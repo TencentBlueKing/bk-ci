@@ -943,17 +943,36 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         atomUpdateRequest: AtomUpdateRequest
     ): Result<Boolean> {
         logger.info("updatePipelineAtom userId=$userId|id=$id|atomUpdateRequest=$atomUpdateRequest")
-        // 校验插件分类是否合法
-        classifyService.getClassify(atomUpdateRequest.classifyId).data
-            ?: return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(atomUpdateRequest.classifyId),
-                data = false,
-                language = I18nUtil.getLanguage(userId)
-            )
+        // 校验插件分类是否合法：优先校验 serviceScopeConfigs，兼容旧 classifyId
+        val configs = atomUpdateRequest.serviceScopeConfigs
+        if (!configs.isNullOrEmpty()) {
+            configs.forEach { config ->
+                val classifyRecord = classifyDao.getClassifyByCode(
+                    dslContext = dslContext,
+                    classifyCode = config.classifyCode,
+                    type = StoreTypeEnum.ATOM,
+                    serviceScope = config.serviceScope
+                )
+                if (classifyRecord == null) {
+                    return I18nUtil.generateResponseDataObject(
+                        messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                        params = arrayOf("${config.serviceScope.name}:${config.classifyCode}"),
+                        data = false,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                }
+            }
+        } else {
+            classifyService.getClassify(atomUpdateRequest.classifyId).data
+                ?: return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf(atomUpdateRequest.classifyId),
+                    data = false,
+                    language = I18nUtil.getLanguage(userId)
+                )
+        }
         val atomRecord = atomDao.getPipelineAtom(dslContext, id)
         return if (null != atomRecord) {
-            // 触发器类的插件repositoryHashId字段值为空
             if (atomRecord.repositoryHashId != null) {
                 val visibilityLevel = atomUpdateRequest.visibilityLevel
                 val dbVisibilityLevel = atomRecord.visibilityLevel
@@ -972,17 +991,15 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             if (FrontendTypeEnum.HISTORY.typeVersion != htmlTemplateVersion &&
                 (classType == MarketBuildAtomElement.classType || classType == MarketBuildLessAtomElement.classType)
             ) {
-                // 更新插件市场的插件才需要根据操作系统来生成插件大类
                 classType = handleClassType(atomUpdateRequest.os)
             }
-            atomUpdateRequest.os.sort() // 给操作系统排序
+            atomUpdateRequest.os.sort()
             val atomCode = atomRecord.atomCode
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 atomDao.updateAtomFromOp(context, userId, id, classType, atomUpdateRequest)
                 val recommendFlag = atomUpdateRequest.recommendFlag
                 if (null != recommendFlag) {
-                    // 为了兼容老插件特性表没有记录的情况，如果没有记录就新增
                     val atomFeatureRecord = atomFeatureDao.getAtomFeature(context, atomCode)
                     if (null != atomFeatureRecord) {
                         atomFeatureDao.updateAtomFeature(
@@ -1006,19 +1023,17 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                         )
                     }
                 }
-                // 更新默认插件缓存
                 if (atomUpdateRequest.defaultFlag) {
                     redisOperation.addSetValue(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
                 } else {
                     redisOperation.removeSetMember(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
                 }
-                // 更新插件运行时信息缓存
                 marketAtomCommonService.updateAtomRunInfoCache(
                     atomId = id,
                     atomName = atomUpdateRequest.name,
                     buildLessRunFlag = atomUpdateRequest.buildLessRunFlag,
                     props = atomUpdateRequest.props,
-                    serviceScope = atomUpdateRequest.serviceScope
+                    serviceScope = atomUpdateRequest.getEffectiveServiceScope()
                 )
             }
             Result(true)
@@ -1422,9 +1437,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         dslContext.transaction { t ->
             val context = DSL.using(t)
             atomDao.updateAtomBaseInfo(context, userId, atomIdList, atomBaseInfoUpdateRequest)
-            // 更新标签信息（优先用顶层 labelIdList，兼容从 serviceScopeConfigs 首项取）
-            val labelIdList = atomBaseInfoUpdateRequest.labelIdList ?: atomBaseInfoUpdateRequest.toServiceScopeConfigs()
-                .firstOrNull()?.labelIdList
+            // 更新标签信息：优先从 serviceScopeConfigs 合并所有 scope 的标签，兼容旧的 labelIdList
+            val labelIdList = atomBaseInfoUpdateRequest.serviceScopeConfigs
+                ?.flatMap { it.labelIdList.orEmpty() }
+                ?.distinct()
+                ?.takeIf { it.isNotEmpty() }
+                ?: atomBaseInfoUpdateRequest.labelIdList
             atomIdList.forEach { atomId ->
                 if (labelIdList?.isNotEmpty() == true) {
                     atomLabelRelDao.deleteByAtomId(context, atomId)

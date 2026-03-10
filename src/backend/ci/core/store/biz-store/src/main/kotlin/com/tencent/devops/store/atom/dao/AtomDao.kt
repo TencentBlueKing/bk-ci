@@ -49,6 +49,8 @@ import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.store.atom.util.AtomJobTypeUtil
+import com.tencent.devops.store.atom.util.JobTypeWriteResult
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
@@ -84,6 +86,7 @@ import com.tencent.devops.store.pojo.common.KEY_RECENT_EXECUTE_NUM
 import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
 import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
+import com.tencent.devops.store.pojo.common.ServiceScopeConfig
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -139,6 +142,15 @@ private data class AtomConditionSet(
     val includeTestAtom: Boolean
 )
 
+/**
+ * ServiceScopeConfig 解析后的多 scope 字段写入值，供 DAO 更新方法复用。
+ */
+private data class ServiceScopeResolvedFields(
+    val serviceScopeJson: String,
+    val classifyIdMap: Map<String, String>,
+    val jobTypeResult: JobTypeWriteResult
+)
+
 @Suppress("ALL")
 @Repository
 class AtomDao : AtomBaseDao() {
@@ -159,8 +171,10 @@ class AtomDao : AtomBaseDao() {
                 CLASS_TYPE,
                 SERVICE_SCOPE,
                 JOB_TYPE,
+                JOB_TYPE_MAP,
                 OS,
                 CLASSIFY_ID,
+                CLASSIFY_ID_MAP,
                 DOCS_LINK,
                 ATOM_TYPE,
                 ATOM_STATUS,
@@ -182,8 +196,16 @@ class AtomDao : AtomBaseDao() {
                     classType,
                     JsonUtil.toJson(atomRequest.serviceScope, formatted = false),
                     atomRequest.jobType.name,
+                    JsonUtil.toJson(
+                        mapOf(ServiceScopeEnum.PIPELINE.name to listOf(atomRequest.jobType.name)),
+                        formatted = false
+                    ),
                     JsonUtil.toJson(atomRequest.os, formatted = false),
                     atomRequest.classifyId,
+                    JsonUtil.toJson(
+                        mapOf(ServiceScopeEnum.PIPELINE.name to atomRequest.classifyId),
+                        formatted = false
+                    ),
                     atomRequest.docsLink,
                     atomRequest.atomType.type.toByte(),
                     AtomStatusEnum.RELEASED.status.toByte(),
@@ -999,11 +1021,8 @@ class AtomDao : AtomBaseDao() {
         with(TAtom.T_ATOM) {
             val baseStep = dslContext.update(this)
                 .set(NAME, atomUpdateRequest.name)
-                .set(SERVICE_SCOPE, JsonUtil.toJson(atomUpdateRequest.serviceScope, formatted = false))
-                .set(JOB_TYPE, atomUpdateRequest.jobType.name)
                 .set(OS, JsonUtil.toJson(atomUpdateRequest.os, formatted = false))
                 .set(CLASS_TYPE, classType)
-                .set(CLASSIFY_ID, atomUpdateRequest.classifyId)
                 .set(DOCS_LINK, atomUpdateRequest.docsLink)
                 .set(ATOM_TYPE, atomUpdateRequest.atomType.type.toByte())
             if (null != atomUpdateRequest.summary) {
@@ -1041,11 +1060,44 @@ class AtomDao : AtomBaseDao() {
                 baseStep.set(VISIBILITY_LEVEL, visibilityLevel.level)
             }
             if (visibilityLevel == VisibilityLevelEnum.LOGIN_PUBLIC) {
-                baseStep.set(PRIVATE_REASON, "") // 选择开源则清空不开源原因
+                baseStep.set(PRIVATE_REASON, "")
             } else {
                 if (null != privateReason) {
                     baseStep.set(PRIVATE_REASON, privateReason)
                 }
+            }
+            val configs = atomUpdateRequest.serviceScopeConfigs
+            if (!configs.isNullOrEmpty()) {
+                val resolved = resolveServiceScopeFields(dslContext, configs)
+                baseStep.set(SERVICE_SCOPE, resolved.serviceScopeJson)
+                if (resolved.classifyIdMap.isNotEmpty()) {
+                    baseStep.set(CLASSIFY_ID_MAP, JsonUtil.toJson(resolved.classifyIdMap, formatted = false))
+                    resolved.classifyIdMap[ServiceScopeEnum.PIPELINE.name]?.let { baseStep.set(CLASSIFY_ID, it) }
+                }
+                resolved.jobTypeResult.pipelineJobType?.let { baseStep.set(JOB_TYPE, it) }
+                resolved.jobTypeResult.jobTypeMapJson?.let { baseStep.set(JOB_TYPE_MAP, it) }
+            } else {
+                baseStep.set(SERVICE_SCOPE, JsonUtil.toJson(atomUpdateRequest.serviceScope, formatted = false))
+                baseStep.set(JOB_TYPE, atomUpdateRequest.jobType.name)
+                baseStep.set(CLASSIFY_ID, atomUpdateRequest.classifyId)
+                baseStep.set(
+                    CLASSIFY_ID_MAP,
+                    DSL.field(
+                        "JSON_SET(COALESCE({0}, '{{}}'), '$.PIPELINE', {1})",
+                        String::class.java,
+                        CLASSIFY_ID_MAP,
+                        DSL.inline(atomUpdateRequest.classifyId)
+                    )
+                )
+                baseStep.set(
+                    JOB_TYPE_MAP,
+                    DSL.field(
+                        "JSON_SET(COALESCE({0}, '{{}}'), '$.PIPELINE', JSON_ARRAY({1}))",
+                        String::class.java,
+                        JOB_TYPE_MAP,
+                        DSL.inline(atomUpdateRequest.jobType.name)
+                    )
+                )
             }
             baseStep.set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
@@ -1255,16 +1307,30 @@ class AtomDao : AtomBaseDao() {
             baseStep.set(MODIFIER, userId)
                 .where(ID.`in`(atomIdList))
                 .execute()
-            // 按 serviceScopeConfigs（或兼容的 classifyCode+serviceScope）覆盖更新 CLASSIFY_ID、CLASSIFY_ID_MAP
-            val resolvedMap = buildClassifyIdMap(dslContext, atomBaseInfoUpdateRequest)
-            if (resolvedMap.isNotEmpty()) {
-                val newMapJson = JsonUtil.toJson(resolvedMap, formatted = false)
-                val pipelineClassifyId = resolvedMap[ServiceScopeEnum.PIPELINE.name]
+
+            val configs = atomBaseInfoUpdateRequest.serviceScopeConfigs
+            if (!configs.isNullOrEmpty()) {
                 val step = dslContext.update(this)
-                    .set(CLASSIFY_ID_MAP, newMapJson)
-                    .set(MODIFIER, userId)
-                pipelineClassifyId?.let { step.set(CLASSIFY_ID, it) }
-                step.where(ID.`in`(atomIdList)).execute()
+                val resolved = resolveServiceScopeFields(dslContext, configs)
+                step.set(SERVICE_SCOPE, resolved.serviceScopeJson)
+                if (resolved.classifyIdMap.isNotEmpty()) {
+                    step.set(CLASSIFY_ID_MAP, JsonUtil.toJson(resolved.classifyIdMap, formatted = false))
+                    resolved.classifyIdMap[ServiceScopeEnum.PIPELINE.name]?.let { step.set(CLASSIFY_ID, it) }
+                }
+                resolved.jobTypeResult.pipelineJobType?.let { step.set(JOB_TYPE, it) }
+                resolved.jobTypeResult.jobTypeMapJson?.let { step.set(JOB_TYPE_MAP, it) }
+                step.set(MODIFIER, userId)
+                    .where(ID.`in`(atomIdList))
+                    .execute()
+            } else if (atomBaseInfoUpdateRequest.classifyCode != null) {
+                val resolvedMap = buildClassifyIdMap(dslContext, atomBaseInfoUpdateRequest)
+                if (resolvedMap.isNotEmpty()) {
+                    val step = dslContext.update(this)
+                        .set(CLASSIFY_ID_MAP, JsonUtil.toJson(resolvedMap, formatted = false))
+                        .set(MODIFIER, userId)
+                    resolvedMap[ServiceScopeEnum.PIPELINE.name]?.let { step.set(CLASSIFY_ID, it) }
+                    step.where(ID.`in`(atomIdList)).execute()
+                }
             }
         }
     }
@@ -1490,25 +1556,26 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    /**
-     * 构建分类ID映射表
-     * 
-     * @param dslContext DSL上下文
-     * @param atomBaseInfoUpdateRequest 插件基本信息更新请求
-     * @return 服务范围到分类ID的映射表
-     */
     private fun buildClassifyIdMap(
         dslContext: DSLContext,
         atomBaseInfoUpdateRequest: AtomBaseInfoUpdateRequest
     ): Map<String, String> {
-        return atomBaseInfoUpdateRequest.toServiceScopeConfigs()
-            .mapNotNull { config ->
-                getClassifyIdByCode(dslContext, config.classifyCode, config.serviceScope)
-                    ?.let { id -> 
-                        (ServiceScopeUtil.normalize(config.serviceScope.name) ?: config.serviceScope.name) to id 
-                    }
-            }
-            .toMap()
+        return buildClassifyIdMapFromConfigs(dslContext, atomBaseInfoUpdateRequest.toServiceScopeConfigs())
+    }
+
+    /**
+     * 从 ServiceScopeConfig 列表解析出 SERVICE_SCOPE、CLASSIFY_ID_MAP、JOB_TYPE/JOB_TYPE_MAP 的写入值。
+     * 供 updateAtomFromOp 和 updateAtomBaseInfo 等方法复用。
+     */
+    private fun resolveServiceScopeFields(
+        dslContext: DSLContext,
+        configs: List<ServiceScopeConfig>
+    ): ServiceScopeResolvedFields {
+        return ServiceScopeResolvedFields(
+            serviceScopeJson = JsonUtil.toJson(configs.map { it.serviceScope.name }, formatted = false),
+            classifyIdMap = buildClassifyIdMapFromConfigs(dslContext, configs),
+            jobTypeResult = AtomJobTypeUtil.buildJobTypeFields(configs)
+        )
     }
 
     /**
