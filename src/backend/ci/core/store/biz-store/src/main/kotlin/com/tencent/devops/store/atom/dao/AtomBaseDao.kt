@@ -32,6 +32,7 @@ import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.common.ServiceScopeConfig
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -129,21 +130,22 @@ abstract class AtomBaseDao {
     }
 
     fun getSupportGitCiAtom(dslContext: DSLContext, os: String?, classType: String?): Result<Record1<String>> {
-        return with(TAtom.T_ATOM) {
-            val conditions = mutableListOf<Condition>()
-            if (!os.isNullOrBlank()) {
-                conditions.add(OS.eq(os))
-            }
-            if (!classType.isNullOrBlank()) {
-                conditions.add(CLASS_TYPE.eq(classType))
-            }
-            conditions.add(JOB_TYPE.eq(JobTypeEnum.AGENT.name))
-            conditions.add(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
-            dslContext.selectDistinct(ATOM_CODE)
-                .from(this)
-                .where(conditions)
-                .fetch()
+        val ta = TAtom.T_ATOM
+        val conditions = mutableListOf<Condition>()
+        if (!os.isNullOrBlank()) {
+            conditions.add(ta.OS.eq(os))
         }
+        if (!classType.isNullOrBlank()) {
+            conditions.add(ta.CLASS_TYPE.eq(classType))
+        }
+        buildJobTypeCondition(ta, JobTypeEnum.AGENT.name, ServiceScopeEnum.PIPELINE)?.let {
+            conditions.add(it)
+        }
+        conditions.add(ta.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
+        return dslContext.selectDistinct(ta.ATOM_CODE)
+            .from(ta)
+            .where(conditions)
+            .fetch()
     }
 
     /**
@@ -170,6 +172,22 @@ abstract class AtomBaseDao {
             query.and(tClassify.SERVICE_SCOPE.eq(serviceScope.name))
         }
         return query.limit(1).fetchOne(0, String::class.java)
+    }
+
+    /**
+     * 从 ServiceScopeConfig 列表构建 scope → classifyId 映射。
+     * 通过 classifyCode + serviceScope 查询 T_CLASSIFY 表解析出 classifyId。
+     */
+    protected fun buildClassifyIdMapFromConfigs(
+        dslContext: DSLContext,
+        configs: List<ServiceScopeConfig>
+    ): Map<String, String> {
+        return configs.mapNotNull { config ->
+            getClassifyIdByCode(dslContext, config.classifyCode, config.serviceScope)
+                ?.let { id ->
+                    (ServiceScopeUtil.normalize(config.serviceScope.name) ?: config.serviceScope.name) to id
+                }
+        }.toMap()
     }
 
     /**

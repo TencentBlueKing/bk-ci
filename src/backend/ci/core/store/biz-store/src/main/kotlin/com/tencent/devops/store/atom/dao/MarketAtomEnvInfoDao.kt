@@ -153,6 +153,7 @@ class MarketAtomEnvInfoDao {
             tAtom.PROPS,
             tAtom.VISIBILITY_LEVEL,
             tAtom.CLASSIFY_ID,
+            tAtom.CLASSIFY_ID_MAP,
             tAtom.HTML_TEMPLATE_VERSION,
             tAtom.CLASS_TYPE,
             tAtom.SERVICE_SCOPE,

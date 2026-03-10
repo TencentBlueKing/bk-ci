@@ -28,18 +28,32 @@
 package com.tencent.devops.store.atom.util
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.store.atom.service.AtomLabelService
+import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.ServiceScopeConfig
+import com.tencent.devops.store.pojo.common.ServiceScopeDetail
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
+import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.util.ServiceScopeUtil
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
 /**
- * 插件服务范围工具类
+ * 插件服务范围工具类，负责解析和构建 ServiceScopeConfig / ServiceScopeDetail。
  */
-object AtomServiceScopeUtil {
-    
-    private val logger = LoggerFactory.getLogger(AtomServiceScopeUtil::class.java)
+@Component
+class AtomServiceScopeUtil @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val classifyDao: ClassifyDao,
+    private val atomLabelService: AtomLabelService
+) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AtomServiceScopeUtil::class.java)
+    }
     
     /**
      * 从 SERVICE_SCOPE 和 CLASSIFY_ID_MAP 中获取所有服务范围
@@ -151,6 +165,105 @@ object AtomServiceScopeUtil {
             )
         } catch (e: Exception) {
             logger.warn("Failed to build ServiceScopeConfig for scope: $scope", e)
+            null
+        }
+    }
+
+    /**
+     * 根据 CLASSIFY_ID_MAP 构建 scope → classifyId 映射。
+     * 各 scope 优先从 MAP 中取；PIPELINE 若不在 MAP 中则使用 pipelineClassifyIdFallback（遗留字段，仅表示流水线）。
+     */
+    private fun buildScopeToClassifyId(
+        serviceScopes: List<String>,
+        classifyIdMapJson: String?,
+        pipelineClassifyIdFallback: String?
+    ): Map<String, String> {
+        val normalizedMap = mutableMapOf<String, String>()
+        if (!classifyIdMapJson.isNullOrEmpty()) {
+            try {
+                @Suppress("UNCHECKED_CAST")
+                val raw = JsonUtil.toOrNull(classifyIdMapJson, Map::class.java) as? Map<String, Any>
+                raw?.forEach { (key, value) ->
+                    val scope = ServiceScopeUtil.normalize(key) ?: key
+                    val id = value.toString().takeIf { it.isNotBlank() } ?: return@forEach
+                    normalizedMap[scope] = id
+                }
+            } catch (e: Exception) {
+                logger.warn("Failed to parse CLASSIFY_ID_MAP: $classifyIdMapJson", e)
+            }
+        }
+        return serviceScopes.mapNotNull { scope ->
+            val id = normalizedMap[scope]
+                ?: (if (scope == ServiceScopeEnum.PIPELINE.name) pipelineClassifyIdFallback else null)
+            if (id.isNullOrBlank()) null else scope to id
+        }.toMap()
+    }
+
+    /**
+     * 一站式构建 ServiceScopeDetail 列表（用于接口返回报文）。
+     * 封装了「解析服务范围 → 构建 scopeToClassifyId → 批量查询分类信息 → 查标签 → 组装 Detail」的完整流程。
+     *
+     * @param atomId 插件ID
+     * @param serviceScopeStr SERVICE_SCOPE 字段值（JSON 数组）
+     * @param classifyIdMapJson CLASSIFY_ID_MAP 字段值（JSON 对象）
+     * @param pipelineClassifyIdFallback PIPELINE 服务范围的兜底分类ID（来自 T_ATOM.CLASSIFY_ID 列）
+     * @param jobTypeValue JOB_TYPE 字段值（PIPELINE 纯字符串）
+     * @param jobTypeMapValue JOB_TYPE_MAP 字段值（完整多 scope JSON），优先级高于 jobTypeValue
+     * @return ServiceScopeDetail 列表
+     */
+    fun buildServiceScopeDetails(
+        atomId: String,
+        serviceScopeStr: String?,
+        classifyIdMapJson: String?,
+        pipelineClassifyIdFallback: String?,
+        jobTypeValue: String?,
+        jobTypeMapValue: String? = null
+    ): List<ServiceScopeDetail>? {
+        val serviceScopes = getAllServiceScopes(serviceScopeStr, classifyIdMapJson)
+        if (serviceScopes.isEmpty()) return null
+        val scopeToClassifyId = buildScopeToClassifyId(
+            serviceScopes = serviceScopes,
+            classifyIdMapJson = classifyIdMapJson,
+            pipelineClassifyIdFallback = pipelineClassifyIdFallback
+        )
+        val classifyIds = scopeToClassifyId.values.distinct()
+        val classifyInfosById = classifyDao.getClassifyInfosByIds(dslContext, classifyIds)
+        val allJobTypes = AtomJobTypeUtil.getAllJobTypes(jobTypeValue, jobTypeMapValue)
+        val details = serviceScopes.mapNotNull { scope ->
+            buildSingleServiceScopeDetail(
+                scope = scope,
+                allJobTypes = allJobTypes,
+                getClassifyInfo = { serviceScopeEnum ->
+                    scopeToClassifyId[serviceScopeEnum.name]?.let { classifyInfosById[it] }
+                },
+                getLabelList = { serviceScopeEnum ->
+                    atomLabelService.getLabelsByAtomId(atomId, serviceScopeEnum)
+                }
+            )
+        }
+        return details.ifEmpty { null }
+    }
+
+    private fun buildSingleServiceScopeDetail(
+        scope: String,
+        allJobTypes: Map<String, List<String>>,
+        getClassifyInfo: (ServiceScopeEnum) -> Pair<String, String>?,
+        getLabelList: (ServiceScopeEnum) -> List<Label>?
+    ): ServiceScopeDetail? {
+        return try {
+            val serviceScopeEnum = ServiceScopeEnum.valueOf(scope)
+            val (classifyCode, classifyName) = getClassifyInfo(serviceScopeEnum) ?: return null
+            val jobTypes = resolveJobTypes(scope, allJobTypes)
+            val labelList = getLabelList(serviceScopeEnum)
+            ServiceScopeDetail(
+                serviceScope = serviceScopeEnum,
+                classifyCode = classifyCode,
+                classifyName = classifyName,
+                jobTypes = jobTypes,
+                labelList = labelList
+            )
+        } catch (e: Exception) {
+            logger.warn("Failed to build ServiceScopeDetail for scope: $scope", e)
             null
         }
     }
