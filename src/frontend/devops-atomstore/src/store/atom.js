@@ -209,8 +209,8 @@ export const actions = {
     /**
      * 流水线插件分类
      */
-    requestAtomClassify ({ commit }) {
-        return vue.$ajax.get(`${prefix}/user/pipeline/atom/classify`)
+    requestAtomClassify ({ commit }, { serviceScope }) {
+        return vue.$ajax.get(`${prefix}/user/pipeline/atom/classify?serviceScope=${serviceScope}`)
     },
 
     /**
@@ -339,8 +339,8 @@ export const actions = {
     /**
      * 流水线插件按功能
      */
-    requestAtomLables ({ commit }) {
-        return vue.$ajax.get(`${prefix}/user/market/atom/label/labels`)
+    requestAtomLables ({ commit }, { serviceScope}) {
+        return vue.$ajax.get(`${prefix}/user/market/atom/label/labels?serviceScope=${serviceScope}`)
     },
 
     /**

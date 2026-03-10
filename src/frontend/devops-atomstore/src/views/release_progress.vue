@@ -150,84 +150,96 @@
                                 </div>
                             </div>
                             <div class="detail-form-item multi-item">
-                                <div class="detail-form-item">
-                                    <div class="info-label"> {{ $t('store.范畴：') }} </div>
-                                    <div class="info-value">{{ categoryMap[versionDetail.category] }}</div>
-                                </div>
-                                <div class="detail-form-item">
-                                    <div class="info-label"> {{ $t('store.分类：') }} </div>
-                                    <div class="info-value">{{ versionDetail.classifyName }}</div>
-                                </div>
-                            </div>
-                            <div
-                                class="detail-form-item multi-item"
-                                v-if="isEnterprise"
-                            >
-                                <div class="detail-form-item">
-                                    <div class="info-label"> {{ $t('store.操作系统：') }} </div>
+                                <div class="detail-form-item full-width">
+                                    <div class="info-label"> {{ $t('store.适用范畴：') }} </div>
                                     <div
                                         class="info-value"
-                                        v-if="versionDetail.os"
+                                        style="flex: 1;"
                                     >
-                                        <span v-if="versionDetail.jobType === 'AGENT'">
-                                            <i
-                                                class="devops-icon icon-linux-view"
-                                                v-if="versionDetail.os.indexOf('LINUX') !== -1"
-                                            ></i>
-                                            <i
-                                                class="devops-icon icon-windows"
-                                                v-if="versionDetail.os.indexOf('WINDOWS') !== -1"
-                                            ></i>
-                                            <i
-                                                class="devops-icon icon-macos"
-                                                v-if="versionDetail.os.indexOf('MACOS') !== -1"
-                                            ></i>
-                                        </span>
+                                        <div
+                                            class="category-scope-container"
+                                            v-if="versionDetail.serviceScopeDetails && versionDetail.serviceScopeDetails.length > 0"
+                                        >
+                                            <div
+                                                class="category-scope-item"
+                                                v-for="scopeConfig in versionDetail.serviceScopeDetails"
+                                                :key="scopeConfig.serviceScope"
+                                            >
+                                                <div class="scope-name">{{ scopeNameMap[scopeConfig.serviceScope] }}</div>
+                                                <div class="scope-info">
+                                                    <div class="scope-info-item">
+                                                        <span class="scope-label">{{ $t('store.分类：') }}</span>
+                                                        <span>{{ scopeConfig.classifyName || '--' }}</span>
+                                                    </div>
+                                                    <div
+                                                        class="scope-info-item"
+                                                        v-if="isEnterprise"
+                                                    >
+                                                        <span class="scope-label">{{ $t('store.操作系统：') }}</span>
+                                                        <span v-if="scopeConfig.jobTypes && scopeConfig.jobTypes.includes('AGENT') && scopeConfig.os">
+                                                            <i
+                                                                class="devops-icon icon-linux-view"
+                                                                v-if="scopeConfig.os.indexOf('LINUX') !== -1"
+                                                            ></i>
+                                                            <i
+                                                                class="devops-icon icon-windows"
+                                                                v-if="scopeConfig.os.indexOf('WINDOWS') !== -1"
+                                                            ></i>
+                                                            <i
+                                                                class="devops-icon icon-macos"
+                                                                v-if="scopeConfig.os.indexOf('MACOS') !== -1"
+                                                            ></i>
+                                                        </span>
+                                                    </div>
+                                                    <div
+                                                        class="scope-info-item"
+                                                        v-else
+                                                    >
+                                                        <span class="scope-label">{{ $t('store.适用Job类型：') }}</span>
+                                                        <span>
+                                                            {{ getJobTypeNames(scopeConfig.jobTypes) }}
+                                                            <span v-if="scopeConfig.jobTypes && scopeConfig.jobTypes.includes('AGENT') && scopeConfig.os">（
+                                                                <i
+                                                                    class="devops-icon icon-linux-view"
+                                                                    v-if="scopeConfig.os.indexOf('LINUX') !== -1"
+                                                                ></i>
+                                                                <i
+                                                                    class="devops-icon icon-windows"
+                                                                    v-if="scopeConfig.os.indexOf('WINDOWS') !== -1"
+                                                                ></i>
+                                                                <i
+                                                                    class="devops-icon icon-macos"
+                                                                    v-if="scopeConfig.os.indexOf('MACOS') !== -1"
+                                                                ></i>）
+                                                            </span>
+                                                        </span>
+                                                    </div>
+                                                    <div class="scope-info-item">
+                                                        <span class="scope-label">{{ $t('store.功能标签：') }}</span>
+                                                        <div class="feature-label">
+                                                            <div
+                                                                class="label-card"
+                                                                v-for="(label, index) in getScopeLabelNames(scopeConfig)"
+                                                                :key="index"
+                                                            >
+                                                                {{ label }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <span v-else>--</span>
                                     </div>
                                 </div>
                             </div>
                             <div
                                 class="detail-form-item multi-item"
-                                v-else
+                                v-if="!isEnterprise"
                             >
-                                <div class="detail-form-item">
-                                    <div class="info-label"> {{ $t('store.适用Job类型：') }} </div>
-                                    <div
-                                        class="info-value"
-                                        v-if="versionDetail.os"
-                                    >
-                                        {{ jobTypeMap[versionDetail.jobType] }}
-                                        <span v-if="versionDetail.jobType === 'AGENT'">（
-                                            <i
-                                                class="devops-icon icon-linux-view"
-                                                v-if="versionDetail.os.indexOf('LINUX') !== -1"
-                                            ></i>
-                                            <i
-                                                class="devops-icon icon-windows"
-                                                v-if="versionDetail.os.indexOf('WINDOWS') !== -1"
-                                            ></i>
-                                            <i
-                                                class="devops-icon icon-macos"
-                                                v-if="versionDetail.os.indexOf('MACOS') !== -1"
-                                            ></i>）
-                                        </span>
-                                    </div>
-                                </div>
                                 <div class="detail-form-item is-open">
                                     <label class="info-label"> {{ $t('store.是否开源') }} </label>
                                     <div class="info-value">{{ versionDetail.visibilityLevel | levelFilter }}</div>
-                                </div>
-                            </div>
-                            <div class="detail-form-item">
-                                <div class="info-label"> {{ $t('store.功能标签：') }} </div>
-                                <div class="info-value feature-label">
-                                    <div
-                                        class="label-card"
-                                        v-for="(label, index) in versionDetail.labels"
-                                        :key="index"
-                                    >
-                                        {{ label }}
-                                    </div>
                                 </div>
                             </div>
                             <div class="detail-form-item">
@@ -407,9 +419,15 @@
                     TASK: this.$t('store.流水线插件'),
                     TRIGGER: this.$t('store.流水线触发器')
                 },
+                scopeNameMap: {
+                    PIPELINE: this.$t('store.CI流水线'),
+                    CREATIVE_STREAM: this.$t('store.CP创作流'),
+                },
                 jobTypeMap: {
                     AGENT: this.$t('store.编译环境'),
-                    AGENT_LESS: this.$t('store.无编译环境')
+                    AGENT_LESS: this.$t('store.无编译环境'),
+                    CREATIVE_STREAM: this.$t('store.创作环境'),
+                    CLOUD_TASK: this.$t('store.云任务环境')
                 },
                 osMap: {
                     LINUX: 'Linux',
@@ -783,6 +801,14 @@
             },
             toggleShow () {
                 this.isDropdownShow = !this.isDropdownShow
+            },
+            getJobTypeNames (jobTypes) {
+                if (!jobTypes || jobTypes.length === 0) return '--'
+                return jobTypes.map(type => this.jobTypeMap[type] || type).join('、')
+            },
+            getScopeLabelNames (scopeConfig) {
+                if (!scopeConfig.labelList || scopeConfig.labelList.length === 0) return []
+                return scopeConfig.labelList.map(item => item.labelName)
             }
         }
     }
@@ -1084,5 +1110,70 @@
                 height: calc(100% - 50px);
             }
         }
+    }
+
+    .category-scope-container {
+        width: 100%;
+
+        .category-scope-item {
+            position: relative;
+            padding: 30px 16px 12px;
+            margin-bottom: 8px;
+            background-color: #F5F7FA;
+            border-radius: 2px;
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+
+            .scope-name {
+                position: absolute;
+                left: 0;
+                top: 0;
+                margin-bottom: 8px;
+                padding: 4px 8px;
+                font-size: 12px;
+                color: #1768EF;
+                background-color: #E1ECFF;
+                border-radius: 2px 0 8px 0;
+            }
+
+            .scope-info {
+                .scope-info-item {
+                    display: flex;
+                    align-items: flex-start;
+                    font-size: 12px;
+                    line-height: 20px;
+                    margin-bottom: 4px;
+
+                    &:last-child {
+                        margin-bottom: 0;
+                    }
+
+                    .scope-label {
+                        display: inline-block;
+                        min-width: 110px;
+                        text-align: right;
+                        color: #979BA5;
+                        margin-right: 4px;
+                    }
+
+                    .devops-icon {
+                        font-size: 14px;
+                        margin: 0 2px;
+                    }
+
+                    .feature-label {
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 8px;
+                    }
+                }
+            }
+        }
+    }
+
+    .full-width {
+        width: 100%;
     }
 </style>

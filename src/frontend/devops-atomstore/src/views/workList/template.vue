@@ -26,6 +26,7 @@
                 :data="renderList"
                 :size="tableSize"
                 :pagination="pagination"
+                :max-height="562"
                 @page-change="pageChanged"
                 @page-limit-change="pageCountChanged"
                 v-bkloading="{ isLoading }"

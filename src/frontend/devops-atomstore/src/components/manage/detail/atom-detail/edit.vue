@@ -20,49 +20,51 @@
                 ></bk-input>
             </bk-form-item>
             <bk-form-item
-                :label="$t('store.分类')"
-                :rules="[requireRule($t('store.分类'))]"
+                :label="$t('store.范畴')"
                 :required="true"
-                property="classifyCode"
                 error-display-type="normal"
             >
-                <bk-select
-                    v-model="formData.classifyCode"
-                    searchable
-                    :clearable="false"
-                    @toggle="requestAtomClassify"
-                    :loading="isLoadingClassify"
+                <bk-checkbox-group
+                    v-model="categoryValue"
+                    ext-cls="category-checkbox-group"
                 >
-                    <bk-option
-                        v-for="(option, index) in sortList"
-                        :key="index"
-                        :id="option.classifyCode"
-                        :name="option.classifyName"
-                    >
-                    </bk-option>
-                </bk-select>
-            </bk-form-item>
-            <bk-form-item
-                :label="$t('store.功能标签')"
-                property="labelIdList"
-            >
-                <bk-select
-                    :placeholder="$t('store.请选择功能标签')"
-                    v-model="formData.labelIdList"
-                    show-select-all
-                    searchable
-                    multiple
-                    @toggle="requestAtomlabels"
-                    :loading="isLoadingLabel"
-                >
-                    <bk-option
-                        v-for="(option, index) in labelList"
-                        :key="index"
-                        :id="option.id"
-                        :name="option.labelName"
-                    >
-                    </bk-option>
-                </bk-select>
+                    <template v-if="categoryValue.includes('PIPELINE')">
+                        <bk-checkbox
+                            :value="'PIPELINE'"
+                            :disabled="true"
+                            style="height: 32px; line-height: 32px;"
+                        >
+                            {{ $t('store.CI流水线') }}
+                        </bk-checkbox>
+                        <category-config
+                            ref="pipelineCategoryConfig"
+                            scope-type="pipeline"
+                            :category-data="pipelineCategory"
+                            :disabled="true"
+                            :errors="{
+                                sortError: formErrors.pipelineSortError
+                            }"
+                        ></category-config>
+                    </template>
+                    <template v-if="categoryValue.includes('CREATIVE_STREAM')">
+                        <bk-checkbox
+                            :value="'CREATIVE_STREAM'"
+                            :disabled="true"
+                            style="height: 32px; line-height: 32px;"
+                        >
+                            {{ $t('store.CP创作流') }}
+                        </bk-checkbox>
+                        <category-config
+                            ref="creativeCategoryConfig"
+                            scope-type="creative"
+                            :category-data="creativeCategory"
+                            :disabled="true"
+                            :errors="{
+                                sortError: formErrors.creativeSortError
+                            }"
+                        ></category-config>
+                    </template>
+                </bk-checkbox-group>
             </bk-form-item>
             <template v-if="userInfo.isProjectAdmin && VERSION_TYPE !== 'ee'">
                 <bk-form-item
@@ -179,12 +181,14 @@
 
 <script>
     import selectLogo from '@/components/common/selectLogo'
+    import categoryConfig from '@/components/category-config.vue'
     import { toolbars } from '@/utils/editor-options'
     import { mapGetters } from 'vuex'
 
     export default {
         components: {
-            selectLogo
+            selectLogo,
+            categoryConfig
         },
 
         props: {
@@ -194,11 +198,14 @@
         data () {
             return {
                 formData: JSON.parse(JSON.stringify(this.detail)),
-                sortList: [],
-                labelList: [],
+                pipelineCategory: this.initCategoryData('PIPELINE'),
+                creativeCategory: this.initCategoryData('CREATIVE_STREAM'),
+                categoryValue: this.getSelectedScopes(),
+                formErrors: {
+                    pipelineSortError: false,
+                    creativeSortError: false
+                },
                 isLoading: true,
-                isLoadingClassify: false,
-                isLoadingLabel: false,
                 isSaving: false,
                 toolbars,
                 nameRule: {
@@ -206,6 +213,10 @@
                     message: this.$t('store.由汉字、英文字母、数字、连字符、下划线或点组成，不超过40个字符'),
                     trigger: 'blur'
                 },
+                isOpenSource: [
+                    { title: this.$t('store.否'), label: this.$t('store.否'), value: 'PRIVATE'},
+                    { title: this.$t('store.是'), label: this.$t('store.是'), value: 'LOGIN_PUBLIC'},
+                ],
                 publishersList: []
             }
         },
@@ -234,9 +245,7 @@
 
         created () {
             this.hackData()
-            Promise.all([this.requestAtomlabels(true), this.requestAtomClassify(true), this.fetchPublishersList(this.detail.atomCode)]).finally(() => {
-                this.isLoading = false
-            })
+            this.fetchPublishersList(this.detail.atomCode)
         },
 
         methods: {
@@ -261,43 +270,89 @@
                 this.formData.description = this.formData.description || `#### ${this.$t('store.插件功能')}\n\n#### ${this.$t('store.适用场景')}\n\n#### ${this.$t('store["使用限制和受限解决方案[可选]"]')}\n\n#### ${this.$t('store.常见的失败原因和解决方案')}`
             },
 
+            getSelectedScopes () {
+                const scopes = []
+                if (this.detail.serviceScopeDetails && this.detail.serviceScopeDetails.length > 0) {
+                    this.detail.serviceScopeDetails.forEach(config => {
+                        scopes.push(config.serviceScope)
+                    })
+                    return scopes
+                }
+                // 默认返回 CI流水线
+                return ['PIPELINE']
+            },
+
+            initCategoryData (scope) {
+                const config = this.detail.serviceScopeDetails?.find(item => item.serviceScope === scope) || {}
+                return {
+                    classifyCode: config.classifyCode || '',
+                    jobTypes: config.jobTypes || (scope === 'PIPELINE' ? ['AGENT'] : ['CREATIVE_STREAM']),
+                    os: this.detail.os || [],
+                    labelIdList: config.labelList?.map(label => label.id)|| []
+                }
+            },
+
             save () {
                 this.$refs.atomEdit.validate().then(() => {
                     this.isSaving = true
-                    const { name, classifyCode, summary, description, logoUrl, iconData, publisher, labelIdList, privateReason } = this.formData
-                    this.formData.labelList = this.labelList.filter((label) => (this.formData.labelIdList.includes(label.id)))
+                    const { name, summary, description, logoUrl, iconData, publisher, privateReason } = this.formData
+                    
+                    // 构建 serviceScopeConfigs 数组
+                    const scopeConfigMap = {
+                        PIPELINE: {
+                            data: this.pipelineCategory,
+                        },
+                        CREATIVE_STREAM: {
+                            data: this.creativeCategory
+                        }
+                    }
+                    
+                    const serviceScopeConfigs = this.categoryValue
+                        .filter(scope => scopeConfigMap[scope])
+                        .map(scope => {
+                            const { data } = scopeConfigMap[scope]
+                            return {
+                                serviceScope: scope,
+                                classifyCode: data.classifyCode,
+                                jobTypes: data.jobTypes || [],
+                                labelIdList: (data.labelIdList || []).filter(id => id && id !== 'null' && id !== ' ')
+                            }
+                        })
+                    
                     const putData = {
                         atomCode: this.detail.atomCode,
-                        data: { name, classifyCode, summary, description, logoUrl, iconData, publisher, labelIdList, privateReason }
+                        data: {
+                            name,
+                            summary,
+                            description,
+                            logoUrl,
+                            iconData,
+                            publisher,
+                            privateReason,
+                            serviceScopeConfigs: serviceScopeConfigs.length > 0 ? serviceScopeConfigs : undefined
+                        }
                     }
                     this.$store.dispatch('store/modifyAtomDetail', putData).then(() => {
+                        const serviceScopeDetails = serviceScopeConfigs.map(config => {
+                            const refName = config.serviceScope === 'PIPELINE' ? 'pipelineCategoryConfig' : 'creativeCategoryConfig'
+                            const fullLabelList = this.$refs[refName]?.labelList || []
+                            const labelList = (config.labelIdList || [])
+                                .map(id => fullLabelList.find(label => label.id === id))
+                                .filter(Boolean)
+                            
+                            return { ...config, labelList }
+                        })
+                        this.formData.serviceScopeDetails = serviceScopeDetails
                         this.$store.dispatch('store/clearDetail')
                         this.$store.dispatch('store/setDetail', this.formData)
-                        this.hasChange = false
-                        this.$router.back()
+                        this.$nextTick(() => {
+                            this.hasChange = false
+                            this.$router.back()
+                        })
                     }).catch((err) => this.$bkMessage({ message: err.message || err, theme: 'error' })).finally(() => (this.isSaving = false))
                 }, (validator) => {
                     this.$bkMessage({ message: validator.content || validator, theme: 'error' })
                 })
-            },
-
-            requestAtomlabels (isOpen) {
-                if (!isOpen) return
-                this.isLoadingLabel = true
-                return this.$store.dispatch('store/requestAtomLables').then((res) => (this.labelList = res || [])).catch((err) => {
-                    this.$bkMessage({ message: err.message || err, theme: 'error' })
-                }).finally(() => (this.isLoadingLabel = false))
-            },
-
-            requestAtomClassify (isOpen) {
-                if (!isOpen) return
-                this.isLoadingClassify = true
-                return this.$store.dispatch('store/requestAtomClassify').then((res) => {
-                    this.sortList = res
-                    this.sortList = this.sortList.filter(item => item.classifyCode !== 'trigger')
-                }).catch((err) => {
-                    this.$bkMessage({ message: err.message || err, theme: 'error' })
-                }).finally(() => (this.isLoadingClassify = false))
             },
 
             addImage (pos, file) {
@@ -343,7 +398,7 @@
                             publisherName: this.userName
                         })
                     }
-                }).catch(() => [])
+                }).catch(() => []).finally(() => this.isLoading = false)
             }
         }
     }
