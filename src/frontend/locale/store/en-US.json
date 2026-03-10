@@ -813,5 +813,7 @@
   "清空": "Clear",
   "已添加": "Added",
   "适用范畴：": "Applicable Scope:",
-  "如发邮件通知等对运行环境无特殊要求的任务，无需运行在创作环境中。": "Tasks such as sending email notifications that do not have specific requirements for the runtime environment do not need to run in the creation environment."
+  "如发邮件通知等对运行环境无特殊要求的任务，无需运行在创作环境中。": "Tasks such as sending email notifications that do not have specific requirements for the runtime environment do not need to run in the creation environment.",
+  "CI流水线": "CI Pipeline",
+  "CP创作流": "CP Creation Flow"
 }

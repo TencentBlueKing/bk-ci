@@ -243,9 +243,9 @@
             }
         },
 
-        async created () {
+        created () {
             this.hackData()
-            await this.fetchPublishersList(this.detail.atomCode)
+            this.fetchPublishersList(this.detail.atomCode)
         },
 
         methods: {
