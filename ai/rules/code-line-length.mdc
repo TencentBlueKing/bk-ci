@@ -1,0 +1,111 @@
+---
+description: 
+alwaysApply: true
+enabled: true
+updatedAt: 2025-12-31T03:05:13.036Z
+provider: 
+---
+
+# 代码行长度规范
+
+## 核心规则
+
+**所有代码文件的每行长度不得超过 120 个字符。**
+
+## 适用范围
+
+- Kotlin (`.kt`)
+- Java (`.java`)
+- TypeScript/JavaScript (`.ts`, `.tsx`, `.js`, `.jsx`)
+- Vue (`.vue`)
+- Go (`.go`)
+- SQL (`.sql`)
+
+## 换行策略
+
+### 1. 函数/方法调用换行
+
+```kotlin
+// ❌ 错误：超过120字符
+every { templateDao.countTemplateVersions(dslContext, PROJECT_ID, TEMPLATE_ID, any()) } returns 2
+
+// ✅ 正确：换行处理
+every {
+    templateDao.countTemplateVersions(dslContext, PROJECT_ID, TEMPLATE_ID, any())
+} returns 2
+```
+
+### 2. 字符串拼接换行
+
+```kotlin
+// ❌ 错误：超过120字符
+suggestion = "V1模板数量($v1Count)与V2模板数量($v2Count)不一致，请检查迁移是否完整"
+
+// ✅ 正确：使用字符串拼接
+suggestion = "V1模板数量($v1Count)与V2模板数量($v2Count)不一致，" +
+    "请检查迁移是否完整"
+```
+
+### 3. 链式调用换行
+
+```kotlin
+// ❌ 错误：超过120字符
+val result = someService.doSomething().thenDoAnother().andFinally().getResult()
+
+// ✅ 正确：每个调用一行
+val result = someService
+    .doSomething()
+    .thenDoAnother()
+    .andFinally()
+    .getResult()
+```
+
+### 4. 参数列表换行
+
+```kotlin
+// ❌ 错误：超过120字符
+fun someFunction(param1: String, param2: Int, param3: Boolean, param4: List<String>): Result {
+
+// ✅ 正确：参数换行
+fun someFunction(
+    param1: String,
+    param2: Int,
+    param3: Boolean,
+    param4: List<String>
+): Result {
+```
+
+### 5. 日志语句换行
+
+```kotlin
+// ❌ 错误：超过120字符
+logger.info("Template count validation: V1=$v1Count, V2=$v2Count, projectId=$projectId")
+
+// ✅ 正确：换行处理
+logger.info(
+    "Template count validation: V1=$v1Count, V2=$v2Count, projectId=$projectId"
+)
+```
+
+### 6. 类声明换行
+
+```kotlin
+// ❌ 错误：超过120字符
+private val logger = LoggerFactory.getLogger(TemplateMigrationIntegrityValidator::class.java)
+
+// ✅ 正确：换行处理
+private val logger =
+    LoggerFactory.getLogger(TemplateMigrationIntegrityValidator::class.java)
+```
+
+## 例外情况
+
+以下情况可以超过 120 字符：
+1. 版权声明头部注释
+2. 不可拆分的 URL 链接
+3. 不可拆分的正则表达式
+4. import 语句
+
+## 检查方法
+
+在提交代码前，确保 IDE 的代码格式化配置中设置了 120 字符的行宽限制。

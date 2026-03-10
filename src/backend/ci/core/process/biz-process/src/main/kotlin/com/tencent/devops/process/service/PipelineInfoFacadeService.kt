@@ -1636,10 +1636,9 @@ class PipelineInfoFacadeService @Autowired constructor(
             return
         }
         model.templateId = pipelineTemplateRelated.templateId
-        val templateResource = pipelineTemplateResourceService.getOrNull(
+        val templateResource = pipelineTemplateResourceService.getByRelatedPipeline(
             projectId = projectId,
-            templateId = pipelineTemplateRelated.templateId,
-            version = pipelineTemplateRelated.version
+            pipelineTemplateRelated = pipelineTemplateRelated
         ) ?: return
         val templateModel = templateResource.model
         if (templateModel !is Model) {
@@ -1647,7 +1646,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         }
         // 老的模版实例参数和设置都是流水线自定义,不跟随模版
         if (model.overrideTemplateField == null) {
-            model.overrideTemplateField = TemplateInstanceField.initFromTrigger(model = templateModel)
+            model.overrideTemplateField = TemplateInstanceField.initFromTemplate(model = templateModel)
         }
         // 如果是最新版本,并且模版信息,说明是老的实例化流水线,需要补全模版信息
         if (isLatestVersion && model.template == null) {
