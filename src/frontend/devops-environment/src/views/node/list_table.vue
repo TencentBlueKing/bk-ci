@@ -122,7 +122,7 @@
                                 class="node-name"
                                 :class="{
                                     'pointer': canShowDetail(props.row),
-                                    'useless': !canShowDetail(props.row) || !props.row.canUse,
+                                    'useless': (!canShowDetail(props.row) || !props.row.canUse) && !isCreateResType,
                                     'unavailable': removedStatus.includes(props.row.nodeStatus)
                                 }"
                                 :title="props.row.displayName"
