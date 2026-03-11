@@ -204,6 +204,8 @@ class RbacEnvironmentPermissionService(
         authPermission: AuthPermission,
         resourceType: AuthResourceType
     ): List<TNodeRecord> {
+        if (resourceType == AuthResourceType.CREATIVE_STREAM_NODE)
+            return nodeRecordList
         val hasRbacPermissionNodeIds = listNodeByPermission(
             userId, projectId, authPermission, resourceType
         )

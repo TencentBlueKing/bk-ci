@@ -55,6 +55,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
@@ -112,13 +113,13 @@ import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import jakarta.ws.rs.NotFoundException
 import jakarta.ws.rs.core.Response
-import java.time.LocalDateTime
-import java.util.Date
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.Date
 
 @Service
 @Suppress("ALL")
@@ -180,13 +181,24 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     )
     fun getAgentDetail(userId: String, projectId: String, nodeHashId: String): ThirdPartyAgentDetail? {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
-        if (!environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.VIEW)) {
+        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId = nodeId, projectId = projectId)
+            ?: return null
+        if (!environmentPermissionService.checkNodePermission(
+                userId = userId,
+                projectId = projectId,
+                nodeId = nodeId,
+                permission = AuthPermission.VIEW,
+                resourceType = if (agentRecord.agentType == AgentType.CREATE.name) {
+                    AuthResourceType.CREATIVE_STREAM_NODE
+                } else {
+                    AuthResourceType.ENVIRONMENT_ENV_NODE
+                }
+            )) {
             throw PermissionForbiddenException(
                 message = I18nUtil.getCodeLanMessage(ERROR_NODE_NO_VIEW_PERMISSSION)
             )
         }
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId = nodeId, projectId = projectId)
-            ?: return null
+
         ActionAuditContext.current()
             .setInstanceName(agentRecord.nodeId.toString())
             .setInstanceId(agentRecord.nodeId.toString())
@@ -969,7 +981,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     ) ?: throw CustomException(
                         Response.Status.FORBIDDEN,
                         I18nUtil.getCodeLanMessage(THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST) +
-                                "($sharedProjectId:$sharedEnvId)"
+                            "($sharedProjectId:$sharedEnvId)"
                     )
                     envShareProjectDao.list(
                         dslContext = dslContext,
@@ -1008,12 +1020,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (sharedEnvRecord.isEmpty()) {
             logger.info(
                 "env name not exists, envName: $sharedEnvName, envId: $sharedEnvId, projectId：$projectId, " +
-                        "mainProjectId: $sharedProjectId"
+                    "mainProjectId: $sharedProjectId"
             )
             throw CustomException(
                 Response.Status.FORBIDDEN,
                 I18nUtil.getCodeLanMessage(ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV) +
-                        "($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
+                    "($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
             )
         }
         logger.info("sharedEnvRecord size: ${sharedEnvRecord.size}")
@@ -1065,7 +1077,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             throw CustomException(
                 Response.Status.FORBIDDEN,
                 I18nUtil.getCodeLanMessage(ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV) +
-                        "($sharedProjectId:$sharedEnvName)"
+                    "($sharedProjectId:$sharedEnvName)"
             )
         }
         logger.info("sharedThirdPartyAgents size: ${sharedThirdPartyAgents.size}")
