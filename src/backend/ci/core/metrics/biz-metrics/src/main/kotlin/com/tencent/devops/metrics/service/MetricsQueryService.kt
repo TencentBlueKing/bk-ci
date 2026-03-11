@@ -133,7 +133,7 @@ class MetricsQueryService @Autowired constructor(
 
         // 构建完整的请求参数，添加bk_biz_id和替换后的promql
         val fullParams = requestParams.toMutableMap()
-        fullParams["space_uids"] = "bkci__$projectId"
+        fullParams["space_uids"] = listOf("bkci__$projectId")
 
         // 构建请求体
         val requestBody = JsonUtil.toJson(fullParams, false)
@@ -257,7 +257,10 @@ class MetricsQueryService @Autowired constructor(
      */
     fun validateReplacedPromql(replacedPromql: String, projectId: String) {
         // 确保替换后的promql包含配置的表名（至少包含一个）
-        if (!replacedPromql.contains(monitorTable) && !replacedPromql.contains(monitorTableAgent) && !replacedPromql.contains(monitorTableBkrepo)) {
+        if (!replacedPromql.contains(monitorTable) && !replacedPromql.contains(monitorTableAgent) && !replacedPromql.contains(
+                monitorTableBkrepo
+            )
+        ) {
             logger.error(
                 "替换后的promql不包含配置的表名: table=${monitorTable}, tableAgent=${monitorTableAgent}, " +
                     "tableBkrepo=${monitorTableBkrepo}, promql=$replacedPromql"
