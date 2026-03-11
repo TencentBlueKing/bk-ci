@@ -261,7 +261,7 @@ interface ServiceStoreComponentResource {
     ): Result<VersionInfo?>
 
     @Operation(summary = "根据组件code和版本号获取组件状态信息")
-    @Path("/types/{storeType}/codes/{storeCode}/component/upgrade/status/info/get")
+    @Path("/types/{storeType}/codes/{storeCode}/status/get")
     @GET
     fun getStoreUpgradeStatusInfo(
         @Parameter(description = "userId", required = true)

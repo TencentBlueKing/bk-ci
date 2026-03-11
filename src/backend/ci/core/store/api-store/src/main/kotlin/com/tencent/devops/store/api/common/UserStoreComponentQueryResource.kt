@@ -325,7 +325,7 @@ interface UserStoreComponentQueryResource {
     ): Result<List<StoreMediaInfo>?>
 
     @Operation(summary = "获取组件升级版本信息")
-    @Path("/types/{storeType}/codes/{storeCode}/component/upgrade/version/info/get")
+    @Path("/types/{storeType}/codes/{storeCode}/upgrade/version/info/get")
     @GET
     fun getStoreUpgradeVersionInfo(
         @Parameter(description = "userId", required = true)
