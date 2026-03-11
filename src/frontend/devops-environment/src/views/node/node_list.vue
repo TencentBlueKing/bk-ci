@@ -64,11 +64,11 @@
                                                 projectId: projectId,
                                                 resourceType: currentResourceType,
                                                 resourceCode: projectId,
-                                                action: currentResourceAction.CREATE
+                                                action: item.action
                                             }
                                         }"
                                         @click="item.handler"
-                                        key="thirdPartyBuildMachine"
+                                        :key="item.key"
                                     >
                                         {{ $t(item.textKey) }}
                                     </a>
@@ -607,14 +607,16 @@
                     {
                         key: 'thirdPartyBuildMachine',
                         textKey: 'environment.batchSetTag',
-                        handler: () => this.batchSetTag()
+                        handler: () => this.batchSetTag(),
+                        action: this.currentResourceAction.EDIT
                     },
                     {
                         key: 'bulkEditMaxConcurrency',
                         textKey: 'environment.bulkEditMaxConcurrency',
                         tooltips: this.$t('environment.未选择构建节点，不支持修改'),
                         disabled: this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'THIRDPARTY'),
-                        handler: () => this.batchSetMaxConcurrency()
+                        handler: () => this.batchSetMaxConcurrency(),
+                        action: this.currentResourceAction.EDIT
                     },
                     ...(!this.isCreateResType ? [
                         {
@@ -622,12 +624,14 @@
                             textKey: 'environment.bulkResetImportUser',
                             tooltips: this.$t('environment.未选择部署节点，不支持重置'),
                             disabled: this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'CMDB'),
-                            handler: () => this.batchResetImportUser()
+                            handler: () => this.batchResetImportUser(),
+                            action: this.currentResourceAction.EDIT
                         },
                         {
                             key: 'idcTestMachine',
                             textKey: 'environment.batchDeleteNode',
-                            handler: () => this.batchDeleteNode()
+                            handler: () => this.batchDeleteNode(),
+                            action: this.currentResourceAction.DELETE
                         }
                     ] : [])
                 ]

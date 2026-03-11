@@ -22,10 +22,7 @@ export const NODE_RESOURCE_TYPE = 'env_node'
 
 
 export const CREATIVE_STREAM_NODE_RESOURCE_ACTION = {
-    CREATE: 'creative_stream_node_create',
     VIEW: 'creative_stream_node_view',
-    EDIT: 'creative_stream_node_edit',
-    DELETE: 'creative_stream_node_delete',
-    USE: 'creative_stream_node_use'
+    EDIT: 'creative_stream_node_edit'
 }
 export const CREATIVE_NODE_RESOURCE_TYPE = 'creative_stream_node'

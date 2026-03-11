@@ -352,7 +352,7 @@
                     width="180"
                 >
                     <template slot-scope="props">
-                        <template v-if="props.row.canUse">
+                        <template v-if="props.row.canEdit">
                             <div class="table-node-item node-item-handler">
                                 <span
                                     class="install-agent mr10"
