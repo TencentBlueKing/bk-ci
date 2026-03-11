@@ -244,10 +244,13 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
                 userId = BKREPO_DEFAULT_USER
             ).size
         } catch (ignored: RemoteServiceException) {
-            logger.warn("Error getting store file size - filePath: $filePath, storeType: $storeType", ignored)
+            logger.warn(
+                "Remote service error getting store file size -filePath: $filePath, storeType: $storeType",
+                ignored
+            )
             null
-        } catch (ignored: Exception) {
-            logger.warn("Error getting store file size - filePath: $filePath, storeType: $storeType", ignored)
+        } catch (ignored: Throwable) {
+            logger.warn("Unexpected error getting store file size -filePath: $filePath, storeType: $storeType", ignored)
             null
         }
     }

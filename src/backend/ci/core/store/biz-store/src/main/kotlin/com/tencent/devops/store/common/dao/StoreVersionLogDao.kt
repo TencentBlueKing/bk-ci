@@ -190,7 +190,7 @@ class StoreVersionLogDao {
 
     fun selectComponentIds(dslContext: DSLContext, offset: Long, batchSize: Long): List<String>? {
         with(TStoreBase.T_STORE_BASE) {
-            return dslContext.select(ID).from(this).where(STATUS.eq(AtomStatusEnum.RELEASED.name))
+            return dslContext.select(ID).from(this).where(STATUS.eq(StoreStatusEnum.RELEASED.name))
                 .limit(offset, batchSize)
                 .fetch().into(String::class.java)
         }

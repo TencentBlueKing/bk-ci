@@ -16,5 +16,4 @@ data class StoreVersionLogInfo(
     val packageSize: String?,
     @Schema(description = "发布人")
     val publisher: String?
-
 )
