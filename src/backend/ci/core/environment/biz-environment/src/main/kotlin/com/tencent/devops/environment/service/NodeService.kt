@@ -287,7 +287,7 @@ class NodeService @Autowired constructor(
             collation = collation,
             tagValueIds = tagValues
         ).toLong()
-        val nodeResourceType = if (createMode == true) {
+        val nodeResourceType = if (nodeType == NodeType.CREATE) {
             AuthResourceType.CREATIVE_STREAM_NODE
         } else {
             AuthResourceType.ENVIRONMENT_ENV_NODE
