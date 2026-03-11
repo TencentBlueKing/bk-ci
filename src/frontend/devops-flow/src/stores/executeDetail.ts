@@ -237,6 +237,16 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
     }
   }
 
+  /**
+   * Update execution detail from a WebSocket push.
+   * The payload shape matches the REST API response.
+   */
+  function updateFromWebSocket(data: ExecuteDetailData | null) {
+    if (data) {
+      executeDetail.value = data
+    }
+  }
+
   return {
     loading,
     executeDetail,
@@ -244,6 +254,7 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
 
     initExecuteDetail,
     silentRefreshExecuteDetail,
+    updateFromWebSocket,
     stopExecute,
     requestRePlayFlow,
     requestRetryFlow,

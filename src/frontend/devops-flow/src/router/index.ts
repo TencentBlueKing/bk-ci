@@ -4,9 +4,17 @@ import { FLOW_GROUP_TYPES } from '../constants/flowGroup'
 import { ROUTE_NAMES } from '../constants/routes'
 import { VERSION_STATUS_ENUM } from '../utils/flowConst'
 
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    websocket?: boolean
+  }
+}
+
 declare global {
   interface Window {
     $syncUrl?: (path: string) => void
+    WEBSOCKET_URL_PREFIX?: string
   }
 }
 
@@ -28,6 +36,7 @@ const router = createRouter({
           component: () => import('../views/FlowList'),
           name: ROUTE_NAMES.FLOW_LIST,
           props: true,
+          meta: { websocket: true },
         },
         {
           path: 'flow/:flowId',
@@ -43,6 +52,7 @@ const router = createRouter({
                   component: () => import('../views/Flow/Detail/ExecutionRecord'),
                   name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
                   props: true,
+                  meta: { websocket: true },
                 },
                 {
                   path: 'trigger-record',
@@ -195,6 +205,7 @@ const router = createRouter({
               path: 'execute-detail',
               component: () => import('../views/Flow/Execute/ExecutionTab/ExecPipeline'),
               name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB,
+              meta: { websocket: true },
             },
             {
               path: 'artifacts',
