@@ -102,6 +102,20 @@ const routes = [
                             logo: 'store',
                             header: 'store',
                             to: 'atomHome'
+                        },
+                        beforeEnter: (to, from, next) => {
+                            // 将 devx 类型转换为 atom
+                            if (to.query.pipeType === 'devx') {
+                                next({
+                                    ...to,
+                                    query: {
+                                        ...to.query,
+                                        pipeType: 'atom'
+                                    }
+                                })
+                            } else {
+                                next()
+                            }
                         }
                     }
                 ]
