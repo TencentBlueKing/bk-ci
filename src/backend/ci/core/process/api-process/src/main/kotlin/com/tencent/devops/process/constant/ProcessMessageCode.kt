@@ -456,7 +456,6 @@ object ProcessMessageCode {
     const val ERROR_TEMPLATE_MIGRATING = "2101362" // 模板迁移中，不能操作
     // 非约束流水线不能保存为约束模式
     const val ERROR_NON_CONSTRAINED_PIPELINE_CANNOT_SAVE_AS_CONSTRAINED = "2101363"
-    
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
