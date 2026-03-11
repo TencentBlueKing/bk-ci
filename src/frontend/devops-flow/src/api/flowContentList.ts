@@ -13,7 +13,6 @@ import {
   PROCESS_API_URL_PREFIX,
   STORE_API_URL_PREFIX,
 } from '@/utils/apiUrlPrefix'
-import { API_BASE_URL } from '@/utils/http/config'
 import { del, get, post, put } from '@/utils/http'
 
 /**
@@ -803,22 +802,21 @@ export async function renameFlow(
  * @param fileName 下载文件名
  */
 export async function downloadFlowJson(projectId: string, pipelineId: string, fileName: string): Promise<void> {
-  const url = `${PROCESS_API_URL_PREFIX}/user/pipelines/${pipelineId}/projects/${projectId}/export`
-  const res = await fetch(`${API_BASE_URL}${url}`.replace(/\/\//g, '/'), { credentials: 'include' })
-  if (res.status >= 200 && res.status < 300) {
-    const blob = await res.blob()
-    const a = document.createElement('a')
-    const blobUrl = (window.URL || window.webkitURL).createObjectURL(blob)
-    a.href = blobUrl
-    a.download = fileName
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    window.URL.revokeObjectURL(blobUrl)
-  } else {
-    const result = await res.json()
-    return Promise.reject(result)
-  }
+  const blob = await get<Blob>(
+    `${PROCESS_API_URL_PREFIX}/user/pipelines/${pipelineId}/projects/${projectId}/export`,
+    {
+      responseType: 'blob',
+      headers: { Accept: '*/*' },
+    },
+  )
+  const blobUrl = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = blobUrl
+  a.download = fileName
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  window.URL.revokeObjectURL(blobUrl)
 }
 
 /**

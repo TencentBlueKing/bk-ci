@@ -13,7 +13,6 @@ export async function request<T = unknown>(
     method,
     ...config,
   }
-
   const meta = finalConfig.meta || {}
   finalConfig.meta = meta
   const cacheKey =
