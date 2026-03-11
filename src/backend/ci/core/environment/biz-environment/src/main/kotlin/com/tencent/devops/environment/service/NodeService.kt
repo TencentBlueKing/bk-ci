@@ -264,6 +264,17 @@ class NodeService @Autowired constructor(
         if (nodeRecordList.isEmpty()) {
             return Page(1, 0, 0, emptyList())
         }
+        val nodeResourceType = if (nodeType == NodeType.CREATE) {
+            AuthResourceType.CREATIVE_STREAM_NODE
+        } else {
+            AuthResourceType.ENVIRONMENT_ENV_NODE
+        }
+        val nodes = formatNodeWithPermissions(
+            userId = userId,
+            projectId = projectId,
+            nodeRecordList = nodeRecordList,
+            resourceType = nodeResourceType
+        )
         val count = nodeDao.countForAuthWithSearchCondition(
             dslContext = dslContext,
             projectId = projectId,
@@ -285,19 +296,9 @@ class NodeService @Autowired constructor(
             latestBuildTimeEnd = latestBuildTimeEnd,
             sortType = sortType,
             collation = collation,
-            tagValueIds = tagValues
+            tagValueIds = tagValues,
+            nodeIds = nodes.map { it.nodeId.toLong() }
         ).toLong()
-        val nodeResourceType = if (nodeType == NodeType.CREATE) {
-            AuthResourceType.CREATIVE_STREAM_NODE
-        } else {
-            AuthResourceType.ENVIRONMENT_ENV_NODE
-        }
-        val nodes = formatNodeWithPermissions(
-            userId = userId,
-            projectId = projectId,
-            nodeRecordList = nodeRecordList,
-            resourceType = nodeResourceType
-        )
         if (-1 != page) {
             val nodesMap = nodes.associateBy { it.agentHashId }
             val agentIds = nodesMap.keys.mapNotNull { it }

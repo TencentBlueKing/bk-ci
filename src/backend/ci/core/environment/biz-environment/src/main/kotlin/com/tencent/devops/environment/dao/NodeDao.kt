@@ -133,7 +133,8 @@ class NodeDao {
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
-        tagValueIds: Set<Long>?
+        tagValueIds: Set<Long>?,
+        nodeIds: List<Long>? = null
     ) {
         if (!keywords.isNullOrEmpty()) {
             query.and(NODE_IP.like("%$keywords%").or(DISPLAY_NAME.like("%$keywords%")))
@@ -177,6 +178,9 @@ class NodeDao {
         }
         if (!tagValueIds.isNullOrEmpty()) {
             query.and(TNodeTags.T_NODE_TAGS.TAG_VALUE_ID.`in`(tagValueIds))
+        }
+        if (!nodeIds.isNullOrEmpty()){
+            query.and(NODE_ID.`in`(nodeIds))
         }
         when (sortType) {
             /*别名*/"displayName" -> query.orderBy(DISPLAY_NAME.transferOrder(collation))
@@ -222,7 +226,8 @@ class NodeDao {
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
-        tagValueIds: Set<Long>?
+        tagValueIds: Set<Long>?,
+        nodeIds: List<Long>? = null
     ): Int {
         with(TNode.T_NODE) {
             val dsl = dslContext.selectCount().from(TNode.T_NODE)
@@ -246,8 +251,8 @@ class NodeDao {
                 latestBuildTimeEnd = latestBuildTimeEnd,
                 sortType = sortType,
                 collation = collation,
-                tagValueIds = tagValueIds
-
+                tagValueIds = tagValueIds,
+                nodeIds = nodeIds
             )
             return query.fetchOne(0, Int::class.java)!!
         }
@@ -444,7 +449,7 @@ class NodeDao {
         userId: String,
         agentVersion: String?
     ): Long
-            /** Node ID **/
+        /** Node ID **/
     {
         var nodeId = 0L
         with(TNode.T_NODE) {
