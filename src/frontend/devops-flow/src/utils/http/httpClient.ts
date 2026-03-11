@@ -29,7 +29,9 @@ httpInstance.interceptors.request.use(
     const token = authStore.token
     const extendConfig = config as ExtendedAxiosRequestConfig
 
-    extendConfig.headers.set('Accept', 'application/json')
+    if (!extendConfig.headers.get('Accept')) {
+      extendConfig.headers.set('Accept', 'application/json')
+    }
     extendConfig.headers.set('X-DEVOPS-CHANNEL', 'CREATIVE_STREAM')
     if (!extendConfig.headers.get('Content-Type')) {
       extendConfig.headers.set('Content-Type', 'application/json;charset=UTF-8')
