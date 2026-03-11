@@ -51,7 +51,7 @@
                                 class="node-name"
                                 :class="{
                                     'pointer': canShowDetail(props.row),
-                                    'useless': !canShowDetail(props.row) || !props.row.canUse,
+                                    'useless': (!canShowDetail(props.row) || !props.row.canUse) && !isCreateResType,
                                     'unavailable': removedStatus.includes(props.row.nodeStatus)
                                 }"
                                 :title="props.row.displayName"
@@ -119,7 +119,7 @@
                                     }
                                 } : {}"
                                 class="node-name"
-                                :class="{ 'pointer': canShowDetail(props.row), 'useless': !canShowDetail(props.row) || !props.row.canUse }"
+                                :class="{ 'pointer': canShowDetail(props.row), 'useless': (!canShowDetail(props.row) || !props.row.canUse) && !isCreateResType }"
                                 :title="props.row.displayName"
                                 @click="toNodeDetail(props.row)"
                             >
@@ -380,7 +380,7 @@
                                             projectId: projectId,
                                             resourceType: currentResourceType,
                                             resourceCode: props.row.nodeHashId,
-                                            action: currentResourceAction.DELETE
+                                            action: currentResourceAction.EDIT
                                         }
                                     }"
                                     class="node-handle delete-node-text"
