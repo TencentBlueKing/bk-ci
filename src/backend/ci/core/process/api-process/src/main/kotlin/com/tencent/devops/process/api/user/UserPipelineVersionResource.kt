@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
+import com.tencent.devops.process.enums.PipelineGetVersionSource
 import com.tencent.devops.common.pipeline.pojo.BuildNoUpdateReq
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
@@ -162,7 +163,10 @@ interface UserPipelineVersionResource {
         version: Int,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        @Parameter(description = "请求来源", required = false)
+        @QueryParam("source")
+        source: PipelineGetVersionSource? = PipelineGetVersionSource.VIEW
     ): Result<PipelineVersionWithModel>
 
     @Operation(summary = "触发前配置")

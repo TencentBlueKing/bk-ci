@@ -158,6 +158,13 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
             setProperty("$rabbitPropPrefix.consumer.anonymousGroupPrefix", groupName)
             setProperty("$rabbitPropPrefix.consumer.durableSubscription", "true")
             setProperty("$pulsarPropPrefix.consumer.subscriptionMode", "NonDurable")
+        } else if (event.binder == StreamBinder.CUSTOM) {
+            val namespace = KubernetesUtils.getNamespace()
+            setProperty(
+                "$bindingPrefix.group", consumer.groupName.ifBlank {
+                    "$namespace.$groupName.$bindingName"
+                }
+            )
         } else {
             setProperty("$bindingPrefix.group", consumer.groupName.ifBlank { "$groupName-$bindingName" })
         }

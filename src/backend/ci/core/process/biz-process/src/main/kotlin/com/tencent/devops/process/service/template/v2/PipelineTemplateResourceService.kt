@@ -3,8 +3,11 @@ package com.tencent.devops.process.service.template.v2
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_VERSION_NOT_EXISTS
+import com.tencent.devops.process.dao.template.PipelineTemplateInfoDao
 import com.tencent.devops.process.dao.template.PipelineTemplateResourceDao
 import com.tencent.devops.process.pojo.PipelineTemplateVersionSimple
+import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelated
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceUpdateInfo
@@ -19,7 +22,8 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineTemplateResourceService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineTemplateResourceDao: PipelineTemplateResourceDao
+    private val pipelineTemplateResourceDao: PipelineTemplateResourceDao,
+    private val pipelineTemplateInfoDao: PipelineTemplateInfoDao
 ) {
 
     fun getTemplateResourceVersion(
@@ -201,6 +205,57 @@ class PipelineTemplateResourceService @Autowired constructor(
             templateId = templateId,
             version = version
         ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_VERSION_NOT_EXISTS)
+    }
+
+    fun getOrNullBySrcTemplateVersion(
+        projectId: String,
+        templateId: String,
+        srcTemplateVersion: Long
+    ): PipelineTemplateResource? {
+        return pipelineTemplateResourceDao.getBySrcTemplateVersion(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId,
+            srcTemplateVersion = srcTemplateVersion
+        )
+    }
+
+    fun getBySrcTemplateVersion(
+        projectId: String,
+        templateId: String,
+        srcTemplateVersion: Long
+    ): PipelineTemplateResource {
+        return pipelineTemplateResourceDao.getBySrcTemplateVersion(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId,
+            srcTemplateVersion = srcTemplateVersion
+        ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_VERSION_NOT_EXISTS)
+    }
+
+    fun getByRelatedPipeline(
+        projectId: String,
+        pipelineTemplateRelated: PipelineTemplateRelated
+    ): PipelineTemplateResource? {
+        val pipelineTemplateInfo = pipelineTemplateInfoDao.get(
+            dslContext = dslContext,
+            templateId = pipelineTemplateRelated.templateId
+        ) ?: return null
+        return if (pipelineTemplateInfo.mode == TemplateType.CONSTRAINT) {
+            pipelineTemplateResourceDao.getBySrcTemplateVersion(
+                dslContext = dslContext,
+                projectId = projectId,
+                templateId = pipelineTemplateRelated.templateId,
+                srcTemplateVersion = pipelineTemplateRelated.version
+            )
+        } else {
+            pipelineTemplateResourceDao.get(
+                dslContext = dslContext,
+                projectId = projectId,
+                templateId = pipelineTemplateRelated.templateId,
+                version = pipelineTemplateRelated.version
+            )
+        }
     }
 
     fun count(commonCondition: PipelineTemplateResourceCommonCondition): Int {

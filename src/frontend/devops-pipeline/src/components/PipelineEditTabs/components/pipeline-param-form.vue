@@ -134,6 +134,17 @@
                         :handle-change="(name, value) => handleUpdateParam(name, value)"
                     />
                 </div>
+                <div class="param-checkbox-row">
+                    <atom-checkbox
+                        name="sensitive"
+                        :disabled="disabled"
+                        :text="$t('editPage.sensitive')"
+                        :desc="sensitiveTips"
+                        :custom-tip="true"
+                        :value="param.sensitive"
+                        :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    />
+                </div>
             </template>
             <Accordion
                 show-content
@@ -241,6 +252,9 @@
             },
             typeLabel () {
                 return this.paramType === 'constant' ? this.$t('newui.pipelineParam.constType') : this.$t('editPage.paramsType')
+            },
+            sensitiveTips () {
+                return Array(4).fill(0).map((_, i) => this.$t(`editPage.sensitiveTips${i + 1}`))
             },
             paramsList () {
                 const list = PARAM_LIST.map(item => {

@@ -267,8 +267,10 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version, archiveFlag }) {
-        const query = {}
+    fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version, archiveFlag, source = 'VIEW' }) {
+        const query = {
+            source
+        }
         if (archiveFlag !== undefined && archiveFlag !== null) {
             query.archiveFlag = encodeURIComponent(archiveFlag)
         }
@@ -835,8 +837,8 @@ export default {
     },
 
     // 获取已安装的插件详情
-    getInstallAtomDetail ({ commit }, { projectCode, atomCode }) {
-        return request.get(`${STORE_API_URL_PREFIX}/user/market/atom/statistic/projectCodes/${projectCode}/atomCodes/${atomCode}/pipelines`)
+    getInstallAtomDetail ({ commit }, { page, pageSize, projectCode, atomCode }) {
+        return request.get(`${STORE_API_URL_PREFIX}/user/market/atom/statistic/projectCodes/${projectCode}/atomCodes/${atomCode}/pipelines?page=${page}&pageSize=${pageSize}`)
     },
 
     // 卸载插件

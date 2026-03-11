@@ -59,8 +59,6 @@ data class PipelineTemplateResourceCommonCondition(
     val status: VersionStatus? = null,
     @get:Schema(title = "分支状态", required = false)
     val branchAction: BranchVersionAction? = null,
-    @get:Schema(title = "分支状态", required = false)
-    val excludeBranchAction: BranchVersionAction? = null,
     @get:Schema(title = "创建人", required = false)
     val creator: String? = null,
     @get:Schema(title = "更新人", required = false)

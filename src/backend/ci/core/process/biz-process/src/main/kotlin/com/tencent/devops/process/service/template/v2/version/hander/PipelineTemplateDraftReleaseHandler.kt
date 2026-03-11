@@ -29,7 +29,6 @@ package com.tencent.devops.process.service.template.v2.version.hander
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -67,8 +66,11 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
         context.versionAction == PipelineVersionAction.RELEASE_DRAFT
 
     override fun handle(context: PipelineTemplateVersionCreateContext): DeployTemplateResult {
-        logger.info("Template draft version released with context={}", JsonUtil.toJson(context, false))
         with(context) {
+            logger.info(
+                "handle template draft to released version|" +
+                        "$projectId|$templateId|$versionAction|$version|$targetAction|$branchName|$customVersionName"
+            )
             if (version == null) {
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.PARAMETER_IS_NULL,
@@ -132,6 +134,19 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
             targetAction = targetAction,
             targetBranch = branchName
         )
+        if (versionStatus == VersionStatus.RELEASED) {
+            pipelineTemplateResourceService.getLatestResource(
+                projectId = projectId,
+                templateId = templateId,
+                status = VersionStatus.RELEASED,
+                versionName = resourceOnlyVersion.versionName
+            )?.let {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_TEMPLATE_VERSION_NAME_DUPLICATION,
+                    params = arrayOf(resourceOnlyVersion.versionName!!)
+                )
+            }
+        }
         validateReleaseYamlFile(resourceOnlyVersion = resourceOnlyVersion)
         if (versionStatus == VersionStatus.RELEASED) {
             pipelineTemplatePersistenceService.releaseDraft2ReleaseVersion(
@@ -180,7 +195,8 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
             commitMessage = pTemplateResourceWithoutVersion.description
                 ?: "update template ${pipelineTemplateInfo.name}",
             targetAction = targetAction!!,
-            targetBranch = branchName
+            targetBranch = branchName,
+            source = PipelineYamlFileReleaseReqSource.TEMPLATE
         )
         return pipelineYamlFacadeService.releaseYamlFile(
             yamlFileReleaseReq = yamlFileReleaseReq

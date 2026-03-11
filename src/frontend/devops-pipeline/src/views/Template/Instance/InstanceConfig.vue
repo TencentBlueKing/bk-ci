@@ -7,305 +7,316 @@
         }"
         v-bkloading="{ isLoading: isLoading || instancePageLoading }"
     >
-        <bk-alert
-            v-if="!templateRefTypeById"
-            closable
-            type="warning"
+        <bk-exception
+            v-if="fetchPipelinesError"
+            class="exception-error-part"
+            scene="part"
+            type="500"
         >
-            <div slot="title">
-                <p>
-                    {{ $t('template.notSpecifiedRef.tips1') }}
-                    <bk-popover
-                        placement="top"
-                        width="620"
+            {{ $t('template.fetchPipelinesErrorTips') }}
+        </bk-exception>
+        <template v-else>
+            <bk-alert
+                v-if="!templateRefTypeById"
+                closable
+                type="warning"
+            >
+                <div slot="title">
+                    <p>
+                        {{ $t('template.notSpecifiedRef.tips1') }}
+                        <bk-popover
+                            placement="top"
+                            width="620"
+                        >
+                            <span class="doc-btn">
+                                {{ $t('template.notSpecifiedRef.arrangingValueStrategy') }}
+                            </span>
+                            <div slot="content">
+                                <p>{{ $t('template.arrangingValueStrategyTips.tips1') }}</p>
+                                <p>{{ $t('template.arrangingValueStrategyTips.tips2') }}</p>
+                                <p>{{ $t('template.arrangingValueStrategyTips.tips3') }}</p>
+                                <p style="padding-left: 10px;">{{ $t('template.arrangingValueStrategyTips.tips4') }}</p>
+                                <p style="padding-left: 10px;">{{ $t('template.arrangingValueStrategyTips.tips5') }}</p>
+                            </div>
+                        </bk-popover>
+                    </p>
+                    <p>
+                        {{ $t('template.notSpecifiedRef.tips2') }}
+                    </p>
+                </div>
+            </bk-alert>
+            <section class="instance-config-constant">
+                <header class="config-header">
+                    <div class="left">
+                        {{ $t('template.instanceConfig') }}
+                        <span class="line">|</span>
+                        <span
+                            class="instance-name"
+                            v-bk-overflow-tips
+                        >{{ curInstance?.pipelineName }}</span>
+                    </div>
+                    <div
+                        class="right"
+                        v-if="showCompareParamsNum"
                     >
-                        <span class="doc-btn">
-                            {{ $t('template.notSpecifiedRef.arrangingValueStrategy') }}
-                        </span>
-                        <div slot="content">
-                            <p>{{ $t('template.arrangingValueStrategyTips.tips1') }}</p>
-                            <p>{{ $t('template.arrangingValueStrategyTips.tips2') }}</p>
-                            <p>{{ $t('template.arrangingValueStrategyTips.tips3') }}</p>
-                            <p style="padding-left: 10px;">{{ $t('template.arrangingValueStrategyTips.tips4') }}</p>
-                            <p style="padding-left: 10px;">{{ $t('template.arrangingValueStrategyTips.tips5') }}</p>
-                        </div>
-                    </bk-popover>
-                </p>
-                <p>
-                    {{ $t('template.notSpecifiedRef.tips2') }}
-                </p>
-            </div>
-        </bk-alert>
-        <section class="instance-config-constant">
-            <header class="config-header">
-                <div class="left">
-                    {{ $t('template.instanceConfig') }}
-                    <span class="line">|</span>
-                    <span
-                        class="instance-name"
-                        v-bk-overflow-tips
-                    >{{ curInstance?.pipelineName }}</span>
-                </div>
+                        <ul class="params-compare-content">
+                            <bk-checkbox
+                                class="hide-params-btn"
+                                v-if="compareParamsNum.deleted"
+                                v-model="hideDeleted"
+                            >
+                                {{ $t('template.hideDeletedParam') }}
+                            </bk-checkbox>
+                            <li
+                                v-for="item in renderCompareParamsNum"
+                                :key="item.key"
+                                class="num-item"
+                            >
+                                <span :class="['status-icon', item.class]"></span>
+                                <span> {{ item.label }}</span>
+                                <span :class="['status-value', item.class]">
+                                    {{ item.value }}
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                </header>
                 <div
-                    class="right"
-                    v-if="showCompareParamsNum"
+                    class="config-content"
+                    :key="activeIndex"
                 >
-                    <ul class="params-compare-content">
-                        <bk-checkbox
-                            class="hide-params-btn"
-                            v-if="compareParamsNum.deleted"
-                            v-model="hideDeleted"
-                        >
-                            {{ $t('template.hideDeletedParam') }}
-                        </bk-checkbox>
-                        <li
-                            v-for="item in renderCompareParamsNum"
-                            :key="item.key"
-                            class="num-item"
-                        >
-                            <span :class="['status-icon', item.class]"></span>
-                            <span> {{ item.label }}</span>
-                            <span :class="['status-value', item.class]">
-                                {{ item.value }}
-                            </span>
-                        </li>
-                    </ul>
-                </div>
-            </header>
-            <div
-                class="config-content"
-                :key="activeIndex"
-            >
-                <template>
-                    <section class="params-content-item">
-                        <header
-                            :class="['params-collapse-trigger', {
-                                'params-collapse-expand': activeName.has(1)
-                            }]"
-                            @click="toggleCollapse(1)"
-                        >
-                            <bk-icon
-                                type="right-shape"
-                                class="icon-angle-right"
-                            />
-    
-                            {{ $t('template.pipelineBuildParams') }}
-                        </header>
-                        <div
-                            v-if="activeName.has(1)"
-                            class="params-collapse-content"
-                        >
-                            <pipeline-params-form
-                                v-if="hasPipelineParams"
-                                ref="paramsForm"
-                                :param-values="paramsValues"
-                                :handle-param-change="handleParamChange"
-                                :params="paramsList"
-                                :is-exec-preview="false"
-                                sort-category
-                                show-operate-btn
-                                :hide-deleted="hideDeleted"
-                                :handle-use-default-value="handleUseDefaultValue"
-                                :handle-set-parma-required="handleSetParmaRequired"
-                                follow-template-key="param"
-                                :handle-follow-template="handleFollowTemplate"
+                    <template>
+                        <section class="params-content-item">
+                            <header
+                                :class="['params-collapse-trigger', {
+                                    'params-collapse-expand': activeName.has(1)
+                                }]"
+                                @click="toggleCollapse(1)"
                             >
-                                <template
-                                    slot="versionParams"
-                                    v-if="isVisibleVersion && !hideDeletedVersionParams"
+                                <bk-icon
+                                    type="right-shape"
+                                    class="icon-angle-right"
+                                />
+        
+                                {{ $t('template.pipelineBuildParams') }}
+                            </header>
+                            <div
+                                v-if="activeName.has(1)"
+                                class="params-collapse-content"
+                            >
+                                <pipeline-params-form
+                                    v-if="hasPipelineParams"
+                                    ref="paramsForm"
+                                    :param-values="paramsValues"
+                                    :handle-param-change="handleParamChange"
+                                    :params="paramsList"
+                                    :is-exec-preview="false"
+                                    sort-category
+                                    show-operate-btn
+                                    :hide-deleted="hideDeleted"
+                                    :handle-use-default-value="handleUseDefaultValue"
+                                    :handle-set-parma-required="handleSetParmaRequired"
+                                    follow-template-key="param"
+                                    :handle-follow-template="handleFollowTemplate"
                                 >
-                                    <renderSortCategoryParams
-                                        :name="$t('preview.introVersion')"
-                                        default-layout
-                                        show-follow-template-btn
-                                        show-set-required-btn
-                                        v-bind="buildNo"
-                                        config-type="introVersion"
-                                        follow-template-key="introVersion"
-                                        :handle-follow-template="handleFollowTemplate"
-                                        :handle-set-required="handleSetBuildNoRequired"
-                                        :is-required-param="curInstance.buildNo?.isRequiredParam"
-                                        :is-follow-template="curInstance.buildNo?.isFollowTemplate"
+                                    <template
+                                        slot="versionParams"
+                                        v-if="isVisibleVersion && !hideDeletedVersionParams"
                                     >
-                                        <template slot="content">
-                                            <pipeline-versions-form
-                                                class="mb20"
-                                                ref="versionParamForm"
-                                                :build-no="buildNo"
-                                                is-instance
-                                                :is-init-instance="isInstanceCreateType"
-                                                :is-follow-template="curInstance.buildNo?.isFollowTemplate"
-                                                :reset-build-no="curInstance?.resetBuildNo"
-                                                :build-no-changed="curInstance?.buildNoChanged"
-                                                :version-param-values="versionParamValues"
-                                                :handle-version-change="handleParamChange"
-                                                :handle-build-no-change="handleBuildNoChange"
-                                                :handle-check-change="handleCheckChange"
-                                                :version-param-list="versionParams"
-                                            />
-                                        </template>
-                                    </renderSortCategoryParams>
-                                </template>
-                            </pipeline-params-form>
-                            <bk-exception
-                                v-else
-                                type="empty"
-                                scene="part"
-                            >
-                                {{ $t('noParams') }}
-                            </bk-exception>
-                        </div>
-                    </section>
-                </template>
-    
-                <template v-if="constantParams.length > 0">
-                    <section class="params-content-item">
-                        <header
-                            :class="['params-collapse-trigger', {
-                                'params-collapse-expand': activeName.has(2)
-                            }]"
-                            @click="toggleCollapse(2)"
-                        >
-                            <bk-icon
-                                type="right-shape"
-                                class="icon-angle-right"
-                            />
-                            {{ $t('newui.const') }}
-                        </header>
-                        <div
-                            v-if="activeName.has(2)"
-                            class="params-collapse-content"
-                        >
-                            <pipeline-params-form
-                                ref="constParamsForm"
-                                disabled
-                                :param-values="constantValues"
-                                :params="constantParams"
-                                sort-category
-                                :hide-deleted="hideDeleted"
-                            />
-                        </div>
-                    </section>
-                </template>
-    
-                <template v-if="hasOtherParams">
-                    <section class="params-content-item">
-                        <header
-                            :class="['params-collapse-trigger', {
-                                'params-collapse-expand': activeName.has(3)
-                            }]"
-                            @click="toggleCollapse(3)"
-                        >
-                            <bk-icon
-                                type="right-shape"
-                                class="icon-angle-right"
-                            />
-    
-                            {{ $t('newui.pipelineParam.otherVar') }}
-                        </header>
-                        <div
-                            v-if="activeName.has(3)"
-                            class="params-collapse-content"
-                        >
-                            <pipeline-params-form
-                                ref="otherParamsForm"
-                                disabled
-                                :param-values="otherValues"
-                                :params="otherParams"
-                                sort-category
-                                :hide-deleted="hideDeleted"
-                            >
-                                <template
-                                    slot="versionParams"
-                                    v-if="!isVisibleVersion && versionParams.length"
+                                        <renderSortCategoryParams
+                                            :name="$t('preview.introVersion')"
+                                            default-layout
+                                            show-follow-template-btn
+                                            show-set-required-btn
+                                            v-bind="buildNo"
+                                            config-type="introVersion"
+                                            follow-template-key="introVersion"
+                                            :handle-follow-template="handleFollowTemplate"
+                                            :handle-set-required="handleSetBuildNoRequired"
+                                            :is-required-param="curInstance.buildNo?.isRequiredParam"
+                                            :is-follow-template="curInstance.buildNo?.isFollowTemplate"
+                                        >
+                                            <template slot="content">
+                                                <pipeline-versions-form
+                                                    class="mb20"
+                                                    ref="versionParamForm"
+                                                    :build-no="buildNo"
+                                                    is-instance
+                                                    :is-init-instance="isInstanceCreateType"
+                                                    :is-follow-template="curInstance.buildNo?.isFollowTemplate"
+                                                    :reset-build-no="curInstance?.resetBuildNo"
+                                                    :build-no-changed="curInstance?.buildNoChanged"
+                                                    :version-param-values="versionParamValues"
+                                                    :handle-version-change="handleParamChange"
+                                                    :handle-build-no-change="handleBuildNoChange"
+                                                    :handle-check-change="handleCheckChange"
+                                                    :version-param-list="versionParams"
+                                                    :disabled="buildNo.isDelete"
+                                                />
+                                            </template>
+                                        </renderSortCategoryParams>
+                                    </template>
+                                </pipeline-params-form>
+                                <bk-exception
+                                    v-else
+                                    type="empty"
+                                    scene="part"
                                 >
-                                    <renderSortCategoryParams
-                                        :name="$t('preview.introVersion')"
-                                        default-layout
-                                        key="introVersion"
-                                        v-bind="versionParams"
+                                    {{ $t('noParams') }}
+                                </bk-exception>
+                            </div>
+                        </section>
+                    </template>
+        
+                    <template v-if="constantParams.length > 0">
+                        <section class="params-content-item">
+                            <header
+                                :class="['params-collapse-trigger', {
+                                    'params-collapse-expand': activeName.has(2)
+                                }]"
+                                @click="toggleCollapse(2)"
+                            >
+                                <bk-icon
+                                    type="right-shape"
+                                    class="icon-angle-right"
+                                />
+                                {{ $t('newui.const') }}
+                            </header>
+                            <div
+                                v-if="activeName.has(2)"
+                                class="params-collapse-content"
+                            >
+                                <pipeline-params-form
+                                    ref="constParamsForm"
+                                    disabled
+                                    :param-values="constantValues"
+                                    :params="constantParams"
+                                    sort-category
+                                    :hide-deleted="hideDeleted"
+                                />
+                            </div>
+                        </section>
+                    </template>
+        
+                    <template v-if="hasOtherParams">
+                        <section class="params-content-item">
+                            <header
+                                :class="['params-collapse-trigger', {
+                                    'params-collapse-expand': activeName.has(3)
+                                }]"
+                                @click="toggleCollapse(3)"
+                            >
+                                <bk-icon
+                                    type="right-shape"
+                                    class="icon-angle-right"
+                                />
+        
+                                {{ $t('newui.pipelineParam.otherVar') }}
+                            </header>
+                            <div
+                                v-if="activeName.has(3)"
+                                class="params-collapse-content"
+                            >
+                                <pipeline-params-form
+                                    ref="otherParamsForm"
+                                    disabled
+                                    :param-values="otherValues"
+                                    :params="otherParams"
+                                    sort-category
+                                    :hide-deleted="hideDeleted"
+                                >
+                                    <template
+                                        slot="versionParams"
+                                        v-if="!isVisibleVersion && versionParams.length"
                                     >
-                                        <template slot="content">
-                                            <pipeline-versions-form
-                                                class="mb20"
-                                                ref="versionParamForm"
-                                                :build-no="buildNo"
-                                                is-instance
-                                                :is-init-instance="isInstanceCreateType"
-                                                disabled
-                                                :build-no-changed="curInstance?.buildNoChanged"
-                                                :version-param-values="versionParamValues"
-                                                :handle-version-change="handleParamChange"
-                                                :handle-build-no-change="handleBuildNoChange"
-                                                :version-param-list="versionParams"
-                                                :reset-build-no="curInstance?.resetBuildNo"
-                                                :handle-check-change="handleCheckChange"
-                                            />
-                                        </template>
-                                    </renderSortCategoryParams>
-                                </template>
-                            </pipeline-params-form>
-                        </div>
-                    </section>
-                </template>
+                                        <renderSortCategoryParams
+                                            :name="$t('preview.introVersion')"
+                                            default-layout
+                                            key="introVersion"
+                                            v-bind="versionParams"
+                                        >
+                                            <template slot="content">
+                                                <pipeline-versions-form
+                                                    class="mb20"
+                                                    ref="versionParamForm"
+                                                    :build-no="buildNo"
+                                                    is-instance
+                                                    :is-init-instance="isInstanceCreateType"
+                                                    disabled
+                                                    :build-no-changed="curInstance?.buildNoChanged"
+                                                    :version-param-values="versionParamValues"
+                                                    :handle-version-change="handleParamChange"
+                                                    :handle-build-no-change="handleBuildNoChange"
+                                                    :version-param-list="versionParams"
+                                                    :reset-build-no="curInstance?.resetBuildNo"
+                                                    :handle-check-change="handleCheckChange"
+                                                />
+                                            </template>
+                                        </renderSortCategoryParams>
+                                    </template>
+                                </pipeline-params-form>
+                            </div>
+                        </section>
+                    </template>
 
-                <template v-if="curInstance?.triggerConfigs?.length">
-                    <section class="params-content-item">
-                        <header
-                            :class="['params-collapse-trigger', {
-                                'params-collapse-expand': activeName.has(4)
-                            }]"
-                            @click="toggleCollapse(4)"
-                        >
-                            <bk-icon
-                                type="right-shape"
-                                class="icon-angle-right"
-                            />
-    
-                            {{ $t('template.triggers') }}
-                            <span class="trigger-tips">
-                                {{ $t('template.triggersUpdateTips') }}
-                            </span>
-                        </header>
-                        <div
-                            v-if="activeName.has(4)"
-                            class="params-collapse-content"
-                        >
-                            <renderSortCategoryParams
-                                v-for="(trigger, index) in curInstance?.triggerConfigs"
-                                :key="index"
-                                :name="trigger.stepId ? `${trigger.name}(${trigger.stepId})` : `${trigger.name}`"
-                                default-layout
-                                show-follow-template-btn
-                                follow-template-key="trigger"
-                                check-step-id
-                                v-bind="trigger"
-                                config-type="trigger"
-                                :handle-follow-template="(key) => handleFollowTemplate(key, trigger.stepId)"
+                    <template v-if="curInstance?.triggerConfigs?.length">
+                        <section class="params-content-item">
+                            <header
+                                :class="['params-collapse-trigger', {
+                                    'params-collapse-expand': activeName.has(4)
+                                }]"
+                                @click="toggleCollapse(4)"
                             >
-                                <template slot="content">
-                                    <render-trigger
-                                        :trigger="trigger"
-                                        :index="index"
-                                        :handle-change-trigger="handleChangeTrigger"
-                                    />
-                                </template>
-                            </renderSortCategoryParams>
-                        </div>
-                    </section>
-                </template>
-            </div>
-        </section>
-        <footer
-            v-if="!isLoading && !instancePageLoading && !isInstanceCreateType"
-            class="config-footer"
-        >
-            <bk-button
-                @click="handleResetInstance"
+                                <bk-icon
+                                    type="right-shape"
+                                    class="icon-angle-right"
+                                />
+        
+                                {{ $t('template.triggers') }}
+                            </header>
+                            <div
+                                v-if="activeName.has(4)"
+                                class="params-collapse-content"
+                            >
+                                <renderSortCategoryParams
+                                    v-for="(trigger, index) in curInstance?.triggerConfigs"
+                                    :key="index"
+                                    :name="trigger.stepId ? `${trigger.name}(${trigger.stepId})` : `${trigger.name}`"
+                                    default-layout
+                                    show-follow-template-btn
+                                    follow-template-key="trigger"
+                                    check-step-id
+                                    v-bind="trigger"
+                                    config-type="trigger"
+                                    :is-no-step-id="trigger.isNoStepId || !trigger.stepId"
+                                    :handle-follow-template="(key) => handleFollowTemplate(key, trigger.stepId)"
+                                >
+                                    <template slot="content">
+                                        <render-trigger
+                                            :trigger="trigger"
+                                            :index="index"
+                                            :is-no-step-id="trigger.isNoStepId || !trigger.stepId"
+                                            :is-disabled="trigger.isDelete"
+                                            :handle-change-trigger="handleChangeTrigger"
+                                        />
+                                    </template>
+                                </renderSortCategoryParams>
+                            </div>
+                        </section>
+                    </template>
+                </div>
+            </section>
+            <footer
+                v-if="!isLoading && !instancePageLoading && !isInstanceCreateType"
+                class="config-footer"
             >
-                {{ $t('template.reset') }}
-            </bk-button>
-        </footer>
+                <bk-button
+                    @click="handleResetInstance"
+                >
+                    {{ $t('template.reset') }}
+                </bk-button>
+            </footer>
+        </template>
     </section>
 </template>
 
@@ -320,9 +331,8 @@
         UPDATE_INSTANCE_LIST
     } from '@/store/modules/templates/constants'
     import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { getParamsValuesMap } from '@/utils/util'
+    import { getParamsValuesMap, isObject, isShallowEqual } from '@/utils/util'
     import { computed, defineProps, ref, watch } from 'vue'
-    import { isObject, isShallowEqual } from '@/utils/util'
     const props = defineProps({
         isInstanceCreateType: Boolean
     })
@@ -340,6 +350,7 @@
     const buildNo = ref({})
     const hideDeleted = ref(false)
     const instancePageLoading = computed(() => proxy.$store?.state?.templates?.instancePageLoading)
+    const fetchPipelinesError = computed(() => proxy.$store?.state?.templates?.fetchPipelinesError)
     const templateRef = computed(() => proxy.$store?.state?.templates?.templateRef)
     const templateRefType = computed(() => proxy.$store?.state?.templates?.templateRefType)
     const templateRefTypeById = computed(() => templateRefType.value === 'ID')
@@ -363,17 +374,149 @@
     // 监听合并触发标记,当流水线数据请求完成后执行数据合并
     watch(() => shouldMerge.value, (val) => {
         if (val && curTemplateDetail.value) {
-            mergeInstancesWithTemplate()
+            mergeAllInstancesWithTemplate()
             proxy.$store.commit('templates/TRIGGER_MERGE_INSTANCES', false)
         }
     })
 
     watch(() => curTemplateVersion.value, () => {
-        mergeInstancesWithTemplate()
+        if (props.isInstanceCreateType) {
+            replaceInstancesWithTemplate()
+        } else {
+            mergeAllInstancesWithTemplate()
+        }
     })
     
-    // 数据合并函数
-    function mergeInstancesWithTemplate () {
+    // 新建实例时，将所有实例替换为模板配置
+    function replaceInstancesWithTemplate () {
+        if (!instanceList.value?.length || !curTemplateDetail.value || Object.keys(curTemplateDetail.value).length === 0) {
+            return
+        }
+        
+        try {
+            isLoading.value = true
+            const replacedInstances = instanceList.value.map((instance) => {
+                // 保留实例的基本信息，但使用模板的配置
+                return {
+                    ...instance,
+                    param: curTemplateDetail.value.param?.map(p => ({
+                        ...p,
+                        readOnlyCheck: false,
+                        isRequiredParam: p.required && p.asInstanceInput,
+                        propertyUpdates: []
+                    })) ?? [],
+                    buildNo: curTemplateDetail.value.buildNo ? {
+                        ...curTemplateDetail.value.buildNo,
+                        isRequiredParam: curTemplateDetail.value.buildNo.required && curTemplateDetail.value.buildNo.asInstanceInput
+                    } : undefined,
+                    triggerConfigs: curTemplateDetail.value.triggerConfigs,
+                    resetBuildNo: false,
+                    buildNoChanged: false
+                }
+            })
+            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, {
+                list: replacedInstances,
+                init: true
+            })
+        } catch (e) {
+            throw e
+        } finally {
+            isLoading.value = false
+        }
+    }
+    
+    // 合并单个实例与模板的通用函数
+    function mergeInstanceWithTemplate (instance, index) {
+        // 设置 readOnlyCheck 为 false (readOnly只读属性在执行时才是禁用，在更新实例新建实例可以进行修改)
+        const processedInstance = {
+            ...instance,
+            param: instance.param?.map(p => ({
+                ...p,
+                readOnlyCheck: false
+            }))
+        }
+        
+        // 如果没有模板详情，直接返回处理后的实例
+        if (!curTemplateDetail.value || Object.keys(curTemplateDetail.value).length === 0) {
+            return processedInstance
+        }
+
+        let instanceParams, instanceBuildNoParams, instanceBuildNo, instanceTriggerConfigs
+           
+        if (curTemplateDetail.value?.param) {
+            instanceParams = compareParams(processedInstance, curTemplateDetail.value, index)
+        }
+        if (curTemplateDetail.value?.buildNo) {
+            const { buildNo, buildNoParam } = compareBuild(processedInstance, curTemplateDetail.value)
+            instanceBuildNo = buildNo
+            instanceBuildNoParams = buildNoParam
+        }
+        if (curTemplateDetail.value?.triggerConfigs?.length) {
+            instanceTriggerConfigs = compareTriggerConfigs(processedInstance?.triggerConfigs, curTemplateDetail.value.triggerConfigs)
+        }
+           
+        // 返回合并后的实例
+        if (instanceParams || instanceBuildNo || instanceTriggerConfigs) {
+            const buildNoChanged = curTemplateDetail.value?.buildNo && processedInstance?.buildNo && processedInstance.buildNo?.buildNo !== instanceBuildNo?.buildNo
+            
+            // 合并版本号参数和其他参数一起传入 shouldResetBuildNo
+            // 如果curTemplateDetail.value?.buildNo 不存在，则代表推荐版本号已经删除
+            const mergedCurrentParams = [
+                ...(instanceParams ?? processedInstance.param ?? []),
+                ...(curTemplateDetail.value?.buildNo ? instanceBuildNoParams : (instance?.param ?? []).filter(i => allVersionKeyList.includes(i.id)).map(p => ({ ...p, isDelete: true })))
+            ]
+            
+            const needResetBuildNo = instance?.buildNo && shouldResetBuildNo({
+                currentParams: instanceBuildNoParams,
+                initialParams: instance?.param,
+                currentBuildNo: instanceBuildNo?.buildNo,
+                initialBuildNo: instance?.buildNo?.buildNo
+            })
+            // 获取原始实例的 buildNo 配置
+            const originalBuildNo = initialInstanceList.value?.[index]?.buildNo ?? instance?.buildNo
+            return {
+                ...processedInstance,
+                param: mergedCurrentParams,
+                buildNo: curTemplateDetail.value?.buildNo ? {
+                    ...instanceBuildNo,
+                    currentBuildNo: (buildNoChanged ? instanceBuildNo?.buildNo : processedInstance.buildNo?.currentBuildNo) ?? instanceBuildNo?.currentBuildNo
+                } : originalBuildNo ? {
+                    ...instance?.buildNo,
+                    isNew: false,
+                    isDelete: true
+                } : undefined,
+                triggerConfigs: instanceTriggerConfigs ?? processedInstance.triggerConfigs,
+                resetBuildNo: curTemplateDetail.value?.buildNo ? needResetBuildNo : false,
+                buildNoChanged
+            }
+        }
+
+        return processedInstance
+    }
+    
+    // 更新实例的 overrideTemplateField.paramIds
+    function updateInstanceOverrideParamIds (mergedInstance, index) {
+        const newOverrideParamIds = mergedInstance.param?.filter(p => !p.constant && p.required && !p.isFollowTemplate).map(p => p.id) || []
+        const originalParamIds = mergedInstance?.overrideTemplateField?.paramIds || []
+        if (originalParamIds.includes('BK_CI_BUILD_NO') && !newOverrideParamIds.includes('BK_CI_BUILD_NO')) {
+            newOverrideParamIds.push('BK_CI_BUILD_NO')
+        }
+        proxy.$nextTick(() => {
+            proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+                index,
+                value: {
+                    ...mergedInstance,
+                    overrideTemplateField: {
+                        ...mergedInstance?.overrideTemplateField,
+                        paramIds: [...newOverrideParamIds]
+                    }
+                }
+            })
+        })
+    }
+
+    // 数据合并函数 - 合并所有实例
+    function mergeAllInstancesWithTemplate () {
         if (!initialInstanceList.value?.length || !curTemplateVersion.value) {
             return
         }
@@ -381,64 +524,7 @@
         try {
             isLoading.value = true
             const mergedInstances = initialInstanceList.value.map((instance, index) => {
-                // 设置 readOnlyCheck 为 false (readOnly只读属性在执行时才是禁用，在更新实例新建实例可以进行修改)
-                const processedInstance = {
-                    ...instance,
-                    param: instance.param?.map(p => ({
-                           ...p,
-                           readOnlyCheck: false
-                       }))
-                }
-                // 如果没有模板详情，直接返回处理后的实例
-                if (!curTemplateDetail.value || Object.keys(curTemplateDetail.value).length === 0) {
-                    return processedInstance
-                }
-
-                let instanceParams, instanceBuildNoParams, instanceBuildNo, instanceTriggerConfigs
-                   
-                if (curTemplateDetail.value?.param) {
-                    instanceParams = compareParams(processedInstance, curTemplateDetail.value, index)
-                }
-                if (curTemplateDetail.value?.buildNo) {
-                    const { buildNo, buildNoParam } = compareBuild(processedInstance, curTemplateDetail.value)
-                    instanceBuildNo = buildNo
-                    instanceBuildNoParams = buildNoParam
-                }
-                if (curTemplateDetail.value?.triggerConfigs?.length) {
-                    instanceTriggerConfigs = compareTriggerConfigs(processedInstance?.triggerConfigs, curTemplateDetail.value.triggerConfigs)
-                }
-                   
-                // 返回合并后的实例
-                if (instanceParams || instanceBuildNo || instanceTriggerConfigs) {
-                    // 获取初始实例的参数
-                    const initialInstance = initialInstanceList.value?.[index]
-                    const buildNoChanged = curTemplateDetail.value?.buildNo && processedInstance?.buildNo && processedInstance.buildNo?.buildNo !== instanceBuildNo?.buildNo
-                    
-                    // 合并版本号参数和其他参数一起传入 shouldResetBuildNo
-                    const mergedCurrentParams = [
-                        ...(instanceParams ?? processedInstance.param ?? []),
-                        ...(instanceBuildNoParams ?? [])
-                    ]
-                    
-                    const needResetBuildNo = initialInstance?.buildNo && shouldResetBuildNo({
-                        currentParams: instanceBuildNoParams,
-                        initialParams: initialInstance?.param,
-                        currentBuildNo: instanceBuildNo?.buildNo,
-                        initialBuildNo: initialInstance?.buildNo?.buildNo
-                    })
-                    return {
-                        ...processedInstance,
-                        param: mergedCurrentParams,
-                        buildNo: curTemplateDetail.value?.buildNo ? {
-                            ...instanceBuildNo,
-                            currentBuildNo: (buildNoChanged ? instanceBuildNo?.buildNo : processedInstance.buildNo?.currentBuildNo) ?? instanceBuildNo.currentBuildNo,
-                        } : undefined,
-                        triggerConfigs: instanceTriggerConfigs ?? processedInstance.triggerConfigs,
-                        resetBuildNo: needResetBuildNo,
-                        buildNoChanged
-                    }
-                }
-                return processedInstance
+                return mergeInstanceWithTemplate(instance, index)
             })
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, {
                 list: mergedInstances,
@@ -449,24 +535,7 @@
         } finally {
             // 收集需要添加到 overrideTemplateField.paramIds 的新参数 id
             instanceList.value?.forEach((item, index) => {
-                const newOverrideParamIds = item.param?.filter(p => !p.constant && p.required && !p.isFollowTemplate).map(p => p.id) || []
-                // 如果原始的 overrideTemplateField.paramIds 包含 BK_CI_BUILD_NO，则需要添加回去
-                const originalParamIds = item?.overrideTemplateField?.paramIds || []
-                if (originalParamIds.includes('BK_CI_BUILD_NO') && !newOverrideParamIds.includes('BK_CI_BUILD_NO')) {
-                    newOverrideParamIds.push('BK_CI_BUILD_NO')
-                }
-                proxy.$nextTick(() => {
-                    proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
-                        index: index,
-                        value: {
-                            ...item,
-                            overrideTemplateField: {
-                                ...item?.overrideTemplateField,
-                                paramIds: [...newOverrideParamIds]
-                            }
-                        }
-                    })
-                })
+                updateInstanceOverrideParamIds(item, index)
             })
             isLoading.value = false
         }
@@ -495,11 +564,15 @@
                 counts.deleted++
             }
         })
+
+        if (curInstance?.value?.buildNo?.isDelete) {
+            counts.deleted++
+        }
         
         if (curInstance.value?.buildNoChanged) {
             counts.changed++
         }
-        if (curInstance.value?.resetBuildN && curInstance.value?.buildNo) {
+        if (curInstance.value?.resetBuildNo && curInstance.value?.buildNo) {
             counts.changed++
         }
         // 触发器新增/删除统计
@@ -539,7 +612,7 @@
         })
     })
     const hideDeletedVersionParams = computed(() => {
-        return !hideDeleted.value && versionParams.value.every(i => i.isDelete)
+        return hideDeleted.value && versionParams.value.every(i => i.isDelete)
     })
     const isVisibleVersion = computed(() => {
         return buildNo.value?.required
@@ -577,8 +650,8 @@
         }, {})
         
         // 需更新为模板对应参数值的字段名
-        // 其中required字段为特殊处理，如果模板变量为入参，可以修改默认值，isRequiredParam才是实例的真实入参值， 其余字段均需变更为模板对应的值
-        const needUpdatedField = ['id', 'name', 'desc', 'required', 'type', 'valueNotEmpty', 'category', 'readOnly']
+        // 其中required字段为特殊处理，如果模板变量为入参，可修改默认值(对于模板都是入参)，isRequiredParam才是实例的真实入参值，其余字段均需变更为模板对应的值
+        const needUpdatedField = ['id', 'name', 'desc', 'required', 'type', 'valueNotEmpty', 'category', 'readOnly', 'repoHashId', 'relativePath', 'glob']
         instanceParams?.forEach(i => {
             const templateParam = templateParamsMap.get(i.id)
             const initialInstanceParam = initialInstanceParams[i.id]
@@ -610,6 +683,11 @@
                 } else {
                     // 入参参数处理
                     i.isRequiredParam = templateParam.required && i.required
+                    if (i.type === 'REPO_REF' && i.type !== templateParam.type) {
+                        // 针对变量类型为 【代码库和分支】的特殊处理
+                        // REPO_REF变量的值为对象，转为字符串类型
+                        i.defaultValue = JSON.stringify(i.defaultValue)
+                    }
                     if (i.isFollowTemplate) {
                         i.defaultValue = templateParam.defaultValue
                     }
@@ -654,6 +732,7 @@
         const instanceTriggerMap = createTriggerMap(instanceTriggerConfigs)
         const templateTriggerMap = createTriggerMap(templateTriggerConfigs)
 
+        // 处理有 stepId 的触发器
         const result = templateTriggerConfigs?.filter(i => !!i.stepId)?.reduce((acc, item) => {
             if (!instanceTriggerMap.has(item.stepId)) {
                 acc.push({ ...item, isNew: true })
@@ -668,6 +747,12 @@
             if (!templateTriggerMap.has(item.stepId)) {
                 result.push({ ...item, isDelete: true })
             }
+        })
+
+        // 收集没有 stepId 的触发器（展示但禁用）
+        const noStepIdTriggers = templateTriggerConfigs?.filter(i => !i.stepId) || []
+        noStepIdTriggers.forEach(item => {
+            result.push({ ...item, isNoStepId: true })
         })
 
         return result
@@ -750,12 +835,15 @@
                     required: templateBuildNo.required,
                     isRequiredParam: instanceBuildNo.required
                 },
-                buildNoParam: instanceBuildNoParams
+                buildNoParam: instanceBuildNoParams.length ?  instanceBuildNoParams : templateBuildNoParams
             }
         }
         
         // 兜底：返回实例配置
-        return instanceBuildNo
+        return {
+            buildNo: instanceBuildNo,
+            buildNoParam: instanceBuildNoParams
+        }
     }
     
     /**
@@ -798,6 +886,22 @@
         return versionParamsChanged || buildNoChanged
     }
     
+
+    const paramsTypeName = computed(() => ({
+        STRING: proxy.$t('storeMap.string'),
+        BOOLEAN: proxy.$t('storeMap.boolean'),
+        TEXTAREA: proxy.$t('storeMap.textarea'),
+        ENUM: proxy.$t('storeMap.enum'),
+        MULTIPLE: proxy.$t('storeMap.multiple'),
+        REPO_REF: proxy.$t('storeMap.reporef'),
+        SVN_TAG: proxy.$t('storeMap.svntag'),
+        GIT_REF: proxy.$t('storeMap.gitref'),
+        CODE_LIB: proxy.$t('storeMap.codelib'),
+        SUB_PIPELINE: proxy.$t('storeMap.subPipeline'),
+        CONTAINER_TYPE: proxy.$t('storeMap.buildResource'),
+        ARTIFACTORY: proxy.$t('storeMap.artifactory'),
+        CUSTOM_FILE: proxy.$t('storeMap.custom_file')
+    }))
     /**
      * 收集参数属性更新信息
      * @param {Object} templateParam - 模板参数（新值）
@@ -819,13 +923,31 @@
             isRequiredParam: proxy.$t('template.propertyUpdate.required'),
             valueNotEmpty: proxy.$t('template.propertyUpdate.valueNotEmpty'),
             readOnly: proxy.$t('template.propertyUpdate.readOnly'),
-            category: proxy.$t('template.propertyUpdate.category')
+            category: proxy.$t('template.propertyUpdate.category'),
+            repoHashId: proxy.$t('template.propertyUpdate.repo'),
+            relativePath: proxy.$t('template.propertyUpdate.relativePath'),
+            glob: proxy.$t('template.propertyUpdate.glob'),
         }
         
         // 检查各个属性是否有变更
         Object.keys(propertyMap).forEach(key => {
             let oldValue = initialParam[key]
             let newValue = currentParam[key]
+            
+            // 处理 REPO_REF 类型，defaultValue 是对象需要转为字符串
+            if (key === 'defaultValue' && currentParam.type === 'REPO_REF') {
+                if (isObject(oldValue)) {
+                    oldValue = JSON.stringify(oldValue)
+                }
+                if (isObject(newValue)) {
+                    newValue = JSON.stringify(newValue)
+                }
+            }
+
+            if (key === 'type') {
+                oldValue = paramsTypeName.value[oldValue]
+                newValue = paramsTypeName.value[newValue]
+            }
             
             // 处理布尔值显示
             const booleanField = ['isRequiredParam', 'valueNotEmpty', 'readOnly']
@@ -1028,11 +1150,17 @@
 
     function handleResetInstance () {
         const instanceIndex = activeIndex.value - 1
-        curInstance.value = initialInstanceList.value[instanceIndex]
+        const instance = initialInstanceList.value[instanceIndex]
+        
+        // 先恢复为初始实例数据，再与模板版本配置进行合并
+        const mergedInstance = mergeInstanceWithTemplate(instance, instanceIndex)
+        
+        // 更新实例并处理 overrideTemplateField.paramIds
         proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
             index: instanceIndex,
-            value: initialInstanceList.value[instanceIndex]
+            value: mergedInstance
         })
+        updateInstanceOverrideParamIds(mergedInstance, instanceIndex)
     }
 
     function handleBuildNoChange (name, value) {
@@ -1296,10 +1424,19 @@
                                 const initialParam = initialInstanceParams?.find(ip => ip.id === id)
                                 
                                 // 如果跟随模板，使用模板的默认值；否则使用原始实例的值
-                                const newDefaultValue = newIsFollowTemplate
-                                    ? temDefaultValue
-                                    : initialParam?.defaultValue
-                                
+                                let newDefaultValue = ''
+                                if (p.type === 'REPO_REF') {
+                                    newDefaultValue = newIsFollowTemplate
+                                        ? temDefaultValue
+                                        : {
+                                            'repo-name': '',
+                                            branch: ''
+                                        }
+                                } else {
+                                    newDefaultValue = newIsFollowTemplate
+                                       ? isObject(temDefaultValue) ? JSON.stringify(temDefaultValue) : temDefaultValue
+                                       : isObject(initialParam?.defaultValue) ? JSON.stringify(initialParam?.defaultValue) : initialParam?.defaultValue
+                                }
                                 // 计算 isChange：对比新值与初始实例值
                                 let isChange = false
                                 if (!p.isNew) {
@@ -1323,7 +1460,6 @@
                                     : (allVersionKeyList.includes(id)
                                         ? Number(initialParam?.defaultValue) !== Number(temDefaultValue)
                                         : initialParam?.defaultValue !== temDefaultValue)
-
                                 const propertyUpdates = collectPropertyUpdates({
                                     ...p,
                                     defaultValue: newDefaultValue
@@ -1394,6 +1530,9 @@
             color: #3a84ff;
             cursor: pointer;
         }
+    }
+    .exception-error-part {
+        margin-top: 10%;
     }
     .instance-config-constant {
         height: 100%;

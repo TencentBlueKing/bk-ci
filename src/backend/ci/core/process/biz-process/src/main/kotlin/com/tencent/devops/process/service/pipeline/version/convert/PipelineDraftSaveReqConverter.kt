@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
@@ -84,8 +85,9 @@ class PipelineDraftSaveReqConverter(
         request as PipelineDraftSaveReq
         with(request) {
             logger.info(
-                "Start to convert draft release request|$projectId|$pipelineId|$version|$storageType|$baseVersion"
+                "Start to convert draft save request|$projectId|$pipelineId|$version|$storageType|$baseVersion"
             )
+            // 注意: 如果是实例化的流水线,modelAndSetting中的model不含stage字段,只有模版引用信息
             val (modelAndSetting, yamlWithVersion) = if (storageType == PipelineStorageType.YAML) {
                 if (yaml.isNullOrEmpty()) {
                     throw IllegalArgumentException("yaml can not be empty")
@@ -134,7 +136,8 @@ class PipelineDraftSaveReqConverter(
                 projectId = projectId,
                 pipelineId = newPipelineId
             )
-            return pipelineVersionCreateContextFactory.create(
+            // 注意: 保存草稿,baseVersion不以前端传入的为准,始终用最新的正式版本,所以这里不需要传入baseVersion
+            val context = pipelineVersionCreateContextFactory.create(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = newPipelineId,
@@ -142,12 +145,22 @@ class PipelineDraftSaveReqConverter(
                 version = version,
                 model = modelAndSetting.model,
                 yaml = yamlWithVersion?.yamlStr,
-                baseVersion = baseVersion,
                 pipelineSettingWithoutVersion = pipelineSettingWithoutVersion,
                 versionStatus = VersionStatus.COMMITTING,
                 versionAction = PipelineVersionAction.SAVE_DRAFT,
                 repoHashId = pipelineYamlInfo?.repoHashId
             )
+            if (context.templateInstanceBasicInfo != null) {
+                val inputParams = request.modelAndSetting!!.model.getTriggerContainer().params
+                val instanceParams = context.templateInstanceBasicInfo.instanceModel.getTriggerContainer().params
+                TemplateInstanceUtil.assertParams(
+                    projectId = projectId,
+                    pipelineId = newPipelineId,
+                    inputParams = inputParams,
+                    instanceParams = instanceParams
+                )
+            }
+            return context
         }
     }
 
@@ -157,15 +170,6 @@ class PipelineDraftSaveReqConverter(
     ): Model {
         // 前端传过来的model是完整的model,如果是模版实例化的,需要转换成引用的方式
         val model = modelAndSetting!!.model
-        val triggerContainer = model.getTriggerContainer()
-        val overrideTemplateField = model.overrideTemplateField
-
-        // 前端传过来的是所有的触发器,triggerConfigs只需要保留流水线自定义的
-        val triggerConfigs = TemplateInstanceUtil.getTriggerConfigs(
-            elements = triggerContainer.elements,
-            overrideTemplateField = overrideTemplateField,
-        )
-
         return if (model.template != null) {
             val template = model.template!!
             val templateResource = pipelineModelParser.parseTemplateDescriptor(
@@ -179,16 +183,25 @@ class PipelineDraftSaveReqConverter(
                 )
             }
             val templateTrigger = templateModel.getTriggerContainer()
+            val pipelineTrigger = model.getTriggerContainer()
+            val overrideTemplateField =
+                model.overrideTemplateField ?: TemplateInstanceField.initFromTemplate(templateModel)
+
+            // 前端传过来的是所有的触发器,triggerConfigs只需要保留流水线自定义的
+            val triggerConfigs = TemplateInstanceUtil.getTriggerConfigs(
+                elements = pipelineTrigger.elements,
+                overrideTemplateField = overrideTemplateField,
+            )
             // 前端传过来的参数是所有的参数,templateVariables只需要流水线自定义的值
             val templateVariables = TemplateInstanceUtil.getTemplateVariables(
-                pipelineParams = triggerContainer.params,
+                pipelineParams = pipelineTrigger.params,
                 templateParams = templateTrigger.params,
                 overrideTemplateField = overrideTemplateField
             )
 
             val recommendedVersion = TemplateInstanceUtil.getRecommendedVersion(
-                pipelineBuildNo = triggerContainer.buildNo,
-                pipelineParams = triggerContainer.params,
+                pipelineBuildNo = pipelineTrigger.buildNo,
+                pipelineParams = pipelineTrigger.params,
                 templateBuildNo = templateTrigger.buildNo,
                 overrideTemplateField = overrideTemplateField
             )
@@ -215,11 +228,16 @@ class PipelineDraftSaveReqConverter(
             ) {
                 return model
             }
-            val templateResource = pipelineTemplateResourceService.get(
+            val templateResource = pipelineTemplateResourceService.getByRelatedPipeline(
                 projectId = projectId,
-                templateId = pipelineTemplateRelated.templateId,
-                version = pipelineTemplateRelated.version
-            )
+                pipelineTemplateRelated = pipelineTemplateRelated
+            ) ?: run {
+                logger.info(
+                    "template resource not found|$projectId|${pipelineTemplateRelated.templateId}|" +
+                            "${pipelineTemplateRelated.version}"
+                )
+                return model
+            }
             val templateModel = templateResource.model
             if (templateModel !is Model) {
                 throw ErrorCodeException(
@@ -227,6 +245,15 @@ class PipelineDraftSaveReqConverter(
                 )
             }
             val templateTrigger = templateModel.getTriggerContainer()
+            val triggerContainer = model.getTriggerContainer()
+            val overrideTemplateField =
+                model.overrideTemplateField ?: TemplateInstanceField.initFromTemplate(templateModel)
+
+            // 前端传过来的是所有的触发器,triggerConfigs只需要保留流水线自定义的
+            val triggerConfigs = TemplateInstanceUtil.getTriggerConfigs(
+                elements = triggerContainer.elements,
+                overrideTemplateField = overrideTemplateField,
+            )
             // 前端传过来的参数是所有的参数,templateVariables只需要流水线自定义的值
             val templateVariables = TemplateInstanceUtil.getTemplateVariables(
                 pipelineParams = triggerContainer.params,
