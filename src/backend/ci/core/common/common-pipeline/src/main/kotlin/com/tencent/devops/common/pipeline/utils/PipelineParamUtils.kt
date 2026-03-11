@@ -121,7 +121,14 @@ object PipelineParamUtils {
         val key = param.key
         val value = param.value
         val paramValue = try {
-            JsonUtil.anyTo(value, object : TypeReference<Map<String, String>>() {})
+            when(value) {
+                is String -> {
+                    JsonUtil.anyTo(value, object : TypeReference<Map<String, String>>() {})
+                }
+                else -> {
+                    value as Map<String, String>
+                }
+            }
         } catch (ignored: Exception) {
             logger.warn("parse custom param error, key: $key, defaultValue: $value")
             mapOf()

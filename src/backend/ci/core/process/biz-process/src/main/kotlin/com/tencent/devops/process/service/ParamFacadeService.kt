@@ -451,12 +451,9 @@ class ParamFacadeService @Autowired constructor(
             options = listOf()
         ).let {
             // 目前自定义参数仅处理一层参数列表，暂不考虑递归情况
-            it.defaultValue = JsonUtil.toJson(
-                it.children?.associate {
-                    it.id to it.defaultValue.toString()
-                } ?: "",
-                false
-            )
+            it.defaultValue = it.children?.associate {
+                it.id to it.defaultValue.toString()
+            } ?: mapOf<String, String>()
             it
         }
     }
