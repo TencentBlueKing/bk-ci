@@ -198,7 +198,7 @@
                 detail: 'getDetail'
             }),
             type () {
-                return this.$route.params.type
+                return this.$route.params.type?.toUpperCase()
             },
             code () {
                 return this.type === 'DEVX' ? this.detail.storeCode : this.detail.atomCode

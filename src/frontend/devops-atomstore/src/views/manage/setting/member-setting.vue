@@ -346,7 +346,7 @@
                         { name: this.$t('store.审批'), active: false, type: 'ADMIN' },
                         { name: this.$t('store.成员管理'), active: false, type: 'ADMIN' }
                     ],
-                    DEVX: [
+                    devx: [
                         { name: this.$t('store.开发'), active: false, type: 'DEVELOPER' },
                         { name: this.$t('store.版本发布'), active: false, type: 'DEVELOPER' },
                         { name: this.$t('store.私有配置'), active: false, type: 'DEVELOPER' },

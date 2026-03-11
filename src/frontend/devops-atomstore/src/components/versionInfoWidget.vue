@@ -3,6 +3,7 @@
         <bk-form-item
             :label="$t('store.发布者')"
             property="publisher"
+            error-display-type="normal"
             :required="true"
         >
             <bk-select
@@ -24,6 +25,7 @@
             :label="$t('store.版本号')"
             property="version"
             :required="true"
+            error-display-type="normal"
         >
             <div class="version-input-wrapper">
                 <bk-input
@@ -45,6 +47,7 @@
             :label="$t('store.版本日志')"
             property="versionContent"
             :required="true"
+            error-display-type="normal"
         >
             <mavon-editor
                 v-model="versionInfo.versionContent"

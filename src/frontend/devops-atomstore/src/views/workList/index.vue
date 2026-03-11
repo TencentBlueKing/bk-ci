@@ -88,7 +88,7 @@
                         ]
                     },
                     {
-                        name: 'DEVXWork',
+                        name: 'devxWork',
                         label: this.$t('store.云研发'),
                     }
                 ]
@@ -116,7 +116,7 @@
                     case 'serviceWork':
                         name = this.$t('store.微扩展')
                         break
-                    case 'DEVXWork':
+                    case 'devxWork':
                         name = this.$t('store.云研发')
                         break
                     default:

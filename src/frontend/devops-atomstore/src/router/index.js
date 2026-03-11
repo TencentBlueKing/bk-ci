@@ -29,7 +29,7 @@ const atomWork = () => import(/* webpackChunkName: 'workList' */ '@/views/workLi
 const templateWork = () => import(/* webpackChunkName: 'workList' */ '@/views/workList/template.vue') // 工作台
 const imageWork = () => import(/* webpackChunkName: 'workList' */ '@/views/workList/image.vue') // 工作台
 const serviceWork = () => import(/* webpackChunkName: 'workList' */ '@/views/workList/service.vue') // 工作台
-const DEVXWork = () => import(/* webpackChunkName: 'workList' */ '@/views/workList/client.vue') // 工作台
+const devxWork = () => import(/* webpackChunkName: 'workList' */ '@/views/workList/client.vue') // 工作台
 
 const install = () => import(/* webpackChunkName: 'install' */ '@/views/install.vue') // 研发商店安装页面
 const manage = () => import(/* webpackChunkName: 'manage' */ '@/views/manage/index.vue') // 研发商店管理页面
@@ -154,9 +154,9 @@ const routes = [
                         component: serviceWork
                     },
                     {
-                        path: 'DEVX',
-                        name: 'DEVXWork',
-                        component: DEVXWork
+                        path: 'devx',
+                        name: 'devxWork',
+                        component: devxWork
                     }
                 ]
             },

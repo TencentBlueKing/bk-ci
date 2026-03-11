@@ -42,7 +42,7 @@
                 const methodGenerator = {
                     atom: this.getAtomData,
                     service: this.getImageData,
-                    DEVX: this.getDEVXData
+                    devx: this.getDEVXData
                 }
 
                 if (!Object.prototype.hasOwnProperty.call(methodGenerator, this.type) || typeof methodGenerator[this.type] !== 'function') {

@@ -54,7 +54,6 @@
                             :limit="6"
                             :files="filesList"
                             :tip="$t('store.请上传2-6张截图，每张不超过2M')"
-                            @on-success="handlePictureSuccess"
                             @on-delete="handlePictureDelete"
                             @on-error="handleUploadError"
                             @on-exceed="handleExceed"
@@ -323,12 +322,6 @@
             showMessage('error', res.message)
         }
         return false
-    }
-
-    const handlePictureSuccess = (file, fileList, res) => {
-        if (res.data) {
-            filesList.value.push({ url: res.data })
-        }
     }
 
     const handleUploadError = (file, fileList) => {

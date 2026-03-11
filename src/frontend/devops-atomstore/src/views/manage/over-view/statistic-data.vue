@@ -13,7 +13,7 @@
         </section>
 
         <section class="view-right">
-            <template v-if="$route.params.type !== 'DEVX'">
+            <template v-if="$route.params.type !== 'devx'">
                 <section class="view-code manage-section">
                     <h5 class="manage-title">{{ $t('store.代码') }}</h5>
                     <code-repo v-bind="componentData"></code-repo>

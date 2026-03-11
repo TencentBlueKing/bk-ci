@@ -1,9 +1,8 @@
 <template>
     <bk-sideslider
-        :is-show="isShow"
+        :is-show.sync="isShow"
         :title="$t('store.下架应用')"
         :width="640"
-        @update:isShow="handleUpdateShow"
     >
         <template slot="content">
             <div class="takedown-container">
@@ -104,22 +103,11 @@
         takeDownForm.value.version = newVal.version
     })
 
-    // 处理 isShow 更新
-    function handleUpdateShow (val) {
-        if (!val) {
+    watch(() => props.isShow, (newVal) => {
+        if (!newVal) {
             resetForm()
         }
-    }
-
-    function hideTakedownSideslider () {
-        emit('update:modelValue', false)
-        takeDownForm.value = {
-            storeCode: props.storeCode,
-            storeType: STORE_TYPE,
-            version: '',
-            reason: '',
-        }
-    }
+    })
 
     // 提交下架
     async function takeDownVersion () {

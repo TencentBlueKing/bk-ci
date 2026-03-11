@@ -5,6 +5,7 @@
                 <bk-form-item
                     :label="$t('store.应用名称')"
                     property="name"
+                    error-display-type="normal"
                     :required="true"
                 >
                     <bk-input
@@ -17,6 +18,7 @@
                 <bk-form-item
                     :label="$t('store.应用分类')"
                     property="classifyCode"
+                    error-display-type="normal"
                     :required="true"
                 >
                     <bk-select
@@ -37,6 +39,7 @@
             <bk-form-item
                 :label="$t('store.应用LOGO')"
                 property="logoUrl"
+                error-display-type="normal"
                 :required="true"
             >
                 <bk-upload
@@ -48,9 +51,9 @@
                     :name="'logo'"
                     :handle-res-code="handleResCode"
                     :url="logoUploadUrl"
-                    @delete="handleDelete"
-                    @error="handleLogoError"
-                    @exceed="handleLogoExceed"
+                    @on-delete="handleDelete"
+                    @on-error="handleLogoError"
+                    @on-exceed="handleLogoExceed"
                 >
                     <template #default>
                         <div class="upload-trigger">
@@ -65,6 +68,7 @@
         <bk-form-item
             :label="$t('store.应用简介')"
             property="summary"
+            error-display-type="normal"
             :required="true"
         >
             <bk-input

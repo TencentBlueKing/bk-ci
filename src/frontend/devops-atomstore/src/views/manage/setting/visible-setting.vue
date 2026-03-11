@@ -138,7 +138,7 @@
                     template: () => this.$store.dispatch('store/requesttplVisibleList', { templateCode: this.detail.templateCode }),
                     image: () => this.$store.dispatch('store/requestImageVisableList', this.detail.imageCode),
                     service: () => this.$store.dispatch('store/requestServiceVisableList', this.detail.serviceCode),
-                    DEVX: () => this.$store.dispatch('store/getVisibilitiesList', this.detail.storeCode)
+                    devx: () => this.$store.dispatch('store/getVisibilitiesList', this.detail.storeCode)
                 }
                 const type = this.$route.params.type
                 this.isLoading = true
@@ -186,9 +186,9 @@
                         params.serviceCode = this.detail.serviceCode
                         method = () => this.$store.dispatch('store/setServiceVisableDept', { params })
                         break
-                    case 'DEVX':
+                    case 'devx':
                         params.storeCode = this.detail.storeCode
-                        params.storeType = 'DEVX'
+                        params.storeType = 'devx'
                         method = () => this.$store.dispatch('store/addVisibilitiesList', params)
                         break
                 }
@@ -241,7 +241,7 @@
                     template: () => this.$store.dispatch('store/deleteTplVisiable', { templateCode: this.detail.templateCode, deptIds }),
                     image: () => this.$store.dispatch('store/requestDeleteImageVis', { imageCode: this.detail.imageCode, deptIds }),
                     service: () => this.$store.dispatch('store/requestDeleteServiceVis', { serviceCode: this.detail.serviceCode, deptIds }),
-                    DEVX: () => this.$store.dispatch('store/deleteVisibilitiesList', { storeCode: this.detail.storeCode, deptIds })
+                    devx: () => this.$store.dispatch('store/deleteVisibilitiesList', { storeCode: this.detail.storeCode, deptIds })
                 }
                 const type = this.$route.params.type
                 this.deleteObj.loading = true

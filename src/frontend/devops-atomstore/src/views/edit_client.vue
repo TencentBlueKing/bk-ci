@@ -2,7 +2,7 @@
     <div v-bkloading="{ isLoading: isLoading, zIndex: 3 }">
         <bread-crumbs
             :bread-crumbs="navList"
-            type="DEVX"
+            type="devx"
         ></bread-crumbs>
         <bk-form
             ref="formRef"
@@ -24,6 +24,7 @@
                         label="Scheme"
                         property="urlScheme"
                         required
+                        error-display-type="normal"
                     >
                         <bk-input
                             v-model="urlScheme"
@@ -53,6 +54,7 @@
                     <bk-form-item
                         :label="$t('store.上传软件安装包')"
                         property="hasPackage"
+                        error-display-type="normal"
                         required
                     >
                         <VersionPackage
@@ -186,6 +188,7 @@
         ],
         urlScheme: [
             {
+                required: true,
                 pattern: /^[a-z][a-z\d-]*$/i,
                 message: $t('Scheme只能由大小写字母、数字和中划线组成，首字母必须为字母'),
                 trigger: 'blur',
@@ -230,7 +233,7 @@
     const navList = computed(() => {
         return [
             { name: $t('store.工作台') },
-            { name: $t('store.云研发'), to: { name: 'DEVXWork' } },
+            { name: $t('store.云研发'), to: { name: 'devxWork' } },
             { name: `${$t('store.新增版本')}` }
         ]
     })

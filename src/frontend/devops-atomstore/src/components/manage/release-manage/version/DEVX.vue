@@ -161,7 +161,7 @@
             :is-show.sync="hasShowTakedown"
             :title="$t('store.下架应用')"
             :width="666"
-            :quick-close="false"
+            quick-close
         >
             <template slot="content">
                 <div class="takedown-content">

@@ -184,7 +184,7 @@
                 detail: 'getDetail'
             }),
             type () {
-                return this.$route.params.type
+                return this.$route.params.type?.toUpperCase()
             },
             // 根据类型获取对应的 code
             code () {

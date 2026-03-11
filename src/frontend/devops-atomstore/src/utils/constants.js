@@ -3,7 +3,7 @@ export const TYPE_ENUM = {
     template: 'template',
     image: 'image',
     service: 'service',
-    DEVX: 'DEVX'
+    devx: 'devx'
 }
 
 export const PUBLISH_STRATEGY = {

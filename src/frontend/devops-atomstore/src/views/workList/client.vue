@@ -363,7 +363,7 @@
         $router.push({
             name: 'statisticData',
             params: {
-                type: 'DEVX',
+                type: 'devx',
                 code: row.storeCode
             }
         })
@@ -485,7 +485,6 @@
 .version-item {
   display: flex;
   align-items: center;
-  cursor: pointer;
   margin-right: 10px;
 }
 

@@ -24,7 +24,7 @@
     import imageVersion from '@/components/manage/release-manage/version/image.vue'
     import serviceVersion from '@/components/manage/release-manage/version/service.vue'
     import templateVersion from '@/components/manage/release-manage/version/template.vue'
-    import DEVXVersion from '@/components/manage/release-manage/version/DEVX.vue'
+    import devxVersion from '@/components/manage/release-manage/version/DEVX.vue'
     import { mapActions, mapGetters } from 'vuex'
 
     export default {
@@ -33,7 +33,7 @@
             imageVersion,
             templateVersion,
             serviceVersion,
-            DEVXVersion
+            devxVersion
         },
 
         props:{
@@ -95,7 +95,7 @@
                         image: this.requestImageVersionList,
                         template: this.requestTemplateReleasedList,
                         service: this.requestServiceVersionList,
-                        DEVX: this.getRelaseVersionList
+                        devx: this.getRelaseVersionList
                     }
 
                     if (!Object.keys(apiMethodMap).includes(type) || typeof apiMethodMap[type] !== 'function') {
@@ -103,8 +103,8 @@
                         return
                     }
 
-                    // DEVX 类型使用 storeCode,其他类型使用 {type}Code
-                    const codeParam = type === 'DEVX'
+                    // devx 类型使用 storeCode,其他类型使用 {type}Code
+                    const codeParam = type === 'devx'
                         ? { storeCode: this.detail.storeCode }
                         : { [`${type}Code`]: this.detail[`${type}Code`] }
                     

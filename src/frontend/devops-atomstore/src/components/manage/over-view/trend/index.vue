@@ -8,13 +8,13 @@
 <script>
     import atom from './atom'
     import service from './service'
-    import DEVX from './DEVX'
+    import devx from './DEVX'
 
     export default {
         components: {
             atom,
             service,
-            DEVX
+            devx
         },
 
         props: {

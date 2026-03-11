@@ -75,7 +75,7 @@
                         : []
                 ),
                 ...(
-                    type.value === 'DEVX'
+                    type.value === 'devx'
                         ? [{
                             label: vm.proxy.$t('store.apiSettingManage'),
                             name: 'api',

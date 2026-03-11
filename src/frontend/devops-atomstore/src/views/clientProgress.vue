@@ -5,7 +5,7 @@
     >
         <bread-crumbs
             :bread-crumbs="navList"
-            type="DEVX"
+            type="devx"
         ></bread-crumbs>
         
         <div class="progress-detail-container">
@@ -122,8 +122,8 @@
     const navList = computed(() => {
         return [
             { name: $t('store.工作台') },
-            { name: $t('store.云研发'), to: { name: 'DEVXWork' } },
-            { name: storeCode.value, to: { name: 'statisticData', params: { code: storeCode.value, type: 'DEVX' } } },
+            { name: $t('store.云研发'), to: { name: 'devxWork' } },
+            { name: storeCode.value, to: { name: 'statisticData', params: { code: storeCode.value, type: 'devx' } } },
             { name: `${$t('store.发布进度')}` }
         ]
     })
