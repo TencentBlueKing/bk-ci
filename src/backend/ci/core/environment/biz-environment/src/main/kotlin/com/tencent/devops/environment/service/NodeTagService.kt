@@ -12,6 +12,7 @@ import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.redis.RedisLock
@@ -33,6 +34,7 @@ import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.NodeTagCanUpdateType
 import com.tencent.devops.environment.pojo.NodeTagUpdateReq
 import com.tencent.devops.environment.pojo.UpdateNodeTag
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import org.jooq.DSLContext
@@ -158,7 +160,23 @@ class NodeTagService @Autowired constructor(
         content = ActionAuditContent.ENV_NODE_TAG_EDIT_CONTENT
     )
     fun addNodeTag(userId: String, projectId: String, data: UpdateNodeTag) {
-        if (!environmentPermissionService.checkNodePermission(userId, projectId, data.nodeId, AuthPermission.EDIT)) {
+        val agentType = thirdPartyAgentDao.getAgentByNodeId(
+            dslContext = dslContext,
+            projectId = projectId,
+            nodeId = data.nodeId
+        )?.agentType
+        val nodeResourceType = if (agentType == AgentType.CREATE.name) {
+                AuthResourceType.CREATIVE_STREAM_NODE
+            } else {
+                AuthResourceType.ENVIRONMENT_ENV_NODE
+            }
+        if (!environmentPermissionService.checkNodePermission(
+                userId = userId,
+                projectId = projectId,
+                nodeId = data.nodeId,
+                permission = AuthPermission.EDIT,
+                resourceType = nodeResourceType
+            )) {
             throw PermissionForbiddenException(
                 message = I18nUtil.getCodeLanMessage(
                     ERROR_NODE_NO_EDIT_PERMISSSION,
