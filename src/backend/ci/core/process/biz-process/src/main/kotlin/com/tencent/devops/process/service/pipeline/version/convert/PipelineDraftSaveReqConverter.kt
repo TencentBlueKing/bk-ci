@@ -171,6 +171,19 @@ class PipelineDraftSaveReqConverter(
         // 前端传过来的model是完整的model,如果是模版实例化的,需要转换成引用的方式
         val model = modelAndSetting!!.model
         return if (model.template != null) {
+            // 如果修改流水线,不能把非约束的流水线改成约束的流水线
+            pipelineId?.let {
+                val pipelineTemplateRelated = pipelineTemplateRelatedService.get(
+                    projectId = projectId, pipelineId = pipelineId
+                )
+                if (pipelineTemplateRelated == null ||
+                    pipelineTemplateRelated.instanceType != PipelineInstanceTypeEnum.CONSTRAINT
+                ) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_NON_CONSTRAINED_PIPELINE_CANNOT_SAVE_AS_CONSTRAINED
+                    )
+                }
+            }
             val template = model.template!!
             val templateResource = pipelineModelParser.parseTemplateDescriptor(
                 projectId = projectId,

@@ -39,19 +39,19 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/jaypipes/ghw"
 	"github.com/pkg/errors"
 
 	languageUtil "golang.org/x/text/language"
 	"gopkg.in/ini.v1"
 
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
 )
 
 const (
@@ -78,6 +78,7 @@ const (
 	KeyLanguage            = "devops.language"
 	KeyImageDebugPortRange = "devops.imagedebug.portrange"
 	KeyEnablePipeline      = "devops.pipeline.enable"
+	KeyMcpServerPort       = "devops.mcp.server.port"
 )
 
 // AgentConfig Agent 配置
@@ -104,6 +105,7 @@ type AgentConfig struct {
 	Language                string
 	ImageDebugPortRange     string
 	EnablePipeline          bool
+	McpServerPort           int
 }
 
 // AgentEnv Agent 环境配置
@@ -153,11 +155,7 @@ func Init(isDebug bool) {
 	}
 	initCert()
 	LoadAgentEnv()
-
-	GApiEnvVars = &GEnvVarsT{
-		envs: make(map[string]string),
-		lock: sync.RWMutex{},
-	}
+	envs.Init()
 }
 
 // LoadAgentEnv 加载Agent环境
@@ -299,13 +297,13 @@ func LoadAgentConfig() error {
 	}
 
 	jdkDirPath := conf.Section("").Key(KeyJdkDirPath).String()
-	// 如果路径为空，是第一次，需要主动去拿一次
 	if jdkDirPath == "" {
 		workDir := systemutil.GetWorkDir()
 		if _, err := os.Stat(workDir + "/jdk"); err != nil && !os.IsExist(err) {
 			jdkDirPath = workDir + "/jre"
+		} else {
+			jdkDirPath = workDir + "/jdk"
 		}
-		jdkDirPath = workDir + "/jdk"
 	}
 	jdk17DirPath := conf.Section("").Key(KeyJdk17DirPath).String()
 	if jdk17DirPath == "" {
@@ -336,6 +334,8 @@ func LoadAgentConfig() error {
 	imageDebugPortRange := conf.Section("").Key(KeyImageDebugPortRange).MustString(DEFAULT_IMAGE_DEBUG_PORT_RANGE)
 
 	enablePipeline := conf.Section("").Key(KeyEnablePipeline).MustBool(false)
+
+	mcpServerPort := conf.Section("").Key(KeyMcpServerPort).MustInt(0)
 
 	// -----------
 
@@ -405,6 +405,10 @@ func LoadAgentConfig() error {
 
 	GAgentConfig.EnablePipeline = enablePipeline
 	logs.Info("EnablePipeline: ", GAgentConfig.EnablePipeline)
+
+	GAgentConfig.McpServerPort = mcpServerPort
+	logs.Info("McpServerPort: ", GAgentConfig.McpServerPort)
+
 	// 初始化 GAgentConfig 写入一次配置, 往文件中写入一次程序中新添加的 key
 	return GAgentConfig.SaveConfig()
 }
@@ -441,8 +445,9 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(KeyLanguage + "=" + GAgentConfig.Language + "\n")
 	content.WriteString(KeyImageDebugPortRange + "=" + GAgentConfig.ImageDebugPortRange + "\n")
 	content.WriteString(KeyEnablePipeline + "=" + strconv.FormatBool(GAgentConfig.EnablePipeline) + "\n")
+	content.WriteString(KeyMcpServerPort + "=" + strconv.Itoa(GAgentConfig.McpServerPort) + "\n")
 
-	err := exitcode.WriteFileWithCheck(filePath, []byte(content.String()), 0666)
+	err := exitcode.WriteFileWithCheck(filePath, content.Bytes(), 0666)
 	if err != nil {
 		logs.Error("write config failed:", err.Error())
 		return errors.New("write config failed")
@@ -470,34 +475,6 @@ func GetGateWay() string {
 	} else {
 		return "http://" + GAgentConfig.Gateway
 	}
-}
-
-func GetCpuAndGpuInfo() (string, string) {
-	cpu, err := ghw.CPU()
-	cpuInfoBuf := bytes.Buffer{}
-	if err != nil {
-		logs.WithError(err).Error("get cpu info error")
-	} else {
-		for _, c := range cpu.Processors {
-			cpuInfoBuf.WriteString(c.Model)
-			cpuInfoBuf.WriteString(";")
-		}
-	}
-	cpuInfo := strings.TrimSuffix(cpuInfoBuf.String(), ";")
-
-	gpuInfoBuf := bytes.Buffer{}
-	gpu, err := ghw.GPU()
-	if err != nil {
-		logs.WithError(err).Error("get gpu info error")
-	} else {
-		for _, card := range gpu.GraphicsCards {
-			gpuInfoBuf.WriteString(card.DeviceInfo.Product.Name)
-			gpuInfoBuf.WriteString(";")
-		}
-	}
-	gpuInfo := strings.TrimSuffix(cpuInfoBuf.String(), ";")
-	logs.Infof("cpu: %s, gpu: %s", cpuInfo, gpuInfo)
-	return cpuInfo, gpuInfo
 }
 
 // initCert 初始化证书
