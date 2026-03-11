@@ -168,11 +168,11 @@ export default defineComponent({
                 <div class={styles.emptyState}>{t('flow.content.noEventsFound')}</div>
               )}
             </Loading>
-            <div class={styles.footer}>
+            {/* <div class={styles.footer}>
               <a class={styles.publishGuideLink} onClick={handleGoToPublishGuide}>
                 {t('flow.content.noEventsMeetRequirements')}
               </a>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
