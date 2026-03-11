@@ -161,7 +161,7 @@ else
         if devops_access_token ~= nil then
             ticket = oauthUtil:verify_token(devops_access_token)
         else
-            ticket = oauthUtil:get_ticket(bk_token)
+            ticket = oauthUtil:get_info(bk_token)
         end
         if ticket ~= nil then
             if double_check and ticket.user_id ~= tof_staffname then -- 双重校验, 蓝鲸用户必须等于TOF账户
@@ -171,7 +171,7 @@ else
             --- 设置用户信息
             ngx.header["x-devops-uid"] = ticket.user_id
             ngx.header["x-devops-bk-token"] = bk_token
-            ngx.header["x-devops-access-token"] = ticket.access_token
+            ngx.header["x-devops-access-token"] = devops_access_token or ""
             ngx.exit(200)
         end
     end
