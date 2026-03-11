@@ -63,7 +63,7 @@
 </template>
 
 <script setup>
-    import { computed, onMounted, ref } from 'vue'
+    import { computed, onMounted, ref, inject } from 'vue'
     import UseInstance from '@/hook/useInstance.js'
     import { toolbars } from '@/utils/editor-options'
 
@@ -96,12 +96,19 @@
     const { $store, $bkInfo, $t } = proxy
 
     const publisherList = ref([])
+    
+    // 尝试注入父组件的表单实例
+    const formRef = inject('formRef', null)
 
     const isCanceled = computed(() => props.versionInfo.releaseType === 'CANCEL_RE_RELEASE')
 
     // 处理版本日志变化
     const handleVersionContentChange = (value, render) => {
         updateField('versionContent', value)
+        // 清除该字段的验证错误
+        if (formRef?.value) {
+            formRef.value.clearError('versionContent')
+        }
     }
 
     // 更新字段的辅助函数

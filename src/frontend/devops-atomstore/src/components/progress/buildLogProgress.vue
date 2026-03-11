@@ -34,6 +34,7 @@
             </template>
         </RecycleScroller>
         <bk-loading
+            v-if="isLogLoading"
             :is-loading="isLogLoading"
             size="small"
             :opacity="0"

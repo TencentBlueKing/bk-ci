@@ -250,10 +250,11 @@
 
     function goOverview () {
         $router.push({
-            name: 'overview',
+            name: 'statisticData',
             params: {
-                storeCode: storeCode.value,
-            },
+                code: storeCode.value,
+                type: 'devx'
+            }
         })
     }
 

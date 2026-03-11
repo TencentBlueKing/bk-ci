@@ -954,5 +954,6 @@
   "版本号不能为空": "Version number cannot be empty",
   "由数字、英文字母、点(.)、中划线(-)、下划线(_)组成，且以数字开头，不超过 32 个字符": "Consisting of numbers, letters, dots (.), hyphens (-), and underscores (_), beginning with a number, no more than 32 characters",
   "上次发布版本：": "Last Released Version:",
-  "版本号已存在": "Version number [{0}] already exists"  
+  "版本号已存在": "Version number [{0}] already exists",
+  "应用简介不超过256个字符": "Application overview should not exceed 256 characters"
 }

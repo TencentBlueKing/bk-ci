@@ -93,7 +93,7 @@
 </template>
 
 <script setup name="AddVersion">
-    import { ref, reactive, computed, onMounted, nextTick } from 'vue'
+    import { ref, computed, onMounted, nextTick, provide } from 'vue'
     import UseInstance from '@/hook/useInstance.js'
     import { STORE_TYPE, ReleaseTypeEnum, CANCEL_RE_RELEASE } from '@/utils/constants'
     import leaveConfirm from '@/utils/leave-confirm'
@@ -112,6 +112,9 @@
     const isLoading = ref(false)
     const storeCode = computed(() => $route.params.storeCode)
     const hasPackage = ref(false)
+    
+    // 提供表单实例给子组件
+    provide('formRef', formRef)
     const packageVersion = ref('')
     const uploading = ref(false)
     const sourceType = ref('')
@@ -175,6 +178,11 @@
             {
                 required: true,
                 message: $t('应用简介不能为空'),
+                trigger: 'blur',
+            },
+            {
+                validator: (val) => val.length <= 256,
+                message: $t('应用简介不超过256个字符'),
                 trigger: 'blur',
             },
         ],

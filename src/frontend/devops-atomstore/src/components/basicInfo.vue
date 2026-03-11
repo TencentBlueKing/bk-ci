@@ -73,6 +73,7 @@
         >
             <bk-input
                 v-model="basicInfo.summary"
+                :placeholder="$t('store.应用简介不超过256个字符')"
                 :clearable="true"
                 @input="val => updateField('summary', val)"
             />
