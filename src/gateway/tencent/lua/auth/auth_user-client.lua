@@ -162,6 +162,9 @@ else
             ticket = oauthUtil:verify_token(devops_access_token)
         else
             ticket = oauthUtil:get_info(bk_token)
+            if ticket.username and not ticket.user_id then
+                ticket.user_id = ticket.username
+            end
         end
         if ticket ~= nil then
             if double_check and ticket.user_id ~= tof_staffname then -- 双重校验, 蓝鲸用户必须等于TOF账户
