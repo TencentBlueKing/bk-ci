@@ -17,11 +17,11 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import { VAR_MAX_LENGTH } from '@/store/constants'
 import { buildEnvMap, jobConst, semverVersionKeySet, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
 import Vue from 'vue'
 import { getAtomModalKey, isCodePullAtom, isNewAtomTemplate, isNormalContainer, isTriggerContainer, isVmContainer } from './atomUtil'
 import { buildNoRules, defaultBuildNo, platformList } from './constants'
-import { VAR_MAX_LENGTH } from '@/store/constants'
 
 function isSkip (status) {
     return status === 'SKIP'
@@ -82,6 +82,10 @@ export default {
     curPipelineParams: state => {
         const firstJob = state.pipeline?.stages?.[0]?.containers?.[0]
         return firstJob?.params?.filter(param => !semverVersionKeySet.has(param.id)) ?? []
+    },
+    allPipelineParams: state => {
+        const firstJob = state.pipeline?.stages?.[0]?.containers?.[0]
+        return firstJob?.params ?? []
     },
     curPipelineBuildNoConfig: state => {
         const firstJob = state.pipeline?.stages?.[0]?.containers?.[0]
@@ -313,6 +317,9 @@ export default {
         return allElements
     },
     getAllContainers: state => stages => {
+        if (!Array.isArray(stages)) {
+            return []
+        }
         return stages.reduce((acc, stage) => {
             acc = [
                 ...acc,
@@ -476,5 +483,47 @@ export default {
                 stages
             }
         })
+    },
+    getAllAtomOutputList: state => (stages = state.pipelineWithoutTrigger?.stages) => {
+        try {
+            const list = [];
+            (stages ?? []).forEach((stage, stageIndex) => {
+                if (stage) {
+                    (stage.containers || []).forEach((container, containerIndex) => {
+                        (container.elements || []).forEach((element, elementIndex) => {
+                        // 从api获取的output信息
+                            const apiOutput = state.atomsOutputMap?.[`${element.atomCode}@${element.version}`] || {}
+                            // 从model解析的output信息
+                            const modelOutput = element?.data?.output || {}
+                            if (Object.keys(modelOutput).length || Object.keys(apiOutput).length) {
+                                const realOutput = Object.keys(apiOutput).length > 0 ? apiOutput : modelOutput
+                                list.push({
+                                    id: element.id,
+                                    location: {
+                                        stageIndex,
+                                        containerIndex,
+                                        elementIndex
+                                    },
+                                    totalIndex: parseInt(`${stageIndex}${containerIndex}${elementIndex}`),
+                                    title: `${stageIndex + 1}-${containerIndex + 1}-${elementIndex + 1}-${element.name}`,
+                                    version: element.version,
+                                    stepId: element.stepId,
+                                    stepName: element.name,
+                                    envPrefix: `jobs.${container.jobId}.steps.${element.stepId}.outputs.`,
+                                    params: Object.keys(realOutput).map(item => ({
+                                        name: item,
+                                        desc: realOutput[item]?.description
+                                    }))
+                                })
+                            }
+                        })
+                    })
+                }
+            })
+            return list
+        } catch (error) {
+            console.log(error)
+            return []
+        }
     }
 }

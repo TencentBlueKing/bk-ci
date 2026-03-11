@@ -53,6 +53,13 @@
                 @toggle="(show) => toggleTab(key, show)"
                 @complete="completeLoading(key)"
             ></component>
+            <AtomContent
+                v-if="currentTab === 'setting'"
+                v-bind="editingElementPos"
+                :stages="stages"
+                :editable="false"
+                :is-instance-template="false"
+            ></AtomContent>
         </template>
     </detail-container>
 </template>
@@ -72,7 +79,8 @@
             detailContainer,
             ReferenceVariable,
             pluginLog,
-            ErrorSummary
+            ErrorSummary,
+            AtomContent
         },
         props: {
             execDetail: {
@@ -145,18 +153,6 @@
                         component: Report,
                         bindData: {
                             taskId: this.currentElement.id
-                        }
-                    },
-                    setting: {
-                        component: AtomContent,
-                        bindData: {
-                            elementIndex: this.editingElementPos.elementIndex,
-                            containerIndex: this.editingElementPos.containerIndex,
-                            containerGroupIndex: this.editingElementPos.containerGroupIndex,
-                            stageIndex: this.editingElementPos.stageIndex,
-                            stages: this.stages,
-                            editable: false,
-                            isInstanceTemplate: false
                         }
                     }
                 }

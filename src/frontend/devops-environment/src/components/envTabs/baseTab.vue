@@ -127,16 +127,12 @@
                     >
                         <bk-radio-group v-model="editEnvForm.type">
                             <bk-radio
-                                :value="'DEV'"
-                                class="env-type-radio"
+                                v-for="envType in envTypeEnums"
+                                class="base-tab-env-type-radio"
+                                :key="envType"
+                                :value="envType"
                             >
-                                {{ $t('environment.envInfo.devEnvType') }}
-                            </bk-radio>
-                            <bk-radio
-                                :value="'PROD'"
-                                class="env-type-radio"
-                            >
-                                {{ $t('environment.envInfo.testEnvType') }}
+                                {{ $t(`environment.envInfo.${envType}EnvType`) }}
                             </bk-radio>
                         </bk-radio-group>
                     </div>
@@ -148,7 +144,7 @@
                     </p>
                     <div
                         class="handler-btn"
-                        v-if="curEnvDetail.envType !== 'BUILD'"
+                        v-if="envTypeChangable"
                     >
                         <span
                             v-perm="{
@@ -245,13 +241,16 @@
                 return this.curEnvDetail.envVars
             },
             envTypeDesc () {
-                const { envType } = this.curEnvDetail
-                const descMap = {
-                    DEV: 'devEnvType',
-                    PROD: 'testEnvType',
-                    BUILD: 'buildEnvType'
-                }
-                return `environment.envInfo.${descMap[envType]}`
+                return `environment.envInfo.${this.curEnvDetail.envType}EnvType`
+            },
+            envTypeEnums () {
+                return [
+                    'DEV',
+                    'PROD'
+                ]
+            },
+            envTypeChangable () {
+                return !['BUILD', 'DEVX'].includes(this.curEnvDetail.envType)
             }
         },
         methods: {
@@ -375,3 +374,9 @@
         }
     }
 </script>
+
+<style lang="scss">
+    .base-tab-env-type-radio {
+        margin-right: 10px;
+    }
+</style>

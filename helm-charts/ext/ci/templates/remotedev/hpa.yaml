@@ -1,0 +1,38 @@
+# remotedev hpa
+{{ if .Values.remotedev.enabled -}}
+{{ if .Values.remotedev.autoscaling.enabled }}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-remotedev
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/name: remotedev
+    app.kubernetes.io/component: microservice
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+spec:
+  scaleTargetRef:
+    apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+    kind: Deployment
+    name: {{ include "bkci.names.fullname" . }}-remotedev
+  minReplicas: {{ .Values.remotedev.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.remotedev.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.remotedev.autoscaling.targetCPU }}
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: {{ .Values.remotedev.autoscaling.targetCPU }}
+    {{- end }}
+    {{- if .Values.remotedev.autoscaling.targetMemory }}
+    - type: Resource
+      resource:
+        name: memory
+        targetAverageUtilization: {{ .Values.remotedev.autoscaling.targetMemory  }}
+    {{- end }}
+{{- end }}
+{{- end -}}

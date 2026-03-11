@@ -51,16 +51,13 @@ const props = defineProps({
     required: true
   },
   type: String,
-  isRbac: Boolean,
   initPipelineDialect: String,
 });
 const emits = defineEmits(['handleChangeForm']);
-
 const iframeRef = ref(null);
 const showDialog = ref(false);
 const projectData = ref(props.data);
 const vm = getCurrentInstance();
-
 function showMemberDialog (){
   showDialog.value = true;
 }
@@ -79,7 +76,6 @@ function handleMessage (event) {
   const { data, origin } = event;
   if (!trustedOrigins.includes(origin)) {
     console.warn('Received message from untrusted origin:', origin);
-    return;
   }
   if (data.type === 'IAM') {
     switch (data.code) {
@@ -105,17 +101,13 @@ function handleMessage (event) {
     }
   }
 };
-
 onMounted(async () => {
   window.addEventListener('message', handleMessage);
 });
-
 onBeforeUnmount(() => {
   window.removeEventListener('message', handleMessage);
 });
-
 </script>
-
 <style lang="scss" scoped>
 .member-iframe {
   height: 600px;

@@ -1,0 +1,20 @@
+version: "v2.0"
+name: "bk-ci前端部署【dev-devx】"
+
+on:
+  manual: enabled
+
+concurrency:
+  group: frontend-dev-devx
+
+stages:
+- template: frontend-stage.yml
+  parameters:
+    ips: "11.185.144.156"
+    tag: devx
+    env: dev
+    code-branch: develop
+    config-branch: develop
+
+notices:
+  - type: wework-message

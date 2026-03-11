@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>蓝盾DevOps平台</title>
+</head>
+
+<body>
+    <script>
+        function detectDevice() {
+            var u = navigator.userAgent
+            switch (true) {
+                case u.indexOf('Android') > -1 || u.indexOf('Linux') > -1:
+                    return 'android'
+                case u.indexOf('iPhone') > -1 || u.indexOf('iPad') > -1 || u.indexOf('Mac') > -1:
+                    return 'ios'
+                default:
+                    alert("非支持设备，请使用Android或iOS手机访问。请用企业微信联系 蓝盾助手");
+                    console.log("other type device");
+                    return ''
+            }
+        }
+
+        var apkUrl = 'https://__BKCI_EXTERNAL_HOST__/app/download/devops_app.apk'
+        var plistUrl = 'https://__BKCI_EXTERNAL_HOST__/app/download/devops_app.plist'
+        var platform = detectDevice()
+        if (platform === 'ios') {
+            location.href = 'itms-services://?action=download-manifest&url=' + plistUrl
+        }
+        if (platform === 'android') {
+            location.href = apkUrl
+        }
+    </script>
+</body>
+
+</html>

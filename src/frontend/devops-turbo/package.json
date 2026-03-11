@@ -61,7 +61,8 @@
           "{projectRoot}"
         ],
         "outputs": [
-          "{workspaceRoot}/frontend/turbo"
+          "{workspaceRoot}/frontend/turbo",
+          "{workspaceRoot}/frontend/entries/turbo.json"
         ]
       }
     }

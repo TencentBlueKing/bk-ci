@@ -9,7 +9,11 @@
             class="var-header"
             slot="header"
         >
-            <span>{{ $t('editPage.enableMatrix') }}</span>
+            <span>{{ $t('editPage.enableMatrix') }}</span> <a
+                class="title-link"
+                target="blink"
+                :href="matrixDocsLink"
+            >{{ $t('editPage.customTriggerLinkDesc') }}</a>
             <input
                 class="accordion-checkbox"
                 :disabled="disabled"
@@ -75,6 +79,11 @@
                 required: true
             }
         },
+        data () {
+            return {
+                matrixDocsLink: `${IWIKI_DOCS_URL}/pages/viewpage.action?pageId=1294900254`
+            }
+        },
         computed: {
             optionModel () {
                 return this.JOB_MATRIX || {}
@@ -110,3 +119,11 @@
         }
     }
 </script>
+
+<style lang="scss" scoped>
+    .title-link {
+        cursor: pointer;
+        margin-left: 10px;
+        color: #3c96ff;
+    }
+</style>

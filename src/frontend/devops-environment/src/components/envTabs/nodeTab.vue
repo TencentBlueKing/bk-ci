@@ -19,14 +19,15 @@
             </bk-button>
         </div>
 
-        <div
-            class="node-table"
-            v-if="showContent && nodeList.length"
-        >
+        <div class="node-table">
             <bk-table
+                v-bkloading="{ isLoading: tableLoading }"
                 ref="shareDiaglogTable"
                 :data="curNodeList"
+                :pagination="pagination"
                 :row-class-name="handleRowClassName"
+                @page-change="handlePageChange"
+                @page-limit-change="handlePageLimitChange"
             >
                 <bk-table-column
                     :label="$t('environment.envInfo.name')"
@@ -59,39 +60,47 @@
                     </template>
                 </bk-table-column>
                 <bk-table-column
-                    :width="80"
+                    :width="150"
                     :label="$t('environment.nodeInfo.os')"
                     prop="osName"
                 ></bk-table-column>
                 <bk-table-column
-                    :width="80"
-                    :label="$t('environment.nodeInfo.gateway')"
-                    prop="gateway"
+                    v-if="isDevxEnv"
+                    :label="$t('environment.nodeInfo.model')"
+                    prop="size"
+                    show-overflow-tooltip
                 ></bk-table-column>
                 <bk-table-column :label="$t('environment.nodeInfo.cpuStatus')">
                     <template slot-scope="props">
-                        <div
-                            v-if="props.row.nodeStatusIcon === 'creating'"
-                            class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
-                        >
-                            <div
-                                v-for="i in [1,2,3,4,5,6,7,8]"
-                                :key="i"
-                                :class="`rotate rotate${i}`"
-                            ></div>
-                        </div>
-                        <span
-                            v-if="props.row.nodeStatusIcon === 'normal'"
-                            class="node-status-icon normal-stutus-icon"
-                        >
-                        </span>
-                        <span
-                            v-if="props.row.nodeStatusIcon === 'unnormal'"
-                            class="node-status-icon abnormal-stutus-icon"
-                        >
-                        </span>
+                        <div class="status-cell">
+                            <StatusIcon
+                                v-if="successStatus.includes(props.row.nodeStatus)"
+                                status="success"
+                            />
+                            <StatusIcon
+                                v-else-if="failStatus.includes(props.row.nodeStatus)"
+                                status="error"
+                            />
+                            <StatusIcon
+                                v-else-if="['NOT_INSTALLED'].includes(props.row.nodeStatus)"
+                                status="normal"
+                            />
 
-                        <span class="node-status">{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] || props.row.nodeStatus || '--' }}</span>
+                            <div
+                                v-else-if="runningStatus.includes(props.row.nodeStatus)"
+                                class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary loading-icon"
+                            >
+                                <div class="rotate rotate1"></div>
+                                <div class="rotate rotate2"></div>
+                                <div class="rotate rotate3"></div>
+                                <div class="rotate rotate4"></div>
+                                <div class="rotate rotate5"></div>
+                                <div class="rotate rotate6"></div>
+                                <div class="rotate rotate7"></div>
+                                <div class="rotate rotate8"></div>
+                            </div>
+                            <span class="node-status">{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] || props.row.nodeStatus }}</span>
+                        </div>
                     </template>
                 </bk-table-column>
                 <bk-table-column
@@ -134,19 +143,15 @@
                 </bk-table-column>
             </bk-table>
         </div>
-        <bk-exception
-            v-if="showContent && !nodeList.length"
-            class="exception-wrap-item exception-part"
-            type="empty"
-            scene="part"
-        />
         <node-select
+            is-devx-env
+            :title="nodeSelectTitle"
             :node-select-conf="nodeSelectConf"
             :search-info="searchInfo"
             :cur-user-info="curUserInfo"
             :row-list="importNodeList"
             :change-created-user="changeCreatedUser"
-            :select-handlerc-conf="selectHandlercConf"
+            :select-handler-conf="selectHandlerConf"
             :confirm-fn="confirmFn"
             :toggle-all-select="toggleAllSelect"
             :loading="nodeDialogLoading"
@@ -159,11 +164,13 @@
 
 <script>
     import nodeSelect from '@/components/devops/environment/node-select-dialog'
+    import StatusIcon from '@/components/status-icon.vue'
     import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
     export default {
         name: 'node-tab',
         components: {
-            nodeSelect
+            nodeSelect,
+            StatusIcon
         },
         props: {
             projectId: {
@@ -203,10 +210,7 @@
                     search: ''
                 },
                 // 选择节点
-                selectHandlercConf: {
-                    curTotalCount: 0,
-                    curDisplayCount: 0,
-                    selectedNodeCount: 0,
+                selectHandlerConf: {
                     allNodeSelected: false,
                     searchEmpty: false
                 },
@@ -218,7 +222,15 @@
                     unselected: true,
                     importText: this.$t('environment.import')
                 },
-                showContent: false
+                pagination: {
+                    current: 1,
+                    count: 0,
+                    limit: 10
+                },
+                tableLoading: false,
+                runningStatus: ['CREATING', 'RUNNING', 'STARTING', 'STOPPING', 'RESTARTING', 'DELETING', 'BUILDING_IMAGE'],
+                successStatus: ['NORMAL', 'BUILD_IMAGE_SUCCESS'],
+                failStatus: ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN', 'NOT_IN_CC', 'NOT_IN_CMDB']
             }
         },
         computed: {
@@ -226,29 +238,27 @@
                 return window.userInfo
             },
             curNodeList () {
-                return this.nodeList.sort((a, b) => a.envEnableNode - b.envEnableNode)
+                const { limit, current } = this.pagination
+                return this.nodeList.sort((a, b) => a.envEnableNode - b.envEnableNode).slice(limit * (current - 1), limit * current)
+            },
+            isDevxEnv () {
+                return this.curEnvDetail?.envType === 'DEVX'
+            },
+            nodeSelectTitle () {
+                if (!this.curEnvDetail) return ''
+                const typeLabel = `environment.envInfo.${this.curEnvDetail?.envType}EnvType`
+                
+                return `${this.curEnvDetail?.name}-导入${this.$t(typeLabel)}`
             }
+            
         },
         watch: {
             importNodeList: {
                 deep: true,
                 handler: function (val) {
-                    let curCount = 0
-                    const isSelected = this.importNodeList.some(item => {
-                        return item.isChecked === true && !item.isEixtEnvNode
-                    })
+                    const isSelected = this.importNodeList.some(item => item.isChecked === true && !item.isEixtEnvNode)
 
-                    if (isSelected) {
-                        this.nodeSelectConf.unselected = false
-                    } else {
-                        this.nodeSelectConf.unselected = true
-                    }
-
-                    this.importNodeList.forEach(item => {
-                        if (item.isChecked && !item.isEixtEnvNode) curCount++
-                    })
-
-                    this.selectHandlercConf.selectedNodeCount = curCount
+                    this.nodeSelectConf.unselected = !isSelected
                     this.decideToggle()
                 }
             }
@@ -313,52 +323,34 @@
                 this.nodeSelectConf.isShow = true
                 this.requestNodeList()
             },
-
-            getNodeStatusIcon (nodeStatus) {
-                const i18nPrefix = 'environment.nodeInfo'
-                const statusArray = [
-                    'abnormal',
-                    'unknown',
-                    'deleted',
-                    'loss'
-                ]
-            
-                switch (true) {
-                    case nodeStatus === this.$t(`${i18nPrefix}.creating`):
-                        return 'creating'
-                    case nodeStatus === this.$t(`${i18nPrefix}.normal`):
-                        return 'normal'
-                    case statusArray.some(status => nodeStatus === this.$t(`${i18nPrefix}.${status}`)):
-                    default:
-                        return 'unnormal'
-                }
-            },
             /**
              * 获取环境节点列表
              */
             async requestList () {
                 try {
+                    this.tableLoading = true
                     const res = await this.$store.dispatch('environment/requestEnvNodeList', {
                         projectId: this.projectId,
-                        envHashId: this.envHashId
+                        envHashId: this.envHashId,
+                        params: {
+                            page: -1
+                        }
+                        
                     })
 
-                    this.nodeList.splice(0, this.nodeList.length)
-                    res.forEach(item => {
-                        this.nodeList.push({
-                            ...item,
-                            nodeStatusIcon: this.getNodeStatusIcon(item.nodeStatus)
-                        })
-                    })
+                    this.tableLoading = false
+                    this.nodeList = res.records
+                    this.pagination.count = res.count
 
                     if (this.importNodeList.length) {
-                        this.nodeList.forEach(vv => {
-                            this.importNodeList.forEach(kk => {
-                                if (vv.nodeHashId === kk.nodeHashId) {
-                                    kk.isChecked = true
-                                    kk.isEixtEnvNode = true
-                                }
-                            })
+                        const nodeIdMap = this.nodeList.reduce((acc, item) => {
+                            acc[item.nodeHashId] = 1
+                            return acc
+                        }, {})
+                        
+                        this.importNodeList.forEach(kk => {
+                            kk.isChecked = !!nodeIdMap[kk.nodeHashId]
+                            kk.isEixtEnvNode = !!nodeIdMap[kk.nodeHashId]
                         })
                     }
 
@@ -374,7 +366,6 @@
                         theme
                     })
                 }
-                this.showContent = true
             },
             async init () {
                 try {
@@ -404,9 +395,9 @@
 
                 for (let i = 0; i < this.nodeList.length; i++) {
                     const target = this.nodeList[i]
-                    if (target.nodeType === this.$t('environment.BCSVirtualMachine') && (target.nodeStatus === this.$t('environment.nodeInfo.abnormal')
-                        || target.nodeStatus === this.$t('environment.nodeInfo.creating')
-                        || target.nodeStatus === this.$t('environment.nodeInfo.unknown')
+                    if (target.nodeType === this.$t('environment.BCSVirtualMachine') && (target.nodeStatus === 'ABNORMAL'
+                        || this.runningStatus.includes(target.nodeStatus)
+                        || target.nodeStatus === 'UNKNOWN'
                         || !target.agentStatus)) {
                         res = true
                         break
@@ -432,54 +423,38 @@
                         projectId: this.projectId,
                         envHashId: this.envHashId,
                         params: {
-                            page: -1
+                            page: -1,
+                            ...(this.isDevxEnv
+                                ? {
+                                    nodeType: 'DEVX'
+                                }
+                                : {})
                         }
                     })
 
-                    this.importNodeList.splice(0, this.importNodeList.length)
+                    const nodeIdMap = this.nodeList.reduce((acc, item) => {
+                        acc[item.nodeHashId] = 1
+                        return acc
+                    }, {})
 
-                    res.records.forEach(item => {
-                        item.isChecked = false
+                    this.importNodeList = res.records.map(item => {
                         item.isDisplay = true
-                        this.importNodeList.push(item)
-                    })
-
-                    this.importNodeList.forEach(kk => {
-                        this.nodeList.forEach(vv => {
-                            if (vv.nodeHashId === kk.nodeHashId) {
-                                kk.isChecked = true
-                                kk.isEixtEnvNode = true
-                            }
-                        })
+                        item.isChecked = !!nodeIdMap[item.nodeHashId]
+                        item.isEixtEnvNode = !!nodeIdMap[item.nodeHashId]
 
                         if (this.curEnvDetail.envType === 'BUILD') {
-                            if (kk.nodeType !== 'THIRDPARTY' || !kk.canUse) {
-                                kk.isDisplay = false
+                            if (item.nodeType !== 'THIRDPARTY' || !item.canUse) {
+                                item.isDisplay = false
                             }
                         } else {
-                            if (kk.nodeType === 'THIRDPARTY' || !kk.canUse) {
-                                kk.isDisplay = false
+                            if (item.nodeType === 'THIRDPARTY' || !item.canUse) {
+                                item.isDisplay = false
                             }
                         }
+                        return item
                     })
 
-                    let curCount = 0
-
-                    this.importNodeList.forEach(item => {
-                        if (item.isDisplay) curCount++
-                    })
-
-                    this.selectHandlercConf.curTotalCount = curCount
-
-                    const result = this.importNodeList.some(element => {
-                        return element.isDisplay
-                    })
-
-                    if (result) {
-                        this.selectHandlercConf.searchEmpty = false
-                    } else {
-                        this.selectHandlercConf.searchEmpty = true
-                    }
+                    this.selectHandlerConf.searchEmpty = !this.importNodeList.some(element => element.isDisplay)
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'
@@ -507,7 +482,7 @@
                     style: {
                         textAlign: 'center'
                     }
-                }, `${this.$t('environment.nodeInfo.removeNodetips', [row.nodeId])}？`)
+                }, `${this.$t('environment.nodeInfo.removeNodetips', [row.displayName])}？`)
 
                 this.$bkInfo({
                     title: this.$t('environment.remove'),
@@ -547,41 +522,18 @@
              * 弹窗全选联动
              */
             decideToggle () {
-                let curCount = 0
-                let curCheckCount = 0
-
-                this.importNodeList.forEach(item => {
-                    if (item.isDisplay) {
-                        curCount++
-                        if (item.isChecked) curCheckCount++
-                    }
-                })
-
-                this.selectHandlercConf.curDisplayCount = curCount
-
-                if (curCount === curCheckCount) {
-                    this.selectHandlercConf.allNodeSelected = true
-                } else {
-                    this.selectHandlercConf.allNodeSelected = false
-                }
+                this.selectHandlerConf.allNodeSelected = this.importNodeList.every(item => item.isChecked)
             },
             /**
              * 节点全选
              */
-            toggleAllSelect () {
-                if (this.selectHandlercConf.allNodeSelected) {
-                    this.importNodeList.forEach(item => {
-                        if (item.isDisplay && !item.isEixtEnvNode) {
-                            item.isChecked = true
-                        }
-                    })
-                } else {
-                    this.importNodeList.forEach(item => {
-                        if (item.isDisplay && !item.isEixtEnvNode) {
-                            item.isChecked = false
-                        }
-                    })
-                }
+            toggleAllSelect (value) {
+                this.selectHandlerConf.allNodeSelected = value
+                this.importNodeList.forEach(item => {
+                    if (item.isDisplay && !item.isEixtEnvNode) {
+                        item.isChecked = this.selectHandlerConf.allNodeSelected
+                    }
+                })
             },
             /**
              * 搜索节点
@@ -615,17 +567,9 @@
                         }
                     })
 
-                    const result = this.importNodeList.some(element => {
-                        return element.isDisplay
-                    })
-
-                    if (result) {
-                        this.selectHandlercConf.searchEmpty = false
-                    } else {
-                        this.selectHandlercConf.searchEmpty = true
-                    }
+                    this.selectHandlerConf.searchEmpty = !this.importNodeList.some(element => element.isDisplay)
                 } else {
-                    this.selectHandlercConf.searchEmpty = false
+                    this.selectHandlerConf.searchEmpty = false
 
                     if (this.curEnvDetail.envType === 'BUILD') {
                         this.importNodeList.forEach(item => {
@@ -647,13 +591,7 @@
             
             confirmFn () {
                 if (!this.nodeDialogLoading.isLoading) {
-                    const nodeArr = []
-
-                    this.importNodeList.forEach(item => {
-                        if (item.isChecked && !item.isEixtEnvNode) {
-                            nodeArr.push(item.nodeHashId)
-                        }
-                    })
+                    const nodeArr = this.importNodeList.filter(item => item.isChecked && !item.isEixtEnvNode).map(item => item.nodeHashId)
 
                     this.importEnvNode(nodeArr)
                 }
@@ -661,7 +599,7 @@
             cancelFn () {
                 if (!this.nodeDialogLoading.isLoading) {
                     this.nodeSelectConf.isShow = false
-                    this.selectHandlercConf.searchEmpty = false
+                    this.selectHandlerConf.searchEmpty = false
                     this.nodeSelectConf.importText = this.$t('environment.import')
                 }
             },
@@ -695,6 +633,13 @@
             handleRowClassName ({ row, rowIndex }) {
                 return row.envEnableNode ? '' : 'useless'
             },
+            handlePageChange (page) {
+                this.pagination.current = page
+            },
+            handlePageLimitChange (limit) {
+                this.pagination.current = 1
+                this.pagination.limit = limit
+            },
             async handleToggleEnable (row) {
                 try {
                     await this.$store.dispatch('environment/enableNode', {
@@ -704,6 +649,7 @@
                         enableNode: !row.envEnableNode
                     })
 
+                    this.pagination.current = 1
                     await this.requestList()
 
                     this.$bkMessage({
@@ -719,7 +665,11 @@
             },
             handleToNodeDetailPage (row) {
                 if (row.nodeType === 'CMDB') return
-                window.open(`${location.origin}/console/environment/${this.projectId}/node/nodeDetail/${row.nodeHashId}`, '_blank')
+                if (this.curEnvDetail.envType === 'DEVX') {
+                    window.open(`${location.origin}/console/devx/${this.projectId}/instance-manage?active=${row.displayName}&tab=baseInfo`, '_blank')
+                } else {
+                    window.open(`${location.origin}/console/environment/${this.projectId}/node/nodeDetail/${row.nodeHashId}`, '_blank')
+                }
             }
         }
     }
@@ -733,6 +683,10 @@
         .useless {
             color: #c3cdd7;
         }
+    }
+    .loading-icon {
+        display: inline-flex;
+        margin-right: 5px;
     }
 
     .display-name {

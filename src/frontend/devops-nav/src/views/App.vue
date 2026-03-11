@@ -4,6 +4,8 @@
         v-bkloading="{ isLoading: moduleLoading }"
     >
         <router-view />
+        <AnnouncementDialog />
+        <NonDisclosureAgreement />
     </div>
 </template>
 
@@ -11,8 +13,16 @@
     import Vue from 'vue'
     import { Component, Watch } from 'vue-property-decorator'
     import { Action, State } from 'vuex-class'
+    import AnnouncementDialog from '../components/AnnouncementDialog/index.vue'
     
-    @Component()
+    import NonDisclosureAgreement from '../components/NonDisclosureAgreement/index.vue'
+    
+    @Component({
+        components: {
+            AnnouncementDialog,
+            NonDisclosureAgreement
+        }
+    })
     export default class App extends Vue {
         @State fetchError
         @State moduleLoading

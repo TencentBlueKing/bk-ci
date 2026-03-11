@@ -18,10 +18,10 @@
                     :value="element[key]"
                     v-bind="obj"
                     @change="listChange"
-                    :repository-type="element[&quot;repositoryType&quot;]"
-                    :repository-hash-id="element[&quot;repositoryHashId&quot;]"
-                    :branch-name="element[&quot;branchName&quot;]"
-                    :element-type="element[&quot;@type&quot;]"
+                    :repository-type="element['repositoryType']"
+                    :repository-hash-id="element['repositoryHashId']"
+                    :branch-name="element['branchName']"
+                    :element-type="element['@type']"
                     :no-use-permission="noUsePermission"
                     :set-no-use-permission="setNoUsePermission"
                 ></component>
@@ -43,9 +43,9 @@
 </template>
 
 <script>
-    import atomMixin from './atomMixin'
-    import validMixins from '../validMixins'
     import { mapGetters } from 'vuex'
+    import validMixins from '../validMixins'
+    import atomMixin from './atomMixin'
     export default {
         name: 'code-pull-atom',
         mixins: [atomMixin, validMixins],

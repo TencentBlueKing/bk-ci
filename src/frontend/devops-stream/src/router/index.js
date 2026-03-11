@@ -8,18 +8,19 @@ import VueRouter from 'vue-router'
 import websocket from '@/utils/websocket'
 Vue.use(VueRouter)
 
-const dashboard = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard.vue')
-const main = () => import(/* webpackChunkName: 'entry' */'@/views/index.vue')
-const projectIndex = () => import(/* webpackChunkName: 'entry' */'@/views/project-index.vue')
-const exception = () => import(/* webpackChunkName: 'entry' */'@/views/exception.vue')
-const notifications = () => import(/* webpackChunkName: 'notifications' */'@/views/notifications.vue')
-const pipeline = () => import(/* webpackChunkName: 'pipelines' */'@/views/pipeline/index.vue')
-const buildList = () => import(/* webpackChunkName: 'pipelines' */'@/views/pipeline/build-list.vue')
-const pipelineDetail = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/index.vue')
-const buildArtifacts = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/artifacts.vue')
-const buildDetail = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/detail.vue')
-const buildReports = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/reports.vue')
-const buildConfig = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/config.vue')
+const homePage = () => import(/* webpackChunkName: 'home' */'@/views/home')
+const dashboard = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard')
+const main = () => import(/* webpackChunkName: 'entry' */'@/views/index')
+const projectIndex = () => import(/* webpackChunkName: 'entry' */'@/views/project-index')
+const exception = () => import(/* webpackChunkName: 'entry' */'@/views/exception')
+const notifications = () => import(/* webpackChunkName: 'notifications' */'@/views/notifications')
+const pipeline = () => import(/* webpackChunkName: 'pipelines' */'@/views/pipeline')
+const buildList = () => import(/* webpackChunkName: 'pipelines' */'@/views/pipeline/build-list')
+const pipelineDetail = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/index')
+const buildDetail = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/detail')
+const buildReports = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/reports')
+const buildConfig = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/config')
+const buildArtifacts = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/artifacts')
 const webConsole = () => import(/* webpackChunkName: "webConsole" */'@/views/pipeline/web-console.vue')
 const setting = () => import(/* webpackChunkName: 'setting' */'@/views/setting/index.vue')
 const basicSetting = () => import(/* webpackChunkName: 'setting' */'@/views/setting/basic.vue')
@@ -41,6 +42,11 @@ const routes = [
             exception: exception
         },
         children: [
+            {
+                path: 'home',
+                name: 'home',
+                component: homePage
+            },
             {
                 path: 'dashboard',
                 name: 'dashboard',

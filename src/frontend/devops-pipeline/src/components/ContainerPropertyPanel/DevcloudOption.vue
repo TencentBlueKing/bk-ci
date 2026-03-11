@@ -1,6 +1,6 @@
 <template>
     <selector
-        name="performanceConfigId"
+        :name="fieldName"
         :disabled="disabled"
         :is-loading="isLoading"
         :handle-change="handleSelect"
@@ -36,6 +36,10 @@
                 type: Function,
                 required: false
             },
+            templateId: {
+                type: String,
+                default: ''
+            },
             changeShowPerformance: {
                 type: Function,
                 required: false
@@ -51,7 +55,13 @@
         computed: {
             projectId () {
                 return this.$route.params.projectId
-            }
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
+            },
+            fieldName () {
+                return this.buildType === 'PUBLIC_DEVCLOUD' ? 'performanceUid' : 'performanceConfigId'
+            },
         },
         watch: {
             buildType (v) {
@@ -67,7 +77,9 @@
         },
         methods: {
             ...mapActions('atom', [
-                'fetchDevcloudSettings'
+                'fetchDevcloudSettings',
+                'getHistoryDevcloudSettings',
+                'fetchDockerSettings'
             ]),
             handleSelect (name, value) {
                 this.handleChange(name, value)
@@ -75,22 +87,71 @@
             getShowOption (obj) {
                 return `${obj.description} (${obj.cpu}${this.$t('editPage.cpuUnit')}/${obj.memory}/${obj.disk})`
             },
+            // 流水线编辑页面PUBLIC_DEVCLOUD类型下的机型列表
+            async getEditPageDeviceList () {
+                const res = await this.fetchDevcloudSettings({
+                    projectId: this.projectId,
+                    pipelineId: this.pipelineId || this.templateId,
+                    templateId: this.templateId
+                })
+                this.changeShowPerformance(true)
+                this.selectValue = this.value || res.data.defaultUid
+
+                this.optionList = res.data.performanceList.map(i => ({
+                    ...i,
+                    id: i.uid
+                })) || []
+                const hasPermission = this.optionList.find(i => i.id === this.selectValue)
+                if (!hasPermission) {
+                    this.optionList.splice(0, 0, {
+                        id: this.value,
+                        name: this.$t('editPage.withoutOption')
+                    })
+                }
+            },
+            // 流水线查看页面PUBLIC_DEVCLOUD类型下的机型列表
+            async getViewPageDeviceList () {
+                const uid = this.value && this.value !== '' ? this.value : 'Standard-S'
+                const res = await this.getHistoryDevcloudSettings({
+                    username: this.$userInfo.username,
+                    projectId: this.projectId,
+                    uid
+                })
+                this.changeShowPerformance(true)
+                this.selectValue = this.value || res.data.uid
+                this.optionList = [res.data].map(i => ({
+                    ...i,
+                    id: i.uid
+                })) || []
+            },
+            // 其它构件资源类型下的机型列表
+            async getOtherDockerSettings () {
+                const res = await this.fetchDockerSettings({ projectId: this.projectId, buildType: this.buildType })
+                const needShow = res.data.needShow || false
+                this.changeShowPerformance(needShow)
+                if (needShow) {
+                    this.selectValue = this.value || res.data.default
+                }
+                this.optionList = res.data.dockerResourceOptionsMaps || []
+                this.optionList = this.optionList.map(item => {
+                    return {
+                        ...item,
+                        name: this.getShowOption(item.dockerResourceOptionsShow)
+                    }
+                })
+            },
             async getData () {
                 try {
                     this.isLoading = true
-                    const res = await this.fetchDevcloudSettings({ projectId: this.projectId, buildType: this.buildType })
-                    const needShow = res.data.needShow || false
-                    this.changeShowPerformance(needShow)
-                    if (needShow) {
-                        this.selectValue = this.value || res.data.default
-                    }
-                    this.optionList = res.data.dockerResourceOptionsMaps || []
-                    this.optionList = this.optionList.map(item => {
-                        return {
-                            ...item,
-                            name: this.getShowOption(item.dockerResourceOptionsShow)
+                    if (this.buildType === 'PUBLIC_DEVCLOUD') {
+                        if (!this.disabled) {
+                            await this.getEditPageDeviceList()
+                        } else {
+                            await this.getViewPageDeviceList()
                         }
-                    })
+                    } else {
+                        await this.getOtherDockerSettings()
+                    }
                 } catch (err) {
                     this.$showTips({
                         theme: 'error',

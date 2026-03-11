@@ -172,6 +172,9 @@
             pipelineId () {
                 return this.pipelineInfo?.pipelineId
             },
+            longProjectId () {
+                return this.curProject && this.curProject.projectId ? this.curProject.projectId : ''
+            },
             currentTab () {
                 return this.$route.query.tab || 'pipeline'
             },
@@ -240,6 +243,9 @@
                     this.init()
                 })
             },
+            // longProjectId () {
+            //     this.getRoleList()
+            // },
             pipeline (val) {
                 this.getInterceptAtom()
                 if (val && val.instanceFromTemplate) this.requestMatchTemplateRules(val.templateId)

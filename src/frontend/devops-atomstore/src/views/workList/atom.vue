@@ -108,6 +108,11 @@
                             @click="offline(props.row)"
                         > {{ $t('store.下架') }} </span>
                         <span
+                            class="schedule-btn"
+                            v-if="['COMMITTING', 'BUILDING', 'BUILD_FAIL', 'TESTING', 'AUDITING', 'CODECCING', 'CODECC_FAIL'].includes(props.row.atomStatus)"
+                            @click="routerProgress(props.row)"
+                        > {{ $t('store.进度') }} </span>
+                        <span
                             class="delete-btn"
                             v-if="!props.row.releaseFlag"
                             @click="deleteAtom(props.row)"
@@ -300,24 +305,104 @@
                             </div>
                         </div>
                     </div>
-                    <div class="bk-form-item is-required">
-                        <label class="bk-label"> {{ $t('store.自定义前端UI') }} </label>
-                        <div class="bk-form-content atom-item-content">
-                            <bk-radio-group
-                                v-model="createAtomForm.frontendType"
-                                @change="handleChangeForm"
-                            >
-                                <bk-radio
-                                    :title="entry.title"
-                                    :value="entry.value"
-                                    v-for="(entry, key) in frontendTypeList"
-                                    :key="key"
+                    <template v-if="!isEnterprise">
+                        <div class="bk-form-item is-required">
+                            <label class="bk-label"> {{ $t('store.授权方式') }} </label>
+                            <div class="bk-form-content atom-item-content">
+                                <bk-radio-group
+                                    v-model="createAtomForm.authType"
+                                    @change="handleChangeForm"
                                 >
-                                    {{ entry.label }}
-                                </bk-radio>
-                            </bk-radio-group>
+                                    <bk-radio
+                                        :value="entry.value"
+                                        v-for="(entry, key) in authTypeList"
+                                        :key="key"
+                                    >
+                                        {{ entry.label }}
+                                    </bk-radio>
+                                </bk-radio-group>
+                            </div>
                         </div>
-                    </div>
+                        <div class="bk-form-item is-required">
+                            <label class="bk-label"> {{ $t('store.是否开源') }} </label>
+                            <div class="bk-form-content atom-item-content">
+                                <bk-radio-group
+                                    v-model="createAtomForm.visibilityLevel"
+                                    @change="handleChangeForm"
+                                >
+                                    <bk-radio
+                                        :disabled="entry.disable"
+                                        :title="entry.title"
+                                        :value="entry.value"
+                                        v-for="(entry, key) in isOpenSource"
+                                        :key="key"
+                                        @click.native="changeOpenSource"
+                                    >
+                                        {{ entry.label }}
+                                    </bk-radio>
+                                </bk-radio-group>
+                                <p
+                                    v-if="atomErrors.openSourceError"
+                                    class="error-tips"
+                                >
+                                    {{ $t('store.是否开源不能为空') }}
+                                </p>
+                            </div>
+                        </div>
+                        <div
+                            class="bk-form-item is-required"
+                            v-if="createAtomForm.visibilityLevel === 'PRIVATE'"
+                        >
+                            <label class="bk-label"> {{ $t('store.不开源原因') }} </label>
+                            <div class="bk-form-content atom-item-content">
+                                <bk-input
+                                    v-model="createAtomForm.privateReason"
+                                    type="textarea"
+                                    :placeholder="$t('store.请输入不开源原因')"
+                                    @input="atomErrors.privateReasonError = false"
+                                    @change="handleChangeForm"
+                                ></bk-input>
+                                <p
+                                    v-if="atomErrors.privateReasonError"
+                                    class="error-tips"
+                                >
+                                    {{ $t('store.不开源原因不能为空') }}
+                                </p>
+                            </div>
+                            <bk-popover
+                                class="info-circle-icon"
+                                placement="right"
+                                max-width="400"
+                            >
+                                <i class="devops-icon icon-info-circle"></i>
+                                <template slot="content">
+                                    <p> {{ $t('store.debugProjectTips') }} </p>
+                                </template>
+                            </bk-popover>
+                        </div>
+                        <div class="bk-form-item is-required">
+                            <label class="bk-label"> {{ $t('store.自定义前端UI') }} </label>
+                            <div class="bk-form-content atom-item-content">
+                                <bk-radio-group
+                                    v-model="createAtomForm.frontendType"
+                                    @change="handleChangeForm"
+                                >
+                                    <bk-radio
+                                        :title="entry.title"
+                                        :value="entry.value"
+                                        v-for="(entry, key) in frontendTypeList"
+                                        :key="key"
+                                    >
+                                        {{ entry.label }}
+                                    </bk-radio>
+                                </bk-radio-group>
+                            </div>
+                        </div>
+                        <form-tips
+                            :tips-content="createTips"
+                            class="atom-tip"
+                        />
+                    </template>
                     <div class="form-footer">
                         <button
                             class="bk-button bk-primary"
@@ -415,7 +500,6 @@
                 </form>
             </template>
         </bk-sideslider>
-        
         <bk-dialog
             v-model="deleteObj.visible"
             render-directive="if"
@@ -433,7 +517,7 @@
                 :label-width="0"
                 :model="deleteObj.formData"
             >
-                <p class="dialog-tip">{{ $t('store.删除时将清理数据。删除后不可恢复！') }}</p>
+                <p class="dialog-tip">{{ $t('store.删除时将清理数据，包括工蜂代码库。删除后不可恢复！') }}</p>
                 <p class="dialog-tip">{{ $t('store.deleteAtomTip', [deleteObj.atomCode]) }}</p>
                 <bk-form-item property="projectName">
                     <bk-input
@@ -487,12 +571,18 @@
                 <p class="dialog-tip">{{ $t('store.1、插件能获取到的所有内容（包括但不限于：代码、节点、凭证、项目信息）均属于项目资产，仅用于实现流水线编排设定好的功能。') }}</p>
                 <p class="dialog-tip">
                     <font style="color: red;">{{ $t('store.2、未经授权私自使用插件获取内容（包括但不限于：拉取或转移代码、泄露或滥用凭证等）属于违规行为。') }}</font>
-                    {{ $t('store.无论当事人是否在职，公司将对违规行为进行处理，并对情节严重者保留追究法律责任的权利。') }}
+                    {{ $t('store.无论当事人是否在职，公司将按照') }}
+                    <a
+                        href="http://policy.woa.com/document/preview?documentId=D2728D77-4F56-485E-8175-EFD78E6639DA"
+                        class="text-link"
+                        target="_blank"
+                    >{{ $t('store.《阳光行为准则》') }}</a>
+                    {{ $t('store.对违规行为进行处理，并对情节严重者保留追究法律责任的权利。') }}
                 </p>
                 <p class="dialog-tip">
                     {{ $t('store.3、插件发开者有义务按照') }}
                     <a
-                        :href="specificationDocUrl"
+                        :href="`${docsPrefix}/x/6wTl`"
                         class="text-link"
                         target="_blank"
                     >{{ $t('store.《插件开发规范》') }}</a>
@@ -501,7 +591,7 @@
                 <p class="dialog-tip">
                     {{ $t('store.4、插件需提供详细的使用指引和执行日志、清晰明确的错误码信息和相关的修复指引（见') }}
                     <a
-                        :href="errorCodeDocUrl"
+                        :href="`${docsPrefix}/x/kK7-F`"
                         class="text-link"
                         target="_blank"
                     >{{ $t('store.《插件错误码规范》') }}</a>
@@ -548,14 +638,19 @@
                 itemUrl: '/console/pm',
                 itemText: this.$t('store.新建项目'),
                 offlineTips: this.$t('store.下架后：'),
-                specificationDocUrl: this.BKCI_DOCS.PLUGIN_SPECIFICATE_DOC,
-                errorCodeDocUrl: this.BKCI_DOCS.PLUGIN_ERROR_CODE_DOC,
                 renderList: [],
                 projectList: [],
                 languageList: [],
+                authTypeList: [
+                    { label: this.$t('store.工蜂OAUTH'), value: 'OAUTH' }
+                ],
                 frontendTypeList: [
-                    { label: this.$t('store.是'), value: 'SPECIAL', title: this.$t('store.需自行开发插件输入页面,详见插件开发指引') },
+                    { label: this.$t('store.是'), value: 'SPECIAL', title: this.$t('sotre.需自行开发插件输入页面。详见插件开发指引') },
                     { label: this.$t('store.否'), value: 'NORMAL', title: this.$t('store.仅需按照规范定义好输入字段，系统将自动渲染页面') }
+                ],
+                isOpenSource: [
+                    { label: this.$t('store.是'), value: 'LOGIN_PUBLIC' },
+                    { label: this.$t('store.否'), value: 'PRIVATE', disable: true, title: this.$t('store.若有特殊原因无法开源，请联系蓝盾助手（务必联系蓝盾助手，自行修改工蜂项目配置会失效，每次升级插件时将根据插件配置自动刷新）') }
                 ],
                 promptList: [
                     this.$t('store.1、插件市场不再展示插件'),
@@ -572,6 +667,8 @@
                     atomCode: '',
                     name: '',
                     language: '',
+                    authType: 'OAUTH',
+                    visibilityLevel: 'LOGIN_PUBLIC',
                     frontendType: 'NORMAL'
                 },
                 isLoading: false,
@@ -616,6 +713,23 @@
             }
         },
 
+        computed: {
+            createTips () {
+                const host = location.host
+                const innerHosts = ['dev.devops.woa.com', 'test.devops.woa.com', 'v2.dev.devops.woa.com', 'v2.test.devops.woa.com']
+                const index = innerHosts.findIndex(innerHost => innerHost === host)
+                const group = index > -1 ? 'bkdevops-plugins-test' : 'bkdevops-plugins'
+                return `${this.$t('store.提交后，系统将在工蜂自动创建插件代码库，地址示例')}：http://git.woa.com/${group}/${this.createAtomForm.atomCode}.git`
+            },
+
+            isEnterprise () {
+                return VERSION_TYPE === 'ee'
+            },
+            docsPrefix () {
+                return IWIKI_DOCS_URL
+            }
+        },
+
         watch: {
             'createAtomsideConfig.show' (val) {
                 if (!val) {
@@ -626,7 +740,9 @@
                         projectCode: '',
                         atomCode: '',
                         name: '',
-                        language: ''
+                        language: '',
+                        authType: 'OAUTH',
+                        visibilityLevel: 'LOGIN_PUBLIC'
                     }
                 }
             },
@@ -639,6 +755,7 @@
         created () {
             this.isZH = ['zh-CN', 'zh', 'zh_cn'].includes(document.documentElement.lang)
             this.getLanguage()
+            this.checkIsOAuth()
             this.requestList()
         },
 
@@ -690,10 +807,6 @@
                     this.calcConventionSecond()
                 }, 1000)
             },
-            cancelConvention () {
-                this.showConvention = false
-                clearTimeout(this.calcConventionSecond.id)
-            },
             addImage (pos, file) {
                 this.uploadimg(pos, file)
             },
@@ -729,6 +842,19 @@
                 this.$store.dispatch('store/getDevelopLanguage').then((res) => {
                     this.languageList = res || []
                 }).catch((err) => this.$bkMessage({ message: err.message || err, theme: 'error' }))
+            },
+
+            async checkIsOAuth () {
+                try {
+                    const res = await this.$store.dispatch('store/checkIsOAuth')
+                    this.hasOauth = res.status === 200
+                    this.gitOAuthUrl = res.url
+                } catch (err) {
+                    this.$bkMessage({
+                        message: err.message ? err.message : err,
+                        theme: 'error'
+                    })
+                }
             },
 
             async requestList () {
@@ -790,6 +916,11 @@
                     errorCount++
                 }
 
+                if (this.isOpenSource.findIndex(x => x.value === this.createAtomForm.visibilityLevel) < 0) {
+                    this.atomErrors.openSourceError = true
+                    errorCount++
+                }
+
                 if (this.createAtomForm.visibilityLevel === 'PRIVATE' && !this.createAtomForm.privateReason) {
                     this.atomErrors.privateReasonError = true
                     errorCount++
@@ -817,7 +948,7 @@
 
                         message = this.$t('store.新增成功')
                         theme = 'success'
-
+                        
                         this.routerAtoms(this.createAtomForm.atomCode)
                         this.requestList()
                     } catch (err) {

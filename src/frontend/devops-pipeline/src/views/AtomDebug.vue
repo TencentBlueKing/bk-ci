@@ -15,11 +15,14 @@
                     :expand-depth="5"
                 ></json-viewer>
             </div>
-            <div class="preview-atom">
+            <div
+                class="preview-atom"
+            >
                 <preview-atom
-                    :atom-value="atomInputValue"
+                    v-if="initJson"
                     :atom-props-model="initJson"
-                    :handle-update-preview-input="handleChangePreviewInput"
+                    :element="element"
+                    :error-tips="errorTips"
                     class="atom-content"
                 >
                 </preview-atom>
@@ -33,16 +36,21 @@
     import JsonViewer from 'vue-json-viewer'
     import PreviewAtom from '@/components/AtomPropertyPanel/PreviewAtom'
     import { getAtomDefaultValue } from '@/store/modules/atom/atomUtil'
-    Vue.use(JsonViewer)
 
     export default {
         components: {
-            PreviewAtom
+            PreviewAtom,
+            JsonViewer
         },
         data () {
             return {
                 initJsonStr: '',
-                atomInputValue: {},
+                element: {
+                    data: {
+                        input: {}
+                    }
+                },
+                errorTips: this.$t('atomDebug.taskJsonEmpty'),
                 outputValue: {}
             }
         },
@@ -54,10 +62,12 @@
                         if (typeof obj === 'object' && obj) {
                             return obj
                         } else {
-                            return `error: cannot transform ${this.initJsonStr} into json`
+                            this.errorTips = `error: cannot transform ${this.initJsonStr} into json`
+                            return {}
                         }
                     } catch (e) {
-                        return 'error: ' + e
+                        this.errorTips = 'error: ' + e
+                        return {}
                     }
                 }
                 return {}
@@ -65,18 +75,20 @@
         },
         watch: {
             '$route.params.projectId' (val) {
-                this.atomInputValue = getAtomDefaultValue(this.initJson.input)
+                this.$nextTick(this.resetValue)
             },
             initJson: {
                 handler (val) {
-                    this.atomInputValue = getAtomDefaultValue(this.initJson.input)
+                    this.$nextTick(this.resetValue)
                 },
                 immediate: true
             }
         },
         methods: {
-            handleChangePreviewInput (name, value) {
-                Vue.set(this.atomInputValue, name, value)
+            resetValue () {
+                Vue.set(this.element, 'data', {
+                    input: getAtomDefaultValue(this.initJson.input)
+                })
             }
         }
     }

@@ -2,7 +2,7 @@
     <bk-dialog
         v-model="visible"
         header-position="left"
-        :title="$t('pipelineVersionChnaged', [buildNum])"
+        :title="$t('pipelineVersionChanged', [buildNum])"
         :width="640"
         @confirm="handleClose"
         :before-close="handleClose"

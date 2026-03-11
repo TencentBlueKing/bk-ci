@@ -29,7 +29,6 @@ package com.tencent.devops.openapi.filter.manager
 
 import com.tencent.devops.openapi.filter.manager.impl.AccessTokenFilter
 import com.tencent.devops.openapi.filter.manager.impl.ApiPathFilter
-import com.tencent.devops.openapi.filter.manager.impl.BlueKingApiFilter
 import com.tencent.devops.openapi.filter.manager.impl.NoPermissionFilter
 import jakarta.ws.rs.container.ContainerRequestContext
 
@@ -43,8 +42,8 @@ class DefaultApiFilterChain(
             chain = listOf(
                 managerCache.getFilter(ApiPathFilter::class.java),
                 managerCache.getFilter(AccessTokenFilter::class.java),
-                managerCache.getFilter(NoPermissionFilter::class.java),
-                managerCache.getFilter(BlueKingApiFilter::class.java)
+                managerCache.getFilter(NoPermissionFilter::class.java)
+//                managerCache.getFilter(BlueKingApiFilter::class.java) 内部分支暂时去掉，因为加解密包内外不一致
             ).iterator()
         )
     }

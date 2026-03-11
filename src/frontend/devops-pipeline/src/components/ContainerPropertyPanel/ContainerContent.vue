@@ -34,7 +34,7 @@
         </form-field>
         <form
             v-if="isVmContainer(container)"
-            v-bkloading="{ isLoading: !apps || !containerModalId }"
+            v-bkloading="{ isLoading: !apps || !containerModalId || isLoadingImage }"
         >
             <form-field :label="$t('editPage.resourceType')">
                 <selector
@@ -222,6 +222,43 @@
 
             <template v-if="buildResourceType === 'MACOS'">
                 <form-field
+                    :label="$t('editPage.macOSHwSpec')"
+                    :required="true"
+                    :is-error="errors.has('macOSHwSpec')"
+                    :error-msg="errors.first(`macOSHwSpec`)"
+                    class="macOSHwSpec"
+                    ref="macOSHwSpecField"
+                >
+                    <span
+                        class="macOSHwSpec-desc"
+                        ref="macOSHwSpecDesc"
+                        @click="goMacOsDesc"
+                    >{{ $t('editPage.macOSHwSpecDesc') }}</span>
+                    <bk-select
+                        :disabled="!editable"
+                        :value="macOSHwSpec"
+                        searchable
+                        :loading="isLoadingMac"
+                        name="macOSHwSpec"
+                        v-validate.initial="'required'"
+                        @change="handleChangeMacOSHwSpec"
+                    >
+                        <bk-option
+                            v-for="item in macOSHwSpecList"
+                            :key="item.uid"
+                            :id="item.uid"
+                            :name="item.name"
+                            :disabled="!item.enabled"
+                            v-bk-tooltips="{
+                                content: $t('editPage.macOSHwSpecTip'),
+                                disabled: item.enabled
+                            }"
+                            @click.native="chooseMacOSHwSpec(item.uid, !item.enabled)"
+                        >
+                        </bk-option>
+                    </bk-select>
+                </form-field>
+                <form-field
                     :label="$t('editPage.macSystemVersion')"
                     :required="true"
                     :is-error="errors.has('systemVersion')"
@@ -231,17 +268,16 @@
                         :disabled="!editable"
                         :value="systemVersion"
                         searchable
-                        :loading="isLoadingMac"
                         name="systemVersion"
                         v-validate.initial="'required'"
                         @change="toggleXcode"
                     >
                         <bk-option
                             v-for="item in systemVersionList"
-                            :key="item"
-                            :id="item"
-                            :name="item"
-                            @click.native="chooseMacSystem(item)"
+                            :key="item.uid"
+                            :id="item.uid"
+                            :name="item.name"
+                            @click.native="chooseMacSystem(item.uid)"
                         >
                         </bk-option>
                     </bk-select>
@@ -280,14 +316,23 @@
                 ></select-input>
             </form-field>
 
-            <section v-if="buildResourceType === 'DOCKER'">
+            <section
+                v-if="['DOCKER', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)"
+                class="performance"
+            >
+                <span
+                    v-show="isShowPerformance"
+                    class="performance-desc"
+                    @click="goPerformanceDesc"
+                >{{ $t('editPage.performanceDesc') }}</span>
                 <form-field
                     :label="$t('editPage.performance')"
                     v-show="isShowPerformance"
                 >
                     <devcloud-option
                         :disabled="!editable"
-                        :value="container.dispatchType.performanceConfigId"
+                        :value="devcloudValue"
+                        :template-id="templateId"
                         :build-type="buildResourceType"
                         :handle-change="changeBuildResourceWithoutEnv"
                         :change-show-performance="changeShowPerformance"
@@ -298,7 +343,7 @@
 
             <form-field
                 :label="$t('editPage.workspace')"
-                v-if="isThirdParty"
+                v-if="isThirdParty && !isPCGBuildType"
             >
                 <vuex-input
                     :disabled="!editable"
@@ -307,6 +352,19 @@
                     :handle-change="changeBuildResource"
                     :placeholder="$t('editPage.workspaceTips')"
                 />
+            </form-field>
+
+            <form-field v-if="isPCGBuildType">
+                <atom-checkbox
+                    class="show-build-resource"
+                    :value="!!container.dispatchType.useRoot"
+                    :text="$t('editPage.useRootText')"
+                    :desc="$t('editPage.useRootDesc')"
+                    name="useRoot"
+                    :handle-change="changeBuildResource"
+                    :disabled="!editable"
+                >
+                </atom-checkbox>
             </form-field>
             <form-field
                 class="container-app-field"
@@ -492,8 +550,10 @@
                 isLoadingMac: false,
                 xcodeVersionList: [],
                 systemVersionList: [],
+                isLoadingImage: false,
                 isLoadingWin: false,
                 windowsVersionList: [],
+                macOSHwSpecList: [],
                 isShowPerformance: false
             }
         },
@@ -528,12 +588,12 @@
             imageTypeList () {
                 return [
                     { label: this.$t('editPage.fromList'), value: 'BKSTORE' },
-                    {
-                        label: this.$t('editPage.fromHand'),
-                        value: 'THIRD',
-                        hidden: this.buildResourceType === 'PUBLIC_DEVCLOUD'
-                    }
+                    { label: this.$t('editPage.fromHand'), value: 'THIRD' }
                 ]
+            },
+            templateId () {
+                // 实例流水线、模板编辑流水线的templateId
+                return this.pipeline.templateId || this.$route.params.templateId
             },
             appEnvs () {
                 return this.getAppEnvs(this.container.baseOS)
@@ -571,6 +631,9 @@
             isThirdParty () {
                 return this.isThirdPartyContainer(this.container)
             },
+            isPCGBuildType () {
+                return this.buildResourceType === 'THIRD_PARTY_PCG'
+            },
             isDocker () {
                 return this.isDockerBuildResource(this.container)
             },
@@ -593,6 +656,9 @@
             },
             isPublicDevCloud () {
                 return this.isPublicDevCloudContainer(this.container)
+            },
+            macOSHwSpec () {
+                return this.container.dispatchType.macOSHwSpec
             },
             xcodeVersion () {
                 return this.container.dispatchType.xcodeVersion
@@ -694,6 +760,21 @@
             dockerInfo () {
                 return this.container.dispatchType?.dockerInfo || {}
             },
+            devcloudValue () {
+                if (this.buildResourceType === 'PUBLIC_DEVCLOUD') {
+                    if (this.container.dispatchType.performanceUid && this.container.dispatchType.performanceUid !== '') {
+                        return this.container.dispatchType.performanceUid
+                    }
+                    const enumId = {
+                        '0': 'Standard-S',
+                        '1': 'Standard-S',
+                        '2': 'Standard-M',
+                        '10000': 'HighIO-L'
+                    }
+                    return enumId[this.container.dispatchType.performanceConfigId]
+                }
+                return this.container.dispatchType.performanceConfigId
+            },
             linuxOsDockerBuildImageType () {
                 return this.container.dispatchType?.dockerInfo?.imageType
             }
@@ -739,46 +820,80 @@
                     })
                 )
             }
+            if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(this.buildResourceType) && !this.buildImageCode && this.buildImageType !== 'THIRD') {
+                if (/\$\{/.test(this.buildResource)) {
+                    this.handleContainerChange('dispatchType', Object.assign({
+                        ...this.container.dispatchType,
+                        imageType: 'THIRD'
+                    }))
+                } else {
+                    this.isLoadingImage = true
+                    this.requestImageHistory({ agentType: this.buildResourceType, value: this.buildResource }).then((res) => {
+                        const data = res.data || {}
+                        this.handleContainerChange('dispatchType', Object.assign({
+                            ...this.container.dispatchType,
+                            imageType: 'BKSTORE'
+                        }))
+                        data.historyVersion = data.version
+                        if (data.code) this.choose(data)
+                    }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => (this.isLoadingImage = false))
+                }
+            }
+            
             if (this.buildImageCode) {
                 this.getVersionList(this.buildImageCode)
             }
             if (this.buildResourceType === 'MACOS') this.getMacOsData()
             if (this.buildResourceType === 'WINDOWS') this.getWinData()
         },
+        mounted () {
+            this.$nextTick(() => {
+                this.adjustMacOSHwSpecDescPosition()
+            })
+        },
         methods: {
             ...mapActions('atom', [
                 'updateContainer',
-                'getMacSysVersion',
-                'getMacXcodeVersion',
+                'getMacvmModel',
+                'getMacvmModelAll',
                 'getWinVersion'
             ]),
-            ...mapActions('pipelines', ['requestImageVersionlist']),
+            ...mapActions('pipelines', [
+                'requestImageVersionlist',
+                'requestImageHistory'
+            ]),
 
             changeResourceType (name, val) {
                 const currentType
                     = this.buildResourceTypeList.find((buildType) => buildType.type === val) || {}
                 const defaultBuildResource = currentType.defaultBuildResource || {}
-                const defaultAgentType
-                    = name === 'buildType'
-                        && ['THIRD_PARTY_AGENT_ID', 'THIRD_PARTY_AGENT_ENV'].includes(val)
-                        && !this.agentType
-                        ? { agentType: 'ID' }
-                        : {}
-                this.handleContainerChange(
-                    'dispatchType',
-                    Object.assign({
-                        ...this.container.dispatchType,
-                        ...defaultAgentType,
-                        imageVersion: defaultBuildResource.version || '',
-                        value: defaultBuildResource.value || '',
-                        imageCode: defaultBuildResource.code || '',
-                        imageName: defaultBuildResource.name || '',
-                        imageType: defaultBuildResource.imageType || '',
-                        recommendFlag: defaultBuildResource.recommendFlag,
-                        [name]: val
+                const defaultAgentType = (
+                    name === 'buildType'
+                    && ['THIRD_PARTY_AGENT_ID', 'THIRD_PARTY_AGENT_ENV'].includes(val)
+                    && !this.agentType)
+                    ? { agentType: 'ID' }
+                    : {}
+
+                this.handleContainerChange('dispatchType', Object.assign({
+                    ...this.container.dispatchType,
+                    ...defaultAgentType,
+                    imageVersion: defaultBuildResource.version || '',
+                    value: defaultBuildResource.value || '',
+                    imageCode: defaultBuildResource.code || '',
+                    imageName: defaultBuildResource.name || '',
+                    imageType: defaultBuildResource.imageType || '',
+                    recommendFlag: defaultBuildResource.recommendFlag,
+                    useRoot: val === 'THIRD_PARTY_PCG' ? false : undefined,
+                    [name]: val
+                }))
+                
+                if (val === 'MACOS') {
+                    // 调整macOS查看资源配置说明文字的位置
+                    this.$nextTick(() => {
+                        this.adjustMacOSHwSpecDescPosition()
                     })
-                )
-                if (val === 'MACOS') this.getMacOsData()
+                    this.getMacOsData()
+                }
                 if (val === 'WINDOWS') this.getWinData()
                 if (this.container.dispatchType?.imageCode) {
                     this.getVersionList(this.buildImageCode)
@@ -905,34 +1020,122 @@
                 this.showImageSelector = !this.showImageSelector
             },
 
-            getMacOsData () {
-                this.isLoadingMac = true
-                Promise.all([this.getMacSysVersion(), this.getMacXcodeVersion(this.systemVersion)])
-                    .then(([sysVersion, xcodeVersion]) => {
-                        this.xcodeVersionList = xcodeVersion.data?.versionList.map(i => ({
-                            id: i,
-                            name: i
-                        })) || []
-                        this.systemVersionList = sysVersion.data?.versionList || []
-                        if (
-                        this.container.dispatchType?.systemVersion === undefined
-                        && this.container.dispatchType?.xcodeVersion === undefined
-                        ) {
-                            this.chooseMacSystem(sysVersion.data?.defaultVersion)
-                            this.chooseXcode('xcodeVersion', xcodeVersion.data?.defaultVersion)
+            // 获取编辑页macOS数据
+            async getEditMacOsData () {
+                try {
+                    this.isLoadingMac = true
+                    const params = {
+                        projectId: this.projectId,
+                        platform: 'landun',
+                        pipelineId: this.pipelineId || this.templateId
+                    }
+                    const res = await this.getMacvmModel(params)
+                    if (res.data) {
+                        this.macOSHwSpecList = res.data
+
+                        const defaultHwSpec = res.data.find(i => i.uid === 'VMware')
+                        const defaultImage = defaultHwSpec.images[0]
+                        const defaultXcode = defaultImage.xcodes?.[0]
+
+                        // 新建流水线：初始化默认值
+                        if (this.macOSHwSpec === undefined || (this.systemVersion === undefined && this.xcodeVersion === undefined)) {
+                            this.chooseMacOSHwSpec(defaultHwSpec.uid)
+                            this.chooseMacSystem(defaultImage.uid)
+                            this.chooseXcode('xcodeVersion', defaultXcode)
+                        } else if (this.macOSHwSpec === '') {
+                            // 存量数据兼容：macOSHwSpec 为空字符串，但已有 systemVersion 和 xcodeVersion
+                            // 先填充下拉列表数据
+                            this.handleChangeMacOSHwSpec(defaultHwSpec.uid)
+                            this.toggleXcode(this.systemVersion)
+                            // 再设置默认的 macOSHwSpec
+                            this.chooseMacOSHwSpec(defaultHwSpec.uid)
+                        } else {
+                            // 已有配置：恢复选中状态
+                            this.handleChangeMacOSHwSpec(this.macOSHwSpec)
+                            this.toggleXcode(this.systemVersion)
                         }
-                    })
-                    .catch((err) => {
-                        this.$bkMessage({ message: err.message || err, theme: 'error' })
-                    })
-                    .finally(() => (this.isLoadingMac = false))
+                    }
+                } catch (err) {
+                    this.$bkMessage({ message: err.message || err, theme: 'error' })
+                } finally {
+                    this.isLoadingMac = false
+                }
             },
-            async toggleXcode (version) {
-                const res = await this.getMacXcodeVersion(version)
-                this.xcodeVersionList = res.data?.versionList.map(i => ({
+
+            // 获取查看页macOS数据
+            async getViewMacOsData () {
+                try {
+                    this.isLoadingMac = true
+                    const res = await this.getMacvmModelAll()
+                    if (res.data) {
+                        this.macOSHwSpecList = res.data.models
+                        this.systemVersionList = res.data.images
+                        
+                        // 如果是存量数据，没有 macOSHwSpec 或者 macOSHwSpec 为空，设置macOSHwSpec默认值为VMware
+                        if (!this.macOSHwSpec && res.data.models.length > 0) {
+                            const defaultMacOSHwSpec = res.data.models.find(i => i.uid === 'VMware')
+                            // 判断systemVersion是否在MacOs系统版本中，如果不在使用默认值BigSur11.4
+                            const isHaveSystemVersion = res.data.images.some(i => i.uid === this.systemVersion)
+                            this.handleContainerChange(
+                                'dispatchType',
+                                Object.assign({
+                                    ...this.container.dispatchType,
+                                    macOSHwSpec: defaultMacOSHwSpec.uid,
+                                    systemVersion: isHaveSystemVersion ? this.systemVersion : 'BigSur11.4',
+                                    value: `${defaultMacOSHwSpec.uid}:${this.systemVersion || ''}:${this.xcodeVersion || ''}`
+                                })
+                            )
+                        }
+                    }
+                } catch (err) {
+                    this.$bkMessage({ message: err.message || err, theme: 'error' })
+                } finally {
+                    this.isLoadingMac = false
+                }
+            },
+
+            async getMacOsData () {
+                if (this.editable) {
+                    this.getEditMacOsData()
+                } else {
+                    this.getViewMacOsData()
+                }
+            },
+
+            handleChangeMacOSHwSpec (value) {
+                // 如果是编辑模式，需要更新systemVersionList，如果是查看模式，不需要更新systemVersionList
+                if (this.editable) {
+                    this.systemVersionList = this.macOSHwSpecList.find(i => i.uid === value).images
+                }
+            },
+
+            toggleXcode (version) {
+                this.xcodeVersionList =  this.systemVersionList.find(i => i.uid === version)?.xcodes.map(i => ({
                     id: i,
                     name: i
                 })) || []
+            },
+
+            chooseMacOSHwSpec (item, disable = false) {
+                if (disable) {
+                    return
+                }
+                if (item !== this.macOSHwSpec) {
+                    const isHistryData = this.macOSHwSpec === '' && this.systemVersion && this.xcodeVersion
+                    const systemVersion = isHistryData ? this.systemVersion : ''
+                    const xcodeVersion = isHistryData ? this.xcodeVersion : ''
+
+                    this.handleContainerChange(
+                        'dispatchType',
+                        Object.assign({
+                            ...this.container.dispatchType,
+                            macOSHwSpec: item,
+                            systemVersion: systemVersion,
+                            xcodeVersion: xcodeVersion,
+                            value: `${item}:${systemVersion}:${xcodeVersion}`
+                        })
+                    )
+                }
             },
             chooseMacSystem (item) {
                 if (item !== this.systemVersion) {
@@ -942,7 +1145,7 @@
                             ...this.container.dispatchType,
                             systemVersion: item,
                             xcodeVersion: '',
-                            value: `${item}:''`
+                            value: `${this.macOSHwSpec}:${this.macOSHwSpec}:${item}:''`
                         })
                     )
                 }
@@ -953,7 +1156,7 @@
                     Object.assign({
                         ...this.container.dispatchType,
                         xcodeVersion: value,
-                        value: `${this.systemVersion}:${value}`
+                        value: `${this.macOSHwSpec}:${this.systemVersion}:${value}`
                     })
                 )
             },
@@ -1112,6 +1315,28 @@
             },
             changeShowPerformance (isShow = false) {
                 this.isShowPerformance = isShow
+            },
+            goPerformanceDesc () {
+                const url = 'https://iwiki.woa.com/p/4015974495'
+                window.open(url, '_blank')
+            },
+            goMacOsDesc () {
+                const url = 'https://iwiki.woa.com/p/4016789663'
+                window.open(url, '_blank')
+            },
+            /**
+             * 动态计算 label 宽度，调整描述链接位置
+             */
+            adjustMacOSHwSpecDescPosition () {
+                const field = this.$refs.macOSHwSpecField
+                const desc = this.$refs.macOSHwSpecDesc
+                if (field && desc) {
+                    const label = field.$el.querySelector('.bk-label')
+                    if (label) {
+                        const labelWidth = label.offsetWidth
+                        desc.style.left = `${labelWidth + 5}px`
+                    }
+                }
             }
         }
     }
@@ -1165,6 +1390,36 @@
         }
         .image-tag {
             flex: 1;
+        }
+    }
+
+    .performance {
+        position: relative;
+
+        .performance-desc {
+            position: absolute;
+            left: 8%;
+            height: 32px;
+            line-height: 32px;
+            font-size: 12px;
+            color: #3A84FF;
+            cursor: pointer;
+            z-index: 6;
+        }
+    }
+
+    .macOSHwSpec {
+        position: relative;
+
+        .macOSHwSpec-desc {
+            position: absolute;
+            top: 0;
+            height: 32px;
+            line-height: 32px;
+            font-size: 12px;
+            color: #3A84FF;
+            cursor: pointer;
+            z-index: 6;
         }
     }
 

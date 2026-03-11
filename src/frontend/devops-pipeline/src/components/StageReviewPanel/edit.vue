@@ -137,7 +137,6 @@
         </template>
     </div>
 </template>
-
 <script>
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
@@ -327,7 +326,6 @@
         }
     }
 </script>
-
 <style lang="scss" scoped>
 .stage-review-radio-group {
     .bk-form-radio {

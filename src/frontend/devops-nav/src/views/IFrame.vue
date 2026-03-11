@@ -1,7 +1,7 @@
 <template>
     <div
         class="devops-iframe-content"
-        :class="{ 'showTopPrompt': showAnnounce }"
+        :class="{ showTopPrompt: showAnnounce }"
     >
         <div
             v-if="isAnyPopupShow"
@@ -25,36 +25,35 @@
 </template>
 
 <script lang="ts">
+    import cookie from 'js-cookie'
     import Vue from 'vue'
     import { Component, Watch } from 'vue-property-decorator'
+    import { Action, Getter, State } from 'vuex-class'
     import eventBus from '../utils/eventBus'
-    import { urlJoin, queryStringify, getServiceAliasByPath } from '../utils/util'
-    import { State, Getter } from 'vuex-class'
-    import cookie from 'js-cookie'
+    import { getServiceAliasByPath, isAbsoluteUrl, queryStringify, urlJoin } from '../utils/util'
 
-    Component.registerHooks([
-        'beforeRouteEnter',
-        'beforeRouteLeave',
-        'beforeRouteUpdate'
-    ])
+    Component.registerHooks(['beforeRouteEnter', 'beforeRouteLeave', 'beforeRouteUpdate'])
 
     @Component()
     export default class IframeView extends Vue {
-        isLoading: boolean = true
-        initPath: string = ''
-        src: string = ''
-        leaving: boolean = false
+        isLoading: boolean = true;
+        initPath: string = '';
+        src: string = '';
+        leaving: boolean = false;
 
         $refs: {
-            iframeEle: HTMLIFrameElement
-        }
+            iframeEle: HTMLIFrameElement;
+        };
 
-        @State projectList
-        @State currentPage
-        @State isAnyPopupShow
-        @State user
-        @State headerConfig
-        @Getter showAnnounce
+        @State projectList;
+        @State currentPage;
+        @State isAnyPopupShow;
+        @State user;
+        @State services;
+        @State headerConfig;
+        @Getter showAnnounce;
+        @Getter getServiceHooks;
+        @Action updateCurrentPage;
 
         created () {
             this.init()
@@ -62,13 +61,17 @@
         }
 
         beforeRouteLeave (to, from, next) {
-            if (!this.leaving && location.href.indexOf('pipeline') > -1 && (location.href.indexOf('edit') > -1 || location.href.indexOf('setting') > -1)) {
+            if (
+                !this.leaving
+                && location.href.indexOf('pipeline') > -1
+                && (location.href.indexOf('edit') > -1 || location.href.indexOf('setting') > -1)
+            ) {
                 this.leaveConfirm(to, from, next)
                 return
             }
             next()
         }
-        
+
         leaveConfirm (to, from, next) {
             this.leaving = true
             this.$bkInfo({
@@ -79,7 +82,7 @@
                 confirmFn: () => {
                     this.src = null
                     this.$nextTick(() => {
-                        next(true)
+                    next(true)
                     })
                 },
                 cancelFn: () => {
@@ -97,107 +100,191 @@
             return this.$route.name === 'job'
         }
 
-        backHome () {
-            if (this.needLoading) {
-                this.isLoading = true
-            }
-            if (this.$refs.iframeEle) {
-                this.iframeUtil.goHome(this.$refs.iframeEle.contentWindow)
-            }
+        get isEplus (): boolean {
+            return this.currentPage.iframe_url.indexOf('eplus.') > -1
         }
 
-        init () {
-            const { showProjectList } = this.headerConfig
-            const { projectIdType } = this.$route.meta
-            const query = queryStringify(this.$route.query)
-            const path = this.$route.path.replace('/console', '')
-            const hash = this.$route.hash
-            
-            if (showProjectList) {
-                const reg = /^\/?\w+\/(([\w-]+)\/?)(\S*)\/?$/
-                const matchResult = path.match(reg)
-                const { projectId } = this.$route.params
-                const initPath = matchResult ? matchResult[3] : ''
+        get underlineProjectList () {
+            return this.projectList.map((item) => ({
+                ...item,
+                project_code: item.projectCode,
+                project_id: item.projectId,
+                project_name: item.projectName,
+                cc_app_id: item.ccAppId,
+                cc_app_name: item.ccAppName,
+                is_offlined: item.offlined,
+                bg_id: item.bgId,
+                approval_status: item.approvalStatus
+            }))
+        }
 
-                if (projectIdType === 'path') {
-                    this.src = urlJoin(this.currentPage.iframe_url, projectId, initPath) + `${query ? '?' + query : ''}` + hash
+    get serviceHooks (): any[] {
+        if (this.currentPage && this.currentPage.id) {
+            return this.getServiceHooks(this.currentPage.id)
+        }
+        return []
+    }
+
+    backHome () {
+        if (this.needLoading) {
+            this.isLoading = true
+        }
+        if (this.$refs.iframeEle) {
+            this.iframeUtil.goHome(this.$refs.iframeEle.contentWindow)
+        }
+    }
+
+    init () {
+        const { showProjectList } = this.headerConfig
+        const { projectIdType } = this.$route.meta
+        const query = queryStringify(this.$route.query)
+        const path = this.$route.path.replace('/console', '')
+        const hash = this.$route.hash
+
+        if (showProjectList) {
+            const reg = /^\/?\w+\/(([\w-]+)\/?)(\S*)\/?$/
+            const matchResult = path.match(reg)
+            const { projectId } = this.$route.params
+            const initPath = matchResult ? matchResult[3] : ''
+
+            if (projectIdType === 'path') {
+                if (this.isEplus) {
+                    this.src = this.currentPage.iframe_url
                 } else {
-                    const query = Object.assign(this.$route.query, {
-                        projectId
-                    })
-                    this.src = urlJoin(this.currentPage.iframe_url, initPath) + '?' + queryStringify(query) + hash
+                    this.src
+                    = urlJoin(this.currentPage.iframe_url, projectId, initPath)
+                    + `${query ? '?' + query : ''}`
+                    + hash
                 }
             } else {
-                const reg = /^\/?\w+\/(\S*)\/?$/
-                const initPath = path.match(reg) ? path.replace(reg, '$1') : ''
-                const query = Object.assign(
+                const query = Object.assign(this.$route.query, {
+                    projectId
+                })
+                this.src
+                = urlJoin(this.currentPage.iframe_url, initPath)
+                + '?'
+                + queryStringify(query)
+                + hash
+            }
+        } else {
+            const reg = /^\/?\w+\/(\S*)\/?$/
+            const initPath = path.match(reg) ? path.replace(reg, '$1') : ''
+
+            const query = Object.assign(
                     this.currentPage.link === '/permission/' ? {} : { project_code: cookie.get(X_DEVOPS_PROJECT_ID) },
                     this.$route.query
                 )
-                this.src = urlJoin(this.currentPage.iframe_url, initPath) + '?' + queryStringify(query) + hash
+
+            this.src
+                = urlJoin(this.currentPage.iframe_url, initPath)
+                + '?'
+                + queryStringify(query)
+                + hash
+        }
+    }
+
+    onLoad () {
+        this.isLoading = false
+        if (this.$refs.iframeEle) {
+            console.log(this.serviceHooks, 'this.serviceHooks')
+            const childWin = this.$refs.iframeEle.contentWindow
+            this.iframeUtil.syncProjectList(childWin, this.underlineProjectList)
+            this.iframeUtil.syncUserInfo(childWin, this.user)
+            this.iframeUtil.syncLocale(childWin, this.$i18n.locale)
+            this.iframeUtil.syncServiceHooks(childWin, this.serviceHooks)
+            if (this.$route.params.projectId) {
+                this.iframeUtil.syncProjectId(childWin, this.$route.params.projectId)
             }
         }
+    }
 
-        onLoad () {
-            this.isLoading = false
-            if (this.$refs.iframeEle) {
-                const childWin = this.$refs.iframeEle.contentWindow
-                this.iframeUtil.syncProjectList(childWin, this.projectList)
-                this.iframeUtil.syncUserInfo(childWin, this.user)
-                this.iframeUtil.syncLocale(childWin, this.$i18n.locale)
-                
-                if (this.$route.params.projectId) {
-                    this.iframeUtil.syncProjectId(childWin, this.$route.params.projectId)
-                }
+    isSameModule (newPath: string, oldPath: string): boolean {
+        return getServiceAliasByPath(newPath) === getServiceAliasByPath(oldPath)
+    }
+
+    async updateToken () {
+       try {
+            let data = await this.$ajax.get(`/project/api/user/services/${this.currentPage.id}/url/get`)
+            if (!isAbsoluteUrl(data)) {
+                data = `${location.origin}${data}`
             }
-        }
-
-        isSameModule (newPath: string, oldPath: string): boolean {
-            return getServiceAliasByPath(newPath) === getServiceAliasByPath(oldPath)
-        }
-
-        @Watch('$route')
-        routeChange (newRoute: ObjectMap, oldRoute: ObjectMap): void {
-            const { path, params } = newRoute
-            const { path: oldPath, params: oldParams } = oldRoute
-            if (!this.isSameModule(path, oldPath)) {
+            if (data !== this.currentPage.iframe_url) {
                 this.isLoading = true
-                this.init()
-            } else if (params.projectId !== oldParams.projectId) {
-                if (this.$refs.iframeEle && params.projectId) { // 将当前projectId同步到子窗口
-                    this.iframeUtil.syncProjectId(this.$refs.iframeEle.contentWindow, params.projectId)
-                }
+                this.updateCurrentPage({
+                    ...this.currentPage,
+                    iframe_url: data,
+                    grayIframeUrl: data
+                })
+                this.services.forEach((service) => {
+                    service.children.forEach((child) => {
+                        if (child.id === this.currentPage.id) {
+                            child.iframe_url = data
+                            child.grayIframeUrl = data
+                        }
+                    })
+                })
+                this.$nextTick(this.init)
+            }
+       } catch (error) {
+            console.log(error)
+       }
+    }
+
+    @Watch('$route')
+    routeChange (newRoute: ObjectMap, oldRoute: ObjectMap): void {
+        const { path, params } = newRoute
+        const { path: oldPath, params: oldParams } = oldRoute
+        if (!this.isSameModule(path, oldPath)) {
+            this.isLoading = true
+            this.init()
+        } else if (params.projectId !== oldParams.projectId) {
+            if (this.$refs.iframeEle && params.projectId) {
+                // 将当前projectId同步到子窗口
+                this.updateToken()
+                this.iframeUtil.syncProjectId(
+                    this.$refs.iframeEle.contentWindow,
+                    params.projectId
+                )
             }
         }
+    }
 
-        @Watch('projectList')
-        handleProjectListChange (projectList, oldList) {
-            if (this.$refs.iframeEle) {
-                const childWin = this.$refs.iframeEle.contentWindow
-                this.iframeUtil.syncProjectList(childWin, projectList)
-            }
+    @Watch('underlineProjectList')
+    handleProjectListChange (projectList) {
+        if (this.$refs.iframeEle) {
+            const childWin = this.$refs.iframeEle.contentWindow
+            this.iframeUtil.syncProjectList(childWin, projectList)
         }
+    }
 
-        @Watch('user')
-        handleUserChange (user) {
-            if (this.$refs.iframeEle) {
-                const childWin = this.$refs.iframeEle.contentWindow
-                this.iframeUtil.syncUserInfo(childWin, user)
-            }
+    @Watch('user')
+    handleUserChange (user) {
+        if (this.$refs.iframeEle) {
+            const childWin = this.$refs.iframeEle.contentWindow
+            this.iframeUtil.syncUserInfo(childWin, user)
         }
+    }
 
-        @Watch('$i18n.locale')
-        handleLocaleChange (locale) {
+    @Watch('$i18n.locale')
+    handleLocaleChange (locale) {
+        if (this.$refs.iframeEle) {
+            const childWin = this.$refs.iframeEle.contentWindow
+            this.iframeUtil.syncLocale(childWin, locale)
+        }
+    }
+
+        @Watch('serviceHooks')
+        handleServiceHookChange (hooks) {
             if (this.$refs.iframeEle) {
                 const childWin = this.$refs.iframeEle.contentWindow
-                this.iframeUtil.syncLocale(childWin, locale)
+                this.iframeUtil.syncServiceHooks(childWin, hooks)
             }
         }
     }
 </script>
 
 <style lang="scss">
-    @import '../assets/scss/conf';
+    @import "../assets/scss/conf";
     .devops-iframe-content {
         position: absolute;
         left: 0;

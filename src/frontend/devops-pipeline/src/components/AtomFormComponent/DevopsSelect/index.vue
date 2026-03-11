@@ -37,14 +37,14 @@
                 <template v-if="hasGroup">
                     <li
                         v-for="(item, index) in filteredList"
-                        :key="item.id + index"
+                        :key="item.vKey"
                         :disabled="item.disabled"
                     >
                         <div class="option-group-name">{{ item.name }}</div>
                         <div
                             class="option-group-item"
                             v-for="(child, childIndex) in item.children"
-                            :key="child.id"
+                            :key="child.vKey"
                             :class="{
                                 active: child.active,
                                 selected: child.selected
@@ -61,7 +61,7 @@
                 <template v-else>
                     <li
                         v-for="(item, index) in filteredList"
-                        :key="item.id + index"
+                        :key="item.vKey"
                         :class="{
                             'option-item': true,
                             active: item.active,
@@ -123,7 +123,10 @@
             filteredList () {
                 const { displayName, optionList } = this
                 const strVal = String(displayName).toLowerCase()
-                return this.formatList(optionList, strVal)
+                return this.formatList(optionList, strVal).map((item, index) => ({
+                    ...item,
+                    vKey: `option-${item.id ?? ''}-${index}`
+                }))
             },
             hasOption () {
                 return Array.isArray(this.filteredList) && this.filteredList.length > 0
@@ -214,6 +217,7 @@
                                 return {
                                     ...child,
                                     id: child[paramId],
+                                    vKey: `child-${child[paramId] ?? ''}-${childIndex}`,
                                     name: child[paramName],
                                     active: child.id === this.value,
                                     selected: this.selectedPointer === childIndex && this.selectedGroupPointer === index

@@ -22,6 +22,7 @@
         <PipelineListEmpty
             slot="empty"
             :is-patch="isPatchView"
+            :refresh-list="refresh"
         ></PipelineListEmpty>
         <div
             v-if="selectionLength > 0"
@@ -958,6 +959,8 @@
                     const collation = prop ? ORDER_ENUM[order] : ORDER_ENUM.descending
                     localStorage.setItem('pipelineSortType', sortType)
                     localStorage.setItem('pipelineSortCollation', collation)
+
+                    console.log('sortType', sortType, this.$route.fullPath)
                     this.$router.replace({
                         query: {
                             ...this.$route.query,

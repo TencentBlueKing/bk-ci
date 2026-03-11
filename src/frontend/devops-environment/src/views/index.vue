@@ -26,6 +26,27 @@
                 >
                 </bk-tab-panel>
             </bk-tab>
+            <span class="monitoring">
+                <span
+                    v-if="isEnableDashboard && activePanel === 'nodeList'"
+                    class="enable-monitoring ml5"
+                >
+                    <i class="devops-icon icon-tiaozhuan jump-icon"></i>
+                    <a
+                        :href="jumpDashboardUrl"
+                        target="_blank"
+                    >{{ $t('environment.查看构建机监控') }}</a>
+                </span>
+                <!-- <span
+                    class="enable-monitoring"
+                >{{ $t('environment.enableBuildAgentMonitoring') }}</span>
+                <p
+                    class="enable-monitoring"
+                >
+                    <span>{{ $t('environment.buildAgentMonitoring') }}</span>
+                    <span class="enabled">{{ $t('environment.enabled') }}</span>
+                </p> -->
+            </span>
         </div>
 
         <router-view :container-width="containerWidth"></router-view>
@@ -34,23 +55,50 @@
 
 <script>
     import environmentUrl from '@/scss/logo/environment.svg'
+    import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
         data () {
             return {
                 environmentUrl,
+                isEnableDashboard: false,
+                bizId: 0,
                 containerWidth: 0,
             }
         },
 
         computed: {
+            ...mapState('environment', [
+                'extensions'
+            ]),
+            ...mapGetters('environment', {
+                hookIds: 'asideNavBarExtIds'
+            }),
+            projectId () {
+                return this.$route.params.projectId
+            },
+            extNav () {
+                return this.extensions.map((ext) => ({
+                    name: 'extPage',
+                    label: ext.serviceName,
+                    icon: 'devops-icon icon-placeholder',
+                    params: {
+                        itemId: ext.itemId,
+                        serviceCode: ext.serviceCode
+                    }
+                }))
+            },
             activePanel () {
-                const routeMap = {
-                    nodeList: 1,
-                    nodeDetail: 1,
-                    setNodeTag: 1,
+                if (this.$route.name === 'extPage') {
+                    return 'extPage'
+                } else {
+                    const routeMap = {
+                        nodeList: 1,
+                        nodeDetail: 1,
+                        setNodeTag: 1,
+                    }
+                    return routeMap[this.$route.name] === 1 ? 'nodeList' : 'envList'
                 }
-                return routeMap[this.$route.name] === 1 ? 'nodeList' : 'envList'
             },
             panels () {
                 return [
@@ -63,8 +111,32 @@
                         name: 'nodeList',
                         label: this.$t('environment.node'),
                         icon: 'devops-icon icon-node'
-                    }
+                    },
+                    ...this.extNav
                 ]
+            },
+            projectCode () {
+                return this.$route.params.projectId
+            },
+            jumpDashboardUrl () {
+                return `https://bkm.woa.com/?bizId=${this.bizId}#/grafana/d/bT8qy3NVa`
+            }
+        },
+        watch: {
+            hookIds: {
+                handler: function (hookIds) {
+                    hookIds && this.getEnvironmentExtensions({
+                        projectCode: this.projectCode,
+                        hookIds: hookIds
+                    })
+                },
+                immediate: true
+            },
+            projectCode: function (projectCode) {
+                this.getEnvironmentExtensions({
+                    projectCode,
+                    hookIds: this.hookIds
+                })
             }
         },
         created () {
@@ -74,29 +146,48 @@
                 })
             }
         },
-        mounted () {
+        async mounted () {
             this.updateContainerWidth()
             window.addEventListener('resize', this.updateContainerWidth)
+            await this.getEnableDashboard()
         },
         beforeDestroy () {
             window.removeEventListener('resize', this.updateContainerWidth)
         },
         methods: {
+            ...mapActions('environment', [
+                'getEnvironmentExtensions'
+            ]),
             updateContainerWidth () {
                 if (this.$refs.environmentContainer) {
                     this.containerWidth = this.$refs.environmentContainer.clientWidth
                 }
             },
+            async getEnableDashboard () {
+                try {
+                    const res = await this.$store.dispatch('environment/checkEnableDashboard', {
+                        projectId: this.projectId
+                    })
+                    if (res) {
+                        this.isEnableDashboard = res.result
+                        this.bizId = res.bizId
+                    }
+                } catch (e) {
+                    console.err(e)
+                }
+            },
             handleChangeTab (name) {
                 if (this.activePanel === name) return
+                const item = this.panels.find(navItem => navItem.name === name)
 
                 const routeMap = {
                     envList: 'envList',
-                    nodeList: 'nodeList'
+                    nodeList: 'nodeList',
+                    extPage: 'extPage'
                 }
-                
                 this.$router.push({
-                    name: routeMap[name]
+                    name: routeMap[name],
+                    params: item.params
                 })
             }
         }
@@ -117,13 +208,12 @@
     box-sizing: border-box;
     min-height: calc(100% - 210px);
     overflow: hidden;
-
     .biz-header {
         position: relative;
         z-index: 1;
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
         width: 100%;
         height: 48px;
         box-sizing: border-box;
@@ -132,12 +222,9 @@
         background-color: #FFFFFF;
         border-bottom: 1px solid rgb(220, 222, 229);
     }
-
     .environment-tit {
         display: flex;
         align-items: center;
-        position: absolute;
-        left: 24px;
         img {
             vertical-align: middle;
         }
@@ -148,6 +235,32 @@
 
     .tabs-manage {
         height: 48px;
+    }
+    .monitoring {
+        width: 200px;
+        text-align: right;
+        .enable-monitoring, a {
+            margin-left: auto;
+            font-size: 12px;
+            color: #3A84FF;
+            cursor: pointer;
+        }
+        .enabled {
+            display: inline-block;
+            margin-left: 8px;
+            width: 56px;
+            height: 22px;
+            line-height: 22px;
+            background: #EDF4FF;
+            text-align: center;
+            border-radius: 2px;
+        }
+
+        .jump-icon {
+            font-size: 18px;
+            position: relative;
+            top: 2px;
+        }
     }
 }
 </style>

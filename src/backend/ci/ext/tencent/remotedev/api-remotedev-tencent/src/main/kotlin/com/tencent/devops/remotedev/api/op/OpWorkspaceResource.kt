@@ -1,0 +1,204 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.remotedev.api.op
+
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.ShareWorkspace
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WorkspaceShared
+import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
+
+@Tag(name = "OP_WORKSPACE", description = "OP_WORKSPACE")
+@Path("/op/workspace")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpWorkspaceResource {
+
+    @Operation(summary = "分享工作空间")
+    @POST
+    @Path("/share/add")
+    fun shareWorkspace(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间共享", required = true)
+        workspaceShared: WorkspaceSharedOpUse
+    ): Result<Boolean>
+
+    @Operation(summary = "分享或删除工作空间")
+    @POST
+    @Path("/share/update")
+    fun shareWorkspace4OP(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间共享信息", required = true)
+        shareWorkspace: ShareWorkspace
+    ): Result<Boolean>
+
+    @Operation(summary = "获取分享工作空间列表")
+    @GET
+    @Path("/share/list")
+    fun getShareWorkspace(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String?
+    ): Result<List<WorkspaceShared>>
+
+    @Operation(summary = "删除分享工作空间")
+    @DELETE
+    @Path("/share/delete")
+    fun deleteShareWorkspace(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "id", required = true)
+        @QueryParam("id")
+        id: Long
+    ): Result<Boolean>
+
+    @Operation(summary = "变更工作空间状态")
+    @GET
+    @Path("/status_change")
+    fun updateStatus(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @QueryParam("workspaceStatus")
+        workspaceStatus: WorkspaceStatus
+    ): Result<Boolean>
+
+    @Operation(summary = "通过已有cgsIp实例创建workspace记录")
+    @POST
+    @Path("/create_win_workspace_by_vm")
+    fun createWinWorkspaceByVm(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "老workspace记录，可以为空，如果填写将会做清理", required = true)
+        @QueryParam("oldWorkspaceName")
+        oldWorkspaceName: String?,
+        @Parameter(description = "项目ID，可以为空，如果oldWorkspaceName=null 必填", required = true)
+        @QueryParam("projectId")
+        projectId: String?,
+        @Parameter(description = "工作空间类型，可以为空，如果oldWorkspaceName=null 必填", required = true)
+        @QueryParam("ownerType")
+        ownerType: WorkspaceOwnerType?,
+        @Parameter(description = "机器uid", required = true)
+        @QueryParam("uid")
+        uid: String,
+        @Parameter(description = "是否走备份流程", required = true)
+        @QueryParam("bak")
+        bak: Boolean
+    ): Result<Boolean>
+
+    @Operation(summary = "手动通过已有workspace注册环境管理节点")
+    @POST
+    @Path("/devx_env_node_init")
+    fun devxEnvNodeInit(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "workspaceName", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "取消公共云桌面节点，将其转换为团队云桌面")
+    @POST
+    @Path("/devx_env_node_del")
+    fun devxEnvNodeDel(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "workspaceName", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "工作空间生成录屏密钥")
+    @POST
+    @Path("/create_workspace_record_ticket")
+    fun createWorkspaceRecordTicket(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        workspaceNames: Set<String>,
+        @Parameter(description = "类型", required = false)
+        @QueryParam("type")
+        type: String?
+    ): Result<Boolean>
+
+    @Operation(summary = "由于取消了任务轮询，现在状态流转依赖于回调，所以增加此监控手段")
+    @GET
+    @Path("/pending_check")
+    fun pendingCheck(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "企微群id", required = true)
+        @QueryParam("ww")
+        ww: String?
+    ): Result<String>
+
+    @Operation(summary = "更新工作空间录屏密钥启用状态")
+    @POST
+    @Path("/update_workspace_record_ticket_enable")
+    fun updateWorkspaceRecordTicketEnable(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "密钥类型", required = true)
+        @QueryParam("type")
+        type: String,
+        @Parameter(description = "是否启用", required = true)
+        @QueryParam("enable")
+        enable: Boolean
+    ): Result<Boolean>
+}

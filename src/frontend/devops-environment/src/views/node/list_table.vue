@@ -24,6 +24,7 @@
                 prop="displayName"
                 fixed="left"
                 min-width="200"
+                :show-overflow-tooltip="!isEditNodeStatus"
             >
                 <template slot-scope="props">
                     <div
@@ -68,7 +69,11 @@
                                 }
                             } : {}"
                             class="node-name"
-                            :class="{ 'pointer': canShowDetail(props.row), 'useless': !canShowDetail(props.row) || !props.row.canUse }"
+                            :class="{
+                                'pointer': canShowDetail(props.row),
+                                'useless': !canShowDetail(props.row) || !props.row.canUse,
+                                'unavailable': removedStatus.includes(props.row.nodeStatus)
+                            }"
                             :title="props.row.displayName"
                             @click="toNodeDetail(props.row)"
                         >
@@ -97,8 +102,8 @@
             </bk-table-column>
             <bk-table-column
                 label="IP"
-                sortable="custom"
                 prop="nodeIp"
+                sortable="custom"
                 min-width="120"
                 show-overflow-tooltip
             >
@@ -160,10 +165,11 @@
             </bk-table-column>
             <bk-table-column
                 v-if="allRenderColumnMap.os"
-                sortable="custom"
                 :label="$t('environment.nodeInfo.os')"
+                sortable="custom"
                 min-width="120"
                 prop="osName"
+                show-overflow-tooltip
             >
                 <template slot-scope="props">
                     {{ props.row.osName || '-' }}
@@ -173,63 +179,74 @@
                 v-if="allRenderColumnMap.nodeStatus"
                 :label="`${$t('environment.status')}(${$t('environment.version')})`"
                 sortable="custom"
-                min-width="180"
                 prop="nodeStatus"
+                min-width="180"
+                show-overflow-tooltip
             >
                 <template slot-scope="props">
-                    <div
-                        class="table-node-item node-item-status"
-                        v-if="props.row.nodeStatus === 'BUILDING_IMAGE'"
-                    >
-                        <span class="node-status-icon normal-stutus-icon"></span>
-                        <span class="node-status">{{ $t('environment.nodeInfo.normal') }}</span>
-                    </div>
                     <div class="table-node-item node-item-status">
-                        <!-- 状态icon -->
-                        <span
-                            class="node-status-icon normal-stutus-icon"
-                            v-if="successStatus.includes(props.row.nodeStatus)"
-                        ></span>
-                        <span
-                            class="node-status-icon abnormal-stutus-icon"
-                            v-if="failStatus.includes(props.row.nodeStatus)"
+                        <!-- 责任人已变更 -->
+                        <template
+                            v-if="((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && props.row.createdUser !== props.row.bakOperator)
+                                || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator?.split(';').indexOf(props.row.createdUser) === -1))"
                         >
-                        </span>
-                        <span
-                            v-if="runningStatus.includes(props.row.nodeStatus)"
-                            class="loading-icon"
-                        >
-                            <bk-loading
-                                theme="primary"
-                                mode="spin"
-                                size="mini"
-                                is-loading
+                            <span class="prompt-operator">
+                                <i class="devops-icon icon-exclamation-circle"></i>
+                                {{ $t('environment.nodeInfo.prohibited') }}
+                            </span>
+                        </template>
+                        <!-- 已从 CMDB 、蓝鲸CC 移除 -->
+                        <template v-else-if="removedStatus.includes(props.row.nodeStatus) && deploymentNodes.includes(props.row.nodeType)">
+                            <i class="bk-icon node-removed-icon icon-close error"></i>
+                            <span class="node-removed-message">
+                                {{ removedMessage[props.row.nodeStatus] }}
+                            </span>
+                        </template>
+                        <template v-else>
+                            <!-- 状态icon -->
+                            <StatusIcon
+                                v-if="successStatus.includes(props.row.nodeStatus)"
+                                status="success"
                             />
-                        </span>
-                        <!-- 状态值 -->
-                        <span
-                            class="install-agent"
-                            v-if="props.row.nodeStatus === 'RUNNING'"
-                            @click="installAgent(props.row)"
-                        >
-                            {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}
-                        </span>
-                        <span
-                            class="node-status"
-                            v-else
-                        >
-                            {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] || props.row.nodeStatus }}
-                        </span>
-                        <div
-                            class="install-agent"
-                            v-if="['THIRDPARTY'].includes(props.row.nodeType) && props.row.nodeStatus === 'ABNORMAL'"
-                            @click="installAgent(props.row)"
-                        >
-                            {{ `（${$t('environment.install')}Agent）` }}
-                        </div>
-                        <span v-if="props.row.agentVersion">
-                            ({{ props.row.agentVersion }})
-                        </span>
+                            <StatusIcon
+                                v-else-if="failStatus.includes(props.row.nodeStatus)"
+                                status="error"
+                            />
+                            <StatusIcon
+                                v-else-if="['NOT_INSTALLED'].includes(props.row.nodeStatus)"
+                                status="normal"
+                            />
+                            <span
+                                v-else-if="runningStatus.includes(props.row.nodeStatus)"
+                                class="loading-icon"
+                            >
+                                <bk-loading
+                                    theme="primary"
+                                    mode="spin"
+                                    size="mini"
+                                    is-loading
+                                />
+                            </span>
+                            <!-- 状态值 -->
+                            <span class="node-status">
+                                {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}
+                                <span v-if="props.row.agentVersion">
+                                    ({{ props.row.agentVersion }})
+                                </span>
+                                <span
+                                    v-if="props.row.nodeStatus === 'RUNNING'"
+                                    v-bk-tooltips="$t('environment.查看日志')"
+                                    class="log-icon-box"
+                                    @click="handleShowLogDetail(props.row)"
+                                >
+                                    <Icon
+                                        class="log-icon"
+                                        name="log"
+                                        size="16"
+                                    />
+                                </span>
+                            </span>
+                        </template>
                     </div>
                 </template>
             </bk-table-column>
@@ -255,7 +272,7 @@
             ></bk-table-column>
             <bk-table-column
                 v-if="allRenderColumnMap.lastModifyBy"
-                :label="$t('environment.lastModifier')"
+                :label="$t('environment.nodeInfo.lastModifyBy')"
                 sortable="custom"
                 prop="lastModifyUser"
                 min-width="120"
@@ -304,12 +321,121 @@
             </bk-table-column>
             <bk-table-column
                 :label="$t('environment.operation')"
+                :min-width="200"
                 fixed="right"
-                width="180"
             >
                 <template slot-scope="props">
                     <template v-if="props.row.canUse">
-                        <div class="table-node-item node-item-handler">
+                        <!-- 用途为部署的节点-操作按钮 -->
+                        <div class="table-node-item">
+                            <template v-if="deploymentNodes.includes(props.row.nodeType)">
+                                <span
+                                    v-bk-tooltips="{
+                                        content: $t('environment.主机负责人已变更，请联系主机负责人重新授权使用'),
+                                        disabled: !(props.row.allOperator.split(';').indexOf(userInfo.username) === -1)
+                                    }"
+                                >
+                                    <bk-button
+                                        v-if="((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && !props.row.bakOperator.includes(props.row.createdUser))
+                                            || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator?.split(';').indexOf(props.row.createdUser) === -1))"
+                                        class="mr5"
+                                        :disabled="props.row.allOperator.split(';').indexOf(userInfo.username) === -1"
+                                        text
+                                        @click="changeCreatedUser(props.row)"
+                                    >
+                                        {{ $t('environment.重新授权') }}
+                                    </bk-button>
+                                </span>
+                                <!-- CC中不存在 - 重新导入 -->
+                                <span
+                                    v-bk-tooltips="{
+                                        content: $t('environment.你不是主机负责人，请联系主机负责人重新导入使用'),
+                                        disabled: !(props.row.allOperator.split(';').indexOf(userInfo.username) === -1)
+                                    }"
+                                >
+                                    <bk-button
+                                        v-if="['NOT_IN_CC'].includes(props.row.nodeStatus)"
+                                        class="mr5"
+                                        text
+                                        v-perm="{
+                                            hasPermission: props.row.canEdit,
+                                            disablePermissionApi: true,
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: NODE_RESOURCE_TYPE,
+                                                resourceCode: props.row.nodeHashId,
+                                                action: NODE_RESOURCE_ACTION.EDIT
+                                            }
+                                        }"
+                                        :disabled="props.row.allOperator.split(';').indexOf(userInfo.username) === -1"
+                                        @click="handleReImport(props.row)"
+                                    >
+                                        {{ $t('environment.reImport') }}
+                                    </bk-button>
+                                </span>
+                                <!-- 重装Agent -->
+                                <bk-button
+                                    v-if="props.row.nodeStatus === 'ABNORMAL' || (props.row.nodeStatus === 'RUNNING' && props.row.agentStatus === 1)"
+                                    v-perm="{
+                                        hasPermission: props.row.canEdit,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: NODE_RESOURCE_TYPE,
+                                            resourceCode: props.row.nodeHashId,
+                                            action: NODE_RESOURCE_ACTION.EDIT
+                                        }
+                                    }"
+                                    :disable="props.row.nodeStatus === 'RUNNING'"
+                                    text
+                                    class="mr5"
+                                    @click="installAgent(props.row)"
+                                >
+                                    {{ $t('environment.reinstallAgent') }}
+                                </bk-button>
+                                <!-- 未安装Agent -->
+                                <bk-button
+                                    v-if="props.row.nodeStatus === 'NOT_INSTALLED' || (props.row.nodeStatus === 'RUNNING' && props.row.agentStatus === 0)"
+                                    v-perm="{
+                                        hasPermission: props.row.canEdit,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: NODE_RESOURCE_TYPE,
+                                            resourceCode: props.row.nodeHashId,
+                                            action: NODE_RESOURCE_ACTION.EDIT
+                                        }
+                                    }"
+                                    :disable="props.row.nodeStatus === 'RUNNING'"
+                                    text
+                                    class="mr5"
+                                    @click="installAgent(props.row)"
+                                >
+                                    {{ $t('environment.installAgent') }}
+                                </bk-button>
+                            </template>
+                            <!-- 用途为构建的节点-操作按钮 -->
+                            <template v-else>
+                                <!-- Agent异常 - 重装Agent -->
+                                <bk-button
+                                    v-if="props.row.nodeStatus === 'ABNORMAL'"
+                                    v-perm="{
+                                        hasPermission: props.row.canEdit,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: NODE_RESOURCE_TYPE,
+                                            resourceCode: props.row.nodeHashId,
+                                            action: NODE_RESOURCE_ACTION.EDIT
+                                        }
+                                    }"
+                                    text
+                                    class="mr5"
+                                    @click="installAgent(props.row)"
+                                >
+                                    {{ $t('environment.reinstallAgent') }}
+                                </bk-button>
+                            </template>
                             <span
                                 v-if="['THIRDPARTY'].includes(props.row.nodeType)"
                                 v-perm="{
@@ -327,8 +453,9 @@
                             >
                                 {{ $t('environment.setTag') }}
                             </span>
-                            <span
+                            <bk-button
                                 v-if="!['TSTACK'].includes(props.row.nodeType)"
+                                text
                                 v-perm="{
                                     hasPermission: props.row.canDelete,
                                     disablePermissionApi: true,
@@ -339,10 +466,34 @@
                                         action: NODE_RESOURCE_ACTION.DELETE
                                     }
                                 }"
-                                class="node-handle delete-node-text"
+                                :disable="props.row.nodeStatus === 'RUNNING'"
+                                class="mr5"
                                 @click.stop="confirmDelete(props.row, index)"
                             >
                                 {{ $t('environment.delete') }}
+                            </bk-button>
+                            <span
+                                id="moreHandler"
+                                class="node-handle more-handle"
+                                v-if="props.row.canUse && props.row.nodeType === 'DEVCLOUD'"
+                            >
+                                <bk-popover
+                                    placement="bottom-start"
+                                    size="samll"
+                                    theme="light"
+                                >
+                                    <span>{{ $t('environment.more') }}</span>
+                                    <div
+                                        slot="content"
+                                        class="devcloud-menu-list"
+                                    >
+                                        <dropdown-list
+                                            :is-show="showTooltip"
+                                            @handleNode="handleNode"
+                                            :node="props.row"
+                                        ></dropdown-list>
+                                    </div>
+                                </bk-popover>
                             </span>
                         </div>
                     </template>
@@ -373,6 +524,7 @@
                 />
             </template>
         </bk-table>
+
         <bk-sideslider
             :is-show.sync="isShowSetTagSlider"
             :show-mask="false"
@@ -424,7 +576,7 @@
                             >
                             </bk-option>
                         </bk-select>
-                        
+
                         <i
                             class="devops-icon icon-plus-circle set-icon"
                             @click="addRow"
@@ -459,15 +611,19 @@
 </template>
 
 <script>
-    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
+    import dropdownList from '@/components/devops/environment/dropdown-list'
     import EmptyTableStatus from '@/components/empty-table-status'
+    import StatusIcon from '@/components/status-icon.vue'
+    import { ALLNODE, ENV_ACTIVE_NODE_TYPE } from '@/store/constants'
+    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
     import { mapActions } from 'vuex'
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
-    import { ENV_ACTIVE_NODE_TYPE, ALLNODE } from '@/store/constants'
 
     export default {
         components: {
-            EmptyTableStatus
+            EmptyTableStatus,
+            dropdownList,
+            StatusIcon
         },
         props: {
             nodeList: {
@@ -507,7 +663,7 @@
                 ALLNODE,
                 curEditNodeDisplayName: '',
                 isEditNodeStatus: false,
-                tableSize: localStorage.getItem('node_table_size') || 'small',
+                tableSize: 'small',
                 tableColumn: [
                     {
                         id: 'displayName',
@@ -570,17 +726,27 @@
                     { id: 'latestBuildTime' }
                 ],
                 isShowSetTagSlider: false,
-                runningStatus: ['CREATING', 'STARTING', 'STOPPING', 'RESTARTING', 'DELETING', 'BUILDING_IMAGE'],
+                runningStatus: ['CREATING', 'RUNNING', 'STARTING', 'STOPPING', 'RESTARTING', 'DELETING', 'BUILDING_IMAGE'],
                 successStatus: ['NORMAL', 'BUILD_IMAGE_SUCCESS'],
-                failStatus: ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN', 'RUNNING'],
+                failStatus: ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN'],
+                deploymentNodes: ['CC', 'CMDB', 'UNKNOWN', 'OTHER'], // deployment 部署用途的节点
                 setTagForm: [
                     { tagKeyId: '', tagValueId: '' }
                 ],
                 currentNodeId: null,
-                visibleLabelCountList: {}
+                visibleLabelCountList: {},
+                removedStatus: ['NOT_IN_CC', 'NOT_IN_CMDB'],
+                removedMessage: {
+                    NOT_IN_CMDB: this.$t('environment.节点已从CMDB移除，不可使用'),
+                    NOT_IN_CC: this.$t('environment.节点已从蓝鲸CC移除，不可使用')
+                },
+                isDeleteIng: false
             }
         },
         computed: {
+            userInfo () {
+                return window.userInfo
+            },
             projectId () {
                 return this.$route.params.projectId
             },
@@ -592,12 +758,12 @@
             },
             usageMap () {
                 return {
-                    DEVCLOUD: this.$t('environment.build'),
-                    THIRDPARTY: this.$t('environment.build'),
-                    CC: this.$t('environment.deploy'),
-                    CMDB: this.$t('environment.deploy'),
-                    UNKNOWN: this.$t('environment.deploy'),
-                    OTHER: this.$t('environment.deploy')
+                    DEVCLOUD: this.$t('environment.构建'),
+                    THIRDPARTY: this.$t('environment.构建'),
+                    CC: this.$t('environment.部署'),
+                    CMDB: this.$t('environment.部署'),
+                    UNKNOWN: this.$t('environment.部署'),
+                    OTHER: this.$t('environment.部署')
                 }
             },
             tagKeyIdList () {
@@ -615,7 +781,6 @@
                             showMore: tags.length - visibleCount
                         }
                     }
-
                     return {
                         visibleLabels: tags,
                         hiddenLabels: [],
@@ -651,7 +816,6 @@
                             !isOverSize && tagVisibleCount++
                             return !isOverSize
                         })
-
                         acc[index] = tagVisibleCount
                     }
                     return acc
@@ -739,7 +903,8 @@
                         name: 'nodeDetail',
                         params: {
                             projectId: this.projectId,
-                            nodeHashId: node.nodeHashId
+                            nodeHashId: node.nodeHashId,
+                            enableDashboard: this.enableDashboard
                         }
                     })
                 }
@@ -774,11 +939,14 @@
                     theme: 'warning',
                     type: 'warning',
                     extCls: 'info-content',
+                    confirmLoading: true,
                     title: `${this.$t('environment.nodeInfo.deleteNodetips', [row.displayName])}`,
                     subTitle: this.$t('environment.nodeInfo.stopAgentProcessOnly'),
                     confirmFn: async () => {
                         let message, theme
                         try {
+                            if (this.isDeleteIng) return
+                            this.isDeleteIng = true
                             await this.$store.dispatch('environment/toDeleteNode', {
                                 projectId: this.projectId,
                                 params
@@ -802,8 +970,10 @@
                                 }
                             )
                         } finally {
-                            this.$emit('refresh')
+                            this.isDeleteIng = false
                             await this.requestGetCounts(this.projectId)
+                            this.$emit('changePageCurrent')
+                            this.$emit('refresh')
                         }
                     }
                 })
@@ -811,7 +981,6 @@
             handleSetTag (row) {
                 this.isShowSetTagSlider = true
                 this.currentNodeId = row.nodeId
-
                 if (row.tags && row.tags.length > 0) {
                     this.setTagForm = row.tags.flatMap(tag =>
                         tag.tagValues.map(value => ({
@@ -921,234 +1090,324 @@
                 }))
             },
             canShowDetail (row) {
-                return row.nodeType === 'THIRDPARTY'
+                return row.nodeType === 'THIRDPARTY' || (row.nodeType === 'DEVCLOUD' && row.nodeStatus === 'NORMAL')
+            },
+            handleNode (name, canUse, node) {
+                this.$emit('node', name, canUse, node)
+            },
+            handleShowLogDetail (node) {
+                this.$emit('showLogDetail', node)
+            },
+            /**
+             * 构建机信息
+             */
+            async changeCreatedUser (row) {
+                this.$bkInfo({
+                    title: this.$t('environment.重新授权'),
+                    subTitle: this.$t('environment.确认授权节点X在流水线中进行远程脚本执行或构件分发吗', [row.displayName]),
+                    confirmFn: async () => {
+                        let message, theme
+
+                        try {
+                            await this.$store.dispatch('environment/changeCreatedUser', {
+                                projectId: this.projectId,
+                                nodeHashId: row.nodeHashId
+                            })
+
+                            message = this.$t('environment.successfullyModified')
+                            theme = 'success'
+                        } catch (err) {
+                            message = err.message ? err.message : err
+                            theme = 'error'
+                        } finally {
+                            this.$bkMessage({
+                                message,
+                                theme
+                            })
+                            this.$emit('refresh')
+                        }
+                    }
+                })
+            },
+            handleReImport (row) {
+                this.$emit('reImport', row)
             }
         }
     }
 </script>
 
 <style lang="scss">
-  @import '@/scss/conf';
+@import '@/scss/conf';
 
-  .node-table-wrapper {
-      margin-top: 20px;
-      td:nth-child(2) {
-          position: relative;
-          color: $primaryColor;
-          .node-name {
-              line-height: 14px;
-              display: inline-block;
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
-          }
-          .pointer {
-              cursor: pointer;
-          }
-          .useless {
-            color: $fontLigtherColor;
-          }
-          .icon-edit {
-              position: relative;
-              left: 4px;
-              color: $fontColor;
-              cursor: pointer;
-              display: none;
-          }
-          &:hover {
-              .icon-edit {
-                  display: inline-block;
-              }
-          }
-      }
+%flex {
+    display: flex;
+    align-items: center;
+}
 
-      .th-handler,
-      td:last-child {
-          padding-right: 30px;
-      }
+.node-table-wrapper {
+    margin-top: 20px;
+    .bk-table-body-wrapper,
+    .bk-table-pagination-wrapper {
+        background-color: #fff !important;
+    }
+    td:nth-child(2) {
+        position: relative;
+        color: $primaryColor;
+        .node-name {
+            line-height: 14px;
+            display: inline-block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .pointer {
+            cursor: pointer;
+        }
+        .useless {
+          color: $fontLighterColor;
+        }
+        .unavailable {
+            text-decoration: line-through;
+        }
+        .icon-edit {
+            position: relative;
+            left: 4px;
+            color: $fontColor;
+            cursor: pointer;
+            display: none;
+        }
+        &:hover {
+            .icon-edit {
+                display: inline-block;
+            }
+        }
+    }
 
-      td:last-child {
-          cursor: pointer;
-      }
+    .th-handler,
+    td:last-child {
+        padding-right: 30px;
+    }
 
-      .edit-node-item {
-          width: 24%;
-      }
+    td:last-child {
+        cursor: pointer;
+    }
 
-      .group-label-warpper {
-          display: flex;
-          width: 100%;
-          flex-wrap: wrap;
-          margin: 3px 0;
+    .edit-node-item {
+        width: 24%;
+    }
 
-          .group-tag {
+    .prompt-operator {
+        padding-right: 10px;
+        color: #ffbf00;
+
+        .devops-icon {
+            margin-right: 6px;
+        }
+    }
+
+    .group-label-warpper {
+        display: flex;
+        width: 100%;
+        flex-wrap: wrap;
+        margin: 3px 0;
+
+        .group-tag {
             margin-bottom: 4px;
-          }
+        }
 
-          .key {
+        .key {
             height: 100%;
             margin-bottom: 2px;
-          }
-       }
+        }
+    }
 
-      .node-item-row {
+    .node-item-row {
         &.node-row-useless {
-          border: #30D878 1px solid;
-          cursor: url('../../images/cursor-lock.png'), auto;
-          color: $fontLigtherColor;
-          .node-count-item {
-            color: $fontLigtherColor;
-          }
+            cursor: url('../../images/cursor-lock.png'), auto;
+            color: $fontLighterColor;
+            .node-count-item {
+                color: $fontLighterColor;
+            }
         }
-      }
-
-      .install-agent {
-          color: $primaryColor;
-          cursor: pointer;
-      }
-
-      .node-item-content {
-          position: absolute;
-          top: 6px;
-          display: flex;
-          width: 90%;
-          margin-right: 12px;
-          z-index: 2;
-          .edit-content {
-              display: flex;
-              width: 100%;
-          }
-          .bk-form-input {
-              height: 30px;
-              font-size: 12px;
-              width: 100%;
-              padding-right: 74px;
-          }
-          .error-tips {
-              font-size: 12px;
-          }
-          .handler-btn {
-              display: flex;
-              align-items: center;
-              margin-left: 10px;
-              position: absolute;
-              right: 11px;
-              top: 8px;
-              .edit-base {
-                  cursor: pointer;
-              }
-              .save {
-                  margin-right: 8px;
-              }
-          }
-          .is-danger {
-              border-color: #ff5656;
-              background-color: #fff4f4;
-          }
-      }
-
-      .node-item-id {
-          display: flex;
-
-          i {
-            vertical-align: middle;
-            margin-left: 4px;
-          }
-      }
-
-      .node-status-icon {
-          display: inline-block;
-          margin-left: 2px;
-          width: 10px;
-          height: 10px;
-          border: 2px solid #30D878;
-          border-radius: 50%;
-          -webkit-border-radius: 50%;
-      }
-
-      .loading-icon {
-          display: inline-block;
-          position: relative;
-          width: 12px;
-          top: -12px;
-          margin-right: 5px;
-      }
-
-      .abnormal-stutus-icon {
-          border-color: $failColor;
-      }
-
-      .delete-node-text {
-          position: relative;
-          padding-right: 9px;
-      }
-
-      .normal-status-node {
-          color: #30D878;
-      }
-
-      .abnormal-status-node {
-          color: $failColor;
-      }
-
-      .pipeline-name {
-          cursor: pointer;
-          &:hover {
-              color: $primaryColor;
-          }
-      }
-  }
-
-  .set-tag-slider {
-    .bk-sideslider-content {
-      padding: 30px 24px;
-      height: calc(100vh - 150px);
     }
 
-    .set-Tag-content {
-      .key-value {
-        margin: 0 16px;
-      }
-      .form-item-row {
-        display: flex;
-        align-items: center;
-        margin-bottom: 10px;
-      }
-      .set-icon {
+    .log-icon-box {
+        position: relative;
+        top: 3px;
+    }
+
+    .log-icon {
         cursor: pointer;
-        margin-left: 10px;
-        font-size: 16px;
-      }
-      .value-input {
-        padding: 0 10px 0 8px;
-        background-color: #fff;
-        border: 1px solid #c4c6cc;
-        border-radius: 2px;
-        color: #63656e;
-        height: 32px;
-        width: 280px;
-        outline: none;
-        font-size: 12px;
-        &:focus {
-          border-color: #3a84ff;
-        }
-        &.is-danger {
-          border-color: #ff5656;
-          background-color: #fff4f4
-        }
-      }
+        margin-left: 4px;
     }
-  
-    .set-Tag-footer {
-      box-shadow: 0 -1px 0 0 #DCDEE5;
-      line-height: 47px;
-      width: 100%;
+
+    .node-removed-icon {
+        width: 20px;
+        height: 20px;
+        line-height: 20px;
+        font-size: 16px;
+        border-radius: 50%;
+        &.success {
+            background-color: #e5f6ea;
+            color: #3fc06d;
+        }
+        &.error {
+            background-color: #fdd;
+            color: #ea3636;
+        }
+    }
+    .node-removed-message {
+        padding-left: 2px;
+        color: #ea3636;
+    }
+
+    .install-agent {
+        color: $primaryColor;
+        cursor: pointer;
+    }
+
+    .node-item-content {
+        position: absolute;
+        top: 6px;
+        display: flex;
+        width: 90%;
+        margin-right: 12px;
+        z-index: 2;
+        .edit-content {
+            display: flex;
+            width: 100%;
+        }
+        .bk-form-input {
+            height: 30px;
+            font-size: 12px;
+            width: 100%;
+            padding-right: 74px;
+        }
+        .error-tips {
+            font-size: 12px;
+        }
+        .handler-btn {
+            display: flex;
+            align-items: center;
+            margin-left: 10px;
+            position: absolute;
+            right: 11px;
+            top: 8px;
+            .edit-base {
+                cursor: pointer;
+            }
+            .save {
+                margin-right: 8px;
+            }
+        }
+        .is-danger {
+            border-color: #ff5656;
+            background-color: #fff4f4;
+        }
+    }
+
+    .node-item-id {
+        display: flex;
+
+        i {
+          vertical-align: middle;
+          margin-left: 4px;
+        }
+    }
+
+    .node-status-icon {
+        display: inline-block;
+        margin-left: 2px;
+        width: 10px;
+        height: 10px;
+        border: 2px solid #30D878;
+        border-radius: 50%;
+        -webkit-border-radius: 50%;
+    }
+
+    .loading-icon {
+        display: inline-block;
+        position: relative;
+        width: 12px;
+        top: -12px;
+        margin-right: 5px;
+    }
+
+    .abnormal-stutus-icon {
+        border-color: $failColor;
+    }
+
+    .delete-node-text {
+        position: relative;
+        padding-right: 9px;
+    }
+
+    .normal-status-node {
+        color: #30D878;
+    }
+
+    .abnormal-status-node {
+        color: $failColor;
+    }
+
+    .pipeline-name {
+        cursor: pointer;
+        &:hover {
+            color: $primaryColor;
+        }
+    }
+}
+
+.set-tag-slider {
+  .bk-sideslider-content {
+    padding: 30px 24px;
+    height: calc(100vh - 150px);
+  }
+
+  .set-Tag-content {
+    .key-value {
+      margin: 0 16px;
+    }
+    .form-item-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .set-icon {
+      cursor: pointer;
+      margin-left: 10px;
+      font-size: 16px;
+    }
+    .value-input {
+      padding: 0 10px 0 8px;
+      background-color: #fff;
+      border: 1px solid #c4c6cc;
+      border-radius: 2px;
+      color: #63656e;
+      height: 32px;
+      width: 280px;
+      outline: none;
+      font-size: 12px;
+      &:focus {
+        border-color: #3a84ff;
+      }
+      &.is-danger {
+        border-color: #ff5656;
+        background-color: #fff4f4
+      }
     }
   }
 
-  .info-content {
-      .bk-dialog-type-header .header {
-          white-space: normal !important;
-      }
+  .set-Tag-footer {
+    box-shadow: 0 -1px 0 0 #DCDEE5;
+    line-height: 47px;
+    width: 100%;
   }
+}
+
+.info-content {
+    .bk-dialog-type-header .header {
+        white-space: normal !important;
+    }
+}
 </style>

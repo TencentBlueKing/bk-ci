@@ -18,7 +18,8 @@
     "new": "New",
     "aliasName": "Alias",
     "aliasNameEnter": "Please enter alias name",
-    "address": "Address","type": "Type",
+    "address": "Address",
+    "type": "Type",
     "operation": "Actions",
     "edit": "Edit",
     "delete": "Delete",
@@ -116,7 +117,7 @@
     "确定开启 PAC 模式？": "Confirm to enable PAC mode?",
     "关闭 PAC 模式": "Closed PAC mode",
     "检测到默认分支仍存在ci 文件目录。": "It is detected that the default branch still exists in the .ci file directory.",
-    "请先将目录": "Please", 
+    "请先将目录": "Please",
     "改名或删除": "rename or delete",
     "ci目录已改名或删除": "The .ci directory has been renamed or deleted",
     "继续关闭": "Close",
@@ -211,5 +212,6 @@
     "触发结果": "Trigger Result",
     "codelibUndeployTitle": "{0} connection service has not been fully deployed",
     "githubUndeployDesc": "To use this feature, please contact the platform administrator to register the GitHub APP",
+    "CodeBuddy（内网版）": "CodeBuddy (internal version)",
     "authorizeAccount": "Authorize Account"
 }

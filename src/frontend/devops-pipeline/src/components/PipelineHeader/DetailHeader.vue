@@ -284,9 +284,10 @@
                     await this.stopExecute(this.execDetail?.id)
                 } catch (err) {
                     this.handleError(err, {
-                        projectId: this.$route.params.projectId,
-                        resourceCode: this.$route.params.pipelineId,
-                        action: this.$permissionResourceAction.EXECUTE
+                        projectId: this.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: this.pipelineId,
+                        action: RESOURCE_ACTION.EXECUTE
                     })
                     this.loading = false
                 }
@@ -546,6 +547,8 @@
         height: 32px;
         line-height: 32px;
         font-size: 14px;
+        white-space: nowrap;
+        padding: 0 8px;
 
         &:hover {
             background-color: #f0f1f5;

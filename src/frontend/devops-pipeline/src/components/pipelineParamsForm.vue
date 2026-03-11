@@ -65,6 +65,7 @@
     import renderParam from '@/components/renderParam'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
     import {
+        ARTIFACTORY,
         BOOLEAN,
         BOOLEAN_LIST,
         CODE_LIB,
@@ -73,6 +74,8 @@
         getBranchOption,
         getParamsGroupByLabel,
         GIT_REF,
+        isArtifactoryParam,
+        isBuildResourceParam,
         isCodelibParam,
         isEnumParam,
         isFileParam,
@@ -100,6 +103,10 @@
             disabled: {
                 type: Boolean,
                 default: false
+            },
+            allPipelineParamValues: {
+                type: Object,
+                default: null
             },
             paramValues: {
                 type: Object,
@@ -186,12 +193,12 @@
                                 multiSelect: isMultiple,
                                 value: isMultiple && !Array.isArray(val) ? [] : val,
                                 allIdString: true,
-                                paramValues: this.paramValues,
+                                paramValues: this.allPipelineParamValues || this.paramValues,
                                 affected,
                                 affectedChanged,
                                 affectTips: affectedChanged && Object.keys(affected).length > 0 ? this.$t('relyChanged', [Object.keys(affected).join('/')]) : ''
                             }
-                        } else {
+                        } else if (!isBuildResourceParam(param.type)) {
                             restParam = {
                                 ...restParam,
                                 displayKey: 'value',
@@ -201,13 +208,24 @@
                         }
 
                         // codeLib 接口返回的数据没有匹配的默认值,导致回显失效，兼容加上默认值
-                        if (param.type === CODE_LIB) {
+                        if (param.type === CODE_LIB || isBuildResourceParam(param.type)) {
                             const value = this.paramValues[param.id]
                             const listItemIndex = restParam.list && restParam.list.findIndex(i => i.value === value)
                             if (listItemIndex < 0 && value) {
                                 restParam.list.push({
                                     key: value,
                                     value: value
+                                })
+                            }
+                            if (isBuildResourceParam(param.type)) {
+                                const url = `environment/api/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`
+                                const paramId = 'displayName'
+                                Object.assign(restParam, {
+                                    url: `${url}&displayName=${value || ''}`,
+                                    paramId,
+                                    paramName: paramId,
+                                    replaceKey: '{{__keywords__}}',
+                                    searchUrl: `${url}&keywords={{__keywords__}}`
                                 })
                             }
                         }
@@ -275,6 +293,7 @@
             
         },
         methods: {
+            isArtifactoryParam,
             isObject,
             getBranchOption,
             isEqual (a, b) {
@@ -289,7 +308,7 @@
                 }
             },
             getParamComponentType (param) {
-                if (isRemoteType(param)) {
+                if (isRemoteType(param) || isBuildResourceParam(param.type)) {
                     return 'request-selector'
                 } else {
                     return ParamComponentMap[param.type]
@@ -305,6 +324,7 @@
                     case param.type === GIT_REF:
                     case param.type === CODE_LIB:
                     case param.type === CONTAINER_TYPE:
+                    case param.type === ARTIFACTORY:
                     case param.type === SUB_PIPELINE:
                     case param.type === REPO_REF:
                         return param.options
@@ -332,10 +352,14 @@
             },
             handleParamUpdate (name, value) {
                 const param = this.getParamByName(name)
-                if (isMultipleParam(param.type)) { // 复选框，需要将数组转化为逗号隔开的字符串
-                    value = Array.isArray(value) ? value.join(',') : ''
+                if (isMultipleParam(param.type) || (isRemoteType(param) && param.multiSelect)) { // 复选框，需要将数组转化为逗号隔开的字符串
+                    this.handleParamChange(param.name, Array.isArray(value) ? value.join(',') : '')
+                } else {
+                    this.handleParamChange(param.name, value)
                 }
-                this.handleParamChange(param.name, value)
+            },
+            showMetadata (type, value) {
+                return isArtifactoryParam(type) && value && this.$route.path.indexOf('preview') > -1
             },
             showFileUploader (type) {
                 return isFileParam(type) && this.$route.path.indexOf('preview') > -1

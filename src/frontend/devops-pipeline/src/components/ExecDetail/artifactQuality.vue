@@ -45,7 +45,6 @@ ul {
   margin: 0;
   padding: 0;
   list-style-type: none;
-
   .quality-tags {
     display: inline-flex;
     align-items: center;
@@ -56,16 +55,13 @@ ul {
     border: 1px solid #DCDEE5;
     border-radius: 2px;
     cursor: pointer;
-
     .tag-label {
       color: #4D4F56;
     }
-
     .color-item {
       margin-left: 3px;
       position: relative;
     }
-
     .color-block {
       display: inline-block;
       text-align: center;
@@ -73,14 +69,11 @@ ul {
       height: 16px;
       color: #FFF;
       border-radius: 11px;
-
       transition: background-color 0.3s ease;
-
       &:hover {
         opacity: 0.8;
       }
     }
-
     &:hover {
       background-color: #F0F1F5;
     }

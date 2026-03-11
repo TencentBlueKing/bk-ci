@@ -216,6 +216,22 @@
                     >
                     </request-selector>
                     <request-selector
+                        v-if="isBuildResourceParam(param.type)"
+                        :popover-min-width="250"
+                        :url="`${buildResourceUrl}&displayName=${param.defaultValue ?? ''}`"
+                        param-id="displayName"
+                        param-name="displayName"
+                        :disabled="disabled && !isOverride"
+                        name="defaultValue"
+                        v-validate="{ required: valueRequired }"
+                        :data-vv-scope="'pipelineParam'"
+                        :value="param.defaultValue"
+                        :handle-change="handleChange"
+                        replace-key="\{\{__keywords__\}\}"
+                        :search-url="buildResourceSearchUrl"
+                    >
+                    </request-selector>
+                    <request-selector
                         v-if="isSubPipelineParam(param.type)"
                         :popover-min-width="250"
                         v-bind="subPipelineOption"
@@ -299,7 +315,7 @@
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import validMixins from '@/components/validMixins'
     import { CLASSIFY_ENUM } from '@/hook/useTemplateConstraint'
-    import { PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX, VAR_MAX_LENGTH } from '@/store/constants'
+    import { ENVIRONMENT_API_URL_PREFIX, PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX, VAR_MAX_LENGTH } from '@/store/constants'
     import {
         CODE_LIB_OPTION,
         CODE_LIB_TYPE,
@@ -309,6 +325,7 @@
         getRepoOption,
         isArtifactoryParam,
         isBooleanParam,
+        isBuildResourceParam,
         isCodelibParam,
         isEnumParam,
         isFileParam,
@@ -321,7 +338,8 @@
         isTextareaParam,
         SUB_PIPELINE_OPTION
     } from '@/store/modules/atom/paramsConfig'
-    import { mapGetters, mapState } from 'vuex'
+    import { getParamsValuesMap } from '@/utils/util'
+    import { mapGetters } from 'vuex'
     import SelectTypeParam from './select-type-param'
     
     const BOOLEAN = [
@@ -387,10 +405,9 @@
         computed: {
             ...mapGetters('atom', [
                 'osList',
+                'allPipelineParams',
+                'getBuildResourceTypeList',
                 'failIfVariableInvalid'
-            ]),
-            ...mapState('atom', [
-                'pipeline'
             ]),
             varLengthRule () {
 
@@ -420,6 +437,12 @@
             },
             isRemoteSelect () {
                 return this.param?.payload?.type === 'remote'
+            },
+            buildResourceUrl () {
+                return `${ENVIRONMENT_API_URL_PREFIX}/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`
+            },
+            buildResourceSearchUrl () {
+                return `${this.buildResourceUrl}&keywords={{__keywords__}}`
             }
         },
         created () {
@@ -445,20 +468,21 @@
             isSubPipelineParam,
             isFileParam,
             isRepoParam,
+            isBuildResourceParam,
             getParamsDefaultValueLabel,
             getParamsDefaultValueLabelTips,
             isSelectorParam (type) {
                 return isMultipleParam(type) || isEnumParam(type)
             },
             setRemoteParamOption (payload) {
-                payload = payload || {}
-                const remoteOpion = {
-                    url: payload.url || '',
-                    dataPath: payload.dataPath || 'data',
-                    paramId: payload.paramId || 'id',
-                    paramName: payload.paramName || 'name'
+                this.remoteParamOption = {
+                    url: payload?.url || '',
+                    dataPath: payload?.dataPath || 'data',
+                    paramId: payload?.paramId || 'id',
+                    paramName: payload?.paramName || 'name',
+                    allIdString: true,
+                    paramValues: getParamsValuesMap(this.allPipelineParams, 'defaultValue')
                 }
-                this.remoteParamOption = remoteOpion
             },
             getRepoOption (type, paramId) {
                 return getRepoOption(type, paramId)
@@ -567,7 +591,7 @@
             },
             handleToggleConstraint (isOverride) {
                 if (!isOverride) {
-                    const param = this.pipeline.stages[0].containers[0].params.find(item => item.id === this.param.id)
+                    const param = this.allPipelineParams.find(item => item.id === this.param.id)
                     this.handleChange('defaultValue', param.defaultValue)
                 } else {
                     this.handleChange('defaultValue', this.initParamItem.defaultValue)

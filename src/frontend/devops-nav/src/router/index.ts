@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import { getServiceAliasByPath, ifShowNotice, importScript, importStyle, updateRecentVisitServiceList, urlJoin } from '../utils/util'
 
+import request from '@/utils/request'
 import cookie from 'js-cookie'
 import compilePath from '../utils/pathExp'
 
@@ -24,6 +25,7 @@ let mod: Route[] = []
 for (const key in window.Pages) {
     mod = mod.concat(window.Pages[key].routes)
 }
+
 const iframeRoutes = window.serviceObject.iframeRoutes.map(r => ({
     path: urlJoin('/console', r.path, ':restPath*'),
     name: r.name,
@@ -79,6 +81,7 @@ function isAmdModule (currentPage: subService): boolean {
 }
 
 const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
+    counterUser()
     const router = new Router({
         mode: 'history',
         routes: routes
@@ -93,54 +96,24 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
         }
     }
     
-    router.beforeEach((to, from, next) => {
-        const serviceAlias = getServiceAliasByPath(to.path)
-        const currentPage = window.serviceObject.serviceMap[serviceAlias]
-        const { platformInfo } = (store.state as any).platFormConfig
-        if (to.name !== from.name && platformInfo) {
-            let platformTitle = `${platformInfo.i18n.name || platformInfo.name} | ${platformInfo.i18n.brandName || platformInfo.brandName}`
-            if (currentPage) {
-                platformTitle = `${currentPage.name} | ${platformTitle}`
+    router.beforeEach(async (to, from, next) => {
+        if (window.diclosurePrjoectList?.includes(to.params.projectId)) {
+            for await (const signed of showNonDisclosureAgreement(store, to.params.projectId)) {
+                if (signed) {
+                    if (store.state.cancelDisclosureHandler === 'function') {
+                        // 已开始签署
+                        setTimeout(() => {
+                            resolveRoute(to, from, next)
+                        }, 3000)
+                    } else {
+                        resolveRoute(to, from, next)
+                    }
+                    break
+                }
             }
-            document.title = platformTitle
-        }
-        window.currentPage = currentPage
-        store.dispatch('updateCurrentPage', currentPage) // update currentPage
-        if (!currentPage) { // console 首页
-            next()
-            return
-        }
-        
-        const { css_url, js_url } = currentPage
-        if (isAmdModule(currentPage) && !loadedModule[serviceAlias]) {
-            loadedModule[serviceAlias] = true
-            store.dispatch('toggleModuleLoading', true)
-            Promise.all([
-                importStyle(css_url, document.head),
-                importScript(js_url, document.body),
-                dynamicLoadModule(serviceAlias, i18n.locale)
-            ]).then(() => {
-                const module = window.Pages[serviceAlias]
-                store.registerModule(serviceAlias, module.store)
-                const dynamicRoutes = [{
-                    path: '/console/',
-                    component: Index,
-                    children: module.routes
-                }]
-                
-                router.addRoutes(dynamicRoutes)
-                setTimeout(() => {
-                    store.dispatch('toggleModuleLoading', false)
-                }, 100)
-                goNext(to, next)
-            })
-            goNext(to, next)
-        } else if (isAmdModule(currentPage) && loadedModule[serviceAlias]) {
-            dynamicLoadModule(serviceAlias, i18n.locale).then(() => {
-                goNext(to, next)
-            })
+            next(false)
         } else {
-            goNext(to, next)
+            resolveRoute(to, from, next)
         }
     })
 
@@ -152,17 +125,105 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
         const isShowNotice = ifShowNotice(store.state.currentNotice || {})
         isShowNotice && store.dispatch('toggleNoticeDialog', isShowNotice)
     })
+
+    async function resolveRoute (to, from, next) {
+        try {
+            const serviceAlias = getServiceAliasByPath(to.path)
+            const currentPage = window.serviceObject.serviceMap[serviceAlias]
+            const { platformInfo } = (store.state as any).platFormConfig
+        
+            if (to.name !== from.name && platformInfo) {
+                let platformTitle = `${platformInfo.i18n.name || platformInfo.name} | ${platformInfo.i18n.brandName || platformInfo.brandName}`
+                if (currentPage) {
+                    platformTitle = `${currentPage.name} | ${platformTitle}`
+                }
+                document.title = platformTitle
+            }
+            window.currentPage = currentPage
+        
+            store.dispatch('updateCurrentPage', currentPage) // update currentPage
+            if (!currentPage) { // console 首页
+                next()
+                return
+            }
+            if (isAmdModule(currentPage) && !loadedModule[serviceAlias]) {
+                const { css_url, js_url } = currentPage
+                loadedModule[serviceAlias] = true
+                store.dispatch('toggleModuleLoading', true)
+                
+                await Promise.all([
+                    goNext(from, to, next),
+                    importStyle(css_url, document.head),
+                    importScript(js_url, document.body),
+                    dynamicLoadModule(serviceAlias, i18n.locale)
+                ])
+                const module = window.Pages[serviceAlias]
+                store.registerModule(serviceAlias, module.store)
+                
+                router.addRoute({
+                    path: '/console/',
+                    component: Index,
+                    children: module.routes
+                })
+                setTimeout(() => {
+                    store.dispatch('toggleModuleLoading', false)
+                }, 100)
+            } else if (isAmdModule(currentPage) && loadedModule[serviceAlias]) {
+                await dynamicLoadModule(serviceAlias, i18n.locale)
+                goNext(from, to, next)
+            } else {
+                goNext(from, to, next)
+            }
+        } catch (e) {
+            next({
+                name: '503'
+            })
+        }
+    }
+    
     return router
 }
 
 function updateHeaderConfig (routeMeta: any) {
     return {
-        showProjectList: routeMeta.showProjectList || (window.currentPage && window.currentPage.show_project_list && typeof routeMeta.showProjectList === 'undefined'),
-        showNav: routeMeta.showNav || (window.currentPage && window.currentPage.show_nav && typeof routeMeta.showNav === 'undefined')
+        // eslint-disable-next-line camelcase
+        showProjectList: routeMeta.showProjectList || (window.currentPage?.show_project_list && typeof routeMeta.showProjectList === 'undefined'),
+        // eslint-disable-next-line camelcase
+        showNav: routeMeta.showNav || (window.currentPage?.show_nav && typeof routeMeta.showNav === 'undefined')
     }
 }
 
-function getProjectId (params): string {
+/**
+ * 上报用户信息
+ */
+function counterUser (): void {
+    const userId = window.userInfo.username
+    const os = parseOS()
+    
+    request.post('/project/api/user/count/login', {
+        os,
+        userId
+    })
+}
+
+function parseOS (): string {
+    const { userAgent } = window.navigator
+    switch (true) {
+        case userAgent.indexOf('Linux') > -1:
+            return /android/i.test(userAgent) ? 'ANDROID' : 'LINUX'
+        case userAgent.indexOf('iPhone') > -1:
+            return 'IOS'
+        case userAgent.indexOf('iPad') > -1:
+            return 'iPad'
+        case userAgent.indexOf('Mac') > -1:
+            return 'MACOS'
+        case userAgent.indexOf('Win') > -1:
+            return 'WINDOWS'
+    }
+    return 'WINDOWS'
+}
+
+export function getProjectId (params): string {
     try {
         const cookiePid = cookie.get(X_DEVOPS_PROJECT_ID)
         const projectId = window.GLOBAL_PID || cookiePid
@@ -192,19 +253,59 @@ function initProjectId (to): string {
     }
 }
 
-function goNext (to, next) {
+function goNext (from, to, next) {
     const newPath = initProjectId(to)
-
     // @ts-ignore
     window.setProjectIdCookie(getProjectId(to.params))
     if (to.path !== newPath) {
         next({
             path: newPath,
             query: to.query,
-            hash: to.hash
+            hash: to.hash,
+            replace: true
         })
     } else {
         next()
     }
 }
+
+async function* showNonDisclosureAgreement (store, projectId) {
+    let timeoutId
+    let cancelled = false
+    
+    // eslint-disable-next-line no-unmodified-loop-condition
+    while (!cancelled) {
+        try {
+            const signed = await store.dispatch('fetchSignatureStatus', { projectId })
+            if (signed) {
+                yield signed
+                break
+            }
+
+            if (!store.state.isShowNonDisclosureAgreement) {
+                store.dispatch('toggleSignatureDialog', true)
+                // Add cancel handler in store
+                store.dispatch('setCancelHandler', () => {
+                    cancelled = true
+                    store.dispatch('setCancelHandler', null)
+                    if (timeoutId) clearTimeout(timeoutId)
+                })
+            }
+
+            yield false
+            
+            // Make timeout cancellable
+            await new Promise(resolve => {
+                timeoutId = setTimeout(resolve, 3000)
+            })
+        } catch (e) {
+            console.error('Error checking non-disclosure agreement:', e)
+            yield true
+            break
+        } finally {
+            timeoutId = null
+        }
+    }
+}
+
 export default createRouter

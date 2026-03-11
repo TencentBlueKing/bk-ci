@@ -41,15 +41,15 @@
                             :handle-change="(name, value) => addReviewGroup(reviewGroup, name, value)"
                         >
                         </user-group-input>
-                        <user-input
+                        <staff-input
                             v-else
                             clearable
                             class="review-user"
-                            :placeholder="reviewGroup.reviewType ? $t('stageReview.userInputTips') : ''"
+                            :placeholder="$t('stageReview.userInputTips')"
                             :value="reviewGroup.reviewers"
-                            :disabled="disabled || !reviewGroup.reviewType"
+                            :disabled="disabled"
                             :handle-change="(name, value) => addReviewUser(reviewGroup, name, value)"
-                        ></user-input>
+                        ></staff-input>
                     </div>
 
                     <bk-button
@@ -82,12 +82,12 @@
 </template>
 
 <script>
-    import UserInput from '@/components/atomFormField/UserInput'
     import UserGroupInput from '@/components/atomFormField/UserGroupInput'
+    import StaffInput from '@/components/atomFormField/StaffInput'
 
     export default {
         components: {
-            UserInput,
+            StaffInput,
             UserGroupInput
         },
 

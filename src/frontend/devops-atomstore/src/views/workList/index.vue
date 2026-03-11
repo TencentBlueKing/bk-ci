@@ -76,6 +76,16 @@
                                 link: this.BKCI_DOCS.IMAGE_GUIDE_DOC
                             }
                         ]
+                    },
+                    {
+                        name: 'serviceWork',
+                        label: this.$t('store.微扩展'),
+                        links: [
+                            {
+                                name: this.$t('store.微扩展指引'),
+                                link: this.BKCI_DOCS.EXT_GUIDE_DOC
+                            }
+                        ]
                     }
                 ]
             }
@@ -98,6 +108,9 @@
                         break
                     case 'imageWork':
                         name = this.$t('store.容器镜像')
+                        break
+                    case 'serviceWork':
+                        name = this.$t('store.微扩展')
                         break
                     default:
                         name = this.$t('store.流水线插件')
@@ -195,10 +208,7 @@
     .title-work {
         cursor: pointer;
         color: #1592ff;
-        margin-right: 16px;
-        &:last-child {
-            margin-right: 32px;
-        }
+        margin: 0 16px;
     }
     .content-header {
         display: flex;
@@ -239,7 +249,7 @@
             display: flex;
         }
         .bk-tooltip {
-            color: $fontLigtherColor;
+            color: $fontLighterColor;
             p {
                 max-width: 250px;
                 text-align: left;

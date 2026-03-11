@@ -142,8 +142,11 @@
         },
 
         data () {
+            const vm = this
+
             return {
                 allPipeline: { displayName: this.$t('pipeline.allPipelines'), enabled: true },
+                firstPipelineId: vm.$route.params.pipelineId,
                 dirList: [],
                 branchList: [],
                 yamlData: {
@@ -278,6 +281,7 @@
                 const params = {
                     filePath: dir.path,
                     projectId: this.projectId,
+                    pipelineId: this.firstPipelineId,
                     page: dir.page,
                     pageSize: dir.pageSize
                 }

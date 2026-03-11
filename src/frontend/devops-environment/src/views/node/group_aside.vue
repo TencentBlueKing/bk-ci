@@ -739,7 +739,6 @@
         border-radius: 50%;
         background-color: rgba(99, 101, 110, 0.1);
     }
-
     .no-can-delete {
         width: 100%;
         text-align: left;
@@ -749,13 +748,11 @@
             background-color: #F5F7FA;
         }
     }
-
     .group-label {
         display: flex;
         flex: 1;
         width: calc(100% - 12px);
         align-items: center;
-
         span{
             display: inline-block;
             flex: 1;

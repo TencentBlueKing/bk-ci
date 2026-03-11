@@ -179,6 +179,7 @@
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import validMixins from '@/components/validMixins'
     import { deepCopy } from '@/utils/util'
+    import { mapState } from 'vuex'
     import ParamValueOption from './children/param-value-option'
 
     import {
@@ -239,10 +240,21 @@
             }
         },
         computed: {
+            ...mapState('atom', [
+                'pipelineSetting'
+            ]),
+            pipelineAsCodeSettings () {
+                return this.pipelineSetting?.pipelineAsCodeSettings || {}
+            },
+            currentDialect () {
+                const { inheritedDialect, projectDialect, pipelineDialect } = this.pipelineAsCodeSettings
+                return (inheritedDialect ? projectDialect : pipelineDialect) === 'CONSTRAINED'
+            },
             idValidRule () {
-                return this.paramType === 'constant'
-                    ? `required|paramsIdRule|notInList:${this.getUniqueArgs('id')}|constVarRule|max:64`
-                    : `required|paramsIdRule|notInList:${this.getUniqueArgs('id')}`
+                const baseRules = 'required|notInList:' + this.getUniqueArgs('id')
+                const additionalRules = this.paramType === 'constant' ? '|constVarRule|max:64' : ''
+                const dialectRules = this.currentDialect ? '|paramsIdRule' : ''
+                return `${baseRules}${dialectRules}${additionalRules}`
             },
             idLabel () {
                 return this.paramType === 'constant' ? this.$t('newui.pipelineParam.constName') : this.$t('newui.pipelineParam.varName')

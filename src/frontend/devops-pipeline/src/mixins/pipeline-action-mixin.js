@@ -38,7 +38,9 @@ import {
     TEMPLATE_RESOURCE_ACTION
 } from '@/utils/permission'
 
+
 import { ORDER_ENUM, PIPELINE_SORT_FILED, pipelineTabIdMap, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
+
 
 export default {
     data () {
@@ -122,10 +124,10 @@ export default {
                     const archiveObj = {
                         ...item,
                         latestBuildStartDate: this.getLatestBuildFromNow(item.latestBuildStartTime),
-                        updater: item.lastModifyUser,
+                        updater: item.lastModifyUser || item.updater,
                         updateDate: convertTime(item.updateTime),
                         duration: this.calcDuration(item),
-                        latestBuildUserId: item.lastModifyUser,
+                        latestBuildUserId: item.lastModifyUser || item.updater,
                         onlyDraftVersion: isDraft,
                         historyRoute: {
                             name: isDraft ? 'pipelinesEdit' : 'pipelinesHistory',
@@ -292,7 +294,6 @@ export default {
                     text: this.$t('newlist.saveAsTemp'),
                     handler: this.saveAsTempHandler,
                     hasPermission: this.isManage,
-                    disablePermissionApi: true,
                     permissionData: {
                         projectId: pipeline.projectId,
                         resourceType: RESOURCE_TYPE.PROJECT,

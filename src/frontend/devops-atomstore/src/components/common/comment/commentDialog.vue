@@ -54,25 +54,31 @@
         },
 
         computed: {
-            getCommentGenerator () {
-                return {
-                    atom: this.requestAtomUserComment,
-                    template: this.requestTemplateUserComment,
-                    image: this.requestImageUserComment
-                }
-            },
             modifyCommentGenerator () {
                 return {
                     atom: this.requestAtomModifyComment,
                     template: this.requestTemplateModifyComment,
-                    image: this.requestImageModifyComment
+                    ide: this.requestIDEModifyComment,
+                    image: this.requestImageModifyComment,
+                    service: this.requestServiceModifyComment
                 }
             },
             addCommentGenerator () {
                 return {
                     atom: this.requestAddAtomComment,
                     template: this.requestAddTemplateComment,
-                    image: this.requestAddImageComment
+                    ide: this.requestAddIDEComment,
+                    image: this.requestAddImageComment,
+                    service: this.requestAddServiceComment
+                }
+            },
+            getCommentGenerator () {
+                return {
+                    atom: this.requestAtomUserComment,
+                    template: this.requestTemplateUserComment,
+                    ide: this.requestIDEUserComment,
+                    image: this.requestImageUserComment,
+                    service: this.requestServiceUserComment
                 }
             },
             type () {
@@ -88,13 +94,19 @@
             ...mapActions('store', [
                 'requestAddAtomComment',
                 'requestAddTemplateComment',
+                'requestAddIDEComment',
                 'requestTemplateModifyComment',
                 'requestTemplateUserComment',
                 'requestAtomModifyComment',
                 'requestAtomUserComment',
+                'requestIDEModifyComment',
+                'requestIDEUserComment',
                 'requestAddImageComment',
                 'requestImageModifyComment',
-                'requestImageUserComment'
+                'requestImageUserComment',
+                'requestAddServiceComment',
+                'requestServiceModifyComment',
+                'requestServiceUserComment'
             ]),
 
             getComment () {

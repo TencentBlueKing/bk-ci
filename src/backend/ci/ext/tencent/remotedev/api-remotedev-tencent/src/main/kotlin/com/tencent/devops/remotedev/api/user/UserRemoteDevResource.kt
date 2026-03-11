@@ -1,0 +1,297 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.remotedev.api.user
+
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.DEVX_HEADER_CDS_TOKEN
+import com.tencent.devops.common.api.pojo.LocaleInfo
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.project.pojo.UserSignatureStatusResponse
+import com.tencent.devops.remotedev.pojo.ClientTips
+import com.tencent.devops.remotedev.pojo.RemoteDevSettings
+import com.tencent.devops.remotedev.pojo.Watermark
+import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeData
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeResp
+import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DefaultValue
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
+
+@Tag(name = "USER_WORKSPACE", description = "用户-工作空间,apiType:内网传user，离岸传desktop")
+@Path("/{apiType:user|desktop}/remotedev")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserRemoteDevResource {
+
+    @Operation(summary = "获取远程开发环境配置")
+    @GET
+    @Path("/settings")
+    fun getRemoteDevSettings(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<RemoteDevSettings>
+
+    @Operation(summary = "获取文件上传网关配置")
+    @GET
+    @Path("/fileGateway")
+    fun getFileGateway(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<Map<String, String>>
+
+    @Operation(summary = "更新远程开发环境配置")
+    @POST
+    @Path("/settings")
+    fun updateRemoteDevSettings(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间描述", required = false)
+        remoteDevSettings: RemoteDevSettings
+    ): Result<Boolean>
+
+    @Operation(summary = "watermark")
+    @POST
+    @Path("/watermark")
+    fun getWatermark(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: Watermark
+    ): Result<Any>
+
+    @Operation(summary = "根据bi_ticket或bk_token获取用户名称")
+    @GET
+    @Path("/get_user")
+    fun getUser(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<String>
+
+    @Operation(summary = "获取所有的WINDOWS GPU资源配置信息")
+    @GET
+    @Path("/get_all_windows_resource_config")
+    fun getAllWindowsResourceConfig(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "是否包含不可用机型", required = false)
+        @QueryParam("withUnavailable")
+        @DefaultValue("false")
+        withUnavailable: Boolean? = false
+    ): Result<List<WindowsResourceTypeConfig>>
+
+    @Operation(summary = "获取所有的WINDOWS GPU资源地域信息")
+    @GET
+    @Path("/get_all_windows_resource_zone")
+    fun getAllWindowsResourceZone(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<WindowsResourceZoneConfig>>
+
+    @Operation(summary = "获取项目下所有的WINDOWS 配额")
+    @GET
+    @Path("/get_all_windows_resource_quota")
+    fun allWindowsQuota(
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("searchCustom")
+        searchCustom: Boolean?
+    ): Result<Map<String, Map<String, Int>>>
+
+    @Operation(summary = "获取用户1Password")
+    @GET
+    @Path("/1Password")
+    fun onePassword(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间ID", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<String>
+
+    @Operation(summary = "一键认领求助问题")
+    @GET
+    @Path("/addExpSup")
+    fun addExpSup(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工单id", required = true)
+        @QueryParam("id")
+        id: Long,
+        @Parameter(description = "工作空间ID", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "获取兔小巢用户登录态token")
+    @GET
+    @Path("/txc/token")
+    fun getTxcToken(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "用户唯一标识", required = true)
+        @QueryParam("openId")
+        openId: String,
+        @Parameter(description = "用户昵称", required = true)
+        @QueryParam("nickName")
+        nickName: String,
+        @Parameter(description = "用户头像", required = true)
+        @QueryParam("avatar")
+        avatar: String
+    ): Result<String>
+
+    @Operation(summary = "一键查询CGS密码")
+    @GET
+    @Path("/queryCgsPwd")
+    fun queryCgsPwd(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "cgsId", required = true)
+        @QueryParam("cgsId")
+        cgsId: String
+    ): Result<Boolean>
+
+    @Operation(summary = "客户端查询是否可以升级")
+    @POST
+    @Path("/client/upgrade")
+    fun clientUpgrade(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: ClientUpgradeData
+    ): Result<ClientUpgradeResp>
+
+    @Operation(summary = "根据CDS TOKEN获取云桌面信息")
+    @GET
+    @Path("/workspace_detail")
+    fun getProjectWorkspace(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "IP", required = false)
+        @HeaderParam(DEVX_HEADER_CDS_TOKEN)
+        cdsToken: String
+    ): Result<WeSecProjectWorkspace?>
+
+    @Operation(summary = "点击进入云桌面时客户端获取加载时Tips")
+    @GET
+    @Path("/client/tips")
+    fun clientTips(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("projectId")
+        projectId: String?
+    ): Result<List<ClientTips>>
+
+    @Operation(summary = "获取云研发项目的云研发审批管理员")
+    @GET
+    @Path("/managers")
+    fun remoteAuditManagers(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("projectId")
+        projectId: String
+    ): Result<List<String>>
+
+    @GET
+    @Path("/users/locale/get")
+    @Operation(summary = "获取用户国际化信息")
+    fun getUserLocale(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String
+    ): Result<LocaleInfo>
+
+    @PUT
+    @Path("/locale/update")
+    @Operation(summary = "更新用户国际化信息")
+    fun updateUserLocale(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "国际化信息", required = true)
+        localeInfo: LocaleInfo
+    ): Result<Boolean>
+
+    @GET
+    @Path("/{projectId}/getSignatureStatus")
+    @Operation(summary = "获取项目电子签状态")
+    fun getSignatureStatus(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<UserSignatureStatusResponse>
+
+    @POST
+    @Path("/thumbnails/batch")
+    @Operation(summary = "批量获取云桌面工作空间的截图缩略图地址")
+    fun batchGetThumbnails(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称列表", required = true)
+        workspaceNames: List<String>,
+        @Parameter(description = "缩略图宽度", required = false)
+        @QueryParam("width")
+        @DefaultValue("1280")
+        width: Int,
+        @Parameter(description = "缩略图高度", required = false)
+        @QueryParam("high")
+        @DefaultValue("720")
+        high: Int,
+        @Parameter(description = "JPEG图片质量", required = false)
+        @QueryParam("jpegQuality")
+        @DefaultValue("60")
+        jpegQuality: Int,
+        @Parameter(description = "屏幕id", required = false)
+        @QueryParam("screenId")
+        @DefaultValue("0")
+        screenId: Int
+    ): Result<Map<String, String>>
+}

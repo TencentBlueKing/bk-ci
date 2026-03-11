@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
+import ManageHeader from '@/components/manage-header.vue';
+import ProjectForm from '@/components/project-form.vue';
+import http from '@/http/api';
+import { InfoBox, Message } from 'bkui-vue';
 import {
   ref,
 } from 'vue';
-import http from '@/http/api';
-import { Message } from 'bkui-vue';
-import ManageHeader from '@/components/manage-header.vue';
-import ProjectForm from '@/components/project-form.vue';
+import { useI18n } from 'vue-i18n';
 import {
   useRouter,
 } from 'vue-router';
@@ -18,7 +18,10 @@ const projectData = ref({
   englishName: '',
   description: '',
   projectType: '',
+  projectTypes: '',
   logoAddr: '',
+  productId: '',
+  productName: '',
   bgId: 0,
   bgName: '',
   deptId: '',
@@ -36,7 +39,8 @@ const projectData = ref({
 const projectForm = ref(null);
 const btnLoading = ref(false);
 const handleConfirm = () => {
-  projectForm.value?.validate().then(async () => {
+  const confirmFn = async () => {
+    infoBoxInstance.value.hide();
     btnLoading.value = true;
     const result = await http.requestCreateProject({
       projectData: projectData.value,
@@ -54,12 +58,30 @@ const handleConfirm = () => {
         path: `${projectData.value.englishName}/show`,
       });
     }
-  })
+  };
+  const infoBoxInstance = ref();
+  projectForm.value?.validate().then(() => {
+    infoBoxInstance.value = InfoBox({
+      isShow: true,
+      infoType: 'warning',
+      title: t('创建项目需你的上级审批，确认提交吗'),
+      contentAlign: 'center',
+      headerAlign: 'center',
+      footerAlign: 'center',
+      confirmText: t('确认提交'),
+      cancelText: t('取消'),
+      onConfirm: confirmFn,
+      onClosed: () => true,
+    });
+  });
 };
 const initProjectForm = (value) => {
   projectForm.value = value;
 };
 
+const productIdChange = ({ id, list }) => {
+  projectData.value.productName = list.find(i => i.ProductId === id)?.ProductName;
+};
 const handleCancel = () => {
   router.back();
 };
@@ -78,6 +100,7 @@ const handleCancel = () => {
           type="apply"
           :data="projectData"
           @initProjectForm="initProjectForm"
+          @productIdChange="productIdChange"
         >
       </project-form>
       <div class="btn-group">

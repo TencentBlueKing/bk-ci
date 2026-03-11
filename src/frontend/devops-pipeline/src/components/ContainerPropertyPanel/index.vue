@@ -28,6 +28,7 @@
                 />
                 <p v-if="!nameEditing">{{ container.name }} ({{ stageIndex + 1 }}-{{ containerIndex + 1 }})</p>
                 <i
+                    v-if="editable"
                     @click="toggleEditName(true)"
                     class="devops-icon icon-edit"
                     :class="nameEditing ? 'editing' : ''"
@@ -54,7 +55,7 @@
 </template>
 
 <script>
-    import { mapActions, mapState, mapGetters } from 'vuex'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     import ContainerContent from './ContainerContent'
 
     export default {
@@ -78,6 +79,7 @@
         },
         computed: {
             ...mapState('atom', [
+                'execDetail',
                 'showVariable',
                 'isPropertyPanelVisible'
             ]),

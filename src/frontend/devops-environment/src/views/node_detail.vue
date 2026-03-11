@@ -73,6 +73,16 @@
                     </div>
                 </li>
             </ul>
+            <div
+                class="metric-monitor"
+                v-if="isEnableDashboard"
+            >
+                <i class="devops-icon icon-tiaozhuan jump-icon"></i>
+                <a
+                    :href="jumpDashboardUrl"
+                    target="_blank"
+                >{{ $t('environment.查看更多指标监控') }}</a>
+            </div>
             <node-overview-chart></node-overview-chart>
             <node-detail-tab></node-detail-tab>
         </div>
@@ -80,12 +90,12 @@
 </template>
 
 <script>
-    import { mapState } from 'vuex'
-    import { bus } from '@/utils/bus'
-    import { copyText } from '@/utils/util'
     import nodeDetailTab from '@/components/devops/node-detail-tab'
     import nodeOverviewChart from '@/components/devops/node-overview-chart'
-    import { ENV_ACTIVE_NODE_TYPE, ALLNODE } from '@/store/constants'
+    import { ALLNODE, ENV_ACTIVE_NODE_TYPE } from '@/store/constants'
+    import { bus } from '@/utils/bus'
+    import { copyText } from '@/utils/util'
+    import { mapState } from 'vuex'
 
     export default {
         components: {
@@ -109,7 +119,9 @@
                 loading: {
                     isLoading: false,
                     title: this.$t('environment.loadingTitle')
-                }
+                },
+                isEnableDashboard: false,
+                bizId: 0
             }
         },
         computed: {
@@ -124,6 +136,9 @@
             },
             agentLink () {
                 return this.nodeDetails.os === 'WINDOWS' ? this.nodeDetails.agentUrl : this.nodeDetails.agentScript
+            },
+            jumpDashboardUrl () {
+                return `https://bkm.woa.com/?bizId=${this.bizId}&var-server=${this.nodeDetails.ip}#/grafana/d/bT8qy3NVa`
             }
         },
         watch: {
@@ -138,6 +153,7 @@
         },
         async mounted () {
             this.requestNodeDetail()
+            this.getEnableDashboard()
         },
         methods: {
             toNodeList () {
@@ -217,18 +233,35 @@
                 bus.$emit('refreshBuild')
                 bus.$emit('refreshAction')
                 bus.$emit('refreshCharts')
+            },
+            async getEnableDashboard () {
+                try {
+                    const res = await this.$store.dispatch('environment/checkEnableDashboard', {
+                        projectId: this.projectId
+                    })
+                    if (res) {
+                        this.isEnableDashboard = res.result
+                        this.bizId = res.bizId
+                    }
+                } catch (e) {
+                    console.err(e)
+                }
             }
         }
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     @import './../scss/conf';
     .node-detail-wrapper {
         height: 100%;
         overflow: hidden;
         .info-header {
+            .header-text {
+                display: inline-block;
+            }
             .icon-edit {
+                display: inline-block;
                 margin-left: 6px;
                 cursor: pointer;
             }
@@ -281,7 +314,21 @@
                 }
             }
         }
-
+        .metric-monitor {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #3c96ff;
+            cursor: pointer;
+            a {
+                font-size: 14px;
+                color: #3c96ff;
+            }
+            .jump-icon {
+                font-size: 18px;
+                position: relative;
+                top: 2px;
+            }
+        }
         .sub-view-port {
             height: calc(100vh - 158px);
             overflow: auto;

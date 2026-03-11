@@ -31,16 +31,3 @@
 	min-height: calc(100% - 210px);
 }
 
-.biz-action-box {
-	padding: 20px;
-}
-
-// 自适应
-@media screen and (max-width: $mediaWidth) {
-	.biz-container {
-		.biz-side-bar {
-            width: 241px;
-            min-width: 241px;
-		}
-	}
-}

@@ -654,7 +654,7 @@
             canManualStartup () {
                 try {
                     const manualAtom = this.pipeline?.stages?.[0]?.containers[0]?.elements?.find(e => e.atomCode === 'manualTrigger')
-                    return manualAtom?.additionalOptions?.enable
+                    return manualAtom?.additionalOptions?.enable ?? !!manualAtom
                 } catch (error) {
                     return false
                 }

@@ -55,11 +55,12 @@
                     if (projectPath) {
                         common.getProjectInfo(projectPath).then((projectInfo = {}) => {
                             if (projectInfo.id) {
-                                if (getCookie(X_DEVOPS_PROJECT_ID) !== projectInfo.projectCode) {
+                                const projectId = `git_${projectInfo.id}`
+                                if (getCookie(X_DEVOPS_PROJECT_ID) !== projectId) {
                                     // 清除 projectid cookie
                                     deleteCookie(X_DEVOPS_PROJECT_ID)
                                     // 设置 projectid cookie
-                                    setCookie(X_DEVOPS_PROJECT_ID, projectInfo.projectCode, location.hostname)
+                                    setCookie(X_DEVOPS_PROJECT_ID, projectId, location.hostname)
                                     if (getCookie(ROUTER_TAG) !== projectInfo.routerTag) {
                                         // 清除是否灰度 cookie
                                         deleteCookie(ROUTER_TAG)

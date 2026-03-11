@@ -83,15 +83,13 @@
 
 <script>
     import Logo from '@/components/Logo'
+    import { bus, SHOW_VERSION_HISTORY_SIDESLIDER } from '@/utils/bus'
+    import { convertTime } from '@/utils/util'
+
     import ModeSwitch from '@/components/ModeSwitch'
     import { NotifyTab, TriggerTab } from '@/components/PipelineEditTabs/'
     import YamlEditor from '@/components/YamlEditor'
-    import { bus, SHOW_VERSION_HISTORY_SIDESLIDER } from '@/utils/bus'
-    import {
-        RESOURCE_ACTION
-    } from '@/utils/permission'
     import { pipelineTabIdMap } from '@/utils/pipelineConst'
-    import { convertTime } from '@/utils/util'
     import { mapGetters, mapState } from 'vuex'
     import BaseConfig from './BaseConfig'
     import PipelineModel from './PipelineModel'
@@ -106,7 +104,6 @@
         },
         data () {
             return {
-                RESOURCE_ACTION,
                 isLoading: false,
                 yaml: ''
             }

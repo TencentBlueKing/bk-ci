@@ -38,6 +38,8 @@ const devopsUtil = {};
     const LEAVE_CANCEL_ORDER = 'leaveCancelOrder'
     const SHOW_TIPS = 'showTips'
     const BACK_HOME = 'backHome'
+    const HOOK_TRIGGER = 'hookTrigger'
+    const SYNC_SERVICE_HOOKS = 'syncServiceHooks'
     const UPDATE_TAB_TITLE = 'updateTabTitle'
 
     function init () {
@@ -273,6 +275,27 @@ const devopsUtil = {};
      */
     exports[SYNC_LOCALE] = function (locale) {
         triggerEvent('order::' + SYNC_LOCALE, locale)
+    }
+
+    /**
+     * 同步扩展信息
+     * @method syncExtensions
+     */
+    exports[SYNC_SERVICE_HOOKS] = function (hooks) {
+        triggerEvent('order::' + SYNC_SERVICE_HOOKS, hooks)
+    }
+
+    /**
+     * Hook触发
+     * @method hookTrigger
+     * @param {hook} obj 钩子详情
+     */
+    
+    exports[HOOK_TRIGGER] = function (params) {
+        communicateOuter({
+            action: HOOK_TRIGGER,
+            params
+        })
     }
 
     for (const key in exports) {

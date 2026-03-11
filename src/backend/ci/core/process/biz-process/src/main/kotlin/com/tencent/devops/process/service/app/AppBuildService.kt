@@ -30,7 +30,6 @@ package com.tencent.devops.process.service.app
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -40,10 +39,10 @@ import com.tencent.devops.process.pojo.pipeline.AppModelDetail
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.label.PipelineGroupService
+import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -53,7 +52,7 @@ class AppBuildService @Autowired constructor(
     private val pipelineGroupService: PipelineGroupService,
     private val client: Client,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineArtifactQualityService: PipelineArtifactQualityService
+    private val pipelineArtifactQualityService: PipelineArtifactQualityService,
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(AppBuildService::class.java)
@@ -65,27 +64,42 @@ class AppBuildService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         channelCode: ChannelCode,
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
     ): AppModelDetail {
         // 查web端数据
         var beginTime = System.currentTimeMillis()
         val modelDetail =
-            pipelineBuildFacadeService.getBuildDetail(userId, projectId, pipelineId, buildId, channelCode, checkPermission)
+            pipelineBuildFacadeService.getBuildDetail(
+                userId,
+                projectId,
+                pipelineId,
+                buildId,
+                channelCode,
+                checkPermission,
+            )
         val buildStatusWithVars =
-            pipelineBuildFacadeService.getBuildStatusWithVars(userId, projectId, pipelineId, buildId, channelCode, checkPermission)
+            pipelineBuildFacadeService.getBuildStatusWithVars(
+                userId,
+                projectId,
+                pipelineId,
+                buildId,
+                channelCode,
+                checkPermission,
+            )
         logger.info("Get web-side data ${System.currentTimeMillis() - beginTime} ms")
         beginTime = System.currentTimeMillis()
 
         // 文件个数、版本
-        val files = client.get(ServiceArtifactoryResource::class)
-            .search(userId, projectId, null, null, listOf(Property("pipelineId", pipelineId), Property("buildId", buildId)))
-            .data
+        val files = client.get(ServiceArtifactoryResource::class).search(
+            userId = userId,
+            projectId = projectId,
+            page = null,
+            pageSize = null,
+            searchProps = listOf(Property("pipelineId", pipelineId), Property("buildId", buildId)),
+        ).data
         val packageVersion = StringBuilder()
-        files?.records?.forEach {
-            val singlePackageVersion =
-                client.get(ServiceArtifactoryResource::class).show(userId, projectId, it.artifactoryType, it.path)
-                    .data?.meta?.get(ARCHIVE_PROPS_APP_VERSION)?.toString()
-            if (!singlePackageVersion.isNullOrBlank()) packageVersion.append(singlePackageVersion).append(";")
+        files?.records?.filterNot { it.appVersion.isNullOrBlank() }?.forEach {
+            packageVersion.append(it.appVersion).append(";")
         }
         logger.info("Query the number and version of the file: ${System.currentTimeMillis() - beginTime} ms")
         beginTime = System.currentTimeMillis()
@@ -101,15 +115,15 @@ class AppBuildService @Autowired constructor(
 
         val buildInfo = pipelineRuntimeService.getBuildInfo(
             projectId = projectId,
-            buildId = buildId
+            buildId = buildId,
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-            params = arrayOf(buildId)
+            params = arrayOf(buildId),
         )
         return AppModelDetail(
             buildId = modelDetail.id,
-            userId = modelDetail.userId,
+            userId = modelDetail.triggerUser ?: modelDetail.userId,
             trigger = modelDetail.trigger,
             startTime = modelDetail.startTime,
             endTime = modelDetail.endTime,
@@ -118,7 +132,7 @@ class AppBuildService @Autowired constructor(
             buildNum = modelDetail.buildNum,
             cancelUserId = modelDetail.cancelUserId,
             fileCount = files?.records?.size ?: 0,
-            packageVersion = packageVersion.toString().removeSuffix(";"),
+            packageVersion = packageVersion.toString(),
             pipelineId = pipelineId,
             pipelineVersion = version,
             pipelineName = name,
@@ -132,8 +146,8 @@ class AppBuildService @Autowired constructor(
             artifactQuality = pipelineArtifactQualityService.buildArtifactQuality(
                 userId = userId,
                 projectId = projectId,
-                artifactQualityList = buildInfo.artifactQualityList
-            )
+                artifactQualityList = buildInfo.artifactQualityList,
+            ),
         )
     }
 }

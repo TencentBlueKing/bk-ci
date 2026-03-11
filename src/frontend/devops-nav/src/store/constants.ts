@@ -17,7 +17,10 @@ export const UPDATE_CURRENT_PAGE: string = 'UPDATE_CURRENT_PAGE'
 export const TOGGLE_PERMISSION_DIALOG: string = 'TOGGLE_PERMISSION_DIALOG'
 export const TOGGLE_NOTICE_DIALOG: string = 'TOGGLE_NOTICE_DIALOG'
 export const SET_CURRENT_NOTICE: string = 'SET_CURRENT_NOTICE'
-export const GET_PERM_REDIRECT_URL: string = 'GET_PERM_REDIRECT_URL'
+export const SET_SERVICE_HOOKS: string = 'SET_SERVICE_HOOKS'
+export const TOGGLE_SIGNATURE_DIALOG: string = 'TOGGLE_SIGNATURE_DIALOG'
+export const SET_DISCLOSURE_AGREEMENT_CONFIG: string = 'SET_DISCLOSURE_AGREEMENT_CONFIG'
+export const SET_DISCLOSURE_AGREEMENT_CANCEL_HANDLER: string = 'SET_DISCLOSURE_AGREEMENT_CANCEL_HANDLER'
 
 // 服务列表
 const serviceList = [
@@ -34,6 +37,7 @@ const serviceList = [
     'notify',
     'repository',
     'ticket',
+    'store',
     'auth'
 ]
 export const [
@@ -50,6 +54,7 @@ export const [
     NOTIFY_API_URL_PREFIX,
     REPOSITORY_API_URL_PREFIX,
     TICKET_API_URL_PREFIX,
+    STORE_API_URL_PREFIX,
     AUTH_API_URL_PREFIX
 ] = serviceList.map(s => `${s}/api`)
 
@@ -58,6 +63,13 @@ export const EMPTY_PROJECT: Project = {
     englishName: '',
     projectType: '',
     description: '',
+    bgId: '',
+    bgName: '',
+    deptId: '',
+    deptName: '',
+    centerId: '',
+    centerName: '',
     isSecrecy: false,
+    deployType: [],
     kind: '0'
 }

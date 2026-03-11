@@ -34,7 +34,7 @@
 <script lang="ts">
     import Vue from 'vue'
     import { Prop, Component } from 'vue-property-decorator'
-    import { BkPopover } from 'bk-magic-vue'
+    import { BkPopover } from '@tencent/bk-magic-vue'
 
     @Component
     export default class ShowTooltip extends Vue {

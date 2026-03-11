@@ -51,6 +51,7 @@
     import nodeTab from '@/components/envTabs/nodeTab'
     import settingTab from '@/components/envTabs/settingTab'
     import authTab from '@/components/envTabs/authTab'
+    import advancedTab from '@/components/envTabs/advancedTab'
     import { convertTime } from '@/utils/util'
     import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
     
@@ -76,6 +77,9 @@
             isBuildEnv () {
                 return this.curEnvDetail && this.curEnvDetail.envType === 'BUILD'
             },
+            isDevxEnv () {
+                return this.curEnvDetail && this.curEnvDetail.envType === 'DEVX'
+            },
             tabs () {
                 const tabs = [
                     {
@@ -83,12 +87,6 @@
                         tabName: 'node',
                         label: 'node',
                         comp: nodeTab
-                    },
-                    {
-                        cls: 'config-item',
-                        tabName: 'config',
-                        label: 'configItem',
-                        comp: configTab
                     },
                     {
                         cls: 'base-item',
@@ -103,6 +101,27 @@
                         comp: authTab
                     }
                 ]
+                // 配置项
+                if (!this.isDevxEnv) {
+                    const index = tabs.findIndex(tab => tab.tabName === 'base')
+                    tabs.splice(index, 0, {
+                        cls: 'config-item',
+                        tabName: 'config',
+                        label: 'configItem',
+                        comp: configTab
+                    })
+                }
+                // 云研发-高级设置
+                if (this.isDevxEnv) {
+                    const index = tabs.findIndex(tab => tab.tabName === 'auth')
+                    tabs.splice(index, 0, {
+                        cls: 'advanced-item',
+                        tabName: 'advancedSetting',
+                        label: 'advancedSetting',
+                        comp: advancedTab
+                    })
+                }
+                // 共享设置
                 if (this.isBuildEnv) {
                     const index = tabs.findIndex(tab => tab.tabName === 'auth')
                     tabs.splice(index, 0, {
@@ -189,7 +208,7 @@
                     if (curTab === 'config') {
                         obj.className += ' ' + 'config-active'
                     } else {
-                        obj.classList.remove('.config-active')
+                        obj?.classList?.remove('.config-active')
                     }
                 })
             },

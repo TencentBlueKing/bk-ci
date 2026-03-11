@@ -90,35 +90,7 @@
                     prop="templateStatus"
                 >
                     <template slot-scope="props">
-                        <div
-                            class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
-                            v-if="props.row.templateStatus === 'AUDITING'"
-                        >
-                            <div class="rotate rotate1"></div>
-                            <div class="rotate rotate2"></div>
-                            <div class="rotate rotate3"></div>
-                            <div class="rotate rotate4"></div>
-                            <div class="rotate rotate5"></div>
-                            <div class="rotate rotate6"></div>
-                            <div class="rotate rotate7"></div>
-                            <div class="rotate rotate8"></div>
-                        </div>
-                        <span
-                            class="atom-status-icon success"
-                            v-if="props.row.templateStatus === 'RELEASED'"
-                        ></span>
-                        <span
-                            class="atom-status-icon fail"
-                            v-if="props.row.templateStatus === 'GROUNDING_SUSPENSION'"
-                        ></span>
-                        <span
-                            class="atom-status-icon obtained"
-                            v-if="props.row.templateStatus === 'AUDIT_REJECT' || props.row.templateStatus === 'UNDERCARRIAGED'"
-                        ></span>
-                        <span
-                            class="atom-status-icon devops-icon icon-initialize"
-                            v-if="props.row.templateStatus === 'INIT'"
-                        ></span>
+                        <status :status="calcStatus(props.row.templateStatus)"></status>
                         <span>{{ $t(templateStatusMap[props.row.templateStatus]) }}</span>
                     </template>
                 </bk-table-column>
@@ -200,7 +172,7 @@
                         > {{ $t('store.下架') }} </span>
                         <span
                             style="margin-right:0"
-                            @click="delete (props.row)"
+                            @click="handleDelete (props.row)"
                             v-if="['INIT', 'GROUNDING_SUSPENSION', 'UNDERCARRIAGED'].includes(props.row.templateStatus)"
                         > {{ $t('store.移除') }} </span>
                     </template>
@@ -266,9 +238,11 @@
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
     import { mapActions } from 'vuex'
+    import status from './status'
 
     export default {
         components: {
+            status,
             SearchSelect
         },
 
@@ -467,6 +441,29 @@
         },
 
         methods: {
+            calcStatus (status) {
+                let icon = ''
+                switch (status) {
+                    case 'AUDITING':
+                        icon = 'doing'
+                        break
+                    case 'RELEASED':
+                        icon = 'success'
+                        break
+                    case 'GROUNDING_SUSPENSION':
+                        icon = 'fail'
+                        break
+                    case 'AUDIT_REJECT':
+                    case 'UNDERCARRIAGED':
+                        icon = 'info'
+                        break
+                    case 'INIT':
+                        icon = 'init'
+                        break
+                }
+                return icon
+            },
+
             ...mapActions('store', [
                 'offlineTemplate',
                 'deleteTemplate',
@@ -501,7 +498,7 @@
                 return `${year} ${time}`
             },
 
-            async delete (row) {
+            async handleDelete (row) {
                 let message = this.$t('store.移除成功')
                 let theme = 'success'
                 try {

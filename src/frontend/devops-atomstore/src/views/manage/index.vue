@@ -58,7 +58,7 @@
             },
             panels () {
                 return [
-                    ...(this.type === TYPE_ENUM.atom ? [{ label: this.$t('store.概览'), name: 'statisticData' }] : []),
+                    ...([TYPE_ENUM.atom, TYPE_ENUM.service].includes(this.type) ? [{ label: this.$t('store.概览'), name: 'statisticData' }] : []),
                     ...(this.type !== TYPE_ENUM.image ? [{ label: this.$t('store.发布管理'), name: 'releaseManage' }] : []),
                     ...(this.type === TYPE_ENUM.atom ? [{ label: this.$t('store.协作审批'), name: 'approval' }] : []),
                     ...(this.type !== TYPE_ENUM.template ? [{ label: this.$t('store.基本信息'), name: 'show' }] : []),
@@ -70,7 +70,8 @@
                 const labelMap = {
                     template: this.$t('store.流水线模板'),
                     image: this.$t('store.容器镜像'),
-                    atom: this.$t('store.流水线插件')
+                    atom: this.$t('store.流水线插件'),
+                    service: this.$t('store.微扩展')
                 }
                 return [
                     { name: this.$t('store.工作台') },
@@ -90,6 +91,7 @@
                 'requestAtom',
                 'requestTemplateDetail',
                 'requestImageDetailByCode',
+                'requestServiceDetailByCode',
                 'setDetail',
                 'clearDetail',
                 'updateUserInfo'
@@ -125,7 +127,8 @@
                 const methodUrl = {
                     atom: this.requestAtom,
                     template: this.requestTemplateDetail,
-                    image: this.requestImageDetailByCode
+                    image: this.requestImageDetailByCode,
+                    service: this.requestServiceDetailByCode
                 }
                 const res = await methodUrl[this.type](code)
                 

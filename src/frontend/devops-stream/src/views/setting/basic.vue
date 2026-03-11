@@ -1,62 +1,226 @@
 <template>
     <article class="setting-basic-home" v-bkloading="{ isLoading }">
-        <h3 class="setting-basic-head">{{$t('setting.general')}}</h3>
-        <section class="basic-main">
-            <h5 class="main-title">{{$t('setting.configListeningEvents')}}</h5>
-            <section class="main-checkbox">
-                <bk-checkbox v-model="form.buildPushedBranches" class="basic-item">{{$t('setting.buildPushedBranches')}}</bk-checkbox>
-                <bk-checkbox v-model="form.buildPushedPullRequest" class="basic-item">{{$t('setting.buildPushedMergeRequest')}}</bk-checkbox>
+        <template v-if="form.enableCi">
+            <h3 class="setting-basic-head">{{$t('setting.general')}}</h3>
+            <section class="basic-main">
+                <h5 class="main-title">{{$t('setting.configListeningEvents')}}</h5>
+                <section class="main-checkbox">
+                    <bk-checkbox v-model="form.buildPushedBranches" class="basic-item">{{$t('setting.buildPushedBranches')}}</bk-checkbox>
+                    <bk-checkbox v-model="form.buildPushedPullRequest" class="basic-item">{{$t('setting.buildPushedMergeRequest')}}</bk-checkbox>
+                </section>
+
+                <h5 class="main-title">{{$t('setting.configMergeRequest')}}</h5>
+                <section class="main-checkbox">
+                    <bk-checkbox v-model="form.enableMrBlock" class="basic-item">{{$t('setting.lockMrMerge')}}</bk-checkbox>
+                </section>
+                <bk-button theme="primary" class="basic-btn" @click="saveSetting" :loading="isSaving">{{$t('save')}}</bk-button>
             </section>
 
-            <h5 class="main-title">{{$t('setting.configMergeRequest')}}</h5>
-            <section class="main-checkbox">
-                <bk-checkbox v-model="form.enableMrBlock" class="basic-item">{{$t('setting.lockMrMerge')}}</bk-checkbox>
+            <h3 class="setting-basic-head">{{$t('setting.ciAuthorization')}}</h3>
+            <section class="basic-main">
+                <h5 class="main-title">{{ $t('setting.authBy', [form.enableUserId])}}</h5>
+                <section class="main-checkbox">
+                    <bk-button @click="resetAuthorization" :loading="isReseting">{{$t('setting.resetAuthorization')}}</bk-button>
+                </section>
+                <h5 class="main-title">{{ form.enableCi ? $t('setting.disableTips') : $t('setting.enableTips') }}</h5>
+                <section class="main-checkbox">
+                    <bk-button class="basic-btn" :theme="form.enableCi ? 'danger' : 'primary'" :loading="isToggleEnable" @click="toggleEnable">{{ form.enableCi ? $t('setting.disableCi') : $t('setting.enableCi') }}</bk-button>
+                </section>
             </section>
-            <bk-button theme="primary" class="basic-btn" @click="saveSetting" :loading="isSaving">{{$t('save')}}</bk-button>
-        </section>
 
-        <h3 class="setting-basic-head">{{$t('setting.ciAuthorization')}}</h3>
-        <section class="basic-main">
-            <h5 class="main-title">{{ $t('setting.authBy', [form.enableUserId])}}</h5>
-            <section class="main-checkbox">
-                <bk-button @click="resetAuthorization" :loading="isReseting">{{$t('setting.resetAuthorization')}}</bk-button>
+            <h3 class="setting-basic-head">{{$t('setting.mrRunPerm')}}</h3>
+            <section class="basic-main">
+                <section class="form-item">
+                    <bk-checkbox v-model="triggerSetting.memberNoNeedApproving" class="basic-item">{{$t('setting.mrNoApproval')}}</bk-checkbox>
+                    <p class="desc desc-padding">{{$t('setting.mrNoApprovalTips')}}</p>
+                </section>
+                <section class="form-item">
+                    <p>{{$t('setting.whiteList')}}</p>
+                    <bk-input
+                        :placeholder="$t('setting.whiteListPlaceholder')"
+                        :type="'textarea'"
+                        :rows="3"
+                        :maxlength="255"
+                        v-model="triggerSetting.whitelistStr">
+                    </bk-input>
+                    <p class="desc">{{$t('setting.whiteListTips')}}</p>
+                </section>
+                <section class="main-checkbox">
+                    <bk-button class="basic-btn" theme="primary" :loading="isSavingTrigginSetting" @click="saveTriggerSetting">{{ $t('save') }}</bk-button>
+                </section>
             </section>
-            <h5 class="main-title">{{ form.enableCi ? $t('setting.disableTips') : $t('setting.enableTips') }}</h5>
-            <section class="main-checkbox">
-                <bk-button :theme="form.enableCi ? 'danger' : 'primary'" :loading="isToggleEnable" @click="toggleEnable">{{ form.enableCi ? $t('setting.disableCi') : $t('setting.enableCi') }}</bk-button>
+            
+            <h3 class="setting-basic-head">{{$t('setting.organization')}}</h3>
+            <section class="basic-main">
+                <bk-form
+                    :model="projectOrg"
+                    :rules="rules"
+                    ref="projectSaveForm"
+                    class="mb-20"
+                >
+                    <section class="form-item">
+                        <p>{{$t('setting.projectOrg')}}</p>
+                        <div class="project-org-select-area">
+                            <bk-form-item
+                                v-if="orgs.length > 0"
+                                property="dept"
+                                required
+                                error-display-type="normal"
+                                :label-width="0"
+                                class="project-org-form org-from-width"
+                            >
+                                <bk-cascade
+                                    is-remote
+                                    v-model="projectOrg.dept"
+                                    :scroll-width="240"
+                                    :remote-method="loadDepartMents"
+                                    :list="orgs"
+                                    @change="loadCenters"
+                                >
+                                </bk-cascade>
+                            </bk-form-item>
+                            <bk-form-item
+                                property="centerId"
+                                required
+                                error-display-type="normal"
+                                :label-width="0"
+                                class="project-org-form"
+                            >
+                                <bk-select
+                                    v-model="projectOrg.centerId"
+                                >
+                                    <bk-option
+                                        v-for="item in centers"
+                                        :key="item.id"
+                                        :id="item.id"
+                                        :value="item.id"
+                                        :name="item.name"
+                                    />
+                                </bk-select>
+                            </bk-form-item>
+                        </div>
+                    </section>
+                    <section class="form-item">
+                        <p>{{$t('setting.projectProduct')}}</p>
+                        <bk-form-item
+                            property="productId"
+                            required
+                            error-display-type="normal"
+                            :label-width="0"
+                            class="project-org-form org-from-width"
+                        >
+                            <bk-select
+                                searchable
+                                v-model="projectOrg.productId"
+                                enable-virtual-scroll
+                                :list="products"
+                            >
+                            </bk-select>
+                        </bk-form-item>
+                    </section>
+                </bk-form>
+                <section class="main-checkbox">
+                    <bk-button
+                        theme="primary"
+                        class="basic-btn"
+                        :loading="isSavingProjectOrg"
+                        @click="saveProjectOrg">
+                        {{ $t('save') }}
+                    </bk-button>
+                </section>
             </section>
-        </section>
-
-        <h3 class="setting-basic-head">{{$t('setting.mrRunPerm')}}</h3>
-        <section class="basic-main">
-            <section class="form-item">
-                <bk-checkbox v-model="triggerSetting.memberNoNeedApproving" class="basic-item">{{$t('setting.mrNoApproval')}}</bk-checkbox>
-                <p class="desc desc-padding">{{$t('setting.mrNoApprovalTips')}}</p>
+        </template>
+        <template v-else>
+            <h3 class="setting-basic-head">{{$t('setting.enableCi')}}</h3>
+            <section class="basic-main">
+                <bk-form
+                    :model="projectOrg"
+                    :rules="rules"
+                    ref="projectForm"
+                    class="mb-20"
+                >
+                    <section class="form-item">
+                        <p>{{$t('setting.projectOrg')}}</p>
+                        <div class="project-org-select-area">
+                            <bk-form-item
+                                v-if="orgs.length > 0"
+                                property="dept"
+                                required
+                                error-display-type="normal"
+                                :label-width="0"
+                                class="project-org-form org-from-width"
+                            >
+                                <bk-cascade
+                                    is-remote
+                                    v-model="projectOrg.dept"
+                                    :scroll-width="240"
+                                    :remote-method="loadDepartMents"
+                                    :list="orgs"
+                                    @change="loadCenters"
+                                >
+                                </bk-cascade>
+                            </bk-form-item>
+                            <bk-form-item
+                                property="centerId"
+                                required
+                                error-display-type="normal"
+                                :label-width="0"
+                                class="project-org-form"
+                            >
+                                <bk-select
+                                    v-model="projectOrg.centerId"
+                                >
+                                    <bk-option
+                                        v-for="item in centers"
+                                        :key="item.id"
+                                        :id="item.id"
+                                        :value="item.id"
+                                        :name="item.name"
+                                    />
+                                </bk-select>
+                            </bk-form-item>
+                        </div>
+                    </section>
+                    <section class="form-item">
+                        <p>{{$t('setting.projectProduct')}}</p>
+                        <bk-form-item
+                            property="productId"
+                            required
+                            error-display-type="normal"
+                            :label-width="0"
+                            class="project-org-form org-from-width"
+                        >
+                            <bk-select
+                                searchable
+                                v-model="projectOrg.productId"
+                                enable-virtual-scroll
+                                :list="products"
+                            >
+                            </bk-select>
+                        </bk-form-item>
+                    </section>
+                </bk-form>
+                <section class="main-checkbox">
+                    <bk-button
+                        class="mt-20 basic-btn"
+                        theme="primary"
+                        :loading="isToggleEnable"
+                        @click="saveEnable">
+                        {{ $t('setting.enableCi') }}
+                    </bk-button>
+                </section>
             </section>
-            <section class="form-item">
-                <p>{{$t('setting.whiteList')}}</p>
-                <bk-input
-                    :placeholder="$t('setting.whiteListPlaceholder')"
-                    :type="'textarea'"
-                    :rows="3"
-                    :maxlength="255"
-                    v-model="triggerSetting.whitelistStr">
-                </bk-input>
-                <p class="desc">{{$t('setting.whiteListTips')}}</p>
-            </section>
-            <section class="main-checkbox">
-                <bk-button theme="primary" :loading="isSavingTrigginSetting" @click="saveTriggerSetting">{{ $t('save') }}</bk-button>
-            </section>
-        </section>
+        </template>
     </article>
 </template>
 
 <script>
     import { setting } from '@/http'
-    import { mapState, mapActions } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
 
     export default {
         data () {
+            const self = this
             return {
                 form: {
                     buildPushedBranches: false,
@@ -67,11 +231,44 @@
                     memberNoNeedApproving: true,
                     whitelistStr: ''
                 },
+                projectOrg: {
+                    dept: [],
+                    centerId: '',
+                    productId: ''
+                },
+                deptMap: {},
+                orgs: [],
+                centers: [],
+                products: [],
                 isSaving: false,
                 isLoading: false,
                 isToggleEnable: false,
                 isSavingTrigginSetting: false,
-                isReseting: false
+                isSavingProjectOrg: false,
+                isReseting: false,
+                rules: {
+                    dept: [
+                        {
+                            validator: (val) => (val || self.orgs.length <= 0),
+                            message: self.$t('请选择项目所属组织'),
+                            trigger: 'blur'
+                        }
+                    ],
+                    centerId: [
+                        {
+                            validator: (val) => (val || self.centers.length <= 0),
+                            message: self.$t('请选择中心'),
+                            trigger: 'blur'
+                        }
+                    ],
+                    productId: [
+                        {
+                            required: true,
+                            message: self.$t('请选择项目所属运营产品'),
+                            trigger: 'blur'
+                        }
+                    ]
+                }
             }
         },
 
@@ -85,20 +282,59 @@
 
         methods: {
             ...mapActions(['setProjectSetting']),
-            getSetting () {
-                this.isLoading = true
-                setting.getSetting(this.projectId).then((res = {}) => {
+            async getSetting () {
+                try {
+                    this.isLoading = true
+                    const [res, projectInfo, products] = await Promise.all([
+                        setting.getSetting(this.projectId),
+                        setting.getProjectInfo(this.projectId),
+                        setting.getProducts()
+                    ])
+                    const dept = ['bgId', 'businessLineId', 'deptId'].map(key => projectInfo[key]).filter(item => item)
+                    this.initOrgs(dept)
+                    
+                    this.projectOrg = {
+                        dept,
+                        centerId: projectInfo.centerId,
+                        productId: projectInfo.productId
+                    }
+                    console.log(dept, this.projectOrg)
+                    this.products = products.map(item => ({
+                        id: item.ProductId,
+                        name: item.ProductName
+                    }))
                     Object.assign(this.form, res)
                     this.triggerSetting = {
                         memberNoNeedApproving: res.triggerReviewSetting?.memberNoNeedApproving !== undefined ? res.triggerReviewSetting?.memberNoNeedApproving : true,
                         whitelistStr: (res.triggerReviewSetting?.whitelist || []).join(',') || ''
                     }
                     this.setProjectSetting(res)
-                }).catch((err) => {
+                } catch (err) {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
-                }).finally(() => {
+                } finally {
                     this.isLoading = false
-                })
+                }
+            },
+
+            async initOrgs (dept) {
+                const depts = await Promise.all(['0', ...dept].map((id, index) => {
+                    const type = index === dept.length ? 'center' : 'dept'
+                    return setting.getDepartmentList(type, id)
+                }))
+                // 去掉最后的center
+                this.centers = depts.pop()
+                this.deptMap = depts.flat().reduce((prev, cur) => {
+                    prev[cur.id] = cur
+                    if (cur.type === 'dept') {
+                        prev[cur.id].isLoading = false
+                    }
+                    if (cur.parentId && prev[cur.parentId]) {
+                        prev[cur.parentId].children = prev[cur.parentId].children || []
+                        prev[cur.parentId].children.push(cur)
+                    }
+                    return prev
+                }, {})
+                this.orgs = Object.values(this.deptMap).filter(item => item.parentId === '0')
             },
 
             saveSetting () {
@@ -126,15 +362,38 @@
                 })
             },
 
-            toggleEnable () {
+            async saveEnable () {
                 this.isToggleEnable = true
-                setting.toggleEnableCi(!this.form.enableCi, this.projectInfo).then(() => {
+                try {
+                    await this.$refs.projectForm.validate()
+                    const { dept, productId, centerId } = this.projectOrg
+                    await setting.saveProjectInfo(this.projectId, {
+                        ...this.generateProjectOrgParam(dept),
+                        centerId,
+                        centerName: this.centers.find(item => item.id === this.projectOrg.centerId)?.name ?? ''
+                    }, {
+                        productId,
+                        productName: this.products.find(item => item.id === this.projectOrg.productId)?.name ?? ''
+                    })
+                    await setting.toggleEnableCi(!this.form.enableCi, this.projectInfo)
                     this.getSetting()
-                }).catch((err) => {
-                    this.$bkMessage({ theme: 'error', message: err.message || err })
-                }).finally(() => {
+                } catch (err) {
+                    this.$bkMessage({ theme: 'error', message: err.message || err.content || err })
+                } finally {
                     this.isToggleEnable = false
-                })
+                }
+            },
+
+            async toggleEnable () {
+                this.isToggleEnable = true
+                try {
+                    await setting.toggleEnableCi(!this.form.enableCi, this.projectInfo)
+                    this.getSetting()
+                } catch (err) {
+                    this.$bkMessage({ theme: 'error', message: err.message || err.content || err })
+                } finally {
+                    this.isToggleEnable = false
+                }
             },
 
             resetAuthorization () {
@@ -146,6 +405,79 @@
                 }).finally(() => {
                     this.isReseting = false
                 })
+            },
+            async loadDepartMents (item, resolve) {
+                try {
+                    if (item.type === 'dept' || item.isLoading === false) {
+                        resolve(item)
+                        return
+                    }
+                    const res = await setting.getDepartmentList('dept', item.id)
+                    item.children = res.map(item => {
+                        if (item.type === 'dept') {
+                            item.isLoading = false
+                        }
+                        if (!this.deptMap[item.id]) {
+                            this.deptMap[item.id] = item
+                        }
+                        return item
+                    })
+                    resolve(item)
+                } catch (err) {
+                    this.$bkMessage({ theme: 'error', message: err.message || err })
+                }
+            },
+            async loadCenters (dept) {
+                try {
+                    this.projectOrg.centerId = ''
+                    
+                    const last = dept[dept.length - 1]
+                    const res = await setting.getDepartmentList('center', last)
+                    this.centers = res
+                } catch (err) {
+                    this.$bkMessage({ theme: 'error', message: err.message || err })
+                }
+            },
+            async saveProjectOrg () {
+                this.isSavingProjectOrg = true
+                try {
+                    await this.$refs.projectSaveForm.validate()
+                    const { dept, productId, centerId } = this.projectOrg
+                    
+                    await setting.saveProjectInfo(this.projectId, {
+                        ...this.generateProjectOrgParam(dept),
+                        centerId,
+                        centerName: this.centers.find(item => item.id === this.projectOrg.centerId)?.name ?? ''
+                    }, {
+                        productId,
+                        productName: this.products.find(item => item.id === this.projectOrg.productId)?.name ?? ''
+                    })
+                    this.$bkMessage({ theme: 'success', message: 'Saved successfully' })
+                } catch (err) {
+                    this.$bkMessage({ theme: 'error', message: err.message || err.content || err })
+                } finally {
+                    this.isSavingProjectOrg = false
+                }
+            },
+            generateProjectOrgParam () {
+                try {
+                    const { dept } = this.projectOrg
+                    const deptParam = dept.reduce((acc, id) => {
+                        const item = this.deptMap[id]
+                        Object.assign(acc, {
+                            [`${item.type}Name`]: item.name,
+                            [`${item.type}Id`]: id
+                        })
+                        return acc
+                    }, {
+                        businessLineId: '',
+                        businessLineName: ''
+                    })
+                    return deptParam
+                } catch (error) {
+                    console.error(error)
+                    return {}
+                }
             }
         }
     }
@@ -191,9 +523,27 @@
             .desc-padding {
                 padding-left: 22px;
             }
+            .project-org-select-area {
+                display: grid;
+                grid-gap: 12px;
+                grid-auto-flow: column;
+                grid-auto-columns: 400px 400px;
+            }
+            .project-org-form {
+                /deep/ .bk-form-content {
+                    margin-left: 0 !important;
+                }
+                margin-top: 0 !important;
+                &.org-from-width {
+                    width: 400px;
+                }
+            }
         }
         .basic-item {
             margin-right: 100px;
+        }
+        .mb-20 {
+            margin-bottom: 20px;
         }
     }
     .basic-btn {

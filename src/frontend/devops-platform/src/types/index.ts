@@ -62,3 +62,10 @@ export interface UploadLogoResponse {
   file: Blob;
   filename: string;
 }
+export interface DeptInfos {
+  deptId: number,
+  deptName: string,
+  status: string,
+  comment: string
+}
+

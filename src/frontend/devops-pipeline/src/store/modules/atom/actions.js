@@ -17,9 +17,9 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 import {
+    DEVCLOUD_API_URL_PREFIX,
     FETCH_ERROR,
     LOG_API_URL_PREFIX,
-    MACOS_API_URL_PREFIX,
     PROCESS_API_URL_PREFIX,
     STORE_API_URL_PREFIX,
     UPDATE_PIPELINE_MODE
@@ -76,6 +76,7 @@ import {
     SET_SHOW_VARIABLE,
     SET_STAGE_TAG_LIST,
     SET_STORE_SEARCH,
+    SET_TRIGGER_PARAMS,
     SWITCHING_PIPELINE_VERSION,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
@@ -436,7 +437,12 @@ export default {
     },
     requestTriggerParams: async ({ commit }, params) => {
         try {
-            const { data } = await request.post(`/${PROCESS_API_URL_PREFIX}/user/buildParam/trigger`, params)
+            let data = []
+            if (params?.length > 0) {
+                const res = await request.post(`/${PROCESS_API_URL_PREFIX}/user/buildParam/trigger`, params)
+                data = res.data
+            }
+            commit(SET_TRIGGER_PARAMS, data)
             return data
         } catch (e) {
             rootCommit(commit, FETCH_ERROR, e)
@@ -884,7 +890,14 @@ export default {
         })
     },
 
-    fetchDevcloudSettings ({ commit }, { projectId, buildType }) {
+    fetchDevcloudSettings ({ commit }, { projectId, pipelineId, templateId }) {
+        return request.get(`/dispatch-devcloud/api/user/dispatchDevcloud/v2/project/${projectId}/pipeline/${pipelineId}/performanceConfig/list?templateId=${templateId}`)
+    },
+    getHistoryDevcloudSettings ({ commit }, { username, projectId, uid }) {
+        return request.get(`/dispatch-devcloud/api/user/dispatchDevcloud/v2/project/${username}/pipeline/${projectId}/uid/${uid}/performanceConfig/info`)
+    },
+    
+    fetchDockerSettings ({ commit }, { projectId, buildType }) {
         return request.get(`/dispatch-docker/api/user/dispatch-docker/resource-config/projects/${projectId}/list?buildType=${buildType}`)
     },
 
@@ -957,17 +970,25 @@ export default {
     getAIStatus () {
         return request.get('/misc/api/user/gpt_config/is_ok')
     },
+    //
+    // getMacSysVersion () {
+    //     return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/macos/systemVersions/v2`)
+    // },
 
-    getMacSysVersion () {
-        return request.get(`${MACOS_API_URL_PREFIX}/user/systemVersions/v2`)
+    // getMacXcodeVersion (_, systemVersion = '') {
+    //     return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/macos/xcodeVersions/v2?systemVersion=${systemVersion}`)
+    // },
+    //
+    getMacvmModel (_, params) {
+        return request.post(`${DEVCLOUD_API_URL_PREFIX}/user/macos/vmModel`, params)
     },
 
-    getMacXcodeVersion (_, systemVersion = '') {
-        return request.get(`${MACOS_API_URL_PREFIX}/user/xcodeVersions/v2?systemVersion=${systemVersion}`)
+    getMacvmModelAll (_, params) {
+        return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/macos/vmModel/all`)
     },
 
     getWinVersion () {
-        return request.get('/dispatch-windows/api/user/systemVersions').then((res) => {
+        return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/windows/systemVersions`).then((res) => {
             return res.data
         })
     },

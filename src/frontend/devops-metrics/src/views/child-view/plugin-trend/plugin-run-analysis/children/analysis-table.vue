@@ -14,7 +14,7 @@ import {
   useRouter,
 } from 'vue-router';
 import useFilter from '@/composables/use-filter';
-import EmptyTableStatus from '@/components/empty-table-status.vue'
+import EmptyTableStatus from '@/components/empty-table-status'
 import { useI18n } from "vue-i18n";
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';

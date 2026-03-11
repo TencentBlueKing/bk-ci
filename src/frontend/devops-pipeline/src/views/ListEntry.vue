@@ -47,6 +47,10 @@
                 {
                     label: vm.proxy.$t('templateName'),
                     name: 'TemplateManageList'
+                },
+                {
+                    label: vm.proxy.$t('pipelineDataBoard'),
+                    name: 'PipelineDataBoard'
                 }
             ]
 

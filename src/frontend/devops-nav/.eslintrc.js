@@ -50,14 +50,16 @@ module.exports = {
         {
             files: ['*.vue'],
             rules: {
-                indent: 'off'
+                indent: 'off',
+                camelcase: 'off'
             }
         },
         {
             files: ['*.ts'],
             rules: {
                 'no-unused-vars': 'off',
-                '@typescript-eslint/no-unused-vars': 'error'
+                '@typescript-eslint/no-unused-vars': 'error',
+                'camelcase': 'off'
             }
         }
     ]

@@ -42,6 +42,7 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildJobResult
 import com.tencent.devops.process.pojo.BuildTask
@@ -462,7 +463,15 @@ object Runner {
         jobBuildVariables.variablesWithType = variablesWithType
             .plus(taskBuildParameters)
             .values.toList()
-
+        // 内部特殊兼容两个写法
+        val additionalOptions = try {
+            buildTask.params?.get("additionalOptions")?.let { str ->
+                JsonUtil.toOrNull(str, ElementAdditionalOptions::class.java)
+            }
+        } catch (ignore: Throwable) {
+            logger.warn("Parse additionalOptions with error: ", ignore)
+            null
+        }
         // 填充插件级的ENV参数
         val customEnvStr = buildTask.params?.get(Element::customEnv.name)
         val dialect = PipelineDialectUtil.getPipelineDialect(jobBuildVariables.variables[PIPELINE_DIALECT])
@@ -475,7 +484,7 @@ object Runner {
             }
             if (customEnv.isNullOrEmpty()) return
             val jobVariables = jobBuildVariables.variables.toMutableMap()
-            customEnv.forEach {
+            (customEnv.plus(additionalOptions?.customEnv ?: emptyList())).forEach {
                 if (!it.key.isNullOrBlank()) {
                     // 解决BUG:93319235,将Task的env变量key加env.前缀塞入variables，塞入之前需要对value做替换
                     val value = EnvReplacementParser.parse(

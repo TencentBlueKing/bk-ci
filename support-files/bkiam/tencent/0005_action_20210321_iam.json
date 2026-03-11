@@ -1,0 +1,1159 @@
+{
+  "system_id": "bk_ci",
+  "operations": [
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "project_view",
+        "name": "查看项目",
+        "name_en": "Project View",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "project_instance"
+              }
+            ]
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "project_views_manager",
+        "name": "项目视图管理",
+        "name_en": "Project Views Manager",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "project_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "all_action",
+        "name": "项目所有权限",
+        "name_en": "All action",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "project_instance"
+              }
+            ]
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_view",
+        "name": "查看流水线",
+        "name_en": "Pipeline View",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "pipeline",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "pipeline_instance"
+              }
+            ]
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_edit",
+        "name": "编辑流水线",
+        "name_en": "Pipeline Edit",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "pipeline",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "pipeline_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "pipeline_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_create",
+        "name": "添加流水线",
+        "name_en": "Pipeline Create",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "project_instance"
+              }
+            ]
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_download",
+        "name": "下载流水线构件",
+        "name_en": "Pipeline Download",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "pipeline",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "pipeline_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "pipeline_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_delete",
+        "name": "删除流水线",
+        "name_en": "Pipeline Delete",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "pipeline",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "pipeline_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "pipeline_view",
+          "pipeline_download"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_share",
+        "name": "分享流水线构件",
+        "name_en": "Pipeline Share",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "pipeline",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "pipeline_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "pipeline_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_execute",
+        "name": "执行流水线",
+        "name_en": "Pipeline Execute",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "pipeline",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "pipeline_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "pipeline_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "repertory_view",
+        "name": "查看代码库",
+        "name_en": "Repository View",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "repertory",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "repertory_instance"
+              }
+            ]
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "repertory_edit",
+        "name": "编辑代码库",
+        "name_en": "Repository Edit",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "repertory",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "repertory_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "repertory_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "repertory_create",
+        "name": "添加代码库",
+        "name_en": "Repository Create",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "project_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "repertory_delete",
+        "name": "删除代码库",
+        "name_en": "Repository Delete",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "repertory",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "repertory_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "repertory_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "repertory_use",
+        "name": "使用代码库",
+        "name_en": "Repository Use",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "repertory",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "repertory_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "repertory_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "credential_view",
+        "name": "查看凭据",
+        "name_en": "Credential View",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "credential",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "credential_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "credential_edit",
+        "name": "编辑凭据",
+        "name_en": "Credential Edit",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "credential",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "credential_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "credential_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "credential_create",
+        "name": "添加凭据",
+        "name_en": "Credential Create",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "project_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "credential_delete",
+        "name": "删除凭据",
+        "name_en": "Credential Delete",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "credential",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "credential_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "credential_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "credential_use",
+        "name": "使用凭据",
+        "name_en": "Credential Use",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "credential",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "credential_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "credential_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "environment_view",
+        "name": "查看环境",
+        "name_en": "Environment View",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "environment",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "environment_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "environment_edit",
+        "name": "编辑环境",
+        "name_en": "Environment Edit",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "environment",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "environment_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "environment_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "environment_create",
+        "name": "添加环境",
+        "name_en": "Environment Create",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "project_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "environment_delete",
+        "name": "删除环境",
+        "name_en": "Environment Delete",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "environment",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "environment_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "environment_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "environment_use",
+        "name": "使用环境",
+        "name_en": "Environment Use",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "environment",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "environment_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "environment_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "env_node_view",
+        "name": "查看节点",
+        "name_en": "Node View",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "env_node",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "node_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "env_node_edit",
+        "name": "编辑节点",
+        "name_en": "Node Edit",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "env_node",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "node_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "env_node_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "env_node_create",
+        "name": "添加节点",
+        "name_en": "Node Create",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "project_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "env_node_delete",
+        "name": "删除节点",
+        "name_en": "Node Delete",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "env_node",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "node_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "env_node_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "env_node_use",
+        "name": "使用节点",
+        "name_en": "Node Use",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "env_node",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "node_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "env_node_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cert_view",
+        "name": "查看证书",
+        "name_en": "Cert View",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "cert",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "cert_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cert_edit",
+        "name": "编辑证书",
+        "name_en": "Cert Edit",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "cert",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "cert_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cert_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cert_create",
+        "name": "添加证书",
+        "name_en": "Cert Create",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "project_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cert_delete",
+        "name": "删除证书",
+        "name_en": "Cert Delete",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "cert",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "cert_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cert_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cert_use",
+        "name": "使用证书",
+        "name_en": "Cert Use",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "cert",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "cert_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cert_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "experience_task_delete",
+        "name": "删除版本体验任务",
+        "name_en": "Experience Task Delete",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "experience_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "experience_task_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "experience_task_edit",
+        "name": "修改版本体验任务",
+        "name_en": "Experience Task Edit",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "experience_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "experience_task_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "experience_group_delete",
+        "name": "删除版本体验用户组",
+        "name_en": "Experience Group Delete",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "experience_group",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "experience_group_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "experience_group_edit",
+        "name": "修改版本体验用户组",
+        "name_en": "Experience Group Edit",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "experience_group",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "experience_group_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "rule_create",
+        "name": "创建质量红线规则",
+        "name_en": "Rule Create",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "project_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "rule_delete",
+        "name": "删除质量红线规则",
+        "name_en": "Rule Delete",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "rule",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "quality_rule_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "rule_edit",
+        "name": "编辑质量红线规则",
+        "name_en": "Rule Edit",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "rule",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "quality_rule_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "rule_enable",
+        "name": "停用/启用质量红线规则",
+        "name_en": "Rule Enable",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "rule",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "quality_rule_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "quality_group_create",
+        "name": "创建质量红线通知组",
+        "name_en": "Group Create",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "project_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "quality_group_delete",
+        "name": "删除质量红线通知组",
+        "name_en": "Group Delete",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "quality_group",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "quality_group_rule"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "quality_group_edit",
+        "name": "编辑质量红线通知组",
+        "name_en": "Group Edit",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "quality_group",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "quality_group_rule"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    }
+  ]
+}

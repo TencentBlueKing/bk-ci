@@ -1,9 +1,9 @@
-import { createApp } from 'vue';
 import { createPinia } from 'pinia';
-import router from './router';
+import { createApp } from 'vue';
 import App from './app.vue';
+import './css/iconcool.js';
 import './css/index.css';
-import './css/iconcool.js'
+import router from './router';
 
 // 全量引入 bkui-vue
 import bkui from 'bkui-vue';
@@ -15,31 +15,31 @@ import bkuiJp from 'bkui-vue/dist/locale/ja-jp.esm'
 import { bkTooltips } from 'bkui-vue/lib/directives';
 
 // 引入权限指令相关资源
-import { handleProjectManageNoPermission } from './utils/permission';
 import { AuthorityDirectiveV3 } from 'bk-permission';
 import 'bk-permission/dist/main.css';
+import { handleProjectManageNoPermission } from './utils/permission';
 
 // i18n
-import { getCookies } from './common/util';
 import { createI18n } from 'vue-i18n';
-import ZhCN from '../../locale/manage/zh-CN.json';
 import EnUS from '../../locale/manage/en-US.json';
+import ZhCN from '../../locale/manage/zh-CN.json';
 import JaJP from '../../locale/manage/ja-JP.json';
+import { getCookies } from './common/util';
 
 const localeAliasMap = {
-  'zh-CN': 'zh-CN',
-  'zh-cn': 'zh-CN',
-  'ja-JP': 'ja-JP',
-  ja: 'ja-JP',
-  zh_CN: 'zh-CN',
-  zh_cn: 'zh-CN',
-  cn: 'zh-CN',
-  'en-US': 'en-US',
-  'en-us': 'en-US',
-  en: 'en-US',
-  us: 'en-US',
-  en_US: 'en-US',
-  en_us: 'en-US'
+    'zh-CN': 'zh-CN',
+    'zh-cn': 'zh-CN',
+    'ja-JP': 'ja-JP',
+    ja: 'ja-JP',
+    zh_CN: 'zh-CN',
+    zh_cn: 'zh-CN',
+    cn: 'zh-CN',
+    'en-US': 'en-US',
+    'en-us': 'en-US',
+    en: 'en-US',
+    us: 'en-US',
+    en_US: 'en-US',
+    en_us: 'en-US'
 }
 const bkUiLocaleAliasMap = {
   'zh-CN': bkuiZhCn,
@@ -59,6 +59,7 @@ const bkUiLocaleAliasMap = {
 const cookiesObj = getCookies() || {};
 const i18n = createI18n({
   legacy: false,
+  globalInjection: true,
   locale: localeAliasMap[cookiesObj.blueking_language] || 'zh-CN',
   fallbackLocale: 'zh-CN',
   messages: {
@@ -68,7 +69,7 @@ const i18n = createI18n({
   },
 });
 
-const app = createApp(App)
+const app = createApp(App);
 app
   .use(router)
   .use(createPinia())
@@ -78,4 +79,4 @@ app
   .use(i18n)
   .use(AuthorityDirectiveV3(handleProjectManageNoPermission))
   .mount('.app');
-app.directive('bk-tooltips', bkTooltips)
+app.directive('bk-tooltips', bkTooltips);

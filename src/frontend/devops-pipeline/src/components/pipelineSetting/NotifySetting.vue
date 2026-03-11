@@ -53,13 +53,13 @@
                 </bk-checkbox-group>
             </bk-form-item>
             <bk-form-item :label="$t('settings.additionUser')">
-                <user-input
+                <staff-input
                     name="additionUser"
                     :handle-change="(name, value) => subscription.users = value.join(',')"
                     :value="subscription.users.split(',').filter(Boolean)"
                     :placeholder="$t('settings.additionUserPlaceholder')"
                 >
-                </user-input>
+                </staff-input>
             </bk-form-item>
             <bk-form-item
                 property="content"
@@ -116,14 +116,15 @@
 
 <script>
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import StaffInput from '@/components/atomFormField/StaffInput'
     import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
-    import UserInput from '@/components/atomFormField/UserInput/index.vue'
+
     export default {
         name: 'notify-setting',
         components: {
             GroupIdSelector,
             AtomCheckbox,
-            UserInput
+            StaffInput
         },
         props: {
             subscription: Object,
@@ -156,7 +157,7 @@
             noticeList () {
                 return [
                     { id: 4, name: this.$t('settings.emailNotice'), value: 'EMAIL' },
-                    { id: 1, name: this.$t('settings.rtxNotice'), value: 'WEWORK' },
+                    { id: 1, name: this.$t('settings.rtxNotice'), value: 'RTX' },
                     { id: 6, name: this.$t('settings.weworkGroup'), value: 'WEWORK_GROUP' },
                     { id: 5, name: this.$t('settings.voice'), value: 'VOICE' }
                     // { id: 2, name: this.$t('settings.wechatNotice'), value: 'WECHAT' },
@@ -165,6 +166,14 @@
             },
             groupIdDesc () {
                 return this.$t('settings.groupIdDesc')
+            },
+            pipelineSettingUser () {
+                return this.subscription && this.subscription.users ? this.subscription.users.split(',') : []
+            }
+        },
+        methods: {
+            handleUsers (name, value) {
+                this.updateSubscription(name, value.join(','))
             }
         }
     }
@@ -198,11 +207,6 @@
                 white-space: nowrap;
                 text-overflow: ellipsis;
             }
-        }
-        .notify-setting-no-data {
-            vertical-align: top;
-            font-size: 12px;
-            color: #63656e;
         }
     }
 </style>

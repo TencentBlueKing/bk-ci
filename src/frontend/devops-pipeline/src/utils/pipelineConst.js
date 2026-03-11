@@ -80,8 +80,9 @@ export function getVersionConfig () {
 }
 
 export function pluginUrlParse (originUrl, query) {
+    const url = originUrl.replace(/^https?\:\/\/((dev|test)\.)?devops\.oa\.com\/ms/, '')
     /* eslint-disable */
-    return new Function('ctx', `return '${originUrl.replace(PLUGIN_URL_PARAM_REG, '\'\+ (ctx.hasOwnProperty(\'$1\') ? ctx[\'$1\'] : "") \+\'')}'`)(query)
+    return new Function('ctx', `return '${url.replace(PLUGIN_URL_PARAM_REG, '\'\+ (ctx.hasOwnProperty(\'$1\') ? ctx[\'$1\'] : "") \+\'')}'`)(query)
     /* eslint-enable */
 }
 
@@ -122,7 +123,7 @@ export const fileExtIconMap = {
     txt: ['.json', '.txt', '.md'],
     zip: ['.zip', '.tar', '.tar.gz', '.tgz', '.jar', '.gz'],
     apkfile: ['.apk'],
-    ipafile: ['.ipa']
+    ipafile: ['.ipa', '.hap']
 }
 export function extForFile (name) {
     const defaultIcon = 'file'
@@ -176,7 +177,7 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
         index: 0,
         id: 'buildNum',
         label: 'buildNum',
-        width: 120
+        width: localStorage.getItem('buildNumWidth') ?? 120
     },
     stageStatus: {
         index: 1,
@@ -194,25 +195,25 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
         index: 3,
         id: 'startType',
         label: 'history.triggerInfo',
-        width: 120
+        width: localStorage.getItem('triggerTypeWidth') ?? 120
     },
     queueTime: {
         index: 4,
         id: 'queueTime',
         label: 'history.tableMap.queueTime',
-        width: 120
+        width: localStorage.getItem('queueTimeWidth') ?? 120
     },
     startTime: {
         index: 5,
         id: 'startTime',
         label: 'history.tableMap.startTime',
-        width: 120
+        width: localStorage.getItem('startTimeWidth') ?? 120
     },
     endTime: {
         index: 6,
         id: 'endTime',
         label: 'history.tableMap.endTime',
-        width: 120
+        width: localStorage.getItem('endTimeWidth') ?? 120
     },
     totalTime: {
         index: 7,
@@ -230,7 +231,7 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
         index: 9,
         id: 'artifactList',
         label: 'history.artifactList',
-        width: 180
+        width: localStorage.getItem('artifactListWidth') ?? 180
     },
     artifactQuality: {
         index: 10,
@@ -241,7 +242,8 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
     appVersions: {
         index: 11,
         id: 'appVersions',
-        label: 'history.tableMap.appVersions'
+        label: 'history.tableMap.appVersions',
+        width: localStorage.getItem('appVersionsWidth') ?? 120
     },
     remark: {
         index: 12,
@@ -253,18 +255,20 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
     recommendVersion: {
         index: 13,
         id: 'recommendVersion',
-        label: 'history.tableMap.recommendVersion'
+        label: 'history.tableMap.recommendVersion',
+        width: localStorage.getItem('recommendVersionWidth') ?? 120
     },
     pipelineVersion: {
         index: 14,
         id: 'pipelineVersion',
-        label: 'history.tableMap.pipelineVersion'
+        label: 'history.tableMap.pipelineVersion',
+        width: localStorage.getItem('pipelineVersionWidth') ?? 120
     },
     entry: {
         index: 15,
         id: 'entry',
         label: 'history.tableMap.entry',
-        width: 120,
+        width: localStorage.getItem('entryWidth') ?? 120,
         hiddenInHistory: true,
         entries: [{
             type: '',
@@ -284,7 +288,7 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
     },
     errorCode: {
         index: 16,
-        width: 280,
+        width: localStorage.getItem('errorCodeWidth') ?? 280,
         id: 'errorCode',
         label: 'history.errorCode'
     },
@@ -328,3 +332,5 @@ export const STRATEGY_ENUM = {
     AUTO: 'AUTO',
     MANUAL: 'MANUAL'
 }
+
+export const MAX_FILE_SIZE_MB = 500

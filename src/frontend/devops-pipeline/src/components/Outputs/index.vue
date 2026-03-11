@@ -62,6 +62,10 @@
                         >{{ output.name }}</span>
                         <span class="output-size">{{ output.size }}</span>
                         <p class="output-hover-icon-box">
+                            <output-qrcode
+                                v-if="output.isApp"
+                                :output="output"
+                            />
                             <artifact-download-button
                                 v-if="output.downloadable"
                                 :output="output"
@@ -135,6 +139,10 @@
                             >
                                 {{ btn.text }}
                             </bk-button>
+                            <output-qrcode
+                                :output="activeOutput"
+                                v-if="activeOutputDetail.isApp"
+                            />
 
                             <ext-menu
                                 v-if="!activeOutputDetail.folder"
@@ -266,6 +274,7 @@
     import Logo from '@/components/Logo'
     import CopyToCustomRepoDialog from '@/components/Outputs/CopyToCustomRepoDialog'
     import IframeReport from '@/components/Outputs/IframeReport'
+    import OutputQrcode from '@/components/Outputs/OutputQrcode'
     import ThirdPartyReport from '@/components/Outputs/ThirdPartyReport'
     import ExtMenu from '@/components/pipelineList/extMenu'
     import { extForFile, repoTypeMap, repoTypeNameMap } from '@/utils/pipelineConst'
@@ -279,6 +288,7 @@
             IframeReport,
             ExtMenu,
             CopyToCustomRepoDialog,
+            OutputQrcode,
             // ArtifactsList
             ArtifactDownloadButton
         },
@@ -925,7 +935,6 @@
             width: 100%;
             margin: 12px 0;
             flex-shrink: 0;
-
             .artifact-search {
                 display: flex;
                 height: 32px;
@@ -943,7 +952,6 @@
                     border-radius: 2px;
                     border-right: none;
                 }
-
                 .select-search {
                     flex: 1;
                     ::placeholder {
@@ -958,7 +966,6 @@
                     }
                 }
             }
-
             .input-search {
                 flex-shrink: 0;
                 flex: 1;

@@ -38,7 +38,7 @@ export default {
         isCommendAtomPageOver: false,
         isAtomPageOver: false,
         atomList: [],
-        atomsOutputMap: {},
+        atomsOutputMap: null,
         requestAtomData: {
             recommendFlag: true,
             keyword: '',
@@ -69,7 +69,9 @@ export default {
         hideSkipExecTask: false,
         globalEnvs: null,
         commonParams: [],
+        triggerParams: [],
         saveStatus: false,
+        authSettingEditing: false,
         stageTagList: [],
         defaultStageTags: [],
         showReviewDialog: false,

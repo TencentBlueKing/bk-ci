@@ -48,7 +48,7 @@ import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
-@Tag(name = "AUTH_SERVICE_PROJECT", description = "权限--项目相关接口")
+@Tag(name = "AUTH_OPEN_PROJECT", description = "权限--项目相关接口")
 @Path("/open/service/auth/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

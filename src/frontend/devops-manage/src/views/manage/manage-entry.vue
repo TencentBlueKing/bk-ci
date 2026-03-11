@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import ManageHeader from '@/components/manage-header.vue';
-import { onMounted, ref, watch, computed } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
-  useRouter,
-  useRoute,
+useRoute,
+useRouter,
 } from 'vue-router';
 const router = useRouter();
 const route = useRoute();
@@ -26,6 +26,10 @@ const manageTabs = ref([
   {
     title: t('授权管理'),
     name: 'permission',
+  },
+  {
+    title: t('微扩展管理'),
+    name: 'expand',
   },
   // {
   //   title: t('微扩展管理'),

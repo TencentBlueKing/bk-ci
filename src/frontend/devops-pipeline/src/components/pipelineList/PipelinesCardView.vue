@@ -10,6 +10,7 @@
             <PipelineListEmpty
                 class="pipeline-card-list-empty-tips"
                 v-if="slotProps.list.length === 0"
+                :refresh-list="refresh"
             ></PipelineListEmpty>
             <ul
                 v-else

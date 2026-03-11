@@ -94,7 +94,7 @@ class UserPermissionService @Autowired constructor(
         managerIds.forEach {
             val manageOrganizationEntity = managerOrganizationService.getManagerInfo(it.toInt())
             if (manageOrganizationEntity != null) {
-                refreshByManagerId(manageOrganizationEntity)
+                refreshByManagerId(manageOrganizationEntity, userId)
             }
         }
         return getUserPermissionFromCache(userId)

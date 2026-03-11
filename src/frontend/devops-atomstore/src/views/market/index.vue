@@ -5,6 +5,7 @@
             :type="filterData.pipeType"
         >
             <router-link
+                v-if="filterData.pipeType !== 'ide'"
                 :to="{ name: `${filterData.pipeType || 'atom'}Work` }"
                 class="g-title-work"
             >
@@ -130,11 +131,11 @@
 </template>
 
 <script>
-    import { debounce } from '@/utils/index'
-    import eventBus from '@/utils/eventBus'
-    import { mapActions } from 'vuex'
-    import commentRate from '@/components/common/comment-rate'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import commentRate from '@/components/common/comment-rate'
+    import eventBus from '@/utils/eventBus'
+    import { debounce } from '@/utils/index'
+    import { mapActions } from 'vuex'
 
     export default {
         components: {
@@ -166,7 +167,9 @@
                 storeTypes: [
                     { type: 'atom', des: this.$t('store.流水线插件') },
                     { type: 'template', des: this.$t('store.流水线模板') },
-                    { type: 'image', des: this.$t('store.容器镜像') }
+                    { type: 'ide', des: this.$t('store.IDE插件') },
+                    { type: 'image', des: this.$t('store.容器镜像') },
+                    { type: 'service', des: this.$t('store.微扩展') }
                 ]
             }
         },
@@ -194,6 +197,12 @@
                         break
                     case 'image':
                         name = this.$t('store.容器镜像')
+                        break
+                    case 'ide':
+                        name = this.$t('store.IDE插件')
+                        break
+                    case 'service':
+                        name = this.$t('store.微扩展')
                         break
                     default:
                         name = this.$t('store.流水线插件')
@@ -230,6 +239,7 @@
         },
 
         created () {
+            if (VERSION_TYPE === 'ee') this.storeTypes.splice(2, 1)
             eventBus.$off('clear')
             eventBus.$on('clear', () => {
                 this.filterData.classifyValue = 'all'
@@ -247,9 +257,16 @@
                 'requestTplCategorys',
                 'requestTplLabel',
                 'requestTplClassify',
+                'requestIDEClassifys',
+                'requestIDECategorys',
+                'requestIDELabel',
                 'requestImageClassifys',
                 'requestImageCategorys',
                 'requestImageLabel',
+                'requestServiceClassifys',
+                'requestServiceCategorys',
+                'requestServiceLabel',
+                'requestServiceItemList',
                 'setMarketQuery'
             ]),
 
@@ -329,11 +346,17 @@
             },
 
             setClassifyValue (key) {
-                let categories = this.categories[2] || {}
-                if (this.filterData.pipeType === 'atom') categories = this.categories[1] || {}
-                const selected = (categories.children || []).find((category) => category.classifyCode === key) || {}
-                this.filterData.classifyValue = selected.classifyValue
-                this.filterData.classifyKey = 'classifyCode'
+                let classifyKey = ''
+                switch (this.filterData.pipeType) {
+                    case 'service':
+                        classifyKey = 'bkServiceId'
+                        break
+                    default:
+                        classifyKey = 'classifyCode'
+                        break
+                }
+                this.filterData.classifyValue = key
+                this.filterData.classifyKey = classifyKey
             },
 
             changeRoute () {
@@ -356,7 +379,9 @@
                 const fun = {
                     atom: () => this.getAtomClassifys(),
                     template: () => this.getTemplateClassifys(),
-                    image: () => this.getImageClassifys()
+                    ide: () => this.getIDEClassifys(),
+                    image: () => this.getImageClassifys(),
+                    service: () => this.getServiceClassifys()
                 }
                 const type = val || 'atom'
                 const method = fun[type]
@@ -371,10 +396,10 @@
                         const name = item.name
                         const children = item.data
                         children.forEach((x) => {
-                            x.name = x[name]
-                            x.id = x[key] + key
                             x.classifyValue = x[key]
                             x.classifyKey = key
+                            x.name = x[name]
+                            x.id = x[key] + key
                         })
                         this.categories.push({ name: item.groupName, children })
                     })
@@ -412,9 +437,45 @@
                 })
             },
 
+            getIDEClassifys () {
+                return Promise.all([this.requestIDECategorys(), this.requestIDELabel(), this.requestIDEClassifys()]).then(([categorys, lables, classify]) => {
+                    const res = []
+                    if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: this.$t('store.适用IDE'), data: categorys })
+                    if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: this.$t('store.按分类'), data: classify })
+                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: this.$t('store.按功能'), data: lables })
+                    return res
+                })
+            },
+
             getImageClassifys () {
                 return Promise.all([this.requestImageCategorys(), this.requestImageLabel(), this.requestImageClassifys()]).then(([categorys, lables, classify]) => {
                     const res = []
+                    if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: '按应用范畴', data: categorys })
+                    if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: '按分类', data: classify })
+                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: '按功能', data: lables })
+                    return res
+                })
+            },
+
+            getServiceClassifys () {
+                return Promise.all([
+                    this.requestServiceCategorys(),
+                    this.requestServiceLabel(),
+                    this.requestServiceClassifys(),
+                    this.requestServiceItemList()
+                ]).then(([categorys = [], lables = [], classify = [], services = []]) => {
+                    const res = []
+                    if (services.length > 0) {
+                        res.push({
+                            name: 'name',
+                            key: 'bkServiceId',
+                            groupName: this.$t('store.按服务'),
+                            data: services.map((x) => {
+                                x.extServiceItem.bkServiceId = x.extServiceItem.id
+                                return x.extServiceItem
+                            })
+                        })
+                    }
                     if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: this.$t('store.按应用范畴'), data: categorys })
                     if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: this.$t('store.按分类'), data: classify })
                     if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: this.$t('store.按功能'), data: lables })
@@ -490,7 +551,7 @@
                 .active-tab {
                     background: $lightBlue;
                     color: $primaryColor;
-                    i {
+                    .title-icon {
                         color: $primaryColor;
                     }
                     span {
@@ -551,7 +612,7 @@
                 height: 18px;
                 display: block;
                 border-radius: 100%;
-                border: 1px solid $fontLigtherColor;
+                border: 1px solid $fontLighterColor;
                 margin-right: 10px;
                 &.checked:after {
                     position: absolute;

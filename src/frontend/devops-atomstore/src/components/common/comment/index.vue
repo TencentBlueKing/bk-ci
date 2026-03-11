@@ -60,7 +60,7 @@
 
         watch: {
             reply (val) {
-                const reg = this.replyToUser ? new RegExp(`^回复@${this.replyToUser}：`) : /^/
+                const reg = this.replyToUser ? new RegExp(`^${this.$t('store.回复')}@${this.replyToUser}：`) : /^/
                 const isMatchUser = reg.test(val)
                 if (!isMatchUser) this.replyToUser = ''
             }
@@ -70,14 +70,16 @@
             ...mapActions('store', [
                 'requestAtomReplyComment',
                 'requestTemplateReplyComment',
+                'requestIDEReplyComment',
                 'requestImageReplyComment',
+                'requestServiceReplyComment',
                 'setCommentReplay',
                 'clearCommentReply'
             ]),
 
             replyComment (user) {
-                const reg = this.replyToUser ? new RegExp(`^回复@${this.replyToUser}：`) : /^/
-                const replaceStr = user ? `${this.$t('store.回复@')}${user}：` : ''
+                const reg = this.replyToUser ? new RegExp(`^${this.$t('store.回复')}@${this.replyToUser}：`) : /^/
+                const replaceStr = user ? `${this.$t('store.回复')}@${user}：` : ''
 
                 this.replyToUser = user
                 this.reply = this.reply.replace(reg, replaceStr)
@@ -101,7 +103,7 @@
                     return
                 }
 
-                const reg = new RegExp(`^回复@${this.replyToUser}：`)
+                const reg = new RegExp(`^${this.$t('store.回复')}@${this.replyToUser}：`)
                 replyContent = replyContent.replace(reg, '')
 
                 const id = this.comment.data.commentId
@@ -110,7 +112,9 @@
                 const funObj = {
                     atom: this.requestAtomReplyComment,
                     template: this.requestTemplateReplyComment,
-                    image: this.requestImageReplyComment
+                    ide: this.requestIDEReplyComment,
+                    image: this.requestImageReplyComment,
+                    service: this.requestServiceReplyComment
                 }
 
                 if (!Object.keys(funObj).includes(type) || typeof funObj[type] !== 'function') {
@@ -136,7 +140,7 @@
             width: calc(100% - 77px);
             height: 56px;
             padding: 5px 5px;
-            margin-left: 59px;
+            margin-left: 77px;
             &:focus {
                 border: 1px solid $primaryColor;
                 outline: none;

@@ -39,6 +39,12 @@ const nodeList = () => import(/* webpackChunkName: 'nodeList' */ '../views/node/
 // 节点详情
 const nodeDetail = () => import(/* webpackChunkName: 'nodeDetail' */ '../views/node_detail')
 
+// 节点详情
+const extPageContainer = () => import(/* webpackChunkName: 'nodeDetail' */ '../views/extPageContainer')
+
+// 脚本执行详情/文件分发详情
+const executionDetail = () => import(/* webpackChunkName: 'nodeDetail' */ '../views/execution-detail/index.vue')
+
 // 批量设置节点标签
 const setNodeTag = () => import(/* webpackChunkName: 'setNodeTag' */ '../views/node/set_node_tag')
 
@@ -127,8 +133,24 @@ const routes = [
                         component: setNodeTag
                     },
                 ]
+            },
+            {
+                path: 'extPage/:serviceCode',
+                name: 'extPage',
+                component: extPageContainer,
+                meta: {
+                    title: 'extPage',
+                    logo: 'environment',
+                    header: 'environmentManage',
+                    to: 'envList'
+                }
             }
         ]
+    },
+    {
+        path: 'environment/:projectId?/execute/step',
+        name: 'executionDetail',
+        component: executionDetail
     }
 ]
 

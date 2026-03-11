@@ -43,28 +43,28 @@
 </template>
 
 <script>
-    import P4 from './P4'
-    import SVN from './SVN'
-    import Git from './Git'
-    import TGit from './TGit'
-    import Github from './Github'
-    import Gitlab from './Gitlab'
-    import Custom from './Custom'
+    import { mapActions, mapState } from 'vuex'
     import {
-        isP4,
-        isSvn,
+        CODE_REPOSITORY_CACHE,
+        getCodelibConfig,
         isGit,
-        isTGit,
         isGithub,
         isGitLab,
+        isP4,
         isScmGit,
         isScmSvn,
-        getCodelibConfig,
-        CODE_REPOSITORY_CACHE
+        isSvn,
+        isTGit
     } from '../../config/'
-    import { mapActions, mapState } from 'vuex'
     import { parsePathRegion } from '../../utils'
+    import Custom from './Custom'
+    import Git from './Git'
+    import Github from './Github'
+    import Gitlab from './Gitlab'
     import dialogMixin from './mixin.js'
+    import P4 from './P4'
+    import SVN from './SVN'
+    import TGit from './TGit'
     export default {
         name: 'codelib-dialog',
         components: {
@@ -429,6 +429,12 @@
     .example-tips {
         color: #c4c6cd;
         font-size: 12px;
+    }
+</style>
+
+<style lang="scss" scoped>
+    .bk-form-control {
+        display: list-item !important;
     }
 </style>
 

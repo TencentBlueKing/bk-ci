@@ -18,8 +18,10 @@
  */
 
 import axios from 'axios'
+import cookie from 'js-cookie'
 import Vue from 'vue'
 import { bus } from './bus'
+import { isAbsoluteURL, randomString } from './util'
 
 const request = axios.create({
     baseURL: API_URL_PREFIX,
@@ -34,19 +36,44 @@ const request = axios.create({
 })
 
 function errorHandler (error) {
-    
-    if (typeof error.response.data === 'undefined' && !error.config?.signal?.aborted) {
+    if (typeof error.response?.data === 'undefined' && !error.config?.signal?.aborted) {
         // HACK REDIRECT 302
-        bus.$toggleLoginDialog(true)
+        const err = dealLogin(401, error)
+        return Promise.reject(err)
     }
     return Promise.reject(error)
 }
 
+request.interceptors.request.use(config => {
+    const url = isAbsoluteURL(config.url)
+        ? new window.URL(config.url)
+        : {
+            host: location.host,
+            pathname: config.url
+        }
+    if (/(devops|gw\.open)\.w?oa\.com(\/ms)?$/i.test(url.host) && !/(\/?ms\/backend|\/?backend)\//i.test(url.pathname)) {
+        const routePid = getCurrentPid()
+        return {
+            ...config,
+            headers: routePid
+                ? {
+                    ...(config.headers || {}),
+                    'X-DEVOPS-PROJECT-ID': routePid
+                }
+                : config.headers
+        }
+    }
+    return config
+}, function (error) {
+    return Promise.reject(error)
+})
+
 request.interceptors.response.use(response => {
     const { data: { data, status, message, code, result } } = response
     const httpStatus = response.status
-    if (httpStatus === 401) {
-        bus.$toggleLoginDialog(true)
+    if (httpStatus === 302 || httpStatus === 401) {
+        const err = dealLogin(httpStatus, response)
+        return Promise.reject(err)
     } else if (httpStatus === 503) {
         const errMsg = {
             status: httpStatus,
@@ -62,6 +89,9 @@ request.interceptors.response.use(response => {
     } else if (httpStatus === 400) {
         const errorMsg = { httpStatus, message: message ?? (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('err400')) ?? 'service is abnormal' }
         return Promise.reject(errorMsg)
+    } else if (httpStatus === 451) {
+        const errorMsg = { httpStatus, message: response.data.message }
+        return Promise.reject(errorMsg)
     } else if (httpStatus > 400) {
         const err = {
             message: `unknow Error httpStatus: ${httpStatus}`,
@@ -72,6 +102,50 @@ request.interceptors.response.use(response => {
 
     return response.data
 }, errorHandler)
+
+const getCurrentPid = () => {
+    try {
+        const pathPid = window.pipelineVue && window.pipelineVue.$route && window.pipelineVue.$route.params && window.pipelineVue.$route.params.projectId
+        const cookiePid = cookie.get(X_DEVOPS_PROJECT_ID)
+        return pathPid || cookiePid
+    } catch (e) {
+        return undefined
+    }
+}
+
+request.jsonp = (url, data, {
+    useCache = true,
+    cache = false,
+    cacheKey = ''
+}) => {
+    if (window.cacheKey && useCache) {
+        return Promise.resolve(window.cacheKey)
+    }
+    const callback = 'CALLBACK' + randomString(12)
+    const JSONP = document.createElement('script')
+    JSONP.setAttribute('type', 'text/javascript')
+
+    const headEle = document.getElementsByTagName('head')[0]
+
+    const query = new URLSearchParams(data).toString()
+    JSONP.src = `${url}?callback=${callback}${query ? `&${query}` : ''}`
+    return new Promise((resolve, reject) => {
+        window[callback] = r => {
+            if (cache && cacheKey) {
+                window.cacheKey = r
+            }
+            resolve(r)
+            headEle.removeChild(JSONP)
+            delete window[callback]
+        }
+        headEle.appendChild(JSONP)
+    })
+}
+
+function dealLogin (httpStatus, error) {
+    bus.$toggleLoginDialog(true)
+    return { httpStatus, message: '登录态已失效' }
+}
 
 Vue.prototype.$ajax = request
 

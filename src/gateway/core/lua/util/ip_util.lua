@@ -55,6 +55,11 @@ function _M:isInWhiteList(whiteList)
   if arrayUtil:isInArray(clientIp,whiteList) then
     return true
   end
+  -- 判断realip是否在名单中（单IP）
+  clientIp = ngx.var.realip or ""
+  if arrayUtil:isInArray(clientIp,whiteList) then
+    return true
+  end
   -- 判断X_FORWARDED_FOR是否在名单中（多IP，逗号分隔）
   -- clientIp = stringUtil:split(headers["X_FORWARDED_FOR"] or "",",")
   -- for k,v in ipairs(clientIp) do

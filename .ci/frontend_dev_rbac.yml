@@ -1,0 +1,25 @@
+version: "v2.0"
+name: "bk-ci前端部署【dev-rbac】"
+
+on:
+  push:
+    branches:
+    - "develop"
+    paths:
+    - "src/frontend/**"
+    - ".ci/frontend_dev_rbac.yml"
+
+concurrency:
+  group: frontend-dev-rbac
+
+stages:
+- template: frontend-stage.yml
+  parameters:
+    ips: "11.185.144.156"
+    tag: rbac
+    env: dev
+    code-branch: develop
+    config-branch: develop
+
+notices:
+  - type: wework-message

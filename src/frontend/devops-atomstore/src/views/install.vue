@@ -172,6 +172,9 @@
                     case 'template':
                         name = this.$t('store.流水线模板')
                         break
+                    case 'service':
+                        name = this.$t('store.微扩展')
+                        break
                     default:
                         name = this.$t('store.容器镜像')
                         break
@@ -205,10 +208,12 @@
                 'requestRelativeProject',
                 'requestRelativeTplProject',
                 'requestRelativeImageProject',
+                'requestServiceDetailByCode',
                 'requestProjectList',
                 'installAtom',
                 'installTemplate',
-                'installImage'
+                'installImage',
+                'installService'
             ]),
             fromFilter (val) {
                 let res = ''
@@ -227,7 +232,8 @@
                 const methods = {
                     atom: this.requestAtom,
                     template: this.requestTemplateDetail,
-                    image: this.requestImageDetailByCode
+                    image: this.requestImageDetailByCode,
+                    service: this.requestServiceDetailByCode
                 }
                 if (!Object.keys(methods).includes(this.type) || typeof methods[this.type] !== 'function') {
                     this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
@@ -308,7 +314,8 @@
                     const methods = {
                         atom: this.installAtom,
                         template: this.installTemplate,
-                        image: this.installImage
+                        image: this.installImage,
+                        service: this.installService
                     }
                     if (!Object.keys(methods).includes(this.type) || typeof methods[this.type] !== 'function') {
                         this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
@@ -399,7 +406,7 @@
             //     margin-top: 14px;
             //     margin-right: 14px;
             //     font-size: 12px;
-            //     color: $fontLigtherColor;
+            //     color: $fontLighterColor;
             //     cursor: pointer;
             // }
             .atom-name {

@@ -13,10 +13,12 @@
         "skipLibCheck": true,
         "module": "esnext",
         "moduleResolution": "node",
+        "forceConsistentCasingInFileNames": false,
         "target": "es5",
         "lib": [
+            "es2015",
             "dom",
-            "es2017",
+            "ES2018.Promise",
             "ESNext"
         ],
         "baseUrl": ".",

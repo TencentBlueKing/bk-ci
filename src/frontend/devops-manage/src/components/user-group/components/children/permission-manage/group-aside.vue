@@ -185,7 +185,6 @@
 
 <script>
 import http from '@/http/api';
-import { validProjectCode } from '@/utils/util';
 import { Message } from 'bkui-vue';
 import { useI18n } from 'vue-i18n';
 import ajax from '../../../ajax/index';
@@ -289,9 +288,6 @@ export default {
   },
   methods: {
     handleGetData(pageSize) {
-      if (!validProjectCode(this.curProjectCode)) {
-        return Promise.resolve();
-      }
       this.fetchGroupLoading = true
       return ajax
         .get(`${this.ajaxPrefix}/auth/api/user/auth/resource/${encodeURIComponent(this.curProjectCode)}/${this.resourceType}/${encodeURIComponent(this.curProjectCode)}/listGroup?page=${encodeURIComponent(this.page)}&pageSize=${encodeURIComponent(pageSize)}`)
@@ -343,9 +339,6 @@ export default {
     },
     handleDeleteGroup() {
       this.deleteObj.isLoading = true;
-      if (!validProjectCode(this.curProjectCode)) {
-        return Promise.resolve();
-      }
       return ajax
         .delete(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/${encodeURIComponent(this.curProjectCode)}/${this.resourceType}/${encodeURIComponent(this.deleteObj.group.groupId)}`)
         .then(() => {
@@ -395,9 +388,6 @@ export default {
     },
     handleCloseManage() {
       this.isClosing = true;
-      if (!validProjectCode(this.curProjectCode)) {
-        return Promise.resolve();
-      }
       return ajax
         .put(`${this.ajaxPrefix}/auth/api/user/auth/resource/${encodeURIComponent(this.curProjectCode)}/${this.resourceType}/${encodeURIComponent(this.curProjectCode)}/disable`)
         .then(() => {
@@ -522,9 +512,6 @@ export default {
         this.renameGroupId = 0;
         this.displayGroupName = '';
         return
-      }
-      if (!validProjectCode(this.curProjectCode)) {
-        return Promise.resolve();
       }
       return ajax
         .put(`${this.ajaxPrefix}/auth/api/user/auth/resource/group/${encodeURIComponent(this.curProjectCode)}/${this.resourceType}/${encodeURIComponent(this.renameGroupId)}/rename`, {

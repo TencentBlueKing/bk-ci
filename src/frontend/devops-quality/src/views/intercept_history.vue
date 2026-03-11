@@ -20,10 +20,10 @@
                         <div class="search-title">{{ $t('quality.状态：') }}</div>
                         <bk-select v-model="searchInfo.interceptResult">
                             <bk-option
-                                v-for="(option, index) in statusList"
-                                :key="index"
-                                :id="option.value"
-                                :name="option.label"
+                                v-for="(key, value) in statusAliasMap"
+                                :key="value"
+                                :id="value"
+                                :name="key"
                             >
                             </bk-option>
                         </bk-select>
@@ -121,6 +121,7 @@
                         <bk-table-column
                             :label="$t('quality.规则名称')"
                             prop="ruleName"
+                            width="150"
                         >
                             <template slot-scope="props">
                                 <span>{{ props.row.ruleName }}</span>
@@ -129,17 +130,23 @@
                         <bk-table-column
                             :label="$t('quality.状态')"
                             prop="interceptResult"
-                            width="100"
+                            width="150"
                         >
                             <template slot-scope="props">
                                 <span
-                                    v-if="props.row.interceptResult === 'PASS'"
-                                    style="color: #30D878;"
-                                >{{ $t('quality.已通过') }}</span>
-                                <span
-                                    v-if="props.row.interceptResult === 'FAIL'"
-                                    style="color: #FFB400;"
-                                >{{ $t('quality.已拦截') }}</span>
+                                    v-if="props.row.interceptResult !== 'ALL'"
+                                    :style="props.row.interceptResult === 'PASS' ? 'color: #30D878;' : ''"
+                                >{{ statusAliasMap[props.row.interceptResult] ?? '--' }}</span>
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column
+                            :label="$t('quality.实际审核人')"
+                            prop="qualityRuleBuildHisOpt"
+                            width="100"
+                        >
+                            <template slot-scope="props">
+                                <span v-if="props.row.qualityRuleBuildHisOpt">{{ props.row.qualityRuleBuildHisOpt.gateOptUser }}</span>
+                                <span v-else>--</span>
                             </template>
                         </bk-table-column>
                         <bk-table-column
@@ -181,11 +188,15 @@
         data () {
             return {
                 showContent: false,
-                statusList: [
-                    { label: this.$t('quality.全部'), value: 'ALL' },
-                    { label: this.$t('quality.已拦截'), value: 'FAIL' },
-                    { label: this.$t('quality.已通过'), value: 'PASS' }
-                ],
+                statusAliasMap: {
+                    ALL: this.$t('quality.全部'),
+                    PASS: this.$t('quality.已通过'),
+                    FAIL: this.$t('quality.拦截后直接终止'),
+                    WAIT: this.$t('quality.拦截后审核中'),
+                    INTERCEPT: this.$t('quality.拦截后审核终止'),
+                    INTERCEPT_PASS: this.$t('quality.拦截后审核继续'),
+                    INTERCEPT_TIMEOUT: this.$t('quality.拦截后超时终止')
+                },
                 pipelineList: [],
                 ruleList: [],
                 interceptList: [],

@@ -82,6 +82,7 @@
                         :disabled="disabled"
                         v-validate.initial="showCondition ? 'required' : ''"
                         name="customCondition"
+                        :max-length="512"
                         :handle-change="handleUpdateStageControl"
                         :placeholder="$t('storeMap.customConditionExpPlaceholder')"
                     >

@@ -1,0 +1,617 @@
+version: v3.0
+name: all job
+on:
+- schedules:
+    cron: "0 0 1 ? * 3,4,5"
+  remote: enabled
+- repo-name: aliasName/xxx
+  repo-id: kjVY7
+  type: git
+  push:
+    branches:
+    - master
+    branches-ignore:
+    - 排除以下目标分支
+    paths:
+    - 监听以下路径：
+    paths-ignore:
+    - 排除以下路径：
+    users:
+    - yongyiduan
+    users-ignore:
+    - yongyiduan
+    path-filter-type: NamePrefixFilter
+  manual: disabled
+- repo-name: aliasName/xxx
+  repo-id: 6DOdE
+  type: tgit
+  push:
+    branches:
+    - master
+    branches-ignore:
+    - 排除以下目标分支
+    paths:
+    - 监听以下路径：
+    paths-ignore:
+    - 排除以下路径：
+    users-ignore:
+    - yongyiduan
+    path-filter-type: NamePrefixFilter
+  manual: disabled
+- repo-name: aliasName/xxx
+  repo-id: Nz0Vj
+  type: github
+  push:
+    branches:
+    - master
+    branches-ignore:
+    - mr
+    users-ignore:
+    - 排除以下人员：
+    path-filter-type: NamePrefixFilter
+  manual: disabled
+- repo-name: 按代码库别名输入
+  type: svn
+  push:
+    paths:
+    - 代码库相对路径：
+    paths-ignore:
+    - 排除以下路径：
+    users:
+    - yongyiduan
+    users-ignore:
+    - yongyiduan
+    path-filter-type: NamePrefixFilter
+  manual: disabled
+- repo-name: "123"
+  type: p4
+  push:
+    paths:
+    - 监听以下路径：
+    paths-ignore:
+    - 排除以下路径：
+  manual: disabled
+- repo-name: aliasName/xxx
+  repo-id: kA3B
+  type: gitlab
+  tag:
+    tags:
+    - 监听以下tag：
+    tags-ignore:
+    - 排除以下tag：
+    users-ignore:
+    - yongyiduan
+  manual: disabled
+variables:
+  字符串:
+    value: value
+    props:
+      type: vuex-input
+      description: 描述描述描述描述描述
+  文本框:
+    value: 文本框
+    props:
+      type: vuex-textarea
+      description: 描述描述描述描述描述
+  布尔值:
+    value: "true"
+    props:
+      type: boolean
+  单选框:
+    value: "1"
+    props:
+      type: selector
+      options:
+      - id: "1"
+        label: "1"
+      - id: "2"
+        label: "2"
+      - id: "3"
+        label: "3"
+      description: 描述描述描述描述
+  复选框:
+    value: "1,2"
+    props:
+      type: checkbox
+      options:
+      - id: "1"
+        label: "1"
+      - id: "2"
+        label: "2"
+      - id: "3"
+        label: "3"
+  代码库:
+    value: lockiechen/obb-demo
+    props:
+      type: code-lib
+      scm-type: git
+  git分支或tag:
+    value: ""
+    props:
+      type: git-ref
+      repo-id: 302rW
+  构建资源:
+    value: tlinux2.2
+    props:
+      type: container-type
+      description: 描述描述描述描述描述
+      container-type:
+        build-type: DOCKER
+        os: LINUX
+  版本仓库过滤器:
+    value: ""
+    props:
+      type: artifactory
+      description: "666"
+      glob: '*'
+      properties:
+        key1asd: asdasd
+        key2: qwe
+  子流水线:
+    value: test123
+    props:
+      type: sub-pipeline
+  文件:
+    value: "123"
+    props:
+      type: custom-file
+stages:
+- name: win
+  label:
+  - Build
+  jobs:
+    job_daZ:
+      name: Windows-私有单构建机
+      runs-on:
+        self-hosted: true
+        pool-name: ydpzneyp
+        pool-type: AGENT_ID
+        agent-selector:
+        - windows
+        workspace: 工作空间
+      steps:
+      - name: Batch Script
+        if: AAA == 'bbb'  && VVV == 'wwww'
+        uses: windowsScript@1.*
+        with:
+          script: echo 1
+        timeout-minutes: "666"
+        continue-on-error: manual
+        retry-times: 4
+    job_nT0:
+      name: Windows-私有构建机群
+      runs-on:
+        self-hosted: true
+        pool-name: dpenqqym
+        pool-type: ENV_ID
+        agent-selector:
+        - windows
+        workspace: 工作空间
+      steps:
+      - enable: false
+        name: Batch Script
+        uses: windowsScript@1.*
+        with:
+          script: echo 1
+    job_W7R:
+      name: Windows-云
+      runs-on:
+        pool-name: windows-2016
+      steps:
+      - name: Batch Script
+        if: param1 != ''
+        uses: windowsScript@1.*
+        with:
+          script: echo 1
+          charsetType: GBK
+      - name: RunScript
+        with:
+          charsetType: UTF_8
+        continue-on-error: true
+        run: "echo 1\r\necho 2"
+        shell: pwsh
+      - name: yamlElementInsert test
+        uses: '@1.*'
+  check-in:
+    reviews:
+      flows:
+      - name: 人工审核
+        reviewers:
+        - yongyiduan
+      variables:
+        人工审核参数:
+          label: 中文名
+          type: INPUT
+          default: ""
+          values: []
+          description: 描述
+      description: 审核说明：
+      content-format: markdown
+      notify-type:
+      - RTX
+      - WEWORK_GROUP
+      chat-id:
+      - ww2075063897
+    timeout-hours: 24
+- name: mac
+  label:
+  - Build
+  if: param1 == ''
+  fast-kill: true
+  jobs:
+    job_fQc:
+      name: MacOS-公共构建机
+      runs-on:
+        pool-name: macos-BigSur11.4
+        xcode: 13.2.1
+      if: qweqwe == '222'
+      steps:
+      - name: Bash
+        uses: linuxScript@1.*
+        with:
+          script: echo 1
+    job_LaA:
+      name: MacOS-私有构建机
+      runs-on:
+        self-hosted: true
+        pool-name: zmoxbbqp
+        pool-type: AGENT_ID
+        agent-selector:
+        - macos
+        workspace: 工作空间
+      steps:
+      - name: Bash
+        uses: linuxScript@1.*
+        with:
+          script: echo 1
+    job_kLT:
+      name: MacOS-私有构建机群
+      runs-on:
+        self-hosted: true
+        pool-name: rqmakgrm
+        pool-type: ENV_ID
+        agent-selector:
+        - macos
+        workspace: 工作空间
+      steps:
+      - name: Bash
+        uses: linuxScript@1.*
+        with:
+          script: echo 1
+- name: linux
+  label:
+  - Build
+  jobs:
+    job_rTM:
+      name: Linux-docker
+      runs-on:
+        pool-name: docker
+        container:
+          image: tlinux3_ci:2.*
+          image-type: THIRD
+          credentials: royalhuang_up
+      steps:
+      - name: Bash
+        uses: linuxScript@1.*
+        with:
+          script: echo 1
+        timeout-minutes: "${bianliang}"
+      timeout-minutes: "${bianliang}"
+    job_B1j:
+      name: Linux-私有构建机
+      runs-on:
+        self-hosted: true
+        pool-name: xpvwazlm
+        pool-type: AGENT_ID
+        agent-selector:
+        - linux
+        workspace: 工作空间
+      steps:
+      - name: Bash
+        uses: linuxScript@1.*
+        with:
+          script: echo 1
+    job_QxG:
+      name: Linux-私有构建机群
+      runs-on:
+        self-hosted: true
+        pool-name: njmkyaom
+        pool-type: ENV_ID
+        agent-selector:
+        - linux
+        workspace: 工作空间
+      steps:
+      - name: Bash
+        uses: linuxScript@1.*
+        with:
+          script: echo 1
+      depend-on:
+      - job_rTM
+    job__JE:
+      name: Linux-矩阵
+      mutex:
+        label: a
+        queue-enable: true
+      runs-on:
+        pool-name: docker
+        container:
+          image: tlinux3_ci:2.*
+          image-type: BKSTORE
+      steps:
+      - name: Bash
+        uses: linuxScript@1.*
+        with:
+          script: echo 1
+      strategy:
+        matrix:
+          os:
+          - docker
+          - macos-10.15
+        fast-kill: true
+        max-parallel: 5
+    job_3DQ:
+      name: 互斥组
+      mutex:
+        label: aasd
+        queue-length: 3
+        timeout-minutes: "${bianliang}"
+        queue-enable: true
+      runs-on:
+        pool-name: docker
+        container:
+          image: tlinux3_ci:2.*
+          image-type: BKSTORE
+      if: 3333 == '6666'
+      steps:
+      - name: Bash
+        uses: linuxScript@1.*
+        with:
+          script: echo 2
+      timeout-minutes: "111"
+      depend-on:
+      - job_QxG
+      depend-on-type: NAME
+- name: stage-5
+  label:
+  - Build
+  jobs:
+    job_i4Z:
+      name: 无编译环境
+      runs-on:
+        pool-name: agentless
+      steps:
+      - name: Python脚本执行
+        uses: pythonscriptrun@8.*
+        with:
+          pythonVersion: "0"
+          optionType: online
+          scriptCode: "1"
+          scriptPath: ""
+        continue-on-error: true
+      - name: 人工审核
+        uses: manualReviewUserTask@1.*
+        with:
+          reviewUsers:
+          - yongyiduan
+          desc: 审核说明：
+          params:
+          - key: 人工审核插件变量
+            value: value22
+            valueType: STRING
+            required: true
+            desc: 描述
+            chineseName: 中文名称
+          - key: 文本框
+            value: qwqwe
+            valueType: TEXTAREA
+            required: true
+            desc: 描述
+            chineseName: 中文名称
+          - key: 布尔值
+            value: true
+            valueType: BOOLEAN
+            required: true
+            desc: 描述
+            chineseName: 中文名称
+          - key: 单选框
+            value: w
+            valueType: ENUM
+            required: true
+            desc: 描述
+            options:
+            - key: w
+              value: w
+            - key: "2"
+              value: "2"
+            - key: "34"
+              value: "34"
+            - key: "22"
+              value: "22"
+            chineseName: 中文名称
+          - key: 复选框
+            value: "qwe,前往"
+            valueType: MULTIPLE
+            required: true
+            desc: 描述
+            options:
+            - key: qwe
+              value: qwe
+            - key: 前往
+              value: 前往
+            - key: qq
+              value: qq
+            chineseName: 中文名称
+          namespace: wqeqweqwe666
+          notifyType:
+          - RTX
+          - EMAIL
+          - MOA
+          - WEWORK_GROUP
+          notifyTitle: 通知标题：
+          markdownContent: true
+          notifyGroup:
+          - qweqweqwe
+          reminderTime: 66
+finally:
+  job_s5r:
+    name: Linux-插件测试
+    runs-on:
+      pool-name: docker
+      container:
+        image: tlinux3_ci:2.*
+        image-type: BKSTORE
+    steps:
+    - checkout: https://git.code.oa.com/XXX/XXX.git
+      name: Checkout
+      with:
+        repositoryType: ID
+        repositoryHashId: 302rW
+        repositoryName: ""
+        repositoryUrl: ""
+        authType: TICKET
+        persistCredentials: true
+        pullType: BRANCH
+        refName: master
+        localPath: ""
+        strategy: REVERT_UPDATE
+        fetchDepth: ""
+        fetchOnlyCurrentRef: false
+        enableFetchRefSpec: false
+        fetchRefSpec: ""
+        enablePartialClone: false
+        includePath: ""
+        excludePath: ""
+        cachePath: ""
+        enableGitLfs: true
+        enableGitLfsClean: false
+        lfsConcurrentTransfers: ""
+        enableSubmodule: true
+        submodulePath: ""
+        enableSubmoduleRemote: false
+        enableSubmoduleRecursive: true
+        submoduleJobs: ""
+        submoduleDepth: ""
+        enableVirtualMergeBranch: true
+        enableGitClean: true
+        enableGitCleanIgnore: true
+        enableGitCleanNested: false
+        autoCrlf: "false"
+        enableTrace: false
+    - name: Bash
+      if: ALWAYS_UNLESS_CANCELLED
+      uses: linuxScript@1.*
+      with:
+        script: echo 1
+        continueNoneZero: true
+        enableArchiveFile: true
+        archiveFile: '*.log'
+      continue-on-error: manual
+      retry-times: 4
+      can-manually-retry: true
+    - name: 腾讯代码分析(官方-代码分析工作组)
+      uses: CodeccCheckAtomDebug@4.*
+      with:
+        beAutoLang: false
+        languages:
+        - KOTLIN
+        checkerSetType: normal
+        tools:
+        - CLOC
+        - DUPC
+        - WOODPECKER_SENSITIVE
+        - DETEKT
+        asyncTask: false
+        asyncTaskId: ""
+        goPath: ""
+        bkcheckDebug: false
+        bkcheckCustomMacros: []
+        bk_atom_del_hook_url: http://v2.idc.devops.oa.com/proxy-devnet?url=http%3A%2F%2Fv2.codecc.oa.com%2Ftask%2Fapi%2Fservice%2Ftask%2Fpipeline%2FstopSingle%3FpipelineId%3D%7BpipelineId%7D%26multiPipelineMark%3D%7BmultiPipelineMark%7D%26disabledReason%3Ddelete%26userName%3D%7BuserId%7D
+        bk_atom_del_hook_url_method: DELETE
+        scriptType: SHELL
+        script: |-
+          # Coverity/Klocwork将通过调用编译脚本来编译您的代码，以追踪深层次的缺陷
+          # 请使用依赖的构建工具如maven/cmake等写一个编译脚本build.sh
+          # 确保build.sh能够编译代码
+          # cd path/to/build.sh
+          # sh build.sh
+        languageRuleSetMap:
+          SWIFT_RULE: []
+          KOTLIN_RULE:
+          - codecc_default_kotlin
+          - standard_kotlin
+        C_CPP_RULE: []
+        checkerSetEnvType: prod
+        multiPipelineMark: ""
+        rtxReceiverType: "1"
+        rtxReceiverList: []
+        botWebhookUrl: ""
+        botRemindRange: "2"
+        botRemindSeverity: "7"
+        botRemaindTools: []
+        emailReceiverType: "1"
+        emailReceiverList: []
+        emailCCReceiverList: []
+        instantReportStatus: "2"
+        reportDate: []
+        reportTime: ""
+        reportTools: []
+        toolScanType: "1"
+        diffBranch: ""
+        byFile: false
+        mrCommentEnable: true
+        prohibitIgnore: false
+        transferAuthorList: []
+        path: []
+        customPath: []
+        scanTestSource: false
+        openScanPrj: false
+        openScanFilterEnable: false
+        issueSystem: TAPD
+        issueSubSystem: ""
+        issueResolvers: []
+        issueReceivers: []
+        issueFindByVersion: ""
+        maxIssue: 1000
+        issueAutoCommit: false
+        issueTools: []
+        issueSeverities: []
+        SWIFT_RULE: []
+        SWIFT_TOOL:
+        - toolList:
+          - CLOC
+          - WOODPECKER_SENSITIVE
+          - IP_CHECK
+          - CCN
+        KOTLIN_RULE:
+        - codecc_default_kotlin
+        - standard_kotlin
+        KOTLIN_TOOL:
+        - toolList:
+          - CLOC
+          - DUPC
+          - WOODPECKER_SENSITIVE
+          - DETEKT
+        - toolList:
+          - DETEKT
+    timeout-minutes: "${bianliang}"
+notices:
+- if: SUCCESS
+  type:
+  - email
+  - sms
+  - wework-message
+  receivers:
+  - "${BK_CI_START_USER_NAME}"
+  - yongyiduan
+  - royalhuang
+  groups:
+  - 开发人员
+  - 管理员
+  content: "【${BK_CI_PROJECT_NAME_CN}】- 【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} 执行成功，耗时${BK_CI_BUILD_TOTAL_TIME}, 触发人: ${BK_CI_START_USER_NAME}。"
+- if: FAILURE
+  type:
+  - email
+  - wework-message
+  receivers:
+  - "${BK_CI_START_USER_NAME}"
+  content: "【${BK_CI_PROJECT_NAME_CN}】- 【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} 执行失败，耗时${BK_CI_BUILD_TOTAL_TIME}, 触发人: ${BK_CI_START_USER_NAME}。"

@@ -28,8 +28,10 @@
 package com.tencent.devops.scm.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 
-@JsonIgnoreProperties(ignoreUnknown = true)@Suppress("ALL")
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Suppress("ALL")
 data class GitCommit(
     val id: String,
     val short_id: String,
@@ -37,5 +39,7 @@ data class GitCommit(
     val author_name: String,
     val author_email: String,
     val title: String,
-    val committed_date: String
+    val committed_date: String,
+    @JsonProperty("parent_ids")
+    val parentIds: List<String>? = null
 )

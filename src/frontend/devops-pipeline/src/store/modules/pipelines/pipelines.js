@@ -21,6 +21,7 @@ import {
     AUTH_URL_PREFIX,
     BACKEND_API_URL_PREFIX,
     FETCH_ERROR,
+    MERTICS_URL_PREFIX,
     PROCESS_API_URL_PREFIX,
     STORE_API_URL_PREFIX
 } from '@/store/constants'
@@ -28,7 +29,10 @@ import ajax from '@/utils/request'
 
 // import axios from 'axios'
 // const CancelToken = axios.CancelToken
-import { PIPELINE_AUTHORITY_MUTATION, RESET_TEMPLATE_SETTING_MUNTATION, TEMPLATE_SETTING_MUTATION, UPDATE_TEMPLATE_SETTING_MUNTATION } from './constants'
+import {
+    PIPELINE_AUTHORITY_MUTATION,
+    RESET_TEMPLATE_SETTING_MUNTATION, TEMPLATE_SETTING_MUTATION, UPDATE_TEMPLATE_SETTING_MUNTATION
+} from './constants'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user/pipelines/`
 const versionPrefix = `/${PROCESS_API_URL_PREFIX}/user/version`
@@ -453,6 +457,10 @@ const actions = {
     resetPipelineAuthorization (_, { projectId, params }) {
         return ajax.post(`${AUTH_URL_PREFIX}/user/auth/authorization/${projectId}/resetResourceAuthorization`, params)
             .then(res => res.data)
+    },
+    // 获取流水线问题治理数据
+    getPipelineProblemDetail (_, params) {
+        return ajax.get(`${MERTICS_URL_PREFIX}/user/pipelines/issueAnalysis`, params).then(res => res.data)
     }
 }
 

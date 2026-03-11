@@ -80,8 +80,6 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
         container {
             environment = hashMapOf("INNER_NAME" to "bk-ci")
         }
-        // 缓存位置
-        System.setProperty("jib.applicationCache", "~/.gradle/jib-cache")
         // 启动参数
         container {
             jvmFlags = finalJvmFlags

@@ -35,13 +35,13 @@
                     :placeholder="$t('pipeline.commitMsgWithEnter')"
                     @enter="handleFilterChange"
                 ></bk-input>
-                <bk-input
-                    v-model="filterData.triggerUser"
-                    name="triggerUser"
-                    class="filter-item w300"
+                <bk-member-selector
+                    class="filter-item"
+                    api="https://api.open.woa.com/api/c/compapi/v2/usermanage/fs_list_users/"
                     :placeholder="$t('pipeline.actor')"
+                    v-model="filterData.triggerUser"
                     @change="handleFilterChange"
-                ></bk-input>
+                ></bk-member-selector>
                 <bk-select
                     v-model="filterData.branch"
                     class="filter-item"
@@ -124,7 +124,12 @@
                 <bk-table-column :label="$t('pipeline.commitMsg')">
                     <template slot-scope="props">
                         <section class="commit-message">
-                            <i :class="getIconClass(props.row.buildHistory.status)"></i>
+                            <i
+                                :class="getIconClass(props.row.buildHistory.status)"
+                                v-bk-tooltips="{
+                                    content: props.row.buildHistory.stageStatus && props.row.buildHistory.stageStatus[0] && props.row.buildHistory.stageStatus[0].showMsg
+                                }"
+                            ></i>
                             <p class="content">
                                 <span class="message">{{ props.row.gitRequestEvent.buildTitle }}</span>
                                 <span class="info">{{ props.row.displayName }} #{{ props.row.buildHistory.buildNum }}：{{ props.row.reason }}</span>
@@ -300,11 +305,13 @@
     import '@blueking/bkui-form/dist/bkui-form.css'
     import UiTips from '@/components/ui-form/tips.vue'
     import UiSelector from '@/components/ui-form/selector.vue'
+    import UiCompanyStaff from '@/components/ui-form/company-staff.vue'
     import EmptyTableStatus from '@/components/empty-table-status'
     const BkUiForm = createForm({
         components: {
             tips: UiTips,
-            selector: UiSelector
+            selector: UiSelector,
+            companyStaff: UiCompanyStaff
         }
     })
 
@@ -331,7 +338,7 @@
             const getFilterData = () => {
                 return {
                     commitMsg: commitMsg || '',
-                    triggerUser: triggerUser || '',
+                    triggerUser: (triggerUser && triggerUser.split(',')) || [],
                     branch: (branch && branch.split(',')) || [],
                     event: (event && event.split(',')) || [],
                     status: (status && status.split(',')) || [],
@@ -484,16 +491,18 @@
             },
 
             handleFilterChange () {
-                this.initBuildData()
-                const query = { page: 1 }
-                Object.keys(this.filterData).forEach(key => {
-                    if (this.filterData[key].length && typeof this.filterData[key] === 'string') {
-                        query[key] = this.filterData[key]
-                    } else if (this.filterData[key].length && Array.isArray(this.filterData[key])) {
-                        query[key] = this.filterData[key].join(',')
-                    }
-                })
-                this.$router.replace({ query })
+                this.$nextTick(() => {
+                    this.initBuildData()
+                    const query = { page: 1 }
+                    Object.keys(this.filterData).forEach(key => {
+                        if (this.filterData[key].length && typeof this.filterData[key] === 'string') {
+                            query[key] = this.filterData[key]
+                        } else if (this.filterData[key].length && Array.isArray(this.filterData[key])) {
+                            query[key] = this.filterData[key].join(',')
+                        }
+                    })
+                    this.$router.replace({ query })
+                });
             },
 
             toggleFilterBranch (isOpen) {
@@ -593,7 +602,7 @@
                 this.compactPaging.current = 1
                 this.filterData = {
                     commitMsg: '',
-                    triggerUser: '',
+                    triggerUser: [],
                     branch: [],
                     event: [],
                     status: [],
@@ -626,14 +635,11 @@
             },
 
             getBuildData () {
-                let { triggerUser } = this.filterData
-                triggerUser = triggerUser ? triggerUser.split(',') : []
                 const params = {
                     page: this.compactPaging.current,
                     pageSize: this.compactPaging.limit,
                     pipelineId: this.curPipeline.pipelineId || this.$route.params.pipelineId,
                     ...this.filterData,
-                    triggerUser
                 }
                 return pipelines.getPipelineBuildList(this.projectId, params).then((res = {}) => {
                     this.buildList = (res.records || []).map((build) => {
@@ -675,7 +681,7 @@
             getPipelineBranchApi (query = {}) {
                 const params = {
                     page: 1,
-                    perPage: 100,
+                    pageSize: 100,
                     projectId: this.projectId,
                     ...query
                 }
@@ -732,7 +738,7 @@
             getBranchCommits (value, options, query = {}) {
                 const params = {
                     page: 1,
-                    perPage: 100,
+                    pageSize: 100,
                     projectId: this.projectId,
                     branch: this.formData.branch,
                     ...query
@@ -866,7 +872,7 @@
             resetFilter () {
                 this.filterData = {
                     commitMsg: '',
-                    triggerUser: '',
+                    triggerUser: [],
                     branch: [],
                     event: [],
                     status: [],

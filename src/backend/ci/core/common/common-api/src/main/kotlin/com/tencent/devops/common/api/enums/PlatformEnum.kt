@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.api.enums
 
+
 enum class PlatformEnum(
     val id: Int,
     val mean: String,
@@ -34,7 +35,7 @@ enum class PlatformEnum(
 ) {
     UNKNOWN(-1, "未知", emptyList()),
 
-    ANDROID(1, "安卓", listOf(".apk")),
+    ANDROID(1, "安卓", listOf(".apk", ".apks")),
 
     IOS(2, "IOS", listOf(".ipa")),
 
@@ -43,6 +44,10 @@ enum class PlatformEnum(
     WIN(4, "Windows", listOf(".zip"))
 
     ;
+
+    fun isForPC(): Boolean {
+        return this == WIN
+    }
 
     companion object {
         /**
@@ -79,10 +84,6 @@ enum class PlatformEnum(
         }
 
         fun of(id: Int?): PlatformEnum? {
-            if (null == id) {
-                return null
-            }
-
             values().forEach {
                 if (it.id == id) {
                     return it

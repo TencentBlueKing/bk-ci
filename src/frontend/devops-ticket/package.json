@@ -1,6 +1,6 @@
 {
   "name": "devops-ticket",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "private": true,
   "dependencies": {
@@ -53,7 +53,8 @@
           "{projectRoot}"
         ],
         "outputs": [
-          "{workspaceRoot}/frontend/ticket"
+          "{workspaceRoot}/frontend/ticket",
+          "{workspaceRoot}/frontend/entries/ticket.json"
         ]
       }
     }

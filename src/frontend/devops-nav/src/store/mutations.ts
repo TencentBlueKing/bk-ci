@@ -2,27 +2,37 @@
 import Vue from 'vue'
 import { MutationTree } from 'vuex'
 import {
-    SET_USER_INFO,
-    SET_PROJECT_LIST,
-    FETCH_ERROR,
-    SET_SERVICES,
-    SET_LINKS,
-    SET_DEMO_PROJECT,
-    SET_DEMO_PIPELINE_ID,
-    UPDATE_NEW_PROJECT,
-    RESET_NEW_PROJECT,
-    TOGGLE_PROJECT_DIALOG,
-    SET_POPUP_SHOW,
-    UPDATE_HEADER_CONFIG,
     CLOSE_PREVIEW_TIPS,
+    FETCH_ERROR,
+    RESET_NEW_PROJECT,
+    SET_CURRENT_NOTICE,
+    SET_DEMO_PIPELINE_ID,
+    SET_DEMO_PROJECT,
+    SET_DISCLOSURE_AGREEMENT_CANCEL_HANDLER,
+    SET_DISCLOSURE_AGREEMENT_CONFIG,
+    SET_LINKS,
+    SET_POPUP_SHOW,
+    SET_PROJECT_LIST,
+    SET_SERVICE_HOOKS,
+    SET_SERVICES,
+    SET_USER_INFO,
     TOGGLE_MODULE_LOADING,
-    UPDATE_CURRENT_PAGE,
-    TOGGLE_PERMISSION_DIALOG,
     TOGGLE_NOTICE_DIALOG,
-    SET_CURRENT_NOTICE
+    TOGGLE_PERMISSION_DIALOG,
+    TOGGLE_PROJECT_DIALOG,
+    TOGGLE_SIGNATURE_DIALOG,
+    UPDATE_CURRENT_PAGE,
+    UPDATE_HEADER_CONFIG,
+    UPDATE_NEW_PROJECT
 } from './constants'
 
 const mutations: MutationTree<RootState> = {
+    [SET_SERVICE_HOOKS]: (state: RootState, { serviceId, extHooks }: any) => {
+        Vue.set(state, 'hookMap', {
+            ...state.hookMap,
+            [serviceId]: extHooks
+        })
+    },
     [TOGGLE_PERMISSION_DIALOG]: (state: RootState, visible: boolean) => {
         Vue.set(state, 'isPermissionDialogShow', visible)
     },
@@ -101,6 +111,15 @@ const mutations: MutationTree<RootState> = {
     },
     [SET_CURRENT_NOTICE]: (state: RootState, notice: object) => {
         Vue.set(state, 'currentNotice', notice)
+    },
+    [TOGGLE_SIGNATURE_DIALOG]: (state: RootState, isShow: boolean) => {
+        Vue.set(state, 'isShowNonDisclosureAgreement', isShow)
+    },
+    [SET_DISCLOSURE_AGREEMENT_CONFIG]: (state: RootState, config: NonDisclosureAgreementConfig) => {
+        Vue.set(state, 'nonDisclosureAgreementConfig', config)
+    },
+    [SET_DISCLOSURE_AGREEMENT_CANCEL_HANDLER]: (state: RootState, handler) => {
+        Vue.set(state, 'cancelDisclosureHandler', handler)
     }
 }
 

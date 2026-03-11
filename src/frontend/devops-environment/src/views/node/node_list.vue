@@ -10,7 +10,66 @@
             <template>
                 <section class="filter-bar">
                     <div class="btn-part">
+                        <template v-if="isExtendTx">
+                            <bk-dropdown-menu
+                                trigger="click"
+                                class="mr10"
+                                :font-size="'medium'"
+                                @show="dropdown"
+                                @hide="dropdown"
+                            >
+                                <bk-button
+                                    theme="primary"
+                                    key="thirdPartyBuildMachine"
+                                    slot="dropdown-trigger"
+                                >
+                                    {{ $t('environment.nodeInfo.importNode') }}
+                                    <i :class="['bk-icon icon-angle-down',{ 'icon-flip': isDropdownShow }]"></i>
+                                </bk-button>
+                                <ul
+                                    class="bk-dropdown-list"
+                                    slot="dropdown-content"
+                                >
+                                    <li>
+                                        <a
+                                            href="javascript:;"
+                                            v-perm="{
+                                                permissionData: {
+                                                    projectId: projectId,
+                                                    resourceType: NODE_RESOURCE_TYPE,
+                                                    resourceCode: projectId,
+                                                    action: NODE_RESOURCE_ACTION.CREATE
+                                                }
+                                            }"
+                                            @click="toImportNode('construct')"
+                                            key="thirdPartyBuildMachine"
+                                        >
+                                            {{ $t('environment.thirdPartyBuildMachine') }}
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a
+                                            href="javascript:;"
+                                            v-perm="{
+                                                permissionData: {
+                                                    projectId: projectId,
+                                                    resourceType: NODE_RESOURCE_TYPE,
+                                                    resourceCode: projectId,
+                                                    action: NODE_RESOURCE_ACTION.CREATE
+                                                }
+                                            }"
+                                            theme="primary"
+                                            @click="toImportNode('cmdb')"
+                                            key="idcTestMachine"
+                                        >
+                                            {{ $t('environment.nodeInfo.idcTestMachine') }}
+                                        </a>
+                                    </li>
+                                </ul>
+                            </bk-dropdown-menu>
+                        </template>
                         <bk-button
+                            v-else
                             :key="projectId"
                             v-perm="{
                                 permissionData: {
@@ -23,10 +82,7 @@
                             theme="primary"
                             @click="toImportNode('construct')"
                         >
-                            <span class="import-btn">
-                                <i class="devops-icon icon-plus"></i>
-                                {{ $t('environment.nodeInfo.importNode') }}
-                            </span>
+                            {{ $t('environment.nodeInfo.importNode') }}
                         </bk-button>
                         <bk-dropdown-menu
                             trigger="click"
@@ -123,14 +179,27 @@
                     @page-change="handlePageChange"
                     @page-limit-change="handlePageLimitChange"
                     @sort-change="handleSortChange"
+                    @changePageCurrent="changePageCurrent"
                     @refresh="requestList"
                     @updataCurEditNodeItem="updataCurEditNodeItem"
                     @install-agent="installAgent"
                     @clear-filter="clearFilter"
+                    @node="handleNode"
+                    @showLogDetail="handleShowLogDetail"
+                    @reImport="handleReImport"
                     @selected-change="handleSelectedChange"
                 />
             </template>
         </section>
+
+        <!-- 导入CMDB -->
+        <config-manage-node
+            :node-select-conf="cmdbNodeSelectConf"
+            @confirm-fn="confirmCmdbFn"
+            @cancel-fn="cancelCmdbFn"
+        ></config-manage-node>
+
+        <!-- 导入第三方构建机 -->
         <third-construct
             :construct-tool-conf="constructToolConf"
             :construct-import-form="constructImportForm"
@@ -145,6 +214,29 @@
             :request-dev-command="requestDevCommand"
         ></third-construct>
 
+        <make-mirror-dialog
+            :current-node="createImageNode"
+            :make-mirror-conf="makeMirrorConf"
+            @cancelMakeMirror="makeMirrorConf.isShow = false"
+            @submitMakeMirror="requestList"
+        ></make-mirror-dialog>
+
+        <!-- 导入成功、失败提示弹框 -->
+        <import-tips-dialog
+            ref="importTipsDialog"
+            :status="importStatus"
+            :message="importMessage"
+            :agent-abnormal-nodes-count="agentAbnormalNodesCount"
+            :agent-not-install-nodes-count="agentNotInstallNodesCount"
+        />
+
+        <!-- 重装/安装Agent -->
+        <installAgent
+            ref="installAgent"
+            v-bind="curNode"
+            :task-id.sync="taskId"
+            @install="handleInstallEnd"
+        />
         <bk-dialog
             v-model="isShowEditMaxConcurrency"
             :width="480"
@@ -288,20 +380,28 @@
 </template>
 
 <script>
+    import configManageNode from '@/components/devops/environment/config-manage-node'
+    import importTipsDialog from '@/components/devops/environment/import-tips-dialog'
+    import installAgent from '@/components/devops/environment/install-agent'
+    import makeMirrorDialog from '@/components/devops/environment/make-mirror-dialog'
     import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
+    import { ALLNODE, ENV_ACTIVE_NODE_TYPE } from '@/store/constants'
+    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
     import { getQueryString } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage.js'
-    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
+    import { mapActions, mapState } from 'vuex'
     import ListTable from './list_table.vue'
-    import { mapState, mapActions } from 'vuex'
     const ENV_NODE_TABLE_LIMIT_CACHE = 'env_node_table_limit_cache'
-    import { ENV_ACTIVE_NODE_TYPE, ALLNODE } from '@/store/constants'
     export default {
         components: {
-            ListTable,
             thirdConstruct,
+            configManageNode,
+            makeMirrorDialog,
+            importTipsDialog,
+            installAgent,
+            ListTable,
             SearchSelect
         },
         data () {
@@ -311,22 +411,17 @@
                 ENV_ACTIVE_NODE_TYPE,
                 ALLNODE,
                 curEditNodeItem: '',
-                curEditNodeDisplayName: '',
+                createImageNode: '',
                 nodeIp: '',
                 isAgent: false,
                 isMultipleBtn: false,
-                isEditNodeStatus: false,
-                isDropdownShow: false, // 导入菜单
-                showContent: false, // 内容显示
                 hasPermission: true, // 构建机权限
                 showTooltip: false,
                 curNodeDialog: '', // 当前弹窗节点
                 lastCliCKNode: {},
                 nodeList: [], // 节点列表
+                allNodeList: [],
                 gatewayList: [], // 网关列表
-                runningStatus: ['CREATING', 'STARTING', 'STOPPING', 'RESTARTING', 'DELETING', 'BUILDING_IMAGE'],
-                successStatus: ['NORMAL', 'BUILD_IMAGE_SUCCESS'],
-                failStatus: ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN', 'RUNNING'],
                 tableLoading: false,
                 // 页面loading
                 loading: {
@@ -366,6 +461,14 @@
                     status: 'UN_IMPORT',
                     os: 'macOS 10.13.4'
                 },
+                // CMDB弹窗配置
+                cmdbNodeSelectConf: {
+                    isShow: false,
+                    quickClose: false,
+                    hasHeader: false,
+                    unselected: true,
+                    importText: '导入'
+                },
                 makeMirrorConf: {
                     isShow: false
                 },
@@ -389,6 +492,10 @@
                     ]
                 },
                 searchValue: [],
+                importStatus: 'success',
+                importMessage: '',
+                agentAbnormalNodesCount: 0,
+                agentNotInstallNodesCount: 0,
                 pagination: {
                     current: 1,
                     count: 0,
@@ -397,9 +504,18 @@
                 },
                 requestParams: {},
                 dateTimeRange: [],
+                buildNodes: ['DEVCLOUD', 'THIRDPARTY'], // Build 构建用途的节点 - 第三方构建机类型
+                deploymentNodes: ['CC', 'CMDB', 'UNKNOWN', 'OTHER'], // deployment 部署用途的节点
+                curNode: {},
+                installAgentIp: '',
+                installHostId: 0,
+                installOsType: '',
+                
+                taskId: 0, // 查询安装日志 -> 安装Agent任务Id
                 currentNodeType: '',
                 currentTags: [],
                 tagSearchValue: [],
+                isDropdownShow: false,
                 isBatchDropdownShow: false,
                 selectedNodes: [],
                 reInstallId: '',
@@ -414,13 +530,10 @@
             projectId () {
                 return this.$route.params.projectId
             },
-            userInfo () {
-                return window.userInfo
-            },
             filterData () {
                 const data = [
                     {
-                        name: this.$t('environment.keywords'),
+                        name: this.$t('environment.关键字'),
                         id: 'keywords',
                         default: true
                     },
@@ -443,11 +556,11 @@
                         children: [
                             {
                                 id: 'CMDB',
-                                name: this.$t('environment.deploy')
+                                name: this.$t('environment.部署')
                             },
                             {
                                 id: 'THIRDPARTY',
-                                name: this.$t('environment.build')
+                                name: this.$t('environment.构建')
                             }
                         ]
                     },
@@ -643,6 +756,7 @@
                 this.constructImportForm.model = urlParams
                 this.toImportNode('construct')
             }
+
             webSocketMessage.installWsMessage(this.requestList)
             this.$once('hook:beforeDestroy', webSocketMessage.unInstallWsMessage)
         },
@@ -651,6 +765,9 @@
         },
         methods: {
             ...mapActions('environment', ['requestGetCounts']),
+            dropdown () {
+                this.isDropdownShow = !this.isDropdownShow
+            },
             batchDropdown () {
                 this.isBatchDropdownShow = !this.isBatchDropdownShow
             },
@@ -785,7 +902,6 @@
                 
                 for (const tagGroup of this.nodeTagList) {
                     const foundTag = tagGroup.tagValues?.find(tag => String(tag.tagValueId) === String(tagValueId))
-
                     if (foundTag) {
                         this.tagSearchValue = [{
                             id: tagGroup.tagKeyId,
@@ -886,12 +1002,11 @@
                         },
                         ...(this.currentTags.length ? { tags: this.currentTags } : {})
                     })
-
                     this.pagination.count = res.count
                     this.nodeList = res.records.map(i => {
                         return {
                             isEnableEdit: i.nodeHashId === this.curEditNodeItem,
-                            isMore: i.nodeHashId === this.lastCliCKNode.nodeHashId,
+                            allOperator: `${i.operator};${i.bakOperator}`,
                             ...i
                         }
                     })
@@ -918,11 +1033,12 @@
                     action: NODE_RESOURCE_ACTION.CREATE
                 })
             },
-            dropdownIsShow (isShow) {
-                if (isShow === 'show') {
-                    this.isDropdownShow = true
-                } else {
-                    this.isDropdownShow = false
+            changePageCurrent () {
+                // 最后一页最后一条删除后，往前翻一页
+                if (
+                    this.pagination.limit * (this.pagination.current - 1) + 1 === this.pagination.count
+                ) {
+                    this.pagination.current -= 1
                 }
             },
             updataCurEditNodeItem (item) {
@@ -944,8 +1060,8 @@
                     if (res) {
                         this.constructToolConf.isShow = true
                         if (node) {
-                            const gateway = node.gateway
-                            this.constructImportForm.model = node.osName.toUpperCase()
+                            const gateway = node.nodeType === 'DEVCLOUD' ? 'shenzhen' : node.gateway
+                            this.constructImportForm.model = node.nodeType === 'DEVCLOUD' ? 'LINUX' : node.osName.toUpperCase()
                             this.requestGateway(gateway, node)
                         } else {
                             this.constructImportForm.model = 'LINUX'
@@ -991,8 +1107,8 @@
                             this.constructImportForm.location = isTarget.zoneName
                         }
                     }
-                    
-                    if (node && ['THIRDPARTY'].includes(node.nodeType)) { // 如果是第三方构建机类型则获取构建机详情以获得安装命令或下载链接
+
+                    if (node && this.buildNodes.includes(node.nodeType)) { // 如果是第三方构建机类型则获取构建机详情以获得安装命令或下载链接
                         this.getVmBuildDetail(node.nodeHashId)
                     } else {
                         this.requestDevCommand()
@@ -1097,16 +1213,30 @@
                 }
             },
             installAgent (node) {
-                if (['THIRDPARTY'].includes(node.nodeType)) {
+                if (this.buildNodes.includes(node.nodeType)) {
                     this.reInstallId = node.agentHashId
                     this.nodeIp = node.ip
                     this.isAgent = true
                     this.constructToolConf.importText = this.$t('environment.confirm')
                     this.switchConstruct(node)
+                } else if (this.deploymentNodes.includes(node.nodeType)) {
+                    this.curNode = node
+                    this.$refs.installAgent.isShow = true
                 }
             },
+
+            handleShowLogDetail (node) {
+                this.curNode = node
+                this.taskId = node.taskId
+                this.$refs.installAgent.isShow = true
+            },
+
             async toImportNode (type) {
-                this.switchConstruct()
+                if (type === 'cmdb') {
+                    this.cmdbNodeSelectConf.isShow = true
+                } else {
+                    this.switchConstruct()
+                }
             },
             /**
              * 构建机导入节点
@@ -1119,11 +1249,87 @@
                 this.constructImportForm.link = ''
                 this.constructImportForm.loginName = ''
                 this.constructImportForm.loginPassword = ''
-                this.constructImportForm.autoSwitchAccount = true
+                this.constructImportForm.autoSwitchAccount = false
                 this.constructImportForm.installType = 'SERVICE'
                 this.constructToolConf.importText = this.$t('environment.import')
                 this.requestList()
                 await this.requestGetCounts(this.projectId)
+            },
+            async destoryNode (node) {
+                const h = this.$createElement
+                const content = h('p', {
+                    style: {
+                        textAlign: 'center'
+                    }
+                }, `${this.$t('environment.nodeInfo.destoryNode')}？`)
+
+                this.$bkInfo({
+                    theme: 'warning',
+                    type: 'warning',
+                    subHeader: content,
+                    confirmFn: async () => {
+                        let message, theme
+                        try {
+                            await this.$store.dispatch('environment/toDestoryNode', {
+                                projectId: this.projectId,
+                                nodeHashId: node.nodeHashId
+                            })
+
+                            message = this.$t('environment.successfullySubmited')
+                            theme = 'success'
+                        } catch (err) {
+                            message = err.message ? err.message : err
+                            theme = 'error'
+                        } finally {
+                            this.$bkMessage({
+                                message,
+                                theme
+                            })
+                            this.requestList()
+                        }
+                    }
+                })
+            },
+            makeImage (node) {
+                this.createImageNode = node
+                // this.showCreateImage = true
+                this.makeMirrorConf.isShow = true
+            },
+            handleNode (name, canUse, node) {
+                if (canUse) {
+                    switch (name) {
+                        case 'destory':
+                            this.destoryNode(node)
+                            break
+                        case 'makeImage':
+                            this.makeImage(node)
+                            break
+                        default:
+                            break
+                    }
+                }
+            },
+            async confirmCmdbFn ({ theme, message, agentAbnormalNodesCount, agentNotInstallNodesCount }) {
+                this.importStatus = theme
+                this.importMessage = message
+                this.agentAbnormalNodesCount = agentAbnormalNodesCount
+                this.agentNotInstallNodesCount = agentNotInstallNodesCount
+                this.$refs.importTipsDialog.isShow = true
+                this.cmdbNodeSelectConf.isShow = false
+                if (this.$route.params.nodeType === 'CMDB') {
+                    this.requestList()
+                } else {
+                    this.$router.push({
+                        name: 'nodeList',
+                        params: {
+                            nodeType: 'CMDB'
+                        }
+                    })
+                }
+                await this.requestGetCounts(this.projectId)
+            },
+            cancelCmdbFn () {
+                this.cmdbNodeSelectConf.isShow = false
             },
             handleSelectedChange (selection) {
                 this.selectedNodes = selection
@@ -1139,7 +1345,6 @@
                 this.pagination.limit = limit
                 this.requestList(this.requestParams)
             },
-
             handleSortChange ({ column, prop, order }) {
                 const orderMap = {
                     ascending: 'ASC',
@@ -1150,20 +1355,6 @@
                 this.requestParams.collation = orderMap[order]
                 this.requestList()
             },
-        
-            clearFilter () {
-                this.$refs.dateTimeRangeRef?.handleClear()
-                this.searchValue = []
-                this.tagSearchValue = []
-                this.currentTags = []
-                this.$router.push({ name: 'nodeList', params: { nodeType: ALLNODE } })
-            },
-
-            handleToPipelineDetail (param) {
-                if (!param.projectId) return
-                window.open(`${window.location.origin}/console/pipeline/${param.projectId}/${param.pipelineId}/detail/${param.buildId}/executeDetail`, '_blank')
-            },
-
             formatTime (date) {
                 try {
                     return +new Date(date)
@@ -1184,7 +1375,6 @@
                 this.pagination.current = 1
                 this.requestList()
             },
-
             async handleExportCSV () {
                 try {
                     const res = await this.$store.dispatch('environment/exportNodeListCSV', {
@@ -1196,7 +1386,6 @@
                     console.error(e)
                 }
             },
-
             downloadCsv (response) {
                 if (!response) return
                 const csvContent = response.split(',')
@@ -1208,6 +1397,45 @@
                 document.body.appendChild(link)
                 link.click()
                 document.body.removeChild(link)
+            },
+            handleReImport (row) {
+                const params = []
+                params.push({
+                    nodeIp: row.ip,
+                    nodeId: row.nodeId
+                })
+                const confirmFn = async () => {
+                    let theme, message, agentAbnormalNodesCount, agentNotInstallNodesCount
+                    try {
+                        const res = await this.$store.dispatch('environment/reImportCmdbNode', {
+                            projectId: this.projectId,
+                            params
+                        })
+                        agentAbnormalNodesCount = res.agentAbnormalNodesCount
+                        agentNotInstallNodesCount = res.agentNotInstallNodesCount
+                        theme = 'success'
+                        await this.confirmCmdbFn({ theme, message, agentAbnormalNodesCount, agentNotInstallNodesCount })
+                    } catch (e) {
+                        theme = 'error'
+                        message = e.message || e
+                    }
+                }
+                this.$bkInfo({
+                    title: this.$t('environment.确认重新导入节点吗？', [row.ip]),
+                    okText: this.$t('environment.confirm'),
+                    cancelText: this.$t('environment.cancel'),
+                    confirmFn
+                })
+            },
+            clearFilter () {
+                this.$refs.dateTimeRangeRef?.handleClear()
+                this.searchValue = []
+                this.tagSearchValue = []
+                this.currentTags = []
+                this.$router.push({ name: 'nodeList', params: { nodeType: ALLNODE } })
+            },
+            handleInstallEnd () {
+                this.requestList(this.requestParams)
             }
         }
     }
@@ -1229,17 +1457,23 @@
             margin: 24px;
         }
 
-        .create-node-btn {
-            margin-right: 6px;
-        }
-
         .prompt-operator,
         .edit-operator {
             padding-right: 10px;
             color: #ffbf00;
 
             .devops-icon {
-                margin-right: 6px;
+                margin-right: 4px;
+            }
+        }
+
+        .dashboard-entry {
+            color: #3c96ff;
+            line-height: 32px;
+            cursor: pointer;
+            a {
+                font-size: 14px;
+                color: #3c96ff;
             }
         }
 
@@ -1247,10 +1481,10 @@
             cursor: pointer;
         }
 
-        .over-handler {
-            max-width: 100px;
-            min-width: 90px;
-        }
+        // .over-handler {
+        //     max-width: 100px;
+        //     min-width: 90px;
+        // }
 
         .node-reset,
         .node-handle,
@@ -1341,10 +1575,15 @@
 
     .batch-menu {
         margin: 0 8px;
-
         .disabled {
             color: #C4C6CC !important;
             cursor: not-allowed;
+        }
+    }
+
+    .info-content {
+        .bk-dialog-header-inner {
+            white-space: normal !important;
         }
     }
     

@@ -19,25 +19,28 @@
 
 import actions from './actions'
 import mutations from './mutations'
-// import { nodeTypeMap, nodeStatusMap } from './constants'
 
 const store = {
     namespaced: true,
     state: {
-        publicDockerList: [],
-        customizeDockerList: [],
         nodeDetails: {},
-        // nodeTypes: nodeTypeMap,
-        // nodeStatus: nodeStatusMap,
         nodeTypes: null,
         nodeStatus: null,
         devCloudVmQuta: {},
         currentSelectedModel: {},
         nodeTagList: [],
         nodeCount: {},
+        extensionMap: {},
+        extensions: [],
         selectionTagList: []
     },
-    getters: {},
+    getters: {
+        asideNavBarExtIds: (_, getters, rootState, rootGetters) => {
+            const currentPageId = rootState.currentPage ? rootState.currentPage.id : ''
+            return (rootGetters.getServiceHooks(currentPageId) || []).filter(hook => hook.htmlPath === 'ENVIRONMENT.ASIDE_NAV').map(hook => hook.itemId).join(',')
+        },
+        nodeCount: {}
+    },
     mutations,
     actions
 }

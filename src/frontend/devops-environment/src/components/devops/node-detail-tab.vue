@@ -22,8 +22,8 @@
 <script>
     import BasicInformation from '@/components/devops/environment/basic-information'
     import EnvVariable from '@/components/devops/environment/env-variable'
-    import PipelineList from '@/components/devops/environment/pipeline-list'
     import MachineRecord from '@/components/devops/environment/machine-record'
+    import PipelineList from '@/components/devops/environment/pipeline-list'
 
     export default {
         components: {

@@ -24,10 +24,10 @@
                     v-for="(parent, index) in actionConfMenus"
                     :key="index"
                 >
-                    <template v-for="(action, aIndex) in parent">
+                    <template v-for="action in parent">
                         <li
                             v-if="!action.hidden"
-                            :key="aIndex"
+                            :key="action.label"
                             v-perm="{
                                 ...action.vPerm
                             }"
@@ -91,7 +91,7 @@
     import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
-    import { RESOURCE_ACTION, RESOURCE_TYPE } from '@/utils/permission'
+    import { RESOURCE_ACTION, RESOURCE_TYPE, TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
     import { pipelineTabIdMap } from '@/utils/pipelineConst'
     import DeleteArchivedDialog from '@/views/PipelineList/DeleteArchivedDialog'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
@@ -150,7 +150,7 @@
                     projectId,
                     resourceType: RESOURCE_TYPE.PROJECT,
                     resourceCode: projectId,
-                    action: RESOURCE_ACTION.CREATE
+                    action: TEMPLATE_RESOURCE_ACTION.CREATE
                 }
                 
                 const menuItems = [

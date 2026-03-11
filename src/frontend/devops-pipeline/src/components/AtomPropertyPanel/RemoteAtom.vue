@@ -14,7 +14,7 @@
         <atom-output
             :element="element"
             :atom-props-model="atomPropsModel"
-            :set-parent-validate="() => {}"
+            :set-parent-validate="setParentValidate"
         ></atom-output>
     </section>
 </template>
@@ -92,7 +92,6 @@
                 }, '*')
             },
             receiveMsgFromIframe (e) {
-                // if (location.href.indexOf(e.origin) === 0) return
                 if (!e.data) return
                 if (e.data.atomValue) {
                     console.log(e.data, this.element?.id, 'dataFromIframeAtom')
@@ -124,6 +123,9 @@
                     env = {}
                 }
                 return env
+            },
+            setParentValidate () {
+                // EMPTY
             }
         }
     }

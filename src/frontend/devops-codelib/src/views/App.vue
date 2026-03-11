@@ -1,14 +1,28 @@
 <template>
     <div class="devops-codelib">
         <header class="devops-codelib-header">
-            <logo
-                size="32"
-                :name="logo"
-            />
-            <span>{{ title }}</span>
+            <div>
+                <logo
+                    size="32"
+                    :name="logo"
+                />
+                <span>{{ title }}</span>
+            </div>
+            <a
+                class="devops-codelib-header-copilot"
+                target="_blank"
+                href="https://codebuddy.woa.com"
+            >
+                <span>{{ $t("codelib.CodeBuddy（内网版）") }}</span>
+                <icon
+                    name="tiaozhuan"
+                    :size="12"
+                    class="score-icon"
+                ></icon>
+            </a>
         </header>
         <main>
-            <router-view></router-view>
+            <router-view />
         </main>
     </div>
 </template>
@@ -17,13 +31,12 @@
     import { mapActions } from 'vuex'
     export default {
         name: 'app',
-
         computed: {
             logo () {
                 return this.$route.meta.logo
             },
             title () {
-                return this.$t(`codelib.${this.$route.meta.title}`)
+                return this.$t('codelib.codelib')
             }
         },
         created () {
@@ -53,18 +66,29 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
             background: white;
             align-items: center;
-            > svg {
+            justify-content: space-between;
+            svg {
                 margin-right: 11px;
+                vertical-align: middle;
             }
-            > span {
+            span {
                 letter-spacing: .5px;
                 font-size: 16px;
                 color: #333948;
             }
-            > i {
+            i {
                 padding-left: 10px;
                 color: #c4cdd6;
                 cursor: pointer;
+            }
+            .devops-codelib-header-copilot {
+                color: #1592ff;
+                cursor: pointer;
+                span {
+                    font-size: 12px;
+                    color: #1592ff;
+                    vertical-align: middle;
+                }
             }
         }
         > main {

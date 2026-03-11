@@ -42,14 +42,15 @@ import {
     RESET_ATOM_MODAL_MAP,
     RESET_PIPELINE_SETTING_MUNTATION,
     SELECT_PIPELINE_VERSION,
+    SET_ATOMS,
+    SET_ATOMS_CLASSIFY,
+    SET_ATOMS_OUTPUT_MAP,
     SET_ATOM_EDITING,
     SET_ATOM_MODAL,
     SET_ATOM_MODAL_FETCHING,
     SET_ATOM_PAGE_OVER,
     SET_ATOM_VERSION_LIST,
-    SET_ATOMS,
-    SET_ATOMS_CLASSIFY,
-    SET_ATOMS_OUTPUT_MAP,
+    SET_AUTH_EDITING,
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
     SET_COMMON_PARAMS,
@@ -78,6 +79,7 @@ import {
     SET_STORE_LOADING,
     SET_STORE_SEARCH,
     SET_TEMPLATE,
+    SET_TRIGGER_PARAMS,
     SWITCHING_PIPELINE_VERSION,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
@@ -95,6 +97,11 @@ import {
 } from './constants'
 
 export default {
+    [SET_AUTH_EDITING]: (state, editing) => {
+        return Object.assign(state, {
+            authSettingEditing: editing
+        })
+    },
     [TOGGLE_STAGE_REVIEW_PANEL]: (state, { showStageReviewPanel, editingElementPos = null }) => {
         Object.assign(state, {
             showStageReviewPanel,
@@ -434,6 +441,11 @@ export default {
     [SET_COMMON_PARAMS]: (state, commonParams) => {
         return Object.assign(state, {
             commonParams
+        })
+    },
+    [SET_TRIGGER_PARAMS]: (state, triggerParams) => {
+        return Object.assign(state, {
+            triggerParams
         })
     },
     [TOGGLE_ATOM_SELECTOR_POPUP]: (state, show) => {

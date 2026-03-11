@@ -38,7 +38,7 @@
                 </ul>
             </ul>
             <div
-                v-for="i in [1,2,3,4]"
+                v-for="i in [1,2,3,4,5]"
                 :key="i"
                 ref="disableToolTips"
                 class="disable-nav-child-item-tooltips"
@@ -78,17 +78,20 @@
         PipelineConfig,
         TriggerEvent
     } from '@/components/PipelineDetailTabs'
-    import { ShowVariable } from '@/components/PipelineEditTabs/'
+    import { AuthorityTab, ShowVariable } from '@/components/PipelineEditTabs/'
     import { mapActions, mapGetters, mapState } from 'vuex'
+    import EplusBoard from '@/views/PipelineList/EplusBoard'
 
     export default {
         components: {
             BuildHistoryTab,
             TriggerEvent,
             PipelineConfig,
+            AuthorityTab,
             ChangeLog,
             Logo,
             ShowVariable,
+            EplusBoard,
             DelegationPermission
         },
         data () {
@@ -108,6 +111,9 @@
             archiveFlag () {
                 return this.$route.query.archiveFlag
             },
+            hasAuthSecrecy () {
+                return this.$store.state.curProject.authSecrecy !== 1
+            },
             asideNav () {
                 return [
                     {
@@ -122,6 +128,17 @@
                                 },
                                 name: 'history'
                             },
+                            this.hasAuthSecrecy
+                                ? {
+                                    title: this.$t('executionAnalysis'),
+                                    disableTooltip: {
+                                        content: this.$refs.disableToolTips?.[4],
+                                        disabled: this.isReleaseVersion || this.isBranchVersion,
+                                        delay: [300, 0]
+                                    },
+                                    name: 'EplusBoard'
+                                }
+                                : {},
                             {
                                 title: this.$t('triggerEvent'),
                                 disableTooltip: {
@@ -172,6 +189,15 @@
                         title: this.$t('more'),
                         children: [
                             {
+                                title: this.$t('authSetting'),
+                                disableTooltip: {
+                                    content: this.$refs.disableToolTips?.[2],
+                                    disabled: this.isReleaseVersion,
+                                    delay: [300, 0]
+                                },
+                                name: 'permission'
+                            },
+                            {
                                 title: this.$t('delegationPermission'),
                                 name: 'delegation'
                             },
@@ -219,6 +245,10 @@
                         return {
                             component: 'TriggerEvent'
                         }
+                    case 'EplusBoard':
+                        return {
+                            component: 'EplusBoard'
+                        }
                     // case 'artifactory':
                     //     return {
                     //         component: 'Artifactory'
@@ -230,6 +260,10 @@
                         return {
                             component: 'PipelineConfig',
                             showVar: type === 'pipeline'
+                        }
+                    case 'permission':
+                        return {
+                            component: 'AuthorityTab'
                         }
                     case 'versionHistory':
                         return {

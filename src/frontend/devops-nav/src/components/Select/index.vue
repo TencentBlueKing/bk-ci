@@ -338,7 +338,7 @@
         }
 
         @Watch('searchable')
-        handleWatchSearchable (searchable) {
+        handleWatchSearchable () {
             this.resetHighlightIndex()
         }
 

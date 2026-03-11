@@ -112,7 +112,7 @@
         props: {
             detail: Object
         },
-
+        
         computed: {
             starWidth () {
                 const integer = Math.floor(this.detail.score)

@@ -1,0 +1,18 @@
+version: "v3.0"
+on:
+  push:
+    branches: [ "*" ]
+  tag:
+    tags: [ "*" ]
+  mr:
+    target-branches:  [ "*" ]
+
+name: "checkout-code"
+
+steps:
+  - checkout: self
+  - run: |
+      echo "hello world"
+      echo "hello world"
+  - run: |
+      echo "hello world"

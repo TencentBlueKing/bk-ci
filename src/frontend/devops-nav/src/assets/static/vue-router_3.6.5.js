@@ -3126,7 +3126,7 @@
             // 忽略重定向错误
                 if (isNavigationFailure(e, NavigationFailureType.redirected) || isNavigationFailure(e, NavigationFailureType.duplicated)) {
                 // 忽略重定向以及重复导航错误
-
+                    console.log('duplicated navigation or redirected navigation', e)
                 } else {
                     throw e
                 }
@@ -3148,7 +3148,7 @@
             // 忽略重定向错误
                 if (isNavigationFailure(e, NavigationFailureType.redirected) || isNavigationFailure(e, NavigationFailureType.duplicated)) {
                 // 忽略重定向以及重复导航错误
-                    
+                    console.log('duplicated navigation or redirected navigation', e)
                 } else {
                     throw e
                 }

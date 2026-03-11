@@ -110,11 +110,12 @@
 
 <script>
     import DevopsSelect from '@/components/AtomFormComponent/DevopsSelect'
+    import SelectInput from '@/components/AtomFormComponent/SelectInput'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
-    import SelectInput from '@/components/AtomFormComponent/SelectInput'
+    import { findItemById } from '@/utils/util'
     import { mapActions } from 'vuex'
 
     export default {
@@ -315,13 +316,12 @@
                             disalbed: !resource.name
                         }))
                     }
-                    console.log(this.nodeList, this.showAgentById, resources)
 
                     // 第三方构建机（节点/环境）选择添加无权限查看项
-                    if (this.showAgentById && this.value !== '' && this.nodeList.filter(item => item.id === this.value).length === 0) {
+                    if (this.showAgentById && this.value !== '' && !findItemById(this.nodeList, this.value)) {
                         this.nodeList.splice(0, 0, {
                             id: this.value,
-                            name: `******（${this.$t('editPage.noPermToView')}）`
+                            name: this.$t('editPage.withoutOption')
                         })
                     }
                 } catch (err) {

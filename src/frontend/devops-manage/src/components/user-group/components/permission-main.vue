@@ -46,7 +46,6 @@
 </template>
 
 <script>
-import { validProjectCode } from '@/utils/util';
 import ajax from '../ajax/index';
 import NoEnablePermission from './children/no-enable-permission/no-enable-permission.vue';
 import NoPermission from './children/no-permission/no-permission.vue';
@@ -102,9 +101,6 @@ export default {
 
   methods: {
     initStatus() {
-      if (!validProjectCode(this.projectCode)) {
-        return;
-      }
       const commonPrefix = `${this.ajaxPrefix}/auth/api/user/auth/resource/${encodeURIComponent(this.projectCode)}/${this.resourceType}/${this.resourceCode}`;
       Promise
         .all([

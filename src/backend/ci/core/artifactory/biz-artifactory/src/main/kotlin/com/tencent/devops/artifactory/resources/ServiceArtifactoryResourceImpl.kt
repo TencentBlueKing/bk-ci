@@ -123,6 +123,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         return Result(Url(urls.fileUrlList[0], urls.fileUrlList[0]))
     }
 
+
     override fun downloadUrl(
         projectId: String,
         artifactoryType: ArtifactoryType,

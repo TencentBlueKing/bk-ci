@@ -106,7 +106,7 @@
                     :prop="col.id"
                     :label="$t(col.label)"
                     :key="col.id"
-                    show-overflow-tooltip
+                    :show-overflow-tooltip="col.id !== 'appVersions'"
                 >
                     <template
                         v-if="col.id === 'buildNum'"
@@ -522,15 +522,14 @@
                         </span>
                     </p>
                     <div class="build-artifactory-operation">
-                        <bk-button
+                        <artifact-download-button
+                            class="artifact-downLoad-button"
                             v-if="artifactory.artifactoryType !== 'IMAGE'"
-                            text
-                            size="small"
-                            theme="primary"
-                            @click.stop="downloadFile(artifactory)"
-                        >
-                            {{ $t('download') }}
-                        </bk-button>
+                            :output="artifactory"
+                            :has-permission="hasDownloadPermission"
+                            v-bind="artifactory"
+                            :artifactory-type="artifactory.artifactoryType"
+                        />
                         <bk-button
                             v-if="artifactory.artifactoryType === 'PIPELINE'"
                             text
@@ -625,6 +624,7 @@
     import qrcode from '@/components/devops/qrcode'
     import ArtifactQuality from '@/components/ExecDetail/artifactQuality'
     import VersionDiffDialog from './VersionDiffDialog'
+    import ArtifactDownloadButton from '@/components/ArtifactDownloadButton'
     import {
         BUILD_HISTORY_TABLE_COLUMNS_MAP,
         BUILD_HISTORY_TABLE_DEFAULT_COLUMNS,
@@ -652,7 +652,9 @@
             TableColumnSetting,
             ArtifactQuality,
             EmptyException,
-            VersionDiffDialog
+            VersionDiffDialog,
+            ArtifactDownloadButton,
+            EmptyException
         },
         props: {
             showLog: {
@@ -681,7 +683,8 @@
                 tableColumnKeys: initSortedColumns,
                 tableHeight: null,
                 dialogTopOffset: null,
-                isShowVersionDiffDialog: false
+                isShowVersionDiffDialog: false,
+                hasDownloadPermission: false
             }
         },
         computed: {
@@ -754,6 +757,7 @@
             versionToolTipsConf () {
                 return {
                     delay: 500,
+                    allowHTML: true,
                     content: '#app-version-tooltip-content'
                 }
             },
@@ -822,8 +826,16 @@
                         startTime: item.startTime ? convertTime(item.startTime) : '--',
                         endTime: item.endTime ? convertTime(item.endTime) : '--',
                         queueTime: item.queueTime ? convertTime(item.queueTime) : '--',
-                        totalTime: item.totalTime ? convertMStoString(item.totalTime) : '--',
-                        executeTime: item.executeTime ? convertMStoString(item.executeTime) : '--',
+                        totalTime: item.totalTime
+                            ? `${convertMStoString(item.totalTime)} (${item.executeCount ?? 1}/${
+                                item.executeCount ?? 1
+                            })`
+                            : '--',
+                        executeTime: item.executeTime
+                            ? `${convertMStoString(item.executeTime)} (${item.executeCount ?? 1}/${
+                                item.executeCount ?? 1
+                            })`
+                            : '--',
                         visibleMaterial:
                             Array.isArray(item.material) ? item.material.slice(0, !active ? 1 : 3) : [],
                         sumSize: convertFileSize(sumSize, 'B'),
@@ -918,7 +930,6 @@
                 'setHistoryPageStatus',
                 'resetHistoryFilterCondition'
             ]),
-            
             getSlicedData (row) {
                 const keys = Object.keys(row.artifactQuality)
                 const slicedKeys = keys.slice(0, 2)
@@ -963,6 +974,7 @@
                         count: res.count
                     })
                     this.buildHistories = res.records
+                    this.hasDownloadPermission = res.hasDownloadPermission
                 } catch (err) {
                     if (err.code === 403) {
                         this.hasNoPermission = true
@@ -1158,17 +1170,18 @@
             async downloadFile ({ artifactoryType, path, name }, key = 'download') {
                 try {
                     const { projectId } = this.$route.params
+                    const isDevnet = await this.$store.dispatch('common/requestDevnetGateway')
                     const res = await this.$store.dispatch('common/requestDownloadUrl', {
                         projectId,
                         artifactoryType,
                         path
                     })
-
+                    const url = isDevnet ? res.url : res.url2
                     this.$showTips({
                         message: `${this.$t('history.downloading')}${name}`,
                         theme: 'success'
                     })
-                    window.open(res.url, '_self')
+                    window.open(url, '_self')
                 } catch (err) {
                     const { projectId, pipelineId } = this
                     this.handleError(err, {
@@ -1663,6 +1676,12 @@
     .bk-dialog {
         top: 50% !important;
         transform: var(--dialog-top-translateY) !important;
+    }
+}
+.artifact-downLoad-button {
+    .bk-button-text {
+        font-size: 12px;
+        line-height: 26px;
     }
 }
 </style>

@@ -32,7 +32,7 @@
                                 <bk-radio
                                     :value="true"
                                     class="view-radio"
-                                    :disabled="!viewManageAuth"
+                                    :disabled="!isManagerUser"
                                 >
                                     {{ $t('view.projectView') }}<span
                                         v-bk-tooltips="viewTypeTips"
@@ -133,12 +133,12 @@
                                                 </div>
                                             </section>
                                             <section v-if="row.id === 'filterByCreator'">
-                                                <user-input
+                                                <staff-input
                                                     :name="'user' + index"
                                                     :value="row.userIds"
                                                     :handle-change="staffHandleChange"
                                                 >
-                                                </user-input>
+                                                </staff-input>
                                                 <div
                                                     v-if="staffHacCheckYet && !row.userIds.length"
                                                     class="error-tips"
@@ -211,12 +211,14 @@
 </template>
 
 <script>
-    import UserInput from '@/components/atomFormField/UserInput/index.vue'
     import { mapGetters } from 'vuex'
+    // import UserInput from '@/components/atomFormField/UserInput/index.vue'
+    import StaffInput from '@/components/atomFormField/StaffInput/index.vue'
 
     export default {
         components: {
-            UserInput
+            // UserInput
+            StaffInput
         },
         data () {
             return {
@@ -251,13 +253,18 @@
         },
         computed: {
             ...mapGetters({
-                viewManageAuth: 'pipelines/getViewManageAuth',
+                userInfo: 'pipelines/getUserInfo',
                 tagGroupList: 'pipelines/getTagGroupList',
                 showViewCreate: 'pipelines/getShowViewCreate',
                 createViewForm: 'pipelines/getCreateViewForm'
             }),
             projectId () {
                 return this.$route.params.projectId
+            },
+            isManagerUser () {
+                return this.userInfo.find(val => {
+                    return val.roleName === 'manager'
+                })
             }
         },
         watch: {

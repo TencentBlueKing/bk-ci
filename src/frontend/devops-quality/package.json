@@ -69,7 +69,8 @@
           "{projectRoot}"
         ],
         "outputs": [
-          "{workspaceRoot}/frontend/quality"
+          "{workspaceRoot}/frontend/quality",
+          "{workspaceRoot}/frontend/entries/quality.json"
         ]
       }
     }

@@ -1,0 +1,78 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.remotedev.pojo.project
+
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "提供给安全侧的获取remotedev项目")
+data class RemotedevProject(
+    @get:Schema(title = "项目ID")
+    @JsonProperty("project_id")
+    val projectId: String,
+    @get:Schema(title = "项目名称")
+    @JsonProperty("project_name")
+    val projectName: String,
+    @get:Schema(title = "云研发管理员")
+    @JsonProperty("remotedev_manager")
+    val remotedevManager: String? = ""
+)
+
+@Schema(title = "开启云研发项目信息")
+data class RemotedevProjectNew(
+    @get:Schema(title = "项目ID")
+    val projectId: String,
+    @get:Schema(title = "项目名称")
+    val projectName: String,
+    @get:Schema(title = "云研发管理员")
+    val remotedevManager: String,
+    @get:Schema(title = "监控面板URL")
+    val monitorUrl: String?
+)
+
+@Schema(title = "开启云研发项目")
+data class EnableRemotedevData(
+    @get:Schema(title = "项目ID")
+    val projectId: String,
+    @get:Schema(title = "true为开启,false为关闭")
+    val enable: Boolean,
+    @get:Schema(title = "云研发管理员列表")
+    val managers: Set<String>,
+    @get:Schema(title = "总配额，默认1000")
+    val quota: Int?
+)
+
+@Schema(title = "修改云研发项目管理员")
+data class UpdateRemotedevDataManagers(
+    @get:Schema(title = "项目ID")
+    val projectId: String,
+    @get:Schema(title = "true增加，false为删除")
+    val add: Boolean,
+    @get:Schema(title = "需要修改的云研发管理员")
+    val managers: Set<String>
+)

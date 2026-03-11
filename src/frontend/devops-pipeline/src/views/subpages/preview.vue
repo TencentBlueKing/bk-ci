@@ -137,6 +137,7 @@
                         v-if="hasPipelineParams"
                         ref="paramsForm"
                         :param-values="paramsValues"
+                        :all-pipeline-param-values="allPipelineParamValues"
                         :highlight-changed-param="showChangedParamsAlert"
                         :handle-param-change="handleParamChange"
                         :params="paramList"
@@ -311,7 +312,7 @@
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
-    import { UPDATE_PREVIEW_PIPELINE_NAME, bus } from '@/utils/bus'
+    import { bus, UPDATE_PREVIEW_PIPELINE_NAME } from '@/utils/bus'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { getParamsValuesMap, isObject, isShallowEqual } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
@@ -421,6 +422,15 @@
                     const item = diffs[key]
                     return this.$t(`inSet${`${key.slice(0, 1).toUpperCase()}${key.slice(1)}`}ParamTips`, [item.length, item.join(', ')])
                 })
+            },
+            allPipelineParamValues () {
+                return {
+                    ...this.paramsValues,
+                    ...this.versionParamValues,
+                    ...this.buildValues,
+                    ...this.constantValues,
+                    ...this.otherValues
+                }
             }
         },
         watch: {
@@ -712,10 +722,11 @@
                 } finally {
                     this.setExecuteStatus(false)
 
-                    message && this.$showTips({
-                        message,
-                        theme
-                    })
+                    message
+                        && this.$showTips({
+                            message,
+                            theme
+                        })
                 }
             },
 

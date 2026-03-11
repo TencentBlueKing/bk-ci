@@ -15,11 +15,11 @@ export default {
   },
 
   validateProjectName(name: string) {
-    return http.put(`${PROJECT_PERFIX}/user/projects/project_name/names/validate/?name=${name}`, { globalError: false })
+    return http.put(`${PROJECT_PERFIX}/user/projects/project_name/names/validate/?name=${name}`, { globalError: false });
   },
 
   validateEnglishName(name: string) {
-    return http.put(`${PROJECT_PERFIX}/user/projects/english_name/names/validate/?name=${name}`, { globalError: false })
+    return http.put(`${PROJECT_PERFIX}/user/projects/english_name/names/validate/?name=${name}`, { globalError: false });
   },
 
   getUserDetail() {
@@ -79,7 +79,7 @@ export default {
   },
 
   requestApprovalInfo(projectCode: string) {
-    return http.get(`${ITSM_PERFIX}/${projectCode}`)
+    return http.get(`${ITSM_PERFIX}/${projectCode}`);
   },
 
   /**
@@ -110,7 +110,10 @@ export default {
    */
   getOrganizations(params: any) {
     const { type, id } = params;
-    return http.get(`${PROJECT_PERFIX}/user/organizations/types/${type}/ids/${id}`);
+    const url = type === 'dept'
+      ? `${PROJECT_PERFIX}/user/organizations/types/${type}/ids/${id}?excludeBelowTheDept=true`
+      : `${PROJECT_PERFIX}/user/organizations/types/${type}/ids/${id}`;
+    return http.get(url);
   },
 
   /**
@@ -213,7 +216,7 @@ export default {
   async renameGroupName(params: any) {
     const { groupName, groupId, projectCode, resourceType } = params;
     return http.put(`${IAM_PERFIX}/group/${projectCode}/${resourceType}/${groupId}/rename`, {
-      groupName
+      groupName,
     });
   },
 
@@ -222,6 +225,9 @@ export default {
     return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/${resourceCode}/getResource`);
   },
 
+  async getOperationalList(bgName: string) {
+    return http.get(`${PROJECT_PERFIX}/user/projects/product/getOperationalProductsByBgName/${bgName}`);
+  },
   /**
    * 获取项目下全体成员(简单查询)
    */
@@ -230,7 +236,7 @@ export default {
       ...params,
     }).toString();
     return http.get(`${IAM_PERFIX}/member/${projectId}/listProjectMembers?${query}`, {
-      globalError: false
+      globalError: false,
     });
   },
   /**
@@ -239,7 +245,7 @@ export default {
   async getProjectMembersByCondition(projectId: string, params: any) {
     return http.post(`${IAM_PERFIX}/member/${projectId}/listProjectMembersByCondition`, {
       ...params,
-      globalError: false
+      globalError: false,
     });
   },
   /**
@@ -298,10 +304,10 @@ export default {
   },
 
   /**
-   * 重置授权（代码库、流水线、部署节点） 
+   * 重置授权（代码库、流水线、部署节点）
    */
   resetAuthorization (projectId: string, params: any) {
-    return http.post(`${USER_PERFIX}/auth/authorization/${projectId}/resetResourceAuthorization`, params)
+    return http.post(`${USER_PERFIX}/auth/authorization/${projectId}/resetResourceAuthorization`, params);
   },
 
   /**

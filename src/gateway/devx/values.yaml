@@ -1,0 +1,36 @@
+replicaCount: 2
+resources:
+  requests:
+    cpu: 1000m
+    memory: 2Gi
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+extraEnvVars:
+  - name: APISIX_WORKER_PROCESSES
+    value: "1" # 需要跟resources的cpu对应上
+etcd:
+  persistence:
+    size: 10Gi
+dashboard:
+  enabled: true
+  service:
+    type: NodePort
+  config:
+    authentication:
+      users: [{"password":"Devops@2023","username":"bkci"}]
+# apisix:
+#   plugins:
+#     - proxy-rewrite
+#     - check-ip-project
+#   customPlugins:
+#     enabled: true
+#     luaPath: "/opts/custom_plugins/?.lua"
+#     plugins:
+#       - name: "check-ip-project"
+#         attrs: {}
+#         configMap:
+#           name: "check-ip-project"
+#           mounts: 
+#             - key: "check-ip-project.lua"
+#               path: "/opts/custom_plugins/apisix/plugins/check-ip-project.lua"

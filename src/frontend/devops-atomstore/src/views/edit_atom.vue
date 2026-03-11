@@ -293,6 +293,7 @@
                             <bk-radio-group
                                 v-model="atomForm.releaseType"
                                 class="radio-group"
+                                @change="releaseTypeChange"
                             >
                                 <bk-radio
                                     :value="entry.value"
@@ -389,28 +390,10 @@
                 >
                     <label class="bk-label"> {{ $t('store.分支') }} </label>
                     <div class="bk-form-content atom-item-content is-tooltips">
-                        <bk-input v-model="atomForm.branch"></bk-input>
-                    </div>
-                </div>
-                <div class="bk-form-item release-package-form-item is-required">
-                    <label class="bk-label"> {{ $t('store.发布包') }} </label>
-                    <div class="bk-form-content atom-item-content">
-                        <bk-file-upload
-                            :post-url="releasePackageUrl"
-                            :os="atomForm.os"
-                            :job-type="atomForm.jobType"
-                            :tip="$t('store.只允许上传 zip 格式的文件')"
-                            accept="application/zip"
-                            @uploadSuccess="uploadPackageSuccess"
-                            @uploadFail="uploadPackageErr"
-                            :key="atomForm.releaseType"
-                        ></bk-file-upload>
-                        <div
-                            v-if="formErrors.releasePackageError"
-                            class="error-tips"
-                        >
-                            {{ $t('store.发布包不能为空') }}
-                        </div>
+                        <bk-input
+                            v-model="atomForm.branch"
+                            @blur="branchBlur"
+                        ></bk-input>
                     </div>
                 </div>
                 <div class="bk-form-item versionlog-form-item is-required">
@@ -455,16 +438,14 @@
 </template>
 
 <script>
+    import api from '@/api'
+    import breadCrumbs from '@/components/bread-crumbs.vue'
     import selectLogo from '@/components/common/selectLogo'
     import { toolbars } from '@/utils/editor-options'
-    import bkFileUpload from '@/components/common/file-upload'
-    import breadCrumbs from '@/components/bread-crumbs.vue'
-    import api from '@/api'
     
     export default {
         components: {
             selectLogo,
-            bkFileUpload,
             breadCrumbs
         },
         data () {
@@ -558,6 +539,7 @@
                 versionMap: {},
                 publishersList: [],
                 containerList: [],
+                lastVersionContent: '',
                 isZH: true
             }
         },
@@ -571,9 +553,6 @@
             toolbarOptions () {
                 return toolbars
             },
-            releasePackageUrl () {
-                return `${API_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.atomForm.projectCode}/ids/${this.atomForm.atomId}/codes/${this.atomForm.atomCode}/versions/${this.curVersion || '1.0.0'}/types/${this.atomForm.releaseType}/archive`
-            },
             navList () {
                 const name = `${this.curTitle}（${this.atomForm.atomCode}）`
                 return [
@@ -583,6 +562,9 @@
             },
             userName () {
                 return this.$store.state.user.username
+            },
+            isCancelReRelease () {
+                return this.initReleaseType === 'CANCEL_RE_RELEASE'
             },
             mavenLang () {
                 return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
@@ -622,6 +604,34 @@
             this.requestAtomClassify()
         },
         methods: {
+            branchBlur (value) {
+                if (this.atomForm.releaseType === 'HIS_VERSION_UPGRADE' && value) {
+                    this.getAtomLog(value)
+                }
+            },
+            releaseTypeChange (value) {
+                const isGetAtomLog = value === 'HIS_VERSION_UPGRADE' && this.atomForm.branch
+                const branch = isGetAtomLog ? this.atomForm.branch : null
+                if (isGetAtomLog || !this.isCancelReRelease) {
+                    this.getAtomLog(branch)
+                } else {
+                    this.atomForm.versionContent = this.lastVersionContent
+                }
+            },
+            async getAtomLog (branch) {
+                try {
+                    const data = await this.$store.dispatch('store/requestAtomLog', {
+                        codeSrc: this.atomForm.codeSrc,
+                        ...(branch ? { branch }:{})
+                    })
+                    this.atomForm.versionContent = data
+                } catch (err) {
+                    this.$bkMessage({
+                        message: err.message ? err.message : err,
+                        theme: 'error'
+                    })
+                }
+            },
             fetchContainerList () {
                 this.$store.dispatch('store/getContainerList').then(res => {
                     this.containerList = res
@@ -691,8 +701,13 @@
                                 this.curVersion = versionInfo.version
                                 this.atomForm.releaseType = versionInfo.releaseType
                                 this.initReleaseType = versionInfo.releaseType
+                                this.lastVersionContent = versionInfo.lastVersionContent
+                                this.isCancelReRelease && (this.atomForm.versionContent = versionInfo.lastVersionContent)
                             }
                         })
+                        if (!this.isCancelReRelease) {
+                            this.getAtomLog()
+                        }
                     }
                 } catch (err) {
                     const message = err.message ? err.message : err
@@ -778,21 +793,6 @@
                         theme
                     })
                     this.$refs[ref].$refs.toolbar_left.$imgDel(pos)
-                }
-            },
-
-            uploadPackageSuccess (data) {
-                if (data.atomEnvRequests && data.atomEnvRequests.length) {
-                    this.formErrors.releasePackageError = false
-                }
-            },
-
-            uploadPackageErr (message) {
-                if (message) {
-                    this.$bkMessage({
-                        message: message,
-                        theme: 'error'
-                    })
                 }
             },
 
@@ -1016,7 +1016,7 @@
                 .bk-tooltip {
                     margin-top: 10px;
                     margin-left: 10px;
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                     p {
                         max-width: 400px;
                         text-align: left;
@@ -1173,5 +1173,8 @@
         .bk-dialog-default-status {
             padding-top: 10px;
         }
+    }
+    .input-width-full {
+        width: 100%;
     }
 </style>

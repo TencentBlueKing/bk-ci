@@ -20,8 +20,11 @@
 import { mergeModules } from '@/utils/index'
 import * as atom from './atom'
 import { CLEAR_MARKET_DETAIL, UPDATE_CURRENT_LIST, UPDATE_MARKET_DETAIL, UPDATE_MARKET_QUERY, UPDATE_USER_INFO } from './constants'
+import * as IDE from './IDE'
 import * as Image from './image'
+import * as Service from './service'
 import * as template from './template'
+const repositoryPrefix = 'repository/api'
 
 const Vue = window.Vue
 const vue = new Vue()
@@ -116,6 +119,17 @@ const commonModules = {
 
         requestProjectList ({ commit }, params = {}) {
             return vue.$ajax.get('/project/api/user/projects/', { params })
+        },
+
+        requestProgressLog ({ commit }, { type, projectCode, pipelineId, buildId, start, executeCount }) {
+            return vue.$ajax.get(`${prefix}/user/store/logs/types/${type}/projects/${projectCode}/pipelines/${pipelineId}/builds/${buildId}/after?start=${start}&executeCount=${executeCount}`)
+        },
+
+        /**
+         * git OAuth授权
+         */
+        checkIsOAuth ({ commit }, redirectUrl = location.href) {
+            return vue.$ajax.get(`${repositoryPrefix}/user/git/isOauth?redirectUrlType=SPEC&redirectUrl=${redirectUrl}`)
         }
     },
     getters: {
@@ -126,4 +140,4 @@ const commonModules = {
     }
 }
 
-export default mergeModules(commonModules, atom, template, Image)
+export default mergeModules(commonModules, atom, template, IDE, Image, Service)

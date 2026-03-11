@@ -22,6 +22,8 @@
             >
                 <component
                     :is="activeTab.component"
+                    :id="activeTab.id"
+                    :scm-type="activeTab.scmType"
                     v-bind="activeTab.componentProps"
                 ></component>
             </slot>
@@ -33,6 +35,8 @@
     import NotifySetting from '@/components/pipelineSetting/NotifySetting'
     import BaseInfo from '@/components/pipelineSetting/BaseInfo'
     import RunningLock from '@/components/pipelineSetting/RunningLock'
+    import CleanPolicy from '@/components/pipelineSetting/CleanPolicy'
+    import AuthoritySetting from '../pipelineSetting/AuthoritySetting'
     import CodeRecordTable from '@/components/codeRecord/CodeRecordTable'
 
     export default {
@@ -41,6 +45,8 @@
             NotifySetting,
             BaseInfo,
             RunningLock,
+            CleanPolicy,
+            AuthoritySetting,
             CodeRecordTable
         },
         props: {

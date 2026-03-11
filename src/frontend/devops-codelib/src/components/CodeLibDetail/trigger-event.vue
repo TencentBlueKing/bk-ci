@@ -80,12 +80,12 @@
     </section>
 </template>
 <script>
+    import '@blueking/search-select/dist/styles/index.css'
     import {
         mapActions
     } from 'vuex'
     import EmptyTableStatus from '../empty-table-status.vue'
     import TimelineCollapse from './timeline-collapse.vue'
-    import '@blueking/search-select/dist/styles/index.css'
 
     export default {
         name: 'basicSetting',

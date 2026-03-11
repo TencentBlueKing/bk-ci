@@ -30,6 +30,9 @@ const getters: GetterTree<RootState, any> = {
         return state.projectList.filter((project: ObjectMap) => project.approvalStatus === 1)
     },
 
+    getServiceHooks: (state: RootState) => (serviceId): any[] => {
+        return state.hookMap[serviceId]
+    },
     // 是否显示跑马灯类型公告
     showAnnounce (state: RootState) {
         // @ts-ignore

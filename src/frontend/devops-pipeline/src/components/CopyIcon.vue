@@ -7,7 +7,7 @@
 </template>
 <script>
     import { copyToClipboard } from '@/utils/util'
-    import { bkMessage } from 'bk-magic-vue'
+    import { bkMessage } from '@tencent/bk-magic-vue'
     import { defineComponent } from 'vue'
     import { useI18n } from 'vue-i18n-bridge'
 

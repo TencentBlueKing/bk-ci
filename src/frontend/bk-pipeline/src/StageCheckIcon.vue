@@ -21,13 +21,13 @@
 </template>
 
 <script>
-    import { eventBus } from './util'
+    import {
+        STAGE_CHECK,
+        STATUS_MAP
+    } from './constants'
     import { localeMixins } from './locale'
     import Logo from './Logo'
-    import {
-        STATUS_MAP,
-        STAGE_CHECK
-    } from './constants'
+    import { eventBus } from './util'
     export default {
         name: 'stage-check-icon',
         components: {

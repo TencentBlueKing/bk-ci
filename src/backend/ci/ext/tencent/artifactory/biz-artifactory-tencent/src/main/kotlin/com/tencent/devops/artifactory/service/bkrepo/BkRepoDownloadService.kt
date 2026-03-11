@@ -1,0 +1,1057 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.artifactory.service.bkrepo
+
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.BUILD_NOT_EXIST
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.METADATA_NOT_EXIST
+import com.tencent.devops.artifactory.constant.REPO_NAME_CUSTOM
+import com.tencent.devops.artifactory.constant.REPO_NAME_PIPELINE
+import com.tencent.devops.artifactory.pojo.AllowDownload
+import com.tencent.devops.artifactory.pojo.FileDetail
+import com.tencent.devops.artifactory.pojo.HapJson5Info
+import com.tencent.devops.artifactory.pojo.TokenForJsonRequest
+import com.tencent.devops.artifactory.pojo.Url
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.artifactory.service.PipelineService
+import com.tencent.devops.artifactory.service.RepoDownloadService
+import com.tencent.devops.artifactory.service.ShortUrlService
+import com.tencent.devops.artifactory.service.pojo.FileShareInfo
+import com.tencent.devops.artifactory.service.pojo.HapAppDependency
+import com.tencent.devops.artifactory.util.EmailUtil
+import com.tencent.devops.artifactory.util.PathUtils
+import com.tencent.devops.artifactory.util.RegionUtil
+import com.tencent.devops.artifactory.util.RepoUtils
+import com.tencent.devops.artifactory.util.UrlUtil
+import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
+import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_DEPENDENCIES
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_DEVICE_TYPES
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_MIN_API_VERSION
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_MODULE_TYPE
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_TARGET_API_VERSION
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION_CODE
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.audit.ActionAuditContent.BUILD_ID_TEMPLATE
+import com.tencent.devops.common.audit.ActionAuditContent.PIPELINE_DOWNLOAD_CONTENT
+import com.tencent.devops.common.auth.api.ActionId.PIPELINE_DOWNLOAD
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.ResourceTypeId.PIPELINE
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.experience.api.service.ServiceExperienceResource
+import com.tencent.devops.notify.api.service.ServiceNotifyResource
+import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import jakarta.ws.rs.BadRequestException
+import jakarta.ws.rs.NotFoundException
+import jakarta.ws.rs.core.Response
+import java.net.URLEncoder
+import java.util.regex.Pattern
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import org.slf4j.LoggerFactory
+import org.springframework.util.DigestUtils
+
+@Suppress("LongParameterList", "ComplexMethod", "LongMethod", "MagicNumber", "TooManyFunctions")
+open class BkRepoDownloadService(
+    private val pipelineService: PipelineService,
+    private val bkRepoService: BkRepoService,
+    private val client: Client,
+    private val bkRepoClient: BkRepoClient,
+    private val commonConfig: CommonConfig,
+    private val shortUrlService: ShortUrlService
+) : RepoDownloadService {
+    @ActionAuditRecord(
+        actionId = PIPELINE_DOWNLOAD,
+        instance = AuditInstanceRecord(
+            resourceType = PIPELINE
+        ),
+        content = PIPELINE_DOWNLOAD_CONTENT
+    )
+    override fun outerDownloadUrlByToken(
+        creatorId: String?,
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String,
+        ttl: Int
+    ): Url {
+        logger.info(
+            "outerBkrepoDownloadUrl, creatorId: $creatorId, userId:$userId, projectId: $projectId, " +
+                    "artifactoryType: $artifactoryType, path: $path, ttl: $ttl"
+        )
+        val normalizedPath = getNormalizePath(path, artifactoryType, creatorId ?: userId, projectId)
+        val url = bkRepoService.externalDownloadUrl(
+            creatorId = creatorId ?: userId,
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            fullPath = normalizedPath,
+            ttl = ttl
+        )
+        // 审计
+        audit(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = normalizedPath
+        )
+        return Url(url)
+    }
+
+    @ActionAuditRecord(
+        actionId = PIPELINE_DOWNLOAD,
+        instance = AuditInstanceRecord(
+            resourceType = PIPELINE
+        ),
+        content = PIPELINE_DOWNLOAD_CONTENT
+    )
+    override fun outerPlistContent(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int,
+        experienceHashId: String?,
+        organization: String?
+    ): String {
+        logger.info(
+            "getPlistFile, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
+                    "argPath: $argPath, experienceHashId: $experienceHashId"
+        )
+
+        if (experienceHashId != null) {
+            val check = client.get(ServiceExperienceResource::class).check(userId, experienceHashId, organization)
+            if (!check.isOk() || !check.data!!) {
+                throw CustomException(
+                    Response.Status.BAD_REQUEST,
+                    MessageUtil.getMessageByLocale(
+                        messageCode = ArtifactoryMessageCode.NO_EXPERIENCE_PERMISSION,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
+            }
+        }
+
+        val creatorId = if (experienceHashId != null) {
+            val experience = client.get(ServiceExperienceResource::class).get(userId, projectId, experienceHashId)
+            if (experience.isOk() && experience.data != null) {
+                experience.data!!.creator
+            } else {
+                userId
+            }
+        } else {
+            userId
+        }
+
+        // 获取IP下载链接
+        val ipaExternalDownloadUrl = outerDownloadUrlByToken(
+            creatorId = creatorId,
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = argPath,
+            ttl = ttl
+        )
+
+        // 获取IPA属性
+        val fileProperties = bkRepoClient.listMetadata(
+            creatorId,
+            projectId,
+            RepoUtils.getRepoByType(artifactoryType),
+            URLEncoder.encode(
+                argPath,
+                "utf-8"
+            ).replace("+", "%20")
+        )
+        val bundleIdentifier = fileProperties[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER] ?: ""
+        val appTitle = fileProperties[ARCHIVE_PROPS_APP_NAME] ?: fileProperties[ARCHIVE_PROPS_APP_APP_TITLE] ?: ""
+        val appVersion = fileProperties[ARCHIVE_PROPS_APP_VERSION] ?: ""
+        val appIcon = fileProperties[ARCHIVE_PROPS_APP_ICON]?.let { UrlUtil.toOuterPhotoAddr(it) } ?: ""
+        return """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+            <plist version="1.0">
+            <dict>
+                <key>items</key>
+                <array>
+                    <dict>
+                        <key>assets</key>
+                        <array>
+                            <dict>
+                                <key>kind</key>
+                                <string>software-package</string>
+                                <key>url</key>
+                                <string>${getCdataStr(ipaExternalDownloadUrl.url)}</string>
+                            </dict>
+                            <dict>
+                                <key>kind</key>
+                                <string>display-image</string>
+                                <key>needs-shine</key>
+                                <false/>
+                                <key>url</key>
+                                <string>${getCdataStr(appIcon)}</string>
+                            </dict>
+                        </array>
+                        <key>metadata</key>
+                        <dict>
+                            <key>bundle-identifier</key>
+                            <string>${getCdataStr(bundleIdentifier)}</string>
+                            <key>bundle-version</key>
+                            <string>${getCdataStr(appVersion)}</string>
+                            <key>title</key>
+                            <string>${getCdataStr(appTitle)}</string>
+                            <key>kind</key>
+                            <string>software</string>
+                        </dict>
+                    </dict>
+                </array>
+            </dict>
+            </plist>
+        """.trimIndent()
+    }
+
+    override fun outerHapJson5Content(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int,
+        experienceHashId: String?,
+        organization: String?
+    ): String {
+        logger.info(
+            "getPlistFile, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
+                    "argPath: $argPath, experienceHashId: $experienceHashId"
+        )
+
+        if (experienceHashId != null) {
+            val check = client.get(ServiceExperienceResource::class).check(userId, experienceHashId, organization)
+            if (!check.isOk() || !check.data!!) {
+                throw CustomException(
+                    Response.Status.BAD_REQUEST,
+                    MessageUtil.getMessageByLocale(
+                        messageCode = ArtifactoryMessageCode.NO_EXPERIENCE_PERMISSION,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
+            }
+        }
+
+        val creatorId = if (experienceHashId != null) {
+            val experience = client.get(ServiceExperienceResource::class).get(userId, projectId, experienceHashId)
+            if (experience.isOk() && experience.data != null) {
+                experience.data!!.creator
+            } else {
+                userId
+            }
+        } else {
+            userId
+        }
+
+        // 获取下载链接
+        val outerDownloadUrl = outerDownloadUrlByToken(
+            creatorId = creatorId,
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = argPath,
+            ttl = ttl
+        ).url
+
+        // 获取参数(HAP 企业分发无法拼参数 , 特殊处理)
+        val hapExternalDownloadUrl = convert2HapExternalDownloadUrl(outerDownloadUrl)
+
+        // 获取IPA属性
+        val repoName = RepoUtils.getRepoByType(artifactoryType)
+        val path = URLEncoder.encode(
+            argPath,
+            "utf-8"
+        ).replace("+", "%20")
+        val fileDetail = bkRepoClient.getFileDetail(
+            userId = creatorId,
+            projectId = projectId,
+            repoName = repoName,
+            path = path
+        )
+        val fileProperties = fileDetail!!.metadata.map { it.key to it.value.toString() }.toMap()
+        val bundleIdentifier = fileProperties[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER] ?: ""
+        val appTitle = fileProperties[ARCHIVE_PROPS_APP_NAME] ?: fileProperties[ARCHIVE_PROPS_APP_APP_TITLE] ?: ""
+        val appVersion = fileProperties[ARCHIVE_PROPS_APP_VERSION] ?: ""
+        val appVersionCode = fileProperties[ARCHIVE_PROPS_APP_VERSION_CODE]?.toInt() ?: 0
+        val appMinApiVersion = fileProperties[ARCHIVE_PROPS_APP_MIN_API_VERSION] ?: ""
+        val appTargetApiVersion = fileProperties[ARCHIVE_PROPS_APP_TARGET_API_VERSION] ?: ""
+        val appIcon = fileProperties[ARCHIVE_PROPS_APP_ICON]?.let { UrlUtil.toOuterPhotoAddr(it) } ?: ""
+        val sha256 = fileDetail.sha256
+        val deployDomain = HomeHostUtil.outerServerHost().removePrefix("https://").removePrefix("http://")
+        val appDeviceTypes = fileProperties[ARCHIVE_PROPS_APP_DEVICE_TYPES] ?: "[\"tablet\",\"phone\"]"
+        val appModuleType = fileProperties[ARCHIVE_PROPS_APP_MODULE_TYPE] ?: "entry"
+
+        // 支持HSP
+        val buildId = fileProperties[ARCHIVE_PROPS_BUILD_ID]
+        var hspStringBuilder = ""
+        if (buildId != null) {
+            hspStringBuilder = getHspString(
+                fileProperties = fileProperties,
+                creatorId = creatorId,
+                projectId = projectId,
+                userId = userId,
+                ttl = ttl,
+                buildId = buildId
+            )
+        } else {
+            logger.warn("buildId is null")
+        }
+        if (logger.isDebugEnabled) {
+            logger.debug("hspStringBuilder: $hspStringBuilder")
+        }
+
+        return """
+            {
+              "app": {
+                "bundleName": "$bundleIdentifier",
+                "bundleType": "app",
+                "versionCode": $appVersionCode,
+                "versionName": "$appVersion",
+                "label": "$appTitle",
+                "deployDomain": "$deployDomain",
+                "icons": {
+                  "normal": "$appIcon",
+                  "large": "$appIcon"
+                },
+                "minAPIVersion": "$appMinApiVersion",
+                "targetAPIVersion": "$appTargetApiVersion",
+                "modules": [
+                  {
+                    "name": "$appTitle",
+                    "type": "$appModuleType",
+                    "deviceTypes":$appDeviceTypes,
+                    "packageUrl": "$hapExternalDownloadUrl",
+                    "packageHash": "$sha256"
+                  }
+                  $hspStringBuilder
+                ]
+              }
+            }
+        """.trimIndent()
+    }
+
+    /**
+     * 获取HSP模块信息
+     */
+    private fun getHspString(
+        fileProperties: Map<String, String>,
+        creatorId: String,
+        projectId: String,
+        userId: String,
+        ttl: Int,
+        buildId: String
+    ): String {
+        val appDependencies = fileProperties[ARCHIVE_PROPS_APP_DEPENDENCIES]
+        val hspStringBuilder = StringBuilder()
+        if (null != appDependencies) {
+            val dependencies = JsonUtil.to(appDependencies, object : TypeReference<List<HapAppDependency>>() {})
+            val hspFileMap = bkRepoClient.queryByPathEqOrNameMatchOrMetadataEqAnd(
+                userId = creatorId,
+                projectId = projectId,
+                repoNames = listOf(REPO_NAME_PIPELINE, REPO_NAME_CUSTOM),
+                filePaths = emptyList(),
+                fileNames = listOf("*.hsp", "*.hap"),
+                metadata = mapOf(ARCHIVE_PROPS_BUILD_ID to buildId),
+                page = 1,
+                pageSize = 1000 // 最多关联1000个HSP
+            ).records.filter { null != it.metadata && it.metadata!!.contains(ARCHIVE_PROPS_APP_NAME) }
+                .associateBy { it.metadata!![ARCHIVE_PROPS_APP_NAME]!!.toString() }
+            for (d in dependencies) {
+                val hspFile = hspFileMap[d.moduleName]
+                if (hspFile == null) {
+                    logger.warn("module not found , name:{} , code:{}", d.moduleName, d.versionCode)
+                    continue
+                }
+                val hspMetadata = hspFile.metadata ?: emptyMap()
+                if (logger.isDebugEnabled) {
+                    logger.debug("hspFile: {}", hspFile)
+                }
+                // 获取下载链接
+                val artifactoryType =
+                    if (hspFile.repoName == REPO_NAME_PIPELINE) ArtifactoryType.PIPELINE else ArtifactoryType.CUSTOM_DIR
+                val hspDownloadUrl = outerDownloadUrlByToken(
+                    creatorId = creatorId,
+                    userId = userId,
+                    projectId = projectId,
+                    artifactoryType = artifactoryType,
+                    path = hspFile.fullPath,
+                    ttl = ttl
+                ).url.let { convert2HapExternalDownloadUrl(it) }
+
+                hspStringBuilder.append(
+                    """,{
+                          "name": "${hspMetadata[ARCHIVE_PROPS_APP_NAME] ?: d.moduleName}",
+                          "type": "${hspMetadata[ARCHIVE_PROPS_APP_MODULE_TYPE] ?: "shared"}",
+                          "deviceTypes": ${hspMetadata[ARCHIVE_PROPS_APP_DEVICE_TYPES] ?: "[\"tablet\",\"phone\"]"},
+                          "packageUrl": "$hspDownloadUrl",
+                          "packageHash": "${hspFile.sha256}"
+                        }
+                    """.trimIndent()
+                )
+            }
+        }
+        return hspStringBuilder.toString()
+    }
+
+    /**
+     * 转换为hapExternalDownloadUrl
+     */
+    private fun convert2HapExternalDownloadUrl(outerDownloadUrl: String): String {
+        val toHttpUrl = outerDownloadUrl.toHttpUrl()
+        val queryParams = toHttpUrl.queryParameterNames.associateWith { name ->
+            toHttpUrl.queryParameterValues(name)[0]
+        }
+        val outerDownloadUrlData = outerDownloadUrl.split("?")[0].split("/api/share/")
+        val hapExternalDownloadUrl = outerDownloadUrlData[0] + "/api/token/" + queryParams["token"] +
+                "/user/" + queryParams["userId"] + "/" + outerDownloadUrlData[1]
+        return hapExternalDownloadUrl
+    }
+
+    @ActionAuditRecord(
+        actionId = PIPELINE_DOWNLOAD,
+        instance = AuditInstanceRecord(
+            resourceType = PIPELINE
+        ),
+        content = PIPELINE_DOWNLOAD_CONTENT
+    )
+    override fun outerPlistUrl(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int
+    ): Url {
+        logger.info(
+            "getExternalPlistDownloadUrl, userId: $userId, projectId: $projectId, " +
+                    "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl"
+        )
+        val normalizedPath = URLEncoder.encode(
+            argPath,
+            "utf-8"
+        ).replace("+", "%20")
+        val url = HomeHostUtil.outerApiServerHost() + "/artifactory/api/app/artifactories/$projectId/" +
+                "$artifactoryType/filePlist?path=$normalizedPath" +
+                "&x-devops-project-id=$projectId"
+        // 审计
+        audit(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = normalizedPath
+        )
+        return Url(url)
+    }
+
+    @ActionAuditRecord(
+        actionId = PIPELINE_DOWNLOAD,
+        instance = AuditInstanceRecord(
+            resourceType = PIPELINE
+        ),
+        content = PIPELINE_DOWNLOAD_CONTENT
+    )
+    override fun outerHapJson5Url(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int
+    ): Url {
+        logger.info(
+            "outerHapJson5Url, userId: $userId, projectId: $projectId, " +
+                    "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl"
+        )
+//        val normalizedPath = URLEncoder.encode(
+//            argPath,
+//            "utf-8"
+//        ).replace("+", "%20")
+
+        val hapJson5InfoJson = JsonUtil.toSortJson(
+            HapJson5Info(
+                userId = userId,
+                ttl = ttl,
+                filePath = argPath
+            )
+        )
+        val token = client.get(ServiceArtifactoryDownLoadResource::class)
+            .createTokenForJson(TokenForJsonRequest(hapJson5InfoJson, 60)).data!!
+
+        val url = "${HomeHostUtil.outerApiServerHost()}/artifactory/api/external/artifactories" +
+                "/$projectId/$artifactoryType/$token/hapJson5.json5"
+
+        // 审计
+        audit(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = argPath
+        )
+        return Url(url)
+    }
+
+    @ActionAuditRecord(
+        actionId = PIPELINE_DOWNLOAD,
+        instance = AuditInstanceRecord(
+            resourceType = PIPELINE
+        ),
+        content = PIPELINE_DOWNLOAD_CONTENT
+    )
+    override fun innerDownloadUrlByToken(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int,
+        useWeb: Boolean?
+    ): Url {
+        logger.info(
+            "innerBkrepoDownloadUrl, userId: $userId, projectId: $projectId, " +
+                    "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl"
+        )
+        val normalizedPath = getNormalizePath(argPath, artifactoryType, userId, projectId)
+        // 审计
+        audit(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = normalizedPath
+        )
+        val url = bkRepoService.internalDownloadUrl(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = normalizedPath,
+            ttl = ttl,
+            useWeb = useWeb
+        )
+        return Url(url)
+    }
+
+    // 创建临时分享的下载链接，目前仅为bkRepo有，所以并未抽象
+    fun serviceGetInternalTemporaryAccessDownloadUrls(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPathSet: Set<String>,
+        ttl: Int,
+        permits: Int?
+    ): List<Url> {
+        logger.info(
+            "serviceGetInnerDownloadUrl, userId: $userId, projectId: $projectId," +
+                    " artifactoryType: $artifactoryType, argPathSet: $argPathSet, ttl: $ttl, permits: $permits"
+        )
+        val normalizedPaths = mutableSetOf<String>()
+        argPathSet.forEach { path ->
+            normalizedPaths.add(PathUtils.checkAndNormalizeAbsPath(path))
+        }
+        val urls = bkRepoService.internalTemporaryAccessDownloadUrls(
+            userId,
+            projectId,
+            artifactoryType,
+            normalizedPaths,
+            ttl,
+            permits
+        )
+        return urls.map { Url(it) }
+    }
+
+    @ActionAuditRecord(
+        actionId = PIPELINE_DOWNLOAD,
+        instance = AuditInstanceRecord(
+            resourceType = PIPELINE
+        ),
+        content = PIPELINE_DOWNLOAD_CONTENT
+    )
+    override fun innerDownloadUrlByUser(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        channelCode: ChannelCode?,
+        fullUrl: Boolean
+    ): Url {
+        logger.info("getDownloadUrl|userId=$userId|projectId=$projectId|type=$artifactoryType|argPath=$argPath")
+        pipelineService.validatePermission(userId, projectId)
+        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
+        val repo = RepoUtils.getRepoByType(artifactoryType)
+        val urlBuilder = StringBuilder()
+        if (fullUrl) {
+            urlBuilder.append(HomeHostUtil.getHost(commonConfig.devopsIdcGateway!!))
+        }
+        val url = urlBuilder.append("/bkrepo/api/user/generic/$projectId/$repo$normalizedPath?download=true").toString()
+        // 审计
+        audit(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = normalizedPath
+        )
+        return Url(url, url)
+    }
+
+    @ActionAuditRecord(
+        actionId = PIPELINE_DOWNLOAD,
+        instance = AuditInstanceRecord(
+            resourceType = PIPELINE
+        ),
+        content = PIPELINE_DOWNLOAD_CONTENT
+    )
+    override fun outerHtmlUrl4Download(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String
+    ): Url {
+        logger.info("getExternalUrl|userId=$userId|projectId=$projectId|type=$artifactoryType|argPath=$argPath")
+        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
+        val fileInfo =
+            bkRepoClient.getFileDetail(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
+                ?: throw NotFoundException(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = FILE_NOT_EXIST,
+                        params = arrayOf(argPath)
+                    )
+                )
+        val properties = fileInfo.metadata
+        properties[ARCHIVE_PROPS_PIPELINE_ID] ?: throw BadRequestException(
+            I18nUtil.getCodeLanMessage(
+                messageCode = METADATA_NOT_EXIST,
+                params = arrayOf("pipelineId")
+            )
+        )
+        properties[ARCHIVE_PROPS_BUILD_ID] ?: throw BadRequestException(
+            I18nUtil.getCodeLanMessage(
+                messageCode = METADATA_NOT_EXIST,
+                params = arrayOf("buildId")
+            )
+        )
+        val shortUrl = shortUrlService.createShortUrl(
+            url = PathUtils.buildDetailLink(
+                projectId = projectId,
+                artifactoryType = artifactoryType.name,
+                path = fileInfo.fullPath
+            ),
+            ttl = 24 * 3600 * 30
+        )
+        // 审计
+        audit(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = normalizedPath
+        )
+        return Url(shortUrl)
+    }
+
+    @ActionAuditRecord(
+        actionId = PIPELINE_DOWNLOAD,
+        instance = AuditInstanceRecord(
+            resourceType = PIPELINE
+        ),
+        content = PIPELINE_DOWNLOAD_CONTENT
+    )
+    override fun sendNotifyWithInnerUrl(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int,
+        downloadUsers: String
+    ) {
+        logger.info(
+            "shareUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
+                    "argPath: $argPath, ttl: $ttl, downloadUsers: $downloadUsers"
+        )
+        val path = getNormalizePath(argPath, artifactoryType, userId, projectId)
+        val downloadUrl = bkRepoService.internalDownloadUrl(userId, projectId, artifactoryType, path, ttl,)
+        val fileDetail = bkRepoClient.getFileDetail(
+            userId,
+            projectId,
+            RepoUtils.getRepoByType(artifactoryType),
+            path
+        ) ?: throw BadRequestException(
+            I18nUtil.getCodeLanMessage(
+                messageCode = FILE_NOT_EXIST,
+                params = arrayOf(path)
+            )
+        )
+        val fileName = fileDetail.name
+        val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
+
+        val days = ttl / (3600 * 24)
+        val title = EmailUtil.getShareEmailTitle(userId, fileName, 1)
+        val body = EmailUtil.getShareEmailBody(
+            projectName,
+            title,
+            userId,
+            days,
+            listOf(FileShareInfo(fileName, fileDetail.md5 ?: "", projectName, downloadUrl))
+        )
+        val receivers = downloadUsers.split(",").toSet()
+        receivers.forEach {
+            if (it.startsWith("g_")) throw BadRequestException("Invalid download users")
+        }
+
+        val emailNotifyMessage = EmailUtil.makeEmailNotifyMessage(title, body, receivers)
+        client.get(ServiceNotifyResource::class).sendEmailNotify(emailNotifyMessage)
+        // 审计
+        audit(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = path
+        )
+    }
+
+    override fun innerCrossDownloadUrl(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int?,
+        crossProjectId: String?,
+        crossPipineId: String?,
+        crossBuildNo: String?,
+        crossBuildId: String?,
+        region: String?,
+        userId: String?
+    ): List<String> {
+        logger.info(
+            "getThirdPartyDownloadUrl, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, " +
+                    "artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, " +
+                    "ttl: $ttl, crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo, " +
+                    "crossBuildId: $crossBuildId, region：$region, userId: $userId"
+        )
+        var targetProjectId = projectId
+        var targetPipelineId = pipelineId
+        var targetBuildId = buildId
+        if (!crossProjectId.isNullOrBlank()) {
+            targetProjectId = crossProjectId
+            if (artifactoryType == ArtifactoryType.PIPELINE) {
+                targetPipelineId = crossPipineId ?: throw BadRequestException("Invalid Parameter pipelineId")
+                targetBuildId = crossBuildId ?: run {
+                    val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
+                        targetProjectId,
+                        targetPipelineId,
+                        crossBuildNo ?: throw BadRequestException("Invalid Parameter buildNo"),
+                        ChannelCode.BS
+                    ).data ?: throw BadRequestException(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BUILD_NOT_EXIST,
+                            params = arrayOf(crossBuildNo)
+                        )
+                    )
+                    targetBuild.id
+                }
+            }
+        }
+
+        var accessUserId: String
+        val projectDownloadErrorMsg: String?
+        val pipelineDownloadErrorMsg: String?
+        if (!userId.isNullOrBlank()) {
+            accessUserId = userId
+            projectDownloadErrorMsg = I18nUtil.getCodeLanMessage(
+                messageCode = ArtifactoryMessageCode.USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
+                params = arrayOf(accessUserId, targetProjectId)
+            )
+            pipelineDownloadErrorMsg = I18nUtil.getCodeLanMessage(
+                messageCode = ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                params = arrayOf(accessUserId, targetProjectId, targetPipelineId)
+            )
+        } else {
+            accessUserId = client.get(ServicePipelineResource::class)
+                .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
+            // pref:流水线相关的文件操作人调整为流水线的权限代持人 #11016
+            val pipelineOauthUser = pipelineService.getPipelineOauthUser(projectId, pipelineId)
+            if (!pipelineOauthUser.isNullOrBlank()) {
+                accessUserId = pipelineOauthUser
+            }
+            projectDownloadErrorMsg = I18nUtil.getCodeLanMessage(
+                messageCode = ArtifactoryMessageCode.HANDOVER_TO_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
+                params = arrayOf(accessUserId, targetProjectId)
+            )
+            pipelineDownloadErrorMsg = I18nUtil.getCodeLanMessage(
+                messageCode = ArtifactoryMessageCode.HANDOVER_TO_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                params = arrayOf(accessUserId, targetProjectId, targetPipelineId)
+            )
+        }
+        logger.info(
+            "accessUserId: $accessUserId, targetProjectId: $targetProjectId, " +
+                    "targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId"
+        )
+
+        // 校验用户权限, auth权限优化实施后可以去掉
+        if (artifactoryType == ArtifactoryType.CUSTOM_DIR && !pipelineService.hasPermission(
+                accessUserId,
+                targetProjectId
+            )
+        ) {
+            throw PermissionForbiddenException(projectDownloadErrorMsg)
+        }
+        if (artifactoryType == ArtifactoryType.PIPELINE) {
+            pipelineService.validatePermission(
+                userId = accessUserId,
+                projectId = targetProjectId,
+                pipelineId = targetPipelineId,
+                permission = AuthPermission.DOWNLOAD,
+                message = pipelineDownloadErrorMsg
+            )
+        }
+
+        val regex = Pattern.compile(",|;")
+        val pathArray = regex.split(argPath)
+        val fileList = mutableListOf<FileDetail>()
+        pathArray.forEach { path ->
+            val absPath = "/${PathUtils.normalize(path).removePrefix("/")}"
+            val filePath = if (artifactoryType == ArtifactoryType.PIPELINE) {
+                "/$targetPipelineId/$targetBuildId/${
+                    PathUtils.getParentFolder(absPath).removePrefix("/")
+                }" // /$projectId/$pipelineId/$buildId/path/
+            } else {
+                "/${PathUtils.getParentFolder(absPath).removePrefix("/")}" // /path/
+            }
+            val fileName = PathUtils.getFileName(path) // *.txt
+
+            bkRepoClient.queryByPathEqOrNameMatchOrMetadataEqAnd(
+                userId = accessUserId,
+                projectId = targetProjectId,
+                repoNames = listOf(RepoUtils.getRepoByType(artifactoryType)),
+                filePaths = listOf(filePath),
+                fileNames = listOf(fileName),
+                metadata = mapOf(),
+                page = 0,
+                pageSize = 10000
+            ).records.forEach {
+                fileList.add(RepoUtils.toFileDetail(it))
+            }
+        }
+
+        val resultList = mutableListOf<String>()
+        fileList.forEach {
+            val repoName = RepoUtils.getRepoByType(artifactoryType)
+            val shareUri = bkRepoClient.createShareUri(
+                creatorId = accessUserId,
+                projectId = targetProjectId,
+                repoName = repoName,
+                fullPath = it.fullPath,
+                downloadUsers = listOf(),
+                downloadIps = listOf(),
+                timeoutInSeconds = ((ttl ?: (24 * 3600))).toLong()
+            )
+            if (region == "OPENAPI") {
+                resultList.add("${bkRepoClient.getRkRepoIdcHost()}/repository$shareUri&download=true")
+            } else {
+                resultList.add(
+                    "${RegionUtil.getRegionUrl(region)}/bkrepo/api/external/repository$shareUri&download=true"
+                )
+            }
+        }
+        return resultList
+    }
+
+    private fun getCdataStr(str: String): String = "<![CDATA[$str]]>"
+
+    private fun getNormalizePath(
+        argPath: String,
+        artifactoryType: ArtifactoryType,
+        userId: String,
+        projectId: String
+    ): String {
+        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
+        checkArtifactoryType(artifactoryType, userId, projectId, normalizedPath)
+        return normalizedPath
+    }
+
+    private fun checkArtifactoryType(
+        artifactoryType: ArtifactoryType,
+        userId: String,
+        projectId: String,
+        normalizedPath: String
+    ) {
+        try {
+            // 能够获取文件属性证明有下载文件的权限
+            bkRepoClient.listMetadata(
+                userId,
+                projectId,
+                RepoUtils.getRepoByType(artifactoryType),
+                normalizedPath
+            )
+        } catch (e: Exception) {
+            logger.error("checkArtifactoryType failed", e)
+            throw CustomException(
+                Response.Status.BAD_REQUEST,
+                MessageUtil.getMessageByLocale(
+                    messageCode = ArtifactoryMessageCode.METADATA_NOT_EXIST_DOWNLOAD_FILE_BY_SHARING,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf("pipelineId")
+                )
+            )
+        }
+    }
+
+    private fun audit(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ) {
+        val repoName = RepoUtils.getRepoByType(artifactoryType)
+        try {
+            val pipelineId = bkRepoClient.listMetadata(
+                userId = userId,
+                projectId = projectId,
+                repoName = repoName,
+                path = path
+            )["pipelineId"]
+            val buildId = bkRepoClient.listMetadata(
+                userId = userId,
+                projectId = projectId,
+                repoName = repoName,
+                path = path
+            )["buildId"]
+            // 审计
+            ActionAuditContext.current()
+                .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
+                .scopeId = projectId
+            if (!pipelineId.isNullOrEmpty()) {
+                val pipelineName = client.get(ServicePipelineResource::class)
+                    .getPipelineInfo(projectId, pipelineId, null).data?.pipelineName ?: ""
+                ActionAuditContext.current()
+                    .setInstanceName(pipelineName)
+                    .setInstanceId(pipelineId)
+            }
+            if (!buildId.isNullOrEmpty()) {
+                ActionAuditContext.current()
+                    .addExtendData("buildId", buildId)
+                    .addAttribute(BUILD_ID_TEMPLATE, buildId)
+            }
+        } catch (ignore: Exception) {
+            logger.warn("audit download artifacts fail!$projectId|$repoName|$path")
+        }
+    }
+
+    fun createTokenForJson(json: String, ttlSecond: Int): String {
+        val token = DigestUtils.md5DigestAsHex(json.toByteArray())
+        logger.info("create token for json , token: $token , json: $json")
+        SpringContextUtil.getBean(RedisOperation::class.java).set(tokenRedisKey(token), json, ttlSecond.toLong())
+        return token
+    }
+
+    fun <T> getObjectByToken(token: String, clz: Class<T>): T? {
+        val tokenRedisKey = tokenRedisKey(token)
+        val json = SpringContextUtil.getBean(RedisOperation::class.java).get(tokenRedisKey)
+        if (json == null) {
+            logger.warn("get json is null , token: $token")
+            return null
+        }
+        return JsonUtil.to(json, clz)
+    }
+
+    private fun tokenRedisKey(token: String) = "artifactory:token:$token"
+
+    override fun allowDownload(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String,
+        ip: String,
+        checkDownload: Boolean
+    ): AllowDownload {
+        if (checkDownload) {
+            val properties = bkRepoService.getProperties(userId, projectId, artifactoryType, path)
+            val propertyMap = mutableMapOf<String, String>()
+            properties.forEach {
+                propertyMap[it.key] = it.value
+            }
+            val pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID]
+            try {
+                pipelineService.validatePermission(
+                    userId,
+                    projectId,
+                    pipelineId,
+                    AuthPermission.DOWNLOAD,
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                        params = arrayOf(userId, projectId, pipelineId ?: "")
+                    )
+                )
+            } catch (e: Exception) {
+                logger.warn("user $userId download project $projectId pipeline $pipelineId failed, error: $e")
+                return AllowDownload(
+                    false,
+                    "用户没有下载该构件的权限,请联系项目管理员处理"
+                )
+            }
+        }
+
+        val (allow, _) = bkRepoClient.allowDownload(
+            userId = userId,
+            projectId = projectId,
+            repoName = RepoUtils.getRepoByType(artifactoryType),
+            path = path,
+            ip = ip
+        )
+        return AllowDownload(
+            allow,
+            if (allow) "" else "命中仓库配置的禁用策略（如元数据不满足要求、开启了 IP限制等），或因安全漏洞、Crash等原因被禁用"
+        )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BkRepoDownloadService::class.java)
+    }
+}

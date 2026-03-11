@@ -1,5 +1,8 @@
 <template>
     <main class="pipeline-list-main">
+        <pipeline-problem-tips
+            :update-table-height="updateTableHeight"
+        />
         <div
             class="recycle-bin-header"
             v-if="isDeleteView"
@@ -240,6 +243,7 @@
     import CopyPipelineDialog from '@/components/PipelineActionDialog/CopyPipelineDialog'
     import DisableDialog from '@/components/PipelineActionDialog/DisableDialog'
     import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
+    import PipelineProblemTips from '@/components/PipelineProblemTips'
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import PipelineTableView from '@/components/pipelineList/PipelineTableView'
     import PipelinesCardView from '@/components/pipelineList/PipelinesCardView'
@@ -254,7 +258,7 @@
     import PipelineSearcher from './PipelineSearcher'
 
     import Logo from '@/components/Logo'
-    import piplineActionMixin from '@/mixins/pipeline-action-mixin'
+    import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
     import {
         ALL_PIPELINE_VIEW_ID,
         ARCHIVE_VIEW_ID,
@@ -286,9 +290,10 @@
             ArchiveViewName,
             ArchiveDialog,
             DeleteArchivedDialog,
-            DisableDialog
+            DisableDialog,
+            PipelineProblemTips
         },
-        mixins: [piplineActionMixin],
+        mixins: [pipelineActionMixin],
         data () {
             const { page, pageSize, sortType, collation, ...restQuery } = this.$route.query
             return {
@@ -333,7 +338,7 @@
                 return this.$route.params.viewId === ARCHIVE_VIEW_ID
             },
             isTableLayout () {
-                return this.isDeleteView || this.layout === TABLE_LAYOUT
+                return this.isDeleteView || this.isArchiveView || this.layout === TABLE_LAYOUT
             },
             isCardLayout () {
                 return this.layout === CARD_LAYOUT
