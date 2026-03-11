@@ -395,6 +395,7 @@ class RepositoryPacService @Autowired constructor(
             projectId = projectId,
             authRepository = authRepository
         ) as GitScmServerRepository
+        val defaultBranch = serverRepository.defaultBranch!!
         val branches = refApiService.listBranches(
             projectId = projectId,
             authRepository = authRepository,
@@ -404,12 +405,12 @@ class RepositoryPacService @Autowired constructor(
         ).map {
             GitBranchInfo(
                 name = it.name,
-                commitId = it.sha
+                commitId = it.sha,
+                default = it.name == defaultBranch
             )
         }.toMutableList()
-        val defaultBranch = serverRepository.defaultBranch!!
         // 默认分支放第一个
-        if (!branches.any { it.name == serverRepository.defaultBranch }) {
+        if (search.isNullOrBlank() && !branches.any { it.name == serverRepository.defaultBranch }) {
             branches.add(
                 0, GitBranchInfo(
                     name = defaultBranch,
