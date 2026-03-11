@@ -376,7 +376,7 @@
                     fixed="right"
                 >
                     <template slot-scope="props">
-                        <template v-if="props.row.canUse">
+                        <template v-if="props.row.canEdit">
                             <!-- 用途为部署的节点-操作按钮 -->
                             <div class="table-node-item">
                                 <template v-if="deploymentNodes.includes(props.row.nodeType)">
