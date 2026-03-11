@@ -152,7 +152,7 @@
         name: [
             {
                 required: true,
-                pattern: /^(?!.*^\s)(?!.*\s$)[\u4e00-\u9fa5a-zA-Z0-9\-_.\s]{1,40}$/,
+                validator: (val) => /^(?!.*^\s)(?!.*\s$)[\u4e00-\u9fa5a-zA-Z0-9\-_.\s]{1,40}$/.test(val),
                 message: $t('由汉字、英文字母、数字、连字符(-)、下划线(_)或点(.)组成，不超过40个字符'),
                 trigger: 'blur',
             },
@@ -189,7 +189,7 @@
         urlScheme: [
             {
                 required: true,
-                pattern: /^[a-z][a-z\d-]*$/i,
+                validator: (val) => /^[a-z][a-z\d-]*$/i.test(val),
                 message: $t('Scheme只能由大小写字母、数字和中划线组成，首字母必须为字母'),
                 trigger: 'blur',
             },
@@ -215,7 +215,7 @@
                 trigger: 'blur',
             },
             {
-                pattern: /^[0-9][a-zA-Z0-9._-]{0,31}$/,
+                validator: (val) => /^[0-9][a-zA-Z0-9._-]{0,31}$/.test(val),
                 message: $t(
                     '由数字、英文字母、点(.)、中划线(-)、下划线(_)组成，且以数字开头，不超过 32 个字符'
                 ),

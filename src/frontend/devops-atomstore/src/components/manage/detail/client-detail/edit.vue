@@ -50,7 +50,7 @@
                     name: [
                         {
                             required: true,
-                            pattern: /^(?!.*^\s)(?!.*\s$)[\u4e00-\u9fa5a-zA-Z0-9\-_.\s]{1,40}$/,
+                            validator: (val) => /^(?!.*^\s)(?!.*\s$)[\u4e00-\u9fa5a-zA-Z0-9\-_.\s]{1,40}$/.test(val),
                             message: this.$t('由汉字、英文字母、数字、连字符(-)、下划线(_)或点(.)组成，不超过40个字符'),
                             trigger: 'blur',
                         },

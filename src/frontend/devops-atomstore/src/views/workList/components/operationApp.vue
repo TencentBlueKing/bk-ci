@@ -222,13 +222,13 @@
     const rules = {
         storeCode: [{
             required: true,
-            pattern: /^[a-z_][a-z\d_]{0,31}$/i,
+            validator: (val) => /^[a-z_][a-z\d_]{0,31}$/i.test(val),
             message: $t('store.标识只能由大小写字母、数字和下划线组成，首字母必须为字母或者下划线，长度在1-32之间'),
             trigger: 'blur'
         }],
         name: [{
             required: true,
-            pattern: /^[\u4e00-\u9fa5a-zA-Z0-9\-_.]{1,40}$/,
+            validator: (val) => /^[\u4e00-\u9fa5a-zA-Z0-9\-_.]{1,40}$/.test(val),
             message: $t('store.由汉字、英文字母、数字、连字符(-)、下划线(_)或点(.)组成，不超过40个字符'),
             trigger: 'blur'
         }]
