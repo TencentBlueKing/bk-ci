@@ -133,8 +133,8 @@ object PipelineParamUtils {
         val customParam = param.copy(value = paramValue)
         val allParams = mutableListOf(customParam)
         // 下级参数，填充住参数名前缀
-        paramValue.forEach { (subKey, paramKey) ->
-            allParams.add(param.copy(key = paramKey, value = paramValue[subKey] ?: ""))
+        paramValue.forEach { (subKey, subValue) ->
+            allParams.add(param.copy(key = "${key}.${subKey}", value = subValue ?: ""))
         }
         // 添加variables前缀
         allParams.forEach { fillContextPrefix(it, originStartContexts) }
