@@ -195,10 +195,16 @@ class VariableTransfer {
             props.group = it.category
         }
         return Variable(
-            value = if (CascadePropertyUtils.supportCascadeParam(it.type)) {
-                CascadePropertyUtils.parseDefaultValue(it.id, it.defaultValue, it.type)
-            } else {
-                it.defaultValue.toString()
+            value = when {
+                CascadePropertyUtils.supportCascadeParam(it.type) -> CascadePropertyUtils.parseDefaultValue(
+                    it.id,
+                    it.defaultValue,
+                    it.type
+                )
+
+                it.type == BuildFormPropertyType.CUSTOM_PARAM -> it.defaultValue
+
+                else -> it.defaultValue.toString()
             },
             readonly = if (const == true) null else it.readOnly.nullIfDefault(false),
             allowModifyAtStartup = if (const != true) it.required.nullIfDefault(true) else null,
@@ -294,7 +300,7 @@ class VariableTransfer {
                 type == BuildFormPropertyType.BOOLEAN ->
                     (variable.value as String?)?.toBoolean() ?: false
 
-                CascadePropertyUtils.supportCascadeParam(type) ->
+                CascadePropertyUtils.supportCascadeParam(type) || type == BuildFormPropertyType.CUSTOM_PARAM ->
                     variable.value ?: mapOf<String, String>()
 
                 else -> variable.value ?: ""
