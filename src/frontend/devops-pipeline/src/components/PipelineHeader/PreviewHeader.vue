@@ -3,18 +3,24 @@
         v-if="pipelineName"
         class="pipeline-preview-header"
     >
-        <pipeline-bread-crumb
-            :is-loading="!pipelineName"
-            :pipeline-name="pipelineName"
-        >
-            <span class="build-num-switcher-wrapper">
-                {{ title }}
-            </span>
-        </pipeline-bread-crumb>
+        <div class="pipeline-preview-left-aside">
+            <pipeline-bread-crumb
+                :is-loading="!pipelineName"
+                :pipeline-name="pipelineName"
+            >
+                <span class="build-num-switcher-wrapper">
+                    {{ title }}
+                </span>
+            </pipeline-bread-crumb>
+            <pac-branch-selector
+                ref="pacBranchSelectorRef"
+                @branch-change="handleBranchChange"
+            />
+        </div>
         <aside class="pipeline-preview-right-aside">
             <bk-button
                 theme="primary"
-                :disabled="executeStatus"
+                :disabled="executeStatus || hasPacError"
                 :loading="executeStatus"
                 v-if="isDebugPipeline"
                 v-perm="{
@@ -36,7 +42,7 @@
             <span v-bk-tooltips="execTips">
                 <bk-button
                     theme="primary"
-                    :disabled="executeStatus || versionNotMatch"
+                    :disabled="executeStatus || versionNotMatch || hasPacError"
                     :loading="executeStatus"
                     v-if="!isDebugPipeline"
                     v-perm="{
@@ -59,21 +65,24 @@
 </template>
 
 <script>
-    import { UPDATE_PREVIEW_PIPELINE_NAME, bus } from '@/utils/bus'
+    import { UPDATE_PREVIEW_PIPELINE_NAME, PAC_BRANCH_CHANGE, UPDATE_PAC_ERROR_STATUS, bus } from '@/utils/bus'
     import {
         RESOURCE_ACTION,
         RESOURCE_TYPE
     } from '@/utils/permission'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
+    import PacBranchSelector from './PacBranchSelector'
     export default {
         components: {
-            PipelineBreadCrumb
+            PipelineBreadCrumb,
+            PacBranchSelector
         },
         data () {
             return {
                 paramsValid: true,
-                pipelineName: ''
+                previewPipelineName: '',
+                hasPacError: false
             }
         },
         computed: {
@@ -87,6 +96,9 @@
             ...mapState('atom', [
                 'pipelineInfo'
             ]),
+            pipelineName () {
+                return this.previewPipelineName || this.pipelineInfo?.pipelineName || ''
+            },
             RESOURCE_ACTION () {
                 return RESOURCE_ACTION
             },
@@ -144,21 +156,29 @@
         },
         mounted () {
             bus.$on(UPDATE_PREVIEW_PIPELINE_NAME, this.updatePipelineName)
+            bus.$on(UPDATE_PAC_ERROR_STATUS, this.updatePacErrorStatus)
         },
         beforeDestroy () {
             bus.$off(UPDATE_PREVIEW_PIPELINE_NAME, this.updatePipelineName)
+            bus.$off(UPDATE_PAC_ERROR_STATUS, this.updatePacErrorStatus)
             this.selectPipelineVersion(null)
         },
         methods: {
             ...mapActions('atom', ['selectPipelineVersion']),
             updatePipelineName (name) {
-                this.pipelineName = name
+                this.previewPipelineName = name
+            },
+            updatePacErrorStatus (hasError) {
+                this.hasPacError = hasError
             },
             handleClick () {
                 bus.$emit('start-execute')
             },
             goBack () {
                 this.$router.back()
+            },
+            handleBranchChange (branchName, branchInfo) {
+                bus.$emit(PAC_BRANCH_CHANGE, branchName, branchInfo)
             }
         }
     }
@@ -171,6 +191,12 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 24px 0 14px;
+  .pipeline-preview-left-aside {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    overflow: hidden;
+  }
   .build-num-switcher-wrapper {
     display: grid;
     grid-auto-flow: column;

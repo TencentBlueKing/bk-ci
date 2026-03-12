@@ -1191,5 +1191,15 @@ export default {
             params: query
         })
         return res.data
+    },
+    /**
+     * 获取 PAC 分支编排
+     * @param {String} projectId 项目ID
+     * @param {String} pipelineId 流水线ID
+     * @param {String} branch 分支名
+     */
+    async fetchPacBranchPipeline (_, { projectId, pipelineId, branch }) {
+        const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/branches/${encodeURIComponent(branch)}`)
+        return res.data
     }
 }

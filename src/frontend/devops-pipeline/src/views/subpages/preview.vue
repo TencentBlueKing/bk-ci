@@ -4,303 +4,331 @@
         v-bkloading="{ isLoading }"
     >
         <div
-            v-if="!isDebugPipeline"
-            class="pipeline-execute-version-select params-content-item"
+            v-if="pacError.show"
+            class="pac-error-container"
         >
-            <span>
-                {{ $t('history.tableMap.pipelineVersion') }}
-            </span>
-            <VersionSelector
-                :editable="pacEnabled"
-                :class="{
-                    'exec-version-is-disabled': !pacEnabled
-                }"
-                :value="executeVersion"
-                @change="handleExecuteVersionChange"
-                :include-draft="false"
-                :show-extension="false"
-                refresh-list-on-expand
-                :unique-id="pipelineId"
-            />
-            <i
-                class="bk-icon icon-info-circle"
-                v-bk-tooltips="execVersionSelectorDisableTips"
-            />
-        </div>
-        <bk-alert
-            v-if="isDebugPipeline"
-            :title="$t('debugHint')"
-        ></bk-alert>
-        <div class="pipeline-execute-preview-content">
-            <template v-if="!isDebugPipeline && buildList.length">
-                <section class="params-content-item">
-                    <header
-                        :class="['params-collapse-trigger', {
-                            'params-collapse-expand': activeName.has(1)
-                        }]"
-                        @click="toggleCollapse(1)"
+            <bk-exception
+                class="exception-wrap-item"
+                :type="pacError.type"
+                scene="part"
+            >
+                <div class="pac-error-content">
+                    <p class="pac-error-title">{{ pacError.message }}</p>
+                    <p
+                        v-if="pacError.branch"
+                        class="pac-error-detail"
                     >
-                        <bk-icon
-                            type="right-shape"
-                            class="icon-angle-right"
-                        />
-
-                        {{ $t('buildMsg') }}
-                    </header>
-                    <div
-                        v-if="activeName.has(1)"
-                        class="params-collapse-content"
+                        {{ $t('preview.errorBranch') }}{{ pacError.branch }}
+                    </p>
+                    <p
+                        v-if="pacError.pipelinePath"
+                        class="pac-error-detail"
                     >
-                        <pipeline-params-form
-                            ref="buildForm"
-                            :param-values="buildValues"
-                            :handle-param-change="handleBuildChange"
-                            :params="buildList"
-                        />
-                    </div>
-                </section>
-            </template>
-            <section class="params-content-item">
-                <header
-                    :class="['params-collapse-trigger', {
-                        'params-collapse-expand': activeName.has(2)
-                    }]"
-                    @click="toggleCollapse(2)"
-                >
-                    <bk-icon
-                        type="right-shape"
-                        class="icon-angle-right"
-                    />
-
-                    {{ $t('buildParams') }}
-                    
-                    <template v-if="hasPipelineParams">
-                        <span
-                            @click.stop=""
-                        >
-                            <param-set
-                                ref="paramSetSelector"
-                                :all-params="pipelineParams"
-                                :use-last-params="useLastParams"
-                                :is-visible-version="isVisibleVersion"
-                                @change="updateParamsValues"
-                            />
-                        </span>
-                        <i
-                            class="devops-icon icon-question-circle"
-                            v-bk-tooltips="$t('paramSetTips')"
-                        />
-                        <span
-                            :class="['text-link', {
-                                'disabled': !showChangedParamsAlert
-                            }]"
-                            @click.stop="resetDefaultParams"
-                        >
-                            {{ $t('resetDefault') }}
-                        </span>
-                        <span class="collapse-trigger-divider">|</span>
-                        <span
-                            class="text-link"
-                            @click.stop="saveAsParamSet"
-                        >
-                            {{ $t('saveAsParamSet') }}
-                        </span>
-                    </template>
-                </header>
-                <div
-                    v-show="activeName.has(2)"
-                    class="params-collapse-content"
-                >
-                    <bk-alert
-                        v-if="showChangedParamsAlert"
-                        class="changed-tips-alert"
-                        type="warning"
-                    >
-                        <template #title>
-                            <div>
-                                {{ $t('paramSetApplyTips', [applySetDiff.setName]) }}
-                                <ul
-                                    class="param-set-diff-tips"
-                                    v-if="paramSetDiffTips.length"
-                                >
-                                    <li
-                                        v-for="(tip, index) in paramSetDiffTips"
-                                        :key="index"
-                                    >
-                                        {{ tip }}
-                                    </li>
-                                </ul>
-                            </div>
-                        </template>
-                    </bk-alert>
-                    <pipeline-params-form
-                        v-if="hasPipelineParams"
-                        ref="paramsForm"
-                        :param-values="paramsValues"
-                        :highlight-changed-param="showChangedParamsAlert"
-                        :handle-param-change="handleParamChange"
-                        :params="paramList"
-                        sort-category
-                    >
-                        <template
-                            slot="versionParams"
-                            v-if="isVisibleVersion"
-                        >
-                            <renderSortCategoryParams :name="$t('preview.introVersion')">
-                                <template slot="content">
-                                    <pipeline-versions-form
-                                        class="mb20"
-                                        ref="versionParamForm"
-                                        :build-no="buildNo"
-                                        :is-preview="true"
-                                        :version-param-values="versionParamValues"
-                                        :handle-version-change="handleVersionChange"
-                                        :handle-build-no-change="handleBuildNoChange"
-                                        :highlight-changed-param="showChangedParamsAlert"
-                                        :version-param-list="versionParamList"
-                                    />
-                                </template>
-                            </renderSortCategoryParams>
-                        </template>
-                    </pipeline-params-form>
-                    <bk-exception
-                        v-else
-                        type="empty"
-                        scene="part"
-                    >
-                        {{ $t('noParams') }}
-                    </bk-exception>
+                        {{ $t('preview.errorPipelinePath') }}{{ pacError.pipelinePath }}
+                    </p>
                 </div>
-            </section>
-            <template v-if="constantParams.length > 0">
+            </bk-exception>
+        </div>
+        <template v-else>
+            <div
+                v-if="!isDebugPipeline"
+                class="pipeline-execute-version-select params-content-item"
+            >
+                <span>
+                    {{ $t('history.tableMap.pipelineVersion') }}
+                </span>
+                <VersionSelector
+                    :editable="pacEnabled"
+                    :class="{
+                        'exec-version-is-disabled': !pacEnabled
+                    }"
+                    :value="executeVersion"
+                    @change="handleExecuteVersionChange"
+                    :include-draft="false"
+                    :show-extension="false"
+                    refresh-list-on-expand
+                    :unique-id="pipelineId"
+                />
+                <i
+                    class="bk-icon icon-info-circle"
+                    v-bk-tooltips="execVersionSelectorDisableTips"
+                />
+            </div>
+            <bk-alert
+                v-if="isDebugPipeline"
+                :title="$t('debugHint')"
+            ></bk-alert>
+            <div class="pipeline-execute-preview-content">
+                <template v-if="!isDebugPipeline && buildList.length">
+                    <section class="params-content-item">
+                        <header
+                            :class="['params-collapse-trigger', {
+                                'params-collapse-expand': activeName.has(1)
+                            }]"
+                            @click="toggleCollapse(1)"
+                        >
+                            <bk-icon
+                                type="right-shape"
+                                class="icon-angle-right"
+                            />
+    
+                            {{ $t('buildMsg') }}
+                        </header>
+                        <div
+                            v-if="activeName.has(1)"
+                            class="params-collapse-content"
+                        >
+                            <pipeline-params-form
+                                ref="buildForm"
+                                :param-values="buildValues"
+                                :handle-param-change="handleBuildChange"
+                                :params="buildList"
+                            />
+                        </div>
+                    </section>
+                </template>
                 <section class="params-content-item">
                     <header
                         :class="['params-collapse-trigger', {
-                            'params-collapse-expand': activeName.has(3)
+                            'params-collapse-expand': activeName.has(2)
                         }]"
-                        @click="toggleCollapse(3)"
+                        @click="toggleCollapse(2)"
                     >
                         <bk-icon
                             type="right-shape"
                             class="icon-angle-right"
                         />
-                        {{ $t('newui.const') }}
+    
+                        {{ $t('buildParams') }}
+                        
+                        <template v-if="hasPipelineParams">
+                            <span
+                                @click.stop=""
+                            >
+                                <param-set
+                                    ref="paramSetSelector"
+                                    :all-params="pipelineParams"
+                                    :use-last-params="useLastParams"
+                                    :is-visible-version="isVisibleVersion"
+                                    @change="updateParamsValues"
+                                />
+                            </span>
+                            <i
+                                class="devops-icon icon-question-circle"
+                                v-bk-tooltips="$t('paramSetTips')"
+                            />
+                            <span
+                                :class="['text-link', {
+                                    'disabled': !showChangedParamsAlert
+                                }]"
+                                @click.stop="resetDefaultParams"
+                            >
+                                {{ $t('resetDefault') }}
+                            </span>
+                            <span class="collapse-trigger-divider">|</span>
+                            <span
+                                class="text-link"
+                                @click.stop="saveAsParamSet"
+                            >
+                                {{ $t('saveAsParamSet') }}
+                            </span>
+                        </template>
                     </header>
                     <div
-                        v-if="activeName.has(3)"
+                        v-show="activeName.has(2)"
                         class="params-collapse-content"
                     >
+                        <bk-alert
+                            v-if="showChangedParamsAlert"
+                            class="changed-tips-alert"
+                            type="warning"
+                        >
+                            <template #title>
+                                <div>
+                                    {{ $t('paramSetApplyTips', [applySetDiff.setName]) }}
+                                    <ul
+                                        class="param-set-diff-tips"
+                                        v-if="paramSetDiffTips.length"
+                                    >
+                                        <li
+                                            v-for="(tip, index) in paramSetDiffTips"
+                                            :key="index"
+                                        >
+                                            {{ tip }}
+                                        </li>
+                                    </ul>
+                                </div>
+                            </template>
+                        </bk-alert>
                         <pipeline-params-form
-                            ref="constParamsForm"
-                            disabled
-                            :param-values="constantValues"
-                            :params="constantParams"
-                            sort-category
-                        />
-                    </div>
-                </section>
-            </template>
-            <template v-if="hasOtherParams">
-                <section class="params-content-item">
-                    <header
-                        :class="['params-collapse-trigger', {
-                            'params-collapse-expand': activeName.has(4)
-                        }]"
-                        @click="toggleCollapse(4)"
-                    >
-                        <bk-icon
-                            type="right-shape"
-                            class="icon-angle-right"
-                        />
-
-                        {{ $t('newui.pipelineParam.otherVar') }}
-                    </header>
-                    <div
-                        v-if="activeName.has(4)"
-                        class="params-collapse-content"
-                    >
-                        <pipeline-params-form
-                            ref="otherParamsForm"
-                            disabled
-                            :param-values="otherValues"
-                            :params="otherParams"
+                            v-if="hasPipelineParams"
+                            ref="paramsForm"
+                            :param-values="paramsValues"
+                            :highlight-changed-param="showChangedParamsAlert"
+                            :handle-param-change="handleParamChange"
+                            :params="paramList"
                             sort-category
                         >
                             <template
                                 slot="versionParams"
-                                v-if="!isVisibleVersion && versionParamValues.length"
+                                v-if="isVisibleVersion"
                             >
-                                <pipeline-versions-form
-                                    class="mb20"
-                                    ref="versionParamForm"
-                                    :build-no="buildNo"
-                                    is-preview
-                                    disabled
-                                    :version-param-values="versionParamValues"
-                                    :handle-version-change="handleVersionChange"
-                                    :handle-build-no-change="handleBuildNoChange"
-                                    :version-param-list="versionParamList"
-                                />
+                                <renderSortCategoryParams :name="$t('preview.introVersion')">
+                                    <template slot="content">
+                                        <pipeline-versions-form
+                                            class="mb20"
+                                            ref="versionParamForm"
+                                            :build-no="buildNo"
+                                            :is-preview="true"
+                                            :version-param-values="versionParamValues"
+                                            :handle-version-change="handleVersionChange"
+                                            :handle-build-no-change="handleBuildNoChange"
+                                            :highlight-changed-param="showChangedParamsAlert"
+                                            :version-param-list="versionParamList"
+                                        />
+                                    </template>
+                                </renderSortCategoryParams>
                             </template>
                         </pipeline-params-form>
+                        <bk-exception
+                            v-else
+                            type="empty"
+                            scene="part"
+                        >
+                            {{ $t('noParams') }}
+                        </bk-exception>
                     </div>
                 </section>
-            </template>
-
-            <section class="params-content-item">
-                <header
-                    :class="['params-collapse-trigger', {
-                        'params-collapse-expand': activeName.has(5)
-                    }]"
-                    @click="toggleCollapse(5)"
-                >
-                    <bk-icon
-                        type="right-shape"
-                        class="icon-angle-right"
-                    />
-
-                    {{ $t(canElementSkip ? 'preview.atomToExec' : 'executeStepPreview') }}
-                    <template v-if="canElementSkip">
-                        <span
-                            v-if="!isDebugPipeline"
-                            class="no-bold-font"
+                <template v-if="constantParams.length > 0">
+                    <section class="params-content-item">
+                        <header
+                            :class="['params-collapse-trigger', {
+                                'params-collapse-expand': activeName.has(3)
+                            }]"
+                            @click="toggleCollapse(3)"
                         >
-                            ({{ $t('preview.skipTipsPrefix') }}
+                            <bk-icon
+                                type="right-shape"
+                                class="icon-angle-right"
+                            />
+                            {{ $t('newui.const') }}
+                        </header>
+                        <div
+                            v-if="activeName.has(3)"
+                            class="params-collapse-content"
+                        >
+                            <pipeline-params-form
+                                ref="constParamsForm"
+                                disabled
+                                :param-values="constantValues"
+                                :params="constantParams"
+                                sort-category
+                            />
+                        </div>
+                    </section>
+                </template>
+                <template v-if="hasOtherParams">
+                    <section class="params-content-item">
+                        <header
+                            :class="['params-collapse-trigger', {
+                                'params-collapse-expand': activeName.has(4)
+                            }]"
+                            @click="toggleCollapse(4)"
+                        >
+                            <bk-icon
+                                type="right-shape"
+                                class="icon-angle-right"
+                            />
+    
+                            {{ $t('newui.pipelineParam.otherVar') }}
+                        </header>
+                        <div
+                            v-if="activeName.has(4)"
+                            class="params-collapse-content"
+                        >
+                            <pipeline-params-form
+                                ref="otherParamsForm"
+                                disabled
+                                :param-values="otherValues"
+                                :params="otherParams"
+                                sort-category
+                            >
+                                <template
+                                    slot="versionParams"
+                                    v-if="!isVisibleVersion && versionParamValues.length"
+                                >
+                                    <pipeline-versions-form
+                                        class="mb20"
+                                        ref="versionParamForm"
+                                        :build-no="buildNo"
+                                        is-preview
+                                        disabled
+                                        :version-param-values="versionParamValues"
+                                        :handle-version-change="handleVersionChange"
+                                        :handle-build-no-change="handleBuildNoChange"
+                                        :version-param-list="versionParamList"
+                                    />
+                                </template>
+                            </pipeline-params-form>
+                        </div>
+                    </section>
+                </template>
+    
+                <section class="params-content-item">
+                    <header
+                        :class="['params-collapse-trigger', {
+                            'params-collapse-expand': activeName.has(5)
+                        }]"
+                        @click="toggleCollapse(5)"
+                    >
+                        <bk-icon
+                            type="right-shape"
+                            class="icon-angle-right"
+                        />
+    
+                        {{ $t(canElementSkip ? 'preview.atomToExec' : 'executeStepPreview') }}
+                        <template v-if="canElementSkip">
                             <span
-                                @click.stop="editTrigger"
-                                class="text-link item-title-tips-link"
+                                v-if="!isDebugPipeline"
+                                class="no-bold-font"
                             >
-                                {{ $t('preview.manualTrigger') }}
+                                ({{ $t('preview.skipTipsPrefix') }}
+                                <span
+                                    @click.stop="editTrigger"
+                                    class="text-link item-title-tips-link"
+                                >
+                                    {{ $t('preview.manualTrigger') }}
+                                </span>
+                                {{ $t('preview.skipTipsSuffix') }})
                             </span>
-                            {{ $t('preview.skipTipsSuffix') }})
-                        </span>
-                        <span
-                            @click.stop
-                            class="no-bold-font"
-                        >
-                            <bk-checkbox
-                                @change="handleCheckTotalChange"
-                                v-model="checkTotal"
+                            <span
+                                @click.stop
+                                class="no-bold-font"
                             >
-                                {{ $t('preview.selectAll') }}/{{ $t('preview.selectNone') }}
-                            </bk-checkbox>
-                        </span>
-                    </template>
-                </header>
-                <div
-                    v-if="activeName.has(5)"
-                    class="params-collapse-content pipeline-optional-model"
-                >
-                    <pipeline
-                        is-preview
-                        :show-header="false"
-                        :pipeline="pipelineModel"
-                        :editable="false"
-                        :can-skip-element="canElementSkip"
-                    />
-                </div>
-            </section>
-        </div>
+                                <bk-checkbox
+                                    @change="handleCheckTotalChange"
+                                    v-model="checkTotal"
+                                >
+                                    {{ $t('preview.selectAll') }}/{{ $t('preview.selectNone') }}
+                                </bk-checkbox>
+                            </span>
+                        </template>
+                    </header>
+                    <div
+                        v-if="activeName.has(5)"
+                        class="params-collapse-content pipeline-optional-model"
+                    >
+                        <pipeline
+                            is-preview
+                            :show-header="false"
+                            :pipeline="pipelineModel"
+                            :editable="false"
+                            :can-skip-element="canElementSkip"
+                        />
+                    </div>
+                </section>
+            </div>
+        </template>
     </div>
 </template>
 
@@ -311,7 +339,7 @@
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
-    import { UPDATE_PREVIEW_PIPELINE_NAME, bus } from '@/utils/bus'
+    import { UPDATE_PREVIEW_PIPELINE_NAME, PAC_BRANCH_CHANGE, UPDATE_PAC_ERROR_STATUS, bus } from '@/utils/bus'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { getParamsValuesMap, isObject, isShallowEqual } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
@@ -353,6 +381,16 @@
                         deleted: [],
                         noRequired: []
                     }
+                },
+                selectedBranch: '', // PAC 分支选择
+                branchVersion: null, // PAC 分支版本号，用于启动构建时指定 version
+                // PAC 分支版本错误状态
+                pacError: {
+                    show: false,
+                    type: '', // '404' | 'empty'
+                    message: '',
+                    branch: '', // 分支名称
+                    pipelinePath: '' // 流水线路径
                 }
             }
         },
@@ -389,7 +427,7 @@
                 return this.isDebugPipeline || this.startupInfo?.useLatestParameters
             },
             hasOtherParams () {
-                if (!this.isVisibleVersion) {
+                if (this.isVisibleVersion) {
                     return [...this.otherParams, ...this.versionParamList].length
                 }
                 return this.otherParams.length
@@ -426,7 +464,12 @@
         watch: {
             executeVersion: {
                 handler () {
-                    this.$nextTick(this.init)
+                    if (!this.pacEnabled || this.isDebugPipeline) {
+                        this.$nextTick(() => this.init())
+                    } else {
+                        // PAC 模式：显示 loading 状态，等待分支选择器触发 handleBranchChange
+                        this.isLoading = true
+                    }
                 },
                 immediate: true
             }
@@ -435,9 +478,11 @@
         mounted () {
             bus.$off('start-execute')
             bus.$on('start-execute', this.executePipeline)
+            bus.$on(PAC_BRANCH_CHANGE, this.handleBranchChange)
         },
         beforeDestroy () {
             bus.$off('start-execute', this.executePipeline)
+            bus.$off(PAC_BRANCH_CHANGE, this.handleBranchChange)
             this.togglePropertyPanel({
                 isShow: false
             })
@@ -449,7 +494,8 @@
             ...mapActions('atom', [
                 'togglePropertyPanel',
                 'fetchPipelineByVersion',
-                'selectPipelineVersion'
+                'selectPipelineVersion',
+                'fetchPacBranchPipeline'
             ]),
             ...mapActions('pipelines', [
                 'requestStartupInfo',
@@ -624,40 +670,104 @@
                     }
                 })
             },
-            async init () {
+            async init (branch) {
                 try {
                     this.isLoading = true
                     const params = {
                         projectId: this.projectId,
-                        pipelineId: this.pipelineId,
-                        version: this.$route.params.version ?? this.pipelineInfo?.[this.isDebugPipeline ? 'version' : 'releaseVersion']
+                        pipelineId: this.pipelineId
                     }
-                    const [res, pipelineRes] = await Promise.all([
-                        this.requestStartupInfo(params),
-                        this.fetchPipelineByVersion(params)
-                    ])
+                    
+                    // 如果有选择分支，添加分支参数；PAC 模式下指定分支时不传 version
+                    if (branch && this.pacEnabled) {
+                        params.branch = branch
+                    } else {
+                        params.version = this.$route.params.version ?? this.pipelineInfo?.[this.isDebugPipeline ? 'version' : 'releaseVersion']
+                    }
+                    
+                    let pipelineRes
+                    
+                    // 如果选择了分支，使用 PAC 分支编排接口
+                    if (branch && this.pacEnabled) {
+                        const [res, branchPipelineRes] = await Promise.all([
+                            this.requestStartupInfo(params),
+                            this.fetchPacBranchPipeline({
+                                projectId: this.projectId,
+                                pipelineId: this.pipelineId,
+                                branch
+                            })
+                        ])
+                        this.startupInfo = res
+                        pipelineRes = branchPipelineRes
+                        // 保存分支版本号，用于启动构建时指定 version
+                        this.branchVersion = branchPipelineRes?.version ?? null
+                    } else {
+                        const [res, normalPipelineRes] = await Promise.all([
+                            this.requestStartupInfo(params),
+                            this.fetchPipelineByVersion(params)
+                        ])
+                        this.startupInfo = res
+                        pipelineRes = normalPipelineRes
+                        // 非 PAC 分支模式下清空 branchVersion
+                        this.branchVersion = null
+                    }
+                    
                     this.pipelineModel = {
                         ...pipelineRes?.modelAndSetting?.model,
                         stages: pipelineRes?.modelAndSetting?.model.stages.slice(1)
                     }
                     this.setPipelineSkipProp(this.pipelineModel.stages, this.checkTotal)
                     bus.$emit(UPDATE_PREVIEW_PIPELINE_NAME, this.pipelineModel?.name)
-                    this.startupInfo = res
                     this.initParams(this.startupInfo)
                     this.showChangedParamsAlert = this.startupInfo?.useLatestParameters
+                    this.pacError = { show: false, type: '', message: '' }
+                    bus.$emit(UPDATE_PAC_ERROR_STATUS, false)
                 } catch (err) {
-                    this.handleError(
-                        err,
-                        {
-                            projectId: this.projectId,
-                            resourceCode: this.pipelineId,
-                            action: this.$permissionResourceAction.EXECUTE
+                    const errorCode = err?.code || err?.status
+                    // PAC 模式下特定错误码不返回，而是展示错误页面
+                    if (this.pacEnabled && errorCode === 2101378) {
+                        // 分支版本不存在，展示 404 页面
+                        this.pacError = {
+                            show: true,
+                            type: '404',
+                            message: this.$t('preview.branchVersionNotFound'),
+                            branch: branch || this.selectedBranch,
+                            pipelinePath: this.pipelineInfo?.yamlInfo?.filePath || ''
                         }
-                    )
-                    this.$router.back()
+                        bus.$emit(UPDATE_PAC_ERROR_STATUS, true)
+                    } else if (this.pacEnabled && errorCode === 2101379) {
+                        // 分支版本创建失败，展示错误信息
+                        this.pacError = {
+                            show: true,
+                            type: 'empty',
+                            message: err?.message || this.$t('preview.branchVersionCreateFailed')
+                        }
+                        bus.$emit(UPDATE_PAC_ERROR_STATUS, true)
+                    } else {
+                        this.handleError(
+                            err,
+                            {
+                                projectId: this.projectId,
+                                resourceCode: this.pipelineId,
+                                action: this.$permissionResourceAction.EXECUTE
+                            }
+                        )
+                        this.$router.back()
+                    }
                 } finally {
                     this.isLoading = false
                 }
+            },
+            /**
+             * 处理分支变更
+             * @param {String} branchName 分支名
+             */
+            async handleBranchChange (branchName) {
+                this.selectedBranch = branchName
+                // 切换分支前重置执行参数，确保使用新接口返回的数据
+                this.resetExecuteConfig(this.pipelineId)
+                // 重新获取编排和参数数据
+                await this.init(branchName)
             },
             async executePipeline () {
                 let message, theme
@@ -673,11 +783,21 @@
                 console.log(params, skipAtoms)
                 try {
                     this.setExecuteStatus(true)
+                    // 确定启动版本号：PAC 分支模式使用 branchVersion，调试模式使用 pipelineInfo.version，其他使用 executeVersion
+                    let execVersion
+                    if (this.isDebugPipeline) {
+                        execVersion = this.pipelineInfo?.version
+                    } else if (this.pacEnabled && this.branchVersion !== null) {
+                        // PAC 模式下选择了分支，使用分支版本号
+                        execVersion = this.branchVersion
+                    } else {
+                        execVersion = this.executeVersion
+                    }
                     // 请求执行构建
                     const res = await this.requestExecPipeline({
                         projectId: this.projectId,
                         pipelineId: this.pipelineId,
-                        version: this.isDebugPipeline ? this.pipelineInfo?.version : this.executeVersion,
+                        version: execVersion,
                         params: {
                             ...skipAtoms,
                             ...params
@@ -962,6 +1082,40 @@ $header-height: 36px;
         list-style: disc;
         > li {
             list-style: disc;
+        }
+    }
+
+    .pac-error-container {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #FFFFFF;
+        box-shadow: 0 2px 4px 0 #1919290d;
+        border-radius: 2px;
+        
+        .exception-wrap-item {
+            padding: 40px 0;
+        }
+        
+        .pac-error-content {
+            text-align: center;
+            
+            .pac-error-title {
+                font-size: 14px;
+                color: #63656E;
+                margin-bottom: 16px;
+            }
+            
+            .pac-error-detail {
+                font-size: 12px;
+                color: #979BA5;
+                margin-bottom: 8px;
+                
+                &:last-child {
+                    margin-bottom: 0;
+                }
+            }
         }
     }
 }
