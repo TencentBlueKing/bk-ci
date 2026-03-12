@@ -496,6 +496,8 @@
       "mutexTimeoutPlaceholder": "タイムアウトを入力してください。0は即時失敗を意味します",
       "queueSize": "キューサイズ",
       "queueSizePlaceholder": "キューサイズを入力してください（1-50）",
+      "allPlugins": "すべてのプラグイン",
+      "rdStore": "開発ストア",
       "choosePlugin": "プラグインを選択",
       "searchPluginPlaceholder": "プラグイン名または説明を検索",
       "installed": "インストール済み",

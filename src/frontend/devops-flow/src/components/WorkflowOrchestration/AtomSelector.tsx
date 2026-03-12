@@ -1,7 +1,7 @@
 import { JobCategory, JobType, type AtomClassify, type AtomItem } from '@/api/atom'
 import type { Container, Element } from '@/api/flowModel'
 import { SvgIcon } from '@/components/SvgIcon'
-import { useAtomManager } from '@/hooks/useAtomManager'
+import { useAtomManager, RD_STORE_CODE } from '@/hooks/useAtomManager'
 import { useAtomVersion } from '@/hooks/useAtomVersion'
 import { Exception, Input, Loading, Message, Tab } from 'bkui-vue'
 import { Transition, computed, defineComponent, ref, watch, type PropType } from 'vue'
@@ -110,14 +110,17 @@ export default defineComponent({
     })
 
     const classifyId = computed(() => {
-      if (classifyCode.value === 'all') return ''
+      if (classifyCode.value === 'all' || classifyCode.value === RD_STORE_CODE) return ''
       return classifyMap.value[classifyCode.value]?.id || ''
     })
+
+    const queryProjectAtomFlag = computed(() => classifyCode.value !== RD_STORE_CODE)
 
     const isLoadingAtoms = computed(() =>
       atomManager.isLoadingAtoms({
         classifyId: classifyId.value,
         keyword: searchKey.value,
+        queryProjectAtomFlag: queryProjectAtomFlag.value,
       }),
     )
 
@@ -246,6 +249,7 @@ export default defineComponent({
           classifyId: classifyId.value,
           keyword: searchKey.value,
           jobType: props.container?.['@type'] === 'normal' ? JobType.CLOUD_TASK : JobType.CREATIVE_STREAM,
+          queryProjectAtomFlag: queryProjectAtomFlag.value,
           page: currentPage.value,
           pageSize: 20,
         })
@@ -268,6 +272,7 @@ export default defineComponent({
       await atomManager.refreshData({
         classifyId: classifyId.value,
         keyword: searchKey.value,
+        queryProjectAtomFlag: queryProjectAtomFlag.value,
       })
 
       loadAtomList(true)

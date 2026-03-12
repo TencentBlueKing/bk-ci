@@ -494,6 +494,8 @@
       "mutexTimeoutPlaceholder": "请输入超时时间，0表示不等待直接失败",
       "queueSize": "排队队列大小",
       "queueSizePlaceholder": "请输入队列大小（1-50）",
+      "allPlugins": "全部插件",
+      "rdStore": "研发商店",
       "choosePlugin": "选择插件",
       "searchPluginPlaceholder": "搜索插件名称或描述",
       "installed": "已安装",

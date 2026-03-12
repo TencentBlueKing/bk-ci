@@ -7,7 +7,10 @@ import {
   type AtomItem,
 } from '@/api/atom'
 import { computed, reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
+
+export const RD_STORE_CODE = 'rdStore'
 
 interface AtomListCache {
   data: AtomItem[]
@@ -30,6 +33,7 @@ interface UseAtomManagerOptions {
  * 提供插件分类和插件列表的缓存管理
  */
 export const useAtomManager = (options: UseAtomManagerOptions) => {
+  const { t } = useI18n()
   const route = useRoute()
   const { category = JobCategory.TASK } = options
   const projectCode = computed(() => {
@@ -49,9 +53,10 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
     classifyId?: string
     keyword?: string
     jobType?: JobType
+    queryProjectAtomFlag?: boolean
   }) => {
-    const { classifyId = '', keyword = '', jobType } = params
-    return `${category}_${classifyId}_${keyword}_${jobType}`
+    const { classifyId = '', keyword = '', jobType, queryProjectAtomFlag = true } = params
+    return `${category}_${classifyId}_${keyword}_${jobType}_${queryProjectAtomFlag}`
   }
 
   // 检查缓存是否有效
@@ -85,6 +90,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
     classifyId?: string
     jobType?: JobType
     keyword?: string
+    queryProjectAtomFlag?: boolean
     page?: number
     pageSize?: number
     forceRefresh?: boolean
@@ -97,12 +103,13 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
       classifyId = '',
       keyword = '',
       jobType,
+      queryProjectAtomFlag = true,
       page = 1,
       pageSize = 20,
       forceRefresh = false,
     } = params
 
-    const cacheKey = generateCacheKey({ classifyId, keyword, jobType })
+    const cacheKey = generateCacheKey({ classifyId, keyword, jobType, queryProjectAtomFlag })
 
     // 初始化缓存
     if (!atomCacheMap[cacheKey]) {
@@ -145,6 +152,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
         classifyId,
         os: 'WINDOWS',
         keyword,
+        queryProjectAtomFlag,
         page,
         pageSize,
       })
@@ -188,6 +196,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
       classifyId?: string
       keyword?: string
       jobType?: JobType
+      queryProjectAtomFlag?: boolean
     } = {},
   ): AtomItem[] => {
     const cacheKey = generateCacheKey(params)
@@ -200,6 +209,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
       classifyId?: string
       keyword?: string
       jobType?: JobType
+      queryProjectAtomFlag?: boolean
     } = {},
   ) => {
     const cacheKey = generateCacheKey(params)
@@ -207,7 +217,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
   }
 
   // 清除指定缓存
-  const clearCache = (params?: { classifyId?: string; keyword?: string; jobType?: JobType }) => {
+  const clearCache = (params?: { classifyId?: string; keyword?: string; jobType?: JobType; queryProjectAtomFlag?: boolean }) => {
     if (params) {
       const cacheKey = generateCacheKey(params)
       delete atomCacheMap[cacheKey]
@@ -233,6 +243,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
       classifyId?: string
       keyword?: string
       jobType?: JobType
+      queryProjectAtomFlag?: boolean
     } = {},
   ) => {
     return await fetchAtomList({ ...params, forceRefresh: true })
@@ -269,14 +280,20 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
       return map
     }),
 
-    // 获取分类选项（包含"全部"选项）
+    // 获取分类选项（包含"全部"和"研发商店"选项）
     classifyOptions: computed(() => {
       const options = [...classifyList.value]
       if (category !== JobCategory.TRIGGER) {
         options.unshift({
           id: '',
           classifyCode: 'all',
-          classifyName: '全部插件',
+          classifyName: t('flow.orchestration.allPlugins'),
+          weight: 0,
+        } as AtomClassify)
+        options.push({
+          id: '',
+          classifyCode: RD_STORE_CODE,
+          classifyName: t('flow.orchestration.rdStore'),
           weight: 0,
         } as AtomClassify)
       }
