@@ -34,7 +34,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 )
