@@ -43,11 +43,11 @@ data class AtomBuildArchiveElement(
     @get:Schema(title = "插件发布包所在相对路径", required = true)
     val filePath: String = "\${{steps.scriptStep.outputs.filePath}}",
     @get:Schema(title = "插件发布包上传至仓库的目标路径", required = true)
-    val destPath: String = "\${atomCode}/\${version}/\${{steps.scriptStep.outputs.packageName}}",
+    val destPath: String = "\${{atomCode}}/\${{version}}/\${{steps.scriptStep.outputs.packageName}}",
     @get:Schema(title = "插件自定义UI前端文件所在相对路径", required = false)
     val frontendFilePath: String? = "\${BK_CI_CUSTOM_FRONTEND_DIST_PATH}",
     @get:Schema(title = "插件自定义UI前端文件上传至仓库的目标路径", required = false)
-    val frontendDestPath: String? = "\${atomCode}/\${version}",
+    val frontendDestPath: String? = "\${{atomCode}}/\${{version}}",
     @get:Schema(title = "操作系统名称", required = false)
     val osName: String? = "\${{steps.scriptStep.outputs.matrixOsName}}",
     @get:Schema(title = "操作系统cpu架构", required = false)
@@ -55,7 +55,9 @@ data class AtomBuildArchiveElement(
     @get:Schema(title = "是否有可用的操作系统名称配置", required = false)
     val validOsNameFlag: String? = null,
     @get:Schema(title = "是否有可用的操作系统cpu架构配置", required = false)
-    val validOsArchFlag: String? = null
+    val validOsArchFlag: String? = null,
+    @get:Schema(title = "原子执行入口", required = true)
+    val target: String = "\${{steps.scriptStep.outputs.target}}"
 ) : Element(name, id, status) {
 
     companion object {
