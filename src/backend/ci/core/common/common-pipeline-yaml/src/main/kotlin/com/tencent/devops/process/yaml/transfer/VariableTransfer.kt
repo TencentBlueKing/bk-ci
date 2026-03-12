@@ -213,7 +213,11 @@ class VariableTransfer {
             sensitive = it.sensitive,
             props = if (props?.empty() == false) props else null,
             ifCondition = it.displayCondition?.ifEmpty { null },
-            children = it.children?.map { child -> convertVariable(child) }
+            children = if (it.type == BuildFormPropertyType.CUSTOM_PARAM) {
+                it.children?.map { child -> convertVariable(child) }
+            } else {
+                null
+            }
         )
     }
 

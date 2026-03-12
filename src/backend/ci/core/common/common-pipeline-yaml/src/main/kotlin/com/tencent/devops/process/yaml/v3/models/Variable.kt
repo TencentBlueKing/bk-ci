@@ -204,7 +204,7 @@ enum class VariablePropType(val value: String) {
     SUB_PIPELINE("sub-pipeline"),
     CUSTOM_FILE("custom-file"),
     TIPS("tips"),
-    CUSTOM_PARAM("tips");
+    CUSTOM_PARAM("custom-param");
 
     fun toBuildFormPropertyType() = when (this) {
         VUEX_INPUT -> BuildFormPropertyType.STRING
