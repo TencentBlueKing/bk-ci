@@ -140,13 +140,31 @@
                             :label="$t('template.customVersionName')"
                             property="customVersionName"
                         >
-                            <bk-input
-                                v-model="customVersionName"
-                                @blur="handleBlurCustomVersionName"
-                                :disabled="!isCommitToMaster && releaseParams.enablePac"
-                                :maxlength="30"
+                            <div
+                                class="custom-version-name-select-input"
+                                v-bk-clickoutside="handleVersionNameBlur"
                             >
-                            </bk-input>
+                                <bk-input
+                                    v-model="customVersionName"
+                                    :disabled="!isCommitToMaster && releaseParams.enablePac"
+                                    :maxlength="30"
+                                    @focus="handleVersionNameFocus"
+                                >
+                                </bk-input>
+                                <ul
+                                    v-show="showVersionNameDropdown && templateVersionList.length > 0"
+                                    class="version-name-dropdown"
+                                >
+                                    <li
+                                        v-for="item in templateVersionList"
+                                        :key="item.version"
+                                        :class="{ active: item.versionName === customVersionName }"
+                                        @click="selectVersionName(item.versionName)"
+                                    >
+                                        {{ item.versionName }}
+                                    </li>
+                                </ul>
+                            </div>
                         </bk-form-item>
                         <div v-if="releaseParams.enablePac && hasOauth">
                             <header
@@ -551,6 +569,9 @@
                 currentSidesliderContentHeight: 0,
                 maxSidesliderContentHeight: 0,
                 isFooterFixed: false,
+                showVersionNameDropdown: false,
+                templateVersionList: [],
+                isLoadingVersionList: false,
             }
         },
         computed: {
@@ -837,7 +858,8 @@
                 'prefetchTemplateVersion'
             ]),
             ...mapActions('templates', [
-                'fetchTemplateReleasePreFetch'
+                'fetchTemplateReleasePreFetch',
+                'requestTemplateVersionList'
             ]),
             ...mapActions('common', ['isPACOAuth', 'getSupportPacScmTypeList', 'getPACRepoList']),
             errorHandler (error) {
@@ -1382,6 +1404,57 @@
                 if (!val) {
                     this.customVersionName = this.newReleaseVersionName
                 }
+            },
+            async handleVersionNameFocus () {
+                this.showVersionNameDropdown = true
+                // 获取焦点时加载最近5个版本号
+                if (this.templateVersionList.length === 0 && !this.isLoadingVersionList) {
+                    await this.fetchTemplateVersionList()
+                }
+            },
+            handleVersionNameBlur () {
+                this.showVersionNameDropdown = false
+                // 失去焦点时，如果没有值则使用默认版本名
+                if (!this.customVersionName) {
+                    this.customVersionName = this.newReleaseVersionName
+                }
+            },
+            selectVersionName (versionName) {
+                this.customVersionName = versionName
+                this.showVersionNameDropdown = false
+            },
+            async fetchTemplateVersionList () {
+                const { projectId, templateId } = this.$route.params
+                if (!projectId || !templateId) return
+                
+                try {
+                    this.isLoadingVersionList = true
+                    const res = await this.requestTemplateVersionList({
+                        projectId,
+                        templateId,
+                        page: 1,
+                        pageSize: 100
+                    })
+                    const records = res.records || []
+                    const seenNames = new Set()
+                    const result = []
+                    for (const item of records) {
+                        if (!item.versionName || seenNames.has(item.versionName)) {
+                            continue
+                        }
+                        seenNames.add(item.versionName)
+                        result.push(item)
+                        if (result.length >= 5) {
+                            break
+                        }
+                    }
+                    this.templateVersionList = result
+                } catch (e) {
+                    console.error('获取模板版本列表失败:', e)
+                    this.templateVersionList = []
+                } finally {
+                    this.isLoadingVersionList = false
+                }
             }
         }
     }
@@ -1394,6 +1467,49 @@
 .release-pipeline-side-slider {
     .bk-sideslider-footer {
         border: none;
+    }
+}
+
+.custom-version-name-select-input {
+    position: relative;
+    
+    .version-name-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        margin-top: 4px;
+        max-height: 200px;
+        overflow: auto;
+        background: #fff;
+        border: 1px solid #dcdee5;
+        border-radius: 2px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        z-index: 2600;
+        list-style: none;
+        padding: 0;
+        margin: 4px 0 0;
+        
+        li {
+            padding: 0 12px;
+            height: 32px;
+            line-height: 32px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            
+            &:hover {
+                background: #f4f6fa;
+                color: #3a84ff;
+            }
+            
+            &.active {
+                background: #e1ecff;
+                color: #3a84ff;
+            }
+        }
     }
 }
 
