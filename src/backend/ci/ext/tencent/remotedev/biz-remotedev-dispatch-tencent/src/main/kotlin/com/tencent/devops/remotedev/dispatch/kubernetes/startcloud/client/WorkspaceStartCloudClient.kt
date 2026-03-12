@@ -50,6 +50,9 @@ class WorkspaceStartCloudClient @Autowired constructor(
     @Value("\${startCloud.apiUrlSZ:}")
     val apiUrlSZ: String = ""
 
+    @Value("\${startCloud.apiUrlAI:}")
+    val apiUrlAI: String = ""
+
     fun createUser(userId: String, environment: EnvironmentUserCreate): Boolean {
         val url = "$apiUrlSZ/openapi/user/create"
         val body = JsonUtil.toJson(environment, false)
@@ -177,7 +180,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
     }
 
     fun setCoffeeAIToken(userId: String, token: CoffeeAIToken) {
-        val url = "$apiUrlSZ/openapi/coffee/token"
+        val url = "$apiUrlAI/openapi/coffee/token"
         val body = JsonUtil.toJson(token, false)
         val id = UUID.randomUUID()
         logger.info("$id|User $userId request url: $url, body: $body")
@@ -210,7 +213,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
     }
 
     fun setCoffeeAIWorkspace(userId: String, workspaces: List<WorkspaceRegistration>) {
-        val url = "$apiUrlSZ/openapi/coffee/workspace_register"
+        val url = "$apiUrlAI/openapi/coffee/workspace_register"
         val body = JsonUtil.toJson(workspaces, false)
         val id = UUID.randomUUID()
         logger.info("$id|User $userId request url: $url, body: $body")
