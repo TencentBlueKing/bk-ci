@@ -496,6 +496,8 @@
       "mutexTimeoutPlaceholder": "Please enter timeout, 0 means fail immediately",
       "queueSize": "Queue Size",
       "queueSizePlaceholder": "Please enter queue size (1-50)",
+      "allPlugins": "All Plugins",
+      "rdStore": "R&D Store",
       "choosePlugin": "Choose Plugin",
       "searchPluginPlaceholder": "Search plugin name or description",
       "installed": "Installed",
