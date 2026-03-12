@@ -37,10 +37,7 @@ object PipelineParamUtils {
             // 自定义参数
             paramType == BuildFormPropertyType.CUSTOM_PARAM -> {
                 try {
-                    val customParams = JsonUtil.anyTo(
-                        paramDefaultValue,
-                        object : TypeReference<Map<String, String>>() {}
-                    )
+                    val customParams = paramDefaultValue as Map<String, String>
                     customParams.forEach { (key, value) ->
                         startParams["$paramKey.$key"] = value
                     }
@@ -123,7 +120,7 @@ object PipelineParamUtils {
         val paramValue = try {
             when(value) {
                 is String -> {
-                    JsonUtil.anyTo(value, object : TypeReference<Map<String, String>>() {})
+                    JsonUtil.to(value, object : TypeReference<Map<String, String>>() {})
                 }
                 else -> {
                     value as Map<String, String>
