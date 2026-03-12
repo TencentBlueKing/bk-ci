@@ -6,11 +6,13 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.CoffeeAIToken
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentDefaltRsp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentShare
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentShareRep
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentUnShare
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentUserCreate
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import java.net.SocketTimeoutException
 import java.util.UUID
@@ -45,11 +47,14 @@ class WorkspaceStartCloudClient @Autowired constructor(
     @Value("\${startCloud.appKey}")
     val appKey: String = ""
 
-    @Value("\${startCloud.apiUrl}")
-    val apiUrl: String = ""
+    @Value("\${startCloud.apiUrlSZ:}")
+    val apiUrlSZ: String = ""
+
+    @Value("\${startCloud.apiUrlAI:}")
+    val apiUrlAI: String = ""
 
     fun createUser(userId: String, environment: EnvironmentUserCreate): Boolean {
-        val url = "$apiUrl/openapi/user/create"
+        val url = "$apiUrlSZ/openapi/user/create"
         val body = JsonUtil.toJson(environment, false)
         val id = UUID.randomUUID()
         logger.info("$id|User $userId request url: $url, body: $body")
@@ -92,7 +97,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
     }
 
     fun shareWorkspace(userId: String, environment: EnvironmentShare): String {
-        val url = "$apiUrl/openapi/computer/share"
+        val url = "$apiUrlSZ/openapi/computer/share"
         val body = JsonUtil.toJson(environment, false)
         val id = UUID.randomUUID()
         logger.info("$id|User $userId request url: $url, body: $body")
@@ -134,7 +139,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
     }
 
     fun unShareWorkspace(userId: String, unShare: EnvironmentUnShare): Boolean {
-        val url = "$apiUrl/openapi/computer/unshare"
+        val url = "$apiUrlSZ/openapi/computer/unshare"
         val body = JsonUtil.toJson(unShare, false)
         logger.info("User $userId request url: $url, body: $body")
         val request = Request.Builder()
@@ -170,6 +175,72 @@ class WorkspaceStartCloudClient @Autowired constructor(
             logger.error("User $userId unShare environment get SocketTimeoutException", e)
             throw WorkspaceDispatchException(
                 errorMessage = " 取消分享云桌面接口超时, url: $url"
+            )
+        }
+    }
+
+    fun setCoffeeAIToken(userId: String, token: CoffeeAIToken) {
+        val url = "$apiUrlAI/openapi/coffee/token"
+        val body = JsonUtil.toJson(token, false)
+        val id = UUID.randomUUID()
+        logger.info("$id|User $userId request url: $url, body: $body")
+        val request = Request.Builder()
+            .url(url)
+            .headers(
+                makeHeaders(
+                    body
+                ).toHeaders()
+            )
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("$id|User $userId set coffee ai token response: ${response.code} || $responseContent")
+                if (!response.isSuccessful) {
+                    throw WorkspaceDispatchException(
+                        "设置AI token接口异常: ${response.code}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("User $userId set coffee ai token get SocketTimeoutException", e)
+            throw WorkspaceDispatchException(
+                errorMessage = "设置AI token接口超时, url: $url"
+            )
+        }
+    }
+
+    fun setCoffeeAIWorkspace(userId: String, workspaces: List<WorkspaceRegistration>) {
+        val url = "$apiUrlAI/openapi/coffee/workspace_register"
+        val body = JsonUtil.toJson(workspaces, false)
+        val id = UUID.randomUUID()
+        logger.info("$id|User $userId request url: $url, body: $body")
+        val request = Request.Builder()
+            .url(url)
+            .headers(
+                makeHeaders(
+                    body
+                ).toHeaders()
+            )
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("$id|User $userId set coffee workspaces response: ${response.code} || $responseContent")
+                if (!response.isSuccessful) {
+                    throw WorkspaceDispatchException(
+                        "设置AI workspaces 接口异常: ${response.code}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("User $userId set coffee workspaces get SocketTimeoutException", e)
+            throw WorkspaceDispatchException(
+                errorMessage = "设置AI workspaces 接口超时, url: $url"
             )
         }
     }
