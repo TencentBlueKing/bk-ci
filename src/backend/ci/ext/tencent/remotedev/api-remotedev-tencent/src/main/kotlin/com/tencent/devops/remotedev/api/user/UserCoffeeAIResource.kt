@@ -2,7 +2,6 @@ package com.tencent.devops.remotedev.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.remotedev.pojo.WorkspaceAiInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -27,13 +26,4 @@ interface UserCoffeeAIResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<String>
-
-    @Operation(summary = "获取用户开启AI功能的云桌面列表")
-    @GET
-    @Path("/workspaces")
-    fun getAiWorkspaceList(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<List<WorkspaceAiInfo>>
 }

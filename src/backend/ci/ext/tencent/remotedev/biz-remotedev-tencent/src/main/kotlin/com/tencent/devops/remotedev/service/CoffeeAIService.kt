@@ -37,8 +37,6 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.CoffeeAI
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.pojo.WorkspaceAiInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
-import com.tencent.devops.remotedev.service.workspace.CreateControl
-import com.tencent.devops.remotedev.service.workspace.CreateControl.Companion
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import java.util.Date
@@ -89,7 +87,7 @@ class CoffeeAIService @Autowired constructor(
         val workspaces = getAiWorkspaceList(userId)
 
         val organization = kotlin.runCatching {
-            client.get(ServiceTxUserResource::class).get(userId)?.data?.let {
+            client.get(ServiceTxUserResource::class).get(userId).data?.let {
                 "${it.bgName}/${it.businessLineName}/${it.deptName}/${it.centerName}/${it.groupName}"
             }
         }.onFailure { logger.warn("get user $userId info error|${it.message}") }
@@ -114,7 +112,8 @@ class CoffeeAIService @Autowired constructor(
         val records = workspaceJoinDao.fetchWindowsWorkspacesSimple(
             dslContext = dslContext,
             owner = userId,
-            status = WorkspaceStatus.RUNNING
+            status = WorkspaceStatus.RUNNING,
+            coffeeAi = true
         )
         if (records.isEmpty()) return emptyList()
 
