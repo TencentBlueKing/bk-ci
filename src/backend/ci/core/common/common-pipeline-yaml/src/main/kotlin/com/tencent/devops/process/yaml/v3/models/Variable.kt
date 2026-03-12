@@ -84,7 +84,8 @@ data class Variable(
     val sensitive: Boolean? = null,
     val props: VariableProps? = null,
     @JsonProperty("if")
-    val ifCondition: Map<String, String>? = null
+    val ifCondition: Map<String, String>? = null,
+    val children: List<Variable>? = null
 ) : IVariable
 
 /**
