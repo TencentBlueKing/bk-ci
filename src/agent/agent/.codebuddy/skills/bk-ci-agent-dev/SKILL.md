@@ -104,7 +104,7 @@ agent.Run()
 
 **鉴权Header**: `X-DEVOPS-PROJECT-ID`, `X-DEVOPS-AGENT-ID`, `X-DEVOPS-AGENT-SECRET-KEY`
 
-**重要**: HTTP客户端有超时重试机制，连续超时达阈值会触发Agent退出重启。
+**重要**: HTTP客户端有超时重试机制，连续超时达阈值会触发Agent退出重启；代理请求支持 `HTTP_PROXY` / `HTTPS_PROXY` / `NO_PROXY`，并会优先读取后台下发后持久化到 `.agent.properties` 的代理配置。
 
 ### 构建任务执行 (`pkg/job/`)
 
