@@ -50,6 +50,7 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceUpdat
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingUpdateInfo
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
+import com.tencent.devops.process.util.PipelineTemplateUtil
 import com.tencent.devops.process.service.template.v2.version.processor.PTemplateVersionCreatePostProcessor
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
@@ -248,8 +249,39 @@ class PipelineTemplatePersistenceService @Autowired constructor(
             projectId = templateResource.projectId,
             templateId = templateResource.templateId
         )
+        // 检查正式版本中是否已存在同名版本，若存在则为已有版本追加后缀以避免重名
+        val conflictReleasedResource = templateResource.versionName?.let { versionName ->
+            pipelineTemplateResourceService.getLatestResource(
+                projectId = templateResource.projectId,
+                templateId = templateResource.templateId,
+                status = VersionStatus.RELEASED,
+                versionName = versionName
+            )
+        }
+        val conflictRenamedVersionName = conflictReleasedResource?.let {
+            PipelineTemplateUtil.buildVersionNameWithSuffix(
+                originalName = it.versionName ?: "",
+                suffix = "-${it.version}"
+            )
+        }
+
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
+            // 若存在同名正式版本，先将其重命名以避免冲突
+            if (conflictReleasedResource != null && !conflictRenamedVersionName.isNullOrBlank()) {
+                pipelineTemplateResourceService.update(
+                    transactionContext = context,
+                    record = PipelineTemplateResourceUpdateInfo(
+                        versionName = conflictRenamedVersionName,
+                        updater = userId
+                    ),
+                    commonCondition = PipelineTemplateResourceCommonCondition(
+                        projectId = templateResource.projectId,
+                        templateId = templateResource.templateId,
+                        version = conflictReleasedResource.version
+                    )
+                )
+            }
             pipelineTemplateInfoService.update(
                 transactionContext = context,
                 record = pipelineTemplateInfoUpdateInfo,
@@ -498,8 +530,36 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                 templateId = templateId,
                 version = resourceOnlyVersion.version
             )
+            // 检查正式版本中是否已存在同名版本，若存在则为已有版本追加后缀以避免重名
+            val conflictReleasedResource = pipelineTemplateResourceService.getLatestResource(
+                projectId = projectId,
+                templateId = templateId,
+                status = VersionStatus.RELEASED,
+                versionName = resourceOnlyVersion.versionName
+            )
+            val conflictRenamedVersionName = conflictReleasedResource?.let {
+                PipelineTemplateUtil.buildVersionNameWithSuffix(
+                    originalName = it.versionName ?: "",
+                    suffix = "-${it.version}"
+                )
+            }
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
+                // 若存在同名正式版本，先将其重命名以避免冲突
+                if (conflictReleasedResource != null && !conflictRenamedVersionName.isNullOrBlank()) {
+                    pipelineTemplateResourceService.update(
+                        transactionContext = transactionContext,
+                        record = PipelineTemplateResourceUpdateInfo(
+                            versionName = conflictRenamedVersionName,
+                            updater = userId
+                        ),
+                        commonCondition = PipelineTemplateResourceCommonCondition(
+                            projectId = projectId,
+                            templateId = templateId,
+                            version = conflictReleasedResource.version
+                        )
+                    )
+                }
                 pipelineTemplateInfoService.update(
                     transactionContext = transactionContext,
                     record = templateInfoUpdateInfo,

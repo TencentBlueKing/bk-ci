@@ -273,6 +273,19 @@ class PipelineTemplateResourceService @Autowired constructor(
         )
     }
 
+    fun existsVersionName(
+        projectId: String,
+        templateId: String,
+        versionName: String
+    ): Boolean {
+        return pipelineTemplateResourceDao.existsVersionName(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId,
+            versionName = versionName
+        )
+    }
+
     fun delete(
         transactionContext: DSLContext? = null,
         commonCondition: PipelineTemplateResourceCommonCondition

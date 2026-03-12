@@ -65,6 +65,7 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommo
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.template.TemplateCommonService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionManager
+import com.tencent.devops.process.util.PipelineTemplateUtil
 import org.springframework.stereotype.Service
 
 /**
@@ -144,6 +145,7 @@ class PipelineTemplateCompatibilityAdapter(
         model.labels = labels
 
         // 从 model 解析 params / templateParams
+        PipelineTemplateUtil.splitParamsForV1Compatibility(model)
         val triggerContainer = model.getTriggerContainer()
         val params = triggerContainer.params
         val templateParams = triggerContainer.templateParams
