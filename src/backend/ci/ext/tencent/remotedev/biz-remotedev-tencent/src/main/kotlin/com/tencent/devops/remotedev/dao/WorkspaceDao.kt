@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.fetchCountFix
 import com.tencent.devops.common.db.utils.skipCheck
+import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceLabels
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
@@ -466,6 +467,19 @@ class WorkspaceDao {
                 .set(OWNER_TYPE, new.name)
                 .where(NAME.eq(workspaceName))
                 .and(OWNER_TYPE.eq(old.name))
+                .execute()
+        }
+    }
+
+    fun enableCoffeeAI(
+        dslContext: DSLContext,
+        workspaceNames: List<String>,
+    ) {
+        with(TWorkspace.T_WORKSPACE) {
+            dslContext.update(this)
+                .set(COFFEE_AI, ByteUtils.bool2Byte(true))
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(NAME.`in`(workspaceNames))
                 .execute()
         }
     }

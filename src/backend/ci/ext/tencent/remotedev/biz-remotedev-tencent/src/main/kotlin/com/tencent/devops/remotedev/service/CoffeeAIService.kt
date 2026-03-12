@@ -30,6 +30,7 @@ package com.tencent.devops.remotedev.service
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
+import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
@@ -55,6 +56,7 @@ class CoffeeAIService @Autowired constructor(
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
     private val windowsResourceZoneDao: WindowsResourceZoneDao,
+    private val workspaceDao: WorkspaceDao,
     private val dslContext: DSLContext
 ) {
     companion object {
@@ -137,5 +139,10 @@ class CoffeeAIService @Autowired constructor(
                 zoneConfigType = record.zoneId?.let { zoneTypeMap[it] } ?: ""
             )
         }
+    }
+
+    fun enableCoffeeAI(workspaceNames: List<String>) {
+        logger.info("批量开启工作空间CoffeeAI功能：workspaceNames={}", workspaceNames)
+        workspaceDao.enableCoffeeAI(dslContext, workspaceNames)
     }
 }
