@@ -202,7 +202,8 @@ enum class VariablePropType(val value: String) {
     ARTIFACTORY("artifactory"),
     SUB_PIPELINE("sub-pipeline"),
     CUSTOM_FILE("custom-file"),
-    TIPS("tips");
+    TIPS("tips"),
+    CUSTOM_PARAM("tips");
 
     fun toBuildFormPropertyType() = when (this) {
         VUEX_INPUT -> BuildFormPropertyType.STRING
@@ -218,6 +219,7 @@ enum class VariablePropType(val value: String) {
         SUB_PIPELINE -> BuildFormPropertyType.SUB_PIPELINE
         CUSTOM_FILE -> BuildFormPropertyType.CUSTOM_FILE
         REPO_REF -> BuildFormPropertyType.REPO_REF
+        CUSTOM_PARAM -> BuildFormPropertyType.CUSTOM_PARAM
         else -> BuildFormPropertyType.STRING
     }
 

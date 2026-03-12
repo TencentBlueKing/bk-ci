@@ -81,7 +81,7 @@ object YamlObjects {
         }
         val type = props?.type
         val va = Variable(
-            value = if (type == VariablePropType.REPO_REF.value) {
+            value = if (type == VariablePropType.REPO_REF.value || type == VariablePropType.CUSTOM_PARAM.value) {
                 variable["value"] ?: mapOf<String, String>()
             } else {
                 variable["value"]?.toString()

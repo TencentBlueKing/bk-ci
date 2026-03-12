@@ -156,6 +156,10 @@ class VariableTransfer {
                 it.type == BuildFormPropertyType.LONG -> VariableProps(
                     type = VariablePropType.VUEX_INPUT.value
                 )
+                // not use
+                it.type == BuildFormPropertyType.CUSTOM_PARAM -> VariableProps(
+                    type = VariablePropType.CUSTOM_PARAM.value
+                )
 
                 else -> null
             }
