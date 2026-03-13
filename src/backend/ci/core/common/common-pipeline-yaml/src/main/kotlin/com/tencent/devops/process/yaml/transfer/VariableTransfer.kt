@@ -214,7 +214,7 @@ class VariableTransfer {
             props = if (props?.empty() == false) props else null,
             ifCondition = it.displayCondition?.ifEmpty { null },
             children = if (it.type == BuildFormPropertyType.CUSTOM_PARAM) {
-                it.children?.map { child -> convertVariable(child) }
+                it.children?.associate { child -> child.id to convertVariable(child) }
             } else {
                 null
             }
@@ -337,7 +337,7 @@ class VariableTransfer {
                 variable.asInstanceInput ?: true
             } else null,
             sensitive = variable.sensitive,
-            children = variable.children?.map { child -> convertBuildFormProperty(key, child) }
+            children = variable.children?.map { child -> convertBuildFormProperty(child.key, child.value) }
         )
     }
 

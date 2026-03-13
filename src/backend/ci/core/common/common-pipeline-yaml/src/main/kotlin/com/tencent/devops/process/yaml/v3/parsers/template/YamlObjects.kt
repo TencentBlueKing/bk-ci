@@ -93,7 +93,7 @@ object YamlObjects {
             ifCondition = transNullValue<Map<String, String>>(fromPath, "if", "if", variable),
             sensitive = getNullValue("sensitive", variable)?.toBoolean(),
             asInstanceInput = getNullValue("asInstanceInput", variable)?.toBoolean(),
-            children = JsonUtil.anyToOrNull(variable["children"], object : TypeReference<List<Variable>>() {})
+            children = JsonUtil.anyToOrNull(variable["children"], object : TypeReference<Map<String, Variable>>() {})
         )
 
         // 只有列表需要判断
