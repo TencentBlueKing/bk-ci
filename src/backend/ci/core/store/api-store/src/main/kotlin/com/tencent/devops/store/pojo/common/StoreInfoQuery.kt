@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.common
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
@@ -81,6 +82,7 @@ data class StoreInfoQuery(
         }
     }
 
+    @JsonIgnore
     fun getSpecQueryFlag(): Boolean {
         return queryProjectComponentFlag || installed != null || updateFlag != null || queryTestFlag != null
     }

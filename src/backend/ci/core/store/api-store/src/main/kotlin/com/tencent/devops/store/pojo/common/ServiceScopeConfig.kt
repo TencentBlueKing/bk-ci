@@ -1,5 +1,6 @@
 package com.tencent.devops.store.pojo.common
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import io.swagger.v3.oas.annotations.media.Schema
@@ -28,6 +29,7 @@ data class ServiceScopeConfig(
     /**
      * 获取生效的 jobType 列表。优先从 jobTypeConfigs 提取，回退到 jobTypes。
      */
+    @JsonIgnore
     fun getEffectiveJobTypes(): List<JobTypeEnum> {
         if (!jobTypeConfigs.isNullOrEmpty()) {
             return jobTypeConfigs.map { it.jobType }
@@ -39,6 +41,7 @@ data class ServiceScopeConfig(
      * 获取生效的 jobType → OS 列表映射。仅包含编译环境且有 OS 配置的 jobType。
      * 优先从 jobTypeConfigs 提取，jobTypes 无 OS 信息则返回空。
      */
+    @JsonIgnore
     fun getEffectiveOsMap(): Map<String, List<String>> {
         if (!jobTypeConfigs.isNullOrEmpty()) {
             return jobTypeConfigs
