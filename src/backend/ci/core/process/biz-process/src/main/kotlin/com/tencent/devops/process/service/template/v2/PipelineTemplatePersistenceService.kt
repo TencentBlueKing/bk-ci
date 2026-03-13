@@ -467,6 +467,11 @@ class PipelineTemplatePersistenceService @Autowired constructor(
             val pipelineTemplateSetting = pTemplateSettingWithoutVersion.copy(
                 version = resourceOnlyVersion.settingVersion
             )
+            postProcessBeforeVersionCreate(
+                context = context,
+                pipelineTemplateResource = pipelineTemplateResource,
+                pipelineTemplateSetting = pipelineTemplateSetting
+            )
             val templateInfoUpdateInfo = PipelineTemplateInfoUpdateInfo(
                 name = pipelineTemplateSetting.pipelineName,
                 desc = pipelineTemplateSetting.desc,
