@@ -27,7 +27,8 @@
       "reset": "清空",
       "true": "是",
       "false": "否",
-      "pleaseSelect": "请选择创作节点"
+      "pleaseSelect": "请选择创作节点",
+      "unAccessUser": "用户{0}不是当前项目成员"
     },
     "sidebar": {
       "myFlows": "我的创作流",

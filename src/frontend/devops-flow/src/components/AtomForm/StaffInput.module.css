@@ -1,0 +1,54 @@
+.staffInput {
+  display: flex;
+}
+
+.staffInput :global(.bk-tag-input) {
+  flex: 1;
+}
+
+.prependBox {
+  border: 1px solid #c4c6cc;
+  border-right: none;
+  padding: 0 15px;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  font-size: 12px;
+  background: #fafbfd;
+  color: #63656e;
+}
+
+.selectedStaffTag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  font-size: 12px;
+  padding: 0 4px;
+}
+
+.selectedStaffTag > img {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+
+.selectorMember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  min-height: 32px;
+}
+
+.avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.text {
+  font-size: 12px;
+  line-height: 20px;
+}
