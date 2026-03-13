@@ -54,7 +54,8 @@
                 return this.$route.params.type
             },
             itemName () {
-                return this.detail?.[`${this.type}Name`] ?? this.$route.params.code
+                const detailName = this.type === TYPE_ENUM.devx ?this.detail?.name : this.detail?.[`${this.type}Name`]
+                return detailName ?? this.$route.params.code
             },
             panels () {
                 return [

@@ -338,7 +338,7 @@
             },
 
             statusFormatter (row, column, cellValue, index) {
-                return this.$t(cellValue) || cellValue
+                return this.$t(`store.${cellValue}`) || cellValue
             },
 
             convertTime (row, column, cellValue, index) {

@@ -80,7 +80,7 @@
                             :width="200"
                         />
                         <p class="approve-text">
-                            {{ currentStep.status === StepStatus.FAIL ? $t('store.审核不通过') : $t('store.应用正在审核中，请耐心等待') }}
+                            {{ currentStep.status === StepStatus.FAIL ? $t('store.审核不通过') : currentStep.status === StepStatus.SUCCESS ? $t('store.审核通过') : $t('store.应用正在审核中，请耐心等待') }}
                         </p>
                     </div>
                 </template>
@@ -123,7 +123,7 @@
         return [
             { name: $t('store.工作台') },
             { name: $t('store.云研发'), to: { name: 'devxWork' } },
-            { name: storeCode.value, to: { name: 'statisticData', params: { code: storeCode.value, type: 'devx' } } },
+            { name: appDetail.value?.name, to: { name: 'statisticData', params: { code: storeCode.value, type: 'devx' } } },
             { name: `${$t('store.发布进度')}` }
         ]
     })
