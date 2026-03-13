@@ -273,6 +273,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     transactionContext = context,
                     record = PipelineTemplateResourceUpdateInfo(
                         versionName = conflictRenamedVersionName,
+                        status = VersionStatus.DELETE,
                         updater = userId
                     ),
                     commonCondition = PipelineTemplateResourceCommonCondition(
@@ -551,6 +552,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                         transactionContext = transactionContext,
                         record = PipelineTemplateResourceUpdateInfo(
                             versionName = conflictRenamedVersionName,
+                            status = VersionStatus.DELETE,
                             updater = userId
                         ),
                         commonCondition = PipelineTemplateResourceCommonCondition(
