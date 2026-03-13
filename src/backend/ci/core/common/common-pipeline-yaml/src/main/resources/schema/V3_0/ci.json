@@ -1801,6 +1801,12 @@
               },
               "if" : {
                 "type" : "object"
+              },
+              "as-instance-input" : {
+                "type" : "boolean"
+              },
+              "sensitive" : {
+                "type" : "boolean"
               }
             }
           } ]
@@ -2343,6 +2349,15 @@
                           },
                           "privileged" : {
                             "type" : "boolean"
+                          },
+                          "network" : {
+                            "type" : "array",
+                            "items" : {
+                              "type" : "string"
+                            }
+                          },
+                          "user" : {
+                            "type" : "string"
                           }
                         }
                       },
