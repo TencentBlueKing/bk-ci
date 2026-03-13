@@ -168,7 +168,10 @@ class VariableTransfer {
             )
             // not use
             it.type == BuildFormPropertyType.FORM_LIST -> VariableProps(
-                type = VariablePropType.FORM_LIST.value
+                type = VariablePropType.FORM_LIST.value,
+                fields = it.fields?.associate { form ->
+                    form.id to convertVariable(form)
+                }
             )
 
             else -> null
