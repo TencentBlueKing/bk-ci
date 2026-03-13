@@ -3,7 +3,7 @@
  * 完整日志组件 - 全屏显示流水线执行的完整日志
  * 使用 useLogFetcher hook、LogViewer 组件和 LogHeader 组件
  */
-import { buildLogDownloadUrl } from '@/api/log'
+import { downloadLogFile } from '@/api/log'
 import LogViewer from '@/components/LogViewer'
 import LogHeader from '@/components/LogViewer/LogHeader'
 import { useLogFetcher } from '@/hooks/useLogFetcher'
@@ -88,14 +88,13 @@ export default defineComponent({
 
     const downloadLog = () => {
       const fileName = props.execDetail.pipelineName || 'pipeline'
-      const url = buildLogDownloadUrl({
+      downloadLogFile({
         projectId: route.params.projectId as string,
         pipelineId: route.params.flowId as string,
         buildId: props.execDetail.id,
         executeCount: currentExe.value,
         fileName,
       })
-      location.href = url
       showMoreMenu.value = false
     }
 

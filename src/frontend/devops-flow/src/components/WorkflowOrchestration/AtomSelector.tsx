@@ -235,7 +235,7 @@ export default defineComponent({
       }
     }
 
-    async function loadAtomList(reset = false) {
+    async function loadAtomList(reset = false, forceRefresh = false) {
       if (reset) {
         currentPage.value = 1
         atomList.value = []
@@ -245,13 +245,16 @@ export default defineComponent({
       if (!hasMore.value) return
 
       try {
+        const isCreativeStream = props.container?.['@type'] === 'normal'
         const result = await atomManager.fetchAtomList({
           classifyId: classifyId.value,
           keyword: searchKey.value,
-          jobType: props.container?.['@type'] === 'normal' ? JobType.CLOUD_TASK : JobType.CREATIVE_STREAM,
+          jobType: isCreativeStream ? JobType.CREATIVE_STREAM : JobType.CLOUD_TASK,
+          os: isCreativeStream ? 'WINDOWS' : undefined,
           queryProjectAtomFlag: queryProjectAtomFlag.value,
           page: currentPage.value,
           pageSize: 20,
+          forceRefresh,
         })
         if (reset) {
           atomList.value = result.records
@@ -268,14 +271,7 @@ export default defineComponent({
 
     async function refreshAtomList() {
       if (isLoadingAtoms.value) return
-
-      await atomManager.refreshData({
-        classifyId: classifyId.value,
-        keyword: searchKey.value,
-        queryProjectAtomFlag: queryProjectAtomFlag.value,
-      })
-
-      loadAtomList(true)
+      await loadAtomList(true, true)
     }
 
     function handleClearWrapper() {

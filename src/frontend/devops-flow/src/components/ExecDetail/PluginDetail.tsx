@@ -4,7 +4,7 @@
  * 使用 useLogFetcher hook、LogViewer 组件、LogHeader 组件和 AtomPropertyContent 组件
  * 参考 devops-pipeline 的 plugin.vue 和 pluginLog.vue 实现
  */
-import { buildLogDownloadUrl } from '@/api/log'
+import { downloadLogFile } from '@/api/log'
 import LogViewer from '@/components/LogViewer'
 import LogHeader from '@/components/LogViewer/LogHeader'
 import { AtomPropertyContent } from '@/components/WorkflowOrchestration'
@@ -95,17 +95,6 @@ export default defineComponent({
     const elementName = computed(() => props.element?.name || 'Plugin')
     const elementStatus = computed(() => (props.element?.status || 'QUEUE') as StatusType)
 
-    const downloadLink = computed(() => {
-      return buildLogDownloadUrl({
-        projectId: route.params.projectId as string,
-        pipelineId: route.params.flowId as string,
-        buildId: props.execDetail.id,
-        tag: props.element?.id || undefined, // pluginLog 只传 tag
-        executeCount: currentExe.value,
-        fileName: props.element?.name || 'plugin',
-      })
-    })
-
     // Methods
     const closePanel = () => {
       emit('close')
@@ -133,7 +122,14 @@ export default defineComponent({
     }
 
     const downloadLog = () => {
-      location.href = downloadLink.value
+      downloadLogFile({
+        projectId: route.params.projectId as string,
+        pipelineId: route.params.flowId as string,
+        buildId: props.execDetail.id,
+        tag: props.element?.id || undefined,
+        executeCount: currentExe.value,
+        fileName: props.element?.name || 'plugin',
+      })
       showMoreMenu.value = false
     }
 

@@ -153,6 +153,7 @@
   font-size: var(--font-size-md);
   color: var(--color-text-primary);
   padding-right: var(--spacing-lg);
+  gap: var(--spacing-xs);
 }
 
 .outputDetailName {

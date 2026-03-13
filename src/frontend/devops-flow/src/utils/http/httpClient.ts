@@ -25,8 +25,6 @@ interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
 
 httpInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
-    const authStore = useAuthStore()
-    const token = authStore.token
     const extendConfig = config as ExtendedAxiosRequestConfig
 
     if (!extendConfig.headers.get('Accept')) {

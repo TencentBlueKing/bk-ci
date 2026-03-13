@@ -229,7 +229,7 @@ export default defineComponent({
                             onClick={() => handleClick('reBuild')}
                           >
                             {t('flow.execute.reBuild')}
-                            <Popover zIndex={3000} width={300} placement="bottom">
+                            <Popover zIndex={999999} width={300} placement="right">
                               {{
                                 default: () => <SvgIcon name="info-line" class={styles.infoIcon} />,
                                 content: () => (
@@ -250,7 +250,7 @@ export default defineComponent({
                             onClick={() => handleClick('rePlay')}
                           >
                             {t('flow.execute.rePlay')}
-                            <Popover zIndex={3000} width={300} placement="bottom">
+                            <Popover zIndex={999999} width={300} placement="right">
                               {{
                                 default: () => <SvgIcon name="info-line" class={styles.infoIcon} />,
                                 content: () => (

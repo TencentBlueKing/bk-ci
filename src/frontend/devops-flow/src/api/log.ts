@@ -2,6 +2,7 @@
  * 日志相关 API
  * 参考 devops-pipeline 的日志接口实现
  */
+import httpInstance from '@/utils/http/httpClient'
 import { get } from '@/utils/http'
 
 const LOG_API_URL_PREFIX = 'log/api'
@@ -103,10 +104,7 @@ export function getLogStatus(params: {
   )
 }
 
-/**
- * 构建日志下载链接
- */
-export function buildLogDownloadUrl(params: {
+export interface DownloadLogParams {
   projectId: string
   pipelineId: string
   buildId: string
@@ -114,16 +112,34 @@ export function buildLogDownloadUrl(params: {
   jobId?: string
   executeCount: number
   fileName?: string
-}): string {
+}
+
+/**
+ * 下载日志文件
+ * 通过 httpInstance 发起请求以携带 X-DEVOPS-CHANNEL 等自定义头部
+ */
+export async function downloadLogFile(params: DownloadLogParams): Promise<void> {
   const { projectId, pipelineId, buildId, tag, jobId, executeCount, fileName } = params
-  const baseUrl = `${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/download`
-  const queryParams = new URLSearchParams()
+  const url = `${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/download`
 
-  if (tag) queryParams.append('tag', tag)
-  if (jobId) queryParams.append('jobId', jobId)
-  if (executeCount) queryParams.append('executeCount', String(executeCount))
-  if (fileName) queryParams.append('fileName', fileName)
+  const data = await httpInstance.get(url, {
+    params: {
+      tag,
+      jobId,
+      executeCount,
+      fileName: fileName ? encodeURIComponent(fileName) : undefined,
+    },
+    responseType: 'blob',
+  })
 
-  const queryString = queryParams.toString()
-  return queryString ? `${baseUrl}?${queryString}` : baseUrl
+  // httpClient 响应拦截器已解包 response.data，返回值直接是 Blob
+  const blob = data as unknown as Blob
+  const blobUrl = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = blobUrl
+  anchor.download = fileName ? `${fileName}.log` : 'log.txt'
+  document.body.appendChild(anchor)
+  anchor.click()
+  document.body.removeChild(anchor)
+  URL.revokeObjectURL(blobUrl)
 }
