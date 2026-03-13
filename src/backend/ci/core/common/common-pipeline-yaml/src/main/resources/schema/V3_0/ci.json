@@ -1688,13 +1688,7 @@
               "allow-modify-at-startup" : {
                 "type" : "boolean"
               },
-              "as-instance-input" : {
-                "type" : "boolean"
-              },
               "value-not-empty" : {
-                "type" : "boolean"
-              },
-              "sensitive" : {
                 "type" : "boolean"
               },
               "props" : {
@@ -1807,6 +1801,12 @@
               },
               "if" : {
                 "type" : "object"
+              },
+              "as-instance-input" : {
+                "type" : "boolean"
+              },
+              "sensitive" : {
+                "type" : "boolean"
               }
             }
           } ]
@@ -1865,9 +1865,6 @@
               "type" : "boolean"
             },
             "value-not-empty" : {
-              "type" : "boolean"
-            },
-            "sensitive" : {
               "type" : "boolean"
             },
             "props" : {
@@ -1980,6 +1977,12 @@
             },
             "if" : {
               "type" : "object"
+            },
+            "as-instance-input" : {
+              "type" : "boolean"
+            },
+            "sensitive" : {
+              "type" : "boolean"
             }
           }
         }
@@ -2165,6 +2168,9 @@
                   "fix" : {
                     "type" : "integer"
                   },
+                  "as-instance-input" : {
+                    "type" : "boolean"
+                  },
                   "build-no" : {
                     "type" : "object",
                     "additionalProperties" : false,
@@ -2346,6 +2352,15 @@
                           },
                           "privileged" : {
                             "type" : "boolean"
+                          },
+                          "network" : {
+                            "type" : "array",
+                            "items" : {
+                              "type" : "string"
+                            }
+                          },
+                          "user" : {
+                            "type" : "string"
                           }
                         }
                       },
@@ -2528,6 +2543,9 @@
         "fix" : {
           "type" : "integer"
         },
+        "as-instance-input" : {
+          "type" : "boolean"
+        },
         "build-no" : {
           "type" : "object",
           "additionalProperties" : false,
@@ -2550,7 +2568,7 @@
       "enum" : [ "INHERIT", "CLASSIC", "CONSTRAINT" ]
     },
     "cancel-policy" : {
-      "type" : "string"
+      "enum" : [ "BROAD", "RESTRICTED" ]
     }
   },
   "definitions" : {
