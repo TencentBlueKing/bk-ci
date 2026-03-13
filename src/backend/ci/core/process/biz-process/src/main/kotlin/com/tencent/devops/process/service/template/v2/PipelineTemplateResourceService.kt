@@ -1,7 +1,10 @@
 package com.tencent.devops.process.service.template.v2
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_VERSION_NOT_EXISTS
 import com.tencent.devops.process.dao.template.PipelineTemplateInfoDao
 import com.tencent.devops.process.dao.template.PipelineTemplateResourceDao
@@ -13,6 +16,7 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommo
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceUpdateInfo
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -334,6 +338,55 @@ class PipelineTemplateResourceService @Autowired constructor(
             dslContext = transactionContext,
             projectId = projectId,
             templateId = templateId
+        )
+    }
+
+    fun renameExistingReleasedVersionIfDuplicate(
+        projectId: String,
+        templateId: String,
+        versionName: String?,
+        transactionContext: DSLContext? = null
+    ) {
+        if (versionName.isNullOrBlank()) return
+        val existingVersion = getLatestResource(
+            projectId = projectId,
+            templateId = templateId,
+            status = VersionStatus.RELEASED,
+            versionName = versionName
+        ) ?: return
+
+        val suffix = "-${existingVersion.version}"
+        val newName = PipelineTemplateCommonService
+            .buildVersionNameWithSuffix(versionName, suffix)
+        val i18nDesc = MessageUtil.getMessageByLocale(
+            messageCode = ProcessMessageCode
+                .BK_TEMPLATE_VERSION_REFACTOR_SUFFIX_DESC,
+            language = I18nUtil.getDefaultLocaleLanguage()
+        )
+        val affected = update(
+            transactionContext = transactionContext,
+            record = PipelineTemplateResourceUpdateInfo(
+                versionName = newName,
+                description = i18nDesc,
+                status = VersionStatus.DELETE
+            ),
+            commonCondition = PipelineTemplateResourceCommonCondition(
+                projectId = projectId,
+                templateId = templateId,
+                versionName = versionName,
+                status = VersionStatus.RELEASED
+            )
+        )
+        logger.info(
+            "renamed duplicate released version|" +
+                "$projectId|$templateId|" +
+                "from=$versionName|to=$newName|affected=$affected"
+        )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(
+            PipelineTemplateResourceService::class.java
         )
     }
 }
