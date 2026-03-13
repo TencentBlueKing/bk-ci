@@ -14,6 +14,7 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelated
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceUpdateInfo
+import com.tencent.devops.process.util.PipelineTemplateUtil
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -356,8 +357,7 @@ class PipelineTemplateResourceService @Autowired constructor(
         ) ?: return
 
         val suffix = "-${existingVersion.version}"
-        val newName = PipelineTemplateCommonService
-            .buildVersionNameWithSuffix(versionName, suffix)
+        val newName = PipelineTemplateUtil.buildVersionNameWithSuffix(versionName, suffix)
         val i18nDesc = MessageUtil.getMessageByLocale(
             messageCode = ProcessMessageCode
                 .BK_TEMPLATE_VERSION_REFACTOR_SUFFIX_DESC,

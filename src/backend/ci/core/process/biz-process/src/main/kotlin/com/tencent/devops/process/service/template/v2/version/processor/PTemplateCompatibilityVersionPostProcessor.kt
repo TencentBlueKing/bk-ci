@@ -34,7 +34,7 @@ class PTemplateCompatibilityVersionPostProcessor(
     private val strictMode: Boolean = true
 
     @Suppress("NestedBlockDepth")
-    override fun postProcessInTransactionVersionCreate(
+    override fun postProcessInTransactionAfterVersionCreate(
         transactionContext: DSLContext,
         context: PipelineTemplateVersionCreateContext,
         pipelineTemplateResource: PipelineTemplateResource,

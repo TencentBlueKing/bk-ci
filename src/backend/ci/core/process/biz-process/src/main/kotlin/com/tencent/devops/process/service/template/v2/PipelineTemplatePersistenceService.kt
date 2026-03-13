@@ -50,7 +50,6 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceUpdat
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingUpdateInfo
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
-import com.tencent.devops.process.util.PipelineTemplateUtil
 import com.tencent.devops.process.service.template.v2.version.processor.PTemplateVersionCreatePostProcessor
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
@@ -138,7 +137,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     templateId = pipelineTemplateInfo.id,
                     templateName = pipelineTemplateInfo.name
                 )
-                postProcessInTransactionVersionCreate(
+                postProcessInTransactionAfterVersionCreate(
                     transactionContext = transactionContext,
                     context = context,
                     pipelineTemplateResource = pipelineTemplateResource,
@@ -170,11 +169,6 @@ class PipelineTemplatePersistenceService @Autowired constructor(
             val pipelineTemplateSetting = pTemplateSettingWithoutVersion.copy(
                 version = resourceOnlyVersion.settingVersion
             )
-            postProcessBeforeVersionCreate(
-                context = context,
-                pipelineTemplateResource = pipelineTemplateResource,
-                pipelineTemplateSetting = pipelineTemplateSetting
-            )
             operationLogType = OperationLogType.RELEASE_MASTER_VERSION
             operationLogParams = resourceOnlyVersion.versionName!!
 
@@ -193,6 +187,12 @@ class PipelineTemplatePersistenceService @Autowired constructor(
             )
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
+                postProcessInTransactionBeforeVersionCreate(
+                    transactionContext = transactionContext,
+                    context = context,
+                    pipelineTemplateResource = pipelineTemplateResource,
+                    pipelineTemplateSetting = pipelineTemplateSetting
+                )
                 pipelineTemplateInfoService.update(
                     transactionContext = transactionContext,
                     record = pipelineTemplateInfoUpdateInfo,
@@ -212,7 +212,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     templateId = templateId,
                     templateName = pipelineTemplateSetting.pipelineName
                 )
-                postProcessInTransactionVersionCreate(
+                postProcessInTransactionAfterVersionCreate(
                     transactionContext = transactionContext,
                     context = context,
                     pipelineTemplateResource = pipelineTemplateResource,
@@ -249,40 +249,8 @@ class PipelineTemplatePersistenceService @Autowired constructor(
             projectId = templateResource.projectId,
             templateId = templateResource.templateId
         )
-        // 检查正式版本中是否已存在同名版本，若存在则为已有版本追加后缀以避免重名
-        val conflictReleasedResource = templateResource.versionName?.let { versionName ->
-            pipelineTemplateResourceService.getLatestResource(
-                projectId = templateResource.projectId,
-                templateId = templateResource.templateId,
-                status = VersionStatus.RELEASED,
-                versionName = versionName
-            )
-        }
-        val conflictRenamedVersionName = conflictReleasedResource?.let {
-            PipelineTemplateUtil.buildVersionNameWithSuffix(
-                originalName = it.versionName ?: "",
-                suffix = "-${it.version}"
-            )
-        }
-
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            // 若存在同名正式版本，先将其重命名以避免冲突
-            if (conflictReleasedResource != null && !conflictRenamedVersionName.isNullOrBlank()) {
-                pipelineTemplateResourceService.update(
-                    transactionContext = context,
-                    record = PipelineTemplateResourceUpdateInfo(
-                        versionName = conflictRenamedVersionName,
-                        status = VersionStatus.DELETE,
-                        updater = userId
-                    ),
-                    commonCondition = PipelineTemplateResourceCommonCondition(
-                        projectId = templateResource.projectId,
-                        templateId = templateResource.templateId,
-                        version = conflictReleasedResource.version
-                    )
-                )
-            }
             pipelineTemplateInfoService.update(
                 transactionContext = context,
                 record = pipelineTemplateInfoUpdateInfo,
@@ -335,7 +303,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     transactionContext = transactionContext,
                     pipelineTemplateSetting = pipelineTemplateSetting
                 )
-                postProcessInTransactionVersionCreate(
+                postProcessInTransactionAfterVersionCreate(
                     transactionContext = transactionContext,
                     context = context,
                     pipelineTemplateResource = pipelineTemplateResource,
@@ -401,7 +369,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     transactionContext = transactionContext,
                     pipelineTemplateSetting = pipelineTemplateSetting
                 )
-                postProcessInTransactionVersionCreate(
+                postProcessInTransactionAfterVersionCreate(
                     transactionContext = transactionContext,
                     context = context,
                     pipelineTemplateResource = pipelineTemplateResource,
@@ -467,7 +435,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     record = templateSettingUpdateInfo,
                     commonCondition = templateSettingCondition
                 )
-                postProcessInTransactionVersionCreate(
+                postProcessInTransactionAfterVersionCreate(
                     transactionContext = transactionContext,
                     context = context,
                     pipelineTemplateResource = pipelineTemplateResource,
@@ -500,11 +468,6 @@ class PipelineTemplatePersistenceService @Autowired constructor(
             val pipelineTemplateSetting = pTemplateSettingWithoutVersion.copy(
                 version = resourceOnlyVersion.settingVersion
             )
-            postProcessBeforeVersionCreate(
-                context = context,
-                pipelineTemplateResource = pipelineTemplateResource,
-                pipelineTemplateSetting = pipelineTemplateSetting
-            )
             val templateInfoUpdateInfo = PipelineTemplateInfoUpdateInfo(
                 name = pipelineTemplateSetting.pipelineName,
                 desc = pipelineTemplateSetting.desc,
@@ -536,37 +499,14 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                 templateId = templateId,
                 version = resourceOnlyVersion.version
             )
-            // 检查正式版本中是否已存在同名版本，若存在则为已有版本追加后缀以避免重名
-            val conflictReleasedResource = pipelineTemplateResourceService.getLatestResource(
-                projectId = projectId,
-                templateId = templateId,
-                status = VersionStatus.RELEASED,
-                versionName = resourceOnlyVersion.versionName
-            )
-            val conflictRenamedVersionName = conflictReleasedResource?.let {
-                PipelineTemplateUtil.buildVersionNameWithSuffix(
-                    originalName = it.versionName ?: "",
-                    suffix = "-${it.version}"
-                )
-            }
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
-                // 若存在同名正式版本，先将其重命名以避免冲突
-                if (conflictReleasedResource != null && !conflictRenamedVersionName.isNullOrBlank()) {
-                    pipelineTemplateResourceService.update(
-                        transactionContext = transactionContext,
-                        record = PipelineTemplateResourceUpdateInfo(
-                            versionName = conflictRenamedVersionName,
-                            status = VersionStatus.DELETE,
-                            updater = userId
-                        ),
-                        commonCondition = PipelineTemplateResourceCommonCondition(
-                            projectId = projectId,
-                            templateId = templateId,
-                            version = conflictReleasedResource.version
-                        )
-                    )
-                }
+                postProcessInTransactionBeforeVersionCreate(
+                    transactionContext = transactionContext,
+                    context = context,
+                    pipelineTemplateResource = pipelineTemplateResource,
+                    pipelineTemplateSetting = pipelineTemplateSetting
+                )
                 pipelineTemplateInfoService.update(
                     transactionContext = transactionContext,
                     record = templateInfoUpdateInfo,
@@ -583,7 +523,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     templateId = templateId,
                     templateName = pipelineTemplateSetting.pipelineName
                 )
-                postProcessInTransactionVersionCreate(
+                postProcessInTransactionAfterVersionCreate(
                     transactionContext = transactionContext,
                     context = context,
                     pipelineTemplateResource = pipelineTemplateResource,
@@ -668,7 +608,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     record = templateResourceUpdateInfo,
                     commonCondition = templateResourceCondition
                 )
-                postProcessInTransactionVersionCreate(
+                postProcessInTransactionAfterVersionCreate(
                     transactionContext = transactionContext,
                     context = context,
                     pipelineTemplateResource = pipelineTemplateResource,
@@ -850,14 +790,30 @@ class PipelineTemplatePersistenceService @Autowired constructor(
         }
     }
 
-    private fun postProcessInTransactionVersionCreate(
+    private fun postProcessInTransactionBeforeVersionCreate(
         transactionContext: DSLContext,
         context: PipelineTemplateVersionCreateContext,
         pipelineTemplateResource: PipelineTemplateResource,
         pipelineTemplateSetting: PipelineSetting
     ) {
         versionCreatePostProcessors.forEach {
-            it.postProcessInTransactionVersionCreate(
+            it.postProcessInTransactionBeforeVersionCreate(
+                transactionContext = transactionContext,
+                context = context,
+                pipelineTemplateResource = pipelineTemplateResource,
+                pipelineTemplateSetting = pipelineTemplateSetting
+            )
+        }
+    }
+
+    private fun postProcessInTransactionAfterVersionCreate(
+        transactionContext: DSLContext,
+        context: PipelineTemplateVersionCreateContext,
+        pipelineTemplateResource: PipelineTemplateResource,
+        pipelineTemplateSetting: PipelineSetting
+    ) {
+        versionCreatePostProcessors.forEach {
+            it.postProcessInTransactionAfterVersionCreate(
                 transactionContext = transactionContext,
                 context = context,
                 pipelineTemplateResource = pipelineTemplateResource,

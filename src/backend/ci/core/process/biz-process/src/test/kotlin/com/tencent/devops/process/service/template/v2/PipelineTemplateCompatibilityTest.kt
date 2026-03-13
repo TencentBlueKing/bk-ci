@@ -150,7 +150,7 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
             pTemplateSettingWithoutVersion = setting
         )
 
-        post.postProcessInTransactionVersionCreate(dsl, ctx, res, setting)
+        post.postProcessInTransactionAfterVersionCreate(dsl, ctx, res, setting)
 
         verify(exactly = 1) {
             v1Dao.createTemplate(
@@ -236,7 +236,7 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
             pTemplateSettingWithoutVersion = setting
         )
 
-        post.postProcessInTransactionVersionCreate(dsl, ctx, res, setting)
+        post.postProcessInTransactionAfterVersionCreate(dsl, ctx, res, setting)
 
         verify(exactly = 0) {
             v1Dao.createTemplate(
@@ -318,7 +318,7 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
         )
 
         Assertions.assertThrows(RuntimeException::class.java) {
-            post.postProcessInTransactionVersionCreate(dsl, ctx, res, setting)
+            post.postProcessInTransactionAfterVersionCreate(dsl, ctx, res, setting)
         }
     }
 
@@ -388,7 +388,7 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
             pTemplateSettingWithoutVersion = setting
         )
 
-        post.postProcessInTransactionVersionCreate(dsl, ctx, res, setting)
+        post.postProcessInTransactionAfterVersionCreate(dsl, ctx, res, setting)
 
         verify(exactly = 1) { v1Dao.countTemplateVersionNum(dsl, projectId, templateId) }
         verify(exactly = 0) {
@@ -469,7 +469,7 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
             pTemplateSettingWithoutVersion = setting
         )
 
-        post.postProcessInTransactionVersionCreate(dsl, ctx, res, setting)
+        post.postProcessInTransactionAfterVersionCreate(dsl, ctx, res, setting)
 
         verify(exactly = 1) {
             v1Dao.createTemplate(
@@ -562,7 +562,7 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
             pTemplateSettingWithoutVersion = setting
         )
 
-        post.postProcessInTransactionVersionCreate(dsl, ctx, res, setting)
+        post.postProcessInTransactionAfterVersionCreate(dsl, ctx, res, setting)
 
         verify(exactly = 1) {
             v1Dao.createTemplate(
