@@ -59,7 +59,7 @@ export function useFlowListData(styles?: Styles) {
   const currentCollation = ref(
     (route.query.collation as string) ||
       localStorage.getItem('flowSortCollation') ||
-      ORDER_ENUM.ascending,
+      ORDER_ENUM.descending,
   )
 
   const currentGroup = computed(() => {

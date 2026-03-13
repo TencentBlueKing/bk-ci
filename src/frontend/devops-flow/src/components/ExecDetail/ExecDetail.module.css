@@ -236,13 +236,13 @@
 .logContentArea {
   flex: 1;
   overflow: auto;
-  padding: var(--spacing-lg);
+  padding: var(--spacing-lg) 0;
 }
 
 .logContent {
   flex: 1;
   overflow: auto;
-  padding: var(--spacing-lg);
+  padding: var(--spacing-lg) 0;
 }
 
 /* === Log Lines === */
@@ -410,7 +410,7 @@
 .multipleLogContent {
   max-height: 400px;
   overflow: auto;
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: var(--spacing-sm) 0;
   background: var(--log-bg-dark);
 }
 

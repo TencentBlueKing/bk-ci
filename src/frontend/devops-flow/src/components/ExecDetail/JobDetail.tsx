@@ -3,7 +3,7 @@
  * Job/Container 详情侧边栏 - 显示 Job 内所有插件的日志（可折叠）和 Job 配置
  * 使用 LogHeader 组件、LogViewer 组件、useMultiLogFetcher hook 和 JobPropertyContent 组件
  */
-import { buildLogDownloadUrl } from '@/api/log'
+import { downloadLogFile } from '@/api/log'
 import LogViewer from '@/components/LogViewer'
 import LogHeader from '@/components/LogViewer/LogHeader'
 import StatusIcon from '@/components/StatusIcon'
@@ -122,9 +122,8 @@ export default defineComponent({
       showMoreMenu.value = false
     }
 
-    // Download plugin log
     const downloadPluginLog = (pluginId: string, pluginName: string) => {
-      const url = buildLogDownloadUrl({
+      downloadLogFile({
         projectId: route.params.projectId as string,
         pipelineId: route.params.flowId as string,
         buildId: props.execDetail.id,
@@ -132,19 +131,16 @@ export default defineComponent({
         executeCount: currentExe.value,
         fileName: pluginName,
       })
-      location.href = url
     }
 
-    // Download all job logs
     const downloadAllLog = () => {
-      const url = buildLogDownloadUrl({
+      downloadLogFile({
         projectId: route.params.projectId as string,
         pipelineId: route.params.flowId as string,
         buildId: props.execDetail.id,
         executeCount: currentExe.value,
         fileName: props.container?.name || 'job',
       })
-      location.href = url
       showMoreMenu.value = false
     }
 
@@ -239,7 +235,7 @@ export default defineComponent({
                 onClick={() => togglePlugin(state.id)}
               >
                 <span class={[styles.multipleLogArrow, state.expanded && styles.expanded]}>
-                  <SvgIcon name="angle-right" />
+                  <SvgIcon name="right-shape" size={14} />
                 </span>
                 <StatusIcon status={state.status as StatusType} size="small" />
                 <span class={styles.multipleLogItemName}>{state.name}</span>

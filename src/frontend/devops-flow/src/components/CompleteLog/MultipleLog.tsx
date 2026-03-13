@@ -3,7 +3,7 @@
  * 多任务日志组件 - 显示 Job 内所有插件的日志（可折叠）
  * 参考 @blueking/log 的 bkMultipleLog 组件
  */
-import { buildLogDownloadUrl, getAfterLog, getInitLog, type LogItem } from '@/api/log'
+import { downloadLogFile, getAfterLog, getInitLog, type LogItem } from '@/api/log'
 import StatusIcon from '@/components/StatusIcon'
 import { LogIcon } from '@/components/LogViewer/LogIcon'
 import type { Container, StatusType } from '@/types/flow'
@@ -12,6 +12,7 @@ import { defineComponent, onBeforeUnmount, ref, watch, type PropType } from 'vue
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import styles from './CompleteLog.module.css'
+import { SvgIcon } from '../SvgIcon'
 
 interface PluginLogState {
   id: string
@@ -197,9 +198,8 @@ export default defineComponent({
       }
     }
 
-    // Download plugin log
     const downloadPluginLog = (pluginId: string, pluginName: string) => {
-      const url = buildLogDownloadUrl({
+      downloadLogFile({
         projectId: route.params.projectId as string,
         pipelineId: route.params.flowId as string,
         buildId: props.buildId,
@@ -208,7 +208,6 @@ export default defineComponent({
         executeCount: props.executeCount,
         fileName: pluginName,
       })
-      location.href = url
     }
 
     // Clear all logs and polling
@@ -272,7 +271,7 @@ export default defineComponent({
               onClick={() => togglePlugin(state.id)}
             >
               <span class={[styles.multipleLogArrow, state.expanded && styles.expanded]}>
-                <LogIcon name="angle-right" size={12} />
+                <SvgIcon name="right-shape" size={12} />
               </span>
               <StatusIcon status={state.status} size="small" />
               <span class={styles.multipleLogItemName}>{state.name}</span>
@@ -284,7 +283,7 @@ export default defineComponent({
                     downloadPluginLog(state.id, state.name)
                   }}
                 >
-                  <LogIcon name="download" size={14} />
+                  <SvgIcon name="download" size={14} />
                 </button>
               </div>
             </div>

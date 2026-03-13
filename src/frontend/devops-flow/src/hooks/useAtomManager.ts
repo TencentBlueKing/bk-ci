@@ -88,6 +88,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
   // 获取插件列表
   const fetchAtomList = async (params: {
     classifyId?: string
+    os?: string
     jobType?: JobType
     keyword?: string
     queryProjectAtomFlag?: boolean
@@ -107,6 +108,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
       page = 1,
       pageSize = 20,
       forceRefresh = false,
+      os,
     } = params
 
     const cacheKey = generateCacheKey({ classifyId, keyword, jobType, queryProjectAtomFlag })
@@ -150,7 +152,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
         category,
         jobType,
         classifyId,
-        os: 'WINDOWS',
+        os,
         keyword,
         queryProjectAtomFlag,
         page,
