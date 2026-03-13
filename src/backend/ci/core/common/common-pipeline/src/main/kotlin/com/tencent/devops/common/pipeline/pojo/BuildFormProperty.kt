@@ -111,7 +111,7 @@ data class BuildFormProperty(
     )
     var asInstanceInput: Boolean? = null,
     @get:Schema(title = "复杂参数列表[仅type==CUSTOM_PARAM有效]", required = false)
-    var children: List<BuildFormProperty>? = null
+    var fields: List<BuildFormProperty>? = null
 )
 
 @Schema(title = "构建模型-自定义路径拆分的版本控制信息")

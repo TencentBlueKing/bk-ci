@@ -167,8 +167,8 @@ class VariableTransfer {
                 type = VariablePropType.VUEX_INPUT.value
             )
             // not use
-            it.type == BuildFormPropertyType.CUSTOM_PARAM -> VariableProps(
-                type = VariablePropType.CUSTOM_PARAM.value
+            it.type == BuildFormPropertyType.FORM_LIST -> VariableProps(
+                type = VariablePropType.FORM_LIST.value
             )
 
             else -> null
@@ -202,7 +202,7 @@ class VariableTransfer {
                     it.type
                 )
 
-                it.type == BuildFormPropertyType.CUSTOM_PARAM -> it.defaultValue
+                it.type == BuildFormPropertyType.FORM_LIST -> it.defaultValue
 
                 else -> it.defaultValue.toString()
             },
@@ -212,12 +212,7 @@ class VariableTransfer {
             const = const,
             sensitive = it.sensitive,
             props = if (props?.empty() == false) props else null,
-            ifCondition = it.displayCondition?.ifEmpty { null },
-            children = if (it.type == BuildFormPropertyType.CUSTOM_PARAM) {
-                it.children?.associate { child -> child.id to convertVariable(child) }
-            } else {
-                null
-            }
+            ifCondition = it.displayCondition?.ifEmpty { null }
         )
     }
 
@@ -304,8 +299,12 @@ class VariableTransfer {
                 type == BuildFormPropertyType.BOOLEAN ->
                     (variable.value as String?)?.toBoolean() ?: false
 
-                CascadePropertyUtils.supportCascadeParam(type) || type == BuildFormPropertyType.CUSTOM_PARAM ->
+                CascadePropertyUtils.supportCascadeParam(type) ->
                     variable.value ?: mapOf<String, String>()
+
+                type == BuildFormPropertyType.FORM_LIST -> {
+                    variable.value ?: listOf<Map<String, String>>()
+                }
 
                 else -> variable.value ?: ""
             },
@@ -337,7 +336,11 @@ class VariableTransfer {
                 variable.asInstanceInput ?: true
             } else null,
             sensitive = variable.sensitive,
-            children = variable.children?.map { child -> convertBuildFormProperty(child.key, child.value) }
+            fields = if (type == BuildFormPropertyType.FORM_LIST) {
+                variable.props?.fields?.map { child -> convertBuildFormProperty(child.key, child.value) }
+            } else {
+                null
+            }
         )
     }
 

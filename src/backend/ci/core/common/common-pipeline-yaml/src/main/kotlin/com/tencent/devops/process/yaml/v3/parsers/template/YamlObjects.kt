@@ -81,10 +81,19 @@ object YamlObjects {
         }
         val type = props?.type
         val va = Variable(
-            value = if (type == VariablePropType.REPO_REF.value || type == VariablePropType.CUSTOM_PARAM.value) {
-                variable["value"] ?: mapOf<String, String>()
-            } else {
-                variable["value"]?.toString()
+            value = when (type) {
+                VariablePropType.REPO_REF.value -> {
+                    variable["value"] ?: mapOf<String, String>()
+                }
+
+                VariablePropType.FORM_LIST.value -> {
+                    variable["value"] ?: listOf<Map<String, String>>()
+                }
+
+                else -> {
+
+                    variable["value"]?.toString()
+                }
             },
             readonly = getNullValue("readonly", variable)?.toBoolean(),
             const = getNullValue("const", variable)?.toBoolean(),
@@ -92,8 +101,7 @@ object YamlObjects {
             props = props,
             ifCondition = transNullValue<Map<String, String>>(fromPath, "if", "if", variable),
             sensitive = getNullValue("sensitive", variable)?.toBoolean(),
-            asInstanceInput = getNullValue("asInstanceInput", variable)?.toBoolean(),
-            children = JsonUtil.anyToOrNull(variable["children"], object : TypeReference<Map<String, Variable>>() {})
+            asInstanceInput = getNullValue("asInstanceInput", variable)?.toBoolean()
         )
 
         // 只有列表需要判断
@@ -151,7 +159,8 @@ object YamlObjects {
                 key = "metadata",
                 map = propsMap
             ),
-            payload = propsMap["payload"]
+            payload = propsMap["payload"],
+            fields = JsonUtil.anyToOrNull(propsMap["fields"], object : TypeReference<Map<String, Variable>>() {})
         )
 
         return po

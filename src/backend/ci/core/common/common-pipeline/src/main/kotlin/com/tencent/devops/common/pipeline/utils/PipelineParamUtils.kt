@@ -35,11 +35,13 @@ object PipelineParamUtils {
             }
 
             // 自定义参数
-            paramType == BuildFormPropertyType.CUSTOM_PARAM -> {
+            paramType == BuildFormPropertyType.FORM_LIST -> {
                 try {
-                    val customParams = paramDefaultValue as Map<String, String>
-                    customParams.forEach { (key, value) ->
-                        startParams["$paramKey.$key"] = value
+                    val customParams = paramDefaultValue as List<Map<String, String>>
+                    customParams.forEachIndexed { index, map ->
+                        map.forEach { (key, value) ->
+                            startParams["$paramKey.${index}.$key"] = value
+                        }
                     }
                 } catch (ignored: Exception) {
                     logger.warn(
@@ -71,7 +73,7 @@ object PipelineParamUtils {
         }
 
         // 自定义复杂参数
-        param.valueType == BuildFormPropertyType.CUSTOM_PARAM -> {
+        param.valueType == BuildFormPropertyType.FORM_LIST -> {
             fillCustomParam(param, originStartContexts)
         }
 
@@ -120,21 +122,23 @@ object PipelineParamUtils {
         val paramValue = try {
             when(value) {
                 is String -> {
-                    JsonUtil.to(value, object : TypeReference<Map<String, String>>() {})
+                    JsonUtil.to(value, object : TypeReference<List<Map<String, String>>>() {})
                 }
                 else -> {
-                    value as Map<String, String>
+                    value as List<Map<String, String>>
                 }
             }
         } catch (ignored: Exception) {
             logger.warn("parse custom param error, key: $key, defaultValue: $value")
-            mapOf()
+            listOf()
         }
         val customParam = param.copy(value = paramValue)
         val allParams = mutableListOf(customParam)
         // 下级参数，填充住参数名前缀
-        paramValue.forEach { (subKey, subValue) ->
-            allParams.add(param.copy(key = "${key}.${subKey}", value = subValue ?: ""))
+        paramValue.forEachIndexed { index, map ->
+            map.forEach { (subKey, subValue) ->
+                allParams.add(param.copy(key = "${key}.${index}.${subKey}", value = subValue ?: ""))
+            }
         }
         // 添加variables前缀
         allParams.forEach { fillContextPrefix(it, originStartContexts) }

@@ -84,8 +84,7 @@ data class Variable(
     val sensitive: Boolean? = null,
     val props: VariableProps? = null,
     @JsonProperty("if")
-    val ifCondition: Map<String, String>? = null,
-    val children: Map<String, Variable>? = null
+    val ifCondition: Map<String, String>? = null
 ) : IVariable
 
 /**
@@ -128,7 +127,8 @@ data class VariableProps(
     @get:Schema(title = "文件元数据", required = false)
     @JsonProperty("metadata")
     val properties: Map<String, String>? = null,
-    val payload: Any? = null
+    val payload: Any? = null,
+    val fields: Map<String, Variable>? = null
 ) {
     fun empty(): Boolean {
         return label == null && (type == null || type == VariablePropType.VUEX_INPUT.value) && options == null &&
@@ -204,7 +204,7 @@ enum class VariablePropType(val value: String) {
     SUB_PIPELINE("sub-pipeline"),
     CUSTOM_FILE("custom-file"),
     TIPS("tips"),
-    CUSTOM_PARAM("custom-param");
+    FORM_LIST("form-list");
 
     fun toBuildFormPropertyType() = when (this) {
         VUEX_INPUT -> BuildFormPropertyType.STRING
@@ -220,7 +220,7 @@ enum class VariablePropType(val value: String) {
         SUB_PIPELINE -> BuildFormPropertyType.SUB_PIPELINE
         CUSTOM_FILE -> BuildFormPropertyType.CUSTOM_FILE
         REPO_REF -> BuildFormPropertyType.REPO_REF
-        CUSTOM_PARAM -> BuildFormPropertyType.CUSTOM_PARAM
+        FORM_LIST -> BuildFormPropertyType.FORM_LIST
         else -> BuildFormPropertyType.STRING
     }
 

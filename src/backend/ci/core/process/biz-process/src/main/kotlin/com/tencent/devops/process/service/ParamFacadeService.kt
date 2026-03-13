@@ -31,7 +31,6 @@ import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.CustomFileSearchCondition
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -90,7 +89,7 @@ class ParamFacadeService @Autowired constructor(
                 filterParams.add(addSubPipelineProperties(userId, projectId, pipelineId, it))
             } else if (it.type == BuildFormPropertyType.REPO_REF) {
                 filterParams.add(addRepoRefs(projectId, it))
-            } else if (it.type == BuildFormPropertyType.CUSTOM_PARAM) {
+            } else if (it.type == BuildFormPropertyType.FORM_LIST) {
                 filterParams.add(addCustomParam(projectId, it))
             } else {
                 filterParams.add(it)
@@ -350,7 +349,7 @@ class ParamFacadeService @Autowired constructor(
             asInstanceInput = property.asInstanceInput,
             sensitive = property.sensitive,
             constant = property.constant,
-            children = property.children
+            fields = property.fields
         )
     }
 
@@ -451,7 +450,7 @@ class ParamFacadeService @Autowired constructor(
             options = listOf()
         ).let {
             // 目前自定义参数仅处理一层参数列表，暂不考虑递归情况
-            it.defaultValue = it.children?.associate {
+            it.defaultValue = it.fields?.associate {
                 it.id to it.defaultValue.toString()
             } ?: mapOf<String, String>()
             it
