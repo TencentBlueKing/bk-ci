@@ -150,14 +150,14 @@ class PipelineTemplateCompatibilityAdapter(
         groups.forEach { labels.addAll(it.labels) }
         model.labels = labels
 
-        fillOptionsParam(
+        val fillModel = fillOptionsParam(
             userId = userId,
             projectId = projectId,
             model = model
         )
         // 从 model 解析 params / templateParams
-        PipelineTemplateUtil.splitParamsForV1Compatibility(model)
-        val triggerContainer = model.getTriggerContainer()
+        PipelineTemplateUtil.splitParamsForV1Compatibility(fillModel)
+        val triggerContainer = fillModel.getTriggerContainer()
         val params = triggerContainer.params
         val templateParams = triggerContainer.templateParams
 
@@ -176,7 +176,7 @@ class PipelineTemplateCompatibilityAdapter(
             templateName = templateInfo.name,
             description = templateInfo.desc ?: "",
             creator = templateInfo.creator,
-            template = model,
+            template = fillModel,
             templateType = templateInfo.mode.name,
             logoUrl = templateInfo.logoUrl ?: "",
             hasPermission = hasPermission,
