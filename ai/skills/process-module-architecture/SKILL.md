@@ -1,6 +1,6 @@
 ---
 name: process-module-architecture
-description: Process 流水线核心模块架构总览，涵盖流水线 CRUD、构建执行引擎、事件驱动机制、分层架构设计。当用户开发流水线核心功能、理解 Process 模块、修改构建逻辑或进行流水线相关开发时使用。
+description: Process 模块架构指南，用于创建/修改流水线配置、触发和调试构建任务、扩展触发方式、处理构建事件与调度逻辑。当用户进行流水线开发（pipeline 配置、CI/CD 持续集成、自动化构建）、排查构建问题、修改 Process 模块代码时使用。
 ---
 
 # Process 流水线核心模块架构指南
@@ -73,74 +73,25 @@ src/backend/ci/core/process/
 | **biz-engine** | 构建调度引擎 | 25 | 依赖 biz-base |
 | **model-process** | JOOQ 数据模型 | 自动生成 | 基础层 |
 
-## 二、分层架构图
+## 二、分层架构
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                              请求入口                                    │
-│                    HTTP Request / 服务间调用 / MQ 消息                    │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         API 层 (api-process)                             │
-│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐    │
-│  │UserPipeline  │ │ServiceBuild  │ │BuildBuild    │ │UserTemplate  │    │
-│  │Resource      │ │Resource      │ │Resource      │ │Resource      │    │
-│  │(用户流水线)   │ │(服务间构建)   │ │(构建机调用)   │ │(模板管理)    │    │
-│  └──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘    │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                       业务层 (biz-process)                               │
-│  ┌──────────────────────────────────────────────────────────────────┐   │
-│  │                      ResourceImpl 实现层                          │   │
-│  │  UserPipelineResourceImpl | ServiceBuildResourceImpl | ...       │   │
-│  └──────────────────────────────────────────────────────────────────┘   │
-│                                    │                                     │
-│  ┌──────────────────────────────────────────────────────────────────┐   │
-│  │                      Facade Service 层                            │   │
-│  │  PipelineInfoFacadeService    - 流水线信息管理门面                  │   │
-│  │  PipelineListFacadeService    - 流水线列表查询门面                  │   │
-│  │  PipelineVersionFacadeService - 版本管理门面                       │   │
-│  │  ParamFacadeService           - 参数管理门面                       │   │
-│  └──────────────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      基础业务层 (biz-base)                               │
-│  ┌──────────────────────────────────────────────────────────────────┐   │
-│  │                      Engine Service 层                            │   │
-│  │  PipelineRepositoryService  - 流水线存储服务（110KB，核心）         │   │
-│  │  PipelineRuntimeService     - 运行时服务（101KB，核心）            │   │
-│  │  PipelineContainerService   - 容器管理服务                        │   │
-│  │  PipelineStageService       - 阶段管理服务                        │   │
-│  │  PipelineTaskService        - 任务管理服务                        │   │
-│  └──────────────────────────────────────────────────────────────────┘   │
-│                                    │                                     │
-│  ┌──────────────────────────────────────────────────────────────────┐   │
-│  │                      DAO 层                                       │   │
-│  │  PipelineInfoDao | PipelineBuildDao | PipelineResourceDao        │   │
-│  └──────────────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      引擎层 (biz-engine)                                 │
-│  ┌──────────────────────────────────────────────────────────────────┐   │
-│  │                      Control 层 (核心调度)                         │   │
-│  │  BuildStartControl | StageControl | ContainerControl | TaskControl│   │
-│  │  BuildEndControl | BuildCancelControl | MutexControl             │   │
-│  └──────────────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      数据层 (model-process + MySQL)                      │
-│  数据库：devops_process（共 92 张表）                                    │
-└─────────────────────────────────────────────────────────────────────────┘
+请求入口 (HTTP / 服务间调用 / MQ)
+  │
+  ▼
+API 层 (api-process) ── UserPipelineResource, ServiceBuildResource, BuildBuildResource, UserTemplateResource
+  │
+  ▼
+业务层 (biz-process) ── ResourceImpl 实现 → Facade Service (PipelineInfoFacade, PipelineBuildFacade, ...)
+  │
+  ▼
+基础业务层 (biz-base) ── Engine Service (RepositoryService, RuntimeService, ...) → DAO 层
+  │
+  ▼
+引擎层 (biz-engine) ── Control 层 (BuildStart/Stage/Container/Task/BuildEnd/MutexControl)
+  │
+  ▼
+数据层 (model-process + MySQL: devops_process, 92 张表)
 ```
 
 ## 三、核心数据流
@@ -170,127 +121,32 @@ PipelineRepositoryService.deployPipeline()  # Engine Service 层
     └─► PipelineSettingDao.create()     # 保存流水线配置
 ```
 
-### 3.2 构建执行完整流程（对应流程图）
+### 3.2 构建执行完整流程
 
 ```
-┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                        触发层                                                     │
-├──────────────────────────────────────────────────────────────────────────────────────────────────┤
-│  ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐                             │
-│  │ Quartz定时调度   │     │ API接口触发      │     │ Webhook触发     │                             │
-│  │ PipelineQuartz  │     │ UserBuild       │     │ PipelineBuild   │                             │
-│  │ Service         │     │ Resource        │     │ WebhookService  │                             │
-│  └────────┬────────┘     └────────┬────────┘     └────────┬────────┘                             │
-│           │                       │                       │                                       │
-│           └───────────────────────┼───────────────────────┘                                       │
-│                                   ▼                                                               │
-│                    ┌──────────────────────────────┐                                               │
-│                    │ PipelineTimerService         │  ← 定时触发服务                                │
-│                    │ PipelineBuildFacadeService   │  ← 构建门面服务                                │
-│                    └──────────────┬───────────────┘                                               │
-└───────────────────────────────────┼───────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                     拦截器链层                                                    │
-├──────────────────────────────────────────────────────────────────────────────────────────────────┤
-│  ┌─────────────────────────────────────────────────────────────────────────────────────────────┐ │
-│  │                         PipelineInterceptorChain                                             │ │
-│  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────────┐                  │ │
-│  │  │ RunLock         │→ │ Queue           │→ │ TimerTriggerScmChange       │                  │ │
-│  │  │ Interceptor     │  │ Interceptor     │  │ Interceptor                 │                  │ │
-│  │  │ (运行锁检查)     │  │ (队列/并发控制)  │  │ (定时触发源码变更检查)        │                  │ │
-│  │  └─────────────────┘  └─────────────────┘  └─────────────────────────────┘                  │ │
-│  └─────────────────────────────────────────────────────────────────────────────────────────────┘ │
-└───────────────────────────────────┼───────────────────────────────────────────────────────────────┘
-                                    │ 拦截通过
-                                    ▼
-┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                   运行时服务层                                                    │
-├──────────────────────────────────────────────────────────────────────────────────────────────────┤
-│  PipelineRuntimeService.startBuild()                                                             │
-│    ├─► 生成 buildId                                                                              │
-│    ├─► 创建构建记录 (T_PIPELINE_BUILD_HISTORY)                                                   │
-│    ├─► 创建 Stage/Container/Task 记录                                                            │
-│    └─► 保存构建变量                                                                              │
-└───────────────────────────────────┼───────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                   事件分发层                                                      │
-├──────────────────────────────────────────────────────────────────────────────────────────────────┤
-│  PipelineEventDispatcher.dispatch(PipelineBuildStartEvent)  ──────────►  RabbitMQ                │
-└───────────────────────────────────┼───────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                   监听器层 (Listener)                                             │
-├──────────────────────────────────────────────────────────────────────────────────────────────────┤
-│  ┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐                       │
-│  │PipelineBuildStart   │  │PipelineStageBuild   │  │PipelineContainerBuild│                      │
-│  │Listener             │  │Listener             │  │Listener             │                       │
-│  │  └► BuildStartControl│  │  └► StageControl    │  │  └► ContainerControl│                       │
-│  └─────────────────────┘  └─────────────────────┘  └─────────────────────┘                       │
-│  ┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐                       │
-│  │PipelineAtomTaskBuild│  │PipelineBuildFinish  │  │PipelineBuildCancel  │                       │
-│  │Listener             │  │Listener             │  │Listener             │                       │
-│  │  └► TaskControl     │  │  └► BuildEndControl │  │  └► BuildCancelControl│                      │
-│  └─────────────────────┘  └─────────────────────┘  └─────────────────────┘                       │
-└───────────────────────────────────┼───────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                   引擎控制层 (Control)                                            │
-├──────────────────────────────────────────────────────────────────────────────────────────────────┤
-│  BuildStartControl ─► StageControl ─► ContainerControl ─► TaskControl ─► BuildEndControl        │
-│        │                   │                 │                 │                                 │
-│        │                   │                 │                 ▼                                 │
-│        │                   │                 │    ┌─────────────────────────┐                    │
-│        │                   │                 │    │ 发送 AgentStartupEvent  │                    │
-│        │                   │                 │    │ 到 Dispatch 服务        │                    │
-│        │                   │                 │    └───────────┬─────────────┘                    │
-│        │                   │                 │                │                                  │
-│        ▼                   ▼                 ▼                ▼                                  │
-│  ┌─────────────────────────────────────────────────────────────────────────────────────────────┐ │
-│  │                              命令链 (Command Chain)                                          │ │
-│  │  Stage: CheckSkip → CheckInterrupt → CheckPauseReview → StartContainer → UpdateState       │ │
-│  │  Container: CheckSkip → CheckDependOn → CheckMutex → CheckDispatch → StartTask → UpdateState│ │
-│  └─────────────────────────────────────────────────────────────────────────────────────────────┘ │
-└───────────────────────────────────┼───────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                   Dispatch 调度服务                                               │
-├──────────────────────────────────────────────────────────────────────────────────────────────────┤
-│  ┌─────────────────────────────────────────────────────────────────────────────────────────────┐ │
-│  │ DispatcherService (构建机分配服务)                                                           │ │
-│  │   ├─► ThirdPartyDispatchService (第三方构建机调度)                                           │ │
-│  │   │     ├─► ThirdPartyAgentIDDispatchType (指定Agent)                                       │ │
-│  │   │     └─► ThirdPartyAgentEnvDispatchType (环境调度)                                       │ │
-│  │   ├─► VMDispatcher (虚拟机调度)                                                             │ │
-│  │   └─► DockerDispatcher (Docker调度)                                                         │ │
-│  └─────────────────────────────────────────────────────────────────────────────────────────────┘ │
-│                                           │                                                      │
-│                                           ▼                                                      │
-│  ┌─────────────────────────────────────────────────────────────────────────────────────────────┐ │
-│  │ 构建分发 REST API                                                                            │ │
-│  │   BuildAgentBuildResource.claimBuildTask()  ← Agent 领取任务                                 │ │
-│  └─────────────────────────────────────────────────────────────────────────────────────────────┘ │
-└───────────────────────────────────┼───────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                   构建机 Agent                                                    │
-├──────────────────────────────────────────────────────────────────────────────────────────────────┤
-│  ┌─────────────────────────────────────────────────────────────────────────────────────────────┐ │
-│  │ BuildRunner (容器或虚运行)                    MasterRunner (裸运行)                          │ │
-│  │   ├─► 领取任务                                 ├─► 领取任务                                  │ │
-│  │   ├─► 执行插件                                 ├─► 执行插件                                  │ │
-│  │   ├─► 心跳上报                                 ├─► 心跳上报                                  │ │
-│  │   └─► 回调完成                                 └─► 回调完成                                  │ │
-│  └─────────────────────────────────────────────────────────────────────────────────────────────┘ │
-└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+触发 (Quartz/API/Webhook)
+  → PipelineBuildFacadeService.buildManualStartup()
+  → PipelineInterceptorChain (RunLock → Queue → TimerTriggerScmChange)
+  → PipelineRuntimeService.startBuild() (生成 buildId, 创建构建记录)
+  → PipelineEventDispatcher.dispatch(PipelineBuildStartEvent) → RabbitMQ
+  → Listener → Control 链:
+      BuildStartControl → StageControl → ContainerControl → TaskControl → BuildEndControl
+  → Command Chain:
+      Stage:     CheckSkip → CheckInterrupt → CheckPauseReview → StartContainer → UpdateState
+      Container: CheckSkip → CheckDependOn → CheckMutex → CheckDispatch → StartTask → UpdateState
+  → Dispatch (ThirdParty/VM/Docker) → Agent 领取并执行任务
 ```
+
+**关键事件-监听器映射**:
+
+| 事件 | 监听器 | 控制器 |
+|------|--------|--------|
+| `PipelineBuildStartEvent` | `PipelineBuildStartListener` | `BuildStartControl` |
+| `PipelineBuildStageEvent` | `PipelineStageBuildListener` | `StageControl` |
+| `PipelineBuildContainerEvent` | `PipelineContainerBuildListener` | `ContainerControl` |
+| `PipelineBuildAtomTaskEvent` | `PipelineAtomTaskBuildListener` | `TaskControl` |
+| `PipelineBuildFinishEvent` | `PipelineBuildFinishListener` | `BuildEndControl` |
+| `PipelineBuildCancelEvent` | `PipelineBuildCancelListener` | `BuildCancelControl` |
 
 ## 四、核心类速查
 
@@ -322,18 +178,7 @@ PipelineRepositoryService.deployPipeline()  # Engine Service 层
 | `PipelineBuildFacadeService` | 137KB | 构建管理门面 |
 | `PipelineInfoFacadeService` | 80KB | 流水线信息管理门面 |
 
-### 4.4 监听器层
-
-| 类名 | 模块 | 消费事件 |
-|------|------|----------|
-| `PipelineBuildStartListener` | biz-engine | `PipelineBuildStartEvent` |
-| `PipelineStageBuildListener` | biz-engine | `PipelineBuildStageEvent` |
-| `PipelineContainerBuildListener` | biz-engine | `PipelineBuildContainerEvent` |
-| `PipelineAtomTaskBuildListener` | biz-engine | `PipelineBuildAtomTaskEvent` |
-| `PipelineBuildFinishListener` | biz-engine | `PipelineBuildFinishEvent` |
-| `PipelineBuildCancelListener` | biz-engine | `PipelineBuildCancelEvent` |
-
-### 4.5 Control 层
+### 4.4 Control 层
 
 | 类名 | 文件大小 | 职责 |
 |------|----------|------|
@@ -344,7 +189,7 @@ PipelineRepositoryService.deployPipeline()  # Engine Service 层
 | `BuildEndControl` | 27KB | 构建结束控制 |
 | `MutexControl` | 26KB | 互斥锁控制 |
 
-### 4.6 DAO 层
+### 4.5 DAO 层
 
 | 类名 | 文件大小 | 职责 |
 |------|----------|------|
@@ -352,28 +197,81 @@ PipelineRepositoryService.deployPipeline()  # Engine Service 层
 | `PipelineInfoDao` | 30KB | 流水线信息数据访问 |
 | `PipelineResourceDao` | 15KB | 流水线模型数据访问 |
 
-## 五、开发规范
+## 五、代码示例
 
-### 5.1 新增功能检查清单
+### 5.1 通过 API 触发构建
+
+```kotlin
+// POST /api/user/builds/{projectId}/{pipelineId}
+// 对应 UserBuildResource.manualStartupNew()
+@Path("/{projectId}/{pipelineId}")
+fun manualStartupNew(
+    @PathParam("projectId") projectId: String,
+    @PathParam("pipelineId") pipelineId: String,
+    @RequestBody values: Map<String, String> = emptyMap()
+): Result<BuildId>
+
+// 实现入口: PipelineBuildFacadeService.buildManualStartup()
+```
+
+### 5.2 分发自定义事件
+
+```kotlin
+// 通过 PipelineEventDispatcher 发送事件到 RabbitMQ
+pipelineEventDispatcher.dispatch(
+    PipelineBuildStartEvent(
+        source = "manualTrigger",
+        projectId = projectId,
+        pipelineId = pipelineId,
+        userId = userId,
+        buildId = buildId,
+        taskId = "",
+        status = BuildStatus.QUEUE,
+        actionType = ActionType.START
+    )
+)
+```
+
+### 5.3 扩展新的触发方式
+
+```kotlin
+// 1. 在 StartType 枚举添加新类型
+// src/backend/ci/core/common/common-pipeline/src/main/kotlin/com/tencent/devops/common/pipeline/enums/StartType.kt
+enum class StartType {
+    MANUAL, TIME_TRIGGER, SERVICE, PIPELINE, WEB_HOOK, REMOTE,
+    MY_CUSTOM_TRIGGER  // 新增
+}
+
+// 2. 在 PipelineTriggerEventService 中处理
+fun onCustomTrigger(event: MyCustomTriggerEvent) {
+    pipelineBuildFacadeService.buildManualStartup(
+        userId = event.userId,
+        startType = StartType.MY_CUSTOM_TRIGGER,
+        projectId = event.projectId,
+        pipelineId = event.pipelineId,
+        values = event.params
+    )
+}
+```
+
+### 5.4 查询流水线模型（JOOQ DAO 模式）
+
+```kotlin
+// 流水线模型存储在 T_PIPELINE_RESOURCE 表 MODEL 字段（JSON 格式）
+// 使用 PipelineResourceDao 读取:
+val model = pipelineResourceDao.getLatestVersionModelString(
+    dslContext = dslContext,
+    projectId = projectId,
+    pipelineId = pipelineId
+) // 返回 JSON 字符串，反序列化为 Model 对象
+```
+
+## 六、开发检查清单
 
 - [ ] API 接口定义在 `api-process` 模块
-- [ ] API 实现在 `biz-process` 模块
+- [ ] API 实现在 `biz-process` 模块（`ResourceImpl` 后缀）
 - [ ] 核心服务在 `biz-base` 模块
 - [ ] DAO 使用 JOOQ，禁止手写 SQL
 - [ ] 事件通过 `PipelineEventDispatcher` 分发
-- [ ] 遵循命名规范（见各子 Skill）
-
-### 5.2 常见问题
-
-**Q: 流水线模型存储在哪里？**
-A: `T_PIPELINE_RESOURCE` 表的 `MODEL` 字段，JSON 格式。
-
-**Q: 如何扩展新的触发方式？**
-A: 在 `StartType` 枚举中添加，并在 `PipelineTriggerEventService` 处理。
-
-**Q: 事件如何分发？**
-A: 通过 `PipelineEventDispatcher` 发送到 RabbitMQ，由对应 Control 消费。
-
----
-
-**版本**: 2.1.0 | **更新日期**: 2025-12-10 | **补充**: 根据流程图完善触发层、拦截器层、监听器层、Dispatch 调度服务
+- [ ] 验证: `./gradlew :process:test` 确认无回归
+- [ ] 验证: 检查 `T_PIPELINE_BUILD_HISTORY` 表确认构建记录正确写入

@@ -1,6 +1,6 @@
 ---
 name: supporting-modules-architecture
-description: BK-CI 支撑模块架构指南，涵盖凭证管理(Ticket)、构建机环境(Environment)、通知服务(Notify)、构建日志(Log)、质量红线(Quality)、开放接口(OpenAPI)等支撑性服务模块。当用户开发这些模块功能或需要理解支撑服务架构时使用。
+description: BK-CI 支撑模块开发指南 — 配置凭证(Ticket)、管理构建机(Environment)、设置通知规则(Notify)、查询构建日志(Log)、配置质量红线(Quality)、对接开放接口(OpenAPI)。当需要为流水线添加凭证访问、环境管理、通知策略、日志查询、质量门禁或第三方 API 集成时使用本 Skill。
 related_skills:
   - 00-bkci-global-architecture
   - process-module-architecture
@@ -11,48 +11,20 @@ token_estimate: 15000
 
 ## Skill 概述
 
-本 Skill 涵盖了 BK-CI 的 **6 大支撑模块**，这些模块为核心业务提供支撑性服务，不直接参与流水线核心执行逻辑，但提供凭证、环境、通知、日志、质量检查、API 开放等关键能力。
+本 Skill 涵盖 BK-CI 的 **6 大支撑模块**，为核心流水线引擎提供凭证、环境、通知、日志、质量检查、API 开放等关键能力。
 
-### 模块列表
-
-| 模块 | 说明 | 文档 |
-|------|------|------|
-| **Ticket** | 凭证管理模块 | [1-ticket-module.md](./reference/1-ticket-module.md) |
-| **Environment** | 构建机环境模块 | [2-environment-module.md](./reference/2-environment-module.md) |
-| **Notify** | 通知服务模块 | [3-notify-module.md](./reference/3-notify-module.md) |
-| **Log** | 构建日志模块 | [4-log-module.md](./reference/4-log-module.md) |
-| **Quality** | 质量红线模块 | [5-quality-module.md](./reference/5-quality-module.md) |
-| **OpenAPI** | 开放接口模块 | [6-openapi-module.md](./reference/6-openapi-module.md) |
+| 模块 | 典型任务 | 参考文档 |
+|------|----------|----------|
+| **Ticket** | 创建 SSH/Token 凭证、配置凭证授权 | [1-ticket-module.md](./reference/1-ticket-module.md) |
+| **Environment** | 注册构建机节点、配置环境分组 | [2-environment-module.md](./reference/2-environment-module.md) |
+| **Notify** | 设置流水线失败邮件通知、配置企微审批提醒 | [3-notify-module.md](./reference/3-notify-module.md) |
+| **Log** | 实时查看构建日志、按关键字搜索日志 | [4-log-module.md](./reference/4-log-module.md) |
+| **Quality** | 添加代码覆盖率红线、配置安全扫描拦截 | [5-quality-module.md](./reference/5-quality-module.md) |
+| **OpenAPI** | 第三方系统触发流水线、通过 SDK 查询构建状态 | [6-openapi-module.md](./reference/6-openapi-module.md) |
 
 ---
 
 ## 核心业务模块 vs 支撑模块
-
-### 模块分类
-
-```
-BK-CI 模块架构
-├── 核心业务模块 (直接参与流水线执行)
-│   ├── Process (流水线引擎)
-│   ├── Auth (权限中心)
-│   ├── Project (项目管理)
-│   ├── Repository (代码库)
-│   ├── Store (研发商店)
-│   ├── Artifactory (制品库)
-│   ├── Dispatch (构建调度)
-│   ├── Worker (构建执行器)
-│   └── Agent (构建机)
-│
-└── 支撑服务模块 (提供支撑能力)
-    ├── Ticket (凭证管理) ⭐
-    ├── Environment (环境管理) ⭐
-    ├── Notify (通知服务) ⭐
-    ├── Log (日志服务) ⭐
-    ├── Quality (质量检查) ⭐
-    └── OpenAPI (API 网关) ⭐
-```
-
-### 定位对比
 
 | 维度 | 核心业务模块 | 支撑服务模块 |
 |------|-------------|-------------|
@@ -64,9 +36,7 @@ BK-CI 模块架构
 
 ---
 
-## 支撑模块全景视图
-
-### 协作关系
+## 支撑模块协作全景
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -231,59 +201,122 @@ BK-CI 模块架构
 
 ---
 
-## 模块间协作关系
+## 跨模块协作：实战示例
 
-### 典型交互场景
+以下示例展示通过 OpenAPI 创建凭证、触发流水线、查询质量红线结果的完整流程：
 
-#### 场景 1: 流水线执行完整流程
+```kotlin
+// 1. 通过 Ticket 模块创建 SSH 凭证
+val credentialClient = client.get(ServiceCredentialResource::class)
+val createResult = credentialClient.create(
+    userId = "admin",
+    projectId = "my-project",
+    credential = CredentialCreate(
+        credentialId = "my-ssh-key",
+        credentialType = CredentialType.SSH_PRIVATEKEY,
+        v1 = Base64.encode(sshPrivateKey),  // 私钥内容
+        v2 = passphrase                      // 密码短语（可选）
+    )
+)
+check(createResult.isOk()) { "凭证创建失败: ${createResult.message}" }
+
+// 2. 通过 OpenAPI 触发流水线（使用刚创建的凭证）
+val buildClient = client.get(ApigwBuildResourceV4::class)
+val buildResult = buildClient.start(
+    appCode = "my-app",
+    apigwType = "apigw",
+    userId = "admin",
+    projectId = "my-project",
+    pipelineId = "p-xxxx",
+    values = mapOf("credentialId" to "my-ssh-key")
+)
+check(buildResult.isOk()) { "流水线触发失败: ${buildResult.message}" }
+val buildId = buildResult.data?.id ?: error("构建 ID 为空")
+
+// 3. 查询质量红线拦截结果
+val qualityClient = client.get(ServiceQualityRuleResource::class)
+val gateResult = qualityClient.getGateResult(
+    projectId = "my-project",
+    pipelineId = "p-xxxx",
+    buildId = buildId
+)
+when {
+    gateResult.data?.isPass == true -> println("质量红线检查通过")
+    else -> {
+        // 4. 红线拦截时通过 Notify 发送通知
+        val notifyClient = client.get(ServiceNotifyResource::class)
+        notifyClient.sendEmailNotify(
+            EmailNotifyMessage(
+                receivers = setOf("dev-team@example.com"),
+                title = "质量红线拦截: 构建 $buildId",
+                body = "流水线 p-xxxx 未通过质量检查，请查看详情。"
+            )
+        )
+    }
+}
+```
+
+---
+
+## 开发工作流
+
+### 新增凭证类型
+
+1. 在 `api-ticket` 的 `CredentialType` 枚举中添加新类型
+2. 创建对应的 `CredentialItem` 数据类定义字段映射
+3. 在 `biz-ticket` 的 `CredentialService` 中实现加密存储逻辑
+4. **验证**: 调用 `GET /api/ticket/credentials/{credentialId}` 确认凭证可正确创建和读取
+
+### 添加通知渠道
+
+1. 在 `NotifyType` 中注册新渠道标识
+2. 实现 `AbstractSendNotifyService` 子类处理发送逻辑
+3. 在通知模板配置中支持新渠道
+4. **验证**: 发送测试通知，检查 `T_NOTIFY_MESSAGE` 表中记录状态为 `SUCCESS`
+
+### 配置质量红线规则
+
+1. 通过 `ServiceQualityIndicatorResource` 注册自定义指标
+2. 创建规则绑定指标到流水线的准入/准出控制点
+3. 配置拦截阈值和通知策略
+4. **验证**: 执行流水线，确认 `GET /api/quality/rules/{ruleId}/intercept` 返回预期的拦截/放行结果
+
+---
+
+## 模块间交互场景
+
+### 场景 1: 流水线执行完整流程
 
 ```
 1. Process (启动流水线)
     ↓
-2. Ticket (获取 Git 凭证)
+2. Ticket (获取 Git 凭证) → 失败则中止并通知
     ↓
 3. Dispatch (分配构建机)
     ↓
-4. Environment (获取节点信息)
+4. Environment (获取节点信息) → 无可用节点则排队等待
     ↓
 5. Worker (执行构建任务)
     ↓
 6. Log (上报构建日志)
     ↓
-7. Quality (质量检查)
-    ↓ (失败)
-8. Notify (发送失败通知)
+7. Quality (质量检查) → 红线拦截则触发通知
+    ↓
+8. Notify (发送结果通知)
 ```
 
-#### 场景 2: 第三方系统集成
+### 场景 2: 第三方系统集成
 
 ```
 第三方系统
     ↓
-OpenAPI (接口鉴权)
+OpenAPI (接口鉴权 - AppCode 校验)
     ↓
 Process (触发流水线)
     ↓
 支撑模块 (Ticket/Env/Log/Quality/Notify)
     ↓
 OpenAPI (返回结果)
-```
-
----
-
-## 使用场景决策树
-
-```
-用户需求
-    ↓
-需要开发/理解哪个模块？
-    ├─ 凭证管理 → supporting-modules (reference/1-ticket)
-    ├─ 构建机环境 → supporting-modules (reference/2-environment)
-    ├─ 通知服务 → supporting-modules (reference/3-notify)
-    ├─ 构建日志 → supporting-modules (reference/4-log)
-    ├─ 质量红线 → supporting-modules (reference/5-quality)
-    ├─ 开放 API → supporting-modules (reference/6-openapi)
-    └─ 核心业务 → 查找对应核心模块 Skill
 ```
 
 ---
@@ -305,16 +338,3 @@ OpenAPI (返回结果)
 ### 全局架构
 
 - [00-bkci-global-architecture](../00-bkci-global-architecture/SKILL.md) - 全局架构指南
-
----
-
-## Quick Reference
-
-| 需求 | 模块 | 参考文档 |
-|------|------|----------|
-| 添加新凭证类型 | Ticket | reference/1-ticket-module.md |
-| 管理构建机节点 | Environment | reference/2-environment-module.md |
-| 添加通知渠道 | Notify | reference/3-notify-module.md |
-| 实现日志存储 | Log | reference/4-log-module.md |
-| 配置质量规则 | Quality | reference/5-quality-module.md |
-| 开放新 API | OpenAPI | reference/6-openapi-module.md |
