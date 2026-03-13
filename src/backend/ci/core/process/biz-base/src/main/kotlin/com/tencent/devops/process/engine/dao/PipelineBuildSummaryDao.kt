@@ -467,11 +467,7 @@ class PipelineBuildSummaryDao {
                     }
                 }
             }
-            // 草稿状态（COMMITTING）的流水线优先排在最前面
-            val draftSortField = DSL.`when`(
-                T_PIPELINE_INFO.LATEST_VERSION_STATUS.eq(VersionStatus.COMMITTING.name), 0
-            ).otherwise(1).asc()
-            baseStep.orderBy(T_PIPELINE_INFO.DELETE.asc(), draftSortField, sortTypeField, T_PIPELINE_INFO.PIPELINE_ID)
+            baseStep.orderBy(T_PIPELINE_INFO.DELETE.asc(), sortTypeField, T_PIPELINE_INFO.PIPELINE_ID)
         }
         return if (null != offset && null != limit && offset >= 0 && limit > 0) {
             baseStep.limit(limit).offset(offset).fetch()

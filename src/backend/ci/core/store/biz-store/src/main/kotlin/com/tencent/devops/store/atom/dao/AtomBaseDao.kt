@@ -343,4 +343,18 @@ abstract class AtomBaseDao {
             else -> null
         }
     }
+
+    /**
+     * 按服务范围返回"编译环境"对应的 JOB_TYPE 值。
+     * 用于 buildOsCondition 的 scope 感知查询，从 OS_MAP 中精确提取指定 jobType 的 OS 列表，
+     * 避免 JSON_SEARCH 全路径遍历带来的性能开销。
+     */
+    protected fun getBuildEnvJobTypeForScope(serviceScope: ServiceScopeEnum?): String? {
+        val normalizedScope = serviceScope?.let { ServiceScopeUtil.normalize(it.name) } ?: return null
+        return when (normalizedScope) {
+            ServiceScopeEnum.PIPELINE.name -> JobTypeEnum.AGENT.name
+            ServiceScopeEnum.CREATIVE_STREAM.name -> JobTypeEnum.CREATIVE_STREAM.name
+            else -> null
+        }
+    }
 }

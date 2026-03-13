@@ -68,6 +68,7 @@ import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
 import com.tencent.devops.quality.api.v2.pojo.op.QualityMetaData
 import com.tencent.devops.store.atom.dao.AtomDao
+import com.tencent.devops.store.atom.util.AtomOsMapUtil
 import com.tencent.devops.store.atom.dao.AtomLabelRelDao
 import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomEnvInfoDao
@@ -1416,13 +1417,15 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
         val packagePath = updateAtomPackageInfo.packagePath
         val atomPackageSourceType = updateAtomPackageInfo.atomPackageSourceType
+        val serviceScopeConfigs = convertUpdateRequest.toServiceScopeConfigs()
         val classType = if (packagePath.isNullOrBlank() && atomPackageSourceType == PackageSourceTypeEnum.UPLOAD) {
-            // 没有可执行文件的插件是老的内置插件，插件的classType为插件标识
             atomCode
-        } else if (convertUpdateRequest.os.isEmpty()) {
-            MarketBuildLessAtomElement.classType
-        } else {
+        } else if (convertUpdateRequest.os.isNotEmpty()) {
             MarketBuildAtomElement.classType
+        } else if (AtomOsMapUtil.hasAnyBuildEnvJobType(serviceScopeConfigs)) {
+            MarketBuildAtomElement.classType
+        } else {
+            MarketBuildLessAtomElement.classType
         }
         val propsMap = mutableMapOf<String, Any?>()
         val inputDataMap = taskDataMap[KEY_INPUT] as? Map<String, Any>
@@ -1439,8 +1442,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             if (atomPackageSourceType == PackageSourceTypeEnum.REPO) {
                 AtomStatusEnum.COMMITTING
             } else AtomStatusEnum.TESTING
-        // 转换为服务范围配置列表
-        val serviceScopeConfigs = convertUpdateRequest.toServiceScopeConfigs()
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val props = JsonUtil.toJson(propsMap, formatted = false)

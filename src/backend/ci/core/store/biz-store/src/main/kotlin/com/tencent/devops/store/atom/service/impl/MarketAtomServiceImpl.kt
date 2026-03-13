@@ -842,7 +842,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 classifyIdMapJson = record[tAtom.CLASSIFY_ID_MAP],
                 pipelineClassifyIdFallback = record[tAtom.CLASSIFY_ID]?.toString(),
                 jobTypeValue = record[tAtom.JOB_TYPE],
-                jobTypeMapValue = record[tAtom.JOB_TYPE_MAP]
+                jobTypeMapValue = record[tAtom.JOB_TYPE_MAP],
+                osValue = record[tAtom.OS],
+                osMapValue = record[tAtom.OS_MAP]
             )
             val releaseType = if (record[tAtomVersionLog.RELEASE_TYPE] != null) {
                 ReleaseTypeEnum.getReleaseTypeObj((record[tAtomVersionLog.RELEASE_TYPE] as Byte).toInt())

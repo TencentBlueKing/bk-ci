@@ -40,6 +40,7 @@ import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.store.atom.util.AtomJobTypeUtil
+import com.tencent.devops.store.atom.util.AtomOsMapUtil
 import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
@@ -189,6 +190,7 @@ class MarketAtomDao : AtomBaseDao() {
             ta.SUMMARY,
             ta.DEFAULT_FLAG,
             ta.OS,
+            ta.OS_MAP,
             ta.BUILD_LESS_RUN_FLAG,
             ta.DOCS_LINK,
             ta.MODIFIER,
@@ -470,6 +472,7 @@ class MarketAtomDao : AtomBaseDao() {
     ) {
         val serviceScopeConfigs: List<ServiceScopeConfig> = marketAtomUpdateRequest.toServiceScopeConfigs()
         val jobTypeResult = AtomJobTypeUtil.buildJobTypeFields(serviceScopeConfigs, marketAtomUpdateRequest.jobType?.name)
+        val osWriteResult = AtomOsMapUtil.buildOsFields(serviceScopeConfigs, marketAtomUpdateRequest.os)
 
         val classifyIdMap = buildClassifyIdMap(
             dslContext = dslContext,
@@ -488,7 +491,7 @@ class MarketAtomDao : AtomBaseDao() {
         with(TAtom.T_ATOM) {
             val baseStep = dslContext.update(this)
                 .set(NAME, marketAtomUpdateRequest.name)
-                .set(OS, JsonUtil.toJson(marketAtomUpdateRequest.os, formatted = false))
+                .set(OS, JsonUtil.toJson(osWriteResult.pipelineOs, formatted = false))
                 .set(SUMMARY, marketAtomUpdateRequest.summary)
                 .set(DESCRIPTION, marketAtomUpdateRequest.description)
                 .set(CATEGROY, marketAtomUpdateRequest.category.category.toByte())
@@ -502,24 +505,21 @@ class MarketAtomDao : AtomBaseDao() {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
             
-            // 更新分类ID（用于 PIPELINE 服务范围）
             classifyId?.let {
                 baseStep.set(CLASSIFY_ID, it)
             }
             
-            // 更新 CLASSIFY_ID_MAP（支持多服务范围）
             classifyIdMap?.let {
                 baseStep.set(CLASSIFY_ID_MAP, JsonUtil.toJson(it, formatted = false))
             }
             
-            // 更新 JOB_TYPE（PIPELINE 纯字符串）和 JOB_TYPE_MAP（完整多 scope JSON）
             jobTypeResult.pipelineJobType?.let {
                 baseStep.set(JOB_TYPE, it)
             }
             jobTypeResult.jobTypeMapJson?.let {
                 baseStep.set(JOB_TYPE_MAP, it)
             }
-            // 更新 SERVICE_SCOPE（服务范围列表 JSON）
+            baseStep.set(OS_MAP, osWriteResult.osMapJson)
             val serviceScopeJson = JsonUtil.toJson(
                 serviceScopeConfigs.map { it.serviceScope.name },
                 formatted = false
@@ -579,6 +579,7 @@ class MarketAtomDao : AtomBaseDao() {
         val currentJobType = atomRecord.jobType
         val jobTypeResult = AtomJobTypeUtil.buildJobTypeFields(serviceScopeConfigs, currentJobType)
         val currentJobTypeMap = atomRecord.jobTypeMap
+        val osWriteResult = AtomOsMapUtil.buildOsFields(serviceScopeConfigs, atomRequest.os)
         val serviceScopeJson = JsonUtil.toJson(
             serviceScopeConfigs.map { it.serviceScope.name },
             formatted = false
@@ -601,6 +602,7 @@ class MarketAtomDao : AtomBaseDao() {
                 JOB_TYPE,
                 JOB_TYPE_MAP,
                 OS,
+                OS_MAP,
                 CLASSIFY_ID,
                 CLASSIFY_ID_MAP,
                 DOCS_LINK,
@@ -637,7 +639,8 @@ class MarketAtomDao : AtomBaseDao() {
                     serviceScopeJson,
                     jobTypeResult.pipelineJobType ?: currentJobType,
                     jobTypeResult.jobTypeMapJson ?: currentJobTypeMap,
-                    JsonUtil.toJson(atomRequest.os, formatted = false),
+                    JsonUtil.toJson(osWriteResult.pipelineOs, formatted = false),
+                    osWriteResult.osMapJson,
                     classifyId,
                     classifyIdMapJson,
                     atomRecord.docsLink,
@@ -771,6 +774,7 @@ class MarketAtomDao : AtomBaseDao() {
             tAtom.ATOM_TYPE,
             tAtom.JOB_TYPE,
             tAtom.OS,
+            tAtom.OS_MAP,
             tAtom.SUMMARY,
             tAtom.DESCRIPTION,
             tAtom.VERSION,

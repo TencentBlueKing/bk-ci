@@ -157,6 +157,7 @@ class MarketAtomEnvInfoDao {
             tAtom.HTML_TEMPLATE_VERSION,
             tAtom.CLASS_TYPE,
             tAtom.SERVICE_SCOPE,
+            tAtom.OS_MAP,
             tAtom.CREATE_TIME,
             tAtom.UPDATE_TIME
         ).from(tAtom)
