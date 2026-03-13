@@ -711,7 +711,8 @@
       "category": "Group labels",
       "repo": "Repository",
       "relativePath": "Relative path to code repository",
-      "glob": "Filter rules"
+      "glob": "Filter rules",
+      "constant": "Constant"
     },
     "propertyUpdated": "Updated",
     "toInstance": "To instantiate",

@@ -709,7 +709,8 @@
       "category": "グループラベル",
       "repo": "コードリポジトリ",
       "relativePath": "コード庫相対ディレクトリ",
-      "glob": "フィルタルール"
+      "glob": "フィルタルール",
+      "constant": "定数"
     },
     "propertyUpdated": "更新",
     "toInstance": "実例化",

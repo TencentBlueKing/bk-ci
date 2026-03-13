@@ -712,7 +712,8 @@
       "category": "分组标签",
       "repo": "代码库",
       "relativePath": "代码库相对目录",
-      "glob": "过滤规则"
+      "glob": "过滤规则",
+      "constant": "常量"
     },
     "propertyUpdated": "更新",
     "toInstance": "去实例化",
