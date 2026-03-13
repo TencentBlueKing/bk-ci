@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
+import com.tencent.devops.store.pojo.common.JobTypeConfig
 import com.tencent.devops.store.pojo.common.ServiceScopeConfig
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
@@ -85,18 +86,21 @@ data class MarketAtomUpdateRequest(
     var isBranchTestVersion: Boolean = false
 ) {
     fun toServiceScopeConfigs(): List<ServiceScopeConfig> {
-        // 如果提供了新格式，直接使用
         if (!serviceScopeConfigs.isNullOrEmpty()) {
             return serviceScopeConfigs
         }
 
-        // 兼容老格式：使用兼容字段，默认服务范围为PIPELINE
+        val effectiveJobType = jobType ?: JobTypeEnum.AGENT
+        val jobTypeConfig = JobTypeConfig(
+            jobType = effectiveJobType,
+            osList = if (os.isNotEmpty() && effectiveJobType.isBuildEnv()) os.toList() else null
+        )
         return listOf(
             ServiceScopeConfig(
                 serviceScope = ServiceScopeEnum.PIPELINE,
                 classifyCode = classifyCode
                     ?: throw IllegalArgumentException("Either serviceScopeConfigs or classifyCode must be provided"),
-                jobTypes = listOf(jobType ?: JobTypeEnum.AGENT),
+                jobTypeConfigs = listOf(jobTypeConfig),
                 labelIdList = labelIdList
             )
         )

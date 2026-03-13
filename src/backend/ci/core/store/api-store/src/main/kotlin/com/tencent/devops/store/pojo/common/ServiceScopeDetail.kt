@@ -20,7 +20,11 @@ data class ServiceScopeDetail(
     @get:Schema(title = "所属插件分类名称", required = true)
     val classifyName: String,
 
+    @get:Schema(title = "Job类型配置列表（包含 jobType 及其操作系统信息）", required = false)
+    val jobTypeConfigs: List<JobTypeConfig>? = null,
+
     @get:Schema(title = "适用Job类型列表", required = false)
+    @Deprecated("使用 jobTypeConfigs 替代")
     val jobTypes: List<JobTypeEnum>? = null,
 
     @get:Schema(title = "插件标签列表", required = false)

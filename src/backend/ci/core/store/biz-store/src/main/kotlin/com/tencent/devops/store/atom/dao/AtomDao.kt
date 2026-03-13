@@ -50,7 +50,9 @@ import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.atom.util.AtomJobTypeUtil
+import com.tencent.devops.store.atom.util.AtomOsMapUtil
 import com.tencent.devops.store.atom.util.JobTypeWriteResult
+import com.tencent.devops.store.atom.util.OsWriteResult
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
@@ -58,6 +60,7 @@ import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
 import com.tencent.devops.store.pojo.common.KEY_ATOM_STATUS
 import com.tencent.devops.store.pojo.common.KEY_ATOM_TYPE
@@ -81,6 +84,7 @@ import com.tencent.devops.store.pojo.common.KEY_INSTALL_TYPE
 import com.tencent.devops.store.pojo.common.KEY_LATEST_FLAG
 import com.tencent.devops.store.pojo.common.KEY_LOGO_URL
 import com.tencent.devops.store.pojo.common.KEY_MODIFIER
+import com.tencent.devops.store.pojo.common.KEY_OS_MAP
 import com.tencent.devops.store.pojo.common.KEY_PUBLISHER
 import com.tencent.devops.store.pojo.common.KEY_RECENT_EXECUTE_NUM
 import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
@@ -101,6 +105,7 @@ import org.jooq.Record3
 import org.jooq.Record5
 import org.jooq.Result
 import org.jooq.SelectOnConditionStep
+import org.jooq.UpdateSetMoreStep
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.countDistinct
 import org.springframework.stereotype.Repository
@@ -148,7 +153,8 @@ private data class AtomConditionSet(
 private data class ServiceScopeResolvedFields(
     val serviceScopeJson: String,
     val classifyIdMap: Map<String, String>,
-    val jobTypeResult: JobTypeWriteResult
+    val jobTypeResult: JobTypeWriteResult,
+    val osWriteResult: OsWriteResult
 )
 
 @Suppress("ALL")
@@ -163,6 +169,9 @@ class AtomDao : AtomBaseDao() {
         atomRequest: AtomCreateRequest
     ) {
         with(TAtom.T_ATOM) {
+            val osMapJson = if (atomRequest.os.isNotEmpty() && atomRequest.jobType.isBuildEnv()) {
+                JsonUtil.toJson(mapOf(atomRequest.jobType.name to atomRequest.os), formatted = false)
+            } else null
             dslContext.insertInto(
                 this,
                 ID,
@@ -173,6 +182,7 @@ class AtomDao : AtomBaseDao() {
                 JOB_TYPE,
                 JOB_TYPE_MAP,
                 OS,
+                OS_MAP,
                 CLASSIFY_ID,
                 CLASSIFY_ID_MAP,
                 DOCS_LINK,
@@ -201,6 +211,7 @@ class AtomDao : AtomBaseDao() {
                         formatted = false
                     ),
                     JsonUtil.toJson(atomRequest.os, formatted = false),
+                    osMapJson,
                     atomRequest.classifyId,
                     JsonUtil.toJson(
                         mapOf(ServiceScopeEnum.PIPELINE.name to atomRequest.classifyId),
@@ -375,34 +386,20 @@ class AtomDao : AtomBaseDao() {
         atomStatusList: List<Byte>? = null
     ): TAtomRecord? {
         val tAtom = TAtom.T_ATOM
-        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
-        return if (defaultFlag) {
-            val conditions = generateGetPipelineAtomCondition(
-                tAtom = tAtom,
-                atomCode = atomCode,
-                version = version,
-                defaultFlag = true,
-                atomStatusList = atomStatusList
+        val conditions = generateGetPipelineAtomCondition(
+            tAtom = tAtom,
+            atomCode = atomCode,
+            version = version,
+            defaultFlag = defaultFlag,
+            atomStatusList = atomStatusList
+        )
+        if (!defaultFlag) {
+            conditions.add(
+                buildProjectInstalledCondition(tAtom, TStoreProjectRel.T_STORE_PROJECT_REL, projectCode)
             )
-            dslContext.selectFrom(tAtom).where(conditions).orderBy(tAtom.CREATE_TIME.desc()).limit(1).fetchOne()
-        } else {
-            val conditions = generateGetPipelineAtomCondition(
-                tAtom = tAtom,
-                atomCode = atomCode,
-                version = version,
-                defaultFlag = false,
-                atomStatusList = atomStatusList
-            )
-            dslContext.selectFrom(tAtom).where(conditions)
-                .andExists(
-                    dslContext.selectOne().from(tStoreProjectRel).where(
-                        tAtom.ATOM_CODE.eq(tStoreProjectRel.STORE_CODE)
-                            .and(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
-                            .and(tStoreProjectRel.PROJECT_CODE.eq(projectCode))
-                    )
-                )
-                .orderBy(tAtom.CREATE_TIME.desc()).limit(1).fetchOne()
         }
+        return dslContext.selectFrom(tAtom).where(conditions)
+            .orderBy(tAtom.CREATE_TIME.desc()).limit(1).fetchOne()
     }
 
     private fun generateGetPipelineAtomCondition(
@@ -516,7 +513,11 @@ class AtomDao : AtomBaseDao() {
         buildServiceScopeCondition(SERVICE_SCOPE, serviceScope)?.let {
             conditions.add(it)
         }
-        os?.let { if (!"all".equals(os, true)) conditions.add(OS.contains(os)) }
+        os?.let {
+            if (!"all".equals(os, true)) {
+                conditions.add(OS.contains(os).or(OS_MAP.contains(os)))
+            }
+        }
         category?.let { conditions.add(CATEGROY.eq(AtomCategoryEnum.valueOf(category).category.toByte())) }
         // 使用 buildClassifyCondition 构建分类查询条件（支持多服务范围）
         buildClassifyCondition(ta = this, classifyId = classifyId, serviceScope = serviceScope)?.let {
@@ -673,38 +674,16 @@ class AtomDao : AtomBaseDao() {
         page: Int?,
         pageSize: Int?
     ): Result<out Record> {
-        val normalStep = buildAtomSelectStep(
-            dslContext = dslContext,
-            tAtom = tAtom,
-            tClassify = tClassify,
-            tAtomFeature = tAtomFeature,
-            tStoreStatisticsTotal = tStoreStatisticsTotal,
-            serviceScope = param.serviceScope
-        )
-        val defaultStep = buildAtomSelectStep(
-            dslContext = dslContext,
-            tAtom = tAtom,
-            tClassify = tClassify,
-            tAtomFeature = tAtomFeature,
-            tStoreStatisticsTotal = tStoreStatisticsTotal,
-            serviceScope = param.serviceScope
-        )
-        val unionQuery =
-            normalStep.where(conditionSet.normalConditions).unionAll(defaultStep.where(conditionSet.defaultConditions))
-
-        val unionWithTest = if (conditionSet.testConditions != null) {
-            val testStep = buildAtomSelectStep(
-                dslContext = dslContext,
-                tAtom = tAtom,
-                tClassify = tClassify,
-                tAtomFeature = tAtomFeature,
-                tStoreStatisticsTotal = tStoreStatisticsTotal,
-                serviceScope = param.serviceScope
-            )
-            unionQuery.unionAll(testStep.where(conditionSet.testConditions))
-        } else {
-            unionQuery
+        val newBranch = {
+            buildAtomSelectStep(dslContext, tAtom, tClassify, tAtomFeature, tStoreStatisticsTotal, param.serviceScope)
         }
+
+        val unionQuery = newBranch().where(conditionSet.normalConditions)
+            .unionAll(newBranch().where(conditionSet.defaultConditions))
+
+        val unionWithTest = conditionSet.testConditions?.let { testConds ->
+            unionQuery.unionAll(newBranch().where(testConds))
+        } ?: unionQuery
 
         val t = unionWithTest.asTable("t")
         val baseStep = dslContext.select().from(t).orderBy(t.field(KEY_WEIGHT)!!.desc(), t.field(NAME)!!.asc())
@@ -725,27 +704,19 @@ class AtomDao : AtomBaseDao() {
         val joinCond = tAtom.ATOM_CODE.eq(tStoreStatisticsTotal.STORE_CODE)
             .and(tStoreStatisticsTotal.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
 
-        val defaultBranch = dslContext.select(tAtom.ATOM_CODE.`as`(KEY_ATOM_CODE)).from(tAtom)
-            .leftJoin(tAtomFeature).on(tAtom.ATOM_CODE.eq(tAtomFeature.ATOM_CODE))
-            .leftJoin(tStoreStatisticsTotal).on(joinCond)
-            .where(conditionSet.defaultConditions)
-
-        val normalBranch = dslContext.select(tAtom.ATOM_CODE.`as`(KEY_ATOM_CODE)).from(tAtom)
-            .leftJoin(tAtomFeature).on(tAtom.ATOM_CODE.eq(tAtomFeature.ATOM_CODE))
-            .leftJoin(tStoreStatisticsTotal).on(joinCond)
-            .where(conditionSet.normalConditions)
-
-        val unionQuery = defaultBranch.unionAll(normalBranch)
-
-        val unionWithTest = if (conditionSet.testConditions != null) {
-            val testBranch = dslContext.select(tAtom.ATOM_CODE.`as`(KEY_ATOM_CODE)).from(tAtom)
+        val newBranch = { conditions: MutableList<Condition> ->
+            dslContext.select(tAtom.ATOM_CODE.`as`(KEY_ATOM_CODE)).from(tAtom)
                 .leftJoin(tAtomFeature).on(tAtom.ATOM_CODE.eq(tAtomFeature.ATOM_CODE))
                 .leftJoin(tStoreStatisticsTotal).on(joinCond)
-                .where(conditionSet.testConditions)
-            unionQuery.unionAll(testBranch)
-        } else {
-            unionQuery
+                .where(conditions)
         }
+
+        val unionQuery = newBranch(conditionSet.defaultConditions)
+            .unionAll(newBranch(conditionSet.normalConditions))
+
+        val unionWithTest = conditionSet.testConditions?.let { testConds ->
+            unionQuery.unionAll(newBranch(testConds))
+        } ?: unionQuery
 
         val t = unionWithTest.asTable("t")
         return dslContext.select(countDistinct(t.field(KEY_ATOM_CODE)))
@@ -768,6 +739,7 @@ class AtomDao : AtomBaseDao() {
             tAtom.CLASS_TYPE.`as`(KEY_CLASS_TYPE),
             tAtom.NAME.`as`(NAME),
             tAtom.OS.`as`(KEY_OS),
+            tAtom.OS_MAP.`as`(KEY_OS_MAP),
             tAtom.SERVICE_SCOPE.`as`(KEY_SERVICE_SCOPE),
             classifyIdField.`as`(KEY_CLASSIFY_ID),
             tClassify.CLASSIFY_CODE.`as`(KEY_CLASSIFY_CODE),
@@ -828,7 +800,6 @@ class AtomDao : AtomBaseDao() {
             tAtomFeature = tAtomFeature,
             param = param
         )
-        defaultConditions.add(tStoreStatisticsTotal.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
         val normalConditions = buildNormalConditions(
             tAtom = tAtom,
             tStoreProjectRel = tStoreProjectRel,
@@ -992,14 +963,18 @@ class AtomDao : AtomBaseDao() {
 
     private fun buildOsCondition(tAtom: TAtom, param: AtomQueryParam): Condition? {
         val os = param.os
+        if (isExplicitNonBuildEnvJobType(param.jobType)) {
+            return null
+        }
         return when {
             !os.isNullOrBlank() && !os.equals(KEY_ALL, ignoreCase = true) -> {
+                val osMatch = buildJobTypeAwareOsMatch(tAtom, os, param.jobType, param.serviceScope)
                 if (param.fitOsFlag == false) {
-                    tAtom.OS.notLike("%$os%")
+                    osMatch.not()
                         .and(tAtom.BUILD_LESS_RUN_FLAG.ne(true).or(tAtom.BUILD_LESS_RUN_FLAG.isNull))
                         .and(tAtom.CATEGROY.eq(AtomCategoryEnum.TASK.category.toByte()))
                 } else {
-                    tAtom.OS.contains(os).or(tAtom.BUILD_LESS_RUN_FLAG.eq(true))
+                    osMatch.or(tAtom.BUILD_LESS_RUN_FLAG.eq(true))
                 }
             }
             os.equals(KEY_ALL, ignoreCase = true) && param.fitOsFlag == false -> {
@@ -1009,6 +984,63 @@ class AtomDao : AtomBaseDao() {
             }
             else -> null
         }
+    }
+
+    /**
+     * 解析 jobType 字符串的编译环境标识：true=编译环境，false=无编译环境，null=为空或无法解析。
+     * 供 isExplicitNonBuildEnvJobType / resolveOsMapKey 等方法复用，避免重复 valueOf + isBuildEnv 调用。
+     */
+    private fun parseBuildEnvFlag(jobType: String?): Boolean? {
+        if (jobType.isNullOrBlank()) return null
+        return runCatching { JobTypeEnum.valueOf(jobType).isBuildEnv() }.getOrNull()
+    }
+
+    private fun isExplicitNonBuildEnvJobType(jobType: String?): Boolean {
+        return parseBuildEnvFlag(jobType) == false
+    }
+
+    /**
+     * 根据 jobType 构建 OS 匹配条件（OS 与 jobType 一对一）。
+     *
+     * 优先使用请求参数中的 jobType 确定 OS_MAP 的查询 key；jobType 为空时回退到 serviceScope 推导。
+     *
+     * 性能策略：
+     * - AGENT（或 jobType/scope 均为空）：只查 OS 字段（LIKE），与优化前一致，零开销
+     * - 非 AGENT 编译环境 jobType（如 CREATIVE_STREAM）：用 JSON_EXTRACT + JSON_CONTAINS 精确定位
+     *   OS_MAP 中对应 jobType 的数组，避免 JSON_SEARCH 全路径遍历。同时 OR OS 字段兜底兼容。
+     */
+    private fun buildJobTypeAwareOsMatch(
+        tAtom: TAtom,
+        os: String,
+        jobType: String?,
+        serviceScope: ServiceScopeEnum?
+    ): Condition {
+        val osMapKey = resolveOsMapKey(jobType, serviceScope)
+
+        if (osMapKey == null || osMapKey == JobTypeEnum.AGENT.name) {
+            return tAtom.OS.contains(os)
+        }
+
+        val osInMapCondition = DSL.condition(
+            "JSON_CONTAINS(JSON_EXTRACT({0}, {1}), CONCAT('\"', {2}, '\"'))",
+            tAtom.OS_MAP,
+            DSL.inline("\$.${osMapKey}"),
+            DSL.inline(os)
+        )
+        return osInMapCondition.or(tAtom.OS.contains(os))
+    }
+
+    /**
+     * 确定 OS_MAP 中的查询 key。
+     * 优先使用请求参数中的 jobType（OS 与 jobType 一对一）；
+     * jobType 为空时回退到 serviceScope 推导（getBuildEnvJobTypeForScope）。
+     * 返回 null 表示无需查 OS_MAP，直接用 OS 字段。
+     */
+    private fun resolveOsMapKey(jobType: String?, serviceScope: ServiceScopeEnum?): String? {
+        if (!jobType.isNullOrBlank()) {
+            return if (parseBuildEnvFlag(jobType) == true) jobType else null
+        }
+        return getBuildEnvJobTypeForScope(serviceScope)
     }
 
     fun updateAtomFromOp(
@@ -1068,14 +1100,7 @@ class AtomDao : AtomBaseDao() {
             }
             val configs = atomUpdateRequest.serviceScopeConfigs
             if (!configs.isNullOrEmpty()) {
-                val resolved = resolveServiceScopeFields(dslContext, configs)
-                baseStep.set(SERVICE_SCOPE, resolved.serviceScopeJson)
-                if (resolved.classifyIdMap.isNotEmpty()) {
-                    baseStep.set(CLASSIFY_ID_MAP, JsonUtil.toJson(resolved.classifyIdMap, formatted = false))
-                    resolved.classifyIdMap[ServiceScopeEnum.PIPELINE.name]?.let { baseStep.set(CLASSIFY_ID, it) }
-                }
-                resolved.jobTypeResult.pipelineJobType?.let { baseStep.set(JOB_TYPE, it) }
-                resolved.jobTypeResult.jobTypeMapJson?.let { baseStep.set(JOB_TYPE_MAP, it) }
+                applyResolvedServiceScopeFields(baseStep, resolveServiceScopeFields(dslContext, configs))
             } else {
                 baseStep.set(SERVICE_SCOPE, JsonUtil.toJson(atomUpdateRequest.serviceScope, formatted = false))
                 baseStep.set(JOB_TYPE, atomUpdateRequest.jobType.name)
@@ -1310,18 +1335,9 @@ class AtomDao : AtomBaseDao() {
 
             val configs = atomBaseInfoUpdateRequest.serviceScopeConfigs
             if (!configs.isNullOrEmpty()) {
-                val step = dslContext.update(this)
-                val resolved = resolveServiceScopeFields(dslContext, configs)
-                step.set(SERVICE_SCOPE, resolved.serviceScopeJson)
-                if (resolved.classifyIdMap.isNotEmpty()) {
-                    step.set(CLASSIFY_ID_MAP, JsonUtil.toJson(resolved.classifyIdMap, formatted = false))
-                    resolved.classifyIdMap[ServiceScopeEnum.PIPELINE.name]?.let { step.set(CLASSIFY_ID, it) }
-                }
-                resolved.jobTypeResult.pipelineJobType?.let { step.set(JOB_TYPE, it) }
-                resolved.jobTypeResult.jobTypeMapJson?.let { step.set(JOB_TYPE_MAP, it) }
-                step.set(MODIFIER, userId)
-                    .where(ID.`in`(atomIdList))
-                    .execute()
+                val moreStep = dslContext.update(this).set(MODIFIER, userId)
+                applyResolvedServiceScopeFields(moreStep, resolveServiceScopeFields(dslContext, configs))
+                moreStep.where(ID.`in`(atomIdList)).execute()
             } else if (atomBaseInfoUpdateRequest.classifyCode != null) {
                 val resolvedMap = buildClassifyIdMap(dslContext, atomBaseInfoUpdateRequest)
                 if (resolvedMap.isNotEmpty()) {
@@ -1415,37 +1431,21 @@ class AtomDao : AtomBaseDao() {
         atomStatusList: List<Byte>? = null
     ): String? {
         val tAtom = TAtom.T_ATOM
-        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
-        return if (defaultFlag) {
-            val conditions = generateGetPipelineAtomCondition(
-                tAtom = tAtom,
-                atomCode = atomCode,
-                version = version,
-                defaultFlag = true,
-                atomStatusList = atomStatusList
+        val conditions = generateGetPipelineAtomCondition(
+            tAtom = tAtom,
+            atomCode = atomCode,
+            version = version,
+            defaultFlag = defaultFlag,
+            atomStatusList = atomStatusList
+        )
+        if (!defaultFlag) {
+            conditions.add(
+                buildProjectInstalledCondition(tAtom, TStoreProjectRel.T_STORE_PROJECT_REL, projectCode)
             )
-            dslContext.select(tAtom.VERSION).from(tAtom)
-                .where(conditions)
-                .orderBy(tAtom.CREATE_TIME.desc()).limit(1).fetchOne(0, String::class.java)
-        } else {
-            val conditions = generateGetPipelineAtomCondition(
-                tAtom = tAtom,
-                atomCode = atomCode,
-                version = version,
-                defaultFlag = false,
-                atomStatusList = atomStatusList
-            )
-            dslContext.select(tAtom.VERSION).from(tAtom)
-                .where(conditions)
-                .andExists(
-                    dslContext.selectOne().from(tStoreProjectRel).where(
-                        tAtom.ATOM_CODE.eq(tStoreProjectRel.STORE_CODE)
-                            .and(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
-                            .and(tStoreProjectRel.PROJECT_CODE.eq(projectCode))
-                    )
-                )
-                .orderBy(tAtom.CREATE_TIME.desc()).limit(1).fetchOne(0, String::class.java)
         }
+        return dslContext.select(tAtom.VERSION).from(tAtom)
+            .where(conditions)
+            .orderBy(tAtom.CREATE_TIME.desc()).limit(1).fetchOne(0, String::class.java)
     }
 
     fun getAtomRepoInfoByCode(
@@ -1574,8 +1574,28 @@ class AtomDao : AtomBaseDao() {
         return ServiceScopeResolvedFields(
             serviceScopeJson = JsonUtil.toJson(configs.map { it.serviceScope.name }, formatted = false),
             classifyIdMap = buildClassifyIdMapFromConfigs(dslContext, configs),
-            jobTypeResult = AtomJobTypeUtil.buildJobTypeFields(configs)
+            jobTypeResult = AtomJobTypeUtil.buildJobTypeFields(configs),
+            osWriteResult = AtomOsMapUtil.buildOsFields(configs)
         )
+    }
+
+    /**
+     * 将 ServiceScopeResolvedFields 中的多 scope 字段统一写入 UPDATE 语句。
+     * 供 updateAtomFromOp 和 updateAtomBaseInfo 复用，消除重复的字段赋值代码。
+     */
+    private fun TAtom.applyResolvedServiceScopeFields(
+        step: UpdateSetMoreStep<TAtomRecord>,
+        resolved: ServiceScopeResolvedFields
+    ) {
+        step.set(SERVICE_SCOPE, resolved.serviceScopeJson)
+        if (resolved.classifyIdMap.isNotEmpty()) {
+            step.set(CLASSIFY_ID_MAP, JsonUtil.toJson(resolved.classifyIdMap, formatted = false))
+            resolved.classifyIdMap[ServiceScopeEnum.PIPELINE.name]?.let { step.set(CLASSIFY_ID, it) }
+        }
+        resolved.jobTypeResult.pipelineJobType?.let { step.set(JOB_TYPE, it) }
+        resolved.jobTypeResult.jobTypeMapJson?.let { step.set(JOB_TYPE_MAP, it) }
+        step.set(OS, JsonUtil.toJson(resolved.osWriteResult.pipelineOs, formatted = false))
+        step.set(OS_MAP, resolved.osWriteResult.osMapJson)
     }
 
     /**

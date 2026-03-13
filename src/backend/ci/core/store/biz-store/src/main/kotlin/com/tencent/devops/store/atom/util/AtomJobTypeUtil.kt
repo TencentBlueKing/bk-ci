@@ -63,8 +63,8 @@ object AtomJobTypeUtil {
 
         val jobTypeMap = mutableMapOf<String, MutableSet<String>>()
         for (config in serviceScopeConfigs) {
-            val types = config.jobTypes
-            if (types.isNullOrEmpty()) continue
+            val types = config.getEffectiveJobTypes()
+            if (types.isEmpty()) continue
             val scope = ServiceScopeUtil.normalize(config.serviceScope.name) ?: config.serviceScope.name
             val set = jobTypeMap.getOrPut(scope) { linkedSetOf() }
             types.forEach { set.add(it.name) }

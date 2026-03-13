@@ -117,6 +117,15 @@ BEGIN
     END IF;
 
     IF NOT EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_ATOM'
+                AND COLUMN_NAME = 'OS_MAP') THEN
+      ALTER TABLE T_ATOM ADD COLUMN `OS_MAP` text
+          COMMENT '多JobType操作系统映射，JSON格式：{"AGENT":["WINDOWS","LINUX","MACOS"],"CREATIVE_STREAM":["WINDOWS"]}';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
                    FROM information_schema.statistics
                    WHERE TABLE_SCHEMA = db
                      AND TABLE_NAME = 'T_ATOM'

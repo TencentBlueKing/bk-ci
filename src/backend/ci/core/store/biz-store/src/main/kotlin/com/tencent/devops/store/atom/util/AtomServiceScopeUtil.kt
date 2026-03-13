@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.store.atom.service.AtomLabelService
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
+import com.tencent.devops.store.pojo.common.JobTypeConfig
 import com.tencent.devops.store.pojo.common.ServiceScopeConfig
 import com.tencent.devops.store.pojo.common.ServiceScopeDetail
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
@@ -217,7 +218,9 @@ class AtomServiceScopeUtil @Autowired constructor(
         classifyIdMapJson: String?,
         pipelineClassifyIdFallback: String?,
         jobTypeValue: String?,
-        jobTypeMapValue: String? = null
+        jobTypeMapValue: String? = null,
+        osValue: String? = null,
+        osMapValue: String? = null
     ): List<ServiceScopeDetail>? {
         val serviceScopes = getAllServiceScopes(serviceScopeStr, classifyIdMapJson)
         if (serviceScopes.isEmpty()) return null
@@ -229,10 +232,12 @@ class AtomServiceScopeUtil @Autowired constructor(
         val classifyIds = scopeToClassifyId.values.distinct()
         val classifyInfosById = classifyDao.getClassifyInfosByIds(dslContext, classifyIds)
         val allJobTypes = AtomJobTypeUtil.getAllJobTypes(jobTypeValue, jobTypeMapValue)
+        val allOs = AtomOsMapUtil.getAllOs(osValue, osMapValue, jobTypeValue)
         val details = serviceScopes.mapNotNull { scope ->
             buildSingleServiceScopeDetail(
                 scope = scope,
                 allJobTypes = allJobTypes,
+                allOs = allOs,
                 getClassifyInfo = { serviceScopeEnum ->
                     scopeToClassifyId[serviceScopeEnum.name]?.let { classifyInfosById[it] }
                 },
@@ -247,6 +252,7 @@ class AtomServiceScopeUtil @Autowired constructor(
     private fun buildSingleServiceScopeDetail(
         scope: String,
         allJobTypes: Map<String, List<String>>,
+        allOs: Map<String, List<String>>,
         getClassifyInfo: (ServiceScopeEnum) -> Pair<String, String>?,
         getLabelList: (ServiceScopeEnum) -> List<Label>?
     ): ServiceScopeDetail? {
@@ -255,10 +261,17 @@ class AtomServiceScopeUtil @Autowired constructor(
             val (classifyCode, classifyName) = getClassifyInfo(serviceScopeEnum) ?: return null
             val jobTypes = resolveJobTypes(scope, allJobTypes)
             val labelList = getLabelList(serviceScopeEnum)
+            val jobTypeConfigs = jobTypes.map { jt ->
+                JobTypeConfig(
+                    jobType = jt,
+                    osList = if (jt.isBuildEnv()) allOs[jt.name] else null
+                )
+            }
             ServiceScopeDetail(
                 serviceScope = serviceScopeEnum,
                 classifyCode = classifyCode,
                 classifyName = classifyName,
+                jobTypeConfigs = jobTypeConfigs,
                 jobTypes = jobTypes,
                 labelList = labelList
             )
