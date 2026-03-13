@@ -1065,7 +1065,6 @@
                         
                         // 检查版本名是否存在（仅对模板生效且有自定义版本名时）
                         const versionNameToCheck = this.customVersionName?.trim()
-                        console.log(this.isTemplate, versionNameToCheck, !skipVersionNameCheck)
                         if (this.isTemplate && versionNameToCheck && !skipVersionNameCheck) {
                             const { projectId, templateId } = this.$route.params
                             const isExist = await this.checkTemplateVersionNameExist({
@@ -1468,7 +1467,8 @@
                         projectId,
                         templateId,
                         page: 1,
-                        pageSize: 100
+                        pageSize: 10,
+                        includeDraft: false
                     })
                     const records = res.records || []
                     const seenNames = new Set()
@@ -1479,9 +1479,6 @@
                         }
                         seenNames.add(item.versionName)
                         result.push(item)
-                        if (result.length >= 5) {
-                            break
-                        }
                     }
                     this.templateVersionList = result
                 } catch (e) {
