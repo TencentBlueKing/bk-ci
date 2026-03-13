@@ -104,7 +104,7 @@ export const actions = {
     /**
      * 取消发布
      */
-    cancelRelease ({ commit }, storeId) {
+    cancelClientRelease ({ commit }, storeId) {
         return vue.$ajax.put(`${prefix}/user/store/releases/components/${storeId}/cancel`)
     },
 

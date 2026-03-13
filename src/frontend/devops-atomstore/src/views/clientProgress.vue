@@ -228,7 +228,7 @@
     async function cancelRelease () {
         try {
             setLoadingState(true)
-            await $store.dispatch('store/cancelRelease', storeId.value)
+            await $store.dispatch('store/cancelClientRelease', storeId.value)
             refreshProgress()
             if (componentRef.value?.refreshBuildProgress) {
                 componentRef.value.refreshBuildProgress()

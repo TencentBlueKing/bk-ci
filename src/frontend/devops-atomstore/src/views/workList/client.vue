@@ -382,7 +382,7 @@
                         color: '#ea3636',
                         marginBottom: '20px'
                     }
-                }, $t('store.删除时将清理数据，删除后不可恢复！避免误操作，请输入标识【{0}】后再提交删除', [row.name])),
+                }, $t('store.删除时将清理数据，删除后不可恢复！避免误操作，请输入标识【{0}】后再提交删除', [row.storeCode])),
                 h('input', {
                     class: 'bk-form-input',
                     on: {

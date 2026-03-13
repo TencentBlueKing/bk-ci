@@ -97,7 +97,7 @@
     const foldSet = ref(new Set())
     const scrollContainer = ref()
     let buildTimer
-    const isRunning = ref(true)
+    const isRunning = ref(false)
     const isLogLoading = ref(false)
     const isFolded = ref(false)
     const infoBuild = ref(true)
