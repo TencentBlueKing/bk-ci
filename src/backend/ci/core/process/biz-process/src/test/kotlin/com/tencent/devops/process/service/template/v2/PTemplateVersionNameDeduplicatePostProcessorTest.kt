@@ -50,10 +50,13 @@ class PTemplateVersionNameDeduplicatePostProcessorTest : BkCiAbstractTest() {
             versionAction = PipelineVersionAction.CREATE_RELEASE
         )
 
-        postProcessor.postProcessBeforeVersionCreate(ctx, res, setting)
+        postProcessor.postProcessInTransactionBeforeVersionCreate(
+            dslContext, ctx, res, setting
+        )
 
         verify(exactly = 1) {
             resourceService.renameExistingReleasedVersionIfDuplicate(
+                transactionContext = dslContext,
                 projectId = PROJECT_ID,
                 templateId = TEMPLATE_ID,
                 versionName = versionName
@@ -70,10 +73,13 @@ class PTemplateVersionNameDeduplicatePostProcessorTest : BkCiAbstractTest() {
             versionAction = PipelineVersionAction.CREATE_RELEASE
         )
 
-        postProcessor.postProcessBeforeVersionCreate(ctx, res, setting)
+        postProcessor.postProcessInTransactionBeforeVersionCreate(
+            dslContext, ctx, res, setting
+        )
 
         verify(exactly = 1) {
             resourceService.renameExistingReleasedVersionIfDuplicate(
+                transactionContext = dslContext,
                 projectId = PROJECT_ID,
                 templateId = TEMPLATE_ID,
                 versionName = "res-v1"
@@ -89,7 +95,9 @@ class PTemplateVersionNameDeduplicatePostProcessorTest : BkCiAbstractTest() {
             versionAction = PipelineVersionAction.SAVE_DRAFT
         )
 
-        postProcessor.postProcessBeforeVersionCreate(ctx, res, setting)
+        postProcessor.postProcessInTransactionBeforeVersionCreate(
+            dslContext, ctx, res, setting
+        )
 
         verify(exactly = 0) {
             resourceService.renameExistingReleasedVersionIfDuplicate(
@@ -107,10 +115,13 @@ class PTemplateVersionNameDeduplicatePostProcessorTest : BkCiAbstractTest() {
             versionAction = PipelineVersionAction.RELEASE_DRAFT
         )
 
-        postProcessor.postProcessBeforeVersionCreate(ctx, res, setting)
+        postProcessor.postProcessInTransactionBeforeVersionCreate(
+            dslContext, ctx, res, setting
+        )
 
         verify(exactly = 1) {
             resourceService.renameExistingReleasedVersionIfDuplicate(
+                transactionContext = dslContext,
                 projectId = PROJECT_ID,
                 templateId = TEMPLATE_ID,
                 versionName = versionName
