@@ -1720,6 +1720,17 @@ class PipelineTemplateFacadeService @Autowired constructor(
         return null
     }
 
+    fun existsVersionName(
+        projectId: String,
+        templateId: String,
+        versionName: String
+    ): Boolean {
+        return pipelineTemplateResourceService.existsVersionName(
+            projectId = projectId,
+            templateId = templateId,
+            versionName = versionName
+        )
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineTemplateFacadeService::class.java)

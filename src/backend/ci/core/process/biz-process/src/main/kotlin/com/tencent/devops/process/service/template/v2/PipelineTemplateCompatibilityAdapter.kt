@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
@@ -39,6 +40,7 @@ import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
 import com.tencent.devops.process.pojo.PTemplateOrderByType
 import com.tencent.devops.process.pojo.PTemplateSortType
@@ -62,9 +64,12 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstancesRequ
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateReleaseCreateReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
+import com.tencent.devops.process.service.ParamFacadeService
+import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.template.TemplateCommonService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionManager
+import com.tencent.devops.process.util.PipelineTemplateUtil
 import org.springframework.stereotype.Service
 
 /**
@@ -87,7 +92,9 @@ class PipelineTemplateCompatibilityAdapter(
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     private val pipelineGroupService: PipelineGroupService,
     private val redisOperation: RedisOperation,
-    private val templateCommonService: TemplateCommonService
+    private val templateCommonService: TemplateCommonService,
+    private val stageTagService: StageTagService,
+    private val paramService: ParamFacadeService
 ) {
 
     /**
@@ -143,8 +150,14 @@ class PipelineTemplateCompatibilityAdapter(
         groups.forEach { labels.addAll(it.labels) }
         model.labels = labels
 
+        val fillModel = fillOptionsParam(
+            userId = userId,
+            projectId = projectId,
+            model = model
+        )
         // 从 model 解析 params / templateParams
-        val triggerContainer = model.getTriggerContainer()
+        PipelineTemplateUtil.splitParamsForV1Compatibility(fillModel)
+        val triggerContainer = fillModel.getTriggerContainer()
         val params = triggerContainer.params
         val templateParams = triggerContainer.templateParams
 
@@ -163,7 +176,7 @@ class PipelineTemplateCompatibilityAdapter(
             templateName = templateInfo.name,
             description = templateInfo.desc ?: "",
             creator = templateInfo.creator,
-            template = model,
+            template = fillModel,
             templateType = templateInfo.mode.name,
             logoUrl = templateInfo.logoUrl ?: "",
             hasPermission = hasPermission,
@@ -677,6 +690,36 @@ class PipelineTemplateCompatibilityAdapter(
                 errorCode = ProcessMessageCode.ERROR_TEMPLATE_MIGRATING
             )
         }
+    }
+
+    /**
+     * 填充 options 参数的值,比如代码库类型、git分支类型参数类型需要填充下拉的值
+     */
+    private fun fillOptionsParam(userId: String, projectId: String, model: Model): Model {
+        val triggerContainer = model.getTriggerContainer()
+        val params = paramService.filterParams(userId, projectId, null, triggerContainer.params)
+        val templateParams =
+            if (triggerContainer.templateParams == null || triggerContainer.templateParams!!.isEmpty()) {
+                triggerContainer.templateParams
+            } else {
+                paramService.filterParams(userId, projectId, null, triggerContainer.templateParams!!)
+            }
+        val rewriteContainer = TriggerContainer(
+            name = triggerContainer.name,
+            elements = triggerContainer.elements,
+            params = params, templateParams = templateParams,
+            buildNo = triggerContainer.buildNo,
+            containerId = triggerContainer.containerId,
+            containerHashId = triggerContainer.containerHashId
+        )
+        val defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
+        return Model(
+            name = model.name,
+            desc = "",
+            stages = PipelineUtils.getFixedStages(model, rewriteContainer, defaultStageTagId),
+            labels = model.labels,
+            instanceFromTemplate = false
+        )
     }
 
     companion object {
