@@ -659,6 +659,9 @@
                 // 在 instanceParams 中存在，但在 templateParams 中不存在，标记为isDelete
                 i.isDelete = true
             } else {
+                if (templateParam.constant) {
+                    i.constant = templateParam.constant
+                }
                 // 常量 其他变量直接赋值为模板对应参数的值（版本号除外）
                 // hasChange(控制一键填入默认值按钮是否显示, 如果变量值与模板默认值不同则显示)
                 // isChange(控制默认值输入框是否高亮，默认值变更则高亮)
@@ -927,6 +930,7 @@
             repoHashId: proxy.$t('template.propertyUpdate.repo'),
             relativePath: proxy.$t('template.propertyUpdate.relativePath'),
             glob: proxy.$t('template.propertyUpdate.glob'),
+            constant: proxy.$t('template.propertyUpdate.constant')
         }
         
         // 检查各个属性是否有变更
@@ -950,7 +954,7 @@
             }
             
             // 处理布尔值显示
-            const booleanField = ['isRequiredParam', 'valueNotEmpty', 'readOnly']
+            const booleanField = ['isRequiredParam', 'valueNotEmpty', 'readOnly', 'constant']
             if (booleanField.includes(key)) {
                 oldValue = oldValue ? proxy.$t('true') : proxy.$t('false')
                 newValue = newValue ? proxy.$t('true') : proxy.$t('false')
