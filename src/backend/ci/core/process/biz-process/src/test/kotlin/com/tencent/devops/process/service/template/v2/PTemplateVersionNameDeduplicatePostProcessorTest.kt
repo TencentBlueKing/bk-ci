@@ -15,7 +15,6 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoV2
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
 import com.tencent.devops.process.service.template.v2.version.processor.PTemplateVersionNameDeduplicatePostProcessor
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
