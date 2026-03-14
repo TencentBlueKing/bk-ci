@@ -3,6 +3,7 @@ import { JobDetail, PluginDetail, StageDetail } from '@/components/ExecDetail'
 import StageReviewPanel from '@/components/StageReviewPanel'
 import { SvgIcon } from '@/components/SvgIcon'
 import { useExecuteDetail } from '@/hooks/useExecuteDetail'
+import { useAuthStore } from '@/stores/auth'
 import {
   STATUS,
   type Container,
@@ -57,6 +58,9 @@ export default defineComponent({
     // 从 store 获取执行详情数据（全局唯一）
     const { executeDetail, isRunning, requestRetryFlow, silentRefreshExecuteDetail } =
       useExecuteDetail()
+    const authStore = useAuthStore()
+
+    const username = computed(() => authStore.username)
 
     // ==================== State ====================
     const hideSkipExecTask = ref(false)
@@ -74,7 +78,6 @@ export default defineComponent({
     const isExpandAllMatrix = ref(true)
     const showLog = ref(false)
     const showErrors = ref(false)
-    const activeErrorAtom = ref<any>(null)
     const bkPipelineRef = ref<any>(null)
     const scrollBoxRef = ref<HTMLElement | null>(null)
     const errorPopupRef = ref<HTMLElement | null>(null)
@@ -803,6 +806,7 @@ export default defineComponent({
                     isCreativeStream={true}
                     isExecDetail={true}
                     currentExecCount={executeCount.value}
+                    userName={username.value}
                     cancelUserId={cancelUserId.value as string}
                     pipeline={filteredPipeline.value}
                     matchRules={props.matchRules as any}
