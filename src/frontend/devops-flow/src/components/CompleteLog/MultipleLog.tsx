@@ -5,7 +5,6 @@
  */
 import { downloadLogFile, getAfterLog, getInitLog, type LogItem } from '@/api/log'
 import StatusIcon from '@/components/StatusIcon'
-import { LogIcon } from '@/components/LogViewer/LogIcon'
 import type { Container, StatusType } from '@/types/flow'
 import { hashID } from '@/utils/util'
 import { defineComponent, onBeforeUnmount, ref, watch, type PropType } from 'vue'
