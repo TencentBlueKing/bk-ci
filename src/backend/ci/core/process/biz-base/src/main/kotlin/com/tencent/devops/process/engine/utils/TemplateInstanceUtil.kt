@@ -285,9 +285,19 @@ object TemplateInstanceUtil {
         pipelineParam: BuildFormProperty?,
         overrideTemplateField: TemplateInstanceField?
     ): BuildFormProperty {
-        // 如果没有对应的流水线参数，直接返回模板参数
-        if (pipelineParam == null) {
+        // 如果是常量参数或者其他变量,则直接使用模版参数
+        if (templateParam.constant == true || !templateParam.required) {
             return templateParam
+        }
+        // 如果没有传入流水线参数，也直接返回模板参数
+        if (pipelineParam == null) {
+            // 不能直接使用模版的require,应该使用asInstanceInput,表示默认实例入参
+            val asInstanceInput = templateParam.asInstanceInput
+            return if (asInstanceInput == null) {
+                templateParam
+            } else {
+                templateParam.copy(required = asInstanceInput)
+            }
         }
 
         val overrideParam = overrideTemplateField?.overrideParam(templateParam.id) == true
@@ -313,7 +323,7 @@ object TemplateInstanceUtil {
         templateVariableMap: Map<String, TemplateVariable>,
         templateParam: BuildFormProperty
     ): BuildFormProperty {
-        // 如果是常量参数或者其他变量,则直接反正模版参数
+        // 如果是常量参数或者其他变量,则直接使用模版参数
         if (templateParam.constant == true || !templateParam.required) {
             return templateParam
         }
