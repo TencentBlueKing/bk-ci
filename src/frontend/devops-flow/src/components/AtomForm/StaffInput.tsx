@@ -74,7 +74,7 @@ export default defineComponent({
   name: 'StaffInput',
   props: {
     value: {
-      type: Array as PropType<string[]>,
+      type: [Array, String] as PropType<string[] | string>,
       default: () => [],
     },
     name: {
@@ -104,6 +104,11 @@ export default defineComponent({
     const route = useRoute()
     const isLoading = ref(false)
     const list = ref<StaffInfo[]>([])
+    const normalizedValue = computed(() => {
+      if (Array.isArray(props.value)) return props.value
+      if (typeof props.value === 'string' && props.value) return props.value.split(',')
+      return []
+    })
 
     const projectId = computed(() => route.params.projectId as string)
 
@@ -144,7 +149,7 @@ export default defineComponent({
 
     const handleSelect = async (value: string[]) => {
       try {
-        const currentValueMap = props.value.reduce<Record<string, boolean>>((acc, item) => {
+        const currentValueMap = normalizedValue.value.reduce<Record<string, boolean>>((acc, item) => {
           acc[item] = true
           return acc
         }, {})
@@ -167,7 +172,7 @@ export default defineComponent({
         applyChange(value.filter((_, index) => res[index]))
       } catch (error) {
         console.error(error)
-        applyChange(props.value)
+        applyChange(normalizedValue.value)
       }
     }
 
@@ -202,7 +207,7 @@ export default defineComponent({
       <div class={styles.staffInput}>
         {props.prependText && <div class={styles.prependBox}>{props.prependText}</div>}
         <TagInput
-          modelValue={props.value}
+          modelValue={normalizedValue.value}
           placeholder={props.placeholder}
           disabled={props.disabled || isLoading.value}
           allowCreate={true}

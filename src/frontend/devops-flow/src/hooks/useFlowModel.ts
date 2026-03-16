@@ -517,7 +517,10 @@ export function useFlowModel() {
       })
     }
 
-    if (atomModal.logoUrl) (element as any).logoUrl = atomModal.logoUrl
+    const runtimeEle = element as any
+    if (atomModal.logoUrl) runtimeEle.logoUrl = atomModal.logoUrl
+    if (atomModal.os) runtimeEle.os = atomModal.os
+    if (atomModal.buildLessRunFlag !== undefined) runtimeEle.buildLessRunFlag = atomModal.buildLessRunFlag
 
     atomStore.setAtomModal(atomCode, finalVersion, atomModal)
 

@@ -573,7 +573,8 @@
       "includeCaseDesc": "Specify combinations to include",
       "excludeCaseDesc": "Specify combinations to exclude",
       "mutexTimeoutDesc": "Queue timeout in minutes, 0 means fail immediately",
-      "fieldRequired": "This field is required"
+      "fieldRequired": "This field is required",
+      "cronInvalid": "Invalid cron expression"
     },
     "dialog": {
       "createGroup": {

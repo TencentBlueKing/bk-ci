@@ -93,6 +93,7 @@ export default defineComponent({
       () => currentTab.value,
       () => {
         keyWord.value = ''
+        activeOutput.value = null
         activeOutputDetail.value = null
         artifactValue.value = []
         nextTick(init)

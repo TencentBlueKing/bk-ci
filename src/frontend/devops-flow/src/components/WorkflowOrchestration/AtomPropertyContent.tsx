@@ -234,8 +234,14 @@ export default defineComponent({
       return validateStepId(props.element.stepId, props.siblingStepIds)
     })
 
+    const componentErrorFields = ref<string[]>([])
+
+    function handleFieldError(errorFields: string[]) {
+      componentErrorFields.value = errorFields
+    }
+
     const hasAtomError = computed(() => {
-      return atomErrorFields.value.length > 0 || additionalOptionsErrorFields.value.length > 0 || stepIdErrors.value.length > 0
+      return atomErrorFields.value.length > 0 || additionalOptionsErrorFields.value.length > 0 || stepIdErrors.value.length > 0 || componentErrorFields.value.length > 0
     })
 
     // ========== Lifecycle Hooks ==========
@@ -589,6 +595,7 @@ export default defineComponent({
                       atomValue={atomValue.value}
                       element={props.element!}
                       onChange={handleConfigChange}
+                      onFieldError={handleFieldError}
                       disabled={!props.editable}
                       errorFields={atomErrorFields.value}
                     />

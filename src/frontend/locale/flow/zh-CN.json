@@ -571,7 +571,8 @@
       "includeCaseDesc": "指定要包含的组合用例",
       "excludeCaseDesc": "指定要排除的组合用例",
       "mutexTimeoutDesc": "排队超时时间，0 表示不等待直接失败",
-      "fieldRequired": "此字段为必填项"
+      "fieldRequired": "此字段为必填项",
+      "cronInvalid": "Cron 表达式格式不正确"
     },
     "dialog": {
       "createGroup": {
