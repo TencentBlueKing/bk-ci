@@ -220,6 +220,8 @@ export default defineComponent({
           tpl={renderMemberList}
           createTagValidator={detect}
           pasteFn={paste}
+          copyable={false}
+          separator=","
           onChange={handleSelect}
         />
       </div>
