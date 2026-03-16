@@ -341,7 +341,7 @@
                         theme="primary"
                         @click="submit()"
                     >
-                        {{ $t('store.提交') }}111
+                        {{ $t('store.提交') }}
                     </bk-button>
                     <bk-button @click="$router.back()"> {{ $t('store.取消') }} </bk-button>
                 </div>
