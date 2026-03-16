@@ -693,6 +693,9 @@
     "resetBuildNoConfirmMessage": "A total of {0} pipeline(s) will have their [Build Number] field automatically reset to the baseline value after the official release. Please note! If you do not need to reset, please uncheck [Reset to baseline value immediately after releasing the official version].",
     "draftPublished": "The baseline version of the draft to be published is {0}, {1} the current latest version {2}, please proceed with caution!",
     "yamlFilePathInvalidTip": "The YAML file path for the following pipelines is empty or invalid (must end with .yml or .yaml): {0}",
+    "versionNameExistTitle": "Version Name Already Exists",
+    "versionNameExistTips": "Version {0} already exists. Are you sure you want to overwrite this version?",
+    "versionNameExistSubTips": "After overwriting, viewing the modification history of this version will not be supported.",
     "propertyUpdate": {
       "constName": "Constant Name",
       "constAlias": "Constant Alias",
@@ -709,7 +712,8 @@
       "category": "Group labels",
       "repo": "Repository",
       "relativePath": "Relative path to code repository",
-      "glob": "Filter rules"
+      "glob": "Filter rules",
+      "constant": "Constant"
     },
     "propertyUpdated": "Updated",
     "toInstance": "To instantiate",

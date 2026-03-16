@@ -55,6 +55,7 @@ import com.tencent.devops.process.pojo.template.TemplateInstanceParams
 import com.tencent.devops.process.pojo.template.TemplateInstanceStatus
 import com.tencent.devops.process.pojo.template.TemplateOperationMessage
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
+import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceBase
@@ -192,6 +193,116 @@ class PipelineTemplateInstanceService @Autowired constructor(
                 )
                 failurePipelines.add(instance.pipelineName)
                 failureMessages[instance.pipelineName] = errorMessage.message
+            }
+        }
+        return TemplateOperationRet(
+            0,
+            TemplateOperationMessage(
+                successPipelines = successPipelines,
+                failurePipelines = failurePipelines,
+                failureMessages = failureMessages,
+                successPipelinesId = successPipelineIds
+            ),
+            ""
+        )
+    }
+
+    /*同步更新模板实例*/
+    fun updateTemplateInstances(
+        projectId: String,
+        userId: String,
+        templateId: String,
+        version: Long,
+        request: PipelineTemplateInstancesRequest
+    ): TemplateOperationRet {
+        logger.info("template instance update start $projectId|$userId|$templateId")
+        val permission = AuthPermission.EDIT
+        val canEditMap = pipelinePermissionService.getResourceByPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = permission
+        )
+        val notEditPermissions = request.instanceReleaseInfos.filter {
+            !canEditMap.contains(it.pipelineId)
+        }.map { it.pipelineId }
+        if (notEditPermissions.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                params = arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    notEditPermissions.joinToString(",")
+                )
+            )
+        }
+        val templateResource = pipelineTemplateResourceService.get(
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
+        validateInstanceParamsBeforeUpdate(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            version = version,
+            templateResource = templateResource,
+            instanceReleaseInfos = request.instanceReleaseInfos,
+            baseId = null
+        )
+        val instances = request.instanceReleaseInfos
+        val successPipelines = mutableListOf<String>()
+        val failurePipelines = mutableListOf<String>()
+        val successPipelineIds = mutableListOf<String>()
+        val failureMessages = mutableMapOf<String, String>()
+
+        instances.forEach { instance ->
+            try {
+                if (instance.pipelineName.isBlank()) {
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_EMPTY,
+                        params = arrayOf(
+                            PipelineTemplateInstanceReleaseInfo::pipelineName.name
+                        )
+                    )
+                }
+                val instanceUpdateReq = PipelineTemplateInstanceReq(
+                    projectId = projectId,
+                    templateId = templateId,
+                    templateVersion = version,
+                    templateRefType = request.templateRefType,
+                    templateRef = request.templateRef,
+                    pipelineName = instance.pipelineName,
+                    buildNo = instance.buildNo,
+                    params = instance.param,
+                    triggerConfigs = instance.triggerConfigs,
+                    overrideTemplateField = instance.overrideTemplateField,
+                    useTemplateSetting = request.useTemplateSettings,
+                    enablePac = request.enablePac,
+                    repoHashId = request.repoHashId,
+                    filePath = instance.filePath,
+                    targetAction = request.targetAction,
+                    targetBranch = request.targetBranch,
+                    resetBuildNo = instance.resetBuildNo
+                )
+                val deployPipeline = pipelineVersionManager.deployPipeline(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = instance.pipelineId,
+                    request = instanceUpdateReq
+                )
+                successPipelines.add(instance.pipelineName)
+                successPipelineIds.add(deployPipeline.pipelineId)
+            } catch (ignored: Throwable) {
+                val errorMessage = translateInstanceException(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = instance.pipelineId,
+                    exception = ignored,
+                )
+                failurePipelines.add(instance.pipelineName)
+                failureMessages[instance.pipelineName] =
+                    errorMessage.message
             }
         }
         return TemplateOperationRet(
@@ -400,7 +511,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
         version: Long,
         instanceReleaseInfos: List<PipelineTemplateInstanceReleaseInfo>,
         templateResource: PipelineTemplateResource,
-        baseId: String
+        baseId: String?
     ) {
         val pipelineIds = instanceReleaseInfos.mapNotNull { releaseInfo ->
             releaseInfo.pipelineId.takeIf { it.isNotBlank() }
@@ -440,7 +551,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
         if (isModifyParamsResetToDefault) {
             logger.warn(
                 "instance params reset to template defaults|" +
-                        "$projectId|$userId|$templateId|$version|$baseId|${instanceReleaseInfos.size}"
+                    "$projectId|$userId|$templateId|$version|$baseId|${instanceReleaseInfos.size}"
             )
         }
     }
@@ -463,7 +574,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
             val instanceParam = instanceParamMap[beforeInstanceParam.id]
             val templateParam = templateParamMap[beforeInstanceParam.id]
             instanceParam != null && templateParam != null &&
-                    beforeInstanceParam.defaultValue != instanceParam.defaultValue
+                beforeInstanceParam.defaultValue != instanceParam.defaultValue
         }
         return if (modifyParams.isEmpty()) {
             // 值都没有修改
@@ -521,6 +632,8 @@ class PipelineTemplateInstanceService @Autowired constructor(
         status: TemplatePipelineStatus?,
         templateVersion: Long?,
         repoHashId: String?,
+        sortType: TemplateSortTypeEnum? = null,
+        sortDesc: Boolean = true,
         page: Int,
         pageSize: Int
     ): SQLPage<PipelineTemplateRelatedResp> {
@@ -564,7 +677,9 @@ class PipelineTemplateInstanceService @Autowired constructor(
             pipelineIds = repoFilteredPipelineIds,
             instanceTypeEnum = PipelineInstanceTypeEnum.CONSTRAINT,
             limit = limit,
-            offset = offset
+            offset = offset,
+            sortType = sortType,
+            sortDesc = sortDesc
         )
 
         // 6. 获取总数

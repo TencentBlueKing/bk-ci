@@ -74,6 +74,9 @@ const actions = {
     requestTemplateVersionList (_, params) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${params.projectId}/${params.templateId}/versions`, params).then(response => response.data)
     },
+    checkTemplateVersionNameExist (_, { projectId, templateId, versionName }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/versionNameExist?versionName=${encodeURIComponent(versionName)}`).then(response => response.data)
+    },
     fetchPipelineDetailById ({ commit }, { projectId, templateId, pipelineIds, version }) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/pipelines?version=${version}`, pipelineIds).then(res => {
             return res.data

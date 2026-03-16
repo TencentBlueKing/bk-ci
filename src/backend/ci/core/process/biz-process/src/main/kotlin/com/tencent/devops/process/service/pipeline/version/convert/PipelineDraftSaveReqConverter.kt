@@ -85,7 +85,7 @@ class PipelineDraftSaveReqConverter(
         request as PipelineDraftSaveReq
         with(request) {
             logger.info(
-                "Start to convert draft release request|$projectId|$pipelineId|$version|$storageType|$baseVersion"
+                "Start to convert draft save request|$projectId|$pipelineId|$version|$storageType|$baseVersion"
             )
             // 注意: 如果是实例化的流水线,modelAndSetting中的model不含stage字段,只有模版引用信息
             val (modelAndSetting, yamlWithVersion) = if (storageType == PipelineStorageType.YAML) {
@@ -136,6 +136,7 @@ class PipelineDraftSaveReqConverter(
                 projectId = projectId,
                 pipelineId = newPipelineId
             )
+            // 注意: 保存草稿,baseVersion不以前端传入的为准,始终用最新的正式版本,所以这里不需要传入baseVersion
             val context = pipelineVersionCreateContextFactory.create(
                 userId = userId,
                 projectId = projectId,
@@ -144,7 +145,6 @@ class PipelineDraftSaveReqConverter(
                 version = version,
                 model = modelAndSetting.model,
                 yaml = yamlWithVersion?.yamlStr,
-                baseVersion = baseVersion,
                 pipelineSettingWithoutVersion = pipelineSettingWithoutVersion,
                 versionStatus = VersionStatus.COMMITTING,
                 versionAction = PipelineVersionAction.SAVE_DRAFT,
@@ -171,6 +171,19 @@ class PipelineDraftSaveReqConverter(
         // 前端传过来的model是完整的model,如果是模版实例化的,需要转换成引用的方式
         val model = modelAndSetting!!.model
         return if (model.template != null) {
+            // 如果修改流水线,不能把非约束的流水线改成约束的流水线
+            pipelineId?.let {
+                val pipelineTemplateRelated = pipelineTemplateRelatedService.get(
+                    projectId = projectId, pipelineId = pipelineId
+                )
+                if (pipelineTemplateRelated == null ||
+                    pipelineTemplateRelated.instanceType != PipelineInstanceTypeEnum.CONSTRAINT
+                ) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_NON_CONSTRAINED_PIPELINE_CANNOT_SAVE_AS_CONSTRAINED
+                    )
+                }
+            }
             val template = model.template!!
             val templateResource = pipelineModelParser.parseTemplateDescriptor(
                 projectId = projectId,

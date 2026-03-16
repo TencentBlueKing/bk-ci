@@ -292,7 +292,9 @@
                     return
                 }
             },
-            async initDiff () {
+            async initDiff (version) {
+                this.activeVersion = this.version
+                this.currentVersion = this.latestVersion
                 this.showVersionDiffDialog = true
                 this.isLoadYaml = true
                 
@@ -334,7 +336,7 @@
                             projectId: this.$route.params.projectId,
                             templateId: this.$route.params.templateId,
                             pipelineId: this.pipelineId,
-                            templateVersion: this.latestVersion,
+                            templateVersion: ['string', 'number'].includes(typeof version) ? version : this.latestVersion,
                             pipelineVersion: this.activeVersion,
                             useTemplateSettings: this.useTemplateSettings
                         })
@@ -379,8 +381,11 @@
                 }
             },
             async diffCurrentVersion (versionId, versionData) {
-                if (versionId !== this.currentVersion) {
-                    this.currentVersion = versionId
+                if (versionId === this.currentVersion) return
+                if (this.instanceCompareWithTemplate) {
+                    this.initDiff(versionId)
+                } else {
+                    this.currentVersion = version
                     this.isLoadYaml = true
                     const version = versionData.isDraftVersion ? versionData.initialVersion : versionId
                     this.currentYaml = await this.fetchPipelineYaml(version, versionData.draftVersion || undefined)
