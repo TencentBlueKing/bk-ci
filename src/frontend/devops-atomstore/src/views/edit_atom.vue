@@ -341,7 +341,7 @@
                         theme="primary"
                         @click="submit()"
                     >
-                        {{ $t('store.提交') }}
+                        {{ $t('store.提交') }}111
                     </bk-button>
                     <bk-button @click="$router.back()"> {{ $t('store.取消') }} </bk-button>
                 </div>
@@ -600,26 +600,34 @@
                             // 回显 PIPELINE 配置
                             const pipelineConfig = serviceScopeDetails.find(item => item.serviceScope === 'PIPELINE')
                             if (pipelineConfig) {
+                                // 从 jobTypeConfigs 中提取 jobTypes 和 os
+                                const jobTypes = pipelineConfig.jobTypeConfigs?.map(config => config.jobType) || ['AGENT']
+                                // 查找 AGENT 类型的 osList
+                                const agentConfig = pipelineConfig.jobTypeConfigs?.find(config => config.jobType === 'AGENT')
+                                const os = agentConfig?.osList || []
+                                
                                 this.pipelineCategory = {
                                     classifyCode: pipelineConfig.classifyCode || '',
                                     classifyName: pipelineConfig.classifyName || '',
-                                    // 兼容旧的 jobType 字段
-                                    jobTypes: pipelineConfig.jobTypes || (pipelineConfig.jobType ? [pipelineConfig.jobType] : ['AGENT']),
-                                    os: res.os || [],
+                                    jobTypes,
+                                    os,
                                     labelIdList: pipelineConfig.labelIdList || []
                                 }
                                 // 保存初始值用于升级类型判断
-                                this.initJobType = this.pipelineCategory.jobTypes[0] || 'AGENT'
-                                this.initOs = pipelineConfig.os ? JSON.parse(JSON.stringify(pipelineConfig.os)) : []
+                                this.initJobType = jobTypes[0] || 'AGENT'
+                                this.initOs = os.length > 0 ? JSON.parse(JSON.stringify(os)) : []
                             }
                             
                             // 回显 CREATIVE_STREAM 配置
                             const creativeConfig = serviceScopeDetails.find(item => item.serviceScope === 'CREATIVE_STREAM')
                             if (creativeConfig) {
+                                // 从 jobTypeConfigs 中提取 jobTypes
+                                const jobTypes = creativeConfig.jobTypeConfigs?.map(config => config.jobType) || ['CREATIVE_STREAM']
+                                
                                 this.creativeCategory = {
                                     classifyCode: creativeConfig.classifyCode || '',
                                     classifyName: creativeConfig.classifyName || '',
-                                    jobTypes: creativeConfig.jobTypes || ['CREATIVE_STREAM'],
+                                    jobTypes,
                                     labelIdList: creativeConfig.labelIdList || []
                                 }
                             }
@@ -856,12 +864,27 @@
                     
                     const serviceScopeConfigs = this.categoryValue
                         .filter(scope => scopeConfigMap[scope])
-                        .map(scope => ({
-                            serviceScope: scope,
-                            classifyCode: scopeConfigMap[scope].classifyCode,
-                            jobTypes: scopeConfigMap[scope].jobTypes || [],
-                            labelIdList: (scopeConfigMap[scope].labelIdList || []).filter(id => id && id !== 'null' && id !== ' ')
-                        }))
+                        .map(scope => {
+                            const categoryData = scopeConfigMap[scope]
+                            const config = {
+                                serviceScope: scope,
+                                classifyCode: categoryData.classifyCode,
+                                labelIdList: (categoryData.labelIdList || []).filter(id => id && id !== 'null' && id !== ' ')
+                            }
+                            
+                            // 构建 jobTypeConfigs
+                            const jobTypes = categoryData.jobTypes || []
+                            config.jobTypeConfigs = jobTypes.map(jobType => {
+                                const jobTypeConfig = { jobType }
+                                // 如果是 PIPELINE 范畴且是 AGENT 类型，添加 osList
+                                if (scope === 'PIPELINE' && jobType === 'AGENT') {
+                                    jobTypeConfig.osList = categoryData.os || []
+                                }
+                                return jobTypeConfig
+                            })
+                            
+                            return config
+                        })
                     
                     const params = {
                         atomCode: this.atomForm.atomCode,
@@ -869,7 +892,6 @@
                         category: 'TASK',
                         version: this.curVersion,
                         releaseType: this.atomForm.releaseType,
-                        os: this.pipelineCategory.os || [],
                         publisher: this.atomForm.publisher,
                         versionContent: this.atomForm.versionContent,
                         logoUrl: this.atomForm.logoUrl || undefined,
@@ -882,7 +904,7 @@
                         branch: this.atomForm.branch,
                         serviceScopeConfigs: serviceScopeConfigs.length > 0 ? serviceScopeConfigs : undefined
                     }
-
+                    
                     return this.$store.dispatch('store/editAtom', {
                         projectCode: this.atomForm.projectCode,
                         params: params,
