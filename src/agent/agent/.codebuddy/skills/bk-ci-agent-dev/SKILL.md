@@ -242,6 +242,7 @@ AgentUpgrade(upgradeItem, hasBuild)
 | **Docker** | 完整支持 | 不支持 |
 | **文件权限** | `os.Chmod` | 空操作 |
 | **进程替换** | 文件替换 + 进程信号 | 等待退出 + 文件替换 |
+| **硬件信息采集** | Linux/Windows 可走通用 `ghw` 采集；macOS 需用 `_darwin.go` 单独兜底，当前跳过 GPU 采集以规避 `ghw` 未实现报错 | GPU 标签主要用于指标补充，不应影响 Agent 启动 |
 
 ### 内外版差异 (`constant/`)
 
