@@ -284,11 +284,22 @@
 
             initCategoryData (scope) {
                 const config = this.detail.serviceScopeDetails?.find(item => item.serviceScope === scope) || {}
+                
+                // 从 jobTypeConfigs 中提取 jobTypes 和 os
+                const jobTypes = config.jobTypeConfigs?.map(item => item.jobType) || (scope === 'PIPELINE' ? ['AGENT'] : ['CREATIVE_STREAM'])
+                let os = []
+                
+                // 如果是 PIPELINE，查找 AGENT 类型的 osList
+                if (scope === 'PIPELINE') {
+                    const agentConfig = config.jobTypeConfigs?.find(item => item.jobType === 'AGENT')
+                    os = agentConfig?.osList || []
+                }
+                
                 return {
                     classifyCode: config.classifyCode || '',
-                    jobTypes: config.jobTypes || (scope === 'PIPELINE' ? ['AGENT'] : ['CREATIVE_STREAM']),
-                    os: this.detail.os || [],
-                    labelIdList: config.labelList?.map(label => label.id)|| []
+                    jobTypes,
+                    os,
+                    labelIdList: config.labelList?.map(label => label.id) || []
                 }
             },
 
@@ -311,12 +322,24 @@
                         .filter(scope => scopeConfigMap[scope])
                         .map(scope => {
                             const { data } = scopeConfigMap[scope]
-                            return {
+                            const config = {
                                 serviceScope: scope,
                                 classifyCode: data.classifyCode,
-                                jobTypes: data.jobTypes || [],
                                 labelIdList: (data.labelIdList || []).filter(id => id && id !== 'null' && id !== ' ')
                             }
+                            
+                            // 构建 jobTypeConfigs
+                            const jobTypes = data.jobTypes || []
+                            config.jobTypeConfigs = jobTypes.map(jobType => {
+                                const jobTypeConfig = { jobType }
+                                // 如果是 PIPELINE 范畴且是 AGENT 类型，添加 osList
+                                if (scope === 'PIPELINE' && jobType === 'AGENT') {
+                                    jobTypeConfig.osList = data.os || []
+                                }
+                                return jobTypeConfig
+                            })
+                            
+                            return config
                         })
                     
                     const putData = {

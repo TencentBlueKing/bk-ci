@@ -176,18 +176,18 @@
                                                         v-if="isEnterprise"
                                                     >
                                                         <span class="scope-label">{{ $t('store.操作系统：') }}</span>
-                                                        <span v-if="scopeConfig.jobTypes && scopeConfig.jobTypes.includes('AGENT') && versionDetail.os">
+                                                        <span v-if="getAgentOsList(scopeConfig.jobTypeConfigs).length > 0">
                                                             <i
                                                                 class="devops-icon icon-linux-view"
-                                                                v-if="versionDetail.os.indexOf('LINUX') !== -1"
+                                                                v-if="getAgentOsList(scopeConfig.jobTypeConfigs).indexOf('LINUX') !== -1"
                                                             ></i>
                                                             <i
                                                                 class="devops-icon icon-windows"
-                                                                v-if="versionDetail.os.indexOf('WINDOWS') !== -1"
+                                                                v-if="getAgentOsList(scopeConfig.jobTypeConfigs).indexOf('WINDOWS') !== -1"
                                                             ></i>
                                                             <i
                                                                 class="devops-icon icon-macos"
-                                                                v-if="versionDetail.os.indexOf('MACOS') !== -1"
+                                                                v-if="getAgentOsList(scopeConfig.jobTypeConfigs).indexOf('MACOS') !== -1"
                                                             ></i>
                                                         </span>
                                                     </div>
@@ -197,19 +197,19 @@
                                                     >
                                                         <span class="scope-label">{{ $t('store.适用Job类型：') }}</span>
                                                         <span>
-                                                            {{ getJobTypeNames(scopeConfig.jobTypes) }}
-                                                            <span v-if="scopeConfig.jobTypes && scopeConfig.jobTypes.includes('AGENT') && versionDetail.os">（
+                                                            {{ getJobTypeNames(scopeConfig.jobTypeConfigs) }}
+                                                            <span v-if="getAgentOsList(scopeConfig.jobTypeConfigs).length > 0">（
                                                                 <i
                                                                     class="devops-icon icon-linux-view"
-                                                                    v-if="versionDetail.os.indexOf('LINUX') !== -1"
+                                                                    v-if="getAgentOsList(scopeConfig.jobTypeConfigs).indexOf('LINUX') !== -1"
                                                                 ></i>
                                                                 <i
                                                                     class="devops-icon icon-windows"
-                                                                    v-if="versionDetail.os.indexOf('WINDOWS') !== -1"
+                                                                    v-if="getAgentOsList(scopeConfig.jobTypeConfigs).indexOf('WINDOWS') !== -1"
                                                                 ></i>
                                                                 <i
                                                                     class="devops-icon icon-macos"
-                                                                    v-if="versionDetail.os.indexOf('MACOS') !== -1"
+                                                                    v-if="getAgentOsList(scopeConfig.jobTypeConfigs).indexOf('MACOS') !== -1"
                                                                 ></i>）
                                                             </span>
                                                         </span>
@@ -719,11 +719,15 @@
                     }
                 }
             },
+            getAgentOsList (jobTypeConfigs) {
+                if (!Array.isArray(jobTypeConfigs) || jobTypeConfigs.length === 0) return []
+                const agentConfig = jobTypeConfigs.find(config => config.jobType === 'AGENT')
+                return agentConfig && agentConfig.osList ? agentConfig.osList : []
+            },
             uploadFile (fileObj, fieldCheckConfirmFlag = false) {
                 const formData = new FormData()
                 formData.append('file', fileObj.origin)
                 formData.append('os', `["${this.versionDetail.os.join('","')}"]`)
-                console.log("🚀 ~ this.versionDetail:", this.versionDetail)
 
                 const xhr = new XMLHttpRequest()
                 fileObj.xhr = xhr // 保存，用于中断请求
@@ -803,9 +807,9 @@
             toggleShow () {
                 this.isDropdownShow = !this.isDropdownShow
             },
-            getJobTypeNames (jobTypes) {
-                if (!jobTypes || jobTypes.length === 0) return '--'
-                return jobTypes.map(type => this.jobTypeMap[type] || type).join('、')
+            getJobTypeNames (jobTypeConfigs) {
+                if (!Array.isArray(jobTypeConfigs) || jobTypeConfigs.length === 0) return '--'
+                return jobTypeConfigs.map(config => this.jobTypeMap[config.jobType] || config.jobType).join('、')
             },
             getScopeLabelNames (scopeConfig) {
                 if (!scopeConfig.labelList || scopeConfig.labelList.length === 0) return []
