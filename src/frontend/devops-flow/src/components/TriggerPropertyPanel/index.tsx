@@ -61,6 +61,7 @@ export default defineComponent({
     const nameEditing = ref(false)
     const editingName = ref('')
     const showErrors = ref(false)
+    const componentErrorFields = ref<string[]>([])
 
     // ========== Element Initialization ==========
 
@@ -215,6 +216,10 @@ export default defineComponent({
 
     // ========== Handlers ==========
 
+    function handleFieldError(errorFields: string[]) {
+      componentErrorFields.value = errorFields
+    }
+
     const handleClose = () => {
       showErrors.value = false
       emit('update:visible', false)
@@ -226,7 +231,7 @@ export default defineComponent({
         return
       }
 
-      if (triggerErrorFields.value.length > 0 || stepIdErrors.value.length > 0) {
+      if (triggerErrorFields.value.length > 0 || stepIdErrors.value.length > 0 || componentErrorFields.value.length > 0) {
         showErrors.value = true
         Message({ theme: 'warning', message: t('flow.triggerPanel.validationError') })
         return
@@ -310,6 +315,7 @@ export default defineComponent({
               disabled={props.readonly}
               errorFields={showErrors.value ? triggerErrorFields.value : []}
               onChange={updateInput}
+              onFieldError={handleFieldError}
             />
           </div>
         )

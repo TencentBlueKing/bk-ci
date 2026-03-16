@@ -559,7 +559,8 @@
       "stepIdPlaceholder": "Step IDを入力してください。空の場合は任意ですが、現在のジョブ内で一意である必要があります",
       "stepIdFormatError": "英字またはアンダースコアで始まり、英字、数字、アンダースコアのみ使用できます",
       "stepIdDuplicateError": "Step IDが現在のジョブ内で重複しています",
-      "fieldRequired": "このフィールドは必須です"
+      "fieldRequired": "このフィールドは必須です",
+      "cronInvalid": "Cron 式の形式が正しくありません"
     },
     "dialog": {
       "createGroup": {

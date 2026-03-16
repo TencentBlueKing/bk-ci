@@ -1,9 +1,13 @@
 import type { Element } from '@/api/flowModel'
 import { rely } from '@/utils/atom'
 import { Collapse, Form } from 'bkui-vue'
-import { computed, defineAsyncComponent, defineComponent, ref, type PropType } from 'vue'
+import type { InjectionKey } from 'vue'
+import { computed, defineAsyncComponent, defineComponent, provide, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import styles from './AtomForm.module.css'
+
+export type ReportFieldErrorFn = (name: string, hasError: boolean) => void
+export const REPORT_FIELD_ERROR_KEY: InjectionKey<ReportFieldErrorFn> = Symbol('reportFieldError')
 
 const { FormItem } = Form
 
@@ -20,6 +24,8 @@ const StaffInput = defineAsyncComponent(() => import('./StaffInput'))
 const AtomDatePicker = defineAsyncComponent(() => import('./AtomDatePicker'))
 const CronTab = defineAsyncComponent(() => import('./CronTab'))
 const SubParameter = defineAsyncComponent(() => import('./SubParameter'))
+
+const SELF_ERROR_COMPONENTS = new Set(['timer-cron-tab'])
 
 // 组件映射表
 const COMPONENT_MAP: Record<string, any> = {
@@ -108,11 +114,27 @@ export default defineComponent({
       default: () => [],
     },
   },
-  emits: ['change'],
+  emits: ['change', 'fieldError'],
   setup(props, { emit }) {
     const { t } = useI18n()
     // 折叠面板的展开状态
     const expandedGroups = ref<string[]>([])
+
+    const fieldErrors = ref<Set<string>>(new Set())
+    const reportFieldError: ReportFieldErrorFn = (name, hasError) => {
+      const next = new Set(fieldErrors.value)
+      if (hasError) {
+        next.add(name)
+      } else {
+        next.delete(name)
+      }
+      fieldErrors.value = next
+    }
+    provide(REPORT_FIELD_ERROR_KEY, reportFieldError)
+
+    watch(fieldErrors, (errors) => {
+      emit('fieldError', Array.from(errors))
+    })
 
     const handleChange = (name: string, value: any) => {
       emit('change', name, value)
@@ -197,9 +219,11 @@ export default defineComponent({
     const renderFormField = (key: string, obj: any) => {
       if (isHidden(obj, props.element)) return null
 
-      const Component = COMPONENT_MAP[obj.component] || COMPONENT_MAP[obj.type] || VuexInput
+      const componentType = obj.component || obj.type
+      const Component = COMPONENT_MAP[componentType] || VuexInput
       const value = props.atomValue[key] ?? obj.default ?? ''
       const hasError = props.errorFields.includes(key)
+      const showDefaultError = hasError && !SELF_ERROR_COMPONENTS.has(componentType)
       // remove '@type' from obj
       const { '@type': _type, ...rest } = obj
       return (
@@ -221,7 +245,7 @@ export default defineComponent({
             atomValue={props.atomValue}
             {...rest}
           />
-          {hasError && <p class={styles.fieldErrorMessage}>{t('flow.orchestration.fieldRequired')}</p>}
+          {showDefaultError && <p class={styles.fieldErrorMessage}>{t('flow.orchestration.fieldRequired')}</p>}
         </FormItem>
       )
     }

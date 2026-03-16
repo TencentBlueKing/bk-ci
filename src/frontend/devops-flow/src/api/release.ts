@@ -74,21 +74,3 @@ export async function prefetchReleaseVersion(
   )
   return response
 }
-
-/**
- * Get SCM branch list for PAC mode
- * @param projectId Project ID
- * @param repositoryHashId Repository hash ID
- * @param search Search keyword
- */
-export async function getScmBranchList(
-  projectId: string,
-  repositoryHashId: string,
-  search?: string,
-): Promise<string[]> {
-  const response = await get<string[]>(
-    `/process/api/user/scm/${projectId}/${repositoryHashId}/branches`,
-    { params: { search } },
-  )
-  return response
-}

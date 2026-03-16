@@ -3,7 +3,6 @@ import {
   copyContent,
   deleteContent,
   disableContent,
-  getContentDetail,
   getContentTableData,
   getRecycleTableData,
   restoreContent,
@@ -433,19 +432,6 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
   }
 
   /**
-   * 获取内容详情
-   */
-  async function loadContentDetail(id: string) {
-    try {
-      const detail = await getContentDetail(id)
-      return detail
-    } catch (error) {
-      console.error('Failed to load content detail:', error)
-      throw error
-    }
-  }
-
-  /**
    * 删除创作流
    */
   async function removeContent(flowId: string) {
@@ -588,7 +574,6 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
     convertMStoString,
     closeAllDialogs,
     fetchFlowList,
-    loadContentDetail,
     removeContent,
     confirmEnableAction,
     restoreFlow,

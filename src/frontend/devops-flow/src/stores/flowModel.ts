@@ -7,6 +7,7 @@ import {
   type FlowSettings,
   type SaveFlowModelParams,
 } from '@/api/flowModel'
+import { getPluginProperties, type PluginProperty } from '@/api/flowContentList'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { useModeStore } from '@/stores/flowMode'
@@ -88,6 +89,26 @@ export const useFlowModelStore = defineStore('flowModel', () => {
   })
 
   /**
+   * 将 atomProp 中的运行时属性（os、logoUrl、buildLessRunFlag）
+   * 合并到 model 各 element 上，供前端展示使用。
+   * 参考 devops-pipeline dealPipelineRes 实现。
+   */
+  function mergeAtomProps(model: FlowModel, atomProp: PluginProperty) {
+    model.stages?.forEach((stage: any) => {
+      stage.containers?.forEach((container: any) => {
+        container.elements?.forEach((element: any) => {
+          if (element.atomCode && atomProp[element.atomCode]) {
+            Object.assign(element, atomProp[element.atomCode])
+          }
+        })
+      })
+    })
+  }
+
+  /** atomProp 运行时字段，不属于 model 持久化数据 */
+  const ATOM_PROP_RUNTIME_KEYS = ['logoUrl', 'os', 'buildLessRunFlag']
+
+  /**
    * 加载 Flow 模型数据
    * @param projectId 项目 ID
    * @param flowId 创作流 ID
@@ -118,11 +139,20 @@ export const useFlowModelStore = defineStore('flowModel', () => {
     currentFlowId.value = flowId
     currentVersion.value = versionStr
     try {
-      const model = await getFlowModel(projectId, flowId, version)
-      flowModel.value = model.modelAndSetting?.model
-      flowSetting.value = model.modelAndSetting?.setting
-      yamlContent.value = model.yamlPreview?.yaml || ''
-      if (!model.yamlSupported) {
+      const [modelRes, atomProp] = await Promise.all([
+        getFlowModel(projectId, flowId, version),
+        getPluginProperties({ projectId, pipelineId: flowId, version: version ? Number(version) : undefined }).catch(() => null),
+      ])
+      debugger
+      const model = modelRes.modelAndSetting?.model
+      if (model && atomProp) {
+        mergeAtomProps(model, atomProp)
+      }
+
+      flowModel.value = model
+      flowSetting.value = modelRes.modelAndSetting?.setting
+      yamlContent.value = modelRes.yamlPreview?.yaml || ''
+      if (!modelRes.yamlSupported) {
         modeStore.setMode(UI_MODE)
       }
       hasUnsavedChanges.value = false
@@ -193,6 +223,7 @@ export const useFlowModelStore = defineStore('flowModel', () => {
           }
           container.elements?.forEach((element: any) => {
             delete element.isError
+            ATOM_PROP_RUNTIME_KEYS.forEach((key) => delete element[key])
           })
         })
       })

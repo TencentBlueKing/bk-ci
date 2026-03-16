@@ -1,11 +1,11 @@
 import { TagInput } from 'bkui-vue'
-import { defineComponent, type PropType } from 'vue'
+import { computed, defineComponent, type PropType } from 'vue'
 
 export default defineComponent({
   name: 'StaffInput',
   props: {
     value: {
-      type: Array as PropType<string[]>,
+      type: [Array, String] as PropType<string[] | string>,
       default: () => [],
     },
     name: {
@@ -27,6 +27,12 @@ export default defineComponent({
   },
   emits: ['change', 'update:value'],
   setup(props, { emit }) {
+    const normalizedValue = computed(() => {
+      if (Array.isArray(props.value)) return props.value
+      if (typeof props.value === 'string' && props.value) return props.value.split(',')
+      return []
+    })
+
     const handleChange = (val: string[]) => {
       emit('update:value', val)
       emit('change', val)
@@ -35,12 +41,15 @@ export default defineComponent({
 
     return () => (
       <TagInput
-        modelValue={props.value}
+        modelValue={normalizedValue.value}
         placeholder={props.placeholder}
         disabled={props.disabled}
         allowCreate={true}
         allowAutoMatch={true}
         hasDeleteIcon={true}
+        copyable={false}
+        separator=","
+        list={[]}
         onChange={handleChange}
       />
     )

@@ -82,28 +82,6 @@ export function getAfterLog(params: GetLogParams): Promise<LogResponse> {
   )
 }
 
-/**
- * 获取日志状态
- */
-export function getLogStatus(params: {
-  projectId: string
-  pipelineId: string
-  buildId: string
-  tag: string
-  executeCount: number
-}): Promise<{ status: number }> {
-  const { projectId, pipelineId, buildId, tag, executeCount } = params
-  return get<{ status: number }>(
-    `${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`,
-    {
-      params: {
-        tag,
-        executeCount,
-      },
-    },
-  )
-}
-
 export interface DownloadLogParams {
   projectId: string
   pipelineId: string

@@ -9,7 +9,6 @@ import {
   type VersionStatus,
 } from '@/types/flow'
 import {
-  ENVIRONMENT_API_URL_PREFIX,
   PROCESS_API_URL_PREFIX,
   STORE_API_URL_PREFIX,
 } from '@/utils/apiUrlPrefix'
@@ -274,16 +273,6 @@ export interface AuthoringNodeResponse {
   pageSize: number
   totalPages: number
   records: AuthoringNodeItem[]
-}
-
-/**
- * 保存基础设置参数
- */
-export interface SaveBaseInfoParams {
-  flowName: string
-  desc: string
-  authoringEnv: string
-  projectId: string
 }
 
 export interface DeleteContentParams {
@@ -588,7 +577,7 @@ export async function getPluginProperties(
   try {
     const { projectId, pipelineId, actionType, ...params } = importParams
     const res = await get<PluginProperty>(
-      `/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${projectId}/pipelines/${pipelineId}/atom/prop/list`,
+      `${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${projectId}/pipelines/${pipelineId}/atom/prop/list`,
       {
         params: params.version ? { version: params.version } : {},
       },
@@ -597,64 +586,6 @@ export async function getPluginProperties(
   } catch (error) {
     throw error
   }
-}
-
-/**
- * 获取内容详情
- */
-export async function getContentDetail(id: string): Promise<ContentTableItem> {
-  // TODO: 调用实际接口
-  // const response = await http.get(`/api/flow/content/${id}`);
-  // return response.data;
-
-  // 模拟数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const mockData: ContentTableItem = {
-        projectId: 'fayetest',
-        pipelineId: 'p-68ae025a1a354136948596ab3d09073f',
-        pipelineName: '0420-4',
-        pipelineDesc: '',
-        taskCount: 3,
-        buildCount: 0,
-        lock: false,
-        canManualStartup: true,
-        latestBuildStartTime: 0,
-        latestBuildEndTime: 0,
-        latestBuildNum: 0,
-        latestBuildEstimatedExecutionSeconds: 1,
-        deploymentTime: 1618922545000,
-        createTime: 1618922545000,
-        updateTime: 1618922545000,
-        pipelineVersion: 1,
-        currentTimestamp: 1766136363205,
-        runningBuildCount: 0,
-        hasPermission: true,
-        hasCollect: false,
-        latestBuildUserId: '',
-        instanceFromTemplate: false,
-        updater: 'fayewang',
-        creator: 'fayewang',
-        lastBuildTotalCount: 0,
-        lastBuildFinishCount: 0,
-        delete: false,
-        latestVersionStatus: 'RELEASED',
-        permissions: {
-          canManage: true,
-          canDelete: true,
-          canView: true,
-          canEdit: true,
-          canExecute: true,
-          canDownload: true,
-          canShare: true,
-          canArchive: true,
-        },
-        yamlExist: false,
-        archivingFlag: false,
-      }
-      resolve(mockData)
-    }, 300)
-  })
 }
 
 /**
@@ -693,23 +624,6 @@ export async function getSelectedTreeData(
 }
 
 /**
- * 获取创作环境列表
- */
-export async function apiGetAuthoringEnvList(params: {
-  projectId: string
-  envType: string
-}): Promise<AuthoringEnvItem[]> {
-  try {
-    const res = await get<AuthoringEnvItem[]>(
-      `${ENVIRONMENT_API_URL_PREFIX}/user/environment/${params.projectId}?envType=${params.envType}`,
-    )
-    return res
-  } catch (error) {
-    throw error
-  }
-}
-
-/**
  * 获取全部项目模板
  */
 export async function apiGetProjectTemplates(projectId: string): Promise<AllTemplatesResponse> {
@@ -717,18 +631,6 @@ export async function apiGetProjectTemplates(projectId: string): Promise<AllTemp
     const res = await get<AllTemplatesResponse>(
       `${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/allTemplates`,
     )
-    return res
-  } catch (error) {
-    throw error
-  }
-}
-
-/**
- * 获取默认配置
- */
-export async function apiGetDefaultSetting(): Promise<FlowSettings> {
-  try {
-    const res = await get<FlowSettings>(`${PROCESS_API_URL_PREFIX}/user/setting/default/get`)
     return res
   } catch (error) {
     throw error
@@ -774,28 +676,6 @@ export async function toggleFlowFavorite(
 }
 
 /**
- * 重命名创作流
- * @param projectId 项目ID
- * @param pipelineId 创作流ID
- * @param name 新名称
- */
-export async function renameFlow(
-  projectId: string,
-  pipelineId: string,
-  name: string,
-): Promise<boolean> {
-  try {
-    const res = await post<boolean>(
-      `${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/rename`,
-      { name },
-    )
-    return res
-  } catch (error) {
-    throw error
-  }
-}
-
-/**
  * 导出创作流 JSON，参考 devops-pipeline 的 download action 实现
  * @param projectId 项目ID
  * @param pipelineId 创作流ID
@@ -817,34 +697,6 @@ export async function downloadFlowJson(projectId: string, pipelineId: string, fi
   a.click()
   document.body.removeChild(a)
   window.URL.revokeObjectURL(blobUrl)
-}
-
-/**
- * 导出创作流为 YAML - 获取 YAML 内容
- * @param projectId 项目ID
- * @param pipelineId 创作流ID
- * @param modelAndSetting 模型和设置
- */
-export async function exportFlowAsYaml(
-  projectId: string,
-  pipelineId: string,
-  modelAndSetting: ModelAndSetting,
-): Promise<ImportContentResponse> {
-  try {
-    const res = await post<ImportContentResponse>(
-      `${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}`,
-      { modelAndSetting },
-      {
-        params: {
-          pipelineId,
-          actionType: 'FULL_MODEL2YAML',
-        },
-      },
-    )
-    return res
-  } catch (error) {
-    throw error
-  }
 }
 
 /**
