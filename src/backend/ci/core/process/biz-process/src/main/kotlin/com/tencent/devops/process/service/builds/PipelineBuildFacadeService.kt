@@ -72,6 +72,7 @@ import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
@@ -166,6 +167,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil.recommendVersionKey
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
+import com.tencent.devops.store.pojo.common.BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.UriBuilder
 import java.util.concurrent.TimeUnit
@@ -475,7 +477,12 @@ class PipelineBuildFacadeService(
                 var canManualStartup = false
                 run lit@{
                     triggerContainer.elements.forEach {
-                        if (it is ManualTriggerElement && it.elementEnabled()) {
+                        val targetElement = if (channelCode == ChannelCode.CREATIVE_STREAM) {
+                            it is MarketEventAtomElement && it.atomCode == BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
+                        } else {
+                            it is ManualTriggerElement
+                        }
+                        if (targetElement && it.elementEnabled()) {
                             canManualStartup = true
                             return@lit
                         }

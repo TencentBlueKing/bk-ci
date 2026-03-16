@@ -206,3 +206,4 @@ const val BK_STORE_CLOUD_DESKTOP_TRIGGER = "storeCloudDesktopTrigger" // 云桌�
 const val BK_STORE_COMMON_TRIGGER = "storeCommonTrigger" // 通用触发器
 const val BK_STORE_ALL_TRIGGER = "storeAllTrigger" // 全部触发器
 const val BK_STORE_CREATIVE_STREAM_TIMER_TRIGGER = "CREATIVE_STREAM_TIMER_TRIGGER" // 创作流定时触发器
+const val BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER = "CREATIVE_STREAM_MANUAL_TRIGGER" // 创作流手动触发器

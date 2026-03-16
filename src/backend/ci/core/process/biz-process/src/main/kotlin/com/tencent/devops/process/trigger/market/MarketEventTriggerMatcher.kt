@@ -14,6 +14,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_FIELD_CONDITION
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_FIELD_CONDITION_NOT_MATCH
 import com.tencent.devops.process.trigger.enums.MatchStatus
 import com.tencent.devops.process.trigger.pojo.WebhookAtomResponse
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.store.api.common.ServiceStoreComponentResource
 import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.KEY_TRIGGER_EVENT_CONFIG
@@ -86,6 +87,7 @@ class MarketEventTriggerMatcher @Autowired constructor(
             val startParams = mutableMapOf<String, Any>()
             startParams.putAll(variables)
             startParams.putAll(eventVariables)
+            startParams[PIPELINE_BUILD_MSG]  = componentDetail.name
             WebhookAtomResponse(
                 matchStatus = MatchStatus.SUCCESS,
                 outputVars = startParams

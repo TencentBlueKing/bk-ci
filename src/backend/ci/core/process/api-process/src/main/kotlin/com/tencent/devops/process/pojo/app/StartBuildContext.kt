@@ -67,6 +67,7 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_COMMIT_MESSA
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_ID
 import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_ID
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_NAME
@@ -314,6 +315,11 @@ data class StartBuildContext(
             } else {
                 Triple(ActionType.START, 1, false)
             }
+            val channelCode = if (params[PIPELINE_START_CHANNEL] != null) {
+                ChannelCode.valueOf(params[PIPELINE_START_CHANNEL]!!)
+            } else {
+                ChannelCode.BS
+            }
             val startType = StartType.valueOf(params[PIPELINE_START_TYPE]!!)
             return StartBuildContext(
                 projectId = projectId,
@@ -332,15 +338,11 @@ data class StartBuildContext(
                 startType = startType,
                 parentBuildId = params[PIPELINE_START_PARENT_BUILD_ID],
                 parentTaskId = params[PIPELINE_START_PARENT_BUILD_TASK_ID],
-                channelCode = if (params[PIPELINE_START_CHANNEL] != null) {
-                    ChannelCode.valueOf(params[PIPELINE_START_CHANNEL]!!)
-                } else {
-                    ChannelCode.BS
-                },
+                channelCode = channelCode,
                 retryFailedContainer = params[PIPELINE_RETRY_ALL_FAILED_CONTAINER]?.toBoolean() ?: false,
                 skipFailedTask = params[PIPELINE_SKIP_FAILED_TASK]?.toBoolean() ?: false,
                 currentBuildNo = currentBuildNo,
-                webhookInfo = getWebhookInfo(params),
+                webhookInfo = getWebhookInfo(params, channelCode),
                 buildMsg = params[PIPELINE_BUILD_MSG]?.coerceAtMaxLength(MAX_LENGTH),
                 buildParameters = buildParam,
                 concurrencyGroup = pipelineSetting?.takeIf { it.runLockType == PipelineRunLockType.GROUP_LOCK }
@@ -370,17 +372,31 @@ data class StartBuildContext(
             )
         }
 
-        private fun getWebhookInfo(params: Map<String, String>): WebhookInfo? {
+        private fun getWebhookInfo(params: Map<String, String>, channelCode: ChannelCode): WebhookInfo? {
             // 支持webhookInfo的启动类型
             val startTypes = listOf(
                 StartType.WEB_HOOK.name,
                 StartType.PIPELINE.name,
                 StartType.SERVICE.name,
-                StartType.REMOTE.name
+                StartType.REMOTE.name,
+                StartType.TRIGGER_EVENT.name
             )
             val startType = params[PIPELINE_START_TYPE]
             if (!startTypes.contains(startType)) {
                 return null
+            }
+            val (webhookEventType, refId) = when {
+                channelCode == ChannelCode.CREATIVE_STREAM -> {
+                    params[PIPELINE_TRIGGER_EVENT_TYPE] to params[CI_NODE_ID]
+                }
+
+                params[PIPELINE_WEBHOOK_TYPE] == CodeType.GIT.name -> {
+                    params[BK_REPO_GIT_WEBHOOK_EVENT_TYPE] to params[PIPELINE_WEBHOOK_REVISION]
+                }
+
+                else -> {
+                    params[PIPELINE_WEBHOOK_EVENT_TYPE] to params[PIPELINE_WEBHOOK_REVISION]
+                }
             }
             return WebhookInfo(
                 codeType = if (supportCustomMaterials(startType)) {
@@ -395,12 +411,8 @@ data class StartBuildContext(
                 webhookBranch = params[PIPELINE_WEBHOOK_BRANCH],
                 webhookAliasName = params[BK_REPO_WEBHOOK_REPO_ALIAS_NAME],
                 // GIT事件分为MR和MR accept,但是PIPELINE_WEBHOOK_EVENT_TYPE值只有MR
-                webhookEventType = if (params[PIPELINE_WEBHOOK_TYPE] == CodeType.GIT.name) {
-                    params[BK_REPO_GIT_WEBHOOK_EVENT_TYPE]
-                } else {
-                    params[PIPELINE_WEBHOOK_EVENT_TYPE]
-                },
-                refId = params[PIPELINE_WEBHOOK_REVISION],
+                webhookEventType = webhookEventType,
+                refId = refId,
                 webhookCommitId = params[PIPELINE_WEBHOOK_REVISION],
                 webhookMergeCommitSha = params[BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA],
                 webhookSourceBranch = params[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH],
