@@ -56,6 +56,8 @@ src/agent/agent/
 │   └── third_components/       # 第三方组件管理(JDK/Worker)
 ├── internal/
 │   └── third_party/dep/fs/     # 文件系统操作(跨设备rename)
+├── other-utils/
+│   └── process-tree/           # 独立诊断工具 `agent-util`：Windows `tree` + Unix `shell-check`，含 `build.sh`
 ├── Makefile                    # 多平台构建
 ├── build_windows.ps1           # Windows构建脚本
 ├── go.mod                      # Go 1.19, 即将升级到 1.22
@@ -226,6 +228,8 @@ AgentUpgrade(upgradeItem, hasBuild)
 //go:build !out               // 内部版本(默认)
 //go:build out                // 外部版本
 ```
+
+**补充说明**: `other-utils/process-tree/` 目录下的工具对外统一命名为 `agent-util`，采用同目录多入口模式：`main.go` 仅在 Windows 编译，承载 `tree` 子命令；`main_unix.go` + `shell_check_unix.go` 在 Linux/macOS 编译，承载 `shell-check` 子命令；`build.sh` 负责一键构建 `linux/windows` 两个平台产物。
 
 ### 关键平台差异
 
