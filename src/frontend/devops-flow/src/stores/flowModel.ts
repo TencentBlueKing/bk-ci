@@ -141,9 +141,12 @@ export const useFlowModelStore = defineStore('flowModel', () => {
     try {
       const [modelRes, atomProp] = await Promise.all([
         getFlowModel(projectId, flowId, version),
-        getPluginProperties({ projectId, pipelineId: flowId, version: version ? Number(version) : undefined }).catch(() => null),
+        getPluginProperties({
+          projectId,
+          pipelineId: flowId,
+          version: version ? Number(version) : undefined,
+        }).catch(() => null),
       ])
-      debugger
       const model = modelRes.modelAndSetting?.model
       if (model && atomProp) {
         mergeAtomProps(model, atomProp)
@@ -250,11 +253,14 @@ export const useFlowModelStore = defineStore('flowModel', () => {
 
   function persistImportData() {
     try {
-      sessionStorage.setItem(IMPORT_STORAGE_KEY, JSON.stringify({
-        model: flowModel.value,
-        setting: flowSetting.value,
-        yaml: yamlContent.value,
-      }))
+      sessionStorage.setItem(
+        IMPORT_STORAGE_KEY,
+        JSON.stringify({
+          model: flowModel.value,
+          setting: flowSetting.value,
+          yaml: yamlContent.value,
+        }),
+      )
     } catch (e) {
       console.error('Failed to persist import data:', e)
     }
@@ -294,11 +300,7 @@ export const useFlowModelStore = defineStore('flowModel', () => {
    * 设置导入的 Flow 模型数据（不通过 API 加载，直接设置到 store）
    * 用于导入场景：文件解析后填充到编辑器，用户编辑后保存才创建创作流
    */
-  function setImportedFlowModel(
-    model: FlowModel,
-    setting: FlowSettings,
-    yaml?: string,
-  ) {
+  function setImportedFlowModel(model: FlowModel, setting: FlowSettings, yaml?: string) {
     flowModel.value = model
     flowSetting.value = setting
     yamlContent.value = yaml || ''
