@@ -56,7 +56,6 @@ import org.apache.commons.lang3.StringUtils
 import org.json.JSONException
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
-import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder
 
 object CommonUtils {
 
@@ -237,7 +236,7 @@ object CommonUtils {
             mac.init(secretKey)
             val mk = makeSource(method, url_path, params)
             val hash = mac.doFinal(mk.toByteArray(charset("UTF-8")))
-            encodeUrl(String(Base64Coder.encode(hash)))
+            encodeUrl(String(Base64.getEncoder().encode(hash)))
         } catch (e: NoSuchAlgorithmException) {
             throw OperationException(
                 I18nUtil.getCodeLanMessage(messageCode = GET_SIGNATURE_ERROR) + "$e"
