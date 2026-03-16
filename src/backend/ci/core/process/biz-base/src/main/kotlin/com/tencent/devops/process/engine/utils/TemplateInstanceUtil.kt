@@ -285,10 +285,6 @@ object TemplateInstanceUtil {
         pipelineParam: BuildFormProperty?,
         overrideTemplateField: TemplateInstanceField?
     ): BuildFormProperty {
-        // 如果是常量参数或者其他变量,则直接使用模版参数
-        if (templateParam.constant == true || !templateParam.required) {
-            return templateParam
-        }
         // 如果没有传入流水线参数，也直接返回模板参数
         if (pipelineParam == null) {
             // 不能直接使用模版的require,应该使用asInstanceInput,表示默认实例入参
@@ -323,10 +319,6 @@ object TemplateInstanceUtil {
         templateVariableMap: Map<String, TemplateVariable>,
         templateParam: BuildFormProperty
     ): BuildFormProperty {
-        // 如果是常量参数或者其他变量,则直接使用模版参数
-        if (templateParam.constant == true || !templateParam.required) {
-            return templateParam
-        }
         val templateVariable = templateVariableMap[templateParam.id] ?: run {
             // 如果yaml中变量没有声明,表示值和入参都跟随模版,不能直接使用模版的require,应该使用asInstanceInput
             val asInstanceInput = templateParam.asInstanceInput
