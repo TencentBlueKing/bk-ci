@@ -43,11 +43,11 @@ data class AtomBuildArchiveElement(
     @get:Schema(title = "插件发布包所在相对路径", required = true)
     val filePath: String = "\${{steps.scriptStep.outputs.filePath}}",
     @get:Schema(title = "插件发布包上传至仓库的目标路径", required = true)
-    val destPath: String = "\${{atomCode}}/\${{version}}/\${{steps.scriptStep.outputs.packageName}}",
+    val destPath: String = "\${{variables.atomCode}}/\${{variables.version}}/\${{steps.scriptStep.outputs.packageName}}",
     @get:Schema(title = "插件自定义UI前端文件所在相对路径", required = false)
     val frontendFilePath: String? = "\${BK_CI_CUSTOM_FRONTEND_DIST_PATH}",
     @get:Schema(title = "插件自定义UI前端文件上传至仓库的目标路径", required = false)
-    val frontendDestPath: String? = "\${{atomCode}}/\${{version}}",
+    val frontendDestPath: String? = "\${{variables.atomCode}}/\${{variables.version}}",
     @get:Schema(title = "操作系统名称", required = false)
     val osName: String? = "\${{steps.scriptStep.outputs.matrixOsName}}",
     @get:Schema(title = "操作系统cpu架构", required = false)
