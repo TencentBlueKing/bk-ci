@@ -27,7 +27,8 @@
       "reset": "クリア",
       "true": "はい",
       "false": "いいえ",
-      "pleaseSelect": "作成ノードを選択してください"
+      "pleaseSelect": "作成ノードを選択してください",
+      "unAccessUser": "ユーザー{0}は現在のプロジェクトメンバーではありません"
     },
     "sidebar": {
       "myFlows": "自分の作成フロー",

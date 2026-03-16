@@ -27,7 +27,8 @@
       "reset": "Clear",
       "true": "Yes",
       "false": "No",
-      "pleaseSelect": "Please select a creation node"
+      "pleaseSelect": "Please select a creation node",
+      "unAccessUser": "User {0} is not a member of the current project"
     },
     "sidebar": {
       "myFlows": "My Creation Flows",

@@ -245,12 +245,12 @@ export default defineComponent({
       if (!hasMore.value) return
 
       try {
-        const isCreativeStream = props.container?.['@type'] === 'normal'
+        const isCloudJob = props.container?.['@type'] === 'normal'
         const result = await atomManager.fetchAtomList({
           classifyId: classifyId.value,
           keyword: searchKey.value,
-          jobType: isCreativeStream ? JobType.CREATIVE_STREAM : JobType.CLOUD_TASK,
-          os: isCreativeStream ? 'WINDOWS' : undefined,
+          jobType: isCloudJob ? JobType.CLOUD_TASK : JobType.CREATIVE_STREAM,
+          os: isCloudJob ? undefined : 'WINDOWS',
           queryProjectAtomFlag: queryProjectAtomFlag.value,
           page: currentPage.value,
           pageSize: 20,

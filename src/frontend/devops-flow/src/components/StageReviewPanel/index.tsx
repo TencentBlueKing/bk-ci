@@ -46,6 +46,10 @@ export default defineComponent({
       return (props.stage?.[props.reviewType] as Partial<CheckConfig>) || {}
     })
 
+    const isManualTrigger = computed(() => {
+      return stageControl.value.manualTrigger === true
+    })
+
     const reviewGroups = computed<ReviewGroup[]>(() => {
       return stageControl.value.reviewGroups || []
     })
@@ -406,43 +410,51 @@ export default defineComponent({
 
       return (
         <div class={styles.stageReviewContent}>
-          <span class={styles.reviewTitle}>{t('flow.execute.manualReview')}</span>
+          <span class={styles.reviewSubtitle}>{t('flow.stageReviewEdit.stageCondition')}</span>
+          <Radio.Group modelValue={isManualTrigger.value} class={styles.reviewResult}>
+            <Radio label={false} disabled>{t('flow.stageReviewEdit.autoExecute')}</Radio>
+            <Radio label={true} disabled>{t('flow.stageReviewEdit.manualReview')}</Radio>
+          </Radio.Group>
 
-          {stageControl.value.reviewDesc && (
+          {isManualTrigger.value && (
             <>
-              <span class={styles.reviewSubtitle}>{t('flow.execute.reviewDescription')}</span>
-              <div class={styles.reviewDescBox}>{stageControl.value.reviewDesc}</div>
-            </>
-          )}
+              {stageControl.value.reviewDesc && (
+                <>
+                  <span class={styles.reviewSubtitle}>{t('flow.execute.reviewDescription')}</span>
+                  <div class={styles.reviewDescBox}>{stageControl.value.reviewDesc}</div>
+                </>
+              )}
 
-          {reviewGroups.value.length > 0 && (
-            <>
-              <span class={styles.reviewSubtitle}>{t('flow.execute.approvalFlow')}</span>
-              <Timeline list={getReviewTimelineList()} class={styles.reviewTimeline} />
-            </>
-          )}
+              {reviewGroups.value.length > 0 && (
+                <>
+                  <span class={styles.reviewSubtitle}>{t('flow.execute.approvalFlow')}</span>
+                  <Timeline list={getReviewTimelineList()} class={styles.reviewTimeline} />
+                </>
+              )}
 
-          {reviewParams.length > 0 && (
-            <>
-              <span class={styles.reviewSubtitle}>{t('flow.execute.customVariables')}</span>
-              <Table data={reviewParams} border="outer" class={styles.paramsTable}>
-                <Column label={t('flow.execute.alias')} showOverflowTooltip>
-                  {{
-                    default: ({ row }: { row: ReviewParam }) => (
-                      <span>
-                        {row.chineseName || '--'}
-                        {row.desc && (
-                          <span class={styles.paramInfoIcon} v-bk-tooltips={row.desc}>
-                            <SvgIcon name="info-circle" size={14} />
+              {reviewParams.length > 0 && (
+                <>
+                  <span class={styles.reviewSubtitle}>{t('flow.execute.customVariables')}</span>
+                  <Table data={reviewParams} border="outer" class={styles.paramsTable}>
+                    <Column label={t('flow.execute.alias')} showOverflowTooltip>
+                      {{
+                        default: ({ row }: { row: ReviewParam }) => (
+                          <span>
+                            {row.chineseName || '--'}
+                            {row.desc && (
+                              <span class={styles.paramInfoIcon} v-bk-tooltips={row.desc}>
+                                <SvgIcon name="info-circle" size={14} />
+                              </span>
+                            )}
                           </span>
-                        )}
-                      </span>
-                    ),
-                  }}
-                </Column>
-                <Column label={t('flow.execute.paramName')} prop="key" formatter={nameFormatter} showOverflowTooltip />
-                <Column label={t('flow.execute.paramValue')} prop="value" formatter={valueFormatter} showOverflowTooltip />
-              </Table>
+                        ),
+                      }}
+                    </Column>
+                    <Column label={t('flow.execute.paramName')} prop="key" formatter={nameFormatter} showOverflowTooltip />
+                    <Column label={t('flow.execute.paramValue')} prop="value" formatter={valueFormatter} showOverflowTooltip />
+                  </Table>
+                </>
+              )}
             </>
           )}
         </div>
@@ -450,7 +462,7 @@ export default defineComponent({
     }
 
     const renderApproveContent = () => {
-      if (!isStagePause.value) {
+      if (!isStagePause.value || !isManualTrigger.value) {
         return renderShowContent()
       }
 
