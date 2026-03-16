@@ -39,6 +39,7 @@
             <p class="pipeline-version-name">
                 <span v-bk-overflow-tips>
                     <template v-if="isActiveDraft">
+                        <span v-if="draftVersion">{{ convertTime(activeVersion.updateTime) + ` ${activeVersion.updater} ` }}</span>
                         {{ $t('editPage.draftVersion', [draftBaseVersionName]) }}
                     </template>
                     <template v-else>
@@ -325,7 +326,7 @@
                             return {
                                 ...item,
                                 version: `draft-${item.draftVersion}`, // 使用 draft- 前缀作为唯一标识
-                                displayName: this.$t('draft') + item.draftVersion,
+                                displayName: convertTime(item.updateTime) + `  ${item.updater}`,
                                 description: this.$t('baseOn', [item.baseVersionName]),
                                 isBranchVersion: false,
                                 isDraft: true,

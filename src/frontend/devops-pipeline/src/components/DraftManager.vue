@@ -33,7 +33,7 @@
                         <span class="update-info">{{ formatTime(item.updateTime) }} {{ item.updater }}</span>
                         <span
                             class="version-name"
-                            v-if="item.draftVersion !== 1"
+                            v-if="item.draftVersion !== 1 && item.baseVersionName"
                         >{{ $t('basedOn', [item.baseVersionName]) }}</span>
                     </p>
                     <span
