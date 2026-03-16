@@ -15,7 +15,7 @@ const STORE_API_URL_PREFIX = '/store/api'
 export async function getSystemVariables(): Promise<ReadOnlyVariableGroup[]> {
   try {
     const data = await post<ReadOnlyVariableGroup[]>(
-      `/${PROCESS_API_URL_PREFIX}/user/buildParam/common`,
+      `${PROCESS_API_URL_PREFIX}/user/buildParam/common`,
     )
     return data || []
   } catch (error) {
