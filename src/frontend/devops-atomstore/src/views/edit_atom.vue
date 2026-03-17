@@ -1017,6 +1017,8 @@
             height: calc(100% - 5.6vh);
             overflow: auto;
             display: flex;
+            background-color: #fff;
+            box-shadow: 0px 0px 0px 1px #ebedf0;
             justify-content: center;
         }
         .edit-atom-form-en {
