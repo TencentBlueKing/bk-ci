@@ -139,6 +139,13 @@
   overflow: hidden;
 }
 
+.detailLoading {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 .pipelineExecOutputHeader {
   display: flex;
   background: var(--bg-tertiary);
