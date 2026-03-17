@@ -30,6 +30,7 @@ export default defineComponent({
       artifactValue,
       artifactFilterData,
       isLoading,
+      isDetailLoading,
 
       keyWord,
       copyToDialogRef,
@@ -218,92 +219,90 @@ export default defineComponent({
                   />
                 ) : isActiveThirdReport.value ? (
                   <ThirdPartyReport report-list={thirdPartyReportList.value} />
-                ) : activeOutputDetail.value ? (
-                  <>
-                    <div class={styles.pipelineExecOutputHeader}>
-                      <span class={styles.pipelineExecOutputHeaderName}>
-                        <SvgIcon name={activeOutputDetail.value.icon} />
-                        <span title={activeOutputDetail.value.name} class={styles.outputDetailName}>
-                          {activeOutputDetail.value.name}
-                        </span>
-                      </span>
-                      <p class="flex-center">
-                        <Tag theme="info">{t(activeOutputDetail.value.artifactoryTypeTxt)}</Tag>
-                      </p>
-                      <p class={styles.pipelineExecOutputActions}>
-                        {activeOutput.value?.downloadable && (
-                          <ArtifactDownloadButton
-                            output={activeOutput.value}
-                            path={activeOutput.value.fullPath}
-                            name={activeOutput.value.name}
-                            artifactoryType={activeOutput.value.artifactoryType}
-                          />
-                        )}
-                        {btns.value.map((btn) => (
-                          <Button text theme="primary" key={btn.text} onClick={btn.handler}>
-                            {btn.text}
-                          </Button>
-                        ))}
-                        {/* {!activeOutputDetail.value.folder && (
-                          <ExtMenu
-                            data={activeOutputDetail.value}
-                            config={artifactMoreActions.value}
-                          />
-                        )} */}
-                      </p>
-                    </div>
-
-                    <div class={styles.pipelineExecOutputArtifact}>
-                      {infoBlocks.value.map((block) => (
-                        <div key={block.title} class={styles.pipelineExecOutputBlock}>
-                          <h6 class={styles.pipelineExecOutputBlockTitle}>{block.title}</h6>
-                          {block.key === 'meta' ? (
-                            <Table
-                              data={block.value}
-                              border="outer"
-                              columns={columns as any}
-                              class={styles.triggerTable}
-                            >
-                              {{
-                                empty: () => (
-                                  <div class={styles.emptyState}>{t('flow.common.noData')}</div>
-                                ),
-                              }}
-                            </Table>
-                          ) : (
-                            <ul class={styles.pipelineExecOutputBlockContent}>
-                              {'block' in block &&
-                                block.block?.map((row: any) => (
-                                  <li
-                                    key={row.key}
-                                    style={{
-                                      alignItems: row.key === 'fullName' ? 'baseline' : 'center',
-                                    }}
-                                  >
-                                    <span class={styles.pipelineExecOutputBlockRowLabel}>
-                                      {row.name}：
-                                    </span>
-                                    {row.key === 'fullName' ? (
-                                      <span class={styles.pipelineExecOutputBlockRowFullName}>
-                                        {block.value[row.key] || '--'}
-                                      </span>
-                                    ) : (
-                                      <span class={styles.pipelineExecOutputBlockRowValue}>
-                                        {block.value[row.key] || '--'}
-                                      </span>
-                                    )}
-                                  </li>
-                                ))}
-                            </ul>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </>
                 ) : (
-                  <div class={styles.noOutputsPlaceholder}>
-                    <EmptyPage />
-                  </div>
+                  <Loading loading={isDetailLoading.value}>
+                    {activeOutputDetail.value ? (
+                      <>
+                        <div class={styles.pipelineExecOutputHeader}>
+                          <span class={styles.pipelineExecOutputHeaderName}>
+                            <SvgIcon name={activeOutputDetail.value.icon} />
+                            <span title={activeOutputDetail.value.name} class={styles.outputDetailName}>
+                              {activeOutputDetail.value.name}
+                            </span>
+                          </span>
+                          <p class="flex-center">
+                            <Tag theme="info">{t(activeOutputDetail.value.artifactoryTypeTxt)}</Tag>
+                          </p>
+                          <p class={styles.pipelineExecOutputActions}>
+                            {activeOutput.value?.downloadable && (
+                              <ArtifactDownloadButton
+                                output={activeOutput.value}
+                                path={activeOutput.value.fullPath}
+                                name={activeOutput.value.name}
+                                artifactoryType={activeOutput.value.artifactoryType}
+                              />
+                            )}
+                            {btns.value.map((btn) => (
+                              <Button text theme="primary" key={btn.text} onClick={btn.handler}>
+                                {btn.text}
+                              </Button>
+                            ))}
+                          </p>
+                        </div>
+
+                        <div class={styles.pipelineExecOutputArtifact}>
+                          {infoBlocks.value.map((block) => (
+                            <div key={block.title} class={styles.pipelineExecOutputBlock}>
+                              <h6 class={styles.pipelineExecOutputBlockTitle}>{block.title}</h6>
+                              {block.key === 'meta' ? (
+                                <Table
+                                  data={block.value}
+                                  border="outer"
+                                  columns={columns as any}
+                                  class={styles.triggerTable}
+                                >
+                                  {{
+                                    empty: () => (
+                                      <div class={styles.emptyState}>{t('flow.common.noData')}</div>
+                                    ),
+                                  }}
+                                </Table>
+                              ) : (
+                                <ul class={styles.pipelineExecOutputBlockContent}>
+                                  {'block' in block &&
+                                    block.block?.map((row: any) => (
+                                      <li
+                                        key={row.key}
+                                        style={{
+                                          alignItems: row.key === 'fullName' ? 'baseline' : 'center',
+                                        }}
+                                      >
+                                        <span class={styles.pipelineExecOutputBlockRowLabel}>
+                                          {row.name}：
+                                        </span>
+                                        {row.key === 'fullName' ? (
+                                          <span class={styles.pipelineExecOutputBlockRowFullName}>
+                                            {block.value[row.key] || '--'}
+                                          </span>
+                                        ) : (
+                                          <span class={styles.pipelineExecOutputBlockRowValue}>
+                                            {block.value[row.key] || '--'}
+                                          </span>
+                                        )}
+                                      </li>
+                                    ))}
+                                </ul>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    ) : (
+                      <div class={styles.noOutputsPlaceholder}>
+                        <EmptyPage />
+                      </div>
+                    )}
+                  </Loading>
                 )}
               </section>
             </>

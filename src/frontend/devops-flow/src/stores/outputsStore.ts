@@ -41,6 +41,7 @@ export const useOutputsStore = defineStore('outputs', () => {
   const artifactFilterData = ref<any[]>([])
   // 加载状态
   const isLoading = ref(false)
+  const isDetailLoading = ref(false)
 
   const pagination = ref({
     page: 1,
@@ -180,7 +181,7 @@ export const useOutputsStore = defineStore('outputs', () => {
   async function showDetail(output: Output) {
     const { projectId } = route.params
     try {
-      isLoading.value = true
+      isDetailLoading.value = true
       const params: GetFileInfoParams = {
         projectId: projectId as string,
         artifactoryType: output.artifactoryType,
@@ -207,7 +208,7 @@ export const useOutputsStore = defineStore('outputs', () => {
         theme: 'error',
       })
     } finally {
-      isLoading.value = false
+      isDetailLoading.value = false
     }
   }
   /**
@@ -267,6 +268,7 @@ export const useOutputsStore = defineStore('outputs', () => {
     artifactValue,
     artifactFilterData,
     isLoading,
+    isDetailLoading,
     pagination,
     isDebugExec,
     filterQuery,
