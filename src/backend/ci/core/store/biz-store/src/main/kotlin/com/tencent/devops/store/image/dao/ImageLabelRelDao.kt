@@ -38,7 +38,6 @@ import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record1
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
@@ -46,21 +45,10 @@ import org.springframework.stereotype.Repository
 @Repository
 class ImageLabelRelDao {
 
-    fun getImageIdsByLabelIds(
-        dslContext: DSLContext,
-        labelIds: Set<String>
-    ): Result<Record1<String>>? {
-        with(TImageLabelRel.T_IMAGE_LABEL_REL) {
-            return dslContext.select(IMAGE_ID).from(this)
-                .where(LABEL_ID.`in`(labelIds))
-                .fetch()
-        }
-    }
-
     fun getLabelsByImageId(
         dslContext: DSLContext,
         imageId: String
-    ): Result<out Record>? {
+    ): Result<out Record> {
         val tLabel = TLabel.T_LABEL
         val tImageLabelRel = TImageLabelRel.T_IMAGE_LABEL_REL
         return dslContext.select(
