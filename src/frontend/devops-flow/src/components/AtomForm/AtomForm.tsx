@@ -24,6 +24,7 @@ const StaffInput = defineAsyncComponent(() => import('./StaffInput'))
 const AtomDatePicker = defineAsyncComponent(() => import('./AtomDatePicker'))
 const CronTab = defineAsyncComponent(() => import('./CronTab'))
 const SubParameter = defineAsyncComponent(() => import('./SubParameter'))
+const SelectInput = defineAsyncComponent(() => import('./SelectInput'))
 
 const SELF_ERROR_COMPONENTS = new Set(['timer-cron-tab'])
 
@@ -55,6 +56,7 @@ const COMPONENT_MAP: Record<string, any> = {
   'timer-cron-tab': CronTab,
   'sub-parameter': SubParameter,
   'request-selector': Selector,
+  'select-input': SelectInput,
 }
 
 // Display mode types
