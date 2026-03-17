@@ -1,5 +1,7 @@
 package com.tencent.devops.process.trigger
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.process.trigger.market.MarketEventVariablesResolver
 import com.tencent.devops.store.pojo.trigger.EventFieldMappingItem
 import com.tencent.devops.store.pojo.trigger.enums.MappingSource
@@ -140,7 +142,7 @@ class MarketEventVariablesResolverTest {
             fieldMappings = fieldMappings,
             incomingHeaders = headers,
             incomingQueryParamMap = null,
-            incomingBody = body
+            incomingBody = JsonUtil.anyToOrNull(body, object : TypeReference<Map<String, String>>() {})
         )
         Assertions.assertEquals("merge_request", variables["ci.event_type"])
         Assertions.assertEquals("1234567890", variables["ci.event.trace_id"])
