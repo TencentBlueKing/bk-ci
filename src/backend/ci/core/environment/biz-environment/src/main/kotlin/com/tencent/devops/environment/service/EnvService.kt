@@ -70,6 +70,8 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_INVALID_CHARACTER
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_USE_PERMISSSION
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_VIEW_PERMISSSION
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_SHARE_PROJECT_TYPE_ERROR
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_TAG_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_QUOTA_LIMIT
@@ -1157,15 +1159,6 @@ class EnvService @Autowired constructor(
         }
 
         val nodeLongIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }
-        // 检查 node 权限
-        val canUseNodeIds = environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.USE)
-        val unauthorizedNodeIds = nodeLongIds.filterNot { canUseNodeIds.contains(it) }
-        if (unauthorizedNodeIds.isNotEmpty()) {
-            throw ErrorCodeException(
-                errorCode = ERROR_NODE_NO_USE_PERMISSSION,
-                params = arrayOf(unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
-            )
-        }
         // 检查 node 是否存在
         val existNodes = nodeDao.listByIds(dslContext, projectId, nodeLongIds)
         val existNodeIds = existNodes.map { it.nodeId }.toSet()
@@ -1175,6 +1168,37 @@ class EnvService @Autowired constructor(
                 errorCode = ERROR_NODE_NOT_EXISTS,
                 params = arrayOf(notExistNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
             )
+        }
+
+        // 检查 node 权限：创作流节点校验查看权限，普通节点校验使用权限
+        val isCreateEnv = envRecord.envType == EnvType.CREATE.name
+        if (isCreateEnv) {
+            val canViewNodeIds = environmentPermissionService.listNodeByPermission(
+                userId = userId,
+                projectId = projectId,
+                permission = AuthPermission.VIEW,
+                resourceType = AuthResourceType.CREATIVE_STREAM_NODE
+            )
+            val unauthorizedNodeIds = nodeLongIds.filterNot { canViewNodeIds.contains(it) }
+            if (unauthorizedNodeIds.isNotEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_NODE_NO_VIEW_PERMISSSION,
+                    params = arrayOf(unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
+                )
+            }
+        } else {
+            val canUseNodeIds = environmentPermissionService.listNodeByPermission(
+                userId = userId,
+                projectId = projectId,
+                permission = AuthPermission.USE
+            )
+            val unauthorizedNodeIds = nodeLongIds.filterNot { canUseNodeIds.contains(it) }
+            if (unauthorizedNodeIds.isNotEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_NODE_NO_USE_PERMISSSION,
+                    params = arrayOf(unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
+                )
+            }
         }
 
         dslContext.transaction { config ->
