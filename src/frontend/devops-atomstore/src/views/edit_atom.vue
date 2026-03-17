@@ -604,7 +604,6 @@
                             
                             // 回显 PIPELINE 配置
                             const pipelineConfig = serviceScopeDetails.find(item => item.serviceScope === 'PIPELINE')
-                            console.log("🚀 ~ pipelineConfig:", pipelineConfig)
                             if (pipelineConfig) {
                                 // 从 jobTypeConfigs 中提取 jobTypes 和 os
                                 const jobTypes = pipelineConfig.jobTypeConfigs?.map(config => config.jobType) || ['AGENT']
