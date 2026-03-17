@@ -472,7 +472,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 atomRecord = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) newestAtomRecord else atomRecord,
                 releaseType = releaseType,
                 osList = effectiveOsList,
-                version = version
+                version = version,
+                serviceScopeConfigs = serviceScopeConfigs
             )
         logger.info("validateAtomVersionResult is :$validateAtomVersionResult")
         if (validateAtomVersionResult.isNotOk()) {

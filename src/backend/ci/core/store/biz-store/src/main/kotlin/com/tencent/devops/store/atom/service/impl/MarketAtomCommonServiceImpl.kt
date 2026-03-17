@@ -61,6 +61,8 @@ import com.tencent.devops.store.atom.dao.MarketAtomEnvInfoDao
 import com.tencent.devops.store.atom.dao.MarketAtomVersionLogDao
 import com.tencent.devops.store.atom.factory.AtomBusHandleFactory
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
+import com.tencent.devops.store.atom.util.AtomJobTypeUtil
+import com.tencent.devops.store.atom.util.AtomOsMapUtil
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.utils.BkInitProjectCacheUtil
@@ -103,6 +105,7 @@ import com.tencent.devops.store.pojo.common.KEY_PACKAGE_PATH
 import com.tencent.devops.store.pojo.common.KEY_RUNTIME_VERSION
 import com.tencent.devops.store.pojo.common.KEY_TARGET
 import com.tencent.devops.store.pojo.common.KEY_TYPE
+import com.tencent.devops.store.pojo.common.ServiceScopeConfig
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -172,7 +175,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         atomRecord: TAtomRecord,
         releaseType: ReleaseTypeEnum,
         osList: ArrayList<String>,
-        version: String
+        version: String,
+        serviceScopeConfigs: List<ServiceScopeConfig>?
     ): Result<Boolean> {
         val dbVersion = atomRecord.version
         val atomStatus = atomRecord.atomStatus
@@ -186,11 +190,14 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             atomRecord.os,
             List::class.java
         ) as List<String> else null
-        // 支持的操作系统减少必须采用大版本升级方案
-        val requireReleaseType =
-            if (null != dbOsList && !osList.containsAll(dbOsList)) {
-                ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE // 最近的版本处于上架中止状态，重新升级版本号不变
-            } else releaseType
+        // 支持的操作系统减少或 jobType 变更必须采用大版本升级方案
+        var requireReleaseType = if (null != dbOsList && !osList.containsAll(dbOsList)) {
+            ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE
+        } else releaseType
+        if (requireReleaseType != ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE && !serviceScopeConfigs.isNullOrEmpty()) {
+            requireReleaseType =
+                detectServiceScopeIncompatibility(atomRecord, serviceScopeConfigs) ?: requireReleaseType
+        }
         val cancelFlag = atomStatus == AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         val requireVersionList =
             if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
@@ -236,6 +243,52 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             }
         }
         return Result(true)
+    }
+
+    /**
+     * 检测 serviceScopeConfigs 是否存在不兼容变更。
+     * 不兼容条件：jobType 数量减少 / jobType 变更 / jobType 对应 OS 数量减少。
+     * @return INCOMPATIBILITY_UPGRADE 如果检测到不兼容变更，否则 null
+     */
+    private fun detectServiceScopeIncompatibility(
+        dbAtomRecord: TAtomRecord,
+        serviceScopeConfigs: List<ServiceScopeConfig>
+    ): ReleaseTypeEnum? {
+        val oldJobTypeMap = AtomJobTypeUtil.getAllJobTypes(dbAtomRecord.jobType, dbAtomRecord.jobTypeMap)
+        val oldJobTypeSet = oldJobTypeMap.values.flatten().toSet()
+        val oldOsMap = AtomOsMapUtil.getAllOs(dbAtomRecord.os, dbAtomRecord.osMap, dbAtomRecord.jobType)
+
+        val newJobTypeSet = mutableSetOf<String>()
+        val newOsMap = mutableMapOf<String, MutableSet<String>>()
+        for (config in serviceScopeConfigs) {
+            for (jobType in config.getEffectiveJobTypes()) {
+                newJobTypeSet.add(jobType.name)
+            }
+            for ((jobTypeName, osList) in config.getEffectiveOsMap()) {
+                newOsMap.getOrPut(jobTypeName) { mutableSetOf() }.addAll(osList)
+            }
+            for (jobType in config.getEffectiveJobTypes()) {
+                if (jobType.isBuildEnv() && !newOsMap.containsKey(jobType.name)) {
+                    jobType.getDefaultOs()?.let {
+                        newOsMap.getOrPut(jobType.name) { mutableSetOf() }.addAll(it)
+                    }
+                }
+            }
+        }
+
+        if (!newJobTypeSet.containsAll(oldJobTypeSet)) {
+            return ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE
+        }
+
+        for ((jobTypeName, oldOsList) in oldOsMap) {
+            if (jobTypeName !in newJobTypeSet) continue
+            val newOsSet = newOsMap[jobTypeName] ?: emptySet()
+            if (!newOsSet.containsAll(oldOsList)) {
+                return ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE
+            }
+        }
+
+        return null
     }
 
     @Suppress("UNCHECKED_CAST")

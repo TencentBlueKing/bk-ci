@@ -32,7 +32,6 @@ import com.tencent.devops.store.atom.service.AtomLabelService
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.JobTypeConfig
-import com.tencent.devops.store.pojo.common.ServiceScopeConfig
 import com.tencent.devops.store.pojo.common.ServiceScopeDetail
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.label.Label
@@ -103,36 +102,6 @@ class AtomServiceScopeUtil @Autowired constructor(
             emptySet()
         }
     }
-    
-    /**
-     * 构建 ServiceScopeConfig 的核心逻辑
-     *
-     * @param serviceScopes 服务范围列表
-     * @param jobTypeValue JOB_TYPE 字段值（PIPELINE 纯字符串）
-     * @param jobTypeMapValue JOB_TYPE_MAP 字段值（完整多 scope JSON），优先级高于 jobTypeValue
-     * @param getClassifyCode 获取分类代码的函数，参数为服务范围枚举，返回分类代码
-     * @param getLabelIdList 获取标签ID列表的函数，参数为服务范围枚举，返回标签ID列表
-     * @return ServiceScopeConfig 列表
-     */
-    fun buildServiceScopeConfigs(
-        serviceScopes: List<String>,
-        jobTypeValue: String?,
-        jobTypeMapValue: String? = null,
-        getClassifyCode: (ServiceScopeEnum) -> String?,
-        getLabelIdList: (ServiceScopeEnum) -> List<String>?
-    ): List<ServiceScopeConfig>? {
-        if (serviceScopes.isEmpty()) return null
-        val allJobTypes = AtomJobTypeUtil.getAllJobTypes(jobTypeValue, jobTypeMapValue)
-        val configs = serviceScopes.mapNotNull { scope ->
-            buildSingleServiceScopeConfig(
-                scope = scope,
-                allJobTypes = allJobTypes,
-                getClassifyCode = getClassifyCode,
-                getLabelIdList = getLabelIdList
-            )
-        }
-        return configs.ifEmpty { null }
-    }
 
     private fun resolveJobTypes(scope: String, allJobTypes: Map<String, List<String>>): List<JobTypeEnum> {
         val names =
@@ -145,29 +114,6 @@ class AtomServiceScopeUtil @Autowired constructor(
             }
         }
         return result.ifEmpty { listOf(JobTypeEnum.AGENT) }
-    }
-
-    private fun buildSingleServiceScopeConfig(
-        scope: String,
-        allJobTypes: Map<String, List<String>>,
-        getClassifyCode: (ServiceScopeEnum) -> String?,
-        getLabelIdList: (ServiceScopeEnum) -> List<String>?
-    ): ServiceScopeConfig? {
-        return try {
-            val serviceScopeEnum = ServiceScopeEnum.valueOf(scope)
-            val classifyCode = getClassifyCode(serviceScopeEnum) ?: return null
-            val jobTypes = resolveJobTypes(scope, allJobTypes)
-            val labelIdList = getLabelIdList(serviceScopeEnum)
-            ServiceScopeConfig(
-                serviceScope = serviceScopeEnum,
-                classifyCode = classifyCode,
-                jobTypes = jobTypes,
-                labelIdList = labelIdList
-            )
-        } catch (e: Exception) {
-            logger.warn("Failed to build ServiceScopeConfig for scope: $scope", e)
-            null
-        }
     }
 
     /**
@@ -272,7 +218,6 @@ class AtomServiceScopeUtil @Autowired constructor(
                 classifyCode = classifyCode,
                 classifyName = classifyName,
                 jobTypeConfigs = jobTypeConfigs,
-                jobTypes = jobTypes,
                 labelList = labelList
             )
         } catch (e: Exception) {
