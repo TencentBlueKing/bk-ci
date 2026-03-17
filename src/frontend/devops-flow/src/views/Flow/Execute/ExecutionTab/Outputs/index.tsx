@@ -220,7 +220,7 @@ export default defineComponent({
                 ) : isActiveThirdReport.value ? (
                   <ThirdPartyReport report-list={thirdPartyReportList.value} />
                 ) : (
-                  <Loading loading={isDetailLoading.value}>
+                  <Loading loading={isDetailLoading.value} class={styles.detailLoading}>
                     {activeOutputDetail.value ? (
                       <>
                         <div class={styles.pipelineExecOutputHeader}>
