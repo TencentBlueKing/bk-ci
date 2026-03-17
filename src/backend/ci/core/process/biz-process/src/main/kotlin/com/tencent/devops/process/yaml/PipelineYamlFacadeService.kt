@@ -552,6 +552,7 @@ class PipelineYamlFacadeService @Autowired constructor(
                 triggerEventPageUrl(
                     projectId,
                     yamlInfo.repoHashId,
+                    repository.aliasName,
                     PipelineTriggerReason.TRIGGER_FAILED
                 )
             )
@@ -578,8 +579,9 @@ class PipelineYamlFacadeService @Autowired constructor(
     private fun triggerEventPageUrl(
         projectId: String,
         repoHashId: String,
+        repoAliasName: String,
         reason: PipelineTriggerReason
-    ) = "/console/codelib/$projectId/?id=$repoHashId&page=1&scmType=CODE_GIT&" +
+    ) = "/console/codelib/$projectId/?id=$repoHashId&searchName=$repoAliasName&page=1&scmType=CODE_GIT&" +
             "limit=50&tab=triggerEvent&reason=${reason.name}"
 
     /**
