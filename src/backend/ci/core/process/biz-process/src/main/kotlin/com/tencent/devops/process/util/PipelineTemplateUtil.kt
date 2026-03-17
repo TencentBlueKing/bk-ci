@@ -49,13 +49,13 @@ object PipelineTemplateUtil {
         triggerContainer.params = params.toMutableList().map {
             // 模版入参+实例化不入参,那么旧变量应该是不入参
             if (it.required && it.asInstanceInput == false) {
-                it.copy(required = false)
+                it.copy(required = false, asInstanceInput = null)
             } else {
-                it
+                it.copy(asInstanceInput = null)
             }
         }
         triggerContainer.templateParams = takeIf { templateParams.isNotEmpty() }?.let {
-            templateParams.map { it.copy(constant = false) }
+            templateParams.map { it.copy(constant = false, asInstanceInput = null) }
         }
     }
 }
