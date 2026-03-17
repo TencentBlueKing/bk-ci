@@ -134,7 +134,7 @@ object AtomJobTypeUtil {
         val raw: Map<String, Any>?
         try {
             raw = JsonUtil.toOrNull(json, Map::class.java) as? Map<String, Any>
-        } catch (e: Exception) {
+        } catch (ignored: Throwable) {
             return emptyMap()
         }
         if (raw == null) return emptyMap()

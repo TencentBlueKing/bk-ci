@@ -83,8 +83,8 @@ class AtomServiceScopeUtil @Autowired constructor(
                 val scopeName = (scope as? String) ?: scope.toString()
                 if (scopeName.isEmpty()) null else ServiceScopeUtil.normalize(scopeName) ?: scopeName.uppercase()
             }.toSet()
-        } catch (e: Exception) {
-            logger.warn("Failed to parse SERVICE_SCOPE: $serviceScopeStr", e)
+        } catch (ignored: Throwable) {
+            logger.warn("Failed to parse SERVICE_SCOPE: $serviceScopeStr", ignored)
             emptySet()
         }
     }
@@ -97,8 +97,8 @@ class AtomServiceScopeUtil @Autowired constructor(
                 val scopeName = key.toString()
                 if (scopeName.isEmpty()) null else ServiceScopeUtil.normalize(scopeName) ?: scopeName.uppercase()
             }.toSet()
-        } catch (e: Exception) {
-            logger.warn("Failed to parse CLASSIFY_ID_MAP: $classifyIdMapJson", e)
+        } catch (ignored: Throwable) {
+            logger.warn("Failed to parse CLASSIFY_ID_MAP: $classifyIdMapJson", ignored)
             emptySet()
         }
     }
@@ -109,7 +109,7 @@ class AtomServiceScopeUtil @Autowired constructor(
         val result = names.mapNotNull { name ->
             try {
                 JobTypeEnum.valueOf(name)
-            } catch (_: Exception) {
+            } catch (ignored: Throwable) {
                 null
             }
         }
@@ -135,8 +135,8 @@ class AtomServiceScopeUtil @Autowired constructor(
                     val id = value.toString().takeIf { it.isNotBlank() } ?: return@forEach
                     normalizedMap[scope] = id
                 }
-            } catch (e: Exception) {
-                logger.warn("Failed to parse CLASSIFY_ID_MAP: $classifyIdMapJson", e)
+            } catch (ignored: Throwable) {
+                logger.warn("Failed to parse CLASSIFY_ID_MAP: $classifyIdMapJson", ignored)
             }
         }
         return serviceScopes.mapNotNull { scope ->
@@ -220,8 +220,8 @@ class AtomServiceScopeUtil @Autowired constructor(
                 jobTypeConfigs = jobTypeConfigs,
                 labelList = labelList
             )
-        } catch (e: Exception) {
-            logger.warn("Failed to build ServiceScopeDetail for scope: $scope", e)
+        } catch (ignored: Throwable) {
+            logger.warn("Failed to build ServiceScopeDetail for scope: $scope", ignored)
             null
         }
     }

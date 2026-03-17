@@ -72,22 +72,19 @@ class ParamFacadeService @Autowired constructor(
         params: List<BuildFormProperty>,
         channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
     ): List<BuildFormProperty> {
-        val filterParams = mutableListOf<BuildFormProperty>()
-        params.forEach {
-            if (it.type == BuildFormPropertyType.SVN_TAG && (!it.repoHashId.isNullOrBlank())) {
-                val svnTagBuildFormProperty = addSvnTagDirectories(projectId, it)
-                filterParams.add(svnTagBuildFormProperty)
-            } else if (it.type == BuildFormPropertyType.GIT_REF && (!it.repoHashId.isNullOrBlank())) {
-                val gitRefBuildFormProperty = addGitRefs(projectId, it)
-                filterParams.add(gitRefBuildFormProperty)
-            } else if (it.type == BuildFormPropertyType.CODE_LIB && it.scmType != null) {
-                filterParams.add(addCodelibProperties(userId, projectId, it))
-            } else if (it.type == BuildFormPropertyType.CONTAINER_TYPE && it.containerType != null) {
-                filterParams.add(addContainerTypeProperties(userId, projectId, it))
-            } else if (it.type == BuildFormPropertyType.ARTIFACTORY) {
-                filterParams.add(addArtifactoryProperties(userId, projectId, it))
-            } else if (it.type == BuildFormPropertyType.SUB_PIPELINE) {
-                filterParams.add(
+        return params.map {
+            when {
+                it.type == BuildFormPropertyType.SVN_TAG && !it.repoHashId.isNullOrBlank() ->
+                    addSvnTagDirectories(projectId, it)
+                it.type == BuildFormPropertyType.GIT_REF && !it.repoHashId.isNullOrBlank() ->
+                    addGitRefs(projectId, it)
+                it.type == BuildFormPropertyType.CODE_LIB && it.scmType != null ->
+                    addCodelibProperties(userId, projectId, it)
+                it.type == BuildFormPropertyType.CONTAINER_TYPE && it.containerType != null ->
+                    addContainerTypeProperties(userId, projectId, it)
+                it.type == BuildFormPropertyType.ARTIFACTORY ->
+                    addArtifactoryProperties(userId, projectId, it)
+                it.type == BuildFormPropertyType.SUB_PIPELINE ->
                     addSubPipelineProperties(
                         userId = userId,
                         projectId = projectId,
@@ -95,15 +92,11 @@ class ParamFacadeService @Autowired constructor(
                         subPipelineFormProperty = it,
                         channelCode = channelCode
                     )
-                )
-            } else if (it.type == BuildFormPropertyType.REPO_REF) {
-                filterParams.add(addRepoRefs(projectId, it))
-            } else {
-                filterParams.add(it)
+                it.type == BuildFormPropertyType.REPO_REF ->
+                    addRepoRefs(projectId, it)
+                else -> it
             }
         }
-
-        return filterParams
     }
 
     fun filterOptions(

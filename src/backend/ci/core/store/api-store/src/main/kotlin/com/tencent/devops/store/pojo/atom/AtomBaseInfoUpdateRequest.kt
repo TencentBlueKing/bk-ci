@@ -58,16 +58,17 @@ data class AtomBaseInfoUpdateRequest(
     val privateReason: String? = null
 ) {
     /**
-     * 解析为服务范围配置列表：优先使用 serviceScopeConfigs，否则兼容 classifyCode + serviceScope 单范围
+     * 解析为服务范围配置列表：优先使用 serviceScopeConfigs，否则兼容 classifyCode + labelIdList 单范围。
+     * 兼容分支中 jobType 默认使用 AGENT，osList 为空。
      */
     fun toServiceScopeConfigs(): List<ServiceScopeConfig> {
-        if (!serviceScopeConfigs.isNullOrEmpty()) {
-            return serviceScopeConfigs
-        }
-        return listOf(
+        return serviceScopeConfigs?.takeIf { it.isNotEmpty() } ?: listOf(
             ServiceScopeConfig(
                 serviceScope = ServiceScopeEnum.PIPELINE,
-                classifyCode = classifyCode ?: throw IllegalArgumentException("classifyCode is required"),
+                classifyCode = requireNotNull(classifyCode) {
+                    "Either serviceScopeConfigs or classifyCode must be provided"
+                },
+                jobTypeConfigs = emptyList(),
                 labelIdList = labelIdList
             )
         )

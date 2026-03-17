@@ -62,26 +62,20 @@ object AtomOsMapUtil {
                 osMapJson = null
             )
         }
-
-        val osMap = mutableMapOf<String, List<String>>()
-        for (config in serviceScopeConfigs) {
-            for ((jobTypeName, osList) in config.getEffectiveOsMap()) {
-                osMap[jobTypeName] = osList.sorted()
+        // 遍历所有 config 的 jobTypeConfigs，仅对编译环境 jobType 构建 OS 映射：
+        // 有 osList 则使用前端传的值，否则回退到 jobType 的默认 OS
+        val osMap = serviceScopeConfigs
+            .flatMap { it.jobTypeConfigs }
+            .filter { it.jobType.isBuildEnv() }
+            .mapNotNull { jtConfig ->
+                val osList = jtConfig.osList?.takeIf { it.isNotEmpty() }
+                    ?: jtConfig.jobType.getDefaultOs()
+                osList?.let { jtConfig.jobType.name to it.sorted() }
             }
-            for (jobType in config.getEffectiveJobTypes()) {
-                if (jobType.isBuildEnv() && !osMap.containsKey(jobType.name)) {
-                    jobType.getDefaultOs()?.let { osMap[jobType.name] = it.sorted() }
-                }
-            }
-        }
-
+            .toMap()
         val pipelineOs = osMap[JobTypeEnum.AGENT.name] ?: defaultOs ?: emptyList()
-        val osMapJson = if (osMap.isNotEmpty()) {
-            JsonUtil.toJson(osMap, formatted = false)
-        } else {
-            null
-        }
-
+        val osMapJson = osMap.takeIf { it.isNotEmpty() }
+            ?.let { JsonUtil.toJson(it, formatted = false) }
         return OsWriteResult(pipelineOs = pipelineOs, osMapJson = osMapJson)
     }
 
@@ -153,7 +147,7 @@ object AtomOsMapUtil {
                 }
                 if (osList.isEmpty()) null else key to osList
             }.toMap()
-        } catch (e: Exception) {
+        } catch (ignored: Throwable) {
             emptyMap()
         }
     }
@@ -161,7 +155,7 @@ object AtomOsMapUtil {
     private fun parseOsListJson(json: String): List<String> {
         return try {
             JsonUtil.to(json, object : TypeReference<List<String>>() {}).filter { it.isNotBlank() }
-        } catch (e: Exception) {
+        } catch (ignored: Throwable) {
             emptyList()
         }
     }
