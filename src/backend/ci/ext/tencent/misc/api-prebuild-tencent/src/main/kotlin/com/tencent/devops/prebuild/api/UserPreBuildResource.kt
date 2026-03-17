@@ -27,7 +27,6 @@
 
 package com.tencent.devops.prebuild.api
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.AgentStatus
@@ -69,10 +68,7 @@ interface UserPreBuildResource {
     fun getUserProject(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "accessToken", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String
+        userId: String
     ): Result<UserProject>
 
     @Operation(summary = "初始化Agent")
@@ -156,9 +152,6 @@ interface UserPreBuildResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "accessToken", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @Parameter(description = "preProjectId", required = true)
         @PathParam("preProjectId")
         preProjectId: String,

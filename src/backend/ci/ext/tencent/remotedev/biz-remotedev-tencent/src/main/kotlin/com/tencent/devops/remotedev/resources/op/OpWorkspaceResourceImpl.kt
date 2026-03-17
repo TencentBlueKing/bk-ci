@@ -14,6 +14,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordTicketType
+import com.tencent.devops.remotedev.service.CoffeeAIService
 import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
@@ -28,7 +29,8 @@ class OpWorkspaceResourceImpl @Autowired constructor(
     private val workspaceCommon: WorkspaceCommon,
     private val createControl: CreateControl,
     private val workspaceRecordService: WorkspaceRecordService,
-    private val notifyControl: NotifyControl
+    private val notifyControl: NotifyControl,
+    private val coffeeAIService: CoffeeAIService
 ) : OpWorkspaceResource {
 
     companion object {
@@ -174,5 +176,11 @@ class OpWorkspaceResourceImpl @Autowired constructor(
                 enable = enable
             )
         )
+    }
+
+    override fun enableCoffeeAI(userId: String, workspaceNames: List<String>): Result<Boolean> {
+        logger.info("enableCoffeeAI|$userId|$workspaceNames")
+        coffeeAIService.enableCoffeeAI(workspaceNames)
+        return Result(true)
     }
 }
