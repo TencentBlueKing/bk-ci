@@ -409,6 +409,19 @@
                     "required": false
                   }
                 ]
+              },
+              {
+                "id": "creative_stream_node",
+                "actions": [
+                  {
+                    "id": "creative_stream_node_view",
+                    "required": false
+                  },
+                  {
+                    "id": "creative_stream_node_edit",
+                    "required": false
+                  }
+                ]
               }
             ]
           }
