@@ -315,16 +315,17 @@ open class MarketAtomTask : ITask() {
                 language = atomLanguage
             )
             atomData.runtimeVersion?.let {
-                // 准备插件运行环境
-                atomRunConditionHandleService.prepareRunEnv(
+                // 准备插件运行环境，返回虚拟环境bin路径
+                val atomExecutePath = atomRunConditionHandleService.prepareRunEnv(
                     osType = AgentEnv.getOS(),
                     language = atomLanguage,
                     runtimeVersion = it,
-                    workspace = workspace
+                    workspace = workspace,
+                    atomTmpSpace = atomTmpSpace,
+                    runtimeVariables = runtimeVariables
                 )
-                val atomExecutePath = System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)
-                atomExecutePath?.let {
-                    runtimeVariables[BK_CI_ATOM_EXECUTE_ENV_PATH] = atomExecutePath
+                atomExecutePath?.let { envPath ->
+                    runtimeVariables[BK_CI_ATOM_EXECUTE_ENV_PATH] = envPath
                 }
             }
             // 获取插件post操作入口参数
@@ -341,14 +342,24 @@ open class MarketAtomTask : ITask() {
             }
 
             writeInputFile(atomTmpSpace, inputVariables)
+            val atomExecuteEnvPath = runtimeVariables[BK_CI_ATOM_EXECUTE_ENV_PATH]
             val atomTarget = atomRunConditionHandleService.handleAtomTarget(
                 target = atomData.target!!,
                 osType = AgentEnv.getOS(),
-                postEntryParam = postEntryParam
+                postEntryParam = postEntryParam,
+                atomExecuteEnvPath = atomExecuteEnvPath
             )
             val runCmds = mutableListOf<String>()
             if (!preCmd.isNullOrBlank()) {
-                runCmds.addAll(CommonUtils.strToList(preCmd))
+                val preCmdList = CommonUtils.strToList(preCmd).map { cmd ->
+                    // 若虚拟环境路径存在，将pip命令替换为绝对路径
+                    if (!atomExecuteEnvPath.isNullOrBlank()) {
+                        replacePipWithAbsolutePath(cmd = cmd, envPath = atomExecuteEnvPath)
+                    } else {
+                        cmd
+                    }
+                }
+                runCmds.addAll(preCmdList)
             }
             runCmds.add(atomTarget)
             // 运行阶段单独处理执行失败错误
@@ -423,6 +434,20 @@ open class MarketAtomTask : ITask() {
                 }
             }
         }
+    }
+
+    /** 将pip命令替换为虚拟环境内的绝对路径 */
+    private fun replacePipWithAbsolutePath(cmd: String, envPath: String): String {
+        val pipCommands = listOf("pip3", "pip2", "pip")
+        for (pipCmd in pipCommands) {
+            // 检查命令是否以pip命令开头且后面是空格或行尾（等价于\b边界匹配）
+            if (cmd == pipCmd || cmd.startsWith("$pipCmd ")) {
+                val absolutePath = "$envPath${File.separator}$pipCmd"
+                val quotedPath = if (AgentEnv.getOS() == OSType.WINDOWS) "\"$absolutePath\"" else absolutePath
+                return quotedPath + cmd.substring(pipCmd.length)
+            }
+        }
+        return cmd
     }
 
     private fun getAtomExecuteFile(

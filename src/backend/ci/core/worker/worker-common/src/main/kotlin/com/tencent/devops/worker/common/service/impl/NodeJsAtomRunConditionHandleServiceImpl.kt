@@ -37,7 +37,6 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.ZipUtil
-import com.tencent.devops.worker.common.BK_CI_ATOM_EXECUTE_ENV_PATH
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
@@ -57,8 +56,10 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         osType: OSType,
         language: String,
         runtimeVersion: String,
-        workspace: File
-    ): Boolean {
+        workspace: File,
+        atomTmpSpace: File?,
+        runtimeVariables: Map<String, String>
+    ): String? {
         // 获取安装包运行时环境信息
         val atomApi = ApiFactory.create(AtomArchiveSDKApi::class)
         val storePkgRunEnvInfoResult = atomApi.getStorePkgRunEnvInfo(
@@ -88,8 +89,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             }
             val pkgFileDir = File(envDir, "$NODEJS/$pkgFileFolderName")
             val nodejsPath = getNodejsPath(osType, pkgFileDir)
-            // 把nodejs执行路径写入系统变量
-            System.setProperty(BK_CI_ATOM_EXECUTE_ENV_PATH, "$nodejsPath${File.separator}")
+            val nodeExecutePath = "$nodejsPath${File.separator}"
             val command = "$nodejsPath${File.separator}node -v"
             try {
                 // 判断nodejs安装包是否已经存在构建机上
@@ -112,8 +112,9 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             } finally {
                 pkgFile.delete()
             }
+            return nodeExecutePath
         }
-        return true
+        return null
     }
 
     private fun getNodejsPath(osType: OSType, pkgFileDir: File): String? {
@@ -128,11 +129,12 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
     override fun handleAtomTarget(
         target: String,
         osType: OSType,
-        postEntryParam: String?
+        postEntryParam: String?,
+        atomExecuteEnvPath: String?
     ): String {
         logger.info("handleAtomTarget target:$target,osType:$osType,postEntryParam:$postEntryParam")
         var convertTarget = target
-        val executePath = System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)
+        val executePath = atomExecuteEnvPath
         if (!executePath.isNullOrBlank()) {
             convertTarget = "$executePath$target"
         }
@@ -147,7 +149,8 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         preCmd: String,
         osName: String,
         pkgName: String,
-        runtimeVersion: String?
+        runtimeVersion: String?,
+        atomExecuteEnvPath: String?
     ): String {
         val preCmds = CommonUtils.strToList(preCmd).toMutableList()
         preCmds.add(0, "tar -xzf $pkgName")

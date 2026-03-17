@@ -37,15 +37,18 @@ class CommonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         osType: OSType,
         language: String,
         runtimeVersion: String,
-        workspace: File
-    ): Boolean {
-        return true
+        workspace: File,
+        atomTmpSpace: File?,
+        runtimeVariables: Map<String, String>
+    ): String? {
+        return null
     }
 
     override fun handleAtomTarget(
         target: String,
         osType: OSType,
-        postEntryParam: String?
+        postEntryParam: String?,
+        atomExecuteEnvPath: String?
     ): String {
         return target
     }
@@ -54,7 +57,8 @@ class CommonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         preCmd: String,
         osName: String,
         pkgName: String,
-        runtimeVersion: String?
+        runtimeVersion: String?,
+        atomExecuteEnvPath: String?
     ): String {
         return preCmd
     }
