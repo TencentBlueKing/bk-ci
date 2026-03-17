@@ -165,6 +165,24 @@ class AuthResourceDao {
         }
     }
 
+    fun updateRelationId(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        relationId: String
+    ): Boolean {
+        with(TAuthResource.T_AUTH_RESOURCE) {
+            return dslContext.update(this)
+                .set(RELATION_ID, relationId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .execute() == 1
+        }
+    }
+
     fun disable(
         dslContext: DSLContext,
         userId: String,
