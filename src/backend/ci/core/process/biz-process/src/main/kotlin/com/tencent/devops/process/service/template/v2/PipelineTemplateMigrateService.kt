@@ -54,12 +54,17 @@ import com.tencent.devops.process.pojo.template.TemplateMigrateByPercentageReque
 import com.tencent.devops.process.pojo.template.TemplateMigrateByPercentageResult
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateVersion
+import com.tencent.devops.process.pojo.template.v2.FixBadParamsResult
+import com.tencent.devops.process.pojo.template.v2.FixBadParamsTemplateDetail
+import com.tencent.devops.process.pojo.template.v2.FixBadParamsVersionDetail
 import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoV2
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelated
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelatedCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceUpdateInfo
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingCommonCondition
 import com.tencent.devops.process.pojo.template.v2.TemplateVersionPair
 import com.tencent.devops.process.service.template.TemplateFacadeService
@@ -1058,6 +1063,141 @@ class PipelineTemplateMigrateService(
         val countBeforeCleanup: Int,
         val countAfterCleanup: Int
     )
+
+    fun fixBadParams(
+        projectId: String,
+        templateId: String?,
+        dryRun: Boolean
+    ): FixBadParamsResult {
+        logger.info(
+            "fixBadParams start|projectId={}|templateId={}|dryRun={}",
+            projectId, templateId, dryRun
+        )
+        val templateDetails = mutableListOf<FixBadParamsTemplateDetail>()
+        var page = 1
+        val pageSize = 100
+        do {
+            val condition = PipelineTemplateCommonCondition(
+                projectId = projectId,
+                templateId = templateId,
+                page = page,
+                pageSize = pageSize
+            )
+            val templateInfos = pipelineTemplateInfoService.list(condition)
+            templateInfos.forEach { templateInfo ->
+                val badVersions = fixTemplateVersionParams(
+                    projectId = projectId,
+                    templateId = templateInfo.id,
+                    dryRun = dryRun
+                )
+                if (badVersions.isNotEmpty()) {
+                    templateDetails.add(
+                        FixBadParamsTemplateDetail(
+                            templateId = templateInfo.id,
+                            templateName = templateInfo.name,
+                            versions = badVersions
+                        )
+                    )
+                }
+            }
+            page++
+        } while (templateInfos.size == pageSize)
+        val totalVersions = templateDetails.sumOf { it.versions.size }
+        logger.info(
+            "fixBadParams done|projectId={}|dryRun={}|" +
+                "affectedTemplates={}|affectedVersions={}",
+            projectId, dryRun, templateDetails.size, totalVersions
+        )
+        return FixBadParamsResult(
+            dryRun = dryRun,
+            templates = templateDetails,
+            affectedTemplateCount = templateDetails.size,
+            affectedVersionCount = totalVersions
+        )
+    }
+
+    private fun fixTemplateVersionParams(
+        projectId: String,
+        templateId: String,
+        dryRun: Boolean
+    ): List<FixBadParamsVersionDetail> {
+        val badVersions = mutableListOf<FixBadParamsVersionDetail>()
+        var page = 1
+        val pageSize = 100
+        do {
+            val condition = PipelineTemplateResourceCommonCondition(
+                projectId = projectId,
+                templateId = templateId,
+                page = page,
+                pageSize = pageSize
+            )
+            val templateResources = pipelineTemplateResourceService.list(condition)
+            templateResources.forEach { templateResource ->
+                val detail = fixVersionParams(
+                    projectId = projectId,
+                    templateId = templateId,
+                    templateResource = templateResource,
+                    dryRun = dryRun
+                )
+                if (detail != null) {
+                    badVersions.add(detail)
+                }
+            }
+            page++
+        } while (templateResources.size == pageSize)
+        return badVersions
+    }
+
+    private fun fixVersionParams(
+        projectId: String,
+        templateId: String,
+        templateResource: PipelineTemplateResource,
+        dryRun: Boolean
+    ): FixBadParamsVersionDetail? {
+        val model = templateResource.model
+        if (model !is Model) {
+            return null
+        }
+        val triggerContainer = model.getTriggerContainer()
+        val params = triggerContainer.params
+        val badParams = params.filter {
+            !it.required && it.asInstanceInput == false
+        }
+        if (badParams.isEmpty()) return null
+
+        val badParamIds = badParams.map { it.id }
+        logger.info(
+            "fixBadParams found bad params|" +
+                "projectId={}|templateId={}|version={}|params={}",
+            projectId, templateId, templateResource.version, badParamIds
+        )
+        if (!dryRun) {
+            val fixedParams = params.map { param ->
+                if (!param.required && param.asInstanceInput == false) {
+                    param.copy(required = true)
+                } else {
+                    param
+                }
+            }
+            triggerContainer.params = fixedParams
+            pipelineTemplateResourceService.update(
+                record = PipelineTemplateResourceUpdateInfo(
+                    params = fixedParams,
+                    model = model
+                ),
+                commonCondition = PipelineTemplateResourceCommonCondition(
+                    projectId = projectId,
+                    templateId = templateId,
+                    version = templateResource.version
+                )
+            )
+        }
+        return FixBadParamsVersionDetail(
+            version = templateResource.version,
+            versionName = templateResource.versionName,
+            badParamIds = badParamIds
+        )
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineTemplateMigrateService::class.java)
