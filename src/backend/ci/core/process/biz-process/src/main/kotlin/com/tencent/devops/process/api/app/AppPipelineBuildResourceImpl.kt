@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.cascade.BuildCascadeProps
 import com.tencent.devops.common.quality.pojo.request.QualityReviewRequest
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.engine.pojo.builds.BuildHistoryQueryParam
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.BuildHistory
@@ -208,12 +209,9 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         triggerNodeHashIds: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkParam(userId, projectId, pipelineId, pageSize)
-        val result = pipelineBuildFacadeService.getHistoryBuild(
-            userId = userId,
+        val queryParam = BuildHistoryQueryParam(
             projectId = projectId,
             pipelineId = pipelineId,
-            page = page,
-            pageSize = pageSize,
             materialAlias = materialAlias,
             materialUrl = materialUrl,
             materialBranch = materialBranch,
@@ -239,6 +237,12 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             triggerUser = triggerUser,
             triggerEventTypes = triggerEventTypes,
             triggerNodeHashIds = triggerNodeHashIds
+        )
+        val result = pipelineBuildFacadeService.getHistoryBuild(
+            userId = userId,
+            page = page,
+            pageSize = pageSize,
+            queryParam = queryParam
         )
         return Result(result)
     }

@@ -104,6 +104,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineFilterParam
+import com.tencent.devops.process.engine.pojo.builds.BuildHistoryQueryParam
 import com.tencent.devops.process.engine.pojo.builds.CompleteTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
@@ -151,15 +152,15 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
-import java.time.LocalDateTime
-import java.util.Date
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.Date
+import java.util.concurrent.TimeUnit
 
 /**
  * 流水线运行时相关的服务
@@ -199,7 +200,6 @@ class PipelineRuntimeService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val repositoryVersionService: PipelineRepositoryVersionService,
     private val pipelineArtifactQualityService: PipelineArtifactQualityService,
-    private val pipelineRepositoryVersionService: PipelineRepositoryVersionService,
     private val client: Client
 ) {
     companion object {
@@ -394,79 +394,25 @@ class PipelineRuntimeService @Autowired constructor(
 
     fun listPipelineBuildHistory(
         userId: String? = null,
-        projectId: String,
-        pipelineId: String,
         offset: Int,
         limit: Int,
-        materialAlias: List<String>?,
-        materialUrl: String?,
-        materialBranch: List<String>?,
-        materialCommitId: String?,
-        materialCommitMessage: String?,
-        status: List<BuildStatus>?,
-        trigger: List<StartType>?,
-        queueTimeStartTime: Long?,
-        queueTimeEndTime: Long?,
-        startTimeStartTime: Long?,
-        startTimeEndTime: Long?,
-        endTimeStartTime: Long?,
-        endTimeEndTime: Long?,
-        totalTimeMin: Long?,
-        totalTimeMax: Long?,
-        remark: String?,
-        buildNoStart: Int?,
-        buildNoEnd: Int?,
-        buildMsg: String?,
-        startUser: List<String>?,
+        queryParam: BuildHistoryQueryParam,
         updateTimeDesc: Boolean? = null,
-        queryDslContext: DSLContext? = null,
-        debug: Boolean?,
-        triggerAlias: List<String>?,
-        triggerBranch: List<String>?,
-        triggerUser: List<String>?,
-        triggerEventTypes: List<String>?,
-        triggerNodeHashIds: List<String>?
+        queryDslContext: DSLContext? = null
     ): List<BuildHistory> {
         val currentTimestamp = System.currentTimeMillis()
         // 限制最大一次拉1000，防止攻击
         val list = pipelineBuildDao.listPipelineBuildInfo(
             dslContext = queryDslContext ?: dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            materialAlias = materialAlias,
-            materialUrl = materialUrl,
-            materialBranch = materialBranch,
-            materialCommitId = materialCommitId,
-            materialCommitMessage = materialCommitMessage,
-            status = status,
-            trigger = trigger,
-            queueTimeStartTime = queueTimeStartTime,
-            queueTimeEndTime = queueTimeEndTime,
-            startTimeStartTime = startTimeStartTime,
-            startTimeEndTime = startTimeEndTime,
-            endTimeStartTime = endTimeStartTime,
-            endTimeEndTime = endTimeEndTime,
-            totalTimeMin = totalTimeMin,
-            totalTimeMax = totalTimeMax,
-            remark = remark,
+            queryParam = queryParam,
             offset = offset,
             limit = if (limit < 0) {
                 1000
             } else limit,
-            buildNoStart = buildNoStart,
-            buildNoEnd = buildNoEnd,
-            buildMsg = buildMsg,
-            startUser = startUser,
-            updateTimeDesc = updateTimeDesc,
-            debug = debug,
-            triggerAlias = triggerAlias,
-            triggerBranch = triggerBranch,
-            triggerUser = triggerUser,
-            triggerEventTypes = triggerEventTypes,
-            triggerNodeHashIds = triggerNodeHashIds
+            updateTimeDesc = updateTimeDesc
         )
         val hashIdToName = getNodeNamesByHashIds(
-            projectId = projectId,
+            projectId = queryParam.projectId,
             userId = userId,
             hashIds = list.mapNotNull { it.nodeHashId }.filter { it.isNotBlank() }.toSet()
         )
@@ -475,7 +421,7 @@ class PipelineRuntimeService @Autowired constructor(
         list.reversed().forEach { buildInfo ->
             val artifactQuality = pipelineArtifactQualityService.buildArtifactQuality(
                 userId = userId,
-                projectId = projectId,
+                projectId = queryParam.projectId,
                 artifactQualityList = buildInfo.artifactQualityList
             )
             result.add(
@@ -2061,66 +2007,12 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getPipelineBuildHistoryCount(
-        projectId: String,
-        pipelineId: String,
-        materialAlias: List<String>? = null,
-        materialUrl: String? = null,
-        materialBranch: List<String>? = null,
-        materialCommitId: String? = null,
-        materialCommitMessage: String? = null,
-        status: List<BuildStatus>?,
-        trigger: List<StartType>? = null,
-        queueTimeStartTime: Long? = null,
-        queueTimeEndTime: Long? = null,
-        startTimeStartTime: Long? = null,
-        startTimeEndTime: Long? = null,
-        endTimeStartTime: Long? = null,
-        endTimeEndTime: Long? = null,
-        totalTimeMin: Long? = null,
-        totalTimeMax: Long? = null,
-        remark: String? = null,
-        buildNoStart: Int? = null,
-        buildNoEnd: Int? = null,
-        buildMsg: String? = null,
-        startUser: List<String>? = null,
-        queryDslContext: DSLContext? = null,
-        debug: Boolean?,
-        triggerAlias: List<String>?,
-        triggerBranch: List<String>?,
-        triggerUser: List<String>?,
-        triggerEventTypes: List<String>?,
-        triggerNodeHashIds: List<String>?
+        queryParam: BuildHistoryQueryParam,
+        queryDslContext: DSLContext? = null
     ): Int {
         return pipelineBuildDao.count(
             dslContext = queryDslContext ?: dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            materialAlias = materialAlias,
-            materialUrl = materialUrl,
-            materialBranch = materialBranch,
-            materialCommitId = materialCommitId,
-            materialCommitMessage = materialCommitMessage,
-            status = status,
-            trigger = trigger,
-            queueTimeStartTime = queueTimeStartTime,
-            queueTimeEndTime = queueTimeEndTime,
-            startTimeStartTime = startTimeStartTime,
-            startTimeEndTime = startTimeEndTime,
-            endTimeStartTime = endTimeStartTime,
-            endTimeEndTime = endTimeEndTime,
-            totalTimeMin = totalTimeMin,
-            totalTimeMax = totalTimeMax,
-            remark = remark,
-            buildNoStart = buildNoStart,
-            buildNoEnd = buildNoEnd,
-            buildMsg = buildMsg,
-            startUser = startUser,
-            debug = debug,
-            triggerAlias = triggerAlias,
-            triggerBranch = triggerBranch,
-            triggerUser = triggerUser,
-            triggerEventTypes = triggerEventTypes,
-            triggerNodeHashIds = triggerNodeHashIds
+            queryParam = queryParam
         )
     }
 

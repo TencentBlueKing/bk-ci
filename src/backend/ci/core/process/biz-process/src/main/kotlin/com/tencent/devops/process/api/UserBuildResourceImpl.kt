@@ -43,6 +43,7 @@ import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserBuildResource
+import com.tencent.devops.process.engine.pojo.builds.BuildHistoryQueryParam
 import com.tencent.devops.process.engine.service.PipelineProgressRateService
 import com.tencent.devops.process.enums.HistorySearchType
 import com.tencent.devops.process.pojo.BuildHistory
@@ -480,12 +481,9 @@ class UserBuildResourceImpl @Autowired constructor(
         triggerNodeHashIds: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkParam(userId, projectId, pipelineId)
-        val result = pipelineBuildFacadeService.getHistoryBuild(
-            userId = userId,
+        val queryParam = BuildHistoryQueryParam(
             projectId = projectId,
             pipelineId = pipelineId,
-            page = page,
-            pageSize = pageSize,
             materialAlias = materialAlias,
             materialUrl = materialUrl,
             materialBranch = materialBranch,
@@ -505,13 +503,19 @@ class UserBuildResourceImpl @Autowired constructor(
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg,
-            archiveFlag = archiveFlag,
             debug = debug,
             triggerAlias = triggerAlias,
             triggerBranch = triggerBranch,
             triggerUser = triggerUser,
             triggerEventTypes = triggerEventTypes,
             triggerNodeHashIds = triggerNodeHashIds
+        )
+        val result = pipelineBuildFacadeService.getHistoryBuild(
+            userId = userId,
+            page = page,
+            pageSize = pageSize,
+            queryParam = queryParam,
+            archiveFlag = archiveFlag
         )
         if (archiveFlag != true) {
             pipelineRecentUseService.record(userId, projectId, pipelineId)

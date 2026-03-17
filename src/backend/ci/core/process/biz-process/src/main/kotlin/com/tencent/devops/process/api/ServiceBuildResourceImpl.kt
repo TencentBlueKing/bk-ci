@@ -50,6 +50,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.engine.pojo.builds.BuildHistoryQueryParam
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
@@ -420,12 +421,9 @@ class ServiceBuildResourceImpl @Autowired constructor(
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
-        val result = pipelineBuildFacadeService.getHistoryBuild(
-            userId = userId,
+        val queryParam = BuildHistoryQueryParam(
             projectId = projectId,
             pipelineId = pipelineId,
-            page = page,
-            pageSize = pageSize,
             materialAlias = materialAlias?.filter { it.isNotBlank() },
             materialUrl = materialUrl,
             materialBranch = materialBranch?.filter { it.isNotBlank() },
@@ -446,16 +444,22 @@ class ServiceBuildResourceImpl @Autowired constructor(
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg,
-            checkPermission = ChannelCode.isNeedAuth(channelCode),
             startUser = startUser?.filter { it.isNotBlank() },
-            updateTimeDesc = updateTimeDesc,
-            archiveFlag = archiveFlag,
             debug = debug,
             triggerAlias = triggerAlias,
             triggerBranch = triggerBranch,
             triggerUser = triggerUser,
             triggerEventTypes = triggerEventTypes,
             triggerNodeHashIds = triggerNodeHashIds
+        )
+        val result = pipelineBuildFacadeService.getHistoryBuild(
+            userId = userId,
+            page = page,
+            pageSize = pageSize,
+            queryParam = queryParam,
+            checkPermission = ChannelCode.isNeedAuth(channelCode),
+            updateTimeDesc = updateTimeDesc,
+            archiveFlag = archiveFlag
         )
         return Result(result)
     }
