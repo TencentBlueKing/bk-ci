@@ -114,7 +114,8 @@ class MarketEventVariablesResolverTest {
             "            \"id\": \"8435f653e6d0afdbaaefc7564c3a321bd348a140\",\n" +
             "            \"message\": \"Update b-c8bfb1e870c640daa8ee99af5b14b1a4.txt\",\n" +
             "            \"timestamp\": \"2025-10-31T12:02:42+0000\",\n" +
-            "            \"url\": \"http://git.example.com/bkdevops-plugins/HelloeWorlds_HJ/commits/8435f653e6d0afdbaaefc7564c3a321bd348a140\",\n" +
+            "            \"url\": \"http://git.example.com/bkdevops-plugins/HelloeWorlds_HJ/commits" +
+            "/8435f653e6d0afdbaaefc7564c3a321bd348a140\",\n" +
             "            \"author\": {\n" +
             "                \"name\": \"xiaoming\",\n" +
             "                \"email\": \"xiaoming@example.com\"\n" +
