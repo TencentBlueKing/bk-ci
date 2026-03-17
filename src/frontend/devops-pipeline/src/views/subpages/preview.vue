@@ -13,7 +13,10 @@
                 scene="part"
             >
                 <div class="pac-error-content">
-                    <p class="pac-error-title">{{ pacError.message }}</p>
+                    <p
+                        class="pac-error-title"
+                        v-bk-xss-html="pacError.message"
+                    />
                     <p
                         v-if="pacError.branch"
                         class="pac-error-detail"
@@ -31,7 +34,7 @@
         </div>
         <template v-else>
             <div
-                v-if="!isDebugPipeline"
+                v-if="!isDebugPipeline && !pacEnabled"
                 class="pipeline-execute-version-select params-content-item"
             >
                 <span>
@@ -1105,6 +1108,9 @@ $header-height: 36px;
                 font-size: 14px;
                 color: #63656E;
                 margin-bottom: 16px;
+                a {
+                    color: #3A84FF;
+                }
             }
             
             .pac-error-detail {

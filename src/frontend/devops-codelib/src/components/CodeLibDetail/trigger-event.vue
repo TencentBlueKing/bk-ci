@@ -209,6 +209,9 @@
             },
             scmType () {
                 return this.$route.query.scmType || ''
+            },
+            reason () {
+                return this.$route.query.reason || ''
             }
         },
         watch: {
@@ -241,7 +244,9 @@
         },
         created () {
             this.catchRepoId = this.repoId
-            if (!this.eventId) {
+            // 如果没有 eventId 且没有 reason 参数，直接加载数据
+            // 否则需要先设置搜索条件再加载
+            if (!this.eventId && !this.reason) {
                 this.getListData()
             }
             this.shortcuts = [
@@ -291,6 +296,26 @@
                     }]
                 })
                 this.daterange = ['', '']
+            }
+            // 从 URL 参数中获取 reason 并回填到搜索条件
+            if (this.reason) {
+                const reasonMap = {
+                    TRIGGER_SUCCESS: this.$t('codelib.触发成功'),
+                    TRIGGER_FAILED: this.$t('codelib.触发失败'),
+                    TRIGGER_NOT_MATCH: this.$t('codelib.触发器不匹配')
+                }
+                const reasonName = reasonMap[this.reason] || this.reason
+                this.searchValue.push({
+                    id: 'reason',
+                    name: this.$t('codelib.触发结果'),
+                    values: [{
+                        id: this.reason,
+                        name: reasonName
+                    }]
+                })
+                this.daterange = ['', '']
+                // 设置完搜索条件后加载数据
+                this.getListData()
             }
         },
         methods: {
@@ -352,9 +377,11 @@
                 }).finally(() => {
                     this.pageLoading = false
                     this.isLoadingMore = false
-                    if (this.eventId) {
+                    // 清除 URL 中的 eventId 和 reason 参数
+                    if (this.eventId || this.reason) {
                         const query = { ...this.$route.query }
                         delete query.eventId
+                        delete query.reason
                         this.$router.push({
                             query: {
                                 ...query
