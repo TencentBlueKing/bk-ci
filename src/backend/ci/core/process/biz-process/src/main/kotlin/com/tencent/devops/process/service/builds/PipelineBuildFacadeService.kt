@@ -107,6 +107,7 @@ import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.pojo.builds.BuildHistoryQueryParam
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
 import com.tencent.devops.process.engine.service.PipelineContainerService
@@ -2054,41 +2055,16 @@ class PipelineBuildFacadeService(
         content = ActionAuditContent.PIPELINE_VIEW_CONTENT
     )
     fun getHistoryBuild(
-        userId: String?,
-        projectId: String,
-        pipelineId: String,
-        page: Int?,
-        pageSize: Int?,
-        materialAlias: List<String>?,
-        materialUrl: String?,
-        materialBranch: List<String>?,
-        materialCommitId: String?,
-        materialCommitMessage: String?,
-        status: List<BuildStatus>?,
-        trigger: List<StartType>?,
-        queueTimeStartTime: Long?,
-        queueTimeEndTime: Long?,
-        startTimeStartTime: Long?,
-        startTimeEndTime: Long?,
-        endTimeStartTime: Long?,
-        endTimeEndTime: Long?,
-        totalTimeMin: Long?,
-        totalTimeMax: Long?,
-        remark: String?,
-        buildNoStart: Int?,
-        buildNoEnd: Int?,
-        buildMsg: String? = null,
+        userId: String? = null,
+        page: Int? = null,
+        pageSize: Int? = null,
+        queryParam: BuildHistoryQueryParam,
         checkPermission: Boolean = true,
-        startUser: List<String>? = null,
         updateTimeDesc: Boolean? = null,
-        archiveFlag: Boolean? = false,
-        debug: Boolean?,
-        triggerAlias: List<String>?,
-        triggerBranch: List<String>?,
-        triggerUser: List<String>?,
-        triggerEventTypes: List<String>?,
-        triggerNodeHashIds: List<String>?
+        archiveFlag: Boolean? = false
     ): BuildHistoryPage<BuildHistory> {
+        val projectId = queryParam.projectId
+        val pipelineId = queryParam.pipelineId
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 50
         val sqlLimit =
@@ -2124,71 +2100,17 @@ class PipelineBuildFacadeService(
             }
 
             val newTotalCount = pipelineRuntimeService.getPipelineBuildHistoryCount(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                materialAlias = materialAlias,
-                materialUrl = materialUrl,
-                materialBranch = materialBranch,
-                materialCommitId = materialCommitId,
-                materialCommitMessage = materialCommitMessage,
-                status = status,
-                trigger = trigger,
-                queueTimeStartTime = queueTimeStartTime,
-                queueTimeEndTime = queueTimeEndTime,
-                startTimeStartTime = startTimeStartTime,
-                startTimeEndTime = startTimeEndTime,
-                endTimeStartTime = endTimeStartTime,
-                endTimeEndTime = endTimeEndTime,
-                totalTimeMin = totalTimeMin,
-                totalTimeMax = totalTimeMax,
-                remark = remark,
-                buildNoStart = buildNoStart,
-                buildNoEnd = buildNoEnd,
-                buildMsg = buildMsg,
-                startUser = startUser,
-                queryDslContext = queryDslContext,
-                debug = debug,
-                triggerAlias = triggerAlias,
-                triggerBranch = triggerBranch,
-                triggerUser = triggerUser,
-                triggerEventTypes = triggerEventTypes,
-                triggerNodeHashIds = triggerNodeHashIds
+                queryParam = queryParam,
+                queryDslContext = queryDslContext
             )
 
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
                 userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
                 offset = offset,
                 limit = limit,
-                materialAlias = materialAlias,
-                materialUrl = materialUrl,
-                materialBranch = materialBranch,
-                materialCommitId = materialCommitId,
-                materialCommitMessage = materialCommitMessage,
-                status = status,
-                trigger = trigger,
-                queueTimeStartTime = queueTimeStartTime,
-                queueTimeEndTime = queueTimeEndTime,
-                startTimeStartTime = startTimeStartTime,
-                startTimeEndTime = startTimeEndTime,
-                endTimeStartTime = endTimeStartTime,
-                endTimeEndTime = endTimeEndTime,
-                totalTimeMin = totalTimeMin,
-                totalTimeMax = totalTimeMax,
-                remark = remark,
-                buildNoStart = buildNoStart,
-                buildNoEnd = buildNoEnd,
-                buildMsg = buildMsg,
-                startUser = startUser,
+                queryParam = queryParam,
                 updateTimeDesc = updateTimeDesc,
-                queryDslContext = queryDslContext,
-                debug = debug,
-                triggerAlias = triggerAlias,
-                triggerBranch = triggerBranch,
-                triggerUser = triggerUser,
-                triggerEventTypes = triggerEventTypes,
-                triggerNodeHashIds = triggerNodeHashIds
+                queryDslContext = queryDslContext
             )
             val buildHistories = mutableListOf<BuildHistory>()
             buildHistories.addAll(newHistoryBuilds)
