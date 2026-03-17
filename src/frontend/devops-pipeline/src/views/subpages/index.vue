@@ -59,12 +59,7 @@
             }
         },
         beforeDestroy () {
-            this.setPipeline(null)
-            this.setPipelineWithoutTrigger(null)
-            this.setPipelineYaml('')
-            this.selectPipelineVersion(null)
-            this.$store.commit('atom/resetPipelineSetting', null)
-            this.$store.commit(`atom/${SET_PIPELINE_INFO}`, null)
+            this.resetPipeline()
         },
         methods: {
             ...mapActions('atom', [
@@ -75,9 +70,24 @@
                 'requestPipelineSummary',
                 'resetAtomModalMap'
             ]),
+            /**
+             * 重置流水线相关数据
+             * 用于组件销毁或切换流水线时清空旧数据
+             */
+            resetPipeline () {
+                this.setPipeline(null)
+                this.setPipelineWithoutTrigger(null)
+                this.setPipelineYaml('')
+                this.selectPipelineVersion(null)
+                this.$store.commit('atom/resetPipelineSetting', null)
+                this.$store.commit(`atom/${SET_PIPELINE_INFO}`, null)
+            },
             async fetchPipelineInfo () {
                 try {
                     this.isLoading = true
+                    // 切换流水线时，先清空旧的 pipeline 数据，避免旧数据残留
+                    this.resetPipeline()
+                    
                     const params = {
                         ...this.$route.params,
                         ...this.$route.query

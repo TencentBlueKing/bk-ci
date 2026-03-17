@@ -29,7 +29,6 @@ package com.tencent.devops.process.service.pipeline.version.handler
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
@@ -61,8 +60,8 @@ class PipelineBranchCreateHandler @Autowired constructor(
     }
 
     override fun handle(context: PipelineVersionCreateContext): DeployPipelineResult {
-        logger.info("create branch version with context={}", JsonUtil.toJson(context, false))
         with(context) {
+            logger.info("handle pipeline branch version|$projectId|$pipelineId|$version")
             if (!enablePac) {
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.PARAMETER_IS_INVALID,

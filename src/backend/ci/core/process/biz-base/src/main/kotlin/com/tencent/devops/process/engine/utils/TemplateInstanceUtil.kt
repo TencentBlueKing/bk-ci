@@ -85,6 +85,7 @@ object TemplateInstanceUtil {
             instanceFromTemplate = true,
             staticViews = staticViews,
             templateId = templateResource.templateId,
+            srcTemplateId = templateResource.srcTemplateId,
             template = template,
             overrideTemplateField = overrideTemplateField,
             publicVarGroups = templateModel.publicVarGroups
@@ -400,12 +401,15 @@ object TemplateInstanceUtil {
         }
         return when (triggerElement) {
             is TimerTriggerElement -> {
-                triggerElement.copy(
+                val newTimeTrigger = triggerElement.copy(
                     advanceExpression = triggerConfig.cron ?: triggerElement.advanceExpression,
                     startParams = triggerConfig.variables?.let {
                         JsonUtil.toJson(it, false)
                     } ?: triggerElement.startParams
                 )
+                // 因为TimerTriggerElement是data class对象,copy时不会复制父类的属性,所以需要重新赋值
+                newTimeTrigger.additionalOptions = triggerElement.additionalOptions
+                newTimeTrigger
             }
 
             else -> triggerElement
@@ -526,13 +530,13 @@ object TemplateInstanceUtil {
         pipelineParams.forEach { param ->
             when (param.id) {
                 MAJORVERSION -> param.defaultValue =
-                    recommendedVersion.major ?: templateParamMap[MAJORVERSION]?.defaultValue ?: 0
+                    recommendedVersion.major?.toString() ?: templateParamMap[MAJORVERSION]?.defaultValue ?: "0"
 
                 MINORVERSION -> param.defaultValue =
-                    recommendedVersion.minor ?: templateParamMap[MINORVERSION]?.defaultValue ?: 0
+                    recommendedVersion.minor?.toString() ?: templateParamMap[MINORVERSION]?.defaultValue ?: "0"
 
                 FIXVERSION -> param.defaultValue =
-                    recommendedVersion.fix ?: templateParamMap[FIXVERSION]?.defaultValue ?: 0
+                    recommendedVersion.fix?.toString() ?: templateParamMap[FIXVERSION]?.defaultValue ?: "0"
             }
         }
 
@@ -701,25 +705,11 @@ object TemplateInstanceUtil {
         inputParams: List<BuildFormProperty>,
         instanceParams: List<BuildFormProperty>
     ) {
-        if (inputParams.size != instanceParams.size) {
-            logger.warn(
-                "input params size is not equal to instance params size|$projectId|$pipelineId|" +
-                        "${inputParams.size}|${instanceParams.size}"
-            )
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_COUNT_EXCEPTION
-            )
-        }
         val requiredExceptions = mutableListOf<String>()
         val constantExceptions = mutableListOf<String>()
         val defaultValueExceptions = mutableListOf<String>()
         instanceParams.forEach { instanceParam ->
-            val inputParam = inputParams.find { it.id == instanceParam.id } ?: run {
-                logger.warn("input param is not found|$projectId|$pipelineId|${instanceParam.id}")
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_PROP_EXCEPTION
-                )
-            }
+            val inputParam = inputParams.find { it.id == instanceParam.id } ?: return@forEach
             if (inputParam.required != instanceParam.required) {
                 requiredExceptions.add(instanceParam.id)
             }

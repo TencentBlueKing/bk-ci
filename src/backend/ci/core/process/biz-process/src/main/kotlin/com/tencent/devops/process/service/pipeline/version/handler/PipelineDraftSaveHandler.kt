@@ -28,7 +28,6 @@
 package com.tencent.devops.process.service.pipeline.version.handler
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
@@ -60,8 +59,8 @@ class PipelineDraftSaveHandler @Autowired constructor(
     }
 
     override fun handle(context: PipelineVersionCreateContext): DeployPipelineResult {
-        logger.info("save draft version with context={}", JsonUtil.toJson(context, false))
         with(context) {
+            logger.info("handle pipeline draft version|$projectId|$pipelineId|$version")
             if (pipelineResourceWithoutVersion.status != VersionStatus.COMMITTING) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_STATUS_NOT_MATCHED,
@@ -95,7 +94,8 @@ class PipelineDraftSaveHandler @Autowired constructor(
             if (draftVersionResource == null) {
                 val resourceOnlyVersion = pipelineVersionGenerator.generateDraftVersion(
                     projectId = projectId,
-                    pipelineId = pipelineId
+                    pipelineId = pipelineId,
+                    baseVersion = pipelineResourceWithoutVersion.baseVersion
                 )
                 pipelineVersionPersistenceService.createDraftVersion(
                     context = this,
