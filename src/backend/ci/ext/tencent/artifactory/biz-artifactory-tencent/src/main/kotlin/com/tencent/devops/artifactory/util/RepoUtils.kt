@@ -48,28 +48,22 @@ object RepoUtils {
     const val IMAGE_REPO = "image"
     private const val CREATIVE_REPO = REPO_NAME_CREATIVE
 
+    private val repoTypeToNameMap = mapOf(
+        ArtifactoryType.PIPELINE to PIPELINE_REPO,
+        ArtifactoryType.CUSTOM_DIR to CUSTOM_REPO,
+        ArtifactoryType.IMAGE to IMAGE_REPO,
+        ArtifactoryType.REPORT to REPORT_REPO,
+        ArtifactoryType.CREATIVE to CREATIVE_REPO
+    )
+
+    private val repoNameToTypeMap = repoTypeToNameMap.entries.associate { (type, repo) -> repo to type }
+
     fun getRepoByType(repoType: ArtifactoryType): String {
-        return when (repoType) {
-            ArtifactoryType.PIPELINE -> PIPELINE_REPO
-            ArtifactoryType.CUSTOM_DIR -> CUSTOM_REPO
-            ArtifactoryType.IMAGE -> IMAGE_REPO
-            ArtifactoryType.REPORT -> REPORT_REPO
-            ArtifactoryType.CREATIVE -> CREATIVE_REPO
-        }
+        return repoTypeToNameMap[repoType] ?: throw IllegalArgumentException("Unknown repository type: $repoType")
     }
 
     fun getTypeByRepo(repo: String): ArtifactoryType {
-        return when (repo) {
-            PIPELINE_REPO -> ArtifactoryType.PIPELINE
-            CUSTOM_REPO -> ArtifactoryType.CUSTOM_DIR
-            IMAGE_REPO -> ArtifactoryType.IMAGE
-            CREATIVE_REPO -> ArtifactoryType.CREATIVE
-            else -> throw IllegalArgumentException("invalid repo: $repo")
-        }
-    }
-
-    fun isPipelineFile(nodeInfo: NodeInfo): Boolean {
-        return nodeInfo.repoName == PIPELINE_REPO
+        return repoNameToTypeMap[repo] ?: throw IllegalArgumentException("Unknown repository name: $repo")
     }
 
     fun isPipelineFile(nodeInfo: QueryNodeInfo): Boolean {
@@ -78,20 +72,6 @@ object RepoUtils {
 
     fun isImageFile(nodeInfo: QueryNodeInfo): Boolean {
         return nodeInfo.repoName == IMAGE_REPO
-    }
-
-    fun toFileInfo(fileInfo: NodeInfo): FileInfo {
-        val fullPath = refineFullPath(fileInfo)
-        return FileInfo(
-            name = fileInfo.name,
-            fullName = fullPath,
-            path = fileInfo.path,
-            fullPath = fullPath,
-            size = if (fileInfo.folder) -1 else fileInfo.size,
-            folder = fileInfo.folder,
-            modifiedTime = LocalDateTime.parse(fileInfo.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-            artifactoryType = getTypeByRepo(fileInfo.repoName)
-        )
     }
 
     fun toFileInfo(fileInfo: com.tencent.bkrepo.generic.pojo.FileInfo): FileInfo {
