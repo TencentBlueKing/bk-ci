@@ -659,6 +659,9 @@
                 // 在 instanceParams 中存在，但在 templateParams 中不存在，标记为isDelete
                 i.isDelete = true
             } else {
+                if (templateParam.constant) {
+                    i.constant = templateParam.constant
+                }
                 // 常量 其他变量直接赋值为模板对应参数的值（版本号除外）
                 // hasChange(控制一键填入默认值按钮是否显示, 如果变量值与模板默认值不同则显示)
                 // isChange(控制默认值输入框是否高亮，默认值变更则高亮)
@@ -927,6 +930,7 @@
             repoHashId: proxy.$t('template.propertyUpdate.repo'),
             relativePath: proxy.$t('template.propertyUpdate.relativePath'),
             glob: proxy.$t('template.propertyUpdate.glob'),
+            constant: proxy.$t('template.propertyUpdate.constant')
         }
         
         // 检查各个属性是否有变更
@@ -950,7 +954,7 @@
             }
             
             // 处理布尔值显示
-            const booleanField = ['isRequiredParam', 'valueNotEmpty', 'readOnly']
+            const booleanField = ['isRequiredParam', 'valueNotEmpty', 'readOnly', 'constant']
             if (booleanField.includes(key)) {
                 oldValue = oldValue ? proxy.$t('true') : proxy.$t('false')
                 newValue = newValue ? proxy.$t('true') : proxy.$t('false')
@@ -1506,9 +1510,57 @@
             isRequiredParam: curInstance.value?.buildNo?.required ?? false
         } || {}
         getParamsValue()
+        
+        // 根据参数是否有更新自动展开对应面板
+        autoExpandPanels()
+        
         setTimeout(() => {
             isLoading.value = false
         })
+    }
+    
+    // 根据参数更新情况自动展开面板
+    function autoExpandPanels () {
+        const newActiveName = new Set([1]) // 默认展开第一个面板
+        
+        // 检查流水线构建参数是否有更新（面板1）
+        const hasParamsUpdate = paramsList.value.some(p =>
+            p.isNew || p.isDelete || p.isChange || p.propertyUpdates?.length
+        ) || versionParams.value.some(p => p.isChange || p.isNew || p.isDelete)
+            || curInstance.value?.buildNo?.isNew
+            || curInstance.value?.buildNo?.isDelete
+            || curInstance.value?.buildNoChanged
+            || curInstance.value?.resetBuildNo
+        
+        if (hasParamsUpdate) {
+            newActiveName.add(1)
+        }
+        
+        // 检查常量是否有更新（面板2）
+        const hasConstantUpdate = constantParams.value.some(p =>
+            p.isNew || p.isDelete || p.isChange || p.propertyUpdates?.length
+        )
+        if (hasConstantUpdate && constantParams.value.length > 0) {
+            newActiveName.add(2)
+        }
+        
+        // 检查其他变量是否有更新（面板3）
+        const hasOtherUpdate = otherParams.value.some(p =>
+            p.isNew || p.isDelete || p.isChange || p.propertyUpdates?.length
+        )
+        if (hasOtherUpdate && hasOtherParams.value) {
+            newActiveName.add(3)
+        }
+        
+        // 检查触发器是否有更新（面板4）
+        const hasTriggerUpdate = curInstance.value?.triggerConfigs?.some(t =>
+            t.isNew || t.isDelete
+        )
+        if (hasTriggerUpdate && curInstance.value?.triggerConfigs?.length) {
+            newActiveName.add(4)
+        }
+        
+        activeName.value = newActiveName
     }
 
     defineExpose({
