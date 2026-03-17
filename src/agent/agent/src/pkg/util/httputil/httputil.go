@@ -38,16 +38,16 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
-	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
-
-	"github.com/pkg/errors"
-
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
-
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
+	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
+	"github.com/pkg/errors"
+	"golang.org/x/net/http/httpproxy"
 )
 
 type HttpClient struct {
@@ -67,11 +67,62 @@ type HttpResult struct {
 	IgnoreDupLog bool
 }
 
-var client = &http.Client{}
+var client = newClientWithProxy()
 
 // newClient 替换客户端，重置连接池
 func newClient() {
-	client = &http.Client{}
+	client = newClientWithProxy()
+}
+
+// newClientWithProxy 创建带代理感知的 HTTP 客户端。
+// Transport.Proxy 使用闭包函数，每次请求时实时从 envs.FetchEnv 读取
+// HTTP_PROXY / HTTPS_PROXY，支持后台下发环境变量动态切换代理。
+func newClientWithProxy() *http.Client {
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.Proxy = proxyFromAgentEnv
+	return &http.Client{Transport: transport}
+}
+
+// proxyFromAgentEnv 根据请求 scheme 从 agent 环境变量中读取代理配置。
+// 优先读取后台下发的环境变量（通过 envs.FetchEnv），读不到则 fallback 到
+// 标准库 http.ProxyFromEnvironment（读取 os 环境变量）。
+// 同时支持 NO_PROXY 排除规则。
+func proxyFromAgentEnv(req *http.Request) (*url.URL, error) {
+	httpProxy := fetchProxyEnv("HTTP_PROXY")
+	httpsProxy := fetchProxyEnv("HTTPS_PROXY")
+	noProxy := fetchProxyEnv("NO_PROXY")
+
+	if httpProxy == "" && httpsProxy == "" {
+		return http.ProxyFromEnvironment(req)
+	}
+
+	cfg := httpproxy.Config{
+		HTTPProxy:  httpProxy,
+		HTTPSProxy: httpsProxy,
+		NoProxy:    noProxy,
+	}
+
+	proxyURL, err := cfg.ProxyFunc()(req.URL)
+	if err != nil {
+		logs.Errorf("resolve proxy for %s error: %s, fallback to ProxyFromEnvironment", req.URL.Host, err)
+		return http.ProxyFromEnvironment(req)
+	}
+
+	if proxyURL != nil {
+		logs.Infof("using proxy %s for %s", proxyURL.Redacted(), req.URL.Host)
+	}
+	return proxyURL, nil
+}
+
+// fetchProxyEnv 读取代理相关环境变量，同时检查大写和小写形式（与 Go 标准库行为一致）。
+func fetchProxyEnv(key string) string {
+	if v, ok := envs.FetchEnv(key); ok && v != "" {
+		return v
+	}
+	if v, ok := envs.FetchEnv(strings.ToLower(key)); ok && v != "" {
+		return v
+	}
+	return ""
 }
 
 func NewHttpClient() *HttpClient {
@@ -216,7 +267,7 @@ func (r *HttpClient) Execute(ignoreDupLogResp *IgnoreDupLogResp) *HttpResult {
 
 // checkTimeOutExit 检查是否因为超时直接退出
 func checkTimeOutExit(err error) {
-	enableExitTimeStr, ok := config.FetchEnv(constant.DevopsAgentTimeoutExitTime)
+	enableExitTimeStr, ok := envs.FetchEnv(constant.DevopsAgentTimeoutExitTime)
 	if !ok {
 		return
 	}

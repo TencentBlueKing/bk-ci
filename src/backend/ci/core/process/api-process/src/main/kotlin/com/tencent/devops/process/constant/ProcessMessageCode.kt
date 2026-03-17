@@ -453,6 +453,11 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_LEGACY_INSTANCE_CANNOT_ENABLE_PAC = "2101343"
     // 触发事件缓存过期已清理。若需重放，请到代码库操作。
     const val ERROR_TRIGGER_EVENT_EXPIRED = "2101361"
+    const val ERROR_TEMPLATE_MIGRATING = "2101362" // 模板迁移中，不能操作
+    // 非约束流水线不能保存为约束模式
+    const val ERROR_NON_CONSTRAINED_PIPELINE_CANNOT_SAVE_AS_CONSTRAINED = "2101363"
+    // 实例化异常：流水线其他变量[{0}]默认值被改成模版默认值,请联系助手分析
+    const val ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN = "2101364"
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

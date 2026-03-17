@@ -29,6 +29,7 @@ package com.tencent.devops.process.api.template.v2
 
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -683,6 +684,28 @@ class UserPipelineTemplateV2ResourceImpl(
                 templateId = templateId,
                 version = version,
                 highlightType = highlightType
+            )
+        )
+    }
+
+    override fun versionNameExist(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        versionName: String
+    ): Result<Boolean> {
+        if (versionName.isBlank()) throw ParamBlankException("Invalid versionName")
+        permissionService.checkPipelineTemplatePermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW,
+            templateId = templateId
+        )
+        return Result(
+            templateFacadeService.existsVersionName(
+                projectId = projectId,
+                templateId = templateId,
+                versionName = versionName
             )
         )
     }
