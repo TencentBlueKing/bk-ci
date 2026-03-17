@@ -7,7 +7,7 @@ import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
 import com.tencent.devops.notify.dao.NotifyMessageTemplateDao
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import java.util.regex.Pattern
+
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -24,7 +24,6 @@ class WeworkGroupNotifier @Autowired constructor(
     @Value("\${wework.domain}")
     private val userUseDomain: Boolean = true
 
-    private val chatPatten = "^[A-Za-z0-9_-]+\$" // 数字和字母组成的群chatId正则表达式
     override fun type(): NotifyType = NotifyType.WEWORK_GROUP
     override fun send(
         request: SendNotifyMessageTemplateRequest,
@@ -90,7 +89,7 @@ class WeworkGroupNotifier @Autowired constructor(
                     markerDownFlag = request.markdownContent ?: false,
                     mentionUsers = mentionUsers
                 )
-            } else if (Pattern.matches(chatPatten, it)) { // 机器人逻辑
+            } else if (CHAT_PATTERN.matches(it)) { // 机器人逻辑
                 wechatWorkRobotService.sendByRobot(
                     chatId = it,
                     content = content,
@@ -103,5 +102,6 @@ class WeworkGroupNotifier @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(WeworkGroupNotifier::class.java)
+        private val CHAT_PATTERN = Regex("^[A-Za-z0-9_-]+$")
     }
 }
