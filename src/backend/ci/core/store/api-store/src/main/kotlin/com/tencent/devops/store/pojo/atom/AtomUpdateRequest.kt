@@ -97,9 +97,6 @@ data class AtomUpdateRequest(
      */
     @JsonIgnore
     fun getEffectiveServiceScope(): List<String> {
-        if (!serviceScopeConfigs.isNullOrEmpty()) {
-            return serviceScopeConfigs.map { it.serviceScope.name }
-        }
-        return serviceScope
+        return serviceScopeConfigs?.map { it.serviceScope.name } ?: serviceScope
     }
 }

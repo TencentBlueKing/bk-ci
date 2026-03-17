@@ -15,9 +15,9 @@ data class ServiceScopeConfig(
 
     @get:Schema(
         title = "Job类型配置列表（包含每个 jobType 及其操作系统信息）",
-        required = false
+        required = true
     )
-    val jobTypeConfigs: List<JobTypeConfig>? = null,
+    val jobTypeConfigs: List<JobTypeConfig>,
 
     @get:Schema(title = "插件标签列表", required = false)
     val labelIdList: List<String>? = null
@@ -27,7 +27,7 @@ data class ServiceScopeConfig(
      */
     @JsonIgnore
     fun getEffectiveJobTypes(): List<JobTypeEnum> {
-        return jobTypeConfigs?.map { it.jobType } ?: emptyList()
+        return jobTypeConfigs.map { it.jobType }
     }
 
     /**
@@ -35,11 +35,8 @@ data class ServiceScopeConfig(
      */
     @JsonIgnore
     fun getEffectiveOsMap(): Map<String, List<String>> {
-        if (!jobTypeConfigs.isNullOrEmpty()) {
-            return jobTypeConfigs
-                .filter { !it.osList.isNullOrEmpty() && it.jobType.isBuildEnv() }
-                .associate { it.jobType.name to it.osList!! }
-        }
-        return emptyMap()
+        return jobTypeConfigs
+            .filter { !it.osList.isNullOrEmpty() && it.jobType.isBuildEnv() }
+            .associate { it.jobType.name to it.osList!! }
     }
 }
