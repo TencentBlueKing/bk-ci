@@ -688,8 +688,6 @@ class EnvService @Autowired constructor(
                 } else {
                     HashUtil.encodeLongId(thirdPartyAgent.id)
                 },
-                agentId = thirdPartyAgent?.id,
-                createWorkspaceId = thirdPartyAgent?.createWorkspaceName
             )
         }
     }
@@ -759,10 +757,7 @@ class EnvService @Autowired constructor(
                     null
                 } else {
                     HashUtil.encodeLongId(thirdPartyAgent.id)
-                },
-                agentId = thirdPartyAgent?.id,
-                lastModifyTime = it.lastModifyTime?.timestamp(),
-                createWorkspaceId = thirdPartyAgent?.createWorkspaceName
+                }
             )
         }
         val count = nodeDao.countByNodeIdList(dslContext, projectId, nodeIdMaps.keys).toLong()

@@ -240,6 +240,7 @@ class PipelineRepositoryService constructor(
     @Value("\${project.callback.secretParam.aes-key:project_callback_aes_key}")
     private val aesKey = ""
 
+    @SuppressWarnings("NestedBlockDepth")
     fun deployPipeline(
         model: Model,
         projectId: String,
