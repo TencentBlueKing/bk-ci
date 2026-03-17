@@ -69,6 +69,7 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingCommon
 import com.tencent.devops.process.pojo.template.v2.TemplateVersionPair
 import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.service.template.validation.PipelineTemplateMigrationValidationService
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
@@ -1161,7 +1162,8 @@ class PipelineTemplateMigrateService(
         val triggerContainer = model.getTriggerContainer()
         val params = triggerContainer.params
         val badParams = params.filter {
-            !it.required && it.asInstanceInput == false
+            !it.required && it.asInstanceInput == false &&
+                it.id !in PipelineUtils.VERSION_PARAMS
         }
         if (badParams.isEmpty()) return null
 
@@ -1173,7 +1175,9 @@ class PipelineTemplateMigrateService(
         )
         if (!dryRun) {
             val fixedParams = params.map { param ->
-                if (!param.required && param.asInstanceInput == false) {
+                if (!param.required && param.asInstanceInput == false &&
+                    param.id !in PipelineUtils.VERSION_PARAMS
+                ) {
                     param.copy(required = true)
                 } else {
                     param
