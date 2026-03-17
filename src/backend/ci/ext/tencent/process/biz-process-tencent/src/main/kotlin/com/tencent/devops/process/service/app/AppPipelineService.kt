@@ -34,6 +34,7 @@ import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.process.engine.pojo.builds.BuildHistoryQueryParam
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.app.pipeline.AppPipeline
@@ -172,37 +173,22 @@ class AppPipelineService @Autowired constructor(
         triggerEventTypes: List<String>?,
         triggerNodeHashIds: List<String>?
     ): Page<AppPipelineHistory> {
-
-        val result = pipelineBuildFacadeService.getHistoryBuild(
-            userId = userId,
+        val queryParam = BuildHistoryQueryParam(
             projectId = projectId,
             pipelineId = pipelineId,
-            page = page,
-            pageSize = pageSize,
-            materialAlias = null,
-            materialUrl = null,
             materialBranch = materialBranch,
-            materialCommitId = null,
-            materialCommitMessage = null,
-            status = null,
-            trigger = null,
-            queueTimeStartTime = null,
-            queueTimeEndTime = null,
-            startTimeStartTime = null,
-            startTimeEndTime = null,
-            endTimeStartTime = null,
-            endTimeEndTime = null,
-            totalTimeMin = null,
-            totalTimeMax = null,
-            remark = null,
-            buildNoStart = null,
-            buildNoEnd = null,
             debug = debug,
             triggerAlias = triggerAlias,
             triggerBranch = triggerBranch,
             triggerUser = triggerUser,
             triggerEventTypes = triggerEventTypes,
             triggerNodeHashIds = triggerNodeHashIds
+        )
+        val result = pipelineBuildFacadeService.getHistoryBuild(
+            userId = userId,
+            page = page,
+            pageSize = pageSize,
+            queryParam = queryParam
         )
         val histories = result.records.map { h ->
             val packageVersion = StringBuilder()
