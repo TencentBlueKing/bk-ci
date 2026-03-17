@@ -1,7 +1,9 @@
+//go:build loong64
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,17 +27,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.notify.pojo
+package config
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
-
-/**
- * 媒体内容
- */
-@Schema(title = "媒体内容")
-data class MediaContent(
-    @get:Schema(title = "媒体文件ID")
-    @JsonProperty("media_id")
-    val mediaId: String
+import (
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 )
+
+// GetCpuAndGpuInfo loong64 平台暂不支持 ghw 库获取硬件信息，返回空
+func GetCpuAndGpuInfo() (string, string) {
+	logs.Info("ghw not supported on loong64, skip cpu/gpu info detection")
+	return "", ""
+}

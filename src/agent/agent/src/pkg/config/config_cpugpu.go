@@ -1,7 +1,9 @@
+//go:build !loong64
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -24,28 +26,43 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.pojo
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
+package config
 
-/**
- * 企业微信机器人上传媒体文件响应
- */
-@Schema(title = "企业微信机器人上传媒体文件响应")
-data class WeworkRobotUploadResponse(
-    @get:Schema(title = "错误码，0表示成功")
-    @JsonProperty("errcode")
-    val errCode: Int = 0,
-    @get:Schema(title = "错误信息")
-    @JsonProperty("errmsg")
-    val errMsg: String? = null,
-    @get:Schema(title = "媒体类型")
-    val type: String? = null,
-    @get:Schema(title = "媒体文件ID")
-    @JsonProperty("media_id")
-    val mediaId: String? = null,
-    @get:Schema(title = "创建时间戳")
-    @JsonProperty("created_at")
-    val createdAt: String? = null
+import (
+	"bytes"
+	"strings"
+
+	"github.com/jaypipes/ghw"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 )
+
+// GetCpuAndGpuInfo 获取 CPU 和 GPU 型号信息
+func GetCpuAndGpuInfo() (string, string) {
+	cpu, err := ghw.CPU()
+	cpuInfoBuf := bytes.Buffer{}
+	if err != nil {
+		logs.WithError(err).Error("get cpu info error")
+	} else {
+		for _, c := range cpu.Processors {
+			cpuInfoBuf.WriteString(c.Model)
+			cpuInfoBuf.WriteString(";")
+		}
+	}
+	cpuInfo := strings.TrimSuffix(cpuInfoBuf.String(), ";")
+
+	gpuInfoBuf := bytes.Buffer{}
+	gpu, err := ghw.GPU()
+	if err != nil {
+		logs.WithError(err).Error("get gpu info error")
+	} else {
+		for _, card := range gpu.GraphicsCards {
+			gpuInfoBuf.WriteString(card.DeviceInfo.Product.Name)
+			gpuInfoBuf.WriteString(";")
+		}
+	}
+	gpuInfo := strings.TrimSuffix(gpuInfoBuf.String(), ";")
+	logs.Infof("cpu: %s, gpu: %s", cpuInfo, gpuInfo)
+	return cpuInfo, gpuInfo
+}

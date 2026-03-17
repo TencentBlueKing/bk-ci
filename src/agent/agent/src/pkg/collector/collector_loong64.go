@@ -1,7 +1,9 @@
+//go:build loong64
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,17 +27,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.notify.pojo
+package collector
 
-import io.swagger.v3.oas.annotations.media.Schema
-
-/**
- * 图片内容（base64+md5格式，用于群机器人）
- */
-@Schema(title = "图片内容")
-data class ImageContent(
-    @get:Schema(title = "图片base64编码")
-    val base64: String,
-    @get:Schema(title = "图片MD5值")
-    val md5: String
+import (
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 )
+
+// Collect loong64 平台暂不支持 telegraf 采集，跳过
+func Collect() {
+	logs.Info("collector not supported on loong64, skip")
+}
