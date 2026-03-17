@@ -108,15 +108,15 @@ class WorkspaceWindowsDao {
         projectId: String,
         ip: String
     ): Int {
-        return dslContext.fetchCountFix(
-            dslContext.select(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP)
-                .from(TWorkspace.T_WORKSPACE)
-                .leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
-                .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
-                .where(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId))
-                .and(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
-                .and(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.like("%.$ip"))
-        )
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.fetchCountFix(
+                dslContext.select(IP)
+                    .from(this)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                    .and(IP.eq(ip))
+            )
+        }
     }
 
     fun countUserIp(
@@ -203,7 +203,7 @@ class WorkspaceWindowsDao {
                     WorkspaceStatus.DELETED.ordinal,
                     WorkspaceStatus.DELIVERING_FAILED.ordinal
                 )
-            ).and(TWorkspace.T_WORKSPACE.HOST_NAME.like("%.$ip")).fetchAny() ?: return null
+            ).and(TWorkspace.T_WORKSPACE.IP.eq(ip)).fetchAny() ?: return null
         return Triple(dsl.value1(), dsl.value2(), dsl.value3())
     }
 
