@@ -108,7 +108,8 @@ class AuthResourceGroupDao {
                     CREATE_TIME,
                     UPDATE_TIME,
                     DESCRIPTION,
-                    IAM_TEMPLATE_ID
+                    IAM_TEMPLATE_ID,
+                    APPLY_DISABLE
                 ).values(
                     it.projectCode,
                     it.resourceType,
@@ -122,7 +123,8 @@ class AuthResourceGroupDao {
                     now,
                     now,
                     it.description,
-                    it.iamTemplateId
+                    it.iamTemplateId,
+                    it.applyDisable
                 ).onDuplicateKeyUpdate()
                     .set(GROUP_NAME, it.groupName)
                     .set(UPDATE_TIME, now)
@@ -167,6 +169,7 @@ class AuthResourceGroupDao {
                     .set(GROUP_NAME, it.groupName)
                     .set(DESCRIPTION, it.description)
                     .set(IAM_TEMPLATE_ID, it.iamTemplateId)
+                    .set(APPLY_DISABLE, it.applyDisable)
                     .set(UPDATE_TIME, now)
                     .where(PROJECT_CODE.eq(it.projectCode))
                     .and(ID.eq(it.id!!))
@@ -523,7 +526,8 @@ class AuthResourceGroupDao {
                     relationId = relationId.toInt(),
                     createTime = createTime,
                     updateTime = updateTime,
-                    description = description
+                    description = description,
+                    applyDisable = applyDisable
                 )
             } catch (ignore: Exception) {
                 logger.warn(
