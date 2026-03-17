@@ -115,7 +115,7 @@
             <div class="bk-form-content template-item-content">
                 <bk-select
                     :placeholder="$t('store.请选择功能标签')"
-                    v-model="categoryData.labelIdList"
+                    v-model="categoryData.labelList"
                     @selected="handleClassifyChange"
                     show-select-all
                     searchable

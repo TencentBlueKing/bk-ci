@@ -266,7 +266,7 @@
             },
 
             hackData () {
-                this.formData.labelIdList = this.formData.labelList.map(label => label.id)
+                this.formData.labelList = this.formData.labelList.map(label => label.id)
                 this.formData.description = this.formData.description || `#### ${this.$t('store.插件功能')}\n\n#### ${this.$t('store.适用场景')}\n\n#### ${this.$t('store["使用限制和受限解决方案[可选]"]')}\n\n#### ${this.$t('store.常见的失败原因和解决方案')}`
             },
 
@@ -299,7 +299,7 @@
                     classifyCode: config.classifyCode || '',
                     jobTypes,
                     os,
-                    labelIdList: config.labelList?.map(label => label.id) || []
+                    labelList: config.labelList?.map(label => label.id) || []
                 }
             },
 
@@ -325,7 +325,7 @@
                             const config = {
                                 serviceScope: scope,
                                 classifyCode: data.classifyCode,
-                                labelIdList: (data.labelIdList || []).filter(id => id && id !== 'null' && id !== ' ')
+                                labelList: (data.labelList || []).filter(id => id && id !== 'null' && id !== ' ')
                             }
                             
                             // 构建 jobTypeConfigs
@@ -359,7 +359,7 @@
                         const serviceScopeDetails = serviceScopeConfigs.map(config => {
                             const refName = config.serviceScope === 'PIPELINE' ? 'pipelineCategoryConfig' : 'creativeCategoryConfig'
                             const fullLabelList = this.$refs[refName]?.labelList || []
-                            const labelList = (config.labelIdList || [])
+                            const labelList = (config.labelList || [])
                                 .map(id => fullLabelList.find(label => label.id === id))
                                 .filter(Boolean)
                             

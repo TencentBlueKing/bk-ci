@@ -423,13 +423,13 @@
                     classifyName: '',
                     jobTypes: ['AGENT'],
                     os: [],
-                    labelIdList: []
+                    labelList: []
                 },
                 creativeCategory: {
                     classifyCode: '',
                     classifyName: '',
                     jobTypes: ['CREATIVE_STREAM'],
-                    labelIdList: [],
+                    labelList: [],
                 },
                 atomForm: {
                     name: '',
@@ -604,6 +604,7 @@
                             
                             // 回显 PIPELINE 配置
                             const pipelineConfig = serviceScopeDetails.find(item => item.serviceScope === 'PIPELINE')
+                            console.log("🚀 ~ pipelineConfig:", pipelineConfig)
                             if (pipelineConfig) {
                                 // 从 jobTypeConfigs 中提取 jobTypes 和 os
                                 const jobTypes = pipelineConfig.jobTypeConfigs?.map(config => config.jobType) || ['AGENT']
@@ -618,7 +619,8 @@
                                     classifyName: pipelineConfig.classifyName || '',
                                     jobTypes,
                                     os,
-                                    labelIdList: pipelineConfig.labelIdList || []
+                                    // 将 labelList 从对象数组转换为 ID 数组
+                                    labelList: pipelineConfig.labelList?.map(label => label.id) || []
                                 }
                                 // 保存初始值用于升级类型判断
                                 this.initJobType = jobTypes[0] || 'AGENT'
@@ -636,7 +638,8 @@
                                     classifyCode: creativeConfig.classifyCode || '',
                                     classifyName: creativeConfig.classifyName || '',
                                     jobTypes,
-                                    labelIdList: creativeConfig.labelIdList || []
+                                    // 将 labelList 从对象数组转换为 ID 数组
+                                    labelList: creativeConfig.labelList?.map(label => label.id) || []
                                 }
                             }
                             
@@ -914,7 +917,7 @@
                             const config = {
                                 serviceScope: scope,
                                 classifyCode: categoryData.classifyCode,
-                                labelIdList: (categoryData.labelIdList || []).filter(id => id && id !== 'null' && id !== ' ')
+                                labelList: (categoryData.labelList || []).filter(id => id && id !== 'null' && id !== ' ')
                             }
                             
                             // 构建 jobTypeConfigs
