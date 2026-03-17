@@ -43,6 +43,7 @@ import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
@@ -232,7 +233,12 @@ class ImportService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 nodeId = nodeId,
-                nodeName = "$nodeStringId(${agentRecord.ip})"
+                nodeName = "$nodeStringId(${agentRecord.ip})",
+                resourceType = if (agentRecord.agentType == AgentType.CREATE.name) {
+                    AuthResourceType.CREATIVE_STREAM_NODE
+                } else {
+                    AuthResourceType.ENVIRONMENT_ENV_NODE
+                }
             )
         }
 

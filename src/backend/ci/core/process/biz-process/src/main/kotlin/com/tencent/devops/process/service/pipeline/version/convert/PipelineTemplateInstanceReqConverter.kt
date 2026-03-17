@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -190,6 +191,10 @@ class PipelineTemplateInstanceReqConverter(
                     errorCode = ProcessMessageCode.ERROR_TEMPLATE_TYPE_MODEL_TYPE_NOT_MATCH
                 )
             }
+            validateParamsNotOverrideConstOrOptional(
+                templateParams = templateModel.getTriggerContainer().params,
+                inputParams = params ?: emptyList()
+            )
 
             // 生成实例化流水线model
             val templatePath = templateRefType?.takeIf { it == TemplateRefType.PATH }?.let {
@@ -326,10 +331,18 @@ class PipelineTemplateInstanceReqConverter(
 
             // 对实例化参数进行校验
             val instanceParams = instanceModel.getTriggerContainer().params
-            TemplateInstanceUtil.assertParams(
+            TemplateInstanceUtil.assertInstanceParamProps(
                 projectId = projectId,
                 pipelineId = newPipelineId,
                 inputParams = params ?: emptyList(),
+                instanceParams = instanceParams
+            )
+            validateOptionalParamsNotOverridden(
+                projectId = projectId,
+                pipelineId = newPipelineId,
+                templateId = templateId,
+                beforeTemplateVersion = beforeTemplateVersion,
+                currentTemplateParams = templateModel.getTriggerContainer().params,
                 instanceParams = instanceParams
             )
 
@@ -400,6 +413,72 @@ class PipelineTemplateInstanceReqConverter(
             pipelineSetting.copy(pipelineAsCodeSettings = pipelineAsCodeSettings)
         } ?: pipelineSetting
         return pacSetting
+    }
+
+    /**
+     * 校验流水线的"其他变量"（required=false）在实例化时是否被异常覆盖。
+     *
+     * 检测逻辑：
+     * 1. 若流水线是新建（beforeTemplateVersion 为 null），跳过校验
+     * 2. 获取实例化前的旧模板参数和旧流水线参数
+     * 3. 委托 TemplateInstanceUtil.assertOptionalParamsNotOverridden 执行纯参数比对
+     */
+    private fun validateOptionalParamsNotOverridden(
+        projectId: String,
+        pipelineId: String,
+        templateId: String,
+        beforeTemplateVersion: Long?,
+        currentTemplateParams: List<BuildFormProperty>,
+        instanceParams: List<BuildFormProperty>
+    ) {
+        if (beforeTemplateVersion == null) return
+        val beforeTemplateResource = pipelineTemplateResourceService.getOrNull(
+            projectId = projectId,
+            templateId = templateId,
+            version = beforeTemplateVersion
+        ) ?: return
+        val beforeTemplateModel = beforeTemplateResource.model as? Model ?: return
+        val beforeTemplatePipelineResource = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: return
+        TemplateInstanceUtil.assertOptionalParamsNotOverridden(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            beforeTemplateParams = beforeTemplateModel.getTriggerContainer().params,
+            currentTemplateParams = currentTemplateParams,
+            beforePipelineParams = beforeTemplatePipelineResource.model.getTriggerContainer().params,
+            instanceParams = instanceParams
+        )
+    }
+
+    /**
+     * 校验输入参数中是否对模板常量或非必填参数的值进行了覆盖
+     *
+     * 判断依据：模板参数的 constant==true 或 required==false
+     * 若 inputParams 中对应参数的 defaultValue 与模板默认值不同，则视为非法覆盖，抛出异常。
+     *
+     * @param templateParams 模板触发容器的参数列表
+     * @param inputParams    实例化请求中传入的参数列表
+     */
+    private fun validateParamsNotOverrideConstOrOptional(
+        templateParams: List<BuildFormProperty>,
+        inputParams: List<BuildFormProperty>
+    ) {
+        if (inputParams.isEmpty()) return
+        val inputParamMap = inputParams.associateBy { it.id }
+        val invalidParamIds = templateParams
+            .filter { it.constant == true || !it.required }
+            .mapNotNull { templateParam ->
+                val inputParam = inputParamMap[templateParam.id] ?: return@mapNotNull null
+                templateParam.id.takeIf { inputParam.defaultValue != templateParam.defaultValue }
+            }
+        if (invalidParamIds.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_INSTANCE_OVERRIDE_CONST,
+                params = arrayOf(invalidParamIds.joinToString { "[$it]" })
+            )
+        }
     }
 
     companion object {
