@@ -133,7 +133,7 @@ object JsonPathUtil {
         return JsonPath.parse(json)
     }
 
-    fun parse(map: Map<String, String>): DocumentContext {
+    fun parse(map: Map<String, Any>): DocumentContext {
         return JsonPath.parse(map)
     }
 }

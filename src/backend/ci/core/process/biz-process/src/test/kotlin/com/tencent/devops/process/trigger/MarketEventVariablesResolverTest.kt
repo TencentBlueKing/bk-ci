@@ -1,6 +1,5 @@
 package com.tencent.devops.process.trigger
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.process.trigger.market.MarketEventVariablesResolver
 import com.tencent.devops.store.pojo.trigger.EventFieldMappingItem
@@ -69,70 +68,72 @@ class MarketEventVariablesResolverTest {
         "X-Source-ID" to "1234"
     )
 
-    val body = """
-        {
-          "object_kind": "merge_request",
-          "manual_unlock": false,
-          "user": {
-            "name": "xiaoming",
-            "username": "xiaoming",
-            "avatar_url": null
-          },
-          "object_attributes": {
-            "id": 21147820,
-            "target_branch": "master",
-            "source_branch": "feat_11884",
-            "source_project_id": 1064025,
-            "author_id": 286464,
-            "assignee_id": null,
-            "title": "perf: 优化流水线webhook触发流程 #11884",
-            "created_at": "2025-08-22T10:13:36+0000",
-            "updated_at": "2025-12-08T03:45:33+0000",
-            "st_commits": null,
-            "st_diffs": null,
-            "milestone_id": null,
-            "state": "reopened",
-            "merge_status": "cannot_be_merged",
-            "target_project_id": 1064025,
-            "iid": 166,
-            "description": "",
-            "source": {
-              "name": "HelloeWorlds_HJ",
-              "ssh_url": "git@git.example.com:bkdevops-plugins/HelloeWorlds_HJ.git",
-              "http_url": "http://git.example.com/bkdevops-plugins/HelloeWorlds_HJ.git",
-              "web_url": "http://git.example.com/bkdevops-plugins/HelloeWorlds_HJ",
-              "namespace": "bkdevops-plugins/HelloeWorlds_HJ",
-              "visibility_level": 10
-            },
-            "target": {
-              "name": "HelloeWorlds_HJ",
-              "ssh_url": "git@git.example.com:bkdevops-plugins/HelloeWorlds_HJ.git",
-              "http_url": "http://git.example.com/bkdevops-plugins/HelloeWorlds_HJ.git",
-              "web_url": "http://git.example.com/bkdevops-plugins/HelloeWorlds_HJ",
-              "namespace": "bkdevops-plugins/HelloeWorlds_HJ",
-              "visibility_level": 10
-            },
-            "last_commit": {
-              "id": "8435f653e6d0afdbaaefc7564c3a321bd348a140",
-              "message": "Update b-c8bfb1e870c640daa8ee99af5b14b1a4.txt",
-              "timestamp": "2025-10-31T12:02:42+0000",
-              "url": "http://git.example.com/bkdevops-plugins/HelloeWorlds_HJ/commits/8435f653e6d0afdbaaefc7564c3a321bd348a140",
-              "author": {
-                "name": "xiaoming",
-                "email": "xiaoming@example.com"
-              }
-            },
-            "merge_type": null,
-            "merge_commit_sha": null,
-            "before": null,
-            "after": null,
-            "url": "http://git.example.com/bkdevops-plugins/HelloeWorlds_HJ/merge_requests/166",
-            "action": "reopen",
-            "extension_action": "reopen",
-            "labels": ["for test", "tested", "service/process"]
-          }
-        }
-    """.trimIndent()
+    val body = "{\n" +
+            "    \"object_kind\": \"merge_request\",\n" +
+            "    \"manual_unlock\": false,\n" +
+            "    \"user\": {\n" +
+            "        \"name\": \"xiaoming\",\n" +
+            "        \"username\": \"xiaoming\",\n" +
+            "        \"avatar_url\": null\n" +
+            "    },\n" +
+            "    \"object_attributes\": {\n" +
+            "        \"id\": 21147820,\n" +
+            "        \"target_branch\": \"master\",\n" +
+            "        \"source_branch\": \"feat_11884\",\n" +
+            "        \"source_project_id\": 1064025,\n" +
+            "        \"author_id\": 286464,\n" +
+            "        \"assignee_id\": null,\n" +
+            "        \"title\": \"perf: 优化流水线webhook触发流程 #11884\",\n" +
+            "        \"created_at\": \"2025-08-22T10:13:36+0000\",\n" +
+            "        \"updated_at\": \"2025-12-08T03:45:33+0000\",\n" +
+            "        \"st_commits\": null,\n" +
+            "        \"st_diffs\": null,\n" +
+            "        \"milestone_id\": null,\n" +
+            "        \"state\": \"reopened\",\n" +
+            "        \"merge_status\": \"cannot_be_merged\",\n" +
+            "        \"target_project_id\": 1064025,\n" +
+            "        \"iid\": 166,\n" +
+            "        \"description\": \"\",\n" +
+            "        \"source\": {\n" +
+            "            \"name\": \"HelloeWorlds_HJ\",\n" +
+            "            \"ssh_url\": \"git@git.example.com:bkdevops-plugins/HelloeWorlds_HJ.git\",\n" +
+            "            \"http_url\": \"http://git.example.com/bkdevops-plugins/HelloeWorlds_HJ.git\",\n" +
+            "            \"web_url\": \"http://git.example.com/bkdevops-plugins/HelloeWorlds_HJ\",\n" +
+            "            \"namespace\": \"bkdevops-plugins/HelloeWorlds_HJ\",\n" +
+            "            \"visibility_level\": 10\n" +
+            "        },\n" +
+            "        \"target\": {\n" +
+            "            \"name\": \"HelloeWorlds_HJ\",\n" +
+            "            \"ssh_url\": \"git@git.example.com:bkdevops-plugins/HelloeWorlds_HJ.git\",\n" +
+            "            \"http_url\": \"http://git.example.com/bkdevops-plugins/HelloeWorlds_HJ.git\",\n" +
+            "            \"web_url\": \"http://git.example.com/bkdevops-plugins/HelloeWorlds_HJ\",\n" +
+            "            \"namespace\": \"bkdevops-plugins/HelloeWorlds_HJ\",\n" +
+            "            \"visibility_level\": 10\n" +
+            "        },\n" +
+            "        \"last_commit\": {\n" +
+            "            \"id\": \"8435f653e6d0afdbaaefc7564c3a321bd348a140\",\n" +
+            "            \"message\": \"Update b-c8bfb1e870c640daa8ee99af5b14b1a4.txt\",\n" +
+            "            \"timestamp\": \"2025-10-31T12:02:42+0000\",\n" +
+            "            \"url\": \"http://git.example.com/bkdevops-plugins/HelloeWorlds_HJ/commits/8435f653e6d0afdbaaefc7564c3a321bd348a140\",\n" +
+            "            \"author\": {\n" +
+            "                \"name\": \"xiaoming\",\n" +
+            "                \"email\": \"xiaoming@example.com\"\n" +
+            "            }\n" +
+            "        },\n" +
+            "        \"merge_type\": null,\n" +
+            "        \"merge_commit_sha\": null,\n" +
+            "        \"before\": null,\n" +
+            "        \"after\": null,\n" +
+            "        \"url\": \"http://git.example.com/bkdevops-plugins/HelloeWorlds_HJ/merge_requests/166\",\n" +
+            "        \"action\": \"reopen\",\n" +
+            "        \"extension_action\": \"reopen\",\n" +
+            "        \"labels\": [\n" +
+            "            \"for test\",\n" +
+            "            \"tested\",\n" +
+            "            \"service/process\"\n" +
+            "        ]\n" +
+            "    }\n" +
+            "}".trimIndent()
 
     val marketEventVariablesResolver = MarketEventVariablesResolver()
 
@@ -142,7 +143,7 @@ class MarketEventVariablesResolverTest {
             fieldMappings = fieldMappings,
             incomingHeaders = headers,
             incomingQueryParamMap = null,
-            incomingBody = JsonUtil.anyToOrNull(body, object : TypeReference<Map<String, String>>() {})
+            incomingBody = JsonUtil.toMap(body)
         )
         Assertions.assertEquals("merge_request", variables["ci.event_type"])
         Assertions.assertEquals("1234567890", variables["ci.event.trace_id"])

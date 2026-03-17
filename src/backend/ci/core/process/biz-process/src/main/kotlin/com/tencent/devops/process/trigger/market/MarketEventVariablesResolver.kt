@@ -20,7 +20,7 @@ class MarketEventVariablesResolver {
         fieldMappings: List<EventFieldMappingItem>,
         incomingHeaders: Map<String, String>?,
         incomingQueryParamMap: Map<String, String>?,
-        incomingBody: Map<String, String>?
+        incomingBody: Map<String, Any>?
     ): Map<String, Any> {
         val resolvedVariables = mutableMapOf<String, Any>()
         val document = JsonPathUtil.parse(incomingBody ?: mapOf())
