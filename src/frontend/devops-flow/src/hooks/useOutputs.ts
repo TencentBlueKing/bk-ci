@@ -36,6 +36,7 @@ export function useOutputs(currentTab: ComputedRef<string>) {
     isDebugExec,
     filterQuery,
     isLoading,
+    isDetailLoading,
     pagination,
   } = storeToRefs(store)
 
@@ -282,6 +283,7 @@ export function useOutputs(currentTab: ComputedRef<string>) {
     isDebugExec,
     filterQuery,
     isLoading,
+    isDetailLoading,
     pagination,
 
     // 本地状态
