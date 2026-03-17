@@ -693,6 +693,9 @@
     "templatePipelineRollbackNotAllowedTips": "存量版本，不支持一键回滚",
     "resetBuildNoConfirmMessage": "共 {0} 条流水线的 [构建号] 字段在发布正式后将自动重置为基线值，请关注！若无需重置，请取消 [发布正式版本后立即重置为基线值] 的勾选状态。",
     "yamlFilePathInvalidTip": "以下流水线的 YAML 文件路径为空或格式不正确（需以 .yml 或 .yaml 结尾）：{0}",
+    "versionNameExistTitle": "版本名称已存在",
+    "versionNameExistTips": "版本 {0} 已存在，确定覆盖该版本吗？",
+    "versionNameExistSubTips": "覆盖后不支持查看该版本的修改历史。",
     "propertyUpdate": {
       "constName": "常量名",
       "constAlias": "常量别名",
@@ -709,7 +712,8 @@
       "category": "分组标签",
       "repo": "代码库",
       "relativePath": "代码库相对目录",
-      "glob": "过滤规则"
+      "glob": "过滤规则",
+      "constant": "常量"
     },
     "propertyUpdated": "更新",
     "toInstance": "去实例化",

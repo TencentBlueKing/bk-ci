@@ -131,15 +131,6 @@ object AtomOsMapUtil {
     }
 
     /**
-     * 判断是否有任意编译环境 jobType 的 OS 列表非空。
-     * 用于推导 CLASS_TYPE：有编译环境 → marketBuild，全部无编译环境 → marketBuildLess。
-     */
-    fun hasAnyBuildEnvOs(serviceScopeConfigs: List<ServiceScopeConfig>?): Boolean {
-        if (serviceScopeConfigs.isNullOrEmpty()) return false
-        return serviceScopeConfigs.any { it.getEffectiveOsMap().isNotEmpty() }
-    }
-
-    /**
      * 判断是否有任意编译环境 jobType（不管 OS 是否为空）。
      * 用于 classType 推导时，区分「有编译环境 jobType」和「全部无编译环境」。
      */
@@ -162,7 +153,7 @@ object AtomOsMapUtil {
                 }
                 if (osList.isEmpty()) null else key to osList
             }.toMap()
-        } catch (_: Exception) {
+        } catch (e: Exception) {
             emptyMap()
         }
     }
@@ -170,7 +161,7 @@ object AtomOsMapUtil {
     private fun parseOsListJson(json: String): List<String> {
         return try {
             JsonUtil.to(json, object : TypeReference<List<String>>() {}).filter { it.isNotBlank() }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
             emptyList()
         }
     }

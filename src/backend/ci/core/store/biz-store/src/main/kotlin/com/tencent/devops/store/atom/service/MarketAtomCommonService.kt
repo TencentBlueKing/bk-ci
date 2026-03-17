@@ -32,6 +32,7 @@ import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
+import com.tencent.devops.store.pojo.common.ServiceScopeConfig
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 
 interface MarketAtomCommonService {
@@ -40,7 +41,8 @@ interface MarketAtomCommonService {
         atomRecord: TAtomRecord,
         releaseType: ReleaseTypeEnum,
         osList: ArrayList<String>,
-        version: String
+        version: String,
+        serviceScopeConfigs: List<ServiceScopeConfig>? = null
     ): Result<Boolean>
 
     fun validateReleaseType(

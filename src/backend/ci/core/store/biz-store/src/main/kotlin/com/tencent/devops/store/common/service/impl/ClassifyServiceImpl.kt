@@ -191,7 +191,8 @@ class ClassifyServiceImpl @Autowired constructor(
             flag = classifyService.getDeleteClassifyFlag(
                 classifyId = id,
                 storeType = StoreTypeEnum.valueOf(storeType),
-                serviceScope = classifyRecord.serviceScope?.let { ServiceScopeEnum.valueOf(it) })
+                serviceScope = classifyRecord.serviceScope?.takeIf { it.isNotBlank() }
+                    ?.let { runCatching { ServiceScopeEnum.valueOf(it) }.getOrNull() })
         }
         if (flag) {
             classifyDao.delete(dslContext, id)

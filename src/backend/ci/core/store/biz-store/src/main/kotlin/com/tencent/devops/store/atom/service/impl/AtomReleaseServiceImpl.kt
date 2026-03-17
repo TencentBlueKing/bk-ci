@@ -452,13 +452,28 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
         // 校验前端传的版本号是否正确
         val osList = convertUpdateRequest.os
+        val effectiveOsList = if (osList.isEmpty() && serviceScopeConfigs.isNotEmpty()) {
+            val allOs = linkedSetOf<String>()
+            for (config in serviceScopeConfigs) {
+                config.getEffectiveOsMap().values.forEach { allOs.addAll(it) }
+                for (jobType in config.getEffectiveJobTypes()) {
+                    if (jobType.isBuildEnv() && jobType.name !in config.getEffectiveOsMap()) {
+                        jobType.getDefaultOs()?.let { allOs.addAll(it) }
+                    }
+                }
+            }
+            ArrayList(allOs.toList())
+        } else {
+            osList
+        }
         val newestAtomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)!!
         val validateAtomVersionResult =
             marketAtomCommonService.validateAtomVersion(
                 atomRecord = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) newestAtomRecord else atomRecord,
                 releaseType = releaseType,
-                osList = osList,
-                version = version
+                osList = effectiveOsList,
+                version = version,
+                serviceScopeConfigs = serviceScopeConfigs
             )
         logger.info("validateAtomVersionResult is :$validateAtomVersionResult")
         if (validateAtomVersionResult.isNotOk()) {

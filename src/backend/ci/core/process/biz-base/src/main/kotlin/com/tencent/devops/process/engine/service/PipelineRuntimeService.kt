@@ -642,12 +642,17 @@ class PipelineRuntimeService @Autowired constructor(
             checkPermission = false
         )
         val nodes = result.data ?: return cached
-        val fresh = nodes
-            .filter { it.nodeHashId.isNotBlank() && it.name.isNotBlank() }
-        fresh.forEach { node ->
-            nodeNameCache.put(cacheKey(projectId, node.nodeHashId), node.name)
-        }
-        return cached + fresh.associate { it.nodeHashId to it.name }
+        val freshMap = nodes
+            .filter {
+                it.nodeHashId.isNotBlank() &&
+                    (it.displayName?.takeIf { dn -> dn.isNotBlank() } ?: it.name).isNotBlank()
+            }
+            .associate { node ->
+                val nodeName = node.displayName?.takeIf { it.isNotBlank() } ?: node.name
+                nodeNameCache.put(cacheKey(projectId, node.nodeHashId), nodeName)
+                node.nodeHashId to nodeName
+            }
+        return cached + freshMap
     }
 
     private fun cacheKey(projectId: String, nodeHashId: String) = "$projectId:$nodeHashId"

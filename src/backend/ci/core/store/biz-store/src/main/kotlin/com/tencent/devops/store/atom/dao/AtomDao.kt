@@ -1620,26 +1620,25 @@ class AtomDao : AtomBaseDao() {
         if (serviceScope == null) {
             return null
         }
-        // 标准化服务范围值（统一转换为大写格式）
         val normalizedScope = ServiceScopeUtil.normalize(serviceScope.name) ?: serviceScope.name
-        
-        // 使用 JSON_CONTAINS 进行精确匹配（支持大小写兼容）
-        // 同时匹配大写格式（标准格式）和小写格式（兼容现有小写数据）
-        return DSL.or(
-            // 匹配大写格式（标准格式，如 ["PIPELINE"]）
-            DSL.field(
-                "JSON_CONTAINS({0}, {1})",
-                Boolean::class.java,
-                serviceScopeField,
-                DSL.inline("\"$normalizedScope\"")
-            ).eq(true),
-            // 匹配小写格式（兼容现有小写数据 ["pipeline"]）
-            DSL.field(
-                "JSON_CONTAINS({0}, {1})",
-                Boolean::class.java,
-                serviceScopeField,
-                DSL.inline("\"${normalizedScope.lowercase()}\"")
-            ).eq(true)
+
+        val isValidJson = serviceScopeField.isNotNull
+            .and(serviceScopeField.ne(""))
+
+        // 使用 CONCAT 拼接 JSON 字符串值，避免 DSL.inline 对双引号的转义问题
+        return isValidJson.and(
+            DSL.or(
+                DSL.condition(
+                    "JSON_CONTAINS({0}, CONCAT('\"', {1}, '\"'))",
+                    serviceScopeField,
+                    DSL.inline(normalizedScope)
+                ),
+                DSL.condition(
+                    "JSON_CONTAINS({0}, CONCAT('\"', {1}, '\"'))",
+                    serviceScopeField,
+                    DSL.inline(normalizedScope.lowercase())
+                )
+            )
         )
     }
 }

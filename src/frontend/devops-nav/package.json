@@ -35,10 +35,10 @@
     "@babel/runtime": "^7.15.4",
     "@types/node": "^20.12.12",
     "@types/webpack-env": "^1.18.5",
-    "@typescript-eslint/eslint-plugin": "2.7.0",
-    "@typescript-eslint/parser": "2.7.0",
+    "@typescript-eslint/eslint-plugin": "^1.9.0",
+    "@typescript-eslint/parser": "^1.9.0",
     "@vue/babel-preset-jsx": "^1.2.4",
-    "add-asset-html-webpack-plugin": "^6.0.0",
+    "add-asset-html-webpack-plugin": "^5.0.2",
     "babel-helper-vue-jsx-merge-props": "^2.0.3",
     "babel-loader": "^8.2.2",
     "babel-plugin-transform-vue-jsx": "^4.0.1",
@@ -60,7 +60,7 @@
     "style-loader": "^3.3.1",
     "terser-webpack-plugin": "^5.3.6",
     "ts-loader": "^4.1.0",
-    "typescript": "3.7.5",
+    "typescript": "3.4.5",
     "vue-loader": "~15.10.0",
     "webpack": "~5.76.1"
   },
@@ -68,8 +68,8 @@
     "@blueking/login-modal": "1.0.4",
     "@blueking/platform-config": "^1.0.4",
     "@icon-cool/bk-icon-devops": "^0.1.13",
-    "@tencent/bk-magic-vue": "2.5.10-beta.14",
-    "axios": "1.12.2",
+    "axios": "1.13.6",
+    "bk-magic-vue": "2.5.10-beta.12",
     "bk-permission": "workspace:bk-permission",
     "bluebird": "^3.5.1",
     "js-cookie": "^3.0.5",
@@ -96,8 +96,7 @@
       ],
       "public:master": {
         "outputs": [
-          "{workspaceRoot}/frontend/console",
-          "{workspaceRoot}/frontend/entries/main.json"
+          "{workspaceRoot}/frontend/console"
         ]
       }
     }

@@ -66,7 +66,8 @@ class PipelineTemplateYamlWebhookReqConverter(
         request as PipelineTemplateYamlWebhookReq
         with(request) {
             logger.info(
-                "Start to convert yaml webhook request|$projectId|$templateId|$templateId|$version"
+                "Start to convert yaml webhook request|$projectId|$templateId|$templateId|$version" +
+                        "|$branchName|$isDefaultBranch"
             )
             val transferResult = pipelineTemplateGenerator.transfer(
                 userId = userId,

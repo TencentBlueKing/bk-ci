@@ -31,7 +31,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwTemplateInstanceResourceV3
 import com.tencent.devops.openapi.utils.ApigwParamUtil
-import com.tencent.devops.process.api.template.v2.ServicePipelineTemplateV2Resource
+import com.tencent.devops.process.api.template.ServiceTemplateInstanceResource
 import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
 import com.tencent.devops.process.pojo.template.TemplateInstancePage
@@ -41,9 +41,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(
-    private val client: Client
-) : ApigwTemplateInstanceResourceV3 {
+class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(private val client: Client) :
+    ApigwTemplateInstanceResourceV3 {
 
     override fun createTemplateInstances(
         appCode: String?,
@@ -56,19 +55,17 @@ class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(
         instances: List<TemplateInstanceCreate>
     ): TemplateOperationRet {
         logger.info(
-            "OPENAPI_TEMPLATE_INSTANCE_V3|$userId" +
-                "|create template instances" +
-                "|$projectId|$templateId|$version" +
+            "OPENAPI_TEMPLATE_INSTANCE_V3|$userId|create template instances|$projectId|$templateId|$version" +
                 "|$useTemplateSettings|$instances"
         )
-        return client.get(ServicePipelineTemplateV2Resource::class).createTemplateInstances(
+        return client.get(ServiceTemplateInstanceResource::class).createTemplateInstances(
             userId = userId,
             projectId = projectId,
             templateId = templateId,
             version = version,
             useTemplateSettings = useTemplateSettings,
             instances = instances
-        ).data!!
+        )
     }
 
     override fun updateTemplateInstances(
@@ -82,19 +79,17 @@ class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet {
         logger.info(
-            "OPENAPI_TEMPLATE_INSTANCE_V3|$userId" +
-                "|update template instances" +
-                "|$projectId|$templateId|$version" +
+            "OPENAPI_TEMPLATE_INSTANCE_V3|$userId|update template instances|$projectId|$templateId|$version" +
                 "|$useTemplateSettings|$instances"
         )
-        return client.get(ServicePipelineTemplateV2Resource::class).updateTemplateInstances(
+        return client.get(ServiceTemplateInstanceResource::class).updateTemplate(
             userId = userId,
             projectId = projectId,
             templateId = templateId,
             version = version,
             useTemplateSettings = useTemplateSettings,
             instances = instances
-        ).data!!
+        )
     }
 
     override fun listTemplateInstances(
@@ -110,12 +105,10 @@ class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(
         desc: Boolean?
     ): Result<TemplateInstancePage> {
         logger.info(
-            "OPENAPI_TEMPLATE_INSTANCE_V3|$userId" +
-                "|list template instances" +
-                "|$projectId|$templateId|$page" +
+            "OPENAPI_TEMPLATE_INSTANCE_V3|$userId|list template instances|$projectId|$templateId|$page" +
                 "|$pageSize|$searchKey|$sortType|$desc"
         )
-        return client.get(ServicePipelineTemplateV2Resource::class).listTemplateInstances(
+        return client.get(ServiceTemplateInstanceResource::class).listTemplate(
             userId = userId,
             projectId = projectId,
             templateId = templateId,

@@ -33,7 +33,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrader"

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
@@ -94,6 +95,7 @@ data class AtomUpdateRequest(
      * 获取生效的服务范围列表（字符串形式）。
      * 优先从 serviceScopeConfigs 获取，兼容旧的 serviceScope。
      */
+    @JsonIgnore
     fun getEffectiveServiceScope(): List<String> {
         if (!serviceScopeConfigs.isNullOrEmpty()) {
             return serviceScopeConfigs.map { it.serviceScope.name }

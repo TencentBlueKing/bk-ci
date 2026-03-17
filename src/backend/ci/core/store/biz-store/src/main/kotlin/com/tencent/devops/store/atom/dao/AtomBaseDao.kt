@@ -51,6 +51,47 @@ import org.jooq.impl.DSL
  */
 @Suppress("ALL")
 abstract class AtomBaseDao {
+    /**
+     * 构建 JSON_EXTRACT/JSON_CONTAINS 的路径，统一输出 "$.SCOPE_KEY" 形式。
+     */
+    private fun buildScopeJsonPath(scopeKey: String): String = "\$.${scopeKey}"
+
+    /**
+     * 构建 JSON_CONTAINS 条件（避免 DSL.inline 对双引号的转义问题）。
+     * 直接使用 DSL.condition 构造原始 SQL 条件，确保 JSON_CONTAINS 的参数正确传递。
+     *
+     * @param jsonField JSON 字段
+     * @param value JSON 值（不含外层引号，如 CREATIVE_STREAM）
+     * @param path JSON 路径，如 $.CREATIVE_STREAM；为 null 时不传路径参数
+     * @return JSON_CONTAINS(...) = 1 条件
+     */
+    private fun jsonContainsCondition(
+        jsonField: Field<*>,
+        value: String,
+        path: String? = null
+    ): Condition {
+        return if (path != null) {
+            DSL.condition(
+                "JSON_CONTAINS({0}, CONCAT('\"', {1}, '\"'), {2})",
+                jsonField,
+                DSL.inline(value),
+                DSL.inline(path)
+            )
+        } else {
+            DSL.condition(
+                "JSON_CONTAINS({0}, CONCAT('\"', {1}, '\"'))",
+                jsonField,
+                DSL.inline(value)
+            )
+        }
+    }
+
+    /**
+     * 构建 JSON_VALID 条件
+     */
+    private fun jsonValidCondition(jsonField: Field<*>): Condition {
+        return DSL.condition("JSON_VALID({0})", jsonField)
+    }
 
     /**
      * 设置插件市场可见插件查询条件
@@ -209,7 +250,7 @@ abstract class AtomBaseDao {
                 "COALESCE(JSON_UNQUOTE(JSON_EXTRACT({0}, {1})), {2})",
                 String::class.java,
                 ta.CLASSIFY_ID_MAP,
-                DSL.inline("$.$normalizedScope"),
+                DSL.inline(buildScopeJsonPath(normalizedScope)),
                 ta.CLASSIFY_ID
             )
         }
@@ -249,7 +290,7 @@ abstract class AtomBaseDao {
             "JSON_UNQUOTE(JSON_EXTRACT({0}, {1}))",
             String::class.java,
             ta.CLASSIFY_ID_MAP,
-            DSL.inline("$.$normalizedScope")
+            DSL.inline(buildScopeJsonPath(normalizedScope))
         )
         return jsonExtractField.eq(classifyId).or(ta.CLASSIFY_ID.eq(classifyId))
     }
@@ -299,25 +340,21 @@ abstract class AtomBaseDao {
 
         val jobTypeMatchCondition = if (normalizedScope == null || normalizedScope == ServiceScopeEnum.PIPELINE.name) {
             // PIPELINE scope: JOB_TYPE 是纯字符串，直接等值匹配；或从 JOB_TYPE_MAP 匹配
-            val mapJsonContains = DSL.field(
-                "JSON_CONTAINS({0}, {1}, {2})",
-                Boolean::class.java,
-                ta.JOB_TYPE_MAP,
-                DSL.inline("\"$jobType\""),
-                DSL.inline("\$.${ServiceScopeEnum.PIPELINE.name}")
-            ).eq(true)
-            val isMapValid = DSL.field("JSON_VALID({0})", Boolean::class.java, ta.JOB_TYPE_MAP).eq(true)
+            val isMapValid = jsonValidCondition(ta.JOB_TYPE_MAP)
+            val mapJsonContains = jsonContainsCondition(
+                jsonField = ta.JOB_TYPE_MAP,
+                value = jobType,
+                path = buildScopeJsonPath(ServiceScopeEnum.PIPELINE.name)
+            )
             ta.JOB_TYPE.eq(jobType).or(isMapValid.and(mapJsonContains))
         } else {
             // 非 PIPELINE scope: 仅从 JOB_TYPE_MAP 中按 scope 查找（JOB_TYPE 只存 PIPELINE 纯字符串，无需回退）
-            val isMapValid = DSL.field("JSON_VALID({0})", Boolean::class.java, ta.JOB_TYPE_MAP).eq(true)
-            val mapJsonContains = DSL.field(
-                "JSON_CONTAINS({0}, {1}, {2})",
-                Boolean::class.java,
-                ta.JOB_TYPE_MAP,
-                DSL.inline("\"$jobType\""),
-                DSL.inline("$.$normalizedScope")
-            ).eq(true)
+            val isMapValid = jsonValidCondition(ta.JOB_TYPE_MAP)
+            val mapJsonContains = jsonContainsCondition(
+                jsonField = ta.JOB_TYPE_MAP,
+                value = jobType,
+                path = buildScopeJsonPath(normalizedScope)
+            )
             isMapValid.and(mapJsonContains)
         }
 
