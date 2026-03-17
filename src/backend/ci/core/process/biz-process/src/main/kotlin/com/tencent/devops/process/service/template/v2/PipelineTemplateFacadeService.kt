@@ -74,6 +74,7 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoV2
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateMarketCreateReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateMarketRelatedInfo
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelated
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateReleaseCreateReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingCommonCondition
@@ -133,6 +134,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.PIPELINE_TEMPLATE_CREATE_CONTENT
     )
+    // 自定义创建
     fun create(
         userId: String,
         projectId: String,
@@ -143,6 +145,33 @@ class PipelineTemplateFacadeService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             request = request
+        ).also {
+            ActionAuditContext.current()
+                .setInstanceId(it.templateId)
+                .setInstanceName(it.templateName)
+        }
+    }
+
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_TEMPLATE_CREATE,
+        instance = AuditInstanceRecord(resourceType = ResourceTypeId.PIPELINE_TEMPLATE),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_TEMPLATE_CREATE_CONTENT
+    )
+    // 创建正式版本
+    fun createRelease(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        request: PipelineTemplateReleaseCreateReq
+    ): DeployTemplateResult {
+        logger.info("$userId create release template in project $projectId ,body is $request,templateId is $templateId")
+        return pipelineTemplateVersionManager.deployTemplate(
+            userId = userId,
+            projectId = projectId,
+            request = request,
+            templateId = templateId
         ).also {
             ActionAuditContext.current()
                 .setInstanceId(it.templateId)
@@ -1686,11 +1715,22 @@ class PipelineTemplateFacadeService @Autowired constructor(
         // 3. 找不到模板资源，记录日志并返回null
         logger.info(
             "template resource not found|$projectId|$pipelineId|$pipelineVersion|" +
-                    "${pipelineTemplateRelated.version}"
+                "${pipelineTemplateRelated.version}"
         )
         return null
     }
 
+    fun existsVersionName(
+        projectId: String,
+        templateId: String,
+        versionName: String
+    ): Boolean {
+        return pipelineTemplateResourceService.existsVersionName(
+            projectId = projectId,
+            templateId = templateId,
+            versionName = versionName
+        )
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineTemplateFacadeService::class.java)

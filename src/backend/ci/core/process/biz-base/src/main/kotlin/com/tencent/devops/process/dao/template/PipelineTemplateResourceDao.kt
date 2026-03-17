@@ -199,6 +199,25 @@ class PipelineTemplateResourceDao {
     }
 
     /**
+     * 检查正式版本中是否存在指定的版本名称
+     */
+    fun existsVersionName(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String,
+        versionName: String
+    ): Boolean {
+        return with(TPipelineTemplateResourceVersion.T_PIPELINE_TEMPLATE_RESOURCE_VERSION) {
+            dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TEMPLATE_ID.eq(templateId))
+                .and(VERSION_NAME.eq(versionName))
+                .and(STATUS.eq(VersionStatus.RELEASED.name))
+                .fetchOne(0, Int::class.java)!! > 0
+        }
+    }
+
+    /**
      * 统计模板版本数量
      */
     fun countVersions(
@@ -251,7 +270,8 @@ class PipelineTemplateResourceDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(TEMPLATE_ID.eq(templateId))
                 .and(SRC_TEMPLATE_VERSION.eq(srcTemplateVersion))
-                .fetchOne()?.convert()
+                .orderBy(CREATED_TIME.desc())
+                .fetchAny()?.convert()
         }
     }
 
