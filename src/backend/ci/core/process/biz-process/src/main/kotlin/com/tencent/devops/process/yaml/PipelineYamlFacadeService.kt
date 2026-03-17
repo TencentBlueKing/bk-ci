@@ -593,6 +593,6 @@ class PipelineYamlFacadeService @Autowired constructor(
         filePath: String
     ): String {
         val (domain, repoName) = GitUtils.getDomainAndRepoName(repoUrl)
-        return "$domain/$repoName/tree/$branch/$filePath"
+        return "https://$domain/$repoName/tree/$branch/$filePath"
     }
 }
