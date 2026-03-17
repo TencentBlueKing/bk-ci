@@ -170,5 +170,7 @@ data class WorkspaceRecordWithWindows(
     @get:Schema(title = "resourceId")
     val resourceId: String?,
     @get:Schema(title = "enableRecord")
-    val enableRecord: Boolean? = false
+    val enableRecord: Boolean? = false,
+    @get:Schema(title = "是否开启AI功能")
+    val coffeeAi: Boolean? = false
 ) : WorkspaceRecordInf

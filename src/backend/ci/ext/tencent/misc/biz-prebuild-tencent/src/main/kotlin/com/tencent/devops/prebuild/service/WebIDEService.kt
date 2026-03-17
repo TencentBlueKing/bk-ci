@@ -95,8 +95,8 @@ class WebIDEService @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
 
-    fun getUserProject(userId: String, accessToken: String): ProjectVO? {
-        val projectInfo = client.get(ServiceTxProjectResource::class).getPreUserProject(userId, accessToken)
+    fun getUserProject(userId: String): ProjectVO? {
+        val projectInfo = client.get(ServiceTxProjectResource::class).getPreUserProject(userId)
         return projectInfo!!.data
     }
 

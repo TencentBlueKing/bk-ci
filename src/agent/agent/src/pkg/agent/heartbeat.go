@@ -28,10 +28,12 @@
 package agent
 
 import (
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/mcp"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
@@ -86,22 +88,31 @@ func agentHeartbeat(heartbeatResponse *api.AgentHeartbeatResponse) {
 
 	// agent环境变量
 	if heartbeatResponse.Envs != nil {
-		if config.GApiEnvVars.Size() <= 0 {
-			config.GApiEnvVars.SetEnvs(heartbeatResponse.Envs)
+		if envs.GApiEnvVars.Size() <= 0 {
+			envs.GApiEnvVars.SetEnvs(heartbeatResponse.Envs)
 		} else {
-			flag := false
-			config.GApiEnvVars.RangeDo(func(k, v string) bool {
-				if heartbeatResponse.Envs[k] != v {
-					flag = true
-					return false
-				}
-				return true
-			})
-			if flag {
-				config.GApiEnvVars.SetEnvs(heartbeatResponse.Envs)
+			changed := false
+			// 检查数量是否变化（新增或删除了 key）
+			if envs.GApiEnvVars.Size() != len(heartbeatResponse.Envs) {
+				changed = true
+			} else {
+				// 数量相同时，检查旧值在新 map 中是否有变化
+				envs.GApiEnvVars.RangeDo(func(k, v string) bool {
+					if heartbeatResponse.Envs[k] != v {
+						changed = true
+						return false
+					}
+					return true
+				})
+			}
+			if changed {
+				envs.GApiEnvVars.SetEnvs(heartbeatResponse.Envs)
 			}
 		}
 	}
+
+	// 根据环境变量动态启停 MCP Server
+	mcp.SyncState()
 
 	/*
 	   忽略一些在Windows机器上VPN代理软件所产生的虚拟网卡（有Mac地址）的IP，一般这类IP

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.project.api.service
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
@@ -162,9 +161,6 @@ interface ServiceProjectResource {
     @Path("/{projectCode}/users/{userId}/verify")
     @Operation(summary = " 校验用户是否项目成员")
     fun verifyUserProjectPermission(
-        @Parameter(description = "accessToken", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String? = null,
         @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
@@ -199,10 +195,7 @@ interface ServiceProjectResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @Parameter(description = "项目信息", required = true)
-        projectCreateInfo: ProjectCreateInfo,
-        @Parameter(description = "accessToken", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String? = null
+        projectCreateInfo: ProjectCreateInfo
     ): Result<Boolean>
 
     @POST
@@ -235,10 +228,7 @@ interface ServiceProjectResource {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "项目信息", required = true)
-        projectUpdateInfo: ProjectUpdateInfo,
-        @Parameter(description = "accessToken", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String? = null
+        projectUpdateInfo: ProjectUpdateInfo
     ): Result<Boolean>
 
     @PUT

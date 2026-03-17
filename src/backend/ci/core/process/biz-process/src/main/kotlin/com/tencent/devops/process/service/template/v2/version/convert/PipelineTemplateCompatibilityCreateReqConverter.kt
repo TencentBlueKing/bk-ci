@@ -121,7 +121,6 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 templateId = templateId,
-                v1VersionName = v1VersionName,
                 customVersionName = v1VersionName,
                 versionAction = PipelineVersionAction.CREATE_RELEASE,
                 pipelineTemplateInfo = pipelineTemplateInfo,

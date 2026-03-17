@@ -1,4 +1,4 @@
-﻿
+
 
 # Process 模块构建引擎 Control 层详细分析
 
@@ -584,15 +584,217 @@ private fun PipelineBuildAtomTaskEvent.execute() {
     
     // 4. 判断任务类型
     if (taskAtomService.runByVmTask(buildTask)) {
-        // 构建机上执行的任务
-        handleVmTask(buildTask)
+        // 构建机上执行的任务（taskAtom 为空）
+        // 引擎不执行插件逻辑，仅在 terminate/end 时兜底改状态
     } else {
-        // 后端执行的任务
-        val atomResponse = taskAtomService.execute(buildTask)
-        handleAtomResponse(buildTask, atomResponse)
+        // 引擎内执行的任务（taskAtom 非空）
+        val buildStatus = runTask(userId, actionType, buildTask)
+        // 运行中则轮询，结束则 finishTask
     }
 }
 ```
+
+**分流判定**:
+
+```kotlin
+// TaskAtomService.kt
+fun runByVmTask(buildTask: PipelineBuildTask): Boolean {
+    return buildTask.taskAtom.isBlank()
+}
+```
+
+- `taskAtom` **非空** → 引擎内直接执行（`taskAtomService.start/tryFinish`）
+- `taskAtom` **为空** → Worker 远端执行，引擎仅做状态兜底
+
+#### 3.4.1 Task 的 5 种角色
+
+一个 Job 内的 task 按执行顺序排列如下：
+
+```
+一个 Job 的 task 组成：
+┌──────────────────────────────────────────────────────────────┐
+│  startVM-{seq}    环境启动任务（引擎执行）                      │
+│  ──────────────────────────────────────────────────────────  │
+│  插件任务1         Worker 执行（taskAtom 为空）                │
+│  插件任务2         Worker 执行（taskAtom 为空）                │
+│  插件任务3         引擎内执行（taskAtom 非空，如人工审核）        │
+│  插件任务4         Worker 执行（taskAtom 为空）                │
+│  ──────────────────────────────────────────────────────────  │
+│  stopVM-{seq}     环境关闭任务（引擎执行）                      │
+│  end-{seq}        结束标记任务（Worker 领到它即 Job 结束）       │
+└──────────────────────────────────────────────────────────────┘
+```
+
+| 类型 | taskAtom | taskId 前缀 | 谁执行 | 代表实现 |
+|---|---|---|---|---|
+| **环境启动** | 非空 | `startVM-` | 引擎 | `DispatchVMStartupTaskAtom` / `DispatchBuildLessDockerStartupTaskAtom` |
+| **环境关闭** | 非空 | `stopVM-` | 引擎 | `DispatchVMShutdownTaskAtom` / `DispatchBuildLessDockerShutdownTaskAtom` |
+| **结束标记** | — | `end-` | Worker 领到后返回 END | 不执行逻辑，仅做信号 |
+| **内置业务插件** | 非空 | 普通 ID | 引擎 | `ManualReviewTaskAtom` / `QualityGateInTaskAtom` / `SubPipelineCallAtom` 等 |
+| **Worker 执行插件** | **为空** | 普通 ID | Worker | `MarketBuildAtomElement` / `MarketBuildLessAtomElement` |
+
+**taskId 前缀由 `VMUtils` 生成**（`process/api-process/.../VMUtils.kt`）：
+
+- `genStartVMTaskId(seq)` → `startVM-{seq}`
+- `genStopVMTaskId(seq)` → `stopVM-{seq}`
+- `genEndPointTaskId(seq)` → `end-{seq}`
+- `isVMTask(taskId)` → 判断是否为环境控制类任务
+
+**`EnvControlTaskType` 枚举**（`common-pipeline/.../EnvControlTaskType.kt`）：
+
+| 值 | 含义 |
+|---|---|
+| `VM` | 构建机环境（对应 `VMBuildContainer`） |
+| `NORMAL` | 无编译环境（对应 `NormalContainer`） |
+
+**TaskControl 分流全景**:
+
+```
+PipelineBuildAtomTaskEvent 进入 TaskControl.handle()
+    │
+    ├── taskAtom 非空？(runByVmTask=false)
+    │     └── 引擎内直接执行
+    │         ├── 环境控制类 (startVM / stopVM)
+    │         │     发送调度事件到 Dispatch/BuildLess
+    │         ├── ManualReview / QualityGate
+    │         │     暂停等待审核或质量检查
+    │         └── SubPipelineCall
+    │               触发子流水线
+    │
+    └── taskAtom 为空？(runByVmTask=true)
+          └── 引擎不执行插件逻辑
+              仅在 terminate/end 时兜底改状态
+              实际由 Worker 通过 claimTask 领取执行
+```
+
+#### 3.4.2 Worker 执行插件的生命周期（事件驱动）
+
+对于 `taskAtom` 为空的 Worker 执行插件，引擎是**事件驱动**的，
+不做轮询等待。整个过程分 4 步：
+
+```
+       引擎                                   Worker
+        │                                       │
+   ┌────┴────┐                                   │
+   │ Step 1  │  选出下一任务                       │
+   │ 置为     │  QUEUE_CACHE                      │
+   │ 引擎停住 │                                   │
+   └────┬────┘                                   │
+        │                                   ┌────┴────┐
+        │     ← ─ ─ claimTask 轮询 ─ ─ →    │ Step 2  │
+        │       返回 BuildTaskStatus.DO      │ 领取任务 │
+        │                                   │ 改RUNNING│
+        │                                   └────┬────┘
+        │                                        │
+        │                                   ┌────┴────┐
+        │                                   │ Step 3  │
+        │                                   │ 执行插件 │
+        │                                   └────┬────┘
+        │                                        │
+   ┌────┴────┐                                   │
+   │ Step 4  │ ← ─ completeTask 回调 ─ ─ ─ ─ ─ ─│
+   │ 被唤醒   │  改 SUCCEED/FAILED                │
+   │ 编排下一 │  发 PipelineBuildContainerEvent   │
+   │ 个任务   │  引擎重新运转                      │
+   └─────────┘                                   │
+```
+
+**Step 1 — 引擎：选出任务，改状态，停住**
+
+`StartActionTaskContainerCmd.findNeedToRunTask()` 选出下一个
+待执行任务后，将其状态改为 `QUEUE_CACHE`：
+
+```kotlin
+// StartActionTaskContainerCmd.kt
+pipelineTaskService.updateTaskStatus(
+    toDoTask, userId = starter,
+    buildStatus = BuildStatus.QUEUE_CACHE
+)
+containerContext.buildStatus = BuildStatus.RUNNING
+containerContext.event.actionType = ActionType.START
+```
+
+随后事件到达 `TaskControl`，发现 `taskAtom` 为空
+（`runByVmTask=true`），**直接 return，引擎停住**。
+
+**Step 2 — Worker：轮询领取任务**
+
+Worker 不断调用 `BuildJobResource.claimTask()`
+→ `EngineVMBuildService.buildClaimTask()`：
+
+```kotlin
+// EngineVMBuildService.kt
+val allTasks = pipelineTaskService.listContainerBuildTasks(
+    projectId, buildId, vmSeqId,
+    buildStatusSet = setOf(
+        BuildStatus.QUEUE_CACHE, BuildStatus.RUNNING
+    )
+)
+val task = allTasks.firstOrNull()
+    ?: return BuildTask(buildId, vmSeqId,
+        BuildTaskStatus.WAIT, ...)
+return claim(task = task, ...)
+```
+
+领取时改为 `RUNNING`，返回 `BuildTaskStatus.DO` 给 Worker：
+
+```kotlin
+// PipelineRuntimeService.kt
+fun claimBuildTask(task: PipelineBuildTask, userId: String) {
+    pipelineTaskService.updateTaskStatus(
+        task = task, userId = userId,
+        buildStatus = BuildStatus.RUNNING
+    )
+}
+```
+
+**Step 3 — Worker：执行插件**
+
+Worker 在构建机或 BuildLess 容器里执行具体插件逻辑
+（脚本、市场插件等）。
+
+**Step 4 — Worker 回调，引擎被唤醒**
+
+Worker 完成后调用 `BuildJobResource.completeTask()`
+→ `EngineVMBuildService.buildCompleteTask()`
+→ `PipelineRuntimeService.completeClaimBuildTask()`：
+
+```kotlin
+// PipelineRuntimeService.kt
+fun completeClaimBuildTask(completeTask: CompleteTask, ...){
+    pipelineTaskService.updateTaskStatus(
+        task = buildTask,
+        buildStatus = completeTask.buildStatus // SUCCEED/FAILED
+    )
+    pipelineEventDispatcher.dispatch(
+        PipelineBuildContainerEvent(      // ← 唤醒引擎
+            source = "completeClaimBuildTask",
+            actionType = if (endBuild)
+                ActionType.END else ActionType.REFRESH,
+            ...
+        )
+    )
+}
+```
+
+`PipelineBuildContainerEvent` 触发
+`ContainerControl` → `StartActionTaskContainerCmd`，
+引擎从 Step 1 重新开始选下一个任务，如此往复，
+直到遇到 `end-{seq}` 任务，Job 结束。
+
+**状态流转总结**:
+
+```
+QUEUE_CACHE ──(Worker claimTask)──→ RUNNING
+    ──(Worker completeTask)──→ SUCCEED / FAILED
+    ──(completeClaimBuildTask 发 ContainerEvent)──→ 引擎唤醒
+```
+
+**核心要点**:
+
+- 引擎是**事件驱动**的，改完状态就停，等回调唤醒
+- Worker 是**轮询驱动**的，不断 `claimTask` 拉任务
+- 两者通过**任务状态**和 `PipelineBuildContainerEvent` 衔接
 
 ### 3.5 BuildEndControl - 构建结束控制
 

@@ -766,15 +766,20 @@ class LogServiceLuceneImpl constructor(
             return emptyList()
         }
 
+        // 在map循环中收集需要保存的subTag，避免额外的filter循环
+        val tagSubTagsMap = mutableMapOf<String, MutableSet<String>>()
+
         var startLineNum: Long = lineNum
-        return logMessages.map {
+        val result = logMessages.map {
+            // 收集非空的subTag
+            if (!it.subTag.isNullOrBlank()) {
+                tagSubTagsMap.getOrPut(it.tag) { mutableSetOf() }.add(it.subTag!!)
+            }
+
             val timestamp = if (it.timestamp == 0L) {
                 System.currentTimeMillis()
             } else {
                 it.timestamp
-            }
-            if (!it.subTag.isNullOrBlank()) {
-                logTagService.saveSubTag(buildId, it.tag, it.subTag!!)
             }
             LogMessageWithLineNo(
                 tag = it.tag,
@@ -789,6 +794,17 @@ class LogServiceLuceneImpl constructor(
                 stepId = it.stepId
             )
         }
+
+        // 循环后统一保存subTag到缓存
+        if (tagSubTagsMap.isNotEmpty()) {
+            tagSubTagsMap.forEach { (tag, subTags) ->
+                subTags.forEach { subTag ->
+                    logTagService.saveSubTag(buildId, tag, subTag)
+                }
+            }
+        }
+
+        return result
     }
 
     private fun prepareIndex(buildId: String): Boolean {

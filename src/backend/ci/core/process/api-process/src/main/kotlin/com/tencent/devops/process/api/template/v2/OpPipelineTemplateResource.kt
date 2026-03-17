@@ -32,6 +32,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
+import com.tencent.devops.process.pojo.template.TemplateMigrateByPercentageRequest
+import com.tencent.devops.process.pojo.template.TemplateMigrateByPercentageResult
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -55,6 +57,14 @@ interface OpPipelineTemplateResource {
     fun migrateTemplatesByCondition(
         projectConditionDTO: ProjectConditionDTO
     ): Result<Boolean>
+
+    @Operation(summary = "迁移模板-按百分比灰度（支持 dry-run 预览和 execute 执行）")
+    @POST
+    @Path("/migrate/percentage")
+    fun migrateTemplatesByPercentage(
+        @Parameter(description = "按比例灰度迁移请求入参", required = true)
+        request: TemplateMigrateByPercentageRequest
+    ): Result<TemplateMigrateByPercentageResult>
 
 
     @Operation(summary = "迁移模板-根据项目ID")

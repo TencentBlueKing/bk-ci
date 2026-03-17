@@ -39,12 +39,12 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 )
 
 // UninstallAgent 卸载

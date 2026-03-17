@@ -33,6 +33,7 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.auth.api.service.ServiceMonitorSpaceResource
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLLimit
@@ -78,7 +79,6 @@ import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
-import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.OrganizationGroup
 import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
@@ -88,10 +88,10 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.Workspace
-import com.tencent.devops.remotedev.pojo.WorkspaceGroupByOrg
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceEnv
+import com.tencent.devops.remotedev.pojo.WorkspaceGroupByOrg
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
@@ -128,7 +128,6 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
-import kotlin.math.max
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -137,6 +136,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import kotlin.math.max
 
 @Service
 @Suppress("ALL")
@@ -1397,7 +1397,7 @@ class WorkspaceService @Autowired constructor(
         * */
         val all = workspaceDao.fetchAllProject4Public(dslContext)
         val userAll = kotlin.runCatching {
-            client.get(ServiceTxProjectResource::class).list(userId, null).data
+            client.get(ServiceTxProjectResource::class).list(userId).data
         }.onFailure {
             logger.warn("error in ServiceTxProjectResource::list|$userId", it)
         }.getOrNull()?.map { it.englishName }?.toSet() ?: kotlin.run {

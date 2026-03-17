@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.dao
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.db.utils.fetchCountFix
 import com.tencent.devops.common.db.utils.skipCheck
+import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.model.remotedev.tables.TRemotedevExpertSupport
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceType
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceZone
@@ -115,6 +116,7 @@ class WorkspaceJoinDao {
         owner: String? = null,
         workspaceName: String? = null,
         notStatus: List<WorkspaceStatus>? = null,
+        coffeeAi: Boolean? = null,
         checkField: List<Field<*>>? = null
     ): List<WorkspaceRecordWithWindows> {
         with(TWorkspace.T_WORKSPACE) {
@@ -133,7 +135,8 @@ class WorkspaceJoinDao {
                     owner = owner?.let { listOf(owner) },
                     workspaceName = workspaceName?.let { listOf(workspaceName) },
                     notStatus = notStatus,
-                    workspaceSystemType = listOf(WorkspaceSystemType.WINDOWS_GPU)
+                    workspaceSystemType = listOf(WorkspaceSystemType.WINDOWS_GPU),
+                    coffeeAi = coffeeAi
                 ),
                 checkField = checkField ?: windowsFullFields
             ).orderBy(CREATE_TIME.desc(), ID.desc())
@@ -253,6 +256,10 @@ class WorkspaceJoinDao {
                 queryType.ownerType().let { ownerType ->
                     conditions.add(OWNER_TYPE.`in`(ownerType.map { it.name }))
                 }
+            }
+
+            search.coffeeAi?.let { coffeeAi ->
+                conditions.add(COFFEE_AI.eq(ByteUtils.bool2Byte(coffeeAi)))
             }
         }
 

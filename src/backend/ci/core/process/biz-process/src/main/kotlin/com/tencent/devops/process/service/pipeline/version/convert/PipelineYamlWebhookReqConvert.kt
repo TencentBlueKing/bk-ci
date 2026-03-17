@@ -70,7 +70,8 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
             }
             logger.info(
                 "Start to convert yaml webhook request|$projectId|$pipelineId|" +
-                        "$branchName|$yamlFileName|yaml=$yaml"
+                        "${yamlFileInfo?.repoHashId}|${yamlFileInfo?.filePath}|" +
+                        "$branchName|$yamlFileName|$isDefaultBranch|$pullRequestUrl"
             )
             val (modelAndSetting, yamlWithVersion) = pipelineVersionGenerator.yaml2model(
                 userId = userId,

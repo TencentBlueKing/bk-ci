@@ -1,7 +1,9 @@
+//go:build !windows
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -23,36 +25,14 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.project.resources
+package envs
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.op.OpProjectTagResource
-import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
-import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
-import com.tencent.devops.project.service.ProjectTagService
-import org.springframework.beans.factory.annotation.Autowired
+func InitEnvPolling() {
 
-@RestResource
-class OpProjectTagResourceImpl @Autowired constructor(
-    val projectTagService: ProjectTagService
-) : OpProjectTagResource {
-    override fun setTagByProject(projectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
-        return projectTagService.updateTagByProject(projectTagUpdateDTO)
-    }
+}
 
-    override fun setTagByOrg(projectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
-        return projectTagService.updateTagByOrg(projectTagUpdateDTO)
-    }
-
-    override fun setTagByChannel(projectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
-        return projectTagService.updateTagByChannel(projectTagUpdateDTO)
-    }
-
-    override fun setExtSystemTagByProject(extSystemTagDTO: ProjectExtSystemTagDTO): Result<Boolean> {
-        return projectTagService.updateExtSystemRouterTag(extSystemTagDTO)
-    }
+func FetchEnvFromPolling() map[string]string {
+	return map[string]string{}
 }

@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )

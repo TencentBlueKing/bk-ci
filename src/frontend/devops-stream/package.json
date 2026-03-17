@@ -48,7 +48,7 @@
     "@tencent/bk-magic-vue": "2.5.10-beta.14",
     "@vue/babel-preset-jsx": "^1.2.4",
     "acorn": "^6.0.5",
-    "axios": "1.12.2",
+    "axios": "1.13.6",
     "babel-loader": "^8.0.2",
     "bkui-pipeline": "workspace:bk-pipeline",
     "codemirror": "^5.61.0",
