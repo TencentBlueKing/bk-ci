@@ -157,6 +157,19 @@ BEGIN
         ADD COLUMN `VALIDATION_DISCREPANCIES` mediumtext COMMENT '验证差异详情(JSON)';
     END IF;
 
+    -- 为 T_TEMPLATE_INSTANCE_ITEM 表添加流水线版本字段
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_TEMPLATE_INSTANCE_ITEM'
+                    AND COLUMN_NAME = 'BEFORE_PIPELINE_VERSION') THEN
+        ALTER TABLE `T_TEMPLATE_INSTANCE_ITEM`
+            ADD COLUMN `BEFORE_PIPELINE_VERSION` int(11) DEFAULT NULL COMMENT '更新前流水线版本',
+            ADD COLUMN `AFTER_PIPELINE_VERSION` int(11) DEFAULT NULL COMMENT '更新后流水线版本',
+            ADD COLUMN `BEFORE_TEMPLATE_VERSION` bigint(20) DEFAULT NULL COMMENT '更新前模板版本',
+            ADD COLUMN `AFTER_TEMPLATE_VERSION` bigint(20) DEFAULT NULL COMMENT '更新后模板版本';
+    END IF;
+
 
     IF NOT EXISTS(SELECT 1
               FROM information_schema.COLUMNS

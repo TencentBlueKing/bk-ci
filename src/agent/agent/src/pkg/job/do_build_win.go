@@ -42,12 +42,13 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
 	ucommand "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/process"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
-	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 )
 
 func doBuild(
@@ -61,7 +62,7 @@ func doBuild(
 	goEnv["DEVOPS_AGENT_WIN_SERVICE"] = config.GAgentEnv.WinTask
 	var err error
 	var exitGroup process.ProcessExitGroup
-	enableExitGroup := config.FetchEnvAndCheck(constant.DevopsAgentEnableExitGroup, "true")
+	enableExitGroup := envs.FetchEnvAndCheck(constant.DevopsAgentEnableExitGroup, "true")
 	if enableExitGroup {
 		logs.Info("DEVOPS_AGENT_ENABLE_EXIT_GROUP enable")
 		exitGroup, err = process.NewProcessExitGroup()
@@ -154,7 +155,7 @@ func doBuild(
 func StartProcessCmd(command string, args []string, workDir string, envMap map[string]string, runUser string) (*exec.Cmd, error) {
 	cmd := exec.Command(command)
 
-	if config.FetchEnvAndCheck(constant.DevopsAgentEnableNewConsole, "true") {
+	if envs.FetchEnvAndCheck(constant.DevopsAgentEnableNewConsole, "true") {
 		cmd.SysProcAttr = &syscall.SysProcAttr{
 			CreationFlags:    constant.WinCommandNewConsole,
 			NoInheritHandles: true,
@@ -170,7 +171,7 @@ func StartProcessCmd(command string, args []string, workDir string, envMap map[s
 		cmd.Dir = workDir
 	}
 
-	cmd.Env = os.Environ()
+	cmd.Env = envs.Envs()
 	if envMap != nil {
 		for k, v := range envMap {
 			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
