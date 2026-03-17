@@ -56,6 +56,8 @@ src/agent/agent/
 │   └── third_components/       # 第三方组件管理(JDK/Worker)
 ├── internal/
 │   └── third_party/dep/fs/     # 文件系统操作(跨设备rename)
+├── other-utils/
+│   └── process-tree/           # 独立诊断工具 `agent-util`：Windows `tree` + Unix `shell-check`，含 `build.sh`
 ├── Makefile                    # 多平台构建
 ├── build_windows.ps1           # Windows构建脚本
 ├── go.mod                      # Go 1.19, 即将升级到 1.22
@@ -104,7 +106,7 @@ agent.Run()
 
 **鉴权Header**: `X-DEVOPS-PROJECT-ID`, `X-DEVOPS-AGENT-ID`, `X-DEVOPS-AGENT-SECRET-KEY`
 
-**重要**: HTTP客户端有超时重试机制，连续超时达阈值会触发Agent退出重启。
+**重要**: HTTP客户端有超时重试机制，连续超时达阈值会触发Agent退出重启；代理请求支持 `HTTP_PROXY` / `HTTPS_PROXY` / `NO_PROXY`，并会优先读取后台下发后持久化到 `.agent.properties` 的代理配置。
 
 ### 构建任务执行 (`pkg/job/`)
 
@@ -227,6 +229,8 @@ AgentUpgrade(upgradeItem, hasBuild)
 //go:build out                // 外部版本
 ```
 
+**补充说明**: `other-utils/process-tree/` 目录下的工具对外统一命名为 `agent-util`，采用同目录多入口模式：`main.go` 仅在 Windows 编译，承载 `tree` 子命令；`main_unix.go` + `shell_check_unix.go` 在 Linux/macOS 编译，承载 `shell-check` 子命令；`build.sh` 负责一键构建 `linux/windows` 两个平台产物。
+
 ### 关键平台差异
 
 | 功能 | Unix | Windows |
@@ -238,6 +242,7 @@ AgentUpgrade(upgradeItem, hasBuild)
 | **Docker** | 完整支持 | 不支持 |
 | **文件权限** | `os.Chmod` | 空操作 |
 | **进程替换** | 文件替换 + 进程信号 | 等待退出 + 文件替换 |
+| **硬件信息采集** | Linux/Windows 可走通用 `ghw` 采集；macOS 需用 `_darwin.go` 单独兜底，当前跳过 GPU 采集以规避 `ghw` 未实现报错 | GPU 标签主要用于指标补充，不应影响 Agent 启动 |
 
 ### 内外版差异 (`constant/`)
 

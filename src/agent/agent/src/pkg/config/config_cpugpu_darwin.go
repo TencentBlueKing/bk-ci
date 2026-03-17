@@ -1,4 +1,4 @@
-//go:build !loong64 && !darwin
+//go:build darwin
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -39,11 +39,12 @@ import (
 )
 
 // GetCpuAndGpuInfo 获取 CPU 和 GPU 型号信息
+// ghw 在 darwin 平台未实现 GPU 采集，这里保留 CPU 信息并跳过 GPU，避免启动时打印误导性的错误堆栈。
 func GetCpuAndGpuInfo() (string, string) {
 	cpu, err := ghw.CPU()
 	cpuInfoBuf := bytes.Buffer{}
 	if err != nil {
-		logs.WithError(err).Error("get cpu info error")
+		logs.WithError(err).Warn("get cpu info error")
 	} else {
 		for _, c := range cpu.Processors {
 			cpuInfoBuf.WriteString(c.Model)
@@ -52,17 +53,7 @@ func GetCpuAndGpuInfo() (string, string) {
 	}
 	cpuInfo := strings.TrimSuffix(cpuInfoBuf.String(), ";")
 
-	gpuInfoBuf := bytes.Buffer{}
-	gpu, err := ghw.GPU()
-	if err != nil {
-		logs.WithError(err).Error("get gpu info error")
-	} else {
-		for _, card := range gpu.GraphicsCards {
-			gpuInfoBuf.WriteString(card.DeviceInfo.Product.Name)
-			gpuInfoBuf.WriteString(";")
-		}
-	}
-	gpuInfo := strings.TrimSuffix(gpuInfoBuf.String(), ";")
-	logs.Infof("cpu: %s, gpu: %s", cpuInfo, gpuInfo)
-	return cpuInfo, gpuInfo
+	logs.Info("skip gpu info detection on darwin: ghw gpu not implemented")
+	logs.Infof("cpu: %s, gpu: %s", cpuInfo, "")
+	return cpuInfo, ""
 }
