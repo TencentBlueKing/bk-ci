@@ -753,9 +753,6 @@ object TemplateInstanceUtil {
         }
     }
 
-    private val logger = LoggerFactory.getLogger(TemplateInstanceUtil::class.java)
-    private val VERSION_PARAMS = listOf(MAJORVERSION, MINORVERSION, FIXVERSION)
-
     /**
      * 校验流水线"其他变量"（required=false）在实例化时是否被异常覆盖。
      *
@@ -788,7 +785,7 @@ object TemplateInstanceUtil {
         val beforePipelineParamMap = beforePipelineParams.associateBy { it.id }
 
         val overriddenParamIds = beforeTemplateParamMap.values
-            .filter { !it.required }
+            .filter { !it.required && it.id !in VERSION_PARAMS }
             .mapNotNull { beforeTemplateParam ->
                 val paramId = beforeTemplateParam.id
                 val currentTemplateParam = currentTemplateParamMap[paramId] ?: return@mapNotNull null
@@ -813,4 +810,7 @@ object TemplateInstanceUtil {
             )
         }
     }
+
+    private val logger = LoggerFactory.getLogger(TemplateInstanceUtil::class.java)
+    private val VERSION_PARAMS = listOf(MAJORVERSION, MINORVERSION, FIXVERSION)
 }
