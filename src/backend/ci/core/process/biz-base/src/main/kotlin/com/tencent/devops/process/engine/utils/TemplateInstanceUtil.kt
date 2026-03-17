@@ -292,7 +292,10 @@ object TemplateInstanceUtil {
             return if (asInstanceInput == null) {
                 templateParam
             } else {
-                templateParam.copy(required = asInstanceInput)
+                templateParam.copy(
+                    required = asInstanceInput,
+                    asInstanceInput = null
+                )
             }
         }
 
