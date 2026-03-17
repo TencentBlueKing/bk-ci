@@ -373,7 +373,10 @@
             return {
                 curVersion: '',
                 atomName: 'landun-atom-codecc',
+                // 用于PIPELINE watch 监听器的自动发布类型调整
                 initJobType: '',
+                // 保存所有初始的 jobType 列表（包括 PIPELINE 和 CREATIVE_STREAM）
+                initJobTypes: [],
                 initReleaseType: '',
                 descTemplate: '',
                 docsLink: this.BKCI_DOCS.PLUGIN_GUIDE_DOC,
@@ -596,12 +599,16 @@
                         if (serviceScopeDetails && serviceScopeDetails.length > 0) {
                             // 设置选中的范畴
                             this.categoryValue = serviceScopeDetails.map(config => config.serviceScope)
+
+                            const allInitJobTypes = []
                             
                             // 回显 PIPELINE 配置
                             const pipelineConfig = serviceScopeDetails.find(item => item.serviceScope === 'PIPELINE')
                             if (pipelineConfig) {
                                 // 从 jobTypeConfigs 中提取 jobTypes 和 os
                                 const jobTypes = pipelineConfig.jobTypeConfigs?.map(config => config.jobType) || ['AGENT']
+                                allInitJobTypes.push(...jobTypes)
+                                
                                 // 查找 AGENT 类型的 osList
                                 const agentConfig = pipelineConfig.jobTypeConfigs?.find(config => config.jobType === 'AGENT')
                                 const os = agentConfig?.osList || []
@@ -623,6 +630,7 @@
                             if (creativeConfig) {
                                 // 从 jobTypeConfigs 中提取 jobTypes
                                 const jobTypes = creativeConfig.jobTypeConfigs?.map(config => config.jobType) || ['CREATIVE_STREAM']
+                                allInitJobTypes.push(...jobTypes)
                                 
                                 this.creativeCategory = {
                                     classifyCode: creativeConfig.classifyCode || '',
@@ -631,10 +639,13 @@
                                     labelIdList: creativeConfig.labelIdList || []
                                 }
                             }
+                            
+                            this.initJobTypes = allInitJobTypes
                         } else {
                             // 没有 serviceScopeConfigs，使用默认值
                             this.categoryValue = ['PIPELINE']
                             this.initJobType = 'AGENT'
+                            this.initJobTypes = ['AGENT']
                             this.initOs = []
                         }
                         
@@ -820,25 +831,59 @@
             },
 
             checkJobType () {
-                let message = ''
-                // 如果没有选择 PIPELINE，不需要检查
-                if (!this.categoryValue.includes('PIPELINE')) {
-                    return message
+                // 只在升级页面且发布类型不是非兼容式升级时才需要检查
+                if (this.$route.name !== 'upgradeAtom' || this.atomForm.releaseType === 'INCOMPATIBILITY_UPGRADE') {
+                    return ''
+                }
+                const currentJobTypes = this.getCurrentJobTypes()
+                
+                // 检查 jobType 是否发生变更
+                if (this.isJobTypeChanged(this.initJobTypes, currentJobTypes)) {
+                    return this.$t('store.适用Job类型发生变更，发布类型请选择非兼容式升级，避免影响已有流水线的使用。')
                 }
                 
-                // 从 pipelineCategory 获取当前的 jobType
-                const currentJobType = this.pipelineCategory.jobTypes && this.pipelineCategory.jobTypes.length > 0
-                    ? this.pipelineCategory.jobTypes[0]
-                    : 'AGENT'
-                
-                const isEqualOs = this.initOs.every(item => this.pipelineCategory.os.indexOf(item) > -1)
-                
-                if (this.atomForm.releaseType !== 'INCOMPATIBILITY_UPGRADE' && currentJobType !== this.initJobType && this.$route.name === 'upgradeAtom') {
-                    message = this.$t('store.适用Job类型发生变更，发布类型请选择非兼容式升级，避免影响已有流水线的使用。')
-                } else if (this.atomForm.releaseType !== 'INCOMPATIBILITY_UPGRADE' && this.$route.name === 'upgradeAtom' && currentJobType === 'AGENT' && this.initJobType === 'AGENT' && !isEqualOs) {
-                    message = this.$t('store.操作系统发生变更，发布类型请选择非兼容式升级，避免影响已有流水线的使用。')
+                // 检查操作系统是否发生变更
+                if (this.isOsChanged()) {
+                    return this.$t('store.操作系统发生变更，发布类型请选择非兼容式升级，避免影响已有流水线的使用。')
                 }
-                return message
+                
+                return ''
+            },
+            
+            // 获取当前选择的所有 jobType
+            getCurrentJobTypes () {
+                const jobTypes = []
+                if (this.categoryValue.includes('PIPELINE') && this.pipelineCategory.jobTypes) {
+                    jobTypes.push(...this.pipelineCategory.jobTypes)
+                }
+                if (this.categoryValue.includes('CREATIVE_STREAM') && this.creativeCategory.jobTypes) {
+                    jobTypes.push(...this.creativeCategory.jobTypes)
+                }
+                return jobTypes
+            },
+            
+            // 检查 jobType 是否发生变更（数量减少或类型变化）
+            isJobTypeChanged (initJobTypes, currentJobTypes) {
+                return currentJobTypes.length < initJobTypes.length
+                    || initJobTypes.some(type => !currentJobTypes.includes(type))
+            },
+            
+            // 检查操作系统是否发生变更（数量不同或包含的 OS 不同）
+            isOsChanged () {
+                const initOs = this.initOs || []
+                
+                if (initOs.length === 0) {
+                    return false
+                }
+                
+                const currentOs = (this.categoryValue.includes('PIPELINE')
+                    && this.pipelineCategory.jobTypes?.includes('AGENT'))
+                    ? (this.pipelineCategory.os || [])
+                    : []
+                
+                return currentOs.length !== initOs.length
+                    || !initOs.every(os => currentOs.includes(os))
+                    || !currentOs.every(os => initOs.includes(os))
             },
 
             validate () {
@@ -904,15 +949,17 @@
                         branch: this.atomForm.branch,
                         serviceScopeConfigs: serviceScopeConfigs.length > 0 ? serviceScopeConfigs : undefined
                     }
+                    console.log(params)
                     
-                    return this.$store.dispatch('store/editAtom', {
-                        projectCode: this.atomForm.projectCode,
-                        params: params,
-                        initProject: this.atomForm.initProjectCode
-                    }).then((res) => {
-                        this.$bkMessage({ message: this.$t('store.提交成功'), theme: 'success' })
-                        if (res) this.toPublishProgress(this.$route.name === 'shelfAtom' ? 'shelf' : 'upgrade', res)
-                    })
+                    
+                    // return this.$store.dispatch('store/editAtom', {
+                    //     projectCode: this.atomForm.projectCode,
+                    //     params: params,
+                    //     initProject: this.atomForm.initProjectCode
+                    // }).then((res) => {
+                    //     this.$bkMessage({ message: this.$t('store.提交成功'), theme: 'success' })
+                    //     if (res) this.toPublishProgress(this.$route.name === 'shelfAtom' ? 'shelf' : 'upgrade', res)
+                    // })
                 }).catch((err) => {
                     if (err.httpStatus === 200) {
                         const h = this.$createElement
