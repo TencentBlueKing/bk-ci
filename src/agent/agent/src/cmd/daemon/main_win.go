@@ -40,12 +40,12 @@ import (
 	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/create"
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
 	"github.com/kardianos/service"
 )
 
@@ -124,6 +124,14 @@ func main() {
 var GAgentProcess *os.Process = nil
 
 func watch() {
+	defer func() {
+		if r := recover(); r != nil {
+			logs.Errorf("watch goroutine panic recovered: %v, will restart watch loop in 30s", r)
+			time.Sleep(30 * time.Second)
+			go watch()
+		}
+	}()
+
 	workDir := systemutil.GetExecutableDir()
 	var agentPath = systemutil.GetWorkDir() + "/devopsAgent.exe"
 	for {
@@ -136,6 +144,7 @@ func watch() {
 				logs.Errorf("agent file: %s not exists", agentPath)
 				logs.Info("restart after 30 seconds")
 				time.Sleep(30 * time.Second)
+				return
 			}
 
 			err := fileutil.SetExecutable(agentPath)

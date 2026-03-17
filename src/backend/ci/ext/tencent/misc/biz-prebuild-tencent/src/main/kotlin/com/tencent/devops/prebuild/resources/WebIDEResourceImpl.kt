@@ -29,11 +29,11 @@ package com.tencent.devops.prebuild.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.prebuild.pojo.ide.IdeDirInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.prebuild.api.WebIDEResource
 import com.tencent.devops.prebuild.pojo.IDEAgentReq
 import com.tencent.devops.prebuild.pojo.IDEInfo
+import com.tencent.devops.prebuild.pojo.ide.IdeDirInfo
 import com.tencent.devops.prebuild.service.WebIDEService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.project.pojo.ProjectVO
@@ -53,11 +53,17 @@ class WebIDEResourceImpl @Autowired constructor(private val webIDEService: WebID
         return Result(webIDEService.heartBeat(userId, ip))
     }
 
-    override fun getUserProject(userId: String, accessToken: String): Result<ProjectVO?> {
-        return Result(webIDEService.getUserProject(userId, accessToken))
+    override fun getUserProject(userId: String): Result<ProjectVO?> {
+        return Result(webIDEService.getUserProject(userId))
     }
 
-    override fun getAgentInstallLink(userId: String, projectId: String, zoneName: String, operationSystem: String, initIp: String): Result<ThirdPartyAgentStaticInfo> {
+    override fun getAgentInstallLink(
+        userId: String,
+        projectId: String,
+        zoneName: String,
+        operationSystem: String,
+        initIp: String
+    ): Result<ThirdPartyAgentStaticInfo> {
         return Result(webIDEService.getAgentInstallLink(userId, projectId, operationSystem, zoneName, initIp))
     }
 

@@ -453,6 +453,9 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_LEGACY_INSTANCE_CANNOT_ENABLE_PAC = "2101343"
     // 触发事件缓存过期已清理。若需重放，请到代码库操作。
     const val ERROR_TRIGGER_EVENT_EXPIRED = "2101361"
+    const val ERROR_TEMPLATE_MIGRATING = "2101362" // 模板迁移中，不能操作
+    // 非约束流水线不能保存为约束模式
+    const val ERROR_NON_CONSTRAINED_PIPELINE_CANNOT_SAVE_AS_CONSTRAINED = "2101363"
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
@@ -717,4 +720,7 @@ object ProcessMessageCode {
 
     // 公共模板名称
     const val BK_PUBLIC_PIPELINE_TEMPLATE_NAME = "bkPublicPipelineTemplateName"
+
+    // 回滚自模板实例化任务，基于版本[xxx]
+    const val BK_ROLLBACK_FROM_TEMPLATE_INSTANCE_BASED_ON_VERSION = "bkRollbackFromTemplateInstanceBasedOnVersion"
 }

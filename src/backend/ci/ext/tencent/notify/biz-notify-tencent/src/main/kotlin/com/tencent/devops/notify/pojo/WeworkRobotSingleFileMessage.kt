@@ -31,13 +31,20 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
- * 企业微信机器人文件消息请求体
+ * 企业微信机器人文件消息（支持chatid发送到指定会话）
  */
-@Schema(title = "企业微信机器人文件消息请求体")
-data class WeworkRobotFileMessage(
+@Schema(title = "企业微信机器人文件消息")
+data class WeworkRobotSingleFileMessage(
+    @get:Schema(title = "会话id")
+    override val chatid: String?,
+    @get:Schema(title = "帖子id", description = "post_id")
+    @JsonProperty("post_id")
+    override val postId: String?,
     @get:Schema(title = "消息类型")
-    @JsonProperty("msgtype")
-    val msgType: String = "file",
+    override val msgtype: String = "file",
     @get:Schema(title = "文件内容")
-    val file: MediaContent
-)
+    val file: MediaContent,
+    @get:Schema(title = "可见用户", description = "visible_to_user,多个userid用'|'分隔")
+    @JsonProperty("visible_to_user")
+    val visibleToUser: String?
+) : WeweokRobotBaseMessage(chatid, postId, msgtype)

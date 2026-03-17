@@ -220,6 +220,12 @@ class AppPipelineService @Autowired constructor(
                 isMobileStart = h.isMobileStart
             }
         }
-        return Page(count = result.count, page = result.page, pageSize = result.pageSize, totalPages = result.totalPages, records = histories)
+        return Page(
+            count = result.count,
+            page = result.page,
+            pageSize = result.pageSize,
+            totalPages = result.totalPages,
+            records = histories
+        )
     }
 }

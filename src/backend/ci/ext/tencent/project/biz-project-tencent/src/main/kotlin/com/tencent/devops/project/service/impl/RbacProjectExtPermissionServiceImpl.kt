@@ -53,7 +53,6 @@ class RbacProjectExtPermissionServiceImpl constructor(
     }
 
     override fun verifyUserProjectPermission(
-        accessToken: String,
         projectCode: String,
         userId: String
     ): Boolean {

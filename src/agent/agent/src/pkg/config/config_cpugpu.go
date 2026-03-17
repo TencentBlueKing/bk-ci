@@ -1,7 +1,9 @@
+//go:build !loong64
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -23,36 +25,44 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.project.resources
+package config
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.op.OpProjectTagResource
-import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
-import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
-import com.tencent.devops.project.service.ProjectTagService
-import org.springframework.beans.factory.annotation.Autowired
+import (
+	"bytes"
+	"strings"
 
-@RestResource
-class OpProjectTagResourceImpl @Autowired constructor(
-    val projectTagService: ProjectTagService
-) : OpProjectTagResource {
-    override fun setTagByProject(projectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
-        return projectTagService.updateTagByProject(projectTagUpdateDTO)
-    }
+	"github.com/jaypipes/ghw"
 
-    override fun setTagByOrg(projectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
-        return projectTagService.updateTagByOrg(projectTagUpdateDTO)
-    }
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
+)
 
-    override fun setTagByChannel(projectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
-        return projectTagService.updateTagByChannel(projectTagUpdateDTO)
-    }
+// GetCpuAndGpuInfo 获取 CPU 和 GPU 型号信息
+func GetCpuAndGpuInfo() (string, string) {
+	cpu, err := ghw.CPU()
+	cpuInfoBuf := bytes.Buffer{}
+	if err != nil {
+		logs.WithError(err).Error("get cpu info error")
+	} else {
+		for _, c := range cpu.Processors {
+			cpuInfoBuf.WriteString(c.Model)
+			cpuInfoBuf.WriteString(";")
+		}
+	}
+	cpuInfo := strings.TrimSuffix(cpuInfoBuf.String(), ";")
 
-    override fun setExtSystemTagByProject(extSystemTagDTO: ProjectExtSystemTagDTO): Result<Boolean> {
-        return projectTagService.updateExtSystemRouterTag(extSystemTagDTO)
-    }
+	gpuInfoBuf := bytes.Buffer{}
+	gpu, err := ghw.GPU()
+	if err != nil {
+		logs.WithError(err).Error("get gpu info error")
+	} else {
+		for _, card := range gpu.GraphicsCards {
+			gpuInfoBuf.WriteString(card.DeviceInfo.Product.Name)
+			gpuInfoBuf.WriteString(";")
+		}
+	}
+	gpuInfo := strings.TrimSuffix(gpuInfoBuf.String(), ";")
+	logs.Infof("cpu: %s, gpu: %s", cpuInfo, gpuInfo)
+	return cpuInfo, gpuInfo
 }

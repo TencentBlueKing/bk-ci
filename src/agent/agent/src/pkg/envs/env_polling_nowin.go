@@ -1,7 +1,9 @@
+//go:build !windows
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,18 +27,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.notify.pojo
+package envs
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
-/**
- * 企业微信机器人图片消息请求体
- */
-@Schema(title = "企业微信机器人图片消息请求体")
-data class WeworkRobotImageMessage(
-    @get:Schema(title = "消息类型")
-    @JsonProperty("msgtype")
-    val msgType: String = "image",
-    @get:Schema(title = "图片内容")
-    val image: ImageContent
-)
+func InitEnvPolling() {
+
+}
+
+func FetchEnvFromPolling() map[string]string {
+	return map[string]string{}
+}
