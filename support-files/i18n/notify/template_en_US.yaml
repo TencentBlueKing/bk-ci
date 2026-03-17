@@ -158,6 +158,11 @@
     id: "jgj46v0knzlkhcah57rcutao30tqza5v"
     taskName: "Build Success"
     content: "${successContent}"
+  weworkGroupTemplate:
+    id: "3ffdfe998646421ba8672a9268069e4c"
+    sender: "DevOps"
+    title: "BK-CI pipeline [${pipelineName}] # ${buildNum} built successfully"
+    body: "✔️ ${successContent}\nView details: ${detailUrl}"
   creator: "system"
   modifior: "system"
 - index: 7

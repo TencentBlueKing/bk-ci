@@ -207,8 +207,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     @Value("\${store.defaultAtomPublishReviewers:#{null}}")
     private val defaultAtomPublishReviewers: String? = null
 
-    @Value("\${store.commentNotifyWeworkGroupIds:}")
-    private var commentNotifyWeworkGroupIds: String = ""
+    @Value("\${store.storeNotifyWeworkGroupIds:}")
+    private var storeNotifyWeworkGroupIds: String = ""
 
     companion object {
         private val logger = LoggerFactory.getLogger(AtomReleaseServiceImpl::class.java)
@@ -1155,7 +1155,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             // 通过websocket推送状态变更消息
             storeWebsocketService.sendWebsocketMessage(userId, atomId)
             // 研发商店插件上架进入审核阶段时通知管理员审批
-            if (atomName !== null && !defaultAtomPublishReviewers.isNullOrBlank()) {
+            if (!atomName.isNullOrBlank() && !defaultAtomPublishReviewers.isNullOrBlank()) {
                 sendPendingReview(
                     userId = userId,
                     atomName = atomName,
@@ -1546,9 +1546,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
         try {
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
-            if (commentNotifyWeworkGroupIds.isNotBlank()) {
+            if (storeNotifyWeworkGroupIds.isNotBlank()) {
                 val weworkGroupIds =
-                    commentNotifyWeworkGroupIds.split(",").filter { it.isNotBlank() }.toSet()
+                    storeNotifyWeworkGroupIds.split(",").filter { it.isNotBlank() }.toSet()
                 if (weworkGroupIds.isNotEmpty()) {
                     storeNotifyService.sendNotifyMessageToWeworkGroup(
                         userId = userId,

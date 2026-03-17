@@ -90,8 +90,8 @@ class StoreCommentServiceImpl @Autowired constructor(
     @Value("\${store.commentNotifyAdmin}")
     private lateinit var commentNotifyAdmin: String
 
-    @Value("\${store.commentNotifyWeworkGroupIds:}")
-    private var commentNotifyWeworkGroupIds: String = ""
+    @Value("\${store.storeNotifyWeworkGroupIds:}")
+    private var storeNotifyWeworkGroupIds: String = ""
 
     override fun getStoreComment(userId: String, commentId: String): Result<StoreCommentInfo?> {
         logger.info("getStoreComment params:[$userId|$commentId]")
@@ -266,8 +266,8 @@ class StoreCommentServiceImpl @Autowired constructor(
             bodyParams = bodyParams
         )
         // 发送评论通知到企业微信群
-        if (commentNotifyWeworkGroupIds.isNotBlank()) {
-            val weworkGroupIds = commentNotifyWeworkGroupIds.split(",").filter { it.isNotBlank() }.toSet()
+        if (storeNotifyWeworkGroupIds.isNotBlank()) {
+            val weworkGroupIds = storeNotifyWeworkGroupIds.split(",").filter { it.isNotBlank() }.toSet()
             if (weworkGroupIds.isNotEmpty()) {
                 storeNotifyService.sendNotifyMessageToWeworkGroup(
                     userId = userId,
