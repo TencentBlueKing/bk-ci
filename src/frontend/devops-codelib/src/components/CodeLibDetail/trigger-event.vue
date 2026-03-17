@@ -379,14 +379,8 @@
                     this.isLoadingMore = false
                     // 清除 URL 中的 eventId 和 reason 参数
                     if (this.eventId || this.reason) {
-                        const query = { ...this.$route.query }
-                        delete query.eventId
-                        delete query.reason
-                        this.$router.push({
-                            query: {
-                                ...query
-                            }
-                        })
+                        const { eventId: _eventId, reason: _reason, ...query } = this.$route.query
+                        this.$router.push({ query })
                     }
                 })
             },
