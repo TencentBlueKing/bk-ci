@@ -81,6 +81,7 @@ import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.atom.enums.AtomFailPolicyEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomRetryPolicyEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.ATOM_INPUT
 import com.tencent.devops.store.pojo.common.ATOM_POST
 import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
@@ -254,40 +255,47 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         dbAtomRecord: TAtomRecord,
         serviceScopeConfigs: List<ServiceScopeConfig>
     ): ReleaseTypeEnum? {
+        // 从数据库记录中解析出旧版本支持的所有 jobType 映射（key: 分类, value: jobType名称列表）
         val oldJobTypeMap = AtomJobTypeUtil.getAllJobTypes(dbAtomRecord.jobType, dbAtomRecord.jobTypeMap)
+        // 将所有分类下的 jobType 名称展平为一个不重复的集合，用于后续比较
         val oldJobTypeSet = oldJobTypeMap.values.flatten().toSet()
+        // 从数据库记录中解析出旧版本各 jobType 对应的操作系统列表（key: jobType名称, value: OS名称列表）
         val oldOsMap = AtomOsMapUtil.getAllOs(dbAtomRecord.os, dbAtomRecord.osMap, dbAtomRecord.jobType)
-
         val newJobTypeSet = mutableSetOf<String>()
+        // 新版本各 jobType 对应的操作系统集合（key: jobType名称, value: OS名称集合）
         val newOsMap = mutableMapOf<String, MutableSet<String>>()
+        val buildEnvJobTypes = mutableSetOf<JobTypeEnum>()
         for (config in serviceScopeConfigs) {
+            // 遍历每个配置项中生效的 jobType，收集名称并识别编译环境类型
             for (jobType in config.getEffectiveJobTypes()) {
                 newJobTypeSet.add(jobType.name)
+                if (jobType.isBuildEnv()) buildEnvJobTypes.add(jobType)
             }
+            // 遍历每个配置项中显式声明的 OS 映射，合并到 newOsMap 中
             for ((jobTypeName, osList) in config.getEffectiveOsMap()) {
                 newOsMap.getOrPut(jobTypeName) { mutableSetOf() }.addAll(osList)
             }
-            for (jobType in config.getEffectiveJobTypes()) {
-                if (jobType.isBuildEnv() && !newOsMap.containsKey(jobType.name)) {
-                    jobType.getDefaultOs()?.let {
-                        newOsMap.getOrPut(jobType.name) { mutableSetOf() }.addAll(it)
-                    }
-                }
+        }
+        // 如果某个编译环境 jobType 在所有 config 中都没有显式配置 OS，则使用该 jobType 的默认 OS
+        for (jobType in buildEnvJobTypes) {
+            if (jobType.name !in newOsMap) {
+                jobType.getDefaultOs()?.let { newOsMap[jobType.name] = it.toMutableSet() }
             }
         }
-
+        // 如果旧版本支持的某些 jobType 在新版本中被移除了，则属于不兼容升级
         if (!newJobTypeSet.containsAll(oldJobTypeSet)) {
             return ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE
         }
-
         for ((jobTypeName, oldOsList) in oldOsMap) {
+            // 跳过新版本已不再支持的 jobType（前面已判断过整体 jobType 兼容性）
             if (jobTypeName !in newJobTypeSet) continue
             val newOsSet = newOsMap[jobTypeName] ?: emptySet()
+            // 如果旧版本某个 jobType 下支持的 OS 在新版本中被缩减了，则属于不兼容升级
             if (!newOsSet.containsAll(oldOsList)) {
                 return ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE
             }
         }
-
+        // 所有检查均通过，不存在不兼容变更
         return null
     }
 
