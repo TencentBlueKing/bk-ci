@@ -51,7 +51,7 @@ class TriggerMethodQueryStrategy : AbstractHistoryConditionQueryStrategy() {
             value, StartType.toReadableString(
                 type = value,
                 channelCode = ChannelCode.getRequestChannelCode(),
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                language = I18nUtil.getLanguage(userId)
             )
         )
     }
