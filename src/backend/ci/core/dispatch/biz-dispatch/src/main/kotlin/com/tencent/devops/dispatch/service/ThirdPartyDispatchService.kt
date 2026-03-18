@@ -143,7 +143,11 @@ class ThirdPartyDispatchService @Autowired constructor(
                 // 2、先后顺序未知，但是客观上被复用对象先跑完了，就按照绝对复用处理
                 buildByAgentId(
                     dispatchMessage,
-                    dispatchType.copy(displayName = agentId, agentType = AgentDispatchType.REUSE_JOB_ID, reusedInfo = null)
+                    dispatchType.copy(
+                        displayName = agentId,
+                        agentType = AgentDispatchType.REUSE_JOB_ID,
+                        reusedInfo = null
+                    )
                 )
             }
 

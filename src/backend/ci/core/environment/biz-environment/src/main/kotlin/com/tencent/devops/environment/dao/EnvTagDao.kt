@@ -7,7 +7,6 @@ import com.tencent.devops.model.environment.tables.TEnvTag
 import com.tencent.devops.model.environment.tables.TNodeTagKey
 import com.tencent.devops.model.environment.tables.TNodeTagValues
 import com.tencent.devops.model.environment.tables.TNodeTags
-import com.tencent.devops.model.environment.tables.records.TEnvTagRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository

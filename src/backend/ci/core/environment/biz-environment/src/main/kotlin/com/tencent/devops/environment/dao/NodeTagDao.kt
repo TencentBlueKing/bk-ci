@@ -4,7 +4,6 @@ import com.tencent.devops.environment.model.NodeTags
 import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.NodeTagCanUpdateType
 import com.tencent.devops.environment.pojo.NodeTagValue
-import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.TNodeTagInternalKey
 import com.tencent.devops.model.environment.tables.TNodeTagInternalValues
@@ -148,7 +147,11 @@ class NodeTagDao {
     }
 
     // 查询节点有哪些标签
-    fun fetchNodesTags(dslContext: DSLContext, projectId: String, nodeIds: List<Long>): Map<Long, MutableList<NodeTag>> {
+    fun fetchNodesTags(
+        dslContext: DSLContext,
+        projectId: String,
+        nodeIds: List<Long>
+    ): Map<Long, MutableList<NodeTag>> {
         val resM = mutableMapOf<Long, MutableMap<Long, NodeTag>>()
         dslContext.select(
             TNodeTags.T_NODE_TAGS.NODE_ID,
