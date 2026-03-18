@@ -93,7 +93,8 @@ class UserNodeResourceImpl @Autowired constructor(
         latestBuildTimeStart: Long?,
         latestBuildTimeEnd: Long?,
         sortType: String?,
-        collation: String?
+        collation: String?,
+        createMode: Boolean?
     ): Result<Page<NodeWithPermission>> {
         return Result(
             nodeService.listNew(
@@ -115,6 +116,7 @@ class UserNodeResourceImpl @Autowired constructor(
                 latestBuildTimeEnd = latestBuildTimeEnd,
                 sortType = sortType,
                 collation = collation,
+                createMode = createMode,
                 data = null
             )
         )
@@ -139,6 +141,7 @@ class UserNodeResourceImpl @Autowired constructor(
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
+        createMode: Boolean?,
         data: NodeFetchReq?
     ): Result<Page<NodeWithPermission>> {
         return Result(
@@ -161,6 +164,7 @@ class UserNodeResourceImpl @Autowired constructor(
                 latestBuildTimeEnd = latestBuildTimeEnd,
                 sortType = sortType,
                 collation = collation,
+                createMode = createMode,
                 data = data
             )
         )
@@ -187,6 +191,7 @@ class UserNodeResourceImpl @Autowired constructor(
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
+        createMode: Boolean?,
         data: NodeFetchReq?,
         response: HttpServletResponse
     ) {
@@ -208,6 +213,7 @@ class UserNodeResourceImpl @Autowired constructor(
             sortType = sortType,
             collation = collation,
             response = response,
+            createMode = createMode,
             data = data
         )
     }

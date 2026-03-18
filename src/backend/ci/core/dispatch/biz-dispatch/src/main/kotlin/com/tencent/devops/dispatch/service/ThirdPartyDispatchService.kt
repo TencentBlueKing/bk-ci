@@ -38,7 +38,8 @@ import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
-import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
+import com.tencent.devops.common.pipeline.type.agent.CreateAgentIdDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
@@ -66,6 +67,7 @@ import com.tencent.devops.dispatch.service.tpaqueue.TPASingleQueueService
 import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentEnvLock
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.AllCreateNodeEnv
 import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.process.api.service.ServiceVarResource
@@ -141,7 +143,11 @@ class ThirdPartyDispatchService @Autowired constructor(
                 // 2、先后顺序未知，但是客观上被复用对象先跑完了，就按照绝对复用处理
                 buildByAgentId(
                     dispatchMessage,
-                    dispatchType.copy(displayName = agentId, agentType = AgentType.REUSE_JOB_ID, reusedInfo = null)
+                    dispatchType.copy(
+                        displayName = agentId,
+                        agentType = AgentDispatchType.REUSE_JOB_ID,
+                        reusedInfo = null
+                    )
                 )
             }
 
@@ -198,7 +204,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                     ThirdPartyAgentIDDispatchType(
                         displayName = agentId,
                         workspace = dispatchType.workspace,
-                        agentType = AgentType.REUSE_JOB_ID,
+                        agentType = AgentDispatchType.REUSE_JOB_ID,
                         dockerInfo = dispatchType.dockerInfo,
                         reusedInfo = null
                     )
@@ -220,6 +226,27 @@ class ThirdPartyDispatchService @Autowired constructor(
                 )
             }
 
+            is CreateAgentIdDispatchType -> {
+                val originDispatchType = dispatchMessage.event.dispatchType as CreateAgentIdDispatchType
+                buildByAgentId(
+                    dispatchMessage = dispatchMessage,
+                    dispatchType = ThirdPartyAgentIDDispatchType(
+                        displayName = originDispatchType.value,
+                        workspace = null,
+                        agentType = AgentDispatchType.ID,
+                        dockerInfo = null,
+                        reusedInfo = null
+                    ),
+                    envId = originDispatchType.envHashId?.let {
+                        if (it == AllCreateNodeEnv.hashId()) {
+                            AllCreateNodeEnv.ENV_ID
+                        } else {
+                            HashUtil.decodeIdToLong(it)
+                        }
+                    }
+                )
+            }
+
             else -> {
                 throw InvalidParamException("Unknown agent type - ${dispatchMessage.event.dispatchType}")
             }
@@ -228,7 +255,8 @@ class ThirdPartyDispatchService @Autowired constructor(
 
     private fun buildByAgentId(
         dispatchMessage: DispatchMessage,
-        dispatchType: ThirdPartyAgentIDDispatchType
+        dispatchType: ThirdPartyAgentIDDispatchType,
+        envId: Long? = null
     ) {
         dispatchMessage.event.dispatchQueueStartTimeMilliSecond = LocalDateTime.now().timestampmilli()
         val agentResult = if (dispatchType.idType()) {
@@ -269,7 +297,7 @@ class ThirdPartyDispatchService @Autowired constructor(
             )
         }
 
-        if (!agentInQueue(dispatchMessage, dispatchType, agent = agentResult.data!!, envId = null)) {
+        if (!agentInQueue(dispatchMessage, dispatchType, agent = agentResult.data!!, envId = envId)) {
             logDebug(
                 dispatchMessage.event,
                 I18nUtil.getCodeLanMessage(
@@ -319,14 +347,16 @@ class ThirdPartyDispatchService @Autowired constructor(
                     .getAgentsByEnvId(
                         projectId = dispatchMessage.event.projectId,
                         envId = dispatchType.envProjectId.takeIf { !it.isNullOrBlank() }
-                            ?.let { "$it@${dispatchType.envName}" } ?: dispatchType.envName
+                            ?.let { "$it@${dispatchType.envName}" } ?: dispatchType.envName,
+                        userId = dispatchMessage.event.userId
                     )
             } else {
                 client.get(ServiceThirdPartyAgentResource::class)
                     .getAgentsByEnvNameWithId(
                         projectId = dispatchMessage.event.projectId,
                         envName = dispatchType.envProjectId.takeIf { !it.isNullOrBlank() }
-                            ?.let { "$it@${dispatchType.envName}" } ?: dispatchType.envName
+                            ?.let { "$it@${dispatchType.envName}" } ?: dispatchType.envName,
+                        userId = dispatchMessage.event.userId
                     )
             }
         } catch (e: Exception) {
@@ -985,7 +1015,13 @@ class ThirdPartyDispatchService @Autowired constructor(
 
     fun finishBuild(event: PipelineAgentShutdownEvent) {
         tpaQueueService.finishQueue(event.buildId, event.vmSeqId)
-        thirdPartyAgentBuildService.finishBuild(event.buildId, event.vmSeqId, event.buildResult, event.executeCount)
+        thirdPartyAgentBuildService.finishBuild(
+            buildId = event.buildId,
+            vmSeqId = event.vmSeqId,
+            buildResult = event.buildResult,
+            executeCount = event.executeCount,
+            timeInterval = event.jobTimeInterval
+        )
     }
 
     companion object {
