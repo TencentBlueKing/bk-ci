@@ -33,28 +33,28 @@ package com.tencent.devops.common.api.context
  */
 object ChannelContext {
     private val channelThreadLocal = ThreadLocal<String?>()
-    
+
     /**
      * 从ThreadLocal获取Channel（HTTP请求场景）
      */
     fun getChannel(): String? {
         return channelThreadLocal.get()
     }
-    
+
     /**
      * 设置Channel（用于显式传递，跨服务调用、MQ等场景）
      */
     fun setChannel(channel: String?) {
         channelThreadLocal.set(channel)
     }
-    
+
     /**
      * 清除ThreadLocal
      */
     fun clear() {
         channelThreadLocal.remove()
     }
-    
+
     /**
      * 在指定上下文中执行代码（用于异步、跨线程场景）
      */
@@ -68,4 +68,5 @@ object ChannelContext {
         }
     }
 }
+
 
