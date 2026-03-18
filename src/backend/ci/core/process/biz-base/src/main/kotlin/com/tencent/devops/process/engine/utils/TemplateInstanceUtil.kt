@@ -595,7 +595,7 @@ object TemplateInstanceUtil {
         val templateVariables = mutableListOf<TemplateVariable>()
         val pipelineParamMap = pipelineParams.associateBy { it.id }
         templateParams.filterNot {
-            it.constant == true || !it.required || VERSION_PARAMS.contains(it.id)
+            it.constant == true || !it.required || PipelineUtils.VERSION_PARAMS.contains(it.id)
         }.forEach { templateParam ->
             val pipelineParam = pipelineParamMap[templateParam.id] ?: return@forEach
             // 是否覆盖模版的值
@@ -785,7 +785,7 @@ object TemplateInstanceUtil {
         val beforePipelineParamMap = beforePipelineParams.associateBy { it.id }
 
         val overriddenParamIds = beforeTemplateParamMap.values
-            .filter { !it.required && it.id !in VERSION_PARAMS }
+            .filter { !it.required && it.id !in PipelineUtils.VERSION_PARAMS }
             .mapNotNull { beforeTemplateParam ->
                 val paramId = beforeTemplateParam.id
                 val currentTemplateParam = currentTemplateParamMap[paramId] ?: return@mapNotNull null
@@ -812,5 +812,4 @@ object TemplateInstanceUtil {
     }
 
     private val logger = LoggerFactory.getLogger(TemplateInstanceUtil::class.java)
-    private val VERSION_PARAMS = listOf(MAJORVERSION, MINORVERSION, FIXVERSION)
 }

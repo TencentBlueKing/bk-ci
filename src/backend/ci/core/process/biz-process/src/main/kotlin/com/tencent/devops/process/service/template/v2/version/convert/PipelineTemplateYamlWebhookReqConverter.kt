@@ -98,7 +98,7 @@ class PipelineTemplateYamlWebhookReqConverter(
                 yamlFileName
             }
 
-            val (newTemplateId, templateInfo) = if (templateId == null) {
+            val (newTemplateId, templateInfo) = if (templateId.isNullOrBlank()) {
                 val newTemplateId = pipelineTemplateGenerator.generateTemplateId()
                 val templateInfo = PipelineTemplateInfoV2(
                     id = newTemplateId,
