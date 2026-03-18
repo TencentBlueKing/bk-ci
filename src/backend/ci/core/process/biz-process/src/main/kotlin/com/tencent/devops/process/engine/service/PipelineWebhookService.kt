@@ -87,6 +87,9 @@ class PipelineWebhookService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineWebhookService::class.java)
+        private const val CREATIVE_STREAM_PATH_TEMPLATE =
+            "console/creative-stream/%s/flow/%s/edit%s/workflow-orchestration"
+        private const val REGULAR_PATH_TEMPLATE = "console/pipeline/%s/%s/edit%s"
     }
 
     fun addWebhook(
@@ -319,9 +322,9 @@ class PipelineWebhookService @Autowired constructor(
         val host = HomeHostUtil.innerServerHost()
         val versionPath = version?.let { "/$it" } ?: ""
         return if (channelCode == ChannelCode.CREATIVE_STREAM) {
-            "$host/console/creative-stream/$projectId/flow/$pipelineId/edit${versionPath}/workflow-orchestration"
+            "$host/${String.format(CREATIVE_STREAM_PATH_TEMPLATE, projectId, pipelineId, versionPath)}"
         } else {
-            "$host/console/pipeline/$projectId/$pipelineId/edit${versionPath}"
+            "$host/${String.format(REGULAR_PATH_TEMPLATE, projectId, pipelineId, versionPath)}"
         }
     }
 

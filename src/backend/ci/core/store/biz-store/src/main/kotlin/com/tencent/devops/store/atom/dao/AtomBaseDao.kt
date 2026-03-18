@@ -337,24 +337,19 @@ abstract class AtomBaseDao {
     ): Condition? {
         if (jobType.isNullOrBlank()) return null
         val normalizedScope = serviceScope?.let { ServiceScopeUtil.normalize(it.name) }
-
-        val jobTypeMatchCondition = if (normalizedScope == null || normalizedScope == ServiceScopeEnum.PIPELINE.name) {
+        val isPipelineScope = normalizedScope == null || normalizedScope == ServiceScopeEnum.PIPELINE.name
+        val effectiveScope = if (isPipelineScope) ServiceScopeEnum.PIPELINE.name else normalizedScope!!
+        val isMapValid = jsonValidCondition(ta.JOB_TYPE_MAP)
+        val mapJsonContains = jsonContainsCondition(
+            jsonField = ta.JOB_TYPE_MAP,
+            value = jobType,
+            path = buildScopeJsonPath(effectiveScope)
+        )
+        val jobTypeMatchCondition = if (isPipelineScope) {
             // PIPELINE scope: JOB_TYPE 是纯字符串，直接等值匹配；或从 JOB_TYPE_MAP 匹配
-            val isMapValid = jsonValidCondition(ta.JOB_TYPE_MAP)
-            val mapJsonContains = jsonContainsCondition(
-                jsonField = ta.JOB_TYPE_MAP,
-                value = jobType,
-                path = buildScopeJsonPath(ServiceScopeEnum.PIPELINE.name)
-            )
             ta.JOB_TYPE.eq(jobType).or(isMapValid.and(mapJsonContains))
         } else {
             // 非 PIPELINE scope: 仅从 JOB_TYPE_MAP 中按 scope 查找（JOB_TYPE 只存 PIPELINE 纯字符串，无需回退）
-            val isMapValid = jsonValidCondition(ta.JOB_TYPE_MAP)
-            val mapJsonContains = jsonContainsCondition(
-                jsonField = ta.JOB_TYPE_MAP,
-                value = jobType,
-                path = buildScopeJsonPath(normalizedScope)
-            )
             isMapValid.and(mapJsonContains)
         }
 
