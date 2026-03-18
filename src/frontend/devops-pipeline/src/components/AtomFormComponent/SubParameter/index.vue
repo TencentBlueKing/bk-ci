@@ -273,7 +273,8 @@
             getInputType (type) {
                 const typeMap = {
                     textarea: 'textarea',
-                    long: 'number'
+                    long: 'text',
+                    input: 'text'
                 }
 
                 return typeMap[type] || 'text'

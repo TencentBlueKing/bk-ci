@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 )
 
 func Test_parseWorkerVersion(t *testing.T) {

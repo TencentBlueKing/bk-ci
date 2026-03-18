@@ -691,6 +691,10 @@
     "setTimeCron": "Set timing rule",
     "templatePipelineRollbackNotAllowedTips": "Stock version, does not support one click rollback",
     "resetBuildNoConfirmMessage": "A total of {0} pipeline(s) will have their [Build Number] field automatically reset to the baseline value after the official release. Please note! If you do not need to reset, please uncheck [Reset to baseline value immediately after releasing the official version].",
+    "yamlFilePathInvalidTip": "The YAML file path for the following pipelines is empty or invalid (must end with .yml or .yaml): {0}",
+    "versionNameExistTitle": "Version Name Already Exists",
+    "versionNameExistTips": "Version {0} already exists. Are you sure you want to overwrite this version?",
+    "versionNameExistSubTips": "After overwriting, viewing the modification history of this version will not be supported.",
     "propertyUpdate": {
       "constName": "Constant Name",
       "constAlias": "Constant Alias",
@@ -707,10 +711,13 @@
       "category": "Group labels",
       "repo": "Repository",
       "relativePath": "Relative path to code repository",
-      "glob": "Filter rules"
+      "glob": "Filter rules",
+      "constant": "Constant"
     },
     "propertyUpdated": "Updated",
-    "toInstance": "To instantiate"
+    "toInstance": "To instantiate",
+    "fetchPipelinesErrorTips": "Failed to retrieve pipeline template parameters. Please contact the assistant for analysis.",
+    "noStepIdTips": "This trigger is not configured with a Step Id and cannot be enabled/disabled in the instance"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
@@ -2083,5 +2090,6 @@
   "placeholderVar": "Please enter the variable, such as ${'{{'}var{'}}'} or ${'{'}var{'}'}",
   "selectTips": "Please select",
   "rollbackToVersion": "Rollback to version {0}",
-  "constraintPipelineEditTips": "This pipeline is in constraint mode, where you can modify input parameter default values, notifications, and other settings. For orchestration upgrades, please go to the template instantiation interface."
+  "constraintPipelineEditTips": "This pipeline is in constraint mode, where you can modify input parameter default values, notifications, and other settings. For orchestration upgrades, please go to the template instantiation interface.",
+  "toggleConstraintFailedTips": "Due to historical reasons, the current constraint pipeline cannot determine the corresponding template version and cannot switch to following the template. Upgrading the instance will restore normal operation."
 }
