@@ -33,25 +33,24 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.dao.LabelDao
+import com.tencent.devops.store.common.service.LabelService
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_LABEL_CODE
 import com.tencent.devops.store.pojo.common.KEY_LABEL_ID
 import com.tencent.devops.store.pojo.common.KEY_LABEL_NAME
 import com.tencent.devops.store.pojo.common.KEY_LABEL_TYPE
+import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.pojo.common.label.LabelRequest
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.service.LabelService
-import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
-import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 标签业务逻辑类
@@ -64,8 +63,6 @@ class LabelServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val labelDao: LabelDao
 ) : LabelService {
-
-    private val logger = LoggerFactory.getLogger(LabelServiceImpl::class.java)
 
     /**
      * 获取所有标签信息
@@ -96,42 +93,14 @@ class LabelServiceImpl @Autowired constructor(
      * 保存标签信息
      */
     override fun saveLabel(labelRequest: LabelRequest, type: Byte): Result<Boolean> {
-        logger.info("saveLabel params:[$labelRequest|$type]")
-        val labelCode = labelRequest.labelCode
-        val serviceScope = labelRequest.serviceScope
-        // 判断标签代码是否存在
-        val codeCount = labelDao.countByCode(
-            dslContext = dslContext,
-            labelCode = labelCode,
+        // 校验标签代码和名称的唯一性
+        val checkResult = checkLabelUniqueness(
+            labelCode = labelRequest.labelCode,
+            labelName = labelRequest.labelName,
             type = type,
-            serviceScope = serviceScope
+            serviceScope = labelRequest.serviceScope
         )
-        if (codeCount > 0) {
-            // 抛出错误提示
-            return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                params = arrayOf(labelCode),
-                data = false,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-            )
-        }
-        val labelName = labelRequest.labelName
-        // 判断标签名称是否存在
-        val nameCount = labelDao.countByName(
-            dslContext = dslContext,
-            labelName = labelName,
-            type = type,
-            serviceScope = serviceScope
-        )
-        if (nameCount > 0) {
-            // 抛出错误提示
-            return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                params = arrayOf(labelName),
-                data = false,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-            )
-        }
+        if (checkResult != null) return checkResult
         val id = UUIDUtil.generate()
         labelDao.add(dslContext, id, labelRequest, type)
         return Result(true)
@@ -141,50 +110,68 @@ class LabelServiceImpl @Autowired constructor(
      * 更新标签信息
      */
     override fun updateLabel(id: String, labelRequest: LabelRequest, type: Byte): Result<Boolean> {
-        logger.info("updateLabel params:[$id|$labelRequest|$type]")
-        val labelCode = labelRequest.labelCode
-        val serviceScope = labelRequest.serviceScope
-        // 判断标签是否存在
-        val codeCount = labelDao.countByCode(
-            dslContext = dslContext,
-            labelCode = labelCode,
+        // 复用公共校验方法，传入excludeId排除自身记录
+        val checkResult = checkLabelUniqueness(
+            labelCode = labelRequest.labelCode,
+            labelName = labelRequest.labelName,
             type = type,
-            serviceScope = serviceScope
+            serviceScope = labelRequest.serviceScope,
+            excludeId = id
         )
-        if (codeCount > 0) {
-            // 判断更新标签名称是否属于自已
-            val label = labelDao.getLabel(dslContext, id)
-            if (null != label && labelCode != label.labelCode) {
-                // 抛出错误提示
+        if (checkResult != null) return checkResult
+        labelDao.update(dslContext, id, labelRequest)
+        return Result(true)
+    }
+
+    /**
+     * 校验标签代码和名称的唯一性（同时支持新增和更新场景）
+     * @param excludeId 更新场景下传入当前记录ID，排除自身；新增场景传null
+     * @return 如果存在冲突返回错误Result，否则返回null
+     */
+    private fun checkLabelUniqueness(
+        labelCode: String,
+        labelName: String,
+        type: Byte,
+        serviceScope: ServiceScopeEnum?,
+        excludeId: String? = null
+    ): Result<Boolean>? {
+        // 更新场景下查询已有记录，用于判断值是否发生变化
+        val existingLabel = excludeId?.let { labelDao.getLabel(dslContext, it) }
+        // 判断标签代码是否已存在（更新场景下仅在值变化时校验）
+        if (existingLabel == null || labelCode != existingLabel.labelCode) {
+            val codeCount = labelDao.countByCode(
+                dslContext = dslContext,
+                labelCode = labelCode,
+                type = type,
+                serviceScope = serviceScope
+            )
+            if (codeCount > 0) {
                 return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                     params = arrayOf(labelCode),
-                    data = false
+                    data = false,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             }
         }
-        val labelName = labelRequest.labelName
-        // 判断类型标签是否存在
-        val count = labelDao.countByName(
-            dslContext = dslContext,
-            labelName = labelName,
-            type = type,
-            serviceScope = serviceScope
-        )
-        if (count > 0) {
-            // 判断更新的标签名称是否属于自已
-            val label = labelDao.getLabel(dslContext, id)
-            if (null != label && labelName != label.labelName) {
-                // 抛出错误提示
+        // 判断标签名称是否已存在（更新场景下仅在值变化时校验）
+        if (existingLabel == null || labelName != existingLabel.labelName) {
+            val nameCount = labelDao.countByName(
+                dslContext = dslContext,
+                labelName = labelName,
+                type = type,
+                serviceScope = serviceScope
+            )
+            if (nameCount > 0) {
                 return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                     params = arrayOf(labelName),
-                    data = false
+                    data = false,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             }
         }
-        labelDao.update(dslContext, id, labelRequest)
-        return Result(true)
+        return null
     }
 
     /**

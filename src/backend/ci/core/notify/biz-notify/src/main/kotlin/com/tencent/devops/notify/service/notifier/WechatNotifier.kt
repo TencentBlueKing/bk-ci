@@ -12,7 +12,6 @@ import com.tencent.devops.notify.service.WechatService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
@@ -22,9 +21,9 @@ class WechatNotifier @Autowired constructor(
     private val dslContext: DSLContext,
     private val commonConfig: CommonConfig
 ) : INotifier {
-    @Value("\${wework.domain}")
-    private val userUseDomain: Boolean = true
+
     override fun type(): NotifyType = NotifyType.WECHAT
+
     override fun send(
         request: SendNotifyMessageTemplateRequest,
         commonNotifyMessageTemplateRecord: TCommonNotifyMessageTemplateRecord
@@ -38,28 +37,15 @@ class WechatNotifier @Autowired constructor(
             wechatTplRecord.body, commonConfig.devopsDefaultLocaleLanguage
         )
         val finalBody = NotifierUtils.replaceContentParams(request.bodyParams, rawBody)
-        sendWechatNotifyMessage(
-            commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
-            sendNotifyMessageTemplateRequest = request,
-            body = finalBody,
+        logger.info("sendWechatNotifyMessage:\nbody:$finalBody")
+        val wechatNotifyMessage = WechatNotifyMessage().apply {
             sender = wechatTplRecord.sender
-        )
-    }
-
-    private fun sendWechatNotifyMessage(
-        commonNotifyMessageTemplate: TCommonNotifyMessageTemplateRecord,
-        sendNotifyMessageTemplateRequest: SendNotifyMessageTemplateRequest,
-        body: String,
-        sender: String
-    ) {
-        logger.info("sendWechatNotifyMessage:\nbody:$body")
-        val wechatNotifyMessage = WechatNotifyMessage()
-        wechatNotifyMessage.sender = sender
-        wechatNotifyMessage.addAllReceivers(sendNotifyMessageTemplateRequest.receivers)
-        wechatNotifyMessage.body = body
-        wechatNotifyMessage.priority = EnumNotifyPriority.parse(commonNotifyMessageTemplate.priority.toString())
-        wechatNotifyMessage.source = EnumNotifySource.parse(commonNotifyMessageTemplate.source.toInt())
-            ?: EnumNotifySource.BUSINESS_LOGIC
+            addAllReceivers(request.receivers)
+            body = finalBody
+            priority = EnumNotifyPriority.parse(commonNotifyMessageTemplateRecord.priority.toString())
+            source = EnumNotifySource.parse(commonNotifyMessageTemplateRecord.source.toInt())
+                ?: EnumNotifySource.BUSINESS_LOGIC
+        }
         wechatService.sendMqMsg(wechatNotifyMessage)
     }
 

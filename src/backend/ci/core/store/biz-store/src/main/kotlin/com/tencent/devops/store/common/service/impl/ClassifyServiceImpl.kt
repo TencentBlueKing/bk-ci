@@ -41,7 +41,6 @@ import com.tencent.devops.store.common.service.AbstractClassifyService
 import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -56,8 +55,6 @@ class ClassifyServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val classifyDao: ClassifyDao
 ) : ClassifyService {
-
-    private val logger = LoggerFactory.getLogger(ClassifyServiceImpl::class.java)
 
     /**
      * 获取所有分类信息
@@ -87,42 +84,14 @@ class ClassifyServiceImpl @Autowired constructor(
      * 保存分类信息
      */
     override fun saveClassify(classifyRequest: ClassifyRequest, type: Byte): Result<Boolean> {
-        logger.info("saveClassify params:[$classifyRequest|$type]")
-        val classifyCode = classifyRequest.classifyCode
-        val serviceScope = classifyRequest.serviceScope
-        // 判断分类代码是否存在
-        val codeCount = classifyDao.countByCode(
-            dslContext = dslContext,
-            classifyCode = classifyCode,
+        // 校验分类代码和名称的唯一性
+        val checkResult = checkClassifyUniqueness(
+            classifyCode = classifyRequest.classifyCode,
+            classifyName = classifyRequest.classifyName,
             type = type,
-            serviceScope = serviceScope
+            serviceScope = classifyRequest.serviceScope
         )
-        if (codeCount > 0) {
-            // 抛出错误提示
-            return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                params = arrayOf(classifyCode),
-                data = false,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-            )
-        }
-        val classifyName = classifyRequest.classifyName
-        // 判断分类名称是否存在
-        val nameCount = classifyDao.countByName(
-            dslContext = dslContext,
-            classifyName = classifyName,
-            type = type,
-            serviceScope = serviceScope
-        )
-        if (nameCount > 0) {
-            // 抛出错误提示
-            return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                params = arrayOf(classifyName),
-                data = false,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-            )
-        }
+        if (checkResult != null) return checkResult
         val id = UUIDUtil.generate()
         classifyDao.add(dslContext, id, classifyRequest, type)
         return Result(true)
@@ -132,50 +101,68 @@ class ClassifyServiceImpl @Autowired constructor(
      * 更新分类信息
      */
     override fun updateClassify(id: String, classifyRequest: ClassifyRequest, type: Byte): Result<Boolean> {
-        logger.info("updateClassify params:[$id|$classifyRequest|$type]")
-        val classifyCode = classifyRequest.classifyCode
-        val serviceScope = classifyRequest.serviceScope
-        // 判断分类是否存在
-        val codeCount = classifyDao.countByCode(
-            dslContext = dslContext,
-            classifyCode = classifyCode,
+        // 复用公共校验方法，传入excludeId排除自身记录
+        val checkResult = checkClassifyUniqueness(
+            classifyCode = classifyRequest.classifyCode,
+            classifyName = classifyRequest.classifyName,
             type = type,
-            serviceScope = serviceScope
+            serviceScope = classifyRequest.serviceScope,
+            excludeId = id
         )
-        if (codeCount > 0) {
-            // 判断更新分类名称是否属于自已
-            val classify = classifyDao.getClassify(dslContext, id)
-            if (null != classify && classifyCode != classify.classifyCode) {
-                // 抛出错误提示
+        if (checkResult != null) return checkResult
+        classifyDao.update(dslContext, id, classifyRequest)
+        return Result(true)
+    }
+
+    /**
+     * 校验分类代码和名称的唯一性（同时支持新增和更新场景）
+     * @param excludeId 更新场景下传入当前记录ID，排除自身；新增场景传null
+     * @return 如果存在冲突返回错误Result，否则返回null
+     */
+    private fun checkClassifyUniqueness(
+        classifyCode: String,
+        classifyName: String,
+        type: Byte,
+        serviceScope: ServiceScopeEnum?,
+        excludeId: String? = null
+    ): Result<Boolean>? {
+        // 更新场景下查询已有记录，用于判断值是否发生变化
+        val existingClassify = excludeId?.let { classifyDao.getClassify(dslContext, it) }
+        // 判断分类代码是否已存在（更新场景下仅在值变化时校验）
+        if (existingClassify == null || classifyCode != existingClassify.classifyCode) {
+            val codeCount = classifyDao.countByCode(
+                dslContext = dslContext,
+                classifyCode = classifyCode,
+                type = type,
+                serviceScope = serviceScope
+            )
+            if (codeCount > 0) {
                 return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                     params = arrayOf(classifyCode),
-                    data = false
+                    data = false,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             }
         }
-        val classifyName = classifyRequest.classifyName
-        // 判断类型分类是否存在
-        val count = classifyDao.countByName(
-            dslContext = dslContext,
-            classifyName = classifyName,
-            type = type,
-            serviceScope = serviceScope
-        )
-        if (count > 0) {
-            // 判断更新的分类名称是否属于自已
-            val classify = classifyDao.getClassify(dslContext, id)
-            if (null != classify && classifyName != classify.classifyName) {
-                // 抛出错误提示
+        // 判断分类名称是否已存在（更新场景下仅在值变化时校验）
+        if (existingClassify == null || classifyName != existingClassify.classifyName) {
+            val nameCount = classifyDao.countByName(
+                dslContext = dslContext,
+                classifyName = classifyName,
+                type = type,
+                serviceScope = serviceScope
+            )
+            if (nameCount > 0) {
                 return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                     params = arrayOf(classifyName),
-                    data = false
+                    data = false,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             }
         }
-        classifyDao.update(dslContext, id, classifyRequest)
-        return Result(true)
+        return null
     }
 
     /**
