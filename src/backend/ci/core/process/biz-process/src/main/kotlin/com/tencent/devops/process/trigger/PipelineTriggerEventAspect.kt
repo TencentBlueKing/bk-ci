@@ -223,12 +223,16 @@ class PipelineTriggerEventAspect(
         startType: StartType?,
         pipelineParamMap: MutableMap<String, BuildParameters>?
     ): Boolean {
-        // 不是BS渠道的不需要记录,webhook的在webhook触发时已记录,在这不需要记录;重试不需要记录
+        // 非BS和CREATIVE_STREAM渠道的不需要记录,webhook的在webhook触发时已记录,在这不需要记录;重试不需要记录
+        val isAnyParamNull = pipeline == null || userId == null || channelCode == null || startType == null
+        val isUnsupportedChannel = channelCode != ChannelCode.BS && channelCode != ChannelCode.CREATIVE_STREAM
+        val isWebHookStart = startType == StartType.WEB_HOOK
+        val isRetryBuild = pipelineParamMap != null && pipelineParamMap[PIPELINE_RETRY_BUILD_ID] != null
         return when {
-            pipeline == null || userId == null || channelCode == null || startType == null -> true
-            channelCode != ChannelCode.BS && channelCode != ChannelCode.CREATIVE_STREAM -> true
-            startType == StartType.WEB_HOOK -> true
-            pipelineParamMap != null && pipelineParamMap[PIPELINE_RETRY_BUILD_ID] != null -> true
+            isAnyParamNull -> true
+            isUnsupportedChannel -> true
+            isWebHookStart -> true
+            isRetryBuild -> true
             else -> false
         }
     }

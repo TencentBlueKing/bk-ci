@@ -1,3 +1,5 @@
+//go:build windows
+
 package main
 
 import (
@@ -124,20 +126,21 @@ type systemHandleEntryInfo struct {
 	GrantedAccess         uint32
 }
 
-const version = "1.2.0"
+const version = "1.3.0"
 
 func printUsage() {
-	fmt.Println("Process Tree & Blocking Diagnosis Tool v" + version)
+	fmt.Println("agent-util v" + version)
 	fmt.Println()
-	fmt.Println("A Windows process analysis tool that builds process trees, detects blocked")
-	fmt.Println("processes, scans pipe handle inheritance, and generates rich HTML reports.")
-	fmt.Println("Designed for diagnosing CI/CD build hangs caused by orphaned child processes")
-	fmt.Println("holding inherited pipe handles (e.g. commons-exec StreamPumper blocking).")
+	fmt.Println("Subcommands:")
+	fmt.Println("  tree         Windows 进程树 / 阻塞诊断")
+	fmt.Println("  shell-check  Unix login shell 启动链路检测（当前平台仅提示不支持）")
 	fmt.Println()
 	fmt.Println("USAGE:")
-	fmt.Println("  process-tree.exe [OPTIONS]")
+	fmt.Println("  agent-util.exe tree [OPTIONS]")
+	fmt.Println("  agent-util.exe shell-check [OPTIONS]")
+	fmt.Println("  agent-util.exe [OPTIONS]   # 兼容旧用法，等价于 tree")
 	fmt.Println()
-	fmt.Println("OPTIONS:")
+	fmt.Println("TREE OPTIONS:")
 	fmt.Println("  -buildid <string>   Build ID used to match process command line (required)")
 	fmt.Println("  -name <string>      Target process name to search for (default: java.exe)")
 	fmt.Println("  -i                  Launch interactive mode (prompts for buildId and options)")
@@ -148,30 +151,29 @@ func printUsage() {
 	fmt.Println("  -v                  Show version and exit")
 	fmt.Println()
 	fmt.Println("EXAMPLES:")
-	fmt.Println("  process-tree.exe -buildid b-ec8dfe3da2174a219d04907dd791479e")
-	fmt.Println("  process-tree.exe -buildid b-ec8dfe3da2174a219d04907dd791479e -diag -pipe")
-	fmt.Println("  process-tree.exe -buildid b-ec8dfe3da2174a219d04907dd791479e -name node.exe")
-	fmt.Println("  process-tree.exe -buildid b-ec8dfe3da2174a219d04907dd791479e -html")
-	fmt.Println("  process-tree.exe -i")
-	fmt.Println()
-	fmt.Println("OUTPUT:")
-	fmt.Println("  Console: Colored process tree with summary, issues, and jstack output")
-	fmt.Println("  HTML:    Interactive report saved to process_tree_report_<timestamp>.html")
-	fmt.Println()
-	fmt.Println("FEATURES:")
-	fmt.Println("  - Process tree visualization (parent chain + child tree)")
-	fmt.Println("  - Pipe handle inheritance scanner (finds grandchild processes blocking pipes)")
-	fmt.Println("  - Thread-level blocking diagnosis (WaitReason analysis)")
-	fmt.Println("  - Per-process pipe handle enumeration via NtQuerySystemInformation")
-	fmt.Println("  - Automatic jstack capture for Java processes")
-	fmt.Println("  - Rich HTML report with dark theme, collapsible sections, and copy-to-clipboard")
+	fmt.Println("  agent-util.exe tree -buildid b-ec8dfe3da2174a219d04907dd791479e")
+	fmt.Println("  agent-util.exe tree -buildid b-ec8dfe3da2174a219d04907dd791479e -diag -pipe")
+	fmt.Println("  agent-util.exe tree -buildid b-ec8dfe3da2174a219d04907dd791479e -name node.exe")
+	fmt.Println("  agent-util.exe tree -buildid b-ec8dfe3da2174a219d04907dd791479e -html")
+	fmt.Println("  agent-util.exe tree -i")
 	fmt.Println()
 	fmt.Println("NOTE:")
-	fmt.Println("  This tool requires Administrator privileges and will auto-elevate if needed.")
+	fmt.Println("  tree 子命令需要管理员权限，并会在需要时自动提权。")
 }
 
 func main() {
 	enableVirtualTerminal()
+
+	args := os.Args[1:]
+	if len(args) > 0 {
+		switch args[0] {
+		case "tree":
+			os.Args = append([]string{os.Args[0]}, args[1:]...)
+		case "shell-check":
+			fmt.Println("shell-check 子命令仅支持 Linux/macOS 平台")
+			return
+		}
+	}
 
 	buildId := flag.String("buildid", "", "Build ID (used to match process command line)")
 	processName := flag.String("name", "java.exe", "Process name (default: java.exe)")
@@ -184,13 +186,12 @@ func main() {
 	flag.Usage = printUsage
 	flag.Parse()
 
-	// Handle -h and -v before admin check so they work without elevation
 	if *showHelp {
 		printUsage()
 		return
 	}
 	if *showVersion {
-		fmt.Println("process-tree v" + version)
+		fmt.Println("agent-util v" + version)
 		return
 	}
 
@@ -217,7 +218,7 @@ func main() {
 func interactiveMode(buildId *string, processName *string) {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("========================================")
-	fmt.Println("  Process Tree & Blocking Diagnosis")
+	fmt.Println("  agent-util tree diagnosis")
 	fmt.Println("========================================")
 	fmt.Println()
 

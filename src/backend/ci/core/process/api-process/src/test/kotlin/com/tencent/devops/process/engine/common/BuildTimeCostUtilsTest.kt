@@ -27,7 +27,7 @@ internal class BuildTimeCostUtilsTest {
         val right = listOf(BuildRecordTimeLine.Moment(200L, 400L))
         val ans = BuildTimeCostUtils.differenceTimeLine(left, right)
         Assertions.assertEquals(
-            listOf(BuildRecordTimeLine.Moment(0L, 100L), BuildRecordTimeLine.Moment(500L, 600L)),
+            left,
             ans
         )
     }

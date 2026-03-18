@@ -1,4 +1,4 @@
-//go:build !loong64
+//go:build !loong64 && !darwin
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
