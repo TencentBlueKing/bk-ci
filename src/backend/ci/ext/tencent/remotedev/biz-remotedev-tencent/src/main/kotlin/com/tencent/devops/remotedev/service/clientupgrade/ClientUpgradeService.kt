@@ -259,7 +259,7 @@ class ClientUpgradeService @Autowired constructor(
         private val logger =
             LoggerFactory.getLogger(ClientUpgradeService::class.java)
         private const val LOCK_KEY = "remotedev_cron_updateCanUpgradeClients"
-        private const val LAST_REQUEST_BEFORE_DAYS = 14
+        private const val LAST_REQUEST_BEFORE_DAYS = 7
         private const val PAGE_SIZE = 500
     }
 }
