@@ -900,7 +900,14 @@
     "minorVersion": "マイナーバージョン",
     "fixVersion": "修正バージョン",
     "paramsInvalidMsg": "パイプライン実行パラメータにエラーが発生しました",
-    "versionSelectorDisableTips": " 1. PACブランチバージョンが存在する場合は、ブランチバージョンを選択して実行できます<br/>2. PACブランチバージョンがない場合は、常に現在の最新バージョンを実行します"
+    "versionSelectorDisableTips": " 1. PACブランチバージョンが存在する場合は、ブランチバージョンを選択して実行できます<br/>2. PACブランチバージョンがない場合は、常に現在の最新バージョンを実行します",
+    "selectBranch": "ブランチを選択",
+    "selectBranchPlaceholder": "ブランチを選択",
+    "runBranchPipeline": "選択したブランチでパイプラインを実行",
+    "branchVersionNotFound": "パイプラインが存在しません、ブランチを再選択してください！",
+    "branchVersionCreateFailed": "ブランチバージョンの作成に失敗しました",
+    "errorBranch": "ブランチ：",
+    "errorPipelinePath": "パイプライン："
   },
   "details": {
     "executorInfo": "{0} {1}が{2}にトリガー",
