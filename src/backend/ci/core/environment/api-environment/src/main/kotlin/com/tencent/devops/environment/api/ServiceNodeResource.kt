@@ -277,6 +277,9 @@ interface ServiceNodeResource {
         @Parameter(description = "正序ASC/倒序DESC (默认倒序)", required = false)
         @QueryParam("collation")
         collation: String? = null,
+        @Parameter(description = "是否是创作流模式", required = false)
+        @QueryParam("createMode")
+        createMode: Boolean? = null,
         data: NodeFetchReq? = null
     ): Result<Page<NodeWithPermission>>
 }
