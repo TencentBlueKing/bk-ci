@@ -53,6 +53,9 @@ class AtomLabelRelDao {
         atomIds: Set<String>,
         serviceScope: ServiceScopeEnum? = null
     ): Result<out Record>? {
+        if (atomIds.isEmpty()) {
+            return null
+        }
         val tLabel = TLabel.T_LABEL
         val tAtomLabelRel = TAtomLabelRel.T_ATOM_LABEL_REL
         val conditions = mutableListOf<org.jooq.Condition>().apply {
