@@ -38,6 +38,7 @@ import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.process.strategy.pojo.HistoryConditionQueryRequest
 import com.tencent.devops.process.strategy.bus.HistoryConditionQueryStrategy
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -48,6 +49,10 @@ import org.springframework.stereotype.Component
 class TriggerNodeQueryStrategy @Autowired constructor(
     private val client: Client
 ) : HistoryConditionQueryStrategy {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(TriggerNodeQueryStrategy::class.java)
+    }
 
     override fun query(
         request: HistoryConditionQueryRequest
@@ -66,6 +71,10 @@ class TriggerNodeQueryStrategy @Autowired constructor(
         // 处理结果
         val nodePage = result.data
         if (result.isNotOk() || nodePage == null) {
+            logger.warn(
+                "Failed to fetch trigger nodes|userId=${request.userId}|projectId=${request.projectId}|" +
+                        "status=${result.status}|message=${result.message}"
+            )
             return Page(
                 page = request.page,
                 pageSize = request.pageSize,
