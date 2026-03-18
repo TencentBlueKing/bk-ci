@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.NodeTag
+import com.tencent.devops.environment.pojo.NodeTagAndEnv
 import com.tencent.devops.environment.pojo.NodeTagReq
 import com.tencent.devops.environment.pojo.NodeTagUpdateReq
 import com.tencent.devops.environment.pojo.UpdateNodeTag
@@ -48,7 +49,10 @@ interface UserNodeTagResource {
         userId: String,
         @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
-        projectId: String
+        projectId: String,
+        @Parameter(description = "是否是创作流模式", required = false)
+        @QueryParam("createMode")
+        createMode: Boolean?
     ): Result<List<NodeTag>>
 
     @Operation(summary = "编辑节点标签信息")
@@ -107,4 +111,19 @@ interface UserNodeTagResource {
         projectId: String,
         data: List<UpdateNodeTag>
     ): Result<Boolean>
+
+    @Operation(summary = "查询节点所属的标签和动态环境")
+    @GET
+    @Path("/fetchNodeTagAndDynEnv")
+    fun fetchNodeTagAndDynEnv(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "节点HashID", required = true)
+        @QueryParam("nodeHashId")
+        nodeHashId: String
+    ): Result<NodeTagAndEnv>
 }

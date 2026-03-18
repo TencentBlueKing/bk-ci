@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.pipeline.type.agent
 
-enum class AgentType {
+enum class AgentDispatchType {
     ID, // This is only for old pipeline, new pipelines will use name
     NAME,
 

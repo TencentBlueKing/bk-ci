@@ -39,7 +39,6 @@ enum class AuthResourceType(val value: String) {
     PIPELINE_GROUP("pipeline_group"), // 流水线组类型
     PIPELINE_TEMPLATE("pipeline_template"), // 流水线模板类型
     CREATIVE_STREAM("creative_stream"), // 创作流类型
-    CREATIVE_STREAM_NODE("creative_stream_node"), // 创作流节点类型
 
     CREATIVE_STREAM("creative_stream"), // 创意流
 
@@ -50,6 +49,7 @@ enum class AuthResourceType(val value: String) {
 
     ENVIRONMENT_ENVIRONMENT("environment"), // 环境
     ENVIRONMENT_ENV_NODE("env_node"), // 环境节点
+    CREATIVE_STREAM_NODE("creative_stream_node"), // 创作流节点类型
 
     EXPERIENCE_TASK("task"), // 体验任务
     EXPERIENCE_TASK_NEW("experience_task"), // 体验任务(新权限中心资源类型需唯一)
