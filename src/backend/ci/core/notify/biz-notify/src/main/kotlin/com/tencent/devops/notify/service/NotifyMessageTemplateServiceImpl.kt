@@ -133,8 +133,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 dslContext,
                 tCommonNotifyMessageTemplateRecord
             )
-            val tWechatNotifyMessageTemplateRecord = template.wechatTemplate?.let {
-                val wechatTemplate = template.wechatTemplate!!
+            val tWechatNotifyMessageTemplateRecord = template.wechatTemplate?.let { wechatTemplate ->
                 TWechatNotifyMessageTemplateRecord().apply {
                     this.id = wechatTemplate.id
                     this.commonTemplateId = template.id
@@ -147,8 +146,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     this.updateTime = LocalDateTime.now()
                 }
             }
-            val tWeworkGroupNotifyMessageTemplateRecord = template.weworkGroupTemplate?.let {
-                val weworkGroupTemplate = template.weworkGroupTemplate!!
+            val tWeworkGroupNotifyMessageTemplateRecord = template.weworkGroupTemplate?.let { weworkGroupTemplate ->
                 TWeworkGroupNotifyMessageTemplateRecord().apply {
                     this.id = weworkGroupTemplate.id
                     this.commonTemplateId = template.id
@@ -160,8 +158,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     this.updateTime = LocalDateTime.now()
                 }
             }
-            val tWeworkNotifyMessageTemplateRecord = template.weworkTemplate?.let {
-                val weworkTemplate = template.weworkTemplate!!
+            val tWeworkNotifyMessageTemplateRecord = template.weworkTemplate?.let { weworkTemplate ->
                 TWeworkNotifyMessageTemplateRecord().apply {
                     this.id = weworkTemplate.id
                     this.commonTemplateId = template.id
@@ -174,8 +171,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     this.updateTime = LocalDateTime.now()
                 }
             }
-            val tEmailsNotifyMessageTemplateRecord = template.emailTemplate?.let {
-                val emailTemplate = template.emailTemplate!!
+            val tEmailsNotifyMessageTemplateRecord = template.emailTemplate?.let { emailTemplate ->
                 TEmailsNotifyMessageTemplateRecord().apply {
                     this.id = emailTemplate.id
                     this.commonTemplateId = template.id
@@ -189,8 +185,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     this.updateTime = LocalDateTime.now()
                 }
             }
-            val tVoiceNotifyMessageTemplateRecord = template.voiceTemplate?.let {
-                val voiceTemplate = template.voiceTemplate!!
+            val tVoiceNotifyMessageTemplateRecord = template.voiceTemplate?.let { voiceTemplate ->
                 TVoiceNotifyMessageTemplateRecord().apply {
                     this.id = voiceTemplate.id
                     this.commonTemplateId = template.id
@@ -692,7 +687,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 val emailTplRecord = notifyMessageTemplateDao.getEmailNotifyMessageTemplate(
                     dslContext,
                     commonNotifyMessageTemplateRecord.id
-                )!!
+                ) ?: return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf(request.templateCode),
+                    data = null
+                )
                 // 先对 DB 原始模板做渠道关键字替换，再替换占位符
                 val language = commonConfig.devopsDefaultLocaleLanguage
                 val rawTitle = NotifierUtils.replaceNotifyKeywordByChannel(emailTplRecord.title, language)
@@ -707,7 +706,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 val rtxTplRecord = notifyMessageTemplateDao.getRtxNotifyMessageTemplate(
                     dslContext = dslContext,
                     commonTemplateId = commonNotifyMessageTemplateRecord.id
-                )!!
+                ) ?: return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf(request.templateCode),
+                    data = null
+                )
                 // 先对 DB 原始模板做渠道关键字替换，再替换占位符
                 val language = commonConfig.devopsDefaultLocaleLanguage
                 val rawTitle = NotifierUtils.replaceNotifyKeywordByChannel(rtxTplRecord.title, language)
@@ -722,7 +725,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 val wechatTplRecord = notifyMessageTemplateDao.getWechatNotifyMessageTemplate(
                     dslContext = dslContext,
                     commonTemplateId = commonNotifyMessageTemplateRecord.id
-                )!!
+                ) ?: return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf(request.templateCode),
+                    data = null
+                )
                 // 先对 DB 原始模板做渠道关键字替换，再替换占位符
                 val language = commonConfig.devopsDefaultLocaleLanguage
                 val rawTitle = NotifierUtils.replaceNotifyKeywordByChannel(wechatTplRecord.title, language)
@@ -737,7 +744,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 val voiceTplRecord = notifyMessageTemplateDao.getVoiceNotifyMessageTemplate(
                     dslContext = dslContext,
                     commonTemplateId = commonNotifyMessageTemplateRecord.id
-                )!!
+                ) ?: return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf(request.templateCode),
+                    data = null
+                )
                 // 先对 DB 原始模板做渠道关键字替换，再替换占位符
                 val language = commonConfig.devopsDefaultLocaleLanguage
                 val rawTitle = NotifierUtils.replaceNotifyKeywordByChannel(voiceTplRecord.taskName, language)
