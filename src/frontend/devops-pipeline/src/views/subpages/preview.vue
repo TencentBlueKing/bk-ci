@@ -10,25 +10,12 @@
             <bk-exception
                 class="exception-wrap-item"
                 :type="pacError.type"
-                scene="part"
             >
                 <div class="pac-error-content">
                     <p
                         class="pac-error-title"
                         v-bk-xss-html="pacError.message"
                     />
-                    <p
-                        v-if="pacError.branch"
-                        class="pac-error-detail"
-                    >
-                        {{ $t('preview.errorBranch') }}{{ pacError.branch }}
-                    </p>
-                    <p
-                        v-if="pacError.pipelinePath"
-                        class="pac-error-detail"
-                    >
-                        {{ $t('preview.errorPipelinePath') }}{{ pacError.pipelinePath }}
-                    </p>
                 </div>
             </bk-exception>
         </div>
@@ -729,17 +716,15 @@
                     const errorCode = err?.code || err?.status
                     // PAC 模式下特定错误码不返回，而是展示错误页面
                     if (this.pacEnabled && errorCode === 2101378) {
-                        // 分支版本不存在，展示 404 页面
+                        // 分支版本不存在
                         this.pacError = {
                             show: true,
-                            type: '404',
-                            message: this.$t('preview.branchVersionNotFound'),
-                            branch: branch || this.selectedBranch,
-                            pipelinePath: this.pipelineInfo?.yamlInfo?.filePath || ''
+                            type: 'empty',
+                            message: err?.message || this.$t('preview.branchVersionNotFound')
                         }
                         bus.$emit(UPDATE_PAC_ERROR_STATUS, true)
                     } else if (this.pacEnabled && errorCode === 2101379) {
-                        // 分支版本创建失败，展示错误信息
+                        // 分支版本创建失败
                         this.pacError = {
                             show: true,
                             type: 'empty',
