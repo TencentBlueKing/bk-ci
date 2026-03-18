@@ -40,8 +40,6 @@ enum class AuthResourceType(val value: String) {
     PIPELINE_TEMPLATE("pipeline_template"), // 流水线模板类型
     CREATIVE_STREAM("creative_stream"), // 创作流类型
 
-    CREATIVE_STREAM("creative_stream"), // 创意流
-
     ARTIFACTORY_CUSTOM_DIR("custom_dir"), // 版本仓库自定义目录
 
     TICKET_CREDENTIAL("credential"), // 凭证服务凭据

@@ -274,8 +274,8 @@ object AtomUtils {
             ChannelCode.CREATIVE_STREAM -> ServiceScopeEnum.CREATIVE_STREAM.name
             else -> ServiceScopeEnum.PIPELINE.name
         }
-        require(serviceScope.any { it.equals(requiredScope, ignoreCase = true) }) {
-            ErrorCodeException(
+        if (serviceScope.none { it.equals(requiredScope, ignoreCase = true) }) {
+            throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID,
                 params = arrayOf(atomName),
                 defaultMessage = I18nUtil.getCodeLanMessage(
