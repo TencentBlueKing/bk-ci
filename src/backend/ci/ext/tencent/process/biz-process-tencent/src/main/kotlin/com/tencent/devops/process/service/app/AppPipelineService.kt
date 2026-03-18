@@ -43,9 +43,45 @@ import com.tencent.devops.process.pojo.app.pipeline.AppProject
 import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import io.swagger.v3.oas.annotations.media.Schema
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+
+/**
+ * App流水线构建历史查询请求参数
+ */
+@Schema(title = "App流水线构建历史查询请求参数")
+data class AppPipelineHistoryQueryReq(
+    @get:Schema(title = "用户ID")
+    val userId: String,
+    @get:Schema(title = "项目ID")
+    val projectId: String,
+    @get:Schema(title = "流水线ID")
+    val pipelineId: String,
+    @get:Schema(title = "第几页")
+    val page: Int? = null,
+    @get:Schema(title = "每页条数")
+    val pageSize: Int? = null,
+    @get:Schema(title = "渠道号")
+    val channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
+    @get:Schema(title = "是否校验权限")
+    val checkPermission: Boolean = true,
+    @get:Schema(title = "代码库分支")
+    val materialBranch: List<String>? = null,
+    @get:Schema(title = "是否调试")
+    val debug: Boolean? = null,
+    @get:Schema(title = "触发代码库")
+    val triggerAlias: List<String>? = null,
+    @get:Schema(title = "触发分支")
+    val triggerBranch: List<String>? = null,
+    @get:Schema(title = "触发人")
+    val triggerUser: List<String>? = null,
+    @get:Schema(title = "触发事件类型")
+    val triggerEventTypes: List<String>? = null,
+    @get:Schema(title = "触发节点HashId")
+    val triggerNodeHashIds: List<String>? = null
+)
 
 @Service
 class AppPipelineService @Autowired constructor(
@@ -157,45 +193,31 @@ class AppPipelineService @Autowired constructor(
         )
     }
 
-    fun listPipelineHistory(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        page: Int?,
-        pageSize: Int?,
-        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
-        checkPermission: Boolean = true,
-        materialBranch: List<String>?,
-        debug: Boolean?,
-        triggerAlias: List<String>?,
-        triggerBranch: List<String>?,
-        triggerUser: List<String>?,
-        triggerEventTypes: List<String>?,
-        triggerNodeHashIds: List<String>?
-    ): Page<AppPipelineHistory> {
+    fun listPipelineHistory(request: AppPipelineHistoryQueryReq): Page<AppPipelineHistory> {
         val queryParam = BuildHistoryQueryParam(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            materialBranch = materialBranch,
-            debug = debug,
-            triggerAlias = triggerAlias,
-            triggerBranch = triggerBranch,
-            triggerUser = triggerUser,
-            triggerEventTypes = triggerEventTypes,
-            triggerNodeHashIds = triggerNodeHashIds
+            projectId = request.projectId,
+            pipelineId = request.pipelineId,
+            materialBranch = request.materialBranch,
+            debug = request.debug,
+            triggerAlias = request.triggerAlias,
+            triggerBranch = request.triggerBranch,
+            triggerUser = request.triggerUser,
+            triggerEventTypes = request.triggerEventTypes,
+            triggerNodeHashIds = request.triggerNodeHashIds
         )
         val result = pipelineBuildFacadeService.getHistoryBuild(
-            userId = userId,
-            page = page,
-            pageSize = pageSize,
+            userId = request.userId,
+            page = request.page,
+            pageSize = request.pageSize,
             queryParam = queryParam
         )
         val histories = result.records.map { h ->
-            val packageVersion = StringBuilder()
-            h.artifactList?.forEach { packageVersion.append(it.appVersion).append(";") }
+            val packageVersion = h.artifactList?.joinToString(";") {
+                it.appVersion.orEmpty()
+            }.orEmpty()
             AppPipelineHistory(
-                projectId = projectId,
-                pipelineId = pipelineId,
+                projectId = request.projectId,
+                pipelineId = request.pipelineId,
                 buildId = h.id,
                 userId = h.userId,
                 trigger = StartType.toStartType(h.trigger),
@@ -205,7 +227,7 @@ class AppPipelineService @Autowired constructor(
                 status = h.status,
                 curTimestamp = h.currentTimestamp,
                 pipelineVersion = h.pipelineVersion,
-                packageVersion = packageVersion.toString().removeSuffix(";")
+                packageVersion = packageVersion
             ).apply {
                 isMobileStart = h.isMobileStart
             }
