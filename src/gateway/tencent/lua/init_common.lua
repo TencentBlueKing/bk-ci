@@ -50,7 +50,7 @@ buildExternalAuthUtil = require("util.build_external_auth_util")
 
 local ok_table = {status = 0, data = true}
 
-no_container_svr = {"sign", "config"}
+no_container_svr = {"sign", "config","ios-sign"}
 
 response_ok = json.encode(ok_table)
 
