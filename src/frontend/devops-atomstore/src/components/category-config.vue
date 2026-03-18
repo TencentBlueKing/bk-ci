@@ -311,7 +311,6 @@
 
         .devops-icon {
             position: relative;
-            top: 3px;
             font-size: 16px;
             color: #979BA5;
         }
