@@ -54,9 +54,7 @@ import com.tencent.devops.process.pojo.template.TemplateMigrateByPercentageReque
 import com.tencent.devops.process.pojo.template.TemplateMigrateByPercentageResult
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateVersion
-import com.tencent.devops.process.pojo.template.v2.FixBadParamsResult
-import com.tencent.devops.process.pojo.template.v2.FixBadParamsTemplateDetail
-import com.tencent.devops.process.pojo.template.v2.FixBadParamsVersionDetail
+import com.tencent.devops.process.pojo.template.v2.FixBadParamsItem
 import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoV2
@@ -1069,12 +1067,12 @@ class PipelineTemplateMigrateService(
         projectId: String,
         templateId: String?,
         dryRun: Boolean
-    ): FixBadParamsResult {
+    ): List<FixBadParamsItem> {
         logger.info(
             "fixBadParams start|projectId={}|templateId={}|dryRun={}",
             projectId, templateId, dryRun
         )
-        val templateDetails = mutableListOf<FixBadParamsTemplateDetail>()
+        val badItems = mutableListOf<FixBadParamsItem>()
         var page = 1
         val pageSize = 100
         do {
@@ -1092,10 +1090,9 @@ class PipelineTemplateMigrateService(
                     dryRun = dryRun
                 )
                 if (badVersions.isNotEmpty()) {
-                    templateDetails.add(
-                        FixBadParamsTemplateDetail(
+                    badItems.add(
+                        FixBadParamsItem(
                             templateId = templateInfo.id,
-                            templateName = templateInfo.name,
                             versions = badVersions
                         )
                     )
@@ -1103,26 +1100,19 @@ class PipelineTemplateMigrateService(
             }
             page++
         } while (templateInfos.size == pageSize)
-        val totalVersions = templateDetails.sumOf { it.versions.size }
         logger.info(
-            "fixBadParams done|projectId={}|dryRun={}|" +
-                "affectedTemplates={}|affectedVersions={}",
-            projectId, dryRun, templateDetails.size, totalVersions
+            "fixBadParams done|projectId={}|dryRun={}|affectedTemplates={}",
+            projectId, dryRun, badItems.size
         )
-        return FixBadParamsResult(
-            dryRun = dryRun,
-            templates = templateDetails,
-            affectedTemplateCount = templateDetails.size,
-            affectedVersionCount = totalVersions
-        )
+        return badItems
     }
 
     private fun fixTemplateVersionParams(
         projectId: String,
         templateId: String,
         dryRun: Boolean
-    ): List<FixBadParamsVersionDetail> {
-        val badVersions = mutableListOf<FixBadParamsVersionDetail>()
+    ): List<Long> {
+        val badVersions = mutableListOf<Long>()
         var page = 1
         val pageSize = 100
         do {
@@ -1134,14 +1124,14 @@ class PipelineTemplateMigrateService(
             )
             val templateResources = pipelineTemplateResourceService.list(condition)
             templateResources.forEach { templateResource ->
-                val detail = fixVersionParams(
-                    projectId = projectId,
-                    templateId = templateId,
-                    templateResource = templateResource,
-                    dryRun = dryRun
-                )
-                if (detail != null) {
-                    badVersions.add(detail)
+                if (fixVersionParams(
+                        projectId = projectId,
+                        templateId = templateId,
+                        templateResource = templateResource,
+                        dryRun = dryRun
+                    )
+                ) {
+                    badVersions.add(templateResource.version)
                 }
             }
             page++
@@ -1154,10 +1144,10 @@ class PipelineTemplateMigrateService(
         templateId: String,
         templateResource: PipelineTemplateResource,
         dryRun: Boolean
-    ): FixBadParamsVersionDetail? {
+    ): Boolean {
         val model = templateResource.model
         if (model !is Model) {
-            return null
+            return false
         }
         val triggerContainer = model.getTriggerContainer()
         val params = triggerContainer.params
@@ -1165,7 +1155,7 @@ class PipelineTemplateMigrateService(
             !it.required && it.asInstanceInput == false &&
                 it.id !in PipelineUtils.VERSION_PARAMS
         }
-        if (badParams.isEmpty()) return null
+        if (badParams.isEmpty()) return false
 
         val badParamIds = badParams.map { it.id }
         logger.info(
@@ -1196,11 +1186,7 @@ class PipelineTemplateMigrateService(
                 )
             )
         }
-        return FixBadParamsVersionDetail(
-            version = templateResource.version,
-            versionName = templateResource.versionName,
-            badParamIds = badParamIds
-        )
+        return true
     }
 
     companion object {

@@ -34,7 +34,7 @@ import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.process.pojo.template.TemplateMigrateByPercentageRequest
 import com.tencent.devops.process.pojo.template.TemplateMigrateByPercentageResult
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
-import com.tencent.devops.process.pojo.template.v2.FixBadParamsResult
+import com.tencent.devops.process.pojo.template.v2.FixBadParamsItem
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -141,5 +141,5 @@ interface OpPipelineTemplateResource {
         )
         @QueryParam("dryRun")
         dryRun: Boolean
-    ): Result<FixBadParamsResult>
+    ): Result<List<FixBadParamsItem>>
 }
