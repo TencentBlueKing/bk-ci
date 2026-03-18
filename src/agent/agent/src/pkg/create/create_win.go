@@ -1,4 +1,4 @@
-﻿//go:build windows
+//go:build windows
 
 package create
 
@@ -7,8 +7,9 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 	"golang.org/x/sys/windows"
+
+	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 )
 
 var mutexHandle windows.Handle

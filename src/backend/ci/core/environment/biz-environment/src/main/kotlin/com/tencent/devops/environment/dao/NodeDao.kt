@@ -179,7 +179,7 @@ class NodeDao {
         if (!tagValueIds.isNullOrEmpty()) {
             query.and(TNodeTags.T_NODE_TAGS.TAG_VALUE_ID.`in`(tagValueIds))
         }
-        if (!nodeIds.isNullOrEmpty()){
+        if (!nodeIds.isNullOrEmpty()) {
             query.and(NODE_ID.`in`(nodeIds))
         }
         when (sortType) {
