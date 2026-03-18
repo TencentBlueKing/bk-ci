@@ -321,11 +321,11 @@ class PipelineWebhookService @Autowired constructor(
     ): String {
         val host = HomeHostUtil.innerServerHost()
         val versionPath = version?.let { "/$it" } ?: ""
-        return if (channelCode == ChannelCode.CREATIVE_STREAM) {
-            "$host/${String.format(CREATIVE_STREAM_PATH_TEMPLATE, projectId, pipelineId, versionPath)}"
-        } else {
-            "$host/${String.format(REGULAR_PATH_TEMPLATE, projectId, pipelineId, versionPath)}"
+        val pathTemplate = when (channelCode) {
+            ChannelCode.CREATIVE_STREAM -> CREATIVE_STREAM_PATH_TEMPLATE
+            else -> REGULAR_PATH_TEMPLATE
         }
+        return "$host/${String.format(pathTemplate, projectId, pipelineId, versionPath)}"
     }
 
     fun deleteWebhook(projectId: String, pipelineId: String, userId: String): Result<Boolean> {

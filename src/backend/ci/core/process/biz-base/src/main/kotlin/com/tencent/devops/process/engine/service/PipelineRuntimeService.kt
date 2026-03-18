@@ -31,6 +31,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.constant.BUILD_QUEUE
+import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorInfo
@@ -77,6 +78,7 @@ import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.environment.api.ServiceNodeResource
+import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -580,7 +582,7 @@ class PipelineRuntimeService @Autowired constructor(
         }.toMap()
         val missedIds = hashIds - cached.keys
         if (missedIds.isEmpty()) return cached
-        val effectiveUserId = userId ?: I18nUtil.getRequestUserId() ?: ""
+        val effectiveUserId = userId ?: I18nUtil.getRequestUserId() ?: SYSTEM
         val result = client.get(ServiceNodeResource::class).listByHashIds(
             userId = effectiveUserId,
             projectId = projectId,
@@ -590,15 +592,18 @@ class PipelineRuntimeService @Autowired constructor(
         val nodes = result.data ?: return cached
         val freshMap = nodes
             .filter {
-                it.nodeHashId.isNotBlank() &&
-                    (it.displayName?.takeIf { dn -> dn.isNotBlank() } ?: it.name).isNotBlank()
+                it.nodeHashId.isNotBlank() && getNodeDisplayName(it).isNotBlank()
             }
             .associate { node ->
-                val nodeName = node.displayName?.takeIf { it.isNotBlank() } ?: node.name
+                val nodeName = getNodeDisplayName(node)
                 nodeNameCache.put(cacheKey(projectId, node.nodeHashId), nodeName)
                 node.nodeHashId to nodeName
             }
         return cached + freshMap
+    }
+
+    private fun getNodeDisplayName(node: NodeWithPermission): String {
+        return node.displayName?.takeIf { it.isNotBlank() } ?: node.name
     }
 
     private fun cacheKey(projectId: String, nodeHashId: String) = "$projectId:$nodeHashId"
