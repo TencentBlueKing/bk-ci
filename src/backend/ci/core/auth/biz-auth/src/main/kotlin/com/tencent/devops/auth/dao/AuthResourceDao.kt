@@ -193,6 +193,7 @@ class AuthResourceDao {
         with(TAuthResource.T_AUTH_RESOURCE) {
             return dslContext.update(this)
                 .set(ENABLE, false)
+                .set(RELATION_ID, "")
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(UPDATE_USER, userId)
                 .where(PROJECT_CODE.eq(projectCode))
