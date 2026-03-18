@@ -488,7 +488,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         )
 
         val classifyList = marketAtomClassifyDao.getAllAtomClassify(dslContext, serviceScope)
-        classifyList?.forEach {
+        classifyList.forEach {
             val classifyCode = it[KEY_CLASSIFY_CODE] as String
             if (classifyCode != "trigger") {
                 val classifyName = it[KEY_CLASSIFY_NAME] as String

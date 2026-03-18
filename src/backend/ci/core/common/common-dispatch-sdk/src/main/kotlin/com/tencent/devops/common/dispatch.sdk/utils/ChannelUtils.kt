@@ -37,14 +37,12 @@ class ChannelUtils @Autowired constructor(
 ) {
     fun getChannelCode(): ChannelCode {
         val consulTag = bkTag.getLocalTag()
-        return if (consulTag.contains("stream")) {
-            ChannelCode.GIT
-        } else if (consulTag.contains("auto")) {
-            ChannelCode.GONGFENGSCAN
-        } else if (consulTag.contains("creative")) {
-            ChannelCode.CREATIVE_STREAM
-        } else {
-            ChannelCode.getRequestChannelCode()
-        }
+        val tagToChannelMap = mapOf(
+            "stream" to ChannelCode.GIT,
+            "auto" to ChannelCode.GONGFENGSCAN,
+            "creative" to ChannelCode.CREATIVE_STREAM
+        )
+        return tagToChannelMap.entries.firstOrNull { consulTag.contains(it.key) }?.value
+            ?: ChannelCode.getRequestChannelCode()
     }
 }

@@ -39,13 +39,20 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
 class MarketAtomClassifyDao : AtomBaseDao() {
 
+    companion object {
+        private const val ATOM_COUNT_ALIAS = "atomNum"
+        private const val CLASSIFY_ID_ALIAS = "classifyId"
+    }
+
     /**
      * 获取所有插件分类信息
+     *
      * @param dslContext JOOQ DSL上下文
      * @param serviceScope 服务范围筛选条件（可选）
      * @return 分类信息结果集，包含每个分类的插件数量统计
@@ -53,40 +60,45 @@ class MarketAtomClassifyDao : AtomBaseDao() {
     fun getAllAtomClassify(
         dslContext: DSLContext,
         serviceScope: ServiceScopeEnum? = null
-    ): Result<out Record>? {
+    ): Result<out Record> {
         val tAtom = TAtom.T_ATOM
         val tClassify = TClassify.T_CLASSIFY
-        
+
         // 构建插件可见性条件
         val atomVisibleConditions = setAtomVisibleCondition(tAtom)
-        
+
         // 构建分类ID字段（根据serviceScope动态选择CLASSIFY_ID或CLASSIFY_ID_MAP）
-        // 当serviceScope为null时，使用CLASSIFY_ID字段（默认字段）
         val classifyIdField = buildClassifyIdField(tAtom, serviceScope)
-        
-        // 统计每个分类下的插件数量
-        val atomCountField = dslContext.selectCount()
+
+        // 子查询：按分类ID分组统计插件数量，T_ATOM 只扫描一次
+        val atomStats = dslContext
+            .select(
+                classifyIdField.`as`(CLASSIFY_ID_ALIAS),
+                DSL.count().`as`(ATOM_COUNT_ALIAS)
+            )
             .from(tAtom)
             .where(atomVisibleConditions)
-            .and(classifyIdField.eq(tClassify.ID))
-            .asField<Int>("atomNum")
-        
-        // 构建查询条件
+            .groupBy(classifyIdField)
+            .asTable("atom_stats")
+
+        // 主查询：LEFT JOIN 聚合结果，无插件的分类 atomNum 为 0
         val query = dslContext.select(
             tClassify.ID.`as`(KEY_ID),
             tClassify.CLASSIFY_CODE.`as`(KEY_CLASSIFY_CODE),
             tClassify.CLASSIFY_NAME.`as`(KEY_CLASSIFY_NAME),
-            atomCountField,
+            DSL.isnull(atomStats.field(ATOM_COUNT_ALIAS, Int::class.java), 0).`as`(ATOM_COUNT_ALIAS),
             tClassify.CREATE_TIME.`as`(KEY_CREATE_TIME),
             tClassify.UPDATE_TIME.`as`(KEY_UPDATE_TIME)
         ).from(tClassify)
-         .where(tClassify.TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
-        
+            .leftJoin(atomStats)
+            .on(tClassify.ID.eq(atomStats.field(CLASSIFY_ID_ALIAS, String::class.java)))
+            .where(tClassify.TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+
         // 如果serviceScope不为null，则添加SERVICE_SCOPE筛选条件
         serviceScope?.let {
             query.and(tClassify.SERVICE_SCOPE.eq(it.name))
         }
-        
+
         return query.orderBy(tClassify.WEIGHT.desc())
             .fetch()
     }
