@@ -59,7 +59,7 @@ class ClientUpgradeService @Autowired constructor(
         return ClientUpgradeResp(clientVersion, startVersion)
     }
 
-    @Scheduled(initialDelay = 60 * 1000L, fixedDelay = 3 * 60 * 1000L)
+    @Scheduled(initialDelay = 60 * 1000L, fixedDelay = 5 * 60 * 1000L)
     fun updateCanUpgradeClients() {
         val watcher = Watcher("updateCanUpgradeClients")
         logger.debug("updateCanUpgradeClients start")
@@ -94,43 +94,53 @@ class ClientUpgradeService @Autowired constructor(
 
     private fun listCanUpgradeClients(maxParallelCount: Int): Set<String> {
         val canUpgradeMacAddressSet = mutableSetOf<String>()
-        // 暂时先全量查询，后续看性能有没有用影响
-        val records = clientDao.fetchAll(dslContext, LAST_REQUEST_BEFORE_DAYS)
-        records.forEach {
-            val os = ClientOS.parse(it.os) ?: return@forEach
-            val clientCurrentVersion = upgradeProps.getCurrentVersion(ClientUpgradeComp.CLIENT, os)
-            val startCurrentVersion = upgradeProps.getCurrentVersion(ClientUpgradeComp.START, os)
-            if (clientCurrentVersion.isBlank() && startCurrentVersion.isBlank()) {
-                return@forEach
-            }
-            val dynamicProps = initUpgradeDynamicProps(
-                os = os,
-                clientCurrentVersion = clientCurrentVersion,
-                startCurrentVersion = startCurrentVersion,
-                noMax = false
+        var offset = 0
+        while (true) {
+            val records = clientDao.fetchByPage(
+                dslContext = dslContext,
+                lastUpdateBeforeDays = LAST_REQUEST_BEFORE_DAYS,
+                offset = offset,
+                limit = PAGE_SIZE
             )
-            val clientCan = checkVersion(
-                upgradeComp = ClientUpgradeComp.CLIENT,
-                inCurrentVersion = clientCurrentVersion,
-                record = it,
-                props = dynamicProps,
-                forceUpdate = false
-            )
-            val startCan = checkVersion(
-                upgradeComp = ClientUpgradeComp.START,
-                inCurrentVersion = startCurrentVersion,
-                record = it,
-                props = dynamicProps,
-                forceUpdate = false
-            )
-            if (!clientCan.isNullOrBlank() || !startCan.isNullOrBlank()) {
-                canUpgradeMacAddressSet.add(it.macAddress)
+            if (records.isEmpty()) break
+            for (record in records) {
+                val os = ClientOS.parse(record.os) ?: continue
+                val clientCurrentVersion =
+                    upgradeProps.getCurrentVersion(ClientUpgradeComp.CLIENT, os)
+                val startCurrentVersion =
+                    upgradeProps.getCurrentVersion(ClientUpgradeComp.START, os)
+                if (clientCurrentVersion.isBlank() && startCurrentVersion.isBlank()) {
+                    continue
+                }
+                val dynamicProps = initUpgradeDynamicProps(
+                    os = os,
+                    clientCurrentVersion = clientCurrentVersion,
+                    startCurrentVersion = startCurrentVersion,
+                    noMax = false
+                )
+                val clientCan = checkVersion(
+                    upgradeComp = ClientUpgradeComp.CLIENT,
+                    inCurrentVersion = clientCurrentVersion,
+                    record = record,
+                    props = dynamicProps,
+                    forceUpdate = false
+                )
+                val startCan = checkVersion(
+                    upgradeComp = ClientUpgradeComp.START,
+                    inCurrentVersion = startCurrentVersion,
+                    record = record,
+                    props = dynamicProps,
+                    forceUpdate = false
+                )
+                if (!clientCan.isNullOrBlank() || !startCan.isNullOrBlank()) {
+                    canUpgradeMacAddressSet.add(record.macAddress)
+                }
+                if (canUpgradeMacAddressSet.size >= maxParallelCount) {
+                    return canUpgradeMacAddressSet
+                }
             }
-            if (canUpgradeMacAddressSet.size >= maxParallelCount) {
-                return canUpgradeMacAddressSet
-            }
+            offset += PAGE_SIZE
         }
-
         return canUpgradeMacAddressSet
     }
 
@@ -246,11 +256,11 @@ class ClientUpgradeService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ClientUpgradeService::class.java)
+        private val logger =
+            LoggerFactory.getLogger(ClientUpgradeService::class.java)
         private const val LOCK_KEY = "remotedev_cron_updateCanUpgradeClients"
-
-        // 客户端最后一次请求的时间
         private const val LAST_REQUEST_BEFORE_DAYS = 14
+        private const val PAGE_SIZE = 500
     }
 }
 
