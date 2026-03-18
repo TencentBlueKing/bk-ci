@@ -487,16 +487,16 @@ class PipelineTimerBuildListener @Autowired constructor(
         pipelineId: String,
         taskId: String,
         channelCode: ChannelCode
-    ): Boolean = pipelineRepositoryService.getModel(
+    ) = pipelineRepositoryService.getModel(
         projectId = projectId,
         pipelineId = pipelineId
-    )?.getTriggerContainer()?.elements?.any {
+    )?.getTriggerContainer()?.elements?.find {
         if (channelCode == ChannelCode.CREATIVE_STREAM) {
             it is MarketEventAtomElement
         } else {
             it is TimerTriggerElement
         } && it.id == taskId
-    } ?: false
+    }
 
     /**
      * 清理无效的定时任务
@@ -509,7 +509,7 @@ class PipelineTimerBuildListener @Autowired constructor(
                 taskId = it,
                 channelCode = channelCode
             )
-            if (!triggerExist) {
+            if (triggerExist == null) {
                 // 存在异常定时任务，尝试删除定时任务
                 val result = pipelineTimerService.deleteTimer(
                     projectId = projectId,
