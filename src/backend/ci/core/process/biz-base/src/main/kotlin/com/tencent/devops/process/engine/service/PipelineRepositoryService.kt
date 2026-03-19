@@ -294,11 +294,13 @@ class PipelineRepositoryService constructor(
         var canElementSkip = false
         run lit@{
             triggerContainer.elements.forEach {
-                val targetElement = if (channelCode == ChannelCode.CREATIVE_STREAM) {
-                    it is MarketEventAtomElement && it.atomCode == BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
-                } else {
-                    it is ManualTriggerElement
-                }
+                val targetElement = it is ManualTriggerElement ||
+                        if (channelCode == ChannelCode.CREATIVE_STREAM) {
+                            it is MarketEventAtomElement &&
+                                    it.atomCode == BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
+                        } else {
+                            false
+                        }
                 if (targetElement && it.elementEnabled()) {
                     canManualStartup = true
                     canElementSkip = when (it) {
