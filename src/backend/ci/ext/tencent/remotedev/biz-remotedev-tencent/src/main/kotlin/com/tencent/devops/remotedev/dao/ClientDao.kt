@@ -7,7 +7,6 @@ import com.tencent.devops.model.remotedev.tables.records.TClientRecord
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientOS
 import org.jooq.DSLContext
 import org.jooq.JSON
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
