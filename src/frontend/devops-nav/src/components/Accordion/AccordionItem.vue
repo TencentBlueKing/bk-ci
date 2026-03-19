@@ -26,7 +26,7 @@
     import { Component, Prop, Watch } from 'vue-property-decorator'
     
     @Component
-        export default class AccordionItem extends Vue {
+    export default class AccordionItem extends Vue {
         @Prop({ default: false })
     initContentShow
 

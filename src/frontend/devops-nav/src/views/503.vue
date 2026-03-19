@@ -13,7 +13,7 @@
     import Img503 from '../assets/static/503.png'
     
     @Component()
-        export default class Exception503 extends Vue {
+    export default class Exception503 extends Vue {
         get Img503 (): string {
             return Img503
         }

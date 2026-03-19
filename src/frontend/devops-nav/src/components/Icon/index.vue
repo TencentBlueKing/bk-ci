@@ -13,7 +13,7 @@
     import { Component, Prop } from 'vue-property-decorator'
 
     @Component
-        export default class SvgIcon extends Vue {
+    export default class SvgIcon extends Vue {
         @Prop()
         name
 

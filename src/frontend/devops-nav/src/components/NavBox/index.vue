@@ -77,7 +77,7 @@
     import eventBus from '../../utils/eventBus'
 
     @Component
-        export default class NavBox extends Vue {
+    export default class NavBox extends Vue {
         readyServices: ObjectMap = {}
 
         @Prop()

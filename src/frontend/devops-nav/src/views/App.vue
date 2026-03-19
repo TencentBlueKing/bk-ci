@@ -13,7 +13,7 @@
     import { Action, State } from 'vuex-class'
     
     @Component()
-        export default class App extends Vue {
+    export default class App extends Vue {
         @State fetchError
         @State moduleLoading
 

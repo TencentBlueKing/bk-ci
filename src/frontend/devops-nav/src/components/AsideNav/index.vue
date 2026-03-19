@@ -46,7 +46,7 @@
     import { Prop, Component } from 'vue-property-decorator'
     
     @Component
-        export default class AsideNav extends Vue {
+    export default class AsideNav extends Vue {
         @Prop({ default: '' })
         headerTitle: string
 

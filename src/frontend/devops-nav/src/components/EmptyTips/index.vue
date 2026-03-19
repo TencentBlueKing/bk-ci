@@ -23,7 +23,7 @@
     import { Component, Prop } from 'vue-property-decorator'
 
     @Component
-        export default class EmptyTips extends Vue {
+    export default class EmptyTips extends Vue {
         @Prop({ default: false })
         showLock
 
