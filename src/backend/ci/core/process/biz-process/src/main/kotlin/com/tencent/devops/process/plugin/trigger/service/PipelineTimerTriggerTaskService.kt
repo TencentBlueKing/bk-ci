@@ -27,10 +27,15 @@
 
 package com.tencent.devops.process.plugin.trigger.service
 
+import com.cronutils.mapper.CronMapper
+import com.cronutils.model.CronType
+import com.cronutils.model.definition.CronDefinitionBuilder
+import com.cronutils.parser.CronParser
 import com.tencent.bkrepo.common.api.exception.NotFoundException
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
@@ -163,6 +168,34 @@ open class PipelineTimerTriggerTaskService @Autowired constructor(
             params = params,
             yamlInfo = pipelineYamlVo
         )
+    }
+
+    // 转化定时任务表达式
+    fun convertAdvanceExpression(advanceExpression: List<String>?, params: Map<String, String>): Set<String> {
+        val expressions = mutableSetOf<String>()
+        if (!advanceExpression.isNullOrEmpty()) {
+            advanceExpression.forEach { expression ->
+                EnvUtils.parseEnv(command = expression, data = params)
+                        .split("\n")
+                        .forEach { expr ->
+                            expressions.add(convertExpression(expr))
+                        }
+            }
+        }
+        return expressions
+    }
+
+    fun convertExpression(expression: String): String {
+        val unixDefinition = CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX)
+        val parser = CronParser(unixDefinition)
+        return try {
+            val qaurtzCron = parser.parse(expression)
+            val mapper = CronMapper.fromUnixToQuartz()
+            mapper.map(qaurtzCron).asString()
+        } catch (ignore: IllegalArgumentException) {
+            // The old cron, just return it
+            expression
+        }
     }
 
     companion object {

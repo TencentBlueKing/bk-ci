@@ -27,11 +27,13 @@
 
 package com.tencent.devops.process.api.user
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_CHANNEL
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
@@ -70,7 +72,10 @@ interface UserBuildParametersResource {
     fun getCommonBuildParams(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
+        userId: String,
+        @Parameter(description = "渠道", required = false)
+        @HeaderParam(AUTH_HEADER_CHANNEL)
+        channelCode: ChannelCode?
     ): Result<List<BuildEnvParameters>>
 
     @Operation(summary = "获取构建的公共参数新接口(ci.xxx)")
@@ -79,7 +84,10 @@ interface UserBuildParametersResource {
     fun getCommonParams(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
+        userId: String,
+        @Parameter(description = "渠道", required = false)
+        @HeaderParam(AUTH_HEADER_CHANNEL)
+        channelCode: ChannelCode?
     ): Result<List<BuildParameterGroup>>
 
     @Operation(summary = "获取构建的触发器参数")

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.api.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_CHANNEL
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
@@ -56,6 +57,13 @@ interface ServiceTimerBuildResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(
+            description = "渠道号，默认为BS，此参数是为了兼容创作流加入的，后续将以header内的channelCode为准",
+            required = false,
+            example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_CHANNEL)
+        channelCodeHeader: ChannelCode? = ChannelCode.BS,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,

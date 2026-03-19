@@ -459,6 +459,7 @@ object ProcessMessageCode {
     // 实例化异常：流水线其他变量[{0}]默认值被改成模版默认值,请联系助手分析
     const val ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN = "2101364"
 
+    const val BUILD_MSG_TRIGGER_EVENT = "2101368" // 通用事件触发
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}
@@ -725,4 +726,18 @@ object ProcessMessageCode {
 
     // 回滚自模板实例化任务，基于版本[xxx]
     const val BK_ROLLBACK_FROM_TEMPLATE_INSTANCE_BASED_ON_VERSION = "bkRollbackFromTemplateInstanceBasedOnVersion"
+
+    // 云桌面触发事件描述
+    const val BK_REMOTE_DEV_TRIGGER_DESC = "bkRemoteDevTriggerDesc"
+
+    // 触发事件配置不存在或已下架, 请联系管理员处理
+    const val BK_TRIGGER_EVENT_CONFIG_NOT_FOUND_DESC = "bkTriggerEventConfigNotFoundDesc"
+
+    // 字段不匹配
+    const val BK_FIELD_CONDITION_NOT_MATCH = "bkFieldConditionNotMatch"
+    // 字段被排除
+    const val BK_FIELD_CONDITION_EXCLUDE = "bkFieldConditionExclude"
+
+    // 创作流启动节点为空
+    const val BK_CREATIVE_STREAM_START_TASK_IS_EMPTY = "bkCreativeStreamStartTaskIsEmpty"
 }

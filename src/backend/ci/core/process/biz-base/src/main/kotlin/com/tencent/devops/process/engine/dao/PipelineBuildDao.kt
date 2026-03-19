@@ -113,7 +113,8 @@ class PipelineBuildDao {
                         CONCURRENCY_GROUP,
                         VERSION_NAME,
                         YAML_VERSION,
-                        EXECUTE_COUNT
+                        EXECUTE_COUNT,
+                        TRIGGER_EVENT_TYPE
                     ).values(
                         startBuildContext.buildId,
                         startBuildContext.buildNum,
@@ -138,7 +139,8 @@ class PipelineBuildDao {
                         startBuildContext.concurrencyGroup,
                         startBuildContext.versionName,
                         startBuildContext.yamlVersion,
-                        startBuildContext.executeCount
+                        startBuildContext.executeCount,
+                        startBuildContext.triggerEventType
                     ).execute()
                 }
             } else {
@@ -2115,7 +2117,8 @@ class PipelineBuildDao {
                     buildNumAlias = t.buildNumAlias,
                     remark = t.remark,
                     debug = false, // #8164 原历史表中查出的记录均为非调试的记录
-                    versionChange = t.versionChange
+                    versionChange = t.versionChange,
+                    triggerEventType = t.triggerEventType // 触发事件标识
                 )
             }
         }

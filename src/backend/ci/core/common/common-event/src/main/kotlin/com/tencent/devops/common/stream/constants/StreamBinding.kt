@@ -165,6 +165,12 @@ object StreamBinding {
     // scm webhook触发事件
     const val SCM_HOOK_BUILD_TRIGGER_EVENT = "engine.pipeline.scm.hook.trigger.event"
 
+    const val REMOTEDEV_WEBHOOK_REQUEST_EVENT = "engine.pipeline.remotedev.webhook.event"
+
+    const val REMOTEDEV_WEBHOOK_TRIGGER_EVENT = "engine.pipeline.remotedev.webhook.trigger.event"
+
+    const val GENERIC_WEBHOOK_REQUEST_EVENT = "engine.pipeline.generic.webhook.event"
+
     // 流水线构建check-run事件
     const val PIPELINE_BUILD_CHECK_RUN = "engine.pipeline.build.check.run"
 

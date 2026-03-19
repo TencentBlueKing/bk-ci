@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_S
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.bean.PipelineUrlBean
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_CATEGORY
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
 import com.tencent.devops.process.engine.interceptor.InterceptData
@@ -52,6 +53,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.enums.PipelineCategory
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
@@ -62,6 +64,7 @@ import com.tencent.devops.process.utils.BK_CI_AUTHORIZER
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_ID
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_NAME
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_URL
+import com.tencent.devops.process.utils.NODE_AGENT_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_DEBUG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
@@ -81,6 +84,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_REMOTE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_SERVICE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TIME_TRIGGER_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_START_TRIGGER_EVENT_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
@@ -250,7 +254,16 @@ class PipelineBuildService(
                 webHookStartParam = webHookStartParam,
                 // 解析出定义的流水线变量
                 realStartParamKeys = resource.model.getTriggerContainer()
-                    .params.map { it.id },
+                        .params
+                        .map { it.id }
+                        .toMutableList()
+                        .let {
+                            // 创作流启动时[NODE_AGENT_ID]为内置变量
+                            if (channelCode == ChannelCode.CREATIVE_STREAM) {
+                                it.add(NODE_AGENT_ID)
+                            }
+                            it
+                        },
                 debug = debug ?: false,
                 versionName = resource.versionName,
                 yamlVersion = resource.yamlVersion
@@ -310,6 +323,7 @@ class PipelineBuildService(
             StartType.MANUAL -> pipelineParamMap[PIPELINE_START_MANUAL_USER_ID]?.value
             StartType.TIME_TRIGGER -> pipelineParamMap[PIPELINE_START_TIME_TRIGGER_USER_ID]?.value
             StartType.REMOTE -> startValues?.get(PIPELINE_START_REMOTE_USER_ID)
+            StartType.TRIGGER_EVENT -> startValues?.get(PIPELINE_START_TRIGGER_EVENT_USER_ID)
         } ?: userId
         // 维持原样，保证可修改
         pipelineParamMap[PIPELINE_START_USER_ID] = BuildParameters(key = PIPELINE_START_USER_ID, value = userId)
@@ -325,7 +339,17 @@ class PipelineBuildService(
             value = projectVO?.projectName ?: "",
             valueType = BuildFormPropertyType.STRING
         )
-
+        // 流水线类型
+        pipelineParamMap[CI_CATEGORY] = BuildParameters(
+            key = CI_CATEGORY,
+            value = if (channelCode == ChannelCode.CREATIVE_STREAM) {
+                PipelineCategory.CREATIVE_STREAM
+            } else {
+                PipelineCategory.PIPELINE
+            },
+            valueType = BuildFormPropertyType.STRING,
+            readOnly = true
+        )
         // 解析出定义的流水线变量
 //        val realStartParamKeys = (model.getTriggerContainer()).params.map { it.id }
 //        val originStartParams = ArrayList<BuildParameters>(realStartParamKeys.size + 4)

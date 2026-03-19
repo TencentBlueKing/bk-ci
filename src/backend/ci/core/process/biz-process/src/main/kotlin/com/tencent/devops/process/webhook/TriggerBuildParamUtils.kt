@@ -28,6 +28,7 @@
 
 package com.tencent.devops.process.webhook
 
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
 import com.tencent.devops.common.pipeline.pojo.BuildParameterGroup
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
@@ -50,6 +51,7 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_BUILD_MSG
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_BUILD_NO
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_BUILD_NUM
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_BUILD_START_TYPE
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_CATEGORY
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_COMMIT_AUTHOR
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_COMMIT_MESSAGE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_CREATE_REF
@@ -78,6 +80,9 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_PROPOSER
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_REVIEWERS
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_TITLE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_URL
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_ID
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_IP
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_NAME
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NOTE_AUTHOR
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NOTE_COMMENT
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NOTE_ID
@@ -152,7 +157,9 @@ object TriggerBuildParamUtils {
 
     fun getBasicParamName() = I18nUtil.getCodeLanMessage("$TRIGGER_BUILD_PARAM_PREFIX.basic")
 
-    fun getBasicBuildParams(): List<BuildEnvParameters> {
+    fun getBasicBuildParams(
+        channelCode: ChannelCode?
+    ): List<BuildEnvParameters> {
         return listOf(
             CI_ACTOR,
             CI_BUILD_MSG,
@@ -170,8 +177,15 @@ object TriggerBuildParamUtils {
             CI_WORKSPACE,
             CI_FAILED_TASKNAMES,
             CI_FAILED_TASKS,
-            CI_REMARK
-        ).sortedBy {
+            CI_REMARK,
+            CI_CATEGORY
+        ).let {
+            if (channelCode?.name == "CREATIVE_STREAM") {
+                it.plus(getCreativeStreamBasicBuildParams())
+            } else {
+                it
+            }
+        }.sortedBy {
             it
         }.map {
             BuildEnvParameters(
@@ -179,6 +193,17 @@ object TriggerBuildParamUtils {
                 desc = I18nUtil.getCodeLanMessage(it)
             )
         }
+    }
+
+    /**
+     * 创作流基础参数
+     */
+    private fun getCreativeStreamBasicBuildParams(): List<String> {
+        return listOf(
+            CI_NODE_ID,
+            CI_NODE_NAME,
+            CI_NODE_IP
+        )
     }
 
     fun getStepParamName() = I18nUtil.getCodeLanMessage("$TRIGGER_BUILD_PARAM_PREFIX.step")

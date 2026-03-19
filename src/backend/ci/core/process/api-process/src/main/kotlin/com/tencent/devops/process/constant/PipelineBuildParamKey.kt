@@ -113,4 +113,14 @@ object PipelineBuildParamKey {
     const val JOB_INDEX = "job.index"
     const val JOB_STATUS_TEMPLATE = "jobs.<job-id>.status"
     const val JOB_OUTCOME_TEMPLATE = "jobs.<job-id>.outcome"
+
+    // 流水线标识， 可选值为 PIPELINE、CREATIVE_STREAM
+    const val CI_CATEGORY = "ci.category"
+    // 创作节点相关信息
+    // 云桌面ID
+    const val CI_NODE_ID = "ci.node_id"
+    // 云桌面名称
+    const val CI_NODE_NAME = "ci.node_name"
+    // 云桌面IP
+    const val CI_NODE_IP = "ci.node_ip"
 }

@@ -72,6 +72,7 @@ import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
@@ -146,6 +147,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.CreativeStreamService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
@@ -165,6 +167,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil.recommendVersionKey
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
+import com.tencent.devops.store.pojo.common.BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.UriBuilder
 import java.util.concurrent.TimeUnit
@@ -203,7 +206,8 @@ class PipelineBuildFacadeService(
     private val pipelineBuildRetryService: PipelineBuildRetryService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplatePermissionService: PipelineTemplatePermissionService,
-    private val pipelineTriggerEventService: PipelineTriggerEventService
+    private val pipelineTriggerEventService: PipelineTriggerEventService,
+    private val createStreamService: CreativeStreamService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -263,11 +267,34 @@ class PipelineBuildFacadeService(
         var manualBuildMsg: String? = null
         run lit@{
             triggerContainer.elements.forEach {
-                if (it is ManualTriggerElement && it.elementEnabled()) {
+                val targetElement = it is ManualTriggerElement || if (channelCode == ChannelCode.CREATIVE_STREAM) {
+                    it is MarketEventAtomElement && it.atomCode == BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
+                } else {
+                    false
+                }
+
+                if (targetElement && it.elementEnabled()) {
                     canManualStartup = true
-                    canElementSkip = it.canElementSkip ?: false
-                    useLatestParameters = it.useLatestParameters ?: false
-                    manualBuildMsg = it.buildMsg
+                    val (elementCanElementSkip, elementUseLatestParameters, buildMsg) = when (it) {
+                        is ManualTriggerElement ->
+                            Triple(
+                                it.canElementSkip ?: false,
+                                it.useLatestParameters ?: false,
+                                it.buildMsg
+                            )
+                        is MarketEventAtomElement -> {
+                            val input = it.data["input"] as Map<String, Any>? ?: emptyMap()
+                            Triple(
+                                input["canElementSkip"] as? Boolean ?: false,
+                                input["useLatestParameters"] as? Boolean ?: false,
+                                null
+                            )
+                        }
+                        else -> Triple(false, false, null)
+                    }
+                    canElementSkip = elementCanElementSkip
+                    useLatestParameters = elementUseLatestParameters
+                    manualBuildMsg = buildMsg
                     return@lit
                 }
             }
@@ -473,7 +500,14 @@ class PipelineBuildFacadeService(
                 var canManualStartup = false
                 run lit@{
                     triggerContainer.elements.forEach {
-                        if (it is ManualTriggerElement && it.elementEnabled()) {
+                        val targetElement = it is ManualTriggerElement ||
+                                if (channelCode == ChannelCode.CREATIVE_STREAM) {
+                                    it is MarketEventAtomElement &&
+                                            it.atomCode == BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
+                                } else {
+                                    false
+                                }
+                        if (targetElement && it.elementEnabled()) {
                             canManualStartup = true
                             return@lit
                         }
@@ -520,6 +554,16 @@ class PipelineBuildFacadeService(
                 pipelineId = pipelineId
             )?.let {
                 paramMap.putAll(it)
+            }
+            // 创作流流水线填充基础变量
+            if (channelCode == ChannelCode.CREATIVE_STREAM) {
+                val creativeParam = createStreamService.creativeStreamBuildParameters(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    paramMap = values,
+                    userId = userId
+                )
+                paramMap.putAll(creativeParam)
             }
 
             return pipelineBuildService.startPipeline(
@@ -2842,12 +2886,18 @@ class PipelineBuildFacadeService(
         val triggerContainer = model.getTriggerContainer()
         // 检查触发器是否存在
         val checkTriggerResult = forceTrigger || when (startType) {
-            StartType.WEB_HOOK -> {
+            StartType.WEB_HOOK, StartType.TRIGGER_EVENT -> {
                 triggerContainer.elements.find { it.id == startParameters[PIPELINE_START_TASK_ID] }
             }
 
             StartType.MANUAL, StartType.SERVICE -> {
-                triggerContainer.elements.find { it is ManualTriggerElement }
+                triggerContainer.elements.find {
+                    if (buildInfo.channelCode == ChannelCode.CREATIVE_STREAM) {
+                        it is MarketEventAtomElement && it.atomCode == BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
+                    } else {
+                        it is ManualTriggerElement
+                    }
+                }
             }
 
             StartType.REMOTE -> {
@@ -2868,7 +2918,7 @@ class PipelineBuildFacadeService(
                 params = arrayOf(resource.versionName ?: "")
             )
         }
-        if (startType == StartType.WEB_HOOK) {
+        if (startType == StartType.WEB_HOOK || startType == StartType.TRIGGER_EVENT) {
             val replayEventId = pipelineTriggerEventService.getTriggerDetail(
                 projectId = projectId,
                 pipelineId = pipelineId,
