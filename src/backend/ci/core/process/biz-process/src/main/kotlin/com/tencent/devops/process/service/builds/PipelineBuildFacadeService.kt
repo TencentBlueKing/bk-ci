@@ -267,11 +267,32 @@ class PipelineBuildFacadeService(
         var manualBuildMsg: String? = null
         run lit@{
             triggerContainer.elements.forEach {
-                if (it is ManualTriggerElement && it.elementEnabled()) {
+                val targetElement = it is ManualTriggerElement || if (channelCode == ChannelCode.CREATIVE_STREAM) {
+                    it is MarketEventAtomElement && it.atomCode == BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
+                } else {
+                    false
+                }
+
+                if (targetElement && it.elementEnabled()) {
                     canManualStartup = true
-                    canElementSkip = it.canElementSkip ?: false
-                    useLatestParameters = it.useLatestParameters ?: false
-                    manualBuildMsg = it.buildMsg
+                    val (elementCanElementSkip, elementUseLatestParameters, buildMsg) = when (it) {
+                        is ManualTriggerElement ->
+                            Triple(
+                                it.canElementSkip ?: false,
+                                it.useLatestParameters ?: false,
+                                it.buildMsg
+                            )
+                        is MarketEventAtomElement ->
+                            Triple(
+                                it.data["canElementSkip"] as? Boolean ?: false,
+                                it.data["useLatestParameters"] as? Boolean ?: false,
+                                null
+                            )
+                        else -> Triple(false, false, null)
+                    }
+                    canManualStartup = elementCanElementSkip
+                    useLatestParameters = elementUseLatestParameters
+                    manualBuildMsg = buildMsg
                     return@lit
                 }
             }
@@ -2868,7 +2889,13 @@ class PipelineBuildFacadeService(
             }
 
             StartType.MANUAL, StartType.SERVICE -> {
-                triggerContainer.elements.find { it is ManualTriggerElement }
+                triggerContainer.elements.find {
+                    if (buildInfo.channelCode == ChannelCode.CREATIVE_STREAM) {
+                        it is MarketEventAtomElement && it.atomCode == BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
+                    } else {
+                        it is ManualTriggerElement
+                    }
+                }
             }
 
             StartType.REMOTE -> {
