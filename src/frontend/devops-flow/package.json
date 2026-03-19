@@ -23,7 +23,7 @@
   "dependencies": {
     "@blueking/crontab": "0.0.2-beta.7",
     "@blueking/search-select-v3": "0.0.1-beta.10",
-    "axios": "1.13.2",
+    "axios": "1.13.6",
     "bk-permission": "workspace:bk-permission",
     "bkui-pipeline": "workspace:bk-pipeline",
     "bkui-vue": "2.0.2-beta.92",
