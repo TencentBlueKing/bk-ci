@@ -282,15 +282,17 @@ class PipelineBuildFacadeService(
                                 it.useLatestParameters ?: false,
                                 it.buildMsg
                             )
-                        is MarketEventAtomElement ->
+                        is MarketEventAtomElement -> {
+                            val input = it.data["input"] as Map<String, Any>? ?: emptyMap()
                             Triple(
-                                it.data["canElementSkip"] as? Boolean ?: false,
-                                it.data["useLatestParameters"] as? Boolean ?: false,
+                                input["canElementSkip"] as? Boolean ?: false,
+                                input["useLatestParameters"] as? Boolean ?: false,
                                 null
                             )
+                        }
                         else -> Triple(false, false, null)
                     }
-                    canManualStartup = elementCanElementSkip
+                    canElementSkip = elementCanElementSkip
                     useLatestParameters = elementUseLatestParameters
                     manualBuildMsg = buildMsg
                     return@lit
