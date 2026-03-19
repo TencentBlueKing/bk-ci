@@ -138,7 +138,7 @@ class JobQuotaManagerService @Autowired constructor(
     fun getProjectQuotaStatus(
         projectId: String,
         jobQuotaVmType: JobQuotaVmType,
-        channelCode: String = ChannelCode.getRequestChannelCode( ).name
+        channelCode: String = ChannelCode.getRequestChannelCode().name
     ): JobQuotaStatus {
         return JobProjectQuotaCache.get(projectId, jobQuotaVmType, channelCode) {
             // 缓存未命中时，从数据库加载

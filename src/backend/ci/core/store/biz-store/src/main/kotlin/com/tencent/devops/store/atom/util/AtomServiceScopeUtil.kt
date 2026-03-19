@@ -54,7 +54,7 @@ class AtomServiceScopeUtil @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(AtomServiceScopeUtil::class.java)
     }
-    
+
     /**
      * 从 SERVICE_SCOPE 和 CLASSIFY_ID_MAP 中获取所有服务范围
      *

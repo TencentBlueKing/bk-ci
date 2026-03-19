@@ -58,4 +58,3 @@ class HistoryConditionQueryStrategyFactory @Autowired constructor(
         }
     }
 }
-

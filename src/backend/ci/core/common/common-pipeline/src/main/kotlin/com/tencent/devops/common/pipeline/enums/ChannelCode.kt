@@ -70,18 +70,17 @@ enum class ChannelCode {
 
         /**
          * 获取请求的渠道代码
-         * 
+         *
          * 该方法从ChannelContext中获取渠道标识，并将其转换为对应的ChannelCode枚举值。
          * 如果渠道标识为空或空白，或者无法转换为有效的ChannelCode，则返回默认的渠道代码。
-         * 
+         *
          * @return ChannelCode 请求的渠道代码，如果无法确定则返回返回默认的渠道代码
          */
         fun getRequestChannelCode(defaultChannelCode: ChannelCode = BS): ChannelCode {
             val channel = ChannelContext.getChannel()
-            return channel?.takeIf { it.isNotBlank() }
-                ?.let {
-                    runCatching { ChannelCode.valueOf(it) }.getOrDefault(defaultChannelCode)
-                } ?: defaultChannelCode
+            return channel?.takeIf { it.isNotBlank() }?.let {
+                runCatching { ChannelCode.valueOf(it) }.getOrDefault(defaultChannelCode)
+            } ?: defaultChannelCode
         }
     }
 }
