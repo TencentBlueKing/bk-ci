@@ -55,7 +55,7 @@ abstract class AtomBaseDao {
     /**
      * 构建 JSON_EXTRACT/JSON_CONTAINS 的路径，统一输出 "$.SCOPE_KEY" 形式。
      */
-    private fun buildScopeJsonPath(scopeKey: String): String = "\$.${scopeKey}"
+    private fun buildScopeJsonPath(scopeKey: String): String = "\$.$scopeKey"
 
     /**
      * 构建 JSON_CONTAINS 条件（避免 DSL.inline 对双引号的转义问题）。

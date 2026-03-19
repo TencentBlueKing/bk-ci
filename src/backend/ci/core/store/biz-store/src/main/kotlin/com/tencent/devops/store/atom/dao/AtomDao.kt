@@ -1019,7 +1019,7 @@ class AtomDao : AtomBaseDao() {
         val osInMapCondition = DSL.condition(
             "JSON_CONTAINS(JSON_EXTRACT({0}, {1}), CONCAT('\"', {2}, '\"'))",
             tAtom.OS_MAP,
-            DSL.inline("\$.${osMapKey}"),
+            DSL.inline("\$.$osMapKey"),
             DSL.inline(os)
         )
         return osInMapCondition.or(tAtom.OS.contains(os))
