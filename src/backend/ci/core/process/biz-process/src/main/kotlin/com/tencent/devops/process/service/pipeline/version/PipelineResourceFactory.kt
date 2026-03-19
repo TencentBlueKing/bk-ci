@@ -112,7 +112,10 @@ class PipelineResourceFactory @Autowired constructor(
                     canManualStartup = true
                     canElementSkip = when (it) {
                         is ManualTriggerElement -> it.canElementSkip ?: false
-                        is MarketEventAtomElement -> it.data["canElementSkip"] as? Boolean ?: false
+                        is MarketEventAtomElement -> {
+                            val input = it.data["input"] as Map<String, Any>? ?: emptyMap()
+                            input["canElementSkip"] as? Boolean ?: false
+                        }
                         else -> false
                     }
                     return@lit
