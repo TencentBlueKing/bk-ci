@@ -175,14 +175,15 @@ class DeleteControl @Autowired constructor(
 
     fun deleteWorkspace4OP(
         userId: String,
-        workspaceName: String
+        workspaceName: String,
+        delaySeconds: Int? = null
     ): Boolean {
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
-        val res = deleteWorkspace4System(userId, workspaceName)
+        val res = deleteWorkspace4System(userId, workspaceName, delaySeconds)
         if (res && workspace.status != WorkspaceStatus.DELIVERING_FAILED) {
 
             // 修复待分配的机器销毁时，拥有者为空发送通知没有相关人
@@ -209,11 +210,12 @@ class DeleteControl @Autowired constructor(
 
     fun batchDeleteWindowsWorkspace4OP(
         userId: String,
-        workspaceNames: Set<String>
+        workspaceNames: Set<String>,
+        delaySeconds: Int? = null
     ): Map<String, Boolean> {
         val result = mutableMapOf<String, Boolean>()
         workspaceNames.forEach {
-            result[it] = deleteWorkspace4System(userId, it)
+            result[it] = deleteWorkspace4System(userId, it, delaySeconds)
         }
         // 只发送删除成功的机器
         val deletedWorkspaces = result.filter { it.value }.keys
@@ -313,9 +315,10 @@ class DeleteControl @Autowired constructor(
     )
     fun deleteWorkspace4System(
         userId: String,
-        workspaceName: String
+        workspaceName: String,
+        delaySeconds: Int? = null
     ): Boolean {
-        logger.info("$userId delete workspace $workspaceName")
+        logger.info("$userId delete workspace $workspaceName with delaySeconds=$delaySeconds")
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
@@ -352,7 +355,8 @@ class DeleteControl @Autowired constructor(
                     type = UpdateEventType.DELETE,
                     workspaceName = workspace.workspaceName,
                     mountType = workspace.workspaceMountType,
-                    appName = gameId.first
+                    appName = gameId.first,
+                    deleteDelaySeconds = delaySeconds
                 )
             )
             return true

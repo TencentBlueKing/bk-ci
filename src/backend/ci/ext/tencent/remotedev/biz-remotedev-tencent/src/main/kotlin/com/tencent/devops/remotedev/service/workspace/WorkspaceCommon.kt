@@ -357,12 +357,13 @@ class WorkspaceCommon @Autowired constructor(
     fun updateStatusAndCreateHistory(
         workspaceName: String,
         newStatus: WorkspaceStatus,
-        action: WorkspaceAction
+        action: WorkspaceAction,
+        allowUpdateDeleted: Boolean = false
     ) {
-        logger.info("updateStatusAndCreateHistory|$workspaceName|$newStatus|$action")
+        logger.info("updateStatusAndCreateHistory|$workspaceName|$newStatus|$action|$allowUpdateDeleted")
         workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)?.let {
             updateStatusAndCreateHistory(
-                it, newStatus, action
+                it, newStatus, action, allowUpdateDeleted
             )
         }
     }
@@ -370,16 +371,18 @@ class WorkspaceCommon @Autowired constructor(
     fun updateStatusAndCreateHistory(
         workspace: WorkspaceRecordInf,
         newStatus: WorkspaceStatus,
-        action: WorkspaceAction
+        action: WorkspaceAction,
+        allowUpdateDeleted: Boolean = false
     ) {
         logger.info(
             "updateStatusAndCreateHistory|workspace|$workspace|oldStatus|${workspace.status}" +
-                "newStatus|$newStatus|action|$action"
+                "newStatus|$newStatus|action|$action|allowUpdateDeleted=$allowUpdateDeleted"
         )
         workspaceDao.updateWorkspaceStatus(
             dslContext = dslContext,
             workspaceName = workspace.workspaceName,
-            status = newStatus
+            status = newStatus,
+            allowUpdateDeleted = allowUpdateDeleted
         )
         workspaceOpHistoryDao.createWorkspaceHistory(
             dslContext = dslContext,
@@ -677,6 +680,19 @@ class WorkspaceCommon @Autowired constructor(
             sharedUsers = sharedUsers,
             assignType = assignType
         )
+        // 记录取消共享操作
+        sharedUsers.forEach { sharedUser ->
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                operator = operator,
+                action = WorkspaceAction.SHARE,
+                actionMessage = String.format(
+                    getOpHistory(OpHistoryCopyWriting.UNSHARE),
+                    sharedUser
+                )
+            )
+        }
         // 解绑后对原先的共享人推送websocket刷新客户端列表
         sharedUsers.forEach {
             notifyControl.dispatchWebsocketPushEvent(

@@ -156,8 +156,7 @@ class TxProjectServiceImpl @Autowired constructor(
 
     override fun getByEnglishName(
         userId: String,
-        englishName: String,
-        accessToken: String?
+        englishName: String
     ): ProjectVO? {
         val projectVO = getInfoByEnglishName(userId = userId, englishName = englishName)
         if (projectVO == null) {
@@ -182,7 +181,7 @@ class TxProjectServiceImpl @Autowired constructor(
                 projectVO.approvalStatus == ProjectApproveStatus.CREATE_REJECT.status)
         if (isNotCreateSuccess)
             return projectVO
-        val englishNames = getProjectFromAuth(userId, accessToken)
+        val englishNames = getProjectFromAuth(userId)
         if (englishNames.isEmpty()) {
             return null
         }
@@ -235,13 +234,12 @@ class TxProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun deleteAuth(projectId: String, accessToken: String?) {
+    override fun deleteAuth(projectId: String) {
         projectPermissionService.deleteResource(projectId)
     }
 
     override fun getProjectFromAuth(
-        userId: String?,
-        accessToken: String?
+        userId: String?
     ): List<String> {
         val projectList = getIamUserProject(userId!!)
         logger.info("$userId iam project: $projectList")
@@ -250,7 +248,6 @@ class TxProjectServiceImpl @Autowired constructor(
 
     override fun getProjectFromAuth(
         userId: String,
-        accessToken: String?,
         permission: AuthPermission,
         resourceType: String?
     ): List<String>? {
@@ -480,7 +477,6 @@ class TxProjectServiceImpl @Autowired constructor(
         return verifyUserProjectPermission(
             userId = userId,
             projectId = englishName,
-            accessToken = null,
             permission = AuthPermission.MANAGE
         )
     }

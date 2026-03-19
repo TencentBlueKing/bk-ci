@@ -29,7 +29,6 @@ package com.tencent.devops.process.service.pipeline.version.handler
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -41,6 +40,7 @@ import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceOnlyVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReqSource
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionPersistenceService
@@ -73,8 +73,8 @@ class PipelineDraftReleaseHandler @Autowired constructor(
     }
 
     override fun handle(context: PipelineVersionCreateContext): DeployPipelineResult {
-        logger.info("draft version released with context={}", JsonUtil.toJson(context, false))
         with(context) {
+            logger.info("handle pipeline draft to release version|$projectId|$pipelineId|$version")
             if (enablePac) {
                 if (targetAction == null) {
                     throw ErrorCodeException(
@@ -120,7 +120,7 @@ class PipelineDraftReleaseHandler @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_RELEASE_MUST_DRAFT_VERSION
             )
         }
-        val resourceOnlyVersion = pipelineVersionGenerator.generateDratReleaseVersion(
+        val resourceOnlyVersion = pipelineVersionGenerator.generateDraftReleaseVersion(
             projectId = projectId,
             pipelineId = pipelineId,
             draftResource = draftResource,
@@ -180,7 +180,8 @@ class PipelineDraftReleaseHandler @Autowired constructor(
         val yamlFileReleaseResult = enablePac.takeIf { it }?.let {
             pipelineVersionPersistenceService.releaseYamlFile(
                 context = this,
-                resourceOnlyVersion = resourceOnlyVersion
+                resourceOnlyVersion = resourceOnlyVersion,
+                source = PipelineYamlFileReleaseReqSource.PIPELINE
             )
         }
 

@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.dao
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.db.utils.fetchCountFix
 import com.tencent.devops.common.db.utils.skipCheck
+import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.model.remotedev.tables.TRemotedevExpertSupport
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceType
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceZone
@@ -111,10 +112,12 @@ class WorkspaceJoinDao {
         ownerType: WorkspaceOwnerType? = null,
         projectId: String? = null,
         sip: String? = null,
+        ip: String? = null,
         businessLineName: String? = null,
         owner: String? = null,
         workspaceName: String? = null,
         notStatus: List<WorkspaceStatus>? = null,
+        coffeeAi: Boolean? = null,
         checkField: List<Field<*>>? = null
     ): List<WorkspaceRecordWithWindows> {
         with(TWorkspace.T_WORKSPACE) {
@@ -128,11 +131,13 @@ class WorkspaceJoinDao {
                     workspaceOwnerType = ownerType?.let { listOf(ownerType) },
                     projectId = projectId?.let { listOf(projectId) },
                     sips = sip?.let { listOf(sip) },
+                    ips = ip?.let { listOf(ip) },
                     businessLineNames = businessLineName?.let { listOf(businessLineName) },
                     owner = owner?.let { listOf(owner) },
                     workspaceName = workspaceName?.let { listOf(workspaceName) },
                     notStatus = notStatus,
-                    workspaceSystemType = listOf(WorkspaceSystemType.WINDOWS_GPU)
+                    workspaceSystemType = listOf(WorkspaceSystemType.WINDOWS_GPU),
+                    coffeeAi = coffeeAi
                 ),
                 checkField = checkField ?: windowsFullFields
             ).orderBy(CREATE_TIME.desc(), ID.desc())
@@ -233,11 +238,7 @@ class WorkspaceJoinDao {
             }
 
             search.workspaceSystemType?.ifEmpty { null }?.let { types ->
-                if (search.onFuzzyMatch) {
-                    conditions.add(SYSTEM_TYPE.likeRegex(types.joinToString("|") { it.name }))
-                } else {
                     conditions.add(SYSTEM_TYPE.`in`(types.map { it.name }))
-                }
             }
             /* 二级匹配OWNER_TYPE */
             /* 第一级以search中单独指定为准 */
@@ -252,6 +253,10 @@ class WorkspaceJoinDao {
                 queryType.ownerType().let { ownerType ->
                     conditions.add(OWNER_TYPE.`in`(ownerType.map { it.name }))
                 }
+            }
+
+            search.coffeeAi?.let { coffeeAi ->
+                conditions.add(COFFEE_AI.eq(ByteUtils.bool2Byte(coffeeAi)))
             }
         }
 

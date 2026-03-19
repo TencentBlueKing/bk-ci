@@ -210,18 +210,17 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         )
     }
 
-    override fun list(userId: String?, accessToken: String?): Result<List<ProjectVO>> {
+    override fun list(userId: String?): Result<List<ProjectVO>> {
         return Result(
             projectService.list(
                 userId = userId ?: "",
-                accessToken = accessToken,
                 unApproved = false
             )
         )
     }
 
-    override fun getPreUserProject(userId: String, accessToken: String): Result<ProjectVO?> {
-        return Result(projectLocalService.getOrCreatePreProject(userId = userId, accessToken = accessToken))
+    override fun getPreUserProject(userId: String): Result<ProjectVO?> {
+        return Result(projectLocalService.getOrCreatePreProject(userId = userId))
     }
 
     override fun getRemoteDevUserProject(userId: String): Result<ProjectVO?> {
@@ -234,7 +233,6 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
 
     override fun create(
         userId: String,
-        accessToken: String,
         projectCreateInfo: ProjectCreateInfo,
         routerTag: String?
     ): Result<String> {
@@ -250,7 +248,6 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
 
         val createResult = projectService.create(
             userId = userId,
-            accessToken = accessToken,
             projectCreateInfo = projectCreateInfo,
             createExtInfo = createExtInfo,
             projectChannel = channelCode
@@ -268,13 +265,11 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     }
 
     override fun verifyUserProjectPermission(
-        accessToken: String,
         projectCode: String,
         userId: String
     ): Result<Boolean> {
         return Result(
             projectExtPermissionService.verifyUserProjectPermission(
-                accessToken = accessToken,
                 projectCode = projectCode,
                 userId = userId
             )

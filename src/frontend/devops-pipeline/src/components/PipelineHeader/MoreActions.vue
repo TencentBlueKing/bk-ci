@@ -91,7 +91,7 @@
     import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
-    import { RESOURCE_ACTION, RESOURCE_TYPE } from '@/utils/permission'
+    import { RESOURCE_ACTION, RESOURCE_TYPE, TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
     import { pipelineTabIdMap } from '@/utils/pipelineConst'
     import DeleteArchivedDialog from '@/views/PipelineList/DeleteArchivedDialog'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
@@ -150,7 +150,7 @@
                     projectId,
                     resourceType: RESOURCE_TYPE.PROJECT,
                     resourceCode: projectId,
-                    action: RESOURCE_ACTION.CREATE
+                    action: TEMPLATE_RESOURCE_ACTION.CREATE
                 }
                 
                 const menuItems = [
@@ -332,7 +332,7 @@
             copyAsTemplateInstance (pipeline) {
                 const pipelineName = (pipeline.pipelineName + '_copy').substring(0, 128)
                 const { templateId, pipelineId, projectId, templateVersion } = pipeline
-                window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/${templateVersion}/instance/create/?pipelineName=${pipelineName}&pipelineId=${pipelineId}`
+                window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/${templateVersion}/instance/copy/?pipelineName=${pipelineName}&pipelineId=${pipelineId}`
             },
             afterRemovePipeline () {
                 this.$router.push({

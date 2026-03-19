@@ -51,10 +51,12 @@ import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
+import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordTicketType
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
+import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
@@ -168,17 +170,21 @@ class ServiceRemoteDevResourceImpl(
     override fun getProjectWorkspace(
         projectId: String?,
         ip: String?,
+        envId: String?,
         businessLineName: String?,
-        ownerName: String?
+        ownerName: String?,
+        workspaceName: String?
     ): Result<List<WeSecProjectWorkspace>> {
         return Result(
             workspaceService.getWorkspaceList4WeSec(
                 projectId = projectId,
                 ip = ip,
+                envId = envId,
                 businessLineName = businessLineName,
                 ownerName = ownerName,
                 hasDepartmentsInfo = null,
-                hasCurrentUser = true
+                hasCurrentUser = true,
+                workspaceName = workspaceName
             )
         )
     }
@@ -650,12 +656,14 @@ class ServiceRemoteDevResourceImpl(
     override fun checkWorkspaceEnableAddress(
         userId: String,
         appId: Long,
-        ip: String
+        ip: String,
+        mediaGary: Boolean?
     ): Result<CheckWorkspaceRecordData> {
         val (enable, address) = workspaceRecordService.checkRecordAndAddress(
             userId = userId,
             appId = appId,
-            ip = ip
+            ip = ip,
+            mediaGary = mediaGary
         )
         return Result(CheckWorkspaceRecordData(enable, address))
     }
@@ -800,8 +808,33 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun getWorkspaceRecordTicket(userId: String, workspaceName: String, token: String): Result<String> {
-        return Result(workspaceRecordService.getWorkspaceRecordTicket(workspaceName, token))
+    override fun getWorkspaceRecordTicket(
+        userId: String,
+        workspaceName: String,
+        token: String
+    ): Result<String> {
+        return Result(
+            workspaceRecordService.getWorkspaceRecordTicket(
+                workspaceName = workspaceName,
+                token = token,
+                type = WorkspaceRecordTicketType.RECORD
+            )
+        )
+    }
+
+    override fun getThumbnailEncryptedTicket(
+        userId: String,
+        workspaceName: String?,
+        envId: String?,
+        expiredSeconds: Long?
+    ): Result<ThumbnailEncryptedTicketResp> {
+        return Result(
+            workspaceRecordService.getThumbnailEncryptedTicket(
+                workspaceName = workspaceName,
+                envId = envId,
+                expiredSeconds = expiredSeconds
+            )
+        )
     }
 
     override fun getTaskStatus(userId: String, taskId: String): Result<WorkspaceTaskStatus?> {

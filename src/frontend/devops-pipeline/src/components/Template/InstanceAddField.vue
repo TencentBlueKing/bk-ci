@@ -33,7 +33,7 @@
                         :right-icon="'bk-icon icon-search'"
                         :placeholder="$t('template.keyword')"
                         class="search-input"
-                        @right-icon-click="handlerSearch"
+                        @clear="handleClearSearch"
                     />
                     <div class="container-groups">
                         <div
@@ -102,6 +102,7 @@
                                 :params="renderParamList"
                                 :param-values="paramsValues"
                                 sort-category
+                                batch-edit-flag
                                 :handle-set-parma-required="handleSetParmaRequired"
                             >
                                 <template
@@ -150,7 +151,7 @@
 </template>
 
 <script setup>
-    import { computed, ref } from 'vue'
+    import { computed, readonly, ref } from 'vue'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import UseInstance from '@/hook/useInstance'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
@@ -163,13 +164,16 @@
     const { proxy } = UseInstance()
     const selectedData = ref([])
     const activeName = ref(new Set([1, 2, 3]))
+    const searchKey = ref('')
     const curIndex = computed(() => proxy.$route.query?.index)
     const curInstance = computed(() => props.instanceList[curIndex.value - 1])
     const params = ref(curInstance.value?.param.map(p => ({
         ...p,
         isChange: false,
         isNew: false,
-        isDelete: false
+        isDelete: false,
+        propertyUpdates: [],
+        defaultValue: ''
     })) ?? [])
     const buildNo = ref(curInstance.value?.buildNo ?? {})
     const isVisibleVersion = computed(() => {
@@ -214,13 +218,30 @@
         return { [key]: value, ...rest }
     })
     const paramsField = computed(() => {
-        return Object.entries(sortParamList.value).map(([title, items]) => ({
-            id: 'params',
-            title: title,
-            isAll: false,
-            count: paramsList.value.length,
-            data: items.map(item => item.id)
-        }))
+        const keyword = searchKey.value.trim().toLowerCase()
+        return Object.entries(sortParamList.value)
+            .map(([title, items]) => {
+                // 根据搜索关键字过滤 items
+                const filteredItems = keyword
+                    ? items.filter(item =>
+                        item.id.toLowerCase().includes(keyword)
+                        || (item.name && item.name.toLowerCase().includes(keyword))
+                    )
+                    : items
+                
+                // 检查当前分组中所有项是否都已选中
+                const filteredIds = filteredItems.map(item => item.id)
+                const isAll = filteredIds.length > 0 && filteredIds.every(id => selectedData.value.includes(id))
+                
+                return {
+                    id: 'params',
+                    title: title,
+                    isAll: isAll,
+                    count: filteredItems.length,
+                    data: filteredIds
+                }
+            })
+            .filter(group => group.data.length > 0) // 过滤掉没有匹配项的分组
     })
     const fieldMap = computed(() => {
         return [
@@ -286,7 +307,10 @@
     function handleCancel () {
         proxy.$emit('cancel', renderParamList.value)
     }
-    
+
+    function handleClearSearch () {
+        searchKey.value = ''
+    }
 </script>
 
 <style lang="scss" scoped>

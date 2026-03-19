@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.fetchCountFix
 import com.tencent.devops.common.db.utils.skipCheck
+import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceLabels
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
@@ -418,7 +419,8 @@ class WorkspaceDao {
     fun updateWorkspaceStatus(
         dslContext: DSLContext,
         workspaceName: String,
-        status: WorkspaceStatus
+        status: WorkspaceStatus,
+        allowUpdateDeleted: Boolean = false
     ) {
         with(TWorkspace.T_WORKSPACE) {
             dslContext.update(this)
@@ -426,7 +428,15 @@ class WorkspaceDao {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
                 .where(NAME.eq(workspaceName))
-                .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                .let {
+                    if (allowUpdateDeleted) {
+                        // 管理员场景：允许更新任何状态的工作空间
+                        it
+                    } else {
+                        // 普通场景：不允许更新已删除的工作空间
+                        it.and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                    }
+                }
                 .execute()
         }
     }
@@ -457,6 +467,19 @@ class WorkspaceDao {
                 .set(OWNER_TYPE, new.name)
                 .where(NAME.eq(workspaceName))
                 .and(OWNER_TYPE.eq(old.name))
+                .execute()
+        }
+    }
+
+    fun enableCoffeeAI(
+        dslContext: DSLContext,
+        workspaceNames: List<String>,
+    ) {
+        with(TWorkspace.T_WORKSPACE) {
+            dslContext.update(this)
+                .set(COFFEE_AI, ByteUtils.bool2Byte(true))
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(NAME.`in`(workspaceNames))
                 .execute()
         }
     }
@@ -704,7 +727,10 @@ class WorkspaceDao {
                 bakWorkspaceName = record.getOrNull(TWorkspace.T_WORKSPACE.BAK_NAME) as String?,
                 ip = record.getOrNull(TWorkspace.T_WORKSPACE.IP) as String?,
                 nodeHashId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.NODE_HASH_ID) as String?,
-                resourceId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.RESOURCE_ID) as String?
+                resourceId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.RESOURCE_ID) as String?,
+                enableRecord = (record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.ENABLE_RECORD_USER) as? String)
+                    ?.isNotBlank() ?: false,
+                coffeeAi = (record.getOrNull(TWorkspace.T_WORKSPACE.COFFEE_AI) as? Byte)?.let { it != 0.toByte() } ?: false
             )
         }
 

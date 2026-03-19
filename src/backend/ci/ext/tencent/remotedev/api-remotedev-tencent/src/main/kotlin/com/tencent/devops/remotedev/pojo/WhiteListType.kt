@@ -45,6 +45,9 @@ enum class WhiteListType {
     // 限制访问所有 remotedev api
     API,
 
+    // 限制使用 COFFEE_AI
+    COFFEE_AI,
+
     // 限制访问云桌面
     WINDOWS_GPU,
 

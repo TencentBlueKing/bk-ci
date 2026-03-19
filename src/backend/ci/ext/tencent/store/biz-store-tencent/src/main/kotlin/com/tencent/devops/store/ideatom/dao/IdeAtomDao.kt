@@ -36,7 +36,7 @@ import com.tencent.devops.model.store.tables.TIdeAtomFeature
 import com.tencent.devops.model.store.tables.TIdeAtomLabelRel
 import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.records.TIdeAtomRecord
-import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.ideatom.IdeAtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.ideatom.IdeAtomCreateRequest

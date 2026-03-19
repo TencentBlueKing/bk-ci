@@ -1,454 +1,502 @@
 <template>
-    <bk-sideslider
-        :is-show.sync="value"
-        :width="640"
-        @shown="showReleaseSlider"
-        @hidden="hideReleaseSlider"
-        ext-cls="release-pipeline-side-slider"
-    >
-        <template>
-            <header
-                slot="header"
-                :class="[{
-                    'release-pipeline-side-slider-header': !isTemplateInstanceMode,
-                    'release-template-side-slider-header': isTemplateInstanceMode,
-                    'has-pac-tag': pacEnabled
-                }]"
-            >
-                <template v-if="!isTemplateInstanceMode">
-                    {{ $t(isTemplate ? "releaseTemplate" : "releasePipeline") }}
-                    <PacTag
-                        v-if="pacEnabled"
-                        :info="pipelineInfo?.yamlInfo"
-                    />
-                    <span
-                        v-bk-overflow-tips
-                        class="release-pipeline-new-version"
-                    >
-                        {{ $t("releasePipelineVersion",[customVersionName || newReleaseVersionName]) }}
-                    </span>
-                    <span v-bk-overflow-tips>
-                        {{ $t("releasePipelineBaseVersion", [draftBaseVersionName]) }}
-                    </span>
-                </template>
-                <template v-else>
-                    {{ isInstanceCreateType ? $t('template.releasePipelineInstance') : $t('template.updatePipelineInstance') }}
-                    <bk-popover
-                        theme="light"
-                        :tippy-options="{
-                            arrow: false,
-                            placement: 'bottom-end'
-                        }"
-                        ext-cls="instance-version"
-                    >
-                        <span class="release-pipeline-num">{{ $t('template.templateInstanceNum', [instanceList.length]) }}</span>
-                        <div
-                            slot="content"
-                            class="release-version-warpper"
-                        >
-                            <div
-                                v-for="item in newReleaseVersionNameList"
-                                :key="item.pipelineName"
-                                class="release-version-list"
-                            >
-                                <span class="instance-name">{{ item.pipelineName }}</span>
-                                <span
-                                    v-bk-overflow-tips
-                                    class="release-pipeline-new-version"
-                                >
-                                    {{ $t("releasePipelineVersion",[item.newVersionName || '--']) }}
-                                </span>
-                            </div>
-                        </div>
-                    </bk-popover>
-                </template>
-            </header>
-            <template v-if="!isTemplateInstanceMode || (isTemplateInstanceMode && !isInstanceReleasing)">
-                <section
-                    slot="content"
-                    v-bkloading="{ isLoading: isLoading || releasing }"
-                    class="release-pipeline-pac-form"
+    <div>
+        <bk-sideslider
+            :is-show.sync="value"
+            :width="640"
+            @shown="showReleaseSlider"
+            @hidden="hideReleaseSlider"
+            ext-cls="release-pipeline-side-slider"
+        >
+            <template>
+                <header
+                    slot="header"
+                    :class="[{
+                        'release-pipeline-side-slider-header': !isTemplateInstanceMode,
+                        'release-template-side-slider-header': isTemplateInstanceMode,
+                        'has-pac-tag': pacEnabled
+                    }]"
                 >
-                    <div
-                        v-if="showPacSwitcherConfig"
-                        class="release-pipeline-pac-conf"
-                    >
-                        <aside class="release-pipeline-pac-conf-leftside">
-                            <label for="enablePac">
-                                {{ $t("pacMode") }}
-                                <span
-                                    class="devops-icon icon-info-circle"
-                                    v-bk-tooltips="pacDesc"
-                                />
-                            </label>
-                            <bk-switcher
-                                :disabled="disabledPacSwitcher"
-                                theme="primary"
-                                name="enablePac"
-                                v-model="releaseParams.enablePac"
-                                @change="handlePacEnableChange"
-                            />
-                        </aside>
-                        <aside
-                            v-if="releaseParams.enablePac && hasPacSupportScmTypeList"
-                            class="release-pipeline-pac-conf-rightside"
+                    <template v-if="!isTemplateInstanceMode">
+                        {{ $t(isTemplate ? "releaseTemplate" : "releasePipeline") }}
+                        <PacTag
+                            v-if="pacEnabled"
+                            :info="pipelineInfo?.yamlInfo"
+                        />
+                        <span
+                            v-bk-overflow-tips
+                            class="release-pipeline-new-version"
                         >
-                            <label for="enablePac">
-                                {{ $t("codelibSrc") }}
-                            </label>
-                            <bk-radio-group v-model="releaseParams.scmType">
-                                <bk-radio
-                                    v-for="item in pacSupportScmTypeList"
-                                    :key="item.id"
-                                    :value="item.id"
-                                >
-                                    {{ $t(item.value) }}
-                                </bk-radio>
-                            </bk-radio-group>
-                        </aside>
-                    </div>
-                   
-                    <bk-form
-                        v-if="!releaseParams.enablePac || (releaseParams.enablePac && hasOauth)"
-                        label-width="auto"
-                        form-type="vertical"
-                        :model="releaseParams"
-                        :rules="rules"
-                        ref="releaseForm"
-                        class="release-pipeline-pac-setting"
-                        error-display-type="normal"
-                    >
-                        <bk-form-item
-                            v-if="!releaseParams.enablePac && isTemplate && !isTemplateInstanceMode"
-                            :label="$t('template.customVersionName')"
-                            property="customVersionName"
+                            {{ $t("releasePipelineVersion",[customVersionName || newReleaseVersionName]) }}
+                        </span>
+                        <span v-bk-overflow-tips>
+                            {{ $t("releasePipelineBaseVersion", [draftBaseVersionName]) }}
+                        </span>
+                    </template>
+                    <template v-else>
+                        {{ isInstanceCreateType ? $t('template.releasePipelineInstance') : $t('template.updatePipelineInstance') }}
+                        <bk-popover
+                            theme="light"
+                            :tippy-options="{
+                                arrow: false,
+                                placement: 'bottom-end'
+                            }"
+                            ext-cls="instance-version"
                         >
-                            <bk-input
-                                v-model="customVersionName"
-                                @blur="handleBlurCustomVersionName"
-                                :disabled="!isCommitToMaster && releaseParams.enablePac"
-                                :maxlength="30"
+                            <span class="release-pipeline-num">{{ $t('template.templateInstanceNum', [instanceList.length]) }}</span>
+                            <div
+                                slot="content"
+                                class="release-version-warpper"
                             >
-                            </bk-input>
-                        </bk-form-item>
-                        <div v-if="releaseParams.enablePac && hasOauth">
-                            <header
-                                @click="togglePacCodelibSettingForm"
-                                class="release-pac-pipeline-form-header"
-                            >
-                                {{ $t("codelibSetting") }}
-                                <i
-                                    :class="[
-                                        'devops-icon icon-angle-right',
-                                        {
-                                            'pac-codelib-form-show': showPacCodelibSetting
-                                        }
-                                    ]"
-                                />
-                            </header>
-                            <section v-show="showPacCodelibSetting">
-                                <label
-                                    class="yaml-info-codelib-label"
-                                    for="yamlCodelib"
+                                <div
+                                    v-for="item in newReleaseVersionNameList"
+                                    :key="item.pipelineName"
+                                    class="release-version-list"
                                 >
-                                    {{ $t("yamlCodeLib") }}
-                                    <i
-                                        class="devops-icon icon-info-circle-shape"
-                                        v-bk-tooltips="$t('yamlCodeLibDesc')"
-                                    />
-                                </label>
-                                <bk-form-item
-                                    required
-                                    property="repoHashId"
-                                >
-                                    <bk-select
-                                        id="yamlCodelib"
-                                        :disabled="disabledYamlCodeLib"
-                                        searchable
-                                        enable-scroll-load
-                                        v-model="releaseParams.repoHashId"
-                                        :scroll-loading="scrollLoadmoreConf"
-                                        :loading="isInitPacRepo"
-                                        :show-empty="false"
-                                        :placeholder="$t('editPage.atomForm.selectTips')"
-                                        :z-index="2600"
-                                        @scroll-end="fetchPacEnableCodelibList(false)"
-                                        @toggle="refreshPacEnableCodelibList"
+                                    <span class="instance-name">{{ item.pipelineName }}</span>
+                                    <span
+                                        v-bk-overflow-tips
+                                        class="release-pipeline-new-version"
                                     >
-                                        <template v-if="pacEnableCodelibList.length">
-                                            <bk-option
-                                                v-for="option in pacEnableCodelibList"
-                                                :key="option.repositoryHashId"
-                                                :id="option.repositoryHashId"
-                                                :name="option.aliasName"
-                                            >
-                                            </bk-option>
-                                        </template>
-                                        <bk-loading
-                                            is-loading
-                                            mode="spin"
-                                            size="small"
-                                            v-else-if="isInitPacRepo"
-                                        >
-                                        </bk-loading>
-                                        <bk-exception
-                                            v-else
-                                            scene="part"
-                                            type="empty"
-                                        >
-                                            <span class="no-pac-enable-codelib-yet">
-                                                {{ $t("noPacEnableCodelibYet") }}
-                                            </span>
-                                        </bk-exception>
-                                        <p
-                                            class="enable-pac-codelib-link"
-                                            slot="extension"
-                                            @click="goCodelib"
-                                        >
-                                            <i class="devops-icon icon-jump-link" />
-                                            {{ $t("goCodelibsEnablePac") }}
-                                        </p>
-                                    </bk-select>
-                                </bk-form-item>
-                                <label
-                                    v-if="!isTemplateInstanceMode"
-                                    class="yaml-info-codelib-label"
-                                    for="yamlFilePath"
-                                >
-                                    {{ $t("yamlDir") }}
-                                    <i
-                                        class="devops-icon icon-info-circle-shape"
-                                        v-bk-tooltips="$t('yamlDirDesc')"
+                                        {{ $t("releasePipelineVersion",[item.newVersionName || '--']) }}
+                                    </span>
+                                </div>
+                            </div>
+                        </bk-popover>
+                    </template>
+                </header>
+                <template v-if="!isTemplateInstanceMode || (isTemplateInstanceMode && !isInstanceReleasing)">
+                    <section
+                        slot="content"
+                        v-bkloading="{ isLoading: isLoading || releasing }"
+                        class="release-pipeline-pac-form"
+                    >
+                        <!-- 构建号重置提醒 -->
+                        <bk-alert
+                            v-if="isTemplateInstanceMode && !!resetBuildNoInstanceCount"
+                            type="warning"
+                            closable
+                        >
+                            <div slot="title">
+                                <i18n path="template.resetBuildNoConfirmMessage">
+                                    <strong
+                                        style="color: #FF9C01;"
+                                    >
+                                        {{ resetBuildNoInstanceCount }}
+                                    </strong>
+                                </i18n>
+                            </div>
+                        </bk-alert>
+                        
+                        <div
+                            v-if="showPacSwitcherConfig"
+                            class="release-pipeline-pac-conf"
+                        >
+                            <aside class="release-pipeline-pac-conf-leftside">
+                                <label for="enablePac">
+                                    {{ $t("pacMode") }}
+                                    <span
+                                        class="devops-icon icon-info-circle"
+                                        v-bk-tooltips="pacDesc"
                                     />
                                 </label>
-                                <bk-form-item
-                                    required
-                                    property="filePath"
-                                >
-                                    <template v-if="isTemplateInstanceMode">
-                                        <table class="instance-filePath">
-                                            <thead>
-                                                <tr align="left">
-                                                    <th>{{ $t('template.instance') }}</th>
-                                                    <th>
-                                                        <span
-                                                            class="yaml-path-name"
-                                                            v-bk-tooltips="$t('yamlDirDesc')"
-                                                        >
-                                                            {{ $t('yamlDir') }}
-                                                        </span>
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr
-                                                    v-for="(item, index) in renderInstanceList"
-                                                    :key="item.pipelineName"
-                                                >
-                                                    <td class="instance-name">{{ item.pipelineName }}</td>
-                                                    <td>
-                                                        <div class="input-cell">
-                                                            <span class="instance-name">{{ filePathDir }}</span>
-                                                            <div class="file-path-input">
-                                                                <bk-input
-                                                                    v-model="item.filePath"
-                                                                    :disabled="disabledYamlCodeLib"
-                                                                    id="yamlFilePath"
-                                                                    placeholder="请输入"
-                                                                    @change="(value) => handleChangeFilePath(`.ci/${value}`, index)"
-                                                                />
-                                                                <i
-                                                                    v-if="!/\.ya?ml$/.test(item.filePath) && item.filePath"
-                                                                    class="bk-icon icon-exclamation-circle-shape tooltips-icon"
-                                                                    v-bk-tooltips="$t('yamlFilePathErrorTip')"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </template>
-                                    <template v-else>
-                                        <bk-input
-                                            :disabled="pacEnabled"
-                                            v-model="releaseParams.filePath"
-                                            id="yamlFilePath"
-                                            :placeholder="$t('yamlFilePathPlaceholder')"
-                                        >
-                                            <span
-                                                class="group-text"
-                                                slot="prepend"
-                                            >{{ filePathDir }}</span>
-                                        </bk-input>
-                                    </template>
-                                </bk-form-item>
-                            </section>
-                        </div>
-                        <div class="release-pipeline-pac-submit-conf">
-                            <header class="release-pac-pipeline-form-header">
-                                {{ $t("submitSetting") }}
-                            </header>
-
-                            <bk-form-item
-                                :required="releaseParams.enablePac"
-                                :label="$t('versionDesc')"
-                                property="description"
-                            >
-                                <bk-input
-                                    type="textarea"
-                                    maxlength="512"
-                                    v-model="releaseParams.description"
-                                    :placeholder="$t(
-                                        releaseParams.enablePac
-                                            ? 'commitMsgPlaceholder'
-                                            : 'versionDescPlaceholder'
-                                    )"
+                                <bk-switcher
+                                    :disabled="disabledPacSwitcher"
+                                    theme="primary"
+                                    name="enablePac"
+                                    v-model="releaseParams.enablePac"
+                                    @change="handlePacEnableChange"
                                 />
-                                <span
-                                    v-if="releaseParams.enablePac"
-                                    class="release-pac-version-desc"
-                                >
-                                    {{ $t("commitMsgDesc") }}
-                                </span>
-                            </bk-form-item>
-                            <bk-form-item
-                                v-if="releaseParams.enablePac"
-                                required
-                                :label="$t('targetBranch')"
-                                property="targetAction"
+                            </aside>
+                            <aside
+                                v-if="releaseParams.enablePac && hasPacSupportScmTypeList"
+                                class="release-pipeline-pac-conf-rightside"
                             >
-                                <bk-radio-group v-model="releaseParams.targetAction">
+                                <label for="enablePac">
+                                    {{ $t("codelibSrc") }}
+                                </label>
+                                <bk-radio-group v-model="releaseParams.scmType">
                                     <bk-radio
-                                        v-for="option in targetActionOptions"
-                                        class="pac-pipeline-dest-branch-radio"
-                                        :key="option"
-                                        :value="option"
+                                        v-for="item in pacSupportScmTypeList"
+                                        :key="item.id"
+                                        :value="item.id"
                                     >
-                                        {{ $t(option, [baseVersionBranch]) }}
+                                        {{ $t(item.value) }}
                                     </bk-radio>
                                 </bk-radio-group>
-                            </bk-form-item>
+                            </aside>
+                        </div>
+                       
+                        <bk-form
+                            v-if="!releaseParams.enablePac || (releaseParams.enablePac && hasOauth)"
+                            label-width="auto"
+                            form-type="vertical"
+                            :model="releaseParams"
+                            :rules="rules"
+                            ref="releaseForm"
+                            class="release-pipeline-pac-setting"
+                            error-display-type="normal"
+                        >
                             <bk-form-item
-                                v-if="isCommitToBranch"
-                                :label="$t('targetBranch')"
-                            >
-                                <bk-select
-                                    v-model="releaseParams.targetBranch"
-                                    :placeholder="$t('editPage.selectBranchTips')"
-                                    searchable
-                                    :remote-method="handleBranchSerach"
-                                >
-                                    <bk-option
-                                        v-for="branch in branchList"
-                                        :key="branch"
-                                        :id="branch"
-                                        :name="branch"
-                                    >
-                                    </bk-option>
-                                </bk-select>
-                            </bk-form-item>
-                            <bk-form-item
-                                v-if="releaseParams.enablePac && isTemplate && !isTemplateInstanceMode"
+                                v-if="!releaseParams.enablePac && isTemplate && !isTemplateInstanceMode"
                                 :label="$t('template.customVersionName')"
                                 property="customVersionName"
                             >
-                                <bk-input
-                                    v-model="customVersionName"
-                                    @blur="handleBlurCustomVersionName"
-                                    :disabled="!isCommitToMaster && releaseParams.enablePac"
-                                    :maxlength="30"
+                                <div
+                                    class="custom-version-name-select-input"
+                                    v-bk-clickoutside="handleVersionNameBlur"
                                 >
-                                </bk-input>
+                                    <bk-input
+                                        v-model="customVersionName"
+                                        :disabled="!isCommitToMaster && releaseParams.enablePac"
+                                        :maxlength="30"
+                                        @focus="handleVersionNameFocus"
+                                    >
+                                    </bk-input>
+                                    <ul
+                                        v-show="showVersionNameDropdown && templateVersionList.length > 0"
+                                        class="version-name-dropdown"
+                                    >
+                                        <li
+                                            v-for="item in templateVersionList"
+                                            :key="item.version"
+                                            :class="{ active: item.versionName === customVersionName }"
+                                            @click="selectVersionName(item.versionName)"
+                                        >
+                                            {{ item.versionName }}
+                                        </li>
+                                    </ul>
+                                </div>
                             </bk-form-item>
+                            <div v-if="releaseParams.enablePac && hasOauth">
+                                <header
+                                    @click="togglePacCodelibSettingForm"
+                                    class="release-pac-pipeline-form-header"
+                                >
+                                    {{ $t("codelibSetting") }}
+                                    <i
+                                        :class="[
+                                            'devops-icon icon-angle-right',
+                                            {
+                                                'pac-codelib-form-show': showPacCodelibSetting
+                                            }
+                                        ]"
+                                    />
+                                </header>
+                                <section v-show="showPacCodelibSetting">
+                                    <label
+                                        class="yaml-info-codelib-label"
+                                        for="yamlCodelib"
+                                    >
+                                        {{ $t("yamlCodeLib") }}
+                                        <i
+                                            class="devops-icon icon-info-circle-shape"
+                                            v-bk-tooltips="$t('yamlCodeLibDesc')"
+                                        />
+                                    </label>
+                                    <bk-form-item
+                                        required
+                                        property="repoHashId"
+                                    >
+                                        <bk-select
+                                            id="yamlCodelib"
+                                            :disabled="disabledYamlCodeLib"
+                                            searchable
+                                            enable-scroll-load
+                                            v-model="releaseParams.repoHashId"
+                                            :scroll-loading="scrollLoadmoreConf"
+                                            :loading="isInitPacRepo"
+                                            :show-empty="false"
+                                            :placeholder="$t('editPage.atomForm.selectTips')"
+                                            :z-index="2600"
+                                            @scroll-end="fetchPacEnableCodelibList(false)"
+                                            @toggle="refreshPacEnableCodelibList"
+                                        >
+                                            <template v-if="pacEnableCodelibList.length">
+                                                <bk-option
+                                                    v-for="option in pacEnableCodelibList"
+                                                    :key="option.repositoryHashId"
+                                                    :id="option.repositoryHashId"
+                                                    :name="option.aliasName"
+                                                >
+                                                </bk-option>
+                                            </template>
+                                            <bk-loading
+                                                is-loading
+                                                mode="spin"
+                                                size="small"
+                                                v-else-if="isInitPacRepo"
+                                            >
+                                            </bk-loading>
+                                            <bk-exception
+                                                v-else
+                                                scene="part"
+                                                type="empty"
+                                            >
+                                                <span class="no-pac-enable-codelib-yet">
+                                                    {{ $t("noPacEnableCodelibYet") }}
+                                                </span>
+                                            </bk-exception>
+                                            <p
+                                                class="enable-pac-codelib-link"
+                                                slot="extension"
+                                                @click="goCodelib"
+                                            >
+                                                <i class="devops-icon icon-jump-link" />
+                                                {{ $t("goCodelibsEnablePac") }}
+                                            </p>
+                                        </bk-select>
+                                    </bk-form-item>
+                                    <label
+                                        v-if="!isTemplateInstanceMode"
+                                        class="yaml-info-codelib-label"
+                                        for="yamlFilePath"
+                                    >
+                                        {{ $t("yamlDir") }}
+                                        <i
+                                            class="devops-icon icon-info-circle-shape"
+                                            v-bk-tooltips="$t('yamlDirDesc')"
+                                        />
+                                    </label>
+                                    <bk-form-item
+                                        required
+                                        property="filePath"
+                                    >
+                                        <template v-if="isTemplateInstanceMode">
+                                            <table class="instance-filePath">
+                                                <thead>
+                                                    <tr align="left">
+                                                        <th>{{ $t('template.instance') }}</th>
+                                                        <th>
+                                                            <span
+                                                                class="yaml-path-name"
+                                                                v-bk-tooltips="$t('yamlDirDesc')"
+                                                            >
+                                                                {{ $t('yamlDir') }}
+                                                            </span>
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr
+                                                        v-for="(item, index) in renderInstanceList"
+                                                        :key="item.pipelineName"
+                                                    >
+                                                        <td class="instance-name">{{ item.pipelineName }}</td>
+                                                        <td>
+                                                            <div class="input-cell">
+                                                                <span class="instance-name">{{ filePathDir }}</span>
+                                                                <div class="file-path-input">
+                                                                    <bk-input
+                                                                        v-model="item.filePath"
+                                                                        :disabled="disabledYamlCodeLib"
+                                                                        id="yamlFilePath"
+                                                                        placeholder="请输入"
+                                                                        @change="(value) => handleChangeFilePath(`.ci/${value}`, index)"
+                                                                    />
+                                                                    <i
+                                                                        v-if="!/\.ya?ml$/.test(item?.filePath) || !item?.filePath"
+                                                                        class="bk-icon icon-exclamation-circle-shape tooltips-icon"
+                                                                        v-bk-tooltips="$t('yamlFilePathErrorTip')"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </template>
+                                        <template v-else>
+                                            <bk-input
+                                                :disabled="pacEnabled"
+                                                v-model="releaseParams.filePath"
+                                                id="yamlFilePath"
+                                                :placeholder="$t('yamlFilePathPlaceholder')"
+                                            >
+                                                <span
+                                                    class="group-text"
+                                                    slot="prepend"
+                                                >{{ filePathDir }}</span>
+                                            </bk-input>
+                                        </template>
+                                    </bk-form-item>
+                                </section>
+                            </div>
+                            <div class="release-pipeline-pac-submit-conf">
+                                <header class="release-pac-pipeline-form-header">
+                                    {{ $t("submitSetting") }}
+                                </header>
+    
+                                <bk-form-item
+                                    :required="releaseParams.enablePac"
+                                    :label="$t('versionDesc')"
+                                    property="description"
+                                >
+                                    <bk-input
+                                        type="textarea"
+                                        maxlength="512"
+                                        v-model="releaseParams.description"
+                                        :placeholder="$t(
+                                            releaseParams.enablePac
+                                                ? 'commitMsgPlaceholder'
+                                                : 'versionDescPlaceholder'
+                                        )"
+                                    />
+                                    <span
+                                        v-if="releaseParams.enablePac"
+                                        class="release-pac-version-desc"
+                                    >
+                                        {{ $t("commitMsgDesc") }}
+                                    </span>
+                                </bk-form-item>
+                                <bk-form-item
+                                    v-if="releaseParams.enablePac"
+                                    required
+                                    :label="$t('targetBranch')"
+                                    property="targetAction"
+                                >
+                                    <bk-radio-group v-model="releaseParams.targetAction">
+                                        <bk-radio
+                                            v-for="option in targetActionOptions"
+                                            class="pac-pipeline-dest-branch-radio"
+                                            :key="option"
+                                            :value="option"
+                                        >
+                                            {{ $t(option, [baseVersionBranch]) }}
+                                        </bk-radio>
+                                    </bk-radio-group>
+                                </bk-form-item>
+                                <bk-form-item
+                                    v-if="isCommitToBranch"
+                                    :label="$t('targetBranch')"
+                                >
+                                    <bk-select
+                                        v-model="releaseParams.targetBranch"
+                                        :placeholder="$t('editPage.selectBranchTips')"
+                                        searchable
+                                        :remote-method="handleBranchSerach"
+                                    >
+                                        <bk-option
+                                            v-for="branch in branchList"
+                                            :key="branch"
+                                            :id="branch"
+                                            :name="branch"
+                                        >
+                                        </bk-option>
+                                    </bk-select>
+                                </bk-form-item>
+                                <bk-form-item
+                                    v-if="releaseParams.enablePac && isTemplate && !isTemplateInstanceMode"
+                                    :label="$t('template.customVersionName')"
+                                    property="customVersionName"
+                                >
+                                    <bk-input
+                                        v-model="customVersionName"
+                                        @blur="handleBlurCustomVersionName"
+                                        :disabled="!isCommitToMaster && releaseParams.enablePac"
+                                        :maxlength="30"
+                                    >
+                                    </bk-input>
+                                </bk-form-item>
+                            </div>
+                        </bk-form>
+                        <div
+                            v-if="releaseParams.enablePac && !hasOauth"
+                            class="pac-oauth-enable"
+                            v-bkloading="{ isLoading: refreshing }"
+                        >
+                            <header v-if="hasPacSupportScmTypeList">
+                                <bk-button
+                                    :loading="oauthing"
+                                    :disabled="oauthing"
+                                    theme="primary"
+                                    size="large"
+                                    @click="requestOauth"
+                                >
+                                    {{ $t("oauth") }}
+                                </bk-button>
+                                <span
+                                    :class="[
+                                        'text-link',
+                                        {
+                                            disabled: refreshing
+                                        }
+                                    ]"
+                                    @click="refreshOatuStatus"
+                                >
+                                    <i class="devops-icon icon-refresh" />
+                                    {{ $t("refreshOauthStatus") }}
+                                </span>
+                            </header>
+                            <p
+                                class="pac-oauth-tips"
+                                v-html="$t(hasPacSupportScmTypeList ? 'oauthPacTips' : 'withoutOauthCodelib')"
+                            ></p>
                         </div>
-                    </bk-form>
-                    <div
-                        v-if="releaseParams.enablePac && !hasOauth"
-                        class="pac-oauth-enable"
-                        v-bkloading="{ isLoading: refreshing }"
+                    </section>
+                    <footer
+                        v-if="!releaseParams.enablePac || hasOauth"
+                        slot="footer"
+                        class="release-pipeline-pac-footer"
+                        :style="{
+                            borderTop: `${isFooterFixed ? '1px solid #dcdee5' : 'none'} !important`,
+                            backgroundColor: `${isFooterFixed ? '#fafbfd' : '#fff'} !important`,
+                            height: `${isFooterFixed ? '47' : '48'}px`
+                        }"
                     >
-                        <header v-if="hasPacSupportScmTypeList">
-                            <bk-button
-                                :loading="oauthing"
-                                :disabled="oauthing"
-                                theme="primary"
-                                size="large"
-                                @click="requestOauth"
-                            >
-                                {{ $t("oauth") }}
-                            </bk-button>
-                            <span
-                                :class="[
-                                    'text-link',
-                                    {
-                                        disabled: refreshing
-                                    }
-                                ]"
-                                @click="refreshOatuStatus"
-                            >
-                                <i class="devops-icon icon-refresh" />
-                                {{ $t("refreshOauthStatus") }}
-                            </span>
-                        </header>
-                        <p
-                            class="pac-oauth-tips"
-                            v-html="$t(hasPacSupportScmTypeList ? 'oauthPacTips' : 'withoutOauthCodelib')"
-                        ></p>
-                    </div>
-                </section>
-                <footer
-                    v-if="!releaseParams.enablePac || hasOauth"
-                    slot="footer"
-                    class="release-pipeline-pac-footer"
-                    :style="{
-                        borderTop: `${isFooterFixed ? '1px solid #dcdee5' : 'none'} !important`,
-                        backgroundColor: `${isFooterFixed ? '#fafbfd' : '#fff'} !important`,
-                        height: `${isFooterFixed ? '47' : '48'}px`
-                    }"
-                >
-                    <bk-button
-                        theme="primary"
-                        :loading="releasing"
-                        :disabled="releasing"
-                        @click="releasePipeline"
+                        <bk-button
+                            theme="primary"
+                            :loading="releasing"
+                            :disabled="releasing"
+                            @click="releasePipeline(false)"
+                        >
+                            {{ $t("release") }}
+                        </bk-button>
+                        <version-diff-entry
+                            v-if="!isTemplateInstanceMode"
+                            :text="false"
+                            theme=""
+                            :disabled="releasing"
+                            :can-switch-version="false"
+                            :version="pipelineInfo?.releaseVersion"
+                            :latest-version="version"
+                        >
+                            {{ $t("checkDiff") }}
+                        </version-diff-entry>
+                        <bk-button
+                            :disabled="releasing"
+                            @click="cancelRelease"
+                        >
+                            {{ isTemplateInstanceMode ? $t('cancel') : $t("cancelRelease") }}
+                        </bk-button>
+                    </footer>
+                </template>
+    
+                <!-- 模板实例化发布-轮询状态 -->
+                <template v-else-if="isTemplateInstanceMode && isInstanceReleasing">
+                    <section
+                        slot="content"
+                        class="release-pipeline-pac-form"
                     >
-                        {{ $t("release") }}
-                    </bk-button>
-                    <version-diff-entry
-                        v-if="!isTemplateInstanceMode"
-                        :text="false"
-                        theme=""
-                        :disabled="releasing"
-                        :can-switch-version="false"
-                        :version="pipelineInfo?.releaseVersion"
-                        :latest-version="version"
-                    >
-                        {{ $t("checkDiff") }}
-                    </version-diff-entry>
-                    <bk-button
-                        :disabled="releasing"
-                        @click="cancelRelease"
-                    >
-                        {{ isTemplateInstanceMode ? $t('cancel') : $t("cancelRelease") }}
-                    </bk-button>
-                </footer>
+                        <release-task-status
+                            :instance-num="instanceList.length"
+                            @cancel="cancelRelease"
+                        />
+                    </section>
+                </template>
             </template>
-
-            <!-- 模板实例化发布-轮询状态 -->
-            <template v-else-if="isTemplateInstanceMode && isInstanceReleasing">
-                <section
-                    slot="content"
-                    class="release-pipeline-pac-form"
-                >
-                    <release-task-status
-                        :instance-num="instanceList.length"
-                        @cancel="cancelRelease"
-                    />
-                </section>
-            </template>
-        </template>
-    </bk-sideslider>
+        </bk-sideslider>
+        <bk-dialog
+            v-model="showVersionNameExistDialog"
+            :title="$t('template.versionNameExistTitle')"
+            :ok-text="$t('confirm')"
+            :cancel-text="$t('cancel')"
+            @confirm="handleConfirmVersionNameExist"
+            @cancel="handleCancelVersionNameExist"
+        >
+            <p>{{ $t('template.versionNameExistTips', [existingVersionName]) }}</p>
+            <p style="color: #979BA5; margin-top: 8px;">{{ $t('template.versionNameExistSubTips') }}</p>
+        </bk-dialog>
+    </div>
 </template>
 
 <script>
@@ -534,6 +582,11 @@
                 currentSidesliderContentHeight: 0,
                 maxSidesliderContentHeight: 0,
                 isFooterFixed: false,
+                showVersionNameDropdown: false,
+                templateVersionList: [],
+                isLoadingVersionList: false,
+                showVersionNameExistDialog: false,
+                existingVersionName: '',
             }
         },
         computed: {
@@ -657,7 +710,7 @@
                 }
             },
             templateInstanceEnablePac () {
-                return this.instanceList.every(i => i.enabledPac) ?? false
+                return this.instanceList.length > 0 && this.instanceList.every(i => i.enabledPac)
             },
             showPacSwitcherConfig () {
                 return this.isTemplateInstanceMode ? !this.templateInstanceEnablePac : !this.pacEnabled
@@ -673,6 +726,10 @@
                     ...i,
                     filePath: this.trimCIPrefix(i?.filePath)
                 }))
+            },
+            resetBuildNoInstanceCount () {
+                // 统计勾选了"发布正式版本后立即重置为基线值"且推荐版本号是必填的实例数量
+                return this.instanceList.filter(i => i.resetBuildNo && i.buildNo?.required).length
             },
             isCommitToMaster () {
                 return this.releaseParams.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_MASTER
@@ -816,7 +873,9 @@
                 'prefetchTemplateVersion'
             ]),
             ...mapActions('templates', [
-                'fetchTemplateReleasePreFetch'
+                'fetchTemplateReleasePreFetch',
+                'requestTemplateVersionList',
+                'checkTemplateVersionNameExist'
             ]),
             ...mapActions('common', ['isPACOAuth', 'getSupportPacScmTypeList', 'getPACRepoList']),
             errorHandler (error) {
@@ -975,14 +1034,26 @@
                 this.showPacCodelibSetting = val
                 this.$nextTick(this.getSidesliderContentHeight)
             },
-            async releasePipeline () {
+            async releasePipeline (skipVersionNameCheck = false) {
                 if (this.isTemplateInstanceMode) {
                     try {
+                        if (this.releasing) return
                         await this.$refs?.releaseForm?.validate?.()
-                        if (this.releaseParams.enablePac && !this.instanceList.every(i => /\.ya?ml$/.test(i.filePath))) return
+                        if (this.releaseParams.enablePac) {
+                            const invalidInstances = this.instanceList.filter(i => !i.filePath || !/\.ya?ml$/.test(i.filePath))
+                            if (invalidInstances.length > 0) {
+                                const names = invalidInstances.map(i => i.pipelineName).join('、')
+                                throw new Error(this.$t('template.yamlFilePathInvalidTip', [names]))
+                            }
+                        }
+                        this.releasing = true
                         this.$emit('release', this.releaseParams)
                     } catch (e) {
-                        console.error(e)
+                        if (e.state === 'error') {
+                            e.message = e.content
+                        }
+                        this.errorHandler(e)
+                        this.releasing = false
                     }
                 } else {
                     const releaseFn = this.isTemplate ? this.releaseDraftTemplate : this.releaseDraftPipeline
@@ -991,6 +1062,24 @@
                         this.releasing = true
                         this.setSaveStatus(true)
                         await this.$refs?.releaseForm?.validate?.()
+                        
+                        // 检查版本名是否存在（仅对模板生效且有自定义版本名时）
+                        const versionNameToCheck = this.customVersionName?.trim()
+                        if (this.isTemplate && versionNameToCheck && !skipVersionNameCheck) {
+                            const { projectId, templateId } = this.$route.params
+                            const isExist = await this.checkTemplateVersionNameExist({
+                                projectId,
+                                templateId,
+                                versionName: versionNameToCheck
+                            })
+                            if (isExist) {
+                                this.existingVersionName = versionNameToCheck
+                                this.showVersionNameExistDialog = true
+                                this.releasing = false
+                                this.setSaveStatus(false)
+                                return
+                            }
+                        }
                         const {
                             fileUrl,
                             webUrl,
@@ -1219,7 +1308,29 @@
                                                 }
                                             },
                                             this.$t(!updateBuildNo ? (this.isTemplate ? 'checkTemplate' : 'checkPipeline') : 'return')
-                                        )
+                                        ),
+                                        this.isTemplate ? h(
+                                            'bk-button',
+                                            {
+                                                props: {
+                                                    theme: 'primary'
+                                                },
+                                                on: {
+                                                    click: () => {
+                                                        this.$bkInfo.close(instance.id)
+                                                        this.$router.push({
+                                                            name: 'TemplateOverview',
+                                                            params: {
+                                                                ...this.$route.params,
+                                                                version: this.pipelineInfo?.releaseVersion,
+                                                                type: 'instanceList'
+                                                            }
+                                                        })
+                                                    }
+                                                }
+                                            },
+                                            this.$t('template.toInstance')
+                                        ) : null
 
                                     ]
                                 )
@@ -1263,6 +1374,9 @@
             cancelRelease () {
                 this.$emit('input', false)
             },
+            resetReleasing () {
+                this.releasing = false
+            },
             togglePacCodelibSettingForm () {
                 this.showPacCodelibSetting = !this.showPacCodelibSetting
             },
@@ -1293,7 +1407,7 @@
                 }
             },
             async refreshOatuStatus () {
-                if (this.refreshing) return
+                if (this.refreshing || !this.releaseParams.enablePac) return
                 try {
                     this.refreshing = true
                     // TODO: 刷新Oauth状态
@@ -1324,6 +1438,62 @@
                 if (!val) {
                     this.customVersionName = this.newReleaseVersionName
                 }
+            },
+            async handleVersionNameFocus () {
+                this.showVersionNameDropdown = true
+                // 获取焦点时加载最近5个版本号
+                if (this.templateVersionList.length === 0 && !this.isLoadingVersionList) {
+                    await this.fetchTemplateVersionList()
+                }
+            },
+            handleVersionNameBlur () {
+                this.showVersionNameDropdown = false
+                // 失去焦点时，如果没有值则使用默认版本名
+                if (!this.customVersionName) {
+                    this.customVersionName = this.newReleaseVersionName
+                }
+            },
+            selectVersionName (versionName) {
+                this.customVersionName = versionName
+                this.showVersionNameDropdown = false
+            },
+            async fetchTemplateVersionList () {
+                const { projectId, templateId } = this.$route.params
+                if (!projectId || !templateId) return
+                
+                try {
+                    this.isLoadingVersionList = true
+                    const res = await this.requestTemplateVersionList({
+                        projectId,
+                        templateId,
+                        page: 1,
+                        pageSize: 10,
+                        includeDraft: false
+                    })
+                    const records = res.records || []
+                    const seenNames = new Set()
+                    const result = []
+                    for (const item of records) {
+                        if (!item.versionName || seenNames.has(item.versionName)) {
+                            continue
+                        }
+                        seenNames.add(item.versionName)
+                        result.push(item)
+                    }
+                    this.templateVersionList = result
+                } catch (e) {
+                    console.error('获取模板版本列表失败:', e)
+                    this.templateVersionList = []
+                } finally {
+                    this.isLoadingVersionList = false
+                }
+            },
+            handleConfirmVersionNameExist () {
+                this.showVersionNameExistDialog = false
+                this.releasePipeline(true)
+            },
+            handleCancelVersionNameExist () {
+                this.showVersionNameExistDialog = false
             }
         }
     }
@@ -1336,6 +1506,49 @@
 .release-pipeline-side-slider {
     .bk-sideslider-footer {
         border: none;
+    }
+}
+
+.custom-version-name-select-input {
+    position: relative;
+    
+    .version-name-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        margin-top: 4px;
+        max-height: 200px;
+        overflow: auto;
+        background: #fff;
+        border: 1px solid #dcdee5;
+        border-radius: 2px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        z-index: 2600;
+        list-style: none;
+        padding: 0;
+        margin: 4px 0 0;
+        
+        li {
+            padding: 0 12px;
+            height: 32px;
+            line-height: 32px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            
+            &:hover {
+                background: #f4f6fa;
+                color: #3a84ff;
+            }
+            
+            &.active {
+                background: #e1ecff;
+                color: #3a84ff;
+            }
+        }
     }
 }
 

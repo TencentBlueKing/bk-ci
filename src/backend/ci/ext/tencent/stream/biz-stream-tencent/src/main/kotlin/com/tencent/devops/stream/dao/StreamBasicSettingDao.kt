@@ -35,13 +35,13 @@ import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
 import com.tencent.devops.stream.pojo.StreamBasicSetting
 import com.tencent.devops.stream.pojo.StreamCIInfo
 import com.tencent.devops.stream.pojo.TriggerReviewSetting
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class StreamBasicSettingDao {
@@ -528,6 +528,22 @@ class StreamBasicSettingDao {
                 .set(GIT_HTTP_URL, GIT_HTTP_URL.replace(oldGitDomain, newGitDomain))
                 .set(GIT_SSH_URL, GIT_SSH_URL.replace(oldGitDomain, newGitDomain))
                 .where(ID.`in`(idList)).execute()
+        }
+    }
+
+    fun getEnableUserIdMapByIds(
+        dslContext: DSLContext,
+        gitProjectIds: List<Long>
+    ): Map<Long, String> {
+        if (gitProjectIds.isEmpty()) {
+            return emptyMap()
+        }
+        with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
+            return dslContext.select(ID, ENABLE_USER_ID)
+                .from(this)
+                .where(ID.`in`(gitProjectIds))
+                .fetch()
+                .associate { it.value1() to it.value2() }
         }
     }
 }

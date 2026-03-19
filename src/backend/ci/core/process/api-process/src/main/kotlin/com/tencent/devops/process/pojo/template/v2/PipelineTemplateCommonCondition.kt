@@ -4,6 +4,8 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.common.pipeline.template.UpgradeStrategyEnum
+import com.tencent.devops.process.pojo.PTemplateOrderByType
+import com.tencent.devops.process.pojo.PTemplateSortType
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import io.swagger.v3.oas.annotations.media.Schema
@@ -57,6 +59,10 @@ data class PipelineTemplateCommonCondition(
     val creator: String? = null,
     @get:Schema(title = "更新人", required = false)
     val updater: String? = null,
+    @get:Schema(title = "排序字段", required = false)
+    val orderBy: PTemplateOrderByType? = null,
+    @get:Schema(title = "排序方向", required = false)
+    val sort: PTemplateSortType? = null,
     @get:Schema(title = "page", required = true)
     val page: Int? = null,
     @get:Schema(title = "pageSize", required = true)

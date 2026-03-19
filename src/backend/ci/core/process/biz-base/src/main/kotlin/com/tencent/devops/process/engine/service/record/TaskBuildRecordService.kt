@@ -51,10 +51,8 @@ import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
-import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
-import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
 import org.jooq.DSLContext
@@ -75,12 +73,10 @@ import java.time.LocalDateTime
 )
 @Service
 class TaskBuildRecordService(
-    private val buildVariableService: BuildVariableService,
     private val dslContext: DSLContext,
     private val recordTaskDao: BuildRecordTaskDao,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
     private val containerBuildRecordService: ContainerBuildRecordService,
-    private val taskBuildDetailService: TaskBuildDetailService,
     recordModelService: PipelineRecordModelService,
     pipelineResourceDao: PipelineResourceDao,
     pipelineBuildDao: PipelineBuildDao,
@@ -111,14 +107,6 @@ class TaskBuildRecordService(
         operation: String,
         timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
     ) {
-        taskBuildDetailService.updateTaskStatus(
-            projectId = projectId,
-            buildId = buildId,
-            taskId = taskId,
-            taskStatus = buildStatus,
-            buildStatus = BuildStatus.RUNNING,
-            operation = operation
-        )
         updateTaskRecord(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -139,13 +127,11 @@ class TaskBuildRecordService(
         taskId: String,
         executeCount: Int
     ) {
-        taskBuildDetailService.taskStart(projectId, buildId, taskId)
         update(
             projectId = projectId, pipelineId = pipelineId, buildId = buildId,
             executeCount = executeCount, buildStatus = BuildStatus.RUNNING,
             cancelUser = null, operation = "taskStart#$taskId"
         ) {
-            val delimiters = ","
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 val recordTask = recordTaskDao.getRecord(
@@ -169,20 +155,6 @@ class TaskBuildRecordService(
                         recordTask.originClassType == ManualReviewUserTaskElement.classType)
                 ) {
                     taskStatus = BuildStatus.REVIEWING
-                    val list = mutableListOf<String>()
-                    taskVar[ManualReviewUserTaskElement::reviewUsers.name]?.let {
-                        try {
-                            (it as List<*>).forEach { reviewUser ->
-                                list.addAll(
-                                    buildVariableService.replaceTemplate(projectId, buildId, reviewUser.toString())
-                                        .split(delimiters)
-                                )
-                            }
-                        } catch (ignore: Throwable) {
-                            return@let
-                        }
-                    }
-                    taskVar[ManualReviewUserTaskElement::reviewUsers.name] = list
                 } else if (
                     recordTask.classType == QualityGateInElement.classType ||
                     recordTask.classType == QualityGateOutElement.classType ||
@@ -239,14 +211,6 @@ class TaskBuildRecordService(
         taskId: String,
         executeCount: Int
     ) {
-        taskBuildDetailService.taskPause(
-            projectId = projectId,
-            buildId = buildId,
-            stageId = stageId,
-            containerId = containerId,
-            taskId = taskId,
-            buildStatus = BuildStatus.PAUSE
-        )
         updateTaskRecord(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -293,13 +257,6 @@ class TaskBuildRecordService(
         executeCount: Int,
         cancelUser: String
     ) {
-        taskBuildDetailService.taskCancel(
-            projectId = projectId,
-            buildId = buildId,
-            containerId = containerId,
-            taskId = taskId,
-            cancelUser = cancelUser // fix me: 是否要直接更新取消人，暂时维护原有逻辑
-        )
         updateTaskRecord(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -326,14 +283,6 @@ class TaskBuildRecordService(
         executeCount: Int,
         element: Element?
     ) {
-        taskBuildDetailService.taskContinue(
-            projectId = projectId,
-            buildId = buildId,
-            stageId = stageId,
-            containerId = containerId,
-            taskId = taskId,
-            element = element
-        )
         // #7983 此处需要保持Container状态独立刷新，不能放进更新task的并发锁
         containerBuildRecordService.updateContainerStatus(
             projectId = projectId,
@@ -453,7 +402,6 @@ class TaskBuildRecordService(
                 )
             }
         }
-        taskBuildDetailService.taskEnd(taskBuildEndParam)
         if (buildStatus?.isCancel() != true && buildStatus?.isSkip() != true) {
             // 如果状态不是取消状态或者跳过状态，无需处理后续更新task状态的逻辑
             return Pair(emptyList(), recordTaskReturn)
