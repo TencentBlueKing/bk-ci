@@ -191,6 +191,7 @@ class ServiceNodeResourceImpl @Autowired constructor(
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
+        createMode: Boolean?,
         data: NodeFetchReq?
     ): Result<Page<NodeWithPermission>> {
         return Result(
