@@ -112,6 +112,13 @@
       <bk-checkbox class="atom-canskip-checkbox" :value="atom.canElementSkip" :model-value="atom.canElementSkip" @change="handleAtomSkipChange"
           :disabled="isSkip" />
       </span>
+
+      <i
+        v-if="reactiveData.editable && !isLastAtom"
+        class="add-plus-icon insert-after"
+        @click.stop="handleInsertAfter"
+        v-bk-tooltips="t('insertAfterAtom')"
+      />
     </template>
   </li>
 </template>
@@ -179,6 +186,7 @@ const emit = defineEmits([
   COPY_EVENT_NAME,
   DELETE_EVENT_NAME,
   "atom-skip-change",
+  "insert-after",
 ]);
 
 const reactiveData = inject("reactiveData");
@@ -471,6 +479,12 @@ const copyAtom = () => {
 
 const deleteAtom = () => {
   emit(DELETE_EVENT_NAME, {
+    elementIndex: props.atomIndex,
+  });
+};
+
+const handleInsertAfter = () => {
+  emit("insert-after", {
     elementIndex: props.atomIndex,
   });
 };
@@ -888,6 +902,28 @@ onBeforeUnmount(() => {
     .disabled-review span {
       color: $fontLighterColor;
       cursor: default;
+    }
+  }
+
+  .add-plus-icon.insert-after {
+    @include add-plus-icon($primaryColor, $primaryColor, white, 18px, true);
+    @include add-plus-icon-hover($primaryColor, $primaryColor, white);
+    display: none;
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: pointer;
+    z-index: 10;
+
+    &:hover {
+      transform: translateX(-50%) scale(1.1);
+    }
+  }
+
+  &:hover {
+    .add-plus-icon.insert-after {
+      display: block;
     }
   }
 
