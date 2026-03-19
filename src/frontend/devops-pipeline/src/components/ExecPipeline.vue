@@ -113,7 +113,7 @@
                         :user-name="userName"
                         :pipeline="curPipeline"
                         v-bind="$attrs"
-                        @click="handlePiplineClick"
+                        @click="handlePipelineClick"
                         @stage-check="handleStageCheck"
                         @stage-retry="handleRetry"
                         @atom-quality-check="qualityCheck"
@@ -289,10 +289,12 @@
     import MiniMap from '@/components/MiniMap'
     import { errorTypeMap } from '@/utils/pipelineConst'
     import { convertMillSec, convertTime } from '@/utils/util'
-    import BkPipeline, { loadI18nMessages } from 'bkui-pipeline'
+    import BkPipeline, { loadI18nMessages } from 'bkui-pipeline/vue2'
     import simplebar from 'simplebar-vue'
     import 'simplebar-vue/dist/simplebar.min.css'
+    import 'bkui-pipeline/dist/bk-pipeline.css'
     import { mapActions, mapState, mapGetters } from 'vuex'
+    
     export default {
         components: {
             simplebar,
@@ -577,7 +579,7 @@
             ...mapActions('pipelines', ['requestRetryPipeline']),
             handleRouteParams () {
                 const { reviewTaskId, reviewStageSeq } = this.$route.query
-    
+
                 if (reviewTaskId) {
                     const targetElement = this.curPipelineAllElements.find(element => element.id === reviewTaskId)
                     if (targetElement && targetElement.status === 'REVIEWING') {
@@ -685,7 +687,7 @@
                 this.showErrors = true
             },
 
-            handlePiplineClick (args) {
+            handlePipelineClick (args) {
                 this.toggleAsidePropertyPanel({
                     isShow: true,
                     editingElementPos: args

@@ -37,7 +37,7 @@
                     disablePermissionApi: true,
                     permissionData: {
                         projectId,
-                        resourceType: 'pipeline',
+                        resourceType: RESOURCE_TYPE.PIPELINE,
                         resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EDIT
                     }
@@ -53,7 +53,7 @@
                     disablePermissionApi: true,
                     permissionData: {
                         projectId,
-                        resourceType: 'pipeline',
+                        resourceType: RESOURCE_TYPE.PIPELINE,
                         resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EXECUTE
                     }
@@ -62,53 +62,17 @@
             >
                 {{ $t("debug") }}
             </bk-button>
-            <bk-dropdown-menu
-                trigger="click"
-                align="center"
-            >
-                <div
-                    slot="dropdown-trigger"
-                >
-                    <i class="manage-icon manage-icon-more-fill"></i>
-                </div>
-                <div slot="dropdown-content">
-                    <ul
-                        class="bk-dropdown-list"
-                        slot="dropdown-content"
-                    >
-                        <li
-                            v-for="(item, index) in actionConfMenus"
-                            :class="['develop-txt', {
-                                'develop-txt-disabled': item.disabled
-                            }]"
-                            :key="index"
-                            @click="item.handler"
-                            v-bk-tooltips="{
-                                content: $t('noDraft'),
-                                disabled: item.showTooltips
-                            }"
-                            v-perm="item.vPerm ? item.vPerm : {}"
-                        >
-                            <template v-if="item.label">
-                                {{ item.label }}
-                            </template>
-                            <template v-else>
-                                <component
-                                    :is="item.component"
-                                    v-bind="item.componentProps"
-                                    :disabled="item.disabled"
-                                />
-                            </template>
-                        </li>
-                    </ul>
-                </div>
-            </bk-dropdown-menu>
+            <PipelineEditMoreAction
+                :can-debug="canDebug"
+                :project-id="projectId"
+                :unique-id="pipelineId"
+            />
 
             <!-- <more-actions /> -->
             <release-button
                 :can-release="canRelease && !isEditing"
                 :project-id="projectId"
-                :pipeline-id="pipelineId"
+                :id="pipelineId"
             />
         </aside>
     </div>
@@ -116,9 +80,10 @@
 
 <script>
     import ModeSwitch from '@/components/ModeSwitch'
-    import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry.vue'
+    import PipelineEditMoreAction from '@/components/PipelineEditMoreAction.vue'
     import {
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        RESOURCE_TYPE
     } from '@/utils/permission'
     import { UI_MODE } from '@/utils/pipelineConst'
     import { showPipelineCheckMsg } from '@/utils/util'
@@ -131,7 +96,7 @@
             PipelineBreadCrumb,
             ReleaseButton,
             ModeSwitch,
-            VersionDiffEntry
+            PipelineEditMoreAction
         },
         props: {
             isSwitchPipeline: Boolean
@@ -153,9 +118,7 @@
                 isCurPipelineLocked: 'atom/isCurPipelineLocked',
                 isEditing: 'atom/isEditing',
                 checkPipelineInvalid: 'atom/checkPipelineInvalid',
-                draftBaseVersionName: 'atom/getDraftBaseVersionName',
-                hasDraftPipeline: 'atom/hasDraftPipeline',
-                isCommittingPipeline: 'atom/isCommittingPipeline'
+                draftBaseVersionName: 'atom/getDraftBaseVersionName'
             }),
             projectId () {
                 return this.$route.params.projectId
@@ -174,6 +137,9 @@
             },
             RESOURCE_ACTION () {
                 return RESOURCE_ACTION
+            },
+            RESOURCE_TYPE () {
+                return RESOURCE_TYPE
             },
             btnDisabled () {
                 return this.saveStatus || this.executeStatus
@@ -198,49 +164,6 @@
             },
             isPipelineNameReady () {
                 return this.pipelineSetting?.pipelineId === this.$route.params.pipelineId
-            },
-            activeVersion () {
-                return this.pipelineInfo?.releaseVersion ?? ''
-            },
-            actionConfMenus () {
-                const { projectId } = this.$route.params
-                return [
-                    {
-                        component: VersionDiffEntry,
-                        componentProps: {
-                            version: this.activeVersion,
-                            latestVersion: this.currentVersion,
-                            theme: 'normal',
-                            size: 'small',
-                            showButton: false
-                        },
-                        handler: () => {},
-                        disabled: !this.hasDraftPipeline,
-                        showTooltips: true
-                    },
-                    {
-                        label: this.$t('draftExecRecords'),
-                        handler: this.goDraftDebugRecord,
-                        disabled: !this.canDebug,
-                        vPerm: {
-                            hasPermission: this.canExecute,
-                            disablePermissionApi: true,
-                            permissionData: {
-                                projectId,
-                                resourceType: 'pipeline',
-                                resourceCode: this.pipelineId,
-                                action: this.RESOURCE_ACTION.EXECUTE
-                            }
-                        },
-                        showTooltips: true
-                    },
-                    {
-                        label: this.$t('deleteDraft'),
-                        handler: this.handelDelete,
-                        disabled: !(this.hasDraftPipeline || this.isCommittingPipeline),
-                        showTooltips: this.hasDraftPipeline || this.isCommittingPipeline
-                    }
-                ]
             }
         },
         watch: {
@@ -263,10 +186,6 @@
                 'setSaveStatus',
                 'requestPipelineSummary',
                 'updateContainer'
-            ]),
-            ...mapActions('pipelines', [
-                'deletePipelineVersion',
-                'patchDeletePipelines'
             ]),
             async exec (debug) {
                 if (debug && this.isEditing) {
@@ -320,7 +239,7 @@
                     this.formatParams(pipeline)
 
                     // 请求执行构建
-                    await this.saveDraftPipeline({
+                    const { version } = await this.saveDraftPipeline({
                         projectId,
                         pipelineId,
                         baseVersion: this.pipelineInfo?.baseVersion,
@@ -341,12 +260,18 @@
                     this.setPipelineEditing(false)
 
                     await this.requestPipelineSummary(this.$route.params)
-
+                    this.$router.replace({
+                        params: {
+                            ...this.$route.params,
+                            version
+                        }
+                    })
                     this.$bkMessage({
                         theme: 'success',
                         message: this.$t('editPage.saveDraftSuccess', [pipelineSetting.pipelineName]),
                         limit: 1
                     })
+
                     return true
                 } catch (e) {
                     const { projectId, pipelineId } = this.$route.params
@@ -363,110 +288,6 @@
                     return false
                 } finally {
                     this.setSaveStatus(false)
-                }
-            },
-            createSubHeader (pipelineName, draftBaseVersionName) {
-                const h = this.$createElement
-                return h('div', { class: 'draft-delete' }, [
-                    h('p', {
-                        class: 'text-overflow',
-                        directives: [
-                            {
-                                name: 'bk-tooltips',
-                                value: pipelineName
-                            }
-                        ]
-                    }, [
-                        h('span', { class: 'label' }, `${this.$t('pipeline')} ：`),
-                        h('span', pipelineName)
-                    ]),
-                    h('p', [
-                        h('span', { class: 'label' }, `${this.$t('draft')} ：`),
-                        h('span', `${this.$t('baseOn', [draftBaseVersionName])} `)
-                    ])
-                ])
-            },
-            async deleteDraftConfirm () {
-                try {
-                    await this.deletePipelineVersion({
-                        projectId: this.projectId,
-                        pipelineId: this.pipelineId,
-                        version: this.currentVersion
-                    })
-
-                    // 删除草稿时需要更新pipelineInfo
-                    await this.requestPipelineSummary(this.$route.params)
-                    this.$showTips({
-                        message: this.$t('delete') + this.$t('version') + this.$t('success'),
-                        theme: 'success'
-                    })
-                    this.$router.push({
-                        name: 'pipelinesHistory'
-                    })
-                } catch (err) {
-                    this.$showTips({
-                        message: err.message || err,
-                        theme: 'error'
-                    })
-                }
-            },
-            async deletePipelineConfirm () {
-                try {
-                    const params = {
-                        projectId: this.projectId,
-                        pipelineIds: [this.pipelineId]
-                    }
-                    const { data } = await this.patchDeletePipelines(params)
-                    const hasErr = Object.keys(data)[0] !== this.pipelineId
-                    if (hasErr) {
-                        throw Error(this.$t('deleteFail'))
-                    }
-                    this.$showTips({
-                        message: this.$t('delete') + this.$t('version') + this.$t('success'),
-                        theme: 'success'
-                    })
-
-                    this.$router.push({
-                        name: 'PipelineManageList'
-                    })
-                } catch (err) {
-                    this.$showTips({
-                        message: err.message || err,
-                        theme: 'error'
-                    })
-                }
-            },
-            goDraftDebugRecord () {
-                if (this.canDebug) {
-                    this.$router.push({
-                        name: 'draftDebugRecord'
-                    })
-                }
-            },
-            /**
-             * 删除草稿
-             */
-            async handelDelete () {
-                const commonConfig = {
-                    title: this.$t('sureDeleteDraft'),
-                    okText: this.$t('delete'),
-                    cancelText: this.$t('cancel'),
-                    theme: 'danger',
-                    width: 470,
-                    confirmLoading: true
-                }
-                if (this.isCommittingPipeline) {
-                    this.$bkInfo({
-                        ...commonConfig,
-                        subTitle: this.$t('deleteDraftPipeline'),
-                        confirmFn: this.deletePipelineConfirm
-                    })
-                } else if (this.hasDraftPipeline) {
-                    this.$bkInfo({
-                        ...commonConfig,
-                        subHeader: this.createSubHeader(this.pipelineSetting.pipelineName, this.draftBaseVersionName),
-                        confirmFn: this.deleteDraftConfirm
-                    })
                 }
             },
             goBack () {
@@ -530,48 +351,5 @@
         }
     }
 }
-.manage-icon-more-fill {
-    font-size: 20px;
-    padding: 3px;
 
-    &:hover,
-    &.active {
-        background-color: #dddee6;
-        color: #3a85ff;
-        border-radius: 50%;
-    }
-}
-.bk-dropdown-list {
-    .develop-txt {
-        display: block;
-        height: 32px;
-        line-height: 33px;
-        padding: 0 16px;
-        white-space: nowrap;
-        font-size: 12px;
-        cursor: pointer;
-        &:hover {
-            background-color: #f0f1f5;
-        }
-        &.develop-txt-disabled {
-            cursor: not-allowed;
-            color: #c4c6cc;
-        }
-    }
-}
-.draft-delete {
-    text-align: center;
-    color: #43444a;
-
-    p {
-        margin-bottom: 14px;
-        max-width: 370px;
-    }
-    .label {
-        color: #76777f;
-    }
-    .text-overflow {
-        @include ellipsis();
-    }
-}
 </style>

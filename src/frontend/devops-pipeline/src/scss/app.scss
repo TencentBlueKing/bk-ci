@@ -71,13 +71,13 @@ table tr:hover {
     background-color: transparent !important;
 }
 
+.bk-table-fixed,
+.bk-table-fixed-right {
+    background-color: #fff;
+}
+
 .biz-app {
     height: 100%;
-    a:not(.bk-button) {
-    	&:hover {
-    		color: $primaryColor;
-    	}
-    }
     .bk-form {
         .bk-label {
             font-size: 12px;

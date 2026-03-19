@@ -17,7 +17,7 @@
                             <bk-input
                                 ref="pipelineName"
                                 :placeholder="$t('pipelineNameInputTips')"
-                                maxlength="40"
+                                maxlength="128"
                                 name="newPipelineName"
                                 v-model.trim="newPipelineName"
                                 v-validate.initial="'required'"
@@ -199,7 +199,7 @@
                             </p>
                         </div>
                         <div
-                            v-if="tIndex > 0 || activePanel === 'store'"
+                            v-if="!temp.isEmptyTemplate || activePanel === 'store'"
                             class="pipeline-template-status"
                         >
                             <bk-button
@@ -212,7 +212,7 @@
                                     disablePermissionApi: true,
                                     permissionData: {
                                         projectId: $route.params.projectId,
-                                        resourceType: 'pipeline_template',
+                                        resourceType: RESOURCE_TYPE.TEMPLATE,
                                         resourceCode: $route.params.projectId,
                                         action: TEMPLATE_RESOURCE_ACTION.CREATE
                                     }
@@ -244,7 +244,7 @@
     import PipelineTemplatePreview from '@/components/PipelineTemplatePreview'
     import pipelineHeader from '@/components/devops/pipeline-header'
     import SyntaxStyleConfiguration from '@/components/syntaxStyleConfiguration'
-    import { TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
+    import { RESOURCE_TYPE, TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
     import { templateTypeEnum } from '@/utils/pipelineConst'
     import { getCacheViewId } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
@@ -261,6 +261,7 @@
         data () {
             return {
                 TEMPLATE_RESOURCE_ACTION,
+                RESOURCE_TYPE,
                 activePanel: 'projected',
                 isDisabled: false,
                 activeTempIndex: 0,
@@ -388,6 +389,7 @@
                             ...item,
                             hasPermission: item.flag,
                             stages: temp?.stages ?? [],
+                            projectId: temp?.projectId,
                             templateId: temp?.templateId,
                             version: temp?.version,
                             cloneTemplateSettingExist: temp?.cloneTemplateSettingExist,
@@ -463,6 +465,7 @@
                 this.requestMarkTemplates(true)
             },
             requestMarkTemplates (isReload) {
+                if (this.isLoadingMore) return
                 this.isLoadingMore = true
                 if (isReload) {
                     this.page = 1
@@ -472,7 +475,8 @@
                     page: this.page,
                     pageSize: this.pageSize,
                     projectCode: this.$route.params.projectId,
-                    keyword: this.searchName
+                    keyword: this.searchName,
+                    excludeProjectCode: this.$route.params.projectId
                 }
                 this.requestStoreTemplate(param).then((res) => {
                     this.page++
@@ -514,7 +518,7 @@
             },
             async selectTemp (index) {
                 const target = this.tempList.length && this.tempList[index]
-                if (target?.templateType !== 'PUBLIC') {
+                if (target?.templateType !== 'PUBLIC' && target.templateId) {
                     await this.requestTemplateSetting({
                         projectId: this.$route.params.projectId,
                         templateId: target.templateId
@@ -554,7 +558,6 @@
                         this.$showTips({ message: this.$t('newlist.noTemplateTips'), theme: 'error' })
                         return
                     }
-
                     const params = {
                         emptyTemplate: this.activeTemp.isEmptyTemplate ?? false, // 0 为空模板
                         projectId: this.$route.params.projectId,
@@ -573,14 +576,15 @@
 
                     if (this.templateType === templateTypeEnum.CONSTRAIN) {
                         this.$router.push({
-                            name: 'createInstance',
+                            name: 'instanceEntry',
                             params: {
+                                ...this.$route.params,
                                 templateId: this.activeTemp.templateId,
-                                curVersionId: this.activeTemp.version,
-                                pipelineName: this.newPipelineName
-
+                                version: this.activeTemp.version,
+                                type: 'create'
                             },
                             query: {
+                                pipelineName: this.newPipelineName,
                                 useTemplateSettings: true
                             }
                         })

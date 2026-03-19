@@ -6,12 +6,15 @@
         :show-footer="viewDialogConfig.hasFooter"
         :close-icon="viewDialogConfig.closeIcon"
         @confirm="confirmHandler"
-        @cancel="cancelHandler">
+        @cancel="cancelHandler"
+    >
         <template>
-            <section class="create-view-content bk-form"
+            <section
+                class="create-view-content bk-form"
                 v-bkloading="{
                     isLoading: viewDialogConfig.loading
-                }">
+                }"
+            >
                 <div class="create-view-header">
                     <span class="title">{{ title }}</span>
                 </div>
@@ -20,9 +23,22 @@
                         <label class="bk-label view-item-label">{{ $t('type') }}:</label>
                         <div class="bk-form-content">
                             <bk-radio-group v-model="createViewForm.projected">
-                                <bk-radio :value="false" class="view-radio">{{ $t('view.personalView') }}</bk-radio>
-                                <bk-radio :value="true" class="view-radio" :disabled="!viewManageAuth">{{ $t('view.projectView') }}<span v-bk-tooltips="viewTypeTips" class="top-start">
-                                    <i class="bk-icon icon-info-circle"></i></span>
+                                <bk-radio
+                                    :value="false"
+                                    class="view-radio"
+                                >
+                                    {{ $t('view.personalView') }}
+                                </bk-radio>
+                                <bk-radio
+                                    :value="true"
+                                    class="view-radio"
+                                    :disabled="!viewManageAuth"
+                                >
+                                    {{ $t('view.projectView') }}<span
+                                        v-bk-tooltips="viewTypeTips"
+                                        class="top-start"
+                                    >
+                                        <i class="bk-icon icon-info-circle"></i></span>
                                 </bk-radio>
                             </bk-radio-group>
                         </div>
@@ -30,14 +46,23 @@
                     <div class="bk-form-item is-required">
                         <label class="bk-label view-item-label">{{ $t('name') }}:</label>
                         <div class="bk-form-content view-item-content">
-                            <input type="text" class="bk-form-input view-name-input" :placeholder="$t('view.nameInputTips')"
+                            <input
+                                type="text"
+                                class="bk-form-input view-name-input"
+                                :placeholder="$t('view.nameInputTips')"
                                 maxlength="15"
                                 name="viewName"
                                 v-model="createViewForm.name"
                                 v-validate="{ required: true }"
                                 data-vv-validate-on="blur"
-                                :class="{ &quot;is-danger&quot;: errors.has(&quot;viewName&quot;) }">
-                            <div v-if="errors.has(&quot;viewName&quot;)" class="error-tips">{{ errors.first('viewName') }}</div>
+                                :class="{ 'is-danger': errors.has('viewName') }"
+                            >
+                            <div
+                                v-if="errors.has('viewName')"
+                                class="error-tips"
+                            >
+                                {{ errors.first('viewName') }}
+                            </div>
                         </div>
                     </div>
                     <div class="bk-form-item is-required">
@@ -46,10 +71,20 @@
                             <div class="relationship-content">
                                 <label class="view-item-label relationship-label">{{ $t('view.conditionRelation') }}：</label>
                                 <bk-radio-group v-model="createViewForm.logic">
-                                    <bk-radio v-for="(entry, key) in conditionList" :key="key" :value="entry.value" class="view-radio">{{ entry.label }}</bk-radio>
+                                    <bk-radio
+                                        v-for="(entry, key) in conditionList"
+                                        :key="key"
+                                        :value="entry.value"
+                                        class="view-radio"
+                                    >
+                                        {{ entry.label }}
+                                    </bk-radio>
                                 </bk-radio-group>
                             </div>
-                            <table class="bk-table rule-list-table" v-if="createViewForm.filters.length">
+                            <table
+                                class="bk-table rule-list-table"
+                                v-if="createViewForm.filters.length"
+                            >
                                 <thead>
                                     <tr>
                                         <th width="30%">{{ $t('view.key') }}</th>
@@ -58,63 +93,116 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="(row, index) in createViewForm.filters" :key="index">
+                                    <tr
+                                        v-for="(row, index) in createViewForm.filters"
+                                        :key="index"
+                                    >
                                         <td class="indicator-item">
                                             <bk-select
                                                 v-model="row.id"
-                                                @change="handleChange(row, index)">
-                                                <bk-option v-for="(option, oindex) in viewFilterTypeList" :key="oindex" :id="option.id" :name="option.name">
+                                                @change="handleChange(row, index)"
+                                            >
+                                                <bk-option
+                                                    v-for="(option, oindex) in viewFilterTypeList"
+                                                    :key="oindex"
+                                                    :id="option.id"
+                                                    :name="option.name"
+                                                >
                                                 </bk-option>
                                             </bk-select>
                                         </td>
                                         <td class="handler-item">
                                             <section v-if="row.id === 'filterByName'">
-                                                <input type="text"
+                                                <input
+                                                    type="text"
                                                     class="bk-form-input input-text"
                                                     :placeholder="$t('view.nameTips')"
                                                     maxlength="40"
-                                                    :name="`item-${index}`" id="pipelineName"
+                                                    :name="`item-${index}`"
+                                                    id="pipelineName"
                                                     v-validate="{ required: true }"
                                                     v-model="row.pipelineName"
                                                     data-vv-validate-on="blur"
-                                                    :class="{ &quot;is-danger&quot;: errors.has(`item-${index}`) }">
-                                                <div v-if="errors.has(`item-${index}`)" class="error-tips">{{ errors.first(`item-${index}`) }}</div>
+                                                    :class="{ 'is-danger': errors.has(`item-${index}`) }"
+                                                >
+                                                <div
+                                                    v-if="errors.has(`item-${index}`)"
+                                                    class="error-tips"
+                                                >
+                                                    {{ errors.first(`item-${index}`) }}
+                                                </div>
                                             </section>
                                             <section v-if="row.id === 'filterByCreator'">
                                                 <user-input
                                                     :name="'user' + index"
                                                     :value="row.userIds"
-                                                    :handle-change="staffHandleChange">
+                                                    :handle-change="staffHandleChange"
+                                                >
                                                 </user-input>
-                                                <div v-if="staffHacCheckYet && !row.userIds.length" class="error-tips">{{ $t('view.creatorTips') }}</div>
+                                                <div
+                                                    v-if="staffHacCheckYet && !row.userIds.length"
+                                                    class="error-tips"
+                                                >
+                                                    {{ $t('view.creatorTips') }}
+                                                </div>
                                             </section>
                                             <section v-if="row.id !== 'filterByName' && row.id !== 'filterByCreator'">
                                                 <bk-select
                                                     v-model="row.labelIds"
                                                     :multiple="true"
                                                 >
-                                                    <bk-option v-for="(option, oindex) in row.labels" :key="oindex" :id="option.id" :name="option.name">
+                                                    <bk-option
+                                                        v-for="(option, oindex) in row.labels"
+                                                        :key="oindex"
+                                                        :id="option.id"
+                                                        :name="option.name"
+                                                    >
                                                     </bk-option>
                                                 </bk-select>
-                                                <div v-if="groupHacCheckYet && !row.labelIds.length" class="error-tips">{{ $t('view.labelTips') }}</div>
+                                                <div
+                                                    v-if="groupHacCheckYet && !row.labelIds.length"
+                                                    class="error-tips"
+                                                >
+                                                    {{ $t('view.labelTips') }}
+                                                </div>
                                             </section>
                                         </td>
-                                        <td class="delete-handler"><i class="devops-icon icon-minus" @click="reduceFilterItem(index)"></i></td>
+                                        <td class="delete-handler">
+                                            <i
+                                                class="devops-icon icon-minus"
+                                                @click="reduceFilterItem(index)"
+                                            ></i>
+                                        </td>
                                     </tr>
                                     <tr>
-                                        <td colspan="3" class="add-new-item">
+                                        <td
+                                            colspan="3"
+                                            class="add-new-item"
+                                        >
                                             <span @click="addFilterItem()"><i class="devops-icon icon-plus-circle" />{{ $t('view.addConditions') }}</span>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
-                            <bk-button type="primary" size="small" style="margin-top: 10px;" v-if="!createViewForm.filters.length"
-                                @click="addFilterItem()">{{ $t('view.addConditions') }}</bk-button>
+                            <bk-button
+                                type="primary"
+                                size="small"
+                                style="margin-top: 10px;"
+                                v-if="!createViewForm.filters.length"
+                                @click="addFilterItem()"
+                            >
+                                {{ $t('view.addConditions') }}
+                            </bk-button>
                         </div>
                     </div>
                 </div>
                 <div class="temp-operation-bar">
-                    <bk-button theme="primary" @click="confirmHandler()">{{ $t('save') }}</bk-button>
+                    <bk-button
+                        theme="primary"
+                        @click="confirmHandler()"
+                    >
+                        {{ $t('save') }}
+                    </bk-button>
                     <bk-button @click="cancelHandler()">{{ $t('cancel') }}</bk-button>
                 </div>
             </section>
@@ -123,8 +211,8 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import UserInput from '@/components/atomFormField/UserInput/index.vue'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {

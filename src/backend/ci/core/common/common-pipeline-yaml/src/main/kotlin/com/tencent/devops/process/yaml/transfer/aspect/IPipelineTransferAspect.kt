@@ -4,14 +4,14 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.pojo.transfer.IPreStep
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYamlParser
-import com.tencent.devops.process.yaml.v3.models.job.PreJob
+import com.tencent.devops.process.yaml.v3.models.job.IJob
+import com.tencent.devops.process.yaml.v3.models.job.IPreJob
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
-import com.tencent.devops.process.yaml.v3.models.stage.PreStage
-import com.tencent.devops.process.yaml.v3.models.job.Job as YamlV3Job
-import com.tencent.devops.process.yaml.v3.models.stage.Stage as YamlV3Stage
-import com.tencent.devops.process.yaml.v3.models.step.Step as YamlV3Step
+import com.tencent.devops.process.yaml.v3.models.stage.IPreStage
+import com.tencent.devops.process.yaml.v3.models.stage.IStage
+import com.tencent.devops.process.yaml.v3.models.step.IStep
 
 interface IPipelineTransferAspect {
     fun before(jp: PipelineTransferJoinPoint): Any? = null
@@ -31,12 +31,12 @@ interface PipelineTransferJoinPoint {
     fun modelJob(): Container?
     fun modelElement(): Element?
     fun model(): Model?
-    fun yamlStage(): YamlV3Stage?
-    fun yamlPreStage(): PreStage?
-    fun yamlJob(): YamlV3Job?
-    fun yamlPreJob(): PreJob?
-    fun yamlStep(): YamlV3Step?
-    fun yamlPreStep(): PreStep?
+    fun yamlStage(): IStage?
+    fun yamlPreStage(): IPreStage?
+    fun yamlJob(): IJob?
+    fun yamlPreJob(): IPreJob?
+    fun yamlStep(): IStep?
+    fun yamlPreStep(): IPreStep?
     fun yamlTriggerOn(): TriggerOn?
     fun yaml(): IPreTemplateScriptBuildYamlParser?
 }

@@ -99,7 +99,7 @@
             clickoutside
         }
     })
-    export default class NavMenu extends Vue {
+        export default class NavMenu extends Vue {
         @Getter('getCollectServices') collectServices
         @Getter showAnnounce
         @State services

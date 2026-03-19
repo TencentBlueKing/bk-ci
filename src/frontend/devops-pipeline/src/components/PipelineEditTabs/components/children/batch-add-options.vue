@@ -26,13 +26,22 @@
             <bk-input
                 class="key-val"
                 :type="'textarea'"
+                :disabled="disabled"
                 v-model="batchInput"
                 :row="3"
                 :placeholder="$t('editPage.optionTips')"
             />
         </form-field>
         <div class="batch-confirm-div">
-            <span @click="handleBatchInput">{{ $t('editPage.batchAddBtn') }}</span>
+            <bk-button
+                text
+                size="small"
+                theme="primary"
+                :disabled="disabled"
+                @click="handleBatchInput"
+            >
+                {{ $t('editPage.batchAddBtn') }}
+            </bk-button>
         </div>
     </section>
 </template>
@@ -40,6 +49,10 @@
 <script>
     export default {
         props: {
+            disabled: {
+                type: Boolean,
+                default: false
+            },
             submitBatchAdd: {
                 type: Function,
                 required: true
@@ -76,11 +89,12 @@
 <style lang="scss" scoped>
     .batch-confirm-div {
         width: 100%;
-        padding: 8px 0 16px 0;
+        padding: 8px 0;
         border-bottom: 1px solid #DCDEE5;
         color: #3A84FF;
         cursor: pointer;
         font-size: 12px;
+        margin-left: -12px;
     }
     .batch-add {
         display: flex;

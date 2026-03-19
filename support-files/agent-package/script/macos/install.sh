@@ -146,6 +146,8 @@ agent_id='##agentId##'
 echo "AgentId: $agent_id"
 enable_check_files='##enableCheckFiles##'
 echo "EnableCheckFiles: $enable_check_files"
+service_name=$(getServiceName)
+echo "Service name: $service_name"
 
 cd $workspace
 

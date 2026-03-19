@@ -56,10 +56,12 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonStatistics
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
+import com.tencent.devops.process.pojo.trigger.TriggerEventBody
 import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.repository.api.ServiceRepositoryPermissionResource
+import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -138,10 +140,16 @@ class PipelineTriggerEventService @Autowired constructor(
         )
     }
 
-    fun updateTriggerEvent(triggerEvent: PipelineTriggerEvent) {
-        pipelineTriggerEventDao.update(
+    fun updateEventBody(
+        projectId: String,
+        eventId: Long,
+        eventBody: TriggerEventBody
+    ) {
+        pipelineTriggerEventDao.updateEventBody(
             dslContext = dslContext,
-            triggerEvent = triggerEvent
+            projectId = projectId,
+            eventId = eventId,
+            eventBody = eventBody
         )
     }
 
@@ -359,7 +367,7 @@ class PipelineTriggerEventService @Autowired constructor(
         userId: String,
         projectId: String,
         detailId: Long
-    ): Boolean {
+    ): Long {
         logger.info("replay pipeline trigger event|$userId|$projectId|$detailId")
         val triggerDetail = pipelineTriggerEventDao.getTriggerDetail(
             dslContext = dslContext,
@@ -385,13 +393,12 @@ class PipelineTriggerEventService @Autowired constructor(
                 arrayOf(userId, projectId, permission.getI18n(I18nUtil.getLanguage(userId)), pipelineId)
             )
         )
-        replayAll(
+        return replayAll(
             userId = userId,
             projectId = projectId,
             eventId = triggerDetail.eventId,
             pipelineId = pipelineId
         )
-        return true
     }
 
     fun replayAll(
@@ -399,7 +406,7 @@ class PipelineTriggerEventService @Autowired constructor(
         projectId: String,
         eventId: Long,
         pipelineId: String? = null
-    ): Boolean {
+    ): Long {
         logger.info("replay all pipeline trigger event|$userId|$projectId|$eventId")
         val triggerEvent = pipelineTriggerEventDao.getTriggerEvent(
             dslContext = dslContext,
@@ -418,6 +425,11 @@ class PipelineTriggerEventService @Autowired constructor(
             projectId = projectId,
             repositoryHashId = triggerEvent.eventSource!!,
             permission = AuthPermission.USE
+        )
+        val webhookRequest = client.get(ServiceRepositoryWebhookResource::class).getWebhookRequest(
+            requestId = triggerEvent.requestId
+        ).data ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_WEBHOOK_REQUEST_NOT_FOUND
         )
         // 保存重放事件
         val requestId = MDC.get(TraceTag.BIZID)
@@ -446,6 +458,13 @@ class PipelineTriggerEventService @Autowired constructor(
             dslContext = dslContext,
             triggerEvent = replayTriggerEvent
         )
+        // 保存重放的webhook请求
+        client.get(ServiceRepositoryWebhookResource::class).saveWebhookRequest(
+            repositoryWebhookRequest = webhookRequest.copy(
+                requestId = requestId,
+                createTime = LocalDateTime.now()
+            )
+        )
         CodeWebhookEventDispatcher.dispatchReplayEvent(
             streamBridge = streamBridge,
             event = ReplayWebhookEvent(
@@ -457,7 +476,7 @@ class PipelineTriggerEventService @Autowired constructor(
                 pipelineId = pipelineId
             )
         )
-        return true
+        return replayEventId
     }
 
     fun triggerReasonStatistics(
@@ -474,6 +493,17 @@ class PipelineTriggerEventService @Autowired constructor(
             pipelineName = pipelineName
         )
     }
+
+    fun getTriggerDetail(
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ) = pipelineTriggerEventDao.getTriggerDetail(
+        dslContext = dslContext,
+        projectId = projectId,
+        pipelineId = pipelineId,
+        buildId = buildId
+    )
 
     /**
      * 获取国际化构建事件描述

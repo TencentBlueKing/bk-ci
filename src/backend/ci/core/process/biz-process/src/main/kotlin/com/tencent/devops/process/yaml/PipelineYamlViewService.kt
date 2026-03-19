@@ -4,8 +4,8 @@ import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.PipelineViewType
-import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
-import com.tencent.devops.process.engine.dao.PipelineYamlViewDao
+import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
+import com.tencent.devops.process.dao.yaml.PipelineYamlViewDao
 import com.tencent.devops.process.pojo.classify.PipelineViewFilterByPacRepo
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.enums.Condition

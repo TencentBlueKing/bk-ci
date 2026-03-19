@@ -1,0 +1,15 @@
+.changeLog {
+  height: 100%;
+  overflow: hidden;
+  padding: var(--spacing-xl);
+}
+
+.searchInput {
+  width: 180px;
+}
+
+.changeLogContainer {
+  margin-top: 16px;
+  height: calc(100% - 48px);
+  overflow: hidden;
+}
