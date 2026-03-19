@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.service.ServiceModelHandleResource
 import com.tencent.devops.common.service.utils.BkServiceUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -77,14 +78,15 @@ class ModelDeserializer : JsonDeserializer<Model>() {
         } else {
             null
         }
-        // 遍历所有阶段和容器，查找并处理TriggerContainer
-        model.stages.forEach { stage ->
-            stage.containers.forEach { container ->
+        // 遍历所有阶段和容器，查找并处理TriggerContainer（找到后立即退出）
+        outer@ for (stage in model.stages) {
+            for (container in stage.containers) {
                 if (container is TriggerContainer) {
                     processSingleTriggerContainer(
                         model = model,
                         modelHandleService = modelHandleService
                     )
+                    break@outer
                 }
             }
         }
@@ -123,30 +125,26 @@ class ModelDeserializer : JsonDeserializer<Model>() {
         }
 
         // 根据服务名称选择处理方式
-        val params = model.getTriggerContainer().params
-        model.getTriggerContainer().params = if (modelHandleService != null) {
+        val triggerContainer = model.getTriggerContainer()
+        val publicVarGroups = model.publicVarGroups ?: emptyList()
+        val context = ModelPublicVarHandleContext(
+            referId = referId,
+            referType = referType,
+            referVersion = model.latestVersion,
+            params = triggerContainer.params,
+            publicVarGroups = publicVarGroups
+        )
+        triggerContainer.params = if (modelHandleService != null) {
             modelHandleService.handleModelParams(
                 projectId = projectId,
-                modelPublicVarHandleContext = ModelPublicVarHandleContext(
-                    referId = referId,
-                    referType = PublicVerGroupReferenceTypeEnum.valueOf(referType.name),
-                    referVersion = model.latestVersion,
-                    params = params,
-                    publicVarGroups = model.publicVarGroups ?: emptyList()
-                )
+                modelPublicVarHandleContext = context
             ).toMutableList()
         } else {
             val client = SpringContextUtil.getBean(Client::class.java)
             client.get(ServiceModelHandleResource::class).handlePipelineModelParams(
                 projectId = projectId,
-                modelPublicVarHandleContext = ModelPublicVarHandleContext(
-                    referId = referId,
-                    referType = PublicVerGroupReferenceTypeEnum.valueOf(referType.name),
-                    referVersion = model.latestVersion,
-                    params = params,
-                    publicVarGroups = model.publicVarGroups ?: emptyList()
-                )
-            ).data!!.toMutableList()
+                modelPublicVarHandleContext = context
+            ).data?.toMutableList() ?: mutableListOf()
         }
     }
 }

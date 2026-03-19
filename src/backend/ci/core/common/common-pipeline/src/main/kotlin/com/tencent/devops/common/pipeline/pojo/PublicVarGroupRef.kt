@@ -33,7 +33,7 @@ data class PublicVarGroupRef(
     @get:Schema(title = "变量组名称", required = true)
     val groupName: String,
     @get:Schema(title = "版本号", required = false)
-    var version: Int? = null,
+    val version: Int? = null,
     @get:Schema(title = "版本名称", required = false)
     val versionName: String? = null,
     @get:Schema(title = "回显的历史变量列表", required = false)
@@ -41,14 +41,23 @@ data class PublicVarGroupRef(
 ) {
     companion object {
         private val VERSION_NAME_REGEX = Regex("^v(\\d+)$", RegexOption.IGNORE_CASE)
-    }
 
-    init {
-        // 当version为空且versionName符合格式时，自动解析版本号
-        if (version == null && !versionName.isNullOrBlank()) {
-            VERSION_NAME_REGEX.matchEntire(versionName)?.let { matchResult ->
-                version = matchResult.groupValues[1].toIntOrNull()
+        fun create(
+            groupName: String,
+            version: Int? = null,
+            versionName: String? = null,
+            variables: List<BuildFormProperty>? = null
+        ): PublicVarGroupRef {
+            val resolvedVersion = version ?: versionName?.let {
+                VERSION_NAME_REGEX.matchEntire(it)?.groupValues?.get(1)?.toIntOrNull()
             }
+            return PublicVarGroupRef(
+                groupName = groupName,
+                version = resolvedVersion,
+                versionName = versionName,
+                variables = variables
+            )
         }
+
     }
 }

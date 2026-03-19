@@ -29,15 +29,18 @@ package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPublicVarGroupHistoryResource
+import com.tencent.devops.process.permission.`var`.PublicVarGroupPermissionService
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.service.`var`.PublicVarGroupReleaseRecordService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserPublicVarGroupHistoryResourceImpl @Autowired constructor(
-    val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService
+    val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService,
+    val publicVarGroupPermissionService: PublicVarGroupPermissionService
 ) : UserPublicVarGroupHistoryResource {
 
     override fun getReleaseHistory(
@@ -47,6 +50,12 @@ class UserPublicVarGroupHistoryResourceImpl @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Result<Page<PublicVarReleaseDO>> {
+        publicVarGroupPermissionService.checkPublicVarGroupPermission(
+            userId = userId,
+            projectId = projectId,
+            groupName = groupName,
+            permission = AuthPermission.VIEW
+        )
         return Result(publicVarGroupReleaseRecordService.getReleaseHistory(
             projectId = projectId,
             groupName = groupName,

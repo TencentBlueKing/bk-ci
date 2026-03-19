@@ -184,7 +184,7 @@ class ModelTransfer @Autowired constructor(
         )
         model.latestVersion = yamlInput.pipelineInfo?.version ?: 0
         model.publicVarGroups = yamlInput.yaml.formatVariableTemplates().map {
-            PublicVarGroupRef(groupName = it.name, versionName = it.version)
+            PublicVarGroupRef.create(groupName = it.name, versionName = it.version)
         }
 
         // 蓝盾引擎会将stageId从1开始顺序强制重写，因此在生成model时保持一致

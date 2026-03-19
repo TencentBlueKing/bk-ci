@@ -308,7 +308,7 @@ data class Model(
                 }
                 val varGroupVersion = param.varGroupVersion
                 val versionName = varGroupVersion?.let { "v$it" }
-                PublicVarGroupRef(
+                PublicVarGroupRef.create(
                     groupName = varGroupName,
                     version = varGroupVersion,
                     versionName = versionName

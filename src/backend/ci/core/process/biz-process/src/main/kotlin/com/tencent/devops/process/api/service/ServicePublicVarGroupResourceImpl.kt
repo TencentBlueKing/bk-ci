@@ -31,14 +31,12 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupVariable
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.process.service.`var`.PublicVarGroupService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServicePublicVarGroupResourceImpl @Autowired constructor(
-    private val publicVarGroupService: PublicVarGroupService,
-    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
+    private val publicVarGroupService: PublicVarGroupService
 ) : ServicePublicVarGroupResource {
 
     override fun getProjectPublicParam(

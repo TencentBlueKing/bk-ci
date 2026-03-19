@@ -77,7 +77,6 @@ import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import jakarta.ws.rs.core.Response
 import java.time.LocalDateTime
-import org.checkerframework.checker.units.qual.t
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -119,29 +118,30 @@ class PublicVarGroupService @Autowired constructor(
         redisLock.lock()
         try {
             publicVarService.checkGroupPublicVar(publicVarGroupDTO.publicVarGroup.publicVars)
-            val version = publicVarGroupDao.getLatestVersionByGroupName(dslContext, projectId, groupName) ?: 0
-            // 通过数据库查询判断操作类型：version为0表示新增，否则为升级版本
-            val isCreate = (version == 0)
-            val newVersion = version + 1
-
-            val publicVarGroupPO = PublicVarGroupPO(
-                id = client.get(ServiceAllocIdResource::class)
-                    .generateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP").data ?: 0,
-                projectId = projectId,
-                groupName = groupName,
-                version = newVersion,
-                versionName = "v$newVersion",
-                latestFlag = true,
-                varCount = publicVarGroupDTO.publicVarGroup.publicVars.size,
-                desc = publicVarGroupDTO.publicVarGroup.desc,
-                creator = userId,
-                modifier = userId,
-                createTime = LocalDateTime.now(),
-                updateTime = LocalDateTime.now()
-            )
+            val id = client.get(ServiceAllocIdResource::class)
+                .generateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP").data ?: 0
+            var isCreate = false
             // 先完成数据库事务操作
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
+                val version = publicVarGroupDao.getLatestVersionByGroupName(context, projectId, groupName) ?: 0
+                // 通过数据库查询判断操作类型：version为0表示新增，否则为升级版本
+                isCreate = (version == 0)
+                val newVersion = version + 1
+                val publicVarGroupPO = PublicVarGroupPO(
+                    id = id,
+                    projectId = projectId,
+                    groupName = groupName,
+                    version = newVersion,
+                    versionName = "v$newVersion",
+                    latestFlag = true,
+                    varCount = publicVarGroupDTO.publicVarGroup.publicVars.size,
+                    desc = publicVarGroupDTO.publicVarGroup.desc,
+                    creator = userId,
+                    modifier = userId,
+                    createTime = LocalDateTime.now(),
+                    updateTime = LocalDateTime.now()
+                )
                 if (version != 0) {
                     // 更新旧版本的 latest 标志
                     publicVarGroupDao.updateLatestFlag(
@@ -173,6 +173,8 @@ class PublicVarGroupService @Autowired constructor(
                     name = groupName
                 )
             }
+        } catch (e: ErrorCodeException) {
+            throw e
         } catch (t: Throwable) {
             logger.warn("Failed to add variable group $groupName", t)
             throw ErrorCodeException(
@@ -799,15 +801,22 @@ class PublicVarGroupService @Autowired constructor(
                 return Result(emptyList())
             }
 
-            // 转换为PipelinePublicVarGroupDO列表
-            val pipelineVarGroups = referInfos.map { referInfo ->
-                val groupRecord = publicVarGroupDao.getRecordByGroupName(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    groupName = referInfo.groupName,
-                    version = referInfo.version
-                ) ?: return@map null
+            // 批量查询变量组记录，避免 N+1 查询
+            // version 为 null 时表示动态最新版本，用 -1 作为 key 占位
+            val groupNameVersionPairs = referInfos.map { it.groupName to it.version }
+            val groupRecordMap = publicVarGroupDao.batchGetRecordsByGroupNameAndVersion(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupNameVersionPairs = groupNameVersionPairs
+            ).associateBy { record ->
+                val keyVersion = if (record.latestFlag == true) -1 else record.version
+                record.groupName to keyVersion
+            }
 
+            // 转换为PipelinePublicVarGroupDO列表
+            val pipelineVarGroups = referInfos.mapNotNull { referInfo ->
+                val keyVersion = referInfo.version
+                val groupRecord = groupRecordMap[referInfo.groupName to keyVersion] ?: return@mapNotNull null
                 PipelineRefPublicVarGroupDO(
                     groupName = groupRecord.groupName,
                     varCount = groupRecord.varCount,
@@ -815,7 +824,7 @@ class PublicVarGroupService @Autowired constructor(
                     modifier = groupRecord.modifier,
                     updateTime = groupRecord.updateTime
                 )
-            }.filterNotNull()
+            }
 
             return Result(pipelineVarGroups)
         } catch (t: Throwable) {

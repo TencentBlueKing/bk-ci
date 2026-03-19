@@ -123,13 +123,14 @@ class PublicVarGroupReleaseRecordDao {
      */
     fun countVersionsByGroupName(dslContext: DSLContext, projectId: String, groupName: String): Long {
         with(TResourcePublicVarGroupReleaseRecord.T_RESOURCE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {
-            return dslContext.selectDistinct(VERSION)
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .fetch()
-                .size
-                .toLong()
+            return dslContext.selectCount()
+                .from(
+                    dslContext.selectDistinct(VERSION)
+                        .from(this)
+                        .where(PROJECT_ID.eq(projectId))
+                        .and(GROUP_NAME.eq(groupName))
+                )
+                .fetchOne(0, Long::class.java) ?: 0
         }
     }
 

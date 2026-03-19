@@ -40,7 +40,6 @@ import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
-import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.process.service.`var`.PublicVarGroupReferQueryService
 import com.tencent.devops.process.service.`var`.PublicVarGroupService
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,9 +47,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserPublicVarGroupReferenceResourceImpl @Autowired constructor(
     private val publicVarGroupService: PublicVarGroupService,
-    private val publicVarGroupReferManageService: PublicVarGroupReferManageService,
     private val publicVarGroupReferQueryService: PublicVarGroupReferQueryService,
-    private val publicVarReferInfoService: PublicVarGroupReferManageService,
     private val publicVarGroupPermissionService: PublicVarGroupPermissionService
 ) : UserPublicVarGroupReferenceResource {
 

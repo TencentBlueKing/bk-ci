@@ -40,9 +40,9 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserPublicVarResourceImpl @Autowired constructor(
-    val publicVarGroupService: PublicVarGroupService,
-    val publicVarService: PublicVarService,
-    val publicVarGroupPermissionService: PublicVarGroupPermissionService
+    private val publicVarGroupService: PublicVarGroupService,
+    private val publicVarService: PublicVarService,
+    private val publicVarGroupPermissionService: PublicVarGroupPermissionService
 ) : UserPublicVarResource {
 
     override fun listGroupPublicVar(

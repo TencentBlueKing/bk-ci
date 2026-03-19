@@ -5,7 +5,7 @@ import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReferPO
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "变量组版本处理信息")
-data class VarGroupVersionChangeInfo(
+class VarGroupVersionChangeInfo(
     @get:Schema(title = "变量组名称")
     val groupName: String,
     @get:Schema(title = "版本号")
@@ -19,33 +19,10 @@ data class VarGroupVersionChangeInfo(
     @get:Schema(title = "待删除的引用记录")
     var referInfoToDelete: ResourcePublicVarGroupReferPO? = null,
     @get:Schema(title = "待新增的引用记录")
-    var referInfoToAdd: ResourcePublicVarGroupReferPO? = null,
-    @get:Schema(title = "引用计数变化量（正数增加，负数减少）")
-    var countChange: Int = 0
+    var referInfoToAdd: ResourcePublicVarGroupReferPO? = null
 ) {
     /**
-     * 设置删除操作
-     * @param referInfo 待删除的引用记录
+     * Returns true if there are actual changes (delete or add operation exists).
      */
-    fun setDeleteOperation(referInfo: ResourcePublicVarGroupReferPO) {
-        this.referInfoToDelete = referInfo
-        this.countChange -= 1
-    }
-
-    /**
-     * 设置新增操作
-     * @param referInfo 待新增的引用记录
-     */
-    fun setAddOperation(referInfo: ResourcePublicVarGroupReferPO) {
-        this.referInfoToAdd = referInfo
-        this.countChange += 1
-    }
-
-    /**
-     * 判断是否有实际变化
-     * @return true表示有变化（存在删除或新增操作），false表示无变化
-     */
-    fun hasChanges(): Boolean {
-        return referInfoToDelete != null || referInfoToAdd != null
-    }
+    fun hasChanges(): Boolean = referInfoToDelete != null || referInfoToAdd != null
 }

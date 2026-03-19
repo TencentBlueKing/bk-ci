@@ -72,11 +72,11 @@ class PublicVarReferInfoService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PublicVarReferInfoService::class.java)
+        private const val RESOURCE_VAR_REFER_LOCK_TIMEOUT_SECONDS = 10L
     }
 
     /**
      * 处理资源的变量引用关系（带锁保护的公共方法）
-     * 使用资源级分布式锁保护整个操作流程，包括引用关系处理和引用计数更新
      * 使用资源级分布式锁保护整个操作流程，包括引用关系处理和引用计数更新
      * 线程安全说明：
      * - 使用资源级分布式锁：RESOURCE_VAR_REFER_LOCK:$projectId:$resourceType:$resourceId:$resourceVersion
@@ -101,7 +101,7 @@ class PublicVarReferInfoService @Autowired constructor(
         val redisLock = RedisLock(
             redisOperation = redisOperation,
             lockKey = lockKey,
-            expiredTimeInSeconds = 10L
+            expiredTimeInSeconds = RESOURCE_VAR_REFER_LOCK_TIMEOUT_SECONDS
         )
 
         try {
@@ -171,6 +171,18 @@ class PublicVarReferInfoService @Autowired constructor(
         )
 
         if (varRefDetails.isNotEmpty()) {
+            // 批量生成分布式ID
+            val segmentIds = client.get(ServiceAllocIdResource::class)
+                .batchGenerateSegmentId("T_VAR_REF_DETAIL", varRefDetails.size).data
+            if (segmentIds.isNullOrEmpty() || segmentIds.size != varRefDetails.size) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_INVALID_PARAM_,
+                    params = arrayOf("Failed to generate segment IDs for var ref detail")
+                )
+            }
+            varRefDetails.forEachIndexed { index, detail ->
+                detail.id = segmentIds[index] ?: 0
+            }
             varRefDetailDao.batchSave(
                 dslContext = context,
                 varRefDetails = varRefDetails

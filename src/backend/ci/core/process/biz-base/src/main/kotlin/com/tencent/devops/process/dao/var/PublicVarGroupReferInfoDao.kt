@@ -36,6 +36,8 @@ import com.tencent.devops.model.process.tables.records.TResourcePublicVarGroupRe
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPositionPO
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReferPO
 import org.jooq.DSLContext
+import org.jooq.Select
+import org.jooq.Record
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
@@ -254,44 +256,24 @@ class PublicVarGroupReferInfoDao {
     }
 
     /**
-     * 统计关联变量组的资源数量（按 referId 去重）
-     */
-    fun countLatestActiveVarGroupReferInfo(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        referType: PublicVerGroupReferenceTypeEnum?
-    ): Int {
-        val trpvgri = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
-
-        val conditions = mutableListOf(
-            trpvgri.PROJECT_ID.eq(projectId),
-            trpvgri.GROUP_NAME.eq(groupName)
-        )
-        referType?.let { conditions.add(trpvgri.REFER_TYPE.eq(it.name)) }
-
-        // 统计所有关联变量组的不同 referId 数量
-        return dslContext.select(DSL.countDistinct(trpvgri.REFER_ID))
-            .from(trpvgri)
-            .where(conditions)
-            .fetchOne(0, Int::class.java) ?: 0
-    }
-
-    /**
-     * 查询关联变量组的资源最新版本记录（按 referId 去重）
+     * 构建关联变量组最新活跃版本的 UNION ALL 查询（按 groupName 维度）
      * 对于有实际变量引用的 referId，取有变量引用版本中的最大 referVersion
      * 对于没有变量引用的 referId，取最大 referVersion
+     *
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param referType 引用类型（可选）
      * @param referIdsWithActualVar 有实际变量引用的 referId 列表
+     * @return UNION ALL 查询（未排序、未分页）
      */
-    fun listLatestActiveVarGroupReferInfo(
+    private fun buildLatestActiveReferUnionQuery(
         dslContext: DSLContext,
         projectId: String,
         groupName: String,
         referType: PublicVerGroupReferenceTypeEnum?,
-        referIdsWithActualVar: List<String>,
-        page: Int,
-        pageSize: Int
-    ): List<ResourcePublicVarGroupReferPO> {
+        referIdsWithActualVar: List<String>
+    ): Select<*> {
         val trpvgri = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
         val trpvgriSub = trpvgri.`as`("trpvgri_sub")
         val trpvri = TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO
@@ -343,77 +325,99 @@ class PublicVarGroupReferInfoDao {
             notExistsHigherVersionQuery = notExistsHigherVersionQuery.and(trpvgriSub.REFER_TYPE.eq(it.name))
         }
 
-        // 情况1: 有实际变量引用的 referId, 查询有变量引用版本中的最大 referVersion
-        val recordsWithVar = if (referIdsWithActualVar.isNotEmpty()) {
-            dslContext.selectFrom(trpvgri)
-                .where(conditions)
-                .and(trpvgri.REFER_ID.`in`(referIdsWithActualVar))
-                .and(existsVarReferCondition)
-                .and(DSL.notExists(notExistsHigherVersionWithVarQuery))
-                .fetch()
-                .map { convertResourcePublicVarGroupReferPO(it) }
-        } else {
-            emptyList()
-        }
+        // 情况1: 有实际变量引用的 referId 的子查询
+        val queryWithVar = dslContext.selectFrom(trpvgri)
+            .where(conditions)
+            .and(trpvgri.REFER_ID.`in`(referIdsWithActualVar.ifEmpty { listOf("") }))
+            .and(existsVarReferCondition)
+            .and(DSL.notExists(notExistsHigherVersionWithVarQuery))
 
-        // 情况2: 没有实际变量引用的 referId, 查询最大 referVersion
-        val recordsWithoutVar = dslContext.selectFrom(trpvgri)
+        // 情况2: 没有实际变量引用的 referId 的子查询
+        val queryWithoutVar = dslContext.selectFrom(trpvgri)
             .where(conditions)
             .and(trpvgri.REFER_ID.notIn(referIdsWithActualVar.ifEmpty { listOf("") }))
             .and(DSL.notExists(notExistsHigherVersionQuery))
-            .fetch()
-            .map { convertResourcePublicVarGroupReferPO(it) }
 
-        // 合并结果并排序分页
-        return (recordsWithVar + recordsWithoutVar)
-            .sortedByDescending { it.updateTime }
-            .drop((page - 1) * pageSize)
-            .take(pageSize)
+        return queryWithVar.unionAll(queryWithoutVar)
     }
 
     /**
-     * 统计按 referId 列表筛选的资源数量（按 referId 去重）
+     * 统计关联变量组的最新活跃版本记录总数（按 groupName 维度）
+     * 基于与 list 方法相同的 UNION ALL 逻辑精确计数，保证 count 与 list 语义一致
+     *
+     * @param referIdsWithActualVar 有实际变量引用的 referId 列表
      */
-    fun countLatestActiveVarGroupReferInfoByReferIds(
+    fun countLatestActiveVarGroupReferInfo(
         dslContext: DSLContext,
         projectId: String,
-        referIds: List<String>,
-        referType: PublicVerGroupReferenceTypeEnum?
+        groupName: String,
+        referType: PublicVerGroupReferenceTypeEnum?,
+        referIdsWithActualVar: List<String>
     ): Int {
-        if (referIds.isEmpty()) return 0
-
-        val trpvgri = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
-
-        val conditions = mutableListOf(
-            trpvgri.PROJECT_ID.eq(projectId),
-            trpvgri.REFER_ID.`in`(referIds)
+        val unionQuery = buildLatestActiveReferUnionQuery(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupName = groupName,
+            referType = referType,
+            referIdsWithActualVar = referIdsWithActualVar
         )
-        referType?.let { conditions.add(trpvgri.REFER_TYPE.eq(it.name)) }
-
-        // 统计指定 referId 列表中的不同 referId 数量
-        return dslContext.select(DSL.countDistinct(trpvgri.REFER_ID))
-            .from(trpvgri)
-            .where(conditions)
+        return dslContext.selectCount()
+            .from(unionQuery.asTable("union_result"))
             .fetchOne(0, Int::class.java) ?: 0
     }
 
     /**
-     * 根据 referId 列表查询关联变量组的资源最新版本记录
+     * 查询关联变量组的资源最新版本记录（按 referId 去重）
      * 对于有实际变量引用的 referId，取有变量引用版本中的最大 referVersion
      * 对于没有变量引用的 referId，取最大 referVersion
      * @param referIdsWithActualVar 有实际变量引用的 referId 列表
      */
-    fun listLatestActiveVarGroupReferInfoByReferIds(
+    fun listLatestActiveVarGroupReferInfo(
         dslContext: DSLContext,
         projectId: String,
-        referIds: List<String>,
+        groupName: String,
         referType: PublicVerGroupReferenceTypeEnum?,
         referIdsWithActualVar: List<String>,
         page: Int,
         pageSize: Int
     ): List<ResourcePublicVarGroupReferPO> {
-        if (referIds.isEmpty()) return emptyList()
+        val trpvgri = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
+        val unionQuery = buildLatestActiveReferUnionQuery(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupName = groupName,
+            referType = referType,
+            referIdsWithActualVar = referIdsWithActualVar
+        )
 
+        // UNION ALL 后在数据库层排序分页
+        val offset = (page - 1) * pageSize
+        return dslContext.selectFrom(unionQuery.asTable("union_result"))
+            .orderBy(DSL.field("update_time").desc())
+            .limit(pageSize)
+            .offset(offset)
+            .fetch()
+            .map { convertResourcePublicVarGroupReferPO(it.into(trpvgri.recordType)) }
+    }
+
+    /**
+     * 构建按 referId 列表筛选的最新活跃版本 UNION ALL 查询
+     * 抽取为公共方法，供 count 和 list 复用，保证语义一致
+     *
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param referIds 需要查询的 referId 列表
+     * @param referType 引用类型（可选）
+     * @param referIdsWithActualVar 有实际变量引用的 referId 列表
+     * @return UNION ALL 查询（未排序、未分页）
+     */
+    private fun buildLatestActiveReferByReferIdsUnionQuery(
+        dslContext: DSLContext,
+        projectId: String,
+        referIds: List<String>,
+        referType: PublicVerGroupReferenceTypeEnum?,
+        referIdsWithActualVar: List<String>
+    ): Select<*> {
         val trpvgri = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
         val trpvgriSub = trpvgri.`as`("trpvgri_sub")
         val trpvri = TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO
@@ -465,38 +469,86 @@ class PublicVarGroupReferInfoDao {
             notExistsHigherVersionQuery = notExistsHigherVersionQuery.and(trpvgriSub.REFER_TYPE.eq(it.name))
         }
 
-        // 情况1: 有实际变量引用的 referId, 查询有变量引用版本中的最大 referVersion
         val idsWithVar = referIds.filter { referIdsWithActualVar.contains(it) }
-        val recordsWithVar = if (idsWithVar.isNotEmpty()) {
-            dslContext.selectFrom(trpvgri)
-                .where(conditions)
-                .and(trpvgri.REFER_ID.`in`(idsWithVar))
-                .and(existsVarReferCondition)
-                .and(DSL.notExists(notExistsHigherVersionWithVarQuery))
-                .fetch()
-                .map { convertResourcePublicVarGroupReferPO(it) }
-        } else {
-            emptyList()
-        }
-
-        // 情况2: 没有实际变量引用的 referId, 查询最大 referVersion
         val idsWithoutVar = referIds.filter { !referIdsWithActualVar.contains(it) }
-        val recordsWithoutVar = if (idsWithoutVar.isNotEmpty()) {
-            dslContext.selectFrom(trpvgri)
-                .where(trpvgri.PROJECT_ID.eq(projectId))
-                .and(trpvgri.REFER_ID.`in`(idsWithoutVar))
-                .apply { referType?.let { and(trpvgri.REFER_TYPE.eq(it.name)) } }
-                .and(DSL.notExists(notExistsHigherVersionQuery))
-                .fetch()
-                .map { convertResourcePublicVarGroupReferPO(it) }
-        } else {
-            emptyList()
-        }
 
-        // 合并结果并排序分页
-        return (recordsWithVar + recordsWithoutVar)
-            .sortedByDescending { it.updateTime }
-            .drop((page - 1) * pageSize)
-            .take(pageSize)
+        // 情况1: 有实际变量引用的 referId 的子查询
+        val queryWithVar = dslContext.selectFrom(trpvgri)
+            .where(conditions)
+            .and(trpvgri.REFER_ID.`in`(idsWithVar.ifEmpty { listOf("") }))
+            .and(existsVarReferCondition)
+            .and(DSL.notExists(notExistsHigherVersionWithVarQuery))
+
+        // 情况2: 没有实际变量引用的 referId 的子查询
+        val queryWithoutVar = dslContext.selectFrom(trpvgri)
+            .where(trpvgri.PROJECT_ID.eq(projectId))
+            .and(trpvgri.REFER_ID.`in`(idsWithoutVar.ifEmpty { listOf("") }))
+            .apply { referType?.let { and(trpvgri.REFER_TYPE.eq(it.name)) } }
+            .and(DSL.notExists(notExistsHigherVersionQuery))
+
+        return queryWithVar.unionAll(queryWithoutVar)
+    }
+
+    /**
+     * 统计按 referId 列表筛选的最新活跃版本记录总数
+     * 基于与 list 方法相同的 UNION ALL 逻辑精确计数，保证 count 与 list 语义一致
+     *
+     * @param referIdsWithActualVar 有实际变量引用的 referId 列表
+     */
+    fun countLatestActiveVarGroupReferInfoByReferIds(
+        dslContext: DSLContext,
+        projectId: String,
+        referIds: List<String>,
+        referType: PublicVerGroupReferenceTypeEnum?,
+        referIdsWithActualVar: List<String>
+    ): Int {
+        if (referIds.isEmpty()) return 0
+
+        val unionQuery = buildLatestActiveReferByReferIdsUnionQuery(
+            dslContext = dslContext,
+            projectId = projectId,
+            referIds = referIds,
+            referType = referType,
+            referIdsWithActualVar = referIdsWithActualVar
+        )
+        return dslContext.selectCount()
+            .from(unionQuery.asTable("union_result"))
+            .fetchOne(0, Int::class.java) ?: 0
+    }
+
+    /**
+     * 根据 referId 列表查询关联变量组的资源最新版本记录
+     * 对于有实际变量引用的 referId，取有变量引用版本中的最大 referVersion
+     * 对于没有变量引用的 referId，取最大 referVersion
+     * @param referIdsWithActualVar 有实际变量引用的 referId 列表
+     */
+    fun listLatestActiveVarGroupReferInfoByReferIds(
+        dslContext: DSLContext,
+        projectId: String,
+        referIds: List<String>,
+        referType: PublicVerGroupReferenceTypeEnum?,
+        referIdsWithActualVar: List<String>,
+        page: Int,
+        pageSize: Int
+    ): List<ResourcePublicVarGroupReferPO> {
+        if (referIds.isEmpty()) return emptyList()
+
+        val trpvgri = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
+        val unionQuery = buildLatestActiveReferByReferIdsUnionQuery(
+            dslContext = dslContext,
+            projectId = projectId,
+            referIds = referIds,
+            referType = referType,
+            referIdsWithActualVar = referIdsWithActualVar
+        )
+
+        // UNION ALL 后在数据库层排序分页
+        val offset = (page - 1) * pageSize
+        return dslContext.selectFrom(unionQuery.asTable("union_result"))
+            .orderBy(DSL.field("update_time").desc())
+            .limit(pageSize)
+            .offset(offset)
+            .fetch()
+            .map { convertResourcePublicVarGroupReferPO(it.into(trpvgri.recordType)) }
     }
 }

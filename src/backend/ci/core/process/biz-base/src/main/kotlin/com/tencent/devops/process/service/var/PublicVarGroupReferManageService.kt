@@ -519,7 +519,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
                             referVersion = historical.referVersion
                         )
                     }
-                    changeInfo.setDeleteOperation(historical)
+                    changeInfo.referInfoToDelete = historical
                 }
             }
 
@@ -540,7 +540,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
                                 referVersion = current.referVersion
                             )
                         }
-                        changeInfo.setAddOperation(current)
+                        changeInfo.referInfoToAdd = current
                     }
                     // 场景3：变量组在历史列表中存在且版本不同 -> 版本切换操作
                     historical.version != current.version -> {
@@ -553,8 +553,8 @@ class PublicVarGroupReferManageService @Autowired constructor(
                                 referVersion = current.referVersion
                             )
                         }
-                        changeInfo.setDeleteOperation(historical)
-                        changeInfo.setAddOperation(current)
+                        changeInfo.referInfoToDelete = historical
+                        changeInfo.referInfoToAdd = current
                     }
                 }
             }

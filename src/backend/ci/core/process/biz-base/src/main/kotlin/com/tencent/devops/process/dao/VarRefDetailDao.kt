@@ -50,9 +50,10 @@ class VarRefDetailDao {
         }
 
         with(TVarRefDetail.T_VAR_REF_DETAIL) {
-            varRefDetails.forEach { detail ->
+            val records = varRefDetails.map { detail ->
                 dslContext.insertInto(
                     this,
+                    ID,
                     PROJECT_ID,
                     VAR_NAME,
                     RESOURCE_ID,
@@ -67,6 +68,7 @@ class VarRefDetailDao {
                     MODIFIER
                 )
                 .values(
+                    detail.id,
                     detail.projectId,
                     detail.varName,
                     detail.resourceId,
@@ -83,8 +85,8 @@ class VarRefDetailDao {
                 .onDuplicateKeyUpdate()
                 .set(POSITION_PATH, detail.positionPath)
                 .set(MODIFIER, detail.modifier)
-                .execute()
             }
+            dslContext.batch(records).execute()
         }
     }
 

@@ -72,7 +72,7 @@ class PublicVarService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(PublicVarService::class.java)
 
         // 正则表达式常量
-        private val VAR_NAME_REGEX = Regex("^[0-9a-zA-Z_]+$")
+        private val VAR_NAME_REGEX = Regex("^[a-zA-Z_][a-zA-Z0-9_]{0,63}$")
     }
 
     fun addGroupPublicVar(context: DSLContext = dslContext, publicVarDTO: PublicVarDTO): Boolean {
@@ -119,7 +119,7 @@ class PublicVarService @Autowired constructor(
         }
 
         // 批量保存和发布记录（在事务中执行查询和保存）
-        dslContext.transaction { configuration ->
+        context.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
 
             // 获取前一个版本号（处理版本不连续和第一个版本的情况）

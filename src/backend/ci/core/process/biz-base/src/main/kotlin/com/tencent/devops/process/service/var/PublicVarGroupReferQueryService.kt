@@ -312,15 +312,7 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                 referType = queryReq.referType
             )
 
-            // Step2: 统计有实际变量引用的资源数量（作为 totalCount）
-            val totalCount = publicVarGroupReferInfoDao.countLatestActiveVarGroupReferInfo(
-                dslContext = dslContext,
-                projectId = projectId,
-                groupName = groupName,
-                referType = queryReq.referType
-            )
-
-            // Step3: 查询关联变量组的资源最新版本记录
+            // Step2: 先查询分页数据列表（避免 UNION ALL 执行两次）
             val varGroupReferInfo = publicVarGroupReferInfoDao.listLatestActiveVarGroupReferInfo(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -330,6 +322,26 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                 page = queryReq.page,
                 pageSize = queryReq.pageSize
             )
+
+            // Step3: 推断 totalCount，首页且结果不满一页时直接计算，避免重复执行 UNION ALL count 查询
+            val totalCount = if (queryReq.page == 1 && varGroupReferInfo.size < queryReq.pageSize) {
+                varGroupReferInfo.size
+            } else {
+                publicVarGroupReferInfoDao.countLatestActiveVarGroupReferInfo(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    groupName = groupName,
+                    referType = queryReq.referType,
+                    referIdsWithActualVar = referIdsWithActualVar
+                )
+            }
+
+            if (totalCount == 0) {
+                return VarGroupReferInfoQueryResult(
+                    totalCount = 0,
+                    referInfos = emptyList()
+                )
+            }
 
             // Step4: 统计每个 referId 的变量引用数量
             val referIds = varGroupReferInfo.map { it.referId }
@@ -389,15 +401,7 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                 )
             }
 
-            // Step2: 统计有实际变量引用的资源数量
-            val totalCount = publicVarGroupReferInfoDao.countLatestActiveVarGroupReferInfoByReferIds(
-                dslContext = dslContext,
-                projectId = projectId,
-                referIds = referIdsWithActualVar,
-                referType = queryReq.referType
-            )
-
-            // Step3: 查询这些 referId 的最新版本详细信息
+            // Step2: 先查询分页数据列表（避免 UNION ALL 执行两次）
             val varGroupReferInfo = publicVarGroupReferInfoDao.listLatestActiveVarGroupReferInfoByReferIds(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -407,6 +411,19 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                 page = queryReq.page,
                 pageSize = queryReq.pageSize
             )
+
+            // Step3: 推断 totalCount，首页且结果不满一页时直接计算，避免重复执行 UNION ALL count 查询
+            val totalCount = if (queryReq.page == 1 && varGroupReferInfo.size < queryReq.pageSize) {
+                varGroupReferInfo.size
+            } else {
+                publicVarGroupReferInfoDao.countLatestActiveVarGroupReferInfoByReferIds(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    referIds = referIdsWithActualVar,
+                    referType = queryReq.referType,
+                    referIdsWithActualVar = referIdsWithActualVar
+                )
+            }
 
             logger.info(
                 "Query result: totalCount=$totalCount, returnedCount=${varGroupReferInfo.size}"
@@ -464,12 +481,8 @@ class PublicVarGroupReferQueryService @Autowired constructor(
         version: Long
     ): String {
         return when (referType) {
-            PublicVerGroupReferenceTypeEnum.PIPELINE -> {
-                String.format("$basePath/$projectId/${referId}$pipelinePath", version)
-            }
-            PublicVerGroupReferenceTypeEnum.TEMPLATE -> {
-                String.format("$basePath/${projectId}$templatePath", referId, version)
-            }
+            PublicVerGroupReferenceTypeEnum.PIPELINE -> "$basePath/$projectId/$referId$pipelinePath"
+            PublicVerGroupReferenceTypeEnum.TEMPLATE -> "$basePath/$projectId$templatePath/$referId/$version"
         }
     }
 

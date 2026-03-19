@@ -41,6 +41,13 @@ object ModelVarRefUtils {
      */
     private val VARIABLE_PATTERN = Pattern.compile("\\$\\{?\\{\\s*(variables\\.)?([^}\\s]+)\\s*}?}")
 
+    /**
+     * 纯文本变量引用模式，匹配不带 $ 前缀的 variables.xxx 格式
+     * 变量名仅允许字母、数字、下划线和连字符，避免 \S+ 误匹配特殊符号
+     * 预编译为常量，避免在高频路径中重复编译
+     */
+    private val PLAIN_VARIABLE_PATTERN = Pattern.compile("(?:^|[^\\w.])(variables\\.([\\w-]+))(?=$|[^\\w.])")
+
     /** 支持的资源类型常量 - 流水线资源 */
     private const val RESOURCE_TYPE_PIPELINE = "PIPELINE"
     /** 支持的资源类型常量 - 模板资源 */
@@ -988,9 +995,7 @@ object ModelVarRefUtils {
         if (cleanedText.isEmpty()) return emptySet()
 
         val variables = mutableSetOf<String>()
-        // 匹配不带$的variables.xxx格式，匹配 variables.xxx，确保它是独立的单词（前面是边界或空格，后面是边界或空格）
-        val plainPattern = Pattern.compile("(?:^|[^\\w.])(variables\\.(\\S+))(?=$|[^\\w.])")
-        val plainMatcher = plainPattern.matcher(cleanedText)
+        val plainMatcher = PLAIN_VARIABLE_PATTERN.matcher(cleanedText)
 
         while (plainMatcher.find()) {
             val variable = plainMatcher.group(2)?.trim() // group(2) 是纯变量名

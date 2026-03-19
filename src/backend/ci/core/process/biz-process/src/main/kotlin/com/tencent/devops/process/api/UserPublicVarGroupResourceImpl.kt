@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPublicVarGroupResource
-import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.`var`.PublicVarGroupPermissionService
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
@@ -46,7 +45,6 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserPublicVarGroupResourceImpl @Autowired constructor(
     private val publicVarGroupService: PublicVarGroupService,
-    private val pipelinePermissionService: PipelinePermissionService,
     private val publicVarGroupPermissionService: PublicVarGroupPermissionService
 ) : UserPublicVarGroupResource {
 

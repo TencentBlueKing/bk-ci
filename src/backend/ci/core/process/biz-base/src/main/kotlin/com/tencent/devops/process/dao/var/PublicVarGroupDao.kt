@@ -217,13 +217,13 @@ class PublicVarGroupDao {
 
             // 添加筛选条件
             filterByGroupName?.let {
-                conditions.add(GROUP_NAME.like("%$it%"))
+                conditions.add(GROUP_NAME.contains(it))
             }
             filterByGroupDesc?.let {
-                conditions.add(DESC.like("%$it%"))
+                conditions.add(DESC.contains(it))
             }
             filterByUpdater?.let {
-                conditions.add(MODIFIER.like("%$it%"))
+                conditions.add(MODIFIER.contains(it))
             }
             if (!groupNames.isNullOrEmpty()) {
                 conditions.add(GROUP_NAME.`in`(groupNames))
@@ -339,6 +339,34 @@ class PublicVarGroupDao {
             return dslContext.selectFrom(this)
                 .where(conditions)
                 .fetchOne()?.let { record -> mapRecordToPublicVarGroupPO(record) }
+        }
+    }
+
+    /**
+     * 批量根据变量组名和版本号查询变量组记录
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupNameVersionPairs groupName to version 列表，version 为 null 时查最新版本
+     * @return 变量组PO列表
+     */
+    fun batchGetRecordsByGroupNameAndVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        groupNameVersionPairs: List<Pair<String, Int?>>
+    ): List<PublicVarGroupPO> {
+        if (groupNameVersionPairs.isEmpty()) return emptyList()
+        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
+            val conditions = groupNameVersionPairs.map { (groupName, version) ->
+                if (version != null) {
+                    GROUP_NAME.eq(groupName).and(VERSION.eq(version))
+                } else {
+                    GROUP_NAME.eq(groupName).and(LATEST_FLAG.eq(true))
+                }
+            }.reduce { acc, condition -> acc.or(condition) }
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(conditions)
+                .fetch { record -> mapRecordToPublicVarGroupPO(record) }
         }
     }
 

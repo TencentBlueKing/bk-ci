@@ -184,19 +184,7 @@ class TemplateModelTransfer @Autowired constructor(
         }
         baseYaml.stages = stages.ifEmpty { null }?.let { TransferMapper.anyTo(stages) }
         baseYaml.variables = model.triggerContainer()?.let { triggerContainer ->
-            // 刷新公共变量配置信息
-            modelInput.model.handlePublicVarInfo()
-            val variables = mutableMapOf<String, Any>()
-            val publicVarGroupNames = modelInput.model.getPublicVarGroups()
-            if (!publicVarGroupNames.isNullOrEmpty()) {
-                variables[TEMPLATE_KEY] = publicVarGroupNames.map {
-                    VariableTemplate(it.groupName, it.versionName)
-                }
-            }
-            variableTransfer.makeVariableFromModel(triggerContainer)?.let { modelVariables ->
-                variables.putAll(modelVariables)
-            }
-            variables.ifEmpty { null }
+            makeVariablesYaml(modelInput, triggerContainer)
         }
         val lastStage = model.stages()?.last()
         val finally = if (lastStage?.finally == true) {
@@ -228,6 +216,22 @@ class TemplateModelTransfer @Autowired constructor(
             modelInput.aspectWrapper.setYaml4Yaml(baseYaml, PipelineTransferAspectWrapper.AspectType.AFTER)
         }
         return baseYaml
+    }
+
+    private fun makeVariablesYaml(
+        modelInput: TemplateModelTransferInput,
+        triggerContainer: TriggerContainer
+    ): Map<String, Any>? {
+        modelInput.model.handlePublicVarInfo()
+        val variables = mutableMapOf<String, Any>()
+        val publicVarGroups = modelInput.model.getPublicVarGroups()
+        if (!publicVarGroups.isNullOrEmpty()) {
+            variables[TEMPLATE_KEY] = publicVarGroups.map {
+                VariableTemplate(it.groupName, it.versionName)
+            }
+        }
+        variableTransfer.makeVariableFromModel(triggerContainer)?.let { variables.putAll(it) }
+        return variables.ifEmpty { null }
     }
 
     private fun ITemplateModel.triggerContainer() = when (this) {

@@ -324,30 +324,24 @@ class PublicVarGroupReferCountService @Autowired constructor(
                     )
                 }
 
-                // 4. 更新引用计数
-                // 根据countChange更新引用计数
-                if (changeInfo.countChange > 0) {
-                    // 正数：增加引用计数
-                    changeInfo.referInfoToAdd?.let { addInfo ->
-                        incrementReferCount(
-                            context = dslCtx,
-                            projectId = projectId,
-                            groupName = changeInfo.groupName,
-                            version = addInfo.version,
-                            countChange = changeInfo.countChange
-                        )
-                    }
-                } else if (changeInfo.countChange < 0) {
-                    // 负数：减少引用计数
-                    changeInfo.referInfoToDelete?.let { deleteInfo ->
-                        decrementReferCount(
-                            context = dslCtx,
-                            projectId = projectId,
-                            groupName = changeInfo.groupName,
-                            version = deleteInfo.version,
-                            countChange = -changeInfo.countChange
-                        )
-                    }
+                // 4. 更新引用计数（两个操作互相独立，版本切换场景下两者均执行）
+                changeInfo.referInfoToDelete?.let { deleteInfo ->
+                    decrementReferCount(
+                        context = dslCtx,
+                        projectId = projectId,
+                        groupName = changeInfo.groupName,
+                        version = deleteInfo.version,
+                        countChange = 1
+                    )
+                }
+                changeInfo.referInfoToAdd?.let { addInfo ->
+                    incrementReferCount(
+                        context = dslCtx,
+                        projectId = projectId,
+                        groupName = changeInfo.groupName,
+                        version = addInfo.version,
+                        countChange = 1
+                    )
                 }
             }
         }
