@@ -83,9 +83,9 @@ func newClientWithProxy() *http.Client {
 	return &http.Client{Transport: transport}
 }
 
-// proxyFromAgentEnv 根据请求 scheme 从 agent 环境变量中读取代理配置。
-// 优先读取后台下发的环境变量（通过 envs.FetchEnv），读不到则 fallback 到
-// 标准库 http.ProxyFromEnvironment（读取 os 环境变量）。
+// proxyFromAgentEnv 根据请求 scheme 解析代理配置。
+// 优先读取 agent 环境变量，其次回退到 .agent.properties 中持久化的代理配置，
+// 最后再 fallback 到标准库 http.ProxyFromEnvironment。
 // 同时支持 NO_PROXY 排除规则。
 func proxyFromAgentEnv(req *http.Request) (*url.URL, error) {
 	httpProxy := fetchProxyEnv("HTTP_PROXY")
@@ -114,7 +114,7 @@ func proxyFromAgentEnv(req *http.Request) (*url.URL, error) {
 	return proxyURL, nil
 }
 
-// fetchProxyEnv 读取代理相关环境变量，同时检查大写和小写形式（与 Go 标准库行为一致）。
+// fetchProxyEnv 读取代理相关配置：优先查环境变量，其次回退到 .agent.properties 中持久化的代理配置。
 func fetchProxyEnv(key string) string {
 	if v, ok := envs.FetchEnv(key); ok && v != "" {
 		return v
@@ -122,7 +122,24 @@ func fetchProxyEnv(key string) string {
 	if v, ok := envs.FetchEnv(strings.ToLower(key)); ok && v != "" {
 		return v
 	}
-	return ""
+	return fetchProxyFromConfig(key)
+}
+
+func fetchProxyFromConfig(key string) string {
+	if config.GAgentConfig == nil {
+		return ""
+	}
+
+	switch key {
+	case config.KeyHTTPProxy:
+		return strings.TrimSpace(config.GAgentConfig.HTTPProxy)
+	case config.KeyHTTPSProxy:
+		return strings.TrimSpace(config.GAgentConfig.HTTPSProxy)
+	case config.KeyNOProxy:
+		return strings.TrimSpace(config.GAgentConfig.NOProxy)
+	default:
+		return ""
+	}
 }
 
 func NewHttpClient() *HttpClient {
