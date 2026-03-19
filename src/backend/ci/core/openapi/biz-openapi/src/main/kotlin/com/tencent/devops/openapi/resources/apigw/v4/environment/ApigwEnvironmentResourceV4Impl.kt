@@ -266,6 +266,7 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
             latestBuildTimeEnd = latestBuildTimeEnd,
             sortType = sortType,
             collation = collation,
+            createMode = createMode,
             data = data
         )
     }
