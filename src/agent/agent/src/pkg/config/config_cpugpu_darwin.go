@@ -1,3 +1,5 @@
+//go:build darwin
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -25,21 +27,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.service.template.v2
+package config
 
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
+import (
+	"bytes"
+	"strings"
 
-class PipelineTemplateInstanceLock(
-    redisOperation: RedisOperation,
-    projectId: String,
-    templateId: String
-) : RedisLock(
-        redisOperation = redisOperation,
-        lockKey = "pipeline.template.instance.lock.$projectId.$templateId",
-        expiredTimeInSeconds = 10
-    ) {
-    override fun decorateKey(key: String): String {
-        return key
-    }
+	"github.com/jaypipes/ghw"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
+)
+
+// GetCpuAndGpuInfo 获取 CPU 和 GPU 型号信息
+// ghw 在 darwin 平台未实现 GPU 采集，这里保留 CPU 信息并跳过 GPU，避免启动时打印误导性的错误堆栈。
+func GetCpuAndGpuInfo() (string, string) {
+	cpu, err := ghw.CPU()
+	cpuInfoBuf := bytes.Buffer{}
+	if err != nil {
+		logs.WithError(err).Warn("get cpu info error")
+	} else {
+		for _, c := range cpu.Processors {
+			cpuInfoBuf.WriteString(c.Model)
+			cpuInfoBuf.WriteString(";")
+		}
+	}
+	cpuInfo := strings.TrimSuffix(cpuInfoBuf.String(), ";")
+
+	logs.Info("skip gpu info detection on darwin: ghw gpu not implemented")
+	logs.Infof("cpu: %s, gpu: %s", cpuInfo, "")
+	return cpuInfo, ""
 }
