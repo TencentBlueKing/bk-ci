@@ -325,7 +325,7 @@
                             const config = {
                                 serviceScope: scope,
                                 classifyCode: data.classifyCode,
-                                labelList: (data.labelList || []).filter(id => id && id !== 'null' && id !== ' ')
+                                labelIdList: (data.labelList || []).filter(id => id && id !== 'null' && id !== ' ')
                             }
                             
                             // 构建 jobTypeConfigs
@@ -359,7 +359,8 @@
                         const serviceScopeDetails = serviceScopeConfigs.map(config => {
                             const refName = config.serviceScope === 'PIPELINE' ? 'pipelineCategoryConfig' : 'creativeCategoryConfig'
                             const fullLabelList = this.$refs[refName]?.labelList || []
-                            const labelList = (config.labelList || [])
+                            // 从 labelIdList（ID 数组）还原为 labelList（对象数组），保持与接口返回格式一致，以便正确回显
+                            const labelList = (config.labelIdList || [])
                                 .map(id => fullLabelList.find(label => label.id === id))
                                 .filter(Boolean)
                             

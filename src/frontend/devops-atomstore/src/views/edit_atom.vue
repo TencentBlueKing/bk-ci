@@ -916,7 +916,7 @@
                             const config = {
                                 serviceScope: scope,
                                 classifyCode: categoryData.classifyCode,
-                                labelList: (categoryData.labelList || []).filter(id => id && id !== 'null' && id !== ' ')
+                                labelIdList: (categoryData.labelList || []).filter(id => id && id !== 'null' && id !== ' ')
                             }
                             
                             // 构建 jobTypeConfigs
