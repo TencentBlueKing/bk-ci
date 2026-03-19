@@ -29,7 +29,6 @@ package com.tencent.devops.environment.service
 
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.environment.pojo.EnvAddNodesData
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvUpdateInfo
 import com.tencent.devops.environment.pojo.EnvVar

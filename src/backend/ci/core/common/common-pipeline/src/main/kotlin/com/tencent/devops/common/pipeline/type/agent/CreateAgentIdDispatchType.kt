@@ -39,6 +39,7 @@ data class CreateAgentIdDispatchType(
     }
 
     override fun replaceField(variables: Map<String, String>) {
+        // No field replacement needed for CreateAgentIdDispatchType
     }
 
     override fun buildType() = BuildType.valueOf(BuildType.CREATE_AGENT_ID.name)

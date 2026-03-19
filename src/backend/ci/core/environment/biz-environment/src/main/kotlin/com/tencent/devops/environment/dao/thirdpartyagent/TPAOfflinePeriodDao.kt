@@ -1,6 +1,5 @@
 ﻿package com.tencent.devops.environment.dao.thirdpartyagent
 
-import com.tencent.devops.common.pipeline.container.AgentReuseMutexType
 import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgentOfflinePeriod
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentOfflinePeriodRecord
 import org.jooq.DSLContext

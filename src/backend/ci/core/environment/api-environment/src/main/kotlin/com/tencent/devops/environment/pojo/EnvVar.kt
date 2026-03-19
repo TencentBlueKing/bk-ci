@@ -29,7 +29,6 @@ package com.tencent.devops.environment.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
 
 @Schema(title = "环境变量")
 @JsonIgnoreProperties(ignoreUnknown = true)

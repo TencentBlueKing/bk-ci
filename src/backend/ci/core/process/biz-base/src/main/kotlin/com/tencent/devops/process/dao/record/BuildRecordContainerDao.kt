@@ -382,8 +382,9 @@ class BuildRecordContainerDao {
     }
 
     private fun TPipelineBuildRecordContainer.generateBuildRecordContainer(
-        record: Record16<String, String, String, Int,
-                String, String, String, Int, String, String, Boolean, Boolean, String, LocalDateTime, LocalDateTime, String>
+        record: Record16<String, String, String, Int, String, String,
+                String, Int, String, String, Boolean, Boolean,
+                String, LocalDateTime, LocalDateTime, String>
     ) =
         BuildRecordContainer(
             buildId = record[BUILD_ID],

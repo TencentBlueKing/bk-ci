@@ -1,4 +1,4 @@
-﻿package create
+package create
 
 import "sync/atomic"
 

@@ -1,7 +1,6 @@
 ﻿package com.tencent.devops.dispatch.pojo.thirdpartyagent
 
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
