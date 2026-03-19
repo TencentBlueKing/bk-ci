@@ -1,139 +1,153 @@
-# 进程树 & 阻塞诊断工具
+# 诊断工具集：`agent-util`
 
-一个 Windows 原生的进程分析工具，能够构建进程树、检测阻塞进程、扫描管道句柄继承关系，并生成交互式 HTML 报告。
+`other-utils/process-tree` 目录下的这个工具现在统一对外叫做 **`agent-util`**。
 
-主要用于诊断 **CI/CD 构建卡死** 问题——由孤儿子进程持有继承的管道句柄导致的典型场景，如 `commons-exec` 的 StreamPumper 阻塞在 EOF 等待上。
+它通过不同子命令承载两类能力：
 
-## 功能特性
+- `tree`：Windows 进程树 / 阻塞诊断
+- `shell-check`：Linux / macOS login shell 启动链路检测
 
-- **进程树可视化** — 向上追溯父链 + 向下展示子树
-- **管道句柄继承扫描** — 找出继承了目标进程管道句柄的"孙进程"，精确定位阻塞管道关闭的进程
-- **线程级阻塞诊断** — 分析线程等待状态，检测阻塞/挂起的进程
-- **逐进程管道句柄枚举** — 使用 `NtQuerySystemInformation` 枚举进程树中每个进程持有的管道句柄
-- **自动 jstack 抓取** — 自动捕获 `java.exe` 目标进程的线程转储
-- **丰富的 HTML 报告** — 暗色主题交互式报告，包含可折叠区块、概要卡片、进程树和一键复制命令
-- **控制台输出** — 彩色终端输出，包含进程树、问题汇总和操作建议
+其中 `shell-check` 主要用于排查 Agent 在 Unix 上通过两层脚本启动 worker 时，是否会被用户的 `profile` / `rc` 配置干扰，例如 `exec zsh`、`exit`、`read`、`tmux` 等语句。
 
-## 环境要求
+## 子命令概览
 
-- **Windows**（使用 Windows 特定 API：WMI、NtQuerySystemInformation 等）
-- **管理员权限**（如未以管理员运行会自动通过 UAC 提权）
-- **Go 1.21+**（从源码编译时需要）
+| 子命令 | 平台 | 用途 |
+|---|---|---|
+| `tree` | Windows | 构建进程树、检测阻塞进程、扫描管道句柄继承并生成 HTML 报告 |
+| `shell-check` | Linux / macOS | 真实复现 Agent 的 login shell 启动链路，检测 shell 初始化文件是否吞掉真正脚本 |
 
 ## 编译
 
-```bash
-# 进入项目目录并编译
-cd process
-go build -o process-tree.exe .
+### 直接编译
 
-# 或指定输出路径
-go build -o bin/process-tree.exe .
+#### Windows
+
+```bash
+go build -o agent-util.exe .
 ```
+
+#### Linux / macOS
+
+```bash
+go build -o agent-util .
+```
+
+### 使用编译脚本
+
+目录里新增了 `build.sh`，会一次编译出 `linux` 和 `windows` 两个版本：
+
+```bash
+bash build.sh
+```
+
+默认产物：
+
+- `dist/agent-util_linux_amd64`
+- `dist/agent-util_windows_amd64.exe`
 
 ## 使用方法
 
-```
-process-tree.exe [选项]
-
-选项:
-  -buildid <字符串>   构建 ID，用于匹配进程命令行（必填）
-  -name <字符串>      目标进程名称（默认: java.exe）
-  -i                  交互模式（引导式输入 buildId 和选项）
-  -diag               启用线程级阻塞诊断（较慢）
-  -pipe               启用逐进程管道句柄扫描（最慢）
-  -html               仅生成 HTML 报告，跳过控制台输出
-  -h                  显示帮助信息并退出
-  -v                  显示版本号并退出
-```
-
-### 使用示例
+### `tree` 子命令（Windows）
 
 ```bash
-# 基本用法：查找匹配构建 ID 的 java.exe 进程
-process-tree.exe -buildid b-ec8dfe3da2174a219d04907dd791479e
-
-# 完整诊断：线程分析 + 管道扫描
-process-tree.exe -buildid b-ec8dfe3da2174a219d04907dd791479e -diag -pipe
-
-# 指定其他进程名
-process-tree.exe -buildid b-ec8dfe3da2174a219d04907dd791479e -name node.exe
-
-# 仅生成 HTML 报告
-process-tree.exe -buildid b-ec8dfe3da2174a219d04907dd791479e -html
-
-# 交互模式
-process-tree.exe -i
+agent-util.exe tree -buildid <build-id>
+agent-util.exe tree -buildid <build-id> -diag -pipe
+agent-util.exe tree -buildid <build-id> -name node.exe
+agent-util.exe tree -html -buildid <build-id>
 ```
+
+为了兼容旧用法，Windows 下仍然支持：
+
+```bash
+agent-util.exe -buildid <build-id>
+```
+
+### `shell-check` 子命令（Linux / macOS）
+
+```bash
+./agent-util shell-check
+./agent-util shell-check -shell /bin/bash
+./agent-util shell-check -shell /bin/zsh -timeout 12s -verbose
+./agent-util shell-check -keep -verbose
+```
+
+`shell-check` 会执行下面这条思路与 Agent 当前 Unix worker 启动方式一致的探测链路：
+
+1. 生成真正的 `start` 脚本
+2. 再生成一层 `prepare` 脚本
+3. 用 login shell 执行 `prepare -> start`
+4. 同时扫描常见 `profile` / `rc` 文件中的高风险语句
+
+如果目标脚本没有真正执行到，工具会明确告诉你是：
+
+- **超时卡住**
+- **shell 提前退出**
+- **脚本根本没被执行**
+- **初始化文件中有明显可疑语句**
+
+## `shell-check` 关注的问题类型
+
+工具默认会重点检查常见初始化文件中的这几类语句：
+
+- `exec ...`
+- `exit` / `logout`
+- `read ...`
+- `stty ...`
+- `tmux` / `screen` / `zellij`
+
+其中最典型的问题就是：
+
+```bash
+exec zsh
+```
+
+如果这类语句出现在 `bash` 的登录初始化链路中，就可能导致 Agent 原本想执行的 `start.sh` 被新 shell 替换掉，最终 worker 起不来。
+
+## `tree` 功能特性（Windows）
+
+- 进程树可视化
+- 管道句柄继承扫描
+- 线程级阻塞诊断
+- 逐进程管道句柄枚举
+- 自动 `jstack` 抓取
+- 交互式 HTML 报告
 
 ## 输出说明
 
-### 控制台输出
+### `tree`
 
-彩色进程树，包含：
-- 目标进程信息（PID、命令行、运行时长）
-- 父进程链（谁启动了这个进程）
-- 子进程树（所有后代进程）
-- 管道句柄继承警告
-- 问题汇总和操作建议
+- 控制台输出：彩色进程树、问题汇总、建议操作
+- HTML 报告：`process-report_<timestamp>.html`
 
-### HTML 报告
+### `shell-check`
 
-保存为 `process_tree_report_<时间戳>.html`，包含：
-- 概要卡片（PID、子进程数、阻塞数、管道句柄数、管道继承者数）
-- 可折叠的父进程链和子进程树
-- **管道继承者分析** — 持有共享管道句柄的进程列表，附带可操作命令
-- 线程级诊断详情（使用 `-diag` 时）
-- 逐进程管道句柄列表（使用 `-pipe` 时）
-- Java 进程的 jstack 输出
-- 所有命令支持一键复制到剪贴板
+会输出：
 
-## 工作原理
+- 最终解析到的 shell
+- 实际执行的 `exec` 命令行
+- 是否超时
+- 是否真正执行到目标脚本
+- 命中的初始化文件与可疑语句
+- 建议处理方式
 
-### 管道继承检测
-
-1. 调用 `NtQuerySystemInformation(SystemHandleInformation)` 获取全系统句柄表
-2. 找到目标进程持有的所有 Pipe 类型文件句柄，记录其内核对象地址
-3. 扫描所有其他进程的句柄，查找引用**相同内核对象**的句柄
-4. 匹配到的 = "管道继承者"——通过 `CreateProcess` 的句柄继承机制获得管道句柄的进程
-
-### 为什么这很重要
-
-当构建工具（如 Maven 通过 `commons-exec`）启动子进程时，会创建 stdout/stderr 的管道。如果子进程又启动了孙进程（守护进程、后台任务等），这些孙进程会**继承管道句柄**。即使直接子进程已经退出，只要这些孙进程还持有管道的写端，管道就无法关闭。构建工具的 `StreamPumper` 会一直阻塞等待 EOF，导致整个构建卡死。
-
-本工具能精确定位持有继承句柄的孙进程，并提供解决命令。
+加上 `-verbose` 后，还会显示 `stdout` / `stderr` 以及临时脚本路径；加上 `-keep` 后，会保留临时探测文件，便于二次分析。
 
 ## 项目结构
 
+```text
+other-utils/process-tree/
+├── build.sh                  # 一次构建 windows + linux 产物
+├── main.go                   # Windows 入口 + tree 子命令
+├── main_unix.go              # Unix 入口 + shell-check 子命令分发
+├── shell_check_unix.go       # Unix shell 启动链路探测逻辑
+├── shell_check_unix_test.go  # shell-check 单测
+├── go.mod
+├── go.sum
+└── README.md
 ```
-process/
-├── main.go                      # 单文件 Go 应用（所有逻辑）
-├── go.mod                       # Go 模块定义
-├── go.sum                       # 依赖校验和
-├── run_as_admin_interactive.bat # 以管理员权限运行交互模式的辅助脚本
-├── Show-ProcessTree.ps1         # PowerShell 版基础进程树查看脚本
-└── README.md                    # 本文件
-```
 
-## 架构说明 (main.go)
+## 说明
 
-应用在单个文件中按逻辑区块组织：
-
-| 区块 | 说明 |
-|------|------|
-| **数据类型** | WMI 结构体、PipeHolder、ProcessDiag、ProcessNode、TargetReport |
-| **主入口 & CLI** | 参数解析、交互模式、入口函数 |
-| **WMI 查询** | 通过 WMI 枚举进程/线程 |
-| **进程树构建** | buildTree、buildParentChain — 递归构建树 |
-| **句柄扫描** | 基于 NtQuerySystemInformation 的管道句柄枚举 |
-| **管道继承检测** | findPipeHolders — 跨进程管道句柄匹配 |
-| **Jstack** | Java 线程转储捕获 |
-| **诊断分析** | 线程等待状态分析、阻塞检测 |
-| **报告收集** | collectReport — 并行数据采集 |
-| **HTML 生成** | generateHTMLReport — 完整交互式 HTML 报告 |
-| **控制台输出** | printReport — 彩色终端输出 |
-| **工具函数** | 颜色打印、时间格式化、管理员提权 |
-
-## 许可证
-
-内部工具 — 未公开许可。
+- `tree` 依赖 Windows API、WMI 和管理员权限
+- `shell-check` 设计目标是 **检测问题**，不是直接修改用户 shell 配置
+- 如果你想让它尽量保留现场，建议使用 `-keep -verbose`
