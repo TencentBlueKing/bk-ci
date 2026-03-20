@@ -399,11 +399,17 @@ class PipelineTemplateCompatibilityAdapter(
             templateId = templateId,
             permission = AuthPermission.DELETE
         )
+        // 约束模式兼容: 老版本用户传入的可能是源模板版本号,需要转换
+        val resolvedVersion = resolveConstraintVersion(
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
         pipelineTemplateVersionManager.deleteVersion(
             userId = userId,
             projectId = projectId,
             templateId = templateId,
-            version = version
+            version = resolvedVersion
         )
         return true
     }
@@ -419,10 +425,16 @@ class PipelineTemplateCompatibilityAdapter(
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceCreate>
     ): TemplateOperationRet {
+        // 约束模式兼容: 老版本用户传入的可能是源模板版本号,需要转换
+        val resolvedVersion = resolveConstraintVersion(
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
         val request = buildInstancesRequest(
             projectId = projectId,
             templateId = templateId,
-            version = version,
+            version = resolvedVersion,
             useTemplateSettings = useTemplateSettings,
             instances = instances.map {
                 InstanceAdaptInfo(
@@ -437,7 +449,7 @@ class PipelineTemplateCompatibilityAdapter(
             projectId = projectId,
             userId = userId,
             templateId = templateId,
-            version = version,
+            version = resolvedVersion,
             request = request
         )
     }
@@ -608,6 +620,9 @@ class PipelineTemplateCompatibilityAdapter(
 
     /**
      * 根据 version 或 versionName 解析出实际的版本号。
+     *
+     * 对于约束模式(CONSTRAINT)的模板，老版本用户传入的 version 可能是源模板(父模板)的版本号,
+     * 需要通过 srcTemplateVersion 映射到当前模板的实际版本号。
      */
     private fun resolveVersion(
         projectId: String,
@@ -615,7 +630,13 @@ class PipelineTemplateCompatibilityAdapter(
         version: Long?,
         versionName: String?
     ): Long? {
-        if (version != null) return version
+        if (version != null) {
+            return resolveConstraintVersion(
+                projectId = projectId,
+                templateId = templateId,
+                version = version
+            )
+        }
         if (!versionName.isNullOrBlank()) {
             val condition = PipelineTemplateResourceCommonCondition(
                 projectId = projectId,
@@ -628,6 +649,46 @@ class PipelineTemplateCompatibilityAdapter(
             return resource.version
         }
         return null
+    }
+
+    /**
+     * 约束模式(CONSTRAINT)的版本号兼容转换。
+     *
+     * 历史原因: 老版本约束模式模板不记录自身版本号,引用的是源模板(父模板)的版本号。
+     * 新版本约束模式有了自己独立的版本号,同时通过 srcTemplateVersion 字段记录源模板版本号。
+     *
+     * 当用户传入的 version 可能是源模板(父模板)的版本号时,对于 CONSTRAINT 类型的模板,
+     * 需要先尝试按当前模板自身的 version 查找,再尝试按 srcTemplateVersion 查找,以兼容老版本用户的调用。
+     */
+    private fun resolveConstraintVersion(
+        projectId: String,
+        templateId: String,
+        version: Long
+    ): Long {
+        val templateInfo = pipelineTemplateInfoService.get(
+            projectId = projectId,
+            templateId = templateId
+        )
+        // 非约束模式直接返回原版本号
+        if (templateInfo.mode != TemplateType.CONSTRAINT) {
+            return version
+        }
+        // 约束模式: 先尝试按当前模板自身的 version 查找,如果能找到说明传入的就是新版本号
+        val directResource = pipelineTemplateResourceService.getOrNull(
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
+        if (directResource != null) {
+            return version
+        }
+        // 当前模板的 version 中找不到,再尝试按 srcTemplateVersion 查找(兼容老版本传入的源模板版本号)
+        val srcResource = pipelineTemplateResourceService.getOrNullBySrcTemplateVersion(
+            projectId = projectId,
+            templateId = templateId,
+            srcTemplateVersion = version
+        )
+        return srcResource?.version ?: version
     }
 
     /**
