@@ -454,6 +454,10 @@ object ProcessMessageCode {
     // 触发事件缓存过期已清理。若需重放，请到代码库操作。
     const val ERROR_TRIGGER_EVENT_EXPIRED = "2101361"
     const val ERROR_TEMPLATE_MIGRATING = "2101362" // 模板迁移中，不能操作
+    // 非约束流水线不能保存为约束模式
+    const val ERROR_NON_CONSTRAINED_PIPELINE_CANNOT_SAVE_AS_CONSTRAINED = "2101363"
+    // 实例化异常：流水线其他变量[{0}]默认值被改成模版默认值,请联系助手分析
+    const val ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN = "2101364"
     // 分支版本[{0}]不存在, 目标分支不存在或流水线引用的Yaml文件[{1}]在分支[{0}]不存在或已被删除
     const val ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND = "2101378"
     // 分支版本[{0}]不存在, 请检查分支版本是否被成功创建

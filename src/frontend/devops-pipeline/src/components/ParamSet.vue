@@ -6,6 +6,7 @@
             <bk-button
                 theme="primary"
                 text
+                :disabled="disabled"
                 @click="saveAsParamSet()"
             >
                 <i class="devops-icon icon-save" />
@@ -58,7 +59,7 @@
         
         <bk-sideslider
             :is-show.sync="isShowParamSetManageSlide"
-            :width="640"
+            :width="860"
             :close-on-click-modal="false"
             height="100%"
             :show-close="true"
@@ -297,7 +298,7 @@
     import {
         getParamsGroupByLabel
     } from '@/store/modules/atom/paramsConfig'
-    import { allVersionKeyList } from '@/utils/pipelineConst'
+    import { allVersionKeyList, TEMP_PARAM_SET_ID } from '@/utils/pipelineConst'
     import { randomString } from '@/utils/util'
     import { computed, defineComponent, getCurrentInstance, nextTick, onBeforeMount, onMounted, ref, watch, } from 'vue'
     const UNGROUP_NAME = 'unGrouped'
@@ -334,6 +335,10 @@
             allParams: {
                 type: Array,
                 default: []
+            },
+            disabled: {
+                type: Boolean,
+                default: false
             }
         },
         setup (props, ctx) {
@@ -357,13 +362,17 @@
                 params: []
             }
 
-            const LAST_USED_SET = {
+            const LAST_USED_SET = computed(() => ({
                 id: 'LAST_USED',
                 name: proxy.$t('lastUsedParams'),
                 disableEdit: true,
                 params: props.allParams
-            }
+            }))
 
+            // Get temp paramSet from separate store field (won't be wiped by fetchParamSets)
+            const tempParamSet = computed(() => {
+                return proxy.$store.state.atom.tempParamSet
+            })
            
             const activeSet = computed(() => {
                 return paramSetList.value[activeSetIndex.value]
@@ -374,7 +383,7 @@
             const paramSetList = computed(() => {
                 return filteredSets.value.map(set => ({
                     ...set,
-                    paramIds: set.params?.filter(param => !allVersionKeyList.includes(param.id)),
+                    paramIds: set.params?.filter(param => !allVersionKeyList.includes(param.id)).map(param => param.id),
                     versionParams: set.params?.filter(param => allVersionKeyList.includes(param.id)).map(version => ({
                         ...version,
                         category: proxy.$t('versionNum'),
@@ -389,21 +398,28 @@
                 }))
             })
             const paramSetGroup = computed(() => {
-                return paramSetList.value.reduce((acc, set) => {
-                    acc[1].children.push(set)
-                    return acc
-                }, [
-                    {
+                const recentlyUsedChildren = []
+                if (props.useLastParams) {
+                    recentlyUsedChildren.push(LAST_USED_SET.value)
+                }
+                if (tempParamSet.value) {
+                    recentlyUsedChildren.push({
+                        ...tempParamSet.value,
+                        disableEdit: true
+                    })
+                }
+                const groups = []
+                if (recentlyUsedChildren.length) {
+                    groups.push({
                         name: proxy.$t('recentlyUsed'),
-                        children: [
-                            LAST_USED_SET
-                        ]
-                    }, {
-                        name: proxy.$t('paramValueSets'),
-                        children: []
-                    }
-                ])
-
+                        children: recentlyUsedChildren
+                    })
+                }
+                groups.push({
+                    name: proxy.$t('paramValueSets'),
+                    children: [...paramSetList.value]
+                })
+                return groups
             })
             const allParamsMap = computed(() => {
                 return props.allParams.reduce((acc, param) => {
@@ -478,8 +494,11 @@
             })
 
             onMounted(() => {
-                if (props.useLastParams) {
-                    paramSetId.value = LAST_USED_SET.id
+                if (tempParamSet.value) {
+                    paramSetId.value = TEMP_PARAM_SET_ID
+                    applyParamSet()
+                } else if (props.useLastParams) {
+                    paramSetId.value = LAST_USED_SET.value.id
                     applyParamSet()
                 }
             })
@@ -498,16 +517,25 @@
             }
 
             async function applyParamSet () {
-                const isLastUsed = paramSetId.value === LAST_USED_SET.id
-                const set = isLastUsed ? {
-                    ...LAST_USED_SET,
-                    params: LAST_USED_SET.params.filter(param => !allVersionKeyList.includes(param.id)),
-                    versionParams: props.allParams.filter(param => allVersionKeyList.includes(param.id))
-                } : paramSetList.value.find(item => item.id === paramSetId.value)
+                const isLastUsed = paramSetId.value === LAST_USED_SET.value.id
+                const isTempSet = paramSetId.value === TEMP_PARAM_SET_ID
+                const isVirtualSet = isLastUsed || isTempSet
+                let set
+                if (isVirtualSet) {
+                    const sourceParams = isLastUsed ? props.allParams : (tempParamSet.value?.params ?? [])
+                    if (isTempSet && !tempParamSet.value) return
+                    set = {
+                        ...(isLastUsed ? LAST_USED_SET.value : tempParamSet.value),
+                        params: sourceParams.filter(param => !allVersionKeyList.includes(param.id)),
+                        versionParams: sourceParams.filter(param => allVersionKeyList.includes(param.id))
+                    }
+                } else {
+                    set = paramSetList.value.find(item => item.id === paramSetId.value)
+                }
                 if (!set) {
                     return
                 }
-                if (!isLastUsed && !set.params?.length) {
+                if (!isVirtualSet && !set.params?.length) {
                     isApplying.value = true
                     const allParams = await dispatch('fetchParamSetDetail', {
                         projectId: proxy.$route.params.projectId,
@@ -531,7 +559,7 @@
             function showParamSetManageSlide (setId) {
                 const pos = paramSetList.value.findIndex(item => item.id === setId)
                 isShowParamSetManageSlide.value = true
-                console.log(paramSetSelector.value?.close())
+                paramSetSelector.value?.close()
                 if (pos >= 0 && setId) {
                     switchManageSet(pos)
                 }

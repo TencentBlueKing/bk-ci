@@ -3,6 +3,7 @@ package com.tencent.devops.process.service
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
@@ -41,13 +42,15 @@ class SubPipelineCheckService @Autowired constructor(
      * @param pipelineId 流水线id
      * @param userId 目标用户id
      * @param permission 目标权限
+     * @param authResourceType 资源类型
      */
     @SuppressWarnings("NestedBlockDepth")
     fun checkSubPipelinePermission(
         projectId: String,
         pipelineId: String,
         userId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        authResourceType: AuthResourceType? = null
     ): Set<String> {
         val model = subPipelineTaskService.getModel(projectId, pipelineId) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -70,7 +73,8 @@ class SubPipelineCheckService @Autowired constructor(
             elements = elements,
             contextMap = contextMap,
             userId = userId,
-            permission = permission
+            permission = permission,
+            authResourceType = authResourceType
         )
     }
 
@@ -114,13 +118,15 @@ class SubPipelineCheckService @Autowired constructor(
         elements: List<ElementHolder>,
         contextMap: Map<String, String>,
         userId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        authResourceType: AuthResourceType? = null
     ): Set<String> {
         val subPipelineElementMap = distinctSubPipeline(projectId = projectId, elements = elements, contextMap)
         return batchCheckPermission(
             subPipelineElementMap = subPipelineElementMap,
             userId = userId,
-            permission = permission
+            permission = permission,
+            authResourceType = authResourceType
         )
     }
 
@@ -132,7 +138,8 @@ class SubPipelineCheckService @Autowired constructor(
     fun batchCheckPermission(
         userId: String,
         permission: AuthPermission,
-        subPipelineElementMap: Map<SubPipelineIdAndName, MutableList<ElementHolder>>
+        subPipelineElementMap: Map<SubPipelineIdAndName, MutableList<ElementHolder>>,
+        authResourceType: AuthResourceType? = null
     ): Set<String> {
         val errorDetails = mutableSetOf<String>()
         subPipelineElementMap.forEach { (subPipeline, elements) ->
@@ -144,7 +151,8 @@ class SubPipelineCheckService @Autowired constructor(
                 userId = userId,
                 projectId = subPipeline.projectId,
                 pipelineId = subPipeline.pipelineId,
-                permission = permission
+                permission = permission,
+                authResourceType = authResourceType
             )
             val pipelinePermissionUrl = "/console/pipeline/$subProjectId/$subPipelineId/history"
             if (!checkPermission) {

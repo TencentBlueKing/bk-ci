@@ -38,10 +38,10 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
-	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 
 	"github.com/gofrs/flock"
 )

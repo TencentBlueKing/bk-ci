@@ -101,6 +101,10 @@
                 type: Boolean,
                 default: false
             },
+            allPipelineParamValues: {
+                type: Object,
+                default: null
+            },
             paramValues: {
                 type: Object,
                 default: () => ({})
@@ -186,7 +190,7 @@
                                 multiSelect: isMultiple,
                                 value: isMultiple && !Array.isArray(val) ? [] : val,
                                 allIdString: true,
-                                paramValues: this.paramValues,
+                                paramValues: this.allPipelineParamValues || this.paramValues,
                                 affected,
                                 affectedChanged,
                                 affectTips: affectedChanged && Object.keys(affected).length > 0 ? this.$t('relyChanged', [Object.keys(affected).join('/')]) : ''
@@ -260,7 +264,7 @@
                                 : {}
                         ),
                         // eslint-disable-next-line
-                        show: Object.keys(param.displayCondition ?? {}).every((key) => this.isEqual(this.paramValues[key], param.displayCondition[key])),
+                        show: Object.keys(param.displayCondition ?? {}).every((key) => this.isEqual((this.allPipelineParamValues ?? this.paramValues)[key], param.displayCondition[key])),
                         
                     }
                 })
