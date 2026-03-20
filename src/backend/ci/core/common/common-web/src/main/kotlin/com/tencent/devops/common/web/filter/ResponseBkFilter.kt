@@ -37,7 +37,7 @@ import jakarta.ws.rs.ext.Provider
 @Provider
 @RequestFilter
 class ResponseBkFilter : ContainerResponseFilter {
-    
+
     override fun filter(
         requestContext: ContainerRequestContext,
         responseContext: ContainerResponseContext

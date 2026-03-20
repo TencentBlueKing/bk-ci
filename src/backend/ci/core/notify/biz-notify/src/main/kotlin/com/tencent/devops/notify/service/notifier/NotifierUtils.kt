@@ -32,7 +32,7 @@ object NotifierUtils {
      * 根据当前请求渠道对通知内容做关键字替换。
      * 当渠道为 CREATIVE_STREAM 时，将文本中的「流水线」替换为「创作流」（国际化）。
      *
-     * @param content  待处理的文本
+     * @param content 待处理的文本
      * @param language 语言标识（如 zh_CN），用于从国际化资源中获取关键字本地化文本
      * @return 替换后的文本
      */

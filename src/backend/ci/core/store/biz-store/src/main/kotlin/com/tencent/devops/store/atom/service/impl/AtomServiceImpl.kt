@@ -679,7 +679,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val atomRunInfos = codeVersions.map { reqItem ->
             val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, reqItem.atomCode)
             val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, reqItem.version)
-            
             when {
                 atomRunInfoJson.isNullOrBlank() -> {
                     // 缓存不存在，重新设置缓存
@@ -702,7 +701,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 }
             }
         }
-        
         return Result(atomRunInfos)
     }
 
@@ -789,13 +787,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                         pipelineAtomRecord.classifyId
                     }
                 } ?: pipelineAtomRecord.classifyId
-                
                 val atomClassify = classifyService.getClassify(classifyId).data
                 val versionList = getPipelineAtomVersions(projectCode, atomCode).data
                 val atomLabelList = atomLabelService.getLabelsByAtomId(pipelineAtomRecord.id, serviceScope)
                 val atomFeature = atomFeatureDao.getAtomFeature(dslContext, atomCode)
                 val jobType = pipelineAtomRecord.jobType
-                
                 // 构建 serviceScopeDetails（返回所有服务范围的详情信息）
                 val serviceScopeDetails = atomServiceScopeUtil.buildServiceScopeDetails(
                     atomId = pipelineAtomRecord.id,

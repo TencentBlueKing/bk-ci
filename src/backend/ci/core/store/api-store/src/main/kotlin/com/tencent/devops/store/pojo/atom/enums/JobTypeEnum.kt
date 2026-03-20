@@ -28,10 +28,10 @@
 package com.tencent.devops.store.pojo.atom.enums
 
 enum class JobTypeEnum {
-    AGENT,  // 编译环境（PIPELINE）
-    AGENT_LESS,  // 无编译环境（PIPELINE）
-    CREATIVE_STREAM,  // 创作流编译环境（CREATIVE_STREAM）
-    CLOUD_TASK;  // 云任务无编译环境（CREATIVE_STREAM）
+    AGENT, // 编译环境（PIPELINE）
+    AGENT_LESS, // 无编译环境（PIPELINE）
+    CREATIVE_STREAM, // 创作流编译环境（CREATIVE_STREAM）
+    CLOUD_TASK; // 云任务无编译环境（CREATIVE_STREAM）
 
     /**
      * 是否属于「编译环境」类型（对应 VMBuildContainer / MarketBuildAtomElement）。

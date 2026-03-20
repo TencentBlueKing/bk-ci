@@ -41,7 +41,7 @@ import org.jooq.Field
  * 抽象历史条件查询策略
  */
 abstract class AbstractHistoryConditionQueryStrategy : HistoryConditionQueryStrategy {
-    
+
     /**
      * 获取要查询的字段
      */
@@ -96,4 +96,3 @@ abstract class AbstractHistoryConditionQueryStrategy : HistoryConditionQueryStra
         )
     }
 }
-

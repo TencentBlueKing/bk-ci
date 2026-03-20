@@ -97,7 +97,7 @@ object ModelVarRefValidator {
             val taskName = ref.taskName?.takeIf { it.isNotBlank() } ?: ""
             val field = fieldName.ifBlank { "-" }
             val prefix = if (indexPart == "-") "" else "[$indexPart]"
-            if (taskName.isBlank()) "${prefix}:$field" else "${prefix}$taskName:$field"
+            if (taskName.isBlank()) "$prefix:$field" else "$prefix$taskName:$field"
         }
     }
 

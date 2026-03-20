@@ -180,7 +180,7 @@ class MarketAtomDao : AtomBaseDao() {
             ta.NAME,
             ta.JOB_TYPE,
             ta.ATOM_TYPE,
-            classifyIdField.`as`("CLASSIFY_ID"),  // 使用动态分类ID字段
+            classifyIdField.`as`("CLASSIFY_ID"), // 使用动态分类ID字段
             ta.CATEGROY,
             ta.ATOM_CODE,
             ta.VERSION,
@@ -478,7 +478,6 @@ class MarketAtomDao : AtomBaseDao() {
             dslContext = dslContext,
             serviceScopeConfigs = serviceScopeConfigs
         )
-
         val pipelineClassifyCode = serviceScopeConfigs
             .firstOrNull { it.serviceScope == ServiceScopeEnum.PIPELINE }?.classifyCode
             ?: marketAtomUpdateRequest.classifyCode
@@ -487,7 +486,6 @@ class MarketAtomDao : AtomBaseDao() {
             classifyCode = pipelineClassifyCode,
             serviceScope = ServiceScopeEnum.PIPELINE
         ) ?: classifyIdMap?.get(ServiceScopeEnum.PIPELINE.name)
-        
         with(TAtom.T_ATOM) {
             val baseStep = dslContext.update(this)
                 .set(NAME, marketAtomUpdateRequest.name)
@@ -504,15 +502,12 @@ class MarketAtomDao : AtomBaseDao() {
                 .set(HTML_TEMPLATE_VERSION, marketAtomUpdateRequest.frontendType.typeVersion)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
-            
             classifyId?.let {
                 baseStep.set(CLASSIFY_ID, it)
             }
-            
             classifyIdMap?.let {
                 baseStep.set(CLASSIFY_ID_MAP, JsonUtil.toJson(it, formatted = false))
             }
-            
             jobTypeResult.pipelineJobType?.let {
                 baseStep.set(JOB_TYPE, it)
             }
@@ -528,7 +523,7 @@ class MarketAtomDao : AtomBaseDao() {
             baseStep.where(ID.eq(id)).execute()
         }
     }
-    
+
     /**
      * 构建 CLASSIFY_ID_MAP：以用户传入的 serviceScopeConfigs 为准，从零构建新的 map。
      * 插件升级时，CLASSIFY_ID_MAP 的值应完全以用户传入的服务范围配置为准，
@@ -761,7 +756,6 @@ class MarketAtomDao : AtomBaseDao() {
         val tAtom = TAtom.T_ATOM
         val tAtomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
         val tClassify = TClassify.T_CLASSIFY
-        
         return dslContext.select(
             tAtom.ATOM_CODE,
             tAtom.NAME,

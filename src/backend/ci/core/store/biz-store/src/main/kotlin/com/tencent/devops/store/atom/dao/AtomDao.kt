@@ -633,7 +633,6 @@ class AtomDao : AtomBaseDao() {
             tAtom = tAtom,
             tStoreProjectRel = tStoreProjectRel,
             tAtomFeature = tAtomFeature,
-            tStoreStatisticsTotal = tStoreStatisticsTotal,
             param = param
         )
 
@@ -788,13 +787,11 @@ class AtomDao : AtomBaseDao() {
         tAtom: TAtom,
         tStoreProjectRel: TStoreProjectRel,
         tAtomFeature: TAtomFeature,
-        tStoreStatisticsTotal: TStoreStatisticsTotal,
         param: AtomQueryParam
     ): AtomConditionSet {
         val effectiveProjectCode = if (param.queryProjectAtomFlag) param.projectCode else null
-        val includeTestAtom = !param.projectCode.isNullOrBlank()
-            && (param.queryProjectAtomFlag || !param.keyword.isNullOrBlank())
-
+        val includeTestAtom =
+            !param.projectCode.isNullOrBlank() && (param.queryProjectAtomFlag || !param.keyword.isNullOrBlank())
         val defaultConditions = buildDefaultConditions(
             tAtom = tAtom,
             tAtomFeature = tAtomFeature,
@@ -1016,15 +1013,13 @@ class AtomDao : AtomBaseDao() {
         serviceScope: ServiceScopeEnum?
     ): Condition {
         val osMapKey = resolveOsMapKey(jobType, serviceScope)
-
         if (osMapKey == null || osMapKey == JobTypeEnum.AGENT.name) {
             return tAtom.OS.contains(os)
         }
-
         val osInMapCondition = DSL.condition(
             "JSON_CONTAINS(JSON_EXTRACT({0}, {1}), CONCAT('\"', {2}, '\"'))",
             tAtom.OS_MAP,
-            DSL.inline("\$.${osMapKey}"),
+            DSL.inline("\$.$osMapKey"),
             DSL.inline(os)
         )
         return osInMapCondition.or(tAtom.OS.contains(os))
@@ -1600,15 +1595,15 @@ class AtomDao : AtomBaseDao() {
 
     /**
      * 构建 SERVICE_SCOPE 查询条件（优化版本，使用 JSON_CONTAINS 替代 contains）
-     * 
+     *
      * 性能优化：
      * - 使用 JSON_CONTAINS 进行精确匹配，避免字符串包含查询的全表扫描
      * - 支持大小写兼容查询（标准格式为大写，兼容小写格式的现有数据）
-     * 
+     *
      * 格式标准：
      * - 统一使用大写格式存储，如 ["PIPELINE"]、"CREATIVE_STREAM"
      * - 查询时同时匹配大写格式（标准格式）和小写格式（兼容现有数据）
-     * 
+     *
      * @param serviceScopeField SERVICE_SCOPE 字段
      * @param serviceScope 服务范围值，支持大小写（会自动标准化为大写）
      * @return 查询条件，如果不需要过滤则返回 null

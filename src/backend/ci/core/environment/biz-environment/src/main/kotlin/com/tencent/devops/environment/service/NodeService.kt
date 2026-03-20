@@ -585,12 +585,14 @@ class NodeService @Autowired constructor(
                 userId, projectId,
                 permissions = setOf(AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
             )
+
             val canViewNodeIds = environmentPermissionService.listNodeByRbacPermission(
                 userId = userId,
                 projectId = projectId,
                 nodeRecordList = nodeRecordList,
                 authPermission = AuthPermission.VIEW
             ).map { it.nodeId }
+
             val canUseNodeIds = if (permissionMap.containsKey(AuthPermission.USE)) {
                 permissionMap[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
             } else {
@@ -606,15 +608,15 @@ class NodeService @Autowired constructor(
             } else {
                 emptyList()
             }
-            val listResult = environmentPermissionService.listNodeByRbacPermission(
+            val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
                 userId = userId,
                 projectId = projectId,
                 nodeRecordList = nodeRecordList,
                 authPermission = AuthPermission.LIST
             )
-            if (listResult.isEmpty()) return emptyList()
+            if (nodeListResult.isEmpty()) return emptyList()
             NodeListWithPermission(
-                nodesToReturn = listResult,
+                nodesToReturn = nodeListResult,
                 canViewNodeIds = canViewNodeIds,
                 canUseNodeIds = canUseNodeIds,
                 canEditNodeIds = canEditNodeIds,

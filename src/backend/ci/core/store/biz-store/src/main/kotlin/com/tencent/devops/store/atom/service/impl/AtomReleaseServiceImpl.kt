@@ -366,25 +366,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        // 转换为服务范围配置列表
-        val serviceScopeConfigs = marketAtomUpdateRequest.toServiceScopeConfigs()
-        serviceScopeConfigs.forEach { config ->
-            // 1. 验证分类是否存在且匹配服务范围
-            classifyDao.getClassifyByCode(
-                dslContext = dslContext,
-                classifyCode = config.classifyCode,
-                type = StoreTypeEnum.ATOM,
-                serviceScope = config.serviceScope
-            ) ?: throw IllegalArgumentException("Classify not found: ${config.classifyCode} for scope: ${config.serviceScope}")
-
-            // 2. 验证标签是否存在且匹配服务范围
-            config.labelIdList?.forEach { labelId ->
-                labelDao.getLabel(
-                    dslContext = dslContext,
-                    id = labelId
-                ) ?: throw IllegalArgumentException("Label not found: $labelId for scope: ${config.serviceScope}")
-            }
-        }
         val atomRecord = atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
         val atomPackageSourceType = getAtomPackageSourceType(atomRecord.repositoryHashId)
         logger.info("updateMarketAtom atomPackageSourceType is :$atomPackageSourceType")
@@ -452,6 +433,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
         // 校验前端传的版本号是否正确
         val osList = convertUpdateRequest.os
+        val serviceScopeConfigs = marketAtomUpdateRequest.toServiceScopeConfigs()
         val effectiveOsList = if (osList.isEmpty() && serviceScopeConfigs.isNotEmpty()) {
             val allOs = linkedSetOf<String>()
             for (config in serviceScopeConfigs) {

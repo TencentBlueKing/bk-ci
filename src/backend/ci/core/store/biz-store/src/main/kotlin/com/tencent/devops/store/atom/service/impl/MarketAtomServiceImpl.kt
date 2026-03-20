@@ -821,7 +821,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val flag = storeUserService.isCanInstallStoreComponent(defaultFlag, userId, atomCode, StoreTypeEnum.ATOM)
             val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, atomCode, StoreTypeEnum.ATOM)
             val feature = marketAtomFeatureDao.getAtomFeature(dslContext, atomCode)
-            
             // 单个字段（classifyCode、classifyName、labelList、jobType）根据传入的 serviceScope 返回对应的值
             // 如果没有传入 serviceScope，则使用 PIPELINE 服务范围的值
             val classifyCode = record[tClassify.CLASSIFY_CODE]
@@ -832,7 +831,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     defaultMessage = classifyName
                 )
             } else classifyName
-            
             val jobType = record[tAtom.JOB_TYPE]
             val labelList = atomLabelService.getLabelsByAtomId(atomId, serviceScope) ?: emptyList()
             // serviceScopeDetails 返回所有 scope 的详情（包含分类名称和标签对象）

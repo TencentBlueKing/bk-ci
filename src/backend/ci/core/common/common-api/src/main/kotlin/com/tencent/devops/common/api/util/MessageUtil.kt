@@ -106,9 +106,9 @@ object MessageUtil {
      * 例如 notify 模块从 DB 模板获取的通知标题和正文。
      * 渠道取值：优先使用 [channel]；若为 null 则从 [ChannelContext.getChannel()] 获取。
      *
-     * @param message  待处理的文本，可能为 null 或空白
+     * @param message 待处理的文本，可能为 null 或空白
      * @param language 语言标识（如 zh_CN），用于从国际化资源中获取关键字本地化文本
-     * @param channel  可选，渠道标识（与 ChannelCode.name 一致）；为 null 时从 ChannelContext 读取
+     * @param channel 可选，渠道标识（与 ChannelCode.name 一致）；为 null 时从 ChannelContext 读取
      * @return 替换后的文本；若渠道不匹配、消息为空或发生异常，则原样返回
      */
     fun replaceKeywordByChannel(
@@ -149,8 +149,8 @@ object MessageUtil {
      * 异步/MQ 等场景下 Context 常为空，调用 [getMessageByLocale] 时建议传入 [channel] 或入口处使用 [ChannelContext.withChannel]。
      *
      * @param resourceBundle 当前语言环境对应的国际化资源包，包含关键字的本地化文本
-     * @param message        待处理的国际化消息文本，可能为 null 或空白
-     * @param messageCode    消息编码，仅用于异常时的日志记录，方便定位问题
+     * @param message 待处理的国际化消息文本，可能为 null 或空白
+     * @param messageCode 消息编码，仅用于异常时的日志记录，方便定位问题
      * @param channelOverride 可选，渠道标识（与 ChannelCode.name 一致）；为 null 时从 ChannelContext 读取
      * @return 替换后的消息文本；若渠道不匹配、消息为空、或替换过程中发生异常，则原样返回
      */

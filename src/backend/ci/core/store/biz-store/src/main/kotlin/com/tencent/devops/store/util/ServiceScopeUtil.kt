@@ -33,51 +33,51 @@ import org.slf4j.LoggerFactory
 /**
  * 服务范围工具类
  * 用于处理 SERVICE_SCOPE 字段的大小写兼容性问题
- * 
+ *
  * 统一使用大写格式存储，如 ["PIPELINE"、"CREATIVE_STREAM"]
  * 支持读取小写格式的数据，但统一转换为大写格式存储
  */
 object ServiceScopeUtil {
-    
+
     private val logger = LoggerFactory.getLogger(ServiceScopeUtil::class.java)
-    
+
     /**
      * 从JSON字符串解析服务范围列表（自动标准化）
-     * 
+     *
      * @param serviceScopeJson 服务范围JSON字符串
      * @return 标准化后的服务范围列表（统一大写）
      */
     @Suppress("UNCHECKED_CAST")
     fun parseServiceScopes(serviceScopeJson: String?): List<String> {
         if (serviceScopeJson.isNullOrBlank()) return emptyList()
-        
+
         try {
-            val serviceScopes = JsonUtil.toOrNull(serviceScopeJson, List::class.java) as? List<String>
-                ?: return emptyList()
-            
+            val serviceScopes =
+                JsonUtil.toOrNull(serviceScopeJson, List::class.java) as? List<String> ?: return emptyList()
+
             return normalizeList(serviceScopes)
         } catch (e: Exception) {
             logger.warn("Failed to parse serviceScope: $serviceScopeJson", e)
             return emptyList()
         }
     }
-    
+
     /**
      * 标准化服务范围值（统一转换为大写）
-     * 
+     *
      * @param value 原始值，支持 "PIPELINE"、"pipeline"、"Pipeline" 等
      * @return 标准化后的大写值，如果无法识别则返回原值的大写形式
      */
     fun normalize(value: String?): String? {
         if (value.isNullOrBlank()) return value
-        
+
         // 已知的服务范围值，统一转换为大写
         return value.uppercase()
     }
-    
+
     /**
      * 标准化服务范围列表（统一转换为大写）
-     * 
+     *
      * @param values 原始值列表
      * @return 标准化后的大写值列表
      */
@@ -85,10 +85,10 @@ object ServiceScopeUtil {
         if (values.isNullOrEmpty()) return emptyList()
         return values.mapNotNull { normalize(it) }
     }
-    
+
     /**
      * 将服务范围列表转换为JSON字符串（统一使用大写）
-     * 
+     *
      * @param serviceScopes 服务范围列表
      * @return JSON字符串，如 ["PIPELINE","CREATIVE_STREAM"]
      */
@@ -97,10 +97,10 @@ object ServiceScopeUtil {
         val normalized = normalizeList(serviceScopes)
         return JsonUtil.toJson(normalized, formatted = false)
     }
-    
+
     /**
      * 检查服务范围列表是否为空或无效
-     * 
+     *
      * @param serviceScopeJson 服务范围JSON字符串
      * @return 是否为空或无效
      */

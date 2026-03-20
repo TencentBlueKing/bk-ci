@@ -51,10 +51,11 @@ import org.jooq.impl.DSL
  */
 @Suppress("ALL")
 abstract class AtomBaseDao {
+
     /**
      * 构建 JSON_EXTRACT/JSON_CONTAINS 的路径，统一输出 "$.SCOPE_KEY" 形式。
      */
-    private fun buildScopeJsonPath(scopeKey: String): String = "\$.${scopeKey}"
+    private fun buildScopeJsonPath(scopeKey: String): String = "\$.$scopeKey"
 
     /**
      * 构建 JSON_CONTAINS 条件（避免 DSL.inline 对双引号的转义问题）。
@@ -191,7 +192,7 @@ abstract class AtomBaseDao {
 
     /**
      * 根据 classifyCode 查询 CLASSIFY_ID 的公共方法
-     * 
+     *
      * @param dslContext DSL上下文
      * @param classifyCode 分类代码
      * @param serviceScope 服务范围，为 null 时不按 scope 过滤
@@ -233,7 +234,7 @@ abstract class AtomBaseDao {
 
     /**
      * 根据服务范围构建分类ID字段表达式
-     * 
+     *
      * - serviceScope 为 null 或 PIPELINE 时，使用 CLASSIFY_ID 字段（性能最好，有索引）
      * - serviceScope 为其他时，从 CLASSIFY_ID_MAP JSON 字段中提取对应的分类ID
      */
@@ -242,7 +243,6 @@ abstract class AtomBaseDao {
         serviceScope: ServiceScopeEnum?
     ): Field<String> {
         val normalizedScope = serviceScope?.let { ServiceScopeUtil.normalize(it.name) }
-        
         return if (normalizedScope == null || normalizedScope == ServiceScopeEnum.PIPELINE.name) {
             ta.CLASSIFY_ID
         } else {
@@ -258,11 +258,11 @@ abstract class AtomBaseDao {
 
     /**
      * 构建分类查询条件（支持多服务范围）
-     * 
+     *
      * 根据 serviceScope 参数动态构建分类过滤条件：
      * - 如果 serviceScope 是 PIPELINE，使用 CLASSIFY_ID 字段查询
      * - 如果 serviceScope 是其他，从 CLASSIFY_ID_MAP 中查询
-     * 
+     *
      * @param ta TAtom 表
      * @param classifyId 分类ID
      * @param serviceScope 服务范围
@@ -297,11 +297,11 @@ abstract class AtomBaseDao {
 
     /**
      * 构建 T_ATOM 和 T_CLASSIFY 的关联条件（支持 CLASSIFY_ID_MAP）
-     * 
+     *
      * 根据 serviceScope 参数动态构建关联条件：
      * - 如果 serviceScope 是 PIPELINE，优先使用 CLASSIFY_ID 字段关联
      * - 如果 serviceScope 是其他，从 CLASSIFY_ID_MAP 中提取对应的分类ID进行关联
-     * 
+     *
      * @param ta TAtom 表
      * @param tc TClassify 表
      * @param serviceScope 服务范围，如果为null则默认使用 PIPELINE
