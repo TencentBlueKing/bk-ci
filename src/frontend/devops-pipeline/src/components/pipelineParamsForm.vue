@@ -176,7 +176,7 @@
             paramList () {
                 return this.params.map(param => {
                     let restParam = {}
-                    if (param.type !== STRING || param.type !== TEXTAREA) {
+                    if (param.type !== STRING && param.type !== TEXTAREA) {
                         if (isRemoteType(param)) {
                             const isMultiple = param.type === 'MULTIPLE'
                             const val = (isMultiple && typeof this.paramValues?.[param.id] === 'string') ? this.paramValues[param.id].split(',').filter(i => i !== '') : this.paramValues?.[param.id]
@@ -367,7 +367,7 @@
                 return false
             },
             async validateAll () {
-                const refsList = this.sortCategory ? this.$refs.categoryRenderParam : this.$refs.renderParam
+                const refsList = this.sortCategory ? (this.$refs.categoryRenderParam ?? []) : (this.$refs.renderParam ?? [])
                 for (let i = 0; i < refsList.length; i++) {
                     const ref = refsList[i]
                     const res = await ref.$validator?.validateAll?.()

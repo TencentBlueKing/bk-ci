@@ -607,7 +607,10 @@
                 }
             },
             handleChange (type, name, value) {
-                this[`${type}Values`][name] = value
+                this[`${type}Values`] = {
+                    ...this[`${type}Values`],
+                    [name]: value
+                }
                 this.setExecuteParams({
                     pipelineId: this.pipelineId,
                     params: {
@@ -673,7 +676,7 @@
                 let message, theme
                 const paramsValid = await this.handleValidate()
                 if (!paramsValid) return
-                const params = this.getExecuteParams(this.pipelineId)
+                const params = this.getExecuteParams(this.pipelineId) ?? {}
                 Object.keys(params).forEach(key => {
                     if (key !== 'buildNo' && isObject(params[key])) {
                         params[key] = JSON.stringify(params[key])

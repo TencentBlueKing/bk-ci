@@ -6,6 +6,7 @@
             <bk-button
                 theme="primary"
                 text
+                :disabled="disabled"
                 @click="saveAsParamSet()"
             >
                 <i class="devops-icon icon-save" />
@@ -334,6 +335,10 @@
             allParams: {
                 type: Array,
                 default: []
+            },
+            disabled: {
+                type: Boolean,
+                default: false
             }
         },
         setup (props, ctx) {
