@@ -221,7 +221,8 @@ class SubPipelineStartUpService @Autowired constructor(
             triggerUser = triggerUser,
             runMode = runMode,
             parentExecuteCount = executeCount,
-            pipelineResource = subPipelineResource
+            pipelineResource = subPipelineResource,
+            branch = branch
         )
         pipelineTaskService.updateSubBuildId(
             projectId = projectId,
@@ -257,7 +258,8 @@ class SubPipelineStartUpService @Autowired constructor(
         triggerUser: String? = null,
         runMode: String,
         parentExecuteCount: Int?,
-        pipelineResource: PipelineResourceVersion?
+        pipelineResource: PipelineResourceVersion?,
+        branch: String?
     ): BuildId {
         val readyToBuildPipelineInfo = getPipelineInfo(
             projectId = projectId,
@@ -362,7 +364,13 @@ class SubPipelineStartUpService @Autowired constructor(
                 pipelineParamMap = params,
                 channelCode = channelCode,
                 isMobile = isMobile,
-                resource = resource,
+                resource = resource.let {
+                    if (!branch.isNullOrBlank()) {
+                        it.copy(versionName = branch)
+                    } else {
+                        it
+                    }
+                },
                 frequencyLimit = false,
                 signPipelineVersion = resource.version
             )
