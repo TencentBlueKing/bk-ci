@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PA
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.VarRefDetail
 import com.tencent.devops.common.redis.RedisLock
@@ -119,7 +119,7 @@ class PublicVarReferInfoService @Autowired constructor(
                     userId = request.userId,
                     projectId = request.projectId,
                     resourceId = request.resourceId,
-                    referType = PublicVerGroupReferenceTypeEnum.valueOf(request.resourceType),
+                    referType = PublicVarGroupReferenceTypeEnum.valueOf(request.resourceType),
                     resourceVersion = request.resourceVersion,
                     model = request.model,
                     varRefDetails = request.varRefDetails
@@ -157,7 +157,7 @@ class PublicVarReferInfoService @Autowired constructor(
         userId: String,
         projectId: String,
         resourceId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
+        referType: PublicVarGroupReferenceTypeEnum,
         resourceVersion: Int,
         model: Model,
         varRefDetails: List<VarRefDetail>

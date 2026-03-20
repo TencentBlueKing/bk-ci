@@ -30,7 +30,7 @@ package com.tencent.devops.process.service.pipeline.version.handler
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -123,7 +123,7 @@ class PipelineBranchCreateHandler @Autowired constructor(
                 projectId = projectId,
                 model = pipelineResourceWithoutVersion.model,
                 referId = pipelineId,
-                referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
+                referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
                 referName = pipelineBasicInfo.pipelineName,
                 referVersion = resourceOnlyVersion.version,
                 referVersionName = resourceOnlyVersion.versionName

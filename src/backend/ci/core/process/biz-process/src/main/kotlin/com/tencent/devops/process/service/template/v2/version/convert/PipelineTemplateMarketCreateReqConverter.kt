@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.template.UpgradeStrategyEnum
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -181,7 +181,7 @@ class PipelineTemplateMarketCreateReqConverter @Autowired constructor(
                 publicVarGroupReferManageService.handleCrossProjectVarGroup(
                     projectId = marketTemplateProjectId,
                     referId = marketTemplateId,
-                    referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
+                    referType = PublicVarGroupReferenceTypeEnum.TEMPLATE,
                     referVersion = finalMarketTemplateVersion.toInt(),
                     model = model
                 )

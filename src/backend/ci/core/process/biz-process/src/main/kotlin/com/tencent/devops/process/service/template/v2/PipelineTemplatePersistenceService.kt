@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.constant.PipelineTemplateConstant
@@ -327,7 +327,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                         projectId = projectId,
                         model = it,
                         referId = templateId,
-                        referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
+                        referType = PublicVarGroupReferenceTypeEnum.TEMPLATE,
                         referName = pipelineTemplateInfo.name,
                         referVersion = pipelineTemplateResource.version.toInt(),
                         referVersionName = pipelineTemplateResource.versionName ?: ""

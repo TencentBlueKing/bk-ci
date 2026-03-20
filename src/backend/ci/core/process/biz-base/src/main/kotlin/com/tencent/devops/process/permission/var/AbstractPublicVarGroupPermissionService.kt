@@ -47,6 +47,14 @@ abstract class AbstractPublicVarGroupPermissionService constructor(
         return true
     }
 
+    override fun getResourcesByPermission(
+        userId: String,
+        projectId: String,
+        permissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>> {
+        TODO("Not yet implemented")
+    }
+
     override fun checkPublicVarGroupPermissions(
         userId: String,
         projectId: String,

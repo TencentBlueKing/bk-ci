@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.pipeline.enums
 
-enum class PublicVerGroupReferenceTypeEnum {
+enum class PublicVarGroupReferenceTypeEnum {
     PIPELINE, // 流水线
     TEMPLATE; // 模板
 }

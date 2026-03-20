@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.pojo.`var`.`do`
 
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
@@ -40,7 +40,7 @@ data class PublicGroupVarRefDO(
     @get:Schema(title = "引用链接")
     val referUrl: String,
     @get:Schema(title = "引用类型")
-    val referType: PublicVerGroupReferenceTypeEnum,
+    val referType: PublicVarGroupReferenceTypeEnum,
     @get:Schema(title = "创建人")
     val creator: String,
     @get:Schema(title = "最近更新人")

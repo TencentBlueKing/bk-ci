@@ -28,12 +28,15 @@
 package com.tencent.devops.process.service.template.v2.version.hander
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
 import com.tencent.devops.process.pojo.template.v2.PTemplateResourceOnlyVersion
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.template.v2.PipelineTemplateGenerator
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateModelLock
@@ -96,6 +99,22 @@ class PipelineTemplateReleaseCreateHandler @Autowired constructor(
             resourceOnlyVersion
         } else {
             createReleaseVersion()
+        }
+
+        // 同步变量组引用关系
+        (pTemplateResourceWithoutVersion.model as? Model)?.let {
+            publicVarGroupReferManageService.handleVarGroupReferBus(
+                PublicVarGroupReferDTO(
+                    userId = userId,
+                    projectId = projectId,
+                    model = it,
+                    referId = templateId,
+                    referType = PublicVarGroupReferenceTypeEnum.TEMPLATE,
+                    referName = pipelineTemplateInfo.name,
+                    referVersion = resourceOnlyVersion.version.toInt(),
+                    referVersionName = resourceOnlyVersion.versionName ?: ""
+                )
+            )
         }
 
         return DeployTemplateResult(

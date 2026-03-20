@@ -53,7 +53,7 @@ import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
@@ -881,7 +881,7 @@ class PipelineRepositoryService constructor(
                         projectId = projectId,
                         model = model,
                         referId = pipelineId,
-                        referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
+                        referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
                         referName = model.name,
                         referVersion = 1,
                         referVersionName = versionName ?: ""
@@ -1268,7 +1268,7 @@ class PipelineRepositoryService constructor(
                         projectId = projectId,
                         model = model,
                         referId = pipelineId,
-                        referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
+                        referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
                         referName = model.name,
                         referVersion = version,
                         referVersionName = versionName
@@ -1832,7 +1832,7 @@ class PipelineRepositoryService constructor(
             publicVarGroupReferManageService.deletePublicVerGroupRefByReferId(
                 referId = pipelineId,
                 projectId = projectId,
-                referType = PublicVerGroupReferenceTypeEnum.PIPELINE
+                referType = PublicVarGroupReferenceTypeEnum.PIPELINE
             )
             templatePipelineDao.get(
                 dslContext = dslContext,

@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.pojo.`var`.po
 
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
@@ -43,7 +43,7 @@ data class VarGroupReferUpdateContext(
     @get:Schema(title = "引用资源ID")
     val referId: String,
     @get:Schema(title = "引用资源类型")
-    val referType: PublicVerGroupReferenceTypeEnum,
+    val referType: PublicVarGroupReferenceTypeEnum,
     @get:Schema(title = "引用资源版本号")
     val referVersion: Int,
     @get:Schema(title = "需要删除的引用记录")

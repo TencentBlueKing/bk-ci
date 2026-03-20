@@ -35,7 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupVariable
 import com.tencent.devops.common.redis.RedisLock
@@ -782,7 +782,7 @@ class PublicVarGroupService @Autowired constructor(
         userId: String,
         projectId: String,
         referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
+        referType: PublicVarGroupReferenceTypeEnum,
         referVersion: Int
     ): Result<List<PipelineRefPublicVarGroupDO>> {
         try {

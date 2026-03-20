@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.redis.RedisLock
@@ -95,7 +95,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
     private fun createReferLock(
         projectId: String,
         referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
+        referType: PublicVarGroupReferenceTypeEnum,
         referVersion: Int? = null
     ): RedisLock {
         val lockKey = if (referVersion != null) {
@@ -118,7 +118,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
     fun deletePublicVerGroupRefByReferId(
         projectId: String,
         referId: String,
-        referType: PublicVerGroupReferenceTypeEnum
+        referType: PublicVarGroupReferenceTypeEnum
     ) {
         // 使用分布式锁保护整个删除流程
         val lock = createReferLock(
@@ -168,7 +168,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
     private fun getSourceProjectId(
         projectId: String,
         referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
+        referType: PublicVarGroupReferenceTypeEnum,
         referHasSource: Boolean
     ): String {
         // 如果referHasSource为false，直接返回当前projectId
@@ -178,11 +178,11 @@ class PublicVarGroupReferManageService @Autowired constructor(
 
         return try {
             when (referType) {
-                PublicVerGroupReferenceTypeEnum.TEMPLATE -> {
+                PublicVarGroupReferenceTypeEnum.TEMPLATE -> {
                     // 模板类型：直接查询T_TEMPLATE.SRC_TEMPLATE_ID
                     getSourceProjectIdForTemplate(projectId, referId)
                 }
-                PublicVerGroupReferenceTypeEnum.PIPELINE -> {
+                PublicVarGroupReferenceTypeEnum.PIPELINE -> {
                     // 流水线类型：先查询T_TEMPLATE_PIPELINE判断是否为模板实例
                     getSourceProjectIdForPipeline(projectId, referId)
                 }
@@ -325,7 +325,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
     fun handleCrossProjectVarGroup(
         projectId: String,
         referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
+        referType: PublicVarGroupReferenceTypeEnum,
         referVersion: Int,
         model: Model
     ) {
@@ -749,7 +749,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
         userId: String,
         projectId: String,
         referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
+        referType: PublicVarGroupReferenceTypeEnum,
         referVersion: Int
     ) {
         // 使用版本级别的分布式锁保护整个删除流程

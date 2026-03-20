@@ -29,7 +29,7 @@ package com.tencent.devops.process.service.`var`
 
 import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupVersionSummaryDao
 import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
@@ -87,7 +87,7 @@ class PublicVarGroupReferCountService @Autowired constructor(
     fun batchRemoveReferInfo(
         projectId: String,
         referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
+        referType: PublicVarGroupReferenceTypeEnum,
         referInfosToDelete: List<ResourcePublicVarGroupReferPO>,
         referVersion: Int? = null
     ) {
@@ -113,32 +113,23 @@ class PublicVarGroupReferCountService @Autowired constructor(
             // 注意：外层（PublicVarGroupReferManageService）已经提供了锁保护，这里不需要再加锁
             // 在同一个事务中完成单个变量组的引用删除和计数更新
             executeWithTransaction { context ->
-                // 1. 删除变量引用记录
-                if (referVersion != null) {
-                    // 删除指定版本
-                    publicVarReferInfoDao.deleteByReferIdAndVersion(
-                        dslContext = context,
-                        projectId = projectId,
-                        referId = referId,
-                        referType = referType,
-                        referVersion = referVersion
-                    )
-                } else {
-                    // 删除所有版本
-                    publicVarReferInfoDao.deleteByReferId(
-                        dslContext = context,
-                        projectId = projectId,
-                        referId = referId,
-                        referType = referType
-                    )
-                }
-
-                // 2. 删除变量组引用记录
-                publicVarGroupReferInfoDao.deleteByReferId(
+                // 1. 删除当前变量组的变量引用记录（按 groupName 隔离）
+                publicVarReferInfoDao.deleteByReferIdAndGroup(
                     dslContext = context,
                     projectId = projectId,
                     referId = referId,
                     referType = referType,
+                    groupName = groupName,
+                    referVersion = referVersion
+                )
+
+                // 2. 删除当前变量组的引用记录（按 groupName 隔离）
+                publicVarGroupReferInfoDao.deleteByReferIdAndGroup(
+                    dslContext = context,
+                    projectId = projectId,
+                    referId = referId,
+                    referType = referType,
+                    groupName = groupName,
                     referVersion = referVersion
                 )
 
@@ -212,12 +203,18 @@ class PublicVarGroupReferCountService @Autowired constructor(
     }
 
     /**
-     * 减少引用计数（增量更新，确保不会变为负数）
+     * 减少引用计数（原子操作，确保不会变为负数）
+     *
+     * 直接使用 DAO 层的原子 incrementReferCount（传负数）实现递减，
+     * 无需先 SELECT 再判断——消除了 TOCTOU 竞态窗口。
+     * DAO 层在 countChange < 0 时自动附加 WHERE REFER_COUNT + countChange >= 0 条件，
+     * 保证计数不会变为负数；若条件不满足则 UPDATE 返回 0 行（即跳过）。
+     *
      * @param context 数据库上下文
      * @param projectId 项目ID
      * @param groupName 变量组名称
      * @param version 版本号（动态版本为-1）
-     * @param countChange 减少的数量
+     * @param countChange 减少的数量（正数，方法内部取反）
      */
     fun decrementReferCount(
         context: DSLContext,
@@ -226,41 +223,19 @@ class PublicVarGroupReferCountService @Autowired constructor(
         version: Int,
         countChange: Int
     ) {
-        val existingSummary = publicVarGroupVersionSummaryDao.getByGroupNameAndVersion(
+        val updatedRows = publicVarGroupVersionSummaryDao.incrementReferCount(
             dslContext = context,
             projectId = projectId,
             groupName = groupName,
-            version = version
+            version = version,
+            countChange = -countChange,
+            modifier = SYSTEM
         )
-
-        if (existingSummary == null) {
+        if (updatedRows == 0) {
             logger.warn(
-                "Summary record not found for decrement, projectId: $projectId, " +
-                        "groupName: $groupName, version: $version"
-            )
-            return
-        }
-
-        val newCount = existingSummary.referCount - countChange
-        if (newCount < 0) {
-            // 将计数设置为0
-            publicVarGroupVersionSummaryDao.updateReferCount(
-                dslContext = context,
-                projectId = projectId,
-                groupName = groupName,
-                version = version,
-                referCount = 0,
-                modifier = SYSTEM
-            )
-        } else {
-            // 使用增量减少
-            publicVarGroupVersionSummaryDao.incrementReferCount(
-                dslContext = context,
-                projectId = projectId,
-                groupName = groupName,
-                version = version,
-                countChange = -countChange,
-                modifier = SYSTEM
+                "Decrement skipped (record not found or count would go negative), " +
+                        "projectId: $projectId, groupName: $groupName, " +
+                        "version: $version, countChange: $countChange"
             )
         }
     }

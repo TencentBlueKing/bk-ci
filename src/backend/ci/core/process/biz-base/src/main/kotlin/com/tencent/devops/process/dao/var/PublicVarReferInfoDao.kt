@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.dao.`var`
 
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.model.process.tables.TResourcePublicVarReferInfo
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarReferPO
 import org.jooq.DSLContext
@@ -100,7 +100,7 @@ class PublicVarReferInfoDao {
         dslContext: DSLContext,
         projectId: String,
         referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
+        referType: PublicVarGroupReferenceTypeEnum,
         referVersionName: String? = null
     ) {
         with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
@@ -119,30 +119,34 @@ class PublicVarReferInfoDao {
     }
 
     /**
-     * 根据引用ID和变量组删除变量引用记录
+     * 根据引用ID和变量组名删除变量引用记录（支持可选版本过滤）
      * @param dslContext 数据库上下文
      * @param projectId 项目ID
      * @param referId 引用ID
      * @param referType 引用类型
      * @param groupName 变量组名
-     * @param referVersion 引用版本
+     * @param referVersion 引用版本（可选，为null时删除该组所有版本的引用）
      */
     fun deleteByReferIdAndGroup(
         dslContext: DSLContext,
         projectId: String,
         referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
+        referType: PublicVarGroupReferenceTypeEnum,
         groupName: String,
-        referVersion: Int
+        referVersion: Int? = null
     ) {
         with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
-            dslContext.deleteFrom(this)
+            val deleteQuery = dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REFER_ID.eq(referId))
                 .and(REFER_TYPE.eq(referType.name))
                 .and(GROUP_NAME.eq(groupName))
-                .and(REFER_VERSION.eq(referVersion))
-                .execute()
+
+            if (referVersion != null) {
+                deleteQuery.and(REFER_VERSION.eq(referVersion))
+            }
+
+            deleteQuery.execute()
         }
     }
 
@@ -159,7 +163,7 @@ class PublicVarReferInfoDao {
         dslContext: DSLContext,
         projectId: String,
         referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
+        referType: PublicVarGroupReferenceTypeEnum,
         groupNames: List<String>,
         referVersion: Int
     ) {
@@ -189,7 +193,7 @@ class PublicVarReferInfoDao {
         dslContext: DSLContext,
         projectId: String,
         referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
+        referType: PublicVarGroupReferenceTypeEnum,
         referVersion: Int
     ) {
         with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
@@ -216,7 +220,7 @@ class PublicVarReferInfoDao {
         dslContext: DSLContext,
         projectId: String,
         referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
+        referType: PublicVarGroupReferenceTypeEnum,
         groupName: String,
         referVersion: Int,
         varNames: List<String>
@@ -251,7 +255,7 @@ class PublicVarReferInfoDao {
         dslContext: DSLContext,
         projectId: String,
         referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
+        referType: PublicVarGroupReferenceTypeEnum,
         referVersion: Int,
         groupName: String? = null,
         version: Int? = null
@@ -282,7 +286,7 @@ class PublicVarReferInfoDao {
                         varName = it.varName,
                         version = it.version,
                         referId = it.referId,
-                        referType = PublicVerGroupReferenceTypeEnum.valueOf(it.referType),
+                        referType = PublicVarGroupReferenceTypeEnum.valueOf(it.referType),
                         referVersion = it.referVersion,
                         referVersionName = it.referVersionName,
                         creator = it.creator,
@@ -302,7 +306,7 @@ class PublicVarReferInfoDao {
         dslContext: DSLContext,
         projectId: String,
         referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
+        referType: PublicVarGroupReferenceTypeEnum,
         referVersion: Int
     ): Set<com.tencent.devops.process.pojo.`var`.PublicGroupKey> {
         with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
@@ -369,7 +373,7 @@ class PublicVarReferInfoDao {
         groupName: String,
         varName: String,
         versions: List<Int>,
-        referType: PublicVerGroupReferenceTypeEnum?
+        referType: PublicVarGroupReferenceTypeEnum?
     ): List<String> {
         if (versions.isEmpty()) {
             return emptyList()
@@ -510,7 +514,7 @@ class PublicVarReferInfoDao {
         dslContext: DSLContext,
         projectId: String,
         groupName: String,
-        referType: PublicVerGroupReferenceTypeEnum? = null,
+        referType: PublicVarGroupReferenceTypeEnum? = null,
         varName: String? = null
     ): List<String> {
         with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {

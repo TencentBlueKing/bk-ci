@@ -30,7 +30,7 @@ package com.tencent.devops.process.api
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPublicVarGroupReferenceResource
 import com.tencent.devops.process.permission.`var`.PublicVarGroupPermissionService
@@ -56,7 +56,7 @@ class UserPublicVarGroupReferenceResourceImpl @Autowired constructor(
         projectId: String,
         groupName: String,
         varName: String?,
-        referType: PublicVerGroupReferenceTypeEnum?,
+        referType: PublicVarGroupReferenceTypeEnum?,
         version: Int?,
         page: Int,
         pageSize: Int
@@ -104,7 +104,7 @@ class UserPublicVarGroupReferenceResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
+        referType: PublicVarGroupReferenceTypeEnum,
         referVersion: Int
     ): Result<List<PipelineRefPublicVarGroupDO>> {
         // 校验使用权限
@@ -139,7 +139,7 @@ class UserPublicVarGroupReferenceResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
+        referType: PublicVarGroupReferenceTypeEnum,
         referVersion: Int,
         groupName: String,
         version: Int?

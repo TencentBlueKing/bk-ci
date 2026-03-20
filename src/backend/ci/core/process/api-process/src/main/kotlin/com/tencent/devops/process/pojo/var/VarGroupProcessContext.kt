@@ -1,6 +1,6 @@
 package com.tencent.devops.process.pojo.`var`
 
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -13,7 +13,7 @@ data class VarGroupProcessContext(
     @get:Schema(title = "资源ID", description = "引用资源的唯一标识（如流水线ID、模板ID）", required = true)
     val resourceId: String,
     @get:Schema(title = "引用类型", description = "资源引用类型（PIPELINE/TEMPLATE）", required = true)
-    val referType: PublicVerGroupReferenceTypeEnum,
+    val referType: PublicVarGroupReferenceTypeEnum,
     @get:Schema(title = "资源版本", description = "引用资源的版本号", required = true)
     val resourceVersion: Int,
     @get:Schema(title = "模型变量组列表", description = "Model中的变量组列表", required = true)

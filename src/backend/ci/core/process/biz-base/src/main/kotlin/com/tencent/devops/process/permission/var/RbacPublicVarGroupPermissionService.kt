@@ -64,45 +64,6 @@ class RbacPublicVarGroupPermissionService constructor(
         return true
     }
 
-    override fun getPublicVarGroupPermissions(
-        userId: String,
-        projectId: String,
-        groupName: String
-    ): PublicVarGroupPermissions {
-        // 逐个检查权限
-        val canEdit = checkPublicVarGroupPermission(
-            userId = userId,
-            projectId = projectId,
-            permission = AuthPermission.EDIT,
-            groupName = groupName
-        )
-        val canView = checkPublicVarGroupPermission(
-            userId = userId,
-            projectId = projectId,
-            permission = AuthPermission.VIEW,
-            groupName = groupName
-        )
-        val canDelete = checkPublicVarGroupPermission(
-            userId = userId,
-            projectId = projectId,
-            permission = AuthPermission.DELETE,
-            groupName = groupName
-        )
-        val canUse = checkPublicVarGroupPermission(
-            userId = userId,
-            projectId = projectId,
-            permission = AuthPermission.USE,
-            groupName = groupName
-        )
-
-        return PublicVarGroupPermissions(
-            canEdit = canEdit,
-            canView = canView,
-            canDelete = canDelete,
-            canUse = canUse
-        )
-    }
-
     override fun getResourcesByPermission(
         userId: String,
         projectId: String,

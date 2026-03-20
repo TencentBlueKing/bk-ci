@@ -36,7 +36,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
@@ -274,7 +274,7 @@ class PipelineTemplateInstanceReqConverter(
             publicVarGroupReferManageService.handleCrossProjectVarGroup(
                 projectId = projectId,
                 referId = templateId,
-                referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
+                referType = PublicVarGroupReferenceTypeEnum.TEMPLATE,
                 referVersion = templateVersion.toInt(),
                 model = instanceModel
             )

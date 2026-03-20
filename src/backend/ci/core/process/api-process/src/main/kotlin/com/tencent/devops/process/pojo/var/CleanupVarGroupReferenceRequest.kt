@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.pojo.`var`
 
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import org.jooq.DSLContext
 
 /**
@@ -37,7 +37,7 @@ data class CleanupVarGroupReferenceRequest(
     val context: DSLContext,
     val projectId: String,
     val resourceId: String,
-    val referType: PublicVerGroupReferenceTypeEnum,
+    val referType: PublicVarGroupReferenceTypeEnum,
     val resourceVersion: Int,
     val groupsToCleanup: Set<PublicGroupKey>? = null
 )

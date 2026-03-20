@@ -36,7 +36,7 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.TemplateModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -329,7 +329,7 @@ class PipelineTransferYamlService @Autowired constructor(
                     projectId = projectId,
                     model = model,
                     referId = pipelineInfo.pipelineId,
-                    referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
+                    referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
                     referName = model.name,
                     referVersion = pipelineInfo.version,
                     referVersionName = pipelineInfo.versionName

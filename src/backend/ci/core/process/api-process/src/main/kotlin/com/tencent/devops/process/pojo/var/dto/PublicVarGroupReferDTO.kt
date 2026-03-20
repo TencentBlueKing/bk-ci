@@ -28,7 +28,7 @@
 package com.tencent.devops.process.pojo.`var`.dto
 
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线公共变量组关联传输对象")
@@ -42,7 +42,7 @@ data class PublicVarGroupReferDTO(
     @get:Schema(title = "关联资源ID")
     val referId: String,
     @get:Schema(title = "关联组件类型")
-    val referType: PublicVerGroupReferenceTypeEnum,
+    val referType: PublicVarGroupReferenceTypeEnum,
     @get:Schema(title = "关联组件名称")
     val referName: String,
     @get:Schema(title = "关联组件版本号")

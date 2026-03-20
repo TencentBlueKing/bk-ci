@@ -29,9 +29,10 @@ package com.tencent.devops.process.service.template.v2.version.hander
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_LATEST_RELEASED_VERSION_NOT_EXIST
@@ -39,6 +40,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_LAT
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCommonCondition
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateModelLock
 import com.tencent.devops.process.service.template.v2.PipelineTemplatePersistenceService
@@ -150,7 +152,7 @@ class PipelineTemplateVersionDeleteHandler @Autowired constructor(
             userId = userId,
             projectId = projectId,
             referId = templateId,
-            referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
+            referType = PublicVarGroupReferenceTypeEnum.TEMPLATE,
             referVersion = version.toInt()
         )
     }
@@ -204,17 +206,46 @@ class PipelineTemplateVersionDeleteHandler @Autowired constructor(
             projectId = projectId,
             templateId = templateId
         )
+
+        // 清理该模板所有版本的变量组引用记录
+        publicVarGroupReferManageService.deletePublicVerGroupRefByReferId(
+            projectId = projectId,
+            referId = templateId,
+            referType = PublicVarGroupReferenceTypeEnum.TEMPLATE
+        )
     }
 
     private fun PipelineTemplateVersionDeleteContext.inactiveBranchVersion() {
         if (branch == null) {
             throw IllegalArgumentException("branchName is null")
         }
+
+        // 在 inactive 之前查出该分支下所有 ACTIVE 版本，以便后续清理变量组引用
+        val branchVersions = pipelineTemplateResourceService.list(
+            PipelineTemplateResourceCommonCondition(
+                projectId = projectId,
+                templateId = templateId,
+                versionName = branch,
+                branchAction = BranchVersionAction.ACTIVE
+            )
+        )
+
         pipelineTemplatePersistenceService.inactiveBranchVersion(
             projectId = projectId,
             templateId = templateId,
             branch = branch
         )
+
+        // 清理被 inactive 的分支版本的变量组引用记录
+        branchVersions.forEach { resource ->
+            publicVarGroupReferManageService.deletePublicGroupRefer(
+                userId = userId,
+                projectId = projectId,
+                referId = templateId,
+                referType = PublicVarGroupReferenceTypeEnum.TEMPLATE,
+                referVersion = resource.version.toInt()
+            )
+        }
     }
 
     companion object {

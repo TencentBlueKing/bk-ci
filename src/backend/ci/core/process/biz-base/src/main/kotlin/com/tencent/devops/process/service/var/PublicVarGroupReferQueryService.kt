@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.toLocalDateTime
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.metrics.api.ServiceMetricsResource
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_QUERY_FAILED
 import com.tencent.devops.process.dao.template.PipelineTemplateResourceDao
@@ -180,10 +180,10 @@ class PublicVarGroupReferQueryService @Autowired constructor(
      */
     private fun processPipelineReferences(
         queryReq: PublicVarGroupInfoQueryReqDTO,
-        referInfoByType: Map<PublicVerGroupReferenceTypeEnum, List<ResourcePublicVarGroupReferPO>>,
+        referInfoByType: Map<PublicVarGroupReferenceTypeEnum, List<ResourcePublicVarGroupReferPO>>,
         varRefCountMap: Map<String, Int>
     ): List<PublicGroupVarRefDO> {
-        val pipelineReferInfos = referInfoByType[PublicVerGroupReferenceTypeEnum.PIPELINE]
+        val pipelineReferInfos = referInfoByType[PublicVarGroupReferenceTypeEnum.PIPELINE]
             ?.takeIf { it.isNotEmpty() } ?: return emptyList()
 
         return runCatching {
@@ -220,10 +220,10 @@ class PublicVarGroupReferQueryService @Autowired constructor(
      */
     private fun processTemplateReferences(
         queryReq: PublicVarGroupInfoQueryReqDTO,
-        referInfoByType: Map<PublicVerGroupReferenceTypeEnum, List<ResourcePublicVarGroupReferPO>>,
+        referInfoByType: Map<PublicVarGroupReferenceTypeEnum, List<ResourcePublicVarGroupReferPO>>,
         varRefCountMap: Map<String, Int>
     ): List<PublicGroupVarRefDO> {
-        val templateReferInfos = referInfoByType[PublicVerGroupReferenceTypeEnum.TEMPLATE]
+        val templateReferInfos = referInfoByType[PublicVarGroupReferenceTypeEnum.TEMPLATE]
             ?.takeIf { it.isNotEmpty() } ?: return emptyList()
 
         return runCatching {
@@ -476,13 +476,13 @@ class PublicVarGroupReferQueryService @Autowired constructor(
      */
     private fun getVarGroupReferUrl(
         projectId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
+        referType: PublicVarGroupReferenceTypeEnum,
         referId: String,
         version: Long
     ): String {
         return when (referType) {
-            PublicVerGroupReferenceTypeEnum.PIPELINE -> "$basePath/$projectId/$referId$pipelinePath"
-            PublicVerGroupReferenceTypeEnum.TEMPLATE -> "$basePath/$projectId$templatePath/$referId/$version"
+            PublicVarGroupReferenceTypeEnum.PIPELINE -> "$basePath/$projectId/$referId$pipelinePath"
+            PublicVarGroupReferenceTypeEnum.TEMPLATE -> "$basePath/$projectId$templatePath/$referId/$version"
         }
     }
 
@@ -492,7 +492,7 @@ class PublicVarGroupReferQueryService @Autowired constructor(
     data class ResourceVarReferInfoQueryRequest(
         val projectId: String,
         val referId: String,
-        val referType: PublicVerGroupReferenceTypeEnum,
+        val referType: PublicVarGroupReferenceTypeEnum,
         val referVersion: Int,
         val groupName: String,
         val version: Int?

@@ -56,7 +56,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
@@ -2617,7 +2617,7 @@ class TemplateFacadeService @Autowired constructor(
                 projectId = projectId,
                 model = model,
                 referId = templateId,
-                referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
+                referType = PublicVarGroupReferenceTypeEnum.TEMPLATE,
                 referName = model.name,
                 referVersion = version,
                 referVersionName = versionName

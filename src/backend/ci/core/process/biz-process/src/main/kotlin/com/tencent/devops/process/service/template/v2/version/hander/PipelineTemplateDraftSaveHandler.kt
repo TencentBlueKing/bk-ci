@@ -30,7 +30,7 @@ package com.tencent.devops.process.service.template.v2.version.hander
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -119,7 +119,7 @@ class PipelineTemplateDraftSaveHandler @Autowired constructor(
                     projectId = projectId,
                     model = it,
                     referId = templateId,
-                    referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
+                    referType = PublicVarGroupReferenceTypeEnum.TEMPLATE,
                     referName = pipelineTemplateInfo.name,
                     referVersion = pTemplateResourceOnlyVersion.version.toInt(),
                     referVersionName = pTemplateResourceOnlyVersion.versionName ?: ""

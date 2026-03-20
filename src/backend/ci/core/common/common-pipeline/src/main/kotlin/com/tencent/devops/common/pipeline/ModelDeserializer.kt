@@ -5,8 +5,7 @@ import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.TriggerContainer
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.service.ServiceModelHandleResource
 import com.tencent.devops.common.service.utils.BkServiceUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -116,8 +115,8 @@ class ModelDeserializer : JsonDeserializer<Model>() {
 
         // 确定引用ID和引用类型
         val (referId, referType) = when {
-            !pipelineId.isNullOrBlank() -> pipelineId to PublicVerGroupReferenceTypeEnum.PIPELINE
-            !templateId.isNullOrBlank() -> templateId to PublicVerGroupReferenceTypeEnum.TEMPLATE
+            !pipelineId.isNullOrBlank() -> pipelineId to PublicVarGroupReferenceTypeEnum.PIPELINE
+            !templateId.isNullOrBlank() -> templateId to PublicVarGroupReferenceTypeEnum.TEMPLATE
             else -> {
                 logger.warn("No valid reference ID found for TriggerContainer")
                 return

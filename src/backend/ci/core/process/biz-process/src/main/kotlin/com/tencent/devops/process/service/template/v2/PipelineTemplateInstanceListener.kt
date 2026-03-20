@@ -30,7 +30,7 @@ package com.tencent.devops.process.service.template.v2
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
@@ -326,7 +326,7 @@ class PipelineTemplateInstanceListener @Autowired constructor(
                 PublicVarGroupReferDTO(
                     userId = "system",
                     projectId = projectId,
-                    referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
+                    referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
                     referId = deployPipelineResult.pipelineId,
                     referName = deployPipelineResult.pipelineName,
                     referVersion = deployPipelineResult.version,

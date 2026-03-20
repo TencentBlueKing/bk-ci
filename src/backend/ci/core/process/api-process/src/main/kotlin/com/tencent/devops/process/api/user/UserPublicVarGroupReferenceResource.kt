@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.pojo.`var`.`do`.PipelineRefPublicVarGroupDO
@@ -77,7 +77,7 @@ interface UserPublicVarGroupReferenceResource {
         varName: String? = null,
         @Parameter(description = "引用类型", required = false)
         @QueryParam("referType")
-        referType: PublicVerGroupReferenceTypeEnum? = null,
+        referType: PublicVarGroupReferenceTypeEnum? = null,
         @Parameter(description = "版本号", required = false)
         @QueryParam("version")
         version: Int? = null,
@@ -119,7 +119,7 @@ interface UserPublicVarGroupReferenceResource {
         referId: String,
         @Parameter(description = "引用资源类型", required = true)
         @QueryParam("referType")
-        referType: PublicVerGroupReferenceTypeEnum,
+        referType: PublicVarGroupReferenceTypeEnum,
         @Parameter(description = "引用版本号", required = true)
         @QueryParam("referVersion")
         referVersion: Int
@@ -152,7 +152,7 @@ interface UserPublicVarGroupReferenceResource {
         referId: String,
         @Parameter(description = "引用资源类型", required = true)
         @QueryParam("referType")
-        referType: PublicVerGroupReferenceTypeEnum,
+        referType: PublicVarGroupReferenceTypeEnum,
         @Parameter(description = "引用版本号", required = true)
         @QueryParam("referVersion")
         referVersion: Int,

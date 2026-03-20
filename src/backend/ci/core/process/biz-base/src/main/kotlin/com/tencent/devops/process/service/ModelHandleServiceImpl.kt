@@ -5,7 +5,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelHandleService
 import com.tencent.devops.common.pipeline.ModelPublicVarHandleContext
 import com.tencent.devops.common.pipeline.ModelVarReferenceHandleContext
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.template.ITemplateModel
 import com.tencent.devops.common.pipeline.utils.ModelVarRefUtils
@@ -102,7 +102,7 @@ class ModelHandleServiceImpl @Autowired constructor(
 
         while (retryCount < MAX_RETRY_TIMES) {
             val modelString = when (resourceType) {
-                PublicVerGroupReferenceTypeEnum.PIPELINE.name -> {
+                PublicVarGroupReferenceTypeEnum.PIPELINE.name -> {
                     pipelineResourceVersionDao.getVersionModelString(
                         dslContext = dslContext,
                         projectId = projectId,
@@ -111,7 +111,7 @@ class ModelHandleServiceImpl @Autowired constructor(
                         includeDraft = true
                     )
                 }
-                PublicVerGroupReferenceTypeEnum.TEMPLATE.name -> {
+                PublicVarGroupReferenceTypeEnum.TEMPLATE.name -> {
                     pipelineTemplateResourceDao.getVersionModelString(
                         dslContext = dslContext,
                         projectId = projectId,
