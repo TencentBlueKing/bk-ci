@@ -1,4 +1,4 @@
-module process-tree
+module agent-util
 
 go 1.21
 
