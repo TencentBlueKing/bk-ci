@@ -347,6 +347,7 @@
                 showChangedParamsAlert: false,
                 checkTotal: true,
                 isApplySet: false,
+                pendingParamSetChange: null,
                 applySetDiff: {
                     setName: '',
                     diffMap: {
@@ -658,6 +659,11 @@
                     this.startupInfo = res
                     this.initParams(this.startupInfo)
                     this.showChangedParamsAlert = this.startupInfo?.useLatestParameters
+                    if (this.pendingParamSetChange) {
+                        const { setName, paramsValues, versionValues } = this.pendingParamSetChange
+                        this.pendingParamSetChange = null
+                        this.updateParamsValues(setName, paramsValues, versionValues)
+                    }
                 } catch (err) {
                     this.handleError(
                         err,
@@ -768,7 +774,7 @@
                 const allParamMap = this.startupInfo?.properties?.reduce((acc, param) => {
                     acc.set(param.id, param)
                     return acc
-                }, new Map())
+                }, new Map()) ?? new Map()
                 Object.keys(partical).forEach(key => {
                     const param = allParamMap.get(key)
                     if (Object.prototype.hasOwnProperty.call(origin, key)) {
@@ -789,6 +795,10 @@
                 }
             },
             updateParamsValues (setName, paramsValues, versionValues) {
+                if (!this.startupInfo) {
+                    this.pendingParamSetChange = { setName, paramsValues, versionValues }
+                    return
+                }
                 const applySetDiff = {
                     setName,
                     diffMap: {
