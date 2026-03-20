@@ -39,11 +39,11 @@ VALUES(1027900, 'b0070f67b1454e818821128f5da5bcd7', 'empty creative stream', '',
       "containers": [
         {
           "@type": "trigger",
-          "name": "构建触发",
+          "name": "Build Trigger",
           "elements": [
             {
               "@type": "marketEvent",
-              "name": "手动触发",
+              "name": "Manual Trigger",
               "id": "T-1-1-1",
               "atomCode": "CREATIVE_STREAM_MANUAL_TRIGGER",
               "version": "1.*",

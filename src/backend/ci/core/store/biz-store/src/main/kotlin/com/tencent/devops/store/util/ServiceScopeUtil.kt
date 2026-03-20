@@ -56,8 +56,8 @@ object ServiceScopeUtil {
                 JsonUtil.toOrNull(serviceScopeJson, List::class.java) as? List<String> ?: return emptyList()
 
             return normalizeList(serviceScopes)
-        } catch (e: Exception) {
-            logger.warn("Failed to parse serviceScope: $serviceScopeJson", e)
+        } catch (ignored: Throwable) {
+            logger.warn("Failed to parse serviceScope: $serviceScopeJson", ignored)
             return emptyList()
         }
     }
