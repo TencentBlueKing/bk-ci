@@ -75,6 +75,8 @@ class PublicVarGroupReferCountService @Autowired constructor(
     /**
      * 批量删除引用并更新引用计数
      * 同时删除变量组引用记录和变量引用记录
+     * 每个变量组在独立事务中处理——变量组之间数据独立，无跨组一致性约束，
+     * 独立事务可实现故障隔离，避免无关变量组被牵连回滚
      * 注意：该方法不提供锁保护，因为通常由外层（PublicVarGroupReferManageService）已经提供了锁保护。
      * @param projectId 项目ID（引用记录所在的当前项目）
      * @param referId 引用ID
@@ -109,7 +111,7 @@ class PublicVarGroupReferCountService @Autowired constructor(
         sortedGroups.forEach { (key, groupReferInfos) ->
             val (groupProjectId, groupName) = key
             // 注意：外层（PublicVarGroupReferManageService）已经提供了锁保护，这里不需要再加锁
-            // 在同一个事务中完成引用删除和计数更新
+            // 在同一个事务中完成单个变量组的引用删除和计数更新
             executeWithTransaction { context ->
                 // 1. 删除变量引用记录
                 if (referVersion != null) {
@@ -158,7 +160,9 @@ class PublicVarGroupReferCountService @Autowired constructor(
     }
 
     /**
-     * 增加引用计数（增量更新）
+     * 增加引用计数
+     * 优化策略：先尝试 UPDATE 增量累加（热路径，记录已存在时零 RPC 开销），
+     * 仅在 UPDATE 返回 0 行（首次创建）时才生成分布式 ID 并执行原子 upsert（防并发安全）
      * @param context 数据库上下文
      * @param projectId 项目ID
      * @param groupName 变量组名称
@@ -172,7 +176,7 @@ class PublicVarGroupReferCountService @Autowired constructor(
         version: Int,
         countChange: Int
     ) {
-        // Try increment first to avoid check-then-act race condition
+        // 热路径：记录已存在，直接 UPDATE 累加，无需生成 ID，零 RPC
         val updatedRows = publicVarGroupVersionSummaryDao.incrementReferCount(
             dslContext = context,
             projectId = projectId,
@@ -181,9 +185,8 @@ class PublicVarGroupReferCountService @Autowired constructor(
             countChange = countChange,
             modifier = SYSTEM
         )
-
         if (updatedRows == 0) {
-            // Record does not exist, create a new one
+            // 冷路径：记录不存在，生成 ID 并执行原子 upsert
             val currentTime = LocalDateTime.now()
             val id = client.get(ServiceAllocIdResource::class)
                 .generateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP_VERSION_SUMMARY").data
@@ -201,7 +204,7 @@ class PublicVarGroupReferCountService @Autowired constructor(
                 createTime = currentTime,
                 updateTime = currentTime
             )
-            publicVarGroupVersionSummaryDao.save(
+            publicVarGroupVersionSummaryDao.saveOrIncrementReferCount(
                 dslContext = context,
                 po = summaryPO
             )
@@ -264,6 +267,8 @@ class PublicVarGroupReferCountService @Autowired constructor(
 
     /**
      * 批量更新引用和计数
+     * 每个变量组在独立事务中处理——变量组之间数据独立，无跨组一致性约束，
+     * 独立事务可实现故障隔离，避免无关变量组被牵连回滚
      * 注意：该方法不提供锁保护，因为通常由外层（PublicVarGroupReferManageService）已经提供了锁保护。
      * @param projectId 当前项目ID（用于删除记录）
      * @param changeInfos 变量组版本变化信息列表

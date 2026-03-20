@@ -49,7 +49,7 @@ class ModelDeserializer : JsonDeserializer<Model>() {
             model
         } catch (ignored: Throwable) {
             // 反序列化失败时的错误处理
-            logger.error("Failed to deserialize Model", ignored)
+            logger.warn("Failed to deserialize Model", ignored)
             throw ignored
         } finally {
             // 清理反序列化标记，确保标记状态正确重置
@@ -140,11 +140,16 @@ class ModelDeserializer : JsonDeserializer<Model>() {
                 modelPublicVarHandleContext = context
             ).toMutableList()
         } else {
-            val client = SpringContextUtil.getBean(Client::class.java)
-            client.get(ServiceModelHandleResource::class).handlePipelineModelParams(
-                projectId = projectId,
-                modelPublicVarHandleContext = context
-            ).data?.toMutableList() ?: mutableListOf()
+            try {
+                val client = SpringContextUtil.getBean(Client::class.java)
+                client.get(ServiceModelHandleResource::class).handlePipelineModelParams(
+                    projectId = projectId,
+                    modelPublicVarHandleContext = context
+                ).data?.toMutableList() ?: context.params.toMutableList()
+            } catch (e: Throwable) {
+                logger.warn("Failed to call remote handlePipelineModelParams, fallback to original params", e)
+                context.params.toMutableList()
+            }
         }
     }
 }

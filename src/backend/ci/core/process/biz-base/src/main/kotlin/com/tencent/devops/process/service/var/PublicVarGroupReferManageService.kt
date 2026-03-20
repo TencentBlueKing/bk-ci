@@ -572,6 +572,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
             }
         } catch (e: Throwable) {
             logger.warn("Failed to update reference count for projectId: $projectId", e)
+            throw e
         }
     }
 

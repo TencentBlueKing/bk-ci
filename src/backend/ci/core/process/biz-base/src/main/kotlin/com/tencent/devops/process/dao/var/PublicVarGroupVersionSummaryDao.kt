@@ -76,6 +76,36 @@ class PublicVarGroupVersionSummaryDao {
     }
 
     /**
+     * 插入新记录或在唯一键冲突时增量累加引用计数（原子操作）
+     * 使用 INSERT ... ON DUPLICATE KEY UPDATE REFER_COUNT = REFER_COUNT + countChange
+     * 解决并发场景下 update-first-then-insert 的 TOCTOU 竞态问题
+     * @param dslContext 数据库上下文
+     * @param po 版本概要对象（referCount 字段作为增量值）
+     */
+    fun saveOrIncrementReferCount(
+        dslContext: DSLContext,
+        po: PublicVarGroupVersionSummaryPO
+    ) {
+        with(TResourcePublicVarGroupVersionSummary.T_RESOURCE_PUBLIC_VAR_GROUP_VERSION_SUMMARY) {
+            dslContext.insertInto(this)
+                .set(ID, po.id)
+                .set(PROJECT_ID, po.projectId)
+                .set(GROUP_NAME, po.groupName)
+                .set(VERSION, po.version)
+                .set(REFER_COUNT, po.referCount)
+                .set(CREATOR, po.creator)
+                .set(MODIFIER, po.modifier)
+                .set(CREATE_TIME, po.createTime)
+                .set(UPDATE_TIME, po.updateTime)
+                .onDuplicateKeyUpdate()
+                .set(REFER_COUNT, REFER_COUNT.plus(po.referCount))
+                .set(MODIFIER, po.modifier)
+                .set(UPDATE_TIME, po.updateTime)
+                .execute()
+        }
+    }
+
+    /**
      * 根据项目ID、变量组名和版本号查询记录
      */
     fun getByGroupNameAndVersion(

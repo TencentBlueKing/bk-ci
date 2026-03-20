@@ -77,10 +77,11 @@ class PublicVarReferInfoService @Autowired constructor(
 
     /**
      * 处理资源的变量引用关系（带锁保护的公共方法）
-     * 使用资源级分布式锁保护整个操作流程，包括引用关系处理和引用计数更新
+     * 使用资源级分布式锁保护整个操作流程，引用关系处理和引用计数更新在同一个数据库事务中完成，
+     * 保证原子性——要么全部成功，要么全部回滚
      * 线程安全说明：
      * - 使用资源级分布式锁：RESOURCE_VAR_REFER_LOCK:$projectId:$resourceType:$resourceId:$resourceVersion
-     * - 锁保护范围：整个操作流程（事务处理 + 计数更新）
+     * - 锁保护范围：整个操作流程（事务处理 + 计数更新在同一事务中）
      * - 所有内部方法调用（包括 cleanupRemovedVarGroupReferences）都在此锁保护下执行
      * @param request 变量引用请求DTO（带锁版本）
      */
@@ -95,7 +96,7 @@ class PublicVarReferInfoService @Autowired constructor(
         // 锁粒度说明：
         // - 资源级别锁确保同一资源的引用操作串行化，避免并发修改导致的数据不一致
         // - 不同资源之间可以并发处理，提升整体性能
-        // - 锁持有时间：事务处理 + 计数更新，已优化为批量处理，减少锁持有时间
+        // - 锁持有时间：事务处理 + 计数更新，均在同一事务中完成
         val lockKey = "RESOURCE_VAR_REFER_LOCK:${request.projectId}:${request.resourceType}" +
                 ":${request.resourceId}:${request.resourceVersion}"
         val redisLock = RedisLock(
@@ -107,12 +108,13 @@ class PublicVarReferInfoService @Autowired constructor(
         try {
             redisLock.lock()
 
-            // 1. 在事务中处理资源维度的引用关系
-            val referenceUpdateResult = dslContext.transactionResult { configuration ->
+            // 在同一个事务中完成引用关系处理 + 引用计数更新，保证原子性
+            // 修复 P1-4：事务提交和引用计数更新不在同一原子操作中的问题
+            dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
 
-                // 调用内部方法处理引用关系
-                doHandleResourceVarReferences(
+                // 1. 处理资源维度的引用关系
+                val referenceUpdateResult = doHandleResourceVarReferences(
                     context = transactionContext,
                     userId = request.userId,
                     projectId = request.projectId,
@@ -122,15 +124,15 @@ class PublicVarReferInfoService @Autowired constructor(
                     model = request.model,
                     varRefDetails = request.varRefDetails
                 )
-            }
 
-            // 2. 在锁保护下更新变量维度的引用计数
-            // 注意：外层已经提供了资源级锁保护，PublicVarReferCountService 内部不再使用锁，避免双重锁
-            // 优化：使用批量处理，减少事务数量，提升性能
-            publicVarReferCountService.updateVarReferCounts(
-                referRecordsToAdd = referenceUpdateResult.referRecordsToAdd,
-                varsNeedRecalculate = referenceUpdateResult.varsNeedRecalculate
-            )
+                // 2. 在同一事务中更新变量维度的引用计数
+                // 使用外部事务上下文版本，不再自行开启新事务
+                publicVarReferCountService.updateVarReferCountsInTransaction(
+                    context = transactionContext,
+                    referRecordsToAdd = referenceUpdateResult.referRecordsToAdd,
+                    varsNeedRecalculate = referenceUpdateResult.varsNeedRecalculate
+                )
+            }
         } catch (e: Throwable) {
             logger.warn(
                 "Failed to handle resource var references: " +

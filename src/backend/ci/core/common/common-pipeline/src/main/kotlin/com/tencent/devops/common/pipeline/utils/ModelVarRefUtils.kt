@@ -141,7 +141,7 @@ object ModelVarRefUtils {
             return references
         } catch (ignored: Throwable) {
             // 异常处理：记录错误日志并返回空列表，确保方法不会抛出异常
-            logger.error("parseModelVarReferences failed", ignored)
+            logger.warn("parseModelVarReferences failed", ignored)
             return emptyList()
         }
     }

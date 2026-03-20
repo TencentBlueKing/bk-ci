@@ -60,7 +60,7 @@ class PublicVarReferCountService @Autowired constructor(
     }
 
     /**
-     * 批量新增引用并更新引用计数（无锁版本）
+     * 批量新增引用并更新引用计数（无锁版本，自管理事务）
      * @param referInfos 引用信息列表
      */
     fun batchAddReferWithCount(referInfos: List<ResourcePublicVarReferPO>) {
@@ -87,80 +87,106 @@ class PublicVarReferCountService @Autowired constructor(
             // 优化：使用单个事务批量处理所有变量组，减少事务数量
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
-                sortedVarGroups.forEach { (key, varReferInfos) ->
-                    val (projectId, groupName, varName) = key
-                    logger.info(
-                        "Processing variable reference addition: " +
-                            "projectId=$projectId, groupName=$groupName, varName=$varName, " +
-                            "version=$version, count=${varReferInfos.size}"
-                    )
-
-                    // 1. 批量插入引用记录
-                    publicVarReferInfoDao.batchSave(
-                        dslContext = context,
-                        pipelinePublicVarReferPOs = varReferInfos
-                    )
-
-                    // 2. 增量更新引用计数
-                    incrementReferCount(
-                        context = context,
-                        projectId = projectId,
-                        groupName = groupName,
-                        varName = varName,
-                        version = version,
-                        countChange = varReferInfos.size
-                    )
-                }
+                doBatchAddReferWithCount(context, sortedVarGroups, version)
             }
         }
     }
 
     /**
-     * 增加引用计数（增量更新）
-     * @param context 数据库上下文
-     * @param projectId 项目ID
-     * @param groupName 变量组名称
-     * @param varName 变量名称
-     * @param version 版本号（动态版本为-1）
-     * @param countChange 增加的数量
+     * 批量新增引用并更新引用计数（使用外部事务上下文）
+     * 在外部事务中执行，不再自行开启新事务，确保与引用关系变更在同一事务中完成
+     * @param context 外部事务的数据库上下文
+     * @param referInfos 引用信息列表
      */
-    fun incrementReferCount(
+    fun batchAddReferWithCountInTransaction(
         context: DSLContext,
-        projectId: String,
-        groupName: String,
-        varName: String,
-        version: Int,
-        countChange: Int
+        referInfos: List<ResourcePublicVarReferPO>
     ) {
-        // 检查是否存在该版本的概要信息
-        val existingSummary = publicVarVersionSummaryDao.getByVarNameAndVersion(
-            dslContext = context,
-            projectId = projectId,
-            groupName = groupName,
-            varName = varName,
-            version = version
-        )
+        if (referInfos.isEmpty()) {
+            return
+        }
 
-        if (existingSummary != null) {
-            // 使用增量更新
-            publicVarVersionSummaryDao.incrementReferCount(
+        // 按版本分组处理
+        val groupedByVersion = referInfos.groupBy { it.version ?: -1 }
+
+        groupedByVersion.forEach { (version, varReferInfosForVersion) ->
+            // 按 (projectId, groupName, varName) 分组
+            val groupedByVar = varReferInfosForVersion.groupBy {
+                Triple(it.projectId, it.groupName, it.varName)
+            }
+
+            // 按固定顺序排序，保持一致的执行顺序，避免死锁
+            val sortedVarGroups = groupedByVar.toList().sortedWith(
+                compareBy<Pair<Triple<String, String, String>, List<ResourcePublicVarReferPO>>> { it.first.first }
+                    .thenBy { it.first.second }
+                    .thenBy { it.first.third }
+            )
+
+            // 直接使用传入的事务上下文，不再开启新事务
+            doBatchAddReferWithCount(context, sortedVarGroups, version)
+        }
+    }
+
+    /**
+     * 批量新增引用并更新引用计数的内部实现
+     * 优化策略：先尝试 UPDATE 增量累加（热路径，记录已存在时零 RPC 开销），
+     * 仅在 UPDATE 返回 0 行（首次创建）时才生成分布式 ID 并执行原子 upsert
+     * @param context 数据库上下文
+     * @param sortedVarGroups 按固定顺序排序的变量组列表
+     * @param version 版本号
+     */
+    private fun doBatchAddReferWithCount(
+        context: DSLContext,
+        sortedVarGroups: List<Pair<Triple<String, String, String>, List<ResourcePublicVarReferPO>>>,
+        version: Int
+    ) {
+        sortedVarGroups.forEach { (key, varReferInfos) ->
+            val (projectId, groupName, varName) = key
+            logger.info(
+                "Processing variable reference addition: " +
+                    "projectId=$projectId, groupName=$groupName, varName=$varName, " +
+                    "version=$version, count=${varReferInfos.size}"
+            )
+
+            // 1. 批量插入引用记录
+            publicVarReferInfoDao.batchSave(
+                dslContext = context,
+                pipelinePublicVarReferPOs = varReferInfos
+            )
+
+            // 2. 增量更新引用计数
+            // 先尝试 UPDATE（热路径：记录已存在，无需生成 ID）
+            val updatedRows = publicVarVersionSummaryDao.incrementReferCount(
                 dslContext = context,
                 projectId = projectId,
                 groupName = groupName,
                 varName = varName,
                 version = version,
-                countChange = countChange,
+                countChange = varReferInfos.size,
                 modifier = SYSTEM
             )
-        } else {
-            createAndSaveNewVersionSummary(
-                context = context,
-                projectId = projectId,
-                groupName = groupName,
-                varName = varName,
-                version = version,
-                referCount = countChange
-            )
+            if (updatedRows == 0) {
+                // 记录不存在，生成 ID 并执行原子 upsert
+                val currentTime = LocalDateTime.now()
+                val id = client.get(ServiceAllocIdResource::class)
+                    .generateSegmentId("T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY").data ?: 0
+                val summaryPO = PublicVarVersionSummaryPO(
+                    id = id,
+                    projectId = projectId,
+                    groupName = groupName,
+                    varName = varName,
+                    version = version,
+                    referCount = varReferInfos.size,
+                    creator = SYSTEM,
+                    modifier = SYSTEM,
+                    createTime = currentTime,
+                    updateTime = currentTime
+                )
+                publicVarVersionSummaryDao.saveOrIncrementReferCount(
+                    dslContext = context,
+                    po = summaryPO
+                )
+            }
         }
     }
 
@@ -193,7 +219,7 @@ class PublicVarReferCountService @Autowired constructor(
     }
 
     /**
-     * 重新计算引用计数（无锁版本）
+     * 重新计算引用计数（无锁版本，自管理事务）
      * 注意：该方法不提供锁保护，因为通常由外层（PublicVarReferInfoService）已经提供了锁保护。
      * @param projectId 项目ID
      * @param groupName 变量组名称
@@ -219,6 +245,32 @@ class PublicVarReferCountService @Autowired constructor(
                 version = targetVersion
             )
         }
+    }
+
+    /**
+     * 重新计算引用计数（使用外部事务上下文）
+     * 在外部事务中执行，不再自行开启新事务，确保与引用关系变更在同一事务中完成
+     * @param context 外部事务的数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名称
+     * @param varName 变量名称
+     * @param version 版本号（null表示重新计算动态版本，即-1）
+     */
+    fun recalculateReferCountInTransaction(
+        context: DSLContext,
+        projectId: String,
+        groupName: String,
+        varName: String,
+        version: Int? = null
+    ) {
+        val targetVersion = version ?: -1
+        recalculateSingleVersionReferCount(
+            context = context,
+            projectId = projectId,
+            groupName = groupName,
+            varName = varName,
+            version = targetVersion
+        )
     }
 
     /**
@@ -273,7 +325,7 @@ class PublicVarReferCountService @Autowired constructor(
     }
 
     /**
-     * 更新变量维度的引用计数（无锁版本）
+     * 更新变量维度的引用计数（无锁版本，自管理事务）
      * 注意：该方法不提供锁保护，因为通常由外层（PublicVarReferInfoService）已经提供了锁保护。
      * @param referRecordsToAdd 需要新增的引用记录列表
      * @param varsNeedRecalculate 需要重新计算计数的变量信息集合
@@ -315,6 +367,47 @@ class PublicVarReferCountService @Autowired constructor(
                         e
                     )
                 }
+            }
+        }
+    }
+
+    /**
+     * 更新变量维度的引用计数（使用外部事务上下文）
+     * 在外部事务中执行，确保引用关系变更和引用计数更新在同一事务中完成，保证原子性
+     * 注意：该方法不吞没异常——任何失败都会导致外层事务回滚，确保数据一致性
+     * @param context 外部事务的数据库上下文
+     * @param referRecordsToAdd 需要新增的引用记录列表
+     * @param varsNeedRecalculate 需要重新计算计数的变量信息集合
+     */
+    fun updateVarReferCountsInTransaction(
+        context: DSLContext,
+        referRecordsToAdd: List<ResourcePublicVarReferPO>,
+        varsNeedRecalculate: Set<VarCountUpdateInfo>
+    ) {
+        // 处理新增引用（使用外部事务上下文）
+        if (referRecordsToAdd.isNotEmpty()) {
+            batchAddReferWithCountInTransaction(context, referRecordsToAdd)
+        }
+
+        // 处理需要重新计算计数的变量
+        if (varsNeedRecalculate.isNotEmpty()) {
+            // 按固定顺序排序，保持一致的执行顺序，避免死锁
+            val sortedVars = varsNeedRecalculate.sortedWith(
+                compareBy<VarCountUpdateInfo> { it.projectId }
+                    .thenBy { it.groupName }
+                    .thenBy { it.varName }
+                    .thenBy { it.version }
+            )
+
+            // 在同一事务中逐个重算，失败则整个事务回滚
+            sortedVars.forEach { varInfo ->
+                recalculateReferCountInTransaction(
+                    context = context,
+                    projectId = varInfo.projectId,
+                    groupName = varInfo.groupName,
+                    varName = varInfo.varName,
+                    version = varInfo.version
+                )
             }
         }
     }
