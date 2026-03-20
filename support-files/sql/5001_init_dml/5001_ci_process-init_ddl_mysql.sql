@@ -24,32 +24,47 @@ REPLACE INTO `T_PIPELINE_SETTING` (
     '', 7200, 10, 1, 0, 0, 50, 50, NULL, NULL, 0, 0, NULL, 1, NULL, NULL, NULL
 );
 
-REPLACE INTO devops_process.T_PIPELINE_TEMPLATE_INFO
+REPLACE INTO T_PIPELINE_TEMPLATE_INFO
 (ID, PROJECT_ID, NAME, `DESC`, MODE, CATEGORY, `TYPE`, LOGO_URL, PAC, RELEASED_VERSION, RELEASED_VERSION_NAME, RELEASED_SETTING_VERSION, LATEST_VERSION_STATUS, SRC_TEMPLATE_ID, SRC_TEMPLATE_PROJECT_ID, DEBUG_PIPELINE_COUNT, INSTANCE_PIPELINE_COUNT, CREATOR, UPDATER, CREATED_TIME, UPDATE_TIME, UPGRADE_STRATEGY, SETTING_SYNC_STRATEGY, PUBLISH_STRATEGY, STORE_STATUS, CHANNEL)
 VALUES('b0070f67b1454e818821128f5da5bcd7', '', 'empty creative stream', NULL, 'PUBLIC', '', 'PIPELINE', NULL, 0, 1027900, 'init', 1, 'RELEASED', NULL, NULL, 0, 0, '', '', '2025-12-18 11:46:00', '2025-12-18 11:46:00', NULL, NULL, NULL, 'NEVER_PUBLISHED', 'CREATIVE_STREAM');
 
-REPLACE INTO devops_process.T_TEMPLATE
+REPLACE INTO T_TEMPLATE
 (VERSION, ID, TEMPLATE_NAME, PROJECT_ID, VERSION_NAME, CREATOR, CREATED_TIME, TEMPLATE, `TYPE`, CATEGORY, LOGO_URL, SRC_TEMPLATE_ID, STORE_FLAG, WEIGHT, UPDATE_TIME, `DESC`)
-VALUES(1027900, 'b0070f67b1454e818821128f5da5bcd7', 'empty creative stream', '', 'init', '', '2025-12-18 11:46:00', '{
+VALUES(1027900, 'b0070f67b1454e818821128f5da5bcd7', 'empty creative stream', '', 'init', '', '2025-12-18 11:46:00', '
+{
   "name" : "empty creative stream",
-  "desc" : "",
-  "stages" : [ {
-    "containers" : [ {
-      "@type" : "trigger",
-      "name" : "Trigger",
-      "elements" : [ {
-        "@type" : "manualTrigger",
-        "name" : "Manual",
-        "id" : "T-1-1-1",
-       "canElementSkip" : true,
-        "properties" : [ ]
-      } ]
-    } ],
-    "id" : "stage-1"
-  }]
+  "desc": "",
+  "stages": [
+    {
+      "containers": [
+        {
+          "@type": "trigger",
+          "name": "构建触发",
+          "elements": [
+            {
+              "@type": "marketEvent",
+              "name": "手动触发",
+              "id": "T-1-1-1",
+              "atomCode": "CREATIVE_STREAM_MANUAL_TRIGGER",
+              "version": "1.*",
+              "data": {
+                "input": {
+                  "canElementSkip": true,
+                  "useLatestParameters": true
+                }
+              },
+              "classType": "marketEvent",
+              "autoAtomCode": "CREATIVE_STREAM_MANUAL_TRIGGER"
+            }
+          ]
+        }
+      ],
+      "id": "stage-1"
+    }
+  ]
 }', 'PUBLIC', '', NULL, NULL, 0, 100, '2025-12-18 11:46:00', NULL);
 
-REPLACE INTO devops_process.T_PIPELINE_SETTING
+REPLACE INTO T_PIPELINE_SETTING
 (PIPELINE_ID, `DESC`, RUN_TYPE, NAME, SUCCESS_RECEIVER, FAIL_RECEIVER, SUCCESS_GROUP, FAIL_GROUP, SUCCESS_TYPE, FAIL_TYPE, PROJECT_ID, SUCCESS_WECHAT_GROUP_FLAG, SUCCESS_WECHAT_GROUP, FAIL_WECHAT_GROUP_FLAG, FAIL_WECHAT_GROUP, RUN_LOCK_TYPE, SUCCESS_DETAIL_FLAG, FAIL_DETAIL_FLAG, SUCCESS_CONTENT, FAIL_CONTENT, WAIT_QUEUE_TIME_SECOND, MAX_QUEUE_SIZE, IS_TEMPLATE, SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG, FAIL_WECHAT_GROUP_MARKDOWN_FLAG, MAX_PIPELINE_RES_NUM, MAX_CON_RUNNING_QUEUE_SIZE, BUILD_NUM_RULE, CONCURRENCY_GROUP, CONCURRENCY_CANCEL_IN_PROGRESS, CLEAN_VARIABLES_WHEN_RETRY, PIPELINE_AS_CODE_SETTINGS, SUCCESS_SUBSCRIPTION, FAILURE_SUBSCRIPTION, VERSION, FAIL_IF_VARIABLE_INVALID, BUILD_CANCEL_POLICY, ENV_HASH_ID)
 VALUES('b0070f67b1454e818821128f5da5bcd7', '', NULL, 'empty creative stream', '${pipeline.start.user.name}', '${pipeline.start.user.name}', '', '', '', '', '', 0, '', 0, '', 1, 0, 0, '【${project.name.chinese}】- 【${pipeline.name}】#${pipeline.build.num} execution successful, time elapsed: ${pipeline.time.duration}, triggered by: ${pipeline.start.user.name}。', '【${project.name.chinese}】- 【${pipeline.name}】#${pipeline.build.num} execution failed, time elapsed: ${pipeline.time.duration}, triggered by: ${pipeline.start.user.name}。 ', 7200, 10, 1, 0, 0, 50, 50, NULL, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, 'EXECUTE_PERMISSION', NULL);
 
