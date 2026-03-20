@@ -519,7 +519,7 @@ class PipelineYamlFacadeService @Autowired constructor(
             if (ignored.errorCode == HTTP_404) {
                 throw ErrorCodeException(
                     errorCode = ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND,
-                    params = arrayOf(yamlInfo.filePath, branchName, repoFileUrl)
+                    params = arrayOf(branchName, yamlInfo.filePath, repoFileUrl)
                 )
             } else {
                 logger.warn(
@@ -530,7 +530,7 @@ class PipelineYamlFacadeService @Autowired constructor(
             }
         } ?: throw ErrorCodeException(
             errorCode = ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND,
-            params = arrayOf(yamlInfo.filePath, branchName, repoFileUrl)
+            params = arrayOf(branchName, yamlInfo.filePath, repoFileUrl)
         )
         logger.info(
             "get file content|$projectId|$pipelineId|${yamlInfo.repoHashId}|" +
