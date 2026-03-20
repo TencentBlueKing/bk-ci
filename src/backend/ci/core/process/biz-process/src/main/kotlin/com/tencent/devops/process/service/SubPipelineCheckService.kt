@@ -3,12 +3,14 @@ package com.tencent.devops.process.service
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementHolder
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.api.service.ServicePipelineVersionResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.SubPipelineTaskService
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -29,7 +31,8 @@ import jakarta.ws.rs.core.Response
 class SubPipelineCheckService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val subPipelineRefService: SubPipelineRefService,
-    private val subPipelineTaskService: SubPipelineTaskService
+    private val subPipelineTaskService: SubPipelineTaskService,
+    private val client: Client
 ) {
 
     /**
@@ -404,11 +407,11 @@ class SubPipelineCheckService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         branch: String
-    ) = subPipelineTaskService.getBranchVersionResource(
+    ) = client.get(ServicePipelineVersionResource::class).getBranch(
         projectId = projectId,
         pipelineId = pipelineId,
-        branchName = branch
-    )
+        branch = branch
+    ).data
 
     companion object {
         private val logger = LoggerFactory.getLogger(SubPipelineCheckService::class.java)

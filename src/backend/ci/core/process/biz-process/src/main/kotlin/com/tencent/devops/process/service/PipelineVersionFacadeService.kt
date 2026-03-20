@@ -934,4 +934,24 @@ class PipelineVersionFacadeService @Autowired constructor(
             versionName = branch
         )
     }
+
+    fun getByBranch(
+        projectId: String,
+        pipelineId: String,
+        branch: String
+    ): PipelineResourceVersion? {
+        // 流水线分支版本
+        return pipelineYamlFacadeService.getPipelineYamlInfo(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            branchName = branch,
+            yamlParams = mutableMapOf()
+        )?.let {
+            pipelineRepositoryService.getPipelineResourceVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = it
+            )
+        }
+    }
 }
