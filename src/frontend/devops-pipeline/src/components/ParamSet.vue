@@ -59,7 +59,7 @@
         
         <bk-sideslider
             :is-show.sync="isShowParamSetManageSlide"
-            :width="640"
+            :width="860"
             :close-on-click-modal="false"
             height="100%"
             :show-close="true"
@@ -383,7 +383,7 @@
             const paramSetList = computed(() => {
                 return filteredSets.value.map(set => ({
                     ...set,
-                    paramIds: set.params?.filter(param => !allVersionKeyList.includes(param.id)),
+                    paramIds: set.params?.filter(param => !allVersionKeyList.includes(param.id)).map(param => param.id),
                     versionParams: set.params?.filter(param => allVersionKeyList.includes(param.id)).map(version => ({
                         ...version,
                         category: proxy.$t('versionNum'),
@@ -399,19 +399,16 @@
             })
             const paramSetGroup = computed(() => {
                 const recentlyUsedChildren = []
-                // Only add LAST_USED_SET when useLastParams is true
                 if (props.useLastParams) {
                     recentlyUsedChildren.push(LAST_USED_SET.value)
                 }
-                // Add temp paramSet to recently used group if it exists
                 if (tempParamSet.value) {
                     recentlyUsedChildren.push({
                         ...tempParamSet.value,
-                        disableEdit: true // Hide edit/delete options for temp set
+                        disableEdit: true
                     })
                 }
                 const groups = []
-                // Only add recently used group if it has children
                 if (recentlyUsedChildren.length) {
                     groups.push({
                         name: proxy.$t('recentlyUsed'),
@@ -497,7 +494,6 @@
             })
 
             onMounted(() => {
-                // Auto-select temp paramSet if exists (from "Reuse Parameters Execute")
                 if (tempParamSet.value) {
                     paramSetId.value = TEMP_PARAM_SET_ID
                     applyParamSet()
@@ -523,11 +519,9 @@
             async function applyParamSet () {
                 const isLastUsed = paramSetId.value === LAST_USED_SET.value.id
                 const isTempSet = paramSetId.value === TEMP_PARAM_SET_ID
-                // Virtual sets (LAST_USED and temp) have params attached directly
                 const isVirtualSet = isLastUsed || isTempSet
                 let set
                 if (isVirtualSet) {
-                    // Use current props.allParams for LAST_USED (not the cached value in LAST_USED_SET)
                     const sourceParams = isLastUsed ? props.allParams : (tempParamSet.value?.params ?? [])
                     if (isTempSet && !tempParamSet.value) return
                     set = {
@@ -541,7 +535,6 @@
                 if (!set) {
                     return
                 }
-                // Only fetch details for regular sets that don't have params loaded yet
                 if (!isVirtualSet && !set.params?.length) {
                     isApplying.value = true
                     const allParams = await dispatch('fetchParamSetDetail', {
@@ -566,7 +559,7 @@
             function showParamSetManageSlide (setId) {
                 const pos = paramSetList.value.findIndex(item => item.id === setId)
                 isShowParamSetManageSlide.value = true
-                console.log(paramSetSelector.value?.close())
+                paramSetSelector.value?.close()
                 if (pos >= 0 && setId) {
                     switchManageSet(pos)
                 }
