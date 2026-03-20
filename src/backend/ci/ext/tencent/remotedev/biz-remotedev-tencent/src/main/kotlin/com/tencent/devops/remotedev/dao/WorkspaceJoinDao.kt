@@ -237,11 +237,7 @@ class WorkspaceJoinDao {
             }
 
             search.workspaceSystemType?.ifEmpty { null }?.let { types ->
-                if (search.onFuzzyMatch) {
-                    conditions.add(SYSTEM_TYPE.likeRegex(types.joinToString("|") { it.name }))
-                } else {
                     conditions.add(SYSTEM_TYPE.`in`(types.map { it.name }))
-                }
             }
             /* 二级匹配OWNER_TYPE */
             /* 第一级以search中单独指定为准 */
