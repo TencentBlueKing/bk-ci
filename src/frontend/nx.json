@@ -3,7 +3,10 @@
   "targetDefaults": {
     "public:master": {
       "dependsOn": ["^public:master"],
-      "outputs": ["{projectRoot}/dist", "{workspaceRoot}/frontend"],
+      "outputs": [
+        "{projectRoot}/dist",
+        "{workspaceRoot}/frontend/entries/*.json"
+      ],
       "cache": true
     },
     "dev": {
