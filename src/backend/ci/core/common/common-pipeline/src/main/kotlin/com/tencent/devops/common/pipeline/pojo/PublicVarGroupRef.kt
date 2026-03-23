@@ -58,6 +58,5 @@ data class PublicVarGroupRef(
                 variables = variables
             )
         }
-
     }
 }

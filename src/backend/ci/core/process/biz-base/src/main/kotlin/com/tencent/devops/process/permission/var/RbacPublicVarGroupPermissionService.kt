@@ -156,7 +156,7 @@ class RbacPublicVarGroupPermissionService constructor(
         }
         return resourcePermission
     }
-    
+
     override fun getPublicVarGroupPermissions(
         userId: String,
         projectId: String,
