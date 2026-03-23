@@ -117,6 +117,10 @@ def escape_value(val):
 def export_table(conn, database, table, columns, output_file):
     """导出单张表到 SQL 文件"""
     row_count = get_row_count(conn, table)
+    if row_count == 0:
+        print(f"  {table}: 0 行，跳过导出")
+        return None
+
     col_names = ", ".join(f"`{c}`" for c in columns)
     written = 0
 
@@ -124,10 +128,6 @@ def export_table(conn, database, table, columns, output_file):
         f.write(f"-- Table: {database}.{table}\n")
         f.write(f"-- Rows: {row_count}\n")
         f.write(f"-- Exported at: {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n")
-
-        if row_count == 0:
-            f.write("-- (empty table)\n")
-            return 0
 
         with conn.cursor() as cur:
             cur.execute(f"SELECT {col_names} FROM `{table}`")
@@ -163,6 +163,8 @@ def export_database(host, port, user, password, database, output_dir):
             columns = get_columns(conn, database, table)
             output_file = os.path.join(db_dir, f"{table}.sql")
             count = export_table(conn, database, table, columns, output_file)
+            if count is None:
+                continue
             print(f"  {table}: {count} 行 -> {output_file}")
     finally:
         conn.close()
