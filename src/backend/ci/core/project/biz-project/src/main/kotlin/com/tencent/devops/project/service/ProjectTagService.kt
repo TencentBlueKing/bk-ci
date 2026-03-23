@@ -39,7 +39,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectTagDao
 import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
@@ -47,14 +46,14 @@ import com.tencent.devops.project.pojo.ProjectPercentageRoutingRequest
 import com.tencent.devops.project.pojo.ProjectPercentageRoutingResult
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.enums.SystemEnums
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import java.util.zip.CRC32
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.zip.CRC32
 
 @Suppress("ALL")
 @Service
