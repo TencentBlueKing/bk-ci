@@ -42,6 +42,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.DYNAMIC_VERSION
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_YAML_DESERIALIZE_ERROR
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR
@@ -802,14 +803,14 @@ class PublicVarGroupService @Autowired constructor(
             }
 
             // 批量查询变量组记录，避免 N+1 查询
-            // version 为 null 时表示动态最新版本，用 -1 作为 key 占位
+            // version 为 null 时表示动态最新版本，用 DYNAMIC_VERSION 作为 key 占位
             val groupNameVersionPairs = referInfos.map { it.groupName to it.version }
             val groupRecordMap = publicVarGroupDao.batchGetRecordsByGroupNameAndVersion(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupNameVersionPairs = groupNameVersionPairs
             ).associateBy { record ->
-                val keyVersion = if (record.latestFlag == true) -1 else record.version
+                val keyVersion = if (record.latestFlag == true) DYNAMIC_VERSION else record.version
                 record.groupName to keyVersion
             }
 

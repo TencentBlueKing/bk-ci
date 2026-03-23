@@ -362,8 +362,13 @@ class PublicVarGroupReferInfoDao {
             notExistsHigherVersionQuery = notExistsHigherVersionQuery.and(trpvgriSub.REFER_TYPE.eq(it.name))
         }
 
-        // 分离有/无实际变量引用的 referId
-        val idsWithVar = referIdsWithActualVar.ifEmpty { listOf("") }
+        // 分离有/无实际变量引用的 referId，使用 DSL 条件替代空字符串哨兵值
+        val idsWithVarCondition = if (referIdsWithActualVar.isEmpty()) {
+            // 没有任何 referId 有实际变量引用，情况1直接返回空结果
+            DSL.falseCondition()
+        } else {
+            trpvgri.REFER_ID.`in`(referIdsWithActualVar)
+        }
         val idsWithoutVarCondition = if (referIdsWithActualVar.isEmpty()) {
             // 没有任何 referId 有实际变量引用，全部走 "无变量引用" 分支
             DSL.trueCondition()
@@ -374,7 +379,7 @@ class PublicVarGroupReferInfoDao {
         // 情况1: 有实际变量引用的 referId，取有变量引用版本中的最大 referVersion
         val queryWithVar = dslContext.selectFrom(trpvgri)
             .where(conditions)
-            .and(trpvgri.REFER_ID.`in`(idsWithVar))
+            .and(idsWithVarCondition)
             .and(existsVarReferCondition)
             .and(DSL.notExists(notExistsHigherVersionWithVarQuery))
 
