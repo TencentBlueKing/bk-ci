@@ -114,6 +114,13 @@ def execute_session_setting(conn, sql, warn_prefix):
     return True
 
 
+def print_sql_error(prefix, sql, error):
+    """打印 SQL 执行异常和对应语句内容。"""
+    print(f"{prefix}: {error}")
+    print("    [SQL]")
+    print(sql)
+
+
 def get_target_columns(conn, database, table):
     """获取目标库中表的列名列表"""
     with conn.cursor() as cur:
@@ -388,7 +395,11 @@ def import_table_file(conn, database, table_file, tenant_fields, skip_existing):
                 total_imported += len(batch)
             except Exception as e:
                 conn.rollback()
-                print(f"    [ERROR] {table_name} batch@{batch_start}: {e}")
+                print_sql_error(
+                    f"    [ERROR] {table_name} batch@{batch_start}",
+                    sql,
+                    e,
+                )
                 # 逐行重试
                 for row_sql in new_rows:
                     single = f"INSERT IGNORE INTO `{table_name}` ({col_names_sql}) VALUES\n{row_sql};"
@@ -399,7 +410,11 @@ def import_table_file(conn, database, table_file, tenant_fields, skip_existing):
                         total_imported += 1
                     except Exception as e2:
                         conn.rollback()
-                        print(f"    [ERROR] {table_name} single row: {e2}")
+                        print_sql_error(
+                            f"    [ERROR] {table_name} single row",
+                            single,
+                            e2,
+                        )
 
     return total_imported
 
