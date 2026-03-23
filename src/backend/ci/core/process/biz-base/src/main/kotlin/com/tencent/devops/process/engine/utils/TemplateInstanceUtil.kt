@@ -658,10 +658,32 @@ object TemplateInstanceUtil {
                     pipelineProps = pipelineParam.cascadeProps,
                     templateProps = templateParam.cascadeProps
                 )
-                pipelineParam.options = templateParam.options
+                pipelineParam.options = mergeOptionsWithDefaultValue(
+                    templateOptions = templateParam.options,
+                    defaultValue = pipelineParam.defaultValue
+                )
+                pipelineParam.searchUrl = templateParam.searchUrl
+                pipelineParam.replaceKey = templateParam.replaceKey
             }
             pipelineParam
         }
+    }
+
+    /**
+     * 合并模版options与流水线默认值:
+     * 如果模版options中不包含流水线的默认值,则将默认值追加到options中
+     */
+    private fun mergeOptionsWithDefaultValue(
+        templateOptions: List<BuildFormValue>?,
+        defaultValue: Any
+    ): List<BuildFormValue>? {
+        if (templateOptions == null) return null
+        if (defaultValue !is String) return templateOptions
+        if (templateOptions.any { it.key == defaultValue }) return templateOptions
+        val merged = mutableListOf<BuildFormValue>()
+        merged.addAll(templateOptions)
+        merged.add(BuildFormValue(key = defaultValue, value = defaultValue))
+        return merged
     }
 
     /**
