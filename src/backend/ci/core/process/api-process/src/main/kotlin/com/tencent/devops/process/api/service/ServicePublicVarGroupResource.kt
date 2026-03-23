@@ -43,7 +43,7 @@ import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.core.MediaType
 
-@Tag(name = "SERVICE_PUBLIC_VAR_GROUP", description = "用户-公共变量组")
+@Tag(name = "SERVICE_PUBLIC_VAR_GROUP", description = "SERVICE-公共变量组")
 @Path("/service/pipeline/public/var/groups")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

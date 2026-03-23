@@ -61,18 +61,6 @@ interface PublicVarGroupPermissionService {
     ): PublicVarGroupPermissions
 
     /**
-     * 获取拥有指定权限的公共变量组资源
-     * @param userId 用户ID
-     * @param projectId 项目ID
-     * @param permissions 权限集合
-     */
-    fun getResourcesByPermission(
-        userId: String,
-        projectId: String,
-        permissions: Set<AuthPermission>
-    ): Map<AuthPermission, List<String>>
-
-    /**
      * 批量过滤公共变量组权限
      * @param userId 用户ID
      * @param projectId 项目ID

@@ -196,8 +196,8 @@ class PublicVarReferInfoService @Autowired constructor(
         // 如果Model中没有变量组，清理所有已存在的引用记录
         if (modelVarGroups.isEmpty()) {
             val varsNeedRecalculate = cleanupRemovedVarGroupReferences(
-                CleanupVarGroupReferenceRequest(
-                    context = context,
+                context = context,
+                request = CleanupVarGroupReferenceRequest(
                     projectId = projectId,
                     resourceId = resourceId,
                     referType = referType,
@@ -323,8 +323,8 @@ class PublicVarReferInfoService @Autowired constructor(
 
         return if (groupsToCleanup.isNotEmpty()) {
             cleanupRemovedVarGroupReferences(
-                CleanupVarGroupReferenceRequest(
-                    context = queryParams.context,
+                context = queryParams.context,
+                request = CleanupVarGroupReferenceRequest(
                     projectId = queryParams.projectId,
                     resourceId = queryParams.resourceId,
                     referType = queryParams.referType,
@@ -577,8 +577,10 @@ class PublicVarReferInfoService @Autowired constructor(
      * @param request 清理请求DTO
      * @return 需要重新计算引用计数的变量信息集合
      */
-    private fun cleanupRemovedVarGroupReferences(request: CleanupVarGroupReferenceRequest): Set<VarCountUpdateInfo> {
-        val context = request.context
+    private fun cleanupRemovedVarGroupReferences(
+        context: DSLContext,
+        request: CleanupVarGroupReferenceRequest
+    ): Set<VarCountUpdateInfo> {
         val projectId = request.projectId
         val resourceId = request.resourceId
         val referType = request.referType

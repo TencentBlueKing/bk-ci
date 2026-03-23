@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.pojo.`var`.po
 
-import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
@@ -46,7 +46,7 @@ data class PipelinePublicVarReferPO(
     @get:Schema(title = "关联ID")
     val referId: String,
     @get:Schema(title = "关联类型")
-    val referType: PublicVerGroupReferenceTypeEnum,
+    val referType: PublicVarGroupReferenceTypeEnum,
     @get:Schema(title = "引用的版本名称")
     val referVersionName: String,
     @get:Schema(title = "创建者")

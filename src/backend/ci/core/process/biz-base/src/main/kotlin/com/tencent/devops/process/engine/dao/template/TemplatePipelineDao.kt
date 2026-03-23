@@ -40,6 +40,7 @@ import com.tencent.devops.model.process.tables.TTemplatePipeline
 import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
 import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
+import com.tencent.devops.process.pojo.template.v2.TemplateVersionPair
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_TEMPLATE_ID
 import java.time.LocalDateTime
@@ -278,6 +279,48 @@ class TemplatePipelineDao {
             return dslContext.selectCount().from(this)
                 .where(conditions)
                 .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    /**
+     * 批量统计多个 (templateId, version) 的实例数量
+     * @param templateVersionPairs 模板版本对列表
+     * @return Map<TemplateVersionPair, count> 每个模板版本对应的实例数量
+     */
+    fun batchCountByTemplateVersions(
+        dslContext: DSLContext,
+        projectId: String,
+        instanceType: String,
+        templateVersionPairs: List<TemplateVersionPair>,
+        deleteFlag: Boolean? = null
+    ): Map<TemplateVersionPair, Int> {
+        if (templateVersionPairs.isEmpty()) {
+            return emptyMap()
+        }
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            val baseConditions = getQueryTemplatePipelineCondition(
+                projectId = projectId,
+                templateIds = templateVersionPairs.map { it.templateId }.distinct(),
+                instanceType = instanceType,
+                deleteFlag = deleteFlag
+            )
+            // 构造 (TEMPLATE_ID, VERSION) IN ((?, ?), ...) 条件
+            val pairConditions = templateVersionPairs.map { pair ->
+                DSL.row(TEMPLATE_ID, VERSION).eq(DSL.row(pair.templateId, pair.version.toLong()))
+            }
+            baseConditions.add(DSL.or(pairConditions))
+
+            return dslContext.select(TEMPLATE_ID, VERSION, DSL.count(PIPELINE_ID))
+                .from(this)
+                .where(baseConditions)
+                .groupBy(TEMPLATE_ID, VERSION)
+                .fetch()
+                .associate { record ->
+                    TemplateVersionPair(
+                        templateId = record.value1(),
+                        version = record.value2().toInt()
+                    ) to (record.value3() ?: 0)
+                }
         }
     }
 

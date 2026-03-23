@@ -28,13 +28,11 @@
 package com.tencent.devops.process.pojo.`var`
 
 import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
-import org.jooq.DSLContext
 
 /**
  * 清理变量组引用请求DTO
  */
 data class CleanupVarGroupReferenceRequest(
-    val context: DSLContext,
     val projectId: String,
     val resourceId: String,
     val referType: PublicVarGroupReferenceTypeEnum,

@@ -470,29 +470,35 @@ class PublicVarReferInfoDao {
     }
 
     /**
-     * 统计每个 referId 引用某变量组的变量数量
+     * 统计每个 referId 在指定活跃版本中引用某变量组的变量数量
+     * 同一 referId 的多个活跃版本（最新版本、分支版本、草稿）引用同一变量计为 1
      * @param dslContext 数据库上下文
      * @param projectId 项目ID
      * @param groupName 变量组名
-     * @param referIds 引用ID列表
-     * @return Map<referId, count> 每个资源引用的变量数量
+     * @param referIdVersions referId 到活跃版本列表的映射
+     * @return Map<referId, count> 每个资源引用的去重变量数量
      */
-    fun countVarReferByGroupAndReferIds(
+    fun countVarReferByGroupAndActiveVersions(
         dslContext: DSLContext,
         projectId: String,
         groupName: String,
-        referIds: List<String>
+        referIdVersions: Map<String, List<Int>>
     ): Map<String, Int> {
-        if (referIds.isEmpty()) {
+        if (referIdVersions.isEmpty()) {
             return emptyMap()
         }
 
         with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
+            // 构造条件：(REFER_ID = ? AND REFER_VERSION IN (?)) OR ...
+            val versionConditions = referIdVersions.map { (referId, versions) ->
+                REFER_ID.eq(referId).and(REFER_VERSION.`in`(versions))
+            }.reduce { acc, condition -> acc.or(condition) }
+
             return dslContext.select(REFER_ID, DSL.countDistinct(VAR_NAME))
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(GROUP_NAME.eq(groupName))
-                .and(REFER_ID.`in`(referIds))
+                .and(versionConditions)
                 .groupBy(REFER_ID)
                 .fetch()
                 .associate { record ->

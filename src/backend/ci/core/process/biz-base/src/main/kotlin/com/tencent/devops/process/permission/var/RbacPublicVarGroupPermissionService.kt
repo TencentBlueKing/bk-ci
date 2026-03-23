@@ -64,23 +64,6 @@ class RbacPublicVarGroupPermissionService constructor(
         return true
     }
 
-    override fun getResourcesByPermission(
-        userId: String,
-        projectId: String,
-        permissions: Set<AuthPermission>
-    ): Map<AuthPermission, List<String>> {
-        return permissions.associateWith {
-            authPermissionApi.getUserResourceByPermission(
-                user = userId,
-                serviceCode = publicVarGroupAuthServiceCode,
-                resourceType = RESOURCE_TYPE,
-                projectCode = projectId,
-                permission = it,
-                supplier = null
-            )
-        }
-    }
-
     override fun filterPublicVarGroups(
         userId: String,
         projectId: String,
@@ -172,6 +155,30 @@ class RbacPublicVarGroupPermissionService constructor(
             )
         }
         return resourcePermission
+    }
+    
+    override fun getPublicVarGroupPermissions(
+        userId: String,
+        projectId: String,
+        groupName: String
+    ): PublicVarGroupPermissions {
+        val permissionMap = filterPublicVarGroups(
+            userId = userId,
+            projectId = projectId,
+            authPermissions = setOf(
+                AuthPermission.EDIT,
+                AuthPermission.VIEW,
+                AuthPermission.DELETE,
+                AuthPermission.USE
+            ),
+            groupNames = listOf(groupName)
+        )
+        return PublicVarGroupPermissions(
+            canEdit = permissionMap[AuthPermission.EDIT]?.contains(groupName) ?: false,
+            canView = permissionMap[AuthPermission.VIEW]?.contains(groupName) ?: false,
+            canDelete = permissionMap[AuthPermission.DELETE]?.contains(groupName) ?: false,
+            canUse = permissionMap[AuthPermission.USE]?.contains(groupName) ?: false
+        )
     }
 
     companion object {

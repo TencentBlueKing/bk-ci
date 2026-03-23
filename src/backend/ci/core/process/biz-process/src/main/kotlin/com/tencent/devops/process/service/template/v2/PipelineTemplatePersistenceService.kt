@@ -319,21 +319,6 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                 pipelineTemplateResource = pipelineTemplateResource,
                 pipelineTemplateSetting = pipelineTemplateSetting
             )
-
-            (pTemplateResourceWithoutVersion.model as? Model)?.let {
-                publicVarGroupReferManageService.handleVarGroupReferBus(
-                    PublicVarGroupReferDTO(
-                        userId = userId,
-                        projectId = projectId,
-                        model = it,
-                        referId = templateId,
-                        referType = PublicVarGroupReferenceTypeEnum.TEMPLATE,
-                        referName = pipelineTemplateInfo.name,
-                        referVersion = pipelineTemplateResource.version.toInt(),
-                        referVersionName = pipelineTemplateResource.versionName ?: ""
-                    )
-                )
-            }
         }
     }
 
