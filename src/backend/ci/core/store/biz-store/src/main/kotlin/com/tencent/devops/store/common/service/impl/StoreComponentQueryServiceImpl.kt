@@ -43,6 +43,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ThreadLocalUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.util.RegexUtils
 import com.tencent.devops.common.web.utils.BkApiUtil
@@ -77,6 +78,7 @@ import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.pojo.common.BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.KEY_BUILD_LESS_RUN_FLAG
 import com.tencent.devops.store.pojo.common.KEY_HTML_TEMPLATE_VERSION
@@ -613,7 +615,12 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     ): StoreDetailInfo? {
         return getComponent(
             version = version,
-            storeCode = storeCode,
+            storeCode = if (storeCode == ManualTriggerElement.classType) {
+                // 兼容手动触发器
+                BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
+            } else {
+                storeCode
+            },
             storeType = storeType,
             ownerStoreCode = ownerStoreCode
         )?.let {
