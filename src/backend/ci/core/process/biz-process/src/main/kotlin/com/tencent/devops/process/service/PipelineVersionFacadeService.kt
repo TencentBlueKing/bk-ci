@@ -70,8 +70,8 @@ import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionManager
 import com.tencent.devops.process.service.scm.ScmProxyService
-import com.tencent.devops.process.service.template.v2.PipelineTemplateCompatibilityAdapter
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
+import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
@@ -91,7 +91,7 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val repositoryVersionService: PipelineRepositoryVersionService,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
     private val pipelineRecentUseService: PipelineRecentUseService,
-    private val templateCompatibilityAdapter: PipelineTemplateCompatibilityAdapter,
+    private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val scmProxyService: ScmProxyService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineVersionManager: PipelineVersionManager,
@@ -411,13 +411,21 @@ class PipelineVersionFacadeService @Autowired constructor(
                 pipelineCreator = userId
             )
         } else {
-            templateCompatibilityAdapter.getTemplate(
-                userId = userId,
-                projectId = projectId,
-                templateId = request.templateId,
-                version = request.templateVersion,
-                versionName = null
-            ).template
+            val templateResource = if (request.templateVersion != null) {
+                pipelineTemplateResourceService.get(
+                    projectId = projectId,
+                    templateId = request.templateId,
+                    version = request.templateVersion!!
+                )
+            } else {
+                pipelineTemplateResourceService.getLatestReleasedResource(
+                    projectId = projectId,
+                    templateId = request.templateId
+                ) ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
+                )
+            }
+            templateResource.model as Model
         }
         val pipelineAsCodeSettings = PipelineAsCodeSettings.initDialect(
             inheritedDialect = request.inheritedDialect,
