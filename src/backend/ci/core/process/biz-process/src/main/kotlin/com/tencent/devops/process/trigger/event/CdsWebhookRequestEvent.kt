@@ -5,7 +5,7 @@ import com.tencent.devops.common.event.pojo.IEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Event(StreamBinding.REMOTEDEV_WEBHOOK_REQUEST_EVENT)
+@Event(StreamBinding.CDS_WEBHOOK_REQUEST_EVENT)
 data class CdsWebhookRequestEvent(
     @get:Schema(description = "用户ID")
     val userId: String,

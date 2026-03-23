@@ -261,7 +261,7 @@ class WebhookRequestService(
     fun handleStoreEvent(replayEvent: ReplayWebhookEvent, triggerEvent: PipelineTriggerEvent) {
         with(replayEvent) {
             // 使用MarketEventRequestService的公共方法处理事件分发逻辑
-            marketEventRequestService.handleTriggerEvent(triggerEvent, pipelineId = replayEvent.pipelineId)
+            marketEventRequestService.dispatchCdsTriggerEvent(triggerEvent, pipelineId = replayEvent.pipelineId)
         }
     }
 

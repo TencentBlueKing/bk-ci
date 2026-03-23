@@ -16,7 +16,7 @@ import com.tencent.devops.process.pojo.WorkspaceBaseInfo
 import com.tencent.devops.process.pojo.trigger.GenericWebhookEventBody
 import com.tencent.devops.process.pojo.trigger.PipelineEventSubscriber
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
-import com.tencent.devops.process.service.CreativeStreamService
+import com.tencent.devops.process.service.CreateStreamTriggerSupportService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.event.GenericWebhookRequestEvent
 import com.tencent.devops.process.trigger.event.CdsWebhookRequestEvent
@@ -33,7 +33,7 @@ import java.time.LocalDateTime
 class MarketEventRequestService constructor(
     private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val sampleEventDispatcher: SampleEventDispatcher,
-    private val creativeStreamService: CreativeStreamService
+    private val creativeStreamService: CreateStreamTriggerSupportService
 ) {
     fun handleCdsWebhookRequestEvent(event: CdsWebhookRequestEvent) {
         logger.info("Receive CdsWebhookRequestEvent from MQ [${JsonUtil.toJson(event, false)}]")
@@ -86,7 +86,7 @@ class MarketEventRequestService constructor(
                 )
                 pipelineTriggerEventService.saveTriggerEvent(triggerEvent = triggerEvent)
                 // 2. 使用公共方法处理事件分发
-                handleTriggerEvent(
+                dispatchCdsTriggerEvent(
                     triggerEvent = triggerEvent,
                     pipelineId = null,
                     workspaceBaseInfo = workspaceInfo
@@ -100,7 +100,7 @@ class MarketEventRequestService constructor(
      * 用于处理研发商店事件的公共逻辑
      */
     @SuppressWarnings("NestedBlockDepth")
-    fun handleTriggerEvent(
+    fun dispatchCdsTriggerEvent(
         triggerEvent: PipelineTriggerEvent,
         pipelineId: String? = null,
         workspaceBaseInfo: WorkspaceBaseInfo? = null
