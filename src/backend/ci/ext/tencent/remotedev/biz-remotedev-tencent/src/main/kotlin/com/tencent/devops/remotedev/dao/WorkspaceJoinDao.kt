@@ -75,7 +75,11 @@ class WorkspaceJoinDao {
             if (limit != null) {
                 dsl.limit(limit.limit).offset(limit.offset)
             }
-            logger.debug("limitFetchProjectWorkspace dsl{}", dsl)
+            logger.debug(
+                "limitFetchProjectWorkspace dsl: {}",
+                dslContext.renderInlined(dsl)
+            )
+
             return dsl.skipCheck()
                 .fetch(workspaceWithWindowsMapper)
         }
