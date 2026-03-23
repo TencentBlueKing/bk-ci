@@ -433,10 +433,8 @@ class ProjectTagService @Autowired constructor(
 
         val watcher = Watcher("percentageRouting ${request.targetPercent}% -> ${request.targetTag}")
         logger.info(
-            "percentageRouting start|" +
-                "targetPercent=${request.targetPercent}|channelCode=${request.channelCode}|" +
-                "sourceTag=${request.sourceTag}|targetTag=${request.targetTag}|" +
-                "dryRun=${request.dryRun}"
+            "percentageRouting start|targetPercent=${request.targetPercent}|" +
+                "sourceTag=${request.sourceTag}|targetTag=${request.targetTag}|dryRun=${request.dryRun}"
         )
 
         val blacklist = getBlacklist()
@@ -444,7 +442,6 @@ class ProjectTagService @Autowired constructor(
             "percentageRouting lists loaded|blacklistSize=${blacklist.size}"
         )
 
-        val condition = ProjectConditionDTO(channelCode = request.channelCode)
         val threshold = request.targetPercent
 
         var totalProjectCount = 0
@@ -454,7 +451,7 @@ class ProjectTagService @Autowired constructor(
         var offset = 0
         var pageSize: Int
         do {
-            val page = projectDao.listProjectsByCondition(dslContext, condition, PAGE_SIZE, offset)
+            val page = projectDao.listProjectsByCondition(dslContext, request.condition, PAGE_SIZE, offset)
             pageSize = page.size
             totalProjectCount += pageSize
 
