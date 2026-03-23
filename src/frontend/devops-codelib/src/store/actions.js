@@ -682,6 +682,19 @@ const actions = {
     }, value) {
         commit(SET_PROVIDER_CONFIG, value)
     },
+    /**
+     * 获取用户所有git项目组
+     */
+    async fetchProjectGroup ({ commit }, { projectId, search }) {
+        const query = `projectId=${projectId}${search ? `&search=${encodeURIComponent(search)}` : ''}`
+        const res = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/git/getProjectGroup?${query}`)
+
+        commit(SET_OAUTH_MUTATION, {
+            oAuth: res,
+            type: 'git'
+        })
+        return res
+    },
     getOauthUserList ({ commit }, { scmCode }) {
         return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/oauth/userList?scmCode=${scmCode}`)
     }

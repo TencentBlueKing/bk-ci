@@ -18,7 +18,7 @@
     "new": "新規",
     "aliasName": "別名",
     "aliasNameEnter": "別名を入力してください",
-    "address": "リポジトリのアドレス",
+    "address": "リポジトリ/リポジトリグループのアドレス",
     "type": "タイプ",
     "operation": "操作",
     "edit": "編集",
@@ -207,6 +207,10 @@
     "触发失败": "トリガー失敗",
     "触发器不匹配": "トリガー不一致",
     "触发结果": "トリガー結果",
-    "codelibUndeployTitle": "{0}接続サービスがまだデプロイされていません",
-    "githubUndeployDesc": "この機能を使用するには、プラットフォーム管理者にGitHubAPPを登録してもらう必要があります"
+    "codelibUndeployTitle": "{0}接続サービスはまだ展開されていません",
+    "githubUndeployDesc": "この機能を使用するには、プラットフォーム管理者に連絡してGitHub APPを登録してください。",
+    "CodeBuddy（内网版）": "CodeBuddy（内部版）",
+    "authorizeAccount": "アカウントの認可",
+    "codeRepoGroup": "コードリポジトリグループ",
+    "gitAddress": "Git アドレス"
 }

@@ -74,23 +74,42 @@
                 </bk-select>
             </bk-form-item>
             <bk-form-item
-                :label="$t('codelib.address')"
+                :label="$t('codelib.gitAddress')"
                 :required="true"
                 property="url"
                 error-display-type="normal"
             >
-                <bk-select
-                    v-model="codelib.url"
-                    v-bind="selectComBindData"
-                >
-                    <bk-option
-                        v-for="option in oAuth.project"
-                        :key="option.httpUrl"
-                        :id="option.httpUrl"
-                        :name="option.httpUrl"
+                <div class="git-address-wrapper">
+                    <div class="git-address-tabs">
+                        <span
+                            class="tab-item"
+                            :class="{ active: gitAddressTab === 'repo' }"
+                            @click="handleGitAddressTabChange('repo')"
+                        >
+                            {{ $t('codelib.codelib') }}
+                        </span>
+                        <span
+                            class="tab-item"
+                            :class="{ active: gitAddressTab === 'repoGroup' }"
+                            @click="handleGitAddressTabChange('repoGroup')"
+                        >
+                            {{ $t('codelib.codeRepoGroup') }}
+                        </span>
+                    </div>
+                    <bk-select
+                        v-model="codelib.url"
+                        v-bind="selectComBindData"
+                        class="git-address-select"
                     >
-                    </bk-option>
-                </bk-select>
+                        <bk-option
+                            v-for="option in oAuth.project"
+                            :key="option.httpUrl"
+                            :id="option.httpUrl"
+                            :name="option.httpUrl"
+                        >
+                        </bk-option>
+                    </bk-select>
+                </div>
             </bk-form-item>
             <bk-form-item
                 :label="$t('codelib.aliasName')"
@@ -107,6 +126,7 @@
             </bk-form-item>
             
             <bk-form-item
+                v-if="gitAddressTab !== 'repoGroup'"
                 :label="$t('codelib.PACmode')"
             >
                 <div class="pac-item">
@@ -268,6 +288,44 @@
         margin-top: 10px;
         font-size: 12px;
         color: #979ba5ff;
+    }
+    .git-address-wrapper {
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+    .git-address-tabs {
+        display: flex;
+        flex-shrink: 0;
+        background-color: #F0F1F5;
+        padding: 4px;
+        border-radius: 2px;
+        margin-right: 8px;
+        overflow: hidden;
+        .tab-item {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 24px;
+            padding: 4px 12px;
+            font-size: 12px;
+            color: #63656E;
+            cursor: pointer;
+            white-space: nowrap;
+            border-radius: 2px;
+            transition: all 0.15s;
+            &:hover {
+                color: #3A84FF;
+            }
+            &.active {
+                color: #3A84FF;
+                background: #FFFFFF;
+            }
+        }
+    }
+    .git-address-select {
+        flex: 1;
+        min-width: 0;
     }
     
 </style>

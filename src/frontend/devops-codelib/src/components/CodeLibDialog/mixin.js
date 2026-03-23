@@ -65,6 +65,7 @@ export default {
             'tgitOAuth',
             'scmgitOAuth',
             'scmsvnOAuth',
+            'gitAddressTab',
             'providerConfig'
         ]),
         oAuth () {
@@ -196,10 +197,12 @@ export default {
                 placeholder: this.$t('codelib.codelibUrlPlaceholder')
             }
             if (this.isGit) {
-                bindData.remoteMethod = this.handleSearchCodeLib
-            }
-            
-            if (this.isScmGit) {
+                if (this.gitAddressTab === 'repoGroup') {
+                    bindData.remoteMethod = this.handleSearchRepoGroup
+                } else {
+                    bindData.remoteMethod = this.handleSearchCodeLib
+                }
+            } else if (this.isScmGit) {
                 bindData.remoteMethod = this.handleSearchScmCodeLib
             }
             return bindData
@@ -273,7 +276,10 @@ export default {
             this.isLoadingTickets = false
         },
         'codelib.url': function (newVal) {
-            this.handleCheckPacProject(newVal)
+            // 代码库组不需要校验 PAC
+            if (this.gitAddressTab !== 'repoGroup') {
+                this.handleCheckPacProject(newVal)
+            }
             const { codelib, codelibTypeName } = this
             const { alias, msg } = parsePathAlias(
                 codelibTypeName,
@@ -313,8 +319,18 @@ export default {
             'checkOAuth',
             'checkTGitOAuth',
             'setTemplateCodelib',
+            'fetchProjectGroup',
             'checkPacProject'
         ]),
+
+        async handleGitAddressTabChange (tab) {
+            if (this.gitAddressTab === tab) return
+            this.$store.commit('codelib/SET_GIT_ADDRESS_TAB', tab)
+            this.updateCodelib({
+                url: '',
+                aliasName: ''
+            })
+        },
 
         handleSearchCodeLib (search) {
             const { projectId, codelibTypeConstants } = this
@@ -334,6 +350,13 @@ export default {
                 scmCode: this.codelib.scmCode,
                 search,
                 username: this.codelib.userName
+            })
+        },
+
+        async handleSearchRepoGroup (search) {
+            await this.fetchProjectGroup({
+                projectId: this.projectId,
+                search
             })
         },
 

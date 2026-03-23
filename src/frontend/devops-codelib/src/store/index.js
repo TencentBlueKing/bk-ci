@@ -52,6 +52,7 @@ const store = {
         scmsvnOAuth: {
             project: []
         },
+        gitAddressTab: 'repo', // 'repo' 代码库 | 'repoGroup' 代码库组
         templateCodeLib: null
     },
     getters: {}

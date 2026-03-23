@@ -28,7 +28,8 @@ import {
     SET_T_GIT_OAUTH_MUTATION,
     TOGGLE_CODE_LIB_DIALOG,
     UPDATE_CODE_LIB_MUTATION,
-    SET_PROVIDER_CONFIG
+    SET_PROVIDER_CONFIG,
+    SET_GIT_ADDRESS_TAB
 } from './constants'
 const mutations = {
     [SET_CODELIB_TYPES]: (state, codelibTypes) => {
@@ -76,6 +77,9 @@ const mutations = {
     },
     [SET_TEMPLATE_CODELIB] (state, codelib) {
         Vue.set(state, 'templateCodeLib', codelib)
+    },
+    [SET_GIT_ADDRESS_TAB] (state, tab) {
+        Vue.set(state, 'gitAddressTab', tab)
     },
     [SET_PROVIDER_CONFIG] (state, value) {
         Vue.set(state, 'providerConfig', value)

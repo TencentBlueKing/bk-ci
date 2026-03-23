@@ -350,7 +350,7 @@
                     this.oauthUserList = await this.getOauthUserList({
                         scmCode
                     })
-                    const defaultUserName = this.oauthUserList[0].username
+                    const defaultUserName = this.oauthUserList[0]?.username
                     const username = this.user.username
                     const curUserName = this.oauthUserList.find(i => i.username === username)?.username || defaultUserName
                     return curUserName

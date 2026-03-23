@@ -81,6 +81,14 @@
                             {{ props.row.aliasName }}
                         </div>
                         <span
+                            v-if="props.row.repoResourceType === 'REPOSITORY_GROUP'"
+                            v-bk-tooltips="$t('codelib.codeRepoGroup')"
+                            class="codelib-group"
+                        ><Icon
+                            name="group"
+                            size="12"
+                        /></span>
+                        <span
                             v-if="props.row.enablePac"
                             class="pac-icon"
                         >
@@ -725,6 +733,18 @@
         white-space: nowrap;
         text-overflow: ellipsis;
         overflow: hidden;
+    }
+    .codelib-group {
+        display: inline-block;
+        margin-left: 8px;
+        padding: 0 2px 2px;
+        font-size: 12px;
+        color: #4D4F56;
+        background: #EAEBF0;
+        border-radius: 2px;
+        svg {
+            vertical-align: middle;
+        }
     }
     > footer {
         display: flex;

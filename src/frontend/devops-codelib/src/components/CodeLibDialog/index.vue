@@ -245,11 +245,17 @@
                             username: this.codelib.userName
                         })
                     } else if (this.codelib.authType === 'OAUTH') {
-                        await this.checkOAuth({
-                            projectId,
-                            type: codelibTypeConstants,
-                            username: this.codelib.userName
-                        })
+                        if (this.gitAddressTab === 'repoGroup') {
+                            await this.fetchProjectGroup({
+                                projectId
+                            })
+                        } else {
+                            await this.checkOAuth({
+                                projectId,
+                                type: codelibTypeConstants,
+                                username: this.codelib.userName
+                            })
+                        }
                     }
                 }
             }
@@ -262,6 +268,7 @@
                 'updateCodelib',
                 'createRepo',
                 'toggleCodelibDialog',
+                'fetchProjectGroup',
                 'setTemplateCodelib'
             ]),
             
