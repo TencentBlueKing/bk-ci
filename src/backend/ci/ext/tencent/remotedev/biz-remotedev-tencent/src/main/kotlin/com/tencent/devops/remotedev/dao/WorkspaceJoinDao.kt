@@ -489,14 +489,23 @@ class WorkspaceJoinDao {
         dslContext: DSLContext,
         userId: String
     ): Set<String> {
-        return dslContext.select(TWorkspace.T_WORKSPACE.PROJECT_ID)
+        return dslContext.selectDistinct(TWorkspace.T_WORKSPACE.PROJECT_ID)
             .from(TWorkspace.T_WORKSPACE)
-            .leftJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
-            .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
-            .where(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
-            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.eq(userId))
-            .fetch().distinct()
-            .map { it[TWorkspace.T_WORKSPACE.PROJECT_ID.name] as String? ?: "" }
+            .innerJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
+            .on(
+                TWorkspace.T_WORKSPACE.NAME.eq(
+                    TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME
+                )
+            )
+            .where(
+                TWorkspace.T_WORKSPACE.STATUS
+                    .notEqual(WorkspaceStatus.DELETED.ordinal)
+            )
+            .and(
+                TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.eq(userId)
+            )
+            .fetch()
+            .map { it[TWorkspace.T_WORKSPACE.PROJECT_ID] ?: "" }
             .filter { it.isNotBlank() }
             .toSet()
     }
@@ -531,15 +540,20 @@ class WorkspaceJoinDao {
             }
     }
 
-    // 获取正常状态的 workspace 的用户
     fun fetchProjectSharedUser(
         dslContext: DSLContext,
         projectIds: Set<String>
     ): Set<String> {
-        val dsl = dslContext.select(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER)
+        return dslContext.selectDistinct(
+            TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
+        )
             .from(TWorkspace.T_WORKSPACE)
-            .leftJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
-            .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
+            .innerJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
+            .on(
+                TWorkspace.T_WORKSPACE.NAME.eq(
+                    TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME
+                )
+            )
             .where(TWorkspace.T_WORKSPACE.PROJECT_ID.`in`(projectIds))
             .and(
                 TWorkspace.T_WORKSPACE.STATUS.notIn(
@@ -548,8 +562,11 @@ class WorkspaceJoinDao {
                     WorkspaceStatus.DELIVERING_FAILED.ordinal
                 )
             )
-        return dsl.fetch().distinct()
-            .map { it[TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER] ?: "" }
+            .fetch()
+            .map {
+                it[TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER]
+                    ?: ""
+            }
             .filter { it.isNotBlank() }
             .toSet()
     }
@@ -601,31 +618,60 @@ class WorkspaceJoinDao {
         size: String?,
         owners: Set<String>?
     ): Set<String> {
-        val dsl = dslContext.select(TWorkspace.T_WORKSPACE.HOST_NAME).from(TWorkspace.T_WORKSPACE)
+        val dsl = dslContext.select(TWorkspace.T_WORKSPACE.HOST_NAME)
+            .from(TWorkspace.T_WORKSPACE)
         if (!size.isNullOrEmpty()) {
             dsl.leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
-                .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
+                .on(
+                    TWorkspace.T_WORKSPACE.NAME.eq(
+                        TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME
+                    )
+                )
             dsl.leftJoin(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE)
                 .on(
                     TWorkspaceWindows.T_WORKSPACE_WINDOWS.WIN_CONFIG_ID.eq(
-                        TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.ID.cast(Int::class.java)
+                        TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.ID
+                            .cast(Int::class.java)
                     )
                 )
         }
-        if (!owners.isNullOrEmpty()) {
-            dsl.leftJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
-                .on(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME.eq(TWorkspace.T_WORKSPACE.NAME))
-        }
-        val stepDsl = dsl.where(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId))
-            .and(TWorkspace.T_WORKSPACE.STATUS.eq(WorkspaceStatus.RUNNING.ordinal))
+        val stepDsl = dsl
+            .where(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId))
+            .and(
+                TWorkspace.T_WORKSPACE.STATUS
+                    .eq(WorkspaceStatus.RUNNING.ordinal)
+            )
         if (!size.isNullOrBlank()) {
-            stepDsl.and(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE.eq(size))
+            stepDsl.and(
+                TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE.eq(size)
+            )
         }
         if (!owners.isNullOrEmpty()) {
-            stepDsl.and(TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
-                .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(owners))
+            stepDsl.and(
+                DSL.exists(
+                    DSL.selectOne()
+                        .from(TWorkspaceShared.T_WORKSPACE_SHARED)
+                        .where(
+                            TWorkspaceShared.T_WORKSPACE_SHARED
+                                .WORKSPACE_NAME
+                                .eq(TWorkspace.T_WORKSPACE.NAME)
+                                .and(
+                                    TWorkspaceShared.T_WORKSPACE_SHARED
+                                        .ASSIGN_TYPE.eq(
+                                            WorkspaceShared.AssignType
+                                                .OWNER.name
+                                        )
+                                )
+                                .and(
+                                    TWorkspaceShared.T_WORKSPACE_SHARED
+                                        .SHARED_USER.`in`(owners)
+                                )
+                        )
+                )
+            )
         }
-        return stepDsl.fetch().map { it["HOST_NAME"] as String }.toSet()
+        return stepDsl.fetch()
+            .map { it["HOST_NAME"] as String }.toSet()
     }
 
     fun fetchRunningUser(
@@ -633,13 +679,26 @@ class WorkspaceJoinDao {
         userId: String,
         hostName: String
     ): List<String> {
-        return dslContext.select(TWorkspace.T_WORKSPACE.NAME).from(TWorkspace.T_WORKSPACE)
-            .leftJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
-            .on(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME.eq(TWorkspace.T_WORKSPACE.NAME))
+        return dslContext.select(TWorkspace.T_WORKSPACE.NAME)
+            .from(TWorkspace.T_WORKSPACE)
+            .innerJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
+            .on(
+                TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME
+                    .eq(TWorkspace.T_WORKSPACE.NAME)
+            )
             .where(TWorkspace.T_WORKSPACE.HOST_NAME.eq(hostName))
-            .and(TWorkspace.T_WORKSPACE.STATUS.eq(WorkspaceStatus.RUNNING.ordinal))
-            .and(TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
-            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.eq(userId))
+            .and(
+                TWorkspace.T_WORKSPACE.STATUS
+                    .eq(WorkspaceStatus.RUNNING.ordinal)
+            )
+            .and(
+                TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE
+                    .eq(WorkspaceShared.AssignType.OWNER.name)
+            )
+            .and(
+                TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
+                    .eq(userId)
+            )
             .fetch().map { it[TWorkspace.T_WORKSPACE.NAME] as String }
     }
 
