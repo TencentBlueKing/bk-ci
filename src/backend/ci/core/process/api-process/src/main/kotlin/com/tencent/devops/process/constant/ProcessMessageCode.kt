@@ -488,7 +488,7 @@ object ProcessMessageCode {
     const val ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR = "2101373" // 公共变量组YAML格式错误
     const val ERROR_PUBLIC_VAR_GROUP_IS_EXIST = "2101374" // 流水线公共变量组({0})已存在
     // 实例化异常：流水线其他变量[{0}]默认值被改成模版默认值,请联系助手分析
-    const val ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN = "2101364"
+    const val ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN = "2101375"
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
