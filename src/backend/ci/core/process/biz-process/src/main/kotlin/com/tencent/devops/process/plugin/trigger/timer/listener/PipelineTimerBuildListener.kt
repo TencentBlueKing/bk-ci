@@ -62,7 +62,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
-import com.tencent.devops.process.service.CreativeStreamService
+import com.tencent.devops.process.service.CreateStreamTriggerSupportService
 import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
@@ -88,7 +88,7 @@ class PipelineTimerBuildListener @Autowired constructor(
     private val triggerEventService: PipelineTriggerEventService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineTriggerMeasureService: PipelineTriggerMeasureService,
-    private val creativeStreamService: CreativeStreamService
+    private val creativeStreamService: CreateStreamTriggerSupportService
 ) : PipelineEventListener<PipelineTimerBuildEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineTimerBuildEvent) {

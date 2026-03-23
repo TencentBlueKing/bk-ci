@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service
  * 创作流流水线服务类
  */
 @Service
-class CreativeStreamService constructor(
+class CreateStreamTriggerSupportService constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val pipelineEventSubscriptionDao: PipelineEventSubscriptionDao,
@@ -158,6 +158,6 @@ class CreativeStreamService constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(CreativeStreamService::class.java)
+        private val logger = LoggerFactory.getLogger(CreateStreamTriggerSupportService::class.java)
     }
 }
