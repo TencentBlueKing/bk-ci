@@ -79,6 +79,9 @@ const (
 	KeyImageDebugPortRange = "devops.imagedebug.portrange"
 	KeyEnablePipeline      = "devops.pipeline.enable"
 	KeyMcpServerPort       = "devops.mcp.server.port"
+	KeyHTTPProxy           = "HTTP_PROXY"
+	KeyHTTPSProxy          = "HTTPS_PROXY"
+	KeyNOProxy             = "NO_PROXY"
 )
 
 // AgentConfig Agent 配置
@@ -106,6 +109,9 @@ type AgentConfig struct {
 	ImageDebugPortRange     string
 	EnablePipeline          bool
 	McpServerPort           int
+	HTTPProxy               string
+	HTTPSProxy              string
+	NOProxy                 string
 }
 
 // AgentEnv Agent 环境配置
@@ -156,6 +162,11 @@ func Init(isDebug bool) {
 	initCert()
 	LoadAgentEnv()
 	envs.Init()
+	persistedProxyEnvs := GAgentConfig.GetPersistedProxyEnvs()
+	if len(persistedProxyEnvs) > 0 {
+		envs.GApiEnvVars.SetEnvs(persistedProxyEnvs)
+		logs.Infof("loaded persisted proxy envs from .agent.properties, count=%d", len(persistedProxyEnvs))
+	}
 }
 
 // LoadAgentEnv 加载Agent环境
@@ -336,6 +347,9 @@ func LoadAgentConfig() error {
 	enablePipeline := conf.Section("").Key(KeyEnablePipeline).MustBool(false)
 
 	mcpServerPort := conf.Section("").Key(KeyMcpServerPort).MustInt(0)
+	httpProxy := strings.TrimSpace(conf.Section("").Key(KeyHTTPProxy).String())
+	httpsProxy := strings.TrimSpace(conf.Section("").Key(KeyHTTPSProxy).String())
+	noProxy := strings.TrimSpace(conf.Section("").Key(KeyNOProxy).String())
 
 	// -----------
 
@@ -409,6 +423,11 @@ func LoadAgentConfig() error {
 	GAgentConfig.McpServerPort = mcpServerPort
 	logs.Info("McpServerPort: ", GAgentConfig.McpServerPort)
 
+	GAgentConfig.HTTPProxy = httpProxy
+	GAgentConfig.HTTPSProxy = httpsProxy
+	GAgentConfig.NOProxy = noProxy
+	logs.Infof("Proxy config loaded, http=%t https=%t no_proxy=%t", GAgentConfig.HTTPProxy != "", GAgentConfig.HTTPSProxy != "", GAgentConfig.NOProxy != "")
+
 	// 初始化 GAgentConfig 写入一次配置, 往文件中写入一次程序中新添加的 key
 	return GAgentConfig.SaveConfig()
 }
@@ -446,6 +465,9 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(KeyImageDebugPortRange + "=" + GAgentConfig.ImageDebugPortRange + "\n")
 	content.WriteString(KeyEnablePipeline + "=" + strconv.FormatBool(GAgentConfig.EnablePipeline) + "\n")
 	content.WriteString(KeyMcpServerPort + "=" + strconv.Itoa(GAgentConfig.McpServerPort) + "\n")
+	content.WriteString(KeyHTTPProxy + "=" + GAgentConfig.HTTPProxy + "\n")
+	content.WriteString(KeyHTTPSProxy + "=" + GAgentConfig.HTTPSProxy + "\n")
+	content.WriteString(KeyNOProxy + "=" + GAgentConfig.NOProxy + "\n")
 
 	err := exitcode.WriteFileWithCheck(filePath, content.Bytes(), 0666)
 	if err != nil {
@@ -453,6 +475,47 @@ func (a *AgentConfig) SaveConfig() error {
 		return errors.New("write config failed")
 	}
 	return nil
+}
+
+// GetAuthHeaderMap 生成鉴权头部
+func (a *AgentConfig) GetPersistedProxyEnvs() map[string]string {
+	proxyEnvs := make(map[string]string)
+	if a.HTTPProxy != "" {
+		proxyEnvs[KeyHTTPProxy] = a.HTTPProxy
+	}
+	if a.HTTPSProxy != "" {
+		proxyEnvs[KeyHTTPSProxy] = a.HTTPSProxy
+	}
+	if a.NOProxy != "" {
+		proxyEnvs[KeyNOProxy] = a.NOProxy
+	}
+	return proxyEnvs
+}
+
+func (a *AgentConfig) SyncPersistedProxyEnvs(envMap map[string]string) bool {
+	getValue := func(keys ...string) string {
+		for _, key := range keys {
+			if v, ok := envMap[key]; ok {
+				return strings.TrimSpace(v)
+			}
+		}
+		return ""
+	}
+
+	changed := false
+	if httpProxy := getValue(KeyHTTPProxy, strings.ToLower(KeyHTTPProxy)); a.HTTPProxy != httpProxy {
+		a.HTTPProxy = httpProxy
+		changed = true
+	}
+	if httpsProxy := getValue(KeyHTTPSProxy, strings.ToLower(KeyHTTPSProxy)); a.HTTPSProxy != httpsProxy {
+		a.HTTPSProxy = httpsProxy
+		changed = true
+	}
+	if noProxy := getValue(KeyNOProxy, strings.ToLower(KeyNOProxy)); a.NOProxy != noProxy {
+		a.NOProxy = noProxy
+		changed = true
+	}
+	return changed
 }
 
 // GetAuthHeaderMap 生成鉴权头部

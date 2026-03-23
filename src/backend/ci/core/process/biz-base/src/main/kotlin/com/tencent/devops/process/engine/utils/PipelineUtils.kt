@@ -41,6 +41,9 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
+import com.tencent.devops.process.utils.FIXVERSION
+import com.tencent.devops.process.utils.MAJORVERSION
+import com.tencent.devops.process.utils.MINORVERSION
 import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
 import jakarta.ws.rs.core.Response
 import java.util.regex.Pattern
@@ -49,6 +52,8 @@ import org.slf4j.LoggerFactory
 object PipelineUtils {
 
     private val logger = LoggerFactory.getLogger(PipelineUtils::class.java)
+
+    val VERSION_PARAMS = listOf(MAJORVERSION, MINORVERSION, FIXVERSION)
 
     private const val ENGLISH_NAME_PATTERN = "[A-Za-z_][A-Za-z_0-9.]*"
 
