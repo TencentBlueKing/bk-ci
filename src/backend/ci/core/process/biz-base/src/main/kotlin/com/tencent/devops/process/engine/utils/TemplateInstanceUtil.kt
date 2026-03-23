@@ -658,7 +658,7 @@ object TemplateInstanceUtil {
                     pipelineProps = pipelineParam.cascadeProps,
                     templateProps = templateParam.cascadeProps
                 )
-                pipelineParam.options = mergeOptionsWithDefaultValue(
+                pipelineParam.options = mergeOptions(
                     templateOptions = templateParam.options,
                     defaultValue = pipelineParam.defaultValue
                 )
@@ -673,7 +673,7 @@ object TemplateInstanceUtil {
      * 合并模版options与流水线默认值:
      * 如果模版options中不包含流水线的默认值,则将默认值追加到options中
      */
-    private fun mergeOptionsWithDefaultValue(
+    private fun mergeOptions(
         templateOptions: List<BuildFormValue>?,
         defaultValue: Any
     ): List<BuildFormValue>? {
