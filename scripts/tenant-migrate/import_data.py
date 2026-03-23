@@ -86,8 +86,6 @@ BATCH_SIZE = 2000
 RE_INSERT_HEAD = re.compile(
     r"INSERT\s+INTO\s+`(\w+)`\s*\(([^)]+)\)\s*VALUES\s*", re.IGNORECASE
 )
-# 用于按顶层括号分割 values —— 匹配 (...) 包括内部嵌套括号和转义引号
-RE_ROW_VALUE = re.compile(r"\((?:[^()]*|\((?:[^()]*|\([^()]*\))*\))*\)")
 
 
 def get_connection(host, port, user, password, database=None):
@@ -101,6 +99,19 @@ def get_connection(host, port, user, password, database=None):
         cursorclass=pymysql.cursors.Cursor,
         autocommit=False,
     )
+
+
+def execute_session_setting(conn, sql, warn_prefix):
+    """执行会话级 SET 语句；权限不足时仅告警并跳过。"""
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql)
+    except pymysql.err.OperationalError as e:
+        if e.args and e.args[0] == 1227:
+            print(f"{warn_prefix}{sql}: {e}")
+            return False
+        raise
+    return True
 
 
 def get_target_columns(conn, database, table):
@@ -154,8 +165,45 @@ def parse_insert_statements(filepath):
 
 
 def parse_row_values(values_str):
-    """从 values 字符串中提取每一行的原始字面量字符串 (含外层括号)"""
-    return RE_ROW_VALUE.findall(values_str)
+    """线性扫描 values 字符串，提取每一行的原始字面量字符串（含外层括号）。"""
+    row_literals = []
+    in_string = False
+    quote_char = None
+    depth = 0
+    row_start = None
+    i = 0
+
+    while i < len(values_str):
+        ch = values_str[i]
+
+        if in_string:
+            if ch == "\\" and i + 1 < len(values_str):
+                i += 2
+                continue
+            if ch == quote_char:
+                if i + 1 < len(values_str) and values_str[i + 1] == quote_char:
+                    i += 2
+                    continue
+                in_string = False
+                quote_char = None
+            i += 1
+            continue
+
+        if ch in ("'", '"'):
+            in_string = True
+            quote_char = ch
+        elif ch == "(":
+            if depth == 0:
+                row_start = i
+            depth += 1
+        elif ch == ")" and depth > 0:
+            depth -= 1
+            if depth == 0 and row_start is not None:
+                row_literals.append(values_str[row_start:i + 1])
+                row_start = None
+        i += 1
+
+    return row_literals
 
 
 def resolve_field_value(rule, source_columns, row_literal, col_index_map):
@@ -375,10 +423,8 @@ def import_database(host, port, user, password, database, input_dir, skip_existi
     conn = get_connection(host, port, user, password, database)
     try:
         # 关闭外键检查和唯一键检查以加速导入
-        with conn.cursor() as cur:
-            cur.execute("SET FOREIGN_KEY_CHECKS = 0")
-            cur.execute("SET UNIQUE_CHECKS = 0")
-            cur.execute("SET SQL_LOG_BIN = 0")
+        execute_session_setting(conn, "SET FOREIGN_KEY_CHECKS = 0", "    [WARN] 跳过会话设置: ")
+        execute_session_setting(conn, "SET UNIQUE_CHECKS = 0", "    [WARN] 跳过会话设置: ")
         conn.commit()
 
         for sql_file in sql_files:
@@ -394,10 +440,8 @@ def import_database(host, port, user, password, database, input_dir, skip_existi
             print(f"  {table_name}: {count} 行{tag}")
 
         # 恢复设置
-        with conn.cursor() as cur:
-            cur.execute("SET FOREIGN_KEY_CHECKS = 1")
-            cur.execute("SET UNIQUE_CHECKS = 1")
-            cur.execute("SET SQL_LOG_BIN = 1")
+        execute_session_setting(conn, "SET FOREIGN_KEY_CHECKS = 1", "    [WARN] 恢复会话设置失败: ")
+        execute_session_setting(conn, "SET UNIQUE_CHECKS = 1", "    [WARN] 恢复会话设置失败: ")
         conn.commit()
     finally:
         conn.close()
