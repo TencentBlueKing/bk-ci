@@ -20,7 +20,7 @@ class TxCreativeStreamService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineEventSubscriptionDao: PipelineEventSubscriptionDao,
     private val pipelineRepositoryService: PipelineRepositoryService
-) : CreativeStreamService(
+) : CreateStreamTriggerSupportService(
     client = client,
     dslContext = dslContext,
     pipelineEventSubscriptionDao = pipelineEventSubscriptionDao,
