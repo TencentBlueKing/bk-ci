@@ -132,10 +132,10 @@ import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
-import com.tencent.devops.process.service.template.v2.PipelineTemplateCommonService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateMarketFacadeService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionManager
+import com.tencent.devops.process.util.PipelineTemplateUtil
 import com.tencent.devops.process.util.TempNotifyTemplateUtils
 import com.tencent.devops.process.utils.BK_EMPTY_PIPELINE
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
@@ -1511,7 +1511,7 @@ class TemplateFacadeService @Autowired constructor(
                 // 重复版本名中的旧版本，使用 version 作为后缀并标记为重复
                 else -> {
                     val suffix = "-${version.version}"
-                    val newName = PipelineTemplateCommonService.buildVersionNameWithSuffix(originalName, suffix)
+                    val newName = PipelineTemplateUtil.buildVersionNameWithSuffix(originalName, suffix)
                     version.copy(
                         versionName = newName,
                         desc = MessageUtil.getMessageByLocale(
