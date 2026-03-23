@@ -70,7 +70,7 @@ import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionManager
 import com.tencent.devops.process.service.scm.ScmProxyService
-import com.tencent.devops.process.service.template.TemplateFacadeService
+import com.tencent.devops.process.service.template.v2.PipelineTemplateCompatibilityAdapter
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
@@ -91,7 +91,7 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val repositoryVersionService: PipelineRepositoryVersionService,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
     private val pipelineRecentUseService: PipelineRecentUseService,
-    private val templateFacadeService: TemplateFacadeService,
+    private val templateCompatibilityAdapter: PipelineTemplateCompatibilityAdapter,
     private val scmProxyService: ScmProxyService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineVersionManager: PipelineVersionManager,
@@ -411,11 +411,12 @@ class PipelineVersionFacadeService @Autowired constructor(
                 pipelineCreator = userId
             )
         } else {
-            templateFacadeService.getTemplate(
+            templateCompatibilityAdapter.getTemplate(
                 userId = userId,
                 projectId = projectId,
                 templateId = request.templateId,
-                version = request.templateVersion
+                version = request.templateVersion,
+                versionName = null
             ).template
         }
         val pipelineAsCodeSettings = PipelineAsCodeSettings.initDialect(

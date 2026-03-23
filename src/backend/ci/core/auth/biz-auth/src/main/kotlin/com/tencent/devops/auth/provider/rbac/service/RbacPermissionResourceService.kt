@@ -416,24 +416,33 @@ class RbacPermissionResourceService(
             logger.info("resource has enable permission manager|$userId|$projectId|$resourceType|$resourceCode")
             return true
         }
-        // 重新创建二级管理员
-        val subsetManagerId = permissionSubsetManagerService.createSubsetManager(
-            gradeManagerId = projectInfo.relationId,
-            userId = userId,
-            projectCode = projectId,
-            projectName = projectInfo.resourceName,
-            resourceType = resourceType,
-            resourceCode = resourceCode,
-            resourceName = resourceInfo.resourceName,
-            iamResourceCode = resourceInfo.iamResourceCode
-        )
-        // 更新资源的二级管理员关联ID
-        authResourceService.updateRelationId(
-            projectCode = projectId,
-            resourceType = resourceType,
-            resourceCode = resourceCode,
-            relationId = subsetManagerId.toString()
-        )
+        // 如果发现resourceInfo.relationId不为空，说明二级管理员已存在，不需要再创建
+        val subsetManagerId: Int
+        val createMode: AuthGroupCreateMode
+        if (resourceInfo.relationId.isNotBlank()) {
+            subsetManagerId = resourceInfo.relationId.toInt()
+            createMode = AuthGroupCreateMode.ENABLE
+        } else {
+            // 重新创建二级管理员
+            subsetManagerId = permissionSubsetManagerService.createSubsetManager(
+                gradeManagerId = projectInfo.relationId,
+                userId = userId,
+                projectCode = projectId,
+                projectName = projectInfo.resourceName,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                resourceName = resourceInfo.resourceName,
+                iamResourceCode = resourceInfo.iamResourceCode
+            )
+            createMode = AuthGroupCreateMode.CREATE
+            // 更新资源的二级管理员关联ID
+            authResourceService.updateRelationId(
+                projectCode = projectId,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                relationId = subsetManagerId.toString()
+            )
+        }
         // 创建默认用户组
         permissionSubsetManagerService.createSubsetManagerDefaultGroup(
             subsetManagerId = subsetManagerId,
@@ -444,7 +453,7 @@ class RbacPermissionResourceService(
             resourceCode = resourceCode,
             resourceName = resourceInfo.resourceName,
             iamResourceCode = resourceInfo.iamResourceCode,
-            createMode = AuthGroupCreateMode.CREATE
+            createMode = createMode
         )
         return authResourceService.enable(
             userId = userId,
