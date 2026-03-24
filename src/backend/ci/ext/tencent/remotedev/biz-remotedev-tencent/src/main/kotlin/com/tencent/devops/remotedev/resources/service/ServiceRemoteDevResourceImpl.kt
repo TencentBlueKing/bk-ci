@@ -52,6 +52,7 @@ import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordTicketType
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
+import com.tencent.devops.remotedev.pojo.record.CheckEnableRecordLiveResp
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
@@ -653,14 +654,16 @@ class ServiceRemoteDevResourceImpl(
     override fun checkWorkspaceEnableAddress(
         userId: String,
         appId: Long,
-        ip: String,
-        mediaGary: Boolean?
+        ip: String?,
+        mediaGary: Boolean?,
+        envUid: String?
     ): Result<CheckWorkspaceRecordData> {
         val (enable, address) = workspaceRecordService.checkRecordAndAddress(
             userId = userId,
             appId = appId,
             ip = ip,
-            mediaGary = mediaGary
+            mediaGary = mediaGary,
+            envUid = envUid
         )
         return Result(CheckWorkspaceRecordData(enable, address))
     }
@@ -938,5 +941,47 @@ class ServiceRemoteDevResourceImpl(
         data: TGitBindRemotedevData
     ): Result<Map<String, Boolean>> {
         return Result(tGitBindService.bindTGitProject(userId, data.tgitId, data.tgitUrl, data.projectIds))
+    }
+
+    override fun checkEnableRecordLive(
+        userId: String,
+        projectId: String,
+        workspaceName: String
+    ): Result<CheckEnableRecordLiveResp> {
+        return Result(workspaceRecordService.checkEnableRecordLive(userId, projectId, workspaceName))
+    }
+
+    override fun checkViewLive(
+        userId: String,
+        projectId: String,
+        workspaceName: String
+    ): Result<Boolean> {
+        val workspace = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
+        if (workspace == null || !workspace.ownerType.projectUse() || workspace.projectId != projectId) {
+            logger.warn("get project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
+            return Result(false)
+        }
+
+        if (!permissionService.hasManagerOrViewerPermission(userId, workspace.projectId, workspace.workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("We're sorry but you don't have permission to get $workspaceName info")
+            )
+        }
+
+        val workspaceInfo = workspaceService.getWorkspaceList4WeSec(
+            workspaceName = workspace.workspaceName,
+            notStatus = null,
+            hasCurrentUser = true,
+            userId = userId
+        ).firstOrNull()
+
+        if (workspace.coffeeAi == true) {
+            return Result(workspaceInfo?.owner == userId)
+        }
+
+        return Result(
+            workspaceInfo?.owner == userId || (workspaceInfo?.viewers?.contains(userId) == true)
+        )
     }
 }
