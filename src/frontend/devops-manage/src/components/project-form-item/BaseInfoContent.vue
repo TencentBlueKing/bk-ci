@@ -606,11 +606,6 @@ async function checkKpiCodeVisibility(isInitialLoad = false) {
     
     const needMonetization = await http.checkNeedMonetization(orgParams)
     setKpiCodeState(needMonetization, !isInitialLoad)
-    
-    // 只有在非初始化时才触发表单变更事件
-    if (!isInitialLoad) {
-      handleChangeForm()
-    }
   } catch (err: any) {
     console.log('检查KPI代码显示状态失败:', err)
     setKpiCodeState(false, !isInitialLoad)

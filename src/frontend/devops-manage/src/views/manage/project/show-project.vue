@@ -104,7 +104,7 @@ const checkKpiCodeVisibility = async () => {
     
     // 调用接口检查是否需要货币化
     const needMonetization = await http.checkNeedMonetization(orgParams)
-    showKpiCode.value = needMonetization
+    showKpiCode.value = Boolean(needMonetization)
   } catch (err: any) {
     showKpiCode.value = false
   }
