@@ -41,12 +41,14 @@ import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.common.UnInstallReq
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
@@ -74,9 +76,10 @@ interface UserAtomResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "支持的服务范围（pipeline/quality/all 分别表示流水线/质量红线/全部）", required = false)
+        @Parameter(description = "支持的服务范围", required = false)
         @QueryParam("serviceScope")
-        serviceScope: String?,
+        @DefaultValue("PIPELINE")
+        serviceScope: String? = ServiceScopeEnum.PIPELINE.name,
         @Parameter(description = "job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = false)
         @QueryParam("jobType")
         jobType: String?,
