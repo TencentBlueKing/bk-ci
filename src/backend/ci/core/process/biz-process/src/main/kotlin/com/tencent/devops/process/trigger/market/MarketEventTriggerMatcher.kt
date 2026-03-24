@@ -131,7 +131,7 @@ class MarketEventTriggerMatcher @Autowired constructor(
                 condition is InputCondition &&
                         condition.multiple == true &&
                         condition.separator != null ->
-                    inputValue?.toString()?.split(condition.separator!!)
+                    inputValue?.toString()?.takeIf { it.isNotBlank() }?.split(condition.separator!!)
 
                 else -> inputValue
             }
