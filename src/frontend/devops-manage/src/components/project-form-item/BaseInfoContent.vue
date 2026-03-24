@@ -117,7 +117,7 @@
       :required="true"
     >
       <div class="cost-attribution-box">
-        <div class="cost-description">{{ t('用于货币化结算场景，可在 tea.woa.com 查看业务信息。') }}</div>
+        <div class="cost-description" v-if="showKpiCode">{{ t('用于货币化结算场景，可在 tea.woa.com 查看业务信息。') }}</div>
         <bk-form-item
           property="productId"
           :rules="[{ required: true, message: t('请选择所属运营产品'), trigger: 'change' }]"
@@ -658,12 +658,12 @@ function getOrganizationParams() {
   .cost-description {
     font-size: 14px;
     color: #a8abae;
-    margin-bottom: 10px;
   }
   .cost-item {
     display: flex;
     align-items: center;
     font-size: 14px;
+    margin-top: 10px;
     &:not(:last-child) {
       margin-bottom: 12px;
     }
