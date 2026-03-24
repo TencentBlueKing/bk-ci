@@ -436,33 +436,14 @@ class PipelineVersionFacadeService @Autowired constructor(
     private fun initializeModel(
         userId: String,
         pipelineName: String
-    ) = Model(
-        name = pipelineName,
-        desc = "",
-        stages = listOf(
-            Stage(
-                id = "stage-1",
-                containers = listOf(
-                    TriggerContainer(
-                        id = "0",
-                        name = "trigger",
-                        elements = listOf(
-                            ManualTriggerElement(
-                                id = "T-1-1-1",
-                                name = I18nUtil.getCodeLanMessage(
-                                    CommonMessageCode.BK_MANUAL_TRIGGER,
-                                    language = I18nUtil.getLanguage(
-                                        userId
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            )
-        ),
-        pipelineCreator = userId
-    )
+    ): Model {
+        val isCreativeStream = ChannelCode.getRequestChannelCode() == ChannelCode.CREATIVE_STREAM
+        return if (isCreativeStream) {
+            Model.creativeStreamDefaultModel(pipelineName, userId)
+        } else {
+            Model.defaultModel(pipelineName, userId)
+        }
+    }
 
     fun getVersion(
         userId: String,
