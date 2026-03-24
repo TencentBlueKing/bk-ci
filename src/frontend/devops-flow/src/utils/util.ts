@@ -1,3 +1,5 @@
+import { TRIGGER_TYPE } from './flowConst'
+
 export function throttle<T extends (...args: any[]) => any>(
   func: T,
   interval: number = 200,
@@ -127,7 +129,7 @@ export function getMaterialIconByType(type: string) {
     GITHUB: 'codeGithubWebHookTrigger',
     CODE_TGIT: 'CODE_GIT',
     CODE_P4: 'CODE_P4',
-    CODE_REMOTE: 'remoteTrigger',
+    CODE_REMOTE: TRIGGER_TYPE.REMOTE,
     CODE_SERVICE: 'openApi',
   }
   return materialIconMap[type as keyof MaterialIconMap] ?? 'CODE_GIT'

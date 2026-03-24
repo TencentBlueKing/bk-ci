@@ -76,6 +76,15 @@ export const templateTypeEnum = {
   CUSTOMIZE: 'CUSTOMIZE',
 }
 
+export const TRIGGER_TYPE = {
+  MANUAL: 'CREATIVE_STREAM_MANUAL_TRIGGER',
+  TIMER: 'timerTrigger',
+  CODE_GIT_WEBHOOK: 'codeGitWebHookTrigger',
+  REMOTE: 'remoteTrigger',
+} as const
+
+export type TriggerType = (typeof TRIGGER_TYPE)[keyof typeof TRIGGER_TYPE]
+
 export const errorTypeMap = [
   { title: 'flow.content.systemError', icon: 'info-circle' },
   { title: 'flow.content.userError', icon: 'user' },

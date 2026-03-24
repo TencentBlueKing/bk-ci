@@ -142,8 +142,7 @@ export const useFlowModelStore = defineStore('flowModel', () => {
       const [modelRes, atomProp] = await Promise.all([
         getFlowModel(projectId, flowId, version),
         getPluginProperties({ projectId, pipelineId: flowId, version: version ? Number(version) : undefined }).catch(() => null),
-      ])
-      debugger
+      ])      
       const model = modelRes.modelAndSetting?.model
       if (model && atomProp) {
         mergeAtomProps(model, atomProp)

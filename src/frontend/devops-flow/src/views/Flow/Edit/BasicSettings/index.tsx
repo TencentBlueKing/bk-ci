@@ -2,7 +2,7 @@ import type { FlowSettings } from '@/api/flowModel'
 import { useFlowModel } from '@/hooks/useFlowModel'
 import { useFlowModelStore } from '@/stores/flowModel'
 import { RunLockType } from '@/types/flow'
-import { Checkbox, Form, Input, Radio } from 'bkui-vue'
+import { Checkbox, Form, Input, Loading, Radio } from 'bkui-vue'
 import { storeToRefs } from 'pinia'
 import { defineComponent, nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -19,7 +19,7 @@ export default defineComponent({
     const route = useRoute()
     const router = useRouter()
     const flowId = route.params.flowId as string
-    const { flowSetting, updateFlowSetting } = useFlowModel()
+    const { flowSetting, updateFlowSetting, loading } = useFlowModel()
     const nameInputRef = ref<any>(null)
     const store = useFlowModelStore()
     const { settingsErrorFields } = storeToRefs(store)
@@ -75,7 +75,7 @@ export default defineComponent({
     }
 
     return () => (
-      <div class={sharedStyles.tabContainer}>
+      <Loading loading={loading.value} class={sharedStyles.tabContainer}>
         <div class={styles.basicSettings}>
           <Form formType="vertical" labelWidth={120} model={formData.value}>
             {/* 基础信息 */}
@@ -232,7 +232,7 @@ export default defineComponent({
             </div>
           </Form>
         </div>
-      </div>
+      </Loading>
     )
   },
 })

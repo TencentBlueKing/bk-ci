@@ -4,7 +4,7 @@ import TriggerEventSelector from '@/components/TriggerEventSelector'
 import TriggerPropertyPanel from '@/components/TriggerPropertyPanel'
 import { useFlowModel } from '@/hooks/useFlowModel'
 import { createDefaultElement } from '@/utils/flowDefaults'
-import { Button, Message, Popover, Switcher, Table } from 'bkui-vue'
+import { Button, Loading, Message, Popover, Switcher, Table } from 'bkui-vue'
 import { computed, defineComponent, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -19,6 +19,7 @@ export default defineComponent({
     const route = useRoute()
     const projectCode = computed(() => route.params.projectId as string)
     const flowModel = useFlowModel()
+    const { loading } = flowModel
     const isTriggerPanelVisible = ref(false)
     const editingTriggerIndex = ref<number | null>(null)
     const panelElement = ref<Element | null>(null)
@@ -211,7 +212,7 @@ export default defineComponent({
     ]
 
     return () => (
-      <div class={sharedStyles.tabContainer}>
+      <Loading zIndex={1000} loading={loading.value} class={sharedStyles.tabContainer}>
         <div class={styles.triggerEvents}>
           <div class={styles.header}>
             <Popover
@@ -260,7 +261,7 @@ export default defineComponent({
           siblingStepIds={siblingStepIds.value}
           onSave={handleTriggerSave}
         />
-      </div>
+      </Loading>
     )
   },
 })

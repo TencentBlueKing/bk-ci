@@ -22,7 +22,6 @@ export default defineComponent({
       currentStep,
       formData,
       isLoading,
-      projectModelLoading,
       baseInfoRef,
       resetForm,
       clearFormValidation,

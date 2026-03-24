@@ -3,12 +3,11 @@ import type { Element } from '@/api/flowModel'
 import AtomForm, { DISPLAY_MODE, type AtomPropsModel } from '@/components/AtomForm/AtomForm'
 import { SvgIcon } from '@/components/SvgIcon'
 import { getAtomDefaultValue, getAtomOutputObj } from '@/utils/atom'
+import { TRIGGER_TYPE } from '@/utils/flowConst'
 import { createDefaultElement } from '@/utils/flowDefaults'
 import { validateAtomElement, validateStepId } from '@/utils/validation'
 import {
   Button,
-  Checkbox,
-  Form,
   Input,
   Loading,
   Message,
@@ -48,7 +47,6 @@ export default defineComponent({
   emits: ['update:visible', 'save'],
   setup(props, { emit }) {
     const { t } = useI18n()
-    const { FormItem } = Form
     const route = useRoute()
     const triggerManager = useTriggerManager()
     const projectCode = computed(() => route.params.projectId as string)
@@ -95,12 +93,10 @@ export default defineComponent({
     const triggerType = computed(
       () => localElement.value?.atomCode || localElement.value?.['@type'] || '',
     )
-    const isManualTrigger = computed(() => triggerType.value === 'manualTrigger')
-
     const triggerName = computed(() => {
       if (localElement.value?.name) return localElement.value.name
-      if (triggerType.value === 'manualTrigger') return t('flow.content.manualTrigger')
-      if (triggerType.value === 'timerTrigger') return t('flow.content.timerTrigger')
+      if (triggerType.value === TRIGGER_TYPE.MANUAL) return t('flow.content.manualTrigger')
+      if (triggerType.value === TRIGGER_TYPE.TIMER) return t('flow.content.timerTrigger')
       return triggerType.value || t('flow.content.triggerEvents')
     })
 
@@ -136,7 +132,7 @@ export default defineComponent({
     const isDisabled = computed(() => isLoadingModal.value || props.readonly)
 
     const triggerErrorFields = computed(() => {
-      if (!localElement.value || isManualTrigger.value) return []
+      if (!localElement.value) return []
       return validateAtomElement(
         localElement.value,
         atomModal.value as AtomModal | null,
@@ -174,7 +170,6 @@ export default defineComponent({
     }
 
     const loadAtomModal = async () => {
-      if (isManualTrigger.value) return
       const code = triggerType.value
       const version = atomVersion.value
       if (!code || !version || !props.visible) return
@@ -198,7 +193,6 @@ export default defineComponent({
     watch([triggerType, atomVersion, () => props.visible], loadAtomModal, { immediate: true })
 
     const loadVersionList = async () => {
-      if (isManualTrigger.value) return
       const code = triggerType.value
       if (!code || !projectCode.value || !props.visible) return
 
@@ -267,33 +261,6 @@ export default defineComponent({
 
     // ========== Render ==========
 
-    const renderManualSection = () => (
-      <Form form-type="vertical" class={styles.manualForm}>
-        <FormItem>
-          <Checkbox
-            modelValue={localElement.value?.canElementSkip ?? false}
-            disabled={props.readonly}
-            onChange={(val: boolean) => {
-              if (localElement.value) (localElement.value as any).canElementSkip = val
-            }}
-          >
-            {t('flow.triggerPanel.manualAllowSkip')}
-          </Checkbox>
-        </FormItem>
-        <FormItem>
-          <Checkbox
-            modelValue={localElement.value?.useLatestParameters ?? false}
-            disabled={props.readonly}
-            onChange={(val: boolean) => {
-              if (localElement.value) (localElement.value as any).useLatestParameters = val
-            }}
-          >
-            {t('flow.triggerPanel.manualReuseParams')}
-          </Checkbox>
-        </FormItem>
-      </Form>
-    )
-
     const renderDynamicFormSection = () => {
       if (!localElement.value) return null
       if (isLoadingModal.value) {
@@ -303,7 +270,6 @@ export default defineComponent({
           </div>
         )
       }
-      if (isManualTrigger.value) return renderManualSection()
       if (hasAtomFormConfig.value && atomPropsModel.value) {
         return (
           <div class={styles.section}>
