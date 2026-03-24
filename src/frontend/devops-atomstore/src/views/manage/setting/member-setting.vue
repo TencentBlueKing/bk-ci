@@ -525,7 +525,7 @@
                 }, [
                     h('img', {
                         attrs: {
-                            src: `//dayu.woa.com/avatars/${node.english_name}/profile.jpg`
+                            src: `//dayu.woa.com/avatars/${encodeURIComponent(node.english_name)}/profile.jpg`
                         },
                         style: {
                             width: '20px',

@@ -90,6 +90,7 @@
                     {
                         name: 'devxWork',
                         label: this.$t('store.云研发'),
+                        links: []
                     }
                 ]
             }

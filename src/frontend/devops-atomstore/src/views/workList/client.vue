@@ -393,11 +393,11 @@
                 })
             ]),
             confirmFn: async () => {
-                if (deleteNameConfirm.value !== row.name) {
+                if (deleteNameConfirm.value !== row.storeCode) {
                     $bkMessage({
                         theme: 'error',
                         message: deleteNameConfirm.value
-                            ? $t('store.输入的内容【{0}】与应用标识【{1}】不匹配', [deleteNameConfirm.value, row.name])
+                            ? $t('store.输入的内容【{0}】与应用标识【{1}】不匹配', [deleteNameConfirm.value, row.storeCode])
                             : $t('store.请按提示输入应用标识')
                     })
                     return false

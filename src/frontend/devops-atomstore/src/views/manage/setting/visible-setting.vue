@@ -188,7 +188,7 @@
                         break
                     case 'devx':
                         params.storeCode = this.detail.storeCode
-                        params.storeType = 'devx'
+                        params.storeType = 'DEVX'
                         method = () => this.$store.dispatch('store/addVisibilitiesList', params)
                         break
                 }

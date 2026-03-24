@@ -93,7 +93,7 @@
                     pageSize: this.limit
                 }).then((res) => {
                     const records = res.records || []
-                    this.list = [...this.list, ...records.map(this.formatVersionItem)]
+                    this.list = [...this.list, ...records.map(item => this.formatVersionItem(item))]
                     this.loadEnd = res.count <= this.list.length
                 })
             },

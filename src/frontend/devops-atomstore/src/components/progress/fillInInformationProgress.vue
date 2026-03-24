@@ -372,10 +372,15 @@
                 // 使用 tempId 查找并替换
                 const index = videoList.value.findIndex(item => item.tempId === tempId)
                 if (index !== -1) {
+                    // 释放占位符的 Blob URL，避免内存泄漏
+                    URL.revokeObjectURL(videoList.value[index].mediaUrl)
                     videoList.value.splice(index, 1, { mediaUrl, mediaType: 'VIDEO', loading: false })
                 }
                 return true
             } catch (error) {
+                // 释放失败项的 Blob URL，避免内存泄漏
+                const failedItem = videoList.value.find(item => item.tempId === tempId)
+                if (failedItem) URL.revokeObjectURL(failedItem.mediaUrl)
                 // 使用 tempId 删除失败的项
                 videoList.value = videoList.value.filter(item => item.tempId !== tempId)
                 showMessage('error', $t('store.上传失败，请重试'))
@@ -388,6 +393,10 @@
     }
 
     const handleVideoDelete = (fileUrl) => {
+        // 如果是 Blob URL，主动释放避免内存泄漏
+        if (fileUrl && fileUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(fileUrl)
+        }
         videoList.value = videoList.value.filter(item => item.mediaUrl !== fileUrl)
     }
 
