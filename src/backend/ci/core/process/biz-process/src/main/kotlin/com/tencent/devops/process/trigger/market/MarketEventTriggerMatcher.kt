@@ -117,7 +117,7 @@ class MarketEventTriggerMatcher @Autowired constructor(
             // 目标变量值
             val inputValue = input[condition.key()]?.let {
                 when (it) {
-                    is String -> EnvUtils.parseEnv(it, variables)
+                    is String -> EnvUtils.parseEnv(it, variables).takeIf { it.isNotBlank() }
                     is List<*> -> it.map { item ->
                         item as String
                         EnvUtils.parseEnv(item, variables)
@@ -131,7 +131,7 @@ class MarketEventTriggerMatcher @Autowired constructor(
                 condition is InputCondition &&
                         condition.multiple == true &&
                         condition.separator != null ->
-                    inputValue?.toString()?.split(condition.separator!!)
+                    inputValue?.toString()?.takeIf { it.isNotBlank() }?.split(condition.separator!!)
 
                 else -> inputValue
             }
