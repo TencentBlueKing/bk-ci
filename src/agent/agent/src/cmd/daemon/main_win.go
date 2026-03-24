@@ -37,6 +37,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"sync"
 	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
@@ -46,6 +47,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 	"github.com/kardianos/service"
+	"golang.org/x/sys/windows"
 )
 
 const daemonProcess = "daemon"
@@ -99,7 +101,13 @@ func main() {
 	logs.Info("pid: ", os.Getpid())
 	logs.Info("workDir: ", workDir)
 
-	//服务定义
+	isServiceMode = !service.Interactive()
+	if isServiceMode {
+		logs.Info("running as Windows service, will launch agent in user session")
+	} else {
+		logs.Info("running in interactive mode")
+	}
+
 	serviceConfig := &service.Config{
 		Name: "name",
 	}
@@ -118,7 +126,12 @@ func main() {
 	}
 }
 
-var GAgentProcess *os.Process = nil
+var (
+	isServiceMode      bool
+	agentMu            sync.Mutex
+	agentProcess       *os.Process
+	agentProcessHandle windows.Handle
+)
 
 func watch() {
 	defer func() {
@@ -130,12 +143,9 @@ func watch() {
 	}()
 
 	workDir := systemutil.GetExecutableDir()
-	var agentPath = systemutil.GetWorkDir() + "/devopsAgent.exe"
+	agentPath := systemutil.GetWorkDir() + "/devopsAgent.exe"
 	for {
 		func() {
-			cmd := exec.Command(agentPath)
-			cmd.Dir = workDir
-
 			logs.Info("start devops agent")
 			if !fileutil.Exists(agentPath) {
 				logs.Errorf("agent file: %s not exists", agentPath)
@@ -152,37 +162,100 @@ func watch() {
 				return
 			}
 
-			err = cmd.Start()
-			if err != nil {
-				logs.WithError(err).Error("agent start failed, err")
-				logs.Info("restart after 30 seconds")
-				time.Sleep(30 * time.Second)
-				return
-			}
-
-			GAgentProcess = cmd.Process
-			logs.Info("devops agent started, pid: ", cmd.Process.Pid)
-			err = cmd.Wait()
-			if err != nil {
-				var exitErr *exec.ExitError
-				if errors.As(err, &exitErr) {
-					if exitErr.ExitCode() == constant.DaemonExitCode {
-						logs.Warnf("exit code %d daemon exit", constant.DaemonExitCode)
-						systemutil.ExitProcess(constant.DaemonExitCode)
-					}
+			if isServiceMode {
+				if launchAgentInUserSession(agentPath, workDir) {
+					return
 				}
-				logs.WithError(err).Error("agent process error")
+				logs.Warn("session launch failed, falling back to direct start")
 			}
-			logs.Info("agent process exited")
-
-			logs.Info("restart after 30 seconds")
-			time.Sleep(30 * time.Second)
+			launchAgentDirect(agentPath, workDir)
 		}()
 	}
 }
 
-type program struct {
+// launchAgentInUserSession uses WTS APIs to start the agent in the active
+// user's desktop session. Returns true if the agent was launched and exited
+// (caller should loop); returns false if launching failed so the caller can
+// fall back to direct start.
+func launchAgentInUserSession(agentPath, workDir string) bool {
+	cmdLine := fmt.Sprintf(`"%s"`, agentPath)
+	proc, err := StartProcessAsUser(agentPath, cmdLine, workDir)
+	if err != nil {
+		logs.WithError(err).Warn("StartProcessAsUser failed")
+		return false
+	}
+
+	agentMu.Lock()
+	agentProcessHandle = proc.ProcessHandle
+	agentMu.Unlock()
+
+	logs.Infof("agent started in user session, pid=%d", proc.PID)
+
+	windows.WaitForSingleObject(proc.ProcessHandle, windows.INFINITE)
+
+	var exitCode uint32
+	_ = windows.GetExitCodeProcess(proc.ProcessHandle, &exitCode)
+
+	agentMu.Lock()
+	agentProcessHandle = 0
+	agentMu.Unlock()
+
+	windows.CloseHandle(proc.ProcessHandle)
+	proc.Close()
+
+	if exitCode == uint32(constant.DaemonExitCode) {
+		logs.Warnf("exit code %d daemon exit", constant.DaemonExitCode)
+		systemutil.ExitProcess(constant.DaemonExitCode)
+	}
+
+	logs.Infof("agent process exited with code %d", exitCode)
+	logs.Info("restart after 30 seconds")
+	time.Sleep(30 * time.Second)
+	return true
 }
+
+// launchAgentDirect starts the agent as a direct child process (interactive
+// mode or fallback when no user session is available).
+func launchAgentDirect(agentPath, workDir string) {
+	cmd := exec.Command(agentPath)
+	cmd.Dir = workDir
+
+	err := cmd.Start()
+	if err != nil {
+		logs.WithError(err).Error("agent start failed, err")
+		logs.Info("restart after 30 seconds")
+		time.Sleep(30 * time.Second)
+		return
+	}
+
+	agentMu.Lock()
+	agentProcess = cmd.Process
+	agentMu.Unlock()
+
+	logs.Info("devops agent started, pid: ", cmd.Process.Pid)
+	err = cmd.Wait()
+
+	agentMu.Lock()
+	agentProcess = nil
+	agentMu.Unlock()
+
+	if err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			if exitErr.ExitCode() == constant.DaemonExitCode {
+				logs.Warnf("exit code %d daemon exit", constant.DaemonExitCode)
+				systemutil.ExitProcess(constant.DaemonExitCode)
+			}
+		}
+		logs.WithError(err).Error("agent process error")
+	}
+	logs.Info("agent process exited")
+
+	logs.Info("restart after 30 seconds")
+	time.Sleep(30 * time.Second)
+}
+
+type program struct{}
 
 func (p *program) Start(s service.Service) error {
 	go watch()
@@ -195,7 +268,11 @@ func (p *program) Stop(s service.Service) error {
 }
 
 func (p *program) tryStopAgent() {
-	if GAgentProcess != nil {
-		GAgentProcess.Kill()
+	agentMu.Lock()
+	defer agentMu.Unlock()
+	if agentProcessHandle != 0 {
+		windows.TerminateProcess(agentProcessHandle, 1)
+	} else if agentProcess != nil {
+		agentProcess.Kill()
 	}
 }
