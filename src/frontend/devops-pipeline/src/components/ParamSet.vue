@@ -398,28 +398,25 @@
                 }))
             })
             const paramSetGroup = computed(() => {
-                const recentlyUsedChildren = []
-                if (props.useLastParams) {
-                    recentlyUsedChildren.push(LAST_USED_SET.value)
-                }
+                const recentlyUsedChildren = [
+                    LAST_USED_SET.value
+                ]
                 if (tempParamSet.value) {
                     recentlyUsedChildren.push({
                         ...tempParamSet.value,
                         disableEdit: true
                     })
                 }
-                const groups = []
-                if (recentlyUsedChildren.length) {
-                    groups.push({
+                return [
+                    {
                         name: proxy.$t('recentlyUsed'),
                         children: recentlyUsedChildren
-                    })
-                }
-                groups.push({
-                    name: proxy.$t('paramValueSets'),
-                    children: [...paramSetList.value]
-                })
-                return groups
+                    },
+                    {
+                        name: proxy.$t('paramValueSets'),
+                        children: [...paramSetList.value]
+                    }
+                ]
             })
             const allParamsMap = computed(() => {
                 return props.allParams.reduce((acc, param) => {
@@ -773,8 +770,9 @@
             }
 
             function handleCurrentParamSetChange (ids) {
-                editingSet.value.paramIds = ids
-                editingSet.value.params = ids.map(id => editingSet.value.params.find(param => param.id === id) ?? allParamsMap.value[id])
+                const uniqueIds = [...new Set(ids)]
+                editingSet.value.paramIds = uniqueIds
+                editingSet.value.params = uniqueIds.map(id => editingSet.value.params.find(param => param.id === id) ?? allParamsMap.value[id])
             }
 
             function handleRemoveParamItem (paramId) {
