@@ -54,12 +54,6 @@ $agent_id = "##agentId##"
 Write-Host "agent_id=$agent_id"
 $service_name = "devops_agent_$agent_id"
 Write-Host "service_name=$service_name"
-$service_username = "##serviceUsername##"
-Write-Host "service_username=$service_username"
-$service_password = "##servicePassword##"
-Write-Host "service_password=$service_password"
-$install_type = "##installType##"
-Write-Host "install_type=$install_type"
 
 if ($MyInvocation.MyCommand.Path) {
     $work_dir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -94,31 +88,15 @@ if (Test-Path "jre.zip") {
 New-Item -ItemType Directory -Force -Path "$work_dir\logs" | Out-Null
 New-Item -ItemType Directory -Force -Path "$work_dir\workspace" | Out-Null
 
-if ([string]::IsNullOrEmpty($install_type) -or $install_type -eq "SERVICE") {
-    $service = Get-Service -Name $service_name -ErrorAction SilentlyContinue
-    if (-not $service) {
-        sc.exe create $service_name binPath= "$work_dir\devopsDaemon.exe" start= auto
-        Write-Host "install agent service" -ForegroundColor Green
-    }
-    sc.exe start $service_name
-    Write-Host "start agent service" -ForegroundColor Green
-    if (![string]::IsNullOrEmpty($service_username) -and (![string]::IsNullOrEmpty($service_password))) {
-        Write-Host "both service_username and service_password are defined"
-        sc.exe config $service_name obj= $service_username password= $service_password
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host "service login credentials updated successfully" -ForegroundColor Green
-        } else {
-            Write-Host "failed to update service login credentials" -ForegroundColor Red
-        }
-    }
-} elseif ($install_type -eq "TASK") {
-    Write-Host "Creating scheduled task to run $service_name when any user logs on..."
-    schtasks /create /tn $service_name /tr "cscript  $work_dir\devopsctl.vbs" /sc ONLOGON /F
-    cscript devopsctl.vbs
-    Write-Host "start agent task" -ForegroundColor Green
-} else {
-    Write-Host "Unknown install_type: $install_type" -ForegroundColor Red
+Set-Content -Path "$work_dir\.install_type" -Value "SERVICE" -NoNewline
+
+$service = Get-Service -Name $service_name -ErrorAction SilentlyContinue
+if (-not $service) {
+    sc.exe create $service_name binPath= "$work_dir\devopsDaemon.exe" start= auto
+    Write-Host "install agent service" -ForegroundColor Green
 }
+sc.exe start $service_name
+Write-Host "start agent service" -ForegroundColor Green
 
 Remove-Item -Path "$work_dir\download_install.ps1" -Force
 

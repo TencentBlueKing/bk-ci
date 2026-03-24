@@ -34,6 +34,8 @@ IF EXIST "jre.zip" (
 mkdir logs
 mkdir workspace
 
+echo TASK> .install_type
+
 sc query %service_name%
 
 IF ERRORLEVEL 1 GOTO :create_schtasks

@@ -26,9 +26,7 @@ GOTO :stop_service
 sc query %service_name%
 
 IF ERRORLEVEL 1 GOTO :finally_end
-GOTO :stop_service
 
-:stop_service
 echo "stop devops service"
 sc stop %service_name%
 GOTO :finally_end

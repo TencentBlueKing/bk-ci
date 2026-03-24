@@ -1,6 +1,6 @@
 @echo off
 
-echo start install devops agent...
+echo start install devops daemon (session mode)...
 cd /d %~dp0
 set work_dir=%CD%
 set agent_id=##agentId##
@@ -33,15 +33,24 @@ IF EXIST "jre.zip" (
 mkdir logs
 mkdir workspace
 
-echo SERVICE> .install_type
+echo SESSION> .install_type
 
 schtasks /query | findstr %service_name%
 
-IF ERRORLEVEL 1 GOTO :use_register_service
-GOTO :start_schtasks
+IF ERRORLEVEL 1 GOTO :check_service
+GOTO :remove_schtasks
 
-:use_register_service
+:remove_schtasks
+
+echo delete existing scheduled task %service_name%
+schtasks /delete /tn %service_name% /F
+
+GOTO :check_service
+
+:check_service
+
 sc query %service_name%
+
 IF ERRORLEVEL 1 GOTO :service_create
 GOTO :service_start
 
@@ -51,17 +60,10 @@ sc create %service_name% binPath= "%work_dir%\devopsDaemon.exe" start= auto
 GOTO :service_start
 
 :service_start
-echo start agent service
+echo start agent service (session mode)
 sc start %service_name%
 
-GOTO :finally_label
-
-:start_schtasks
-echo start devops daemon by devopsctl.vbs
-devopsctl.vbs
-GOTO :finally_label
-
-:finally_label
+echo "done"
 pause
 exit /b
 
