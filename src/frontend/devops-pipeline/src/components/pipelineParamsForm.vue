@@ -101,6 +101,10 @@
                 type: Boolean,
                 default: false
             },
+            allPipelineParamValues: {
+                type: Object,
+                default: null
+            },
             paramValues: {
                 type: Object,
                 default: () => ({})
@@ -172,7 +176,7 @@
             paramList () {
                 return this.params.map(param => {
                     let restParam = {}
-                    if (param.type !== STRING || param.type !== TEXTAREA) {
+                    if (param.type !== STRING && param.type !== TEXTAREA) {
                         if (isRemoteType(param)) {
                             const isMultiple = param.type === 'MULTIPLE'
                             const val = (isMultiple && typeof this.paramValues?.[param.id] === 'string') ? this.paramValues[param.id].split(',').filter(i => i !== '') : this.paramValues?.[param.id]
@@ -186,7 +190,7 @@
                                 multiSelect: isMultiple,
                                 value: isMultiple && !Array.isArray(val) ? [] : val,
                                 allIdString: true,
-                                paramValues: this.paramValues,
+                                paramValues: this.allPipelineParamValues || this.paramValues,
                                 affected,
                                 affectedChanged,
                                 affectTips: affectedChanged && Object.keys(affected).length > 0 ? this.$t('relyChanged', [Object.keys(affected).join('/')]) : ''
@@ -260,7 +264,7 @@
                                 : {}
                         ),
                         // eslint-disable-next-line
-                        show: Object.keys(param.displayCondition ?? {}).every((key) => this.isEqual(this.paramValues[key], param.displayCondition[key])),
+                        show: Object.keys(param.displayCondition ?? {}).every((key) => this.isEqual((this.allPipelineParamValues ?? this.paramValues)[key], param.displayCondition[key])),
                         
                     }
                 })
@@ -363,7 +367,7 @@
                 return false
             },
             async validateAll () {
-                const refsList = this.sortCategory ? this.$refs.categoryRenderParam : this.$refs.renderParam
+                const refsList = this.sortCategory ? (this.$refs.categoryRenderParam ?? []) : (this.$refs.renderParam ?? [])
                 for (let i = 0; i < refsList.length; i++) {
                     const ref = refsList[i]
                     const res = await ref.$validator?.validateAll?.()

@@ -691,6 +691,10 @@
     "setTimeCron": "Set timing rule",
     "templatePipelineRollbackNotAllowedTips": "Stock version, does not support one click rollback",
     "resetBuildNoConfirmMessage": "A total of {0} pipeline(s) will have their [Build Number] field automatically reset to the baseline value after the official release. Please note! If you do not need to reset, please uncheck [Reset to baseline value immediately after releasing the official version].",
+    "yamlFilePathInvalidTip": "The YAML file path for the following pipelines is empty or invalid (must end with .yml or .yaml): {0}",
+    "versionNameExistTitle": "Version Name Already Exists",
+    "versionNameExistTips": "Version {0} already exists. Are you sure you want to overwrite this version?",
+    "versionNameExistSubTips": "After overwriting, viewing the modification history of this version will not be supported.",
     "propertyUpdate": {
       "constName": "Constant Name",
       "constAlias": "Constant Alias",
@@ -707,11 +711,13 @@
       "category": "Group labels",
       "repo": "Repository",
       "relativePath": "Relative path to code repository",
-      "glob": "Filter rules"
+      "glob": "Filter rules",
+      "constant": "Constant"
     },
     "propertyUpdated": "Updated",
     "toInstance": "To instantiate",
-    "fetchPipelinesErrorTips": "Failed to retrieve pipeline template parameters. Please contact the assistant for analysis."
+    "fetchPipelinesErrorTips": "Failed to retrieve pipeline template parameters. Please contact the assistant for analysis.",
+    "noStepIdTips": "This trigger is not configured with a Step Id and cannot be enabled/disabled in the instance"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
@@ -886,7 +892,7 @@
     "reBuildInfo2": "2. Pipeline version, BK_CI_BUILD_ID are consistent with those when it is triggered for the first time.",
     "rePlayFailed": "Replay failed, Please try again.",
     "canNotReplayTips": "The event trigger cache has expired and been cleared. If replay is required, please perform the operation in the code repository."
-  },    
+  },
   "preview": {
     "build": "Build",
     "introVersion": "Recommended Version",
@@ -1728,8 +1734,8 @@
   "paramSetTips": "Select parameter combinations to apply and quickly fill in predefined parameter sets",
   "paramChangeTips": "The last build parameter value has been automatically filled in. {0} parameters have changed the default value. Please pay attention to whether the changes meet the expected",
   "paramSetApplyTips": "Parameter values from combination {0} have been applied, including the following changes. Please check if the changes meet your expectations",
-  "inSetChangedParamTips": "{0} parameters have changed default values; ",
-  "inSetNoRequiredParamTips": "{0} parameters ({1}) are no longer input parameters, ignored and not filled; ",
+  "inSetChangedParamTips": "{0} parameters have changed values; ",
+  "inSetNoRequiredParamTips": "{0} parameters ({1}) are not input parameters, ignored and not filled; ",
   "inSetDeletedParamTips": "{0} parameters ({1}) have been deleted, ignored and not filled.",
   "resetDefault": "Restore Default",
   "useLastParams": "Use Last Parameter Values",
@@ -2033,6 +2039,9 @@
   "noArchivedPipelines": "No archived pipelines for now, no action needed",
   "notParamsTip": "This parameter is no longer an input parameter or has been deleted and cannot be passed during execution. You can manually delete it, or it will be automatically removed from the parameter list after saving.",
   "saveAsParamSet": "Save Current Parameter Set",
+  "reuseParamsExecute": "Reuse Parameters",
+  "reuseParamsExecuteTips": "Execute pipeline with current build's startup parameters",
+  "reuseParamsExecuteFailed": "Failed to reuse parameters execute",
   "oneKeyFill": "One-Click Fill",
   "manageParamSets": "Manage Parameter Sets",
   "totalParamSets": "Total {0} sets",
@@ -2042,6 +2051,7 @@
   "paramList": "Parameter List",
   "addParamField": "Add Parameter Field",
   "noParamsAdded": "No parameters added yet",
+  "currentPipelineHasNoParams": "Current pipeline has no input parameters, ignored and not filled",
   "newParamSet": "New Parameter Set",
   "lastUsedParams": "My Last Used Parameter Values",
   "recentlyUsed": "Recently Used",
