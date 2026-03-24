@@ -37,7 +37,6 @@ import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmRespDataMachineResource
 import org.jooq.DSLContext
 import org.jooq.Record2
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
