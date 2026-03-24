@@ -129,7 +129,7 @@ interface UserScmRepositoryApiResource {
     ): Result<List<Reference>>
 
     @Operation(summary = "获取远端仓库信息")
-    @POST
+    @GET
     @Path("/getRepository")
     fun getRepository(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
