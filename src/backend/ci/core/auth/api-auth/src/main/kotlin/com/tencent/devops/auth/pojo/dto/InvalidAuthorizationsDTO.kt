@@ -11,9 +11,14 @@ data class InvalidAuthorizationsDTO(
     @get:Schema(title = "引起oauth失效的代码库")
     val invalidRepertoryIds: List<String> = emptyList(),
     @get:Schema(title = "失效的CMDB环境节点")
-    val invalidEnvNodeIds: List<String> = emptyList()
+    val invalidEnvNodeIds: List<String> = emptyList(),
+    @get:Schema(title = "引起代持人权限失效的创作流")
+    val invalidCreativeStreamIds: List<String> = emptyList()
 ) {
     fun isHasInvalidAuthorizations(): Boolean {
-        return invalidRepertoryIds.isNotEmpty() || invalidPipelineIds.isNotEmpty() || invalidEnvNodeIds.isNotEmpty()
+        return invalidRepertoryIds.isNotEmpty() ||
+            invalidPipelineIds.isNotEmpty() ||
+            invalidEnvNodeIds.isNotEmpty() ||
+            invalidCreativeStreamIds.isNotEmpty()
     }
 }

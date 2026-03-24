@@ -842,6 +842,7 @@
                             }
                             .is-store-template {
                                 flex-shrink: 0;
+                                color: #3a84ff;
                             }
                         }
                         .pipeline-template-desc {

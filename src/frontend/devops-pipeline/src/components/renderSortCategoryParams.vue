@@ -13,6 +13,7 @@
                     <ToggleFollowTemplatePopover
                         v-if="showFollowTemplateBtn && !isDelete"
                         is-collapsed
+                        :is-no-step-id="isNoStepId"
                         :is-follow-template="isFollowTemplate"
                         :handle-change="handleChangeFollow"
                         :type="configType"
@@ -108,6 +109,10 @@
                 type: Boolean,
                 default: false
             },
+            isNoStepId: {
+                type: Boolean,
+                default: false
+            },
             configType: {
                 type: String,
                 default: ''
@@ -192,5 +197,24 @@
         transform: rotate(-90deg);
     }
 
-    
+    .status-tag {
+        padding: 0 8px;
+        border-radius: 2px;
+        font-size: 12px;
+        height: 16px;
+        line-height: 16px;
+        font-weight: 400;
+        &.success {
+            color: #299E56;
+            background: #DAF6E5;
+        }
+        &.danger {
+            color: #E71818;
+            background: #FFEBEB;
+        }
+        &.warning {
+            color: #FF9C01;
+            background: #FFF3E1;
+        }
+    }
 </style>

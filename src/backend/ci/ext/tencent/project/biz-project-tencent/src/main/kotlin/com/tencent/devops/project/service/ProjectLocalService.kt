@@ -247,10 +247,10 @@ class ProjectLocalService @Autowired constructor(
     }
 
     fun getOrCreateRemoteDevProject(userId: String): ProjectVO {
-        return getOrCreatePreProject(userId, null)
+        return getOrCreatePreProject(userId)
     }
 
-    fun getOrCreatePreProject(userId: String, accessToken: String?): ProjectVO {
+    fun getOrCreatePreProject(userId: String): ProjectVO {
         val projectCode = "_$userId"
         var userProjectRecord = projectDao.getByEnglishName(dslContext, projectCode)
         if (userProjectRecord != null) {
@@ -283,7 +283,6 @@ class ProjectLocalService @Autowired constructor(
             projectService.create(
                 userId = userId,
                 projectCreateInfo = projectCreateInfo,
-                accessToken = accessToken,
                 createExtInfo = ProjectCreateExtInfo(needValidate = false, needAuth = true),
                 defaultProjectId = null,
                 projectChannel = ProjectChannelCode.PREBUILD
@@ -330,7 +329,6 @@ class ProjectLocalService @Autowired constructor(
             projectService.create(
                 userId = userId,
                 projectCreateInfo = projectCreateInfo,
-                accessToken = null,
                 createExtInfo = createExt,
                 defaultProjectId = projectId,
                 projectChannel = ProjectChannelCode.BS
@@ -483,11 +481,10 @@ class ProjectLocalService @Autowired constructor(
         return ProjectUtils.packagingBean(projectInfo)
     }
 
-    fun getProjectUsers(accessToken: String, userId: String, projectCode: String): Result<List<String>?> {
-        logger.info("getProjectUsers accessToken is :$accessToken,userId is :$userId,projectCode is :$projectCode")
+    fun getProjectUsers(userId: String, projectCode: String): Result<List<String>?> {
+        logger.info("getProjectUsers userId is :$userId,projectCode is :$projectCode")
         // 检查用户是否有查询项目下用户列表的权限
-//        val validateResult = verifyUserProjectPermission(accessToken, projectCode, userId)
-        val validateFlag = projectPermissionService.verifyUserProjectPermission(accessToken, projectCode, userId)
+        val validateFlag = projectPermissionService.verifyUserProjectPermission(projectCode, userId)
         logger.info("getProjectUsers validateResult is :$validateFlag")
         if (!validateFlag) {
             val messageResult = I18nUtil.generateResponseDataObject<String>(
@@ -502,7 +499,6 @@ class ProjectLocalService @Autowired constructor(
     }
 
     fun getProjectUserRoles(
-        accessToken: String,
         userId: String,
         projectCode: String,
         serviceCode: AuthServiceCode
@@ -559,7 +555,6 @@ class ProjectLocalService @Autowired constructor(
             projectService.create(
                 userId = userId,
                 projectCreateInfo = projectCreateInfo,
-                accessToken = null,
                 createExtInfo = createExt,
                 defaultProjectId = projectCode,
                 projectChannel = ProjectChannelCode.GITCI
@@ -618,7 +613,6 @@ class ProjectLocalService @Autowired constructor(
         // 必须用户在项目下才能授权
         createUserList.forEach {
             if (!projectPermissionService.verifyUserProjectPermission(
-                    accessToken = null,
                     projectCode = projectId,
                     userId = userId
                 )

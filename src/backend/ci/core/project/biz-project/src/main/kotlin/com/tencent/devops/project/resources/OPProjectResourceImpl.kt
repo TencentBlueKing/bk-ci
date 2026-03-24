@@ -77,10 +77,9 @@ class OPProjectResourceImpl @Autowired constructor(
 
     override fun updateProject(
         userId: String,
-        accessToken: String,
         projectInfoRequest: OpProjectUpdateInfoRequest
     ): Result<Int> {
-        return Result(data = opProjectService.updateProjectFromOp(userId, accessToken, projectInfoRequest))
+        return Result(data = opProjectService.updateProjectFromOp(userId, projectInfoRequest))
     }
 
     override fun updateProjectCreator(projectUpdateCreatorDtoList: List<ProjectUpdateCreatorDTO>): Result<Boolean> {

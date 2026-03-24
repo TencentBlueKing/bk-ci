@@ -186,6 +186,21 @@ class AuthResourceService @Autowired constructor(
         )
     }
 
+    fun updateRelationId(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        relationId: String
+    ): Boolean {
+        return authResourceDao.updateRelationId(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            relationId = relationId
+        )
+    }
+
     fun disable(
         userId: String,
         projectCode: String,

@@ -35,7 +35,7 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 )
 
 // MkBuildTmpDir 创建构建提供的临时目录

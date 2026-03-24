@@ -74,38 +74,36 @@
 
                     {{ $t('buildParams') }}
                     
-                    <template v-if="hasPipelineParams">
-                        <span
-                            @click.stop=""
-                        >
-                            <param-set
-                                ref="paramSetSelector"
-                                :all-params="pipelineParams"
-                                :use-last-params="useLastParams"
-                                :is-visible-version="isVisibleVersion"
-                                @change="updateParamsValues"
-                            />
-                        </span>
-                        <i
-                            class="devops-icon icon-question-circle"
-                            v-bk-tooltips="$t('paramSetTips')"
+                    <span
+                        @click.stop=""
+                    >
+                        <param-set
+                            ref="paramSetSelector"
+                            :all-params="pipelineParams"
+                            :use-last-params="useLastParams"
+                            :is-visible-version="isVisibleVersion"
+                            @change="updateParamsValues"
                         />
-                        <span
-                            :class="['text-link', {
-                                'disabled': !showChangedParamsAlert
-                            }]"
-                            @click.stop="resetDefaultParams"
-                        >
-                            {{ $t('resetDefault') }}
-                        </span>
-                        <span class="collapse-trigger-divider">|</span>
-                        <span
-                            class="text-link"
-                            @click.stop="saveAsParamSet"
-                        >
-                            {{ $t('saveAsParamSet') }}
-                        </span>
-                    </template>
+                    </span>
+                    <i
+                        class="devops-icon icon-question-circle"
+                        v-bk-tooltips="$t('paramSetTips')"
+                    />
+                    <span
+                        :class="['text-link', {
+                            'disabled': !showChangedParamsAlert
+                        }]"
+                        @click.stop="resetDefaultParams"
+                    >
+                        {{ $t('resetDefault') }}
+                    </span>
+                    <span class="collapse-trigger-divider">|</span>
+                    <span
+                        class="text-link"
+                        @click.stop="saveAsParamSet"
+                    >
+                        {{ $t('saveAsParamSet') }}
+                    </span>
                 </header>
                 <div
                     v-show="activeName.has(2)"
@@ -137,7 +135,7 @@
                         v-if="hasPipelineParams"
                         ref="paramsForm"
                         :param-values="paramsValues"
-                        :all-pipeline-param-values="allExecuteParams"
+                        :all-pipeline-param-values="allPipelineParamValues"
                         :highlight-changed-param="showChangedParamsAlert"
                         :handle-param-change="handleParamChange"
                         :params="paramList"
@@ -195,6 +193,7 @@
                             ref="constParamsForm"
                             disabled
                             :param-values="constantValues"
+                            :all-pipeline-param-values="allPipelineParamValues"
                             :params="constantParams"
                             sort-category
                         />
@@ -224,6 +223,7 @@
                             ref="otherParamsForm"
                             disabled
                             :param-values="otherValues"
+                            :all-pipeline-param-values="allPipelineParamValues"
                             :params="otherParams"
                             sort-category
                         >
@@ -347,6 +347,7 @@
                 showChangedParamsAlert: false,
                 checkTotal: true,
                 isApplySet: false,
+                pendingParamSetChange: null,
                 applySetDiff: {
                     setName: '',
                     diffMap: {
@@ -366,7 +367,8 @@
                 'pacEnabled'
             ]),
             ...mapState('atom', [
-                'pipelineInfo'
+                'pipelineInfo',
+                'tempParamSet'
             ]),
             execVersionSelectorDisableTips () {
                 return {
@@ -408,6 +410,11 @@
                 return this.isDebugPipeline || (this.startupInfo?.canElementSkip ?? false)
             },
             paramSetDiffTips () {
+                if (!this.hasPipelineParams) {
+                    return [
+                        this.$t('currentPipelineHasNoParams')
+                    ]
+                }
                 const diffs = Object.keys(this.applySetDiff.diffMap).reduce((acc, key) => {
                     const item = this.applySetDiff.diffMap[key]
                     if (item.length > 0) {
@@ -423,8 +430,14 @@
                     return this.$t(`inSet${`${key.slice(0, 1).toUpperCase()}${key.slice(1)}`}ParamTips`, [item.length, item.join(', ')])
                 })
             },
-            allExecuteParams () {
-                return this.getExecuteParams(this.pipelineId)
+            allPipelineParamValues () {
+                return {
+                    ...this.paramsValues,
+                    ...this.versionParamValues,
+                    ...this.buildValues,
+                    ...this.constantValues,
+                    ...this.otherValues
+                }
             }
         },
         watch: {
@@ -448,12 +461,17 @@
             setTimeout(() => {
                 this.resetExecuteConfig(this.pipelineId)
             }, 0)
+            // Clear temp paramSet when leaving preview page
+            if (this.tempParamSet) {
+                this.setTempParamSet(null)
+            }
         },
         methods: {
             ...mapActions('atom', [
                 'togglePropertyPanel',
                 'fetchPipelineByVersion',
-                'selectPipelineVersion'
+                'selectPipelineVersion',
+                'setTempParamSet'
             ]),
             ...mapActions('pipelines', [
                 'requestStartupInfo',
@@ -561,17 +579,6 @@
                             ...this.versionParamValues
                         }
                     })
-                    if (this.buildNo.buildNoType === 'CONSISTENT' && this.buildNo.currentBuildNo !== this.buildNo.lastBuildNo) {
-                        this.buildNo.currentBuildNo = this.buildNo.lastBuildNo
-                        this.buildNo.isChanged = true
-
-                        this.setExecuteParams({
-                            pipelineId: this.pipelineId,
-                            params: {
-                                buildNo: this.buildNo
-                            }
-                        })
-                    }
                 }
             },
             async handleValidate () {
@@ -601,7 +608,10 @@
                 }
             },
             handleChange (type, name, value) {
-                this[`${type}Values`][name] = value
+                this[`${type}Values`] = {
+                    ...this[`${type}Values`],
+                    [name]: value
+                }
                 this.setExecuteParams({
                     pipelineId: this.pipelineId,
                     params: {
@@ -649,6 +659,11 @@
                     this.startupInfo = res
                     this.initParams(this.startupInfo)
                     this.showChangedParamsAlert = this.startupInfo?.useLatestParameters
+                    if (this.pendingParamSetChange) {
+                        const { setName, paramsValues, versionValues } = this.pendingParamSetChange
+                        this.pendingParamSetChange = null
+                        this.updateParamsValues(setName, paramsValues, versionValues)
+                    }
                 } catch (err) {
                     this.handleError(
                         err,
@@ -667,7 +682,7 @@
                 let message, theme
                 const paramsValid = await this.handleValidate()
                 if (!paramsValid) return
-                const params = this.getExecuteParams(this.pipelineId)
+                const params = this.getExecuteParams(this.pipelineId) ?? {}
                 Object.keys(params).forEach(key => {
                     if (key !== 'buildNo' && isObject(params[key])) {
                         params[key] = JSON.stringify(params[key])
@@ -757,10 +772,10 @@
                 })
             },
             particalyUpdateParams (origin, partical, diffMap) {
-                const allParamMap = this.startupInfo.properties.reduce((acc, param) => {
+                const allParamMap = this.startupInfo?.properties?.reduce((acc, param) => {
                     acc.set(param.id, param)
                     return acc
-                }, new Map())
+                }, new Map()) ?? new Map()
                 Object.keys(partical).forEach(key => {
                     const param = allParamMap.get(key)
                     if (Object.prototype.hasOwnProperty.call(origin, key)) {
@@ -769,7 +784,7 @@
 
                     if (!param) {
                         diffMap.deleted.push(key)
-                    } else if (!(param.required === true) && !allVersionKeyList.includes(key)) {
+                    } else if (!(param.required === true && param.constant === false) && !allVersionKeyList.includes(key)) {
                         diffMap.noRequired.push(key)
                     } else if (!isShallowEqual(param.defaultValue, partical[key])) {
                         diffMap.changed.push(key)
@@ -781,6 +796,10 @@
                 }
             },
             updateParamsValues (setName, paramsValues, versionValues) {
+                if (!this.startupInfo) {
+                    this.pendingParamSetChange = { setName, paramsValues, versionValues }
+                    return
+                }
                 const applySetDiff = {
                     setName,
                     diffMap: {

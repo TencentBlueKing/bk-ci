@@ -29,5 +29,6 @@ package com.tencent.devops.common.pipeline.template
 enum class MigrationStatus(val value: String) {
     SUCCESS("迁移成功"),
     FAILED("迁移失败"),
+    SKIPPED("跳过"),
     IN_PROGRESS("迁移中")
 }

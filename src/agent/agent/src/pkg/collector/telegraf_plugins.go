@@ -1,3 +1,5 @@
+//go:build !loong64
+
 package collector
 
 import (

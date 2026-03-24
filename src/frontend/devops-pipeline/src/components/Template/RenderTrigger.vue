@@ -14,14 +14,14 @@
                     >
                         <bk-radio
                             :value="false"
-                            :disabled="trigger.isFollowTemplate"
+                            :disabled="trigger.isFollowTemplate || isNoStepId"
                             class="mr20"
                         >
                             {{ $t('template.enable') }}
                         </bk-radio>
                         <bk-radio
                             :value="true"
-                            :disabled="trigger.isFollowTemplate"
+                            :disabled="trigger.isFollowTemplate || isNoStepId"
                         >
                             {{ $t('template.close') }}
                         </bk-radio>
@@ -36,7 +36,7 @@
                     <section class="component-row">
                         <bk-input
                             v-model="trigger.cron"
-                            :disabled="trigger.isFollowTemplate"
+                            :disabled="trigger.isFollowTemplate || isDisabled"
                             @focus="handleShowTimeCronCom"
                         />
                     </section>
@@ -45,7 +45,7 @@
                     name="variables"
                     :title="$t('details.startupParams')"
                     :value="trigger.variables"
-                    :disabled="trigger.isFollowTemplate"
+                    :disabled="trigger.isFollowTemplate || isDisabled"
                     :param="timerTriggerParamConfig"
                     :handle-change="handleChangeStartParam"
                 />
@@ -83,7 +83,15 @@
     const props = defineProps({
         index: Boolean,
         trigger: Object,
-        handleChangeTrigger: Function
+        handleChangeTrigger: Function,
+        isDisabled: {
+            type: Boolean,
+            default: false
+        },
+        isNoStepId: {
+            type: Boolean,
+            default: false
+        }
     })
     const showTimeCronCom = ref(false)
     const isTimerTriggerV2 = computed(() => {

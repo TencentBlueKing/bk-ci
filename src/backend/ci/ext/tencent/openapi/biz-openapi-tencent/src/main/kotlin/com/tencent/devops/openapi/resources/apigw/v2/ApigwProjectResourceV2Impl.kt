@@ -57,14 +57,12 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String,
-        accessToken: String,
         projectCreateInfo: ProjectCreateInfo
     ): Result<String> {
         return createProjectSetRouter(
             appCode = appCode,
             apigwType = apigwType,
             userId = userId,
-            accessToken = accessToken,
             routerTag = null,
             projectCreateInfo = projectCreateInfo
         )
@@ -74,11 +72,10 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String,
-        accessToken: String,
         routerTag: String?,
         projectCreateInfo: ProjectCreateInfo
     ): Result<String> {
-        logger.info("v2/projects/newProject:create:Input($userId,$accessToken,$projectCreateInfo,$routerTag)")
+        logger.info("v2/projects/newProject:create:Input($userId,$projectCreateInfo,$routerTag)")
 
         // 创建项目需要指定对接的主集群。 不同集群可能共用同一个套集群
         if (!projectRouteTag.isNullOrEmpty()) {
@@ -87,7 +84,6 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
         return Result(
             client.get(ServiceTxProjectResource::class).create(
                 userId = userId,
-                accessToken = accessToken,
                 projectCreateInfo = projectCreateInfo,
                 routerTag = routerTag
             ).data!!

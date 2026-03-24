@@ -103,6 +103,7 @@
                     </div>
                     <bk-table
                         :data="previewTableData"
+                        :max-height="300"
                     >
                         <bk-table-column
                             label="IP"
