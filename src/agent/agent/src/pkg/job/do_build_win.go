@@ -40,6 +40,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
@@ -47,8 +49,6 @@ import (
 	ucommand "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/process"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 )
 
 func doBuild(
@@ -155,13 +155,17 @@ func doBuild(
 func StartProcessCmd(command string, args []string, workDir string, envMap map[string]string, runUser string) (*exec.Cmd, error) {
 	cmd := exec.Command(command)
 
+	// 始终禁止子进程继承父进程的所有句柄，防止 Agent 持有的管道句柄（如 daemon stderr pipe）
+	// 沿 Worker→cmd.exe→构建脚本链路层层传播，导致构建脚本的孙进程继承管道写端后
+	// 上层 StreamPumper/read() 永远等不到 EOF 而阻塞
+	sysProcAttr := &syscall.SysProcAttr{
+		NoInheritHandles: true,
+	}
 	if envs.FetchEnvAndCheck(constant.DevopsAgentEnableNewConsole, "true") {
-		cmd.SysProcAttr = &syscall.SysProcAttr{
-			CreationFlags:    constant.WinCommandNewConsole,
-			NoInheritHandles: true,
-		}
+		sysProcAttr.CreationFlags = constant.WinCommandNewConsole
 		logs.Info("DEVOPS_AGENT_ENABLE_NEW_CONSOLE enabled")
 	}
+	cmd.SysProcAttr = sysProcAttr
 
 	if len(args) > 0 {
 		cmd.Args = append(cmd.Args, args...)
