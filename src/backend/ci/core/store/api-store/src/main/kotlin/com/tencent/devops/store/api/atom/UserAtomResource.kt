@@ -49,6 +49,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
@@ -78,7 +79,8 @@ interface UserAtomResource {
         userId: String,
         @Parameter(description = "支持的服务范围", required = false)
         @QueryParam("serviceScope")
-        serviceScope: ServiceScopeEnum?,
+        @DefaultValue("PIPELINE")
+        serviceScope: ServiceScopeEnum? = ServiceScopeEnum.PIPELINE,
         @Parameter(description = "job类型", required = false)
         @QueryParam("jobType")
         jobType: JobTypeEnum?,

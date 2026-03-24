@@ -196,13 +196,16 @@ class LabelServiceImpl @Autowired constructor(
             messageCode = "$labelType.label.$labelCode",
             defaultMessage = labelName
         )
+        val serviceScope = it.field(KEY_SERVICE_SCOPE)?.let { field ->
+            it.get(field) as? String
+        }
         labelList.add(
             Label(
                 id = it[KEY_LABEL_ID] as String,
                 labelCode = labelCode,
                 labelName = labelLanName,
                 labelType = labelType,
-                serviceScope = it[KEY_SERVICE_SCOPE] as? String,
+                serviceScope = serviceScope,
                 createTime = (it[KEY_CREATE_TIME] as LocalDateTime).timestampmilli(),
                 updateTime = (it[KEY_UPDATE_TIME] as LocalDateTime).timestampmilli()
             )
