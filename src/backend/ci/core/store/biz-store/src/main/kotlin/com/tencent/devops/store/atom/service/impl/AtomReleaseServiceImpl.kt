@@ -68,6 +68,7 @@ import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
 import com.tencent.devops.quality.api.v2.pojo.op.QualityMetaData
 import com.tencent.devops.store.atom.dao.AtomDao
+import com.tencent.devops.store.atom.util.AtomOsMapUtil
 import com.tencent.devops.store.atom.dao.AtomLabelRelDao
 import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomEnvInfoDao
@@ -79,6 +80,8 @@ import com.tencent.devops.store.atom.service.AtomQualityService
 import com.tencent.devops.store.atom.service.AtomReleaseService
 import com.tencent.devops.store.atom.service.MarketAtomArchiveService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
+import com.tencent.devops.store.common.dao.ClassifyDao
+import com.tencent.devops.store.common.dao.LabelDao
 import com.tencent.devops.store.common.dao.StoreErrorCodeInfoDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
@@ -169,6 +172,10 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var storeErrorCodeInfoDao: StoreErrorCodeInfoDao
     @Autowired
     lateinit var storeStatisticTotalDao: StoreStatisticTotalDao
+    @Autowired
+    lateinit var classifyDao: ClassifyDao
+    @Autowired
+    lateinit var labelDao: LabelDao
     @Autowired
     lateinit var marketAtomCommonService: MarketAtomCommonService
     @Autowired
@@ -426,13 +433,29 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
         // 校验前端传的版本号是否正确
         val osList = convertUpdateRequest.os
+        val serviceScopeConfigs = marketAtomUpdateRequest.toServiceScopeConfigs()
+        val effectiveOsList = if (osList.isEmpty() && serviceScopeConfigs.isNotEmpty()) {
+            val allOs = linkedSetOf<String>()
+            for (config in serviceScopeConfigs) {
+                config.getEffectiveOsMap().values.forEach { allOs.addAll(it) }
+                for (jobType in config.getEffectiveJobTypes()) {
+                    if (jobType.isBuildEnv() && jobType.name !in config.getEffectiveOsMap()) {
+                        jobType.getDefaultOs()?.let { allOs.addAll(it) }
+                    }
+                }
+            }
+            ArrayList(allOs.toList())
+        } else {
+            osList
+        }
         val newestAtomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)!!
         val validateAtomVersionResult =
             marketAtomCommonService.validateAtomVersion(
                 atomRecord = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) newestAtomRecord else atomRecord,
                 releaseType = releaseType,
-                osList = osList,
-                version = version
+                osList = effectiveOsList,
+                version = version,
+                serviceScopeConfigs = serviceScopeConfigs
             )
         logger.info("validateAtomVersionResult is :$validateAtomVersionResult")
         if (validateAtomVersionResult.isNotOk()) {
@@ -1391,13 +1414,15 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
         val packagePath = updateAtomPackageInfo.packagePath
         val atomPackageSourceType = updateAtomPackageInfo.atomPackageSourceType
+        val serviceScopeConfigs = convertUpdateRequest.toServiceScopeConfigs()
         val classType = if (packagePath.isNullOrBlank() && atomPackageSourceType == PackageSourceTypeEnum.UPLOAD) {
-            // 没有可执行文件的插件是老的内置插件，插件的classType为插件标识
             atomCode
-        } else if (convertUpdateRequest.os.isEmpty()) {
-            MarketBuildLessAtomElement.classType
-        } else {
+        } else if (convertUpdateRequest.os.isNotEmpty()) {
             MarketBuildAtomElement.classType
+        } else if (AtomOsMapUtil.hasAnyBuildEnvJobType(serviceScopeConfigs)) {
+            MarketBuildAtomElement.classType
+        } else {
+            MarketBuildLessAtomElement.classType
         }
         val propsMap = mutableMapOf<String, Any?>()
         val inputDataMap = taskDataMap[KEY_INPUT] as? Map<String, Any>
@@ -1453,10 +1478,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 )
             }
             // 更新标签信息
-            val labelIdList = convertUpdateRequest.labelIdList?.filter { !it.isNullOrBlank() }
-            if (!convertUpdateRequest.isBranchTestVersion && null != labelIdList) {
-                atomLabelRelDao.deleteByAtomId(context, atomId)
-                if (labelIdList.isNotEmpty()) {
+            // 删除旧的关联关系
+            atomLabelRelDao.deleteByAtomId(dslContext, atomId)
+            // 为每个服务范围创建标签关联
+            serviceScopeConfigs.forEach { config ->
+                val labelIdList = config.labelIdList?.filter { !it.isNullOrBlank() }
+                if (!convertUpdateRequest.isBranchTestVersion && !labelIdList.isNullOrEmpty()) {
                     atomLabelRelDao.batchAdd(context, userId = userId, atomId = atomId, labelIdList = labelIdList)
                 }
             }

@@ -145,6 +145,16 @@ interface StoreComponentQueryService {
     ): Result<String?>
 
     /**
+     * 获取组件基础信息
+     */
+    fun getComponentBaseInfo(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        version: String? = null
+    ): StoreBaseInfo?
+
+    /**
      * 统计分组信息
      */
     fun getComponentGroupCount(

@@ -15,7 +15,7 @@ data class AsyncPipelineEvent(
     val projectId: String,
     val pipelineId: String,
     val values: Map<String, String>,
-    val channelCode: ChannelCode = ChannelCode.BS,
+    val channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
     val buildNo: Int? = null,
     val startType: StartType = StartType.SERVICE
 ) : AsyncExecuteEventData {

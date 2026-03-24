@@ -138,7 +138,7 @@ class PipelineTimerBuildListener @Autowired constructor(
     ) {
         with(event) {
             try {
-                when (channelCode) {
+                when (timerChannelCode) {
                     ChannelCode.CREATIVE_STREAM -> {
                         event.creativeStreamTimer(
                             params = params,
@@ -152,7 +152,7 @@ class PipelineTimerBuildListener @Autowired constructor(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             params = params,
-                            channelCode = channelCode,
+                            channelCode = timerChannelCode,
                             taskId = taskId
                         )
                     }
@@ -225,7 +225,7 @@ class PipelineTimerBuildListener @Autowired constructor(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         params = params.plus(creativeStreamParams),
-                        channelCode = channelCode,
+                        channelCode = timerChannelCode,
                         taskId = taskId
                     )
                 }
@@ -251,7 +251,7 @@ class PipelineTimerBuildListener @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     params = params.plus(creativeStreamParams),
-                    channelCode = channelCode,
+                    channelCode = timerChannelCode,
                     taskId = taskId
                 )
             }
@@ -507,7 +507,7 @@ class PipelineTimerBuildListener @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 taskId = it,
-                channelCode = channelCode
+                channelCode = timerChannelCode
             )
             if (triggerExist == null) {
                 // 存在异常定时任务，尝试删除定时任务

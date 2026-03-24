@@ -30,6 +30,7 @@ package com.tencent.devops.process.bean
 import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
@@ -49,7 +50,8 @@ class GitCIPipelineUrlBeanImpl constructor(
         buildId: String,
         position: String?,
         stageId: String?,
-        needShortUrl: Boolean
+        needShortUrl: Boolean,
+        channelCode: ChannelCode?
     ): String {
         logger.info("[$buildId]|genGitCIBuildDetailUrl| host=$v2GitUrl")
         try {
@@ -79,7 +81,12 @@ class GitCIPipelineUrlBeanImpl constructor(
         }
     }
 
-    override fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
+    override fun genAppBuildDetailUrl(
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode?
+    ): String {
         val devopsOuterHostGateWay = HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)
         logger.info("[$buildId]|genGitCIBuildDetailUrl| outHost=$devopsOuterHostGateWay")
         val url = "$devopsOuterHostGateWay/app/download/devops_app_forward.html" +
@@ -93,7 +100,8 @@ class GitCIPipelineUrlBeanImpl constructor(
         buildId: String,
         stageSeq: Int?,
         taskId: String?,
-        needShortUrl: Boolean
+        needShortUrl: Boolean,
+        channelCode: ChannelCode?
     ): String {
         return genBuildDetailUrl(
             projectCode = projectCode,

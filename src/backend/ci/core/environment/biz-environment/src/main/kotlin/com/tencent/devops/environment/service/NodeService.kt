@@ -255,10 +255,10 @@ class NodeService @Autowired constructor(
             } else {
                 nodeDao.listNodes(
                     dslContext = dslContext, projectId = projectId, nodeType = if (createMode == true) {
-                    NodeType.CREATE
-                } else {
-                    nodeType
-                }
+                        NodeType.CREATE
+                    } else {
+                        nodeType
+                    }
                 )
             }
         if (nodeRecordList.isEmpty()) {
@@ -567,47 +567,71 @@ class NodeService @Autowired constructor(
         )
     }
 
-    fun listByHashIds(userId: String, projectId: String, hashIds: List<String>): List<NodeWithPermission> {
+    fun listByHashIds(
+        userId: String,
+        projectId: String,
+        hashIds: List<String>,
+        checkPermission: Boolean = true
+    ): List<NodeWithPermission> {
         val nodeIds = hashIds.map { HashUtil.decodeIdToLong(it) }
         val nodeRecordList = nodeDao.listAllByIds(dslContext, projectId, nodeIds)
         if (nodeRecordList.isEmpty()) {
             return emptyList()
         }
 
-        val permissionMap = environmentPermissionService.listNodeByPermissions(
-            userId, projectId,
-            permissions = setOf(AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
-        )
+        val allNodeIds = nodeRecordList.map { it.nodeId }
+        val (nodesToReturn, canViewNodeIds, canUseNodeIds, canEditNodeIds, canDeleteNodeIds) = if (checkPermission) {
+            val permissionMap = environmentPermissionService.listNodeByPermissions(
+                userId, projectId,
+                permissions = setOf(AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
+            )
 
-        val canViewNodeIds = environmentPermissionService.listNodeByRbacPermission(
-            userId = userId,
-            projectId = projectId,
-            nodeRecordList = nodeRecordList,
-            authPermission = AuthPermission.VIEW
-        ).map { it.nodeId }
+            val canViewNodeIds = environmentPermissionService.listNodeByRbacPermission(
+                userId = userId,
+                projectId = projectId,
+                nodeRecordList = nodeRecordList,
+                authPermission = AuthPermission.VIEW
+            ).map { it.nodeId }
 
-        val canUseNodeIds = if (permissionMap.containsKey(AuthPermission.USE)) {
-            permissionMap[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+            val canUseNodeIds = if (permissionMap.containsKey(AuthPermission.USE)) {
+                permissionMap[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+            } else {
+                emptyList()
+            }
+            val canEditNodeIds = if (permissionMap.containsKey(AuthPermission.EDIT)) {
+                permissionMap[AuthPermission.EDIT]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+            } else {
+                emptyList()
+            }
+            val canDeleteNodeIds = if (permissionMap.containsKey(AuthPermission.DELETE)) {
+                permissionMap[AuthPermission.DELETE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+            } else {
+                emptyList()
+            }
+            val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
+                userId = userId,
+                projectId = projectId,
+                nodeRecordList = nodeRecordList,
+                authPermission = AuthPermission.LIST
+            )
+            if (nodeListResult.isEmpty()) return emptyList()
+            NodeListWithPermission(
+                nodesToReturn = nodeListResult,
+                canViewNodeIds = canViewNodeIds,
+                canUseNodeIds = canUseNodeIds,
+                canEditNodeIds = canEditNodeIds,
+                canDeleteNodeIds = canDeleteNodeIds
+            )
         } else {
-            emptyList()
+            NodeListWithPermission(
+                nodesToReturn = nodeRecordList,
+                canViewNodeIds = allNodeIds,
+                canUseNodeIds = allNodeIds,
+                canEditNodeIds = allNodeIds,
+                canDeleteNodeIds = allNodeIds
+            )
         }
-        val canEditNodeIds = if (permissionMap.containsKey(AuthPermission.EDIT)) {
-            permissionMap[AuthPermission.EDIT]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
-        } else {
-            emptyList()
-        }
-        val canDeleteNodeIds = if (permissionMap.containsKey(AuthPermission.DELETE)) {
-            permissionMap[AuthPermission.DELETE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
-        } else {
-            emptyList()
-        }
-        val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
-            userId = userId,
-            projectId = projectId,
-            nodeRecordList = nodeRecordList,
-            authPermission = AuthPermission.LIST
-        )
-        if (nodeListResult.isEmpty()) return emptyList()
+
         val thirdPartyAgentNodeIds = nodeRecordList.filter {
             it.nodeType == NodeType.THIRDPARTY.name || it.nodeType == NodeType.CREATE.name
         }.map { it.nodeId }
@@ -615,7 +639,7 @@ class NodeService @Autowired constructor(
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
                 .associateBy { it.nodeId }
-        return nodeListResult.map {
+        return nodesToReturn.map {
             val thirdPartyAgent = thirdPartyAgentMap[it.nodeId]
             val gatewayShowName = if (thirdPartyAgent != null) {
                 slaveGatewayService.getShowName(thirdPartyAgent.gateway)
@@ -1146,3 +1170,11 @@ class NodeService @Autowired constructor(
         logger.info("addhashid time cost: ${System.currentTimeMillis() - startTime}")
     }
 }
+
+private data class NodeListWithPermission(
+    val nodesToReturn: List<TNodeRecord>,
+    val canViewNodeIds: List<Long>,
+    val canUseNodeIds: List<Long>,
+    val canEditNodeIds: List<Long>,
+    val canDeleteNodeIds: List<Long>
+)

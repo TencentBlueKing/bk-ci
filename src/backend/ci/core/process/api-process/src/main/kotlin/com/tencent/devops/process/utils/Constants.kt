@@ -241,6 +241,12 @@ const val PIPELINE_BUILD_MSG = "BK_CI_BUILD_MSG"
 
 const val NODE_AGENT_ID = "BK_CI_NODE_AGENT_ID"
 
+const val NODE_OS = "BK_CI_NODE_OS"
+
+const val NODE_HASH_ID = "BK_CI_NODE_HASH_ID"
+
+const val NODE_ENV_HASH_ID = "BK_CI_NODE_ENV_HASH_ID"
+
 /**
  * 保存流水线编排的最大个数
  */
@@ -263,3 +269,5 @@ const val KEY_TASK = "task"
 const val KEY_TASK_ATOM = "taskAtom"
 
 const val BK_EMPTY_PIPELINE = "bkEmptyPipeline"
+
+const val BK_EMPTY_CREATIVE_STREAM = "bkEmptyCreativeStream"

@@ -36,6 +36,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.SendRTXNotifyElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
@@ -57,6 +58,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_SEND_WECOM_MESS
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
@@ -69,7 +71,8 @@ import org.springframework.stereotype.Component
 class RtxTaskAtom @Autowired constructor(
     private val client: Client,
     private val wechatWorkService: WechatWorkService,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) :
     IAtomTask<SendRTXNotifyElement> {
     override fun getParamElement(task: PipelineBuildTask): SendRTXNotifyElement {
@@ -158,7 +161,13 @@ class RtxTaskAtom @Autowired constructor(
 
             val sendDetailFlag = param.detailFlag != null && param.detailFlag!!
 
-            val detailUrl = detailUrl(projectId, pipelineId, buildId)
+            // 获取流水线渠道信息，用于生成对应渠道的 URL
+            val channelCode = try {
+                pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)?.channelCode
+            } catch (ignore: Exception) {
+                null
+            }
+            val detailUrl = detailUrl(projectId, pipelineId, buildId, channelCode)
 
             val detailOuterUrl = detailOuterUrl(projectId, pipelineId, buildId)
 
@@ -245,8 +254,19 @@ class RtxTaskAtom @Autowired constructor(
         return set
     }
 
-    private fun detailUrl(projectId: String, pipelineId: String, processInstanceId: String) =
-            "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$processInstanceId"
+    /**
+     * 根据渠道生成构建详情 URL
+     * 流水线渠道: /console/pipeline/{projectId}/{pipelineId}/detail/{buildId}
+     * 创作流渠道: /console/creative-stream/{projectId}/flow/{pipelineId}/execute/{buildId}/execute-detail
+     */
+    private fun detailUrl(projectId: String, pipelineId: String, processInstanceId: String, channelCode: ChannelCode? = null): String {
+        val host = HomeHostUtil.innerServerHost()
+        return if (channelCode == ChannelCode.CREATIVE_STREAM) {
+            "$host/console/creative-stream/$projectId/flow/$pipelineId/execute/$processInstanceId/execute-detail"
+        } else {
+            "$host/console/pipeline/$projectId/$pipelineId/detail/$processInstanceId"
+        }
+    }
 
     private fun detailOuterUrl(projectId: String, pipelineId: String, processInstanceId: String) =
             "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&" +

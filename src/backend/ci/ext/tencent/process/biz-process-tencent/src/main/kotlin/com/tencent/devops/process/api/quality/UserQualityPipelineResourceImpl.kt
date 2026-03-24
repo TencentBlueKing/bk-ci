@@ -46,13 +46,43 @@ class UserQualityPipelineResourceImpl @Autowired constructor(
     private val txPipelineService: TXPipelineService,
     private val pipelineRepositoryService: PipelineRepositoryService
 ) : UserQualityPipelineResource {
-    override fun getPipelineInfo(userId: String, projectId: String, pipelineId: String, channelCode: ChannelCode?): Result<PipelineInfo> {
-        return Result(pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode) ?: throw RuntimeException("pipeline info not found for $pipelineId"))
+
+    override fun getPipelineInfo(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode?
+    ): Result<PipelineInfo> {
+        return Result(
+            pipelineRepositoryService.getPipelineInfo(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = channelCode ?: ChannelCode.getRequestChannelCode()
+            ) ?: throw RuntimeException("pipeline info not found for $pipelineId")
+        )
     }
 
-    override fun listViewPipelines(userId: String, projectId: String, keywords: String?, page: Int?, pageSize: Int?, viewId: String?): Result<PipelineViewPipelinePage<QualityPipeline>> {
-        return Result(txPipelineService.listQualityViewPipelines(userId, projectId, page, pageSize, PipelineSortType.CREATE_TIME,
-                ChannelCode.BS, viewId ?: PIPELINE_VIEW_ALL_PIPELINES, true, keywords))
+    override fun listViewPipelines(
+        userId: String,
+        projectId: String,
+        keywords: String?,
+        page: Int?,
+        pageSize: Int?,
+        viewId: String?
+    ): Result<PipelineViewPipelinePage<QualityPipeline>> {
+        return Result(
+            txPipelineService.listQualityViewPipelines(
+                userId = userId,
+                projectId = projectId,
+                page = page,
+                pageSize = pageSize,
+                sortType = PipelineSortType.CREATE_TIME,
+                channelCode = ChannelCode.getRequestChannelCode(),
+                viewId = viewId ?: PIPELINE_VIEW_ALL_PIPELINES,
+                checkPermission = true,
+                filterByPipelineName = keywords
+            )
+        )
     }
 
     override fun list(userId: String, projectId: String, request: PipelineListRequest?): Result<List<Pipeline>> {

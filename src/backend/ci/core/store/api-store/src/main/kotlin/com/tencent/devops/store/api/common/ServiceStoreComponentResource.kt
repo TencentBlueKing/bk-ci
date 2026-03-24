@@ -281,6 +281,32 @@ interface ServiceStoreComponentResource {
         version: String
     ): Result<String?>
 
+    @Operation(summary = "获取组件基础信息")
+    @GET
+    @Path("/types/{storeType}/code/{storeCode}/component/base/info")
+    @BkInterfaceI18n(
+        keyPrefixNames = [
+            "{data.storeType}", "{data.storeCode}", "{data.version}",
+            "releaseInfo"
+        ]
+    )
+    fun getComponentBaseInfo(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: String,
+        @Parameter(description = "组件代码", required = true)
+        @PathParam("storeCode")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeCode: String,
+        @Parameter(description = "组件版本", required = false)
+        @QueryParam("version")
+        version: String? = null
+    ): Result<StoreBaseInfo?>
+
     @Operation(summary = "根据组件code和版本号获取组件详情")
     @GET
     @Path("/types/{storeType}/codes/{storeCode}/{version}/component/base/info")

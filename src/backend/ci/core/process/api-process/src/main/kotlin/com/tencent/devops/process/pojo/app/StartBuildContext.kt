@@ -318,7 +318,7 @@ data class StartBuildContext(
             val channelCode = if (params[PIPELINE_START_CHANNEL] != null) {
                 ChannelCode.valueOf(params[PIPELINE_START_CHANNEL]!!)
             } else {
-                ChannelCode.BS
+                ChannelCode.getRequestChannelCode()
             }
             val startType = StartType.valueOf(params[PIPELINE_START_TYPE]!!)
             return StartBuildContext(
@@ -461,7 +461,8 @@ data class StartBuildContext(
             firstTaskId: String,
             startType: StartType,
             startBuildStatus: BuildStatus,
-            debug: Boolean
+            debug: Boolean,
+            channelCode: ChannelCode
         ): StartBuildContext = StartBuildContext(
             now = LocalDateTime.now(),
             projectId = projectId,
@@ -480,7 +481,7 @@ data class StartBuildContext(
             retryStartTaskId = null,
             triggerUser = "",
             parentTaskId = "",
-            channelCode = ChannelCode.BS,
+            channelCode = channelCode,
             retryFailedContainer = false,
             needUpdateStage = false,
             skipFailedTask = false,

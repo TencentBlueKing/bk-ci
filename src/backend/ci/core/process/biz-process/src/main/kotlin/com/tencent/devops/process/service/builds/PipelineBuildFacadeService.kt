@@ -108,6 +108,7 @@ import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.pojo.builds.BuildHistoryQueryParam
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
 import com.tencent.devops.process.engine.service.PipelineContainerService
@@ -153,10 +154,13 @@ import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.strategy.bus.impl.UserNormalPipelinePermissionCheckStrategy
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
+import com.tencent.devops.process.strategy.factory.HistoryConditionQueryStrategyFactory
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
+import com.tencent.devops.process.strategy.pojo.HistoryConditionQueryRequest
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.BUILD_NO
+import com.tencent.devops.process.utils.NODE_AGENT_ID
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
 import com.tencent.devops.process.utils.MINORVERSION
@@ -207,6 +211,7 @@ class PipelineBuildFacadeService(
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplatePermissionService: PipelineTemplatePermissionService,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
+    private val historyConditionQueryStrategyFactory: HistoryConditionQueryStrategyFactory,
     private val createStreamService: CreateStreamTriggerSupportService
 ) {
 
@@ -223,9 +228,16 @@ class PipelineBuildFacadeService(
         userId: String?,
         projectId: String,
         pipelineId: String,
-        params: List<BuildFormProperty>
+        params: List<BuildFormProperty>,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
     ): List<BuildFormProperty> {
-        return paramFacadeService.filterParams(userId, projectId, pipelineId, params)
+        return paramFacadeService.filterParams(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            params = params,
+            channelCode = channelCode
+        )
     }
 
     fun buildManualStartupInfo(
@@ -342,11 +354,13 @@ class PipelineBuildFacadeService(
         val params = getBuildManualParams(
             projectId = projectId,
             pipelineId = pipelineId,
+            version = resource.version,
             userId = userId,
             triggerParams = triggerContainer.params,
             checkPermission = false, // 已校验权限
             debug = debug,
-            manualBuildMsg = manualBuildMsg
+            manualBuildMsg = manualBuildMsg,
+            channelCode = channelCode
         )
 
         val currentBuildNo = triggerContainer.buildNo?.apply {
@@ -416,7 +430,7 @@ class PipelineBuildFacadeService(
         failedContainer: Boolean? = false, // 仅重试所有失败Job
         skipFailedTask: Boolean? = false, // 跳过失败插件，为true时需要传taskId值（值为stageId则表示跳过Stage下所有失败插件）
         isMobile: Boolean = false,
-        channelCode: ChannelCode? = ChannelCode.BS,
+        channelCode: ChannelCode? = ChannelCode.getRequestChannelCode(),
         checkPermission: Boolean? = true,
         checkManualStartup: Boolean? = false
     ): BuildId {
@@ -966,7 +980,7 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         projectId: String,
         approve: Boolean,
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         checkPermission: Boolean = true
     ): Boolean {
         if (checkPermission) {
@@ -1427,16 +1441,14 @@ class PipelineBuildFacadeService(
         return getBuildDetail(
             projectId = projectId,
             pipelineId = pipelineId,
-            buildId = buildId,
-            channelCode = channelCode
+            buildId = buildId
         )
     }
 
     fun getBuildDetail(
         projectId: String,
         pipelineId: String,
-        buildId: String,
-        channelCode: ChannelCode
+        buildId: String
     ): ModelDetail {
         val newModel = buildRecordService.getBuildRecord(
             projectId = projectId,
@@ -1518,7 +1530,7 @@ class PipelineBuildFacadeService(
             params = arrayOf("buildNo=$buildNo")
         )
         return getBuildDetail(
-            projectId = projectId, pipelineId = pipelineId, buildId = buildId, channelCode = channelCode
+            projectId = projectId, pipelineId = pipelineId, buildId = buildId
         )
     }
 
@@ -1577,7 +1589,6 @@ class PipelineBuildFacadeService(
             pipelineId = pipelineId,
             buildId = buildId,
             executeCount = null,
-            channelCode = channelCode,
             archiveFlag = archiveFlag,
             encryptedFlag = !pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
@@ -1594,7 +1605,6 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         buildId: String,
         executeCount: Int?,
-        channelCode: ChannelCode,
         archiveFlag: Boolean? = false,
         encryptedFlag: Boolean? = false
     ): ModelRecord {
@@ -1677,7 +1687,6 @@ class PipelineBuildFacadeService(
             pipelineId = pipelineId,
             buildId = buildId,
             executeCount = executeCount,
-            channelCode = channelCode,
             archiveFlag = archiveFlag,
             encryptedFlag = true
         )
@@ -2003,7 +2012,6 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         page: Int?,
         pageSize: Int?,
-        channelCode: ChannelCode,
         checkPermission: Boolean = true,
         updateTimeDesc: Boolean? = null,
         debugVersion: Int? = null
@@ -2015,7 +2023,7 @@ class PipelineBuildFacadeService(
         val offset = sqlLimit?.offset ?: 0
         val limit = sqlLimit?.limit ?: 50
 
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
@@ -2091,39 +2099,16 @@ class PipelineBuildFacadeService(
         content = ActionAuditContent.PIPELINE_VIEW_CONTENT
     )
     fun getHistoryBuild(
-        userId: String?,
-        projectId: String,
-        pipelineId: String,
-        page: Int?,
-        pageSize: Int?,
-        materialAlias: List<String>?,
-        materialUrl: String?,
-        materialBranch: List<String>?,
-        materialCommitId: String?,
-        materialCommitMessage: String?,
-        status: List<BuildStatus>?,
-        trigger: List<StartType>?,
-        queueTimeStartTime: Long?,
-        queueTimeEndTime: Long?,
-        startTimeStartTime: Long?,
-        startTimeEndTime: Long?,
-        endTimeStartTime: Long?,
-        endTimeEndTime: Long?,
-        totalTimeMin: Long?,
-        totalTimeMax: Long?,
-        remark: String?,
-        buildNoStart: Int?,
-        buildNoEnd: Int?,
-        buildMsg: String? = null,
+        userId: String? = null,
+        page: Int? = null,
+        pageSize: Int? = null,
+        queryParam: BuildHistoryQueryParam,
         checkPermission: Boolean = true,
-        startUser: List<String>? = null,
         updateTimeDesc: Boolean? = null,
-        archiveFlag: Boolean? = false,
-        debug: Boolean?,
-        triggerAlias: List<String>?,
-        triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        archiveFlag: Boolean? = false
     ): BuildHistoryPage<BuildHistory> {
+        val projectId = queryParam.projectId
+        val pipelineId = queryParam.pipelineId
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 50
         val sqlLimit =
@@ -2131,7 +2116,7 @@ class PipelineBuildFacadeService(
         val offset = sqlLimit?.offset ?: 0
         val limit = sqlLimit?.limit ?: 1000
 
-        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
+        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.getRequestChannelCode()
         val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId = projectId,
@@ -2159,67 +2144,17 @@ class PipelineBuildFacadeService(
             }
 
             val newTotalCount = pipelineRuntimeService.getPipelineBuildHistoryCount(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                materialAlias = materialAlias,
-                materialUrl = materialUrl,
-                materialBranch = materialBranch,
-                materialCommitId = materialCommitId,
-                materialCommitMessage = materialCommitMessage,
-                status = status,
-                trigger = trigger,
-                queueTimeStartTime = queueTimeStartTime,
-                queueTimeEndTime = queueTimeEndTime,
-                startTimeStartTime = startTimeStartTime,
-                startTimeEndTime = startTimeEndTime,
-                endTimeStartTime = endTimeStartTime,
-                endTimeEndTime = endTimeEndTime,
-                totalTimeMin = totalTimeMin,
-                totalTimeMax = totalTimeMax,
-                remark = remark,
-                buildNoStart = buildNoStart,
-                buildNoEnd = buildNoEnd,
-                buildMsg = buildMsg,
-                startUser = startUser,
-                queryDslContext = queryDslContext,
-                debug = debug,
-                triggerAlias = triggerAlias,
-                triggerBranch = triggerBranch,
-                triggerUser = triggerUser
+                queryParam = queryParam,
+                queryDslContext = queryDslContext
             )
 
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
                 userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
                 offset = offset,
                 limit = limit,
-                materialAlias = materialAlias,
-                materialUrl = materialUrl,
-                materialBranch = materialBranch,
-                materialCommitId = materialCommitId,
-                materialCommitMessage = materialCommitMessage,
-                status = status,
-                trigger = trigger,
-                queueTimeStartTime = queueTimeStartTime,
-                queueTimeEndTime = queueTimeEndTime,
-                startTimeStartTime = startTimeStartTime,
-                startTimeEndTime = startTimeEndTime,
-                endTimeStartTime = endTimeStartTime,
-                endTimeEndTime = endTimeEndTime,
-                totalTimeMin = totalTimeMin,
-                totalTimeMax = totalTimeMax,
-                remark = remark,
-                buildNoStart = buildNoStart,
-                buildNoEnd = buildNoEnd,
-                buildMsg = buildMsg,
-                startUser = startUser,
+                queryParam = queryParam,
                 updateTimeDesc = updateTimeDesc,
-                queryDslContext = queryDslContext,
-                debug = debug,
-                triggerAlias = triggerAlias,
-                triggerBranch = triggerBranch,
-                triggerUser = triggerUser
+                queryDslContext = queryDslContext
             )
             val buildHistories = mutableListOf<BuildHistory>()
             buildHistories.addAll(newHistoryBuilds)
@@ -2332,6 +2267,25 @@ class PipelineBuildFacadeService(
         return StartType.getStartTypeMap(I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
     }
 
+    fun getHistoryConditions(request: HistoryConditionQueryRequest): Page<IdValue> {
+        // 权限校验
+        pipelinePermissionService.validPipelinePermission(
+            userId = request.userId,
+            projectId = request.projectId,
+            pipelineId = request.pipelineId,
+            permission = AuthPermission.VIEW,
+            message = MessageUtil.getMessageByLocale(
+                ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                I18nUtil.getLanguage(request.userId),
+                arrayOf(request.userId, request.pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_HISTORY))
+            )
+        )
+        // 根据条件类型获取对应的策略
+        val strategy = historyConditionQueryStrategyFactory.getStrategy(request.conditionType)
+        // 调用策略查询数据
+        return strategy.query(request)
+    }
+
     fun getHistoryConditionRepo(
         userId: String,
         projectId: String,
@@ -2428,8 +2382,7 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String,
         buildNum: Int,
-        buildId: String?,
-        channelCode: ChannelCode
+        buildId: String?
     ): BuildHistory? {
         val statusSet = mutableSetOf<BuildStatus>()
         if (buildNum == -1) {
@@ -2458,8 +2411,7 @@ class PipelineBuildFacadeService(
     fun getLatestSuccessBuild(
         projectId: String,
         pipelineId: String,
-        buildId: String?,
-        channelCode: ChannelCode
+        buildId: String?
     ): BuildHistory? {
         val buildInfo = buildId?.let {
             pipelineRuntimeService.getBuildInfo(projectId, pipelineId, buildId)
@@ -2939,7 +2891,7 @@ class PipelineBuildFacadeService(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS,
+            channelCode = buildInfo.channelCode,
             values = startParameters,
             startType = StartType.MANUAL
         )
@@ -3065,6 +3017,7 @@ class PipelineBuildFacadeService(
         val properties = getBuildManualParams(
             projectId = projectId,
             pipelineId = pipelineId,
+            version = model.latestVersion,
             userId = userId,
             debug = false,
             checkPermission = true,
@@ -3085,18 +3038,18 @@ class PipelineBuildFacadeService(
             } else {
                 true
             }
-            const && required
+            const && required && it.id != NODE_AGENT_ID
         }
         for (item in prop) {
             if (item.type == BuildFormPropertyType.MULTIPLE || item.type == BuildFormPropertyType.ENUM) {
                 val keyList = ArrayList<StartUpInfo>()
                 val valueList = ArrayList<StartUpInfo>()
                 val defaultValue = item.defaultValue.toString()
-                for (option in item.options!!) {
+                item.options?.forEach { option ->
                     valueList.add(
                         StartUpInfo(
-                            option.key,
-                            option.value
+                            id = option.key,
+                            name = option.value
                         )
                     )
                 }
@@ -3237,12 +3190,14 @@ class PipelineBuildFacadeService(
     private fun getBuildManualParams(
         projectId: String,
         pipelineId: String,
+        version: Int,
         userId: String?,
         debug: Boolean,
         checkPermission: Boolean,
         triggerParams: List<BuildFormProperty>,
         manualBuildMsg: String? = null,
-        isTemplate: Boolean? = false
+        isTemplate: Boolean? = false,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
     ): List<BuildFormProperty> {
         if (checkPermission) {
             if (isTemplate == true) {
@@ -3295,12 +3250,51 @@ class PipelineBuildFacadeService(
                 propertyType = BuildPropertyType.BUILD.name
             )
         )
+        if (channelCode == ChannelCode.CREATIVE_STREAM) {
+            // 查出环境信息
+            val envHashId = pipelineRepositoryService.getSettingByPipelineVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pipelineVersion = version
+            )?.envHashId
+            envHashId?.let {
+                val payload = mapOf(
+                    "type" to "remote",
+                    "url" to "/environment/api/user/environment/$projectId/$envHashId/listNodesNew?page=-1",
+                    "dataPath" to "data.records",
+                    "paramName" to "displayName",
+                    "paramId" to "agentHashId"
+                )
+                params.add(
+                    BuildFormProperty(
+                        id = NODE_AGENT_ID,
+                        required = true,
+                        type = BuildFormPropertyType.ENUM,
+                        defaultValue = "",
+                        value = "",
+                        options = null,
+                        desc = I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_CREATIVE_STREAM_NODE_DESC),
+                        repoHashId = null,
+                        relativePath = null,
+                        scmType = null,
+                        containerType = null,
+                        glob = null,
+                        properties = null,
+                        label = I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_CREATIVE_STREAM_NODE_LABEL),
+                        propertyType = BuildPropertyType.BUILD.name,
+                        valueNotEmpty = true,
+                        payload = payload
+                    )
+                )
+            }
+        }
         params.addAll(
             filterParams(
                 userId = if (checkPermission) userId else null,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                params = triggerParams
+                params = triggerParams,
+                channelCode = channelCode
             )
         )
 
@@ -3340,7 +3334,7 @@ class PipelineBuildFacadeService(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 values = startParameters,
-                channelCode = ChannelCode.BS
+                channelCode = buildInfo.channelCode
             ).id
         }
     }

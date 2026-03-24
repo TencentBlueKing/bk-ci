@@ -32,11 +32,9 @@ import com.tencent.devops.common.websocket.enum.NotityLevel
 import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
-import com.tencent.devops.process.websocket.page.DetailPageBuild
 import com.tencent.devops.process.websocket.page.HistoryPageBuild
 import com.tencent.devops.process.websocket.page.RecordPageBuild
 import com.tencent.devops.process.websocket.page.StatusPageBuild
-import com.tencent.devops.process.websocket.push.DetailWebsocketPush
 import com.tencent.devops.process.websocket.push.HistoryWebsocketPush
 import com.tencent.devops.process.websocket.push.RecordWebsocketPush
 import com.tencent.devops.process.websocket.push.StatusWebsocketPush
@@ -48,45 +46,9 @@ import org.springframework.stereotype.Service
 class PipelineWebsocketService @Autowired constructor(
     val redisOperation: RedisOperation,
     val historyPageBuild: HistoryPageBuild,
-    val detailPageBuild: DetailPageBuild,
     val statusPageBuild: StatusPageBuild,
     val recordPageBuild: RecordPageBuild
 ) {
-    fun buildDetailMessage(
-        buildId: String,
-        projectId: String,
-        pipelineId: String,
-        userId: String
-    ): DetailWebsocketPush {
-        val page = detailPageBuild.buildPage(
-            buildPageInfo = BuildPageInfo(
-                buildId = buildId,
-                pipelineId = pipelineId,
-                projectId = projectId,
-                atomId = null,
-                executeCount = null
-            )
-        )
-        logger.debug("detail websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
-        return DetailWebsocketPush(
-            buildId = buildId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            userId = userId,
-            redisOperation = redisOperation,
-            page = page,
-            pushType = WebSocketType.DETAIL,
-            notifyPost = NotifyPost(
-                module = "process",
-                level = NotityLevel.LOW_LEVEL.getLevel(),
-                message = "",
-                dealUrl = null,
-                code = 200,
-                webSocketType = WebSocketType.changWebType(WebSocketType.DETAIL),
-                page = page
-            )
-        )
-    }
 
     fun buildHistoryMessage(
         buildId: String,

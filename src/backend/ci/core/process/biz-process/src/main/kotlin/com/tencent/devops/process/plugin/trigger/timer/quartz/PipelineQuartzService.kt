@@ -248,7 +248,7 @@ class PipelineJobBean(
                                 projectId = projectId,
                                 pipelineId = pipelineId
                             ) ?: pipelineTimer.startUser,
-                            channelCode = pipelineTimer.channelCode,
+                            timerChannelCode = pipelineTimer.channelCode,
                             taskId = taskId,
                             startParam = pipelineTimer.startParam,
                             expectedStartTime = context.scheduledFireTime.time
