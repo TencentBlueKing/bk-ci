@@ -72,13 +72,12 @@ object AtomJobTypeUtil {
 
         if (jobTypeMap.isEmpty()) {
             return JobTypeWriteResult(
-                pipelineJobType = extractPipelineJobType(defaultJobType),
+                pipelineJobType = null,
                 jobTypeMapJson = null
             )
         }
 
         val pipelineJobType = jobTypeMap[PIPELINE]?.firstOrNull()
-            ?: extractPipelineJobType(defaultJobType)
         val jobTypeMapJson = JsonUtil.toJson(jobTypeMap.mapValues { it.value.toList() }, formatted = false)
 
         return JobTypeWriteResult(
