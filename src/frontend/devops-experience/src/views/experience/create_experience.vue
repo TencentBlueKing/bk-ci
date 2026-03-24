@@ -270,6 +270,26 @@
                             </bk-select>
                         </bk-form-item>
                         <bk-form-item
+                            :label="$t('experience.experience_env')"
+                        >
+                            <div class="bkdevop-checkbox-group">
+                                <bk-checkbox v-model="createReleaseForm.enableDevxAccess">
+                                    {{ $t('experience.allow_dev_cloud_access') }}
+                                </bk-checkbox>
+                                <bk-checkbox v-model="createReleaseForm.enablePublicAccess">
+                                    {{ $t('experience.allow_public_access') }}
+                                    <span
+                                        v-bk-tooltips="{
+                                            content: $t('experience.allow_public_access_tip'),
+                                            maxWidth: 300
+                                        }"
+                                    >
+                                        <i class="bk-icon icon-info-circle" />
+                                    </span>
+                                </bk-checkbox>
+                            </div>
+                        </bk-form-item>
+                        <bk-form-item
                             :label="$t('experience.notification_method')"
                             v-bind="notifyDesc"
                         >
@@ -435,7 +455,9 @@
                     wechatGroups: '',
                     enableWechatGroups: false,
                     experienceGroups: [],
-                    classify: ''
+                    classify: '',
+                    enableDevxAccess: false,
+                    enablePublicAccess: false
                 },
                 packageLoading: {
                     isLoading: false,
