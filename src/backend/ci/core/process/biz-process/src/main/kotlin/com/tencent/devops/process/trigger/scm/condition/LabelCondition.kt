@@ -27,28 +27,34 @@
 
 package com.tencent.devops.process.trigger.scm.condition
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
+import com.tencent.devops.common.webhook.service.code.filter.ListContainsFilter
+import com.tencent.devops.common.webhook.util.WebhookUtils.convert
 
-@Schema(title = "webhook触发实际参数")
-data class WebhookFactParam(
-    @get:Schema(title = "用户id")
-    val userId: String,
-    @get:Schema(title = "事件ID")
-    val eventType: String,
-    @get:Schema(title = "操作")
-    val action: String = "",
-    @get:Schema(title = "触发分支/目标分支")
-    val branch: String = "",
-    @get:Schema(title = "源分支")
-    val sourceBranch: String = "",
-    @get:Schema(title = "变更路径")
-    val changes: List<String> = emptyList(),
-    @get:Schema(title = "评论内容")
-    val comment: String = "",
-    @get:Schema(title = "触发标题")
-    val title: String = "",
-    @get:Schema(title = "最新提交信息")
-    val lastCommitMsg: String = "",
-    @get:Schema(title = "标签信息")
-    val labels: List<String> = emptyList()
-)
+class LabelCondition : WebhookCondition {
+    override fun match(context: WebhookConditionContext): Boolean {
+        with(context) {
+            val userFilter = ListContainsFilter(
+                pipelineId = pipelineId,
+                filterName = "mrLabel",
+                triggerOn = factParam.labels.toSet(),
+                included = convert(webhookParams.includeLabels),
+                excluded = convert(webhookParams.excludeLabels),
+                includeFailedReason = { item ->
+                    I18Variable(
+                        WebhookI18nConstants.MR_LABEL_NOT_MATCH,
+                        params = listOf(item)
+                    ).toJsonStr()
+                },
+                excludedFailedReason = { item ->
+                    I18Variable(
+                        WebhookI18nConstants.MR_LABEL_IGNORED,
+                        params = listOf(item)
+                    ).toJsonStr()
+                }
+            )
+            return userFilter.doFilter(response)
+        }
+    }
+}

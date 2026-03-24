@@ -161,4 +161,10 @@ object WebhookI18nConstants {
 
     // Git Tag操作类型不匹配
     const val TAG_ACTION_NOT_MATCH = "bkRepoTriggerTagActionNotMatch"
+
+    // Git MR Label不匹配
+    const val MR_LABEL_NOT_MATCH = "bkRepoTriggerMrLabelNotMatch"
+
+    // Git MR Label被排除
+    const val MR_LABEL_IGNORED = "bkRepoTriggerMrLabelIgnored"
 }

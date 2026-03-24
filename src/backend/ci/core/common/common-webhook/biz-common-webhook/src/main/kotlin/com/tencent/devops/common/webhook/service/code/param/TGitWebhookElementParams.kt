@@ -141,6 +141,8 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
             params.includeIssueAction = joinToString(includeIssueAction)
             params.includeNoteComment = includeNoteComment
             params.includeNoteTypes = joinToString(includeNoteTypes)
+            params.includeLabels = EnvUtils.parseEnv(params.includeLabels ?: "", variables)
+            params.excludeLabels = EnvUtils.parseEnv(params.excludeLabels ?: "", variables)
             return params
         }
     }

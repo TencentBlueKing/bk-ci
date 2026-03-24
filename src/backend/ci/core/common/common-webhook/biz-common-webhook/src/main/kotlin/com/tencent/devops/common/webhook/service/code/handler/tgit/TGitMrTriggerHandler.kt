@@ -67,6 +67,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_TARGET
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_TITLE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_URL
 import com.tencent.devops.common.webhook.pojo.code.GIT_MR_NUMBER
+import com.tencent.devops.common.webhook.pojo.code.MATCH_LABEL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_COMMIT_MESSAGE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANCH
@@ -88,6 +89,7 @@ import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
 import com.tencent.devops.common.webhook.service.code.filter.KeywordSkipFilter
 import com.tencent.devops.common.webhook.service.code.filter.KeywordSkipFilter.Companion.KEYWORD_SKIP_CI
 import com.tencent.devops.common.webhook.service.code.filter.KeywordSkipFilter.Companion.KEYWORD_SKIP_WIP
+import com.tencent.devops.common.webhook.service.code.filter.ListContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.ThirdFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
@@ -273,7 +275,26 @@ class TGitMrTriggerHandler(
                     params = listOf(getAction(event) ?: "")
                 ).toJsonStr()
             )
-
+            val labelFilter = ListContainsFilter(
+                pipelineId = pipelineId,
+                filterName = "mrLabel",
+                triggerOn = event.object_attributes.labels?.mapNotNull { it.title }?.toSet() ?: setOf(),
+                included = convert(includeLabels),
+                excluded = convert(excludeLabels),
+                includeFailedReason = { item ->
+                    I18Variable(
+                        WebhookI18nConstants.MR_LABEL_NOT_MATCH,
+                        params = listOf(item)
+                    ).toJsonStr()
+                },
+                excludedFailedReason = { item ->
+                    I18Variable(
+                        WebhookI18nConstants.MR_LABEL_IGNORED,
+                        params = listOf(item)
+                    ).toJsonStr()
+                },
+                includeItemKey = MATCH_LABEL
+            )
             // 只有开启路径匹配时才查询mr change file list
             val changeFiles = if (tryGetChangeFilePath(this)) {
                 val mrId = if (repository is CodeGitlabRepository) {
@@ -325,10 +346,11 @@ class TGitMrTriggerHandler(
                 failedReason = I18Variable(code = WebhookI18nConstants.THIRD_FILTER_NOT_MATCH).toJsonStr(),
                 eventType = getEventType().name
             )
+            // 不需要请求外部接口的filter放在优先处理
             return listOf(
                 wipFilter, userFilter, targetBranchFilter,
-                sourceBranchFilter, skipCiFilter, pathFilter,
-                commitMessageFilter, actionFilter, thirdFilter
+                sourceBranchFilter, skipCiFilter, commitMessageFilter,
+                actionFilter, labelFilter, pathFilter, thirdFilter
             )
         }
     }

@@ -79,5 +79,9 @@ data class WebHookParams(
     // 触发代码库的链接地址[SVN触发时需关注{关联代码库地址}和{触发器配置的相对路径}]
     var sourceRepoUrl: String? = "",
     // tag事件action
-    var includeTagAction: String? = null
+    var includeTagAction: String? = null,
+    // 包含的label
+    var includeLabels: String? = null,
+    // 排查的label
+    var excludeLabels: String? = null
 )

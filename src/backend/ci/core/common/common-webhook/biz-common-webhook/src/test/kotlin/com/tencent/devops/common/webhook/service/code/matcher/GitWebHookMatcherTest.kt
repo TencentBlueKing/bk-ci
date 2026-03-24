@@ -214,6 +214,15 @@ class GitWebHookMatcherTest : BkCiAbstractTest() {
                 CodeGitWebHookTriggerElement.MERGE_ACTION_OPEN,
                 CodeGitWebHookTriggerElement.MERGE_ACTION_REOPEN,
                 CodeGitWebHookTriggerElement.MERGE_ACTION_PUSH_UPDATE
+            ).joinToString(","),
+            includeLabels = listOf(
+                "devops_label#1",
+                "devops_label#2",
+                "devops_label#3",
+            ).joinToString(","),
+            excludeLabels = listOf(
+                "devops_label#4",
+                "devops_label#5"
             ).joinToString(",")
         )
         val matcher = GitWebHookMatcher(event = event)

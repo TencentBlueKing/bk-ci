@@ -54,6 +54,20 @@
     "merge_commit_sha": null,
     "url": "https://git.code.tencent.com/mingshewhe/webhook_test3/merge_requests/9",
     "action": "open",
-    "extension_action": "open"
+    "extension_action": "open",
+    "labels": [
+      {
+        "id": 447469250,
+        "title": "devops_label#1"
+      },
+      {
+        "id": 447469394,
+        "title": "devops_label#2"
+      },
+      {
+        "id": 447469512,
+        "title": "devops_label#3"
+      }
+    ]
   }
 }

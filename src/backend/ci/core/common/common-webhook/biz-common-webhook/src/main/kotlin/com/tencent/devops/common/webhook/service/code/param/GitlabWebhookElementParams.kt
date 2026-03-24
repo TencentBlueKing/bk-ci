@@ -122,6 +122,8 @@ class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTrig
         params.includeSourceBranchName = EnvUtils.parseEnv(element.includeSourceBranchName ?: "", variables)
         params.includeCommitMsg = EnvUtils.parseEnv(element.includeCommitMsg ?: "", variables)
         params.excludeCommitMsg = EnvUtils.parseEnv(element.excludeCommitMsg ?: "", variables)
+        params.includeLabels = EnvUtils.parseEnv(element.includeLabels ?: "", variables)
+        params.excludeLabels = EnvUtils.parseEnv(element.excludeLabels ?: "", variables)
         return params
     }
 }

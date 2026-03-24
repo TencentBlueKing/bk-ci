@@ -108,7 +108,11 @@ data class CodeGitWebHookTriggerElement(
     @get:Schema(title = "跳过WIP")
     val skipWip: Boolean? = false,
     @get:Schema(title = "tag事件action")
-    val includeTagAction: List<String>? = null
+    val includeTagAction: List<String>? = null,
+    @get:Schema(title = "用于包含的label", required = false)
+    val includeLabels: String? = null,
+    @get:Schema(title = "用于排除的label", required = false)
+    val excludeLabels: String? = null
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGitWebHookTrigger"
@@ -157,7 +161,9 @@ data class CodeGitWebHookTriggerElement(
                     vuexInput(name = "includePaths", value = includePaths),
                     vuexInput(name = "excludePaths", value = excludePaths),
                     staffInput(name = "includeUsers", value = includeUsers),
-                    staffInput(name = "excludeUsers", value = excludeUsers)
+                    staffInput(name = "excludeUsers", value = excludeUsers),
+                    vuexInput(name = "includeLabels", value = includeLabels),
+                    vuexInput(name = "excludeLabels", value = excludeLabels)
                 )
             }
 
@@ -171,7 +177,9 @@ data class CodeGitWebHookTriggerElement(
                     vuexInput(name = "includePaths", value = includePaths),
                     vuexInput(name = "excludePaths", value = excludePaths),
                     staffInput(name = "includeUsers", value = includeUsers),
-                    staffInput(name = "excludeUsers", value = excludeUsers)
+                    staffInput(name = "excludeUsers", value = excludeUsers),
+                    vuexInput(name = "includeLabels", value = includeLabels),
+                    vuexInput(name = "excludeLabels", value = excludeLabels)
                 )
             }
 

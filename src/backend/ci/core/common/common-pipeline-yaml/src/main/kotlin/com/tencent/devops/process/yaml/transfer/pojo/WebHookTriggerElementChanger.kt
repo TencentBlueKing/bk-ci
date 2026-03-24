@@ -111,7 +111,11 @@ data class WebHookTriggerElementChanger(
     @get:Schema(title = "代码库标识")
     val scmCode: String? = null,
     @get:Schema(title = "tag事件action")
-    val includeTagAction: List<String>? = null
+    val includeTagAction: List<String>? = null,
+    @get:Schema(title = "用于包含的label", required = false)
+    val includeLabels: String? = null,
+    @get:Schema(title = "用于排除的label", required = false)
+    val excludeLabels: String? = null
 ) {
     constructor(data: CodeGitWebHookTriggerElement) : this(
         id = data.stepId,
@@ -147,7 +151,9 @@ data class WebHookTriggerElementChanger(
         thirdSecretToken = data.thirdSecretToken,
         enable = data.elementEnabled(),
         skipWip = data.skipWip,
-        includeTagAction = data.includeTagAction
+        includeTagAction = data.includeTagAction,
+        includeLabels = data.includeLabels,
+        excludeLabels = data.excludeLabels
     )
 
     constructor(data: CodeTGitWebHookTriggerElement) : this(
@@ -182,7 +188,9 @@ data class WebHookTriggerElementChanger(
         enableThirdFilter = data.data.input.enableThirdFilter,
         enable = data.elementEnabled(),
         skipWip = data.data.input.skipWip,
-        includeTagAction = data.data.input.includeTagAction
+        includeTagAction = data.data.input.includeTagAction,
+        includeLabels = data.data.input.includeLabels,
+        excludeLabels = data.data.input.excludeLabels
     )
 
     constructor(data: CodeGithubWebHookTriggerElement) : this(
@@ -214,7 +222,9 @@ data class WebHookTriggerElementChanger(
         includeMrAction = data.includeMrAction,
         includePushAction = data.includePushAction,
         enableThirdFilter = data.enableThirdFilter,
-        enable = data.elementEnabled()
+        enable = data.elementEnabled(),
+        includeLabels = data.includeLabels,
+        excludeLabels = data.excludeLabels
     )
 
     constructor(data: CodeSVNWebHookTriggerElement) : this(
@@ -265,7 +275,9 @@ data class WebHookTriggerElementChanger(
         includeSourceBranchName = data.includeSourceBranchName,
         includeMrAction = data.includeMrAction,
         includePushAction = data.includePushAction,
-        enable = data.elementEnabled()
+        enable = data.elementEnabled(),
+        includeLabels = data.includeLabels,
+        excludeLabels = data.excludeLabels
     )
 
     constructor(data: CodeScmGitWebHookTriggerElement) : this(

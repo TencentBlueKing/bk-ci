@@ -93,7 +93,14 @@ data class GitMRAttributes(
     @JsonProperty("merge_type")
     val mergeType: String? = null,
     @JsonProperty("merge_commit_sha")
-    val mergeCommitSha: String? = null
+    val mergeCommitSha: String? = null,
+    @JsonProperty("labels")
+    val labels: List<GitLabel>? = null
+)
+
+data class GitLabel(
+    val id: Int?,
+    val title: String?
 )
 
 fun GitMergeRequestEvent.isMrMergeEvent() = this.object_attributes.action == TGitMergeActionKind.MERGE.value
