@@ -910,7 +910,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         val version = pipelineYamlFacadeService.getPipelineYamlInfo(
             projectId = projectId,
             pipelineId = pipelineId,
-            branchName = branch,
+            branch = branch,
             yamlParams = mutableMapOf()
         )!!
         return getVersion(
@@ -934,7 +934,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         return pipelineYamlFacadeService.getPipelineYamlInfo(
             projectId = projectId,
             pipelineId = pipelineId,
-            branchName = branch,
+            branch = branch,
             yamlParams = mutableMapOf()
         )?.let {
             pipelineRepositoryService.getPipelineResourceVersion(

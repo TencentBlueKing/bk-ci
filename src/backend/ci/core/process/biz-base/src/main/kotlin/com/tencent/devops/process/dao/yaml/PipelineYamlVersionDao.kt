@@ -228,24 +228,4 @@ class PipelineYamlVersionDao {
             )
         }
     }
-
-    fun getPipelineYamlVersionByBoldId(
-        dslContext: DSLContext,
-        projectId: String,
-        repoHashId: String,
-        filePath: String,
-        blobId: String
-    ): PipelineYamlVersion? {
-        with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
-            val record = dslContext.selectFrom(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(REPO_HASH_ID.eq(repoHashId))
-                    .and(FILE_PATH.eq(filePath))
-                    .and(BLOB_ID.eq(blobId))
-                    .orderBy(CREATE_TIME.desc())
-                    .limit(1)
-                    .fetchOne()
-            return record?.let { convert(it) }
-        }
-    }
 }

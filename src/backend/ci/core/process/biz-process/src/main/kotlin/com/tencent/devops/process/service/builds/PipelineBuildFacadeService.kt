@@ -254,7 +254,7 @@ class PipelineBuildFacadeService(
             pipelineYamlFacadeService.getPipelineYamlInfo(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                branchName = branch,
+                branch = branch,
                 yamlParams = mutableMapOf()
             )
         }
@@ -430,7 +430,7 @@ class PipelineBuildFacadeService(
         frequencyLimit: Boolean = true,
         triggerReviewers: List<String>? = null,
         version: Int? = null,
-        branchName: String? = null
+        branch: String? = null
     ): BuildId {
         logger.info("[$pipelineId] Manual build start with buildNo[$buildNo] and vars: $values")
         if (checkPermission) {
@@ -458,11 +458,11 @@ class PipelineBuildFacadeService(
             // PAC流水线相关参数
             val yamlParams = mutableMapOf<String, BuildParameters>()
             // 优先使用version参数，如果version为空，则使用branchName
-            val targetVersion = version ?: branchName?.takeIf { it.isNotBlank() }?.let {
+            val targetVersion = version ?: branch?.takeIf { it.isNotBlank() }?.let {
                 pipelineYamlFacadeService.getPipelineYamlInfo(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    branchName = it,
+                    branch = it,
                     yamlParams = yamlParams
                 )
             }
@@ -547,8 +547,8 @@ class PipelineBuildFacadeService(
                 channelCode = channelCode,
                 isMobile = isMobile,
                 resource = resource.let {
-                    if (version == null && !branchName.isNullOrBlank()) {
-                        it.copy(versionName = branchName)
+                    if (version == null && !branch.isNullOrBlank()) {
+                        it.copy(versionName = branch)
                     } else {
                         it
                     }
@@ -3215,7 +3215,7 @@ class PipelineBuildFacadeService(
     ) = pipelineYamlFacadeService.getPipelineYamlInfo(
         projectId = projectId,
         pipelineId = pipelineId,
-        branchName = branchName,
+        branch = branchName,
         yamlParams = yamlParams
     )
 

@@ -46,8 +46,6 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND
 import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseResult
@@ -55,6 +53,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileSyncReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
+import com.tencent.devops.process.service.pipeline.PipelineYamlVersionResolver
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.scm.WebhookGrayService
 import com.tencent.devops.process.webhook.WebhookEventFactory
@@ -98,7 +97,8 @@ class PipelineYamlFacadeService @Autowired constructor(
     private val pipelineYamlViewService: PipelineYamlViewService,
     private val pipelineYamlFileManager: PipelineYamlFileManager,
     private val webhookGrayService: WebhookGrayService,
-    private val pipelineYamlCommonService: PipelineYamlCommonService
+    private val pipelineYamlCommonService: PipelineYamlCommonService,
+    private val pipelineYamlVersionResolver: PipelineYamlVersionResolver
 ) {
 
     companion object {
@@ -490,7 +490,7 @@ class PipelineYamlFacadeService @Autowired constructor(
     fun getPipelineYamlInfo(
         projectId: String,
         pipelineId: String,
-        branchName: String,
+        branch: String,
         yamlParams: MutableMap<String, BuildParameters>
     ): Int? {
         // 不是PAC流水线
@@ -505,58 +505,15 @@ class PipelineYamlFacadeService @Autowired constructor(
         yamlParams[PIPELINE_WEBHOOK_BRANCH] = BuildParameters(
             key = PIPELINE_WEBHOOK_BRANCH, value = yamlInfo.defaultBranch ?: ""
         )
-        val repository = getRepository(projectId, yamlInfo.repoHashId)
-        val repoFileUrl = repoFileUrl(repository.url, branchName, GitActionCommon.getCiDirectory(yamlInfo.filePath))
-        // 目标分支下文件不存在
-        val fileContent = try {
-            pipelineYamlFileManager.getFileContent(
-                projectId = projectId,
-                ref = branchName,
-                path = yamlInfo.filePath,
-                authRepository = AuthRepository(repository)
-            )?.takeIf { it.blobId.isNotBlank() }
-        } catch (ignored: RemoteServiceException) {
-            if (ignored.errorCode == HTTP_404) {
-                throw ErrorCodeException(
-                    errorCode = ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND,
-                    params = arrayOf(branchName, yamlInfo.filePath, repoFileUrl)
-                )
-            } else {
-                logger.warn(
-                    "fail to get file content|$projectId|" +
-                            "${yamlInfo.repoHashId}|$branchName|${yamlInfo.filePath}", ignored
-                )
-                null
-            }
-        } ?: throw ErrorCodeException(
-            errorCode = ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND,
-            params = arrayOf(branchName, yamlInfo.filePath, repoFileUrl)
-        )
-        logger.info(
-            "get file content|$projectId|$pipelineId|${yamlInfo.repoHashId}|" +
-                    "${yamlInfo.filePath}|${fileContent.blobId}"
-        )
-        // 根据blobId获取版本信息
-        return pipelineYamlService.getPipelineYamlVersionByBoldId(
+        return pipelineYamlVersionResolver.resolvePipelineRefVersion(
             projectId = projectId,
-            filePath = yamlInfo.filePath,
             repoHashId = yamlInfo.repoHashId,
-            blobId = fileContent.blobId
-        )?.version?.let {
-            yamlParams[CI_BRANCH] = BuildParameters(key = CI_BRANCH, value = branchName)
+            filePath = GitActionCommon.getCiDirectory(yamlInfo.filePath),
+            ref = branch
+        ).let {
+            yamlParams[CI_BRANCH] = BuildParameters(key = CI_BRANCH, value = branch)
             it
-        } ?: throw ErrorCodeException(
-            errorCode = ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH,
-            params = arrayOf(
-                branchName,
-                triggerEventPageUrl(
-                    projectId,
-                    yamlInfo.repoHashId,
-                    repository.aliasName,
-                    PipelineTriggerReason.TRIGGER_FAILED
-                )
-            )
-        )
+        }
     }
 
     /**

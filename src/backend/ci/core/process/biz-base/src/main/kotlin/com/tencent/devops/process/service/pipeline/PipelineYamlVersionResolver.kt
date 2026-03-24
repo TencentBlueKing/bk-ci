@@ -1,5 +1,6 @@
 package com.tencent.devops.process.service.pipeline
 
+import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.constant.HttpStatus
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -7,12 +8,15 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH
 import com.tencent.devops.process.dao.yaml.PipelineYamlVersionDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -143,12 +147,113 @@ class PipelineYamlVersionResolver @Autowired constructor(
         }
     }
 
+    /**
+     * 获取流水线yaml版本
+     */
+    fun resolvePipelineRefVersion(
+        projectId: String,
+        repoHashId: String,
+        filePath: String,
+        ref: String
+    ): Int {
+        logger.info("resolve pipeline yaml version|$projectId|$repoHashId|$filePath|$ref")
+        val repository = client.get(ServiceRepositoryResource::class).get(
+            projectId = projectId,
+            repositoryId = repoHashId,
+            repositoryType = RepositoryType.ID
+        ).data ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.GIT_NOT_FOUND,
+            params = arrayOf(repoHashId)
+        )
+
+        val authRepository = AuthRepository(repository)
+        val serverRepository = scmProxyService.getServerRepository(
+            projectId = projectId,
+            authRepository = authRepository
+        )
+        if (serverRepository !is GitScmServerRepository) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC
+            )
+        }
+        val defaultBranch = serverRepository.defaultBranch!!
+        val repoFileUrl = repoFileUrl(repository.url, ref, filePath)
+        // 这里后续看是否可以改成从T_PIPELINE_YAML_BRANCH_FILE表中获取
+        val fileContent = try {
+            scmProxyService.getFileContent(
+                projectId = projectId,
+                ref = ref,
+                path = filePath,
+                authRepository = AuthRepository(repository)
+            )?.takeIf { it.blobId.isNotBlank() }
+        } catch (ignored: RemoteServiceException) {
+            if (ignored.errorCode == HTTP_404) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND,
+                    params = arrayOf(ref, filePath, repoFileUrl)
+                )
+            } else {
+                logger.warn(
+                    "fail to get file content|$projectId|${repoHashId}|$ref|$filePath", ignored
+                )
+                null
+            }
+        } ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND,
+            params = arrayOf(ref, filePath, repoFileUrl)
+        )
+
+        return getPipelineYamlVersion(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath,
+            ref = ref,
+            blobId = fileContent.blobId,
+            defaultBranch = defaultBranch
+        )?.version ?: throw ErrorCodeException(
+            errorCode = ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH,
+            params = arrayOf(
+                ref,
+                triggerEventPageUrl(
+                    projectId,
+                    repoHashId,
+                    repository.aliasName,
+                    PipelineTriggerReason.TRIGGER_FAILED
+                )
+            )
+        )
+    }
+
+
     private fun trimRef(branch: String): String {
         return when {
             branch.startsWith("refs/heads/") -> branch.removePrefix("refs/heads/")
             branch.startsWith("refs/tags/") -> branch.removePrefix("refs/tags/")
             else -> branch
         }
+    }
+
+    /**
+     * 蓝盾代码库触发事件页面链接
+     */
+    private fun triggerEventPageUrl(
+        projectId: String,
+        repoHashId: String,
+        repoAliasName: String,
+        reason: PipelineTriggerReason
+    ) = "/console/codelib/$projectId/?id=$repoHashId&searchName=$repoAliasName&page=1&scmType=CODE_GIT&" +
+            "limit=50&tab=triggerEvent&reason=${reason.name}"
+
+    /**
+     * 代码源仓库文件链接
+     */
+    private fun repoFileUrl(
+        repoUrl: String,
+        branch: String,
+        filePath: String
+    ): String {
+        val (domain, repoName) = GitUtils.getDomainAndRepoName(repoUrl)
+        return "https://$domain/$repoName/tree/$branch/$filePath"
     }
 
     companion object {

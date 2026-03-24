@@ -499,6 +499,24 @@ class ScmRepositoryApiService @Autowired constructor(
         }
     }
 
+    fun getRepository(
+        userId: String,
+        projectId: String,
+        repositoryType: RepositoryType,
+        repoHashIdOrName: String
+    ): ScmServerRepository {
+        val repo = getRepo(projectId, repositoryType, repoHashIdOrName)
+        return invokeApi(
+            projectId = projectId,
+            authRepository = AuthRepository(repo)
+        ) { providerProperties, providerRepository ->
+            scmApiManager.findRepository(
+                providerProperties = providerProperties,
+                providerRepository = providerRepository
+            )
+        }
+    }
+
     private fun createHook(
         providerProperties: ScmProviderProperties,
         providerRepository: ScmProviderRepository,

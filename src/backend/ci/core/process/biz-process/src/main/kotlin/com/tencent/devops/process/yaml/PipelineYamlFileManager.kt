@@ -1150,16 +1150,4 @@ class PipelineYamlFileManager @Autowired constructor(
         }
         return title
     }
-
-    fun getFileContent(
-        projectId: String,
-        ref: String,
-        path: String,
-        authRepository: AuthRepository
-    ) = pipelineYamlFileService.getFileContent(
-        projectId = projectId,
-        path = path,
-        ref = ref,
-        authRepository = authRepository
-    )
 }
