@@ -508,11 +508,13 @@ class MarketAtomDao : AtomBaseDao() {
             classifyIdMap?.let {
                 baseStep.set(CLASSIFY_ID_MAP, JsonUtil.toJson(it, formatted = false))
             }
-            jobTypeResult.pipelineJobType?.let {
-                baseStep.set(JOB_TYPE, it)
-            }
-            jobTypeResult.jobTypeMapJson?.let {
-                baseStep.set(JOB_TYPE_MAP, it)
+            if (jobTypeResult.jobTypeMapJson != null) {
+                baseStep.set(JOB_TYPE, jobTypeResult.pipelineJobType)
+                baseStep.set(JOB_TYPE_MAP, jobTypeResult.jobTypeMapJson)
+            } else {
+                jobTypeResult.pipelineJobType?.let {
+                    baseStep.set(JOB_TYPE, it)
+                }
             }
             baseStep.set(OS_MAP, osWriteResult.osMapJson)
             val serviceScopeJson = JsonUtil.toJson(
@@ -632,7 +634,11 @@ class MarketAtomDao : AtomBaseDao() {
                     atomRequest.name,
                     atomRecord.atomCode,
                     serviceScopeJson,
-                    jobTypeResult.pipelineJobType ?: currentJobType,
+                    if (jobTypeResult.jobTypeMapJson != null) {
+                        jobTypeResult.pipelineJobType
+                    } else {
+                        jobTypeResult.pipelineJobType ?: currentJobType
+                    },
                     jobTypeResult.jobTypeMapJson ?: currentJobTypeMap,
                     JsonUtil.toJson(osWriteResult.pipelineOs, formatted = false),
                     osWriteResult.osMapJson,
