@@ -165,13 +165,21 @@ class WindowsGpuResourceDao {
         ).execute()
     }
 
-    // 获取pool实例信息
     fun batchFetchWindowsGpuPool(
         dslContext: DSLContext,
         hostIps: List<String>
-    ): Result<TWindowsGpuPoolRecord> {
+    ): List<TWindowsGpuPoolRecord> {
+        if (hostIps.isEmpty()) return emptyList()
         with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
-            return dslContext.selectFrom(this).where(CGS_ID.`in`(hostIps)).fetch()
+            return hostIps.chunked(BATCH_QUERY_SIZE).flatMap { chunk ->
+                dslContext.selectFrom(this)
+                    .where(CGS_ID.`in`(chunk))
+                    .fetch()
+            }
         }
+    }
+
+    companion object {
+        private const val BATCH_QUERY_SIZE = 100
     }
 }
