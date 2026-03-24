@@ -326,9 +326,7 @@ class PipelineTemplateInfoDao {
             commonCondition.checkAllFieldsAreNull()
             with(commonCondition) {
                 val conditions = mutableListOf<Condition>()
-                if (projectId == "") {
-                    conditions.add(CHANNEL.eq(ChannelCode.BS.name))
-                }
+                conditions.add(CHANNEL.eq(ChannelCode.BS.name))
                 if (projectId != null) conditions.add(PROJECT_ID.eq(projectId))
                 if (templateId != null) conditions.add(ID.eq(templateId))
                 if (fuzzySearchName != null && fuzzySearchName!!.isNotBlank()) {
