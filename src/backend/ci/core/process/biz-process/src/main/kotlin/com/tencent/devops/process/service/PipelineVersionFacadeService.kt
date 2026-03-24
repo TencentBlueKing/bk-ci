@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.NUM_ZERO
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
@@ -42,15 +41,12 @@ import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
-import com.tencent.devops.common.pipeline.container.Stage
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
-import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -436,33 +432,14 @@ class PipelineVersionFacadeService @Autowired constructor(
     private fun initializeModel(
         userId: String,
         pipelineName: String
-    ) = Model(
-        name = pipelineName,
-        desc = "",
-        stages = listOf(
-            Stage(
-                id = "stage-1",
-                containers = listOf(
-                    TriggerContainer(
-                        id = "0",
-                        name = "trigger",
-                        elements = listOf(
-                            ManualTriggerElement(
-                                id = "T-1-1-1",
-                                name = I18nUtil.getCodeLanMessage(
-                                    CommonMessageCode.BK_MANUAL_TRIGGER,
-                                    language = I18nUtil.getLanguage(
-                                        userId
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            )
-        ),
-        pipelineCreator = userId
-    )
+    ): Model {
+        val isCreativeStream = ChannelCode.getRequestChannelCode() == ChannelCode.CREATIVE_STREAM
+        return if (isCreativeStream) {
+            Model.creativeStreamDefaultModel(pipelineName, userId)
+        } else {
+            Model.defaultModel(pipelineName, userId)
+        }
+    }
 
     fun getVersion(
         userId: String,
