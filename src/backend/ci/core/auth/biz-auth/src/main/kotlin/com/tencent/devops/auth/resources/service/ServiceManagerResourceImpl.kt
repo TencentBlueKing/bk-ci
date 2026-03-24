@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,35 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.atom
+package com.tencent.devops.auth.resources.service
 
+import com.tencent.devops.auth.api.service.ServiceManagerResource
+import com.tencent.devops.auth.service.SuperManagerService
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.MarketAtomClassify
-import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
-import io.swagger.v3.oas.annotations.tags.Tag
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
-import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.DefaultValue
-import jakarta.ws.rs.GET
-import jakarta.ws.rs.Path
-import jakarta.ws.rs.Produces
-import jakarta.ws.rs.QueryParam
-import jakarta.ws.rs.core.MediaType
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-@Tag(name = "USER_MARKET_ATOM_CLASSIFY", description = "插件市场-插件分类")
-@Path("/user/market/atom/classifys")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface UserMarketAtomClassifyResource {
-
-    @Operation(summary = "获取所有插件分类信息")
-    @GET
-    @Path("/")
-    fun getAllAtomClassifies(
-        @Parameter(description = "支持的服务范围", required = false)
-        @QueryParam("serviceScope")
-        @DefaultValue("PIPELINE")
-        serviceScope: ServiceScopeEnum? = ServiceScopeEnum.PIPELINE
-    ): Result<List<MarketAtomClassify>>
+@RestResource
+class ServiceManagerResourceImpl @Autowired constructor(
+    val superManagerService: SuperManagerService
+) : ServiceManagerResource {
+    override fun validateManagerPermission(
+        userId: String,
+        token: String,
+        projectCode: String,
+        action: String,
+        resourceCode: String
+    ): Result<Boolean> {
+        return Result(superManagerService.projectManagerCheck(
+            userId = userId,
+            projectCode = projectCode,
+            action = action,
+            resourceType = resourceCode
+        ))
+    }
 }

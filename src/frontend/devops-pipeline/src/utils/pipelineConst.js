@@ -22,6 +22,8 @@ export const allVersionKeyList = [
     'BK_CI_MINOR_VERSION',
     'BK_CI_FIX_VERSION'
 ]
+
+export const TEMP_PARAM_SET_ID = 'TEMP_REUSE'
 export const semverVersionKeySet = new Set(allVersionKeyList)
 
 export const NAME_FILTER_TYPE = 'filterByName'
