@@ -2,7 +2,7 @@
     <div class="pipeline-import-edit-header">
         <template-bread-crumb
             v-if="isTemplate"
-            :template-name="templateName"
+            :template-name="pipeline?.name"
             :is-loading="!pipeline"
         />
         <pipeline-bread-crumb v-else />
@@ -51,7 +51,6 @@
             ]),
             ...mapState('atom', [
                 'pipeline',
-                'pipelineInfo',
                 'saveStatus',
                 'pipelineWithoutTrigger',
                 'pipelineSetting',
@@ -66,9 +65,6 @@
             },
             isTemplate () {
                 return !!TEMPLATE_TYPE[this.pipelineSetting?.type]
-            },
-            templateName () {
-                return this?.pipelineInfo?.name ?? this.pipeline?.name
             }
         },
         methods: {
