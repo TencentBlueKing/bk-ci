@@ -25,7 +25,10 @@ src/agent/agent/
 ├── src/
 │   ├── cmd/                    # 入口程序（4个可执行文件）
 │   │   ├── agent/main.go       # Agent 主程序
-│   │   ├── daemon/main.go      # 守护进程（保活Agent）
+│   │   ├── daemon/             # 守护进程（保活Agent）
+│   │   │   ├── main.go         #   Linux/macOS 入口
+│   │   │   ├── main_win.go     #   Windows 入口（kardianos/service）
+│   │   │   └── session_windows.go # Windows用户会话启动（WTS API）
 │   │   ├── upgrader/main.go    # 升级器（替换二进制）
 │   │   └── installer/main.go   # 安装器（首次安装）
 │   ├── pkg/                    # 核心业务包
@@ -232,6 +235,7 @@ AgentUpgrade(upgradeItem, hasBuild)
 | 功能 | Unix | Windows |
 |------|------|---------|
 | **进程管理** | `Setpgid` + `syscall.Kill(-pgId)` | Windows Job Object (`JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`) |
+| **Daemon启动Agent** | `exec.Command` 直接启动 | 服务模式: WTS API `CreateProcessAsUser` 在用户Session启动; 交互模式: `exec.Command` 直接启动 |
 | **构建启动** | 写Shell脚本 → `/bin/bash` 执行 | 直接 `java -jar` |
 | **用户切换** | `syscall.Credential{Uid, Gid}` | 不支持(空操作) |
 | **环境变量** | `os.Environ()` | 注册表轮询(每3秒) + PATH合并 |
@@ -396,14 +400,17 @@ func handleNewTool(ctx context.Context, req *protocol.CallToolRequest) (*protoco
 # Linux (amd64)
 make build_linux
 
-# Windows (当前386，计划升级amd64)
+# Windows (默认amd64)
 make build_windows
+
+# Windows (386, 带_386后缀)
+make build_windows_386
 
 # macOS
 make build_macos
 
 # 全平台
-make build_all
+make all
 ```
 
 ### 编译注入变量
@@ -525,7 +532,7 @@ bin/
 3. **Docker构建日志**: `docker_build_tmp/logs/{buildId}/{vmSeqId}/`
 4. **HTTP通信调试**: 日志中搜索请求URL和响应状态码
 5. **升级问题**: 检查 `tmp/` 目录下载的文件和MD5
-6. **Windows服务问题**: 使用 `wintask` 包检测启动方式
+6. **Windows服务问题**: 使用 `wintask` 包检测启动方式。服务模式下 daemon 通过 WTS API (`CreateProcessAsUser`) 在用户 Session 中启动 agent，确保构建进程可访问用户桌面；若无活跃用户 Session 则自动回退为直接启动
 7. **MCP调试**: 设置 `DEVOPS_AGENT_ENABLE_MCP=true`，agent 启动后 MCP Server 在 `127.0.0.1` 监听 Streamable HTTP，端口号持久化到 `.agent.properties` 的 `devops.mcp.server.port`。可在 CodeBuddy/Claude Desktop 中配置 `http://127.0.0.1:{PORT}/mcp` 进行交互式调试
 
 ## 环境变量开关
