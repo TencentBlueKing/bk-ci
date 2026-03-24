@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.api.user
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_CHANNEL
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_CHANNEL
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.RepositoryType
@@ -74,7 +74,7 @@ interface UserBuildParametersResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "渠道", required = false)
-        @HeaderParam(AUTH_HEADER_CHANNEL)
+        @HeaderParam(AUTH_HEADER_DEVOPS_CHANNEL)
         channelCode: ChannelCode?
     ): Result<List<BuildEnvParameters>>
 
@@ -86,7 +86,7 @@ interface UserBuildParametersResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "渠道", required = false)
-        @HeaderParam(AUTH_HEADER_CHANNEL)
+        @HeaderParam(AUTH_HEADER_DEVOPS_CHANNEL)
         channelCode: ChannelCode?
     ): Result<List<BuildParameterGroup>>
 

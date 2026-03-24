@@ -195,7 +195,7 @@ class PipelineTimerBuildListener @Autowired constructor(
         val triggerElement = checkTriggerExist(
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = channelCode,
+            channelCode = timerChannelCode,
             taskId = taskId
         ) as? MarketEventAtomElement ?: return
         val input = triggerElement.data[KEY_INPUT] as Map<String, Any>? ?: mapOf()
