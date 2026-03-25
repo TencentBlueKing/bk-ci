@@ -47,12 +47,13 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
-import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.api.thirdpartyagent.ServicePreBuildAgentResource
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStaticInfo
@@ -189,7 +190,10 @@ class WebIDEService @Autowired constructor(
 
     private fun getAgentInfo(userId: String, projectId: String, ip: String): ThirdPartyAgentInfo {
         // val nodeInfoList = client.get(ServiceNodeResource::class).listNodeByNodeType(projectId, NodeType.THIRDPARTY)
-        val nodeInfoList = client.get(ServiceThirdPartyAgentResource::class).listAgents(userId, projectId, OS.LINUX)
+        val nodeInfoList = client.get(ServiceThirdPartyAgentResource::class).listAgents(
+            userId = userId, projectId = projectId, os = OS.LINUX,
+            agentType = AgentType.BUILD
+        )
         if (nodeInfoList.isNotOk()) {
             logger.error("list user third party node failed")
             throw OperationException("list user third party node failed")
@@ -417,7 +421,7 @@ class WebIDEService @Autowired constructor(
             thirdPartyWorkspace = null,
             dockerBuildVersion = null,
             tstackAgentId = null,
-            dispatchType = ThirdPartyAgentIDDispatchType(agentId, null, AgentType.ID, null, null)
+            dispatchType = ThirdPartyAgentIDDispatchType(agentId, null, AgentDispatchType.ID, null, null)
         )
         val stage2 = Stage(listOf(vmContainer), "stage-2")
         stageList.add(stage2)
