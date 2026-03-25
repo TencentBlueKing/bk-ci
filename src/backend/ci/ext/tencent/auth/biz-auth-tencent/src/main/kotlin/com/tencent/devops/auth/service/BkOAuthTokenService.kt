@@ -23,7 +23,7 @@ class BkOAuthTokenService(
     @Value("\${bkoauth.appSecret:}")
     private val appSecret: String = ""
 
-    @Value("\${bkoauth.url:http://apigw.o.woa.com}")
+    @Value("\${bkoauth.url:}")
     private val bkOAuthUrl: String = ""
 
     @Value("\${bkoauth.envName:prod}")
