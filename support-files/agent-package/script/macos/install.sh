@@ -183,5 +183,8 @@ fi
 echo "check if write ssh config"
 writeSSHConfig
 
-uninstallAgentService
-installAgentService
+cd $workspace
+chmod +x devopsAgent devopsDaemon 2>/dev/null
+
+echo "installing agent service via CLI..."
+./devopsAgent install

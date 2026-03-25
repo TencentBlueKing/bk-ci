@@ -240,15 +240,8 @@ fi
 echo "check if write ssh config"
 writeSSHConfig
 
-service_name=`getServiceName`
+cd $workspace
+chmod +x devopsAgent devopsDaemon 2>/dev/null
 
-if [[ "$user" = "root" ]]; then
-  echo "root, instll agent service, $service_name"
-  uninstallAgentService
-  installAgentService
-else
-  echo "no root, only start agent"
-  cd $workspace
-  chmod +x *.sh
-  ${workspace}/start.sh
-fi
+echo "installing agent service via CLI..."
+./devopsAgent install

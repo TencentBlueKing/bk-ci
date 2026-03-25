@@ -39,6 +39,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/agent"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/agentcli"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
@@ -52,7 +53,7 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 
 	isDebug := false
-	if len(os.Args) == 2 {
+	if len(os.Args) >= 2 {
 		switch os.Args[1] {
 		case "version":
 			fmt.Println(config.AgentVersion)
@@ -64,6 +65,13 @@ func main() {
 			systemutil.ExitProcess(0)
 		case "debug":
 			isDebug = true
+		}
+
+		if agentcli.IsSubcommand(os.Args[1]) {
+			workDir := systemutil.GetExecutableDir()
+			os.Chdir(workDir)
+			agentcli.Run(workDir, os.Args[1:])
+			return
 		}
 	}
 
