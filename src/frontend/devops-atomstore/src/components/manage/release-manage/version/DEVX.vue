@@ -79,6 +79,7 @@
                         v-if="detail.storeId"
                     >
                         <img
+                            v-if="detail.logoUrl"
                             :src="detail.logoUrl"
                             class="detail-logo"
                         />
@@ -107,10 +108,7 @@
                                 </li>
                                 <li
                                     class="detail-item"
-                                    v-if="
-                    detail.extData?.netPolicyInfo?.needVisitedSiteInfos &&
-                    detail.extData.netPolicyInfo.needVisitedSiteInfos.length
-                                    "
+                                    v-if="detail.extData?.netPolicyInfo?.needVisitedSiteInfos && detail.extData?.netPolicyInfo.needVisitedSiteInfos.length"
                                 >
                                     <span class="detail-label">{{ $t('store.需要访问的站点') }}：</span>
                                     <site-info-table
@@ -128,7 +126,7 @@
                                 </li>
                                 <li class="detail-item">
                                     <span class="detail-label">{{ $t('store.发布类型') }}：</span>
-                                    <span>{{ $t(detail.versionInfo?.releaseType) }}</span>
+                                    <span>{{ detail.versionInfo?.releaseType ? $t(detail.versionInfo.releaseType) : '--' }}</span>
                                 </li>
                                 <li class="detail-item">
                                     <span class="detail-label">{{ $t('store.版本') }}：</span>
@@ -270,7 +268,7 @@
 
             showDetail (row) {
                 this.hasShowDetail = true
-                this.detailLoading = true
+                // this.detailLoading = true
                 this.$store
                     .dispatch('store/getComponentDetailByVersion', {
                         storeId: row.storeId,
@@ -338,7 +336,7 @@
             },
 
             statusFormatter (row, column, cellValue, index) {
-                return this.$t(`store.${cellValue}`) || cellValue
+                return cellValue ? this.$t(`store.${cellValue}`) : cellValue
             },
 
             convertTime (row, column, cellValue, index) {
