@@ -275,6 +275,18 @@
                   },
                   "skip-wip" : {
                     "type" : "boolean"
+                  },
+                  "labels" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "labels-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
                   }
                 }
               } ]
@@ -1094,6 +1106,18 @@
                 },
                 "skip-wip" : {
                   "type" : "boolean"
+                },
+                "labels" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
                 }
               }
             } ]
