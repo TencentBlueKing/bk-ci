@@ -136,8 +136,8 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         params.thirdUrl = EnvUtils.parseEnv(element.thirdUrl ?: "", variables)
         params.thirdSecretToken = EnvUtils.parseEnv(element.thirdSecretToken ?: "", variables)
         params.skipWip = element.skipWip
-        params.includeLabels = EnvUtils.parseEnv(params.includeLabels ?: "", variables)
-        params.excludeLabels = EnvUtils.parseEnv(params.excludeLabels ?: "", variables)
+        params.includeLabels = EnvUtils.parseEnv(element.includeLabels ?: "", variables)
+        params.excludeLabels = EnvUtils.parseEnv(element.excludeLabels ?: "", variables)
         return params
     }
 
