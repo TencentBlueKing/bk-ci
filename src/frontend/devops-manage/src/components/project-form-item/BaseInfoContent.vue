@@ -581,7 +581,7 @@ async function fetchApilist(kpiName) {
     const res = await http.getKpiCodeList(kpiName)
     KPIList.value = (res || []).map(i => ({
       value: i?.product_code,
-      label: i?.product_name,
+      label: `[${i?.product_code}]${i?.product_name}`,
     }));
   } catch (err: any) {
     Message({
