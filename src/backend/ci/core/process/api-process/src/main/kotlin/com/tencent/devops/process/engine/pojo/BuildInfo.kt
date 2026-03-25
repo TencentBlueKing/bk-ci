@@ -81,7 +81,8 @@ data class BuildInfo(
     val errorType: Int? = null,
     val errorCode: Int? = null,
     val errorMsg: String? = null,
-    val nodeHashId: String? = null
+    val nodeHashId: String? = null,
+    val triggerEventType: String? = null
 ) {
 
     fun isFinish() = when {

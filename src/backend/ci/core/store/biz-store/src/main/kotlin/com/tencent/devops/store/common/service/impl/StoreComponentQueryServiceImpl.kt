@@ -32,6 +32,7 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.auth.REFERER
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_OS
+import com.tencent.devops.common.api.constant.NUM_ONE
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
@@ -42,12 +43,14 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ThreadLocalUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.util.RegexUtils
 import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
+import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.LabelDao
@@ -75,6 +78,7 @@ import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.pojo.common.BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.KEY_BUILD_LESS_RUN_FLAG
 import com.tencent.devops.store.pojo.common.KEY_HTML_TEMPLATE_VERSION
@@ -86,6 +90,7 @@ import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.MarketMainItemLabel
 import com.tencent.devops.store.pojo.common.MyStoreComponent
 import com.tencent.devops.store.pojo.common.QueryComponentsParam
+import com.tencent.devops.store.pojo.common.QueryGroupParam
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
@@ -518,14 +523,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         val labels = storeLabelService.getLabelsByStoreId(storeBaseRecord.id)
         val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, storeCode, storeType)
 
-        val baseExtRecords = storeBaseExtQueryDao.getBaseExtByIds(dslContext, listOf(storeId))
-        var extData = baseExtRecords.associateBy({ it.fieldName }, { formatJson(it.fieldValue) })
-        val baseFeatureExtRecords = storeBaseFeatureExtQueryDao.queryStoreBaseFeatureExt(
-            dslContext = dslContext,
-            storeCode = storeCode,
-            storeType = storeType
-        )
-        extData = extData.plus(baseFeatureExtRecords.associateBy({ it.fieldName }, { formatJson(it.fieldValue) }))
+        val extData = getComponentExtData(storeId, storeCode, storeType)
         val htmlTemplateVersion = extData[KEY_HTML_TEMPLATE_VERSION]
         val initProjectCode =
             if (htmlTemplateVersion != null && htmlTemplateVersion == FrontendTypeEnum.HISTORY.typeVersion) {
@@ -592,11 +590,39 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         )
     }
 
-    override fun getComponentDetailInfoByCode(userId: String, storeType: String, storeCode: String): StoreDetailInfo? {
-        return storeBaseQueryDao.getLatestComponentByCode(
+    private fun getComponentExtData(
+        storeId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): Map<String, Any> {
+        val baseExtRecords = storeBaseExtQueryDao.getBaseExtByIds(dslContext, listOf(storeId))
+        var extData = baseExtRecords.associateBy({ it.fieldName }, { formatJson(it.fieldValue) })
+        val baseFeatureExtRecords = storeBaseFeatureExtQueryDao.queryStoreBaseFeatureExt(
             dslContext = dslContext,
             storeCode = storeCode,
-            storeType = StoreTypeEnum.valueOf(storeType)
+            storeType = storeType
+        )
+        extData = extData.plus(baseFeatureExtRecords.associateBy({ it.fieldName }, { formatJson(it.fieldValue) }))
+        return extData
+    }
+
+    override fun getComponentDetailInfoByCode(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        version: String?,
+        ownerStoreCode: String?
+    ): StoreDetailInfo? {
+        return getComponent(
+            version = version,
+            storeCode = if (storeCode == ManualTriggerElement.classType) {
+                // 兼容手动触发器
+                BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
+            } else {
+                storeCode
+            },
+            storeType = storeType,
+            ownerStoreCode = ownerStoreCode
         )?.let {
             getComponentDetailInfoById(userId, StoreTypeEnum.valueOf(storeType), it.id)
         }
@@ -903,6 +929,150 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         )
     }
 
+    override fun getComponentGroupCount(userId: String, queryGroupParam: QueryGroupParam): List<Pair<String, Int>> {
+        val watcher = Watcher("getComponentGroupCount|$userId|$queryGroupParam")
+        watcher.start("queryComponents")
+        // 有权限的组件code
+        val storeCodes = queryComponents(
+            userId = userId,
+            storeInfoQuery = StoreInfoQuery(
+                storeType = queryGroupParam.storeType.name,
+                page = NUM_ONE,
+                pageSize = Int.MAX_VALUE,
+                queryProjectComponentFlag = false
+            )
+        ).records.map { it.code }.toSet()
+        watcher.start("queryComponentGroupCount")
+        return storeBaseQueryDao.getComponentGroupCount(
+            dslContext = dslContext,
+            queryGroupParam = queryGroupParam,
+            storeCodes = storeCodes
+        )
+    }
+
+    override fun getComponentVersionList(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        storeStatus: StoreStatusEnum?
+    ): List<VersionInfo> {
+        val records = storeBaseQueryDao.getVersionsByStoreCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType,
+            status = storeStatus
+        )
+        return StoreUtils.getVersionService(storeType).convertVersionList(records = records)
+    }
+
+    override fun getComponentBaseInfo(
+        storeType: StoreTypeEnum,
+        storeCode: String?,
+        storeId: String?,
+        storeStatus: StoreStatusEnum?,
+        ownerStoreCode: String?,
+        keyword: String?
+    ): StoreBaseInfo? {
+        if (storeId.isNullOrEmpty() && storeCode.isNullOrEmpty()) {
+            throw IllegalArgumentException("storeCode or storeId can not be null")
+        }
+        val baseRecord = storeCode?.let {
+            storeBaseQueryDao.getLatestComponentByCode(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = storeType,
+                ownerStoreCode = ownerStoreCode,
+                storeStatus = storeStatus,
+                keyword = keyword
+            )
+        } ?: storeId?.let {
+            storeBaseQueryDao.getComponentById(
+                dslContext = dslContext,
+                storeId = it
+            )
+        }
+        return baseRecord?.convertStoreBaseInfo()
+    }
+
+    override fun getComponentDataInfoByCode(
+        storeType: String,
+        storeCode: String,
+        version: String?,
+        ownerStoreCode: String?,
+        status: StoreStatusEnum?
+    ): StoreDetailInfo? {
+        return getComponent(
+            version = version,
+            storeCode = storeCode,
+            storeType = storeType,
+            ownerStoreCode = ownerStoreCode,
+            status = status
+        )?.let {
+            val finalStoreType = StoreTypeEnum.getStoreTypeObj(it.storeType.toInt())
+            StoreDetailInfo(
+                storeCode = it.storeCode,
+                storeType = finalStoreType.name,
+                storeId = it.id,
+                name = it.name,
+                description = it.description,
+                extData = getComponentExtData(
+                    storeId = it.id,
+                    storeType = finalStoreType,
+                    storeCode = it.storeCode
+                ),
+                ownerStoreCode = it.ownerStoreCode
+            )
+        }
+    }
+
+    private fun getComponent(
+        version: String?,
+        storeCode: String,
+        storeType: String,
+        ownerStoreCode: String? = null,
+        status: StoreStatusEnum? = null
+    ) = if (version.isNullOrBlank()) {
+        storeBaseQueryDao.getLatestComponentByCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = StoreTypeEnum.valueOf(storeType),
+            ownerStoreCode = ownerStoreCode,
+            storeStatus = status
+        )
+    } else {
+        storeBaseQueryDao.getComponent(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = StoreTypeEnum.valueOf(storeType),
+            version = version,
+            ownerStoreCode = ownerStoreCode,
+            status = status
+        )
+    }
+
+    override fun getComponentBaseInfoList(
+        storeType: StoreTypeEnum,
+        storeCodes: Set<String>?
+    ) = storeBaseQueryDao.getLatestComponentByCodes(
+        dslContext = dslContext,
+        storeCodes = storeCodes,
+        storeType = storeType
+    ).map {
+        it.convertStoreBaseInfo()
+    }
+
+    private fun TStoreBaseRecord.convertStoreBaseInfo() = StoreBaseInfo(
+        storeId = id,
+        storeCode = storeCode,
+        storeName = name,
+        storeType = StoreTypeEnum.getStoreTypeObj(storeType.toInt()),
+        version = version,
+        status = status,
+        logoUrl = logoUrl,
+        publisher = publisher,
+        classifyId = classifyId
+    )
+
     private fun isUpdateRequired(
         storeId: String,
         installedTime: LocalDateTime,
@@ -1175,6 +1345,12 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         val storeIndexInfosMap =
             storeIndexManageService.getStoreIndexInfosByStoreCodes(storeTypeEnum, storeCodeList)
         val categoryInfoMap = categoryService.getByRelStoreIds(storeIds)
+        // 获取宿主应用信息
+        val ownerStoreCodes = storeInfos.mapNotNull { it[tStoreBase.OWNER_STORE_CODE] }.toSet()
+        val ownerStoreInfos = getComponentBaseInfoList(
+            storeType = StoreTypeEnum.DEVX,
+            storeCodes = ownerStoreCodes
+        ).associate { it.storeCode to it.storeName }
         watcher.start("handleStoreInfos")
         storeInfos.forEach { record ->
             val storeId = record[tStoreBase.ID]
@@ -1182,6 +1358,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             val statistic = storeStatisticData[storeCode]
             val version = record[tStoreBase.VERSION]
             val status = record[tStoreBase.STATUS]
+            val ownerStoreCode = record[tStoreBase.OWNER_STORE_CODE]
             // 组件是否已安装
             val installed = storeInfoQuery.installed ?: run {
                 projectCode?.let { installedInfoMap?.contains(storeCode) }
@@ -1243,7 +1420,13 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 indexInfos = storeIndexInfosMap[storeCode],
                 recentExecuteNum = statistic?.recentExecuteNum,
                 hotFlag = statistic?.hotFlag,
-                extData = extData
+                extData = extData,
+                ownerStoreName = if (ownerStoreCode.isNullOrBlank()) {
+                    null
+                } else {
+                    ownerStoreInfos[ownerStoreCode]
+                },
+                ownerStoreCode = ownerStoreCode
             )
             results.add(marketItem)
         }

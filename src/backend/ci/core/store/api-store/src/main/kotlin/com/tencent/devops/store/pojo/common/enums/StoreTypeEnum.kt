@@ -45,6 +45,7 @@ enum class StoreTypeEnum(val type: Int) {
                 3 -> IDE_ATOM.name
                 4 -> SERVICE.name
                 5 -> DEVX.name
+                6 -> TRIGGER_EVENT.name
                 else -> ATOM.name
             }
         }

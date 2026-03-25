@@ -46,6 +46,7 @@ import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.process.bean.PipelineUrlBean
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_CATEGORY
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
 import com.tencent.devops.process.engine.interceptor.InterceptData
@@ -54,6 +55,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.enums.PipelineCategory
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
@@ -87,6 +89,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_REMOTE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_SERVICE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TIME_TRIGGER_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_START_TRIGGER_EVENT_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
@@ -345,6 +348,7 @@ class PipelineBuildService(
             StartType.MANUAL -> ctx.pipelineParamMap[PIPELINE_START_MANUAL_USER_ID]?.value
             StartType.TIME_TRIGGER -> ctx.pipelineParamMap[PIPELINE_START_TIME_TRIGGER_USER_ID]?.value
             StartType.REMOTE -> ctx.startValues?.get(PIPELINE_START_REMOTE_USER_ID)
+            StartType.TRIGGER_EVENT -> ctx.startValues?.get(PIPELINE_START_TRIGGER_EVENT_USER_ID)
         } ?: ctx.userId
 
         val paramMap = ctx.pipelineParamMap
@@ -361,6 +365,17 @@ class PipelineBuildService(
             key = PROJECT_NAME_CHINESE,
             value = ctx.projectVO?.projectName ?: "",
             valueType = BuildFormPropertyType.STRING
+        )
+        // 流水线类型
+        paramMap[CI_CATEGORY] = BuildParameters(
+            key = CI_CATEGORY,
+            value = if (ctx.channelCode == ChannelCode.CREATIVE_STREAM) {
+                PipelineCategory.CREATIVE_STREAM
+            } else {
+                PipelineCategory.PIPELINE
+            },
+            valueType = BuildFormPropertyType.STRING,
+            readOnly = true
         )
         paramMap[PIPELINE_BUILD_MSG] = BuildParameters(
             key = PIPELINE_BUILD_MSG,

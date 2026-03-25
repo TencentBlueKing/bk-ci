@@ -175,4 +175,6 @@ object StoreMessageCode {
     // 组件包文件[{0}]不存在，请检查文件所在路径是否正确
     const val STORE_PACKAGE_FILE_NOT_FOUND = "2120939"
     const val OFFSET_REASON_IS_NOT_ALLOW_NULL = "2120940" // 下架原因不允许为空
+    const val OWNER_STORE_CODE_NOT_NULL = "2120941" // 归属应用标识不能为空
+    const val TRIGGER_EVENT_CONFIG_EXIST = "2120942" // 应用[{0}]下已存在[{1}]触发事件配置
 }
