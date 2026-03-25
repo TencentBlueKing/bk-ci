@@ -132,7 +132,7 @@ class PipelineTimerBuildListener @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     params = params,
-                    channelCode = channelCode
+                    channelCode = timerChannelCode
                 )
 
                 // 如果是不存在的流水线，则直接删除定时任务，相当于给异常创建失败的定时流水线做清理

@@ -674,14 +674,14 @@ class PipelineRepositoryService constructor(
      * 初始化默认的流水线setting
      */
     fun createDefaultSetting(
-        projectId: String,
-        pipelineId: String,
-        pipelineName: String,
+        projectId: String = "",
+        pipelineId: String = "",
+        pipelineName: String = "",
         channelCode: ChannelCode
     ): PipelineSetting {
         // 空白流水线设置初始化
         val maxPipelineResNum = calculateMaxPipelineResNum(channelCode)
-        val notifyTypes = if (channelCode == ChannelCode.BS) {
+            val notifyTypes = if (channelCode == ChannelCode.BS || channelCode == ChannelCode.CREATIVE_STREAM) {
             pipelineInfoExtService.failNotifyChannel()
         } else {
             ""
@@ -1818,7 +1818,7 @@ class PipelineRepositoryService constructor(
     fun isPipelineExist(
         projectId: String,
         pipelineName: String,
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         excludePipelineId: String?
     ): Boolean {
         return pipelineInfoDao.isNameExist(dslContext, projectId, pipelineName, channelCode, excludePipelineId)
@@ -1977,10 +1977,10 @@ class PipelineRepositoryService constructor(
                 try {
                     ChannelCode.valueOf(it)
                 } catch (e: IllegalArgumentException) {
-                    logger.warn("Invalid channel code: $it, using default ChannelCode.BS")
-                    ChannelCode.BS
+                    logger.warn("Invalid channel code: $it, using default channel code")
+                    ChannelCode.getRequestChannelCode()
                 }
-            } ?: ChannelCode.BS
+            } ?: ChannelCode.getRequestChannelCode()
             val processedSetting = processMaxPipelineResNumIfNull(setting, channelCode)
             if (!isTemplate && versionStatus.isReleasing()) pipelineInfoDao.update(
                 dslContext = transactionContext,

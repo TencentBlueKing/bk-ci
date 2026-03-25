@@ -61,11 +61,12 @@ import com.tencent.devops.store.atom.dao.MarketAtomEnvInfoDao
 import com.tencent.devops.store.atom.dao.MarketAtomVersionLogDao
 import com.tencent.devops.store.atom.factory.AtomBusHandleFactory
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
+import com.tencent.devops.store.atom.util.AtomJobTypeUtil
+import com.tencent.devops.store.atom.util.AtomOsMapUtil
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.utils.BkInitProjectCacheUtil
 import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreConstants.BK_DEFAULT_FAIL_POLICY
 import com.tencent.devops.store.constant.StoreConstants.BK_DEFAULT_RETRY_POLICY
 import com.tencent.devops.store.constant.StoreConstants.BK_DEFAULT_TIMEOUT
@@ -105,16 +106,19 @@ import com.tencent.devops.store.pojo.common.KEY_PACKAGE_PATH
 import com.tencent.devops.store.pojo.common.KEY_RUNTIME_VERSION
 import com.tencent.devops.store.pojo.common.KEY_TARGET
 import com.tencent.devops.store.pojo.common.KEY_TYPE
+import com.tencent.devops.store.pojo.common.ServiceScopeConfig
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.util.ServiceScopeUtil
+import com.tencent.devops.store.utils.VersionUtils
 import jakarta.ws.rs.core.Response
-import kotlin.reflect.KClass
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import kotlin.reflect.KClass
 
 @Suppress("ALL")
 @Service
@@ -172,7 +176,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         atomRecord: TAtomRecord,
         releaseType: ReleaseTypeEnum,
         osList: ArrayList<String>,
-        version: String
+        version: String,
+        serviceScopeConfigs: List<ServiceScopeConfig>?
     ): Result<Boolean> {
         val dbVersion = atomRecord.version
         val atomStatus = atomRecord.atomStatus
@@ -186,11 +191,14 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             atomRecord.os,
             List::class.java
         ) as List<String> else null
-        // 支持的操作系统减少必须采用大版本升级方案
-        val requireReleaseType =
-            if (null != dbOsList && !osList.containsAll(dbOsList)) {
-                ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE // 最近的版本处于上架中止状态，重新升级版本号不变
-            } else releaseType
+        // 支持的操作系统减少或 jobType 变更必须采用大版本升级方案
+        var requireReleaseType = if (null != dbOsList && !osList.containsAll(dbOsList)) {
+            ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE
+        } else releaseType
+        if (requireReleaseType != ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE && !serviceScopeConfigs.isNullOrEmpty()) {
+            requireReleaseType =
+                detectServiceScopeIncompatibility(atomRecord, serviceScopeConfigs) ?: requireReleaseType
+        }
         val cancelFlag = atomStatus == AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         val requireVersionList =
             if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
@@ -236,6 +244,59 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             }
         }
         return Result(true)
+    }
+
+    /**
+     * 检测 serviceScopeConfigs 是否存在不兼容变更。
+     * 不兼容条件：jobType 数量减少 / jobType 变更 / jobType 对应 OS 数量减少。
+     * @return INCOMPATIBILITY_UPGRADE 如果检测到不兼容变更，否则 null
+     */
+    private fun detectServiceScopeIncompatibility(
+        dbAtomRecord: TAtomRecord,
+        serviceScopeConfigs: List<ServiceScopeConfig>
+    ): ReleaseTypeEnum? {
+        // 从数据库记录中解析出旧版本支持的所有 jobType 映射（key: 分类, value: jobType名称列表）
+        val oldJobTypeMap = AtomJobTypeUtil.getAllJobTypes(dbAtomRecord.jobType, dbAtomRecord.jobTypeMap)
+        // 将所有分类下的 jobType 名称展平为一个不重复的集合，用于后续比较
+        val oldJobTypeSet = oldJobTypeMap.values.flatten().toSet()
+        // 从数据库记录中解析出旧版本各 jobType 对应的操作系统列表（key: jobType名称, value: OS名称列表）
+        val oldOsMap = AtomOsMapUtil.getAllOs(dbAtomRecord.os, dbAtomRecord.osMap, dbAtomRecord.jobType)
+        val newJobTypeSet = mutableSetOf<String>()
+        // 新版本各 jobType 对应的操作系统集合（key: jobType名称, value: OS名称集合）
+        val newOsMap = mutableMapOf<String, MutableSet<String>>()
+        val buildEnvJobTypes = mutableSetOf<JobTypeEnum>()
+        for (config in serviceScopeConfigs) {
+            // 遍历每个配置项中生效的 jobType，收集名称并识别编译环境类型
+            for (jobType in config.getEffectiveJobTypes()) {
+                newJobTypeSet.add(jobType.name)
+                if (jobType.isBuildEnv()) buildEnvJobTypes.add(jobType)
+            }
+            // 遍历每个配置项中显式声明的 OS 映射，合并到 newOsMap 中
+            for ((jobTypeName, osList) in config.getEffectiveOsMap()) {
+                newOsMap.getOrPut(jobTypeName) { mutableSetOf() }.addAll(osList)
+            }
+        }
+        // 如果某个编译环境 jobType 在所有 config 中都没有显式配置 OS，则使用该 jobType 的默认 OS
+        for (jobType in buildEnvJobTypes) {
+            if (jobType.name !in newOsMap) {
+                jobType.getDefaultOs()?.let { newOsMap[jobType.name] = it.toMutableSet() }
+            }
+        }
+        // 如果旧版本支持的某些 jobType 在新版本中被移除了，则属于不兼容升级
+        if (!newJobTypeSet.containsAll(oldJobTypeSet)) {
+            return ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE
+        }
+        for ((jobTypeName, oldOsList) in oldOsMap) {
+            // 跳过新版本已不再支持的 jobType（前面已判断过整体 jobType 兼容性）
+            if (jobTypeName !in newJobTypeSet) continue
+            val newOsSet = newOsMap[jobTypeName] ?: emptySet()
+            // 如果旧版本某个 jobType 下支持的 OS 在新版本中被缩减了，则属于不兼容升级
+            if (!newOsSet.containsAll(oldOsList)) {
+                return ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE
+            }
+        }
+        // 所有检查均通过，不存在不兼容变更
+        return null
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -720,7 +781,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         return releaseTotalNum > currentNum
     }
 
-    override fun handleAtomCache(atomId: String, atomCode: String, version: String, releaseFlag: Boolean) {
+    override fun handleAtomCache(atomId: String, atomCode: String, version: String, releaseFlag: Boolean): AtomRunInfo {
         val atomEnv = marketAtomEnvInfoDao.getNewestAtomEnvInfo(dslContext, atomId)
             ?: throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
@@ -739,7 +800,6 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             ATOM_POST_CONDITION to postCondition
         )
         val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
-        val jobType = atom.jobType
         val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
             dslContext = dslContext,
             storeCode = atomCode,
@@ -752,12 +812,14 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             atomName = atom.name,
             version = atom.version,
             initProjectCode = initProjectCode,
-            jobType = if (jobType == null) null else JobTypeEnum.valueOf(jobType),
+            jobType = atom.jobType,
+            jobTypeMap = atom.jobTypeMap,
             buildLessRunFlag = atom.buildLessRunFlag,
             inputTypeInfos = generateInputTypeInfos(atom.props),
             atomStatus = atom.atomStatus,
             sensitiveParams = params?.joinToString(","),
-            canPauseBeforeRun = getAtomCanPauseBeforeRun(atom.props)
+            canPauseBeforeRun = getAtomCanPauseBeforeRun(atom.props),
+            serviceScope = ServiceScopeUtil.parseServiceScopes(atom.serviceScope).ifEmpty { null }
         )
         // 更新插件当前版本号的缓存信息
         redisOperation.hset(
@@ -789,15 +851,16 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 values = "false"
             )
         }
+        return atomRunInfo
     }
 
     override fun updateAtomRunInfoCache(
         atomId: String,
         atomName: String?,
-        jobType: JobTypeEnum?,
         buildLessRunFlag: Boolean?,
         latestFlag: Boolean?,
-        props: String?
+        props: String?,
+        serviceScope: List<String>?
     ) {
         val atomRecord = atomDao.getPipelineAtom(dslContext, atomId) ?: return
         val atomCode = atomRecord.atomCode
@@ -807,12 +870,14 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         if (!atomRunInfoJson.isNullOrEmpty()) {
             val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
             if (atomName != null) atomRunInfo.atomName = atomName
-            if (jobType != null) atomRunInfo.jobType = jobType
+            atomRunInfo.jobType = atomRecord.jobType
+            atomRunInfo.jobTypeMap = atomRecord.jobTypeMap
             if (buildLessRunFlag != null) atomRunInfo.buildLessRunFlag = buildLessRunFlag
             if (props != null) atomRunInfo.inputTypeInfos = generateInputTypeInfos(props)
             val params = getAtomSensitiveParams(props ?: atomRecord.props)
             atomRunInfo.sensitiveParams = params?.joinToString(",")
             atomRunInfo.canPauseBeforeRun = getAtomCanPauseBeforeRun(atomRecord.props)
+            atomRunInfo.serviceScope = serviceScope?.let { ServiceScopeUtil.normalizeList(it) }?.ifEmpty { null }
             // 更新插件当前版本号的缓存信息
             redisOperation.hset(
                 key = atomRunInfoKey,

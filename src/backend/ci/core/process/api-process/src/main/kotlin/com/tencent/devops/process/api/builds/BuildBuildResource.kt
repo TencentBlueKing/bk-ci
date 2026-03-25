@@ -32,13 +32,12 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
@@ -69,10 +68,7 @@ interface BuildBuildResource {
         buildNum: String,
         @Parameter(description = "查询方的当前构建ID，用户判断是否为调试记录", required = false)
         @QueryParam("buildId")
-        buildId: String?,
-        @Parameter(description = "渠道号，默认为BS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode?
+        buildId: String?
     ): Result<BuildHistory?>
 
     @Operation(summary = "获取流水线最近成功构建")
@@ -87,10 +83,7 @@ interface BuildBuildResource {
         pipelineId: String,
         @Parameter(description = "查询方的当前构建ID，用户判断是否为调试记录", required = false)
         @QueryParam("buildId")
-        buildId: String?,
-        @Parameter(description = "渠道号，默认为BS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode?
+        buildId: String?
     ): Result<BuildHistory?>
 
     @Operation(summary = "获取构建详情")
@@ -106,10 +99,7 @@ interface BuildBuildResource {
         pipelineId: String,
         @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
-        buildId: String,
-        @Parameter(description = "渠道号，默认为BS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode
+        buildId: String
     ): Result<ModelDetail>
 
     @Operation(summary = "获取子流水线变量")

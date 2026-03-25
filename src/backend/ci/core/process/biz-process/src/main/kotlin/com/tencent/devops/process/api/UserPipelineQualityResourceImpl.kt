@@ -57,7 +57,7 @@ class UserPipelineQualityResourceImpl @Autowired constructor(
             pipelineRepositoryService.getPipelineInfo(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                channelCode = channelCode
+                channelCode = channelCode ?: ChannelCode.getRequestChannelCode()
             ) ?: throw RuntimeException("pipeline info not found for $pipelineId")
         )
     }
@@ -88,7 +88,7 @@ class UserPipelineQualityResourceImpl @Autowired constructor(
                 page = page,
                 pageSize = pageSize,
                 sortType = PipelineSortType.CREATE_TIME,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 viewId = viewId ?: PIPELINE_VIEW_ALL_PIPELINES,
                 checkPermission = true,
                 filterByPipelineName = keywords

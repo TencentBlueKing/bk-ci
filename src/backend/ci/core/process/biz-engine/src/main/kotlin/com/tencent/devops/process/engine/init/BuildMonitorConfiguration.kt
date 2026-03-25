@@ -60,7 +60,7 @@ class BuildMonitorConfiguration {
     @EventConsumer
     fun buildMonitorConsumer(
         @Autowired buildListener: PipelineBuildMonitorListener
-    ) = ScsConsumerBuilder.build<PipelineBuildMonitorEvent> { buildListener.run(it) }
+    ) = ScsConsumerBuilder.build<PipelineBuildMonitorEvent> { buildListener.execute(it) }
 
     /**
      * 心跳监听队列--- 并发可小
@@ -77,5 +77,5 @@ class BuildMonitorConfiguration {
     @EventConsumer
     fun buildHeartBeatConsumer(
         @Autowired buildListener: PipelineBuildHeartbeatListener
-    ) = ScsConsumerBuilder.build<PipelineContainerAgentHeartBeatEvent> { buildListener.run(it) }
+    ) = ScsConsumerBuilder.build<PipelineContainerAgentHeartBeatEvent> { buildListener.execute(it) }
 }

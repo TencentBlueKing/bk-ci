@@ -29,6 +29,7 @@
 package com.tencent.devops.process.trigger
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
@@ -39,6 +40,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
@@ -87,7 +89,9 @@ class PipelineTriggerEventService @Autowired constructor(
         private const val PIPELINE_TRIGGER_EVENT_BIZ_ID = "PIPELINE_TRIGGER_EVENT"
         private const val PIPELINE_TRIGGER_DETAIL_BIZ_ID = "PIPELINE_TRIGGER_DETAIL"
         // 构建链接
-        const val PIPELINE_BUILD_URL_PATTERN = "<a href=\"{0}\" target=\"_blank\">#{1}</a>"
+        private const val PIPELINE_BUILD_URL_PATTERN = "<a href=\"{0}\" target=\"_blank\">#{1}</a>"
+        private const val CREATIVE_STREAM_CONSOLE_PATH = "/console/creative-stream/%s/flow/%s/execute/%s/execute-detail"
+        private const val PIPELINE_CONSOLE_PATH = "/console/pipeline/%s/%s/detail/%s/executeDetail"
     }
 
     fun getDetailId(): Long {
@@ -531,7 +535,11 @@ class PipelineTriggerEventService @Autowired constructor(
         return if (status == PipelineTriggerStatus.SUCCEED.name) {
             when {
                 !buildId.isNullOrBlank() -> {
-                    val linkUrl = "/console/pipeline/$projectId/$pipelineId/detail/$buildId/executeDetail"
+                    val linkUrl = if (ChannelContext.getChannel() == ChannelCode.CREATIVE_STREAM.name) {
+                        MessageFormat.format(CREATIVE_STREAM_CONSOLE_PATH, projectId, pipelineId, buildId)
+                    } else {
+                        MessageFormat.format(PIPELINE_CONSOLE_PATH, projectId, pipelineId, buildId)
+                    }
                     MessageFormat.format(PIPELINE_BUILD_URL_PATTERN, linkUrl, buildNum)
                 }
 

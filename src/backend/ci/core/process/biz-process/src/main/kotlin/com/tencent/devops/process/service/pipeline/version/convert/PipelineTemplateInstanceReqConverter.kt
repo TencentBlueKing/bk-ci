@@ -61,6 +61,7 @@ import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenera
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.yaml.PipelineYamlService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -156,7 +157,7 @@ class PipelineTemplateInstanceReqConverter(
             val pipelineBasicInfo = pipelineResourceFactory.createPipelineBasicInfo(
                 projectId = projectId,
                 pipelineId = newPipelineId,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 pipelineName = pipelineName,
                 pipelineDesc = null,
                 pipelineDisable = pipelineInfo?.locked
@@ -300,7 +301,7 @@ class PipelineTemplateInstanceReqConverter(
                 userId = userId,
                 create = pipelineId == null,
                 versionStatus = versionStatus,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 pipelineDialect = pipelineDialect
             )
 
@@ -404,7 +405,7 @@ class PipelineTemplateInstanceReqConverter(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 pipelineName = pipelineName,
-                channelCode = ChannelCode.BS
+                channelCode = ChannelCode.getRequestChannelCode()
             )
         }
         val pacSetting = enablePac.takeIf { it }?.let {
@@ -468,12 +469,18 @@ class PipelineTemplateInstanceReqConverter(
         if (inputParams.isEmpty()) return
         val inputParamMap = inputParams.associateBy { it.id }
         val invalidParamIds = templateParams
-            .filter { it.constant == true || !it.required }
+            .filter {
+                (it.constant == true || !it.required) &&
+                    it.id !in PipelineUtils.VERSION_PARAMS
+            }
             .mapNotNull { templateParam ->
                 val inputParam = inputParamMap[templateParam.id] ?: return@mapNotNull null
                 templateParam.id.takeIf { inputParam.defaultValue != templateParam.defaultValue }
             }
         if (invalidParamIds.isNotEmpty()) {
+            logger.warn(
+                "Template instance params override const or optional: $invalidParamIds"
+            )
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_TEMPLATE_INSTANCE_OVERRIDE_CONST,
                 params = arrayOf(invalidParamIds.joinToString { "[$it]" })

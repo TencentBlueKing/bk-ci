@@ -506,8 +506,8 @@ class BuildStartControl @Autowired constructor(
                 userId = buildInfo.startUser,
                 buildId = buildId,
                 startTime = buildInfo.startTime,
-                triggerType = buildInfo.trigger
-            ),
+                triggerType = buildInfo.trigger,
+            ).apply { channelCode = buildInfo.channelCode.name },
             // build 启动，根据状态做响应的扩展广播消息给订阅者
             PipelineBuildStatusBroadCastEvent(
                 source = source,

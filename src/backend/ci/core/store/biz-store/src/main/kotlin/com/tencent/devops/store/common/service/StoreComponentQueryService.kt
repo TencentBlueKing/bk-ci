@@ -33,6 +33,7 @@ import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.MyStoreComponent
 import com.tencent.devops.store.pojo.common.QueryComponentsParam
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -138,4 +139,14 @@ interface StoreComponentQueryService {
         storeCode: String,
         version: String
     ): Result<String?>
+
+    /**
+     * 获取组件基础信息
+     */
+    fun getComponentBaseInfo(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        version: String? = null
+    ): StoreBaseInfo?
 }

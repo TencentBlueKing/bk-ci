@@ -278,12 +278,20 @@ class MetricsEventService @Autowired constructor(
 
     @Suppress("NestedBlockDepth")
     private fun cachePipeline(projectId: String, pipelineId: String, pipelineVersion: Int?): Map<String, String> {
+        // 先通过 getPipelineInfo(channelCode=null) 获取流水线真实的 channelCode
+        val pipelineChannelCode = kotlin.runCatching {
+            client.get(ServicePipelineResource::class).getPipelineInfo(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = null
+            ).data?.channelCode
+        }.getOrNull() ?: ChannelCode.BS
         val model = kotlin.runCatching {
             client.get(ServicePipelineResource::class).get(
                 userId = "metrics",
                 projectId = projectId,
                 pipelineId = pipelineId,
-                channelCode = ChannelCode.BS,
+                channelCode = pipelineChannelCode,
                 version = pipelineVersion,
                 checkPermission = false,
                 includeDraft = true

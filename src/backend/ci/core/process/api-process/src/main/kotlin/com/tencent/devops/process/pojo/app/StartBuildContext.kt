@@ -332,7 +332,7 @@ data class StartBuildContext(
                 channelCode = if (params[PIPELINE_START_CHANNEL] != null) {
                     ChannelCode.valueOf(params[PIPELINE_START_CHANNEL]!!)
                 } else {
-                    ChannelCode.BS
+                    ChannelCode.getRequestChannelCode()
                 },
                 retryFailedContainer = params[PIPELINE_RETRY_ALL_FAILED_CONTAINER]?.toBoolean() ?: false,
                 skipFailedTask = params[PIPELINE_SKIP_FAILED_TASK]?.toBoolean() ?: false,
@@ -443,7 +443,8 @@ data class StartBuildContext(
             firstTaskId: String,
             startType: StartType,
             startBuildStatus: BuildStatus,
-            debug: Boolean
+            debug: Boolean,
+            channelCode: ChannelCode
         ): StartBuildContext = StartBuildContext(
             now = LocalDateTime.now(),
             projectId = projectId,
@@ -462,7 +463,7 @@ data class StartBuildContext(
             retryStartTaskId = null,
             triggerUser = "",
             parentTaskId = "",
-            channelCode = ChannelCode.BS,
+            channelCode = channelCode,
             retryFailedContainer = false,
             needUpdateStage = false,
             skipFailedTask = false,

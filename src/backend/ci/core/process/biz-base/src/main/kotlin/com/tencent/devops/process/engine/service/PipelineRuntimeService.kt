@@ -28,7 +28,10 @@
 package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.constant.BUILD_QUEUE
+import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorInfo
@@ -37,6 +40,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.archive.pojo.ArtifactQualityMetadataAnalytics
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
@@ -73,6 +77,8 @@ import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
+import com.tencent.devops.environment.api.ServiceNodeResource
+import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -100,6 +106,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineFilterParam
+import com.tencent.devops.process.engine.pojo.builds.BuildHistoryQueryParam
 import com.tencent.devops.process.engine.pojo.builds.CompleteTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
@@ -147,15 +154,15 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
-import java.time.LocalDateTime
-import java.util.Date
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.Date
+import java.util.concurrent.TimeUnit
 
 /**
  * 流水线运行时相关的服务
@@ -195,7 +202,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val repositoryVersionService: PipelineRepositoryVersionService,
     private val pipelineArtifactQualityService: PipelineArtifactQualityService,
-    private val pipelineRepositoryVersionService: PipelineRepositoryVersionService
+    private val client: Client
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
@@ -203,7 +210,14 @@ class PipelineRuntimeService @Autowired constructor(
         private const val TAG = "startVM-0"
         private const val JOB_ID = "0"
         private const val BUILD_REMARK_MAX_LENGTH = 4096
+        private const val NODE_NAME_CACHE_MAX_SIZE = 5000
+        private const val NODE_NAME_CACHE_EXPIRE_MINUTES = 30L
     }
+
+    private val nodeNameCache: Cache<String, String> = Caffeine.newBuilder()
+        .maximumSize(NODE_NAME_CACHE_MAX_SIZE.toLong())
+        .expireAfterWrite(NODE_NAME_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
+        .build<String, String>()
 
     fun cancelPendingTask(projectId: String, pipelineId: String, userId: String) {
         val runningBuilds = pipelineBuildDao.getBuildTasksByStatus(
@@ -359,6 +373,11 @@ class PipelineRuntimeService @Autowired constructor(
             limit = if (limit < 0) 1000 else limit,
             updateTimeDesc = updateTimeDesc
         )
+        val hashIdToName = getNodeNamesByHashIds(
+            projectId = projectId,
+            userId = null,
+            hashIds = list.mapNotNull { it.nodeHashId }.filter { it.isNotBlank() }.toSet()
+        )
         val result = mutableListOf<BuildHistory>()
         var prevBuildVersion: Int? = null
         list.reversed().forEach {
@@ -366,7 +385,8 @@ class PipelineRuntimeService @Autowired constructor(
                 genBuildHistory(
                     buildInfo = it,
                     currentTimestamp = currentTimestamp,
-                    prevBuildVersion = prevBuildVersion
+                    prevBuildVersion = prevBuildVersion,
+                    nodeName = it.nodeHashId?.let { hashId -> hashIdToName[hashId] }
                 )
             )
             prevBuildVersion = it.version
@@ -376,79 +396,34 @@ class PipelineRuntimeService @Autowired constructor(
 
     fun listPipelineBuildHistory(
         userId: String? = null,
-        projectId: String,
-        pipelineId: String,
         offset: Int,
         limit: Int,
-        materialAlias: List<String>?,
-        materialUrl: String?,
-        materialBranch: List<String>?,
-        materialCommitId: String?,
-        materialCommitMessage: String?,
-        status: List<BuildStatus>?,
-        trigger: List<StartType>?,
-        queueTimeStartTime: Long?,
-        queueTimeEndTime: Long?,
-        startTimeStartTime: Long?,
-        startTimeEndTime: Long?,
-        endTimeStartTime: Long?,
-        endTimeEndTime: Long?,
-        totalTimeMin: Long?,
-        totalTimeMax: Long?,
-        remark: String?,
-        buildNoStart: Int?,
-        buildNoEnd: Int?,
-        buildMsg: String?,
-        startUser: List<String>?,
+        queryParam: BuildHistoryQueryParam,
         updateTimeDesc: Boolean? = null,
-        queryDslContext: DSLContext? = null,
-        debug: Boolean?,
-        triggerAlias: List<String>?,
-        triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        queryDslContext: DSLContext? = null
     ): List<BuildHistory> {
         val currentTimestamp = System.currentTimeMillis()
         // 限制最大一次拉1000，防止攻击
         val list = pipelineBuildDao.listPipelineBuildInfo(
             dslContext = queryDslContext ?: dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            materialAlias = materialAlias,
-            materialUrl = materialUrl,
-            materialBranch = materialBranch,
-            materialCommitId = materialCommitId,
-            materialCommitMessage = materialCommitMessage,
-            status = status,
-            trigger = trigger,
-            queueTimeStartTime = queueTimeStartTime,
-            queueTimeEndTime = queueTimeEndTime,
-            startTimeStartTime = startTimeStartTime,
-            startTimeEndTime = startTimeEndTime,
-            endTimeStartTime = endTimeStartTime,
-            endTimeEndTime = endTimeEndTime,
-            totalTimeMin = totalTimeMin,
-            totalTimeMax = totalTimeMax,
-            remark = remark,
+            queryParam = queryParam,
             offset = offset,
             limit = if (limit < 0) {
                 1000
             } else limit,
-            buildNoStart = buildNoStart,
-            buildNoEnd = buildNoEnd,
-            buildMsg = buildMsg,
-            startUser = startUser,
-            updateTimeDesc = updateTimeDesc,
-            debug = debug,
-            triggerAlias = triggerAlias,
-            triggerBranch = triggerBranch,
-            triggerUser = triggerUser
+            updateTimeDesc = updateTimeDesc
+        )
+        val hashIdToName = getNodeNamesByHashIds(
+            projectId = queryParam.projectId,
+            userId = userId,
+            hashIds = list.mapNotNull { it.nodeHashId }.filter { it.isNotBlank() }.toSet()
         )
         val result = mutableListOf<BuildHistory>()
         var prevBuildVersion: Int? = null
         list.reversed().forEach { buildInfo ->
             val artifactQuality = pipelineArtifactQualityService.buildArtifactQuality(
                 userId = userId,
-                projectId = projectId,
+                projectId = queryParam.projectId,
                 artifactQualityList = buildInfo.artifactQualityList
             )
             result.add(
@@ -456,7 +431,8 @@ class PipelineRuntimeService @Autowired constructor(
                     buildInfo = buildInfo,
                     currentTimestamp = currentTimestamp,
                     artifactQuality = artifactQuality,
-                    prevBuildVersion = prevBuildVersion
+                    prevBuildVersion = prevBuildVersion,
+                    nodeName = buildInfo.nodeHashId?.let { hashIdToName[it] }
                 )
             )
             prevBuildVersion = buildInfo.version
@@ -595,11 +571,49 @@ class PipelineRuntimeService @Autowired constructor(
         }
     }
 
+    private fun getNodeNamesByHashIds(
+        projectId: String,
+        userId: String?,
+        hashIds: Set<String>
+    ): Map<String, String> {
+        if (hashIds.isEmpty()) return emptyMap()
+        val cached = hashIds.mapNotNull { hashId ->
+            nodeNameCache.getIfPresent(cacheKey(projectId, hashId))?.let { hashId to it }
+        }.toMap()
+        val missedIds = hashIds - cached.keys
+        if (missedIds.isEmpty()) return cached
+        val effectiveUserId = userId ?: I18nUtil.getRequestUserId() ?: SYSTEM
+        val result = client.get(ServiceNodeResource::class).listByHashIds(
+            userId = effectiveUserId,
+            projectId = projectId,
+            nodeHashIds = missedIds.toList(),
+            checkPermission = false
+        )
+        val nodes = result.data ?: return cached
+        val freshMap = nodes
+            .filter {
+                it.nodeHashId.isNotBlank() && getNodeDisplayName(it).isNotBlank()
+            }
+            .associate { node ->
+                val nodeName = getNodeDisplayName(node)
+                nodeNameCache.put(cacheKey(projectId, node.nodeHashId), nodeName)
+                node.nodeHashId to nodeName
+            }
+        return cached + freshMap
+    }
+
+    private fun getNodeDisplayName(node: NodeWithPermission): String {
+        return node.displayName?.takeIf { it.isNotBlank() } ?: node.name
+    }
+
+    private fun cacheKey(projectId: String, nodeHashId: String) = "$projectId:$nodeHashId"
+
     private fun genBuildHistory(
         buildInfo: BuildInfo,
         currentTimestamp: Long,
         artifactQuality: Map<String, List<ArtifactQualityMetadataAnalytics>>? = null,
-        prevBuildVersion: Int? = null
+        prevBuildVersion: Int? = null,
+        nodeName: String? = null
     ): BuildHistory {
         return with(buildInfo) {
             val startType = StartType.toStartType(trigger)
@@ -640,7 +654,8 @@ class PipelineRuntimeService @Autowired constructor(
                 updateTime = updateTime ?: endTime ?: 0L, // 防止空异常
                 concurrencyGroup = concurrencyGroup,
                 executeCount = executeCount,
-                versionChange = (versionChange ?: false) || (prevBuildVersion != null && version != prevBuildVersion)
+                versionChange = (versionChange ?: false) || (prevBuildVersion != null && version != prevBuildVersion),
+                nodeName = nodeName
             )
         }
     }
@@ -1411,7 +1426,8 @@ class PipelineRuntimeService @Autowired constructor(
                 actionType = ActionType.START,
                 startBuildStatus = BuildStatus.QUEUE,
                 startType = StartType.toStartType(buildInfo.trigger),
-                debug = buildInfo.debug
+                debug = buildInfo.debug,
+                channelCode = buildInfo.channelCode
             ).apply {
                 buildNoType = null // 该字段是需要遍历Model获得，不过在审核阶段为null，目前不影响功能逻辑。
             }.sendBuildStartEvent()
@@ -1475,6 +1491,8 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineId = pipelineId,
             queueIncrement = 1
         )
+        // 将渠道标识传入事件，确保MQ消费线程中能恢复ChannelContext
+        val channelCodeStr = channelCode.name
         pipelineEventDispatcher.dispatch(
             PipelineBuildStartEvent(
                 source = "startBuild",
@@ -1486,8 +1504,9 @@ class PipelineRuntimeService @Autowired constructor(
                 status = startBuildStatus,
                 actionType = actionType,
                 executeCount = executeCount,
-                buildNoType = buildNoType // 该字段是需要遍历Model‘获得，不过在审核阶段为null，不影响功能逻辑。
-            ), // 监控事件
+                buildNoType = buildNoType // 该字段是需要遍历Model'获得，不过在审核阶段为null，不影响功能逻辑。
+            ).apply { this.channelCode = channelCodeStr },
+            // 监控事件
             PipelineBuildMonitorEvent(
                 source = "startBuild",
                 projectId = projectId,
@@ -1495,7 +1514,8 @@ class PipelineRuntimeService @Autowired constructor(
                 userId = userId,
                 buildId = buildId,
                 executeCount = executeCount
-            ), // #3400 点启动处于DETAIL界面，以操作人视角，没有刷历史列表的必要，在buildStart真正启动时也会有HISTORY，减少负载
+            ).apply { this.channelCode = channelCodeStr },
+            // #3400 点启动处于DETAIL界面，以操作人视角，没有刷历史列表的必要，在buildStart真正启动时也会有HISTORY，减少负载
             PipelineBuildWebSocketPushEvent(
                 source = "startBuild",
                 projectId = projectId,
@@ -1504,7 +1524,8 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId,
                 // 刷新历史列表和详情页面
                 refreshTypes = RefreshType.RECORD.binary
-            ), // 广播构建排队事件
+            ).apply { this.channelCode = channelCodeStr },
+            // 广播构建排队事件
             PipelineBuildQueueBroadCastEvent(
                 source = "startQueue",
                 projectId = projectId,
@@ -1513,7 +1534,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId,
                 actionType = actionType,
                 triggerType = startType.name
-            )
+            ).apply { this.channelCode = channelCodeStr }
         )
     }
 
@@ -1991,62 +2012,12 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getPipelineBuildHistoryCount(
-        projectId: String,
-        pipelineId: String,
-        materialAlias: List<String>? = null,
-        materialUrl: String? = null,
-        materialBranch: List<String>? = null,
-        materialCommitId: String? = null,
-        materialCommitMessage: String? = null,
-        status: List<BuildStatus>?,
-        trigger: List<StartType>? = null,
-        queueTimeStartTime: Long? = null,
-        queueTimeEndTime: Long? = null,
-        startTimeStartTime: Long? = null,
-        startTimeEndTime: Long? = null,
-        endTimeStartTime: Long? = null,
-        endTimeEndTime: Long? = null,
-        totalTimeMin: Long? = null,
-        totalTimeMax: Long? = null,
-        remark: String? = null,
-        buildNoStart: Int? = null,
-        buildNoEnd: Int? = null,
-        buildMsg: String? = null,
-        startUser: List<String>? = null,
-        queryDslContext: DSLContext? = null,
-        debug: Boolean?,
-        triggerAlias: List<String>?,
-        triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        queryParam: BuildHistoryQueryParam,
+        queryDslContext: DSLContext? = null
     ): Int {
         return pipelineBuildDao.count(
             dslContext = queryDslContext ?: dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            materialAlias = materialAlias,
-            materialUrl = materialUrl,
-            materialBranch = materialBranch,
-            materialCommitId = materialCommitId,
-            materialCommitMessage = materialCommitMessage,
-            status = status,
-            trigger = trigger,
-            queueTimeStartTime = queueTimeStartTime,
-            queueTimeEndTime = queueTimeEndTime,
-            startTimeStartTime = startTimeStartTime,
-            startTimeEndTime = startTimeEndTime,
-            endTimeStartTime = endTimeStartTime,
-            endTimeEndTime = endTimeEndTime,
-            totalTimeMin = totalTimeMin,
-            totalTimeMax = totalTimeMax,
-            remark = remark,
-            buildNoStart = buildNoStart,
-            buildNoEnd = buildNoEnd,
-            buildMsg = buildMsg,
-            startUser = startUser,
-            debug = debug,
-            triggerAlias = triggerAlias,
-            triggerBranch = triggerBranch,
-            triggerUser = triggerUser
+            queryParam = queryParam
         )
     }
 

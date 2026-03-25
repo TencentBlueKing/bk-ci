@@ -30,6 +30,7 @@ package com.tencent.devops.store.common.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.classify.Classify
 import com.tencent.devops.store.pojo.common.classify.ClassifyRequest
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 
 /**
  * 分类业务逻辑类
@@ -40,9 +41,10 @@ interface ClassifyService {
 
     /**
      * 获取所有分类信息
-     * @param type 0:插件 1：模板
+     * @param type 分类类型
+     * @param serviceScope 服务范围
      */
-    fun getAllClassify(type: Byte): Result<List<Classify>>
+    fun getAllClassify(type: Byte, serviceScope: ServiceScopeEnum? = null): Result<List<Classify>>
 
     /**
      * 根据id获取分类信息
