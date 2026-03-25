@@ -367,7 +367,7 @@ class PipelineBuildService(
             valueType = BuildFormPropertyType.STRING
         )
         // 流水线类型
-        pipelineParamMap[CI_CATEGORY] = BuildParameters(
+        paramMap[CI_CATEGORY] = BuildParameters(
             key = CI_CATEGORY,
             value = if (ctx.channelCode == ChannelCode.CREATIVE_STREAM) {
                 PipelineCategory.CREATIVE_STREAM
