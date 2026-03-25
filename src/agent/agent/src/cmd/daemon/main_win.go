@@ -37,6 +37,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -309,7 +310,7 @@ func (p *program) tryStopAgent() {
 func tryLogonFallback(agentPath, cmdLine, workDir string) (*SessionProcessInfo, error) {
 	user, password := ReadSessionCredentials()
 	if user == "" {
-		return nil, fmt.Errorf("no session credentials in LSA Secret (run configure_session.ps1 -UserName ... -Password ...)")
+		return nil, fmt.Errorf("no session credentials in LSA Secret (run: devopsAgent configure-session --user ... --password ...)")
 	}
 	logs.Infof("attempting LogonUser fallback with user=%s", user)
 	return StartProcessWithLogon(user, password, agentPath, cmdLine, workDir)
