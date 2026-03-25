@@ -313,7 +313,7 @@ class PipelineTemplateMarketFacadeService @Autowired constructor(
                         "Failed to install new version for template" +
                             "(${templateInfo.id}) in project" +
                             "(${templateInfo.projectId}), " +
-                            "srcTemplate=$templateId, version=$version"+
+                            "srcTemplate=$templateId, version=$version" +
                             "srcProjectId=$projectId",
                         e
                     )
@@ -374,26 +374,26 @@ class PipelineTemplateMarketFacadeService @Autowired constructor(
     }
 
     @Suppress("NestedBlockDepth")
-    /**
-     * 校验模板（指定版本）中引用的构建镜像是否全部处于【已发布】状态。
-     *
-     * 逻辑说明：
-     * 1. 获取模板资源与其模型，仅在模板类型为 PIPELINE 时检查镜像；否则直接返回 null。
-     * 2. 遍历所有阶段与容器，仅处理 VMBuildContainer 且分发类型为 StoreDispatchType 的场景。
-     * 3. 以 `imageCode@imageVersion` 作为唯一键去重，避免对相同镜像重复调用远端状态接口。
-     * 4. 一旦发现第一个未发布的镜像，立即短路返回该镜像的 imageCode；若全部发布则返回 null。
-     *
-     * 设计考量：
-     * - 命名参数：统一采用命名参数，降低参数顺序误用风险并提升可读性。
-     * - 安全转换：使用 `as?` 避免不必要的强转异常。
-     * - 早退出：非流水线类型模板直接返回，减少分支嵌套。
-     *
-     * @param userId 操作人 ID（用于审计/日志，当前逻辑不参与判定）
-     * @param projectId 项目 ID
-     * @param templateId 模板 ID
-     * @param version 模板版本号
-     * @return Result<String?> 未发布镜像的 imageCode；若全部发布或无需校验则为 null
-     */
+        /**
+         * 校验模板（指定版本）中引用的构建镜像是否全部处于【已发布】状态。
+         *
+         * 逻辑说明：
+         * 1. 获取模板资源与其模型，仅在模板类型为 PIPELINE 时检查镜像；否则直接返回 null。
+         * 2. 遍历所有阶段与容器，仅处理 VMBuildContainer 且分发类型为 StoreDispatchType 的场景。
+         * 3. 以 `imageCode@imageVersion` 作为唯一键去重，避免对相同镜像重复调用远端状态接口。
+         * 4. 一旦发现第一个未发布的镜像，立即短路返回该镜像的 imageCode；若全部发布则返回 null。
+         *
+         * 设计考量：
+         * - 命名参数：统一采用命名参数，降低参数顺序误用风险并提升可读性。
+         * - 安全转换：使用 `as?` 避免不必要的强转异常。
+         * - 早退出：非流水线类型模板直接返回，减少分支嵌套。
+         *
+         * @param userId 操作人 ID（用于审计/日志，当前逻辑不参与判定）
+         * @param projectId 项目 ID
+         * @param templateId 模板 ID
+         * @param version 模板版本号
+         * @return Result<String?> 未发布镜像的 imageCode；若全部发布或无需校验则为 null
+         */
     fun checkImageReleaseStatus(
         userId: String,
         projectId: String,
