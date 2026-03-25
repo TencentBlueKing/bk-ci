@@ -32,6 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserStoreClassifyResource
 import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.pojo.common.classify.Classify
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -40,7 +41,7 @@ class UserStoreClassifyResourceImpl @Autowired constructor(
     private val classifyService: ClassifyService
 ) : UserStoreClassifyResource {
 
-    override fun getClassifyList(storeType: String): Result<List<Classify>> {
-        return classifyService.getAllClassify(StoreTypeEnum.valueOf(storeType).type.toByte())
+    override fun getClassifyList(storeType: String, serviceScope: ServiceScopeEnum?): Result<List<Classify>> {
+        return classifyService.getAllClassify(StoreTypeEnum.valueOf(storeType).type.toByte(), serviceScope)
     }
 }

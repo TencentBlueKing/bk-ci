@@ -29,9 +29,11 @@ package com.tencent.devops.process.pojo.template
 
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoV2
+import com.tencent.devops.process.utils.BK_EMPTY_CREATIVE_STREAM
 import com.tencent.devops.process.utils.BK_EMPTY_PIPELINE
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -50,9 +52,14 @@ data class OptionalTemplateList(
         if (page != 1) {
             return this
         }
+        val isCreativeStream = ChannelCode.getRequestChannelCode() == ChannelCode.CREATIVE_STREAM
         val newMap = linkedMapOf<String, OptionalTemplate>().apply {
             val emptyTemplate = OptionalTemplate(
-                name = I18nUtil.getCodeLanMessage(messageCode = BK_EMPTY_PIPELINE),
+                name = if (isCreativeStream) {
+                    I18nUtil.getCodeLanMessage(messageCode = BK_EMPTY_CREATIVE_STREAM)
+                } else {
+                    I18nUtil.getCodeLanMessage(messageCode = BK_EMPTY_PIPELINE)
+                },
                 templateId = templateInfo.id,
                 projectId = "",
                 version = templateInfo.releasedVersion,
@@ -61,7 +68,11 @@ data class OptionalTemplateList(
                 templateTypeDesc = TemplateType.PUBLIC.value,
                 category = emptyList(),
                 logoUrl = "",
-                stages = Model.defaultModel().stages,
+                stages = if (isCreativeStream) {
+                    Model.creativeStreamDefaultModel().stages
+                } else {
+                    Model.defaultModel().stages
+                },
                 cloneTemplateSettingExist = CloneTemplateSettingExist(
                     notifySettingExist = false,
                     concurrencySettingExist = false,

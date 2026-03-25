@@ -40,6 +40,7 @@ import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceRecommendedVersion
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -52,6 +53,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.service.pipeline.PipelineModelParser
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import com.tencent.devops.store.pojo.common.BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -83,6 +85,7 @@ class PipelineResourceFactory @Autowired constructor(
         )
     }
 
+    @Suppress("NestedBlockDepth")
     fun createPipelineModelBasicInfo(
         userId: String,
         projectId: String,
@@ -99,9 +102,23 @@ class PipelineResourceFactory @Autowired constructor(
         var canElementSkip = false
         run lit@{
             triggerContainer.elements.forEach {
-                if (it is ManualTriggerElement && it.elementEnabled()) {
+                val targetElement = it is ManualTriggerElement ||
+                        if (channelCode == ChannelCode.CREATIVE_STREAM) {
+                            it is MarketEventAtomElement &&
+                                    it.atomCode == BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
+                        } else {
+                            false
+                        }
+                if (targetElement && it.elementEnabled()) {
                     canManualStartup = true
-                    canElementSkip = it.canElementSkip ?: false
+                    canElementSkip = when (it) {
+                        is ManualTriggerElement -> it.canElementSkip ?: false
+                        is MarketEventAtomElement -> {
+                            val input = it.data["input"] as Map<String, Any>? ?: emptyMap()
+                            input["canElementSkip"] as? Boolean ?: false
+                        }
+                        else -> false
+                    }
                     return@lit
                 }
             }

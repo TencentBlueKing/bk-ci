@@ -39,6 +39,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.pojo.EnvCreateInfo
+import com.tencent.devops.environment.pojo.EnvData
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
@@ -166,7 +167,18 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         if (envHashIds.isEmpty()) {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_NEED_PARAM_, params = arrayOf("envHashIds"))
         }
-        return Result(envService.listAllEnvNodesNew(userId, projectId, page, pageSize, envHashIds))
+        return Result(envService.listAllEnvNodesNew(
+            userId = userId,
+            projectId = projectId,
+            page = page,
+            pageSize = pageSize,
+            envHashIds = envHashIds,
+            envName = null,
+            nodeIp = null,
+            displayName = null,
+            createdUser = null,
+            nodeStatus = null
+        ))
     }
 
     @BkTimed(extraTags = ["operate", "getEnv"])
@@ -246,5 +258,40 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         if (projectId.isEmpty()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_SHARE_PROJECT_EMPTY)
         }
+    }
+
+    override fun fetchAllNodeEnvList(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        noCheckPerm: Boolean
+    ): Result<List<EnvData>> {
+        return Result(envService.fetchAllNodeEnvList(userId, projectId, workspaceName, noCheckPerm))
+    }
+
+    override fun listNodesNewByName(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        envName: String
+    ): Result<Page<NodeBaseInfo>> {
+        if (envName.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
+        }
+        return Result(
+            envService.listAllEnvNodesNew(
+                userId = userId,
+                projectId = projectId,
+                page = page,
+                pageSize = pageSize,
+                envHashIds = null,
+                envName = envName,
+                nodeIp = null,
+                displayName = null,
+                createdUser = null,
+                nodeStatus = null
+            )
+        )
     }
 }

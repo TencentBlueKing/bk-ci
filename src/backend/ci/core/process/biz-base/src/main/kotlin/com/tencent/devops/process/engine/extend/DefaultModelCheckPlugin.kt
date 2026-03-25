@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ElementBatchCheckPar
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementHolder
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -300,7 +301,11 @@ open class DefaultModelCheckPlugin constructor(
                 checkJobControlNodeConcurrency(container)
             }
 
-            container.elements.forEach { e ->
+            container.elements.forEach elementCheck@{ e ->
+                // 触发器Container不校验market element
+                if (container is TriggerContainer && e is MarketEventAtomElement) {
+                    return@elementCheck
+                }
                 container.checkElement(
                     stage = this,
                     element = e,

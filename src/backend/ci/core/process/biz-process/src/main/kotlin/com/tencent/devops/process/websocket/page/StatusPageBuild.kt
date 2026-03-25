@@ -27,17 +27,28 @@
 
 package com.tencent.devops.process.websocket.page
 
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.websocket.page.IPath
 import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 
 abstract class StatusPageBuild : IPath {
+
+    /**
+     * 解析渠道（MQ 等链路可能丢失请求头，优先从流水线信息/缓存获取）。
+     */
+    protected abstract fun getChannel(buildPageInfo: BuildPageInfo): ChannelCode
+
     override fun buildPage(buildPageInfo: BuildPageInfo): String {
-        val defaultPage = "/console/pipeline/${buildPageInfo.projectId}/list"
-        if (!extStatusPage(buildPageInfo).isNullOrEmpty()) {
-            return extStatusPage(buildPageInfo)!!
-        }
-        return defaultPage
+        val channel = getChannel(buildPageInfo)
+        PagePathStrategies.statusStrategies
+            .firstOrNull { it.supports(channel) }
+            ?.build(buildPageInfo)
+            ?.let { return it }
+        extStatusPage(buildPageInfo)?.takeIf { it.isNotBlank() }?.let { return it }
+        return defaultStatusPath(buildPageInfo)
     }
+
+    private fun defaultStatusPath(info: BuildPageInfo): String = "/console/pipeline/${info.projectId}/list"
 
     abstract fun extStatusPage(buildPageInfo: BuildPageInfo): String?
 }

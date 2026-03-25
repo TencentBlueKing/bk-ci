@@ -461,8 +461,7 @@ abstract class ImageService @Autowired constructor() {
                     code = it.code,
                     version = it.version,
                     status = it.status,
-                    // 仅用于插件区分Agent/AgentLess
-                    type = "",
+                    type = StoreTypeEnum.IMAGE.name,
                     rdType = it.rdType,
                     classifyCode = it.classifyCode,
                     category = categories.joinToString(","),

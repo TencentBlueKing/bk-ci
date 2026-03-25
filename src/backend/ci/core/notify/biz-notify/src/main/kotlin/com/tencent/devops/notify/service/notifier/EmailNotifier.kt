@@ -5,6 +5,7 @@ import com.tencent.devops.common.notify.enums.EnumEmailType
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
 import com.tencent.devops.notify.dao.NotifyMessageTemplateDao
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
@@ -19,7 +20,8 @@ import org.springframework.stereotype.Component
 class EmailNotifier @Autowired constructor(
     private val emailService: EmailService,
     private val notifyMessageTemplateDao: NotifyMessageTemplateDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val commonConfig: CommonConfig
 ) : INotifier {
     override fun type(): NotifyType = NotifyType.EMAIL
     override fun send(
@@ -30,17 +32,20 @@ class EmailNotifier @Autowired constructor(
             dslContext,
             commonNotifyMessageTemplateRecord.id
         )!!
-        // 替换标题里的动态参数
-        val title = NotifierUtils.replaceContentParams(request.titleParams, emailTplRecord.title)
-        // 替换内容里的动态参数
-        val body = NotifierUtils.replaceContentParams(request.bodyParams, emailTplRecord.body) {
+        // 先对 DB 原始模板做渠道关键字替换（如 CREATIVE_STREAM 渠道将「流水线」替换为「创作流」），再替换占位符
+        val language = commonConfig.devopsDefaultLocaleLanguage
+        val rawTitle = NotifierUtils.replaceNotifyKeywordByChannel(emailTplRecord.title, language)
+        val rawBody = NotifierUtils.replaceNotifyKeywordByChannel(emailTplRecord.body, language)
+        // 替换标题和内容里的动态参数
+        val finalTitle = NotifierUtils.replaceContentParams(request.titleParams, rawTitle)
+        val finalBody = NotifierUtils.replaceContentParams(request.bodyParams, rawBody) {
             it.replace("\n", "<br>")
         }
         sendEmailNotifyMessage(
             commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
             sendNotifyMessageTemplateRequest = request,
-            title = title,
-            body = body,
+            title = finalTitle,
+            body = finalBody,
             sender = emailTplRecord.sender,
             variables = request.titleParams?.plus(request.bodyParams ?: emptyMap()) ?: emptyMap(),
             tencentCloudTemplateId = emailTplRecord.tencentCloudTemplateId

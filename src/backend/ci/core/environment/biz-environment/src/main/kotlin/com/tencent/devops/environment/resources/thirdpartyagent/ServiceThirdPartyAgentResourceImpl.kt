@@ -41,6 +41,7 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.NodeTag
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
@@ -92,11 +93,11 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         return thirdPartyAgentService.getAgentByDisplayName(projectId, displayName)
     }
 
-    override fun getAgentsByEnvId(projectId: String, envId: String) =
-        Result(thirdPartyAgentService.getAgentByEnvId(projectId, envId))
+    override fun getAgentsByEnvId(projectId: String, envId: String, userId: String?) =
+        Result(thirdPartyAgentService.getAgentByEnvId(projectId, envId, userId))
 
-    override fun getAgentsByEnvName(projectId: String, envName: String): Result<List<EnvNodeAgent>> {
-        val (_, res) = thirdPartyAgentService.getAgentByEnvName(projectId, envName)
+    override fun getAgentsByEnvName(projectId: String, envName: String, userId: String?): Result<List<EnvNodeAgent>> {
+        val (_, res) = thirdPartyAgentService.getAgentByEnvName(projectId, envName, userId)
         return Result(res)
     }
 
@@ -131,8 +132,13 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(thirdPartyAgentPipelineService.getPipelineResult(projectId, nodeId, seqId))
     }
 
-    override fun listAgents(userId: String, projectId: String, os: OS): Result<List<ThirdPartyAgentInfo>> {
-        return Result(thirdPartyAgentService.listAgents(userId, projectId, os))
+    override fun listAgents(
+        userId: String,
+        projectId: String,
+        os: OS,
+        agentType: AgentType?
+    ): Result<List<ThirdPartyAgentInfo>> {
+        return Result(thirdPartyAgentService.listAgents(userId, projectId, os, agentType))
     }
 
     override fun agentTaskStarted(
@@ -306,9 +312,10 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
 
     override fun getAgentsByEnvNameWithId(
         projectId: String,
-        envName: String
+        envName: String,
+        userId: String?
     ): Result<Pair<Long?, List<EnvNodeAgent>>> {
-        return Result(thirdPartyAgentService.getAgentByEnvName(projectId, envName))
+        return Result(thirdPartyAgentService.getAgentByEnvName(projectId, envName, userId))
     }
 
     override fun fetchAgentEnv(
@@ -351,9 +358,9 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(agentService.updateAgentInfo(userId, projectId, data))
     }
 
-    override fun fetchTag(userId: String, projectId: String): Result<List<NodeTag>> {
+    override fun fetchTag(userId: String, projectId: String, createMode: Boolean?): Result<List<NodeTag>> {
         return Result(
-            nodeTagService.fetchTagAndNodeCount(projectId)
+            nodeTagService.fetchTagAndNodeCount(projectId, createMode)
         )
     }
 }

@@ -714,8 +714,15 @@ class PipelineBuildRecordService @Autowired constructor(
                 startUser = recordModel.startUser,
                 executeCount = executeCount
             )
+            val allRecordStages = recordStageDao.getLatestRecords(
+                dslContext = context,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                executeCount = executeCount
+            )
             allStageStatus = fetchHistoryStageStatus(
-                recordStages = recordStages, buildStatus = buildStatus, errorMsg = errorMsg
+                recordStages = allRecordStages, buildStatus = buildStatus, errorMsg = errorMsg
             )
         }
         val model = getRecordModel(

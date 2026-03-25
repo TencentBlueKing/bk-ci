@@ -33,10 +33,11 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.utils.ModelVarRefValidator
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_MAX_PIPELINE_COUNT_PER_PROJECT
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_MODEL_VAR_REF_INVALID
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.service.ProjectCacheService
@@ -65,6 +66,16 @@ class PipelineVersionValidator @Autowired constructor(
             logger.warn("The pipeline name is empty")
             throw CustomMessageException("The pipeline name cannot be empty.")
         }
+        val model = pipelineResourceWithoutVersion.model
+        // 检查model中表达式是否合法
+        val invalidRefs = ModelVarRefValidator.getInvalidRefs(model, projectId)
+        if (invalidRefs.isNotEmpty()) {
+            val invalidRefsMsg = ModelVarRefValidator.formatInvalidRefsMessage(invalidRefs)
+            throw ErrorCodeException(
+                errorCode = ERROR_PIPELINE_MODEL_VAR_REF_INVALID,
+                params = arrayOf(invalidRefsMsg)
+            )
+        }
         val nameExist = pipelineRepositoryService.isPipelineExist(
             projectId = projectId,
             pipelineName = pipelineBasicInfo.pipelineName,
@@ -82,7 +93,8 @@ class PipelineVersionValidator @Autowired constructor(
             // 检查用户流水线是否达到上限
             val projectVO = projectCacheService.getProject(projectId)
             if (projectVO?.pipelineLimit != null) {
-                val preCount = pipelineRepositoryService.countByProjectIds(setOf(projectId), ChannelCode.BS)
+                val preCount =
+                    pipelineRepositoryService.countByProjectIds(setOf(projectId), pipelineBasicInfo.channelCode)
                 if (preCount >= projectVO.pipelineLimit!!) {
                     throw OperationException(
                         MessageUtil.getMessageByLocale(

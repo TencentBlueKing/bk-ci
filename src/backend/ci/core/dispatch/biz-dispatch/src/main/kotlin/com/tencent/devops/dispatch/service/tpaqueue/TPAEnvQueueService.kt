@@ -137,9 +137,11 @@ class TPAEnvQueueService @Autowired constructor(
 
         val agentsResult = try {
             if (data.dispatchType.idType()) {
-                client.get(ServiceThirdPartyAgentResource::class).getAgentsByEnvId(data.projectId, env)
+                client.get(ServiceThirdPartyAgentResource::class)
+                    .getAgentsByEnvId(data.projectId, env, userId = dataContext.data.userId)
             } else {
-                client.get(ServiceThirdPartyAgentResource::class).getAgentsByEnvNameWithId(data.projectId, env)
+                client.get(ServiceThirdPartyAgentResource::class)
+                    .getAgentsByEnvNameWithId(data.projectId, env, data.userId)
             }
         } catch (e: Exception) {
             throw TPACommonUtil.queueFailure(

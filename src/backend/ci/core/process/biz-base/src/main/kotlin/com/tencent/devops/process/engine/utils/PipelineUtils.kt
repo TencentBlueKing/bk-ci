@@ -237,7 +237,7 @@ object PipelineUtils {
 
         return Model(
             name = pipelineName,
-            desc = "",
+            desc = templateModel.desc,
             stages = getFixedStages(templateModel, triggerContainer, defaultStageTagId),
             labels = labels ?: templateModel.labels,
             instanceFromTemplate = instanceFromTemplate

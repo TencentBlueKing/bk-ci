@@ -147,7 +147,7 @@ class PipelineDraftSaveReqConverter(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = newPipelineId,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 version = version,
                 model = modelAndSetting.model,
                 yaml = yamlWithVersion?.yamlStr,

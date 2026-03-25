@@ -81,7 +81,9 @@ data class PipelineSettingVersion(
     @get:Schema(title = "YAML流水线特殊配置", required = false)
     var pipelineAsCodeSettings: PipelineAsCodeSettings? = null,
     @get:Schema(title = "构建取消权限策略", required = false)
-    var buildCancelPolicy: BuildCancelPolicy? = null
+    var buildCancelPolicy: BuildCancelPolicy? = null,
+    @get:Schema(title = "环境hashId", required = false)
+    var envHashId: String? = null
 ) {
     companion object {
 

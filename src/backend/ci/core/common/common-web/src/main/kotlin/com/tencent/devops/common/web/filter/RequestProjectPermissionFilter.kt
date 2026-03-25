@@ -27,12 +27,14 @@
 
 package com.tencent.devops.common.web.filter
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_CHANNEL
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.constant.API_PERMISSION
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_PIPELINE_ID
 import com.tencent.devops.common.api.constant.KEY_PROJECT_ID
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.redis.RedisOperation
@@ -71,6 +73,9 @@ class RequestProjectPermissionFilter(
     private var resourceInfo: ResourceInfo? = null
 
     override fun filter(requestContext: ContainerRequestContext) {
+        // 设置渠道代码
+        val channelCode = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_CHANNEL)
+        ChannelContext.setChannel(channelCode)
         // 判断流水线或者项目的api权限校验开关是否打开
         if ((!apiPipelinePermissionSwitch && !apiProjectPermissionSwitch) || resourceInfo == null) {
             return
