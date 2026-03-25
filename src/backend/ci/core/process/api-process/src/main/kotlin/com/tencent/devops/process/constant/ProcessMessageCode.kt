@@ -461,6 +461,7 @@ object ProcessMessageCode {
     // 模型变量引用表达式不合规：仅允许双大括号${{xxx}}，且前缀须为 variables./stages./jobs./steps.。不合规项（含位置 positionPath）：{0}
     const val ERROR_PIPELINE_MODEL_VAR_REF_INVALID = "2101376"
 
+    const val BUILD_MSG_TRIGGER_EVENT = "2101368" // 通用事件触发
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}
@@ -733,4 +734,18 @@ object ProcessMessageCode {
 
     // 创作流节点描述
     const val BK_CREATIVE_STREAM_NODE_DESC = "bkCreativeStreamNodeDesc"
+
+    // 云桌面触发事件描述
+    const val BK_REMOTE_DEV_TRIGGER_DESC = "bkRemoteDevTriggerDesc"
+
+    // 触发事件配置不存在或已下架, 请联系管理员处理
+    const val BK_TRIGGER_EVENT_CONFIG_NOT_FOUND_DESC = "bkTriggerEventConfigNotFoundDesc"
+
+    // 字段不匹配
+    const val BK_FIELD_CONDITION_NOT_MATCH = "bkFieldConditionNotMatch"
+    // 字段被排除
+    const val BK_FIELD_CONDITION_EXCLUDE = "bkFieldConditionExclude"
+
+    // 创作流启动节点为空
+    const val BK_CREATIVE_STREAM_START_TASK_IS_EMPTY = "bkCreativeStreamStartTaskIsEmpty"
 }

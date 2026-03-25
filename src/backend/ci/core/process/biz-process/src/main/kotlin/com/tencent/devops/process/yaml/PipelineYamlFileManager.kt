@@ -190,7 +190,7 @@ class PipelineYamlFileManager @Autowired constructor(
             checkParam()
             logger.info(
                 "[PAC_PIPELINE]|create or update yaml pipeline|$eventId|" +
-                    "$projectId|$repoHashId|$filePath|$ref|${commit!!.commitId}|$blobId"
+                    "$projectId|$repoHashId|$filePath|$ref|${commit?.commitId}|$blobId"
             )
             val lock = PipelineYamlTriggerLock(
                 redisOperation = redisOperation,
@@ -212,7 +212,7 @@ class PipelineYamlFileManager @Autowired constructor(
             } catch (ignored: Exception) {
                 logger.error(
                     "[PAC_PIPELINE]|Failed to create or update yaml pipeline|$eventId|" +
-                            "$projectId$repoHashId|$filePath|$ref|${commit.commitId}|$blobId",
+                            "$projectId$repoHashId|$filePath|$ref|${commit?.commitId}|$blobId",
                     ignored
                 )
                 webhookTriggerManager.fireChangeError(context = context, exception = ignored)
@@ -277,11 +277,11 @@ class PipelineYamlFileManager @Autowired constructor(
                 "[PAC_PIPELINE]|rename pipeline yaml|$eventId|$projectId|$repoHashId|$filePath|$ref"
             )
             checkParam()
-            if (oldFilePath.isNullOrBlank()) {
+            if (oldFilePath?.isNullOrBlank() == true) {
                 logger.error("old file path cannot be empty")
                 return
             }
-            val oldFileEvent = event.copy(filePath = oldFilePath)
+            val oldFileEvent = event.copy(filePath = oldFilePath ?: "")
             if (deleteYamlFile(event = oldFileEvent)) {
                 createOrUpdateYamlFile(event = event)
             }
@@ -341,9 +341,9 @@ class PipelineYamlFileManager @Autowired constructor(
                 pipelineYamlResourceManager.completePullRequest(
                     projectId = projectId,
                     pipelineId = pipelineYamlInfo.pipelineId,
-                    pullRequestId = pullRequestId,
-                    pullRequestUrl = pullRequestUrl,
-                    pullRequestNumber = pullRequestNumber,
+                    pullRequestId = pullRequestId ?: 0L,
+                    pullRequestUrl = pullRequestUrl ?: "",
+                    pullRequestNumber = pullRequestNumber ?: 0,
                     merged = merged,
                     isTemplate = isTemplate
                 )
@@ -670,8 +670,8 @@ class PipelineYamlFileManager @Autowired constructor(
             defaultBranch = defaultBranch,
             blobId = content.blobId!!,
             ref = ref,
-            commitId = commit.commitId,
-            commitTime = commit.commitTime,
+            commitId = commit?.commitId ?: "",
+            commitTime = commit?.commitTime?:LocalDateTime.now(),
             pipelineId = pipelineId,
             status = if (isDefaultBranch) {
                 PipelineYamlStatus.OK.name
@@ -702,8 +702,8 @@ class PipelineYamlFileManager @Autowired constructor(
             repoHashId = repoHashId,
             filePath = filePath,
             ref = ref,
-            commitId = commit!!.commitId,
-            blobId = blobId!!,
+            commitId = commit?.commitId ?: "",
+            blobId = blobId ?: "",
             defaultBranch = defaultBranch
         )
         return if (needCreateVersion) {
@@ -883,8 +883,8 @@ class PipelineYamlFileManager @Autowired constructor(
             repoHashId = repoHashId,
             filePath = filePath,
             blobId = content.blobId,
-            commitId = commit.commitId,
-            commitTime = commit.commitTime,
+            commitId = commit?.commitId ?: "",
+            commitTime = commit?.commitTime ?: LocalDateTime.now(),
             ref = ref,
             defaultBranch = defaultBranch,
             pipelineId = deployPipelineResult.pipelineId,

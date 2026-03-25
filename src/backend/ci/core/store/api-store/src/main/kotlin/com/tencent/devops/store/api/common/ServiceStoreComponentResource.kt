@@ -40,6 +40,8 @@ import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -304,4 +306,43 @@ interface ServiceStoreComponentResource {
         @QueryParam("version")
         version: String? = null
     ): Result<StoreBaseInfo?>
+
+    @Operation(summary = "根据组件code和版本号获取组件详情")
+    @GET
+    @Path("/types/{storeType}/codes/{storeCode}/{version}/component/base/info")
+    @BkInterfaceI18n(
+        keyPrefixNames = [
+            "{data.storeType}", "{data.storeCode}", "{data.version}",
+            "releaseInfo"
+        ]
+    )
+    fun getComponentDataInfoByCode(
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: StoreTypeEnum,
+        @Parameter(description = "组件CODE", required = true)
+        @PathParam("storeCode")
+        @BkField(patternStyle = BkStyleEnum.ID_STYLE, required = false)
+        storeCode: String,
+        @Parameter(description = "组件版本", required = true)
+        @PathParam("version")
+        version: String? = null,
+        @Parameter(description = "版本状态", required = false)
+        @QueryParam("status")
+        status: StoreStatusEnum? = null
+    ): Result<StoreDetailInfo?>
+
+    @Operation(summary = "根据组件code和版本号获取组件详情")
+    @POST
+    @Path("/types/{storeType}/codes/base/info")
+    fun getComponentBaseInfoByCodes(
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: StoreTypeEnum,
+        @Parameter(description = "组件CODE集合", required = false)
+        @QueryParam("storeCodes")
+        storeCodes: String? = null
+    ): Result<List<StoreBaseInfo>>
 }

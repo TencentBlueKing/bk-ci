@@ -1,0 +1,214 @@
+package com.tencent.devops.store.trigger.service
+
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
+import com.tencent.devops.common.pipeline.pojo.atom.form.AtomForm
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.common.service.StoreComponentQueryService
+import com.tencent.devops.store.pojo.atom.AtomResp
+import com.tencent.devops.store.pojo.atom.AtomRespItem
+import com.tencent.devops.store.pojo.atom.PipelineAtom
+import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
+import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
+import com.tencent.devops.store.pojo.common.BK_STORE_ALL_TRIGGER
+import com.tencent.devops.store.pojo.common.KEY_ATOM_FORM
+import com.tencent.devops.store.pojo.common.QueryGroupParam
+import com.tencent.devops.store.pojo.common.StoreInfoQuery
+import com.tencent.devops.store.pojo.common.enums.StoreGroupByEnum
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.trigger.TriggerGroupInfo
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+class TriggerEventService @Autowired constructor(
+    private val storeComponentQueryService: StoreComponentQueryService
+) {
+    fun previewEvent(userId: String, storeId: String): AtomForm? {
+        val detailInfo = storeComponentQueryService.getComponentDetailInfoById(
+            userId = userId,
+            storeId = storeId,
+            storeType = StoreTypeEnum.TRIGGER_EVENT
+        ) ?: throw InvalidParamException("storeId[$storeId] not found")
+        val atomForm = detailInfo.extData?.get(KEY_ATOM_FORM)?.let {
+            JsonUtil.anyTo(it, object : TypeReference<AtomForm>() {})
+        }
+        return atomForm
+    }
+
+    fun listOwnerStoreCodes(userId: String): List<TriggerGroupInfo> {
+        // 按照归属应用分组
+        val componentGroupCount = storeComponentQueryService.getComponentGroupCount(
+            userId = userId,
+            queryGroupParam = QueryGroupParam(
+                storeType = StoreTypeEnum.TRIGGER_EVENT,
+                groupBy = StoreGroupByEnum.OWNER_STORE_CODE
+            )
+        )
+        // 触发事件总数
+        var componentCount = 0
+        componentGroupCount.forEach {
+            componentCount += it.second
+        }
+        val ownerAppCodes = componentGroupCount.map { it.first }.toSet()
+        // 查询归属应用信息
+        val ownerAppInfos = storeComponentQueryService.getComponentBaseInfoList(
+            storeType = StoreTypeEnum.DEVX,
+            storeCodes = ownerAppCodes
+        ).associate { it.storeCode to it.storeName }
+        val finalComponentGroup = componentGroupCount.map {
+            TriggerGroupInfo(
+                ownerStoreCode = it.first,
+                name = ownerAppInfos[it.first] ?: I18nUtil.getCodeLanMessage(
+                    messageCode = it.first
+                ).ifBlank { it.first },
+                count = it.second
+            )
+        }
+        return mutableListOf(
+            TriggerGroupInfo(
+                ownerStoreCode = BK_STORE_ALL_TRIGGER,
+                count = componentCount
+            )
+        ).plus(finalComponentGroup)
+    }
+
+    fun list(
+        userId: String,
+        keyword: String?,
+        ownerStoreCode: String?,
+        page: Int,
+        pageSize: Int
+    ): AtomResp<AtomRespItem>? {
+        return storeComponentQueryService.queryComponents(
+            userId = userId,
+            storeInfoQuery = StoreInfoQuery(
+                storeType = StoreTypeEnum.TRIGGER_EVENT.name,
+                page = page,
+                pageSize = pageSize,
+                queryProjectComponentFlag = false,
+                keyword = keyword,
+                ownerStoreCode = if (ownerStoreCode == BK_STORE_ALL_TRIGGER) {
+                    null
+                } else {
+                    ownerStoreCode
+                }
+            )
+        ).let {
+            AtomResp(
+                count = it.count,
+                page = it.page,
+                pageSize = it.pageSize,
+                totalPages = it.totalPages,
+                records = it.records.map { marketItem ->
+                    AtomRespItem(
+                        name = marketItem.name,
+                        atomCode = marketItem.code,
+                        version = marketItem.version,
+                        defaultVersion = marketItem.version,
+                        classType = MarketBuildLessAtomElement.classType,
+                        serviceScope = listOf(SERVICE_SCOPE_PIPELINE),
+                        os = marketItem.os ?: emptyList(),
+                        logoUrl = marketItem.logoUrl,
+                        icon = marketItem.logoUrl,
+                        classifyCode = marketItem.classifyCode ?: "",
+                        classifyName = marketItem.classifyCode ?: "",
+                        category = marketItem.category ?: AtomCategoryEnum.TRIGGER.name,
+                        summary = marketItem.summary,
+                        docsLink = marketItem.docsLink,
+                        atomType = marketItem.rdType ?: AtomTypeEnum.SELF_DEVELOPED.name,
+                        atomStatus = marketItem.status,
+                        description = marketItem.summary,
+                        publisher = marketItem.publisher,
+                        creator = marketItem.publisher,
+                        modifier = marketItem.modifier,
+                        createTime = marketItem.updateTime,
+                        updateTime = marketItem.updateTime,
+                        defaultFlag = false,
+                        latestFlag = true,
+                        htmlTemplateVersion = "1.1",
+                        buildLessRunFlag = marketItem.buildLessRunFlag,
+                        weight = marketItem.recentExecuteNum,
+                        recommendFlag = marketItem.recommendFlag,
+                        score = marketItem.score,
+                        recentExecuteNum = marketItem.recentExecuteNum,
+                        uninstallFlag = true,
+                        labelList = null,
+                        installFlag = marketItem.flag,
+                        installed = marketItem.installed,
+                        honorInfos = marketItem.honorInfos,
+                        indexInfos = marketItem.indexInfos,
+                        hotFlag = marketItem.hotFlag,
+                        ownerStoreCode = marketItem.ownerStoreCode
+                    )
+                }
+            )
+        }
+    }
+
+    fun triggerDetail(
+        userId: String,
+        atomCode: String,
+        version: String,
+        ownerStoreCode: String?
+    ): PipelineAtom? {
+        return storeComponentQueryService.getComponentDetailInfoByCode(
+            userId = userId,
+            storeType = StoreTypeEnum.TRIGGER_EVENT.name,
+            storeCode = atomCode,
+            ownerStoreCode = ownerStoreCode,
+            version = version
+        )?.let { storeDetailInfo ->
+            PipelineAtom(
+                id = storeDetailInfo.storeId,
+                name = storeDetailInfo.name,
+                atomCode = storeDetailInfo.storeCode,
+                version = storeDetailInfo.version,
+                classType = MarketEventAtomElement.classType,
+                atomStatus = storeDetailInfo.status,
+                creator = userId,
+                createTime = 0,
+                updateTime = 0,
+                versionList = storeComponentQueryService.getComponentVersionList(
+                    userId = userId,
+                    storeType = StoreTypeEnum.TRIGGER_EVENT,
+                    storeCode = atomCode,
+                    storeStatus = StoreStatusEnum.RELEASED
+                ),
+                logoUrl = storeDetailInfo.logoUrl,
+                icon = storeDetailInfo.logoUrl,
+                summary = storeDetailInfo.summary,
+                serviceScope = listOf(SERVICE_SCOPE_PIPELINE),
+                jobType = "AGENT",
+                os = emptyList(),
+                classifyId = storeDetailInfo.classify?.id,
+                classifyCode = storeDetailInfo.classify?.classifyCode ?: "",
+                classifyName = storeDetailInfo.classify?.classifyName ?: "",
+                docsLink = null,
+                category = storeDetailInfo.categoryList?.firstOrNull()?.categoryCode ?: "TASK",
+                atomType = storeDetailInfo.rdType ?: "SELF_DEVELOPED",
+                description = storeDetailInfo.description,
+                atomLabelList = emptyList(),
+                defaultFlag = true,
+                latestFlag = storeDetailInfo.latestFlag,
+                htmlTemplateVersion = "1.1",
+                buildLessRunFlag = false,
+                weight = 0,
+                props = storeDetailInfo.extData?.get(KEY_ATOM_FORM) as Map<String, Any>? ?: mapOf(),
+                data = emptyMap(),
+                recommendFlag = storeDetailInfo.recommendFlag,
+                frontendType = FrontendTypeEnum.NORMAL,
+                visibilityLevel = "PRIVATE"
+            )
+        }
+    }
+
+    companion object {
+        const val SERVICE_SCOPE_PIPELINE = "PIPELINE"
+    }
+}

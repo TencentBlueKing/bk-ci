@@ -1,4 +1,4 @@
-﻿package com.tencent.devops.environment.api.thirdpartyagent
+package com.tencent.devops.environment.api.thirdpartyagent
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
