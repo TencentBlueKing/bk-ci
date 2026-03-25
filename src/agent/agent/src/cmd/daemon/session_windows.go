@@ -53,6 +53,8 @@ var (
 	procCreateEnvironmentBlock      = moduserenv.NewProc("CreateEnvironmentBlock")
 	procDestroyEnvironmentBlock     = moduserenv.NewProc("DestroyEnvironmentBlock")
 	procCreateProcessAsUserW        = modadvapi32.NewProc("CreateProcessAsUserW")
+	procLogonUserW                  = modadvapi32.NewProc("LogonUserW")
+	procSetTokenInformation         = modadvapi32.NewProc("SetTokenInformation")
 )
 
 const (
@@ -77,6 +79,10 @@ const (
 const (
 	securityImpersonation = 2
 	tokenPrimary          = 1
+
+	logon32LogonInteractive = 2
+	logon32ProviderDefault  = 0
+	tokenSessionId          = 12
 )
 
 const (
@@ -234,6 +240,151 @@ func StartProcessAsUser(appPath, cmdLine, workDir string) (*SessionProcessInfo, 
 	}
 
 	logs.Infof("launched agent as user in session %d, pid=%d, app=%s", sessionID, pi.ProcessId, appPath)
+	return &SessionProcessInfo{
+		PID:           pi.ProcessId,
+		ProcessHandle: pi.Process,
+		ThreadHandle:  pi.Thread,
+	}, nil
+}
+
+// enableTcbPrivilege enables SeTcbPrivilege on the current process token.
+// This is required by SetTokenInformation(TokenSessionId) and is only
+// available when running as SYSTEM.
+func enableTcbPrivilege() error {
+	var token windows.Token
+	err := windows.OpenProcessToken(
+		windows.CurrentProcess(),
+		windows.TOKEN_ADJUST_PRIVILEGES|windows.TOKEN_QUERY,
+		&token,
+	)
+	if err != nil {
+		return fmt.Errorf("OpenProcessToken: %w", err)
+	}
+	defer token.Close()
+
+	var luid windows.LUID
+	err = windows.LookupPrivilegeValue(nil, windows.StringToUTF16Ptr("SeTcbPrivilege"), &luid)
+	if err != nil {
+		return fmt.Errorf("LookupPrivilegeValue(SeTcbPrivilege): %w", err)
+	}
+
+	tp := windows.Tokenprivileges{
+		PrivilegeCount: 1,
+		Privileges: [1]windows.LUIDAndAttributes{
+			{Luid: luid, Attributes: windows.SE_PRIVILEGE_ENABLED},
+		},
+	}
+	err = windows.AdjustTokenPrivileges(token, false, &tp, 0, nil, nil)
+	if err != nil {
+		return fmt.Errorf("AdjustTokenPrivileges: %w", err)
+	}
+	return nil
+}
+
+// StartProcessWithLogon launches an executable in the console session using
+// LogonUser credentials. This works even when no user is interactively logged
+// in — the service (running as SYSTEM) uses LogonUser to obtain a token, sets
+// its session to the physical console session via SetTokenInformation, then
+// calls CreateProcessAsUser.
+//
+// Requirements:
+//   - Service must run as SYSTEM (for SeTcbPrivilege)
+//   - A physical console session must exist (machine has a display or virtual display)
+func StartProcessWithLogon(user, password, appPath, cmdLine, workDir string) (*SessionProcessInfo, error) {
+	domain := "."
+
+	if err := enableTcbPrivilege(); err != nil {
+		logs.WithError(err).Warn("enableTcbPrivilege failed, SetTokenInformation may fail")
+	}
+
+	var logonToken windows.Handle
+	ret, _, err := procLogonUserW.Call(
+		uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(user))),
+		uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(domain))),
+		uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(password))),
+		uintptr(logon32LogonInteractive),
+		uintptr(logon32ProviderDefault),
+		uintptr(unsafe.Pointer(&logonToken)),
+	)
+	if ret == 0 {
+		return nil, fmt.Errorf("LogonUserW(%s): %w", user, err)
+	}
+	defer windows.CloseHandle(logonToken)
+
+	var primaryToken windows.Token
+	ret, _, err = procDuplicateTokenEx.Call(
+		uintptr(logonToken),
+		0,
+		0,
+		uintptr(securityImpersonation),
+		uintptr(tokenPrimary),
+		uintptr(unsafe.Pointer(&primaryToken)),
+	)
+	if ret == 0 {
+		return nil, fmt.Errorf("DuplicateTokenEx: %w", err)
+	}
+	defer primaryToken.Close()
+
+	consoleSession, _, _ := procWTSGetActiveConsoleSessionId.Call()
+	if consoleSession == 0xFFFFFFFF {
+		return nil, fmt.Errorf("no console session available")
+	}
+	sid := uint32(consoleSession)
+
+	ret, _, err = procSetTokenInformation.Call(
+		uintptr(primaryToken),
+		uintptr(tokenSessionId),
+		uintptr(unsafe.Pointer(&sid)),
+		unsafe.Sizeof(sid),
+	)
+	if ret == 0 {
+		return nil, fmt.Errorf("SetTokenInformation(TokenSessionId=%d): %w", sid, err)
+	}
+
+	var envBlock uintptr
+	ret, _, err = procCreateEnvironmentBlock.Call(
+		uintptr(unsafe.Pointer(&envBlock)),
+		uintptr(primaryToken),
+		0,
+	)
+	if ret == 0 {
+		return nil, fmt.Errorf("CreateEnvironmentBlock: %w", err)
+	}
+	defer procDestroyEnvironmentBlock.Call(envBlock)
+
+	si := windows.StartupInfo{
+		Cb:      uint32(unsafe.Sizeof(windows.StartupInfo{})),
+		Desktop: windows.StringToUTF16Ptr("winsta0\\default"),
+	}
+	var pi windows.ProcessInformation
+
+	creationFlags := createUnicodeEnvironment | createNoWindow
+
+	var cmdLinePtr *uint16
+	if cmdLine != "" {
+		cmdLinePtr = windows.StringToUTF16Ptr(cmdLine)
+	}
+	var workDirPtr *uint16
+	if workDir != "" {
+		workDirPtr = windows.StringToUTF16Ptr(workDir)
+	}
+
+	ret, _, err = procCreateProcessAsUserW.Call(
+		uintptr(primaryToken),
+		uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(appPath))),
+		uintptr(unsafe.Pointer(cmdLinePtr)),
+		0, 0, 0,
+		uintptr(creationFlags),
+		envBlock,
+		uintptr(unsafe.Pointer(workDirPtr)),
+		uintptr(unsafe.Pointer(&si)),
+		uintptr(unsafe.Pointer(&pi)),
+	)
+	if ret == 0 {
+		return nil, fmt.Errorf("CreateProcessAsUserW(logon): %w", err)
+	}
+
+	logs.Infof("launched process via LogonUser(%s) in console session %d, pid=%d", user, sid, pi.ProcessId)
 	return &SessionProcessInfo{
 		PID:           pi.ProcessId,
 		ProcessHandle: pi.Process,

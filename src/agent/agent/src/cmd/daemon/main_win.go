@@ -37,6 +37,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -173,16 +174,19 @@ func watch() {
 	}
 }
 
-// launchAgentInUserSession uses WTS APIs to start the agent in the active
-// user's desktop session. Returns true if the agent was launched and exited
-// (caller should loop); returns false if launching failed so the caller can
-// fall back to direct start.
+// launchAgentInUserSession tries to start the agent in a user desktop session.
+// Priority: 1) WTS active session  2) LogonUser with stored credentials  3) give up (return false).
 func launchAgentInUserSession(agentPath, workDir string) bool {
 	cmdLine := fmt.Sprintf(`"%s"`, agentPath)
+
 	proc, err := StartProcessAsUser(agentPath, cmdLine, workDir)
 	if err != nil {
-		logs.WithError(err).Warn("StartProcessAsUser failed")
-		return false
+		logs.WithError(err).Warn("StartProcessAsUser failed, trying LogonUser fallback")
+		proc, err = tryLogonFallback(agentPath, cmdLine, workDir)
+		if err != nil {
+			logs.WithError(err).Warn("LogonUser fallback also failed")
+			return false
+		}
 	}
 
 	agentMu.Lock()
@@ -275,4 +279,39 @@ func (p *program) tryStopAgent() {
 	} else if agentProcess != nil {
 		agentProcess.Kill()
 	}
+}
+
+// tryLogonFallback attempts to launch the agent using LogonUser when no active
+// user session exists. Reads devops.agent.session.user / password from
+// .agent.properties.
+func tryLogonFallback(agentPath, cmdLine, workDir string) (*SessionProcessInfo, error) {
+	user, password := readSessionCredentials()
+	if user == "" {
+		return nil, fmt.Errorf("no session credentials configured (devops.agent.session.user)")
+	}
+	logs.Infof("attempting LogonUser fallback with user=%s", user)
+	return StartProcessWithLogon(user, password, agentPath, cmdLine, workDir)
+}
+
+// readSessionCredentials reads devops.agent.session.user and
+// devops.agent.session.password from .agent.properties using plain file I/O
+// to avoid importing the full config package.
+func readSessionCredentials() (user, password string) {
+	propsPath := filepath.Join(systemutil.GetWorkDir(), ".agent.properties")
+	data, err := os.ReadFile(propsPath)
+	if err != nil {
+		return "", ""
+	}
+	for _, line := range strings.Split(string(data), "\n") {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "#") {
+			continue
+		}
+		if strings.HasPrefix(line, "devops.agent.session.user=") {
+			user = strings.TrimPrefix(line, "devops.agent.session.user=")
+		} else if strings.HasPrefix(line, "devops.agent.session.password=") {
+			password = strings.TrimPrefix(line, "devops.agent.session.password=")
+		}
+	}
+	return user, password
 }
