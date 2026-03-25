@@ -27,7 +27,8 @@ data class ThirdPartyAgentDispatchData(
     val ignoreEnvAgentIds: Set<String>?,
     val singleNodeConcurrency: Int?,
     val allNodeConcurrency: Int?,
-    val jobTimeoutMinutes: Int?
+    val jobTimeoutMinutes: Int?,
+    val stageId: String?
 ) {
     fun isEnv() = dispatchType.isEnv()
     // 生成环境资源标识，需要添加共享项目信息
@@ -91,7 +92,8 @@ data class ThirdPartyAgentDispatchData(
         ignoreEnvAgentIds = dispatchMessage.event.ignoreEnvAgentIds,
         singleNodeConcurrency = dispatchMessage.event.singleNodeConcurrency,
         allNodeConcurrency = dispatchMessage.event.allNodeConcurrency,
-        jobTimeoutMinutes = dispatchMessage.event.jobTimeoutMinutes
+        jobTimeoutMinutes = dispatchMessage.event.jobTimeoutMinutes,
+        stageId = dispatchMessage.event.stageId
     )
 
     constructor(
@@ -122,7 +124,8 @@ data class ThirdPartyAgentDispatchData(
         ignoreEnvAgentIds = infoData.ignoreEnvAgentIds,
         singleNodeConcurrency = infoData.singleNodeConcurrency,
         allNodeConcurrency = infoData.allNodeConcurrency,
-        jobTimeoutMinutes = infoData.jobTimeoutMinutes
+        jobTimeoutMinutes = infoData.jobTimeoutMinutes,
+        stageId = infoData.stageId
     )
 
     fun genSqlJsonData(): ThirdPartyAgentDispatchDataSqlJson {
@@ -144,7 +147,8 @@ data class ThirdPartyAgentDispatchData(
             ignoreEnvAgentIds = this.ignoreEnvAgentIds,
             singleNodeConcurrency = this.singleNodeConcurrency,
             allNodeConcurrency = this.allNodeConcurrency,
-            jobTimeoutMinutes = this.jobTimeoutMinutes
+            jobTimeoutMinutes = this.jobTimeoutMinutes,
+            stageId = this.stageId
         )
     }
 }
@@ -168,7 +172,8 @@ data class ThirdPartyAgentDispatchDataSqlJson(
     val ignoreEnvAgentIds: Set<String>?,
     val singleNodeConcurrency: Int?,
     val allNodeConcurrency: Int?,
-    val jobTimeoutMinutes: Int?
+    val jobTimeoutMinutes: Int?,
+    val stageId: String?
 )
 
 // 数据库使用的排队类型

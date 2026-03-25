@@ -36,7 +36,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
@@ -111,7 +111,7 @@ object StreamDispatchUtils {
                     envProjectId = null,
                     envName = poolName,
                     workspace = workspace,
-                    agentType = AgentType.NAME,
+                    agentType = AgentDispatchType.NAME,
                     dockerInfo = null,
                     reusedInfo = null
                 )
@@ -141,7 +141,7 @@ object StreamDispatchUtils {
                 envProjectId = null,
                 envName = poolName,
                 workspace = workspace,
-                agentType = AgentType.NAME,
+                agentType = AgentDispatchType.NAME,
                 dockerInfo = dockerInfo,
                 reusedInfo = null
             )

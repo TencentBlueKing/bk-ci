@@ -55,6 +55,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
@@ -70,7 +71,6 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_THIR
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST
 import com.tencent.devops.environment.dao.AgentShareProjectDao
 import com.tencent.devops.environment.dao.EnvDao
-import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.EnvShareProjectDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.AgentPipelineRefDao
@@ -82,6 +82,7 @@ import com.tencent.devops.environment.model.AgentHostInfo
 import com.tencent.devops.environment.model.AgentProps
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvVar
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.enums.SharedEnvType
@@ -98,6 +99,7 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStartI
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStatusWithInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.UpdateAgentRequest
 import com.tencent.devops.environment.service.AgentUrlService
+import com.tencent.devops.environment.service.EnvService
 import com.tencent.devops.environment.service.NodeWebsocketService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.service.thirdpartyagent.upgrade.AgentPropsScope
@@ -111,13 +113,13 @@ import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import jakarta.ws.rs.NotFoundException
 import jakarta.ws.rs.core.Response
-import java.time.LocalDateTime
-import java.util.Date
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.Date
 
 @Service
 @Suppress("ALL")
@@ -126,7 +128,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val thirdPartyAgentEnableProjectsDao: ThirdPartyAgentEnableProjectsDao,
     private val nodeDao: NodeDao,
-    private val envNodeDao: EnvNodeDao,
     private val envDao: EnvDao,
     private val agentPipelineRefDao: AgentPipelineRefDao,
     private val slaveGatewayService: SlaveGatewayService,
@@ -143,7 +144,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val agentMetricService: AgentMetricService,
     private val agentShareProjectDao: AgentShareProjectDao,
     private val thirdPartyAgentActionDao: ThirdPartyAgentActionDao,
-    private val thirdPartAgentService: ThirdPartAgentService
+    private val thirdPartAgentService: ThirdPartAgentService,
+    private val envService: EnvService
 ) {
 
     fun getAgentDetailById(
@@ -179,13 +181,24 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     )
     fun getAgentDetail(userId: String, projectId: String, nodeHashId: String): ThirdPartyAgentDetail? {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
-        if (!environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.VIEW)) {
+        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId = nodeId, projectId = projectId)
+            ?: return null
+        if (!environmentPermissionService.checkNodePermission(
+                userId = userId,
+                projectId = projectId,
+                nodeId = nodeId,
+                permission = AuthPermission.VIEW,
+                resourceType = if (agentRecord.agentType == AgentType.CREATE.name) {
+                    AuthResourceType.CREATIVE_STREAM_NODE
+                } else {
+                    AuthResourceType.ENVIRONMENT_ENV_NODE
+                }
+            )) {
             throw PermissionForbiddenException(
                 message = I18nUtil.getCodeLanMessage(ERROR_NODE_NO_VIEW_PERMISSSION)
             )
         }
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId = nodeId, projectId = projectId)
-            ?: return null
+
         ActionAuditContext.current()
             .setInstanceName(agentRecord.nodeId.toString())
             .setInstanceId(agentRecord.nodeId.toString())
@@ -397,6 +410,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
                 params = arrayOf(nodeHashId)
             )
+        envs.forEach {
+            it.lastUpdateUser = userId
+            it.lastUpdateTime = LocalDateTime.now().timestamp()
+        }
         thirdPartyAgentDao.saveAgentEnvs(
             dslContext = dslContext,
             agentIds = setOf(agentRecord.id),
@@ -404,19 +421,44 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         )
     }
 
-    fun getAgentEnv(projectId: String, nodeHashId: String): List<EnvVar> {
+    fun getAgentEnv(
+        userId: String,
+        projectId: String,
+        nodeHashId: String,
+        envName: String?,
+        envValue: String?,
+        secure: Boolean?,
+        lastUpdateUser: String?,
+        checkPermission: Boolean
+    ): List<EnvVar> {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
+        if (checkPermission &&
+            !environmentPermissionService.checkNodePermission(
+                userId = userId,
+                projectId = projectId,
+                nodeId = nodeId,
+                permission = AuthPermission.VIEW
+            )
+        ) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(ERROR_NODE_NO_VIEW_PERMISSSION)
+            )
+        }
         val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId, projectId)
             ?: throw ErrorCodeException(
                 errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
                 params = arrayOf(nodeHashId)
             )
-
-        return if (agentRecord.agentEnvs.isNullOrBlank()) {
+        val envs: List<EnvVar> = if (agentRecord.agentEnvs.isNullOrBlank()) {
             listOf()
         } else {
-            objectMapper.readValue(agentRecord.agentEnvs)
+            JsonUtil.to(agentRecord.agentEnvs, object : TypeReference<List<EnvVar>>() {})
         }
+        return envs.filter { envName.isNullOrBlank() || it.name == envName }
+            .filter { envValue.isNullOrBlank() || it.value == envValue }
+            .filter { secure == null || it.secure == secure }
+            .filter { lastUpdateUser.isNullOrBlank() || it.lastUpdateUser == lastUpdateUser }
+            .sortedByDescending { it.lastUpdateTime }
     }
 
     private fun checkEditPermmission(userId: String, projectId: String, nodeId: Long) {
@@ -539,13 +581,15 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull) else null
         val count = thirdPartyAgentDao.countProjectAgentId(
             dslContext = dslContext,
-            projectId = projectId
+            projectId = projectId,
+            agentType = null
         )
         val agentRecord /*map<agent hash id, node hash id>*/ = thirdPartyAgentDao.listProjectAgentId(
             dslContext = dslContext,
             projectId = projectId,
             offset = sqlLimit?.offset ?: 0,
-            limit = sqlLimit?.limit ?: 100
+            limit = sqlLimit?.limit ?: 100,
+            agentType = null
         )
         val agentBuildPage = client.get(ServiceAgentResource::class).listLatestBuildPipelines(
             agentIds = agentRecord.keys.toList()
@@ -624,7 +668,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         userId: String,
         projectId: String,
         os: OS,
-        zoneName: String?
+        zoneName: String?,
+        agentType: AgentType?
     ): ThirdPartyAgentLink {
         val gateway = slaveGatewayService.getGateway(zoneName)
         val fileGateway = slaveGatewayService.getFileGateway(zoneName)
@@ -633,7 +678,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             dslContext = dslContext,
             projectId = projectId,
             userId = userId,
-            os = os
+            os = os,
+            agentType = agentType ?: AgentType.BUILD
         )
         val agentRecord: TEnvironmentThirdpartyAgentRecord = if (unimportAgent.isEmpty()) {
             val secretKey = generateSecretKey()
@@ -644,7 +690,9 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 os = os,
                 secretKey = SecurityUtil.encrypt(secretKey),
                 gateway = gateway,
-                fileGateway = fileGateway
+                fileGateway = fileGateway,
+                agentType = agentType,
+                createWorkspaceName = null
             )
             thirdPartyAgentDao.getAgent(dslContext, id)!!
         } else {
@@ -694,7 +742,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     fun listAgents(
         userId: String,
         projectId: String,
-        os: OS?
+        os: OS?,
+        agentType: AgentType?
     ): List<ThirdPartyAgentInfo> {
 
         val canUseNodeIds = environmentPermissionService.listNodeByPermission(
@@ -713,7 +762,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             dslContext = dslContext,
             projectId = projectId,
             nodeIds = canUseNodeIds,
-            os = os
+            os = os,
+            agentType = agentType
         )
         if (agents.isEmpty()) {
             return emptyList()
@@ -869,7 +919,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         )
     }
 
-    fun getAgentByEnvName(projectId: String, envName: String): Pair<Long?, List<EnvNodeAgent>> {
+    fun getAgentByEnvName(projectId: String, envName: String, userId: String?): Pair<Long?, List<EnvNodeAgent>> {
         // 共享环境由 被共享的项目ID@环境名称 组成，这里通过@分隔出的数量来区分是否是共享环境
         val envNameItems = envName.split("@")
         val thirdPartyAgentList = mutableListOf<EnvNodeAgent>()
@@ -887,7 +937,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     projectId = projectId,
                     sharedProjectId = envNameItems[0],
                     sharedEnvName = envNameItems[1],
-                    sharedEnvId = null
+                    sharedEnvId = null,
+                    userId = userId
                 )
             }
         }
@@ -901,7 +952,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             )
         }
         thirdPartyAgentList.addAll(
-            getAgentByEnvId(projectId = projectId, envHashId = HashUtil.encodeLongId(envRecord.envId))
+            getAgentByEnvId(projectId = projectId, envHashId = HashUtil.encodeLongId(envRecord.envId), userId)
         )
 
         return Pair(envRecord.envId, thirdPartyAgentList)
@@ -911,7 +962,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         projectId: String,
         sharedProjectId: String,
         sharedEnvName: String?,
-        sharedEnvId: Long?
+        sharedEnvId: Long?,
+        userId: String?
     ): Pair<Long?, List<EnvNodeAgent>> {
         logger.info("[$projectId|$sharedProjectId|$sharedEnvName|$sharedEnvId]get shared third party agent list")
         val sharedEnvRecord = when {
@@ -1010,7 +1062,13 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     }
                 }
 
-                sharedThirdPartyAgents.addAll(getAgentByEnvId(it.mainProjectId, HashUtil.encodeLongId(it.envId)))
+                sharedThirdPartyAgents.addAll(
+                    getAgentByEnvId(
+                        it.mainProjectId,
+                        HashUtil.encodeLongId(it.envId),
+                        userId
+                    )
+                )
                 // 找到了环境可用就可以退出了
                 return@outSide
             }
@@ -1026,7 +1084,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         return Pair(sharedEnvRecord.getOrNull(0)?.envId, sharedThirdPartyAgents)
     }
 
-    fun getAgentByEnvId(projectId: String, envHashId: String): List<EnvNodeAgent> {
+    fun getAgentByEnvId(projectId: String, envHashId: String, userId: String?): List<EnvNodeAgent> {
         logger.info("[$projectId|$envHashId] Get the agents by envId")
         run {
             val sharedProjEnv = envHashId.split("@") // sharedProjId@poolName
@@ -1037,12 +1095,13 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 projectId = projectId,
                 sharedProjectId = sharedProjEnv[0],
                 sharedEnvName = null,
-                sharedEnvId = HashUtil.decodeIdToLong(sharedProjEnv[1])
+                sharedEnvId = HashUtil.decodeIdToLong(sharedProjEnv[1]),
+                userId = userId
             )
             return aList
         }
         val envId = HashUtil.decodeIdToLong(envHashId)
-        val nodes = envNodeDao.list(dslContext = dslContext, projectId = projectId, envIds = listOf(envId))
+        val nodes = envService.fetchEnvNodes(projectId = projectId, envIds = listOf(envId), userId)
         if (nodes.isEmpty()) {
             logger.warn("[$projectId|$envHashId] The env is not exist")
             throw CustomException(
@@ -1433,7 +1492,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 fileGateway = agentRecord.fileGateway,
                 props = oldUserProps,
                 dockerParallelTaskCount = agentRecord.dockerParallelTaskCount ?: 0,
-                language = commonConfig.devopsDefaultLocaleLanguage
+                language = commonConfig.devopsDefaultLocaleLanguage,
+                createMod = nodeRecord.nodeType == NodeType.CREATE.name
             )
         }
         thirdPartyAgentHeartbeatUtils.saveNewHeartbeat(projectId, agentId, newHeartbeatInfo)

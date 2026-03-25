@@ -1,8 +1,10 @@
 package com.tencent.devops.environment.dao
 
+import com.tencent.devops.environment.model.NodeTags
 import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.NodeTagCanUpdateType
 import com.tencent.devops.environment.pojo.NodeTagValue
+import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.TNodeTagInternalKey
 import com.tencent.devops.model.environment.tables.TNodeTagInternalValues
 import com.tencent.devops.model.environment.tables.TNodeTagKey
@@ -145,7 +147,11 @@ class NodeTagDao {
     }
 
     // 查询节点有哪些标签
-    fun fetchNodesTags(dslContext: DSLContext, projectId: String, nodeIds: Set<Long>): Map<Long, MutableList<NodeTag>> {
+    fun fetchNodesTags(
+        dslContext: DSLContext,
+        projectId: String,
+        nodeIds: List<Long>
+    ): Map<Long, MutableList<NodeTag>> {
         val resM = mutableMapOf<Long, MutableMap<Long, NodeTag>>()
         dslContext.select(
             TNodeTags.T_NODE_TAGS.NODE_ID,
@@ -184,7 +190,7 @@ class NodeTagDao {
     fun fetchNodesInternalTags(
         dslContext: DSLContext,
         projectId: String,
-        nodeIds: Set<Long>
+        nodeIds: List<Long>
     ): Map<Long, MutableList<NodeTag>> {
         val resM = mutableMapOf<Long, MutableMap<Long, NodeTag>>()
         dslContext.select(
@@ -334,9 +340,25 @@ class NodeTagDao {
         return resM.values.associateBy { it.tagKeyName }
     }
 
-    fun fetchNodeTag(dslContext: DSLContext, projectId: String): List<TNodeTagsRecord> {
+    fun fetchNodeTag(
+        dslContext: DSLContext,
+        projectId: String,
+        nodeTypeList: List<String>?
+    ): List<NodeTags> {
         with(TNodeTags.T_NODE_TAGS) {
-            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).fetch()
+            val dsl = dslContext.select().from(this)
+            if (!nodeTypeList.isNullOrEmpty()) {
+                dsl.innerJoin(TNode.T_NODE).on(NODE_ID.eq(TNode.T_NODE.NODE_ID))
+                    .and(TNode.T_NODE.NODE_TYPE.`in`(nodeTypeList))
+            }
+            return dsl.where(PROJECT_ID.eq(projectId)).fetch().map {
+                NodeTags(
+                    it[NODE_ID],
+                    it[TAG_VALUE_ID],
+                    it[TAG_KEY_ID],
+                    it[PROJECT_ID]
+                )
+            }
         }
     }
 
