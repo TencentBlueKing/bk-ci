@@ -39,13 +39,14 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
+	"github.com/kardianos/service"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/create"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/kardianos/service"
 )
 
 const daemonProcess = "daemon"
@@ -116,6 +117,8 @@ func main() {
 	if err != nil {
 		logs.WithError(err).Error("run agent program error")
 	}
+
+	create.ReleaseMutex()
 }
 
 var GAgentProcess *os.Process = nil

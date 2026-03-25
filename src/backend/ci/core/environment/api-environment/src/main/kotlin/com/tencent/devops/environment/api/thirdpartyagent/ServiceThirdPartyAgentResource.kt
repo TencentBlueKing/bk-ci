@@ -42,6 +42,7 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.NodeTag
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
@@ -124,7 +125,9 @@ interface ServiceThirdPartyAgentResource {
         projectId: String,
         @Parameter(description = "Environment Hash ID", required = true)
         @PathParam("envId")
-        envId: String
+        envId: String,
+        @QueryParam("userId")
+        userId: String? = null
     ): Result<List<EnvNodeAgent>>
 
     @Operation(summary = "根据环境名称获取Agent列表")
@@ -136,7 +139,9 @@ interface ServiceThirdPartyAgentResource {
         projectId: String,
         @Parameter(description = "Environment name", required = true)
         @PathParam("envName")
-        envName: String
+        envName: String,
+        @QueryParam("userId")
+        userId: String? = null
     ): Result<List<EnvNodeAgent>>
 
     @Operation(summary = "Agent是否能升级")
@@ -241,7 +246,10 @@ interface ServiceThirdPartyAgentResource {
         projectId: String,
         @Parameter(description = "操作系统", required = true)
         @PathParam("os")
-        os: OS
+        os: OS,
+        @Parameter(description = "第三方机节点类型", required = false)
+        @QueryParam("agentType")
+        agentType: AgentType?
     ): Result<List<ThirdPartyAgentInfo>>
 
     @Operation(summary = "构建任务已认领")
@@ -446,7 +454,9 @@ interface ServiceThirdPartyAgentResource {
         projectId: String,
         @Parameter(description = "Environment name", required = true)
         @PathParam("envName")
-        envName: String
+        envName: String,
+        @QueryParam("userId")
+        userId: String? = null
     ): Result<Pair<Long?, List<EnvNodeAgent>>>
 
     @Operation(summary = "批量查询Agent环境变量")
@@ -500,6 +510,9 @@ interface ServiceThirdPartyAgentResource {
         userId: String,
         @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
-        projectId: String
+        projectId: String,
+        @Parameter(description = "是否是创作流模式", required = false)
+        @QueryParam("createMode")
+        createMode: Boolean?
     ): Result<List<NodeTag>>
 }

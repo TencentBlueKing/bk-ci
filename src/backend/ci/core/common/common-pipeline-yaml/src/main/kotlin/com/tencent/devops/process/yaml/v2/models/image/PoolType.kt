@@ -29,7 +29,7 @@ package com.tencent.devops.process.yaml.v2.models.image
 
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
@@ -62,7 +62,7 @@ enum class PoolType {
                     envProjectId = null,
                     envName = pool.envName!!,
                     workspace = pool.workspace,
-                    agentType = AgentType.NAME,
+                    agentType = AgentDispatchType.NAME,
                     dockerInfo = null,
                     reusedInfo = null
                 )
@@ -71,7 +71,7 @@ enum class PoolType {
                     envProjectId = null,
                     envName = pool.envId!!,
                     workspace = pool.workspace,
-                    agentType = AgentType.ID,
+                    agentType = AgentDispatchType.ID,
                     dockerInfo = null,
                     reusedInfo = null
                 )
@@ -79,7 +79,7 @@ enum class PoolType {
                 return ThirdPartyAgentIDDispatchType(
                     displayName = pool.agentId!!,
                     workspace = pool.workspace,
-                    agentType = AgentType.ID,
+                    agentType = AgentDispatchType.ID,
                     dockerInfo = null,
                     reusedInfo = null
                 )
@@ -87,7 +87,7 @@ enum class PoolType {
                 return ThirdPartyAgentIDDispatchType(
                     displayName = pool.agentName!!,
                     workspace = pool.workspace,
-                    agentType = AgentType.NAME,
+                    agentType = AgentDispatchType.NAME,
                     dockerInfo = null,
                     reusedInfo = null
                 )

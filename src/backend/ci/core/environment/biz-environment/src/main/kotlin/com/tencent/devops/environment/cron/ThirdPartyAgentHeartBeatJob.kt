@@ -84,14 +84,23 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
     }
 
     private fun checkOKAgent() {
-        val totalRecordCount = thirdPartyAgentDao.countAgentByStatus(dslContext, setOf(AgentStatus.IMPORT_OK))
+        val totalRecordCount = thirdPartyAgentDao.countAgentByStatus(
+            dslContext = dslContext,
+            status = setOf(AgentStatus.IMPORT_OK),
+            agentType = null
+        )
         val lc = max(ceil(totalRecordCount / PageUtil.DEFAULT_PAGE_SIZE.toFloat()).toInt(), 1) // 算出循环次数
         val vo = LoopUtil.LoopVo<Long, Any>(id = 0L, data = true, thresholdMills = MAX_LOOP_MILLS, thresholdCount = lc)
         justDoItByLoop(vo = vo, tip = "checkOnlineAgent", func = this::checkOnlineAgent)
     }
 
     private fun checkOnlineAgent(vo: LoopUtil.LoopVo<Long, Any>) {
-        val records = thirdPartyAgentDao.listByStatusGtId(dslContext, setOf(AgentStatus.IMPORT_OK), vo.id)
+        val records = thirdPartyAgentDao.listByStatusGtId(
+            dslContext = dslContext,
+            status = setOf(AgentStatus.IMPORT_OK),
+            startId = vo.id,
+            agentType = null
+        )
         records.ifEmpty {
             vo.finish = true
             return
@@ -131,14 +140,23 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
     }
 
     private fun checkUnImportAgent() {
-        val totalRecordCount = thirdPartyAgentDao.countAgentByStatus(dslContext, setOf(AgentStatus.UN_IMPORT_OK))
+        val totalRecordCount = thirdPartyAgentDao.countAgentByStatus(
+            dslContext = dslContext,
+            status = setOf(AgentStatus.UN_IMPORT_OK),
+            agentType = null
+        )
         val lc = max(ceil(totalRecordCount / PageUtil.DEFAULT_PAGE_SIZE.toFloat()).toInt(), 1) // 算出循环次数
         val vo = LoopUtil.LoopVo<Long, Any>(id = 0L, data = true, thresholdMills = MAX_LOOP_MILLS, thresholdCount = lc)
         justDoItByLoop(vo = vo, tip = "checkUnImportAgent", func = this::checkUnImportAgent)
     }
 
     private fun checkUnImportAgent(vo: LoopUtil.LoopVo<Long, Any>) {
-        val records = thirdPartyAgentDao.listByStatusGtId(dslContext, setOf(AgentStatus.UN_IMPORT_OK), vo.id)
+        val records = thirdPartyAgentDao.listByStatusGtId(
+            dslContext = dslContext,
+            status = setOf(AgentStatus.UN_IMPORT_OK),
+            startId = vo.id,
+            agentType = null
+        )
         records.ifEmpty {
             vo.finish = true // 没有数据完成任务
             return
@@ -164,14 +182,23 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
     }
 
     private fun checkExceptionAgent() {
-        val totalRecordCount = thirdPartyAgentDao.countAgentByStatus(dslContext, setOf(AgentStatus.IMPORT_EXCEPTION))
+        val totalRecordCount = thirdPartyAgentDao.countAgentByStatus(
+            dslContext = dslContext,
+            status = setOf(AgentStatus.IMPORT_EXCEPTION),
+            agentType = null
+        )
         val lc = max(ceil(totalRecordCount / PageUtil.DEFAULT_PAGE_SIZE.toFloat()).toInt(), 1) // 算出循环次数
         val vo = LoopUtil.LoopVo<Long, Any>(id = 0L, data = true, thresholdMills = MAX_LOOP_MILLS, thresholdCount = lc)
         justDoItByLoop(vo, "checkExceptionAgent", this::deleteExceptionAgent)
     }
 
     private fun deleteExceptionAgent(vo: LoopUtil.LoopVo<Long, Any>) {
-        val records = thirdPartyAgentDao.listByStatusGtId(dslContext, setOf(AgentStatus.IMPORT_EXCEPTION), vo.id)
+        val records = thirdPartyAgentDao.listByStatusGtId(
+            dslContext = dslContext,
+            status = setOf(AgentStatus.IMPORT_EXCEPTION),
+            startId = vo.id,
+            agentType = null
+        )
         records.ifEmpty {
             vo.finish = true // 没有数据完成任务
             return
@@ -208,7 +235,8 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ThirdPartyAgentHeartBeatJob::class.java)
         private const val LOCK_KEY = "env_cron_agent_heartbeat_check"
         private const val OK_AGENT_INTERVAL_MILLS = 10 * THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL * 1000 // 10个心跳周期内未上报的
-        private const val UNIMPORT_AGENT_INTERVAL_MILLS = 2 * THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL * 1000 // 2个心跳周期内未完成导入
+        private const val UNIMPORT_AGENT_INTERVAL_MILLS =
+            2 * THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL * 1000 // 2个心跳周期内未完成导入
         private const val MAX_LOOP_MILLS = 10 * 60 * 1000L // 10 minutes
     }
 }

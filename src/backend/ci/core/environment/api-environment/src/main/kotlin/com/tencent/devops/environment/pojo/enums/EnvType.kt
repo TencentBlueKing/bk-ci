@@ -31,5 +31,15 @@ enum class EnvType {
     DEV,
     TEST,
     PROD,
-    BUILD
+    BUILD,
+    CREATE;
+
+    companion object {
+        fun noCreateMode(): List<EnvType> = listOf(DEV, TEST, PROD, BUILD)
+    }
+}
+
+enum class EnvNodeType {
+    NODE,
+    TAG
 }

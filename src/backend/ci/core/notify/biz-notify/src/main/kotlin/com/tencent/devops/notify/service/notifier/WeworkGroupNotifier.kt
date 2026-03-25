@@ -2,6 +2,7 @@ package com.tencent.devops.notify.service.notifier
 
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
@@ -19,7 +20,8 @@ class WeworkGroupNotifier @Autowired constructor(
     private val wechatWorkService: WechatWorkService,
     private val wechatWorkRobotService: WechatWorkRobotService,
     private val notifyMessageTemplateDao: NotifyMessageTemplateDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val commonConfig: CommonConfig
 ) : INotifier {
     @Value("\${wework.domain}")
     private val userUseDomain: Boolean = true
@@ -41,18 +43,21 @@ class WeworkGroupNotifier @Autowired constructor(
                 dslContext = dslContext,
                 commonTemplateId = commonNotifyMessageTemplateRecord.id
             )!!
-        val title = NotifierUtils.replaceContentParams(request.titleParams, weworkTplRecord.title)
-        // 替换内容里的动态参数
-        val body = NotifierUtils.replaceContentParams(
-            request.bodyParams,
+        // 先对 DB 原始模板做渠道关键字替换（如 CREATIVE_STREAM 渠道将「流水线」替换为「创作流」），再替换占位符
+        val language = commonConfig.devopsDefaultLocaleLanguage
+        val rawTitle = NotifierUtils.replaceNotifyKeywordByChannel(weworkTplRecord.title, language)
+        val rawBody = NotifierUtils.replaceNotifyKeywordByChannel(
             if (request.markdownContent == true) {
                 weworkTplRecord.bodyMd ?: weworkTplRecord.body
             } else {
                 weworkTplRecord.body
-            }
+            },
+            language
         )
+        val finalTitle = NotifierUtils.replaceContentParams(request.titleParams, rawTitle)
+        val finalBody = NotifierUtils.replaceContentParams(request.bodyParams, rawBody)
 
-        val content = title + "\n\n" + body
+        val content = finalTitle + "\n\n" + finalBody
         val mentionUsers = if (request.mentionReceivers == true) {
             request.receivers.toList()
         } else {

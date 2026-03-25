@@ -252,8 +252,10 @@ interface ApigwEnvironmentAgentResourceV4 {
         data: UpdateAgentInfo
     ): Result<Boolean>
 
-    @Operation(summary = "查询项目标签和对应节点数",
-        tags = ["v4_user_node_third_part_agent_tags", "v4_app_node_third_part_agent_tags"])
+    @Operation(
+        summary = "查询项目标签和对应节点数",
+        tags = ["v4_user_node_third_part_agent_tags", "v4_app_node_third_part_agent_tags"]
+    )
     @GET
     @Path("/fetch_agent_tag")
     fun fetchTag(
@@ -262,6 +264,9 @@ interface ApigwEnvironmentAgentResourceV4 {
         userId: String,
         @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
-        projectId: String
+        projectId: String,
+        @Parameter(description = "是否是创作流模式", required = false)
+        @QueryParam("createMode")
+        createMode: Boolean?
     ): Result<List<NodeTag>>
 }

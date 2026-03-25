@@ -31,8 +31,10 @@ import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.IdValue
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.pipeline.enums.BuildConditionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -41,7 +43,9 @@ import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserBuildResource
+import com.tencent.devops.process.engine.pojo.builds.BuildHistoryQueryParam
 import com.tencent.devops.process.engine.service.PipelineProgressRateService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.enums.HistorySearchType
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
@@ -54,10 +58,12 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.BuildRecordInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
+import com.tencent.devops.process.pojo.task.PipelineContainerBuild
 import com.tencent.devops.process.service.PipelineRecentUseService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildMaintainFacadeService
 import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
+import com.tencent.devops.process.strategy.pojo.HistoryConditionQueryRequest
 import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 import jakarta.ws.rs.core.Response
@@ -69,7 +75,8 @@ class UserBuildResourceImpl @Autowired constructor(
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService,
     private val pipelineRecentUseService: PipelineRecentUseService,
-    private val pipelineProgressRateService: PipelineProgressRateService
+    private val pipelineProgressRateService: PipelineProgressRateService,
+    private val pipelineTaskService: PipelineTaskService
 ) : UserBuildResource {
 
     override fun manualStartupInfo(
@@ -85,7 +92,7 @@ class UserBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version,
-                channelCode = ChannelCode.BS
+                channelCode = ChannelCode.getRequestChannelCode()
             )
         )
     }
@@ -129,7 +136,7 @@ class UserBuildResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             values = values,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             buildNo = buildNo,
             version = version,
             triggerReviewers = triggerReviewers
@@ -175,7 +182,13 @@ class UserBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        pipelineBuildFacadeService.buildManualShutdown(userId, projectId, pipelineId, buildId, ChannelCode.BS)
+        pipelineBuildFacadeService.buildManualShutdown(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            channelCode = ChannelCode.getRequestChannelCode()
+        )
         return Result(true)
     }
 
@@ -194,6 +207,7 @@ class UserBuildResourceImpl @Autowired constructor(
         if (elementId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
+        val channelCode = ChannelCode.getRequestChannelCode()
         pipelineBuildFacadeService.buildManualReview(
             userId = userId,
             projectId = projectId,
@@ -201,8 +215,8 @@ class UserBuildResourceImpl @Autowired constructor(
             buildId = buildId,
             elementId = elementId,
             params = params,
-            channelCode = ChannelCode.BS,
-            checkPermission = ChannelCode.isNeedAuth(ChannelCode.BS),
+            channelCode = channelCode,
+            checkPermission = ChannelCode.isNeedAuth(channelCode),
             stepId = null
         )
         return Result(true)
@@ -294,7 +308,7 @@ class UserBuildResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.getRequestChannelCode()
         )
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(buildDetail)
@@ -320,7 +334,7 @@ class UserBuildResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 executeCount = executeCount,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 archiveFlag = archiveFlag
             )
         )
@@ -343,7 +357,7 @@ class UserBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                channelCode = ChannelCode.BS
+                channelCode = ChannelCode.getRequestChannelCode()
             )
         )
     }
@@ -366,7 +380,7 @@ class UserBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildNo = buildNo,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 debugVersion = debugVersion
             )
         )
@@ -391,7 +405,7 @@ class UserBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildNum = buildNum,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 debugVersion = debugVersion,
                 archiveFlag = archiveFlag
             )
@@ -405,7 +419,7 @@ class UserBuildResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             checkPermission = false
         )
     }
@@ -428,7 +442,6 @@ class UserBuildResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             page = page,
             pageSize = pageSize,
-            channelCode = ChannelCode.BS,
             checkPermission = check,
             debugVersion = debugVersion
         )
@@ -466,15 +479,14 @@ class UserBuildResourceImpl @Autowired constructor(
         debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        triggerUser: List<String>?,
+        triggerEventTypes: List<String>?,
+        triggerNodeHashIds: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkParam(userId, projectId, pipelineId)
-        val result = pipelineBuildFacadeService.getHistoryBuild(
-            userId = userId,
+        val queryParam = BuildHistoryQueryParam(
             projectId = projectId,
             pipelineId = pipelineId,
-            page = page,
-            pageSize = pageSize,
             materialAlias = materialAlias,
             materialUrl = materialUrl,
             materialBranch = materialBranch,
@@ -494,11 +506,19 @@ class UserBuildResourceImpl @Autowired constructor(
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg,
-            archiveFlag = archiveFlag,
             debug = debug,
             triggerAlias = triggerAlias,
             triggerBranch = triggerBranch,
-            triggerUser = triggerUser
+            triggerUser = triggerUser,
+            triggerEventTypes = triggerEventTypes,
+            triggerNodeHashIds = triggerNodeHashIds
+        )
+        val result = pipelineBuildFacadeService.getHistoryBuild(
+            userId = userId,
+            page = page,
+            pageSize = pageSize,
+            queryParam = queryParam,
+            archiveFlag = archiveFlag
         )
         if (archiveFlag != true) {
             pipelineRecentUseService.record(userId, projectId, pipelineId)
@@ -540,6 +560,33 @@ class UserBuildResourceImpl @Autowired constructor(
     ): Result<List<IdValue>> {
         checkParam(userId, projectId, pipelineId)
         return Result(pipelineBuildFacadeService.getHistoryConditionTrigger(userId, projectId, pipelineId))
+    }
+
+    override fun getHistoryConditions(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        conditionType: BuildConditionType,
+        page: Int,
+        pageSize: Int,
+        keyword: String?,
+        debug: Boolean?
+    ): Result<Page<IdValue>> {
+        checkParam(userId, projectId, pipelineId)
+        // 构建查询请求
+        val request = HistoryConditionQueryRequest(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            conditionType = conditionType,
+            keyword = keyword,
+            debug = debug ?: false,
+            page = page,
+            pageSize = pageSize
+        )
+        return Result(
+            pipelineBuildFacadeService.getHistoryConditions(request)
+        )
     }
 
     override fun getHistoryConditionRepo(
@@ -693,6 +740,29 @@ class UserBuildResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 userId = userId
+            )
+        )
+    }
+
+    override fun getPipelineContainerBuilds(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        containerId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<PipelineContainerBuild?>> {
+        checkParam(userId, projectId, pipelineId)
+        if (containerId.isBlank()) {
+            throw ParamBlankException("Invalid containerId")
+        }
+        return Result(
+            pipelineTaskService.getPipelineContainerBuilds(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                containerId = containerId,
+                page = page,
+                pageSize = pageSize
             )
         )
     }

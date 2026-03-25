@@ -69,32 +69,34 @@ class ParamFacadeService @Autowired constructor(
         userId: String?,
         projectId: String,
         pipelineId: String?,
-        params: List<BuildFormProperty>
+        params: List<BuildFormProperty>,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
     ): List<BuildFormProperty> {
-        val filterParams = mutableListOf<BuildFormProperty>()
-        params.forEach {
-            if (it.type == BuildFormPropertyType.SVN_TAG && (!it.repoHashId.isNullOrBlank())) {
-                val svnTagBuildFormProperty = addSvnTagDirectories(projectId, it)
-                filterParams.add(svnTagBuildFormProperty)
-            } else if (it.type == BuildFormPropertyType.GIT_REF && (!it.repoHashId.isNullOrBlank())) {
-                val gitRefBuildFormProperty = addGitRefs(projectId, it)
-                filterParams.add(gitRefBuildFormProperty)
-            } else if (it.type == BuildFormPropertyType.CODE_LIB && it.scmType != null) {
-                filterParams.add(addCodelibProperties(userId, projectId, it))
-            } else if (it.type == BuildFormPropertyType.CONTAINER_TYPE && it.containerType != null) {
-                filterParams.add(addContainerTypeProperties(userId, projectId, it))
-            } else if (it.type == BuildFormPropertyType.ARTIFACTORY) {
-                filterParams.add(addArtifactoryProperties(userId, projectId, it))
-            } else if (it.type == BuildFormPropertyType.SUB_PIPELINE) {
-                filterParams.add(addSubPipelineProperties(userId, projectId, pipelineId, it))
-            } else if (it.type == BuildFormPropertyType.REPO_REF) {
-                filterParams.add(addRepoRefs(projectId, it))
-            } else {
-                filterParams.add(it)
+        return params.map {
+            when {
+                it.type == BuildFormPropertyType.SVN_TAG && !it.repoHashId.isNullOrBlank() ->
+                    addSvnTagDirectories(projectId, it)
+                it.type == BuildFormPropertyType.GIT_REF && !it.repoHashId.isNullOrBlank() ->
+                    addGitRefs(projectId, it)
+                it.type == BuildFormPropertyType.CODE_LIB && it.scmType != null ->
+                    addCodelibProperties(userId, projectId, it)
+                it.type == BuildFormPropertyType.CONTAINER_TYPE && it.containerType != null ->
+                    addContainerTypeProperties(userId, projectId, it)
+                it.type == BuildFormPropertyType.ARTIFACTORY ->
+                    addArtifactoryProperties(userId, projectId, it)
+                it.type == BuildFormPropertyType.SUB_PIPELINE ->
+                    addSubPipelineProperties(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        subPipelineFormProperty = it,
+                        channelCode = channelCode
+                    )
+                it.type == BuildFormPropertyType.REPO_REF ->
+                    addRepoRefs(projectId, it)
+                else -> it
             }
         }
-
-        return filterParams
     }
 
     fun filterOptions(
@@ -289,10 +291,11 @@ class ParamFacadeService @Autowired constructor(
         userId: String?,
         projectId: String,
         pipelineId: String?,
-        subPipelineFormProperty: BuildFormProperty
+        subPipelineFormProperty: BuildFormProperty,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
     ): BuildFormProperty {
         try {
-            val hasPermissionPipelines = getHasPermissionPipelineList(userId, projectId)
+            val hasPermissionPipelines = getHasPermissionPipelineList(userId, projectId, channelCode)
             val options = hasPermissionPipelines
                 .filter { pipelineId == null || !it.pipelineId.contains(pipelineId) }
                 .map { BuildFormValue(it.pipelineName, it.pipelineName) }
@@ -376,7 +379,11 @@ class ParamFacadeService @Autowired constructor(
         }
     }
 
-    private fun getHasPermissionPipelineList(userId: String?, projectId: String): List<SubPipeline> {
+    private fun getHasPermissionPipelineList(
+        userId: String?,
+        projectId: String,
+        channelCode: ChannelCode
+    ): List<SubPipeline> {
         val watcher = Watcher("getHasPermissionPipelineList_$userId")
         try {
             // 从权限中拉取有权限的流水线，若无userId则返回空值
@@ -398,7 +405,7 @@ class ParamFacadeService @Autowired constructor(
             val buildPipelineRecords =
                 pipelineRuntimeService.getBuildPipelineRecords(
                     projectId = projectId,
-                    channelCode = ChannelCode.BS,
+                    channelCode = channelCode,
                     pipelineIds = hasPermissionList,
                     page = 1,
                     pageSize = 100

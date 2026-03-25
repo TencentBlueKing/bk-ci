@@ -102,9 +102,27 @@ BEGIN
               FROM information_schema.COLUMNS
               WHERE TABLE_SCHEMA = db
                 AND TABLE_NAME = 'T_ATOM'
+                AND COLUMN_NAME = 'JOB_TYPE_MAP') THEN
+      ALTER TABLE T_ATOM ADD COLUMN `JOB_TYPE_MAP` text
+        COMMENT '多服务范围Job类型映射，JSON格式：{"PIPELINE":["AGENT"],"CREATIVE_STREAM":["CREATIVE_STREAM","CLOUD_TASK"]}';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_ATOM'
                 AND COLUMN_NAME = 'CLASSIFY_ID_MAP') THEN
       ALTER TABLE T_ATOM ADD COLUMN `CLASSIFY_ID_MAP` text
          COMMENT '多服务范围分类映射，JSON格式：{"PIPELINE":"classifyId1","CREATIVE_STREAM":"classifyId2"}';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_ATOM'
+                AND COLUMN_NAME = 'OS_MAP') THEN
+      ALTER TABLE T_ATOM ADD COLUMN `OS_MAP` text
+          COMMENT '多JobType操作系统映射，JSON格式：{"AGENT":["WINDOWS","LINUX","MACOS"],"CREATIVE_STREAM":["WINDOWS"]}';
     END IF;
 
     IF NOT EXISTS(SELECT 1
