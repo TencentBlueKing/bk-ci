@@ -289,6 +289,17 @@ class WorkspaceJoinDao {
 
         // owner 条件查询（EXISTS 替代 LEFT JOIN 避免行膨胀）
         search.owner?.ifEmpty { null }?.let { owners ->
+            val personalCond = TWorkspace.T_WORKSPACE.OWNER_TYPE
+                .eq(WorkspaceOwnerType.PERSONAL.name)
+                .and(
+                    if (search.onFuzzyMatch) {
+                        TWorkspace.T_WORKSPACE.CREATOR
+                            .likeRegex(owners.joinToString("|"))
+                    } else {
+                        TWorkspace.T_WORKSPACE.CREATOR.`in`(owners)
+                    }
+                )
+
             val sharedOwnerExists = DSL.exists(
                 DSL.selectOne()
                     .from(TWorkspaceShared.T_WORKSPACE_SHARED)
@@ -310,11 +321,21 @@ class WorkspaceJoinDao {
                             )
                     )
             )
-            conditions.add(sharedOwnerExists)
+            conditions.add(personalCond.or(sharedOwnerExists))
         }
 
         // viewers 条件查询（EXISTS 替代 LEFT JOIN 避免行膨胀）
         search.viewers?.ifEmpty { null }?.let { viewers ->
+            val personalCond = TWorkspace.T_WORKSPACE.OWNER_TYPE
+                .eq(WorkspaceOwnerType.PERSONAL.name)
+                .and(
+                    if (search.onFuzzyMatch) {
+                        TWorkspace.T_WORKSPACE.CREATOR
+                            .likeRegex(viewers.joinToString("|"))
+                    } else {
+                        TWorkspace.T_WORKSPACE.CREATOR.`in`(viewers)
+                    }
+                )
 
             val userMatchCond = if (search.onFuzzyMatch) {
                 TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
@@ -339,7 +360,7 @@ class WorkspaceJoinDao {
                             .and(userMatchCond)
                     )
             )
-            conditions.add(sharedViewerExists)
+            conditions.add(personalCond.or(sharedViewerExists))
         }
 
         // machineType 条件查询
