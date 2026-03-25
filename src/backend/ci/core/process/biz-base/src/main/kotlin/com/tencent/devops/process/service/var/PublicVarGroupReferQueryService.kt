@@ -497,8 +497,12 @@ class PublicVarGroupReferQueryService @Autowired constructor(
         version: Long
     ): String {
         return when (referType) {
-            PublicVarGroupReferenceTypeEnum.PIPELINE -> "$basePath/$projectId/$referId$pipelinePath"
-            PublicVarGroupReferenceTypeEnum.TEMPLATE -> "$basePath/$projectId$templatePath/$referId/$version"
+            PublicVarGroupReferenceTypeEnum.PIPELINE -> {
+                String.format("$basePath/$projectId/${referId}$pipelinePath", version)
+            }
+            PublicVarGroupReferenceTypeEnum.TEMPLATE -> {
+                String.format("$basePath/${projectId}$templatePath", referId, version)
+            }
         }
     }
 
