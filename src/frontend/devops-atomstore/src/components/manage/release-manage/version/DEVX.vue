@@ -268,7 +268,7 @@
 
             showDetail (row) {
                 this.hasShowDetail = true
-                // this.detailLoading = true
+                this.detailLoading = true
                 this.$store
                     .dispatch('store/getComponentDetailByVersion', {
                         storeId: row.storeId,
