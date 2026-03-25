@@ -299,14 +299,25 @@ class PipelineTemplateMarketFacadeService @Autowired constructor(
             )
 
             templatesOfNeedToUpgrade.forEach { templateInfo ->
-                installNewVersion(
-                    templateInfo = templateInfo,
-                    srcTemplateProjectId = templateResource.projectId,
-                    srcTemplateId = templateResource.templateId,
-                    srcTemplateVersion = templateResource.version,
-                    srcTemplateNumber = templateResource.number,
-                    srcTemplateVersionName = templateResource.versionName!!
-                )
+                try {
+                    installNewVersion(
+                        templateInfo = templateInfo,
+                        srcTemplateProjectId = templateResource.projectId,
+                        srcTemplateId = templateResource.templateId,
+                        srcTemplateVersion = templateResource.version,
+                        srcTemplateNumber = templateResource.number,
+                        srcTemplateVersionName = templateResource.versionName!!
+                    )
+                } catch (e: Exception) {
+                    logger.warn(
+                        "Failed to install new version for template" +
+                            "(${templateInfo.id}) in project" +
+                            "(${templateInfo.projectId}), " +
+                            "srcTemplate=$templateId, version=$version"+
+                            "srcProjectId=$projectId",
+                        e
+                    )
+                }
             }
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch}) ms to release template($templateId) " +
