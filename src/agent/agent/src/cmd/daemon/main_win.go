@@ -37,7 +37,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"sync"
 	"time"
 
@@ -282,36 +281,13 @@ func (p *program) tryStopAgent() {
 }
 
 // tryLogonFallback attempts to launch the agent using LogonUser when no active
-// user session exists. Reads devops.agent.session.user / password from
-// .agent.properties.
+// user session exists. Reads credentials from LSA Secret store (written by
+// configure_session.ps1).
 func tryLogonFallback(agentPath, cmdLine, workDir string) (*SessionProcessInfo, error) {
-	user, password := readSessionCredentials()
+	user, password := ReadSessionCredentials()
 	if user == "" {
-		return nil, fmt.Errorf("no session credentials configured (devops.agent.session.user)")
+		return nil, fmt.Errorf("no session credentials in LSA Secret (run configure_session.ps1 -UserName ... -Password ...)")
 	}
 	logs.Infof("attempting LogonUser fallback with user=%s", user)
 	return StartProcessWithLogon(user, password, agentPath, cmdLine, workDir)
-}
-
-// readSessionCredentials reads devops.agent.session.user and
-// devops.agent.session.password from .agent.properties using plain file I/O
-// to avoid importing the full config package.
-func readSessionCredentials() (user, password string) {
-	propsPath := filepath.Join(systemutil.GetWorkDir(), ".agent.properties")
-	data, err := os.ReadFile(propsPath)
-	if err != nil {
-		return "", ""
-	}
-	for _, line := range strings.Split(string(data), "\n") {
-		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, "#") {
-			continue
-		}
-		if strings.HasPrefix(line, "devops.agent.session.user=") {
-			user = strings.TrimPrefix(line, "devops.agent.session.user=")
-		} else if strings.HasPrefix(line, "devops.agent.session.password=") {
-			password = strings.TrimPrefix(line, "devops.agent.session.password=")
-		}
-	}
-	return user, password
 }

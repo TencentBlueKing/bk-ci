@@ -45,16 +45,20 @@ var (
 	modadvapi32 = windows.NewLazySystemDLL("advapi32.dll")
 	moduserenv  = windows.NewLazySystemDLL("userenv.dll")
 
-	procWTSEnumerateSessionsW       = modwtsapi32.NewProc("WTSEnumerateSessionsW")
+	procWTSEnumerateSessionsW        = modwtsapi32.NewProc("WTSEnumerateSessionsW")
 	procWTSGetActiveConsoleSessionId = modkernel32.NewProc("WTSGetActiveConsoleSessionId")
-	procWTSQueryUserToken           = modwtsapi32.NewProc("WTSQueryUserToken")
-	procWTSFreeMemory               = modwtsapi32.NewProc("WTSFreeMemory")
-	procDuplicateTokenEx            = modadvapi32.NewProc("DuplicateTokenEx")
-	procCreateEnvironmentBlock      = moduserenv.NewProc("CreateEnvironmentBlock")
-	procDestroyEnvironmentBlock     = moduserenv.NewProc("DestroyEnvironmentBlock")
-	procCreateProcessAsUserW        = modadvapi32.NewProc("CreateProcessAsUserW")
-	procLogonUserW                  = modadvapi32.NewProc("LogonUserW")
-	procSetTokenInformation         = modadvapi32.NewProc("SetTokenInformation")
+	procWTSQueryUserToken            = modwtsapi32.NewProc("WTSQueryUserToken")
+	procWTSFreeMemory                = modwtsapi32.NewProc("WTSFreeMemory")
+	procDuplicateTokenEx             = modadvapi32.NewProc("DuplicateTokenEx")
+	procCreateEnvironmentBlock       = moduserenv.NewProc("CreateEnvironmentBlock")
+	procDestroyEnvironmentBlock      = moduserenv.NewProc("DestroyEnvironmentBlock")
+	procCreateProcessAsUserW         = modadvapi32.NewProc("CreateProcessAsUserW")
+	procLogonUserW                   = modadvapi32.NewProc("LogonUserW")
+	procSetTokenInformation          = modadvapi32.NewProc("SetTokenInformation")
+	procLsaOpenPolicy                = modadvapi32.NewProc("LsaOpenPolicy")
+	procLsaRetrievePrivateData       = modadvapi32.NewProc("LsaRetrievePrivateData")
+	procLsaFreeMemory                = modadvapi32.NewProc("LsaFreeMemory")
+	procLsaClose                     = modadvapi32.NewProc("LsaClose")
 )
 
 const (
@@ -83,6 +87,11 @@ const (
 	logon32LogonInteractive = 2
 	logon32ProviderDefault  = 0
 	tokenSessionId          = 12
+
+	policyGetPrivateInformation uint32 = 0x00000004
+
+	lsaSecretKeyUser     = "BkCiSessionUser"
+	lsaSecretKeyPassword = "BkCiSessionPassword"
 )
 
 const (
@@ -390,4 +399,75 @@ func StartProcessWithLogon(user, password, appPath, cmdLine, workDir string) (*S
 		ProcessHandle: pi.Process,
 		ThreadHandle:  pi.Thread,
 	}, nil
+}
+
+// ── LSA Secret read (for session credentials) ────────────────────────────
+
+type lsaUnicodeString struct {
+	Length        uint16
+	MaximumLength uint16
+	Buffer        *uint16
+}
+
+type lsaObjectAttributes struct {
+	Length                   uint32
+	RootDirectory            uintptr
+	ObjectName               uintptr
+	Attributes               uint32
+	SecurityDescriptor       uintptr
+	SecurityQualityOfService uintptr
+}
+
+// ReadLsaSecret reads a secret stored by LsaStorePrivateData (same API used
+// by configure_session.ps1 and Sysinternals Autologon).
+func ReadLsaSecret(keyName string) (string, error) {
+	var attrs lsaObjectAttributes
+	attrs.Length = uint32(unsafe.Sizeof(attrs))
+	var systemName lsaUnicodeString
+	var policyHandle uintptr
+
+	ret, _, err := procLsaOpenPolicy.Call(
+		uintptr(unsafe.Pointer(&systemName)),
+		uintptr(unsafe.Pointer(&attrs)),
+		uintptr(policyGetPrivateInformation),
+		uintptr(unsafe.Pointer(&policyHandle)),
+	)
+	if ret != 0 {
+		return "", fmt.Errorf("LsaOpenPolicy: NTSTATUS 0x%x: %w", ret, err)
+	}
+	defer procLsaClose.Call(policyHandle)
+
+	key := lsaUnicodeString{
+		Length:        uint16(len(keyName) * 2),
+		MaximumLength: uint16((len(keyName) + 1) * 2),
+		Buffer:        windows.StringToUTF16Ptr(keyName),
+	}
+
+	var privateData *lsaUnicodeString
+	ret, _, err = procLsaRetrievePrivateData.Call(
+		policyHandle,
+		uintptr(unsafe.Pointer(&key)),
+		uintptr(unsafe.Pointer(&privateData)),
+	)
+	if ret != 0 {
+		return "", fmt.Errorf("LsaRetrievePrivateData(%s): NTSTATUS 0x%x: %w", keyName, ret, err)
+	}
+	if privateData == nil || privateData.Buffer == nil {
+		return "", fmt.Errorf("LsaRetrievePrivateData(%s): empty result", keyName)
+	}
+	defer procLsaFreeMemory.Call(uintptr(unsafe.Pointer(privateData)))
+
+	result := windows.UTF16PtrToString(privateData.Buffer)
+	return result, nil
+}
+
+// ReadSessionCredentials reads session user/password from LSA Secret store.
+// Returns empty strings if not configured.
+func ReadSessionCredentials() (user, password string) {
+	u, err := ReadLsaSecret(lsaSecretKeyUser)
+	if err != nil {
+		return "", ""
+	}
+	p, _ := ReadLsaSecret(lsaSecretKeyPassword)
+	return u, p
 }

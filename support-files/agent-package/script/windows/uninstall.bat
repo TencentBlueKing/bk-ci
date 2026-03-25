@@ -6,11 +6,15 @@ set work_dir=%CD%
 set agent_id=##agentId##
 set service_name=devops_agent_%agent_id%
 
-REM === Clean up session mode (auto-logon + auto-lock) ===
-echo clean up session mode configuration...
-reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" /v AutoAdminLogon /t REG_SZ /d 0 /f 2>nul
-reg delete "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" /v DefaultPassword /f 2>nul
-schtasks /delete /tn BkCiAgentAutoLock /f 2>nul
+REM === Clean up session mode (auto-logon + LSA secrets) ===
+IF EXIST "%~dp0configure_session.ps1" (
+    echo clean up session mode via configure_session.ps1 -Disable ...
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0configure_session.ps1" -Disable 2>nul
+) ELSE (
+    echo clean up session mode registry...
+    reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" /v AutoAdminLogon /t REG_SZ /d 0 /f 2>nul
+    reg delete "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" /v DefaultPassword /f 2>nul
+)
 
 REM === Stop and remove service ===
 sc query %service_name%

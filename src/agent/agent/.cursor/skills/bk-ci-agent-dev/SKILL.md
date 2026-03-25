@@ -181,9 +181,8 @@ devops.agent.detect.shell=false         # 检测Shell
 devops.language=zh_CN                   # 语言
 devops.imagedebug.portrange=30000-32767 # 调试端口范围
 
-# Windows Session 凭据(daemon LogonUser回退用, 可选)
-devops.agent.session.user=             # 用户名
-devops.agent.session.password=         # 密码
+# Windows Session 凭据通过 LSA Secret 存储(configure_session.ps1 写入)
+# 键名: BkCiSessionUser / BkCiSessionPassword，daemon 运行时读取
 ```
 
 **全局配置对象**: `config.GAgentConfig` — 所有模块直接引用

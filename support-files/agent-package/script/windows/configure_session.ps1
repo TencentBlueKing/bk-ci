@@ -4,87 +4,114 @@
     One-step install / configure BK-CI Agent in Session mode (desktop-interactive).
 
 .DESCRIPTION
-    This script is the session-mode counterpart of install.bat.
+    Session mode allows the agent (and its build processes) to access the
+    logged-in user's desktop for UI testing, screenshots, etc.
 
-    Typical workflows:
+    Three levels of session support:
 
-      Fresh install    :  download_install.ps1  ->  (already running as SERVICE)
-      Switch to session:  configure_session.ps1 -UserName ... -Password ...
-      Uninstall all    :  uninstall.bat
-      Reinstall session:  configure_session.ps1 -UserName ... -Password ...
-      Revert to plain  :  configure_session.ps1 -Disable   (then use install.bat if needed)
+      No credentials (simplest):
+        - Installs the daemon as a Windows service.
+        - When a user IS logged in the daemon detects the session via WTS API
+          and launches the agent there.
+        - When NO user is logged in the agent falls back to Session 0.
 
-    The script is idempotent — safe to run multiple times. It handles:
-      - JDK unzipping and directory creation (same as install.bat)
-      - Cleaning up existing schtasks / service before creating the service
-      - Registering the daemon as a Windows service (auto start)
-      - Configuring Windows Auto-Logon (password via LSA Secret)
-      - Creating an auto-lock scheduled task for security
-      - Restarting the daemon service
-      - Prompting to reboot for auto-logon activation
+      With -UserName / -Password:
+        - All of the above, PLUS stores credentials in .agent.properties.
+        - When NO user is logged in the daemon uses LogonUser with the stored
+          credentials to launch the agent in the console session.
 
-    Modeled after Azure DevOps Agent --runAsAutoLogon.
+      With -UserName / -Password / -AutoLogon:
+        - All of the above, PLUS configures Windows auto-logon so that on
+          every reboot Windows logs in automatically, guaranteeing a user
+          session. Password stored via LSA Secret (encrypted).
+          This is a system-wide setting.
+
+    The script is idempotent. Safe to re-run with same or different credentials.
 
 .PARAMETER UserName
-    Windows logon account (e.g. "builduser", "DOMAIN\builduser", "user@domain").
+    Optional. Windows logon account (e.g. "builduser", "DOMAIN\builduser").
+    Required when -AutoLogon is used.
 
 .PARAMETER Password
-    Password for the logon account.
+    Optional. Password for the account. Required when -UserName is specified.
+    Validated via LogonUser before saving.
 
-.PARAMETER NoLock
-    Skip auto-lock after logon. By default the workstation is locked 5 seconds
-    after auto-logon for security.
-
-.PARAMETER NoRestart
-    Do not prompt to reboot after configuration.
+.PARAMETER AutoLogon
+    Configure Windows auto-logon on every reboot. Requires -UserName/-Password.
 
 .PARAMETER Disable
-    Revert to plain service mode: remove auto-logon and auto-lock settings,
-    restart the daemon service. The service itself is kept.
+    Revert to plain service mode: remove session credentials and auto-logon.
 
 .EXAMPLE
-    # Full install in session mode (after download_install or after uninstall)
+    .\configure_session.ps1
     .\configure_session.ps1 -UserName builduser -Password P@ssw0rd
-
-    # Session mode without auto-lock, no reboot prompt
-    .\configure_session.ps1 -UserName builduser -Password P@ssw0rd -NoLock -NoRestart
-
-    # Revert to plain service mode (keep the service, remove auto-logon)
+    .\configure_session.ps1 -UserName builduser -Password P@ssw0rd -AutoLogon
     .\configure_session.ps1 -Disable
 #>
 
-[CmdletBinding(DefaultParameterSetName = "Enable")]
 param(
-    [Parameter(ParameterSetName = "Enable", Mandatory = $true)]
     [string]$UserName,
-
-    [Parameter(ParameterSetName = "Enable", Mandatory = $true)]
     [string]$Password,
-
-    [Parameter(ParameterSetName = "Enable")]
-    [switch]$NoLock,
-
-    [Parameter(ParameterSetName = "Enable")]
-    [switch]$NoRestart,
-
-    [Parameter(ParameterSetName = "Disable", Mandatory = $true)]
+    [switch]$AutoLogon,
     [switch]$Disable
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$script:WorkDir       = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$script:WinlogonPath  = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"
-$script:LockTaskName  = "BkCiAgentAutoLock"
-$script:PropsFile     = Join-Path $WorkDir ".agent.properties"
+$script:WorkDir      = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$script:WinlogonPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"
+$script:PropsFile    = Join-Path $WorkDir ".agent.properties"
 
 # ═══════════════════════════════════════════════════════════════════════════
-# LSA Secret helper — same P/Invoke as Sysinternals Autologon
+# Parameter validation
+# ═══════════════════════════════════════════════════════════════════════════
+if (-not $Disable) {
+    if ($AutoLogon -and [string]::IsNullOrEmpty($UserName)) {
+        Write-Host "[BK-CI][ERROR] -AutoLogon requires -UserName and -Password" -ForegroundColor Red
+        exit 1
+    }
+    if (-not [string]::IsNullOrEmpty($UserName) -and [string]::IsNullOrEmpty($Password)) {
+        Write-Host "[BK-CI][ERROR] -Password is required when -UserName is specified" -ForegroundColor Red
+        exit 1
+    }
+}
+
+$script:HasCredentials = -not [string]::IsNullOrEmpty($UserName)
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Win32 helpers (P/Invoke)
 # ═══════════════════════════════════════════════════════════════════════════
 Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
+
+public static class CredentialValidator
+{
+    [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern bool LogonUser(
+        string lpszUsername, string lpszDomain, string lpszPassword,
+        int dwLogonType, int dwLogonProvider, out IntPtr phToken);
+
+    [DllImport("kernel32.dll")]
+    private static extern bool CloseHandle(IntPtr hObject);
+
+    private const int LOGON32_LOGON_INTERACTIVE = 2;
+    private const int LOGON32_PROVIDER_DEFAULT  = 0;
+
+    public static bool Validate(string user, string domain, string password,
+                                out int errorCode)
+    {
+        IntPtr token;
+        bool ok = LogonUser(user, domain, password,
+                            LOGON32_LOGON_INTERACTIVE,
+                            LOGON32_PROVIDER_DEFAULT,
+                            out token);
+        errorCode = ok ? 0 : Marshal.GetLastWin32Error();
+        if (ok) CloseHandle(token);
+        return ok;
+    }
+}
 
 public static class LsaSecret
 {
@@ -199,9 +226,7 @@ function Get-AgentId {
     return $match.Matches[0].Groups[1].Value.Trim()
 }
 
-function Get-ServiceName {
-    return "devops_agent_$(Get-AgentId)"
-}
+function Get-ServiceName { return "devops_agent_$(Get-AgentId)" }
 
 function Split-UserDomain {
     param([string]$Account)
@@ -230,8 +255,6 @@ function Test-ServiceRunning {
 
 function Stop-DaemonSafe {
     param([string]$ServiceName)
-
-    # Stop service if running
     if ((Test-ServiceExists $ServiceName) -and (Test-ServiceRunning $ServiceName)) {
         Write-Step "Stopping service $ServiceName ..."
         & sc.exe stop $ServiceName 2>$null | Out-Null
@@ -240,8 +263,6 @@ function Stop-DaemonSafe {
             if (-not (Test-ServiceRunning $ServiceName)) { break }
         }
     }
-
-    # Kill residual processes from schtasks / manual launch
     foreach ($pidFile in @("runtime\daemon.pid", "runtime\agent.pid")) {
         $path = Join-Path $WorkDir $pidFile
         if (Test-Path $path) {
@@ -259,16 +280,10 @@ function Stop-DaemonSafe {
 
 function Unzip-IfNeeded {
     param([string]$ZipFile, [string]$DestDir)
-    $zipPath = Join-Path $WorkDir $ZipFile
+    $zipPath  = Join-Path $WorkDir $ZipFile
     $destPath = Join-Path $WorkDir $DestDir
-    if (-not (Test-Path $zipPath)) {
-        Write-Warn "$ZipFile not found, skipped"
-        return
-    }
-    if (Test-Path $destPath) {
-        Write-Step "$DestDir already exists, skipped unzip"
-        return
-    }
+    if (-not (Test-Path $zipPath))  { return }
+    if (Test-Path $destPath)        { Write-Step "$DestDir exists, skip unzip"; return }
     Write-Step "Unzipping $ZipFile -> $DestDir"
     if ($PSVersionTable.PSVersion.Major -ge 5) {
         Expand-Archive -Path $zipPath -DestinationPath $destPath -Force
@@ -279,7 +294,30 @@ function Unzip-IfNeeded {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Phase 1 — Prepare environment (same as install.bat)
+# Validate credentials
+# ═══════════════════════════════════════════════════════════════════════════
+function Assert-Credentials {
+    param([string]$Account, [string]$Pass)
+    $parsed = Split-UserDomain $Account
+    Write-Step "Validating credentials for $($parsed.User)@$($parsed.Domain) ..."
+    $errCode = 0
+    $valid = [CredentialValidator]::Validate($parsed.User, $parsed.Domain, $Pass, [ref]$errCode)
+    if (-not $valid) {
+        $errMsg = switch ($errCode) {
+            1326    { "wrong username or password" }
+            1327    { "account restriction (e.g. logon hours)" }
+            1328    { "account logon time restriction" }
+            1330    { "password expired" }
+            1331    { "account currently disabled" }
+            default { "Win32 error $errCode" }
+        }
+        throw "Credential validation failed: $errMsg"
+    }
+    Write-Step "Credentials verified OK"
+}
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Phase 1 — Prepare environment
 # ═══════════════════════════════════════════════════════════════════════════
 function Initialize-AgentDir {
     Write-Step "Preparing agent directory..."
@@ -295,94 +333,75 @@ function Initialize-AgentDir {
 function Ensure-DaemonService {
     $serviceName = Get-ServiceName
     $daemonExe   = Join-Path $WorkDir "devopsDaemon.exe"
+    if (-not (Test-Path $daemonExe)) { throw "devopsDaemon.exe not found at $daemonExe" }
 
-    if (-not (Test-Path $daemonExe)) {
-        throw "devopsDaemon.exe not found at $daemonExe"
-    }
-
-    # Stop everything first
     Stop-DaemonSafe -ServiceName $serviceName
 
-    # Remove legacy schtasks if present
     $null = schtasks /query /tn $serviceName 2>$null
     if ($LASTEXITCODE -eq 0) {
         Write-Step "Removing legacy scheduled task: $serviceName"
         schtasks /delete /tn $serviceName /f 2>$null | Out-Null
     }
 
-    # Delete existing service to ensure clean binPath
     if (Test-ServiceExists $serviceName) {
-        Write-Step "Removing existing service to re-create with correct binPath"
+        Write-Step "Removing existing service to re-create cleanly"
         & sc.exe delete $serviceName 2>$null | Out-Null
         Start-Sleep -Seconds 2
     }
 
-    # Create service
     $binPath = "`"$daemonExe`""
     Write-Step "Creating service: $serviceName"
     & sc.exe create $serviceName binPath= $binPath start= auto | Out-Null
-    if ($LASTEXITCODE -ne 0) {
-        throw "sc.exe create failed (exit $LASTEXITCODE)"
-    }
+    if ($LASTEXITCODE -ne 0) { throw "sc.exe create failed (exit $LASTEXITCODE)" }
     Write-Step "Service created: $serviceName (auto start)"
     return $serviceName
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Phase 3 — Configure Auto-Logon
+# Phase 3a — Session credentials in LSA Secret
+# ═══════════════════════════════════════════════════════════════════════════
+function Save-SessionCredentials {
+    param([string]$Account, [string]$Pass)
+    [LsaSecret]::Store("BkCiSessionUser", $Account)
+    [LsaSecret]::Store("BkCiSessionPassword", $Pass)
+    Write-Step "Session credentials stored in LSA Secret (encrypted)"
+}
+
+function Remove-SessionCredentials {
+    try { [LsaSecret]::Delete("BkCiSessionUser") }     catch {}
+    try { [LsaSecret]::Delete("BkCiSessionPassword") } catch {}
+    Write-Step "Session credentials removed from LSA Secret"
+}
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Phase 3b — Windows Auto-Logon (optional)
 # ═══════════════════════════════════════════════════════════════════════════
 function Enable-AutoLogon {
-    param([string]$Account, [string]$Pass, [bool]$SetupLock)
-
+    param([string]$Account, [string]$Pass)
     $parsed = Split-UserDomain $Account
-    Write-Step "Configuring auto-logon: user=$($parsed.User), domain=$($parsed.Domain)"
+    Write-Step "Configuring Windows auto-logon: user=$($parsed.User), domain=$($parsed.Domain)"
 
-    # Winlogon registry
     Set-ItemProperty -Path $WinlogonPath -Name "AutoAdminLogon"    -Value "1"
     Set-ItemProperty -Path $WinlogonPath -Name "DefaultUserName"   -Value $parsed.User
     Set-ItemProperty -Path $WinlogonPath -Name "DefaultDomainName" -Value $parsed.Domain
     Remove-ItemProperty -Path $WinlogonPath -Name "DefaultPassword" -ErrorAction SilentlyContinue
     Remove-ItemProperty -Path $WinlogonPath -Name "AutoLogonCount"  -ErrorAction SilentlyContinue
 
-    # LSA Secret (encrypted password storage)
     [LsaSecret]::Store("DefaultPassword", $Pass)
-    Write-Step "Password stored via LSA Secret (encrypted)"
+    Write-Step "Auto-logon password stored via LSA Secret (encrypted)"
 
-    # Disable lock-screen-on-wake policy
     $powerCfg = "HKLM:\SOFTWARE\Policies\Microsoft\Power\PowerSettings\0e796bdb-100d-47d6-a2d5-f7d2daa51f51"
     if (-not (Test-Path $powerCfg)) { New-Item -Path $powerCfg -Force | Out-Null }
     Set-ItemProperty -Path $powerCfg -Name "DCSettingIndex" -Value 0 -Type DWord
     Set-ItemProperty -Path $powerCfg -Name "ACSettingIndex" -Value 0 -Type DWord
-
-    # Auto-lock after logon
-    if ($SetupLock) {
-        $null = schtasks /query /tn $LockTaskName 2>$null
-        if ($LASTEXITCODE -eq 0) {
-            schtasks /delete /tn $LockTaskName /f 2>$null | Out-Null
-        }
-        schtasks /create `
-            /tn $LockTaskName `
-            /tr "rundll32.exe user32.dll,LockWorkStation" `
-            /sc ONLOGON `
-            /delay 0000:05 `
-            /rl HIGHEST `
-            /f | Out-Null
-        Write-Step "Auto-lock scheduled: screen locks 5s after logon"
-    }
+    Write-Step "Auto-logon configured (activates on next reboot)"
 }
 
 function Disable-AutoLogon {
-    Write-Step "Removing auto-logon configuration..."
     Set-ItemProperty -Path $WinlogonPath -Name "AutoAdminLogon" -Value "0"
     Remove-ItemProperty -Path $WinlogonPath -Name "DefaultPassword" -ErrorAction SilentlyContinue
     try { [LsaSecret]::Delete("DefaultPassword") } catch {}
-    Write-Step "Auto-logon disabled"
-
-    $null = schtasks /query /tn $LockTaskName 2>$null
-    if ($LASTEXITCODE -eq 0) {
-        schtasks /delete /tn $LockTaskName /f 2>$null | Out-Null
-        Write-Step "Auto-lock task removed"
-    }
+    Write-Step "Windows auto-logon disabled"
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -396,7 +415,7 @@ function Start-DaemonService {
     }
     Write-Step "Starting service $Name ..."
     & sc.exe start $Name | Out-Null
-    Start-Sleep -Seconds 2
+    Start-Sleep -Seconds 3
     if (Test-ServiceRunning $Name) {
         Write-Step "Service $Name is running"
     } else {
@@ -414,56 +433,67 @@ try {
     Write-Step "Work directory: $WorkDir"
 
     if ($Disable) {
-        # ---- Disable session mode ----
+        # ---- Disable ----
+        Remove-SessionCredentials
         Disable-AutoLogon
         $serviceName = Get-ServiceName
         if (Test-ServiceExists $serviceName) {
-            Stop-DaemonSafe  -ServiceName $serviceName
+            Stop-DaemonSafe     -ServiceName $serviceName
             Start-DaemonService -Name $serviceName
         }
         Write-Step ""
-        Write-Step "Session mode disabled. The daemon service is still running"
-        Write-Step "but the agent will fall back to Session 0 (no desktop access)"
-        Write-Step "unless a user manually logs in."
+        Write-Step "Done. Session mode disabled."
+        Write-Step "The agent will run in Session 0 unless a user is logged in."
     } else {
-        # ---- Enable session mode (full install) ----
+        # ---- Enable ----
+        if ($HasCredentials) {
+            Assert-Credentials -Account $UserName -Pass $Password
+        }
 
-        # Phase 1: prepare
         Initialize-AgentDir
-
-        # Phase 2: service
         $serviceName = Ensure-DaemonService
 
-        # Phase 3: auto-logon
-        Enable-AutoLogon -Account $UserName -Pass $Password -SetupLock (-not $NoLock)
+        if ($HasCredentials) {
+            Save-SessionCredentials -Account $UserName -Pass $Password
+        }
+        if ($AutoLogon) {
+            Enable-AutoLogon -Account $UserName -Pass $Password
+        }
 
-        # Phase 4: start
         Start-DaemonService -Name $serviceName
 
-        # Done
+        # ---- Summary ----
         Write-Step ""
         Write-Step "============================================"
-        Write-Step " Configuration complete"
+        Write-Step " Done"
         Write-Step "============================================"
-        Write-Step "Service       : $serviceName (running)"
-        Write-Step "Auto-logon    : $UserName"
-        Write-Step "Auto-lock     : $(-not $NoLock)"
-        Write-Step ""
-        Write-Step "A reboot is required to activate auto-logon."
-        Write-Step "After reboot Windows logs in automatically and the"
-        Write-Step "daemon launches the agent in the user desktop session."
+        Write-Step "Service      : $serviceName (running)"
 
-        if (-not $NoRestart) {
+        if ($AutoLogon) {
+            Write-Step "Session user : $UserName"
+            Write-Step "LogonUser    : enabled (fallback when no session)"
+            Write-Step "Auto-logon   : enabled (every reboot auto-logs in)"
             Write-Step ""
-            $answer = Read-Host "Reboot now? (Y/N)"
-            if ($answer -match "^[Yy]") {
-                Write-Step "Rebooting in 5 seconds..."
-                shutdown /r /t 5 /c "BK-CI Agent: activating session mode"
-            } else {
-                Write-Step "Please reboot manually to activate session mode."
-            }
+            Write-Step "The agent is active in your current session NOW."
+            Write-Step "On future reboots Windows auto-logs in as $UserName."
+            Write-Step "If the password changes, re-run with the new password."
+        } elseif ($HasCredentials) {
+            Write-Step "Session user : $UserName"
+            Write-Step "LogonUser    : enabled (fallback when no session)"
+            Write-Step "Auto-logon   : not configured"
+            Write-Step ""
+            Write-Step "The agent is active in your current session NOW."
+            Write-Step "When no user is logged in, daemon uses LogonUser fallback."
+            Write-Step "To also auto-logon on reboot, add -AutoLogon."
+            Write-Step "If the password changes, re-run with the new password."
         } else {
-            Write-Step "NoRestart specified, please reboot manually."
+            Write-Step "Session user : (current logged-in user)"
+            Write-Step "LogonUser    : not configured"
+            Write-Step "Auto-logon   : not configured"
+            Write-Step ""
+            Write-Step "The agent is active in your current session NOW."
+            Write-Step "When no user is logged in, agent falls back to Session 0."
+            Write-Step "To enable fallback, add -UserName and -Password."
         }
     }
 } catch {
