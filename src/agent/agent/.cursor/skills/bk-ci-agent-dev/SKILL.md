@@ -24,13 +24,21 @@ description: 蓝鲸CI Agent（Go语言）项目开发迭代指南。包含项目
 src/agent/agent/
 ├── src/
 │   ├── cmd/                    # 入口程序（4个可执行文件）
-│   │   ├── agent/main.go       # Agent 主程序
+│   │   ├── agent/main.go       # Agent 主程序（含 CLI 子命令入口）
 │   │   ├── daemon/             # 守护进程（保活Agent）
 │   │   │   ├── main.go         #   Linux/macOS 入口
 │   │   │   ├── main_win.go     #   Windows 入口（kardianos/service）
 │   │   │   └── session_windows.go # Windows用户会话启动（WTS API）
 │   │   ├── upgrader/main.go    # 升级器（替换二进制）
 │   │   └── installer/main.go   # 安装器（首次安装）
+│   ├── pkg/
+│   │   ├── agentcli/           # Agent CLI 子命令（install/uninstall/start/stop/configure-session）
+│   │   │   ├── cli.go          #   子命令路由和通用工具
+│   │   │   ├── service_linux.go #  Linux systemd 服务管理
+│   │   │   ├── service_darwin.go # macOS launchd 服务管理
+│   │   │   ├── service_win.go  #   Windows sc.exe 服务管理
+│   │   │   ├── session_win.go  #   Windows Session 配置（LSA/AutoLogon/凭据验证）
+│   │   │   └── session_nowin.go #  非Windows stub
 │   ├── pkg/                    # 核心业务包
 │   │   ├── agent/              # Agent主循环与任务分发
 │   │   ├── api/                # 与BK-CI后台HTTP API通信
@@ -181,9 +189,8 @@ devops.agent.detect.shell=false         # 检测Shell
 devops.language=zh_CN                   # 语言
 devops.imagedebug.portrange=30000-32767 # 调试端口范围
 
-# Windows Session 凭据(daemon LogonUser回退用, 可选)
-devops.agent.session.user=             # 用户名
-devops.agent.session.password=         # 密码
+# Windows Session 凭据通过 LSA Secret 存储(configure_session.ps1 写入)
+# 键名: BkCiSessionUser / BkCiSessionPassword，daemon 运行时读取
 ```
 
 **全局配置对象**: `config.GAgentConfig` — 所有模块直接引用

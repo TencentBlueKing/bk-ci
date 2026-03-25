@@ -36,10 +36,10 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 
 	"github.com/gofrs/flock"
 )
@@ -112,12 +112,12 @@ func UninstallAgent() error {
 	logs.Info("start uninstall agent")
 
 	workDir := systemutil.GetWorkDir()
-	startCmd := workDir + "/" + config.GetUninstallScript()
-	output, err := command.RunCommand(startCmd, []string{} /*args*/, workDir, nil)
+	agentBin := workDir + "/" + config.GetAgentBinary()
+	output, err := command.RunCommand(agentBin, []string{"uninstall"}, workDir, nil)
 	if err != nil {
-		logs.Error("run uninstall script failed: ", err.Error())
+		logs.Error("agent uninstall failed: ", err.Error())
 		logs.Error("output: ", string(output))
-		return errors.New("run uninstall script failed")
+		return errors.New("agent uninstall failed")
 	}
 	logs.Info("output: ", string(output))
 	return nil
@@ -127,18 +127,18 @@ func InstallAgent() error {
 	logs.Info("start install agent")
 
 	workDir := systemutil.GetWorkDir()
-	startCmd := workDir + "/" + config.GetInstallScript()
+	agentBin := workDir + "/" + config.GetAgentBinary()
 
-	err := fileutil.SetExecutable(startCmd)
+	err := fileutil.SetExecutable(agentBin)
 	if err != nil {
-		return errors.Wrap(err, "chmod install script failed")
+		return errors.Wrap(err, "chmod agent binary failed")
 	}
 
-	output, err := command.RunCommand(startCmd, []string{} /*args*/, workDir, nil)
+	output, err := command.RunCommand(agentBin, []string{"install"}, workDir, nil)
 	if err != nil {
-		logs.Error("run install script failed: ", err.Error())
+		logs.Error("agent install failed: ", err.Error())
 		logs.Error("output: ", string(output))
-		return errors.New("run install script failed")
+		return errors.New("agent install failed")
 	}
 	logs.Info("output: ", string(output))
 	return nil

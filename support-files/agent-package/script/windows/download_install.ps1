@@ -54,6 +54,12 @@ $agent_id = "##agentId##"
 Write-Host "agent_id=$agent_id"
 $service_name = "devops_agent_$agent_id"
 Write-Host "service_name=$service_name"
+$service_username = "##serviceUsername##"
+Write-Host "service_username=$service_username"
+$service_password = "##servicePassword##"
+Write-Host "service_password=$service_password"
+$install_type = "##installType##"
+Write-Host "install_type=$install_type"
 
 if ($MyInvocation.MyCommand.Path) {
     $work_dir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -88,15 +94,24 @@ if (Test-Path "jre.zip") {
 New-Item -ItemType Directory -Force -Path "$work_dir\logs" | Out-Null
 New-Item -ItemType Directory -Force -Path "$work_dir\workspace" | Out-Null
 
-Set-Content -Path "$work_dir\.install_type" -Value "SERVICE" -NoNewline
-
-$service = Get-Service -Name $service_name -ErrorAction SilentlyContinue
-if (-not $service) {
-    sc.exe create $service_name binPath= "$work_dir\devopsDaemon.exe" start= auto
-    Write-Host "install agent service" -ForegroundColor Green
+$agent_exe = "$work_dir\devopsAgent.exe"
+Write-Host "Installing agent service via CLI..."
+& $agent_exe install
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "agent service installed and started" -ForegroundColor Green
+} else {
+    Write-Host "agent install failed (exit $LASTEXITCODE)" -ForegroundColor Red
 }
-sc.exe start $service_name
-Write-Host "start agent service" -ForegroundColor Green
+
+if (![string]::IsNullOrEmpty($service_username) -and (![string]::IsNullOrEmpty($service_password))) {
+    Write-Host "configuring service login credentials..."
+    sc.exe config $service_name obj= $service_username password= $service_password
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "service login credentials updated" -ForegroundColor Green
+    } else {
+        Write-Host "failed to update service login credentials" -ForegroundColor Red
+    }
+}
 
 Remove-Item -Path "$work_dir\download_install.ps1" -Force
 

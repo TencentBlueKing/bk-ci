@@ -150,6 +150,15 @@ func GetClientDaemonFile() string {
 	}
 }
 
+// GetAgentBinary 根据平台生成对应agent可执行文件名
+func GetAgentBinary() string {
+	if systemutil.IsWindows() {
+		return AgentFileClientWindows
+	} else {
+		return AgentFileClientLinux
+	}
+}
+
 // GetInstallScript 根据平台生成对应install脚本
 func GetInstallScript() string {
 	if systemutil.IsWindows() {
