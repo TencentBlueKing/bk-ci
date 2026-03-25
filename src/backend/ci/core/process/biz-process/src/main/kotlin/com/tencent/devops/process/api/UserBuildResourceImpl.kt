@@ -45,6 +45,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserBuildResource
 import com.tencent.devops.process.engine.pojo.builds.BuildHistoryQueryParam
 import com.tencent.devops.process.engine.service.PipelineProgressRateService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.enums.HistorySearchType
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
@@ -57,6 +58,7 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.BuildRecordInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
+import com.tencent.devops.process.pojo.task.PipelineContainerBuild
 import com.tencent.devops.process.service.PipelineRecentUseService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildMaintainFacadeService
@@ -73,7 +75,8 @@ class UserBuildResourceImpl @Autowired constructor(
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService,
     private val pipelineRecentUseService: PipelineRecentUseService,
-    private val pipelineProgressRateService: PipelineProgressRateService
+    private val pipelineProgressRateService: PipelineProgressRateService,
+    private val pipelineTaskService: PipelineTaskService
 ) : UserBuildResource {
 
     override fun manualStartupInfo(
@@ -737,6 +740,29 @@ class UserBuildResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 userId = userId
+            )
+        )
+    }
+
+    override fun getPipelineContainerBuilds(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        containerId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<PipelineContainerBuild?>> {
+        checkParam(userId, projectId, pipelineId)
+        if (containerId.isBlank()) {
+            throw ParamBlankException("Invalid containerId")
+        }
+        return Result(
+            pipelineTaskService.getPipelineContainerBuilds(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                containerId = containerId,
+                page = page,
+                pageSize = pageSize
             )
         )
     }

@@ -33,10 +33,12 @@ import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordContainer
+import com.tencent.devops.model.process.tables.TPipelineBuildRecordModel
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordContainerRecord
 import com.tencent.devops.process.pojo.KEY_CONTAINER_ID
 import com.tencent.devops.process.pojo.KEY_EXECUTE_COUNT
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
+import com.tencent.devops.process.pojo.task.PipelineContainerBuild
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record16
@@ -311,9 +313,78 @@ class BuildRecordContainerDao {
         }
     }
 
+    fun fetchContainerRecordsCount(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        containerId: String
+    ): Long {
+        with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
+            return dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(CONTAINER_ID.eq(containerId))
+                .fetchAny(0, Long::class.java) ?: 0
+        }
+    }
+
+    fun fetchContainerRecords(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        containerId: String,
+        offset: Int,
+        limit: Int
+    ): List<PipelineContainerBuild> {
+        val container = TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER
+        val model = TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL
+        return dslContext.select(
+            // Container 字段
+            container.BUILD_ID,
+            container.PROJECT_ID,
+            container.PIPELINE_ID,
+            container.CONTAINER_ID,
+            container.EXECUTE_COUNT,
+            container.STATUS,
+            container.CONTAINER_VAR,
+            container.CONTAINER_TYPE,
+            container.START_TIME,
+            container.END_TIME,
+            // Model 字段（你需要的额外信息）
+            model.START_USER,
+            model.BUILD_NUM
+        )
+            .from(container)
+            .leftJoin(model).on(
+                container.BUILD_ID.eq(model.BUILD_ID)
+                    .and(container.EXECUTE_COUNT.eq(model.EXECUTE_COUNT))
+            )
+            .where(container.PROJECT_ID.eq(projectId))
+            .and(container.PIPELINE_ID.eq(pipelineId))
+            .and(container.CONTAINER_ID.eq(containerId))
+            .orderBy(container.START_TIME.desc())
+            .offset(offset)
+            .limit(limit)
+            .fetch { record ->
+                PipelineContainerBuild(
+                    buildId = record[container.BUILD_ID],
+                    projectId = record[container.PROJECT_ID],
+                    pipelineId = record[container.PIPELINE_ID],
+                    containerId = record[container.CONTAINER_ID],
+                    executeCount = record[container.EXECUTE_COUNT],
+                    status = record[container.STATUS],
+                    startTime = record[container.START_TIME],
+                    endTime = record[container.END_TIME],
+                    buildNum = record[model.BUILD_NUM],
+                    creator = record[model.START_USER]
+                )
+            }
+    }
+
     private fun TPipelineBuildRecordContainer.generateBuildRecordContainer(
-        record: Record16<String, String, String, Int,
-            String, String, String, Int, String, String, Boolean, Boolean, String, LocalDateTime, LocalDateTime, String>
+        record: Record16<String, String, String, Int, String, String,
+                String, Int, String, String, Boolean, Boolean,
+                String, LocalDateTime, LocalDateTime, String>
     ) =
         BuildRecordContainer(
             buildId = record[BUILD_ID],

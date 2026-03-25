@@ -318,7 +318,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 singleNodeConcurrency = param.jobControlOption?.singleNodeConcurrency,
                 allNodeConcurrency = param.jobControlOption?.allNodeConcurrency,
                 jobTimeoutMinutes = param.jobControlOption?.timeoutVar?.toIntOrNull() ?: param.jobControlOption?.timeout
-                ?: VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES
+                ?: VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES,
+                stageId = task.stageId
             )
         )
     }
@@ -407,7 +408,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                             .routeKeySuffix?.routeKeySuffix,
                         executeCount = task.executeCount,
                         jobId = task.jobId,
-                        containerHashId = task.containerHashId
+                        containerHashId = task.containerHashId,
+                        jobTimeInterval = param.timeCost?.totalCost
                     )
                 )
                 defaultFailAtomResponse

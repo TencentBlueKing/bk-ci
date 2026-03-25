@@ -53,9 +53,10 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.BuildRecordInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
+import com.tencent.devops.process.pojo.task.PipelineContainerBuild
+import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
@@ -803,4 +804,28 @@ interface UserBuildResource {
         @PathParam("buildId")
         buildId: String
     ): Result<BuildReplayResult>
+
+    @Operation(summary = "获取指定流水线和job的构建历史")
+    @GET
+    @Path("/{projectId}/{pipelineId}/containers/{containerId}/history")
+    fun getPipelineContainerBuilds(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "任务ID", required = true)
+        @PathParam("containerId")
+        containerId: String,
+        @Parameter(description = "页数", required = true)
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页数量", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<PipelineContainerBuild?>>
 }

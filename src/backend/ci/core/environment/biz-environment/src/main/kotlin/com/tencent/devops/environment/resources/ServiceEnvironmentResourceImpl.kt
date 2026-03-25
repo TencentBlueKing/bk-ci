@@ -167,7 +167,18 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         if (envHashIds.isEmpty()) {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_NEED_PARAM_, params = arrayOf("envHashIds"))
         }
-        return Result(envService.listAllEnvNodesNew(userId, projectId, page, pageSize, envHashIds))
+        return Result(envService.listAllEnvNodesNew(
+            userId = userId,
+            projectId = projectId,
+            page = page,
+            pageSize = pageSize,
+            envHashIds = envHashIds,
+            envName = null,
+            nodeIp = null,
+            displayName = null,
+            createdUser = null,
+            nodeStatus = null
+        ))
     }
 
     @BkTimed(extraTags = ["operate", "getEnv"])
@@ -255,7 +266,32 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         workspaceName: String,
         noCheckPerm: Boolean
     ): Result<List<EnvData>> {
-        // 临时实现，后续合入完整业务代码
-        return Result(listOf())
+        return Result(envService.fetchAllNodeEnvList(userId, projectId, workspaceName, noCheckPerm))
+    }
+
+    override fun listNodesNewByName(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        envName: String
+    ): Result<Page<NodeBaseInfo>> {
+        if (envName.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
+        }
+        return Result(
+            envService.listAllEnvNodesNew(
+                userId = userId,
+                projectId = projectId,
+                page = page,
+                pageSize = pageSize,
+                envHashIds = null,
+                envName = envName,
+                nodeIp = null,
+                displayName = null,
+                createdUser = null,
+                nodeStatus = null
+            )
+        )
     }
 }
