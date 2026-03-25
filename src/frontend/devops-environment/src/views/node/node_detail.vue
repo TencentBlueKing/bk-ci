@@ -54,20 +54,13 @@
             </section>
 
             <section>
-                <bk-popover
+                <a
                     v-if="!isCreateResType"
-                    theme="dot-menu light"
+                    class="reinstall-agent-btn"
+                    @click="handleReinstallAgent"
                 >
-                    <a
-                        class="reinstall-agent-btn"
-                        @click="handleReinstallAgent"
-                    >
-                        {{ $t('environment.reinstallAgent') }}
-                    </a>
-                    <template slot="content">
-                        {{ $t('environment.reinstallAgentTips') }}
-                    </template>
-                </bk-popover>
+                    {{ $t('environment.reinstallAgent') }}
+                </a>
                 <a
                     class="refresh-btn"
                     @click="handleRefresh"
@@ -118,7 +111,13 @@
             TaskList,
             AgentOfflineRecords
         },
-        setup () {
+        props: {
+            installAgent: {
+                type: Function,
+                default: null
+            }
+        },
+        setup (props) {
             const { proxy } = useInstance()
             const {
                 currentNode,
@@ -268,21 +267,19 @@
                 await fetchNodeDetail()
             })
 
-            // 重装 Agent - 复制安装命令到剪贴板
+            // 重装 Agent - 打开安装弹框
             const handleReinstallAgent = () => {
-                const command = currentNode.value?.os === 'WINDOWS'
-                    ? currentNode.value?.agentUrl
-                    : currentNode.value?.agentScript
-                if (command) {
-                    navigator.clipboard.writeText(command).then(() => {
-                        proxy.$bkMessage({
-                            theme: 'success',
-                            message: proxy.$t('environment.successfullyCopyed')
-                        })
-                    }).catch((e) => {
-                        throw e
-                    })
-                }
+                const node = currentNode.value
+                if (!node || !props.installAgent) return
+                
+                props.installAgent({
+                    nodeType: 'THIRDPARTY', // 详情页只有第三方构建机才能重装
+                    nodeHashId: nodeHashId.value,
+                    agentHashId: node.agentId,
+                    ip: node.ip,
+                    osName: node.os,
+                    gateway: node.gatewayShowName
+                })
             }
 
             // 刷新节点详情

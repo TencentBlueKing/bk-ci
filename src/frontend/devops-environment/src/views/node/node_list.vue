@@ -141,7 +141,7 @@
                         @show-detail="handleShowNodeDetail"
                     />
                     <template slot="flod">
-                        <node-detail />
+                        <node-detail :install-agent="installAgent" />
                     </template>
                 </CollapseLayout>
             </template>
@@ -1279,10 +1279,8 @@
                         nodeHashId
                     })
                     if (res.os === 'WINDOWS' && res.agentUrl) {
-                        this.constructImportForm.link = res.agentUrl
                         this.constructImportForm.agentId = res.agentId
                     } else if (['MACOS', 'LINUX'].includes(res.os) && res.agentScript) {
-                        this.constructImportForm.link = res.agentScript
                         this.constructImportForm.agentId = res.agentId
                     } else {
                         this.requestDevCommand()
@@ -1318,12 +1316,12 @@
                 this.dialogLoading.isShow = false
                 this.constructToolConf.isShow = false
                 this.constructImportForm.link = ''
+                this.constructImportForm.location = ''
                 this.constructImportForm.loginName = ''
                 this.constructImportForm.loginPassword = ''
-                this.constructImportForm.autoSwitchAccount = true
+                this.constructImportForm.autoSwitchAccount = false
                 this.constructImportForm.installType = 'SERVICE'
                 this.constructToolConf.importText = this.$t('environment.import')
-                this.requestList()
                 await this.requestGetCounts(this.projectId)
             },
             handleSelectedChange (selection) {
