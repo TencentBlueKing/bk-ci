@@ -20,7 +20,7 @@
                 <li
                     class="param-input"
                     v-for="(parameter, index) in parameters"
-                    :key="parameter.key"
+                    :key="parameter.id"
                     v-bk-tooltips="{
                         content: $t('notParamsTip'),
                         disabled: !parameter.disabled,
@@ -184,19 +184,24 @@
                 let values = this.atomValue[this.name] || this.value || []
                 if (!Array.isArray(values)) values = JSON.parse(values)
 
-                this.parameters = values.map(i => {
+                this.parameters = values.map((i, index) => {
                     const type = this.typeMap.get(i.key)?.type
+                    // 如果 key 为空，说明是新增的参数，hasKey 应该为 true（可选择状态）
+                    // 如果 key 不为空但在 typeMap 中找不到，说明是无效的 key，hasKey 为 false（禁用状态）
+                    const hasKey = !i.key || !!type
                     return {
                         ...i,
+                        id: i.id || `param_${Date.now()}_${index}`,
                         type: type || i.key || 'text',
                         value: isObject(i.value) ? JSON.stringify(i.value) : i.value,
-                        hasKey: !!type,
-                        disabled: !type && i.key
+                        hasKey,
+                        disabled: !type && !!i.key
                     }
                 })
             },
             addParam () {
                 this.parameters.push({
+                    id: `param_${Date.now()}_${this.parameters.length}`,
                     key: '',
                     value: '',
                     hasKey: true

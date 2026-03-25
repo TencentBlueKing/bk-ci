@@ -348,7 +348,8 @@ class ParamFacadeService @Autowired constructor(
             category = property.category,
             displayCondition = property.displayCondition,
             asInstanceInput = property.asInstanceInput,
-            sensitive = property.sensitive
+            sensitive = property.sensitive,
+            constant = property.constant
         )
     }
 
