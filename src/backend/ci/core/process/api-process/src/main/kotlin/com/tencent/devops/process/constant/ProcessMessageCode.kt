@@ -458,6 +458,8 @@ object ProcessMessageCode {
     const val ERROR_NON_CONSTRAINED_PIPELINE_CANNOT_SAVE_AS_CONSTRAINED = "2101363"
     // 实例化异常：流水线其他变量[{0}]默认值被改成模版默认值,请联系助手分析
     const val ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN = "2101364"
+    // 模型变量引用表达式不合规：仅允许双大括号${{xxx}}，且前缀须为 variables./stages./jobs./steps.。不合规项（含位置 positionPath）：{0}
+    const val ERROR_PIPELINE_MODEL_VAR_REF_INVALID = "2101376"
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
@@ -725,4 +727,10 @@ object ProcessMessageCode {
 
     // 回滚自模板实例化任务，基于版本[xxx]
     const val BK_ROLLBACK_FROM_TEMPLATE_INSTANCE_BASED_ON_VERSION = "bkRollbackFromTemplateInstanceBasedOnVersion"
+
+    // 创作流节点标签
+    const val BK_CREATIVE_STREAM_NODE_LABEL = "bkCreativeStreamNodeLabel"
+
+    // 创作流节点描述
+    const val BK_CREATIVE_STREAM_NODE_DESC = "bkCreativeStreamNodeDesc"
 }

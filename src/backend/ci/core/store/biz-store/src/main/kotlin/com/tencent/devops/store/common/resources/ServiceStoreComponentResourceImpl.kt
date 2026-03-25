@@ -37,6 +37,7 @@ import com.tencent.devops.store.common.service.StoreComponentQueryService
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.UnInstallReq
@@ -55,7 +56,7 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
     override fun installComponent(userId: String, installStoreReq: InstallStoreReq): Result<Boolean> {
         return storeComponentManageService.installComponent(
             userId = userId,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             installStoreReq = installStoreReq
         )
     }
@@ -190,6 +191,22 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
             storeType = storeType,
             storeCode = storeCode,
             version = version
+        )
+    }
+
+    override fun getComponentBaseInfo(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        version: String?
+    ): Result<StoreBaseInfo?> {
+        return Result(
+            storeComponentQueryService.getComponentBaseInfo(
+                userId = userId,
+                storeType = storeType,
+                storeCode = storeCode,
+                version = version
+            )
         )
     }
 }

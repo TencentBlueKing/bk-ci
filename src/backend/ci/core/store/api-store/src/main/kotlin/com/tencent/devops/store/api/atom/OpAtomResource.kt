@@ -43,6 +43,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -108,9 +109,9 @@ interface OpAtomResource {
         @Parameter(description = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = false)
         @QueryParam("atomType")
         atomType: AtomTypeEnum?,
-        @Parameter(description = "支持的服务范围（pipeline/quality/all 分别表示流水线/质量红线/全部）", required = false)
+        @Parameter(description = "支持的服务范围", required = false)
         @QueryParam("serviceScope")
-        serviceScope: String?,
+        serviceScope: ServiceScopeEnum?,
         @Parameter(description = "操作系统（ALL/WINDOWS/LINUX/MACOS）", required = false)
         @QueryParam("os")
         os: String?,

@@ -2,6 +2,7 @@ package com.tencent.devops.process.dao.template
 
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.api.util.toLocalDateTimeOrDefault
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.common.pipeline.template.UpgradeStrategyEnum
@@ -25,7 +26,8 @@ import java.time.LocalDateTime
 class PipelineTemplateInfoDao {
     fun create(
         dslContext: DSLContext,
-        record: PipelineTemplateInfoV2
+        record: PipelineTemplateInfoV2,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
     ) {
         with(TPipelineTemplateInfo.T_PIPELINE_TEMPLATE_INFO) {
             dslContext.insertInto(
@@ -51,6 +53,7 @@ class PipelineTemplateInfoDao {
                 SRC_TEMPLATE_PROJECT_ID,
                 DEBUG_PIPELINE_COUNT,
                 INSTANCE_PIPELINE_COUNT,
+                CHANNEL,
                 CREATOR,
                 UPDATER,
                 CREATED_TIME,
@@ -77,6 +80,7 @@ class PipelineTemplateInfoDao {
                 record.srcTemplateProjectId,
                 record.debugPipelineCount,
                 record.instancePipelineCount,
+                channelCode.name,
                 record.creator,
                 record.updater,
                 record.createdTime.toLocalDateTimeOrDefault(),
@@ -299,7 +303,7 @@ class PipelineTemplateInfoDao {
         return with(TPipelineTemplateInfo.T_PIPELINE_TEMPLATE_INFO) {
             val where = dslContext.select(ID)
                 .from(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(CHANNEL.eq(ChannelCode.getRequestChannelCode().name)))
 
             if (excludeTemplateId != null) {
                 where.and(ID.notEqual(excludeTemplateId))
@@ -325,6 +329,7 @@ class PipelineTemplateInfoDao {
             commonCondition.checkAllFieldsAreNull()
             with(commonCondition) {
                 val conditions = mutableListOf<Condition>()
+                conditions.add(CHANNEL.eq(ChannelCode.getRequestChannelCode().name))
                 if (projectId != null) conditions.add(PROJECT_ID.eq(projectId))
                 if (templateId != null) conditions.add(ID.eq(templateId))
                 if (fuzzySearchName != null && fuzzySearchName!!.isNotBlank()) {

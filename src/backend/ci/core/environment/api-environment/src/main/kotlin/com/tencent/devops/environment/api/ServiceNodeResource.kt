@@ -78,7 +78,10 @@ interface ServiceNodeResource {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "节点 hashIds", required = true)
-        nodeHashIds: List<String>
+        nodeHashIds: List<String>,
+        @Parameter(description = "是否校验权限，默认 true 校验权限")
+        @QueryParam("checkPermission")
+        checkPermission: Boolean? = true
     ): Result<List<NodeWithPermission>>
 
     @Operation(summary = "获取项目节点详情")
@@ -234,46 +237,49 @@ interface ServiceNodeResource {
         pageSize: Int? = 20,
         @Parameter(description = "IP", required = false)
         @QueryParam("nodeIp")
-        nodeIp: String?,
+        nodeIp: String? = null,
         @Parameter(description = "别名", required = false)
         @QueryParam("displayName")
-        displayName: String?,
+        displayName: String? = null,
         @Parameter(description = "创建人", required = false)
         @QueryParam("createdUser")
-        createdUser: String?,
+        createdUser: String? = null,
         @Parameter(description = "最后修改人", required = false)
         @QueryParam("lastModifiedUser")
-        lastModifiedUser: String?,
+        lastModifiedUser: String? = null,
         @Parameter(description = "关键字", required = false)
         @QueryParam("keywords")
-        keywords: String?,
+        keywords: String? = null,
         @Parameter(description = "节点类型|用途 (构建: THIRDPARTY;部署: CMDB)", required = false)
         @QueryParam("nodeType")
-        nodeType: NodeType?,
+        nodeType: NodeType? = null,
         @Parameter(description = "Agent 状态", required = false)
         @QueryParam("nodeStatus")
-        nodeStatus: NodeStatus?,
+        nodeStatus: NodeStatus? = null,
         @Parameter(description = "Agent 版本", required = false)
         @QueryParam("agentVersion")
-        agentVersion: String?,
+        agentVersion: String? = null,
         @Parameter(description = "操作系统", required = false)
         @QueryParam("osName")
-        osName: String?,
+        osName: String? = null,
         @Parameter(description = "最近执行流水线", required = false)
         @QueryParam("latestBuildPipelineId")
-        latestBuildPipelineId: String?,
+        latestBuildPipelineId: String? = null,
         @Parameter(description = "最近构建执行时间 (开始)", required = false)
         @QueryParam("latestBuildTimeStart")
-        latestBuildTimeStart: Long?,
+        latestBuildTimeStart: Long? = null,
         @Parameter(description = "最近构建执行时间 (结束)", required = false)
         @QueryParam("latestBuildTimeEnd")
-        latestBuildTimeEnd: Long?,
+        latestBuildTimeEnd: Long? = null,
         @Parameter(description = "排序字段", required = false)
         @QueryParam("sortType")
-        sortType: String?,
+        sortType: String? = null,
         @Parameter(description = "正序ASC/倒序DESC (默认倒序)", required = false)
         @QueryParam("collation")
-        collation: String?,
-        data: NodeFetchReq?
+        collation: String? = null,
+        @Parameter(description = "是否是创作流模式", required = false)
+        @QueryParam("createMode")
+        createMode: Boolean? = null,
+        data: NodeFetchReq? = null
     ): Result<Page<NodeWithPermission>>
 }

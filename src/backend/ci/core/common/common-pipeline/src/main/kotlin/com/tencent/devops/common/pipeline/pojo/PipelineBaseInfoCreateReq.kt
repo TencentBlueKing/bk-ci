@@ -25,9 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.atom.enums
+package com.tencent.devops.common.pipeline.pojo
 
-enum class ServiceScopeEnum(val scopeType: String) {
-    PIPELINE("pipeline"),
-    QUALITY("quality")
-}
+import io.swagger.v3.oas.annotations.media.Schema
+
+data class PipelineBaseInfoCreateReq(
+    @get:Schema(title = "流水线名称", required = true)
+    val pipelineName: String,
+    @get:Schema(title = "流水线描述", required = false)
+    val pipelineDesc: String? = null,
+    @get:Schema(title = "环境名称", required = false)
+    val envName: String? = null,
+)

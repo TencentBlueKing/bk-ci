@@ -64,10 +64,12 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.utils.BK_CI_AUTHORIZER
+import com.tencent.devops.process.utils.NODE_OS
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.yaml.transfer.VariableDefault
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
@@ -114,8 +116,18 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         }
         val fixParam = param.copy(customEnv = buildEnv)
         val executeCount = task.executeCount ?: 1
+        val os = ContainerUtils.getContainerOs(
+            modelOs = param.baseOS?.name,
+            nodeOs = runVariables[NODE_OS]
+        )
         try {
-            atomResponse = if (!checkBeforeStart(task, param, context)) {
+            atomResponse = if (!checkBeforeStart(
+                    task = task,
+                    param = param,
+                    variables = context,
+                    os = os
+                )
+            ) {
                 AtomResponse(
                     BuildStatus.FAILED,
                     errorType = ErrorType.USER,
@@ -123,16 +135,14 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                     errorMsg = "check job start fail"
                 )
             } else {
-                execute(task, fixParam, null, runVariables[BK_CI_AUTHORIZER])
+                execute(
+                    task = task,
+                    param = fixParam,
+                    ignoreEnvAgentIds = null,
+                    pipelineAuthorizer = runVariables[BK_CI_AUTHORIZER],
+                    os = os
+                )
             }
-            buildLogPrinter.stopLog(
-                buildId = task.buildId,
-                tag = task.taskId,
-                containerHashId = task.containerHashId,
-                executeCount = executeCount,
-                jobId = param.jobId,
-                stepId = task.stepId
-            )
         } catch (e: BuildTaskException) {
             buildLogPrinter.addRedLine(
                 buildId = task.buildId,
@@ -167,6 +177,15 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
                 errorMsg = ignored.message
             )
+        } finally {
+            buildLogPrinter.stopLog(
+                buildId = task.buildId,
+                tag = task.taskId,
+                containerHashId = task.containerHashId,
+                executeCount = executeCount,
+                jobId = param.jobId,
+                stepId = task.stepId
+            )
         }
         return atomResponse
     }
@@ -175,7 +194,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         task: PipelineBuildTask,
         param: VMBuildContainer,
         ignoreEnvAgentIds: Set<String>?,
-        pipelineAuthorizer: String? = ""
+        pipelineAuthorizer: String? = "",
+        os: String
     ): AtomResponse {
         val projectId = task.projectId
         val pipelineId = task.pipelineId
@@ -240,9 +260,10 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             vmNames = vmNames,
             container = container,
             ignoreEnvAgentIds = ignoreEnvAgentIds,
-            pipelineAuthorizer = pipelineAuthorizer
+            pipelineAuthorizer = pipelineAuthorizer,
+            os = os
         )
-        logger.info("[$buildId]|STARTUP_VM|VM=${param.baseOS}-$vmNames($vmSeqId)|Dispatch startup")
+        logger.info("[$buildId]|STARTUP_VM|VM=$os-$vmNames($vmSeqId)|Dispatch startup")
         return AtomResponse(BuildStatus.RUNNING)
     }
 
@@ -253,7 +274,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         vmNames: String,
         container: Container,
         ignoreEnvAgentIds: Set<String>?,
-        pipelineAuthorizer: String? = ""
+        pipelineAuthorizer: String? = "",
+        os: String
     ) {
 
         // 读取插件市场中的插件信息，写入待构建处理
@@ -280,7 +302,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 buildNo = pipelineRuntimeService.getBuildInfo(task.projectId, task.buildId)!!.buildNum,
                 vmSeqId = task.containerId,
                 taskName = param.name,
-                os = param.baseOS.name,
+                os = os,
                 vmNames = vmNames,
                 channelCode = pipelineInfo.channelCode.name,
                 dispatchType = dispatchType,
@@ -307,7 +329,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     private fun checkBeforeStart(
         task: PipelineBuildTask,
         param: VMBuildContainer,
-        variables: Map<String, String>
+        variables: Map<String, String>,
+        os: String
     ): Boolean {
         param.buildEnv?.let { buildEnv ->
             val asCode by lazy {
@@ -330,7 +353,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 val res = client.get(ServiceContainerAppResource::class).getBuildEnv(
                     name = env.key,
                     version = version,
-                    os = param.baseOS.name.lowercase()
+                    os = os,
                 ).data
                 if (res == null) {
                     buildLogPrinter.addRedLine(
@@ -409,7 +432,11 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                     return execute(
                         task = task,
                         param = param,
-                        ignoreEnvAgentIds = retryThirdAgentEnv.split(",").filter { it.isNotBlank() }.toSet()
+                        ignoreEnvAgentIds = retryThirdAgentEnv.split(",").filter { it.isNotBlank() }.toSet(),
+                        os = ContainerUtils.getContainerOs(
+                            modelOs = param.baseOS?.name,
+                            nodeOs = runVariables[NODE_OS]
+                        )
                     )
                 }
 
