@@ -180,6 +180,10 @@ devops.slave.user=                      # 构建运行用户(Unix)
 devops.agent.detect.shell=false         # 检测Shell
 devops.language=zh_CN                   # 语言
 devops.imagedebug.portrange=30000-32767 # 调试端口范围
+
+# Windows Session 凭据(daemon LogonUser回退用, 可选)
+devops.agent.session.user=             # 用户名
+devops.agent.session.password=         # 密码
 ```
 
 **全局配置对象**: `config.GAgentConfig` — 所有模块直接引用
@@ -532,7 +536,7 @@ bin/
 3. **Docker构建日志**: `docker_build_tmp/logs/{buildId}/{vmSeqId}/`
 4. **HTTP通信调试**: 日志中搜索请求URL和响应状态码
 5. **升级问题**: 检查 `tmp/` 目录下载的文件和MD5
-6. **Windows服务问题**: 使用 `wintask` 包检测启动方式。服务模式下 daemon 通过 WTS API (`CreateProcessAsUser`) 在用户 Session 中启动 agent，确保构建进程可访问用户桌面；若无活跃用户 Session 则自动回退为直接启动
+6. **Windows服务问题**: 使用 `wintask` 包检测启动方式。服务模式下 daemon 按优先级尝试: ① WTS API (`CreateProcessAsUser`) 在已登录用户 Session 中启动 agent ② `LogonUser` + `SetTokenInformation` 使用 `.agent.properties` 中的 `devops.agent.session.user/password` 凭据在控制台 Session 创建进程 ③ 回退为直接启动。推荐使用 `configure_session.ps1` 一键切换 Session 模式（自动迁移 schtasks→service、配置 Auto-logon + LSA Secret 加密存储密码、重启 daemon、提示 reboot），机器开机自动登录后 daemon 即可通过 ① 路径工作
 7. **MCP调试**: 设置 `DEVOPS_AGENT_ENABLE_MCP=true`，agent 启动后 MCP Server 在 `127.0.0.1` 监听 Streamable HTTP，端口号持久化到 `.agent.properties` 的 `devops.mcp.server.port`。可在 CodeBuddy/Claude Desktop 中配置 `http://127.0.0.1:{PORT}/mcp` 进行交互式调试
 
 ## 环境变量开关
