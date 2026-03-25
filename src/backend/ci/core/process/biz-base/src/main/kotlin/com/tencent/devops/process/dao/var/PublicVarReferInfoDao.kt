@@ -434,6 +434,40 @@ class PublicVarReferInfoDao {
     }
 
     /**
+     * 批量统计多个变量的引用数量（跨所有版本，按 referId 去重）
+     * 单个流水线即使通过多个版本引用同一变量，也只计为 1 次引用
+     * 用于变量组详情页展示变量的实际被引用资源数量
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param varNames 变量名列表
+     * @return Map<String, Int> 变量名到引用数量的映射
+     */
+    fun batchCountDistinctReferIdsAcrossVersionsByVars(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        varNames: List<String>
+    ): Map<String, Int> {
+        if (varNames.isEmpty()) {
+            return emptyMap()
+        }
+
+        with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
+            return dslContext.select(VAR_NAME, DSL.countDistinct(REFER_ID))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(VAR_NAME.`in`(varNames))
+                .groupBy(VAR_NAME)
+                .fetch()
+                .associate { record ->
+                    record.getValue(VAR_NAME) to (record.getValue(1, Int::class.java) ?: 0)
+                }
+        }
+    }
+
+    /**
      * 批量统计多个变量的引用数量（按 referId 去重）
      * 用于查询变量列表时显示实际引用该变量的资源数量
      * @param dslContext 数据库上下文

@@ -39,6 +39,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COM
 import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
+import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarVersionSummaryDao
 import com.tencent.devops.process.pojo.`var`.VarGroupDiffResult
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
@@ -64,6 +65,7 @@ class PublicVarService @Autowired constructor(
     private val publicVarDao: PublicVarDao,
     private val publicVarGroupDao: PublicVarGroupDao,
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
+    private val publicVarReferInfoDao: PublicVarReferInfoDao,
     private val publicVarVersionSummaryDao: PublicVarVersionSummaryDao,
     private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService
 ) {
@@ -194,6 +196,7 @@ class PublicVarService @Autowired constructor(
 
     /**
      * 将PublicVarPO列表转换为PublicVarDO列表，并批量查询引用计数
+     * 引用计数按 referId 去重（跨版本），同一流水线多版本引用同一变量只计为1
      * @param varPOs 变量PO列表
      * @param projectId 项目ID
      * @param groupName 变量组名称
@@ -210,9 +213,9 @@ class PublicVarService @Autowired constructor(
             return emptyList()
         }
 
-        // 批量查询所有变量的引用数量（从 T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY 表读取，汇总所有版本）
+        // 批量查询所有变量的引用数量（跨版本按 referId 去重，同一流水线多版本引用只算1次）
         val varNames = varPOs.map { it.varName }
-        val referCountMap = publicVarVersionSummaryDao.batchGetTotalReferCount(
+        val referCountMap = publicVarReferInfoDao.batchCountDistinctReferIdsAcrossVersionsByVars(
             dslContext = dslContext,
             projectId = projectId,
             groupName = groupName,
