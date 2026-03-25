@@ -6,7 +6,9 @@ package agentcli
 import (
 	"flag"
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"time"
 	"unsafe"
 
@@ -117,6 +119,8 @@ func enableSession(workDir, user, password string, autoLogon bool) error {
 		}
 	}
 
+	writeInstallType(workDir, "SESSION")
+
 	printStepf("starting service %s", serviceName)
 	runSc("start", serviceName)
 	time.Sleep(3 * time.Second)
@@ -160,6 +164,7 @@ func disableSession(workDir string) error {
 	printStep("Disabling session mode...")
 	removeSessionSecrets()
 	removeAutoLogon()
+	writeInstallType(workDir, "SERVICE")
 
 	serviceName, err := getServiceName(workDir)
 	if err != nil {
@@ -346,6 +351,19 @@ func removeAutoLogon() {
 	k.DeleteValue("DefaultPassword")
 	deleteLsaSecret("DefaultPassword")
 	printStep("Windows auto-logon disabled")
+}
+
+// ── Install type marker ──────────────────────────────────────────────────
+
+const installTypeFile = ".install_type"
+
+func writeInstallType(workDir, mode string) {
+	p := filepath.Join(workDir, installTypeFile)
+	if err := os.WriteFile(p, []byte(mode), 0644); err != nil {
+		printWarn(fmt.Sprintf("failed to write %s: %v", installTypeFile, err))
+		return
+	}
+	printStepf("install type set to %s", mode)
 }
 
 // ── sc.exe helper ────────────────────────────────────────────────────────

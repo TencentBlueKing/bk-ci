@@ -71,6 +71,7 @@ func handleUninstall(workDir string) error {
 
 	removeSessionSecrets()
 	removeAutoLogon()
+	os.Remove(filepath.Join(workDir, ".install_type"))
 
 	if serviceExists(serviceName) {
 		stopService(serviceName)

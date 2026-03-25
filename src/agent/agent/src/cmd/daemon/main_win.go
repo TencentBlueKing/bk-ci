@@ -37,6 +37,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -103,9 +104,15 @@ func main() {
 
 	isServiceMode = !service.Interactive()
 	if isServiceMode {
-		logs.Info("running as Windows service, will launch agent in user session")
+		installType := readInstallType()
+		isSessionMode = strings.EqualFold(installType, "SESSION")
+		if isSessionMode {
+			logs.Info("running as Windows service in SESSION mode, will launch agent in user session")
+		} else {
+			logs.Info("running as Windows service in SERVICE mode")
+		}
 	} else {
-		logs.Info("running in interactive mode")
+		logs.Info("running in interactive mode (TASK)")
 	}
 
 	serviceConfig := &service.Config{
@@ -128,10 +135,27 @@ func main() {
 
 var (
 	isServiceMode      bool
+	isSessionMode      bool
 	agentMu            sync.Mutex
 	agentProcess       *os.Process
 	agentProcessHandle windows.Handle
 )
+
+const installTypeFile = ".install_type"
+
+// readInstallType reads the install mode from .install_type file.
+// Returns "SERVICE" as default if the file is missing or unreadable.
+func readInstallType() string {
+	workDir := systemutil.GetExecutableDir()
+	data, err := os.ReadFile(filepath.Join(workDir, installTypeFile))
+	if err != nil {
+		logs.Infof("no %s file found, defaulting to SERVICE mode", installTypeFile)
+		return "SERVICE"
+	}
+	installType := strings.TrimSpace(string(data))
+	logs.Infof("install type from %s: %s", installTypeFile, installType)
+	return installType
+}
 
 func watch() {
 	defer func() {
@@ -162,7 +186,7 @@ func watch() {
 				return
 			}
 
-			if isServiceMode {
+			if isServiceMode && isSessionMode {
 				if launchAgentInUserSession(agentPath, workDir) {
 					return
 				}
@@ -286,7 +310,7 @@ func (p *program) tryStopAgent() {
 func tryLogonFallback(agentPath, cmdLine, workDir string) (*SessionProcessInfo, error) {
 	user, password := ReadSessionCredentials()
 	if user == "" {
-		return nil, fmt.Errorf("no session credentials in LSA Secret (run configure_session.ps1 -UserName ... -Password ...)")
+		return nil, fmt.Errorf("no session credentials in LSA Secret (run: devopsAgent configure-session --user ... --password ...)")
 	}
 	logs.Infof("attempting LogonUser fallback with user=%s", user)
 	return StartProcessWithLogon(user, password, agentPath, cmdLine, workDir)
