@@ -46,6 +46,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 
 @Suppress("ALL")
@@ -56,9 +57,10 @@ interface MarketAtomService {
      */
     fun mainPageList(
         userId: String,
-        page: Int?,
-        pageSize: Int?,
-        urlProtocolTrim: Boolean = false
+        page: Int? = 1,
+        pageSize: Int? = 100,
+        urlProtocolTrim: Boolean = false,
+        serviceScope: ServiceScopeEnum? = null
     ): Result<List<MarketMainItem>>
 
     /**
@@ -75,9 +77,10 @@ interface MarketAtomService {
         recommendFlag: Boolean?,
         qualityFlag: Boolean?,
         sortType: MarketAtomSortTypeEnum?,
-        page: Int?,
-        pageSize: Int?,
-        urlProtocolTrim: Boolean = false
+        page: Int? = 1,
+        pageSize: Int? = 100,
+        urlProtocolTrim: Boolean = false,
+        serviceScope: ServiceScopeEnum? = null
     ): MarketAtomResp
 
     /**
@@ -93,17 +96,21 @@ interface MarketAtomService {
     /**
      * 根据插件版本ID获取版本基本信息、发布信息
      */
-    fun getAtomById(atomId: String, userId: String): Result<AtomVersion?>
+    fun getAtomById(atomId: String, userId: String, serviceScope: ServiceScopeEnum? = null): Result<AtomVersion?>
 
     /**
      * 根据插件标识获取插件最新、正式版本息
      */
-    fun getAtomByCode(userId: String, atomCode: String): Result<AtomVersion?>
+    fun getAtomByCode(userId: String, atomCode: String, serviceScope: ServiceScopeEnum? = null): Result<AtomVersion?>
 
     /**
      * 根据标识获取最新版本信息（若最新版本为测试中，取最新版本，否则取最新正式版本）
      */
-    fun getNewestAtomByCode(userId: String, atomCode: String): Result<AtomVersion?>
+    fun getNewestAtomByCode(
+        userId: String,
+        atomCode: String,
+        serviceScope: ServiceScopeEnum? = null
+    ): Result<AtomVersion?>
 
     /**
      * 安装插件到项目

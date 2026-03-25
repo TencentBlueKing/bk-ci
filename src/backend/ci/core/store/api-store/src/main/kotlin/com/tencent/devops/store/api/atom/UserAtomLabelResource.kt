@@ -28,6 +28,7 @@
 package com.tencent.devops.store.api.atom
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.label.Label
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -37,6 +38,7 @@ import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "USER_PIPELINE_ATOM_LABEL", description = "流水线-插件标签")
@@ -48,7 +50,11 @@ interface UserAtomLabelResource {
     @Operation(summary = "获取所有插件标签信息")
     @GET
     @Path("/labels")
-    fun getAllAtomLabels(): Result<List<Label>?>
+    fun getAllAtomLabels(
+        @Parameter(description = "服务范围", required = false)
+        @QueryParam("serviceScope")
+        serviceScope: ServiceScopeEnum? = null
+    ): Result<List<Label>?>
 
     @Operation(summary = "根据插件ID获取插件标签信息")
     @GET
@@ -56,6 +62,9 @@ interface UserAtomLabelResource {
     fun getAtomLabelsByAtomId(
         @Parameter(description = "插件ID", required = true)
         @PathParam("atomId")
-        atomId: String
+        atomId: String,
+        @Parameter(description = "服务范围", required = false)
+        @QueryParam("serviceScope")
+        serviceScope: ServiceScopeEnum? = null
     ): Result<List<Label>?>
 }

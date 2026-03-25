@@ -35,6 +35,7 @@ import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatistic
 import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
 import com.tencent.devops.store.pojo.common.comment.StoreUserCommentInfo
+import com.tencent.devops.store.pojo.common.ServiceScopeDetail
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class AtomVersion(
@@ -59,7 +60,7 @@ data class AtomVersion(
     val htmlTemplateVersion: String,
     @get:Schema(title = "插件类型")
     val atomType: String?,
-    @get:Schema(title = "适用Job类型")
+    @get:Schema(title = "Job类型（PIPELINE 范围的纯字符串，如 AGENT）")
     val jobType: String?,
     @get:Schema(title = "操作系统")
     val os: List<String>?,
@@ -124,5 +125,7 @@ data class AtomVersion(
     @get:Schema(title = "荣誉信息", required = false)
     val honorInfos: List<HonorInfo>? = null,
     @get:Schema(title = "指标信息列表")
-    val indexInfos: List<StoreIndexInfo>? = null
+    val indexInfos: List<StoreIndexInfo>? = null,
+    @get:Schema(title = "服务范围详情列表（当serviceScope不传时返回所有服务范围的详情）", required = false)
+    val serviceScopeDetails: List<ServiceScopeDetail>? = null
 )

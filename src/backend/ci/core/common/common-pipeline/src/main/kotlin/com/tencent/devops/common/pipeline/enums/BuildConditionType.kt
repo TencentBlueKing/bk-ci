@@ -25,12 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.websocket.page
+package com.tencent.devops.common.pipeline.enums
 
-import com.tencent.devops.common.websocket.page.IPath
-import com.tencent.devops.common.websocket.pojo.BuildPageInfo
-
-class EditPageBuild : IPath {
-    override fun buildPage(buildPageInfo: BuildPageInfo): String =
-        "/console/pipeline/${buildPageInfo.projectId}/${buildPageInfo.pipelineId}/edit"
+enum class BuildConditionType {
+    TRIGGER_METHOD, // 触发方式
+    TRIGGER_EVENT, // 触发事件
+    TRIGGER_USER, // 触发人
+    TRIGGER_NODE // 触发节点
 }

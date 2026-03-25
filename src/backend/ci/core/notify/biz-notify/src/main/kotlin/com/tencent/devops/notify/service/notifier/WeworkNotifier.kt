@@ -1,6 +1,7 @@
 package com.tencent.devops.notify.service.notifier
 
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
 import com.tencent.devops.notify.dao.NotifyMessageTemplateDao
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
@@ -15,7 +16,8 @@ import org.springframework.stereotype.Component
 class WeworkNotifier @Autowired constructor(
     private val weworkService: WeworkService,
     private val notifyMessageTemplateDao: NotifyMessageTemplateDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val commonConfig: CommonConfig
 ) : INotifier {
     @Value("\${wework.domain}")
     private val userUseDomain: Boolean = true
@@ -28,13 +30,16 @@ class WeworkNotifier @Autowired constructor(
             dslContext = dslContext,
             commonTemplateId = commonNotifyMessageTemplateRecord.id
         )!!
-        // 替换内容里的动态参数
-        val title = NotifierUtils.replaceContentParams(request.titleParams, weworkTplRecord.title)
-        val body = NotifierUtils.replaceContentParams(request.bodyParams, weworkTplRecord.body)
+        // 先对 DB 原始模板做渠道关键字替换（如 CREATIVE_STREAM 渠道将「流水线」替换为「创作流」），再替换占位符
+        val language = commonConfig.devopsDefaultLocaleLanguage
+        val rawTitle = NotifierUtils.replaceNotifyKeywordByChannel(weworkTplRecord.title, language)
+        val rawBody = NotifierUtils.replaceNotifyKeywordByChannel(weworkTplRecord.body, language)
+        val finalTitle = NotifierUtils.replaceContentParams(request.titleParams, rawTitle)
+        val finalBody = NotifierUtils.replaceContentParams(request.bodyParams, rawBody)
         NotifierUtils.sendWeworkNotifyMessage(
             commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
             sendNotifyMessageTemplateRequest = request,
-            body = "$title\n\n$body",
+            body = "$finalTitle\n\n$finalBody",
             sender = weworkTplRecord.sender,
             weworkService = weworkService,
             userUseDomain = userUseDomain

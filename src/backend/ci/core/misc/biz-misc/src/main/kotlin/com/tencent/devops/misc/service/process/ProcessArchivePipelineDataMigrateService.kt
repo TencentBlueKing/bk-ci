@@ -267,7 +267,7 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                     dslContext = dslContext, projectId = projectId, pipelineId = pipelineId
                 )?.channel?.let {
                     ChannelCode.valueOf(it)
-                } ?: ChannelCode.BS
+                } ?: ChannelCode.getRequestChannelCode()
                 migrationLock.lock()
                 client.get(ServicePipelineResource::class).delete(
                     userId = userId,

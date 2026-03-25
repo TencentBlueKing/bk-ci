@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.event.listener.pipeline
 
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.service.trace.TraceTag
@@ -58,6 +59,8 @@ abstract class PipelineEventListener<in T : IPipelineEvent>(val pipelineEventDis
                     MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
                 }
             }
+            // 恢复渠道上下文
+            ChannelContext.setChannel(event.channelCode)
             run(event)
             result = true
         } catch (ignored: Throwable) { // #5109 打开堆栈，追踪未知错误
@@ -76,6 +79,8 @@ abstract class PipelineEventListener<in T : IPipelineEvent>(val pipelineEventDis
                 pipelineEventDispatcher.dispatch(event)
                 logger.warn("[ENGINE_MQ_SEVERE][${event.pipelineId}]|[${event.source}]|FAIL_TO_RETRY")
             }
+            // 清理渠道上下文和traceId，防止线程复用时上下文泄漏
+            ChannelContext.clear()
             MDC.remove(TraceTag.BIZID)
         }
     }
