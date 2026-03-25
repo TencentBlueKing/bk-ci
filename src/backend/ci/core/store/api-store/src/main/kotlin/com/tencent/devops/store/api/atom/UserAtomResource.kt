@@ -80,8 +80,8 @@ interface UserAtomResource {
         @Parameter(description = "支持的服务范围", required = false)
         @QueryParam("serviceScope")
         @DefaultValue("PIPELINE")
-        serviceScope: ServiceScopeEnum? = ServiceScopeEnum.PIPELINE,
-        @Parameter(description = "job类型", required = false)
+        serviceScope: String? = ServiceScopeEnum.PIPELINE.name,
+        @Parameter(description = "job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = false)
         @QueryParam("jobType")
         jobType: JobTypeEnum?,
         @Parameter(description = "操作系统（ALL/WINDOWS/LINUX/MACOS）", required = false)
