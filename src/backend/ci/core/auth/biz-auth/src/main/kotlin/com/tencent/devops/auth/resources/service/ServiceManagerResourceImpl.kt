@@ -25,16 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:environment:biz-environment"))
-    api(project(":ext:tencent:common:common-devcloud"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:scm:api-scm-tencent"))
-    api(project(":core:auth:api-auth"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":ext:tencent:auth:sdk-auth-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-kafka-tencent"))
-    api(project(":core:project:api-project"))
+package com.tencent.devops.auth.resources.service
+
+import com.tencent.devops.auth.api.service.ServiceManagerResource
+import com.tencent.devops.auth.service.SuperManagerService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ServiceManagerResourceImpl @Autowired constructor(
+    val superManagerService: SuperManagerService
+) : ServiceManagerResource {
+    override fun validateManagerPermission(
+        userId: String,
+        token: String,
+        projectCode: String,
+        action: String,
+        resourceCode: String
+    ): Result<Boolean> {
+        return Result(superManagerService.projectManagerCheck(
+            userId = userId,
+            projectCode = projectCode,
+            action = action,
+            resourceType = resourceCode
+        ))
+    }
 }

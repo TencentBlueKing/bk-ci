@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStaticInfo
@@ -109,7 +110,9 @@ class PreBuildAgentMgrService @Autowired constructor(
                 gateway = gateway,
                 ip = initIp ?: "",
                 status = AgentStatus.IMPORT_EXCEPTION,
-                fileGateway = fileGateway
+                fileGateway = fileGateway,
+                agentType = AgentType.BUILD,
+                createWorkspaceName = null
             )
             val agentRecord = thirdPartyAgentDao.getAgent(context, agentId)!!
             val agentHashId = HashUtil.encodeLongId(agentId)
@@ -145,7 +148,11 @@ class PreBuildAgentMgrService @Autowired constructor(
 
     fun listPreBuildAgent(userId: String, projectId: String, os: OS?): List<ThirdPartyAgentStaticInfo> {
         return thirdPartyAgentDao.listImportAgent(
-            dslContext = dslContext, projectId = projectId, os = os ?: OS.LINUX, nodeIds = emptySet()
+            dslContext = dslContext,
+            projectId = projectId,
+            os = os ?: OS.LINUX,
+            nodeIds = emptySet(),
+            agentType = AgentType.BUILD
         ).filter { it.nodeId != null }.map {
             ThirdPartyAgentStaticInfo(
                 agentId = HashUtil.encodeLongId(it.id), // 必须用it.id，不能是it.nodeId
