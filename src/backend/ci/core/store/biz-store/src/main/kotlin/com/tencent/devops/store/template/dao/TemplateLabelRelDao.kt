@@ -36,6 +36,7 @@ import com.tencent.devops.store.pojo.common.KEY_LABEL_CODE
 import com.tencent.devops.store.pojo.common.KEY_LABEL_ID
 import com.tencent.devops.store.pojo.common.KEY_LABEL_NAME
 import com.tencent.devops.store.pojo.common.KEY_LABEL_TYPE
+import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -55,6 +56,7 @@ class TemplateLabelRelDao {
             a.ID.`as`(KEY_LABEL_ID),
             a.LABEL_CODE.`as`(KEY_LABEL_CODE),
             a.LABEL_NAME.`as`(KEY_LABEL_NAME),
+            a.SERVICE_SCOPE.`as`(KEY_SERVICE_SCOPE),
             a.TYPE.`as`(KEY_LABEL_TYPE),
             a.CREATE_TIME.`as`(KEY_CREATE_TIME),
             a.UPDATE_TIME.`as`(KEY_UPDATE_TIME)
