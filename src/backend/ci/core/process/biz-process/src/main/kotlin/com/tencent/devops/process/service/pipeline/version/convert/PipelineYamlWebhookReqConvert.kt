@@ -71,7 +71,8 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
             }
             logger.info(
                 "Start to convert yaml webhook request|$projectId|$pipelineId|" +
-                        "$branchName|$yamlFileName|yaml=$yaml"
+                        "${yamlFileInfo?.repoHashId}|${yamlFileInfo?.filePath}|" +
+                        "$branchName|$yamlFileName|$isDefaultBranch|$pullRequestUrl"
             )
             val (modelAndSetting, yamlWithVersion) = pipelineVersionGenerator.yaml2model(
                 userId = userId,
@@ -82,7 +83,11 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
             )
 
             // 生成流水线ID
-            val newPipelineId = pipelineId ?: pipelineIdGenerator.getNextId()
+            val newPipelineId = if (pipelineId.isNullOrBlank()) {
+                pipelineIdGenerator.getNextId()
+            } else {
+                pipelineId
+            }
             // 流水线名称实际取值优先级：setting > model > fileName
             val pipelineName = modelAndSetting.setting.pipelineName.takeIf {
                 it.isNotBlank()

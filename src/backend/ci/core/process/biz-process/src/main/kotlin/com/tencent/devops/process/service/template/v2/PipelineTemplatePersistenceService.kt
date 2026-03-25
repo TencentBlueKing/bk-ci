@@ -141,7 +141,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     templateId = pipelineTemplateInfo.id,
                     templateName = pipelineTemplateInfo.name
                 )
-                postProcessInTransactionVersionCreate(
+                postProcessInTransactionAfterVersionCreate(
                     transactionContext = transactionContext,
                     context = context,
                     pipelineTemplateResource = pipelineTemplateResource,
@@ -173,11 +173,6 @@ class PipelineTemplatePersistenceService @Autowired constructor(
             val pipelineTemplateSetting = pTemplateSettingWithoutVersion.copy(
                 version = resourceOnlyVersion.settingVersion
             )
-            postProcessBeforeVersionCreate(
-                context = context,
-                pipelineTemplateResource = pipelineTemplateResource,
-                pipelineTemplateSetting = pipelineTemplateSetting
-            )
             operationLogType = OperationLogType.RELEASE_MASTER_VERSION
             operationLogParams = resourceOnlyVersion.versionName!!
 
@@ -196,6 +191,12 @@ class PipelineTemplatePersistenceService @Autowired constructor(
             )
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
+                postProcessInTransactionBeforeVersionCreate(
+                    transactionContext = transactionContext,
+                    context = context,
+                    pipelineTemplateResource = pipelineTemplateResource,
+                    pipelineTemplateSetting = pipelineTemplateSetting
+                )
                 pipelineTemplateInfoService.update(
                     transactionContext = transactionContext,
                     record = pipelineTemplateInfoUpdateInfo,
@@ -215,7 +216,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     templateId = templateId,
                     templateName = pipelineTemplateSetting.pipelineName
                 )
-                postProcessInTransactionVersionCreate(
+                postProcessInTransactionAfterVersionCreate(
                     transactionContext = transactionContext,
                     context = context,
                     pipelineTemplateResource = pipelineTemplateResource,
@@ -322,7 +323,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     settingVersion = pipelineTemplateSetting.version,
                     draftVersion = pipelineTemplateResource.draftVersion!!
                 )
-                postProcessInTransactionVersionCreate(
+                postProcessInTransactionAfterVersionCreate(
                     transactionContext = transactionContext,
                     context = context,
                     pipelineTemplateResource = pipelineTemplateResource,
@@ -388,7 +389,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     transactionContext = transactionContext,
                     pipelineTemplateSetting = pipelineTemplateSetting
                 )
-                postProcessInTransactionVersionCreate(
+                postProcessInTransactionAfterVersionCreate(
                     transactionContext = transactionContext,
                     context = context,
                     pipelineTemplateResource = pipelineTemplateResource,
@@ -471,7 +472,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     settingVersion = pipelineTemplateSetting.version,
                     draftVersion = pipelineTemplateResource.draftVersion!!
                 )
-                postProcessInTransactionVersionCreate(
+                postProcessInTransactionAfterVersionCreate(
                     transactionContext = transactionContext,
                     context = context,
                     pipelineTemplateResource = pipelineTemplateResource,
@@ -537,6 +538,12 @@ class PipelineTemplatePersistenceService @Autowired constructor(
             )
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
+                postProcessInTransactionBeforeVersionCreate(
+                    transactionContext = transactionContext,
+                    context = context,
+                    pipelineTemplateResource = pipelineTemplateResource,
+                    pipelineTemplateSetting = pipelineTemplateSetting
+                )
                 pipelineTemplateInfoService.update(
                     transactionContext = transactionContext,
                     record = templateInfoUpdateInfo,
@@ -553,7 +560,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     templateId = templateId,
                     templateName = pipelineTemplateSetting.pipelineName
                 )
-                postProcessInTransactionVersionCreate(
+                postProcessInTransactionAfterVersionCreate(
                     transactionContext = transactionContext,
                     context = context,
                     pipelineTemplateResource = pipelineTemplateResource,
@@ -638,7 +645,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     record = templateResourceUpdateInfo,
                     commonCondition = templateResourceCondition
                 )
-                postProcessInTransactionVersionCreate(
+                postProcessInTransactionAfterVersionCreate(
                     transactionContext = transactionContext,
                     context = context,
                     pipelineTemplateResource = pipelineTemplateResource,
@@ -820,14 +827,30 @@ class PipelineTemplatePersistenceService @Autowired constructor(
         }
     }
 
-    private fun postProcessInTransactionVersionCreate(
+    private fun postProcessInTransactionBeforeVersionCreate(
         transactionContext: DSLContext,
         context: PipelineTemplateVersionCreateContext,
         pipelineTemplateResource: PipelineTemplateResource,
         pipelineTemplateSetting: PipelineSetting
     ) {
         versionCreatePostProcessors.forEach {
-            it.postProcessInTransactionVersionCreate(
+            it.postProcessInTransactionBeforeVersionCreate(
+                transactionContext = transactionContext,
+                context = context,
+                pipelineTemplateResource = pipelineTemplateResource,
+                pipelineTemplateSetting = pipelineTemplateSetting
+            )
+        }
+    }
+
+    private fun postProcessInTransactionAfterVersionCreate(
+        transactionContext: DSLContext,
+        context: PipelineTemplateVersionCreateContext,
+        pipelineTemplateResource: PipelineTemplateResource,
+        pipelineTemplateSetting: PipelineSetting
+    ) {
+        versionCreatePostProcessors.forEach {
+            it.postProcessInTransactionAfterVersionCreate(
                 transactionContext = transactionContext,
                 context = context,
                 pipelineTemplateResource = pipelineTemplateResource,

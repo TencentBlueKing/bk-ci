@@ -18,7 +18,8 @@ function Check-Files {
         $fileCount = (Get-ChildItem -File -Path . | Measure-Object).Count
         if ($fileCount -gt 0) {
             Write-Host "fatal: current directory is not empty, please install in an empty directory" -ForegroundColor Red
-            exit 1
+            Pause
+            return
         }
     }
 }
@@ -35,14 +36,16 @@ Write-Host "start download agent.zip"
 Invoke-WebRequest -Uri $Uri -Headers $InvalidHeaders -OutFile agent.zip
 if (-not $?) {
     Write-Host "Invoke-WebRequest agent.zip error" -ForegroundColor Red
-    exit 1
+    Pause
+    return
 }
 
 Write-Host "agent.zip downloaded. start unzip it"
 Unzip-File "$PWD/agent.zip" "$PWD"
 if (-not $?) {
     Write-Host "unzip agent.zip error" -ForegroundColor Red
-    exit 1
+    Pause
+    return
 }
 Write-Host "unzip agent.zip succ" -ForegroundColor Green
 

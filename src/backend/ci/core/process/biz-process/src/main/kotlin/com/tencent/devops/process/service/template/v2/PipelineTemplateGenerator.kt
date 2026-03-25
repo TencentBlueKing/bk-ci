@@ -52,10 +52,10 @@ import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.common.pipeline.template.StageTemplateModel
 import com.tencent.devops.common.pipeline.template.StepTemplateModel
 import com.tencent.devops.process.constant.PipelineTemplateConstant
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_LATEST_VERSION_NOT_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_TYPE_INVALID
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_VERSION_NOT_EXISTS
 import com.tencent.devops.process.dao.PipelineTemplateResourceDraftVersionDao
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.service.PipelineInfoExtService
@@ -70,6 +70,7 @@ import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService.C
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService.Companion.setting_key
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService.Companion.trigger_key
 import com.tencent.devops.process.utils.PipelineVersionUtils
+import com.tencent.devops.process.yaml.PipelineYamlCommonService
 import com.tencent.devops.process.yaml.transfer.TransferMapper
 import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
@@ -91,6 +92,7 @@ class PipelineTemplateGenerator @Autowired constructor(
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplateSettingService: PipelineTemplateSettingService,
     private val pipelineInfoExtService: PipelineInfoExtService,
+    private val pipelineYamlCommonService: PipelineYamlCommonService,
     private val dslContext: DSLContext,
     private val pipelineTemplateResourceDraftVersionDao: PipelineTemplateResourceDraftVersionDao
 ) {
@@ -209,18 +211,26 @@ class PipelineTemplateGenerator @Autowired constructor(
      */
     fun generateDraftVersion(
         projectId: String,
-        templateId: String
+        templateId: String,
+        baseVersion: Long?
     ): PTemplateResourceOnlyVersion {
         val latestResource = pipelineTemplateResourceService.getLatestVersionResource(
             projectId = projectId,
             templateId = templateId
         ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_LATEST_VERSION_NOT_EXIST)
+        val baseResource = baseVersion?.let {
+            pipelineTemplateResourceService.get(
+                projectId = projectId,
+                templateId = templateId,
+                version = it
+            )
+        }
         return PTemplateResourceOnlyVersion(
             version = generateTemplateVersion(),
             number = latestResource.number + 1,
             settingVersion = latestResource.settingVersion + 1,
-            baseVersion = latestResource.version,
-            baseVersionName = latestResource.versionName,
+            baseVersion = baseResource?.version ?: latestResource.version,
+            baseVersionName = baseResource?.versionName ?: latestResource.versionName,
             draftVersion = PipelineTemplateConstant.INIT_VERSION
         )
     }
@@ -249,6 +259,7 @@ class PipelineTemplateGenerator @Autowired constructor(
     fun generateBranchVersion(
         projectId: String,
         templateId: String,
+        draftResource: PipelineTemplateResource? = null,
         branchName: String
     ): PTemplateResourceOnlyVersion {
         val latestResource = pipelineTemplateResourceService.getLatestVersionResource(
@@ -261,13 +272,24 @@ class PipelineTemplateGenerator @Autowired constructor(
             templateId = templateId,
             branchName = branchName
         )
+        // 如果从草稿发布,number和setting不需要生成,直接使用草稿版本,否则使用最新版本+1
+        val (version, number, settingVersion) = if (draftResource == null) {
+            Triple(
+                generateTemplateVersion(),
+                latestResource.number + 1,
+                latestResource.settingVersion + 1
+            )
+        } else {
+            Triple(draftResource.version, draftResource.number, draftResource.settingVersion)
+        }
         return PTemplateResourceOnlyVersion(
-            version = generateTemplateVersion(),
-            number = latestResource.number + 1,
+            version = version,
+            number = number,
             versionName = branchName,
-            settingVersion = latestResource.settingVersion + 1,
-            baseVersion = branchResource?.version ?: latestResource.version,
-            baseVersionName = branchResource?.versionName ?: latestResource.versionName
+            settingVersion = settingVersion,
+            baseVersion = draftResource?.baseVersion ?: branchResource?.version ?: latestResource.version,
+            baseVersionName =
+                draftResource?.baseVersionName ?: branchResource?.versionName ?: latestResource.versionName
         )
     }
 
@@ -308,22 +330,6 @@ class PipelineTemplateGenerator @Autowired constructor(
                 customVersionName = customVersionName
             )
             Pair(VersionStatus.RELEASED, resourceOnlyVersion)
-        }.also {
-            val versionStatus = it.first
-            if (versionStatus == VersionStatus.RELEASED) {
-                val versionName = it.second.versionName!!
-                pipelineTemplateResourceService.getLatestResource(
-                    projectId = projectId,
-                    templateId = templateId,
-                    status = VersionStatus.RELEASED,
-                    versionName = it.second.versionName!!
-                )?.let {
-                    throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_TEMPLATE_VERSION_NAME_DUPLICATION,
-                        params = arrayOf(versionName)
-                    )
-                }
-            }
         }
     }
 
@@ -357,19 +363,27 @@ class PipelineTemplateGenerator @Autowired constructor(
                     pipelineTemplateResourceService.get(
                         projectId = projectId, templateId = templateId, version = it
                     )
-                } ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_NOT_EXISTS)
+                } ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_VERSION_NOT_EXISTS)
                 if (baseResource.status != VersionStatus.BRANCH) {
                     throw ErrorCodeException(errorCode = ERROR_TEMPLATE_NOT_EXISTS)
                 }
-                val resourceOnlyVersion =
-                    PTemplateResourceOnlyVersion(draftResource).copy(versionName = baseResource.versionName)
+                val resourceOnlyVersion = generateBranchVersion(
+                    projectId = projectId,
+                    templateId = templateId,
+                    draftResource = draftResource,
+                    branchName = baseResource.versionName!!
+                )
                 Pair(VersionStatus.BRANCH, resourceOnlyVersion)
             }
 
             CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE -> {
-                val versionName = "${PAC_TEMPLATE_BRANCH_PREFIX}$templateId-${draftResource.number}"
-                val resourceOnlyVersion =
-                    PTemplateResourceOnlyVersion(draftResource).copy(versionName = versionName)
+                val checkoutBranch = "${PAC_TEMPLATE_BRANCH_PREFIX}$templateId-${draftResource.number}"
+                val resourceOnlyVersion = generateBranchVersion(
+                    projectId = projectId,
+                    templateId = templateId,
+                    draftResource = draftResource,
+                    branchName = checkoutBranch
+                )
                 Pair(VersionStatus.BRANCH, resourceOnlyVersion)
             }
 
@@ -377,18 +391,11 @@ class PipelineTemplateGenerator @Autowired constructor(
                 if (targetBranch == null) {
                     throw IllegalArgumentException("targetBranch is null")
                 }
-                val serverRepository = client.get(ServiceScmRepositoryApiResource::class).getServerRepositoryById(
-                    projectId = projectId,
-                    repositoryType = RepositoryType.ID,
-                    repoHashIdOrName = repoHashId
-                ).data
-                if (serverRepository !is GitScmServerRepository) {
-                    throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC
-                    )
-                }
+                val defaultBranch = pipelineYamlCommonService.getDefaultBranch(
+                    projectId = projectId, repoHashId = repoHashId
+                )
                 // 如果选择的是默认分支,则应该发布正式版本
-                if (targetBranch == serverRepository.defaultBranch) {
+                if (targetBranch == defaultBranch) {
                     val resourceOnlyVersion = generateReleaseVersion(
                         projectId = projectId,
                         templateId = templateId,
@@ -399,8 +406,12 @@ class PipelineTemplateGenerator @Autowired constructor(
                     )
                     Pair(VersionStatus.RELEASED, resourceOnlyVersion)
                 } else {
-                    val resourceOnlyVersion =
-                        PTemplateResourceOnlyVersion(draftResource).copy(versionName = targetBranch)
+                    val resourceOnlyVersion = generateBranchVersion(
+                        projectId = projectId,
+                        templateId = templateId,
+                        draftResource = draftResource,
+                        branchName = targetBranch
+                    )
                     Pair(VersionStatus.BRANCH, resourceOnlyVersion)
                 }
             }
@@ -416,6 +427,7 @@ class PipelineTemplateGenerator @Autowired constructor(
      *
      * @param draftResource 草稿版本,草稿发布时需传入,直接生成正式版本为空
      */
+    @Suppress("CyclomaticComplexMethod")
     fun generateReleaseVersion(
         projectId: String,
         templateId: String,
@@ -508,7 +520,9 @@ class PipelineTemplateGenerator @Autowired constructor(
                 pipelineVersion = pipelineVersion,
                 triggerVersion = triggerVersion,
                 settingVersion = settingVersion,
-                settingVersionNum = settingVersionNum
+                settingVersionNum = settingVersionNum,
+                baseVersion = draftResource?.version ?: latestReleaseResource.version,
+                baseVersionName = draftResource?.versionName ?: latestReleaseResource.versionName
             )
         }
     }
