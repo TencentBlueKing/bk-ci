@@ -34,6 +34,7 @@ import com.tencent.devops.buildless.pojo.RejectedExecutionType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.utils.BeanUtil
 import com.tencent.devops.dispatch.docker.client.context.BuildLessStartHandlerContext
 import com.tencent.devops.dispatch.docker.common.Constants
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
@@ -80,11 +81,25 @@ class BuildLessStartHandler @Autowired constructor(
                 rejectedExecutionType = rejectedExecutionType
             )
 
+            // 记录资源交付中
+            BeanUtil.getDispatchMessageTracking().trackResourceDelivering(
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                executeCount = event.executeCount ?: 1
+            )
+
             when (clusterType) {
                 DockerHostClusterType.BUILD_LESS -> startBuildLess(buildLessStartInfo, handlerContext)
                 DockerHostClusterType.K8S_BUILD_LESS -> startK8sBuildLess(buildLessStartInfo, handlerContext)
                 else -> startBuildLess(buildLessStartInfo, handlerContext)
             }
+
+            // 记录资源交付完成
+            BeanUtil.getDispatchMessageTracking().trackResourceReady(
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                executeCount = event.executeCount ?: 1
+            )
         }
     }
 
@@ -92,34 +107,32 @@ class BuildLessStartHandler @Autowired constructor(
         buildLessStartInfo: BuildLessStartInfo,
         handlerContext: BuildLessStartHandlerContext
     ) {
-        with(handlerContext) {
-            val request = getDockerHostProxyRequest(
-                hostUri = Constants.BUILD_LESS_STARTUP_URI,
-                hostIp = buildLessHost,
-                hostPort = buildLessPort
-            ).post(
-                JsonUtil.toJson(buildLessStartInfo)
-                    .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
-            ).build()
+        val request = getDockerHostProxyRequest(
+            hostUri = Constants.BUILD_LESS_STARTUP_URI,
+            hostIp = handlerContext.buildLessHost,
+            hostPort = handlerContext.buildLessPort
+        ).post(
+            JsonUtil.toJson(buildLessStartInfo)
+                .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        ).build()
 
-            logger.info("$buildLogKey start buildLess $buildLessHost, ${request.url}")
+        logger.info("${handlerContext.buildLogKey} start buildLess ${handlerContext.buildLessHost}, ${request.url}")
 
-            try {
-                OkhttpUtils.doHttp(request).use { resp ->
-                    if (resp.isSuccessful) {
-                        val response: Map<String, Any> = jacksonObjectMapper().readValue(resp.body!!.string())
-                        logger.info("$buildLogKey response: ${JsonUtil.toJson(response)}")
-                        dealWithResponse(response, this)
-                    } else {
-                        // 接口异常重试
-                        doRetry(resp.message, this)
-                    }
+        try {
+            OkhttpUtils.doHttp(request).use { resp ->
+                if (resp.isSuccessful) {
+                    val response: Map<String, Any> = jacksonObjectMapper().readValue(resp.body!!.string())
+                    logger.info("${handlerContext.buildLogKey} response: ${JsonUtil.toJson(response)}")
+                    dealWithResponse(response, handlerContext)
+                } else {
+                    // 接口异常重试
+                    doRetry(resp.message, handlerContext)
                 }
-            } catch (e: Exception) {
-                when (e) {
-                    is SocketTimeoutException -> handleSocketTimeoutException(e, this)
-                    is NoRouteToHostException, is ConnectException -> doRetry(e.message, this)
-                }
+            }
+        } catch (e: Exception) {
+            when (e) {
+                is SocketTimeoutException -> handleSocketTimeoutException(e, handlerContext)
+                is NoRouteToHostException, is ConnectException -> doRetry(e.message, handlerContext)
             }
         }
     }
