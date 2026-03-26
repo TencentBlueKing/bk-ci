@@ -56,7 +56,8 @@ interface PermissionResourceService {
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        enabled: Boolean? = true
     ): Boolean
 
     /**
@@ -123,4 +124,12 @@ interface PermissionResourceService {
         resourceType: String,
         resourceCode: String
     ): AuthResourceInfo
+
+    /**
+     * 修改项目启用/禁用状态
+     */
+    fun modifyProjectEnabled(
+        projectCode: String,
+        enabled: Boolean
+    ): Boolean
 }
