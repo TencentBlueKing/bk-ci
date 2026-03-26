@@ -66,6 +66,7 @@ import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Record15
 import org.jooq.Record2
+import org.jooq.Record6
 import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL
@@ -2227,6 +2228,23 @@ class PipelineBuildLightInfoJooqMapper : RecordMapper<
                     retry = t[tTPipelineBuildHistory.EXECUTE_COUNT]?.let { it > 1 } == true
                 )
             }
+        }
+    }
+
+    fun getPipelineBuildInfo(
+        dslContext: DSLContext,
+        buildId: String,
+        projectId: String? = null
+    ): Record6<String, String, String, String, Int, Int>? {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            val query =
+                dslContext.select(PARENT_BUILD_ID, BUILD_ID, PROJECT_ID, PIPELINE_ID, VERSION, STATUS).from(this)
+                    .where(BUILD_ID.eq(buildId))
+
+            if (projectId != null) {
+                query.and(PROJECT_ID.eq(projectId))
+            }
+            query.fetchOne()
         }
     }
 }

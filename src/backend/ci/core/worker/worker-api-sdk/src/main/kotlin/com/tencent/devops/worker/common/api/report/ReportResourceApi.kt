@@ -36,6 +36,7 @@ import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
@@ -99,6 +100,78 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         }
     }
 
+    override fun uploadReportFileToParentPipeline(
+        file: File,
+        taskId: String,
+        relativePath: String,
+        buildVariables: BuildVariables,
+        token: String?
+    ) {
+        val result = getParentPipelineBuildInfo(buildVariables.buildId, buildVariables.projectId).data!!
+        val purePath = "$taskId/${purePath(relativePath)}".removeSuffix("/${file.name}")
+        val url = "/ms/artifactory/api/build/artifactories/file/archive" +
+                "?fileType=${FileTypeEnum.BK_REPORT}&customFilePath=$purePath&parentProjectId=" +
+                "${result.projectId}&parentPipelineId=${result.pipelineId}&parentBuildId=${result.buildId}"
+
+        val fileBody = RequestBody.create(MultipartFormData, file)
+        val requestBody = MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart("file", file.name, fileBody)
+            .build()
+
+        val request = buildPost(path = url, requestBody = requestBody)
+
+        val response = request(
+            request,
+            MessageUtil.getMessageByLocale(UPLOAD_CUSTOM_REPORT_FAILURE, AgentEnv.getLocaleLanguage())
+        )
+
+        try {
+            val obj = JsonParser().parse(response).asJsonObject
+            if (obj.has("code") && obj["code"].asString != "200") {
+                throw RemoteServiceException(
+                    MessageUtil.getMessageByLocale(
+                        UPLOAD_PIPELINE_FILE_FAILED,
+                        AgentEnv.getLocaleLanguage()
+                    )
+                )
+            }
+        } catch (ignored: Exception) {
+            LoggerService.addNormalLine(ignored.message ?: "")
+            throw RemoteServiceException("report archive fail: $response")
+        }
+    }
+
+    override fun createParentReportRecord(
+        buildVariables: BuildVariables,
+        taskId: String,
+        indexFile: String,
+        name: String,
+        reportType: String?,
+        token: String?
+    ): Result<Boolean> {
+        val pipelineBuildInfo = getParentPipelineBuildInfo(buildVariables.buildId, buildVariables.projectId).data!!
+        val path =
+            "/ms/process/api/build/reports/$taskId?indexFile=${
+                encode(
+                    indexFile
+                )
+            }&name=${
+                encode(
+                    name
+                )
+            }&reportType=$reportType" +
+                    "&parentProjectId=${pipelineBuildInfo.projectId}" +
+                    "&parentPipelineId=${pipelineBuildInfo.pipelineId}" +
+                    "&parentPipelineBuildId=${pipelineBuildInfo.buildId}"
+        val request = buildPost(path)
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(CREATE_REPORT_FAIL, AgentEnv.getLocaleLanguage())
+        )
+        return objectMapper.readValue(responseContent)
+    }
+
     override fun getRootUrl(taskId: String): Result<String> {
         val path = "/ms/artifactory/api/build/artifactories/report/$taskId/root"
         val request = buildGet(path)
@@ -155,6 +228,16 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             compressThreshold = Long.MAX_VALUE,
             compressSizeLimit = 0
         ))
+    }
+
+    override fun getParentPipelineBuildInfo(buildId: String, projectId: String): Result<BuildBasicInfo> {
+        val path = "/ms/process/api/service/builds/$projectId/$buildId/topParent/get"
+        val request = buildGet(path)
+        val responseContent = request(
+            request,
+            "getParentPipelineBuildInfo error "
+        )
+        return objectMapper.readValue(responseContent)
     }
 
     companion object {

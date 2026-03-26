@@ -95,6 +95,7 @@ const val PATH = "path" // 路径
 const val META_DATA = "metadata" // 制品元数据
 const val ARTIFACTORY_TYPE = "artifactoryType" // 归档仓库类型
 const val REPORT_TYPE = "reportType" // 报告类型
+const val SHOULD_ARCHIVE_TO_PARENT_PIPELINE = "shouldArchiveToParentPipeline"
 const val DATA = "data" // 数据
 const val STRING = "string" // 字符串
 const val LATEST_MODIFIER = "latestModifier" // 最近修改人
