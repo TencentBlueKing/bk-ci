@@ -43,8 +43,6 @@
 <script>
     import { defineComponent, ref, computed, watch, onMounted } from 'vue'
     import useInstance from '@/hook/useInstance'
-    import { REPOSITORY_API_URL_PREFIX } from '@/store/constants'
-    import ajax from '@/utils/request'
 
     export default defineComponent({
         name: 'PacBranchSelector',
@@ -58,6 +56,7 @@
             const scrollLoading = ref(false)
             const searchKey = ref('')
             const isInitializing = ref(false) // 标记是否正在初始化
+            const defaultBranch = ref('') // 默认分支名称
             const pagination = ref({
                 page: 1,
                 pageSize: 100,
@@ -69,6 +68,20 @@
             const pipelineInfo = computed(() => proxy.$store.state.atom.pipelineInfo)
             const pacEnabled = computed(() => proxy.$store.getters['atom/pacEnabled'])
             const repoHashId = computed(() => pipelineInfo.value?.yamlInfo?.repoHashId)
+
+            // 获取仓库信息（用于获取默认分支）
+            const fetchRepoInfo = async () => {
+                if (!repoHashId.value) return
+                try {
+                    const data = await proxy.$store.dispatch('common/getPACRepoInfo', {
+                        projectId: projectId.value,
+                        repoHashIdOrName: repoHashId.value
+                    })
+                    defaultBranch.value = data?.defaultBranch || ''
+                } catch (error) {
+                    console.error('Failed to fetch repo info:', error)
+                }
+            }
 
             // 获取分支列表
             const fetchBranchList = async (isLoadMore = false) => {
@@ -83,32 +96,34 @@
                 }
 
                 try {
-                    const response = await ajax.get(
-                        `/${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId.value}/${repoHashId.value}/branches`,
-                        {
-                            params: {
-                                search: searchKey.value,
-                                page: pagination.value.page,
-                                pageSize: pagination.value.pageSize
-                            }
-                        }
-                    )
-
-                    const data = response.data || []
+                    const data = await proxy.$store.dispatch('common/getPACBranchList', {
+                        projectId: projectId.value,
+                        repoHashIdOrName: repoHashId.value,
+                        search: searchKey.value,
+                        page: pagination.value.page,
+                        pageSize: pagination.value.pageSize
+                    })
                     
                     if (isLoadMore) {
                         branchList.value = [...branchList.value, ...data]
                     } else {
-                        branchList.value = data
+                        branchList.value = data || []
                     }
 
                     // 判断是否还有更多数据
-                    pagination.value.hasMore = data.length >= pagination.value.pageSize
+                    pagination.value.hasMore = data?.length >= pagination.value.pageSize
 
                     // 如果没有选中分支且有分支数据，则选中默认分支或第一个分支
                     if (!selectedBranch.value && branchList.value.length > 0) {
-                        const defaultBranch = branchList.value.find(b => b.default)
-                        const targetBranch = defaultBranch || branchList.value[0]
+                        // 优先使用从仓库信息获取的默认分支
+                        let targetBranch = null
+                        if (defaultBranch.value) {
+                            targetBranch = branchList.value.find(b => b.name === defaultBranch.value)
+                        }
+                        // 如果没找到默认分支，则使用第一个分支
+                        if (!targetBranch) {
+                            targetBranch = branchList.value[0]
+                        }
                         // 设置初始化标记，避免 @change 重复触发
                         isInitializing.value = true
                         selectedBranch.value = targetBranch.name
@@ -164,16 +179,19 @@
             }
 
             // 监听 repoHashId 变化，重新获取分支列表
-            watch(repoHashId, (newVal) => {
+            watch(repoHashId, async (newVal) => {
                 if (newVal) {
                     selectedBranch.value = ''
+                    defaultBranch.value = ''
+                    await fetchRepoInfo()
                     fetchBranchList(false)
                 }
             })
 
             // 组件挂载时获取分支列表
-            onMounted(() => {
+            onMounted(async () => {
                 if (repoHashId.value) {
+                    await fetchRepoInfo()
                     fetchBranchList(false)
                 }
             })

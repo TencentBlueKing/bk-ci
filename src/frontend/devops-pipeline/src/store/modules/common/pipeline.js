@@ -367,6 +367,40 @@ export const actions = {
     getPACRepoCiDirList: (_, { projectId, repoHashId }) => {
         return request.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repoHashId}/ciSubDir`)
     },
+    /**
+     * 获取PAC仓库信息（用于获取默认分支）
+     * @param {String} projectId 项目ID
+     * @param {String} repoHashIdOrName 代码库hashId
+     * @returns {Promise}
+     */
+    getPACRepoInfo: (_, { projectId, repoHashIdOrName }) => {
+        return request.get(`${REPOSITORY_API_URL_PREFIX}/user/scm/repository/api/${projectId}/getRepository`, {
+            params: {
+                repoHashIdOrName,
+                repositoryType: 'ID'
+            }
+        }).then(response => response.data)
+    },
+    /**
+     * 获取PAC分支列表
+     * @param {String} projectId 项目ID
+     * @param {String} repoHashIdOrName 代码库hashId
+     * @param {String} search 搜索关键字
+     * @param {Number} page 页码
+     * @param {Number} pageSize 每页大小
+     * @returns {Promise}
+     */
+    getPACBranchList: (_, { projectId, repoHashIdOrName, search = '', page = 1, pageSize = 100 }) => {
+        return request.get(`${REPOSITORY_API_URL_PREFIX}/user/scm/repository/api/${projectId}/listBranches`, {
+            params: {
+                repoHashIdOrName,
+                repositoryType: 'ID',
+                search,
+                page,
+                pageSize
+            }
+        }).then(response => response.data)
+    },
     validatePermission: async (_, { projectId, ...params }) => {
         return request.post(`${AUTH_URL_PREFIX}/user/auth/permission/batch/validate`, params, {
             headers: {
