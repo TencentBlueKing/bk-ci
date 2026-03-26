@@ -508,7 +508,7 @@ class PipelineYamlFacadeService @Autowired constructor(
         return pipelineYamlVersionResolver.resolvePipelineRefVersion(
             projectId = projectId,
             repoHashId = yamlInfo.repoHashId,
-            filePath = GitActionCommon.getCiDirectory(yamlInfo.filePath),
+            filePath = yamlInfo.filePath,
             ref = branch
         ).let {
             yamlParams[CI_BRANCH] = BuildParameters(key = CI_BRANCH, value = branch)

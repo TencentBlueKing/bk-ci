@@ -177,7 +177,8 @@ class PipelineYamlVersionResolver @Autowired constructor(
             )
         }
         val defaultBranch = serverRepository.defaultBranch!!
-        val repoFileUrl = repoFileUrl(repository.url, ref, filePath)
+        val ciDir = filePath.let { it.substring(0, it.indexOfLast { c -> c == '/' }) }
+        val repoFileUrl = repoFileUrl(repository.url, ref, ciDir)
         // 这里后续看是否可以改成从T_PIPELINE_YAML_BRANCH_FILE表中获取
         val fileContent = try {
             scmProxyService.getFileContent(
@@ -190,7 +191,7 @@ class PipelineYamlVersionResolver @Autowired constructor(
             if (ignored.errorCode == HTTP_404) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND,
-                    params = arrayOf(ref, filePath, repoFileUrl)
+                    params = arrayOf(ref, ciDir, repoFileUrl)
                 )
             } else {
                 logger.warn(
@@ -200,7 +201,7 @@ class PipelineYamlVersionResolver @Autowired constructor(
             }
         } ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND,
-            params = arrayOf(ref, filePath, repoFileUrl)
+            params = arrayOf(ref, ciDir, repoFileUrl)
         )
 
         return getPipelineYamlVersion(
