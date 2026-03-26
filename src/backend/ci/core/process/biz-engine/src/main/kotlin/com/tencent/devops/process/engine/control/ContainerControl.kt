@@ -103,7 +103,6 @@ class ContainerControl @Autowired constructor(
             val containerIdLock = ContainerIdLock(redisOperation, buildId, containerId)
             try {
                 containerIdLock.lock()
-                watcher.start("execute")
                 watcher.start("getContainer")
                 val projectId = event.projectId
                 // #5951 在已结束或不存在的stage下，不再受理，抛弃消息
@@ -121,6 +120,7 @@ class ContainerControl @Autowired constructor(
                     LOG.warn("ENGINE|$buildId|$source|$stageId|j($containerId)|bad container")
                     return
                 }
+                watcher.start("execute")
                 // 防止关键信息传入错误信息，做一次更正
                 val fixEvent = this.copy(
                     stageId = container.stageId,
