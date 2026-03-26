@@ -116,13 +116,18 @@
   templateName: "storeコメントメッセージ通知テンプレート"
   notifyTypeScope:
     - "WEWORK"
+    - "WEWORK_GROUP"
   priority: 0
   source: 0
   weworkTemplate:
     id: "8599414eaeec4791a430594147ded587"
     sender: "DevOps"
     title: "【BlueKing CI研発ストア】コメント通知"
-    body: "${userId} が ${storeName} にコメントを投稿しました\n評価: ${score}\nコメント: ${commentContent}\n[返信する | ${url}]"
+    body: "${userId} が ${storeName} にコメントしました\n評価: ${score}\nコメント: ${commentContent}\n[返信に行く | ${url}]"
+  weworkGroupTemplate:
+    id: "a3b7e9f2d4c1085b6e9f3a7c2d5b8e41"
+    title: "【BlueKing CI研発ストア】コメント通知"
+    body: "${userId} が ${storeName} にコメントしました\n評価: ${score}\nコメント: ${commentContent}\n[返信に行く | ${url}]"
   creator: "system"
   modifior: "system"
 - index: 6
@@ -1085,12 +1090,17 @@
   templateName: "研発ストアプラグイン上架審査通知テンプレート"
   notifyTypeScope:
     - "WEWORK"
+    - "WEWORK_GROUP"
   priority: 0
   source: 0
   weworkTemplate:
     id: "5a8a2dff8cc949e9bee711d1c2e3d51a"
     sender: "DevOps"
-    title: "研発ストアプラグイン審査リマインド"
-    body: "${userId}が上架プラグイン申請を提出しました。できるだけ早く審査してください。\nプラグイン：${atomName} \nバージョン： ${version}"
+    title: "研発ストアプラグイン審査リマインダー"
+    body: "${userId}が上架プラグイン申請を提交しました。審査をお願いします。\nプラグイン：${atomName} \nバージョン： ${version}"
+  weworkGroupTemplate:
+    id: "f47ac10b58cc4372a5670e02b2c3d479"
+    title: "研発ストアプラグイン審査リマインダー"
+    body: "${userId}が上架プラグイン申請を提交しました。審査をお願いします。\nプラグイン：${atomName} \nバージョン： ${version}"
   creator: "system"
   modifior: "system"
