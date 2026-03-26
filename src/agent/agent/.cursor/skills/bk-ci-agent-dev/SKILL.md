@@ -32,12 +32,22 @@ src/agent/agent/
 │   │   ├── upgrader/main.go    # 升级器（替换二进制）
 │   │   └── installer/main.go   # 安装器（首次安装）
 │   ├── pkg/
-│   │   ├── agentcli/           # Agent CLI 子命令（install/uninstall/start/stop/configure-session）
-│   │   │   ├── cli.go          #   子命令路由和通用工具
-│   │   │   ├── service_linux.go #  Linux systemd 服务管理
+│   │   ├── agentcli/           # Agent CLI 子命令系统（含 i18n、状态检测、重装）
+│   │   │   ├── cli.go          #   子命令路由、preserveSet、reinstall/repair 逻辑
+│   │   │   ├── cli_test.go     #   通用函数测试
+│   │   │   ├── i18n.go         #   国际化核心（msg/msgf/initLang/printUsage）
+│   │   │   ├── i18n_test.go    #   i18n 测试
+│   │   │   ├── i18n_nowin.go   #   非 Windows detectPlatformLang stub
+│   │   │   ├── i18n_win.go     #   Windows UTF-8 控制台 + GetUserDefaultUILanguage
+│   │   │   ├── service_linux.go #  Linux systemd/direct 服务管理
 │   │   │   ├── service_darwin.go # macOS launchd 服务管理
 │   │   │   ├── service_win.go  #   Windows sc.exe 服务管理
+│   │   │   ├── status_linux.go #   Linux 状态检测（systemd/进程/JDK）
+│   │   │   ├── status_linux_test.go # Linux 状态检测测试
+│   │   │   ├── status_darwin.go #  macOS 状态检测（launchd/进程/JDK）
+│   │   │   ├── status_win.go  #    Windows 状态检测（服务/LSA/AutoLogon/计划任务）
 │   │   │   ├── session_win.go  #   Windows Session 配置（LSA/AutoLogon/凭据验证）
+│   │   │   ├── session_win_test.go # Windows Session 测试
 │   │   │   └── session_nowin.go #  非Windows stub
 │   ├── pkg/                    # 核心业务包
 │   │   ├── agent/              # Agent主循环与任务分发
@@ -97,6 +107,66 @@ agent.Run()
 - `agent.go` — 主循环、初始化、Ask轮询、safeGo、MCP启动
 - `ask.go` — 处理轮询返回的不同任务类型
 - `heartbeat.go` — 心跳上报(Agent状态、版本、系统信息)
+
+### Agent CLI 子命令系统 (`pkg/agentcli/`)
+
+Agent 二进制 `devopsAgent` 同时作为 CLI 工具使用，通过 `main.go` 中的 `agentcli.IsSubcommand()` 判定后分流。
+
+**子命令一览**:
+
+```
+devopsAgent <command> [options]
+
+服务管理:
+  install              安装并启动 Agent 守护进程服务
+  uninstall            停止并卸载守护进程服务
+  start                启动守护进程
+  stop                 停止守护进程
+
+维护:
+  repair               修复文件: 停止 → 重新解压依赖 → 重启
+  reinstall [-y]       完全重装: 保留身份配置, 从服务端重新下载安装
+  status               显示当前运行模式和配置状态
+
+会话模式 (仅 Windows):
+  configure-session    配置桌面会话访问
+    --user USER        Windows 登录账号
+    --password PASS    密码 (--user 时必填)
+    --auto-logon       配置 Windows 自动登录
+    --disable          取消会话模式
+```
+
+**i18n 机制** (`i18n.go`):
+- `initLang()` 按优先级检测语言: `LANG` → `LC_ALL` → `LANGUAGE` → `.agent.properties` 中的 `devops.language` → 平台 API (Windows: `GetUserDefaultUILanguage`)
+- 所有 CLI 输出通过 `msg(en, zh)` / `msgf(en, zh, args...)` 双语包装
+- Windows 通过 `SetConsoleOutputCP(65001)` 确保 UTF-8 输出不乱码
+
+**reinstall 流程**:
+```
+devopsAgent reinstall [-y]
+  → 步骤 1: handleStop()  停止进程（不清除会话配置和 .install_type）
+  → 步骤 2: 清理文件（保留 preserveSet 中的身份文件）
+  → 步骤 3: 运行 install.sh / download_install.ps1 从服务端重新下载安装
+```
+不依赖 Agent 内置升级机制，直接使用安装脚本从服务端拉取完整包。
+
+**preserveSet** (重装时保留的文件):
+| 文件 | 说明 |
+|------|------|
+| `.agent.properties` | Agent 身份配置 |
+| `.install_type` | Windows 安装模式标记 (SERVICE/SESSION) |
+| `.cert` | TLS 证书信任文件 |
+| `workspace/` | 构建工作空间 |
+| `devopsAgent[.exe]` | 当前运行的 Agent 二进制 |
+| `install.sh` / `download_install.ps1` | 安装脚本 |
+
+**status 命令** 输出内容 (按平台):
+| 项目 | Linux | macOS | Windows |
+|------|-------|-------|---------|
+| 运行模式 | root+systemd / root+direct / non-root | root (LaunchDaemons) / user (LaunchAgents) | SERVICE / SESSION / TASK(legacy) |
+| 服务状态 | systemctl is-active | plist 文件检测 | sc.exe query |
+| 进程检测 | syscall.Kill(pid, 0) | syscall.Kill(pid, 0) | OpenProcess |
+| 会话详情 | — | — | LSA Secret 凭据 + AutoLogon 状态 |
 
 ### API 通信 (`pkg/api/`)
 
@@ -402,6 +472,9 @@ func handleNewTool(ctx context.Context, req *protocol.CallToolRequest) (*protoco
 - [ ] 锁操作是否使用了 `defer Unlock()`？禁止手动多路径 Unlock
 - [ ] 是否需要通过 MCP 暴露新信息？在 `mcp/tools.go` 新增 Tool
 - [ ] 新增环境变量开关？在 `constant/constant.go` 添加常量
+- [ ] **测试用例**：新增/修改的可测试函数是否编写了单元测试？使用 table-driven + `t.Run()` 风格
+- [ ] **功能文档**：是否需要更新 SKILL.md 中的架构描述、目录树、子命令说明？
+- [ ] CLI 子命令新增/修改？更新 `agentcli/` 的 `IsSubcommand()`、`printUsageLocalized()` 和 SKILL.md
 
 ## 构建与测试
 
@@ -436,8 +509,30 @@ config.AgentVersion = 版本号(version.go中声明)
 ### 运行测试
 
 ```bash
+# 全部测试
 go test ./...
+
+# 仅 agentcli 包（带详细输出）
+go test -v ./src/pkg/agentcli/
+
+# 运行特定测试
+go test -v -run TestPidStatus ./src/pkg/agentcli/
 ```
+
+**测试规范**:
+- 使用 table-driven + `t.Run()` 风格（参考 `agentcli/cli_test.go`）
+- 文件系统相关测试使用 `t.TempDir()`
+- 全局状态（如 `useChinese`）测试前保存、测试后恢复
+- 平台特定测试使用 build tag（如 `//go:build linux`）
+- 进程检测测试使用 `os.Getpid()` 验证存活进程
+
+**已有测试覆盖的 agentcli 模块**:
+| 文件 | 覆盖内容 |
+|------|---------|
+| `cli_test.go` | IsSubcommand、readProperty、preserveSet、cleanup 逻辑 |
+| `i18n_test.go` | msg/msgf、initLang 环境变量优先级、tryReadLang |
+| `status_linux_test.go` | dirStatus、fileStatus、readPid、pidStatus、currentUser |
+| `session_win_test.go` | splitUserDomain、readInstallTypeFile |
 
 ### 关键第三方依赖
 

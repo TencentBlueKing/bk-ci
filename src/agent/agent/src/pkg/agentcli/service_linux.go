@@ -20,15 +20,12 @@ func platformUnzip(src, dest string) error {
 }
 
 func hasSystemd() bool {
-	_, err := exec.LookPath("systemctl")
-	if err != nil {
+	if _, err := exec.LookPath("systemctl"); err != nil {
 		return false
 	}
-	// Container environments may have systemctl binary but no running systemd
 	out, err := exec.Command("systemctl", "is-system-running").CombinedOutput()
 	if err != nil {
 		s := strings.TrimSpace(string(out))
-		// "running", "degraded", "starting" all mean systemd is active
 		return s == "degraded" || s == "starting"
 	}
 	return true
@@ -40,7 +37,11 @@ func isRoot() bool {
 }
 
 func handleInstall(workDir string) error {
-	printStep("Installing agent daemon service (Linux)...")
+	printDivider()
+	printStep(msg("Installing agent daemon service (Linux)", "安装 Agent 守护进程服务 (Linux)"))
+	printDivider()
+
+	printStep(msg("Step 1: preparing work directory ...", "步骤 1: 准备工作目录 ..."))
 	prepareWorkDir(workDir)
 
 	serviceName, err := getServiceName(workDir)
@@ -49,36 +50,52 @@ func handleInstall(workDir string) error {
 	}
 
 	if isRoot() && hasSystemd() {
-		if err := uninstallSystemd(serviceName); err != nil {
-			printWarn(fmt.Sprintf("pre-cleanup: %v", err))
-		}
+		printStep(msg("Step 2: registering systemd service ...", "步骤 2: 注册 systemd 服务 ..."))
+		_ = uninstallSystemd(serviceName)
 		cleanRcLocal(serviceName)
-		return installSystemd(workDir, serviceName)
+		if err := installSystemd(workDir, serviceName); err != nil {
+			return err
+		}
+		printStep(msg("Install complete", "安装完成"))
+		return nil
 	}
 
 	if isRoot() {
-		printStep("root without systemd (container?): starting daemon directly")
+		printStep(msg(
+			"Step 2: no systemd detected (container?), starting daemon directly ...",
+			"步骤 2: 未检测到 systemd (容器环境?), 直接启动守护进程 ..."))
 	} else {
-		printStep("non-root: starting daemon directly")
+		printStep(msg(
+			"Step 2: non-root, starting daemon directly ...",
+			"步骤 2: 非 root 用户, 直接启动守护进程 ..."))
 	}
-	return startDirect(workDir)
+	if err := startDirect(workDir); err != nil {
+		return err
+	}
+	printStep(msg("Install complete", "安装完成"))
+	return nil
 }
 
 func handleUninstall(workDir string) error {
-	printStep("Uninstalling agent daemon service (Linux)...")
+	printDivider()
+	printStep(msg("Uninstalling agent daemon service (Linux)", "卸载 Agent 守护进程服务 (Linux)"))
+	printDivider()
+
 	serviceName, err := getServiceName(workDir)
 	if err != nil {
 		return err
 	}
 
 	if hasSystemd() {
-		if err := uninstallSystemd(serviceName); err != nil {
-			printWarn(fmt.Sprintf("systemd cleanup: %v", err))
-		}
+		printStep(msg("Removing systemd service ...", "移除 systemd 服务 ..."))
+		_ = uninstallSystemd(serviceName)
 	}
 	cleanRcLocal(serviceName)
+
+	printStep(msg("Stopping processes ...", "停止进程 ..."))
 	stopProcesses(workDir)
-	printStep("uninstall complete")
+
+	printStep(msg("Uninstall complete", "卸载完成"))
 	return nil
 }
 
@@ -89,12 +106,12 @@ func handleStart(workDir string) error {
 	}
 
 	if hasSystemdUnit(serviceName) {
-		printStepf("starting service %s via systemctl", serviceName)
+		printStep(msgf("Starting service %s via systemctl ...", "通过 systemctl 启动服务 %s ...", serviceName))
 		out, err := exec.Command("systemctl", "start", serviceName).CombinedOutput()
 		if err != nil {
 			return fmt.Errorf("systemctl start: %s (%w)", strings.TrimSpace(string(out)), err)
 		}
-		printStepf("service %s started", serviceName)
+		printStep(msgf("Service %s started", "服务 %s 已启动", serviceName))
 		return nil
 	}
 
@@ -108,17 +125,17 @@ func handleStop(workDir string) error {
 	}
 
 	if hasSystemdUnit(serviceName) {
-		printStepf("stopping service %s via systemctl", serviceName)
+		printStep(msgf("Stopping service %s via systemctl ...", "通过 systemctl 停止服务 %s ...", serviceName))
 		out, err := exec.Command("systemctl", "stop", serviceName).CombinedOutput()
 		if err != nil {
 			printWarn(fmt.Sprintf("systemctl stop: %s", strings.TrimSpace(string(out))))
 		}
-		printStepf("service %s stopped", serviceName)
+		printStep(msgf("Service %s stopped", "服务 %s 已停止", serviceName))
 		return nil
 	}
 
 	stopProcesses(workDir)
-	printStep("agent stopped")
+	printStep(msg("Agent stopped", "Agent 已停止"))
 	return nil
 }
 
@@ -136,7 +153,7 @@ func hasSystemdUnit(serviceName string) bool {
 func installSystemd(workDir, serviceName string) error {
 	daemonPath := filepath.Join(workDir, daemonBinary())
 	if _, err := os.Stat(daemonPath); os.IsNotExist(err) {
-		return fmt.Errorf("daemon binary not found: %s", daemonPath)
+		return fmt.Errorf(msgf("daemon binary not found: %s", "守护进程二进制未找到: %s", daemonPath))
 	}
 	os.Chmod(daemonPath, 0755)
 	os.Chmod(filepath.Join(workDir, agentBinary()), 0755)
@@ -161,7 +178,7 @@ WantedBy=multi-user.target
 	if err := os.WriteFile(unitPath, []byte(unit), 0644); err != nil {
 		return fmt.Errorf("write systemd unit: %w", err)
 	}
-	printStepf("created %s", unitPath)
+	printStep(msgf("Created systemd unit: %s", "已创建 systemd 单元: %s", unitPath))
 
 	if err := exec.Command("systemctl", "daemon-reload").Run(); err != nil {
 		return fmt.Errorf("systemctl daemon-reload: %w", err)
@@ -169,7 +186,7 @@ WantedBy=multi-user.target
 	if err := exec.Command("systemctl", "enable", "--now", serviceName).Run(); err != nil {
 		return fmt.Errorf("systemctl enable --now: %w", err)
 	}
-	printStepf("service %s enabled and started", serviceName)
+	printStep(msgf("Service %s enabled and started", "服务 %s 已启用并启动", serviceName))
 	return nil
 }
 
@@ -182,7 +199,7 @@ func uninstallSystemd(serviceName string) error {
 	_ = exec.Command("systemctl", "reset-failed", serviceName).Run()
 	os.Remove(systemdUnitPath(serviceName))
 	_ = exec.Command("systemctl", "daemon-reload").Run()
-	printStepf("systemd service %s removed", serviceName)
+	printStep(msgf("Systemd service %s removed", "已移除 systemd 服务 %s", serviceName))
 	return nil
 }
 
@@ -203,7 +220,7 @@ func cleanRcLocal(serviceName string) {
 	}
 	if changed {
 		os.WriteFile(rcLocal, []byte(strings.Join(lines, "\n")), 0755)
-		printStep("cleaned rc.local entries")
+		printStep(msg("Cleaned rc.local entries", "已清理 rc.local 条目"))
 	}
 }
 
@@ -217,9 +234,9 @@ func startDirect(workDir string) error {
 	cmd.Stdout = nil
 	cmd.Stderr = nil
 	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("start daemon: %w", err)
+		return fmt.Errorf(msgf("start daemon failed: %v", "启动守护进程失败: %v", err))
 	}
-	printStepf("daemon started, pid=%d", cmd.Process.Pid)
+	printStep(msgf("Daemon started, PID=%d", "守护进程已启动, PID=%d", cmd.Process.Pid))
 	cmd.Process.Release()
 	return nil
 }
