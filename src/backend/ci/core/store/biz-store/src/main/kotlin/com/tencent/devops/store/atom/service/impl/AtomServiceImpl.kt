@@ -970,9 +970,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                         )
                     }
                 }
-                //更新标签信息
+                // 更新标签信息
                 val labelIdList = atomUpdateRequest.labelIdList
-                if(labelIdList?.isNotEmpty() == true){
+                if (labelIdList?.isNotEmpty() == true) {
                     atomLabelRelDao.deleteByAtomId(context, id)
                     atomLabelRelDao.batchAdd(context, userId, id, labelIdList)
                 }
