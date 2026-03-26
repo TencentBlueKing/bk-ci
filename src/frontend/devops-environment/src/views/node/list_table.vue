@@ -821,7 +821,7 @@
                 return this.currentResType === SERVICE_RESOURCE_TYPE.CREATE
             },
             tableColumn () {
-                const column = [
+                const columns = [
                     {
                         id: 'displayName',
                         label: this.$t('environment.nodeInfo.displayName'),
