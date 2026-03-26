@@ -32,10 +32,14 @@ import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
+import com.tencent.devops.store.util.ServiceScopeUtil
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.Record1
 import org.jooq.Result
+import org.jooq.impl.DSL
 
 /**
  * 插件数据库操作基类
@@ -44,6 +48,11 @@ import org.jooq.Result
  */
 @Suppress("ALL")
 abstract class AtomBaseDao {
+
+    /**
+     * 构建 JSON_EXTRACT/JSON_CONTAINS 的路径，统一输出 "$.SCOPE_KEY" 形式。
+     */
+    private fun buildScopeJsonPath(scopeKey: String): String = "\$.$scopeKey"
 
     /**
      * 设置插件市场可见插件查询条件
@@ -138,5 +147,68 @@ abstract class AtomBaseDao {
                 .where(conditions)
                 .fetch()
         }
+    }
+
+    /**
+     * 根据服务范围构建分类ID字段表达式
+     *
+     * - serviceScope 为 null 或 PIPELINE 时，使用 CLASSIFY_ID 字段（性能最好，有索引）
+     * - serviceScope 为其他时，从 CLASSIFY_ID_MAP JSON 字段中提取对应的分类ID
+     */
+    protected fun buildClassifyIdField(
+        ta: TAtom,
+        serviceScope: ServiceScopeEnum?
+    ): Field<String> {
+        val normalizedScope = serviceScope?.let { ServiceScopeUtil.normalize(it.name) }
+        return if (normalizedScope == null || normalizedScope == ServiceScopeEnum.PIPELINE.name) {
+            ta.CLASSIFY_ID
+        } else {
+            DSL.field(
+                "COALESCE(JSON_UNQUOTE(JSON_EXTRACT({0}, {1})), {2})",
+                String::class.java,
+                ta.CLASSIFY_ID_MAP,
+                DSL.inline(buildScopeJsonPath(normalizedScope)),
+                ta.CLASSIFY_ID
+            )
+        }
+    }
+
+    /**
+     * 构建分类查询条件（支持多服务范围）
+     *
+     * 根据 serviceScope 参数动态构建分类过滤条件：
+     * - 如果 serviceScope 是 PIPELINE，使用 CLASSIFY_ID 字段查询
+     * - 如果 serviceScope 是其他，从 CLASSIFY_ID_MAP 中查询
+     *
+     * @param ta TAtom 表
+     * @param classifyId 分类ID
+     * @param serviceScope 服务范围
+     * @return 查询条件，如果不需要过滤则返回 null
+     */
+    protected fun buildClassifyCondition(
+        ta: TAtom,
+        classifyId: String?,
+        serviceScope: ServiceScopeEnum?
+    ): Condition? {
+        if (classifyId.isNullOrBlank()) return null
+        val normalizedScope = serviceScope?.let { ServiceScopeUtil.normalize(it.name) }
+
+        if (normalizedScope == null || normalizedScope == ServiceScopeEnum.PIPELINE.name) {
+            val jsonExtractField = DSL.field(
+                "JSON_UNQUOTE(JSON_EXTRACT({0}, {1}))",
+                String::class.java,
+                ta.CLASSIFY_ID_MAP,
+                DSL.inline("\$.${ServiceScopeEnum.PIPELINE.name}")
+            )
+            return ta.CLASSIFY_ID.eq(classifyId).or(jsonExtractField.eq(classifyId))
+        }
+
+        val jsonExtractField = DSL.field(
+            "JSON_UNQUOTE(JSON_EXTRACT({0}, {1}))",
+            String::class.java,
+            ta.CLASSIFY_ID_MAP,
+            DSL.inline(buildScopeJsonPath(normalizedScope))
+        )
+        return jsonExtractField.eq(classifyId).or(ta.CLASSIFY_ID.eq(classifyId))
     }
 }

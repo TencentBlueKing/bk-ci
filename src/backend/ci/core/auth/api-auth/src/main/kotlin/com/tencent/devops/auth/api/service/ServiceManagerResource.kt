@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,35 +25,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.atom
+package com.tencent.devops.auth.api.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.classify.Classify
-import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import io.swagger.v3.oas.annotations.tags.Tag
-import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.DefaultValue
-import jakarta.ws.rs.GET
-import jakarta.ws.rs.Path
-import jakarta.ws.rs.Produces
-import jakarta.ws.rs.QueryParam
-import jakarta.ws.rs.core.MediaType
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@Tag(name = "USER_PIPELINE_ATOM_CLASSIFY", description = "流水线-插件分类")
-@Path("/user/pipeline/atom/classify")
+@Tag(name = "SERVICE_MANAGER", description = "权限校验--超级管理员")
+@Path("/open/service/auth/manager")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserAtomClassifyResource {
+interface ServiceManagerResource {
 
-    @Operation(summary = "获取所有流水线插件分类信息")
     @GET
-    @Path("/")
-    fun getAllAtomClassifies(
-        @Parameter(description = "服务范围", required = false)
-        @QueryParam("serviceScope")
-        @DefaultValue("PIPELINE")
-        serviceScope: ServiceScopeEnum? = ServiceScopeEnum.PIPELINE
-    ): Result<List<Classify>>
+    @Path("/projects/{projectCode}")
+    fun validateManagerPermission(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @Parameter(description = "待校验用户ID", required = true)
+        userId: String,
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @Parameter(description = "认证token", required = true)
+        token: String,
+        @PathParam("projectCode")
+        @Parameter(description = "项目编码", required = true)
+        projectCode: String,
+        @QueryParam("action")
+        @Parameter(description = "资源类型", required = true)
+        action: String,
+        @QueryParam("resourceCode")
+        @Parameter(description = "资源编码", required = false)
+        resourceCode: String
+    ): Result<Boolean>
 }
