@@ -254,24 +254,42 @@ class RbacPermissionResourceService(
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = projectCode
             )
+            // 如果发现资源已经被禁用，并且relationId为空,
+            // 说明二级管理员已在禁用时被删除,无需修改二级管理员以及用户组相关信息。
+            // 只需要对 Resource 表的名称进行修改即可
             if (!resourceInfo.enable && resourceInfo.relationId.isBlank()) {
                 logger.info(
                     "resource is disabled and relationId is empty, " +
                         "skip modify subset manager" +
                         "|$projectCode|$resourceType|$resourceCode"
                 )
-                true
-            } else {
-                permissionSubsetManagerService.modifySubsetManager(
-                    subsetManagerId = resourceInfo.relationId,
+                authResourceService.update(
                     projectCode = projectCode,
-                    projectName = projectInfo.resourceName,
                     resourceType = resourceType,
                     resourceCode = resourceCode,
-                    resourceName = resourceName,
-                    iamResourceCode = resourceInfo.iamResourceCode
+                    resourceName = resourceName
                 )
+                permissionAuthorizationService.modifyResourceAuthorization(
+                    listOf(
+                        ResourceAuthorizationDTO(
+                            projectCode = projectCode,
+                            resourceType = resourceType,
+                            resourceCode = resourceCode,
+                            resourceName = resourceName
+                        )
+                    )
+                )
+                return true
             }
+            permissionSubsetManagerService.modifySubsetManager(
+                subsetManagerId = resourceInfo.relationId,
+                projectCode = projectCode,
+                projectName = projectInfo.resourceName,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                resourceName = resourceName,
+                iamResourceCode = resourceInfo.iamResourceCode
+            )
         }
         if (updateAuthResource) {
             authResourceService.update(
