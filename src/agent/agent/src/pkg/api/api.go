@@ -85,12 +85,6 @@ func UpdatePipelineStatus(response *PipelineResponse) (*httputil.DevopsResult, e
 		SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute(nil).IntoDevopsResult()
 }
 
-func DownloadAgentInstallBatchZip(saveFile string) error {
-	url := buildUrl(fmt.Sprintf("/ms/environment/api/external/thirdPartyAgent/%s/batch_zip",
-		config.GAgentConfig.BatchInstallKey))
-	return httputil.DownloadAgentInstallScript(url, config.GAgentConfig.GetAuthHeaderMap(), saveFile)
-}
-
 func FinishDockerDebug(
 	imageDebug *ImageDebug,
 	success bool,

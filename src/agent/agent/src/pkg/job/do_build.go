@@ -42,15 +42,15 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
 	ucommand "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 )
 
 func doBuild(
@@ -232,9 +232,25 @@ func StartProcessCmd(
 ) (*exec.Cmd, error) {
 	cmd := exec.Command(command)
 
-	// arm64机器目前无法通过worker杀进程
 	if enableExitGroup {
 		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	}
+
+	// DEVOPS_AGENT_CLOSE_FD_INHERIT: optional fd isolation matching Windows' NoInheritHandles.
+	// On Unix, Go's forkAndExec already closes child fds > stderr that are not in ExtraFiles.
+	// When enabled, we additionally:
+	//   - Setpgid for process group isolation (if not already set by enableExitGroup)
+	//   - Stdin/Stdout/Stderr = nil → /dev/null, preventing daemon pipe inheritance
+	//   - ExtraFiles = nil
+	if envs.FetchEnvAndCheck(constant.DevopsAgentCloseFdInherit, "true") {
+		logs.Info("DEVOPS_AGENT_CLOSE_FD_INHERIT enabled: fd isolation for build process")
+		if cmd.SysProcAttr == nil {
+			cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+		}
+		cmd.Stdin = nil
+		cmd.Stdout = nil
+		cmd.Stderr = nil
+		cmd.ExtraFiles = nil
 	}
 
 	if len(args) > 0 {
