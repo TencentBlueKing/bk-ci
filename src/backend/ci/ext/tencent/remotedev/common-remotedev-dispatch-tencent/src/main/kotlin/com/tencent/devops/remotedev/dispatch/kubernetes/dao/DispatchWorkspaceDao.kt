@@ -118,7 +118,24 @@ class DispatchWorkspaceDao {
             return dslContext.select(WORKSPACE_NAME)
                 .from(this)
                 .where(ENVIRONMENT_UID.eq(envId))
-                .fetchAny()?.value1()
+                .orderBy(ID.desc()).limit(1)
+                .fetchOne()?.value1()
+        }
+    }
+
+    fun getEnvIdsByWorkspaceNames(
+        workspaceNames: List<String>,
+        dslContext: DSLContext
+    ): Map<String, String> {
+        if (workspaceNames.isEmpty()) return emptyMap()
+        with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
+            return dslContext.select(WORKSPACE_NAME, ENVIRONMENT_UID)
+                .from(this)
+                .where(WORKSPACE_NAME.`in`(workspaceNames))
+                .fetch()
+                .associate { record ->
+                    record.get(WORKSPACE_NAME) to (record.get(ENVIRONMENT_UID) ?: "")
+                }
         }
     }
 }

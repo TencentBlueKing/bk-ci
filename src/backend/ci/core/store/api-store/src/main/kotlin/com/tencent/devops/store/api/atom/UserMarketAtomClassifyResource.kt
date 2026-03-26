@@ -29,12 +29,16 @@ package com.tencent.devops.store.api.atom
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.MarketAtomClassify
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "USER_MARKET_ATOM_CLASSIFY", description = "插件市场-插件分类")
@@ -46,5 +50,10 @@ interface UserMarketAtomClassifyResource {
     @Operation(summary = "获取所有插件分类信息")
     @GET
     @Path("/")
-    fun getAllAtomClassifys(): Result<List<MarketAtomClassify>>
+    fun getAllAtomClassifies(
+        @Parameter(description = "支持的服务范围", required = false)
+        @QueryParam("serviceScope")
+        @DefaultValue("PIPELINE")
+        serviceScope: ServiceScopeEnum? = ServiceScopeEnum.PIPELINE
+    ): Result<List<MarketAtomClassify>>
 }

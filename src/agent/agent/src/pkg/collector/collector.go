@@ -1,3 +1,5 @@
+//go:build !loong64
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -37,7 +39,7 @@ import (
 	"github.com/pkg/errors"
 
 	telegrafconf "github.com/TencentBlueKing/bk-ci/agent/src/pkg/collector/telegrafConf"
-	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/influxdata/telegraf/logger"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
@@ -47,7 +49,7 @@ import (
 
 	"strings"
 
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 )

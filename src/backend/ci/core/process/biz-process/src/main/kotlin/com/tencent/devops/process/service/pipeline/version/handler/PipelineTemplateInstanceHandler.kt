@@ -29,7 +29,6 @@ package com.tencent.devops.process.service.pipeline.version.handler
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -55,8 +54,12 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
         context.versionAction == PipelineVersionAction.TEMPLATE_INSTANCE
 
     override fun handle(context: PipelineVersionCreateContext): DeployPipelineResult {
-        logger.info("template instance with context={}", JsonUtil.toJson(context, false))
         with(context) {
+            logger.info(
+                "handle template instance|" +
+                        "$projectId|$pipelineId|$version|" +
+                        "${templateInstanceBasicInfo?.templateId}|${templateInstanceBasicInfo?.templateVersion}"
+            )
             if (templateInstanceBasicInfo == null) {
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.PARAMETER_IS_NULL,

@@ -32,6 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.UserMarketAtomClassifyResource
 import com.tencent.devops.store.pojo.atom.MarketAtomClassify
 import com.tencent.devops.store.atom.service.MarketAtomClassifyService
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -39,7 +40,7 @@ class UserMarketAtomClassifyResourceImpl @Autowired constructor(
     private val marketAtomClassifyService: MarketAtomClassifyService
 ) : UserMarketAtomClassifyResource {
 
-    override fun getAllAtomClassifys(): Result<List<MarketAtomClassify>> {
-        return marketAtomClassifyService.getAllAtomClassify()
+    override fun getAllAtomClassifies(serviceScope: ServiceScopeEnum?): Result<List<MarketAtomClassify>> {
+        return marketAtomClassifyService.getAllAtomClassify(serviceScope)
     }
 }

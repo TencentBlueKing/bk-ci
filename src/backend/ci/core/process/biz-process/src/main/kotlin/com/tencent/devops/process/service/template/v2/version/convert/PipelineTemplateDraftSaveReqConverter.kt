@@ -41,7 +41,6 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateVersionReq
 import com.tencent.devops.process.service.template.v2.PipelineTemplateGenerator
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateModelInitializer
-import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -54,7 +53,6 @@ import org.springframework.stereotype.Service
 class PipelineTemplateDraftSaveReqConverter @Autowired constructor(
     private val pipelineTemplateGenerator: PipelineTemplateGenerator,
     private val pipelineTemplateInfoService: PipelineTemplateInfoService,
-    private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplateModelInitializer: PipelineTemplateModelInitializer
 ) : PipelineTemplateVersionReqConverter {
 
@@ -71,6 +69,9 @@ class PipelineTemplateDraftSaveReqConverter @Autowired constructor(
     ): PipelineTemplateVersionCreateContext {
         request as PipelineTemplateDraftSaveReq
         with(request) {
+            logger.info(
+                "Start to convert draft save request|$projectId|$templateId|$templateId|$version"
+            )
             val transferResult = pipelineTemplateGenerator.transfer(
                 userId = userId,
                 projectId = projectId,
@@ -86,7 +87,7 @@ class PipelineTemplateDraftSaveReqConverter @Autowired constructor(
                 yaml = yaml,
                 fallbackOnError = true
             )
-            val templateInfo = if (templateId != null) {
+            val templateInfo = if (!templateId.isNullOrBlank()) {
                 pipelineTemplateInfoService.get(
                     projectId = projectId,
                     templateId = templateId
@@ -106,31 +107,6 @@ class PipelineTemplateDraftSaveReqConverter @Autowired constructor(
                 )
             }
 
-            baseVersion = baseVersion ?: templateInfo.releasedVersion.takeIf {
-                templateInfo.latestVersionStatus != VersionStatus.COMMITTING
-            }
-
-            // 获取基础版本名称
-            val baseResource = baseVersion?.let {
-                pipelineTemplateResourceService.get(
-                    projectId = projectId,
-                    templateId = templateInfo.id,
-                    version = it
-                )
-            }
-            val (srcTemplateProjectId, srcTemplateId, srcTemplateVersion) =
-                takeIf { templateInfo.mode == TemplateType.CONSTRAINT && baseResource != null }?.let {
-                    with(baseResource!!) {
-                        Triple(srcTemplateProjectId, srcTemplateId, srcTemplateVersion)
-                    }
-                } ?: Triple(null, null, null)
-
-            logger.debug(
-                "PipelineTemplateDraftSaveReqConverter|baseResource={},srcTemplateProjectId={}," +
-                    "srcTemplateId={},srcTemplateVersion={},mode={}", baseResource, srcTemplateProjectId,
-                srcTemplateId, srcTemplateVersion, templateInfo.mode
-            )
-
             pipelineTemplateModelInitializer.initTemplateModel(transferResult.templateModel)
             val pTemplateResourceWithoutVersion = PTemplateResourceWithoutVersion(
                 projectId = projectId,
@@ -141,11 +117,6 @@ class PipelineTemplateDraftSaveReqConverter @Autowired constructor(
                 yaml = transferResult.yamlWithVersion?.yamlStr,
                 status = VersionStatus.COMMITTING,
                 sortWeight = PipelineTemplateConstant.COMMITTING_STATUS_VERSION_SORT_WIGHT,
-                srcTemplateProjectId = srcTemplateProjectId,
-                srcTemplateId = srcTemplateId,
-                srcTemplateVersion = srcTemplateVersion,
-                baseVersion = baseVersion,
-                baseVersionName = baseResource?.versionName,
                 creator = userId,
                 updater = userId
             )

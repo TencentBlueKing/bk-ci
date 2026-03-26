@@ -50,4 +50,8 @@ class ServiceProjectTagResourceImpl @Autowired constructor(
     override fun updateProjectRouteTag(projectCode: String, tag: String): Result<Boolean> {
         return Result(projectTagService.updateTagByProject(projectCode = projectCode, tag = tag))
     }
+
+    override fun getBlacklist(): Result<Set<String>> {
+        return Result(projectTagService.getBlacklist())
+    }
 }

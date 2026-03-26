@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.auth.api
 
+import com.tencent.devops.common.api.context.ChannelContext
+
 enum class AuthResourceType(val value: String) {
     BCS_DEV_IMAGE("dev_image"), // bcs服务开发镜像
     BCS_PROD_IMAGE("prod_image"), // bcs服务生产镜像
@@ -36,6 +38,8 @@ enum class AuthResourceType(val value: String) {
     PIPELINE_DEFAULT("pipeline"), // 流水线默认类型
     PIPELINE_GROUP("pipeline_group"), // 流水线组类型
     PIPELINE_TEMPLATE("pipeline_template"), // 流水线模板类型
+    CREATIVE_STREAM("creative_stream"), // 创作流类型
+    CREATIVE_STREAM_NODE("creative_stream_node"), // 创作流节点类型
 
     ARTIFACTORY_CUSTOM_DIR("custom_dir"), // 版本仓库自定义目录
 
@@ -76,6 +80,20 @@ enum class AuthResourceType(val value: String) {
                 if (value == it.value) return it
             }
             throw IllegalArgumentException("No enum for constant $value")
+        }
+
+        /**
+         * 根据Channel获取AuthResourceType
+         * @param defaultType 默认的AuthResourceType
+         * @return 根据channel确定的AuthResourceType
+         */
+        fun getAuthResourceTypeByChannel(defaultType: AuthResourceType): AuthResourceType {
+            val channel = ChannelContext.getChannel()
+            return if (channel == CREATIVE_STREAM.name && defaultType == PIPELINE_DEFAULT) {
+                CREATIVE_STREAM
+            } else {
+                defaultType
+            }
         }
     }
 }

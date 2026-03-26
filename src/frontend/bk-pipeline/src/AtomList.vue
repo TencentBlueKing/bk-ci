@@ -24,6 +24,7 @@
                 :is-waiting="isWaiting"
                 :is-last-atom="index === atomList.length - 1 && !hasHookAtom"
                 :prev-atom="index > 0 ? atomList[index - 1] : null"
+                @insert-after="handleInsertAfter"
                 @[COPY_EVENT_NAME]="handleCopy"
                 @[DELETE_EVENT_NAME]="handleDelete"
             />
@@ -214,6 +215,9 @@
             handleCopy ({ elementIndex, element }) {
                 this.container.elements.splice(elementIndex + 1, 0, element)
                 this.emitPipelineChange()
+            },
+            handleInsertAfter ({ elementIndex }) {
+                this.editAtom(elementIndex, true)
             },
             handleDelete ({ elementIndex }) {
                 this.container.elements.splice(elementIndex, 1)

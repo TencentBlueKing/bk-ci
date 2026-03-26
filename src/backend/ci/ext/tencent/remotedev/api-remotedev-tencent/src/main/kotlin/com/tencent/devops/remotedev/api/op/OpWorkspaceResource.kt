@@ -201,4 +201,15 @@ interface OpWorkspaceResource {
         @QueryParam("enable")
         enable: Boolean
     ): Result<Boolean>
+
+    @Operation(summary = "批量开启工作空间CoffeeAI功能")
+    @POST
+    @Path("/enable_coffee_ai")
+    fun enableCoffeeAI(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称列表", required = true)
+        workspaceNames: List<String>
+    ): Result<Boolean>
 }

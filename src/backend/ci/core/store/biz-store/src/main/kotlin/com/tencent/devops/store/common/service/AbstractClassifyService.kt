@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.common.service
 
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 @Suppress("ALL")
@@ -35,5 +36,9 @@ abstract class AbstractClassifyService {
     /**
      * 获取删除分类标识
      */
-    abstract fun getDeleteClassifyFlag(classifyId: String, storeType: StoreTypeEnum): Boolean
+    abstract fun getDeleteClassifyFlag(
+        classifyId: String,
+        storeType: StoreTypeEnum,
+        serviceScope: ServiceScopeEnum? = null
+    ): Boolean
 }

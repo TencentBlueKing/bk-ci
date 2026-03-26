@@ -147,7 +147,7 @@
             <bk-sideslider
                 :is-show.sync="detailObj.showSlide"
                 :title="detailObj.detail.name"
-                :width="644"
+                :width="700"
                 :quick-close="true"
             >
                 <section
@@ -172,10 +172,14 @@
                         <h5 class="slide-summary"><span>{{ $t('atomManage.summary') }}：</span><span>{{ detailObj.detail.summary }}</span></h5>
                     </hgroup>
 
-                    <h5 class="related-pipeline">{{ $t('atomManage.relatedPipeline') }}（{{ detailObj.list && detailObj.list.length }}）</h5>
+                    <h5 class="related-pipeline">{{ $t('atomManage.relatedPipeline') }}（{{ detailPaging.count }}）</h5>
                     <bk-table
+                        v-bkloading="{ isLoading: detailObj.loading }"
                         :data="detailObj.list"
                         :empty-text="$t('noReleatedPipeline')"
+                        :pagination="detailPaging"
+                        @page-change="detailPageChange"
+                        @page-limit-change="detailLimitChange"
                     >
                         <bk-table-column
                             :label="$t('pipelineName')"
@@ -241,7 +245,13 @@
                 detailObj: {
                     showSlide: false,
                     detail: {},
-                    list: []
+                    list: [],
+                    loading: false
+                },
+                detailPaging: {
+                    current: 1,
+                    count: 0,
+                    limit: 10
                 },
                 isLoading: false,
                 tableLoading: false,
@@ -328,17 +338,42 @@
             },
 
             showDetail (row) {
-                this.isLoading = true
                 this.detailObj.detail = row
-                this.getInstallAtomDetail({ projectCode: this.projectId, atomCode: row.atomCode }).then(({ data }) => {
+                this.detailObj.showSlide = true
+                // 重置分页
+                this.detailPaging.current = 1
+                this.fetchAtomDetail()
+            },
+
+            fetchAtomDetail () {
+                this.detailObj.loading = true
+                const { atomCode } = this.detailObj.detail
+                this.getInstallAtomDetail({
+                    projectCode: this.projectId,
+                    atomCode,
+                    page: this.detailPaging.current,
+                    pageSize: this.detailPaging.limit
+                }).then(({ data }) => {
                     this.detailObj.list = data.records || []
+                    this.detailPaging.count = data.count || 0
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message })
                     this.detailObj.list = []
                 }).finally(() => {
-                    this.isLoading = false
-                    this.detailObj.showSlide = true
+                    this.detailObj.loading = false
                 })
+            },
+
+            detailPageChange (page) {
+                if (page) this.detailPaging.current = page
+                this.fetchAtomDetail()
+            },
+
+            detailLimitChange (limit) {
+                if (limit === this.detailPaging.limit) return
+                this.detailPaging.limit = limit
+                this.detailPaging.current = 1
+                this.fetchAtomDetail()
             },
 
             showDeletaDialog (row) {

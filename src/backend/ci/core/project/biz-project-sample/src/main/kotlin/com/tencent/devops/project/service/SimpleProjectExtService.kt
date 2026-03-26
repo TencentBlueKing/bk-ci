@@ -43,7 +43,6 @@ class SimpleProjectExtService @Autowired constructor(
     override fun createExtProjectInfo(
         userId: String,
         authProjectId: String,
-        accessToken: String?,
         projectCreateInfo: ProjectCreateInfo,
         createExtInfo: ProjectCreateExtInfo,
         logoAddress: String?
@@ -53,7 +52,6 @@ class SimpleProjectExtService @Autowired constructor(
 
     override fun createOldAuthProject(
         userId: String,
-        accessToken: String?,
         projectCreateInfo: ProjectCreateInfo
     ): String {
         return ""

@@ -35,25 +35,30 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"github.com/pkg/errors"
 
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/httputil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
 )
 
 type BuildTotalManagerType struct {
 	// Lock 多协程修改时的执行锁，这个锁主要用来判断当前是否还有任务，所以添加了任务就可以解锁了
 	Lock sync.Mutex
+	// Upgrading 标识升级流程是否正在进行中，升级持锁期间置 true，
+	// 供 Ask 轮询阶段判断是否跳过构建任务请求，防止升级重启时阻塞的构建任务丢失
+	Upgrading atomic.Bool
 }
 
 var BuildTotalManager *BuildTotalManagerType
@@ -94,44 +99,55 @@ func DoBuild(buildInfo *api.ThirdPartyBuildInfo) {
 		return
 	}
 
-	// 在执行任务先获取锁，防止与其他操作产生干扰
-	BuildTotalManager.Lock.Lock()
+	buildType := acquireBuildSlot(buildInfo)
+	if buildType == buildTypeNone {
+		return
+	}
 
-	// 拿到锁后再判断一次当前是否可以执行任务，防止出现并发问题
+	// 接取任务后判断国际化是否需要切换语言
+	i18n.CheckLocalizer()
+
+	switch buildType {
+	case buildTypeDocker:
+		runDockerBuild(buildInfo)
+	case buildTypeNormal:
+		if err := runBuild(buildInfo); err != nil {
+			logs.WithError(err).Error("start build failed")
+		}
+	}
+}
+
+type buildSlotType int
+
+const (
+	buildTypeNone buildSlotType = iota
+	buildTypeDocker
+	buildTypeNormal
+)
+
+// acquireBuildSlot 在锁保护下判断并发数并注册构建实例，返回构建类型。
+// 该函数返回时锁一定已释放，避免手动多路径 Unlock 导致的遗漏风险。
+func acquireBuildSlot(buildInfo *api.ThirdPartyBuildInfo) buildSlotType {
+	BuildTotalManager.Lock.Lock()
+	defer BuildTotalManager.Lock.Unlock()
+
 	dockerCanRun, normalCanRun := CheckParallelTaskCount()
 
 	if buildInfo.DockerBuildInfo != nil && dockerCanRun {
-		// 接取job任务之后才可以解除总任务锁解锁
 		GBuildDockerManager.AddBuild(buildInfo.BuildId, &api.ThirdPartyDockerTaskInfo{
 			ProjectId: buildInfo.ProjectId,
 			BuildId:   buildInfo.BuildId,
 			VmSeqId:   buildInfo.VmSeqId,
 		})
-		BuildTotalManager.Lock.Unlock()
-
-		// 接取任务后判断国际化是否需要切换语言
-		i18n.CheckLocalizer()
-
-		runDockerBuild(buildInfo)
-		return
+		return buildTypeDocker
 	}
 
 	if !normalCanRun {
-		BuildTotalManager.Lock.Unlock()
-		return
+		return buildTypeNone
 	}
 
-	// 接取任务之后解锁
 	GBuildManager.AddPreInstance(buildInfo.BuildId)
-	BuildTotalManager.Lock.Unlock()
-
-	// 接取任务后判断国际化是否需要切换语言
-	i18n.CheckLocalizer()
-
-	err := runBuild(buildInfo)
-	if err != nil {
-		logs.WithError(err).Error("start build failed")
-	}
+	return buildTypeNormal
 }
 
 // CheckParallelTaskCount checkParallelTaskCount 检查当前运行的最大任务数
@@ -212,8 +228,8 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		"DEVOPS_AGENT_JDK_8_PATH":  third_components.Jdk.Jdk8.GetJavaOrNull(),
 		"DEVOPS_AGENT_JDK_17_PATH": third_components.Jdk.Jdk17.GetJavaOrNull(),
 	}
-	if config.GApiEnvVars != nil {
-		config.GApiEnvVars.RangeDo(func(k, v string) bool {
+	if envs.GApiEnvVars != nil {
+		envs.GApiEnvVars.RangeDo(func(k, v string) bool {
 			goEnv[k] = v
 			return true
 		})

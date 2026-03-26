@@ -41,12 +41,12 @@ import (
 	"github.com/capnspacehook/taskmaster"
 	"github.com/pkg/errors"
 
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
 
 	"github.com/gofrs/flock"
 
@@ -71,8 +71,7 @@ func DoUpgradeAgent() error {
 	}
 
 	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock))
-	err := totalLock.Lock()
-	if err = totalLock.Lock(); err != nil {
+	if err := totalLock.Lock(); err != nil {
 		logs.WithError(err).Error("get total lock failed, exit")
 		return errors.New("get total lock failed")
 	}
@@ -105,6 +104,7 @@ func DoUpgradeAgent() error {
 
 	logs.Infof("agent process start by %s", startT)
 
+	var err error
 	daemonChange := false
 	if startT == wintask.TaskStart {
 		daemonChange, err = checkUpgradeFileChange(config.GetClientDaemonFile())
@@ -116,7 +116,7 @@ func DoUpgradeAgent() error {
 	if daemonChange {
 		daemonPid, err = tryKillAgentProcess(daemonProcess)
 		if err != nil {
-			logs.WithError(err).Error(fmt.Sprintf("try kill daemon process failed"))
+			logs.WithError(err).Error("try kill daemon process failed")
 		}
 	}
 
@@ -128,7 +128,7 @@ func DoUpgradeAgent() error {
 	if agentChange {
 		agentPid, err = tryKillAgentProcess(agentProcess)
 		if err != nil {
-			logs.WithError(err).Error(fmt.Sprintf("try kill agent process failed"))
+			logs.WithError(err).Error("try kill agent process failed")
 		}
 	}
 

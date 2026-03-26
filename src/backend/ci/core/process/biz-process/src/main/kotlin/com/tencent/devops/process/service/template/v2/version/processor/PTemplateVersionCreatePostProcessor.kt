@@ -47,9 +47,19 @@ interface PTemplateVersionCreatePostProcessor {
     ) = Unit
 
     /**
-     * 与模版版本创建时事务保持一致
+     * 模版版本事务前置处理器
      */
-    fun postProcessInTransactionVersionCreate(
+    fun postProcessInTransactionBeforeVersionCreate(
+        transactionContext: DSLContext,
+        context: PipelineTemplateVersionCreateContext,
+        pipelineTemplateResource: PipelineTemplateResource,
+        pipelineTemplateSetting: PipelineSetting
+    ) = Unit
+
+    /**
+     * 模版版本事务后置处理器
+     */
+    fun postProcessInTransactionAfterVersionCreate(
         transactionContext: DSLContext,
         context: PipelineTemplateVersionCreateContext,
         pipelineTemplateResource: PipelineTemplateResource,
