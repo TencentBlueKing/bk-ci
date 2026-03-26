@@ -76,6 +76,7 @@
     import AuthManage from './components/Auth/index.vue'
     import Settings from './components/Settings/index.vue'
     import emptyNode from '../empty_node'
+    import AdvancedTab from '@/components/envTabs/advancedTab.vue'
 
     export default {
         name: 'EnvDetail',
@@ -87,7 +88,8 @@
             BuildTask,
             DeployTask,
             Settings,
-            emptyNode
+            emptyNode,
+            AdvancedTab
         },
         setup () {
             const { proxy } = useInstance()
@@ -122,7 +124,8 @@
                     buildTask: BuildTask,
                     deployTask: DeployTask,
                     settings: Settings,
-                    auth: AuthManage
+                    auth: AuthManage,
+                    advancedSetting: AdvancedTab
                 }
                 return comMap[tabActive.value]
             })
@@ -174,6 +177,12 @@
                         label: currentEnv.value?.envType === ENV_TYPE_MAP.CREATE
                             ? proxy.$t('environment.relatedCreativeFlow')
                             : proxy.$t('environment.nodeInfo.buildTask')
+                    }
+                ] : []),
+                ...(currentEnv.value?.envType === ENV_TYPE_MAP.DEVX ? [
+                    {
+                        name: 'advancedSetting',
+                        label: proxy.$t('environment.advancedSetting')
                     }
                 ] : []),
                 {
