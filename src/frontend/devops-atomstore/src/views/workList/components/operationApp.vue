@@ -426,19 +426,22 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: pre-line;
-  line-height: 20px;
+  margin: 6px 0;
 }
 
 .framework-radio-content {
   display: flex;
   align-items: center;
   width: 430px;
+  white-space: normal;
+  line-height: 2;
   
   .info-icon {
     margin-left: 8px;
     padding: 0 5px;
     font-size: 12px;
     color: #808080;
+    vertical-align: middle;
   }
   
   .info-text {
