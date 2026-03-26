@@ -53,6 +53,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.ServiceLocaleResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.devx.ServiceDEVXResource
+import com.tencent.devops.environment.api.thirdpartyagent.ServiceAgentResource
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
@@ -79,8 +80,6 @@ import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
-import com.tencent.devops.auth.api.service.ServiceDeptResource
-import com.tencent.devops.environment.api.thirdpartyagent.ServiceAgentResource
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.OrganizationGroup
 import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
@@ -130,6 +129,7 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
+import kotlin.math.max
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -138,7 +138,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import kotlin.math.max
 
 @Service
 @Suppress("ALL")
@@ -286,7 +285,7 @@ class WorkspaceService @Autowired constructor(
                 workspaceProperty = workspaceProperty
             )
         }
-        
+
         // 在事务外添加操作记录
         if (workspaceProperty.displayName != null) {
             workspaceOpHistoryDao.createWorkspaceHistory(
@@ -301,7 +300,7 @@ class WorkspaceService @Autowired constructor(
                 )
             )
         }
-        
+
         if (workspaceProperty.remark != null) {
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
@@ -315,7 +314,7 @@ class WorkspaceService @Autowired constructor(
                 )
             )
         }
-        
+
         if (workspaceProperty.labels != null) {
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
@@ -329,7 +328,7 @@ class WorkspaceService @Autowired constructor(
                 )
             )
         }
-        
+
         return true
     }
 
@@ -475,21 +474,21 @@ class WorkspaceService @Autowired constructor(
             notStatus = notStatus?.plus(WorkspaceStatus.DISTRIBUTING)?.plus(WorkspaceStatus.PREPARING)
                 ?: listOf(WorkspaceStatus.DISTRIBUTING, WorkspaceStatus.PREPARING)
         }
-        
+
         // 2. 获取工作空间列表（使用 getWorkspaceList 返回 Workspace 对象）
         val workspaces = getWorkspaceList(userId, page, pageSize, updatedSearch).records
-        
+
         // 3. 提取所有拥有者
         val owners = workspaces.mapNotNull { it.owner }.toSet()
-        
+
         // 4. 分离集团员工和太湖账户
         val corporateOwners = owners.filter { !it.endsWith("@tai") }.toSet()
         val taiOwners = owners.filter { it.endsWith("@tai") }.toSet()
-        
+
         // 5. 批量获取组织架构信息
         val corporateOrgMap = getCorporateUserOrganizations(corporateOwners)
         val taiOrgMap = getTaiUserOrganizations(taiOwners)
-        
+
         // 6. 合并组织架构映射
         val ownerToOrgMap = corporateOrgMap + taiOrgMap
 
@@ -513,14 +512,14 @@ class WorkspaceService @Autowired constructor(
                             workspaces = orgWorkspaces
                         )
                     }
-                
+
                 WorkspaceGroupByOrg(
                     projectId = projId ?: "",
                     projectName = projectNameMap[projId] ?: "",
                     organizations = orgGroups
                 )
             }
-        
+
         return grouped
     }
 
@@ -529,17 +528,17 @@ class WorkspaceService @Autowired constructor(
      */
     private fun getCorporateUserOrganizations(owners: Set<String>): Map<String, String> {
         if (owners.isEmpty()) return emptyMap()
-        
+
         return owners.mapNotNull { owner ->
             try {
                 val userInfo = client.get(ServiceDeptResource::class).getUserInfo(
                     userId = owner,
                     name = owner
                 ).data
-                
+
                 // 取 deptInfo 列表的最后一个元素
                 val lastDept = userInfo?.deptInfo?.lastOrNull()
-                
+
                 if (lastDept != null) {
                     owner to (lastDept.fullName ?: "未知部门")
                 } else {
@@ -558,7 +557,7 @@ class WorkspaceService @Autowired constructor(
      */
     private fun getTaiUserOrganizations(owners: Set<String>): Map<String, String> {
         if (owners.isEmpty()) return emptyMap()
-        
+
         // 所有太湖账户统一标记为"离岸合作伙伴"
         return owners.associateWith { "离岸合作伙伴" }
     }
@@ -1306,8 +1305,8 @@ class WorkspaceService @Autowired constructor(
 
             val oneReady = public.filter {
                 loginUserMap[it.value2()]?.loginUsers.isNullOrEmpty() &&
-                        workspaceStatus[it.value1()] in setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.DISTRIBUTING) &&
-                        cgsStatus?.get(it.value2()) == ComputerStatusEnum.NORMAL.status
+                    workspaceStatus[it.value1()] in setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.DISTRIBUTING) &&
+                    cgsStatus?.get(it.value2()) == ComputerStatusEnum.NORMAL.status
             }.randomOrNull() ?: run {
                 logger.warn("there are no idle public cloud desktops|$envId|$loginUserMap|$workspaceStatus")
                 throw ErrorCodeException(
@@ -1381,7 +1380,7 @@ class WorkspaceService @Autowired constructor(
             val normalNodeCount =
                 env.nodeHashIds?.count {
                     workspaceStatus[it] in normalStatuses &&
-                            cgsStatus?.get(node2HostMap[it]) == ComputerStatusEnum.NORMAL.status
+                        cgsStatus?.get(node2HostMap[it]) == ComputerStatusEnum.NORMAL.status
                 } ?: 0
             val abnormalNodeCount = (env.nodeHashIds?.size ?: 0) - normalNodeCount
             val currentLoginUsers = env.nodeHashIds?.flatMap { nodeHashId ->
