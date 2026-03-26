@@ -92,7 +92,8 @@ import {
     UPDATE_STAGE,
     UPDATE_STORESTATUS,
     UPDATE_TEMPLATE_CONSTRAINT,
-    UPDATE_WHOLE_ATOM_INPUT
+    UPDATE_WHOLE_ATOM_INPUT,
+    UPDATE_PIPELINE_PUBLIC_VAR_GROUPS
 } from './constants'
 
 export default {
@@ -542,4 +543,8 @@ export default {
             storeStatus
         })
     },
+    [UPDATE_PIPELINE_PUBLIC_VAR_GROUPS]: (state, publicVarGroups) => {
+        Object.assign(state.pipeline, { publicVarGroups })
+        return state
+    }
 }
