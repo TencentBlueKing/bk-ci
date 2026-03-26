@@ -49,7 +49,7 @@ class ImageLabelService @Autowired constructor(
     fun getLabelsByImageId(imageId: String): Result<List<Label>?> {
         val imageLabelRecords = imageLabelRelDao.getLabelsByImageId(dslContext, imageId)
         val imageLabelList = mutableListOf<Label>().apply {
-            imageLabelRecords.forEach { labelService.addLabelToLabelList(it, this) }
+            imageLabelRecords?.forEach { labelService.addLabelToLabelList(it, this) }
         }
         return Result(imageLabelList)
     }
