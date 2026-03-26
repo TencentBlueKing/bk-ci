@@ -21,32 +21,32 @@ import org.slf4j.LoggerFactory
 
 /**
  * 模型变量引用解析工具类
- * * 该工具类负责解析流水线模型中的变量引用（如${{变量名}}格式的字符串），
- * 通过递归遍历模型对象的所有字段，识别并提取所有变量引用信息。
- * * 主要功能：
- * 1. 支持递归解析复杂对象结构（List、Map、Stage、Container、Element等）
- * 2. 使用高性能的循环引用检测机制，避免无限递归
- * 3. 通过字段缓存优化反射性能
- * 4. 支持多种资源类型（流水线、模板等）的变量引用解析
  *
+ * 两种模式（由 filterByTriggerParams 控制）：
+ * - filterByTriggerParams = true（默认）：仅提取在 triggerContainer.params 中出现的变量；
+ *   仍能识别上述四种形式，且每条 VarRefDetail 的 isDoubleBrace 区分单/双大括号。
+ * - filterByTriggerParams = false：提取模型中所有 ${xxx}、${{xxx}} 花括号内内容，原封不动（仅允许去掉花括号内首尾空格），并区分单/双大括号。
+ * - filterByTriggerParams = true：提取 ${xxx}、${{xxx}}、${variables.xxx}、${{variables.xxx}} 的 xxx（去掉空格和 variables.
+ * 前缀），并区分单/双大括号。
+ *
+ * 主要功能：递归解析 List/Map/Stage/Container/Element 等，循环引用检测，字段缓存，支持流水线/模板资源。
  */
 object ModelVarRefUtils {
 
     private val logger = LoggerFactory.getLogger(ModelVarRefUtils::class.java)
 
-    /**
-     * 变量引用模式正则表达式
-     * 匹配格式：${{变量名}} 或 ${{variables.变量名}}
-     * 优化：合并正则表达式，提高匹配效率，避免多次编译
-     */
-    private val VARIABLE_PATTERN = Pattern.compile("\\$\\{?\\{\\s*(variables\\.)?([^}\\s]+)\\s*}?}")
+    /** 双大括号：${{xxx}}、${{variables.xxx}}，group(1) 为 xxx（用于 filterByTriggerParams=true 时与 param 匹配） */
+    private val DOUBLE_BRACE_PATTERN = Pattern.compile("\\$\\{\\{\\s*(?:variables\\.)?([^}\\s]+)\\s*}}")
+    /** 单大括号：${xxx}、${variables.xxx}，(?!\\{) 避免与 ${{ 冲突，group(1) 为 xxx */
+    private val SINGLE_BRACE_PATTERN = Pattern.compile("\\$\\{(?!\\{)\\s*(?:variables\\.)?([^}\\s]+)\\s*}")
 
-    /**
-     * 纯文本变量引用模式，匹配不带 $ 前缀的 variables.xxx 格式
-     * 变量名仅允许字母、数字、下划线和连字符，避免 \S+ 误匹配特殊符号
-     * 预编译为常量，避免在高频路径中重复编译
-     */
-    private val PLAIN_VARIABLE_PATTERN = Pattern.compile("(?:^|[^\\w.])(variables\\.([\\w-]+))(?=$|[^\\w.])")
+    /** 双大括号原样：${{...}}，group(1) 为花括号内完整内容（filterByTriggerParams=false 时用，仅做 trim） */
+    private val DOUBLE_BRACE_RAW_PATTERN = Pattern.compile("\\$\\{\\{([^}]*)}}")
+    /** 单大括号原样：${...}，group(1) 为花括号内完整内容（filterByTriggerParams=false 时用，仅做 trim） */
+    private val SINGLE_BRACE_RAW_PATTERN = Pattern.compile("\\$\\{(?!\\{)([^}]*)}")
+
+    /** customCondition 中纯 variables.xxx（无 $ 包裹），group(2) 为 xxx，仅 extractCustomConditionVariableMatches 使用 */
+    private val PLAIN_VARIABLES_PATTERN = Pattern.compile("(?:^|[^\\w.])(variables\\.(\\S+))(?=$|[^\\w.])")
 
     /** 支持的资源类型常量 - 流水线资源 */
     private const val RESOURCE_TYPE_PIPELINE = "PIPELINE"
@@ -73,53 +73,38 @@ object ModelVarRefUtils {
         .build()
 
     /**
-     * 解析模型中的变量引用
-     * 该方法负责遍历整个模型结构，识别并提取所有变量引用（如${{变量名}}格式的字符串），
-     * 并返回详细的变量引用信息列表。
-     * 核心处理流程：
-     * 1. 确定模型的资源类型和ID，为变量引用提供上下文信息
-     * 2. 从触发器容器中提取参数变量列表
-     * 3. 如果没有参数变量则直接返回空列表，避免不必要的递归解析
-     * 4. 创建解析上下文和引用收集器
-     * 5. 使用高性能循环引用检测机制递归解析模型对象
-     * 6. 记录性能指标并返回结果
-     * 性能优化特性：
-     * - 使用IdentityHashMap进行对象身份比较，避免equals()方法的性能开销
-     * - 提前检查参数变量是否为空，避免不必要的递归遍历
-     * - 记录方法执行时间，便于性能监控和优化
-     * @param model 要解析的模型对象，包含完整的流水线配置信息
-     * @param projectId 项目ID，用于标识变量引用的上下文环境
-     * @return List<VarRefDetail> 变量引用详细信息列表，包含引用位置、变量名等信息
-     * @throws Exception 如果解析过程中发生异常，会记录错误日志并返回空列表
+     * 解析模型中的变量引用。
+     * @param model 要解析的模型对象
+     * @param projectId 项目ID
+     * @param filterByTriggerParams true：只返回在 triggerContainer.params 中的变量；花括号内去掉空格和 variables. 前缀得到 xxx.
+     *                             false：返回模型中所有 ${xxx}、${{xxx}}；花括号内内容原封不动，仅去掉首尾空格，并区分单/双大括号。
+     * @return 变量引用详情列表
      */
     fun parseModelVarReferences(
         model: Model,
-        projectId: String
+        projectId: String,
+        filterByTriggerParams: Boolean = true
     ): List<VarRefDetail> {
-        // 记录方法开始时间，用于性能监控和调试
         val startTime = System.currentTimeMillis()
 
         try {
-            // 确定资源类型和ID，为变量引用提供上下文信息
             val (resourceType, resourceId) = determineResourceTypeAndId(model)
-
-            // 从触发器容器中提取参数变量列表
             val triggerContainer = model.getTriggerContainer()
             val paramVariables = extractParamVariables(triggerContainer.params)
 
-            // 避免不必要的递归解析，提高性能
-            if (paramVariables.isEmpty()) {
+            // 仅当“按 trigger 参数过滤”且参数为空时提前返回
+            if (filterByTriggerParams && paramVariables.isEmpty()) {
                 logger.info("No param variables found in trigger container")
                 return emptyList()
             }
 
-            // 初始化变量引用收集器和解析上下文
             val references = mutableListOf<VarRefDetail>()
             val context = ParseContext(
                 projectId = projectId,
                 resourceType = resourceType,
                 resourceId = resourceId,
-                paramVariables = paramVariables
+                paramVariables = paramVariables,
+                filterByTriggerParams = filterByTriggerParams
             )
 
             // 使用高性能的循环引用检测机制，避免无限递归
@@ -141,7 +126,7 @@ object ModelVarRefUtils {
             return references
         } catch (ignored: Throwable) {
             // 异常处理：记录错误日志并返回空列表，确保方法不会抛出异常
-            logger.warn("parseModelVarReferences failed", ignored)
+            logger.error("parseModelVarReferences failed", ignored)
             return emptyList()
         }
     }
@@ -221,17 +206,9 @@ object ModelVarRefUtils {
     }
 
     /**
-     * 优化字符串解析
-     * 专门处理字符串类型的变量引用解析，这是最常用的变量引用场景
-     * 通过正则表达式匹配${变量名}格式的字符串，提取变量引用
-     * 性能优化策略：
-     * 1. 快速检查：先检查字符串是否包含$和{字符，避免不必要的正则匹配
-     * 2. 批量匹配：使用正则表达式一次性提取所有变量引用
-     * 3. 快速过滤：使用HashSet进行变量名匹配，时间复杂度O(1)
-     * @param str 要解析的字符串，可能包含${变量名}格式的变量引用
-     * @param context 解析上下文，包含可用的参数变量集合
-     * @param references 变量引用收集器
-     * @param path 当前字符串在模型中的路径
+     * 字符串解析：提取 ${xxx}、${{xxx}} 中的内容，并区分单/双大括号（isDoubleBrace）。
+     * filterByTriggerParams=true：仅保留在 paramVariables 中的变量，花括号内去掉空格和 variables. 前缀得到 xxx；
+     * filterByTriggerParams=false：原封不动提取花括号内内容，仅去掉首尾空格（不做其他修改）。
      */
     private fun parseString(
         str: String,
@@ -239,32 +216,77 @@ object ModelVarRefUtils {
         references: MutableList<VarRefDetail>,
         path: String
     ) {
-        // 快速检查：如果没有$和{字符，直接返回
         if (!str.contains('$') || !str.contains('{')) return
 
-        // 使用正则表达式提取字符串中的所有变量引用
-        val variables = extractVariablesFromString(str)
-        if (variables.isEmpty()) return
+        val rawExtract = !context.filterByTriggerParams
+        val matches = extractVariableMatchesFromString(str, rawExtract = rawExtract)
+        if (matches.isEmpty()) return
 
-        // 使用HashSet进行快速查找，过滤出在参数变量集合中存在的变量
-        val matchedVariables = variables.filter { context.paramVariables.contains(it) }
-        if (matchedVariables.isEmpty()) return
-
-        // 为每个匹配的变量创建引用详情对象
-        matchedVariables.forEach { varName ->
+        val toAdd = if (context.filterByTriggerParams) {
+            matches.filter { context.paramVariables.contains(it.varName) }
+        } else {
+            matches
+        }
+        toAdd.forEach { m ->
             references.add(
                 VarRefDetail(
                     projectId = context.projectId,
-                    varName = varName,
+                    varName = m.varName,
                     resourceId = context.resourceId,
                     resourceType = context.resourceType,
                     stageId = context.stageId,
                     containerId = context.containerId,
                     taskId = context.taskId,
-                    positionPath = path
+                    taskName = context.taskName,
+                    positionPath = path,
+                    isDoubleBrace = m.isDoubleBrace
                 )
             )
         }
+    }
+
+    /** 变量匹配结果：变量名 + 是否双大括号 ${{xxx}} */
+    private data class VarMatch(val varName: String, val isDoubleBrace: Boolean)
+
+    /**
+     * 从字符串中提取 ${xxx}、${{xxx}} 花括号内的内容，并区分单/双大括号。
+     * @param rawExtract false（默认，filterByTriggerParams=true）：去掉花括号内空格和 variables. 前缀，得到 xxx；
+     *                   true（filterByTriggerParams=false）：原封不动提取，仅去掉花括号内首尾空格。
+     */
+    private fun extractVariableMatchesFromString(text: String, rawExtract: Boolean = false): List<VarMatch> {
+        if (!text.contains('$')) return emptyList()
+        val cleanedText = removeCommentLines(text)
+        if (cleanedText.isEmpty()) return emptyList()
+
+        val result = mutableListOf<VarMatch>()
+        if (rawExtract) {
+            var matcher = DOUBLE_BRACE_RAW_PATTERN.matcher(cleanedText)
+            while (matcher.find()) {
+                matcher.group(1)?.let { content ->
+                    result.add(VarMatch(varName = content.trim(), isDoubleBrace = true))
+                }
+            }
+            matcher = SINGLE_BRACE_RAW_PATTERN.matcher(cleanedText)
+            while (matcher.find()) {
+                matcher.group(1)?.let { content ->
+                    result.add(VarMatch(varName = content.trim(), isDoubleBrace = false))
+                }
+            }
+        } else {
+            var matcher = DOUBLE_BRACE_PATTERN.matcher(cleanedText)
+            while (matcher.find()) {
+                matcher.group(1)?.trim()?.takeIf { it.isNotBlank() }?.let {
+                    result.add(VarMatch(varName = it, isDoubleBrace = true))
+                }
+            }
+            matcher = SINGLE_BRACE_PATTERN.matcher(cleanedText)
+            while (matcher.find()) {
+                matcher.group(1)?.trim()?.takeIf { it.isNotBlank() }?.let {
+                    result.add(VarMatch(varName = it, isDoubleBrace = false))
+                }
+            }
+        }
+        return result
     }
 
     /**
@@ -469,8 +491,8 @@ object ModelVarRefUtils {
         basePath: String,
         visited: MutableSet<Any>
     ) {
-        // 创建包含Element ID的新上下文，为后续解析提供Element上下文信息
-        val elementContext = context.copy(taskId = element.id)
+        // 创建包含 Element ID 与 name 的新上下文，为后续解析提供 Element 上下文信息
+        val elementContext = context.copy(taskId = element.id, taskName = element.name)
 
         // Element通常包含脚本、参数等可能包含变量引用的字段
         parseGenericObject(
@@ -578,37 +600,39 @@ object ModelVarRefUtils {
         optionType: String
     ) {
         // 处理 customVariables 中的直接变量引用
-        // customVariables是NameAndValue对象的列表，每个对象包含变量名和变量值
         customVariables?.forEach { nameAndValue ->
             val varName = nameAndValue.key ?: ""
-            // 检查变量名是否在参数变量列表中（即是否为需要追踪的变量）
-            if (context.paramVariables.contains(varName)) {
+            val include = !context.filterByTriggerParams || context.paramVariables.contains(varName)
+            if (include && varName.isNotBlank()) {
                 references.add(
                     createVarRefDetail(
                         context = context,
                         varName = varName,
                         positionPath = "$path.customVariables.$varName",
-                        optionType = optionType
+                        optionType = optionType,
+                        isDoubleBrace = false
                     )
                 )
             }
         }
 
-        // 处理 customCondition 中的变量表达式
+        // 处理 customCondition 中的 ${xxx}、${{xxx}}，并区分单/双大括号；filterByTriggerParams=false 时原封不动提取花括号内内容
         customCondition?.let { condition ->
-            // 从条件表达式中提取所有变量引用
-            val variables = extractCustomConditionVariablesFromString(condition)
-            // 过滤出在参数变量列表中的变量
-            val matchedVariables = variables.filter { context.paramVariables.contains(it) }
-
-            // 为每个匹配的变量创建引用详情
-            matchedVariables.forEach { varName ->
+            val rawExtract = !context.filterByTriggerParams
+            val matches = extractCustomConditionVariableMatches(condition, rawExtract = rawExtract)
+            val toAdd = if (context.filterByTriggerParams) {
+                matches.filter { context.paramVariables.contains(it.varName) }
+            } else {
+                matches
+            }
+            toAdd.forEach { m ->
                 references.add(
                     createVarRefDetail(
                         context = context,
-                        varName = varName,
+                        varName = m.varName,
                         positionPath = "$path.customCondition",
-                        optionType = optionType
+                        optionType = optionType,
+                        isDoubleBrace = m.isDoubleBrace
                     )
                 )
             }
@@ -634,7 +658,8 @@ object ModelVarRefUtils {
         context: ParseContext,
         varName: String,
         positionPath: String,
-        optionType: String
+        optionType: String,
+        isDoubleBrace: Boolean = false
     ): VarRefDetail {
         return VarRefDetail(
             projectId = context.projectId,
@@ -642,11 +667,11 @@ object ModelVarRefUtils {
             resourceId = context.resourceId,
             resourceType = context.resourceType,
             stageId = context.stageId,
-            // StageControlOption不设置containerId（Stage级别的控制选项）
             containerId = if (optionType != "StageControlOption") context.containerId else null,
-            // 只有ElementAdditionalOptions设置taskId（Element级别的控制选项）
             taskId = if (optionType == "ElementAdditionalOptions") context.taskId else null,
-            positionPath = positionPath
+            taskName = if (optionType == "ElementAdditionalOptions") context.taskName else null,
+            positionPath = positionPath,
+            isDoubleBrace = isDoubleBrace
         )
     }
 
@@ -737,14 +762,19 @@ object ModelVarRefUtils {
     private fun getCachedFields(clazz: Class<*>): List<java.lang.reflect.Field> {
         return fieldCache.get(clazz) {
             val fields = mutableListOf<java.lang.reflect.Field>()
+            val addedNames = mutableSetOf<String>()
             var currentClass: Class<*>? = clazz
 
-            // 向上遍历继承层次，获取所有父类的字段
+            // 向上遍历继承层次，获取所有父类的字段（子类优先）
+            // 若子类 override 了父类同名属性，只保留子类字段，避免同一逻辑属性被解析两次导致重复 VarRefDetail
             while (currentClass != null && currentClass != Any::class.java) {
-                // 只添加非静态字段，静态字段通常不包含业务数据
                 currentClass.declaredFields
                     .filter { !java.lang.reflect.Modifier.isStatic(it.modifiers) }
-                    .forEach { fields.add(it) }
+                    .filter { !addedNames.contains(it.name) }
+                    .forEach {
+                        addedNames.add(it.name)
+                        fields.add(it)
+                    }
                 currentClass = currentClass.superclass
             }
             fields
@@ -946,67 +976,27 @@ object ModelVarRefUtils {
     }
 
     /**
-     * 优化正则表达式匹配
-     * 使用预编译的正则表达式从字符串中提取变量引用
-     * 匹配格式：${变量名} 或 ${variables.变量名}
-     * 正则表达式说明：
-     * - 匹配格式：${变量名} 或 ${variables.变量名}
-     * - 支持可选的variables前缀
-     * - 支持可选的额外花括号
-     * 性能优化策略：
-     * 1. 快速检查：先检查字符串是否包含$字符，避免不必要的正则匹配
-     * 2. 预编译正则：使用预编译的正则表达式，避免重复编译
-     * 3. 使用Set去重：避免重复变量，提高查找效率
-     * 4. 批量匹配：一次性提取所有变量引用
-     * 5. 注释过滤：先移除注释行，避免解析注释中的变量引用
-     * 变量提取规则：
-     * - 使用正则表达式的第二个分组（group(2)）获取变量名
-     * - 对变量名进行trim操作，去除前后空格
-     * - 使用Set集合自动去重
-     * @param text 要解析的文本
-     * @return 提取到的变量名集合（已去重）
+     * 从 customCondition 等条件字符串中提取变量匹配，并区分单/双大括号。
+     * @param rawExtract true：仅从 ${xxx}、${{xxx}} 提取花括号内内容（仅 trim）；
+     * false：含纯 variables.xxx 及去掉空格/variables. 前缀的 ${}/${{}} 提取。
      */
-    private fun extractVariablesFromString(text: String): Set<String> {
-        // 快速检查：如果没有$字符，直接返回空集合
-        // 这是重要的性能优化，避免对不包含变量引用的字符串进行正则匹配
-        if (!text.contains('$')) return emptySet()
-
-        // 先移除注释行，避免解析注释中的变量引用
+    private fun extractCustomConditionVariableMatches(text: String, rawExtract: Boolean = false): List<VarMatch> {
+        if (text.isEmpty()) return emptyList()
         val cleanedText = removeCommentLines(text)
-        if (cleanedText.isEmpty()) return emptySet()
+        if (cleanedText.isEmpty()) return emptyList()
 
-        val variables = mutableSetOf<String>()
-        val matcher = VARIABLE_PATTERN.matcher(cleanedText)
-
-        // 使用正则表达式匹配所有变量引用
-        while (matcher.find()) {
-            val variable = matcher.group(2)?.trim() // 获取第二个分组（变量名）
-            variable?.let { variables.add(it) }
+        if (rawExtract) {
+            return extractVariableMatchesFromString(text, rawExtract = true)
         }
-
-        return variables
-    }
-
-    private fun extractCustomConditionVariablesFromString(text: String): Set<String> {
-        if (text.isEmpty()) return emptySet()
-
-        // 先移除注释行，避免解析注释中的变量引用
-        val cleanedText = removeCommentLines(text)
-        if (cleanedText.isEmpty()) return emptySet()
-
-        val variables = mutableSetOf<String>()
-        val plainMatcher = PLAIN_VARIABLE_PATTERN.matcher(cleanedText)
-
+        val result = mutableListOf<VarMatch>()
+        val plainMatcher = PLAIN_VARIABLES_PATTERN.matcher(cleanedText)
         while (plainMatcher.find()) {
-            val variable = plainMatcher.group(2)?.trim() // group(2) 是纯变量名
-            variable?.let {
-                if (it.isNotBlank()) {
-                    variables.add(it)
-                }
+            plainMatcher.group(2)?.trim()?.takeIf { it.isNotBlank() }?.let {
+                result.add(VarMatch(varName = it, isDoubleBrace = false))
             }
         }
-        variables.addAll(extractVariablesFromString(text))
-        return variables
+        result.addAll(extractVariableMatchesFromString(text, rawExtract = false))
+        return result
     }
 
     /**
@@ -1051,6 +1041,10 @@ object ModelVarRefUtils {
         val stageId: String = "",
         val containerId: String? = null,
         val taskId: String? = null,
-        val paramVariables: Set<String> = emptySet()
+        /** 任务名称，对应 Element.name，在 parseElement 时设置 */
+        val taskName: String? = null,
+        val paramVariables: Set<String> = emptySet(),
+        /** true：仅提取在 triggerContainer.params 中的变量；false：提取所有 ${xxx}、${{xxx}} 并区分单/双大括号 */
+        val filterByTriggerParams: Boolean = true
     )
 }

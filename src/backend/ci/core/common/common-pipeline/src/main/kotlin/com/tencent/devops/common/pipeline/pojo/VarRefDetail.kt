@@ -24,11 +24,15 @@ data class VarRefDetail(
     val containerId: String? = null,
     @get:Schema(title = "任务ID", required = false)
     val taskId: String? = null,
+    @get:Schema(title = "任务名称，对应 Element.name", required = false)
+    val taskName: String? = null,
     @get:Schema(
         title = "位置路径，描述变量在模型中的具体位置，如model.stages[0].containers[0].elements[0].customCondition",
         required = true
     )
     val positionPath: String,
+    @get:Schema(title = "是否为大括号双写引用", required = false)
+    val isDoubleBrace: Boolean = false,
     @get:Schema(title = "创建者", required = true)
     val creator: String = "system",
     @get:Schema(title = "修改者", required = true)
