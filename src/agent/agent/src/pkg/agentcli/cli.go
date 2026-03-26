@@ -3,6 +3,7 @@ package agentcli
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -11,13 +12,18 @@ import (
 
 // Run dispatches CLI subcommands. Called from agent main() before process lock.
 func Run(workDir string, args []string) {
+	initLang(workDir)
+
 	if len(args) == 0 {
-		PrintUsage()
+		printUsageLocalized()
 		os.Exit(1)
 	}
 
 	var err error
 	switch args[0] {
+	case "-h", "--help", "help":
+		printUsageLocalized()
+		return
 	case "install":
 		err = handleInstall(workDir)
 	case "uninstall":
@@ -28,16 +34,20 @@ func Run(workDir string, args []string) {
 		err = handleStop(workDir)
 	case "repair":
 		err = handleRepair(workDir)
+	case "reinstall":
+		err = handleReinstall(workDir, args[1:])
+	case "status":
+		err = handleStatus(workDir)
 	case "configure-session":
 		err = handleConfigureSession(workDir, args[1:])
 	default:
-		fmt.Fprintf(os.Stderr, "unknown command: %s\n", args[0])
-		PrintUsage()
+		printErr(msgf("unknown command: %s", "未知命令: %s", args[0]))
+		printUsageLocalized()
 		os.Exit(1)
 	}
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[BK-CI][ERROR] %s\n", err)
+		printErr(err.Error())
 		os.Exit(1)
 	}
 }
@@ -45,43 +55,25 @@ func Run(workDir string, args []string) {
 // IsSubcommand returns true if the argument is a known CLI subcommand.
 func IsSubcommand(arg string) bool {
 	switch arg {
-	case "install", "uninstall", "start", "stop", "repair", "configure-session":
+	case "install", "uninstall", "start", "stop", "repair", "reinstall", "status", "configure-session",
+		"-h", "--help", "help":
 		return true
 	}
 	return false
 }
 
-func PrintUsage() {
-	fmt.Print(`Usage: devopsAgent <command> [options]
+// ── Output helpers ───────────────────────────────────────────────────────
 
-Service management:
-  install              Install and start agent daemon service
-  uninstall            Stop and remove agent daemon service
-  start                Start agent daemon
-  stop                 Stop agent daemon
+func printStep(m string)                    { fmt.Printf("[BK-CI] %s\n", m) }
+func printWarn(m string)                    { fmt.Printf("[BK-CI][WARN] %s\n", m) }
+func printErr(m string)                     { fmt.Fprintf(os.Stderr, "[BK-CI][ERROR] %s\n", m) }
+func printStepf(f string, a ...interface{}) { fmt.Printf("[BK-CI] "+f+"\n", a...) }
 
-Maintenance:
-  repair               Stop agent, re-extract JDK/dependencies, restart
-
-Session mode (Windows only):
-  configure-session    Configure desktop session access
-    --user USER        Windows logon account (optional)
-    --password PASS    Password (required with --user)
-    --auto-logon       Enable Windows auto-logon on reboot
-    --disable          Revert to plain service mode
-
-Other:
-  version              Print version
-  fullVersion          Print full version info
-  (no command)         Run agent (normal mode)
-`)
+func printDivider() {
+	printStep("============================================")
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────
-
-func printStep(msg string)                  { fmt.Printf("[BK-CI] %s\n", msg) }
-func printWarn(msg string)                  { fmt.Printf("[BK-CI][WARN] %s\n", msg) }
-func printStepf(f string, a ...interface{}) { fmt.Printf("[BK-CI] "+f+"\n", a...) }
+// ── Property / config helpers ────────────────────────────────────────────
 
 func readProperty(workDir, key string) (string, error) {
 	data, err := os.ReadFile(filepath.Join(workDir, ".agent.properties"))
@@ -123,7 +115,8 @@ func agentBinary() string {
 	return "devopsAgent"
 }
 
-// killByPidFile reads a PID from file and kills the process if alive.
+// ── Process helpers ──────────────────────────────────────────────────────
+
 func killByPidFile(pidFile string) {
 	data, err := os.ReadFile(pidFile)
 	if err != nil {
@@ -138,70 +131,207 @@ func killByPidFile(pidFile string) {
 		return
 	}
 	if err := proc.Kill(); err == nil {
-		printStepf("killed process PID %d", pid)
+		printStep(msgf("killed process PID %d", "已终止进程 PID %d", pid))
 	}
 }
 
-// stopProcesses kills daemon and agent by PID files.
 func stopProcesses(workDir string) {
 	killByPidFile(filepath.Join(workDir, "runtime", "daemon.pid"))
 	killByPidFile(filepath.Join(workDir, "runtime", "agent.pid"))
 }
 
-// prepareWorkDir unzips JDK (if zip exists and dir doesn't) and creates standard directories.
+// ── Work directory preparation ───────────────────────────────────────────
+
 func prepareWorkDir(workDir string) {
 	unzipIfNeeded(filepath.Join(workDir, "jdk17.zip"), filepath.Join(workDir, "jdk17"), false)
 	unzipIfNeeded(filepath.Join(workDir, "jre.zip"), filepath.Join(workDir, "jdk"), false)
-
 	os.MkdirAll(filepath.Join(workDir, "logs"), 0755)
 	os.MkdirAll(filepath.Join(workDir, "workspace"), 0755)
 }
 
-// repairWorkDir force re-extracts JDK from zip regardless of whether the dir exists.
 func repairWorkDir(workDir string) {
 	unzipIfNeeded(filepath.Join(workDir, "jdk17.zip"), filepath.Join(workDir, "jdk17"), true)
 	unzipIfNeeded(filepath.Join(workDir, "jre.zip"), filepath.Join(workDir, "jdk"), true)
-
 	os.MkdirAll(filepath.Join(workDir, "logs"), 0755)
 	os.MkdirAll(filepath.Join(workDir, "workspace"), 0755)
 }
 
 func unzipIfNeeded(zipPath, destDir string, force bool) {
+	base := filepath.Base(zipPath)
 	if _, err := os.Stat(zipPath); os.IsNotExist(err) {
-		printWarn(fmt.Sprintf("%s not found, skipped", filepath.Base(zipPath)))
+		printWarn(msgf("%s not found, skipped", "%s 未找到, 跳过", base))
 		return
 	}
 	if _, err := os.Stat(destDir); err == nil {
 		if !force {
 			return
 		}
-		printStepf("removing %s for re-extract", filepath.Base(destDir))
+		printStep(msgf("removing %s for re-extract", "删除 %s 以重新解压", filepath.Base(destDir)))
 		os.RemoveAll(destDir)
 	}
-	printStepf("unzipping %s", filepath.Base(zipPath))
+	printStep(msgf("extracting %s ...", "解压 %s ...", base))
 	if err := unzipFile(zipPath, destDir); err != nil {
-		printWarn(fmt.Sprintf("unzip %s failed: %v", filepath.Base(zipPath), err))
+		printWarn(msgf("extract %s failed: %v", "解压 %s 失败: %v", base, err))
 	}
-}
-
-// handleRepair stops the agent, re-extracts JDK/dependencies from zip, then restarts.
-func handleRepair(workDir string) error {
-	printStep("Repairing agent files...")
-
-	printStep("stopping agent...")
-	_ = handleStop(workDir)
-
-	repairWorkDir(workDir)
-
-	printStep("restarting agent...")
-	if err := handleStart(workDir); err != nil {
-		return err
-	}
-
-	printStep("repair complete")
-	return nil
 }
 
 func unzipFile(src, dest string) error {
 	return platformUnzip(src, dest)
+}
+
+// ── Reinstall ────────────────────────────────────────────────────────────
+
+func preserveSet() map[string]bool {
+	m := map[string]bool{
+		".agent.properties": true,
+		".install_type":     true,
+		".cert":             true,
+		"workspace":         true,
+	}
+	m[agentBinary()] = true
+	m[installScriptName()] = true
+	return m
+}
+
+func installScriptName() string {
+	if runtime.GOOS == "windows" {
+		return "download_install.ps1"
+	}
+	return "install.sh"
+}
+
+func runInstallScript(workDir string) error {
+	script := installScriptName()
+	scriptPath := filepath.Join(workDir, script)
+	if _, err := os.Stat(scriptPath); os.IsNotExist(err) {
+		return fmt.Errorf(msgf(
+			"install script %s not found, cannot re-download. Please re-download manually.",
+			"安装脚本 %s 未找到, 无法重新下载。请手动重新下载安装。", script))
+	}
+
+	printStep(msgf("Running %s to download and install ...", "运行 %s 下载并安装 ...", script))
+
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", scriptPath)
+	} else {
+		os.Chmod(scriptPath, 0755)
+		cmd = exec.Command("bash", scriptPath)
+	}
+	cmd.Dir = workDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+func handleReinstall(workDir string, args []string) error {
+	skipConfirm := false
+	for _, a := range args {
+		if a == "-y" || a == "--yes" {
+			skipConfirm = true
+		}
+	}
+
+	scriptName := installScriptName()
+	scriptPath := filepath.Join(workDir, scriptName)
+	if _, err := os.Stat(scriptPath); os.IsNotExist(err) {
+		return fmt.Errorf(msgf(
+			"install script %s not found in %s. Cannot reinstall without it.",
+			"安装脚本 %s 不在 %s 中, 无法执行重装。", scriptName, workDir))
+	}
+
+	printDivider()
+	printStep(msg("Full Reinstall", "完全重装"))
+	printDivider()
+	fmt.Println()
+
+	printStep(msg("This will:", "本操作将:"))
+	printStep(msg(
+		"  1. Uninstall the daemon service",
+		"  1. 卸载守护进程服务"))
+	printStep(msg(
+		"  2. Delete all files EXCEPT identity and install script",
+		"  2. 删除除身份文件和安装脚本外的所有内容"))
+	printStep(msgf(
+		"  3. Run %s to re-download and install from server",
+		"  3. 运行 %s 从服务端重新下载并安装", scriptName))
+	fmt.Println()
+	printStep(msg("Files preserved:", "保留的文件:"))
+	for name := range preserveSet() {
+		printStep("    " + name)
+	}
+	fmt.Println()
+
+	if !skipConfirm {
+		fmt.Print(msg("Continue? (y/N): ", "是否继续? (y/N): "))
+		var answer string
+		fmt.Scanln(&answer)
+		answer = strings.TrimSpace(strings.ToLower(answer))
+		if answer != "y" && answer != "yes" {
+			printStep(msg("Cancelled", "已取消"))
+			return nil
+		}
+	}
+
+	keep := preserveSet()
+
+	// Step 1: stop (don't uninstall — preserve session config / .install_type on Windows;
+	// the install script's "devopsAgent install" will re-register the service)
+	printStep(msg("Step 1: stopping agent ...", "步骤 1: 停止 Agent ..."))
+	_ = handleStop(workDir)
+
+	// Step 2: clean
+	printStep(msg("Step 2: cleaning files ...", "步骤 2: 清理文件 ..."))
+	entries, err := os.ReadDir(workDir)
+	if err != nil {
+		return fmt.Errorf("read workdir: %w", err)
+	}
+	for _, entry := range entries {
+		name := entry.Name()
+		if keep[name] {
+			continue
+		}
+		path := filepath.Join(workDir, name)
+		if err := os.RemoveAll(path); err != nil {
+			printWarn(msgf("  failed to remove %s: %v", "  删除 %s 失败: %v", name, err))
+		} else {
+			printStep(msgf("  deleted: %s", "  已删除: %s", name))
+		}
+	}
+
+	// Step 3: re-download and install via script
+	printStep(msgf("Step 3: re-downloading via %s ...", "步骤 3: 通过 %s 重新下载 ...", scriptName))
+	if err := runInstallScript(workDir); err != nil {
+		return fmt.Errorf(msgf(
+			"install script failed: %v",
+			"安装脚本执行失败: %v", err))
+	}
+
+	fmt.Println()
+	printDivider()
+	printStep(msg("Reinstall complete", "重装完成"))
+	printDivider()
+	return nil
+}
+
+// ── Repair ───────────────────────────────────────────────────────────────
+
+func handleRepair(workDir string) error {
+	printDivider()
+	printStep(msg("Repairing agent files", "修复 Agent 文件"))
+	printDivider()
+
+	printStep(msg("Step 1: stopping agent ...", "步骤 1: 停止 Agent ..."))
+	_ = handleStop(workDir)
+
+	printStep(msg("Step 2: re-extracting dependencies ...", "步骤 2: 重新解压依赖 ..."))
+	repairWorkDir(workDir)
+
+	printStep(msg("Step 3: restarting agent ...", "步骤 3: 重启 Agent ..."))
+	if err := handleStart(workDir); err != nil {
+		return err
+	}
+
+	printStep(msg("Repair complete", "修复完成"))
+	return nil
 }

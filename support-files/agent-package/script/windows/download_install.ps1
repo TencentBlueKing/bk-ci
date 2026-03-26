@@ -113,6 +113,4 @@ if (![string]::IsNullOrEmpty($service_username) -and (![string]::IsNullOrEmpty($
     }
 }
 
-Remove-Item -Path "$work_dir\download_install.ps1" -Force
-
 Pause

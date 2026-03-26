@@ -25,7 +25,11 @@ func isRoot() bool {
 }
 
 func handleInstall(workDir string) error {
-	printStep("Installing agent daemon service (macOS)...")
+	printDivider()
+	printStep(msg("Installing agent daemon service (macOS)", "安装 Agent 守护进程服务 (macOS)"))
+	printDivider()
+
+	printStep(msg("Step 1: preparing work directory ...", "步骤 1: 准备工作目录 ..."))
 	prepareWorkDir(workDir)
 
 	serviceName, err := getServiceName(workDir)
@@ -33,26 +37,39 @@ func handleInstall(workDir string) error {
 		return err
 	}
 
+	printStep(msg("Step 2: registering launchd service ...", "步骤 2: 注册 launchd 服务 ..."))
 	unloadPlist(serviceName)
-
 	if err := writePlist(workDir, serviceName); err != nil {
 		return err
 	}
 
-	return loadPlist(serviceName)
+	printStep(msg("Step 3: starting service ...", "步骤 3: 启动服务 ..."))
+	if err := loadPlist(serviceName); err != nil {
+		return err
+	}
+
+	printStep(msg("Install complete", "安装完成"))
+	return nil
 }
 
 func handleUninstall(workDir string) error {
-	printStep("Uninstalling agent daemon service (macOS)...")
+	printDivider()
+	printStep(msg("Uninstalling agent daemon service (macOS)", "卸载 Agent 守护进程服务 (macOS)"))
+	printDivider()
+
 	serviceName, err := getServiceName(workDir)
 	if err != nil {
 		return err
 	}
 
+	printStep(msg("Removing launchd service ...", "移除 launchd 服务 ..."))
 	unloadPlist(serviceName)
 	removePlist(serviceName)
+
+	printStep(msg("Stopping processes ...", "停止进程 ..."))
 	stopProcesses(workDir)
-	printStep("uninstall complete")
+
+	printStep(msg("Uninstall complete", "卸载完成"))
 	return nil
 }
 
@@ -62,14 +79,14 @@ func handleStart(workDir string) error {
 		return err
 	}
 
-	plistPath := plistPath(serviceName)
-	if _, err := os.Stat(plistPath); err == nil {
-		printStepf("loading %s via launchctl", serviceName)
-		out, err := exec.Command("launchctl", "load", "-w", plistPath).CombinedOutput()
+	pp := plistPath(serviceName)
+	if _, err := os.Stat(pp); err == nil {
+		printStep(msgf("Loading %s via launchctl ...", "通过 launchctl 加载 %s ...", serviceName))
+		out, err := exec.Command("launchctl", "load", "-w", pp).CombinedOutput()
 		if err != nil {
 			return fmt.Errorf("launchctl load: %s (%w)", strings.TrimSpace(string(out)), err)
 		}
-		printStepf("service %s started", serviceName)
+		printStep(msgf("Service %s started", "服务 %s 已启动", serviceName))
 		return nil
 	}
 
@@ -84,15 +101,12 @@ func handleStop(workDir string) error {
 
 	unloadPlist(serviceName)
 	stopProcesses(workDir)
-	printStep("agent stopped")
+	printStep(msg("Agent stopped", "Agent 已停止"))
 	return nil
 }
 
 // ── launchd ──────────────────────────────────────────────────────────────
 
-// plistDir returns the appropriate plist directory:
-//   - root: /Library/LaunchDaemons (system-level, runs at boot)
-//   - user: ~/Library/LaunchAgents (user-level, runs at login)
 func plistDir() string {
 	if isRoot() {
 		return "/Library/LaunchDaemons"
@@ -136,11 +150,11 @@ func writePlist(workDir, serviceName string) error {
 		return fmt.Errorf("write plist: %w", err)
 	}
 
-	level := "user-level (LaunchAgents)"
+	level := msg("user-level (LaunchAgents)", "用户级 (LaunchAgents)")
 	if isRoot() {
-		level = "system-level (LaunchDaemons)"
+		level = msg("system-level (LaunchDaemons)", "系统级 (LaunchDaemons)")
 	}
-	printStepf("created %s (%s)", pp, level)
+	printStep(msgf("Created %s (%s)", "已创建 %s (%s)", pp, level))
 	return nil
 }
 
@@ -150,7 +164,7 @@ func loadPlist(serviceName string) error {
 	if err != nil {
 		return fmt.Errorf("launchctl load: %s (%w)", strings.TrimSpace(string(out)), err)
 	}
-	printStepf("service %s loaded", serviceName)
+	printStep(msgf("Service %s loaded", "服务 %s 已加载", serviceName))
 	return nil
 }
 
@@ -159,12 +173,11 @@ func unloadPlist(serviceName string) {
 	if _, err := os.Stat(pp); err == nil {
 		_ = exec.Command("launchctl", "unload", pp).Run()
 	}
-	// Also try the other location for cleanup during migration
 	other := otherPlistPath(serviceName)
 	if _, err := os.Stat(other); err == nil {
 		_ = exec.Command("launchctl", "unload", other).Run()
 		os.Remove(other)
-		printStepf("cleaned up legacy plist %s", other)
+		printStep(msgf("Cleaned up legacy plist %s", "已清理旧 plist %s", other))
 	}
 }
 
@@ -172,7 +185,7 @@ func removePlist(serviceName string) {
 	pp := plistPath(serviceName)
 	if _, err := os.Stat(pp); err == nil {
 		os.Remove(pp)
-		printStepf("removed %s", pp)
+		printStep(msgf("Removed %s", "已移除 %s", pp))
 	}
 }
 
@@ -194,9 +207,9 @@ func startDirect(workDir string) error {
 	cmd.Stdout = nil
 	cmd.Stderr = nil
 	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("start daemon: %w", err)
+		return fmt.Errorf(msgf("start daemon failed: %v", "启动守护进程失败: %v", err))
 	}
-	printStepf("daemon started, pid=%d", cmd.Process.Pid)
+	printStep(msgf("Daemon started, PID=%d", "守护进程已启动, PID=%d", cmd.Process.Pid))
 	cmd.Process.Release()
 	return nil
 }
