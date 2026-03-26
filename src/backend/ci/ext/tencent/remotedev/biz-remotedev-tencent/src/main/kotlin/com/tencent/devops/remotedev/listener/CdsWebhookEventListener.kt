@@ -1,6 +1,5 @@
 package com.tencent.devops.remotedev.listener
 
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.service.ServiceMarketEventResource
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
