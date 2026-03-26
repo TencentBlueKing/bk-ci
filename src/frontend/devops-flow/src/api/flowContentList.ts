@@ -20,7 +20,7 @@ import { del, get, post, put } from '@/utils/http'
 // 统一从 types/flow 导入状态类型（已在上方导入）
 export type { StatusType }
 
-type TriggerType = 'manualTrigger' | 'timerTrigger' | 'codeGitWebHookTrigger' | 'remoteTrigger'
+import type { TriggerType } from '@/utils/flowConst'
 export type SortType = 'NAME' | 'CREATE_DATE' | 'LATEST_BUILD_START_DATA' | 'UPDATE_TIME'
 export type Collation = 'ASC' | 'DESC' | 'null' | 'DEFAULT'
 type CanUpdate = 'INTERNAL' | 'TRUE' | 'FALSE'

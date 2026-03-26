@@ -1,7 +1,7 @@
 import { SvgIcon } from '@/components/SvgIcon'
 import { useAuthoringEnvironment } from '@/hooks/useAuthoringEnvironment'
 import { useFlowModel } from '@/hooks/useFlowModel'
-import { Button } from 'bkui-vue'
+import { Button, Loading } from 'bkui-vue'
 import { defineComponent } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -16,7 +16,7 @@ export default defineComponent({
     const route = useRoute()
 
     // Use flowModel to update settings
-    const { flowSetting, updateFlowSetting } = useFlowModel()
+    const { flowSetting, updateFlowSetting, loading } = useFlowModel()
 
     const { envSelectList, nodeList, nodeListLoading, envListLoading, goEnvironment } =
       useAuthoringEnvironment({ ...route.params, autoLoadEnvList: true })
@@ -33,7 +33,7 @@ export default defineComponent({
     }
 
     return () => (
-      <div class={[sharedStyles.tabContainer, sharedStyles.tabPadding, styles.workflowEnvironment]}>
+      <Loading loading={loading.value} class={[sharedStyles.tabContainer, sharedStyles.tabPadding, styles.workflowEnvironment]}>
         <AuthoringEnv
           isEdit
           modelValue={flowSetting.value?.envHashId}
@@ -47,7 +47,7 @@ export default defineComponent({
           <SvgIcon class={styles.jumpIcon} name="jump" size={12} />
           {t('flow.content.environmentManagement')}
         </Button>
-      </div>
+      </Loading>
     )
   },
 })

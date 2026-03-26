@@ -1060,8 +1060,8 @@ importers:
         specifier: 0.0.1-beta.10
         version: 0.0.1-beta.10(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.92(highlight.js@11.11.1)(vue@3.5.24(typescript@5.9.3)))(vue@3.5.24(typescript@5.9.3))
       axios:
-        specifier: 1.13.2
-        version: 1.13.2
+        specifier: 1.13.6
+        version: 1.13.6(debug@4.4.3)
       bk-permission:
         specifier: workspace:bk-permission
         version: link:../bk-permission

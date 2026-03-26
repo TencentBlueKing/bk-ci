@@ -5,6 +5,7 @@ import ModeSwitch from '@/components/ModeSwitch'
 import { useFlowConfigCode } from '@/hooks/useFlowConfigCode'
 import { useFlowModel } from '@/hooks/useFlowModel'
 import { useModeStore } from '@/stores/flowMode'
+import { TRIGGER_TYPE } from '@/utils/flowConst'
 import layoutStyles from '@/styles/layout.module.css'
 import { Loading } from 'bkui-vue'
 import { computed, defineComponent } from 'vue'
@@ -59,7 +60,7 @@ export default defineComponent({
           if (!atomCode) return { icon: '', type: '' }
 
           // 手动触发
-          if (atomCode === 'manualTrigger' || atomCode.includes('manual')) {
+          if (atomCode === TRIGGER_TYPE.MANUAL) {
             return { icon: 'play-circle', type: 'manual' }
           }
 

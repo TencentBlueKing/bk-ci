@@ -81,7 +81,7 @@ export default defineComponent({
           remark.value = val.remark
         }
         if (val?.curVersion !== oldVal?.curVersion) {
-          updateCurVersionDesc()
+          updateCurVersionDesc(val?.curVersion)
         }
       },
       { immediate: true },
@@ -104,9 +104,9 @@ export default defineComponent({
       remarkEditable.value = false
     }
 
-    async function updateCurVersionDesc() {
+    async function updateCurVersionDesc(version: number) {
       try {
-        const result = await fetchVersionDetail(props.execDetail.curVersion)
+        const result = await fetchVersionDetail(version)
         curVersionDesc.value = result.description || ''
       } catch (error: any) {
         Message({

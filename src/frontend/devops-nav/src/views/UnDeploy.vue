@@ -20,7 +20,7 @@
             Undeploy
         }
     })
-        export default class ExceptionUndeploy extends Vue {
+    export default class ExceptionUndeploy extends Vue {
         get service (): Object {
             const currentService = window.serviceObject.serviceMap[this.$route.params.id]
             return currentService || {}

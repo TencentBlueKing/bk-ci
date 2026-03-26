@@ -164,7 +164,6 @@ class ClassifyDao {
                 .associate {
                     val code = it[CLASSIFY_CODE] ?: ""
                     val name = it[CLASSIFY_NAME] ?: ""
-                    // 分类名称支持国际化
                     val classifyType = StoreTypeEnum.getStoreType(it[TYPE]?.toInt() ?: 0)
                     val lanName = I18nUtil.getCodeLanMessage(
                         messageCode = "$classifyType.classify.$code",

@@ -1,4 +1,5 @@
 import { useExecuteDetailStore } from '@/stores/executeDetail'
+import { useFlowInfoStore } from '@/stores/flowInfoStore'
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
 import { isRunning } from '../utils/flowStatus'
@@ -14,7 +15,9 @@ export type ExecuteInfo = {
  */
 export function useExecuteDetail() {
   const store = useExecuteDetailStore()
-  const { loading, executeDetail, flowInfo } = storeToRefs(store)
+  const flowInfoStore = useFlowInfoStore()
+  const { loading, executeDetail } = storeToRefs(store)
+  const { flowInfo } = storeToRefs(flowInfoStore)
 
   // 计算执行详情的相关状态
   const isRunningOrNot = computed(() => isRunning(executeDetail.value?.status))

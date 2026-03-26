@@ -14,7 +14,7 @@
     import { Component, Prop } from 'vue-property-decorator'
 
     @Component
-        export default class SvgLogo extends Vue {
+    export default class SvgLogo extends Vue {
         @Prop()
         name
 

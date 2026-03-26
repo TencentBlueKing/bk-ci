@@ -112,6 +112,8 @@
       <bk-checkbox class="atom-canskip-checkbox" :value="atom.canElementSkip" :model-value="atom.canElementSkip" @change="handleAtomSkipChange"
           :disabled="isSkip" />
       </span>
+
+
       <i
         v-if="reactiveData.editable && !isLastAtom"
         class="add-plus-icon insert-after"
@@ -904,6 +906,28 @@ onBeforeUnmount(() => {
     }
   }
 
+  .add-plus-icon.insert-after {
+    @include add-plus-icon($primaryColor, $primaryColor, white, 18px, true);
+    @include add-plus-icon-hover($primaryColor, $primaryColor, white);
+    display: none;
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: pointer;
+    z-index: 10;
+
+    &:hover {
+      transform: translateX(-50%) scale(1.1);
+    }
+  }
+
+  &:hover {
+    .add-plus-icon.insert-after {
+      display: block;
+    }
+  }
+
   &.readonly {
     background-color: white;
 
@@ -923,29 +947,6 @@ onBeforeUnmount(() => {
         height: 24px;
         top: -23px;
       }
-    }
-  }
-  
-  // Insert after button
-  .add-plus-icon.insert-after {
-    @include add-plus-icon($primaryColor, $primaryColor, white, 18px, true);
-    @include add-plus-icon-hover($primaryColor, $primaryColor, white);
-    display: none;
-    position: absolute;
-    bottom: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    cursor: pointer;
-    z-index: 10;
-    
-    &:hover {
-      transform: translateX(-50%) scale(1.1);
-    }
-  }
-  
-  &:hover {
-    .add-plus-icon.insert-after {
-      display: block;
     }
   }
 }

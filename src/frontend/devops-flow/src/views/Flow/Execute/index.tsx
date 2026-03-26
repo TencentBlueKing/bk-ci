@@ -29,6 +29,7 @@ export default defineComponent({
 
     onUnmounted(() => {
       websocketRegister.unInstallWsMessage(WS_ID)
+      executeDetailStore.$reset()
     })
 
     watch(

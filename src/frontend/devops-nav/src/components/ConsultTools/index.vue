@@ -49,7 +49,7 @@
     const SHOW_O2000_REMINDER_DOT = 'SHOW_O2000_REMINDER_DOT'
 
     @Component
-        export default class ConsultTools extends Vue {
+    export default class ConsultTools extends Vue {
         @State user
         showTabAssistant: boolean = false
         

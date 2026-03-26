@@ -8,11 +8,12 @@ import {
   retryFlow,
   triggerStage as triggerStageApi,
 } from '@/api/executeDetail'
-import { fetchFlowInfo, updateRemark } from '@/api/flowInfo'
-import type { ExecuteDetailData, FlowInfo } from '@/types/flow'
+import { updateRemark } from '@/api/flowInfo'
+import type { ExecuteDetailData } from '@/types/flow'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { useFlowInfoStore } from './flowInfoStore'
 
 export const useExecuteDetailStore = defineStore('executeDetail', () => {
   const route = useRoute()
@@ -22,9 +23,10 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
   const projectId = computed(() => route.params.projectId as string)
   const buildNo = computed(() => route.params.buildNo as string)
 
+  const flowInfoStore = useFlowInfoStore()
+
   const loading = ref(false)
   const executeDetail = ref<ExecuteDetailData | null>(null)
-  const flowInfo = ref<FlowInfo | null>(null)
 
   async function getExecuteDetail() {
     const params = {
@@ -36,28 +38,18 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
     return await requestPipelineExecDetail(params)
   }
 
-  async function getFlowInfoDetail() {
-    return await fetchFlowInfo({
-      projectId: projectId.value,
-      flowId: flowId.value,
-    })
-  }
-
   async function initExecuteDetail() {
     try {
       loading.value = true
-      // 先清空旧数据，避免显示旧数据
       executeDetail.value = null
-      flowInfo.value = null
+      flowInfoStore.reset()
 
-      const [executeRes, flowInfoRes] = await Promise.all([getExecuteDetail(), getFlowInfoDetail()])
+      const [executeRes] = await Promise.all([getExecuteDetail(), flowInfoStore.getFlowInfo()])
 
       executeDetail.value = executeRes
-      flowInfo.value = flowInfoRes
     } catch (error) {
       console.error('Failed to fetch execute detail:', error)
       executeDetail.value = null
-      flowInfo.value = null
     } finally {
       loading.value = false
     }
@@ -247,14 +239,20 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
     }
   }
 
+  function $reset() {
+    loading.value = false
+    executeDetail.value = null
+    flowInfoStore.reset()
+  }
+
   return {
     loading,
     executeDetail,
-    flowInfo,
 
     initExecuteDetail,
     silentRefreshExecuteDetail,
     updateFromWebSocket,
+    $reset,
     stopExecute,
     requestRePlayFlow,
     requestRetryFlow,

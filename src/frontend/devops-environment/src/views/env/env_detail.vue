@@ -59,25 +59,25 @@
 </template>
 
 <script>
-    import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
+    import useCreateEnv from '@/hooks/useCreateEnv'
+    import useEnvAside from '@/hooks/useEnvAside'
+    import useEnvDetail from '@/hooks/useEnvDetail'
+    import useInstance from '@/hooks/useInstance'
     import {
         ENV_TYPE_MAP
     } from '@/store/constants'
-    import useInstance from '@/hooks/useInstance'
-    import useEnvDetail from '@/hooks/useEnvDetail'
-    import useCreateEnv from '@/hooks/useCreateEnv'
-    import useEnvAside from '@/hooks/useEnvAside'
-    import Node from './components/Node/index.vue'
-    import EnvParam from './components/EnvParam/index.vue'
+    import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+    import emptyNode from '../empty_node'
+    import AuthManage from './components/Auth/index.vue'
     import BasicInfo from './components/BasicInfo/index.vue'
-    import SharedSettings from './components/SharedSetting/index.vue'
     import BuildTask from './components/BuildTask/index.vue'
     import DeployTask from './components/DeployTask/index.vue'
-    import AuthManage from './components/Auth/index.vue'
+    import EnvParam from './components/EnvParam/index.vue'
+    import Node from './components/Node/index.vue'
     import Settings from './components/Settings/index.vue'
-    import emptyNode from '../empty_node'
-    import AdvancedTab from '@/components/envTabs/advancedTab.vue'
-
+    import AdvancedTab from './components/SharedSetting/advancedTab.vue'
+    import SharedSettings from './components/SharedSetting/index.vue'
+    
     export default {
         name: 'EnvDetail',
         components: {

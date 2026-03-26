@@ -79,11 +79,9 @@ export default defineConfig(({ mode }) => {
       createHtmlPlugin({
         inject: {
           data: {
-            IAM_URL_PREFIX: isDev ? '//iam-dev.woa.com' : '__BK_CI_IAM_URL_PREFIX__',
-            PUBLIC_PATH_PREFIX: isDev ? '//dev.devops.woa.com' : '__BK_CI_PUBLIC_PATH__',
-            ICON_COOL_PREFIX: isDev
-              ? '//radosgw.open.woa.com/bkicon-default-9/ci-flow-0.0.1/fonts'
-              : '',
+            IAM_URL_PREFIX: '__BK_CI_IAM_URL_PREFIX__',
+            PUBLIC_PATH_PREFIX: '__BK_CI_PUBLIC_PATH__',
+            ICON_COOL_PREFIX: '',
             // Add more variables here as needed
           },
         },

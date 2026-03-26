@@ -78,7 +78,7 @@
     import { getServiceAliasByPath, isAbsoluteUrl, urlJoin } from '../../utils/util'
 
     @Component
-        export default class NavBox extends Vue {
+    export default class NavBox extends Vue {
         readyServices: ObjectMap = {}
 
         @Prop()
