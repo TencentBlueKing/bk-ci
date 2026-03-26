@@ -254,15 +254,24 @@ class RbacPermissionResourceService(
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = projectCode
             )
-            permissionSubsetManagerService.modifySubsetManager(
-                subsetManagerId = resourceInfo.relationId,
-                projectCode = projectCode,
-                projectName = projectInfo.resourceName,
-                resourceType = resourceType,
-                resourceCode = resourceCode,
-                resourceName = resourceName,
-                iamResourceCode = resourceInfo.iamResourceCode
-            )
+            if (!resourceInfo.enable && resourceInfo.relationId.isBlank()) {
+                logger.info(
+                    "resource is disabled and relationId is empty, " +
+                        "skip modify subset manager" +
+                        "|$projectCode|$resourceType|$resourceCode"
+                )
+                true
+            } else {
+                permissionSubsetManagerService.modifySubsetManager(
+                    subsetManagerId = resourceInfo.relationId,
+                    projectCode = projectCode,
+                    projectName = projectInfo.resourceName,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    resourceName = resourceName,
+                    iamResourceCode = resourceInfo.iamResourceCode
+                )
+            }
         }
         if (updateAuthResource) {
             authResourceService.update(
