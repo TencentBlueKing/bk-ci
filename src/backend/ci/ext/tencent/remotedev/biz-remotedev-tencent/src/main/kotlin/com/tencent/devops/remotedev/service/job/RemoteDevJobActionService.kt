@@ -7,6 +7,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.RemoteDevJobExecRecordDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
@@ -67,15 +68,18 @@ class RemoteDevJobActionService @Autowired constructor(
         val mVars = param.variables.toMutableMap()
         mVars[PIPELINE_JOB_CALLBACK_ID] = id.toString()
         mVars[PIPELINE_JOB_IPS] = ips.joinToString(",") { it.substringAfter(".") }
-
-        logger.info("remotedev start pipeline job $id ${param.pipelineId}")
+        val pipelineId = param.pipelineId
+        logger.info("remotedev start pipeline job $id $pipelineId")
         val res = try {
+            val channelCode = client.get(ServicePipelineResource::class)
+                .getPipelineInfoByPipelineId(pipelineId, projectId)?.data?.channelCode
+                ?: ChannelCode.getRequestChannelCode()
             client.get(ServiceBuildResource::class).manualStartupNew(
                 userId = param.userId,
-                projectId = param.projectId,
-                pipelineId = param.pipelineId,
+                projectId = projectId,
+                pipelineId = pipelineId,
                 values = mVars,
-                channelCode = ChannelCode.BS,
+                channelCode = channelCode,
                 buildNo = null,
                 startType = StartType.SERVICE
             )

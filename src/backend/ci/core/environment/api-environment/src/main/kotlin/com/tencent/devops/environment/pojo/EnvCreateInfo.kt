@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.pojo
 
+import com.tencent.devops.environment.pojo.enums.EnvNodeType
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeSource
 import io.swagger.v3.oas.annotations.media.Schema
@@ -37,12 +38,16 @@ data class EnvCreateInfo(
     val name: String,
     @get:Schema(title = "环境描述", required = true)
     val desc: String,
-    @get:Schema(title = "环境类型（开发环境{DEV}|测试环境{TEST}|构建环境{BUILD}）", required = true)
+    @get:Schema(title = "环境类型（开发环境{DEV}|测试环境{TEST}|构建环境{BUILD}|创作流环境{CREATE}）", required = true)
     val envType: EnvType,
+    @get:Schema(title = "环境节点类型（节点环境{NODE}|标签环境{TAG}）", required = false)
+    val envNodeType: EnvNodeType = EnvNodeType.NODE,
     @get:Schema(title = "环境变量", required = false)
     val envVars: List<EnvVar>?,
-    @get:Schema(title = "节点来源（已有节点{EXISTING}|快速生成{CREATE}）", required = true)
+    @get:Schema(title = "节点来源（已有节点{EXISTING}|快速生成{CREATE}）", required = false)
     val source: NodeSource,
     @get:Schema(title = "节点 HashId 列表", required = false)
-    val nodeHashIds: List<String>?
+    val nodeHashIds: List<String>?,
+    @get:Schema(title = "节点标签列表", required = false)
+    val nodeTags: List<NodeTagAddOrDeleteTagItem>?
 )

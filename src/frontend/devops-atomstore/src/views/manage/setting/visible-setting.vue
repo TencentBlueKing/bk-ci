@@ -26,6 +26,7 @@
                 :header-cell-style="{ background: '#fff' }"
                 :empty-text="$t('store.未设置可见对象时，仅成员可以安装到名下项目中使用。设置可见对象后，对应用户可以在Store中查看并安装使用。')"
                 :data="visibleList"
+                :max-height="521"
                 @select="select"
                 @select-all="selectAll"
             >

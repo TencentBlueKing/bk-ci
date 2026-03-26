@@ -39,7 +39,6 @@ import com.tencent.devops.common.archive.pojo.ArtifactQualityMetadataAnalytics
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.PipelineBuildQuery
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
@@ -51,6 +50,9 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryReco
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.BuildRetryInfo
+import com.tencent.devops.process.engine.pojo.builds.BuildHistoryQueryParam
+import com.tencent.devops.process.engine.pojo.builds.HistoryConditionQueryParam
+import com.tencent.devops.process.engine.pojo.builds.HistoryConditionQueryResult
 import com.tencent.devops.process.enums.HistorySearchType
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.LightBuildHistory
@@ -58,6 +60,7 @@ import com.tencent.devops.process.pojo.LightBuildParameter
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.code.WebhookInfo
+import com.tencent.devops.process.utils.NODE_HASH_ID
 import jakarta.ws.rs.core.Response
 import java.sql.Timestamp
 import java.time.LocalDateTime
@@ -68,6 +71,7 @@ import org.jooq.Record15
 import org.jooq.Record2
 import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
+import org.jooq.Table
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
@@ -86,6 +90,7 @@ class PipelineBuildDao {
 
     fun create(dslContext: DSLContext, startBuildContext: StartBuildContext) {
         try {
+            val nodeHashId = startBuildContext.pipelineParamMap[NODE_HASH_ID]?.value?.toString()
             if (!startBuildContext.debug) {
                 with(T_PIPELINE_BUILD_HISTORY) {
                     dslContext.insertInto(
@@ -113,7 +118,9 @@ class PipelineBuildDao {
                         CONCURRENCY_GROUP,
                         VERSION_NAME,
                         YAML_VERSION,
-                        EXECUTE_COUNT
+                        EXECUTE_COUNT,
+                        NODE_HASH_ID,
+                        TRIGGER_EVENT_TYPE
                     ).values(
                         startBuildContext.buildId,
                         startBuildContext.buildNum,
@@ -138,7 +145,9 @@ class PipelineBuildDao {
                         startBuildContext.concurrencyGroup,
                         startBuildContext.versionName,
                         startBuildContext.yamlVersion,
-                        startBuildContext.executeCount
+                        startBuildContext.executeCount,
+                        nodeHashId,
+                        startBuildContext.triggerEventType
                     ).execute()
                 }
             } else {
@@ -168,7 +177,8 @@ class PipelineBuildDao {
                         CONCURRENCY_GROUP,
                         YAML_VERSION,
                         RESOURCE_MODEL,
-                        EXECUTE_COUNT
+                        EXECUTE_COUNT,
+                        NODE_HASH_ID
                     ).values(
                         startBuildContext.buildId,
                         startBuildContext.buildNum,
@@ -193,7 +203,8 @@ class PipelineBuildDao {
                         startBuildContext.concurrencyGroup,
                         startBuildContext.yamlVersion,
                         startBuildContext.debugModelStr,
-                        startBuildContext.executeCount
+                        startBuildContext.executeCount,
+                        nodeHashId
                     ).execute()
                 }
             }
@@ -1014,62 +1025,15 @@ class PipelineBuildDao {
 
     fun count(
         dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        materialAlias: List<String>?,
-        materialUrl: String?,
-        materialBranch: List<String>?,
-        materialCommitId: String?,
-        materialCommitMessage: String?,
-        status: List<BuildStatus>?,
-        trigger: List<StartType>?,
-        queueTimeStartTime: Long?,
-        queueTimeEndTime: Long?,
-        startTimeStartTime: Long?,
-        startTimeEndTime: Long?,
-        endTimeStartTime: Long?,
-        endTimeEndTime: Long?,
-        totalTimeMin: Long?,
-        totalTimeMax: Long?,
-        remark: String?,
-        buildNoStart: Int?,
-        buildNoEnd: Int?,
-        buildMsg: String?,
-        startUser: List<String>?,
-        debug: Boolean?,
-        triggerAlias: List<String>?,
-        triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        queryParam: BuildHistoryQueryParam
     ): Int {
-        return if (debug != true) {
+        return if (queryParam.debug != true) {
             with(T_PIPELINE_BUILD_HISTORY) {
                 val where = dslContext.selectCount()
-                    .from(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
+                    .from(this).where(PROJECT_ID.eq(queryParam.projectId)).and(PIPELINE_ID.eq(queryParam.pipelineId))
                 makeCondition(
                     where = where,
-                    materialAlias = materialAlias,
-                    materialUrl = materialUrl,
-                    materialBranch = materialBranch,
-                    materialCommitId = materialCommitId,
-                    materialCommitMessage = materialCommitMessage,
-                    status = status,
-                    startUser = startUser,
-                    trigger = trigger,
-                    queueTimeStartTime = queueTimeStartTime,
-                    queueTimeEndTime = queueTimeEndTime,
-                    startTimeStartTime = startTimeStartTime,
-                    startTimeEndTime = startTimeEndTime,
-                    endTimeStartTime = endTimeStartTime,
-                    endTimeEndTime = endTimeEndTime,
-                    totalTimeMin = totalTimeMin,
-                    totalTimeMax = totalTimeMax,
-                    remark = remark,
-                    buildNoStart = buildNoStart,
-                    buildNoEnd = buildNoEnd,
-                    buildMsg = buildMsg,
-                    triggerAlias = triggerAlias,
-                    triggerBranch = triggerBranch,
-                    triggerUser = triggerUser
+                    queryParam = queryParam
                 )
                 where.fetchOne(0, Int::class.java)!!
             }
@@ -1077,32 +1041,10 @@ class PipelineBuildDao {
             with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
                 val where = dslContext.selectCount()
                     .from(this)
-                    .where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
+                    .where(PROJECT_ID.eq(queryParam.projectId)).and(PIPELINE_ID.eq(queryParam.pipelineId))
                 makeDebugCondition(
                     where = where,
-                    materialAlias = materialAlias,
-                    materialUrl = materialUrl,
-                    materialBranch = materialBranch,
-                    materialCommitId = materialCommitId,
-                    materialCommitMessage = materialCommitMessage,
-                    status = status,
-                    startUser = startUser,
-                    trigger = trigger,
-                    queueTimeStartTime = queueTimeStartTime,
-                    queueTimeEndTime = queueTimeEndTime,
-                    startTimeStartTime = startTimeStartTime,
-                    startTimeEndTime = startTimeEndTime,
-                    endTimeStartTime = endTimeStartTime,
-                    endTimeEndTime = endTimeEndTime,
-                    totalTimeMin = totalTimeMin,
-                    totalTimeMax = totalTimeMax,
-                    remark = remark,
-                    buildNoStart = buildNoStart,
-                    buildNoEnd = buildNoEnd,
-                    buildMsg = buildMsg,
-                    triggerAlias = triggerAlias,
-                    triggerBranch = triggerBranch,
-                    triggerUser = triggerUser
+                    queryParam = queryParam
                 )
                 where.fetchOne(0, Int::class.java)!!
             }
@@ -1111,64 +1053,17 @@ class PipelineBuildDao {
 
     fun listPipelineBuildInfo(
         dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        materialAlias: List<String>?,
-        materialUrl: String?,
-        materialBranch: List<String>?,
-        materialCommitId: String?,
-        materialCommitMessage: String?,
-        status: List<BuildStatus>?,
-        trigger: List<StartType>?,
-        queueTimeStartTime: Long?,
-        queueTimeEndTime: Long?,
-        startTimeStartTime: Long?,
-        startTimeEndTime: Long?,
-        endTimeStartTime: Long?,
-        endTimeEndTime: Long?,
-        totalTimeMin: Long?,
-        totalTimeMax: Long?,
-        remark: String?,
+        queryParam: BuildHistoryQueryParam,
         offset: Int,
         limit: Int,
-        buildNoStart: Int?,
-        buildNoEnd: Int?,
-        buildMsg: String?,
-        startUser: List<String>?,
-        updateTimeDesc: Boolean? = null,
-        debug: Boolean?,
-        triggerAlias: List<String>?,
-        triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        updateTimeDesc: Boolean? = null
     ): Collection<BuildInfo> {
-        return if (debug != true) {
+        return if (queryParam.debug != true) {
             with(T_PIPELINE_BUILD_HISTORY) {
-                val where = dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
+                val where = dslContext.selectFrom(this).where(PROJECT_ID.eq(queryParam.projectId)).and(PIPELINE_ID.eq(queryParam.pipelineId))
                 makeCondition(
                     where = where,
-                    materialAlias = materialAlias,
-                    materialUrl = materialUrl,
-                    materialBranch = materialBranch,
-                    materialCommitId = materialCommitId,
-                    materialCommitMessage = materialCommitMessage,
-                    status = status,
-                    startUser = startUser,
-                    trigger = trigger,
-                    queueTimeStartTime = queueTimeStartTime,
-                    queueTimeEndTime = queueTimeEndTime,
-                    startTimeStartTime = startTimeStartTime,
-                    startTimeEndTime = startTimeEndTime,
-                    endTimeStartTime = endTimeStartTime,
-                    endTimeEndTime = endTimeEndTime,
-                    totalTimeMin = totalTimeMin,
-                    totalTimeMax = totalTimeMax,
-                    remark = remark,
-                    buildNoStart = buildNoStart,
-                    buildNoEnd = buildNoEnd,
-                    buildMsg = buildMsg,
-                    triggerAlias = triggerAlias,
-                    triggerBranch = triggerBranch,
-                    triggerUser = triggerUser
+                    queryParam = queryParam
                 )
 
                 when (updateTimeDesc) {
@@ -1182,32 +1077,10 @@ class PipelineBuildDao {
         } else {
             with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
                 val where = dslContext.selectFrom(this)
-                    .where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
+                    .where(PROJECT_ID.eq(queryParam.projectId)).and(PIPELINE_ID.eq(queryParam.pipelineId))
                 makeDebugCondition(
                     where = where,
-                    materialAlias = materialAlias,
-                    materialUrl = materialUrl,
-                    materialBranch = materialBranch,
-                    materialCommitId = materialCommitId,
-                    materialCommitMessage = materialCommitMessage,
-                    status = status,
-                    startUser = startUser,
-                    trigger = trigger,
-                    queueTimeStartTime = queueTimeStartTime,
-                    queueTimeEndTime = queueTimeEndTime,
-                    startTimeStartTime = startTimeStartTime,
-                    startTimeEndTime = startTimeEndTime,
-                    endTimeStartTime = endTimeStartTime,
-                    endTimeEndTime = endTimeEndTime,
-                    totalTimeMin = totalTimeMin,
-                    totalTimeMax = totalTimeMax,
-                    remark = remark,
-                    buildNoStart = buildNoStart,
-                    buildNoEnd = buildNoEnd,
-                    buildMsg = buildMsg,
-                    triggerAlias = triggerAlias,
-                    triggerBranch = triggerBranch,
-                    triggerUser = triggerUser
+                    queryParam = queryParam
                 )
                 when (updateTimeDesc) {
                     true -> where.orderBy(UPDATE_TIME.desc(), BUILD_ID)
@@ -1295,30 +1168,33 @@ class PipelineBuildDao {
 
     private fun TPipelineBuildHistory.makeCondition(
         where: SelectConditionStep<*>,
-        materialAlias: List<String>?,
-        materialUrl: String?,
-        materialBranch: List<String>?,
-        materialCommitId: String?,
-        materialCommitMessage: String?,
-        status: List<BuildStatus>?,
-        startUser: List<String>?,
-        trigger: List<StartType>?,
-        queueTimeStartTime: Long?,
-        queueTimeEndTime: Long?,
-        startTimeStartTime: Long?,
-        startTimeEndTime: Long?,
-        endTimeStartTime: Long?,
-        endTimeEndTime: Long?,
-        totalTimeMin: Long?,
-        totalTimeMax: Long?,
-        remark: String?,
-        buildNoStart: Int?,
-        buildNoEnd: Int?,
-        buildMsg: String?,
-        triggerAlias: List<String>?,
-        triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        queryParam: BuildHistoryQueryParam
     ) {
+        val materialAlias = queryParam.materialAlias
+        val materialUrl = queryParam.materialUrl
+        val materialBranch = queryParam.materialBranch
+        val materialCommitId = queryParam.materialCommitId
+        val materialCommitMessage = queryParam.materialCommitMessage
+        val status = queryParam.status
+        val startUser = queryParam.startUser
+        val trigger = queryParam.trigger
+        val queueTimeStartTime = queryParam.queueTimeStartTime
+        val queueTimeEndTime = queryParam.queueTimeEndTime
+        val startTimeStartTime = queryParam.startTimeStartTime
+        val startTimeEndTime = queryParam.startTimeEndTime
+        val endTimeStartTime = queryParam.endTimeStartTime
+        val endTimeEndTime = queryParam.endTimeEndTime
+        val totalTimeMin = queryParam.totalTimeMin
+        val totalTimeMax = queryParam.totalTimeMax
+        val remark = queryParam.remark
+        val buildNoStart = queryParam.buildNoStart
+        val buildNoEnd = queryParam.buildNoEnd
+        val buildMsg = queryParam.buildMsg
+        val triggerAlias = queryParam.triggerAlias
+        val triggerBranch = queryParam.triggerBranch
+        val triggerUser = queryParam.triggerUser
+        val triggerEventTypes = queryParam.triggerEventTypes
+        val triggerNodeHashIds = queryParam.triggerNodeHashIds
         if (!materialAlias.isNullOrEmpty() && materialAlias.first().isNotBlank()) {
             var conditionsOr: Condition
 
@@ -1448,34 +1324,43 @@ class PipelineBuildDao {
         if (!triggerUser.isNullOrEmpty()) { // filterNotNull不能删
             where.and(TRIGGER_USER.`in`(triggerUser))
         }
+        if (!triggerEventTypes.isNullOrEmpty()) {
+            where.and(TRIGGER_EVENT_TYPE.`in`(triggerEventTypes))
+        }
+        if (!triggerNodeHashIds.isNullOrEmpty()) {
+            where.and(NODE_HASH_ID.`in`(triggerNodeHashIds))
+        }
     }
 
     private fun TPipelineBuildHistoryDebug.makeDebugCondition(
         where: SelectConditionStep<*>,
-        materialAlias: List<String>?,
-        materialUrl: String?,
-        materialBranch: List<String>?,
-        materialCommitId: String?,
-        materialCommitMessage: String?,
-        status: List<BuildStatus>?,
-        startUser: List<String>?,
-        trigger: List<StartType>?,
-        queueTimeStartTime: Long?,
-        queueTimeEndTime: Long?,
-        startTimeStartTime: Long?,
-        startTimeEndTime: Long?,
-        endTimeStartTime: Long?,
-        endTimeEndTime: Long?,
-        totalTimeMin: Long?,
-        totalTimeMax: Long?,
-        remark: String?,
-        buildNoStart: Int?,
-        buildNoEnd: Int?,
-        buildMsg: String?,
-        triggerAlias: List<String>?,
-        triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        queryParam: BuildHistoryQueryParam
     ) {
+        val materialAlias = queryParam.materialAlias
+        val materialUrl = queryParam.materialUrl
+        val materialBranch = queryParam.materialBranch
+        val materialCommitId = queryParam.materialCommitId
+        val materialCommitMessage = queryParam.materialCommitMessage
+        val status = queryParam.status
+        val startUser = queryParam.startUser
+        val trigger = queryParam.trigger
+        val queueTimeStartTime = queryParam.queueTimeStartTime
+        val queueTimeEndTime = queryParam.queueTimeEndTime
+        val startTimeStartTime = queryParam.startTimeStartTime
+        val startTimeEndTime = queryParam.startTimeEndTime
+        val endTimeStartTime = queryParam.endTimeStartTime
+        val endTimeEndTime = queryParam.endTimeEndTime
+        val totalTimeMin = queryParam.totalTimeMin
+        val totalTimeMax = queryParam.totalTimeMax
+        val remark = queryParam.remark
+        val buildNoStart = queryParam.buildNoStart
+        val buildNoEnd = queryParam.buildNoEnd
+        val buildMsg = queryParam.buildMsg
+        val triggerAlias = queryParam.triggerAlias
+        val triggerBranch = queryParam.triggerBranch
+        val triggerUser = queryParam.triggerUser
+        val triggerEventTypes = queryParam.triggerEventTypes
+        val triggerNodeHashIds = queryParam.triggerNodeHashIds
         // 增加过滤，对前端屏蔽已删除的构建
         where.and(DELETE_TIME.isNull)
         if (!materialAlias.isNullOrEmpty() && materialAlias.first().isNotBlank()) {
@@ -1606,6 +1491,12 @@ class PipelineBuildDao {
         }
         if (!triggerUser.isNullOrEmpty()) { // filterNotNull不能删
             where.and(TRIGGER_USER.`in`(triggerUser))
+        }
+        if (!triggerEventTypes.isNullOrEmpty()) {
+            where.and(TRIGGER_EVENT_TYPE.`in`(triggerEventTypes))
+        }
+        if (!triggerNodeHashIds.isNullOrEmpty()) {
+            where.and(NODE_HASH_ID.`in`(triggerNodeHashIds))
         }
     }
 
@@ -2115,7 +2006,9 @@ class PipelineBuildDao {
                     buildNumAlias = t.buildNumAlias,
                     remark = t.remark,
                     debug = false, // #8164 原历史表中查出的记录均为非调试的记录
-                    versionChange = t.versionChange
+                    versionChange = t.versionChange,
+                    nodeHashId = t.nodeHashId,
+                    triggerEventType = t.triggerEventType // 触发事件标识
                 )
             }
         }
@@ -2181,10 +2074,107 @@ class PipelineBuildDao {
                     buildNumAlias = t.buildNumAlias,
                     remark = t.remark,
                     debug = true, // #8164 原历史表中查出的记录均为非调试的记录
-                    versionChange = t.versionChange
+                    versionChange = t.versionChange,
+                    nodeHashId = t.nodeHashId
                 )
             }
         }
+    }
+
+    /**
+     * 查询历史构建条件值（支持分页和关键字过滤）
+     * @param param 查询参数
+     * @return 查询结果，包含原始值列表和总数
+     */
+    fun queryHistoryConditions(param: HistoryConditionQueryParam): HistoryConditionQueryResult {
+        // 根据debug标志选择表并执行查询
+        return if (param.debug) {
+            queryFromDebugTable(param)
+        } else {
+            queryFromNormalTable(param)
+        }
+    }
+
+    /**
+     * 从正常表查询
+     */
+    private fun queryFromNormalTable(param: HistoryConditionQueryParam): HistoryConditionQueryResult {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            val conditions = buildHistoryConditions(param)
+            executeHistoryQuery(param, conditions, this)
+        }
+    }
+
+    /**
+     * 从调试表查询
+     */
+    private fun queryFromDebugTable(param: HistoryConditionQueryParam): HistoryConditionQueryResult {
+        return with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+            val conditions = buildHistoryConditions(param)
+            // 调试表需要额外过滤已删除的记录
+            conditions.add(DELETE_TIME.isNull)
+            executeHistoryQuery(param, conditions, this)
+        }
+    }
+
+    private fun Any.buildHistoryConditions(param: HistoryConditionQueryParam): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
+        when (this) {
+            is TPipelineBuildHistory -> {
+                conditions.add(PROJECT_ID.eq(param.projectId))
+                conditions.add(PIPELINE_ID.eq(param.pipelineId))
+            }
+            is TPipelineBuildHistoryDebug -> {
+                conditions.add(PROJECT_ID.eq(param.projectId))
+                conditions.add(PIPELINE_ID.eq(param.pipelineId))
+            }
+        }
+        conditions.add(param.field.isNotNull)
+        if (!param.keyword.isNullOrBlank()) {
+            val escapedKeyword = param.keyword
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_")
+            conditions.add(param.field.contains(escapedKeyword))
+        }
+        return conditions
+    }
+
+    /**
+     * 执行查询（公共逻辑）
+     */
+    private fun <T : Table<*>> executeHistoryQuery(
+        param: HistoryConditionQueryParam,
+        conditions: MutableList<Condition>,
+        table: T
+    ): HistoryConditionQueryResult {
+        // 查询总数（使用count distinct）
+        val totalCount = param.dslContext.select(DSL.countDistinct(param.field))
+            .from(table)
+            .where(conditions)
+            .fetchOne(0, Long::class.java) ?: 0L
+        // 如果总数为0，直接返回空结果
+        if (totalCount == 0L) {
+            return HistoryConditionQueryResult(
+                values = emptyList(),
+                totalCount = 0L
+            )
+        }
+        // 计算分页偏移量
+        val offset = (param.page - 1) * param.pageSize
+        // 使用数据库分页查询distinct值
+        val pagedValues = param.dslContext.selectDistinct(param.field)
+            .from(table)
+            .where(conditions)
+            .orderBy(param.field.asc())
+            .limit(param.pageSize)
+            .offset(offset)
+            .fetch(param.field)
+            .filterNotNull()
+        return HistoryConditionQueryResult(
+            values = pagedValues,
+            totalCount = totalCount
+        )
     }
 
 class PipelineBuildLightInfoJooqMapper : RecordMapper<

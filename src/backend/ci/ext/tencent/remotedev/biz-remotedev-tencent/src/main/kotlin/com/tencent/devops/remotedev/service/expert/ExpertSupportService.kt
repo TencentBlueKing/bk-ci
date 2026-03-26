@@ -15,6 +15,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
@@ -67,8 +68,6 @@ import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_QUERY_CGS_PWD
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import java.time.Duration
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -76,6 +75,8 @@ import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import java.time.Duration
+import java.time.LocalDateTime
 
 @Service
 class ExpertSupportService @Autowired constructor(
@@ -315,13 +316,17 @@ class ExpertSupportService @Autowired constructor(
                     else -> newParam[k] = v
                 }
             }
-
+            val projectId = info.projectId
+            val pipelineId = info.pipelineId
+            val channelCode = client.get(ServicePipelineResource::class)
+                .getPipelineInfoByPipelineId(pipelineId, projectId)?.data?.channelCode
+                ?: ChannelCode.getRequestChannelCode()
             client.get(ServiceBuildResource::class).manualStartupNew(
                 userId = info.userId ?: "",
-                projectId = info.projectId,
-                pipelineId = info.pipelineId,
+                projectId = projectId,
+                pipelineId = pipelineId,
                 values = newParam,
-                channelCode = ChannelCode.BS,
+                channelCode = channelCode,
                 buildNo = null,
                 startType = StartType.SERVICE
             )

@@ -1,0 +1,12 @@
+.cronDisabled {
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.cronErrorMessage {
+  color: var(--color-danger);
+  font-size: var(--font-size-xs);
+  margin-top: 4px;
+  line-height: 1.4;
+}

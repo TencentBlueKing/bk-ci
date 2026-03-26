@@ -101,5 +101,7 @@ data class NodeWithPermission(
     @get:Schema(title = "节点标签信息")
     val tags: List<NodeTag>? = null,
     @get:Schema(title = "当前环境是否启用这个 node")
-    val envEnableNode: Boolean?
+    val envEnableNode: Boolean?,
+    @get:Schema(title = "创作环境，工作空间id", required = false)
+    val createWorkspaceId: String?
 )

@@ -409,7 +409,7 @@
             },
 
             getAtomClassifys () {
-                return Promise.all([this.requestAtomClassifys(), this.requestAtomLables()]).then(([classifys, lables]) => {
+                return Promise.all([this.requestAtomClassifys(), this.requestAtomLables( { serviceScope: 'PIPELINE' })]).then(([classifys, lables]) => {
                     const res = []
                     if (classifys.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: this.$t('store.按分类'), data: classifys })
                     if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: this.$t('store.按功能'), data: lables })

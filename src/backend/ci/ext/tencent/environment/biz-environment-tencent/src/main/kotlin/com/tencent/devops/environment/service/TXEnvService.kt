@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
@@ -36,7 +37,9 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_DEL_PERMISSSION
@@ -47,7 +50,9 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.EnvShareProjectDao
+import com.tencent.devops.environment.dao.EnvTagDao
 import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.dao.NodeTagKeyDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvCreateInfo
@@ -65,26 +70,38 @@ import org.springframework.stereotype.Service
 @Suppress("ALL")
 class TXEnvService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val objectMapper: ObjectMapper,
     private val envDao: EnvDao,
     private val nodeDao: NodeDao,
     private val envNodeDao: EnvNodeDao,
+    private val envTagDao: EnvTagDao,
+    private val nodeTagKeyDao: NodeTagKeyDao,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val envShareProjectDao: EnvShareProjectDao,
     private val nodeService: NodeService,
-    private val client: Client
+    private val client: Client,
+    private val authProjectApi: AuthProjectApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
+    private val createEnvService: CreateEnvService
 ) : EnvService(
     dslContext = dslContext,
+    objectMapper = objectMapper,
     envDao = envDao,
     nodeDao = nodeDao,
     envNodeDao = envNodeDao,
+    envTagDao = envTagDao,
+    nodeTagKeyDao = nodeTagKeyDao,
     thirdPartyAgentDao = thirdPartyAgentDao,
     slaveGatewayService = slaveGatewayService,
     environmentPermissionService = environmentPermissionService,
     envShareProjectDao = envShareProjectDao,
     nodeService = nodeService,
-    client = client
+    client = client,
+    authProjectApi = authProjectApi,
+    pipelineAuthServiceCode = pipelineAuthServiceCode,
+    createEnvService = createEnvService
 ) {
 
     override fun checkName(projectId: String, envId: Long?, envName: String) {

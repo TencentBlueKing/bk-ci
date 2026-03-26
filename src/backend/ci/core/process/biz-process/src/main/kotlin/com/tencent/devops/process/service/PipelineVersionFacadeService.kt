@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.NUM_ZERO
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
@@ -42,14 +41,12 @@ import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
-import com.tencent.devops.common.pipeline.container.Stage
-import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
-import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -383,33 +380,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         request: TemplateInstanceCreateRequest
     ): DeployPipelineResult {
         val templateModel = if (request.emptyTemplate == true) {
-            Model(
-                name = request.pipelineName,
-                desc = "",
-                stages = listOf(
-                    Stage(
-                        id = "stage-1",
-                        containers = listOf(
-                            TriggerContainer(
-                                id = "0",
-                                name = "trigger",
-                                elements = listOf(
-                                    ManualTriggerElement(
-                                        id = "T-1-1-1",
-                                        name = I18nUtil.getCodeLanMessage(
-                                            CommonMessageCode.BK_MANUAL_TRIGGER,
-                                            language = I18nUtil.getLanguage(
-                                                userId
-                                            )
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
-                ),
-                pipelineCreator = userId
-            )
+            initializeModel(userId, request.pipelineName)
         } else {
             val templateResource = if (request.templateVersion != null) {
                 pipelineTemplateResourceService.get(
@@ -427,6 +398,10 @@ class PipelineVersionFacadeService @Autowired constructor(
             }
             templateResource.model as Model
         }
+        val channelCode = ChannelCode.getRequestChannelCode()
+        request.pipelineDialect?.takeIf { channelCode == ChannelCode.CREATIVE_STREAM }?.let {
+            request.pipelineDialect = PipelineDialectType.CONSTRAINED.name
+        }
         val pipelineAsCodeSettings = PipelineAsCodeSettings.initDialect(
             inheritedDialect = request.inheritedDialect,
             pipelineDialect = request.pipelineDialect
@@ -435,10 +410,11 @@ class PipelineVersionFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = "",
             pipelineName = request.pipelineName,
-            channelCode = ChannelCode.BS
+            channelCode = channelCode
         ).copy(
             pipelineAsCodeSettings = pipelineAsCodeSettings,
-            labels = request.labels
+            labels = request.labels,
+            envHashId = request.envHashId
         )
 
         return pipelineInfoFacadeService.createPipeline(
@@ -449,9 +425,10 @@ class PipelineVersionFacadeService @Autowired constructor(
                 templateId = request.templateId,
                 instanceFromTemplate = false,
                 staticViews = request.staticViews,
-                labels = request.labels
+                labels = request.labels,
+                desc = request.pipelineDesc
             ),
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             setting = setting,
             checkPermission = true,
             instanceType = request.instanceType,
@@ -459,6 +436,18 @@ class PipelineVersionFacadeService @Autowired constructor(
             useSubscriptionSettings = request.useSubscriptionSettings,
             useConcurrencyGroup = request.useConcurrencyGroup
         )
+    }
+
+    private fun initializeModel(
+        userId: String,
+        pipelineName: String
+    ): Model {
+        val isCreativeStream = ChannelCode.getRequestChannelCode() == ChannelCode.CREATIVE_STREAM
+        return if (isCreativeStream) {
+            Model.creativeStreamDefaultModel(pipelineName, userId)
+        } else {
+            Model.defaultModel(pipelineName, userId)
+        }
     }
 
     fun getVersion(
@@ -570,7 +559,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             yamlSupported = yamlSupported,
             yamlInvalidMsg = msg,
             updater = resource.updater ?: resource.creator,
-            updateTime = resource.updateTime?.timestampmilli()
+            updateTime = resource.updateTime?.timestampmilli(),
+            envHashId = setting.envHashId
         )
     }
 

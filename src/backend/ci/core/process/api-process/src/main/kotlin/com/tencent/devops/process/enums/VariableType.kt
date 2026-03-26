@@ -183,13 +183,17 @@ enum class VariableType(val hasPrefix: Boolean = false, val alisName: String = "
     // GITHUB CREATE Branch Or Tag事件触发
     BK_CI_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME,
     BK_CI_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE,
-    BK_CI_REPO_GITHUB_WEBHOOK_CREATE_USERNAME
+    BK_CI_REPO_GITHUB_WEBHOOK_CREATE_USERNAME,
 
     // GITHUB Commit Push Hook事件触发
     // 已覆盖
 
     // GITHUB Pull Request Hook事件触发
     // 已覆盖
+
+    // 节点信息
+    BK_CI_NODE_AGENT_ID,
+    BK_CI_NODE_OS
     ;
 
     companion object {

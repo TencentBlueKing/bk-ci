@@ -51,16 +51,15 @@
 </template>
 
 <script>
+    import useEnvDetail from '@/hooks/useEnvDetail'
+    
     export default {
         name: 'advanced-tab',
-        props: {
-            projectId: {
-                type: String,
-                required: true
-            },
-            envHashId: {
-                type: String,
-                required: true
+        setup () {
+            const { projectId, envHashId } = useEnvDetail()
+            return {
+                projectId,
+                envHashId
             }
         },
         data () {

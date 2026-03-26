@@ -43,6 +43,7 @@ import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
@@ -52,8 +53,10 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.service.CreateEnvService
 import com.tencent.devops.environment.service.NodeTagService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import org.jooq.DSLContext
@@ -73,7 +76,8 @@ class ImportService @Autowired constructor(
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val simpleRateLimiter: SimpleRateLimiter,
-    private val nodeTagService: NodeTagService
+    private val nodeTagService: NodeTagService,
+    private val createEnvService: CreateEnvService
 ) {
 
     companion object {
@@ -85,7 +89,7 @@ class ImportService @Autowired constructor(
     /**
      * 利用上一次安装包[agentHashId]的ID来生成新的agent并返回hashId
      */
-    fun generateAgentByOtherAgentId(agentHashId: String): String {
+    fun generateAgentByOtherAgentId(agentHashId: String, agentType: AgentType?): String {
         val lockKey = "lock:tpa:batch:rate:$agentHashId"
         val acquire = simpleRateLimiter.acquire(BU_SIZE, lockKey = lockKey)
         if (!acquire) {
@@ -120,7 +124,9 @@ class ImportService @Autowired constructor(
                 os = os,
                 secretKey = SecurityUtil.encrypt(secretKey),
                 gateway = gateway,
-                fileGateway = fileGateway
+                fileGateway = fileGateway,
+                agentType = agentType,
+                createWorkspaceName = null
             )
 
             return HashUtil.encodeLongId(id)
@@ -193,12 +199,21 @@ class ImportService @Autowired constructor(
                 name = agentRecord.hostname,
                 osName = agentRecord.os.lowercase(),
                 status = NodeStatus.NORMAL,
-                type = NodeType.THIRDPARTY,
+                type = if (agentRecord.agentType == AgentType.CREATE.name) {
+                    NodeType.CREATE
+                } else {
+                    NodeType.THIRDPARTY
+                },
                 userId = userId,
                 agentVersion = masterVersion
             )
 
-            val nodeStringId = "BUILD_${HashUtil.encodeLongId(nodeId)}_${agentRecord.ip}"
+            val nodeStringId = if (agentRecord.agentType == AgentType.CREATE.name) {
+                createEnvService.getWorkspaceDisplayName(userId, projectId, agentRecord.createWorkspaceName)
+                    ?: agentRecord.createWorkspaceName ?: "CREATE_${agentRecord.ip}"
+            } else {
+                "BUILD_${HashUtil.encodeLongId(nodeId)}_${agentRecord.ip}"
+            }
             nodeDao.insertNodeStringIdAndDisplayName(
                 dslContext = context,
                 id = nodeId,
@@ -218,7 +233,12 @@ class ImportService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 nodeId = nodeId,
-                nodeName = "$nodeStringId(${agentRecord.ip})"
+                nodeName = "$nodeStringId(${agentRecord.ip})",
+                resourceType = if (agentRecord.agentType == AgentType.CREATE.name) {
+                    AuthResourceType.CREATIVE_STREAM_NODE
+                } else {
+                    AuthResourceType.ENVIRONMENT_ENV_NODE
+                }
             )
         }
 

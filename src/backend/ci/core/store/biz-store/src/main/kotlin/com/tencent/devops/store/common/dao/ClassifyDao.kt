@@ -129,6 +129,52 @@ class ClassifyDao {
         }
     }
 
+    /**
+     * 批量根据分类 ID 查询 CLASSIFY_CODE，用于一次查询替代多次 getClassify。
+     *
+     * @param ids 分类 ID 列表，空列表返回空 Map
+     * @return Map: 分类ID → CLASSIFY_CODE
+     */
+    fun getClassifyCodesByIds(dslContext: DSLContext, ids: List<String>): Map<String, String> {
+        if (ids.isEmpty()) return emptyMap()
+        val distinctIds = ids.distinct()
+        with(TClassify.T_CLASSIFY) {
+            return dslContext.select(ID, CLASSIFY_CODE)
+                .from(this)
+                .where(ID.`in`(distinctIds))
+                .fetch()
+                .associate { it[ID] to (it[CLASSIFY_CODE] ?: "") }
+        }
+    }
+
+    /**
+     * 批量根据分类 ID 查询 CLASSIFY_CODE 和 CLASSIFY_NAME，用于构建 ServiceScopeDetail。
+     *
+     * @param ids 分类 ID 列表，空列表返回空 Map
+     * @return Map: 分类ID → Pair(CLASSIFY_CODE, CLASSIFY_NAME)
+     */
+    fun getClassifyInfosByIds(dslContext: DSLContext, ids: List<String>): Map<String, Pair<String, String>> {
+        if (ids.isEmpty()) return emptyMap()
+        val distinctIds = ids.distinct()
+        with(TClassify.T_CLASSIFY) {
+            return dslContext.select(ID, CLASSIFY_CODE, CLASSIFY_NAME, TYPE)
+                .from(this)
+                .where(ID.`in`(distinctIds))
+                .fetch()
+                .associate {
+                    val code = it[CLASSIFY_CODE] ?: ""
+                    val name = it[CLASSIFY_NAME] ?: ""
+                    // 分类名称支持国际化
+                    val classifyType = StoreTypeEnum.getStoreType(it[TYPE]?.toInt() ?: 0)
+                    val lanName = I18nUtil.getCodeLanMessage(
+                        messageCode = "$classifyType.classify.$code",
+                        defaultMessage = name
+                    )
+                    it[ID] to Pair(code, lanName)
+                }
+        }
+    }
+
     fun getClassifyByCode(
         dslContext: DSLContext,
         classifyCode: String,

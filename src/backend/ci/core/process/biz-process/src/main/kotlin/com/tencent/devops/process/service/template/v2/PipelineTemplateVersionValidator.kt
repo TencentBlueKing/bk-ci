@@ -37,7 +37,9 @@ import com.tencent.devops.common.pipeline.template.ITemplateModel
 import com.tencent.devops.common.pipeline.template.JobTemplateModel
 import com.tencent.devops.common.pipeline.template.StageTemplateModel
 import com.tencent.devops.common.pipeline.template.StepTemplateModel
+import com.tencent.devops.common.pipeline.utils.ModelVarRefValidator
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_MODEL_VAR_REF_INVALID
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
@@ -89,6 +91,13 @@ class PipelineTemplateVersionValidator @Autowired constructor(
         newTemplate: Boolean = false
     ) {
         if (templateModel is Model) {
+            val invalidRefs = ModelVarRefValidator.getInvalidRefs(templateModel, projectId)
+            if (invalidRefs.isNotEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_PIPELINE_MODEL_VAR_REF_INVALID,
+                    params = arrayOf(ModelVarRefValidator.formatInvalidRefsMessage(invalidRefs))
+                )
+            }
             val pipelineDialect = pipelineAsCodeService.getPipelineDialect(
                 projectId = projectId,
                 asCodeSettings = pipelineAsCodeSettings

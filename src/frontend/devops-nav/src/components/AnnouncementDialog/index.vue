@@ -25,7 +25,7 @@
     import { Component } from 'vue-property-decorator'
     import { State, Action } from 'vuex-class'
     @Component
-    export default class NewServiceDialog extends Vue {
+        export default class NewServiceDialog extends Vue {
         @State showNotice
         @State currentNotice
         

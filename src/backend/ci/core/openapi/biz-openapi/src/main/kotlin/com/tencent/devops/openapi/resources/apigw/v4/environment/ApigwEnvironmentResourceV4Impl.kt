@@ -241,11 +241,12 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
+        createMode: Boolean?,
         data: NodeFetchReq?
     ): Result<Page<NodeWithPermission>> {
         logger.info("OPENAPI_ENVIRONMENT_V4|$userId|fetch nodes|$projectId|$page|$pageSize|$nodeIp|$displayName|" +
             "$createdUser|$lastModifiedUser|$keywords|$nodeType|$nodeStatus|$agentVersion|$osName|" +
-            "$latestBuildPipelineId|$latestBuildTimeStart|$latestBuildTimeEnd|$sortType|$collation|$data")
+            "$latestBuildPipelineId|$latestBuildTimeStart|$latestBuildTimeEnd|$sortType|$collation|$createMode|$data")
         return client.get(ServiceNodeResource::class).fetchNodes(
             userId = userId,
             projectId = projectId,
@@ -265,6 +266,7 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
             latestBuildTimeEnd = latestBuildTimeEnd,
             sortType = sortType,
             collation = collation,
+            createMode = createMode,
             data = data
         )
     }

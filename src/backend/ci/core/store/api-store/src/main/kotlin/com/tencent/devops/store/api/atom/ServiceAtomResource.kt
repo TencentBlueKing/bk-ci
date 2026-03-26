@@ -39,6 +39,7 @@ import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -68,6 +69,9 @@ interface ServiceAtomResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "支持的服务范围", required = false)
+        @QueryParam("serviceScope")
+        serviceScope: ServiceScopeEnum?,
         @Parameter(description = "搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
@@ -127,7 +131,10 @@ interface ServiceAtomResource {
         atomCode: String,
         @Parameter(description = "版本号", required = true)
         @PathParam("version")
-        version: String
+        version: String,
+        @Parameter(description = "支持的服务范围", required = false)
+        @QueryParam("serviceScope")
+        serviceScope: ServiceScopeEnum? = null
     ): Result<PipelineAtom?>
 
     @Operation(summary = "根据插件代码和版本号集合批量获取插件信息")

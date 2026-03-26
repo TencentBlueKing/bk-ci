@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.common.dao
 
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
@@ -35,8 +36,11 @@ import com.tencent.devops.model.store.tables.TStoreLabelRel
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.utils.VersionUtils
+import com.tencent.devops.store.pojo.common.KEY_ATOM_STATUS
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.QueryComponentsParam
+import com.tencent.devops.store.pojo.common.QueryGroupParam
+import com.tencent.devops.store.pojo.common.enums.StoreGroupByEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -99,13 +103,58 @@ class StoreBaseQueryDao {
     fun getLatestComponentByCode(
         dslContext: DSLContext,
         storeCode: String,
-        storeType: StoreTypeEnum
+        storeType: StoreTypeEnum,
+        ownerStoreCode: String? = null,
+        storeStatus: StoreStatusEnum? = null,
+        keyword: String? = null
     ): TStoreBaseRecord? {
         return with(TStoreBase.T_STORE_BASE) {
             dslContext.selectFrom(this)
-                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .where(
+                    mutableListOf(
+                        STORE_CODE.eq(storeCode),
+                        STORE_TYPE.eq(storeType.type.toByte())
+                    ).let {
+                        if (!ownerStoreCode.isNullOrEmpty()) {
+                            it.add(OWNER_STORE_CODE.eq(ownerStoreCode))
+                        }
+                        if (storeStatus != null) {
+                            it.add(STATUS.eq(storeStatus.name))
+                        }
+                        if (!keyword.isNullOrEmpty()) {
+                            it.add(NAME.like("%$keyword%"))
+                        }
+                        it
+                    }
+                )
                 .and(LATEST_FLAG.eq(true))
                 .fetchOne()
+        }
+    }
+
+    fun getLatestComponentByCodes(
+        dslContext: DSLContext,
+        storeCodes: Set<String>?,
+        storeType: StoreTypeEnum,
+        storeStatus: StoreStatusEnum? = null
+    ): Result<TStoreBaseRecord> {
+        return with(TStoreBase.T_STORE_BASE) {
+            dslContext.selectFrom(this)
+                    .where(
+                        mutableListOf(
+                            STORE_TYPE.eq(storeType.type.toByte()),
+                            LATEST_FLAG.eq(true)
+                        ).let {
+                            if (storeStatus != null) {
+                                it.add(STATUS.eq(storeStatus.name))
+                            }
+                            if (!storeCodes.isNullOrEmpty()) {
+                                it.add(STORE_CODE.`in`(storeCodes))
+                            }
+                            it
+                        }
+                    )
+                    .fetch()
         }
     }
 
@@ -163,15 +212,27 @@ class StoreBaseQueryDao {
         dslContext: DSLContext,
         storeCode: String,
         version: String,
-        storeType: StoreTypeEnum
+        storeType: StoreTypeEnum,
+        ownerStoreCode: String? = null,
+        status: StoreStatusEnum? = null
     ): TStoreBaseRecord? {
         return with(TStoreBase.T_STORE_BASE) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
-            conditions.add(STORE_CODE.eq(storeCode))
-            conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
             dslContext.selectFrom(this)
-                .where(conditions)
+                .where(
+                    mutableListOf(
+                        STORE_TYPE.eq(storeType.type.toByte()),
+                        STORE_CODE.eq(storeCode),
+                        VERSION.like(VersionUtils.generateQueryVersion(version))
+                    ).let {
+                        if (!ownerStoreCode.isNullOrEmpty()) {
+                            it.add(OWNER_STORE_CODE.eq(ownerStoreCode))
+                        }
+                        status?.let { statusItem ->
+                            it.add(STATUS.eq(statusItem.name))
+                        }
+                        it
+                    }
+                )
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
@@ -244,7 +305,8 @@ class StoreBaseQueryDao {
         storeCode: String? = null,
         version: String? = null,
         status: StoreStatusEnum? = null,
-        classifyId: String? = null
+        classifyId: String? = null,
+        ownerStoreCode: String? = null
     ): Int {
         with(TStoreBase.T_STORE_BASE) {
             val conditions = mutableListOf<Condition>()
@@ -263,6 +325,9 @@ class StoreBaseQueryDao {
             }
             classifyId?.let {
                 conditions.add(CLASSIFY_ID.eq(it))
+            }
+            if (!ownerStoreCode.isNullOrBlank()) {
+                conditions.add(STORE_CODE.eq(ownerStoreCode))
             }
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
@@ -539,6 +604,74 @@ class StoreBaseQueryDao {
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
+        }
+    }
+
+    fun getVersionsByStoreCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        status: StoreStatusEnum? = null,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): Result<out Record> {
+        return with(TStoreBase.T_STORE_BASE) {
+            val baseStep = dslContext.select(
+                VERSION.`as`(KEY_VERSION),
+                STATUS.`as`(KEY_ATOM_STATUS)
+            )
+                    .from(this)
+                    .where(STORE_CODE.eq(storeCode))
+                    .and(STORE_TYPE.eq(storeType.type.toByte()))
+                    .let {
+                        if (status != null) {
+                            it.and(STATUS.eq(status.name))
+                        }
+                        it
+                    }
+                    .orderBy(CREATE_TIME.desc())
+            if (null != page && null != pageSize) {
+                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            } else {
+                baseStep.fetch()
+            }
+        }
+    }
+
+    /**
+     * 分组统计组件数量
+     */
+    fun getComponentGroupCount(
+        dslContext: DSLContext,
+        queryGroupParam: QueryGroupParam,
+        storeCodes: Set<String>
+    ): List<Pair<String, Int>> {
+        return with(TStoreBase.T_STORE_BASE) {
+            val groupField = when (queryGroupParam.groupBy) {
+                StoreGroupByEnum.OWNER_STORE_CODE -> {
+                    OWNER_STORE_CODE
+                }
+                StoreGroupByEnum.STORE_CODE -> {
+                    STORE_CODE
+                }
+                else -> {
+                    STORE_TYPE
+                }
+            }
+            dslContext.select(groupField, DSL.count())
+                    .from(this)
+                    .where(
+                        listOf(
+                            STORE_TYPE.eq(queryGroupParam.storeType.type.toByte()),
+                            STORE_CODE.`in`(storeCodes),
+                            OWNER_STORE_CODE.isNotNull
+                        )
+                    )
+                    .groupBy(groupField)
+                    .fetch()
+                    .map {
+                        Pair(it.value1() as String, it.value2())
+                    }
         }
     }
 }

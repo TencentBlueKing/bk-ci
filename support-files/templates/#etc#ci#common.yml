@@ -273,6 +273,9 @@ spring:
       - index: 70
         name: T_PIPELINE_BUILD_PARAM_COMBINATION_DETAIL
         databaseShardingStrategy: SHARDING
+      - index: 71
+        name: T_PIPELINE_EVENT_SUBSCRIPTION
+        broadcastFlag: true
 
 endpoints:
   metrics:

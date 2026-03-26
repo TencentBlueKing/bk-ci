@@ -142,7 +142,7 @@ class AuthPipelineService @Autowired constructor(
         authTokenApi.checkToken(token)
         val pipelineInfos = pipelineListFacadeService.getPipelinePage(
             projectId = projectId,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             limit = limit,
             offset = offset
         )

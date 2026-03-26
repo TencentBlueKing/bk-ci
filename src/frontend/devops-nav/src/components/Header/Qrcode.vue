@@ -42,7 +42,7 @@
             clickoutside
         }
     })
-    export default class FeedBack extends Vue {
+        export default class FeedBack extends Vue {
         @State user
         @Action togglePopupShow
         show: boolean = false

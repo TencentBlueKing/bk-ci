@@ -12,6 +12,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.RemoteDevCronJobDao
@@ -316,13 +317,18 @@ class RemoteDevJobService @Autowired constructor(
         repeat(5) {
             // 先暂停60s看看，因为是从finalStage发送的，发送到的时候流水线的状态还是运行中
             Thread.sleep(1000 * 30)
+            val projectId = info.projectId
+            val pipelineId = info.pipelineId
+            val channelCode = client.get(ServicePipelineResource::class)
+                .getPipelineInfoByPipelineId(pipelineId, projectId)?.data?.channelCode
+                ?: ChannelCode.getRequestChannelCode()
             // 获取流水线状态
             val build = client.get(ServiceBuildResource::class).getBuildStatusWithoutPermission(
                 userId = info.userId,
-                projectId = info.projectId,
-                pipelineId = info.pipelineId,
+                projectId = projectId,
+                pipelineId = pipelineId,
                 buildId = receiptInfo.buildId,
-                channelCode = ChannelCode.BS
+                channelCode = channelCode
             ).data ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.REMOTEDEV_JOB_ERROR.errorCode,
                 defaultMessage = "build ${receiptInfo.buildId} status is null"

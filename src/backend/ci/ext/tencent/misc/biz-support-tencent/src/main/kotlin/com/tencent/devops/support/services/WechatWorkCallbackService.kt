@@ -58,6 +58,7 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextT
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextView
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextViewLink
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.user.UserBuildResource
 import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.pojo.BuildId
@@ -478,12 +479,12 @@ class WechatWorkCallbackService @Autowired constructor(
         val manualStartupInfo: Result<BuildManualStartupInfo>
         // 执行流水线的信息，获取启动参数
         try {
+            val channelCode = client.get(ServicePipelineResource::class)
+                .getPipelineInfoByPipelineId(pipelineId, projectCode)?.data?.channelCode
+                ?: ChannelCode.getRequestChannelCode()
             // 正常获取到执行权限的时候
             manualStartupInfo = client.get(ServiceBuildResource::class).manualStartupInfo(
-                userId = userName,
-                projectId = projectCode,
-                pipelineId = pipelineId,
-                channelCode = ChannelCode.BS
+                userId = userName, projectId = projectCode, pipelineId = pipelineId, channelCode = channelCode
             )
             // 判断是否能够启动
             // 判断是否能够启动

@@ -44,7 +44,7 @@
             clickoutside
         }
     })
-    export default class LocaleSwitcher extends Vue {
+        export default class LocaleSwitcher extends Vue {
         showLocaleList: boolean = false
         hideList () {
             this.showLocaleList = false

@@ -79,6 +79,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
+import com.tencent.devops.environment.api.thirdpartyagent.ServiceAgentResource
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.OrganizationGroup
 import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
@@ -211,6 +212,18 @@ class WorkspaceService @Autowired constructor(
                 displayName = displayName
             )
         }
+
+        try {
+            client.get(ServiceAgentResource::class).updateDisplayNameByWorkspaceId(
+                userId = userId,
+                projectId = ws.projectId,
+                workspaceId = workspaceName,
+                displayName = displayName
+            )
+        } catch (e: Exception) {
+            logger.error("update create node displayName error", e)
+        }
+
         return true
     }
 
@@ -247,7 +260,12 @@ class WorkspaceService @Autowired constructor(
             .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, ws.projectId)
             .scopeId = ws.projectId
 
-        if (checkPermission && !permissionService.hasManagerOrViewerPermission(userId, ws.projectId, ws.workspaceName)) {
+        if (checkPermission && !permissionService.hasManagerOrViewerPermission(
+                userId,
+                ws.projectId,
+                ws.workspaceName
+            )
+        ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("We're sorry but you don't have permission to modify $workspaceName property")
@@ -1287,8 +1305,8 @@ class WorkspaceService @Autowired constructor(
 
             val oneReady = public.filter {
                 loginUserMap[it.value2()]?.loginUsers.isNullOrEmpty() &&
-                    workspaceStatus[it.value1()] in setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.DISTRIBUTING) &&
-                    cgsStatus?.get(it.value2()) == ComputerStatusEnum.NORMAL.status
+                        workspaceStatus[it.value1()] in setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.DISTRIBUTING) &&
+                        cgsStatus?.get(it.value2()) == ComputerStatusEnum.NORMAL.status
             }.randomOrNull() ?: run {
                 logger.warn("there are no idle public cloud desktops|$envId|$loginUserMap|$workspaceStatus")
                 throw ErrorCodeException(
@@ -1362,7 +1380,7 @@ class WorkspaceService @Autowired constructor(
             val normalNodeCount =
                 env.nodeHashIds?.count {
                     workspaceStatus[it] in normalStatuses &&
-                        cgsStatus?.get(node2HostMap[it]) == ComputerStatusEnum.NORMAL.status
+                            cgsStatus?.get(node2HostMap[it]) == ComputerStatusEnum.NORMAL.status
                 } ?: 0
             val abnormalNodeCount = (env.nodeHashIds?.size ?: 0) - normalNodeCount
             val currentLoginUsers = env.nodeHashIds?.flatMap { nodeHashId ->
@@ -1429,7 +1447,7 @@ class WorkspaceService @Autowired constructor(
             .setInstanceName(workspace.workspaceName)
         permissionService.checkViewerPermission(userId, workspace.workspaceName, workspace.projectId)
         ActionAuditContext.current().addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
-        
+
         val resourceId = workspace.resourceId
         val owner = if (workspace.ownerType.projectUse()) {
             workspaceSharedDao.fetchWorkspaceSharedInfo(

@@ -1,0 +1,130 @@
+.stageReviewEditContent {
+  padding: 16px 24px;
+  font-size: var(--font-size-xs);
+
+  :global(.bk-form-item) {
+    margin-bottom: 14px;
+  }
+}
+
+.reviewRadioGroup {
+  display: flex;
+  gap: 80px;
+}
+
+.sectionDivider {
+  margin: 14px 0 10px !important;
+}
+
+.formSection {
+  margin-top: 0;
+}
+
+/* Review Group Row */
+.reviewGroupItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.reviewGroupName {
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.reviewGroupTypeSelect {
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.reviewGroupUsers {
+  flex: 1;
+  min-width: 0;
+}
+
+.reviewGroupDelete {
+  flex-shrink: 0;
+}
+
+.addReviewGroupBtn {
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs);
+}
+
+/* Notification */
+.checkboxGroup {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+/* Label with icon (timeout) */
+.labelWithIcon {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.infoIcon {
+  color: var(--color-text-tertiary, #979ba5);
+  cursor: help;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Label with action button (自定义参数 + 添加参数) */
+.labelWithAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Timeout suffix inside input */
+.timeoutSuffix {
+  color: var(--color-text-secondary, #63656e);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+  padding: 0 8px;
+}
+
+/* Error */
+.errorTip {
+  font-size: var(--font-size-xs);
+  color: #ea3636;
+  line-height: 18px;
+  margin-top: 2px;
+  display: block;
+}
+
+/* Review Params */
+.reviewParamsSection {
+  width: 100%;
+}
+
+.addParamBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--font-size-xs);
+}
+
+.paramsTable {
+  font-size: var(--font-size-xs);
+}
+
+.paramActions {
+  display: flex;
+  gap: 8px;
+}
+
+.paramForm {
+  padding: 0 8px;
+
+  :global(.bk-form-item) {
+    margin-bottom: 16px;
+  }
+}
