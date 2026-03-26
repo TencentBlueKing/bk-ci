@@ -159,6 +159,14 @@
                     "items" : {
                       "type" : "string"
                     }
+                  },
+                  "action" : {
+                    "type" : "array",
+                    "uniqueItems" : true,
+                    "items" : {
+                      "enum" : [ "create", "delete" ]
+                    },
+                    "additionalItems" : false
                   }
                 }
               } ]
@@ -970,6 +978,14 @@
                   "items" : {
                     "type" : "string"
                   }
+                },
+                "action" : {
+                  "type" : "array",
+                  "uniqueItems" : true,
+                  "items" : {
+                    "enum" : [ "create", "delete" ]
+                  },
+                  "additionalItems" : false
                 }
               }
             } ]

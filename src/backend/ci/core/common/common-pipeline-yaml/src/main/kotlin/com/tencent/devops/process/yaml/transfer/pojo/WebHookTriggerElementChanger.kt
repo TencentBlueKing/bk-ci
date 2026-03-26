@@ -109,7 +109,9 @@ data class WebHookTriggerElementChanger(
     @get:Schema(title = "跳过WIP")
     val skipWip: Boolean? = false,
     @get:Schema(title = "代码库标识")
-    val scmCode: String? = null
+    val scmCode: String? = null,
+    @get:Schema(title = "tag事件action")
+    val includeTagAction: List<String>? = null
 ) {
     constructor(data: CodeGitWebHookTriggerElement) : this(
         id = data.stepId,
@@ -144,7 +146,8 @@ data class WebHookTriggerElementChanger(
         thirdUrl = data.thirdUrl,
         thirdSecretToken = data.thirdSecretToken,
         enable = data.elementEnabled(),
-        skipWip = data.skipWip
+        skipWip = data.skipWip,
+        includeTagAction = data.includeTagAction
     )
 
     constructor(data: CodeTGitWebHookTriggerElement) : this(
@@ -178,7 +181,8 @@ data class WebHookTriggerElementChanger(
         includePushAction = data.data.input.includePushAction,
         enableThirdFilter = data.data.input.enableThirdFilter,
         enable = data.elementEnabled(),
-        skipWip = data.data.input.skipWip
+        skipWip = data.data.input.skipWip,
+        includeTagAction = data.data.input.includeTagAction
     )
 
     constructor(data: CodeGithubWebHookTriggerElement) : this(
