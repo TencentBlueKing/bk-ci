@@ -150,23 +150,21 @@ class PublicVarGroupReferInfoDao {
         })
 
     /**
-     * 检查同一 referId 的其他 referVersion 是否存在对指定 groupName + version 组合的引用记录
-     * 用于判断增量更新 referCount 时是否需要跳过（避免同一资源多版本重复计数）
+     * 检查指定 referId 是否存在对指定 groupName + version 组合的引用记录
+     * 用于判断增量更新 referCount 时是否需要跳过（避免同一资源重复计数）
      * @param dslContext 数据库上下文
      * @param projectId 项目ID
      * @param referId 引用ID
      * @param referType 引用类型
-     * @param excludeReferVersion 当前版本号（排除该版本）
      * @param groupName 变量组名
      * @param version 变量组版本号
-     * @return 是否存在其他版本的引用记录
+     * @return 是否存在引用记录
      */
-    fun existsOtherVersionReferForGroup(
+    fun existsReferForGroup(
         dslContext: DSLContext,
         projectId: String,
         referId: String,
         referType: PublicVarGroupReferenceTypeEnum,
-        excludeReferVersion: Int,
         groupName: String,
         version: Int
     ): Boolean {
@@ -179,7 +177,6 @@ class PublicVarGroupReferInfoDao {
                     .and(REFER_TYPE.eq(referType.name))
                     .and(GROUP_NAME.eq(groupName))
                     .and(VERSION.eq(version))
-                    .and(REFER_VERSION.ne(excludeReferVersion))
             )
         }
     }
