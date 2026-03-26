@@ -37,7 +37,7 @@ class CdsWebhookEventListener @Autowired constructor(
             cdsIp = ws.hostIp ?: "",
             eventType = event.type.name.lowercase(),
             eventCode = "CDS-${event.type.name}",
-            body = JsonUtil.toJson(event.body, false)
+            body = event.body
         )
     }
 
