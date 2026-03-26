@@ -202,8 +202,8 @@ Invoke-WebRequest -Uri "https://your-server/download_install.ps1" -OutFile dl.ps
 
 ## 脚本清理
 
-`installer.exe`、`upgrader` 和引导脚本已全部改为调用 `devopsAgent install/uninstall`，
-原有的管理脚本已删除：
+`upgrader` 和引导脚本已全部改为调用 `devopsAgent install/uninstall`，
+原有的管理脚本和 `installer` 组件已废弃删除：
 
 | 已删除脚本 | 替代命令 |
 |-----------|---------|
@@ -221,5 +221,4 @@ Invoke-WebRequest -Uri "https://your-server/download_install.ps1" -OutFile dl.ps
 |---------|------|
 | `install.sh`（Linux/macOS） | 首次下载 agent.zip + 解压 + 调用 `devopsAgent install` |
 | `download_install.ps1`（Windows） | 首次下载 agent.zip + 解压 + 调用 `devopsAgent install` |
-| `batch_install.bat`（Windows） | 批量安装入口，调用 installer.exe |
 | `agent_docker_init.sh`（Linux） | Docker 容器初始化 |

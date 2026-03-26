@@ -29,8 +29,7 @@ src/agent/agent/
 │   │   │   ├── main.go         #   Linux/macOS 入口
 │   │   │   ├── main_win.go     #   Windows 入口（kardianos/service）
 │   │   │   └── session_windows.go # Windows用户会话启动（WTS API）
-│   │   ├── upgrader/main.go    # 升级器（替换二进制）
-│   │   └── installer/main.go   # 安装器（首次安装）
+│   │   └── upgrader/main.go    # 升级器（替换二进制）
 │   ├── pkg/
 │   │   ├── agentcli/           # Agent CLI 子命令系统（含 i18n、状态检测、重装）
 │   │   │   ├── cli.go          #   子命令路由、preserveSet、reinstall/repair 逻辑
@@ -57,7 +56,6 @@ src/agent/agent/
 │   │   ├── job_docker/         # Docker CLI参数解析
 │   │   ├── upgrade/            # 升级流程管理
 │   │   ├── upgrader/           # upgrader进程逻辑
-│   │   ├── installer/          # installer进程逻辑
 │   │   ├── imagedebug/         # Docker镜像调试
 │   │   ├── mcp/                # MCP Server（Streamable HTTP，使用 go-mcp SDK）
 │   │   ├── pipeline/           # 流水线引擎(实验性)
@@ -627,8 +625,7 @@ go func() {
 bin/
 ├── devopsDaemon[.exe]
 ├── devopsAgent[.exe]
-├── upgrader[.exe]
-└── installer[.exe]
+└── upgrader[.exe]
 ```
 
 ## 调试技巧
@@ -649,6 +646,7 @@ bin/
 | `DEVOPS_AGENT_ENABLE_EXIT_GROUP` | false | 启动杀掉构建进程组的兜底逻辑 |
 | `DEVOPS_AGENT_DOCKER_CAP_ADD` | 空 | Docker启动时的capadd参数 |
 | `DEVOPS_AGENT_TIMEOUT_EXIT_TIME` | 空 | 超时次数阈值，达到后Agent进程退出 |
+| `DEVOPS_AGENT_CLOSE_FD_INHERIT` | false | Unix 构建进程关闭 fd 继承 (Setpgid + /dev/null + ExtraFiles 清空)，等同 Windows NoInheritHandles |
 | `DEVOPS_AGENT_ENABLE_MCP` | false | 随 agent 主进程启动 MCP Server 协程（Streamable HTTP） |
 
 ## 注意事项
