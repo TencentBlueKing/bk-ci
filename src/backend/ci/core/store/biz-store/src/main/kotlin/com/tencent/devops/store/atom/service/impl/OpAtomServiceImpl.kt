@@ -46,6 +46,7 @@ import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.atom.dao.AtomDao
+import com.tencent.devops.store.atom.dao.AtomLabelRelDao
 import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomFeatureDao
 import com.tencent.devops.store.atom.dao.MarketAtomVersionLogDao
@@ -120,7 +121,8 @@ class OpAtomServiceImpl @Autowired constructor(
     private val storeFileService: StoreFileService,
     private val redisOperation: RedisOperation,
     private val client: Client,
-    private val marketAtomService: MarketAtomService
+    private val marketAtomService: MarketAtomService,
+    private val atomLabelRelDao: AtomLabelRelDao
 ) : OpAtomService {
 
     private val logger = LoggerFactory.getLogger(OpAtomServiceImpl::class.java)
@@ -327,14 +329,23 @@ class OpAtomServiceImpl @Autowired constructor(
             }
         val atomReleaseRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomId)
         val releaseType = ReleaseTypeEnum.getReleaseTypeObj(atomReleaseRecord.releaseType.toInt())!!
-        // 入库信息
-        marketAtomDao.approveAtomFromOp(
-            dslContext = dslContext,
-            userId = userId,
-            atomId = atomId,
-            atomStatus = atomStatus,
-            approveReq = approveReq
-        )
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            // 入库信息
+            marketAtomDao.approveAtomFromOp(
+                dslContext = context,
+                userId = userId,
+                atomId = atomId,
+                atomStatus = atomStatus,
+                approveReq = approveReq
+            )
+            //更新标签信息
+            val labelIdList = approveReq.labelIdList
+            if(labelIdList?.isNotEmpty() == true){
+                atomLabelRelDao.deleteByAtomId(context, atomId)
+                atomLabelRelDao.batchAdd(context, userId, atomId, labelIdList)
+            }
+        }
         if (passFlag) {
             atomReleaseService.handleAtomRelease(
                 userId = userId,

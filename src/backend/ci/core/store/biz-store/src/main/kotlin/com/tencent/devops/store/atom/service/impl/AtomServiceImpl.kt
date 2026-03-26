@@ -970,6 +970,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                         )
                     }
                 }
+                // 更新标签信息
+                val labelIdList = atomUpdateRequest.labelIdList
+                if (labelIdList?.isNotEmpty() == true) {
+                    atomLabelRelDao.deleteByAtomId(context, id)
+                    atomLabelRelDao.batchAdd(context, userId, id, labelIdList)
+                }
                 // 更新默认插件缓存
                 if (atomUpdateRequest.defaultFlag) {
                     redisOperation.addSetValue(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
