@@ -67,6 +67,9 @@ class PipelineYamlVersionResolver @Autowired constructor(
                 path = filePath,
                 ref = finalRef,
                 authRepository = authRepository
+            ) ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_REF_TEMPLATE_YAML_FILE_NOT_FOUND,
+                params = arrayOf(filePath, finalRef)
             )
         } catch (exception: RemoteServiceException) {
             if (exception.httpStatus == HttpStatus.NOT_FOUND.value) {

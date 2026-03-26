@@ -40,17 +40,21 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
+import com.tencent.devops.common.webhook.pojo.code.CI_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND
 import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileSyncReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.scm.WebhookGrayService
 import com.tencent.devops.process.webhook.WebhookEventFactory
@@ -65,8 +69,10 @@ import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -327,14 +333,7 @@ class PipelineYamlFacadeService @Autowired constructor(
     fun pushYamlFile(yamlFileReleaseReq: PipelineYamlFileReleaseReq): PipelineYamlFileReleaseResult {
         with(yamlFileReleaseReq) {
             logger.info("push yaml file|$userId|$projectId|$pipelineId|$repoHashId|$version|$versionName")
-            val repository = client.get(ServiceRepositoryResource::class).get(
-                projectId = projectId,
-                repositoryId = repoHashId,
-                repositoryType = RepositoryType.ID
-            ).data ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.GIT_NOT_FOUND,
-                params = arrayOf(repoHashId)
-            )
+            val repository = getRepository(projectId, repoHashId)
             // TODO 代码源灰度验证,后续需删除
             if (webhookGrayService.isPacGrayRepo(repository.getScmType(), repository.getExternalId())) {
                 return releaseYamlFile(yamlFileReleaseReq = yamlFileReleaseReq)
@@ -409,14 +408,7 @@ class PipelineYamlFacadeService @Autowired constructor(
                 versionName = versionName,
                 targetBranch = targetBranch
             )
-            val repository = client.get(ServiceRepositoryResource::class).get(
-                projectId = projectId,
-                repositoryId = repoHashId,
-                repositoryType = RepositoryType.ID
-            ).data ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.GIT_NOT_FOUND,
-                params = arrayOf(repoHashId)
-            )
+            val repository = getRepository(projectId, repoHashId)
             val authRepository = AuthRepository(repository)
             val serverRepository = try {
                 client.get(ServiceScmRepositoryApiResource::class).getServerRepository(
@@ -489,5 +481,118 @@ class PipelineYamlFacadeService @Autowired constructor(
                 PIPELINE_WEBHOOK_BRANCH, pipelineYamlInfo.defaultBranch ?: ""
             )
         )
+    }
+
+    /**
+     * 获取pac流水线指定分支的版本信息
+     * 通过解析分支下文件md5值获取对应的版本信息
+     */
+    fun getPipelineYamlInfo(
+        projectId: String,
+        pipelineId: String,
+        branchName: String,
+        yamlParams: MutableMap<String, BuildParameters>
+    ): Int? {
+        // 不是PAC流水线
+        val yamlInfo = pipelineYamlService.getPipelineYamlInfo(
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: return null
+        // PAC 基础参数
+        yamlParams[BK_REPO_WEBHOOK_HASH_ID] = BuildParameters(
+            key = BK_REPO_WEBHOOK_HASH_ID, value = yamlInfo.repoHashId
+        )
+        yamlParams[PIPELINE_WEBHOOK_BRANCH] = BuildParameters(
+            key = PIPELINE_WEBHOOK_BRANCH, value = yamlInfo.defaultBranch ?: ""
+        )
+        val repository = getRepository(projectId, yamlInfo.repoHashId)
+        val repoFileUrl = repoFileUrl(repository.url, branchName, GitActionCommon.getCiDirectory(yamlInfo.filePath))
+        // 目标分支下文件不存在
+        val fileContent = try {
+            pipelineYamlFileManager.getFileContent(
+                projectId = projectId,
+                ref = branchName,
+                path = yamlInfo.filePath,
+                authRepository = AuthRepository(repository)
+            )?.takeIf { it.blobId.isNotBlank() }
+        } catch (ignored: RemoteServiceException) {
+            if (ignored.errorCode == HTTP_404) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND,
+                    params = arrayOf(branchName, yamlInfo.filePath, repoFileUrl)
+                )
+            } else {
+                logger.warn(
+                    "fail to get file content|$projectId|" +
+                            "${yamlInfo.repoHashId}|$branchName|${yamlInfo.filePath}", ignored
+                )
+                null
+            }
+        } ?: throw ErrorCodeException(
+            errorCode = ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND,
+            params = arrayOf(branchName, yamlInfo.filePath, repoFileUrl)
+        )
+        logger.info(
+            "get file content|$projectId|$pipelineId|${yamlInfo.repoHashId}|" +
+                    "${yamlInfo.filePath}|${fileContent.blobId}"
+        )
+        // 根据blobId获取版本信息
+        return pipelineYamlService.getPipelineYamlVersionByBoldId(
+            projectId = projectId,
+            filePath = yamlInfo.filePath,
+            repoHashId = yamlInfo.repoHashId,
+            blobId = fileContent.blobId
+        )?.version?.let {
+            yamlParams[CI_BRANCH] = BuildParameters(key = CI_BRANCH, value = branchName)
+            it
+        } ?: throw ErrorCodeException(
+            errorCode = ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH,
+            params = arrayOf(
+                branchName,
+                triggerEventPageUrl(
+                    projectId,
+                    yamlInfo.repoHashId,
+                    repository.aliasName,
+                    PipelineTriggerReason.TRIGGER_FAILED
+                )
+            )
+        )
+    }
+
+    /**
+     * 获取代码库关联信息
+     */
+    fun getRepository(projectId: String, repoHashId: String): Repository {
+        return client.get(ServiceRepositoryResource::class).get(
+            projectId = projectId,
+            repositoryType = RepositoryType.ID,
+            repositoryId = repoHashId
+        ).data ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.GIT_NOT_FOUND,
+            params = arrayOf(repoHashId)
+        )
+    }
+
+    /**
+     * 蓝盾代码库触发事件页面链接
+     */
+    private fun triggerEventPageUrl(
+        projectId: String,
+        repoHashId: String,
+        repoAliasName: String,
+        reason: PipelineTriggerReason
+    ) = "/console/codelib/$projectId/?id=$repoHashId&searchName=$repoAliasName&page=1&scmType=CODE_GIT&" +
+            "limit=50&tab=triggerEvent&reason=${reason.name}"
+
+    /**
+     * 代码源仓库文件链接
+     */
+    private fun repoFileUrl(
+        repoUrl: String,
+        branch: String,
+        filePath: String
+    ): String {
+        val (domain, repoName) = GitUtils.getDomainAndRepoName(repoUrl)
+        return "https://$domain/$repoName/tree/$branch/$filePath"
     }
 }

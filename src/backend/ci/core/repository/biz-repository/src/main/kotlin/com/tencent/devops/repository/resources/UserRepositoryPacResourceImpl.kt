@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.UserRepositoryPacResource
+import com.tencent.devops.repository.pojo.git.GitBranchInfo
 import com.tencent.devops.repository.service.RepositoryPacService
 import com.tencent.devops.scm.config.GitConfig
 import org.springframework.beans.factory.annotation.Autowired
@@ -138,5 +139,25 @@ class UserRepositoryPacResourceImpl @Autowired constructor(
                 )
             })
         }
+    }
+
+    override fun branches(
+        userId: String,
+        projectId: String,
+        repositoryHashId: String,
+        search: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<GitBranchInfo>> {
+        return Result(
+            repositoryPacService.branches(
+                userId = userId,
+                projectId = projectId,
+                repositoryHashId = repositoryHashId,
+                search = search,
+                page = page ?: 1,
+                pageSize = pageSize ?: 20
+            )
+        )
     }
 }

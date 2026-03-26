@@ -230,7 +230,8 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
-        version: Int? = null
+        version: Int? = null,
+        branch: String? = null
     ): BuildManualStartupInfo {
 
         if (checkPermission) { // 不用校验查看权限，只校验执行权限
@@ -249,8 +250,16 @@ class PipelineBuildFacadeService(
                 )
             )
         }
+        val targetVersion = version ?: branch?.takeIf { it.isNotBlank() }?.let {
+            pipelineYamlFacadeService.getPipelineYamlInfo(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                branchName = branch,
+                yamlParams = mutableMapOf()
+            )
+        }
         val (pipeline, resource, debug) = pipelineRepositoryService.getBuildTriggerInfo(
-            projectId, pipelineId, version
+            projectId, pipelineId, targetVersion
         )
         if (pipeline.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
@@ -420,7 +429,8 @@ class PipelineBuildFacadeService(
         buildNo: Int? = null,
         frequencyLimit: Boolean = true,
         triggerReviewers: List<String>? = null,
-        version: Int? = null
+        version: Int? = null,
+        branchName: String? = null
     ): BuildId {
         logger.info("[$pipelineId] Manual build start with buildNo[$buildNo] and vars: $values")
         if (checkPermission) {
@@ -445,8 +455,20 @@ class PipelineBuildFacadeService(
 
         val startEpoch = System.currentTimeMillis()
         try {
+            // PAC流水线相关参数
+            val yamlParams = mutableMapOf<String, BuildParameters>()
+            // 优先使用version参数，如果version为空，则使用branchName
+            val targetVersion = version ?: branchName?.takeIf { it.isNotBlank() }?.let {
+                pipelineYamlFacadeService.getPipelineYamlInfo(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    branchName = it,
+                    yamlParams = yamlParams
+                )
+            }
+
             val (readyToBuildPipelineInfo, resource, debug) = pipelineRepositoryService.getBuildTriggerInfo(
-                projectId, pipelineId, version
+                projectId, pipelineId, targetVersion
             )
             if (readyToBuildPipelineInfo.locked == true) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
@@ -515,12 +537,7 @@ class PipelineBuildFacadeService(
                 paramProperties = triggerContainer.params, paramValues = values
             )
             // 如果是PAC流水线,需要加上代码库hashId,给checkout:self使用
-            pipelineYamlFacadeService.buildYamlManualParamMap(
-                projectId = projectId,
-                pipelineId = pipelineId
-            )?.let {
-                paramMap.putAll(it)
-            }
+            paramMap.putAll(yamlParams)
 
             return pipelineBuildService.startPipeline(
                 userId = userId,
@@ -529,12 +546,18 @@ class PipelineBuildFacadeService(
                 pipelineParamMap = paramMap,
                 channelCode = channelCode,
                 isMobile = isMobile,
-                resource = resource,
+                resource = resource.let {
+                    if (version == null && !branchName.isNullOrBlank()) {
+                        it.copy(versionName = branchName)
+                    } else {
+                        it
+                    }
+                },
                 frequencyLimit = frequencyLimit,
                 buildNo = buildNo,
                 startValues = values,
                 triggerReviewers = triggerReviewers,
-                signPipelineVersion = version,
+                signPipelineVersion = targetVersion,
                 debug = debug
             )
         } finally {
@@ -3183,6 +3206,18 @@ class PipelineBuildFacadeService(
             }
         }
     }
+
+    fun getPipelineYamlInfo(
+        projectId: String,
+        pipelineId: String,
+        branchName: String,
+        yamlParams: MutableMap<String, BuildParameters>
+    ) = pipelineYamlFacadeService.getPipelineYamlInfo(
+        projectId = projectId,
+        pipelineId = pipelineId,
+        branchName = branchName,
+        yamlParams = yamlParams
+    )
 
     private fun getBuildManualParams(
         projectId: String,

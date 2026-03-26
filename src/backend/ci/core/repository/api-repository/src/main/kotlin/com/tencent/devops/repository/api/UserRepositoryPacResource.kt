@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.git.GitBranchInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -160,4 +161,28 @@ interface UserRepositoryPacResource {
     @GET
     @Path("supportScmType")
     fun supportScmType(): Result<List<IdValue>>
+
+    @Operation(summary = "获取仓库最近修改的分支列表")
+    @GET
+    @Path("/{projectId}/{repositoryHashId}/branches")
+    fun branches(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库哈希ID", required = true)
+        @PathParam("repositoryHashId")
+        repositoryHashId: String,
+        @Parameter(description = "search", required = false)
+        @QueryParam("search")
+        search: String? = null,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页多少条", required = false, example = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<List<GitBranchInfo>>
 }

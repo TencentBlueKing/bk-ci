@@ -906,4 +906,51 @@ class PipelineVersionFacadeService @Autowired constructor(
             records = pipelines
         )
     }
+
+    fun getByBranch(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        branch: String,
+        archiveFlag: Boolean? = false,
+        source: PipelineGetVersionSource? = PipelineGetVersionSource.VIEW
+    ): PipelineVersionWithModel {
+        // 流水线分支版本
+        val version = pipelineYamlFacadeService.getPipelineYamlInfo(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            branchName = branch,
+            yamlParams = mutableMapOf()
+        )!!
+        return getVersion(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            archiveFlag = archiveFlag,
+            source = source
+        ).copy(
+            versionName = branch
+        )
+    }
+
+    fun getByBranch(
+        projectId: String,
+        pipelineId: String,
+        branch: String
+    ): PipelineResourceVersion? {
+        // 流水线分支版本
+        return pipelineYamlFacadeService.getPipelineYamlInfo(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            branchName = branch,
+            yamlParams = mutableMapOf()
+        )?.let {
+            pipelineRepositoryService.getPipelineResourceVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = it
+            )
+        }
+    }
 }

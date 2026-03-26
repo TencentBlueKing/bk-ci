@@ -129,11 +129,14 @@ class SubPipelineStartUpService @Autowired constructor(
         branch: String?
     ): Result<ProjectBuildId> {
         val fixProjectId = callProjectId.ifBlank { projectId }
+        // PAC子流水线相关的参数
+        val yamlParams = mutableMapOf<String, BuildParameters>()
         // 获取分支版本Model
         val subPipelineResource = getBranchVersionResource(
             projectId = fixProjectId,
             pipelineId = callPipelineId,
-            branch = branch
+            branch = branch,
+            yamlParams = yamlParams
         )
         // 通过 runVariables获取 userId 和 channelCode
         val runVariables = buildVariableService.getAllVariable(projectId, parentPipelineId, buildId)
@@ -165,6 +168,8 @@ class SubPipelineStartUpService @Autowired constructor(
         values.forEach {
             startParams[it.key] = parseVariable(it.value, runVariables)
         }
+        // 子流水线启动时补充pac相关参数
+        startParams.putAll(yamlParams.map { (key, value) -> key to value.value.toString() })
 
         val existPipelines = HashSet<String>()
         existPipelines.add(parentPipelineId)
@@ -216,7 +221,8 @@ class SubPipelineStartUpService @Autowired constructor(
             triggerUser = triggerUser,
             runMode = runMode,
             parentExecuteCount = executeCount,
-            pipelineResource = subPipelineResource
+            pipelineResource = subPipelineResource,
+            branch = branch
         )
         pipelineTaskService.updateSubBuildId(
             projectId = projectId,
@@ -252,7 +258,8 @@ class SubPipelineStartUpService @Autowired constructor(
         triggerUser: String? = null,
         runMode: String,
         parentExecuteCount: Int?,
-        pipelineResource: PipelineResourceVersion?
+        pipelineResource: PipelineResourceVersion?,
+        branch: String?
     ): BuildId {
         val readyToBuildPipelineInfo = getPipelineInfo(
             projectId = projectId,
@@ -357,7 +364,13 @@ class SubPipelineStartUpService @Autowired constructor(
                 pipelineParamMap = params,
                 channelCode = channelCode,
                 isMobile = isMobile,
-                resource = resource,
+                resource = resource.let {
+                    if (!branch.isNullOrBlank()) {
+                        it.copy(versionName = branch)
+                    } else {
+                        it
+                    }
+                },
                 frequencyLimit = false,
                 signPipelineVersion = resource.version
             )
@@ -568,13 +581,20 @@ class SubPipelineStartUpService @Autowired constructor(
     private fun getBranchVersionResource(
         projectId: String,
         pipelineId: String,
-        branch: String?
+        branch: String?,
+        yamlParams: MutableMap<String, BuildParameters> = mutableMapOf()
     ): PipelineResourceVersion? {
         return if (!branch.isNullOrBlank()) {
-            val branchVersionResource = pipelineRepositoryService.getBranchVersionResource(
+            val version = pipelineBuildFacadeService.getPipelineYamlInfo(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                branchName = branch
+                branchName = branch,
+                yamlParams = yamlParams
+            )
+            val branchVersionResource = pipelineRepositoryService.getPipelineResourceVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
             )
             if (branchVersionResource == null) {
                 val pipelineInfo = getPipelineInfo(projectId, pipelineId)

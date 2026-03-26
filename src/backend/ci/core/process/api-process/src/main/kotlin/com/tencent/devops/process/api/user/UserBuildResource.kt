@@ -89,7 +89,10 @@ interface UserBuildResource {
         pipelineId: String,
         @Parameter(description = "指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        version: Int?
+        version: Int?,
+        @Parameter(description = "指定分支版本（仅PAC流水线有效，若已指定version，则优先使用version）", required = false)
+        @QueryParam("branch")
+        branch: String?
     ): Result<BuildManualStartupInfo>
 
     @Operation(summary = "获取流水线构建参数")

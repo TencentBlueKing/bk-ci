@@ -51,6 +51,7 @@ import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.service.PipelineInfoFacadeService
@@ -481,6 +482,20 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
             projectId = projectId,
             storageType = storageType ?: PipelineStorageType.YAML,
             page = page ?: 1
+        )
+    }
+
+    override fun getBranch(
+        projectId: String,
+        pipelineId: String,
+        branch: String
+    ): Result<PipelineResourceVersion?> {
+        return Result(
+            pipelineVersionFacadeService.getByBranch(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                branch = branch
+            )
         )
     }
 
