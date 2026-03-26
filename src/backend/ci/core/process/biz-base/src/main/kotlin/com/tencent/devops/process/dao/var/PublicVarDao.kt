@@ -43,10 +43,10 @@ class PublicVarDao {
      */
     fun batchSave(
         dslContext: DSLContext,
-        publicVarGroupPOs: List<PublicVarPO>
+        publicVarPOs: List<PublicVarPO>
     ) {
         with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
-            if (publicVarGroupPOs.isEmpty()) return
+            if (publicVarPOs.isEmpty()) return
 
             dslContext.insertInto(
                 this,
@@ -66,7 +66,7 @@ class PublicVarDao {
                 CREATE_TIME,
                 UPDATE_TIME
             ).also { insert ->
-                publicVarGroupPOs.forEach { record ->
+                publicVarPOs.forEach { record ->
                     insert.values(
                         record.id,
                         record.projectId,

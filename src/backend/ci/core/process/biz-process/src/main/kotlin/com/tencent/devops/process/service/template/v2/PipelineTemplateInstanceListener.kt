@@ -417,26 +417,26 @@ class PipelineTemplateInstanceListener @Autowired constructor(
                 pullRequestUrl = deployPipelineResult.targetUrl,
                 pullRequestId = deployPipelineResult.pullRequestId
             )
-        }
-        val versionResource = pipelineResourceVersionDao.getVersionResource(
-            dslContext = dslContext,
-            pipelineId = deployPipelineResult.pipelineId,
-            projectId = projectId,
-            version = deployPipelineResult.version
-        )
-        if (versionResource != null) {
-            publicVarGroupReferManageService.handleVarGroupReferBus(
-                PublicVarGroupReferDTO(
-                    userId = "system",
-                    projectId = projectId,
-                    referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
-                    referId = deployPipelineResult.pipelineId,
-                    referName = deployPipelineResult.pipelineName,
-                    referVersion = deployPipelineResult.version,
-                    referVersionName = deployPipelineResult.versionName,
-                    model = versionResource.model
-                )
+            val versionResource = pipelineResourceVersionDao.getVersionResource(
+                dslContext = transactionContext,
+                pipelineId = deployPipelineResult.pipelineId,
+                projectId = projectId,
+                version = deployPipelineResult.version
             )
+            if (versionResource != null) {
+                publicVarGroupReferManageService.handleVarGroupReferBus(
+                    PublicVarGroupReferDTO(
+                        userId = "system",
+                        projectId = projectId,
+                        referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
+                        referId = deployPipelineResult.pipelineId,
+                        referName = deployPipelineResult.pipelineName,
+                        referVersion = deployPipelineResult.version,
+                        referVersionName = deployPipelineResult.versionName,
+                        model = versionResource.model
+                    )
+                )
+            }
         }
     }
 
@@ -455,7 +455,7 @@ class PipelineTemplateInstanceListener @Autowired constructor(
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             templateInstanceItemDao.updateErrorMessage(
-                dslContext = dslContext,
+                dslContext = transactionContext,
                 projectId = projectId,
                 baseId = instanceItem.baseId,
                 pipelineId = instanceItem.pipelineId,

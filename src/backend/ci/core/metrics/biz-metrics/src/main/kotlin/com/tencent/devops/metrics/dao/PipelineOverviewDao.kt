@@ -147,7 +147,7 @@ class PipelineOverviewDao {
         endTime: LocalDateTime
     ): Int {
         with(TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA) {
-            return dslContext.select(sum(TOTAL_EXECUTE_COUNT))
+            return dslContext.select(sum<Long>(TOTAL_EXECUTE_COUNT))
                 .from(this)
                 .where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
                 .and(STATISTICS_TIME.between(startTime, endTime))
@@ -167,7 +167,7 @@ class PipelineOverviewDao {
     ): Result<Record2<String, BigDecimal>> {
 
         with(TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA) {
-            return dslContext.select(PIPELINE_ID, sum(TOTAL_EXECUTE_COUNT))
+            return dslContext.select(PIPELINE_ID, sum<Long>(TOTAL_EXECUTE_COUNT))
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.`in`(pipelineIds))

@@ -144,7 +144,7 @@ class PublicVarService @Autowired constructor(
                 emptyList()
             }
 
-            publicVarDao.batchSave(dslContext = transactionContext, publicVarGroupPOs = publicVarPOs)
+            publicVarDao.batchSave(dslContext = transactionContext, publicVarPOs = publicVarPOs)
 
             publicVarGroupReleaseRecordService.batchAddPublicVarGroupReleaseRecord(
                 dslContext = transactionContext,
