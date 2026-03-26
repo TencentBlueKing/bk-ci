@@ -6,5 +6,5 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class DevCloudMacosVmDebugCloseResponse(
     val actionCode: Int,
     val actionMessage: String,
-    val data: DevCloudMacosVmDebugCloseInfo
+    val data: DevCloudMacosVmDebugCloseInfo? = null
 )
