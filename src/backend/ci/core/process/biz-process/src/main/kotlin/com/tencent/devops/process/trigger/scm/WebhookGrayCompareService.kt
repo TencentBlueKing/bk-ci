@@ -39,8 +39,6 @@ import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_MANUAL_UNLOCK
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_PREFIX
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TIMESTAMP_SUFFIX
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SOURCE_WEBHOOK
@@ -421,8 +419,6 @@ class WebhookGrayCompareService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(WebhookGrayCompareService::class.java)
         // 忽略的参数名
         private val IGNORED_PARAM_KEYS = listOf(
-            BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME,
-            BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP,
             BK_REPO_GIT_MANUAL_UNLOCK,
             BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION,
             PIPELINE_GIT_MR_DESC
