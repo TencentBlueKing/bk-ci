@@ -79,7 +79,6 @@ import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
-import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceAgentResource
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.OrganizationGroup
