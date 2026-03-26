@@ -454,7 +454,8 @@ class PublicVarReferInfoDao {
         }
 
         with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
-            return dslContext.select(VAR_NAME, DSL.countDistinct(REFER_ID))
+            val countField = DSL.countDistinct(REFER_ID)
+            val dbResult = dslContext.select(VAR_NAME, countField)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(GROUP_NAME.eq(groupName))
@@ -462,8 +463,10 @@ class PublicVarReferInfoDao {
                 .groupBy(VAR_NAME)
                 .fetch()
                 .associate { record ->
-                    record.getValue(VAR_NAME) to (record.getValue(1, Int::class.java) ?: 0)
+                    record.getValue(VAR_NAME) to (record.get(countField) ?: 0)
                 }
+            // 为未查询到的变量名补充默认值0，确保返回map覆盖所有输入变量名
+            return varNames.associateWith { dbResult[it] ?: 0 }
         }
     }
 
