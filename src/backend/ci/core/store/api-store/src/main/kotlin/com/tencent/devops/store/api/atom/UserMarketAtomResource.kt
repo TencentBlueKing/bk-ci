@@ -52,6 +52,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
@@ -84,10 +85,13 @@ interface UserMarketAtomResource {
         serviceScope: ServiceScopeEnum?,
         @Parameter(description = "页码", required = false)
         @QueryParam("page")
-        page: Int?,
+        @DefaultValue("1")
+        page: Int? = 1,
         @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
-        pageSize: Int?
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = false)
+        @DefaultValue("10")
+        pageSize: Int? = 10
     ): Result<List<MarketMainItem>>
 
     @Operation(summary = "插件市场搜索插件")
@@ -132,10 +136,13 @@ interface UserMarketAtomResource {
         serviceScope: ServiceScopeEnum?,
         @Parameter(description = "页码", required = false)
         @QueryParam("page")
-        page: Int?,
+        @DefaultValue("1")
+        page: Int? = 1,
         @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
-        pageSize: Int?
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = false)
+        @DefaultValue("10")
+        pageSize: Int? = 10
     ): Result<MarketAtomResp>
 
     @Operation(summary = "根据用户获取插件工作台插件列表")

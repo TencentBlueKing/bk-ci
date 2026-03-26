@@ -43,6 +43,7 @@ import com.tencent.devops.store.atom.util.AtomJobTypeUtil
 import com.tencent.devops.store.atom.util.AtomOsMapUtil
 import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.pojo.atom.ApproveReq
+import com.tencent.devops.store.pojo.atom.MarketAtomDaoQuery
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.UpdateAtomInfo
@@ -70,25 +71,8 @@ class MarketAtomDao : AtomBaseDao() {
     /**
      * 插件商店搜索结果，总数
      */
-    fun count(
-        dslContext: DSLContext,
-        keyword: String?,
-        classifyCode: String?,
-        labelCodeList: List<String>?,
-        score: Int?,
-        rdType: AtomTypeEnum?,
-        yamlFlag: Boolean?,
-        recommendFlag: Boolean?,
-        qualityFlag: Boolean?,
-        serviceScope: ServiceScopeEnum?
-    ): Int {
-        val (ta, conditions) = formatConditions(
-            keyword = keyword,
-            rdType = rdType,
-            classifyCode = classifyCode,
-            serviceScope = serviceScope,
-            dslContext = dslContext
-        )
+    fun count(dslContext: DSLContext, query: MarketAtomDaoQuery): Int {
+        val (ta, conditions) = formatConditions(query, dslContext)
         val taf = TAtomFeature.T_ATOM_FEATURE
         val baseStep = dslContext.select(DSL.countDistinct(ta.ID)).from(ta).leftJoin(taf)
             .on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
@@ -100,103 +84,57 @@ class MarketAtomDao : AtomBaseDao() {
             taf = taf,
             baseStep = baseStep,
             conditions = conditions,
-            labelCodeList = labelCodeList,
-            storeType = storeType,
-            score = score,
-            yamlFlag = yamlFlag,
-            recommendFlag = recommendFlag,
-            qualityFlag = qualityFlag,
-            serviceScope = serviceScope
+            query = query,
+            storeType = storeType
         )
         return baseStep.where(conditions).fetchOne(0, Int::class.java)!!
     }
 
     private fun formatConditions(
-        keyword: String?,
-        rdType: AtomTypeEnum?,
-        classifyCode: String?,
-        serviceScope: ServiceScopeEnum?,
+        query: MarketAtomDaoQuery,
         dslContext: DSLContext
     ): Pair<TAtom, MutableList<Condition>> {
         val ta = TAtom.T_ATOM
-        val conditions = setAtomVisibleCondition(ta)
-        conditions.add(ta.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
-        if (!keyword.isNullOrEmpty()) {
-            conditions.add(
-                ta.NAME.contains(keyword)
-                    .or(ta.SUMMARY.contains(keyword))
-                    .or(ta.ATOM_CODE.contains(keyword))
-            )
-        }
-        if (rdType != null) {
-            conditions.add(ta.ATOM_TYPE.eq(rdType.type.toByte()))
-        }
-        if (!classifyCode.isNullOrEmpty()) {
-            // 使用公共方法查询分类ID
-            val classifyId = getClassifyIdByCode(
-                dslContext = dslContext,
-                classifyCode = classifyCode,
-                serviceScope = serviceScope
-            )
-            // 使用公共方法构建分类查询条件（支持 CLASSIFY_ID_MAP，默认使用 PIPELINE 服务范围）
-            buildClassifyCondition(ta, classifyId, serviceScope)?.let {
-                conditions.add(it)
+        val conditions = setAtomVisibleCondition(ta).apply {
+            add(ta.DELETE_FLAG.eq(false))
+            // 关键字模糊搜索：匹配名称、简介或插件代码
+            query.keyword?.takeIf { it.isNotEmpty() }?.let { keyword ->
+                add(
+                    ta.NAME.contains(keyword)
+                        .or(ta.SUMMARY.contains(keyword))
+                        .or(ta.ATOM_CODE.contains(keyword))
+                )
+            }
+            // 研发类型过滤
+            query.rdType?.let { add(ta.ATOM_TYPE.eq(it.type.toByte())) }
+            // 分类过滤：根据 classifyCode 和 serviceScope 构建分类条件
+            query.classifyCode?.takeIf { it.isNotEmpty() }?.let {
+                val classifyId = getClassifyIdByCode(
+                    dslContext = dslContext,
+                    classifyCode = it,
+                    serviceScope = query.serviceScope
+                )
+                buildClassifyCondition(ta, classifyId, query.serviceScope)?.let(::add)
             }
         }
-        return Pair(ta, conditions)
+        return ta to conditions
     }
 
     /**
      * 插件商店搜索结果列表
      */
-    fun list(
-        dslContext: DSLContext,
-        keyword: String?,
-        classifyCode: String?,
-        labelCodeList: List<String>?,
-        score: Int?,
-        rdType: AtomTypeEnum?,
-        yamlFlag: Boolean?,
-        recommendFlag: Boolean?,
-        qualityFlag: Boolean?,
-        sortType: MarketAtomSortTypeEnum?,
-        desc: Boolean?,
-        serviceScope: ServiceScopeEnum?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<out Record>? {
-        val (ta, conditions) = formatConditions(
-            keyword = keyword,
-            rdType = rdType,
-            classifyCode = classifyCode,
-            serviceScope = serviceScope,
-            dslContext = dslContext
-        )
+    fun list(dslContext: DSLContext, query: MarketAtomDaoQuery): Result<out Record>? {
+        val (ta, conditions) = formatConditions(query, dslContext)
         val taf = TAtomFeature.T_ATOM_FEATURE
-        // 根据服务范围构建分类ID字段表达式（支持 CLASSIFY_ID_MAP）
-        val classifyIdField = buildClassifyIdField(ta, serviceScope)
+        val classifyIdField = buildClassifyIdField(ta, query.serviceScope)
         val baseStep = dslContext.select(
-            ta.ID,
-            ta.NAME,
-            ta.JOB_TYPE,
-            ta.ATOM_TYPE,
-            classifyIdField.`as`("CLASSIFY_ID"), // 使用动态分类ID字段
-            ta.CATEGROY,
-            ta.ATOM_CODE,
-            ta.VERSION,
-            ta.ATOM_STATUS,
-            ta.LOGO_URL,
-            ta.PUBLISHER,
-            ta.SUMMARY,
-            ta.DEFAULT_FLAG,
-            ta.OS,
-            ta.OS_MAP,
-            ta.BUILD_LESS_RUN_FLAG,
-            ta.DOCS_LINK,
-            ta.MODIFIER,
-            ta.UPDATE_TIME,
-            taf.RECOMMEND_FLAG,
-            taf.YAML_FLAG
+            ta.ID, ta.NAME, ta.JOB_TYPE, ta.ATOM_TYPE,
+            classifyIdField.`as`("CLASSIFY_ID"),
+            ta.CATEGROY, ta.ATOM_CODE, ta.VERSION, ta.ATOM_STATUS,
+            ta.LOGO_URL, ta.PUBLISHER, ta.SUMMARY, ta.DEFAULT_FLAG,
+            ta.OS, ta.OS_MAP, ta.BUILD_LESS_RUN_FLAG, ta.DOCS_LINK,
+            ta.MODIFIER, ta.UPDATE_TIME,
+            taf.RECOMMEND_FLAG, taf.YAML_FLAG
         ).from(ta)
             .leftJoin(taf)
             .on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
@@ -208,50 +146,39 @@ class MarketAtomDao : AtomBaseDao() {
             taf = taf,
             baseStep = baseStep,
             conditions = conditions,
-            labelCodeList = labelCodeList,
-            storeType = storeType,
-            score = score,
-            yamlFlag = yamlFlag,
-            recommendFlag = recommendFlag,
-            qualityFlag = qualityFlag,
-            serviceScope = serviceScope
+            query = query,
+            storeType = storeType
         )
 
-        if (null != sortType) {
-            val flag =
-                sortType == MarketAtomSortTypeEnum.DOWNLOAD_COUNT || sortType == MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM
-            if (flag && score == null) {
+        // 排序处理
+        val statSortTypes = setOf(
+            MarketAtomSortTypeEnum.DOWNLOAD_COUNT,
+            MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM
+        )
+        query.sortType?.let { sortType ->
+            val isStatSortType = sortType in statSortTypes
+            // 统计排序且未按评分过滤时，需额外关联统计表
+            if (isStatSortType && query.score == null) {
                 val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
-                val t =
-                    dslContext.select(
-                        tas.STORE_CODE,
-                        tas.DOWNLOADS.`as`(MarketAtomSortTypeEnum.DOWNLOAD_COUNT.name),
-                        tas.RECENT_EXECUTE_NUM.`as`(MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM.name)
-                    )
-                        .from(tas).where(tas.STORE_TYPE.eq(storeType)).asTable("t")
+                val t = dslContext.select(
+                    tas.STORE_CODE,
+                    tas.DOWNLOADS.`as`(MarketAtomSortTypeEnum.DOWNLOAD_COUNT.name),
+                    tas.RECENT_EXECUTE_NUM.`as`(MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM.name)
+                ).from(tas).where(tas.STORE_TYPE.eq(storeType)).asTable("t")
                 baseStep.leftJoin(t).on(ta.ATOM_CODE.eq(t.field("STORE_CODE", String::class.java)))
             }
 
-            val realSortType =
-                if (flag) {
-                    DSL.field(sortType.name)
-                } else {
-                    ta.field(sortType.name)
-                }
+            val realSortType = if (isStatSortType) DSL.field(sortType.name) else ta.field(sortType.name)
+            val orderField = if (query.desc == true) realSortType!!.desc() else realSortType!!.asc()
+            baseStep.where(conditions).orderBy(orderField)
+        } ?: baseStep.where(conditions)
 
-            if (desc != null && desc) {
-                baseStep.where(conditions).orderBy(realSortType!!.desc())
-            } else {
-                baseStep.where(conditions).orderBy(realSortType!!.asc())
+        // 分页返回
+        return query.page?.let { page ->
+            query.pageSize?.let { pageSize ->
+                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
             }
-        } else {
-            baseStep.where(conditions)
-        }
-        return if (null != page && null != pageSize) {
-            baseStep.limit((page - 1) * pageSize, pageSize).fetch()
-        } else {
-            baseStep.fetch()
-        }
+        } ?: baseStep.fetch()
     }
 
     private fun handleMainListBaseStep(
@@ -260,31 +187,26 @@ class MarketAtomDao : AtomBaseDao() {
         taf: TAtomFeature,
         baseStep: SelectOnConditionStep<out Record>,
         conditions: MutableList<Condition>,
-        labelCodeList: List<String>?,
-        storeType: Byte,
-        score: Int?,
-        yamlFlag: Boolean?,
-        recommendFlag: Boolean?,
-        qualityFlag: Boolean?,
-        serviceScope: ServiceScopeEnum?
+        query: MarketAtomDaoQuery,
+        storeType: Byte
     ) {
-        if (!labelCodeList.isNullOrEmpty()) {
+        // 标签过滤：根据标签代码查询标签ID列表，并关联标签关系表
+        query.labelCodeList?.takeIf { it.isNotEmpty() }?.let { labelCodes ->
             val tLabel = TLabel.T_LABEL
             val labelIdList = dslContext.select(tLabel.ID)
                 .from(tLabel)
                 .where(
-                    tLabel.LABEL_CODE.`in`(labelCodeList).and(
-                        tLabel.TYPE.eq(storeType)
-                    ).and(
-                        serviceScope?.let { tLabel.SERVICE_SCOPE.eq(it.name) } ?: DSL.noCondition()
-                    )
+                    tLabel.LABEL_CODE.`in`(labelCodes)
+                        .and(tLabel.TYPE.eq(storeType))
+                        .and(query.serviceScope?.let { tLabel.SERVICE_SCOPE.eq(it.name) } ?: DSL.noCondition())
                 )
                 .fetch().map { it[tLabel.ID] as String }
             val talr = TAtomLabelRel.T_ATOM_LABEL_REL
             baseStep.leftJoin(talr).on(ta.ID.eq(talr.ATOM_ID))
             conditions.add(talr.LABEL_ID.`in`(labelIdList))
         }
-        if (score != null) {
+        // 评分过滤：关联统计表，筛选平均评分达标的插件
+        query.score?.let { score ->
             val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
             val t = dslContext.select(
                 tas.STORE_CODE,
@@ -295,19 +217,15 @@ class MarketAtomDao : AtomBaseDao() {
             ).from(tas)
             baseStep.leftJoin(t).on(ta.ATOM_CODE.eq(t.field(tas.STORE_CODE.name, String::class.java)))
             conditions.add(
-                t.field(tas.SCORE_AVERAGE.name, BigDecimal::class.java)!!.ge(BigDecimal.valueOf(score.toLong()))
+                t.field(tas.SCORE_AVERAGE.name, BigDecimal::class.java)!!
+                    .ge(BigDecimal.valueOf(score.toLong()))
             )
             conditions.add(t.field(tas.STORE_TYPE.name, Byte::class.java)!!.eq(storeType))
         }
-        if (null != yamlFlag) {
-            conditions.add(taf.YAML_FLAG.eq(yamlFlag))
-        }
-        if (null != recommendFlag) {
-            conditions.add(taf.RECOMMEND_FLAG.eq(recommendFlag))
-        }
-        if (null != qualityFlag) {
-            conditions.add(taf.QUALITY_FLAG.eq(qualityFlag))
-        }
+        // 特性标志过滤
+        query.yamlFlag?.let { conditions.add(taf.YAML_FLAG.eq(it)) }
+        query.recommendFlag?.let { conditions.add(taf.RECOMMEND_FLAG.eq(it)) }
+        query.qualityFlag?.let { conditions.add(taf.QUALITY_FLAG.eq(it)) }
     }
 
     fun countReleaseAtomByCode(dslContext: DSLContext, atomCode: String, version: String? = null): Int {
@@ -914,26 +832,11 @@ class MarketAtomDao : AtomBaseDao() {
     }
 
     private fun TAtom.setUpdateAtomInfo(updateAtomInfo: UpdateAtomInfo, baseStep: UpdateSetFirstStep<TAtomRecord>) {
-        val atomStatus = updateAtomInfo.atomStatus
-        if (null != atomStatus) {
-            baseStep.set(ATOM_STATUS, atomStatus)
-        }
-        val msg = updateAtomInfo.atomStatusMsg
-        if (!msg.isNullOrEmpty()) {
-            baseStep.set(ATOM_STATUS_MSG, msg)
-        }
-        val latestFlag = updateAtomInfo.latestFlag
-        if (null != latestFlag) {
-            baseStep.set(LATEST_FLAG, latestFlag)
-        }
-        val pubTime = updateAtomInfo.pubTime
-        if (null != pubTime) {
-            baseStep.set(PUB_TIME, pubTime)
-        }
-        val deleteFlag = updateAtomInfo.deleteFlag
-        if (null != deleteFlag) {
-            baseStep.set(DELETE_FLAG, deleteFlag)
-        }
+        updateAtomInfo.atomStatus?.let { baseStep.set(ATOM_STATUS, it) }
+        updateAtomInfo.atomStatusMsg?.takeIf { it.isNotEmpty() }?.let { baseStep.set(ATOM_STATUS_MSG, it) }
+        updateAtomInfo.latestFlag?.let { baseStep.set(LATEST_FLAG, it) }
+        updateAtomInfo.pubTime?.let { baseStep.set(PUB_TIME, it) }
+        updateAtomInfo.deleteFlag?.let { baseStep.set(DELETE_FLAG, it) }
     }
 
     /**

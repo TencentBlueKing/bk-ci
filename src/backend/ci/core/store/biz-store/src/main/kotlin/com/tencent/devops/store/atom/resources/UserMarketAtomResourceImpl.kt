@@ -37,6 +37,7 @@ import com.tencent.devops.store.pojo.atom.AtomOutput
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
+import com.tencent.devops.store.pojo.atom.MarketAtomListQuery
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.atom.MyAtomResp
@@ -64,7 +65,13 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<List<MarketMainItem>> {
-        return marketAtomService.mainPageList(userId, page, pageSize, urlProtocolTrim = true)
+        return marketAtomService.mainPageList(
+            userId = userId,
+            page = page,
+            pageSize = pageSize,
+            urlProtocolTrim = true,
+            serviceScope = serviceScope
+        )
     }
 
     override fun list(
@@ -84,19 +91,22 @@ class UserMarketAtomResourceImpl @Autowired constructor(
     ): Result<MarketAtomResp> {
         return Result(
             marketAtomService.list(
-                userId = userId.trim(),
-                keyword = keyword?.trim(),
-                classifyCode = classifyCode?.trim(),
-                labelCode = labelCode?.trim(),
-                score = score,
-                rdType = rdType,
-                yamlFlag = yamlFlag,
-                recommendFlag = recommendFlag,
-                qualityFlag = qualityFlag,
-                sortType = sortType,
-                page = page,
-                pageSize = pageSize,
-                urlProtocolTrim = true
+                MarketAtomListQuery(
+                    userId = userId.trim(),
+                    keyword = keyword?.trim(),
+                    classifyCode = classifyCode?.trim(),
+                    labelCode = labelCode?.trim(),
+                    score = score,
+                    rdType = rdType,
+                    yamlFlag = yamlFlag,
+                    recommendFlag = recommendFlag,
+                    qualityFlag = qualityFlag,
+                    sortType = sortType,
+                    page = page,
+                    pageSize = pageSize,
+                    urlProtocolTrim = true,
+                    serviceScope = serviceScope
+                )
             )
         )
     }
