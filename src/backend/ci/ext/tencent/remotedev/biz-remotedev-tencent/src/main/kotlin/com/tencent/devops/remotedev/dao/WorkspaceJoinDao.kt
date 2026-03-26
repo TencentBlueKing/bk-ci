@@ -690,15 +690,27 @@ class WorkspaceJoinDao {
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(WorkspaceJoinDao::class.java)
+        private val logger =
+            LoggerFactory.getLogger(WorkspaceJoinDao::class.java)
+
+        @Suppress("SpreadOperator")
         val windowsFullFields = lazy {
-            val fields = TWorkspace.T_WORKSPACE.fields()
-                .plus(TWorkspaceWindows.T_WORKSPACE_WINDOWS.fields())
-                .toMutableList()
-            fields.remove(TWorkspace.T_WORKSPACE.ID)
-            fields.remove(TWorkspace.T_WORKSPACE.WIN_CONFIG_ID)
-            fields.remove(TWorkspaceWindows.T_WORKSPACE_WINDOWS.ID)
-            fields
+            val ws = TWorkspace.T_WORKSPACE
+            val win = TWorkspaceWindows.T_WORKSPACE_WINDOWS
+            val excludeFields = setOf(
+                ws.ID, ws.WIN_CONFIG_ID,
+                ws.YAML, ws.DOCKERFILE,
+                ws.TEMPLATE_ID, ws.URL, ws.BRANCH,
+                ws.YAML_PATH, ws.IMAGE_PATH,
+                ws.WORK_PATH, ws.WORKSPACE_FOLDER,
+                ws.HOST_NAME, ws.GPU, ws.CPU,
+                ws.MEMORY, ws.DISK,
+                ws.PROJECT_NAME, ws.BUSINESS_LINE_NAME,
+                ws.COMMISSION_DATE, ws.PRECI_AGENT_ID,
+                win.ID
+            )
+            ws.fields().plus(win.fields())
+                .filter { it !in excludeFields }
         }.value
     }
 }

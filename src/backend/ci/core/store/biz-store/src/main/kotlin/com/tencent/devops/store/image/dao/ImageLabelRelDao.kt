@@ -48,7 +48,7 @@ class ImageLabelRelDao {
     fun getLabelsByImageId(
         dslContext: DSLContext,
         imageId: String
-    ): Result<out Record> {
+    ): Result<out Record>? {
         val tLabel = TLabel.T_LABEL
         val tImageLabelRel = TImageLabelRel.T_IMAGE_LABEL_REL
         return dslContext.select(

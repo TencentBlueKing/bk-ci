@@ -6,7 +6,7 @@
         <template>
             <header class="instance-entry-header">
                 <TemplateBreadCrumb
-                    :template-name="pipeline?.name"
+                    :template-name="templateName"
                     :is-loading="!pipeline"
                 />
                 <aside
@@ -126,6 +126,7 @@
     const templateRefTypeById = computed(() => templateRefType.value === 'ID')
     const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
     const fetchPipelinesError = computed(() => proxy.$store?.state?.templates?.fetchPipelinesError)
+    const templateName =  computed(() => pipelineInfo.value?.name ?? pipeline.value?.name)
 
     const releaseBtnText = computed(() => {
         const type = proxy.$route.params?.type
