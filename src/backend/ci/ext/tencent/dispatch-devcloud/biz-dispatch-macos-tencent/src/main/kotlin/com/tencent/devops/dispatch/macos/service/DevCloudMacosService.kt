@@ -16,6 +16,7 @@ import com.tencent.devops.dispatch.macos.pojo.TaskResponse
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DMAllVmModelRsp
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmCreate
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmCreateInfo
+import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmDebugCloseResponse
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmDebugLoginRequest
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmDebugLoginResponse
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmDelete
@@ -397,8 +398,8 @@ class DevCloudMacosService @Autowired constructor(
     fun debugClose(
         creator: String,
         debugLoginRequest: DevCloudMacosVmDebugLoginRequest
-    ): DevCloudMacosVmDebugLoginResponse? {
-        return executeDebugLoginRequest(
+    ): DevCloudMacosVmDebugCloseResponse? {
+        return executeDebugCloseRequest(
             creator = creator,
             debugLoginRequest = debugLoginRequest,
             apiPath = "/api/mac/vm/close/debuglogin",
@@ -407,7 +408,7 @@ class DevCloudMacosService @Autowired constructor(
     }
 
     /**
-     * 执行调试登录请求的通用方法
+     * 执行开启调试登录请求
      */
     private fun executeDebugLoginRequest(
         creator: String,
@@ -415,6 +416,32 @@ class DevCloudMacosService @Autowired constructor(
         apiPath: String,
         operationType: String
     ): DevCloudMacosVmDebugLoginResponse? {
+        val responseContent = doDebugRequest(creator, debugLoginRequest, apiPath, operationType) ?: return null
+        return JsonUtil.to(responseContent, DevCloudMacosVmDebugLoginResponse::class.java)
+    }
+
+    /**
+     * 执行关闭调试登录请求
+     */
+    private fun executeDebugCloseRequest(
+        creator: String,
+        debugLoginRequest: DevCloudMacosVmDebugLoginRequest,
+        apiPath: String,
+        operationType: String
+    ): DevCloudMacosVmDebugCloseResponse? {
+        val responseContent = doDebugRequest(creator, debugLoginRequest, apiPath, operationType) ?: return null
+        return JsonUtil.to(responseContent, DevCloudMacosVmDebugCloseResponse::class.java)
+    }
+
+    /**
+     * 执行调试请求的通用方法，返回响应内容字符串
+     */
+    private fun doDebugRequest(
+        creator: String,
+        debugLoginRequest: DevCloudMacosVmDebugLoginRequest,
+        apiPath: String,
+        operationType: String
+    ): String? {
         val url = "$devCloudUrl$apiPath"
         val body = ObjectMapper().writeValueAsString(debugLoginRequest)
         logger.info("MacOS VM debug login $operationType request - $url taskId: ${debugLoginRequest.taskId}, " +
@@ -442,10 +469,11 @@ class DevCloudMacosService @Autowired constructor(
                     return null
                 }
                 
-                return JsonUtil.to(responseContent, DevCloudMacosVmDebugLoginResponse::class.java)
+                return responseContent
             }
         } catch (e: Exception) {
-            logger.error("Exception occurred when ${operationType}ing MacOS VM debug login - taskId: ${debugLoginRequest.taskId}, url: $url", e)
+            logger.error("Exception occurred when ${operationType}ing MacOS VM debug login - " +
+                "taskId: ${debugLoginRequest.taskId}, url: $url", e)
             return null
         }
     }
