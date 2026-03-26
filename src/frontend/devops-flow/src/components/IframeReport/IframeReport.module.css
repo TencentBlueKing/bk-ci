@@ -1,0 +1,54 @@
+.iframeReportSection {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.iframeReportSection.pipelineReportFullScreen {
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  left: 0;
+  top: 0;
+  z-index: 999;
+}
+
+.pipelineExecReportHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: var(--header-height);
+  padding: 0 var(--spacing-xxl);
+  background: var(--bg-tertiary);
+  flex-shrink: 0;
+}
+
+.pipelineExecReportHeaderName {
+  display: flex;
+  align-items: center;
+  grid-gap: var(--spacing-sm);
+  font-weight: 500;
+}
+
+.fullScreenToggler {
+  display: grid;
+  align-items: center;
+  grid-gap: var(--spacing-xs);
+  grid-auto-flow: column;
+}
+
+.fullScreenToggler svg {
+  color: var(--color-primary);
+}
+
+.pipelineExecReportContent {
+  flex: 1;
+  background: var(--bg-primary);
+}
+
+.execThirdPartyReport {
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  border: 0;
+}

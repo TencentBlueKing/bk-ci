@@ -1,0 +1,331 @@
+/**
+ * CompleteLog Component Styles
+ * 完整日志组件样式 - 使用 CSS 变量
+ */
+
+/* === Container Layout === */
+.logHome {
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  right: 0;
+  top: 0;
+  background-color: rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+.logMain {
+  position: absolute;
+  right: 26px;
+  width: var(--log-panel-width);
+  height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
+  margin: var(--spacing-lg);
+  border-radius: var(--border-radius-large);
+  transition-property: transform, opacity;
+  transition:
+    transform var(--transition-normal) cubic-bezier(0.165, 0.84, 0.44, 1),
+    opacity var(--transition-fast) cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+.logMain.overHidden {
+  overflow: hidden;
+}
+
+/* === Theme Styles === */
+.blackTheme {
+  background: var(--log-bg-dark);
+  color: var(--log-text-dark);
+}
+
+/* === Header === */
+.logHead {
+  background-color: var(--log-bg-dark-tertiary);
+  line-height: var(--log-header-height);
+  padding: 5px var(--spacing-xl);
+  border-bottom: 1px solid var(--log-border-dark);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--log-text-dark);
+  position: relative;
+  flex: 0 0 auto;
+  border-top-left-radius: var(--border-radius-large);
+  border-top-right-radius: var(--border-radius-large);
+}
+
+.logTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  max-width: 20%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* === Log Tools (参考 ExecDetail.module.css) === */
+.logTools {
+  position: absolute;
+  right: var(--spacing-xxl);
+  top: 13px;
+  display: flex;
+  align-items: center;
+  line-height: var(--log-tool-height);
+  user-select: none;
+  background: none;
+  gap: 0;
+}
+
+/* === Log Search Bar === */
+.logSearchBar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-right: var(--spacing-md);
+}
+
+.logSearchInput {
+  width: 120px;
+  height: var(--log-tool-height);
+}
+
+.logSearchInput :global(.bk-input) {
+  background: var(--log-bg-dark-hover) !important;
+  color: var(--log-text-dark) !important;
+  border: none !important;
+  height: var(--log-tool-height) !important;
+  font-size: var(--font-size-xs) !important;
+  padding: 0 var(--spacing-sm) !important;
+}
+
+.logSearchInput :global(.bk-input--default) {
+  height: var(--log-tool-height);
+  line-height: var(--log-tool-height);
+}
+
+.logSearchCount {
+  font-size: var(--font-size-xs);
+  color: var(--log-text-dark-secondary);
+  min-width: 40px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.logSearchNav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.logSearchNavBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: transparent;
+  border: none;
+  color: var(--log-text-dark-secondary);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  border-radius: 2px;
+  transition: var(--transition-all);
+}
+
+.logSearchNavBtn:hover:not(:disabled) {
+  color: var(--log-text-dark);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.logSearchNavBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* === Log Execute Select === */
+.logExecuteSelect {
+  width: 70px;
+  height: var(--log-tool-height);
+  margin-right: var(--spacing-md);
+}
+
+.logExecuteSelect :global(.bk-input) {
+  background: var(--log-bg-dark-hover) !important;
+  color: var(--log-text-dark) !important;
+  border: none !important;
+  height: var(--log-tool-height) !important;
+  font-size: var(--font-size-xs) !important;
+}
+
+.logExecuteSelect :global(.bk-input--default) {
+  height: var(--log-tool-height);
+}
+
+/* === Close Button === */
+.closeBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--log-text-dark-secondary);
+  transition: color var(--transition-normal);
+  border-radius: var(--border-radius-large);
+}
+
+.closeBtn:hover {
+  color: var(--bg-primary);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* === Log Content Area === */
+.logContent {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* === Log Lines === */
+.logLines {
+  font-family: var(--log-font-family);
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}
+
+.logLine {
+  display: flex;
+  white-space: pre-wrap;
+  word-break: break-all;
+  padding: 2px 0;
+}
+
+.logLine:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.logLineNumber {
+  color: var(--log-text-dark-muted);
+  min-width: var(--log-line-number-width);
+  padding-right: var(--spacing-md);
+  text-align: right;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.logTimestamp {
+  color: var(--log-text-dark-muted);
+  min-width: var(--log-timestamp-width);
+  padding-right: var(--spacing-md);
+  flex-shrink: 0;
+}
+
+.logMessage {
+  flex: 1;
+  color: var(--log-text-dark);
+}
+
+/* === Log States === */
+.logPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xxxl);
+  color: var(--log-text-dark-secondary);
+  font-size: var(--font-size-sm);
+  height: 100%;
+}
+
+.logError {
+  color: var(--log-color-error);
+  padding: var(--spacing-lg);
+  text-align: center;
+}
+
+/* 轮询加载中的底部提示 - 保持显示避免闪烁 */
+.logLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-lg);
+  color: var(--log-text-dark-secondary);
+  font-size: var(--font-size-xs);
+  gap: var(--spacing-sm);
+}
+
+/* === Loading Spinner === */
+.loadingSpinner {
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* === Scrollbar Styles === */
+.logContent::-webkit-scrollbar {
+  width: var(--spacing-sm);
+  height: var(--spacing-sm);
+}
+
+.logContent::-webkit-scrollbar-track {
+  background: var(--log-bg-dark);
+}
+
+.logContent::-webkit-scrollbar-thumb {
+  background: var(--log-border-dark-light);
+  border-radius: var(--border-radius-large);
+}
+
+.logContent::-webkit-scrollbar-thumb:hover {
+  background: var(--log-border-dark-lighter);
+}
+
+/* === Search Highlight === */
+.highlighted {
+  background: rgba(255, 221, 0, 0.15);
+}
+
+.highlightedActive {
+  background: rgba(255, 149, 0, 0.25);
+}
+
+.searchHighlight {
+  background: var(--log-search-highlight, #ffdd00);
+  color: #000;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+/* === Log Level Colors === */
+.levelError {
+  color: var(--log-color-error);
+}
+
+.levelWarning {
+  color: var(--log-color-warning);
+}
+
+.levelInfo {
+  color: var(--log-color-info);
+}
+
+.levelDebug {
+  color: var(--log-color-debug);
+}

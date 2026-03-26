@@ -19,7 +19,7 @@
                 class="create-env-btn"
                 @click="toCreateNode"
             >
-                {{ $t('environment.newPool') }}
+                {{ emptyInfo.btnText || $t('environment.newPool') }}
             </bk-button>
         </div>
         <div
@@ -30,9 +30,9 @@
                 v-perm="{
                     permissionData: {
                         projectId: projectId,
-                        resourceType: NODE_RESOURCE_TYPE,
+                        resourceType: currentResourceType,
                         resourceCode: projectId,
-                        action: NODE_RESOURCE_ACTION.CREATE
+                        action: currentResourceAction.CREATE
                     }
                 }"
                 theme="primary"
@@ -49,9 +49,12 @@
     import {
         NODE_RESOURCE_ACTION,
         NODE_RESOURCE_TYPE,
+        CREATIVE_STREAM_NODE_RESOURCE_ACTION,
+        CREATIVE_NODE_RESOURCE_TYPE,
         ENV_RESOURCE_ACTION,
         ENV_RESOURCE_TYPE
     } from '@/utils/permission'
+    import { SERVICE_RESOURCE_TYPE } from '@/store/constants'
     export default {
         props: {
             isEnv: {
@@ -65,8 +68,6 @@
         data () {
             return {
                 isDropdownShow: false,
-                NODE_RESOURCE_ACTION,
-                NODE_RESOURCE_TYPE,
                 ENV_RESOURCE_ACTION,
                 ENV_RESOURCE_TYPE
             }
@@ -74,6 +75,15 @@
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            isCreateResType () {
+                return this.$route.params.resType === SERVICE_RESOURCE_TYPE.CREATE
+            },
+            currentResourceType () {
+                return this.isCreateResType ? CREATIVE_NODE_RESOURCE_TYPE : NODE_RESOURCE_TYPE
+            },
+            currentResourceAction () {
+                return this.isCreateResType ? CREATIVE_STREAM_NODE_RESOURCE_ACTION : NODE_RESOURCE_ACTION
             }
         },
         methods: {

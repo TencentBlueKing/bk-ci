@@ -29,11 +29,11 @@ jobs:
           fetch-depth: 0
       - uses: pnpm/action-setup@v2
         with:
-          version: 9.5.0
+          version: 10.11.0
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: "pnpm"
           cache-dependency-path: src/frontend/pnpm-lock.yaml
       - uses: nrwl/nx-set-shas@v4
