@@ -28,11 +28,15 @@
 package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import java.util.concurrent.TimeUnit
 
@@ -89,5 +93,50 @@ object TaskUtil {
             taskEnvVariables[PIPELINE_ELEMENT_ID] = taskId
         }
         return taskEnvVariables
+    }
+
+    /**
+     * 构建完整的上下文变量并解析任务参数
+     * @param buildVariables 构建变量
+     * @param buildVariable 任务级别的构建变量
+     * @param taskParams 任务参数
+     * @return 解析后的任务参数
+     */
+    fun resolveTaskParams(
+        buildVariables: BuildVariables,
+        buildVariable: Map<String, String>,
+        taskParams: Map<String, String>
+    ): Map<String, String> {
+        // 合并构建变量，构建完整的上下文（包含 steps.xxx.outputs.yyy 等）
+        val contextMap = buildVariables.variables.plus(buildVariable).toMutableMap()
+
+        // 为当前job的outputs变量生成 steps.xxx 短格式key，使 ${{steps.xxx.outputs.yyy}} 表达式能正常替换
+        val jobId = buildVariables.jobId
+        if (!jobId.isNullOrBlank()) {
+            val prefix = "jobs.$jobId."
+            contextMap.filter { (key, _) ->
+                key.startsWith(prefix) && key.contains(".outputs.")
+            }.forEach { (key, value) ->
+                val shortKey = key.removePrefix(prefix)
+                if (!contextMap.containsKey(shortKey)) {
+                    contextMap[shortKey] = value
+                }
+            }
+        }
+
+        val dialect = PipelineDialectUtil.getPipelineDialect(buildVariables.variables[PIPELINE_DIALECT])
+
+        // 对 taskParams 中的值做统一表达式替换，解决新版方言下 ${{ steps.xxx }} 未被替换的问题
+        return taskParams.mapValues { (_, value) ->
+            if (dialect.supportUseExpression()) {
+                EnvReplacementParser.parse(
+                    value = value,
+                    contextMap = contextMap,
+                    dialect = dialect
+                )
+            } else {
+                ObjectReplaceEnvVarUtil.replaceEnvVar(value, contextMap).toString()
+            }
+        }
     }
 }
