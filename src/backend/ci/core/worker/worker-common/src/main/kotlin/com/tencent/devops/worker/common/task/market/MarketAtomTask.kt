@@ -468,6 +468,23 @@ open class MarketAtomTask : ITask() {
         val fileCacheKey = "${atomData.atomCode}-${atomData.version}-$atomExecuteFileName"
         bkDiskLruFileCache.get(fileCacheKey, atomExecuteFile)
         try {
+            // 插件缓存文件本地缓存探测功能
+            if (atomExecuteFile.exists() && atomExecuteFile.length() > 0) {
+                try {
+                    checkSha(atomExecuteFile, atomData.shaContent!!)
+                } catch (ignored: Throwable) {
+                    // 缓存文件损坏，删除并从缓存中移除，后续会重新下载
+                    LoggerService.addNormalLine(
+                        "getAtomExecuteFile Cached atom file is corrupted! " +
+                                "atomCode=${atomData.atomCode}, version=${atomData.version}, " +
+                                "file=${atomExecuteFile.absolutePath}, error=${ignored.message}"
+                    )
+                    atomExecuteFile.delete()
+                    bkDiskLruFileCache.remove(fileCacheKey)
+                    LoggerService.addNormalLine("Corrupted cache file deleted, will re-download from repo")
+                }
+            }
+
             if (!atomExecuteFile.exists() || atomExecuteFile.length() < 1) {
                 logger.info("local file[$atomExecuteFileName] is not exist,start downloading from the repo!")
                 val cacheFlag = atomData.atomStatus !in setOf(
