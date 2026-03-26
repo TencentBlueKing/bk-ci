@@ -25,6 +25,7 @@
                 :is-waiting="isWaiting"
                 :is-last-atom="index === atomList.length - 1 && !hasHookAtom"
                 :prev-atom="index > 0 ? atomList[index - 1] : null"
+                @insert-after="handleInsertAfter"
                 @[COPY_EVENT_NAME]="handleCopy"
                 @[DELETE_EVENT_NAME]="handleDelete"
             />
@@ -226,6 +227,9 @@
                     ...this.container,
                     elements: newElements,
                 })
+            },
+            handleInsertAfter ({ elementIndex }) {
+                this.editAtom(elementIndex, true)
             },
             handleDelete ({ elementIndex }) {
                 const newElements = [...this.container.elements]

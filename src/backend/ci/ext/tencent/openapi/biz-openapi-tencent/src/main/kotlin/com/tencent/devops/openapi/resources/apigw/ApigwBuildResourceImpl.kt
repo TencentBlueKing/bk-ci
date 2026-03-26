@@ -57,7 +57,7 @@ class ApigwBuildResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.getRequestChannelCode()
         )
     }
 
@@ -77,7 +77,7 @@ class ApigwBuildResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             page = page ?: 1,
             pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.getRequestChannelCode()
         )
     }
 
@@ -95,7 +95,7 @@ class ApigwBuildResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             values = values,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.getRequestChannelCode()
         )
     }
 
@@ -113,7 +113,7 @@ class ApigwBuildResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.getRequestChannelCode()
         )
     }
 
@@ -131,7 +131,7 @@ class ApigwBuildResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.getRequestChannelCode()
         )
     }
 

@@ -38,6 +38,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
@@ -81,10 +82,14 @@ class PipelineWebhookService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val client: Client,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineWebhookService::class.java)
+        private const val CREATIVE_STREAM_PATH_TEMPLATE =
+            "console/creative-stream/%s/flow/%s/edit%s/workflow-orchestration"
+        private const val REGULAR_PATH_TEMPLATE = "console/pipeline/%s/%s/edit%s"
     }
 
     fun addWebhook(
@@ -138,7 +143,8 @@ class PipelineWebhookService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             pipelineName = model.name,
-            failedElementNames = failedElementNames
+            failedElementNames = failedElementNames,
+            version = version
         )
     }
 
@@ -272,9 +278,17 @@ class PipelineWebhookService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         pipelineName: String,
-        failedElementNames: List<String>
+        failedElementNames: List<String>,
+        version: Int? = null
     ) {
         if (failedElementNames.isNotEmpty()) {
+            // 获取流水线渠道信息，用于生成对应渠道的 URL
+            val channelCode = try {
+                pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)?.channelCode
+            } catch (ignore: Exception) {
+                logger.warn("$projectId|$pipelineId|get channelCode failed", ignore)
+                null
+            }
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
                 SendNotifyMessageTemplateRequest(
                     templateCode =
@@ -285,7 +299,7 @@ class PipelineWebhookService @Autowired constructor(
                     bodyParams = mapOf(
                         "pipelineName" to pipelineName,
                         "elementNames" to failedElementNames.joinToString(""),
-                        "pipelineEditUrl" to pipelineEditUrl(projectId, pipelineId)
+                        "pipelineEditUrl" to pipelineEditUrl(projectId, pipelineId, channelCode, version)
                     ),
                     cc = null,
                     bcc = null
@@ -294,8 +308,25 @@ class PipelineWebhookService @Autowired constructor(
         }
     }
 
-    private fun pipelineEditUrl(projectId: String, pipelineId: String) =
-        "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/edit"
+    /**
+     * 根据渠道生成流水线编辑页 URL
+     * 流水线渠道: /console/pipeline/{projectId}/{pipelineId}/edit/{version}
+     * 创作流渠道: /console/creative-stream/{projectId}/flow/{pipelineId}/edit/{version}/workflow-orchestration
+     */
+    private fun pipelineEditUrl(
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode? = null,
+        version: Int? = null
+    ): String {
+        val host = HomeHostUtil.innerServerHost()
+        val versionPath = version?.let { "/$it" } ?: ""
+        val pathTemplate = when (channelCode) {
+            ChannelCode.CREATIVE_STREAM -> CREATIVE_STREAM_PATH_TEMPLATE
+            else -> REGULAR_PATH_TEMPLATE
+        }
+        return "$host/${String.format(pathTemplate, projectId, pipelineId, versionPath)}"
+    }
 
     fun deleteWebhook(projectId: String, pipelineId: String, userId: String): Result<Boolean> {
         logger.info("delete $pipelineId webhook by $userId")

@@ -42,6 +42,7 @@ import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -54,6 +55,7 @@ class ServiceAtomResourceImpl @Autowired constructor(
 
     override fun list(
         userId: String,
+        serviceScope: ServiceScopeEnum?,
         keyword: String?,
         classifyCode: String?,
         labelCode: String?,
@@ -80,7 +82,8 @@ class ServiceAtomResourceImpl @Autowired constructor(
                 sortType = sortType,
                 page = page,
                 pageSize = pageSize,
-                urlProtocolTrim = true
+                urlProtocolTrim = true,
+                serviceScope = serviceScope
             )
         )
     }
@@ -91,8 +94,12 @@ class ServiceAtomResourceImpl @Autowired constructor(
         return Result(atomService.listInstalledAtomByProject(projectCode))
     }
 
-    override fun getAtomVersionInfo(atomCode: String, version: String): Result<PipelineAtom?> {
-        return atomService.getPipelineAtomDetail(atomCode = atomCode, version = version)
+    override fun getAtomVersionInfo(
+        atomCode: String,
+        version: String,
+        serviceScope: ServiceScopeEnum?
+    ): Result<PipelineAtom?> {
+        return atomService.getPipelineAtomDetail(atomCode = atomCode, version = version, serviceScope = serviceScope)
     }
 
     override fun getAtomInfos(

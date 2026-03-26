@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.common.publication
 
+import com.tencent.devops.common.web.utils.I18nUtil
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "发布进度")
@@ -39,4 +40,11 @@ data class ReleaseProcessItem(
     val step: Int,
     @get:Schema(title = "状态", required = true)
     var status: String
-)
+) {
+    constructor(code: String, step: Int, status: String) : this(
+        name = I18nUtil.getCodeLanMessage(messageCode = code),
+        code = code,
+        step = step,
+        status = status
+    )
+}

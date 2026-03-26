@@ -29,6 +29,7 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
@@ -90,8 +91,14 @@ class TxPipelinePauseExtServiceImpl @Autowired constructor(
         val pipelineName = (pipelineRecord.pipelineName ?: "")
         val buildNum = buildRecord?.buildNum.toString()
         val projectName = projectNameService.getProjectName(pipelineRecord.projectId) ?: ""
+        // 获取流水线渠道信息，用于生成对应渠道的 URL
+        val channelCode = try {
+            ChannelCode.valueOf(pipelineRecord.channel)
+        } catch (ignore: Exception) {
+            null
+        }
         val host = HomeHostUtil.innerServerHost()
-        val url = host + buildNotifyUrl(pipelineRecord.projectId, pipelineId, buildId)
+        val url = host + buildNotifyUrl(pipelineRecord.projectId, pipelineId, buildId, channelCode)
 
         // 指定通过rtx发送
         val notifyType = mutableSetOf<String>()
@@ -129,12 +136,22 @@ class TxPipelinePauseExtServiceImpl @Autowired constructor(
             .sendNotifyMessageByTemplate(msg)
     }
 
+    /**
+     * 根据渠道生成构建详情 URL
+     * 流水线渠道: /console/pipeline/{projectId}/{pipelineId}/detail/{buildId}
+     * 创作流渠道: /console/creative-stream/{projectId}/flow/{pipelineId}/execute/{buildId}/execute-detail
+     */
     private fun buildNotifyUrl(
         projectId: String,
         pipelineId: String,
-        buildId: String
+        buildId: String,
+        channelCode: ChannelCode? = null
     ): String {
-        return "/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+        return if (channelCode == ChannelCode.CREATIVE_STREAM) {
+            "/console/creative-stream/$projectId/flow/$pipelineId/execute/$buildId/execute-detail"
+        } else {
+            "/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+        }
     }
 
     companion object {

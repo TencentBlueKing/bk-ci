@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo.pipeline
 
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线模型-列表信息")
@@ -48,5 +49,7 @@ data class SimplePipeline(
     @get:Schema(title = "自增id", required = true)
     val id: Long?,
     @get:Schema(title = "创建人", required = false)
-    val createUser: String? = null
+    val createUser: String? = null,
+    @get:Schema(title = "渠道代码", required = true)
+    val channelCode: ChannelCode
 )

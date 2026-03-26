@@ -463,7 +463,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             projectId = projectId,
             model = model,
             setting = pipelineModelAndSetting.setting,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             checkPermission = true
         ).pipelineId
     }
@@ -565,6 +565,15 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
             }
 
+            // 如果是渠道是创作流，环境hashId不能为空
+            if (channelCode == ChannelCode.CREATIVE_STREAM && setting?.envHashId.isNullOrBlank()) {
+                throw ErrorCodeException(
+                    statusCode = Response.Status.BAD_REQUEST.statusCode,
+                    errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+                    params = arrayOf(PipelineSetting::envHashId.name)
+                )
+            }
+
             // 检查用户是否有插件的使用权限
             if (model.srcTemplateId != null) {
                 watcher.start("store_template_perm")
@@ -589,7 +598,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             // 检查用户流水线是否达到上限
             val projectVO = projectCacheService.getProject(projectId)
             if (projectVO?.pipelineLimit != null) {
-                val preCount = pipelineRepositoryService.countByProjectIds(setOf(projectId), ChannelCode.BS)
+                val preCount = pipelineRepositoryService.countByProjectIds(setOf(projectId), channelCode)
                 if (preCount >= projectVO.pipelineLimit!!) {
                     throw OperationException(
                         MessageUtil.getMessageByLocale(
@@ -790,7 +799,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             projectId = projectId,
             model = newResource.model.copy(name = pipelineName),
             setting = newSetting,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             yaml = yamlWithVersion,
             versionStatus = versionStatus,
             branchName = branchName,
@@ -851,7 +860,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             model = newResource.model.copy(name = pipelineName),
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             checkTemplate = false,
             yaml = yamlWithVersion,
             savedSetting = savedSetting,
@@ -1646,7 +1655,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         }
         // 老的模版实例参数和设置都是流水线自定义,不跟随模版
         if (model.overrideTemplateField == null) {
-            model.overrideTemplateField = TemplateInstanceField.initFromTrigger(model = templateModel)
+            model.overrideTemplateField = TemplateInstanceField.initFromTemplate(model = templateModel)
         }
         // 如果是最新版本,并且模版信息,说明是老的实例化流水线,需要补全模版信息
         if (isLatestVersion && model.template == null) {
@@ -1712,7 +1721,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    channelCode = channelCode ?: ChannelCode.BS
+                    channelCode = channelCode ?: ChannelCode.getRequestChannelCode()
                 )
                 modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, null, param)
                 watcher.start("s_c_yaml_del")
@@ -1792,7 +1801,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 val pipelineExist = isPipelineExist(
                     projectId = it.projectId,
                     name = it.name,
-                    channelCode = ChannelCode.GIT,
+                    channelCode = ChannelCode.getRequestChannelCode(),
                     pipelineId = it.pipelineId
                 )
                 if (!pipelineExist) {

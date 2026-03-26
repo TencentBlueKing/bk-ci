@@ -62,6 +62,7 @@ import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -133,6 +134,7 @@ import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import com.tencent.devops.store.pojo.common.BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
 import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -238,6 +240,7 @@ class PipelineRepositoryService constructor(
     @Value("\${project.callback.secretParam.aes-key:project_callback_aes_key}")
     private val aesKey = ""
 
+    @SuppressWarnings("NestedBlockDepth")
     fun deployPipeline(
         model: Model,
         projectId: String,
@@ -291,9 +294,21 @@ class PipelineRepositoryService constructor(
         var canElementSkip = false
         run lit@{
             triggerContainer.elements.forEach {
-                if (it is ManualTriggerElement && it.elementEnabled()) {
+                val targetElement = it is ManualTriggerElement || if (channelCode == ChannelCode.CREATIVE_STREAM) {
+                    it is MarketEventAtomElement && it.atomCode == BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
+                } else {
+                    false
+                }
+                if (targetElement && it.elementEnabled()) {
                     canManualStartup = true
-                    canElementSkip = it.canElementSkip ?: false
+                    canElementSkip = when (it) {
+                        is ManualTriggerElement -> it.canElementSkip ?: false
+                        is MarketEventAtomElement -> {
+                            val input = it.data["input"] as Map<String, Any>? ?: emptyMap()
+                            input["canElementSkip"] as? Boolean ?: false
+                        }
+                        else -> false
+                    }
                     return@lit
                 }
             }
@@ -674,14 +689,14 @@ class PipelineRepositoryService constructor(
      * 初始化默认的流水线setting
      */
     fun createDefaultSetting(
-        projectId: String,
-        pipelineId: String,
-        pipelineName: String,
+        projectId: String = "",
+        pipelineId: String = "",
+        pipelineName: String = "",
         channelCode: ChannelCode
     ): PipelineSetting {
         // 空白流水线设置初始化
         val maxPipelineResNum = calculateMaxPipelineResNum(channelCode)
-        val notifyTypes = if (channelCode == ChannelCode.BS) {
+            val notifyTypes = if (channelCode == ChannelCode.BS || channelCode == ChannelCode.CREATIVE_STREAM) {
             pipelineInfoExtService.failNotifyChannel()
         } else {
             ""
@@ -1818,7 +1833,7 @@ class PipelineRepositoryService constructor(
     fun isPipelineExist(
         projectId: String,
         pipelineName: String,
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         excludePipelineId: String?
     ): Boolean {
         return pipelineInfoDao.isNameExist(dslContext, projectId, pipelineName, channelCode, excludePipelineId)
@@ -1977,10 +1992,10 @@ class PipelineRepositoryService constructor(
                 try {
                     ChannelCode.valueOf(it)
                 } catch (e: IllegalArgumentException) {
-                    logger.warn("Invalid channel code: $it, using default ChannelCode.BS")
-                    ChannelCode.BS
+                    logger.warn("Invalid channel code: $it, using default channel code")
+                    ChannelCode.getRequestChannelCode()
                 }
-            } ?: ChannelCode.BS
+            } ?: ChannelCode.getRequestChannelCode()
             val processedSetting = processMaxPipelineResNumIfNull(setting, channelCode)
             if (!isTemplate && versionStatus.isReleasing()) pipelineInfoDao.update(
                 dslContext = transactionContext,

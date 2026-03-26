@@ -92,7 +92,7 @@ data class PipelineSetting(
 
     // 平台系统控制相关配置 —— 不作为生成版本的配置
     @get:Schema(title = "保存流水线编排的最大个数", required = false)
-    val maxPipelineResNum: Int? = null, // 保存流水线编排的最大个数
+    val maxPipelineResNum: Int? = PIPELINE_RES_NUM_MIN, // 保存流水线编排的最大个数
     @get:Schema(title = "重试时清理引擎变量表", required = false)
     val cleanVariablesWhenRetry: Boolean? = false,
     @get:Schema(title = "YAML流水线特殊配置", required = false)
@@ -104,7 +104,9 @@ data class PipelineSetting(
     @get:Schema(title = "创建时间", required = false)
     val createdTime: Long? = null,
     @get:Schema(title = "更新时间", required = false)
-    val updateTime: Long? = null
+    val updateTime: Long? = null,
+    @get:Schema(title = "环境hashId", required = false)
+    var envHashId: String? = null
 ) {
 
     companion object {

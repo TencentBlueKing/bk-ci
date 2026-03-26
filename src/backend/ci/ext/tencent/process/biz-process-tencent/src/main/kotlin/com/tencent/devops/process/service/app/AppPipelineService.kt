@@ -34,6 +34,7 @@ import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.process.engine.pojo.builds.BuildHistoryQueryParam
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.app.pipeline.AppPipeline
@@ -42,9 +43,45 @@ import com.tencent.devops.process.pojo.app.pipeline.AppProject
 import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import io.swagger.v3.oas.annotations.media.Schema
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+
+/**
+ * App流水线构建历史查询请求参数
+ */
+@Schema(title = "App流水线构建历史查询请求参数")
+data class AppPipelineHistoryQueryReq(
+    @get:Schema(title = "用户ID")
+    val userId: String,
+    @get:Schema(title = "项目ID")
+    val projectId: String,
+    @get:Schema(title = "流水线ID")
+    val pipelineId: String,
+    @get:Schema(title = "第几页")
+    val page: Int? = null,
+    @get:Schema(title = "每页条数")
+    val pageSize: Int? = null,
+    @get:Schema(title = "渠道号")
+    val channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
+    @get:Schema(title = "是否校验权限")
+    val checkPermission: Boolean = true,
+    @get:Schema(title = "代码库分支")
+    val materialBranch: List<String>? = null,
+    @get:Schema(title = "是否调试")
+    val debug: Boolean? = null,
+    @get:Schema(title = "触发代码库")
+    val triggerAlias: List<String>? = null,
+    @get:Schema(title = "触发分支")
+    val triggerBranch: List<String>? = null,
+    @get:Schema(title = "触发人")
+    val triggerUser: List<String>? = null,
+    @get:Schema(title = "触发事件类型")
+    val triggerEventTypes: List<String>? = null,
+    @get:Schema(title = "触发节点HashId")
+    val triggerNodeHashIds: List<String>? = null
+)
 
 @Service
 class AppPipelineService @Autowired constructor(
@@ -63,7 +100,7 @@ class AppPipelineService @Autowired constructor(
         userId: String,
         page: Int,
         pageSize: Int,
-        channelCode: ChannelCode = ChannelCode.BS
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
     ): Page<AppProject> {
         var beginTime = System.currentTimeMillis()
         val projectIds = authProjectApi.getUserProjects(pipelineAuthServiceCode, userId, null)
@@ -95,7 +132,7 @@ class AppPipelineService @Autowired constructor(
         projectId: String,
         page: Int?,
         pageSize: Int?,
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         sortType: PipelineSortType = PipelineSortType.CREATE_TIME,
         checkPermission: Boolean = true
     ): PipelinePage<AppPipeline> {
@@ -156,56 +193,31 @@ class AppPipelineService @Autowired constructor(
         )
     }
 
-    fun listPipelineHistory(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        page: Int?,
-        pageSize: Int?,
-        channelCode: ChannelCode = ChannelCode.BS,
-        checkPermission: Boolean = true,
-        materialBranch: List<String>?,
-        debug: Boolean?,
-        triggerAlias: List<String>?,
-        triggerBranch: List<String>?,
-        triggerUser: List<String>?
-    ): Page<AppPipelineHistory> {
-
+    fun listPipelineHistory(request: AppPipelineHistoryQueryReq): Page<AppPipelineHistory> {
+        val queryParam = BuildHistoryQueryParam(
+            projectId = request.projectId,
+            pipelineId = request.pipelineId,
+            materialBranch = request.materialBranch,
+            debug = request.debug,
+            triggerAlias = request.triggerAlias,
+            triggerBranch = request.triggerBranch,
+            triggerUser = request.triggerUser,
+            triggerEventTypes = request.triggerEventTypes,
+            triggerNodeHashIds = request.triggerNodeHashIds
+        )
         val result = pipelineBuildFacadeService.getHistoryBuild(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            page = page,
-            pageSize = pageSize,
-            materialAlias = null,
-            materialUrl = null,
-            materialBranch = materialBranch,
-            materialCommitId = null,
-            materialCommitMessage = null,
-            status = null,
-            trigger = null,
-            queueTimeStartTime = null,
-            queueTimeEndTime = null,
-            startTimeStartTime = null,
-            startTimeEndTime = null,
-            endTimeStartTime = null,
-            endTimeEndTime = null,
-            totalTimeMin = null,
-            totalTimeMax = null,
-            remark = null,
-            buildNoStart = null,
-            buildNoEnd = null,
-            debug = debug,
-            triggerAlias = triggerAlias,
-            triggerBranch = triggerBranch,
-            triggerUser = triggerUser
+            userId = request.userId,
+            page = request.page,
+            pageSize = request.pageSize,
+            queryParam = queryParam
         )
         val histories = result.records.map { h ->
-            val packageVersion = StringBuilder()
-            h.artifactList?.forEach { packageVersion.append(it.appVersion).append(";") }
+            val packageVersion = h.artifactList?.joinToString(";") {
+                it.appVersion.orEmpty()
+            }.orEmpty()
             AppPipelineHistory(
-                projectId = projectId,
-                pipelineId = pipelineId,
+                projectId = request.projectId,
+                pipelineId = request.pipelineId,
                 buildId = h.id,
                 userId = h.userId,
                 trigger = StartType.toStartType(h.trigger),
@@ -215,11 +227,17 @@ class AppPipelineService @Autowired constructor(
                 status = h.status,
                 curTimestamp = h.currentTimestamp,
                 pipelineVersion = h.pipelineVersion,
-                packageVersion = packageVersion.toString().removeSuffix(";")
+                packageVersion = packageVersion
             ).apply {
                 isMobileStart = h.isMobileStart
             }
         }
-        return Page(count = result.count, page = result.page, pageSize = result.pageSize, totalPages = result.totalPages, records = histories)
+        return Page(
+            count = result.count,
+            page = result.page,
+            pageSize = result.pageSize,
+            totalPages = result.totalPages,
+            records = histories
+        )
     }
 }

@@ -28,12 +28,15 @@
 package agent
 
 import (
+	"sync"
 	"time"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/create"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/collector"
@@ -43,6 +46,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/imagedebug"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/mcp"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/pipeline"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
@@ -82,6 +86,11 @@ func Run(isDebug bool) {
 
 	initModules()
 
+	// 首次检查并启动 MCP Server（如果通过环境变量启用）
+	// MCP 使用 Streamable HTTP 在 127.0.0.1 监听，端口号持久化到 .agent.properties
+	// 后续通过心跳环境变量变化动态启停
+	mcp.SyncState()
+
 	for {
 		doAsk()
 		// 请求完更新下IP
@@ -94,6 +103,10 @@ func Run(isDebug bool) {
 func initModules() {
 	imagedebug.Init()
 }
+
+var (
+	checkMutexOnce sync.Once
+)
 
 func doAsk() {
 	// Ask请求
@@ -108,16 +121,14 @@ func doAsk() {
 
 	// 每次发送完请求都判断下是否存在退出报错
 	doneRequestExitError := exitcode.GetAndResetExitError()
-	// 发送前和发送后都有需要专门打印下日志
-	if exiterror != nil || doneRequestExitError != nil {
-		if exiterror != nil && doneRequestExitError != nil {
-			logs.Errorf("ExitError|%s|%s", exiterror.ErrorEnum, exiterror.Message)
-			exitcode.Exit(doneRequestExitError)
-		}
+	if doneRequestExitError != nil {
 		if exiterror != nil {
-			exitcode.Exit(exiterror)
+			logs.Errorf("ExitError|%s|%s", exiterror.ErrorEnum, exiterror.Message)
 		}
 		exitcode.Exit(doneRequestExitError)
+	}
+	if exiterror != nil {
+		exitcode.Exit(exiterror)
 	}
 
 	if err != nil {
@@ -145,29 +156,54 @@ func doAsk() {
 		return
 	}
 
+	// 目前仅支持windows机器
+	if systemutil.IsWindows() && resp.Heart.CreateMod != nil {
+		checkMutexOnce.Do(func() {
+			create.UpdateCreateModFlag(*resp.Heart.CreateMod)
+			if create.CheckCreateMod() {
+				if !create.CheckOnlyProcess(create.AgentProcess) {
+					logs.Error("create mod not only process, exit")
+					systemutil.ExitProcess(constant.DaemonExitCode)
+				}
+			}
+		})
+	}
+
 	// 执行各类任务
 	doAgentJob(enable, resp)
 }
 
 func doAgentJob(enable api.AskEnable, resp *api.AskResp) {
 	if resp.Heart != nil {
-		go agentHeartbeat(resp.Heart)
+		safeGo("agentHeartbeat", func() { agentHeartbeat(resp.Heart) })
 	}
 
 	hasBuild := (enable.Build != api.NoneBuildType) && (resp.Build != nil)
 	if hasBuild {
-		go job.DoBuild(resp.Build)
+		safeGo("DoBuild", func() { job.DoBuild(resp.Build) })
 	}
 
 	if enable.Upgrade && resp.Upgrade != nil {
-		go upgrade.AgentUpgrade(resp.Upgrade, hasBuild)
+		safeGo("AgentUpgrade", func() { upgrade.AgentUpgrade(resp.Upgrade, hasBuild) })
 	}
 
 	if enable.Pipeline && resp.Pipeline != nil {
-		go pipeline.RunPipeline(resp.Pipeline)
+		safeGo("RunPipeline", func() { pipeline.RunPipeline(resp.Pipeline) })
 	}
 
 	if enable.DockerDebug && resp.Debug != nil {
-		go imagedebug.DoImageDebug(resp.Debug)
+		safeGo("DoImageDebug", func() { imagedebug.DoImageDebug(resp.Debug) })
 	}
+}
+
+// safeGo 在独立 goroutine 中执行 fn，捕获 panic 防止崩溃整个进程
+func safeGo(name string, fn func()) {
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logs.Errorf("goroutine [%s] panic recovered: %v", name, r)
+			}
+		}()
+		fn()
+	}()
 }

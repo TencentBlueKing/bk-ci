@@ -46,11 +46,7 @@ data class PipelineResourceOnlyVersion(
     @get:Schema(title = "默认的基础版本,取的是最新的正式版本", required = false)
     val baseVersion: Int? = null,
     @get:Schema(title = "基础版本名称,用于记录操作日志", required = false)
-    val baseVersionName: String? = null,
-    @get:Schema(title = "正式版本号,正式版本不一定是正式版本,可能是草稿或者分支,如第一次创建流水线", required = false)
-    val releaseVersion: Int? = null,
-    @get:Schema(title = "最新的正式版本名称", required = false)
-    val releaseVersionName: String? = null
+    val baseVersionName: String? = null
 ) {
     constructor(pipelineResource: PipelineResourceVersion) : this(
         version = pipelineResource.version,

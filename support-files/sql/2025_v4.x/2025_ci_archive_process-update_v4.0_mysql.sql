@@ -63,6 +63,24 @@ BEGIN
             COMMENT '构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY_DEBUG'
+                    AND COLUMN_NAME = 'TRIGGER_EVENT_TYPE') THEN
+    ALTER TABLE T_PIPELINE_BUILD_HISTORY_DEBUG
+        ADD`TRIGGER_EVENT_TYPE` VARCHAR(64) DEFAULT NULL comment '触发事件标识';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
+                    AND COLUMN_NAME = 'TRIGGER_EVENT_TYPE') THEN
+    ALTER TABLE T_PIPELINE_BUILD_HISTORY
+        ADD`TRIGGER_EVENT_TYPE` VARCHAR(64) DEFAULT NULL comment '触发事件标识';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

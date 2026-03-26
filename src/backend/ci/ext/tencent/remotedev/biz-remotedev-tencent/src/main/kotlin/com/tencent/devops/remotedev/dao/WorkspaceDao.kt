@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.fetchCountFix
 import com.tencent.devops.common.db.utils.skipCheck
+import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceLabels
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
@@ -470,6 +471,19 @@ class WorkspaceDao {
         }
     }
 
+    fun enableCoffeeAI(
+        dslContext: DSLContext,
+        workspaceNames: List<String>,
+    ) {
+        with(TWorkspace.T_WORKSPACE) {
+            dslContext.update(this)
+                .set(COFFEE_AI, ByteUtils.bool2Byte(true))
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(NAME.`in`(workspaceNames))
+                .execute()
+        }
+    }
+
     fun updateWorkspaceDisplayName(
         dslContext: DSLContext,
         workspaceName: String,
@@ -715,7 +729,8 @@ class WorkspaceDao {
                 nodeHashId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.NODE_HASH_ID) as String?,
                 resourceId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.RESOURCE_ID) as String?,
                 enableRecord = (record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.ENABLE_RECORD_USER) as? String)
-                    ?.isNotBlank() ?: false
+                    ?.isNotBlank() ?: false,
+                coffeeAi = (record.getOrNull(TWorkspace.T_WORKSPACE.COFFEE_AI) as? Byte)?.let { it != 0.toByte() } ?: false
             )
         }
 

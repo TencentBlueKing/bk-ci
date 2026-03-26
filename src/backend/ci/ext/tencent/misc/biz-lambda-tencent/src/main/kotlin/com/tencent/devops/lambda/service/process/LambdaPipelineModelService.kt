@@ -62,11 +62,12 @@ class LambdaPipelineModelService @Autowired constructor(
     fun onModelExchange(event: PipelineModelAnalysisEvent) {
         pushPipelineResource2Kafka(event.projectId, event.pipelineId, null)
 
+        val eventChannelCode = event.channelCode ?: ChannelCode.BS.name
         pushPipelineInfo2Kafka(
             pipelineId = event.pipelineId,
             userId = event.userId,
             projectId = event.projectId,
-            channelCode = event.channelCode
+            channelCode = eventChannelCode
         )
     }
 

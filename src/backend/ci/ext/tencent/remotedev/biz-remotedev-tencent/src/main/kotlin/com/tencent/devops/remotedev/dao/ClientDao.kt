@@ -86,9 +86,65 @@ class ClientDao {
         with(TClient.T_CLIENT) {
             val dsl = dslContext.selectFrom(this)
             if (lastUpdateBeforeDays != null) {
-                dsl.where(UPDATE_TIME.greaterOrEqual(LocalDateTime.now().minusDays(14)))
+                dsl.where(
+                    UPDATE_TIME.greaterOrEqual(
+                        LocalDateTime.now().minusDays(lastUpdateBeforeDays.toLong())
+                    )
+                )
             }
             return dsl.orderBy(UPDATE_TIME.desc()).skipCheck().fetch()
+        }
+    }
+
+    /**
+     * 分页查询客户端记录，使用延迟关联优化回表性能。
+     * 子查询只走 UPDATE_TIME 索引取主键（索引覆盖），
+     * 外层再用主键精准回表，避免对大量行做无效回表读取 JSON 大字段。
+     */
+    @Suppress("LongParameterList")
+    fun fetchByPage(
+        dslContext: DSLContext,
+        lastUpdateBeforeDays: Int,
+        offset: Int,
+        limit: Int
+    ): List<TClientRecord> {
+        with(TClient.T_CLIENT) {
+            val subQuery = dslContext
+                .select(MAC_ADDRESS)
+                .from(this)
+                .where(
+                    UPDATE_TIME.greaterOrEqual(
+                        LocalDateTime.now()
+                            .minusDays(lastUpdateBeforeDays.toLong())
+                    )
+                )
+                .orderBy(UPDATE_TIME.desc())
+                .limit(limit)
+                .offset(offset)
+                .asTable("tmp")
+
+            return dslContext
+                .select(
+                    MAC_ADDRESS, CURRENT_USER,
+                    CURRENT_WORKSPACE_NAMES, CURRENT_PROJECT_IDS,
+                    VERSION, OS, START_VERSION
+                )
+                .from(this)
+                .join(subQuery)
+                .on(MAC_ADDRESS.eq(subQuery.field(MAC_ADDRESS)))
+                .orderBy(UPDATE_TIME.desc())
+                .skipCheck()
+                .fetch { record ->
+                    TClientRecord().apply {
+                        macAddress = record[MAC_ADDRESS]
+                        currentUser = record[CURRENT_USER]
+                        currentWorkspaceNames = record[CURRENT_WORKSPACE_NAMES]
+                        currentProjectIds = record[CURRENT_PROJECT_IDS]
+                        version = record[VERSION]
+                        os = record[OS]
+                        startVersion = record[START_VERSION]
+                    }
+                }
         }
     }
 }

@@ -34,8 +34,10 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.environment.pojo.EnvAddNodesData
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvUpdateInfo
+import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
@@ -43,6 +45,7 @@ import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.enums.EnvType
+import com.tencent.devops.environment.pojo.enums.NodeStatus
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -116,15 +119,18 @@ interface UserEnvironmentResource {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "环境名称", required = true)
+        @Parameter(description = "环境名称", required = false)
         @QueryParam("envName")
         envName: String?,
-        @Parameter(description = "环境类型", required = true)
+        @Parameter(description = "环境类型", required = false)
         @QueryParam("envType")
         envType: EnvType?,
-        @Parameter(description = "节点", required = true)
+        @Parameter(description = "节点", required = false)
         @QueryParam("nodeHashId")
-        nodeHashId: String?
+        nodeHashId: String?,
+        @Parameter(description = "是否是创作流模式", required = false)
+        @QueryParam("createMode")
+        createMode: Boolean?
     ): Result<List<EnvWithPermission>>
 
     @Operation(summary = "根据类型获取环境列表")
@@ -172,6 +178,33 @@ interface UserEnvironmentResource {
         envHashId: String
     ): Result<EnvWithPermission>
 
+    @Operation(summary = "获取环境环境变量")
+    @GET
+    @Path("/{projectId}/{envHashId}/envs")
+    fun getEnvEnvs(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "Env Hash ID", required = true)
+        @PathParam("envHashId")
+        envHashId: String,
+        @Parameter(description = "环境变量名", required = false)
+        @QueryParam("envName")
+        envName: String?,
+        @Parameter(description = "环境变量值", required = false)
+        @QueryParam("envValue")
+        envValue: String?,
+        @Parameter(description = "是否安全变量", required = false)
+        @QueryParam("source")
+        source: Boolean?,
+        @Parameter(description = "最后修改人", required = false)
+        @QueryParam("lastUpdateUser")
+        lastUpdateUser: String?
+    ): Result<List<EnvVar>>
+
     @Operation(summary = "删除环境")
     @DELETE
     @Path("/{projectId}/{envHashId}")
@@ -212,6 +245,18 @@ interface UserEnvironmentResource {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
+        @Parameter(description = "IP", required = false)
+        @QueryParam("nodeIp")
+        nodeIp: String?,
+        @Parameter(description = "别名", required = false)
+        @QueryParam("displayName")
+        displayName: String?,
+        @Parameter(description = "创建人", required = false)
+        @QueryParam("createdUser")
+        createdUser: String?,
+        @Parameter(description = "Agent 状态", required = false)
+        @QueryParam("nodeStatus")
+        nodeStatus: NodeStatus?,
         @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int? = 1,
@@ -223,6 +268,28 @@ interface UserEnvironmentResource {
         envHashId: String
     ): Result<Page<NodeBaseInfo>>
 
+    @Operation(summary = "通过名字获取环境的节点列表")
+    @GET
+    @Path("/{projectId}/listNodesNew")
+    fun listNodesNewByName(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "第几页", required = false)
+        @QueryParam("page")
+        page: Int? = 1,
+        @Parameter(description = "每页多少条", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int? = 20,
+        @Parameter(description = "环境名称", required = true)
+        @QueryParam("envName")
+        envName: String
+    ): Result<Page<NodeBaseInfo>>
+
+    @Deprecated("动态环境全部上线后就废弃")
     @Operation(summary = "添加节点到环境")
     @POST
     @Path("/{projectId}/{envHashId}/addNodes")
@@ -238,6 +305,22 @@ interface UserEnvironmentResource {
         envHashId: String,
         @Parameter(description = "节点 HashId", required = true)
         nodeHashIds: List<String>
+    ): Result<Boolean>
+
+    @Operation(summary = "添加节点到环境新")
+    @POST
+    @Path("/{projectId}/{envHashId}/addNodesNew")
+    fun addNodesNew(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String,
+        data: EnvAddNodesData
     ): Result<Boolean>
 
     @Operation(summary = "从环境删除节点")
@@ -309,6 +392,9 @@ interface UserEnvironmentResource {
         @Parameter(description = "项目名称", required = false)
         @QueryParam("name")
         name: String? = null,
+        @Parameter(description = "操作人", required = false)
+        @QueryParam("creator")
+        creator: String? = null,
         @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int? = null,
@@ -390,4 +476,19 @@ interface UserEnvironmentResource {
         @BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE, required = true)
         enableNode: Boolean
     ): Result<Boolean>
+
+    @Operation(summary = "获取项目下环境数量")
+    @GET
+    @Path("/{projectId}/envCount")
+    fun getEnvCount(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "是否是创作环境", required = false)
+        @QueryParam("createEnv")
+        createEnv: Boolean?
+    ): Result<Map<String, Int>>
 }

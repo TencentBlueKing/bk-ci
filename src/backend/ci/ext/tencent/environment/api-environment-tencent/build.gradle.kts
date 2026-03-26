@@ -27,6 +27,7 @@
 
 dependencies {
     api(project(":core:environment:api-environment"))
+    api(project(":ext:tencent:remotedev:api-remotedev-tencent"))
 }
 
 plugins {

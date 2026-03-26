@@ -73,6 +73,6 @@ class PipelineFanoutQueueConfiguration {
         @Autowired notifyListener: PipelineNotifyQueueListener
     ) = ScsConsumerBuilder.build<PipelineBuildFinishBroadCastEvent> {
         webhookListener.onBuildFinish(it)
-        notifyListener.run(it)
+        notifyListener.execute(it)
     }
 }

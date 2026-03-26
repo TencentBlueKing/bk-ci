@@ -69,6 +69,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.utils.ModelVarRefValidator
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -77,6 +78,7 @@ import com.tencent.devops.model.process.tables.records.TTemplateInstanceItemReco
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_ELEMENT_CHECK_FAILED
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_MODEL_VAR_REF_INVALID
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
@@ -132,10 +134,10 @@ import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
-import com.tencent.devops.process.service.template.v2.PipelineTemplateCommonService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateMarketFacadeService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionManager
+import com.tencent.devops.process.util.PipelineTemplateUtil
 import com.tencent.devops.process.util.TempNotifyTemplateUtils
 import com.tencent.devops.process.utils.BK_EMPTY_PIPELINE
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
@@ -225,6 +227,7 @@ class TemplateFacadeService @Autowired constructor(
     )
     fun createTemplate(projectId: String, userId: String, template: Model): String {
         logger.info("Start to create the template ${template.name} by user $userId")
+        checkTemplateMigrateStatus(projectId)
         pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
             projectId = projectId,
@@ -280,6 +283,7 @@ class TemplateFacadeService @Autowired constructor(
         copyTemplateReq: CopyTemplateReq
     ): String {
         logger.info("Start to copy the template, $srcTemplateId | $userId | $copyTemplateReq")
+        checkTemplateMigrateStatus(projectId)
         pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
             projectId = projectId,
@@ -353,6 +357,7 @@ class TemplateFacadeService @Autowired constructor(
         saveAsTemplateReq: SaveAsTemplateReq
     ): String {
         logger.info("Start to saveAsTemplate, $userId | $projectId | $saveAsTemplateReq")
+        checkTemplateMigrateStatus(projectId)
 
         pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
@@ -419,6 +424,7 @@ class TemplateFacadeService @Autowired constructor(
     )
     fun deleteTemplate(projectId: String, userId: String, templateId: String): Boolean {
         logger.info("Start to delete the template $templateId by user $userId")
+        checkTemplateMigrateStatus(projectId)
         pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
             projectId = projectId,
@@ -448,6 +454,7 @@ class TemplateFacadeService @Autowired constructor(
     )
     fun deleteTemplate(projectId: String, userId: String, templateId: String, version: Long): Boolean {
         logger.info("Start to delete the template [$projectId|$userId|$templateId|$version]")
+        checkTemplateMigrateStatus(projectId)
         pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
             projectId = projectId,
@@ -482,6 +489,7 @@ class TemplateFacadeService @Autowired constructor(
         versionName: String
     ): Boolean {
         logger.info("Start to delete the template [$projectId|$userId|$templateId|$versionName]")
+        checkTemplateMigrateStatus(projectId)
         pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
             projectId = projectId,
@@ -531,6 +539,7 @@ class TemplateFacadeService @Autowired constructor(
         checkPermissionFlag: Boolean = true
     ): Long {
         logger.info("Start to update the template $templateId by user $userId - ($template)")
+        checkTemplateMigrateStatus(projectId)
 
         // 1. 前置校验与准备
         if (checkPermissionFlag) {
@@ -588,6 +597,14 @@ class TemplateFacadeService @Autowired constructor(
         }
         logger.info("Get the update template version $version")
         return version
+    }
+
+    private fun checkTemplateMigrateStatus(projectId: String) {
+        if (redisOperation.isMember(TEMPLATE_MIGRATE_REDIS_KEY, projectId)) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_MIGRATING
+            )
+        }
     }
 
     /**
@@ -1496,7 +1513,7 @@ class TemplateFacadeService @Autowired constructor(
                 // 重复版本名中的旧版本，使用 version 作为后缀并标记为重复
                 else -> {
                     val suffix = "-${version.version}"
-                    val newName = PipelineTemplateCommonService.buildVersionNameWithSuffix(originalName, suffix)
+                    val newName = PipelineTemplateUtil.buildVersionNameWithSuffix(originalName, suffix)
                     version.copy(
                         versionName = newName,
                         desc = MessageUtil.getMessageByLocale(
@@ -1728,7 +1745,7 @@ class TemplateFacadeService @Autowired constructor(
                     userId = userId,
                     projectId = projectId,
                     model = instanceModel,
-                    channelCode = ChannelCode.BS,
+                    channelCode = ChannelCode.getRequestChannelCode(),
                     checkPermission = true,
                     fixPipelineId = null,
                     instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
@@ -2000,14 +2017,14 @@ class TemplateFacadeService @Autowired constructor(
                     )
                 }
             }
-            val result = pipelineInfoFacadeService.editPipeline(
+            pipelineInfoFacadeService.editPipeline(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = templateInstanceUpdate.pipelineId,
                 model = instanceModel,
                 // TODO #9145 修改流水线实例时的yaml覆盖逻辑
                 yaml = null,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 checkPermission = true,
                 checkTemplate = false
             )
@@ -2476,6 +2493,13 @@ class TemplateFacadeService @Autowired constructor(
                 errorCode = ProcessMessageCode.TEMPLATE_NAME_CAN_NOT_NULL
             )
         }
+        val invalidRefs = ModelVarRefValidator.getInvalidRefs(template, projectId ?: "")
+        if (invalidRefs.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_PIPELINE_MODEL_VAR_REF_INVALID,
+                params = arrayOf(ModelVarRefValidator.formatInvalidRefsMessage(invalidRefs))
+            )
+        }
         // 模版先都统一使用项目配置
         val projectDialect = projectId?.let { pipelineAsCodeService.getProjectDialect(projectId = it) }
         modelCheckPlugin.checkModelIntegrity(
@@ -2802,5 +2826,6 @@ class TemplateFacadeService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(TemplateFacadeService::class.java)
         private const val TEMPLATE_BIZ_TAG_NAME = "TEMPLATE"
+        private const val TEMPLATE_MIGRATE_REDIS_KEY = "pipeline:template:migrate"
     }
 }

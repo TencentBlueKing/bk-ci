@@ -67,7 +67,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
@@ -95,12 +95,12 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import jakarta.ws.rs.NotFoundException
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import jakarta.ws.rs.NotFoundException
 
 @Service
 class PreBuildService @Autowired constructor(
@@ -137,11 +137,10 @@ class PreBuildService @Autowired constructor(
 
     fun shutDown(
         userId: String,
-        accessToken: String,
         preProjectId: String,
         buildId: String
     ): Boolean {
-        val userProject = getOrCreateUserProject(userId, accessToken)
+        val userProject = getOrCreateUserProject(userId)
         val projectId = userProject.projectCode
         val preProjectRecord = prebuildProjectDao.get(dslContext, preProjectId, userId)
             ?: throw OperationException("prebuild project not exist")
@@ -371,7 +370,7 @@ class PreBuildService @Autowired constructor(
                 ThirdPartyAgentIDDispatchType(
                     displayName = agentInfo.agentId,
                     workspace = startUpReq.workspace,
-                    agentType = AgentType.ID,
+                    agentType = AgentDispatchType.ID,
                     dockerInfo = null,
                     reusedInfo = null
                 )
@@ -500,9 +499,9 @@ class PreBuildService @Autowired constructor(
         return preProjectRecord
     }
 
-    fun getOrCreateUserProject(userId: String, accessToken: String): UserProject {
+    fun getOrCreateUserProject(userId: String): UserProject {
         val projectResult =
-            client.get(ServiceTxProjectResource::class).getPreUserProject(userId, accessToken)
+            client.get(ServiceTxProjectResource::class).getPreUserProject(userId)
 
         if (projectResult.isNotOk()) {
             throw RuntimeException("get user project err")
