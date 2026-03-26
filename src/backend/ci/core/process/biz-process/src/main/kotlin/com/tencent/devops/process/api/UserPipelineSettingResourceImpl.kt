@@ -80,4 +80,8 @@ class UserPipelineSettingResourceImpl @Autowired constructor(
     override fun getCommonSetting(userId: String): Result<PipelineCommonSetting> {
         return Result(pipelineSettingFacadeService.getCommonSetting(userId))
     }
+
+    override fun getDefaultSetting(userId: String): Result<PipelineSetting> {
+        return Result(pipelineSettingFacadeService.getDefaultSetting(userId))
+    }
 }

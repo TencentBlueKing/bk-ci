@@ -45,7 +45,8 @@ class StoreUpdateRunPipelineHandler(
 ) : Handler<StoreUpdateRequest> {
 
     override fun canExecute(handlerRequest: StoreUpdateRequest): Boolean {
-        return handlerRequest.baseInfo.storeType != StoreTypeEnum.TEMPLATE
+        // [模板/触发事件]无需运行流水线
+        return !setOf(StoreTypeEnum.TEMPLATE, StoreTypeEnum.TRIGGER_EVENT).contains(handlerRequest.baseInfo.storeType)
     }
 
     override fun execute(handlerRequest: StoreUpdateRequest) {

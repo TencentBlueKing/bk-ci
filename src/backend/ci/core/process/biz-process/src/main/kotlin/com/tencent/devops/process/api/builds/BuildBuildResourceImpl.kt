@@ -29,7 +29,6 @@ package com.tencent.devops.process.api.builds
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.constant.BkApiHandleType
@@ -54,16 +53,14 @@ class BuildBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildNum: String,
-        buildId: String?,
-        channelCode: ChannelCode?
+        buildId: String?
     ): Result<BuildHistory?> {
         return Result(
             data = pipelineBuildFacadeService.getSingleHistoryBuild(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildNum = buildNum.toInt(),
-                buildId = buildId,
-                channelCode = channelCode ?: ChannelCode.BS
+                buildId = buildId
             )
         )
     }
@@ -72,15 +69,13 @@ class BuildBuildResourceImpl @Autowired constructor(
     override fun getLatestSuccessBuild(
         projectId: String,
         pipelineId: String,
-        buildId: String?,
-        channelCode: ChannelCode?
+        buildId: String?
     ): Result<BuildHistory?> {
         return Result(
             data = pipelineBuildFacadeService.getLatestSuccessBuild(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                buildId = buildId,
-                channelCode = channelCode ?: ChannelCode.BS
+                buildId = buildId
             )
         )
     }
@@ -89,8 +84,7 @@ class BuildBuildResourceImpl @Autowired constructor(
     override fun getBuildDetail(
         projectId: String,
         pipelineId: String,
-        buildId: String,
-        channelCode: ChannelCode
+        buildId: String
     ): Result<ModelDetail> {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
@@ -99,8 +93,7 @@ class BuildBuildResourceImpl @Autowired constructor(
             data = pipelineBuildFacadeService.getBuildDetail(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                buildId = buildId,
-                channelCode = channelCode
+                buildId = buildId
             )
         )
     }

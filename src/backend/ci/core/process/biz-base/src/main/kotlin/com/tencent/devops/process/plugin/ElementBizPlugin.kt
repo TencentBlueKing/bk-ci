@@ -55,7 +55,7 @@ interface ElementBizPlugin<T : Element> {
         pipelineId: String,
         pipelineName: String,
         userId: String,
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         create: Boolean,
         container: Container,
         yamlInfo: PipelineYamlVo?

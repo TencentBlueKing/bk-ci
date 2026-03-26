@@ -52,7 +52,6 @@ object BuildTimeCostUtils {
         val totalCost = Duration.between(queueTime, endTime).toMillis()
         var executeCost = 0L
         var waitCost = 0L
-        var queueCost = 0L
         stageRecords.forEach { record ->
             val stageCost = JsonUtil.anyTo(
                 record.stageVar[Stage::timeCost.name] ?: return@forEach,
@@ -60,16 +59,15 @@ object BuildTimeCostUtils {
             )
             executeCost += stageCost.executeCost
             waitCost += stageCost.waitCost
-            queueCost += stageCost.queueCost
         }
+        // 给前端展示的构建排队时间为触发-开始
+        val queueCost = Duration.between(queueTime, startTime).toMillis()
         val systemCost = totalCost - executeCost - queueCost - waitCost
         return BuildRecordTimeCost(
             totalCost = totalCost,
             executeCost = executeCost,
             waitCost = waitCost,
-            // 给前端展示的构建排队时间为触发-开始,
-            // 上面的queueCost用于systemCost的差值
-            queueCost = Duration.between(queueTime, startTime).toMillis(),
+            queueCost = queueCost,
             systemCost = systemCost.notNegative()
         )
     }
@@ -94,9 +92,13 @@ object BuildTimeCostUtils {
             )
             // 计算等到耗时需要将率先执行完毕的container追加无状态区间
             record.endTime?.let {
-                val fixedMoment = BuildRecordTimeLine.Moment(it.timestampmilli(), endTime.timestampmilli())
-                containerTimeLine.waitCostMoments.add(fixedMoment)
-                containerTimeLine.queueCostMoments.add(fixedMoment)
+                val containerEnd = it.timestampmilli()
+                val stageEnd = endTime.timestampmilli()
+                if (containerEnd < stageEnd) {
+                    val fixedMoment = BuildRecordTimeLine.Moment(containerEnd, stageEnd)
+                    containerTimeLine.waitCostMoments.add(fixedMoment)
+                    containerTimeLine.queueCostMoments.add(fixedMoment)
+                }
             }
             // 执行时间取并集
             containerExecuteCost = mergeTimeLine(containerExecuteCost, containerTimeLine.executeCostMoments)
@@ -108,13 +110,16 @@ object BuildTimeCostUtils {
         }
         val executeCost = containerExecuteCost.sumOf { it.endTime - it.startTime }
         val queueCost = containerQueueCost.sumOf { it.endTime - it.startTime }
-        val waitCost = timestamps.toList().sumOf { (type, time) ->
-            if (!type.stageCheckWait()) return@sumOf 0L
-            logWhenNull(
-                time, "$buildId|STAGE|$stageId|${type.name}"
-            )
-            return@sumOf time.between()
-        } + containerWaitCost.sumOf { it.endTime - it.startTime }
+        val stageCheckWaitMoments = mutableListOf<BuildRecordTimeLine.Moment>()
+        timestamps.toList().forEach { (type, time) ->
+            if (!type.stageCheckWait()) return@forEach
+            logWhenNull(time, "$buildId|STAGE|$stageId|${type.name}")
+            time.insert2TimeLine(stageCheckWaitMoments)
+        }
+        // 合并 stage check wait 与 container wait（取并集去重叠），再减去 execute（执行期间不算等待）
+        val allWaitMoments = mergeTimeLine(stageCheckWaitMoments, containerWaitCost)
+        val netWaitMoments = differenceTimeLine(allWaitMoments, containerExecuteCost)
+        val waitCost = netWaitMoments.sumOf { it.endTime - it.startTime }
         val systemCost = totalCost - executeCost - waitCost
         return BuildRecordTimeCost(
             totalCost = totalCost,
@@ -143,6 +148,15 @@ object BuildTimeCostUtils {
                 record.containerVar[BuildRecordTimeLine::class.java.simpleName] ?: return@forEach,
                 object : TypeReference<BuildRecordTimeLine>() {}
             )
+            record.endTime?.let {
+                val containerEnd = it.timestampmilli()
+                val matrixEnd = endTime.timestampmilli()
+                if (containerEnd < matrixEnd) {
+                    val fixedMoment = BuildRecordTimeLine.Moment(containerEnd, matrixEnd)
+                    containerTimeLine.waitCostMoments.add(fixedMoment)
+                    containerTimeLine.queueCostMoments.add(fixedMoment)
+                }
+            }
             // 执行时间取并集
             containerExecuteCost = mergeTimeLine(containerExecuteCost, containerTimeLine.executeCostMoments)
             // 等待时间取交集
@@ -249,34 +263,30 @@ object BuildTimeCostUtils {
     }
 
     /**
-     * 区间求差集 left - right
+     * 区间求差集 left - right，逐个 left 区间减去 merged right 区间
      */
     fun differenceTimeLine(
         left: List<BuildRecordTimeLine.Moment>,
         right: List<BuildRecordTimeLine.Moment>
     ): List<BuildRecordTimeLine.Moment> {
-        val line: MutableList<Pair<Long, Char>> = mutableListOf()
-        val ans: MutableList<BuildRecordTimeLine.Moment> = mutableListOf()
-        left.forEach {
-            line.add(Pair(it.startTime, 'L'))
-            line.add(Pair(it.endTime, 'L'))
-        }
-        right.forEach {
-            line.add(Pair(it.startTime, 'R'))
-            line.add(Pair(it.endTime, 'R'))
-        }
-        line.sortBy { it.first }
-        var cnt = true
-        var index = 0
-        while (index < line.size) {
-            if (line[index].second == 'R') cnt = !cnt
-            if (cnt && index < line.size - 1) ans.add(
-                BuildRecordTimeLine.Moment(
-                    line[index].first,
-                    line[index + 1].first
-                )
-            )
-            index++
+        if (left.isEmpty()) return emptyList()
+        if (right.isEmpty()) return left
+        val ans = mutableListOf<BuildRecordTimeLine.Moment>()
+        val mergedRight = mergeTimeLine(right, emptyList())
+        for (l in left) {
+            if (l.startTime >= l.endTime) continue
+            var current = l.startTime
+            for (r in mergedRight) {
+                if (r.endTime <= current) continue
+                if (r.startTime >= l.endTime) break
+                if (r.startTime > current) {
+                    ans.add(BuildRecordTimeLine.Moment(current, r.startTime))
+                }
+                current = current.coerceAtLeast(r.endTime)
+            }
+            if (current < l.endTime) {
+                ans.add(BuildRecordTimeLine.Moment(current, l.endTime))
+            }
         }
         return ans
     }

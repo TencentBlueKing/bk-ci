@@ -128,7 +128,7 @@ class SubPipelineUpgradeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         model: Model,
-        channel: String = ChannelCode.BS.name
+        channel: String = ChannelCode.getRequestChannelCode().name
     ) {
         try {
             // 解析model，读取子流水线引用信息
@@ -194,7 +194,7 @@ class SubPipelineUpgradeService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId
-        )?.channel ?: ChannelCode.BS.name
+        )?.channel ?: ChannelCode.getRequestChannelCode().name
         updateSubPipelineRef(
             userId = userId,
             projectId = projectId,

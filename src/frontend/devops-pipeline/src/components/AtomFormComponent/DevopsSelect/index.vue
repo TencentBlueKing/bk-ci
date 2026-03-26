@@ -200,7 +200,7 @@
             handleInput (e) {
                 // const { name, value } = e.target
                 this.optionListVisible = true
-                // if (!this.hasGroup ) this.handleChange(name, value.trim())
+            // if (!this.hasGroup ) this.handleChange(name, value.trim())
             },
             formatList (list = [], keyword = '', paramId = 'id', paramName = 'name') {
                 let noSensiveKeyword = ''
@@ -382,7 +382,7 @@
                 }
                 if (defaultVal && !this.loading) {
                     this.showValValidTips(defaultVal)
-                    // this.handleChange(this.name, '')
+                // this.handleChange(this.name, '')
                 }
                 return ''
             },

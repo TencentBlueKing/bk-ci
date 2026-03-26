@@ -51,14 +51,12 @@ import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.StoreI18nMessageService
 import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPostInfo
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
-import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
@@ -66,11 +64,13 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PR
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreVersion
-import java.time.LocalDateTime
+import com.tencent.devops.store.util.ServiceScopeUtil
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 插件执行环境逻辑类
@@ -245,12 +245,15 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             atomCode = atomCode,
             atomName = atomEnv.atomName,
             version = atomEnv.version,
+            atomStatus = AtomStatusEnum.getAtomStatus(atomEnv.atomStatus)?.status?.toByte(),
             initProjectCode = atomEnv.projectCode ?: "",
             jobType = atomEnv.jobType,
+            jobTypeMap = atomEnv.jobTypeMap,
             buildLessRunFlag = atomEnv.buildLessRunFlag,
             inputTypeInfos = marketAtomCommonService.generateInputTypeInfos(atomEnv.props),
             sensitiveParams = sensitiveParams?.joinToString(","),
-            canPauseBeforeRun = props?.let { marketAtomCommonService.getAtomCanPauseBeforeRun(props) }
+            canPauseBeforeRun = props?.let { marketAtomCommonService.getAtomCanPauseBeforeRun(props) },
+            serviceScope = atomEnv.serviceScope
         )
         if (!testFlag) {
             // 将db中的环境信息写入缓存
@@ -353,6 +356,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         )
         logger.info("$atomCode initProjectCode is :$initProjectCode")
         val jobType = atomBaseInfoRecord[tAtom.JOB_TYPE]
+        val jobTypeMap = atomBaseInfoRecord[tAtom.JOB_TYPE_MAP]
         val classifyId = atomBaseInfoRecord[tAtom.CLASSIFY_ID]
         val classifyRecord = classifyDao.getClassify(dslContext, classifyId)
         val atomEnv = AtomEnv(
@@ -385,13 +389,15 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             target = atomEnvInfoRecord?.target,
             shaContent = atomEnvInfoRecord?.shaContent,
             preCmd = atomEnvInfoRecord?.preCmd,
-            jobType = if (jobType == null) null else JobTypeEnum.valueOf(jobType),
+            jobType = jobType,
+            jobTypeMap = jobTypeMap,
             atomPostInfo = atomPostInfo,
             classifyCode = classifyRecord?.classifyCode,
             classifyName = classifyRecord?.classifyName,
             runtimeVersion = atomEnvInfoRecord?.runtimeVersion,
             finishKillFlag = atomEnvInfoRecord?.finishKillFlag,
-            authFlag = atomBaseInfoRecord[tAtom.VISIBILITY_LEVEL] != VisibilityLevelEnum.LOGIN_PUBLIC.level
+            authFlag = atomBaseInfoRecord[tAtom.VISIBILITY_LEVEL] != VisibilityLevelEnum.LOGIN_PUBLIC.level,
+            serviceScope = ServiceScopeUtil.parseServiceScopes(atomBaseInfoRecord[tAtom.SERVICE_SCOPE]).ifEmpty { null }
         )
         return Result(atomEnv)
     }

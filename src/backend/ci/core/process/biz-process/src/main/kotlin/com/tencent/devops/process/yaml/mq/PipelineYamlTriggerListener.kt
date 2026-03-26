@@ -29,6 +29,7 @@
 package com.tencent.devops.process.yaml.mq
 
 import com.tencent.devops.common.event.listener.EventListener
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.process.yaml.PipelineYamlBuildService
 import com.tencent.devops.process.yaml.PipelineYamlRepositoryService
 import com.tencent.devops.process.yaml.PipelineYamlSyncService
@@ -49,18 +50,23 @@ class PipelineYamlTriggerListener @Autowired constructor(
     private val exceptionHandler: YamlTriggerExceptionHandler
 ) : EventListener<BasePipelineYamlEvent> {
     override fun execute(event: BasePipelineYamlEvent) {
-        when (event) {
-            is PipelineYamlEnableEvent -> {
-                enablePac(projectId = event.projectId, event = event)
-            }
+        try {
+            ChannelContext.setChannel(event.channelCode)
+            when (event) {
+                is PipelineYamlEnableEvent -> {
+                    enablePac(projectId = event.projectId, event = event)
+                }
 
-            is PipelineYamlTriggerEvent -> {
-                trigger(projectId = event.projectId, event = event)
-            }
+                is PipelineYamlTriggerEvent -> {
+                    trigger(projectId = event.projectId, event = event)
+                }
 
-            else -> {
-                logger.warn("pipeline yaml trigger listener|not support pac yaml event|$event")
+                else -> {
+                    logger.warn("pipeline yaml trigger listener|not support pac yaml event|$event")
+                }
             }
+        } finally {
+            ChannelContext.clear()
         }
     }
 

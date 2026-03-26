@@ -102,7 +102,7 @@ class ServicePipelineViewResourceImpl @Autowired constructor(
                 page = page,
                 pageSize = pageSize,
                 sortType = sortType ?: PipelineSortType.CREATE_TIME,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 viewId = getViewId(viewId, viewName, projectId, isProject),
                 checkPermission = true,
                 filterByPipelineName = filterByPipelineName,

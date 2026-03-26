@@ -1,10 +1,11 @@
 packages:
-  - "devops-*"
   - "!devops-repo"
   - bk-pipeline
+  - bk-pipeline-vue2
   - bk-permission
   - locale
   - common-lib
+  - "devops-*"
 
 catalogs:
   vue2:

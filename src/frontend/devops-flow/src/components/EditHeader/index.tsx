@@ -1,0 +1,303 @@
+import { ReleaseSlider } from '@/components/ReleaseSlider'
+import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
+import { FLOW_EDIT_TABS, FLOW_IMPORT_EDIT_TABS, ROUTE_NAMES, isValidFlowImportEditTab } from '@/constants/routes'
+import { useFlowModel } from '@/hooks/useFlowModel'
+import { useFlowModelStore } from '@/stores/flowModel'
+import { useUIStore } from '@/stores/ui'
+import { VERSION_STATUS_ENUM } from '@/utils/flowConst'
+import { Button, Message, Tag } from 'bkui-vue'
+import { computed, defineComponent, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
+import { useFlowInfo } from '../../hooks/useFlowInfo'
+import { CommonHeader } from '../CommonHeader'
+import FlowSelector from '../FlowHeader/FlowSelector'
+import styles from './EditHeader.module.css'
+
+export const EditHeader = defineComponent({
+  name: 'EditHeader',
+  props: {
+    loading: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  setup(props) {
+    const { t } = useI18n()
+    const route = useRoute()
+    const router = useRouter()
+    const flowId = computed(() => route.params.flowId as string)
+    const projectId = computed(() => route.params.projectId as string)
+
+    const flowModel = useFlowModel()
+    const flowModelStore = useFlowModelStore()
+    const inImportEditMode = computed(() => flowModelStore.isImportMode)
+    const { flowInfo, refreshFlowInfo } = useFlowInfo()
+    const uiStore = useUIStore()
+    const isSaving = ref(false)
+    const isReleaseSliderShow = ref(false)
+
+    const editTabs = computed(() =>
+      inImportEditMode.value ? FLOW_IMPORT_EDIT_TABS : FLOW_EDIT_TABS,
+    )
+
+    const workflowName = computed(() => {
+      return flowModel.flowModel.value?.name || '--'
+    })
+
+    const currentVersion = computed(() => {
+      return Number(route.params.version) || 1
+    })
+
+    const baseVersionName = computed(() => {
+      return `V${currentVersion.value}`
+    })
+
+    const currentVersionName = computed(() => {
+      if (flowInfo.value?.canDebug) {
+        return t('flow.edit.draftVersion', [
+          flowInfo.value?.baseVersionName || baseVersionName.value,
+        ])
+      }
+      return flowInfo.value?.versionName || baseVersionName.value
+    })
+
+    const handleCancel = () => {
+      if (inImportEditMode.value) {
+        flowModelStore.clearImportData()
+        flowModelStore.reset()
+        router.push({
+          name: ROUTE_NAMES.FLOW_LIST,
+          params: { groupId: FLOW_GROUP_TYPES.ALL_FLOWS },
+        })
+        return
+      }
+      if (flowInfo.value?.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING) {
+        router.push({
+          name: ROUTE_NAMES.FLOW_LIST,
+          params: { groupId: FLOW_GROUP_TYPES.ALL_FLOWS },
+        })
+        return
+      }
+      router.push({
+        name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
+        params: { ...route.params, version: flowInfo.value?.releaseVersion },
+      })
+    }
+
+    const navigateToErrorTab = () => {
+      if (flowModel.hasSettingsError.value) {
+        router.push({
+          name: editTabs.value.BASIC_SETTINGS,
+          params: inImportEditMode.value ? {} : route.params,
+        })
+        return
+      }
+      if (flowModel.hasOrchestrationError.value) {
+        router.push({
+          name: editTabs.value.WORKFLOW_ORCHESTRATION,
+          params: inImportEditMode.value ? {} : route.params,
+        })
+      }
+    }
+
+    const showValidationError = (): boolean => {
+      if (flowModel.hasSettingsError.value) {
+        Message({ theme: 'warning', message: t('flow.content.settingsErrorTip') })
+        navigateToErrorTab()
+        return true
+      }
+      if (flowModel.hasOrchestrationError.value) {
+        Message({ theme: 'warning', message: t('flow.content.orchestrationErrorTip') })
+        navigateToErrorTab()
+        return true
+      }
+      return false
+    }
+
+    const validationTooltipContent = computed(() => {
+      if (flowModel.hasSettingsError.value) return t('flow.content.settingsErrorTip')
+      if (flowModel.hasOrchestrationError.value) return t('flow.content.orchestrationErrorTip')
+      return ''
+    })
+
+    const handleSave = async () => {
+      if (showValidationError()) return
+
+      if (!projectId.value) {
+        Message({
+          theme: 'error',
+          message: t('flow.content.projectIdRequired'),
+        })
+        return
+      }
+
+      if (!flowModel.flowModel.value) {
+        Message({
+          theme: 'error',
+          message: t('flow.content.noFlowModel'),
+        })
+        return
+      }
+
+      isSaving.value = true
+
+      try {
+        const response = await flowModel.saveFlow({
+          projectId: projectId.value,
+          pipelineId: inImportEditMode.value ? undefined : flowId.value,
+          storageType: 'MODEL',
+        })
+
+        Message({
+          theme: 'success',
+          message: t('flow.content.saveSuccess'),
+        })
+
+        if (inImportEditMode.value) {
+          flowModelStore.clearImportData()
+          flowModelStore.isImportMode = false
+          const newFlowId = response?.pipelineId || (response as any)?.id || (response as any)?.flowId
+          if (newFlowId) {
+            router.replace({
+              name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
+              params: {
+                projectId: projectId.value,
+                flowId: String(newFlowId),
+                ...(response.version ? { version: String(response.version) } : {}),
+              },
+            })
+          } else {
+            router.replace({
+              name: ROUTE_NAMES.FLOW_LIST,
+              params: { projectId: projectId.value, groupId: FLOW_GROUP_TYPES.ALL_FLOWS },
+            })
+          }
+          return
+        }
+
+        if (response?.version) {
+          router.replace({
+            name: route.name as string,
+            params: {
+              ...route.params,
+              version: String(response.version),
+            },
+            query: route.query,
+          })
+        }
+      } catch (error: any) {
+        console.error('Failed to save flow:', error)
+        Message({
+          theme: 'error',
+          message: error?.message || t('flow.content.saveFailed'),
+        })
+      } finally {
+        isSaving.value = false
+      }
+    }
+
+    const handleDebug = () => {
+      // TODO: Implement debug logic
+      console.log('Debug flow')
+    }
+
+    const handlePublish = () => {
+      if (showValidationError()) return
+      if (flowModel.hasUnsavedChanges.value) {
+        Message({
+          theme: 'warning',
+          message: t('flow.release.saveBeforeRelease'),
+        })
+        return
+      }
+      isReleaseSliderShow.value = true
+      uiStore.setVariablePanelOpen(false)
+    }
+
+    const handleReleased = () => {
+      flowModel.loadFlow(projectId.value, flowId.value, route.params.version as string, true)
+      refreshFlowInfo()
+    }
+
+    const renderVersionTag = () => (
+      <span class={styles.versionTag}>
+        <Tag>
+          <span class={styles.versionTagText} title={currentVersionName.value}>
+            {currentVersionName.value}
+          </span>
+        </Tag>
+      </span>
+    )
+
+    return () => (
+      <>
+        <CommonHeader
+          loading={props.loading}
+          workflowName={workflowName.value}
+          onWorkflowNameClick={handleCancel}
+        >
+          {{
+            'workflow-selector': () =>
+              inImportEditMode.value ? (
+                <span class={styles.importFlowName}>{workflowName.value}</span>
+              ) : (
+                <FlowSelector
+                  projectId={projectId.value}
+                  currentFlowId={flowId.value}
+                  currentFlowName={workflowName.value}
+                  onNameClick={handleCancel}
+                />
+              ),
+            'version-selector': () =>
+              !inImportEditMode.value ? renderVersionTag() : null,
+            actions: () => (
+              <div class={styles.headerRight}>
+                <Button onClick={handleCancel} disabled={isSaving.value}>
+                  {t('flow.common.cancel')}
+                </Button>
+                <Button
+                  outline
+                  theme="primary"
+                  onClick={handleSave}
+                  loading={isSaving.value}
+                  disabled={isSaving.value || !flowModel.hasUnsavedChanges.value}
+                  v-bk-tooltips={{
+                    content: validationTooltipContent.value,
+                    disabled: !flowModel.hasValidationError.value,
+                  }}
+                >
+                  {t('flow.content.save')}
+                </Button>
+                {!inImportEditMode.value && (
+                  <Button
+                    theme="primary"
+                    onClick={handlePublish}
+                    disabled={isSaving.value}
+                    v-bk-tooltips={{
+                      content: validationTooltipContent.value,
+                      disabled: !flowModel.hasValidationError.value,
+                    }}
+                  >
+                    {t('flow.content.publish')}
+                  </Button>
+                )}
+              </div>
+            ),
+          }}
+        </CommonHeader>
+
+        {!inImportEditMode.value && (
+          <ReleaseSlider
+            v-model:isShow={isReleaseSliderShow.value}
+            projectId={projectId.value}
+            flowId={flowId.value}
+            version={currentVersion.value}
+            baseVersionName={baseVersionName.value}
+            onReleased={handleReleased}
+          />
+        )}
+      </>
+    )
+  },
+})

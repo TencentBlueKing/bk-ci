@@ -56,6 +56,7 @@ class JobQuotaManagerService @Autowired constructor(
             result.add(JobQuotaProject(
                 projectId = it!!.projectId,
                 vmType = JobQuotaVmType.parse(it.vmType)!!,
+                channelCode = it.channelCode,
                 runningJobMax = it.runningJobsMax,
                 runningTimeJobMax = it.runningTimeJobMax,
                 runningTimeProjectMax = it.runningTimeProjectMax,
@@ -98,7 +99,7 @@ class JobQuotaManagerService @Autowired constructor(
     fun getProjectQuota(
         projectId: String,
         jobQuotaVmType: JobQuotaVmType,
-        channelCode: String = ChannelCode.BS.name
+        channelCode: String = ChannelCode.getRequestChannelCode().name
     ): JobQuotaProject {
         val now = System.currentTimeMillis()
         val record = jobQuotaProjectDao.get(dslContext, projectId, jobQuotaVmType, channelCode)
@@ -107,6 +108,7 @@ class JobQuotaManagerService @Autowired constructor(
             return JobQuotaProject(
                 projectId = projectId,
                 vmType = jobQuotaVmType,
+                channelCode = channelCode,
                 runningJobMax = systemDefault.runningJobMaxProject,
                 runningTimeJobMax = systemDefault.runningTimeJobMax,
                 runningTimeProjectMax = systemDefault.runningTimeJobMaxProject,
@@ -119,6 +121,7 @@ class JobQuotaManagerService @Autowired constructor(
         return JobQuotaProject(
             projectId = projectId,
             vmType = jobQuotaVmType,
+            channelCode = record.channelCode,
             runningJobMax = record.runningJobsMax,
             runningTimeJobMax = record.runningTimeJobMax,
             runningTimeProjectMax = record.runningTimeProjectMax,
@@ -135,7 +138,7 @@ class JobQuotaManagerService @Autowired constructor(
     fun getProjectQuotaStatus(
         projectId: String,
         jobQuotaVmType: JobQuotaVmType,
-        channelCode: String = ChannelCode.BS.name
+        channelCode: String = ChannelCode.getRequestChannelCode().name
     ): JobQuotaStatus {
         return JobProjectQuotaCache.get(projectId, jobQuotaVmType, channelCode) {
             // 缓存未命中时，从数据库加载
@@ -184,7 +187,7 @@ class JobQuotaManagerService @Autowired constructor(
     fun deleteProjectQuota(
         projectId: String,
         jobQuotaVmType: JobQuotaVmType,
-        channelCode: String = ChannelCode.BS.name
+        channelCode: String = ChannelCode.getRequestChannelCode().name
     ): Boolean {
         jobQuotaProjectDao.delete(dslContext, projectId, jobQuotaVmType, channelCode)
         // 清除缓存
@@ -273,7 +276,7 @@ class JobQuotaManagerService @Autowired constructor(
         projectId: String,
         vmType: JobQuotaVmType,
         createTime: String,
-        channelCode: String = ChannelCode.BS.name
+        channelCode: String = ChannelCode.getRequestChannelCode().name
     ) {
         runningJobsDao.clearRunningJobs(
             dslContext = dslContext,

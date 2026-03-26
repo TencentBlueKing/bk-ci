@@ -44,7 +44,7 @@ interface ServiceWebhookBuildResource {
         params: WebhookTriggerParams,
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         @Parameter(description = "启动类型", required = false)
         @QueryParam("startType")
         startType: StartType = StartType.WEB_HOOK

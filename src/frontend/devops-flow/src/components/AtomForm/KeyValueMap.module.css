@@ -1,0 +1,61 @@
+.keyValueMap {
+  width: 100%;
+}
+
+.keyValueList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.keyValueItem {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.itemInput {
+  flex: 1;
+}
+
+.key {
+  margin-right: 10px;
+}
+
+.separator {
+  margin: 0 5px 0 0;
+  line-height: 32px;
+  color: var(--text-secondary);
+}
+
+.value {
+  margin-right: 10px;
+}
+
+.itemAction {
+  cursor: pointer;
+  line-height: 32px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+}
+
+.itemAction:hover {
+  color: var(--text-primary);
+}
+
+.iconBtn {
+  font-size: 16px;
+}
+
+.addBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.keyError :global(.bk-input) {
+  border-color: var(--color-danger) !important;
+}
