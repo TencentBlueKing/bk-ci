@@ -30,7 +30,7 @@ class MockArtPipelineServiceImpl(
             projectId = projectId,
             page = 0,
             pageSize = 5000,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             checkPermission = false
         ).data?.records
 

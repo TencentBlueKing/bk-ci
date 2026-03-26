@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.environment.pojo.EnvCreateInfo
+import com.tencent.devops.environment.pojo.EnvData
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
@@ -288,4 +289,41 @@ interface ServiceEnvironmentResource {
         @BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE, required = true)
         enableNode: Boolean
     ): Result<Boolean>
+
+    @Operation(summary = "根据工作空间ID,获取所有拥有这个节点的环境(创作流)")
+    @GET
+    @Path("/{projectId}/fetchAllNodeEnvList")
+    fun fetchAllNodeEnvList(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @QueryParam("noCheckPerm")
+        noCheckPerm: Boolean
+    ): Result<List<EnvData>>
+
+    @Operation(summary = "通过名字获取环境的节点列表")
+    @GET
+    @Path("/{projectId}/listNodesNew")
+    fun listNodesNewByName(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "第几页", required = false)
+        @QueryParam("page")
+        page: Int? = 1,
+        @Parameter(description = "每页多少条", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int? = 20,
+        @Parameter(description = "环境名称", required = true)
+        @QueryParam("envName")
+        envName: String
+    ): Result<Page<NodeBaseInfo>>
 }

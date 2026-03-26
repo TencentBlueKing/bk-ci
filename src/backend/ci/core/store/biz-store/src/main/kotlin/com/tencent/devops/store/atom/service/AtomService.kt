@@ -32,14 +32,15 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
+import com.tencent.devops.store.atom.dao.AtomQueryParam
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
-import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.common.UnInstallReq
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 
 /**
@@ -51,41 +52,21 @@ import com.tencent.devops.store.pojo.common.version.VersionInfo
 interface AtomService {
 
     /**
-     * 获取插件列表
+     * 获取插件列表（含权限校验）
      */
     fun getPipelineAtoms(
         userId: String,
-        serviceScope: String?,
-        jobType: String?,
-        os: String?,
-        projectCode: String,
-        category: String? = AtomCategoryEnum.TASK.name,
-        classifyId: String?,
-        recommendFlag: Boolean?,
-        keyword: String?,
-        queryProjectAtomFlag: Boolean = true,
-        fitOsFlag: Boolean? = true,
-        queryFitAgentBuildLessAtomFlag: Boolean? = true,
+        queryParam: AtomQueryParam,
         page: Int = 1,
         pageSize: Int = 10
     ): Result<AtomResp<AtomRespItem>?>
 
     /**
-     * 获取插件列表
+     * 获取插件列表（内部服务调用，无权限校验）
      */
     fun serviceGetPipelineAtoms(
         userId: String,
-        serviceScope: String?,
-        jobType: String?,
-        os: String?,
-        projectCode: String,
-        category: String? = AtomCategoryEnum.TASK.name,
-        classifyId: String?,
-        recommendFlag: Boolean?,
-        keyword: String?,
-        queryProjectAtomFlag: Boolean = true,
-        fitOsFlag: Boolean? = true,
-        queryFitAgentBuildLessAtomFlag: Boolean? = true,
+        queryParam: AtomQueryParam,
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?>
@@ -108,31 +89,30 @@ interface AtomService {
         atomCode: String,
         version: String,
         atomStatus: Byte? = null,
-        queryOfflineFlag: Boolean = false
+        queryOfflineFlag: Boolean = false,
+        serviceScope: ServiceScopeEnum? = null
     ): Result<PipelineAtom?>
 
     /**
      * 根据项目代码、插件代码和版本号获取插件信息
      */
-    @Suppress("UNCHECKED_CAST")
     fun getPipelineAtomDetail(
         projectCode: String? = null,
         atomCode: String,
         version: String,
         atomStatus: Byte? = null,
-        queryOfflineFlag: Boolean = false
+        queryOfflineFlag: Boolean = false,
+        serviceScope: ServiceScopeEnum? = null
     ): Result<PipelineAtom?>
 
     /**
      * 根据项目代码、插件代码和版本号获取插件信息
      */
-    @Suppress("UNCHECKED_CAST")
     fun getPipelineAtomVersions(projectCode: String? = null, atomCode: String): Result<List<VersionInfo>>
 
     /**
      * 根据插件代码和版本号集合批量获取插件信息
      */
-    @Suppress("UNCHECKED_CAST")
     fun getAtomInfos(codeVersions: Set<AtomCodeVersionReqItem>): Result<List<AtomRunInfo>>
 
     /**
@@ -173,6 +153,7 @@ interface AtomService {
         projectCode: String,
         classifyCode: String?,
         name: String?,
+        serviceScope: ServiceScopeEnum?,
         page: Int,
         pageSize: Int
     ): Page<InstalledAtom>

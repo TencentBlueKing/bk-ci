@@ -786,8 +786,7 @@ open class BkRepoDownloadService(
                     val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
                         targetProjectId,
                         targetPipelineId,
-                        crossBuildNo ?: throw BadRequestException("Invalid Parameter buildNo"),
-                        ChannelCode.BS
+                        crossBuildNo ?: throw BadRequestException("Invalid Parameter buildNo")
                     ).data ?: throw BadRequestException(
                         I18nUtil.getCodeLanMessage(
                             messageCode = BUILD_NOT_EXIST,

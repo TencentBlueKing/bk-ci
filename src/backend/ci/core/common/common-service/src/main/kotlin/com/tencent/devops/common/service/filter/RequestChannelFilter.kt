@@ -29,25 +29,20 @@ package com.tencent.devops.common.service.filter
 
 import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
 import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
-import org.slf4j.LoggerFactory
-import org.springframework.core.Ordered
-import org.springframework.core.annotation.Order
-import org.springframework.stereotype.Component
 import jakarta.servlet.Filter
 import jakarta.servlet.FilterChain
 import jakarta.servlet.FilterConfig
 import jakarta.servlet.ServletRequest
 import jakarta.servlet.ServletResponse
 import jakarta.servlet.http.HttpServletRequest
+import org.springframework.core.Ordered
+import org.springframework.core.annotation.Order
+import org.springframework.stereotype.Component
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 class RequestChannelFilter : Filter {
     override fun destroy() = Unit
-
-    companion object {
-        val logger = LoggerFactory.getLogger(RequestChannelFilter::class.java)
-    }
 
     override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
         if (request == null || chain == null) {

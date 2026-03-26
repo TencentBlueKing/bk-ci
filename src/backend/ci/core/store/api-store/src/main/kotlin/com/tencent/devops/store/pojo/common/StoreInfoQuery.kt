@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.common
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
@@ -72,7 +73,9 @@ data class StoreInfoQuery(
     @get:Schema(title = "页码", required = true)
     val page: Int,
     @get:Schema(title = "每页数量", required = true)
-    val pageSize: Int
+    val pageSize: Int,
+    @get:Schema(title = "归属应用标识", required = true)
+    val ownerStoreCode: String? = null
 ) {
     fun validate() {
         // 检查 projectCode 是否为空
@@ -81,6 +84,7 @@ data class StoreInfoQuery(
         }
     }
 
+    @JsonIgnore
     fun getSpecQueryFlag(): Boolean {
         return queryProjectComponentFlag || installed != null || updateFlag != null || queryTestFlag != null
     }

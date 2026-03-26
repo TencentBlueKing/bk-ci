@@ -67,7 +67,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
@@ -370,7 +370,7 @@ class PreBuildService @Autowired constructor(
                 ThirdPartyAgentIDDispatchType(
                     displayName = agentInfo.agentId,
                     workspace = startUpReq.workspace,
-                    agentType = AgentType.ID,
+                    agentType = AgentDispatchType.ID,
                     dockerInfo = null,
                     reusedInfo = null
                 )

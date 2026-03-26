@@ -91,6 +91,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ST
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_ALIAS_NAME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_REPO_NAME
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_TRIGGER_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BLOCK
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
@@ -272,6 +273,7 @@ object PipelineVarUtil {
         "ci.repo_alias_name" to BK_REPO_WEBHOOK_REPO_ALIAS_NAME,
         "ci.build_msg" to PIPELINE_BUILD_MSG,
         "ci.event" to PIPELINE_WEBHOOK_EVENT_TYPE,
+        "ci.event_type" to PIPELINE_TRIGGER_EVENT_TYPE,
         "ci.milestone_name" to BK_REPO_GIT_WEBHOOK_MR_MILESTONE,
         "ci.milestone_id" to BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID,
         "ci.note_type" to BK_REPO_GIT_WEBHOOK_NOTE_NOTEABLE_TYPE,

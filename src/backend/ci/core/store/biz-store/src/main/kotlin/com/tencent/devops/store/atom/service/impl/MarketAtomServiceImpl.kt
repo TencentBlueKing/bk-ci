@@ -83,10 +83,12 @@ import com.tencent.devops.store.atom.service.AtomLabelService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.atom.service.MarketAtomEnvService
 import com.tencent.devops.store.atom.service.MarketAtomService
+import com.tencent.devops.store.atom.util.AtomServiceScopeUtil
 import com.tencent.devops.store.common.dao.StoreBuildInfoDao
 import com.tencent.devops.store.common.dao.StoreErrorCodeInfoDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
+import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.common.service.StoreCommentService
 import com.tencent.devops.store.common.service.StoreCommonService
@@ -136,6 +138,7 @@ import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.MarketMainItemLabel
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatistic
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
@@ -161,6 +164,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     @Autowired
     lateinit var marketAtomDao: MarketAtomDao
+
+    @Autowired
+    lateinit var classifyDao: ClassifyDao
 
     @Autowired
     lateinit var storeProjectRelDao: StoreProjectRelDao
@@ -203,6 +209,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     @Autowired
     lateinit var atomLabelService: AtomLabelService
+
+    @Autowired
+    lateinit var atomServiceScopeUtil: AtomServiceScopeUtil
 
     @Autowired
     lateinit var storeProjectService: StoreProjectService
@@ -270,7 +279,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         desc: Boolean?,
         page: Int?,
         pageSize: Int?,
-        urlProtocolTrim: Boolean = false
+        urlProtocolTrim: Boolean = false,
+        serviceScope: ServiceScopeEnum?
     ): Future<MarketAtomResp> {
         val referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER)
         return executor.submit(Callable<MarketAtomResp> {
@@ -289,7 +299,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 rdType = rdType,
                 yamlFlag = yamlFlag,
                 recommendFlag = recommendFlag,
-                qualityFlag = qualityFlag
+                qualityFlag = qualityFlag,
+                serviceScope = serviceScope
             )
             val atoms = marketAtomDao.list(
                 dslContext = dslContext,
@@ -304,7 +315,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 sortType = sortType,
                 desc = desc,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                serviceScope = serviceScope
             )
                 ?: return@Callable MarketAtomResp(0, page, pageSize, results)
             val tAtom = TAtom.T_ATOM
@@ -328,8 +340,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             // 获取用户
             val memberData = atomMemberService.batchListMember(atomCodeList, storeType).data
 
-            // 获取分类
-            val classifyList = classifyService.getAllClassify(storeType.type.toByte()).data
+            // 获取分类（如果指定了 serviceScope，传入以获取对应服务范围的分类）
+            val classifyList = classifyService.getAllClassify(storeType.type.toByte(), serviceScope).data
             val classifyMap = mutableMapOf<String, String>()
             classifyList?.forEach {
                 classifyMap[it.id] = it.classifyCode
@@ -371,7 +383,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                             code = atomCode,
                             version = it[tAtom.VERSION] as String,
                             status = AtomStatusEnum.getAtomStatus((it[tAtom.ATOM_STATUS] as Byte).toInt()),
-                            type = it[tAtom.JOB_TYPE] as String,
+                            type = StoreTypeEnum.ATOM.name,
                             rdType = AtomTypeEnum.getAtomType((it[tAtom.ATOM_TYPE] as Byte).toInt()),
                             classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
                             category = AtomCategoryEnum.getAtomCategory((it[tAtom.CATEGROY] as Byte).toInt()),
@@ -417,7 +429,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         userId: String,
         page: Int?,
         pageSize: Int?,
-        urlProtocolTrim: Boolean
+        urlProtocolTrim: Boolean,
+        serviceScope: ServiceScopeEnum?
     ): Result<List<MarketMainItem>> {
         val result = mutableListOf<MarketMainItem>()
         // 获取用户组织架构
@@ -443,7 +456,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 desc = true,
                 page = page,
                 pageSize = pageSize,
-                urlProtocolTrim = urlProtocolTrim
+                urlProtocolTrim = urlProtocolTrim,
+                serviceScope = serviceScope
             )
         )
         labelInfoList.add(
@@ -468,12 +482,13 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 desc = true,
                 page = page,
                 pageSize = pageSize,
-                urlProtocolTrim = urlProtocolTrim
+                urlProtocolTrim = urlProtocolTrim,
+                serviceScope = serviceScope
             )
         )
 
-        val classifyList = marketAtomClassifyDao.getAllAtomClassify(dslContext)
-        classifyList?.forEach {
+        val classifyList = marketAtomClassifyDao.getAllAtomClassify(dslContext, serviceScope)
+        classifyList.forEach {
             val classifyCode = it[KEY_CLASSIFY_CODE] as String
             if (classifyCode != "trigger") {
                 val classifyName = it[KEY_CLASSIFY_NAME] as String
@@ -499,7 +514,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         desc = true,
                         page = page,
                         pageSize = pageSize,
-                        urlProtocolTrim = urlProtocolTrim
+                        urlProtocolTrim = urlProtocolTrim,
+                        serviceScope = serviceScope
                     )
                 )
             }
@@ -534,7 +550,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         sortType: MarketAtomSortTypeEnum?,
         page: Int?,
         pageSize: Int?,
-        urlProtocolTrim: Boolean
+        urlProtocolTrim: Boolean,
+        serviceScope: ServiceScopeEnum?
     ): MarketAtomResp {
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
@@ -554,7 +571,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             desc = true,
             page = page,
             pageSize = pageSize,
-            urlProtocolTrim = urlProtocolTrim
+            urlProtocolTrim = urlProtocolTrim,
+            serviceScope = serviceScope
         ).get()
     }
 
@@ -660,8 +678,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     /**
      * 根据插件版本ID获取版本基本信息、发布信息
      */
-    override fun getAtomById(atomId: String, userId: String): Result<AtomVersion?> {
-        return getAtomVersion(atomId, userId)
+    override fun getAtomById(atomId: String, userId: String, serviceScope: ServiceScopeEnum?): Result<AtomVersion?> {
+        return getAtomVersion(atomId, userId, serviceScope)
     }
 
     /**
@@ -769,8 +787,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     @Suppress("UNCHECKED_CAST")
     @BkTimed(extraTags = ["web_operation", "getAtomVersion"], value = "store_web_operation")
-    private fun getAtomVersion(atomId: String, userId: String): Result<AtomVersion?> {
-        val record = marketAtomDao.getAtomById(dslContext, atomId)
+    private fun getAtomVersion(
+        atomId: String,
+        userId: String,
+        serviceScope: ServiceScopeEnum? = null
+    ): Result<AtomVersion?> {
+        val record = marketAtomDao.getAtomById(dslContext, atomId, serviceScope)
         return if (null == record) {
             Result(data = null)
         } else {
@@ -797,9 +819,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 logger.warn("atom($atomCode) getAtomVersion|get repository info failed", ignored)
             }
             val flag = storeUserService.isCanInstallStoreComponent(defaultFlag, userId, atomCode, StoreTypeEnum.ATOM)
-            val labelList = atomLabelService.getLabelsByAtomId(atomId) // 查找标签列表
             val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, atomCode, StoreTypeEnum.ATOM)
             val feature = marketAtomFeatureDao.getAtomFeature(dslContext, atomCode)
+            // 单个字段（classifyCode、classifyName、labelList、jobType）根据传入的 serviceScope 返回对应的值
+            // 如果没有传入 serviceScope，则使用 PIPELINE 服务范围的值
             val classifyCode = record[tClassify.CLASSIFY_CODE]
             val classifyName = record[tClassify.CLASSIFY_NAME]
             val classifyLanName = if (classifyCode != null) {
@@ -808,6 +831,19 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     defaultMessage = classifyName
                 )
             } else classifyName
+            val jobType = record[tAtom.JOB_TYPE]
+            val labelList = atomLabelService.getLabelsByAtomId(atomId, serviceScope) ?: emptyList()
+            // serviceScopeDetails 返回所有 scope 的详情（包含分类名称和标签对象）
+            val serviceScopeDetails = atomServiceScopeUtil.buildServiceScopeDetails(
+                atomId = atomId,
+                serviceScopeStr = record[tAtom.SERVICE_SCOPE],
+                classifyIdMapJson = record[tAtom.CLASSIFY_ID_MAP],
+                pipelineClassifyIdFallback = record[tAtom.CLASSIFY_ID]?.toString(),
+                jobTypeValue = record[tAtom.JOB_TYPE],
+                jobTypeMapValue = record[tAtom.JOB_TYPE_MAP],
+                osValue = record[tAtom.OS],
+                osMapValue = record[tAtom.OS_MAP]
+            )
             val releaseType = if (record[tAtomVersionLog.RELEASE_TYPE] != null) {
                 ReleaseTypeEnum.getReleaseTypeObj((record[tAtomVersionLog.RELEASE_TYPE] as Byte).toInt())
             } else null
@@ -831,7 +867,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     docsLink = record[tAtom.DOCS_LINK],
                     htmlTemplateVersion = htmlTemplateVersion,
                     atomType = AtomTypeEnum.getAtomType((record[tAtom.ATOM_TYPE] as Byte).toInt()),
-                    jobType = record[tAtom.JOB_TYPE],
+                    jobType = jobType,
                     os = if (!osStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(
                         osStr,
                         List::class.java
@@ -861,7 +897,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         storeType = StoreTypeEnum.ATOM
                     ),
                     initProjectCode = projectCode,
-                    labelList = labelList ?: emptyList(),
+                    labelList = labelList,
                     userCommentInfo = userCommentInfo,
                     visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(record[tAtom.VISIBILITY_LEVEL] as Int),
                     privateReason = record[tAtom.PRIVATE_REASON],
@@ -872,7 +908,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     dailyStatisticList = getRecentDailyStatisticList(atomCode),
                     editFlag = marketAtomCommonService.checkEditCondition(atomCode),
                     honorInfos = storeHonorService.getStoreHonor(userId, StoreTypeEnum.ATOM, atomCode),
-                    indexInfos = storeIndexManageService.getStoreIndexInfosByStoreCode(StoreTypeEnum.ATOM, atomCode)
+                    indexInfos = storeIndexManageService.getStoreIndexInfosByStoreCode(StoreTypeEnum.ATOM, atomCode),
+                    serviceScopeDetails = serviceScopeDetails
                 )
             )
         }
@@ -905,19 +942,23 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     /**
      * 根据插件标识获取插件最新、正式版本息
      */
-    override fun getAtomByCode(userId: String, atomCode: String): Result<AtomVersion?> {
+    override fun getAtomByCode(userId: String, atomCode: String, serviceScope: ServiceScopeEnum?): Result<AtomVersion?> {
         val record = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
         return (if (null == record) {
             Result(data = null)
         } else {
-            getAtomVersion(record.id, userId)
+            getAtomVersion(record.id, userId, serviceScope)
         })
     }
 
     /**
      * 根据标识获取最新版本信息（若最新版本为测试中，取最新版本，否则取最新正式版本）
      */
-    override fun getNewestAtomByCode(userId: String, atomCode: String): Result<AtomVersion?> {
+    override fun getNewestAtomByCode(
+        userId: String,
+        atomCode: String,
+        serviceScope: ServiceScopeEnum?
+    ): Result<AtomVersion?> {
         val newest = marketAtomDao.getNewestAtomByCode(dslContext, atomCode)
         val latest = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
         return if (null == newest || null == latest) {
@@ -934,7 +975,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             } else {
                 latest
             }
-            getAtomVersion(record.id, userId)
+            getAtomVersion(record.id, userId, serviceScope)
         }
     }
 

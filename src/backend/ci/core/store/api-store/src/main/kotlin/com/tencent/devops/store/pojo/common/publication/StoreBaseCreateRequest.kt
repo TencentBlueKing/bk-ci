@@ -48,11 +48,18 @@ data class StoreBaseCreateRequest(
     @get:Schema(title = "版本号", required = true)
     var version: String = INIT_VERSION,
     @get:Schema(title = "基础扩展信息", required = false)
-    val extBaseInfo: Map<String, Any>? = null,
+    val extBaseInfo: MutableMap<String, Any>? = null,
     @get:Schema(title = "特性信息", required = false)
     @Valid
     val baseFeatureInfo: StoreBaseFeatureRequest? = null,
     @get:Schema(title = "环境信息列表", required = false)
     @Valid
-    val baseEnvInfos: List<StoreBaseEnvRequest>? = null
+    val baseEnvInfos: List<StoreBaseEnvRequest>? = null,
+    @get:Schema(title = "归属应用标识", required = false)
+    val ownerStoreCode: String? = null,
+    @get:Schema(title = "logoUrl", required = false)
+    val logoUrl: String? = null,
+    @get:Schema(title = "简介", required = false)
+    @field:BkField(maxLength = 256, required = false)
+    val summary: String? = null
 )

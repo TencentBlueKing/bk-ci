@@ -61,7 +61,8 @@ class TxPipelineBuildCommitService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         matcher: ScmWebhookMatcher,
-        repo: Repository
+        repo: Repository,
+        channelCode: ChannelCode
     ) {
         try {
             val webhookCommitList = eventCacheService.getWebhookCommitList(
@@ -93,7 +94,7 @@ class TxPipelineBuildCommitService @Autowired constructor(
                         mrId = mrId ?: "",
                         url = repo.url,
                         eventType = eventType,
-                        channel = ChannelCode.BS.name,
+                        channel = channelCode.name,
                         action = action
                     )
                 }

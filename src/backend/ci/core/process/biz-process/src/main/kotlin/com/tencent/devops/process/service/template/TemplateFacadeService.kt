@@ -69,6 +69,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.utils.ModelVarRefValidator
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -77,6 +78,7 @@ import com.tencent.devops.model.process.tables.records.TTemplateInstanceItemReco
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_ELEMENT_CHECK_FAILED
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_MODEL_VAR_REF_INVALID
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
@@ -1743,7 +1745,7 @@ class TemplateFacadeService @Autowired constructor(
                     userId = userId,
                     projectId = projectId,
                     model = instanceModel,
-                    channelCode = ChannelCode.BS,
+                    channelCode = ChannelCode.getRequestChannelCode(),
                     checkPermission = true,
                     fixPipelineId = null,
                     instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
@@ -2015,14 +2017,14 @@ class TemplateFacadeService @Autowired constructor(
                     )
                 }
             }
-            val result = pipelineInfoFacadeService.editPipeline(
+            pipelineInfoFacadeService.editPipeline(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = templateInstanceUpdate.pipelineId,
                 model = instanceModel,
                 // TODO #9145 修改流水线实例时的yaml覆盖逻辑
                 yaml = null,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 checkPermission = true,
                 checkTemplate = false
             )
@@ -2489,6 +2491,13 @@ class TemplateFacadeService @Autowired constructor(
         if (template.name.isBlank()) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.TEMPLATE_NAME_CAN_NOT_NULL
+            )
+        }
+        val invalidRefs = ModelVarRefValidator.getInvalidRefs(template, projectId ?: "")
+        if (invalidRefs.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_PIPELINE_MODEL_VAR_REF_INVALID,
+                params = arrayOf(ModelVarRefValidator.formatInvalidRefsMessage(invalidRefs))
             )
         }
         // 模版先都统一使用项目配置

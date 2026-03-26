@@ -30,7 +30,6 @@ package com.tencent.devops.worker.common.api.process
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
@@ -144,11 +143,9 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
         projectId: String,
         pipelineId: String,
         buildNum: String,
-        channelCode: ChannelCode?,
         buildId: String
     ): Result<BuildHistory?> {
         val sb = StringBuilder("/ms/process/api/build/builds/$projectId/$pipelineId/$buildNum/history?buildId=$buildId")
-        if (channelCode != null) sb.append("&channelCode=${channelCode.name}")
         val path = sb.toString()
         val request = buildGet(path)
         val errorMessage = MessageUtil.getMessageByLocale(
@@ -168,13 +165,9 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
     override fun getBuildDetail(
         projectId: String,
         pipelineId: String,
-        buildId: String,
-        channelCode: ChannelCode
+        buildId: String
     ): Result<ModelDetail?> {
-        val sb = StringBuilder(
-            "/ms/process/api/build/builds/$projectId/$pipelineId/$buildId/" +
-                "detail?channelCode=${channelCode.name}"
-        )
+        val sb = StringBuilder("/ms/process/api/build/builds/$projectId/$pipelineId/$buildId/detail")
         val path = sb.toString()
         val request = buildGet(path)
         val errorMessage = MessageUtil.getMessageByLocale(

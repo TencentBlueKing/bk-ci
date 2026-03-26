@@ -61,8 +61,10 @@ import com.tencent.bkrepo.repository.pojo.share.ShareRecordCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordInfo
 import com.tencent.bkrepo.repository.pojo.token.TemporaryTokenCreateRequest
 import com.tencent.bkrepo.repository.pojo.token.TokenType
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_CHANNEL
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -486,12 +488,9 @@ class BkRepoClient constructor(
             destFullPath = toPath,
             overwrite = true
         )
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
-            .header(BK_REPO_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, fromProject)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .headers(getCommonHeaders(userId, fromProject).toHeaders())
             .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE)).build()
         doRequest(request).resolveResponse<Response<Void>>()
     }
@@ -1327,6 +1326,7 @@ class BkRepoClient constructor(
         devopsToken?.let { headers[DEVOPS_TOKEN] = it }
         val traceHeader = getTraceHeader()
         traceHeader?.let { headers[BK_REPO_TRACE] = it }
+        ChannelContext.getChannel()?.takeIf { it.isNotBlank() }?.let { headers[AUTH_HEADER_DEVOPS_CHANNEL] = it }
         return headers
     }
 
