@@ -91,7 +91,10 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
     private val archivePipelineStoreDays: Long = 735 // 归档流水线保存天数
 
     @Value("\${process.clearBaseBuildData:false}")
-    private val clearBaseBuildData: Boolean = false // 是否开启清理【被彻底删除的流水线】的基础构建流水数据（建议开启）
+    private val clearBaseBuildData: Boolean = false
+
+    @Value("\${process.draftVersionStoreDays:30}")
+    private val draftVersionStoreDays: Long = 30
 
     @PostConstruct
     fun init() {
@@ -228,6 +231,8 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                     clearPipelineBuildData(projectId, projectDataClearConfigService)
                     // 清理归档流水线构建数据
                     clearPipelineBuildData(projectId, projectDataClearConfigService, true)
+                    // 清理模板草稿版本数据
+                    clearTemplateData(projectId)
                 }
                 // 将当前已处理完的最大项目Id存入redis
                 redisOperation.set(
@@ -332,6 +337,8 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             isCompletelyDelete = false,
             maxStartTime = projectDataClearConfig.maxStartTime
         )
+        // 清理已发布流水线的过期草稿版本数据
+        clearPipelineDraftVersionData(projectId, pipelineId)
     }
 
     private fun cleanDeletePipelineData(pipelineId: String, projectId: String, archiveFlag: Boolean? = null) {
@@ -403,5 +410,87 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 processRelatedPlatformDataClearService.cleanBuildData(projectId, pipelineId, cleanBuilds)
             }
         }
+    }
+
+    private fun clearPipelineDraftVersionData(projectId: String, pipelineId: String) {
+        val expireTime = LocalDateTime.now().minusDays(draftVersionStoreDays)
+        var offset = 0
+        do {
+            // 1. 从草稿表中获取流水线版本
+            val versions = processMiscService.listPipelineDraftVersions(
+                projectId = projectId, pipelineId = pipelineId,
+                limit = DEFAULT_PAGE_SIZE, offset = offset
+            )
+            if (versions.isEmpty()) break
+            // 2. 获取已经发布超过X天的版本
+            val expiredVersionMap = processMiscService.getExpiredPipelineVersions(
+                projectId = projectId, pipelineId = pipelineId,
+                versions = versions, expireTime = expireTime
+            )
+            if (expiredVersionMap.isEmpty()) break
+            try {
+                processDataClearService.deletePipelineDraftData(
+                    projectId = projectId, pipelineId = pipelineId,
+                    versions = expiredVersionMap.keys.toList(),
+                    settingVersions = expiredVersionMap.values.distinct()
+                )
+            } catch (ignored: Throwable) {
+                logger.warn(
+                    "clearPipelineDraftVersionData failed" +
+                        "|$projectId|$pipelineId|${expiredVersionMap.keys}",
+                    ignored
+                )
+            }
+            offset += DEFAULT_PAGE_SIZE
+        } while (versions.size >= DEFAULT_PAGE_SIZE)
+    }
+
+    private fun clearTemplateData(projectId: String) {
+        var templateOffset = 0
+        do {
+            val templateIds = processMiscService.getTemplateIdsByProjectId(
+                projectId = projectId, gapDays = draftVersionStoreDays,
+                limit = DEFAULT_PAGE_SIZE, offset = templateOffset
+            )
+            if (templateIds.isEmpty()) break
+            templateIds.forEach { templateId ->
+                clearTemplateDraftVersionData(projectId, templateId)
+            }
+            templateOffset += DEFAULT_PAGE_SIZE
+        } while (templateIds.size >= DEFAULT_PAGE_SIZE)
+    }
+
+    private fun clearTemplateDraftVersionData(projectId: String, templateId: String) {
+        val expireTime = LocalDateTime.now().minusDays(draftVersionStoreDays)
+        var offset = 0
+        do {
+            // 1. 从草稿表中获取模版版本
+            val versions = processMiscService.listTemplateDraftVersions(
+                projectId = projectId, templateId = templateId,
+                limit = DEFAULT_PAGE_SIZE, offset = offset
+            )
+            if (versions.isEmpty()) break
+            // 2. 获取已经发布超过X天的版本
+            val expiredVersionMap = processMiscService.getExpiredTemplateVersions(
+                projectId = projectId, templateId = templateId,
+                versions = versions, expireTime = expireTime
+            )
+            if (expiredVersionMap.isEmpty()) break
+            try {
+                logger.info("clearTemplateDraftVersionData|$projectId|$templateId|${expiredVersionMap.keys}")
+                processDataClearService.deleteTemplateDraftData(
+                    projectId = projectId, templateId = templateId,
+                    versions = expiredVersionMap.keys.toList(),
+                    settingVersions = expiredVersionMap.values.distinct()
+                )
+            } catch (ignored: Throwable) {
+                logger.warn(
+                    "clearTemplateDraftVersionData failed" +
+                            "|$projectId|$templateId|${expiredVersionMap.keys}",
+                    ignored
+                )
+            }
+            offset += DEFAULT_PAGE_SIZE
+        } while (versions.size >= DEFAULT_PAGE_SIZE)
     }
 }
