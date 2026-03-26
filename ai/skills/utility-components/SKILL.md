@@ -1,6 +1,6 @@
 ---
 name: utility-components
-description: 工具组件指南，涵盖 JWT 安全认证、表达式解析器、线程池循环工具、责任链模式等特定功能的工具类使用。当用户需要实现 JWT 认证、解析表达式、使用线程池或实现责任链时使用。
+description: BK-CI 工具组件指南：使用 JwtManager 生成验证 JWT Token、ExpressionParser 解析流水线条件表达式、ThreadPoolUtil/LoopUtil 批量并发与循环处理、责任链模式实现拦截器链。当用户需要操作这些具体工具类时使用。
 core_files:
   - "src/backend/ci/core/common/common-security/src/main/kotlin/com/tencent/devops/common/security/jwt/"
   - "src/backend/ci/core/common/common-expression/"
@@ -8,77 +8,21 @@ core_files:
 related_skills:
   - common-technical-practices
   - design-patterns
-token_estimate: 6000
+token_estimate: 4500
 ---
 
 # 工具组件指南
 
-## Skill 概述
+本 Skill 涵盖 BK-CI 中 **4 类工具组件** 的具体使用，详细实现见各 reference 文件。
 
-本 Skill 涵盖了 BK-CI 中常用的 **4 类工具组件**，这些是特定功能的工具类和组件实现。
+> **与 `common-technical-practices` 的区别**: 本 Skill 关注具体工具类（JwtManager、ExpressionParser、ThreadPoolUtil、LoopUtil），`common-technical-practices` 关注框架级横切关注点（AOP 切面、分布式锁、重试机制、性能监控）。
 
-### 核心主题
-
-| 主题 | 说明 | 文档 |
-|------|------|------|
-| **JWT 安全认证** | JWT 生成验证、Token 刷新、OAuth2 | [1-jwt-security.md](./reference/1-jwt-security.md) |
-| **表达式解析器** | 变量表达式、条件求值、自定义函数 | [2-expression-parser.md](./reference/2-expression-parser.md) |
-| **线程池循环工具** | 线程池配置、批量处理、循环工具类 | [3-thread-pool-loop-util.md](./reference/3-thread-pool-loop-util.md) |
-| **责任链模式** | 责任链设计、拦截器链、请求处理链 | [4-chain-responsibility.md](./reference/4-chain-responsibility.md) |
-
----
-
-## ⚠️ 与 `common-technical-practices` 的区别
-
-### 定位对比
-
-| Skill | 定位 | 关注点 | 典型场景 |
-|-------|------|--------|----------|
-| **common-technical-practices** | **框架级实践** | 如何在 Spring Boot 中使用技术 | AOP 切面、分布式锁、重试机制、参数校验、性能监控、定时任务、审计日志 |
-| **utility-components** (本 Skill) | **工具级组件** | 如何使用特定的工具类和组件 | JWT 认证、表达式解析、线程池使用、责任链实现 |
-
-### 使用选择
-
-```
-需要实现横切关注点（AOP、锁、重试、监控）
-    → 使用 common-technical-practices
-
-需要使用特定工具类（JWT、表达式、线程池、责任链）
-    → 使用 utility-components (本 Skill)
-```
-
-**示例对比**:
-- 需要 **添加性能监控切面** → `common-technical-practices` (reference/5-performance-monitoring.md)
-- 需要 **使用线程池批量处理** → `utility-components` (reference/3-thread-pool-loop-util.md)
-- 需要 **实现分布式锁** → `common-technical-practices` (reference/2-distributed-lock.md)
-- 需要 **实现 JWT 认证** → `utility-components` (reference/1-jwt-security.md)
-
----
-
-## 工具组件架构
-
-### 组件分层视图
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    BK-CI 业务逻辑层                          │
-│      (Process/Project/Store/Auth/Repository...)            │
-└─────────────────────────────────────────────────────────────┘
-                           ↓
-        ┌──────────────────┼──────────────────┐
-        │                  │                  │
-   ┌────▼────┐       ┌────▼────┐       ┌────▼────┐
-   │  JWT    │       │  表达式  │       │  线程池  │
-   │  认证   │       │  解析   │       │  工具   │
-   └─────────┘       └─────────┘       └─────────┘
-        │                  │                  │
-        └──────────────────┼──────────────────┘
-                           ↓
-                  ┌────────────────┐
-                  │  责任链模式    │
-                  │  (拦截器链)    │
-                  └────────────────┘
-```
+| 主题 | 核心类 | 文档 |
+|------|--------|------|
+| **JWT 安全认证** | `JwtManager` | [1-jwt-security.md](./reference/1-jwt-security.md) |
+| **表达式解析器** | `ExpressionParser` | [2-expression-parser.md](./reference/2-expression-parser.md) |
+| **线程池循环工具** | `ThreadPoolUtil`, `LoopUtil` | [3-thread-pool-loop-util.md](./reference/3-thread-pool-loop-util.md) |
+| **责任链模式** | 拦截器链 | [4-chain-responsibility.md](./reference/4-chain-responsibility.md) |
 
 ---
 
@@ -86,21 +30,19 @@ token_estimate: 6000
 
 详见 [reference/1-jwt-security.md](./reference/1-jwt-security.md)
 
-### 核心功能
-
-- JWT Token 生成与验证
-- Token 刷新机制
-- 权限校验拦截器
-- OAuth2 集成
-
-### 快速开始
+使用 RSA 公私钥对实现微服务间 JWT Token 认证：
 
 ```kotlin
-// 生成 JWT Token
-val token = JwtManager.generateToken(userId, expireTime)
+import com.tencent.devops.common.security.jwt.JwtManager
 
-// 验证 Token
-val claims = JwtManager.verifyToken(token)
+// JwtManager 通过 Spring 注入，使用 RSA 密钥对
+// 构造: JwtManager(privateKeyString, publicKeyString, enable)
+
+// 获取当前服务的 JWT Token（自动刷新）
+val token: String? = jwtManager.getToken()
+
+// 验证其他服务传入的 Token
+val isValid: Boolean = jwtManager.verifyJwt(token)
 ```
 
 ---
@@ -109,20 +51,30 @@ val claims = JwtManager.verifyToken(token)
 
 详见 [reference/2-expression-parser.md](./reference/2-expression-parser.md)
 
-### 核心功能
-
-- 变量表达式解析 (`${variable}`)
-- 条件表达式求值
-- 自定义函数扩展
-- 表达式缓存优化
-
-### 快速开始
+解析流水线条件表达式，支持变量替换、布尔求值和自定义函数：
 
 ```kotlin
-// 解析变量表达式
-val context = mapOf("buildId" to "b-123", "status" to "success")
-val result = ExpressionParser.parse("${buildId}_${status}", context)
-// 结果: "b-123_success"
+import com.tencent.devops.common.expression.ExpressionParser
+import com.tencent.devops.common.expression.context.DictionaryContextData
+import com.tencent.devops.common.expression.context.StringContextData
+
+// 构建上下文
+val nameValue = listOf(NamedValueInfo("variables", ContextValueNode()))
+val context = DictionaryContextData().apply {
+    add("variables", DictionaryContextData().apply {
+        add("status", StringContextData("success"))
+    })
+}
+
+// 解析表达式求值
+val tree = ExpressionParser.createTree(
+    expression = "eq(variables.status, 'success')",
+    trace = null,
+    namedValues = nameValue,
+    functions = null
+)
+val result = tree!!.evaluate(null, context, null)
+// result.value = true
 ```
 
 ---
@@ -131,25 +83,47 @@ val result = ExpressionParser.parse("${buildId}_${status}", context)
 
 详见 [reference/3-thread-pool-loop-util.md](./reference/3-thread-pool-loop-util.md)
 
-### 核心功能
-
-- 线程池配置与管理
-- 批量任务并发处理
-- 循环工具类 (`LoopUtil`)
-- 并发控制与优化
-
-### 快速开始
+### ThreadPoolUtil — 创建受控线程池
 
 ```kotlin
-// 批量并发处理
-val results = ThreadPoolUtil.executeBatch(taskList) { task ->
-    processTask(task)
-}
+import com.tencent.devops.common.util.ThreadPoolUtil
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeUnit
 
-// 循环重试
-LoopUtil.loopWithRetry(maxRetries = 3) {
-    callExternalApi()
+// 创建线程池（建议定义为成员变量，避免每次创建）
+val executor = ThreadPoolUtil.getThreadPoolExecutor(
+    corePoolSize = 4,
+    maximumPoolSize = 8,
+    keepAliveTime = 60,
+    unit = TimeUnit.SECONDS,
+    threadNamePrefix = "batch-process-",
+    queue = LinkedBlockingQueue(100)
+)
+try {
+    executor.submit { processTask() }
+} finally {
+    executor.shutdown() // 局部变量必须在 finally 中关闭
 }
+```
+
+### LoopUtil — 防死循环数据库批量加载
+
+```kotlin
+import com.tencent.devops.common.util.LoopUtil
+import com.tencent.devops.common.util.LoopUtil.LoopVo
+
+// 按自增 ID 分批加载数据库记录，内置循环次数和耗时保护
+val vo = LoopVo(id = 0L, data = mutableListOf<Record>())
+val metrics = LoopUtil.doLoop(vo) { loopVo ->
+    val records = dao.listByIdGreaterThan(loopVo.id, limit = 500)
+    if (records.isEmpty()) {
+        loopVo.finish = true  // 标记完成，退出循环
+    } else {
+        loopVo.data.addAll(records)
+        loopVo.id = records.last().id  // 更新游标
+    }
+}
+// metrics.loopCount = 实际循环次数, metrics.totalTime = 总耗时ms
 ```
 
 ---
@@ -158,61 +132,31 @@ LoopUtil.loopWithRetry(maxRetries = 3) {
 
 详见 [reference/4-chain-responsibility.md](./reference/4-chain-responsibility.md)
 
-### 核心功能
-
-- 责任链设计与实现
-- 拦截器链模式
-- 流水线插件链
-- 请求处理链
-
-### 快速开始
+实现拦截器链处理请求，支持流水线插件链和请求处理链：
 
 ```kotlin
-// 定义拦截器链
-val chain = InterceptorChain()
-    .addInterceptor(AuthInterceptor())
-    .addInterceptor(ValidationInterceptor())
-    .addInterceptor(LoggingInterceptor())
+// 定义处理器
+class AuthInterceptor : Interceptor {
+    override fun intercept(chain: Chain): Response {
+        val request = chain.request()
+        // 认证逻辑
+        return chain.proceed(request)  // 传递给下一个拦截器
+    }
+}
 
-// 执行链
-chain.proceed(request)
-```
-
----
-
-## 使用场景决策树
-
-```
-用户需求
-    ↓
-是横切关注点（AOP/锁/重试/监控）？
-    ├─ 是 → 使用 common-technical-practices
-    └─ 否 → 是否需要特定工具类？
-              ├─ JWT 认证 → utility-components (reference/1)
-              ├─ 表达式解析 → utility-components (reference/2)
-              ├─ 线程池处理 → utility-components (reference/3)
-              ├─ 责任链模式 → utility-components (reference/4)
-              └─ 其他 → 查找对应模块 Skill
+// 组装拦截器链
+val chain = InterceptorChain(listOf(
+    AuthInterceptor(),
+    ValidationInterceptor(),
+    LoggingInterceptor()
+))
+val response = chain.proceed(request)
 ```
 
 ---
 
 ## 相关 Skill
 
-- [common-technical-practices](../common-technical-practices/SKILL.md) - 通用技术实践（框架级）
+- [common-technical-practices](../common-technical-practices/SKILL.md) - 框架级横切关注点（AOP、分布式锁、重试、监控）
 - [design-patterns](../design-patterns/SKILL.md) - 设计模式指南
 - [backend-microservice-development](../backend-microservice-development/SKILL.md) - 后端微服务开发
-
----
-
-## Quick Reference
-
-| 需求 | 使用 Skill | 参考章节 |
-|------|-----------|----------|
-| 实现 JWT 认证 | utility-components | reference/1-jwt-security.md |
-| 解析流水线变量 | utility-components | reference/2-expression-parser.md |
-| 批量并发处理 | utility-components | reference/3-thread-pool-loop-util.md |
-| 实现拦截器链 | utility-components | reference/4-chain-responsibility.md |
-| 添加 AOP 切面 | common-technical-practices | reference/1-aop-aspect.md |
-| 实现分布式锁 | common-technical-practices | reference/2-distributed-lock.md |
-| 配置重试机制 | common-technical-practices | reference/3-retry-mechanism.md |
