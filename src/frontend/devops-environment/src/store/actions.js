@@ -21,6 +21,8 @@ import Vue from 'vue'
 import { SET_ENVIRONMENT_EXTENSIONS } from './constants'
 
 const prefix = 'environment/api'
+const dispatchPrefix = 'dispatch/api'
+const processPrefix = 'process/api'
 const vue = new Vue()
 
 const actions = {
@@ -30,6 +32,14 @@ const actions = {
     requestEnvList ({ commit }, { projectId, params }) {
         const query = new URLSearchParams(params).toString()
         return vue.$ajax.get(`${prefix}/user/environment/${projectId}?${query}`).then(response => {
+            return response
+        })
+    },
+    /**
+     * 获取环境数量
+     */
+    requestEnvCount ({ commit }, { projectId, createEnv = false }) {
+        return vue.$ajax.get(`${prefix}/user/environment/${projectId}/envCount?createEnv=${createEnv}`).then(response => {
             return response
         })
     },
@@ -77,7 +87,7 @@ const actions = {
      * 导入节点到环境
      */
     importEnvNode ({ commit }, { projectId, envHashId, params }) {
-        return vue.$ajax.post(`${prefix}/user/environment/${projectId}/${envHashId}/addNodes`, params).then(response => {
+        return vue.$ajax.post(`${prefix}/user/environment/${projectId}/${envHashId}/addNodesNew`, params).then(response => {
             return response
         })
     },
@@ -101,9 +111,9 @@ const actions = {
     /**
      * 节点标签列表
      */
-    async requestNodeTagList ({ commit }, projectId) {
+    async requestNodeTagList ({ commit }, { projectId, createMode }) {
         try {
-            const res = await vue.$ajax.get(`${prefix}/user/nodetag/fetchTag?projectId=${projectId}`)
+            const res = await vue.$ajax.get(`${prefix}/user/nodetag/fetchTag?projectId=${projectId}&createMode=${createMode}`)
             commit('setNodeTagList', res || [])
             return res
         } catch (err) {
@@ -328,8 +338,8 @@ const actions = {
     /**
      * 获取agent环境变量
      */
-    requestEnvs ({ commit }, { projectId, nodeHashId }) {
-        return vue.$ajax.get(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/nodes/${nodeHashId}/envs`).then(response => {
+    requestEnvs ({ commit }, { projectId, nodeHashId, params }) {
+        return vue.$ajax.get(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/nodes/${nodeHashId}/envs`, { params }).then(response => {
             return response
         })
     },
@@ -439,10 +449,9 @@ const actions = {
             console.log(error)
         }
     },
-    requestShareEnvProjectList (_, { projectId, envHashId, ...query }) {
-        return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/list`, {
-            params: query
-        })
+    requestShareEnvProjectList (_, { projectId, envHashId, params }) {
+        return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/list`, { params })
+      
     },
 
     requestProjects (_, { projectId, envHashId, page, pageSize, search }) {
@@ -554,6 +563,95 @@ const actions = {
             return response
         })
     },
+    requestEnvNodeList ({ commit }, { projectId, envHashId, params }) {
+        const queryString = new URLSearchParams(params).toString()
+        return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/listNodesNew?${queryString}`).then(response => {
+            return response
+        })
+
+    },
+    // 获取环境的环境变量列表
+    requestEnvParamsList ({ commit }, { projectId, envHashId, params }) {
+        const queryString = new URLSearchParams(params).toString()
+        return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/envs?${queryString}`).then(response => {
+            return response
+        })
+    },
+
+    // 获取agent任务详情
+    requestAgentJobTaskList ({ commit }, { projectId, params }) {
+        const queryString = new URLSearchParams(params).toString()
+        return vue.$ajax.get(`${dispatchPrefix}/user/agents/listAgentPipelineJobs?projectId=${projectId}&${queryString}`).then(response => {
+            return response
+        })
+    },
+
+    // 获取指定流水线和job的构建历史
+    requestPipelineBuildHistory ({ commit }, { projectId, pipelineId, containerId, params }) {
+        const queryString = new URLSearchParams(params).toString()
+        return vue.$ajax.get(`${processPrefix}/user/builds/${projectId}/${pipelineId}/containers/${containerId}/history?${queryString}`).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 根据Job名称搜索
+     * @param {Object} params - 查询参数
+     * @param {string} params.projectId - 项目ID
+     * @param {string} params.agentId - Agent ID (可选)
+     * @param {string} params.envId - 环境ID
+     * @param {string} params.jobName - Job名称
+     */
+    searchJobByName ({ commit }, { params }) {
+        const queryString = new URLSearchParams(params).toString()
+        return vue.$ajax.get(`${dispatchPrefix}/user/agents/listAgentPipelineJobs/searchByJobName?${queryString}`).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 根据流水线名称搜索
+     * @param {Object} params - 查询参数
+     * @param {string} params.projectId - 项目ID
+     * @param {string} params.agentId - Agent ID (可选)
+     * @param {string} params.envId - 环境ID
+     * @param {string} params.pipelineName - 流水线名称
+     */
+    searchPipelineByName ({ commit }, { params }) {
+        const queryString = new URLSearchParams(params).toString()
+        return vue.$ajax.get(`${dispatchPrefix}/user/agents/listAgentPipelineJobs/searchByPipelineName?${queryString}`).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 根据触发人搜索
+     * @param {Object} params - 查询参数
+     * @param {string} params.projectId - 项目ID
+     * @param {string} params.agentId - Agent ID (可选)
+     * @param {string} params.envId - 环境ID
+     * @param {string} params.creator - 触发人
+     */
+    searchByCreator ({ commit }, { params }) {
+        const queryString = new URLSearchParams(params).toString()
+        return vue.$ajax.get(`${dispatchPrefix}/user/agents/listAgentPipelineJobs/searchByCreator?${queryString}`).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 获取Agent离线记录
+     * @param {Object} params - 查询参数
+     * @param {string} params.projectId - 项目ID
+     * @param {string} params.agentHashId - Agent Hash ID
+     * @param {number} params.page - 页码
+     * @param {number} params.pageSize - 每页条数
+     */
+    requestAgentOfflinePeriod ({ commit }, { projectId, agentHashId, page, pageSize }) {
+        return vue.$ajax.get(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/nodes/${agentHashId}/listAgentOfflinePeriod?page=${page}&pageSize=${pageSize}`).then(response => {
+            return response
+        })
+    }
 }
 
 export default actions

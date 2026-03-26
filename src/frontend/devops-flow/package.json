@@ -1,0 +1,84 @@
+{
+  "name": "devops-flow",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "run-p type-check \"build-only {@}\" --",
+    "preview": "vite preview",
+    "test:unit": "vitest",
+    "test:e2e": "playwright test",
+    "build-only": "vite build",
+    "type-check": "vue-tsc --build",
+    "lint:oxlint": "oxlint . --fix -D correctness --ignore-path .gitignore",
+    "lint:eslint": "eslint . --fix --cache",
+    "lint": "run-s lint:*",
+    "format": "prettier --write src/",
+    "public:master": "pnpm run build"
+  },
+  "dependencies": {
+    "@blueking/crontab": "0.0.2-beta.7",
+    "@blueking/search-select-v3": "0.0.1-beta.10",
+    "axios": "1.13.2",
+    "bk-permission": "workspace:bk-permission",
+    "bkui-pipeline": "workspace:bk-pipeline",
+    "bkui-vue": "2.0.2-beta.92",
+    "monaco-editor": "^0.52.2",
+    "monaco-yaml": "^5.2.2",
+    "pinia": "^3.0.3",
+    "vue": "^3.5.22",
+    "vue-i18n": "~11.2.1",
+    "vue-router": "^4.6.3",
+    "yaml": "^2.3.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "@prettier/plugin-oxc": "^0.0.4",
+    "@tsconfig/node22": "^22.0.2",
+    "@types/jsdom": "^27.0.0",
+    "@types/node": "^22.18.11",
+    "@vitejs/plugin-basic-ssl": "^2.1.0",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vitejs/plugin-vue-jsx": "^5.1.1",
+    "@vitest/eslint-plugin": "^1.3.23",
+    "@vue/eslint-config-prettier": "^10.2.0",
+    "@vue/eslint-config-typescript": "^14.6.0",
+    "@vue/test-utils": "^2.4.6",
+    "@vue/tsconfig": "^0.8.1",
+    "eslint": "^9.37.0",
+    "eslint-plugin-oxlint": "~1.23.0",
+    "eslint-plugin-playwright": "^2.2.2",
+    "eslint-plugin-vue": "~10.5.0",
+    "jiti": "^2.6.1",
+    "jsdom": "^27.0.1",
+    "npm-run-all2": "^8.0.4",
+    "oxlint": "~1.23.0",
+    "prettier": "3.6.2",
+    "typescript": "~5.9.0",
+    "vite": "^7.1.11",
+    "vite-plugin-html": "^3.2.2",
+    "vite-plugin-vue-devtools": "^8.0.3",
+    "vitest": "^3.2.4",
+    "vue-draggable-plus": "^0.6.0",
+    "vue-tsc": "^3.1.1"
+  },
+  "nx": {
+    "targets": {
+      "public:master": {
+        "inputs": [
+          "{workspaceRoot}/locale/flow/*.json",
+          "{workspaceRoot}/locale/index.js",
+          "{projectRoot}"
+        ],
+        "outputs": [
+          "{workspaceRoot}/frontend/creative-stream",
+          "{workspaceRoot}/frontend/entry's/creative-stream.json"
+        ]
+      }
+    }
+  }
+}

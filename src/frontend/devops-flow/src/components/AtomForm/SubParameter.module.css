@@ -1,0 +1,76 @@
+/* SubParameter styles - using variables from /src/styles/variables.css */
+
+.subParameter {
+  display: grid;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.addBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+}
+
+.addBtn:hover {
+  color: var(--color-primary-hover);
+}
+
+.addIcon {
+  transform: rotate(45deg);
+}
+
+.desc {
+  display: inline-flex;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  margin-bottom: var(--spacing-sm);
+}
+
+.paramsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.paramItem {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.inputCom {
+  flex: 1;
+}
+
+.inputSeg {
+  flex-basis: var(--spacing-xl);
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.minusBtn {
+  font-size: var(--font-size-sm);
+  margin-left: var(--spacing-xs);
+  cursor: pointer;
+  color: var(--color-text-tertiary);
+  transition: var(--transition-all);
+}
+
+.minusBtn:hover {
+  color: var(--color-danger);
+}
+
+.disabledInput input {
+  text-decoration: line-through !important;
+}

@@ -133,7 +133,7 @@
             DevopsOption
         }
     })
-    export default class DevopsSelect extends Vue {
+        export default class DevopsSelect extends Vue {
         @Prop({ default: '' })
         value: any
         

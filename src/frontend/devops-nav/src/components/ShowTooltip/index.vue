@@ -37,7 +37,7 @@
     import { BkPopover } from '@tencent/bk-magic-vue'
 
     @Component
-    export default class ShowTooltip extends Vue {
+        export default class ShowTooltip extends Vue {
         @Prop({ required: true })
         name: string
 

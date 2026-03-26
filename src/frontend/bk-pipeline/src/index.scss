@@ -118,6 +118,10 @@ span.skip-name {
     opacity: .5;
 }
 
+.append-stage-wrapper {
+    padding: 12px;
+}
+
 .readonly {
     .stage-connector {
         background: $lineColor;
@@ -147,11 +151,11 @@ span.skip-name {
     .container-connect-triangle {
         color: $lineColor;
     }
-    
+
     .container-title {
         cursor: pointer;
         background-color: $fontWeightColor;
-        
+
         &:before,
         &:after {
             border-top-color: $lineColor;
@@ -202,7 +206,7 @@ span.skip-name {
         &.icon-exclamation-triangle-shape {
             font-size: 14px;
             &.is-danger {
-                color: $dangerColor;
+                color: $dangerColor !important;
             }
         }
     }
@@ -212,7 +216,7 @@ span.skip-name {
 }
 
 .bk-pipeline {
-    
+
     .stage-status:not(.readonly) {
         background-color: $primaryColor;
         &.WARNING {
@@ -241,7 +245,7 @@ span.skip-name {
         &.QUEUE_TIMEOUT,
         &.EXEC_TIMEOUT {
             color: $dangerColor;
-            
+
         }
         &.SUCCEED,
         &.REVIEW_PROCESSED {
@@ -319,7 +323,7 @@ span.skip-name {
             }
         }
     }
-    
+
     .bk-pipeline-atom {
         &.is-sub-pipeline-atom {
             box-shadow: 4px 4px 0 0 rgba(99, 101, 110, 0.3);
@@ -411,7 +415,7 @@ span.skip-name {
                 color: $fontWeightColor;
             }
         }
-        
+
         &.template-compare-atom {
             // border-color: $warningColor;
             border-color: #ff6e00;
