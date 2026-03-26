@@ -276,14 +276,20 @@ class PipelineTemplateInstanceReqConverter(
                 template = pipelineModelRef.template
             )
 
-            // 处理跨项目变量组引用，展开变量组中的变量到params
-            publicVarGroupReferManageService.handleCrossProjectVarGroup(
-                projectId = projectId,
-                referId = templateId,
-                referType = PublicVarGroupReferenceTypeEnum.TEMPLATE,
-                referVersion = templateVersion.toInt(),
-                model = instanceModel
-            )
+            // 跨项目模板实例化时，展开变量组中的变量到params（因为跨项目无法保留变量组引用关系）
+            // 同项目模板实例化时，保留公共变量组关联，由后续 handleVarGroupReferBus 建立引用关系
+            val isCrossProject = !templateResource.srcTemplateId.isNullOrBlank() &&
+                templateResource.srcTemplateProjectId != null &&
+                templateResource.srcTemplateProjectId != projectId
+            if (isCrossProject) {
+                publicVarGroupReferManageService.handleCrossProjectVarGroup(
+                    projectId = projectId,
+                    referId = templateId,
+                    referType = PublicVarGroupReferenceTypeEnum.TEMPLATE,
+                    referVersion = templateVersion.toInt(),
+                    model = instanceModel
+                )
+            }
 
             val pipelineResourceWithoutVersion = PipelineResourceWithoutVersion(
                 projectId = projectId,
