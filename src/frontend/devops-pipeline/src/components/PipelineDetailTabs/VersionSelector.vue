@@ -39,6 +39,7 @@
             <p class="pipeline-version-name">
                 <span v-bk-overflow-tips>
                     <template v-if="isActiveDraft">
+                        <span v-if="draftVersion">{{ convertTime(activeVersion.updateTime) + ` ${activeVersion.updater} ` }}</span>
                         {{ $t('editPage.draftVersion', [draftBaseVersionName]) }}
                     </template>
                     <template v-else>
@@ -198,6 +199,10 @@
                 type: Boolean,
                 default: false
             },
+            draftVersion: {
+                type: Number,
+                default: undefined
+            },
             uniqueId: {
                 type: [String, Number],
                 required: true
@@ -272,12 +277,14 @@
             ...mapActions({
                 requestPipelineVersionList: 'pipelines/requestPipelineVersionList',
                 requestTemplateVersionList: 'templates/requestTemplateVersionList',
+                getDraftVersion: 'common/getDraftVersion',
+                getTemplateDraftVersion: 'common/getTemplateDraftVersion',
                 requestPipelineSummary: 'atom/requestPipelineSummary'
             }),
 
             async loadMore (page) {
                 try {
-                    const { projectId, pagination } = this
+                    const { projectId, pagination, pipelineInfo } = this
                     const nextPage = page ?? pagination.page + 1
                     if (nextPage > 1 && !this.hasNext) return
                     if (nextPage === 1) {
@@ -285,22 +292,50 @@
                     } else {
                         this.bottomLoadingOptions.isLoading = true
                     }
-                    const dataSource = this.isTemplate ? this.requestTemplateVersionList : this.requestPipelineVersionList
-                    const res = await dataSource({
+                    
+                    // 判断是否存在 draftVersion
+                    const hasDraftVersion = this.draftVersion ? true : false
+                    
+                    // 根据是否存在 draftVersion 选择不同的接口和参数
+                    const idKey = this.isTemplate ? 'templateId' : 'pipelineId'
+                    const dataSource = hasDraftVersion
+                        ? (this.isTemplate ? this.getTemplateDraftVersion : this.getDraftVersion)
+                        : (this.isTemplate ? this.requestTemplateVersionList : this.requestPipelineVersionList)
+                    
+                    const params = {
                         projectId,
-                        ...{
-                            [this.isTemplate ? 'templateId' : 'pipelineId']: this.uniqueId
-                        },
+                        [idKey]: this.uniqueId,
                         page: nextPage,
                         pageSize: pagination.limit,
-                        fuzzyVersionName: this.searchKeyword,
-                        includeDraft: this.includeDraft,
-                        buildOnly: this.buildOnly,
-                        archiveFlag: this.$route.query.archiveFlag
-                    })
+                        ...(hasDraftVersion
+                            ? { version: pipelineInfo?.version }
+                            : {
+                                fuzzyVersionName: this.searchKeyword,
+                                includeDraft: this.includeDraft,
+                                buildOnly: this.buildOnly,
+                                archiveFlag: this.$route.query.archiveFlag
+                            }
+                        )
+                    }
+                    const res = await dataSource(params)
+
                     this.pagination.page = res.page
                     this.hasNext = res.count > res.page * pagination.limit
                     const versions = res.records.map(item => {
+                        if (hasDraftVersion) {
+                            return {
+                                ...item,
+                                version: `draft-${item.draftVersion}`, // 使用 draft- 前缀作为唯一标识
+                                displayName: convertTime(item.updateTime) + `  ${item.updater}`,
+                                description: this.$t('baseOn', [item.baseVersionName]),
+                                isBranchVersion: false,
+                                isDraft: true,
+                                isRelease: false,
+                                isDraftVersion: true,
+                                initialVersion: item.version // 保留原始 version 供接口调用
+                            }
+                        }
+
                         const isDraft = item.status === VERSION_STATUS_ENUM.COMMITTING
                         const isBranchVersion = item.status === VERSION_STATUS_ENUM.BRANCH
 
@@ -315,9 +350,25 @@
                         }
                     })
                     if (page === 1) {
-                        this.versionList = versions
+                        // 如果存在 draftVersion 且不是激活草稿时，需要在第一条拼接最新发布版本数据
+                        if (hasDraftVersion && !this.isActiveDraft) {
+                            const releaseVersionData = {
+                                status: pipelineInfo.latestVersionStatus,
+                                displayName: pipelineInfo.releaseVersionName,
+                                versionName: pipelineInfo.releaseVersionName,
+                                version: pipelineInfo.releaseVersion,
+                                description: pipelineInfo.releaseVersionName || '--',
+                                isDraft: false,
+                                isBranchVersion: false,
+                                isRelease: pipelineInfo.latestVersionStatus === VERSION_STATUS_ENUM.RELEASED
+                            }
+                            this.versionList = [releaseVersionData, ...versions]
+                        } else {
+                            this.versionList = versions
+                        }
+                        
                         const releaseVersion = versions.find(item => item.status === VERSION_STATUS_ENUM.RELEASED)
-                        if (releaseVersion?.version > this.pipelineInfo.releaseVersion) {
+                        if (releaseVersion?.version > pipelineInfo.releaseVersion) {
                             await this.requestPipelineSummary(this.$route.params)
                             this.switchVersion(this.activeVersion.version)
                         }
@@ -326,7 +377,14 @@
                         this.versionList.push(...versions)
                     }
                     if (!this.activeVersion) {
-                        this.switchVersion(this.value)
+                        if (hasDraftVersion && this.value === this.draftVersion) {
+                            const version = this.versionList.find(item => item.draftVersion === this.draftVersion)
+                            if (version) {
+                                this.switchVersion(version.version)
+                            }
+                        } else {
+                            this.switchVersion(this.value)
+                        }
                     }
                 } catch (error) {
                     console.log(error)

@@ -16,6 +16,18 @@
                         'has-pac-tag': pacEnabled
                     }]"
                 >
+                    <bk-alert
+                        v-if="draftStatus && draftStatus.status === 'OUTDATED'"
+                        type="warning"
+                    >
+                        <template slot="title">
+                            <i18n path="template.draftPublished">
+                                <span>{{ draftStatus?.draft?.baseVersionName }}</span>
+                                <span class="red-tip">{{ $t('Earlier') }}</span>
+                                <span>{{ draftStatus?.release?.versionName }}</span>
+                            </i18n>
+                        </template>
+                    </bk-alert>
                     <template v-if="!isTemplateInstanceMode">
                         {{ $t(isTemplate ? "releaseTemplate" : "releasePipeline") }}
                         <PacTag
@@ -546,6 +558,10 @@
             handleChangeFilePath: {
                 type: Function,
                 default: () => {}
+            },
+            draftStatus: {
+                type: Object,
+                default: null
             }
         },
         data () {
@@ -1591,6 +1607,10 @@
 
 .release-pipeline-pac-form {
     overflow: auto;
+
+    .red-tip {
+        color: #ff7e73;
+    }
 
     .release-pac-pipeline-form-header {
         display: flex;

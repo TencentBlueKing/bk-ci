@@ -268,12 +268,15 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version, archiveFlag, source = 'VIEW' }) {
+    fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version, archiveFlag, source = 'VIEW', draftVersion  }) {
         const query = {
             source
         }
         if (archiveFlag !== undefined && archiveFlag !== null) {
             query.archiveFlag = encodeURIComponent(archiveFlag)
+        }
+        if (draftVersion !== undefined && draftVersion !== null) {
+            query.draftVersion = encodeURIComponent(draftVersion)
         }
         const url = `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`
         return request.get(url, {
@@ -282,8 +285,14 @@ export default {
             return res.data
         })
     },
-    fetchTemplateByVersion ({ commit }, { projectId, templateId, version }) {
-        return request.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/${version}/details/`).then(res => {
+    fetchTemplateByVersion ({ commit }, { projectId, templateId, version, draftVersion }) {
+        const query = {}
+        if (draftVersion !== undefined && draftVersion !== null) {
+            query.draftVersion = encodeURIComponent(draftVersion)
+        }
+        return request.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/${version}/details/`, {
+            params: query
+        }).then(res => {
             return res.data
         })
     },
