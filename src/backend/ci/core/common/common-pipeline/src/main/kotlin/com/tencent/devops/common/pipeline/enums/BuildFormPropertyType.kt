@@ -45,6 +45,5 @@ enum class BuildFormPropertyType(val value: String) {
     CUSTOM_FILE("custom_file"), // 自定义仓库文件
     PASSWORD("password"),
     TEMPORARY("do not storage in database");
-
     override fun toString() = value
 }

@@ -242,4 +242,7 @@ object StreamBinding {
     const val PIPELINE_YAML_FILE_SCHEDULER = "pipeline.yaml.file.scheduler"
     // yaml文件执行事件
     const val PIPELINE_YAML_FILE_EXECUTOR = "pipeline.yaml.file.executor"
+
+    // 变量引用事件监听器
+    const val MODEL_VAR_REFERENCE_FANOUT = "model.var.reference.fanout"
 }
