@@ -102,9 +102,6 @@ interface DesktopExperienceResource {
         @Parameter(description = "体验ID", required = true)
         @PathParam("experienceHashId")
         experienceHashId: String,
-        @Parameter(description = "版本号", required = false)
-        @QueryParam("version")
-        version: String? = null,
         @Parameter(description = "组织", required = false)
         @QueryParam("organization")
         organization: String? = null,

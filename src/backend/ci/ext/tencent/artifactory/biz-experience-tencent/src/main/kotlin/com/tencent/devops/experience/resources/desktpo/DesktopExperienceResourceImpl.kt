@@ -85,7 +85,6 @@ class DesktopExperienceResourceImpl @Autowired constructor(
     override fun installPackages(
         userId: String,
         experienceHashId: String,
-        version: String?,
         organization: String?
     ): Result<Pagination<AppExperienceInstallPackage>> {
         checkParam(userId, experienceHashId)
