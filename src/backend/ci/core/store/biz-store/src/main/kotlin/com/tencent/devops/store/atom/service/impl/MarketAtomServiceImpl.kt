@@ -27,30 +27,16 @@
 
 package com.tencent.devops.store.atom.service.impl
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
 import com.tencent.devops.common.api.auth.REFERER
-import com.tencent.devops.common.api.constant.AND
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.DANG
-import com.tencent.devops.common.api.constant.DEFAULT
 import com.tencent.devops.common.api.constant.INIT_VERSION
-import com.tencent.devops.common.api.constant.MULTIPLE_SELECTOR
-import com.tencent.devops.common.api.constant.NO_LABEL
-import com.tencent.devops.common.api.constant.OPTIONS
-import com.tencent.devops.common.api.constant.OR
-import com.tencent.devops.common.api.constant.OUTPUT_DESC
-import com.tencent.devops.common.api.constant.REQUIRED
-import com.tencent.devops.common.api.constant.SINGLE_SELECTOR
-import com.tencent.devops.common.api.constant.TIMETOSELECT
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ThreadLocalUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -65,7 +51,6 @@ import com.tencent.devops.model.store.tables.TAtomEnvInfo
 import com.tencent.devops.model.store.tables.TAtomFeature
 import com.tencent.devops.model.store.tables.TAtomVersionLog
 import com.tencent.devops.model.store.tables.TClassify
-import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.Repository
@@ -76,10 +61,13 @@ import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.AtomLabelRelDao
 import com.tencent.devops.store.atom.dao.MarketAtomClassifyDao
 import com.tencent.devops.store.atom.dao.MarketAtomDao
+import com.tencent.devops.store.pojo.atom.MarketAtomDaoQuery
 import com.tencent.devops.store.atom.dao.MarketAtomEnvInfoDao
 import com.tencent.devops.store.atom.dao.MarketAtomFeatureDao
 import com.tencent.devops.store.atom.dao.MarketAtomVersionLogDao
 import com.tencent.devops.store.atom.service.AtomLabelService
+import com.tencent.devops.store.atom.service.AtomPropsService
+import com.tencent.devops.store.atom.service.AtomYamlGenerateService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.atom.service.MarketAtomEnvService
 import com.tencent.devops.store.atom.service.MarketAtomService
@@ -89,12 +77,12 @@ import com.tencent.devops.store.common.dao.StoreErrorCodeInfoDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.ClassifyDao
+import com.tencent.devops.store.common.dao.LabelDao
 import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.common.service.StoreCommentService
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreDailyStatisticService
 import com.tencent.devops.store.common.service.StoreHonorService
-import com.tencent.devops.store.common.service.StoreI18nMessageService
 import com.tencent.devops.store.common.service.StoreIndexManageService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.StoreTotalStatisticService
@@ -105,7 +93,6 @@ import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
-import com.tencent.devops.store.constant.StoreMessageCode.TASK_JSON_CONFIGURE_FORMAT_ERROR
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
 import com.tencent.devops.store.pojo.atom.AtomOutput
 import com.tencent.devops.store.pojo.atom.AtomPostInfo
@@ -117,6 +104,7 @@ import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
+import com.tencent.devops.store.pojo.atom.MarketAtomListQuery
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.MyAtomResp
 import com.tencent.devops.store.pojo.atom.MyAtomRespItem
@@ -124,7 +112,6 @@ import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
-import com.tencent.devops.store.pojo.common.ATOM_OUTPUT
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ERROR_JSON_NAME
 import com.tencent.devops.store.pojo.common.HOTTEST
@@ -140,7 +127,10 @@ import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.honor.HonorInfo
+import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
 import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatistic
+import com.tencent.devops.store.pojo.common.statistic.StoreStatistic
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -167,6 +157,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     @Autowired
     lateinit var classifyDao: ClassifyDao
+
+    @Autowired
+    lateinit var labelDao: LabelDao
 
     @Autowired
     lateinit var storeProjectRelDao: StoreProjectRelDao
@@ -244,7 +237,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     lateinit var storeDailyStatisticService: StoreDailyStatisticService
 
     @Autowired
-    lateinit var storeI18nMessageService: StoreI18nMessageService
+    lateinit var atomYamlGenerateService: AtomYamlGenerateService
+
+    @Autowired
+    lateinit var atomPropsService: AtomPropsService
 
     @Autowired
     lateinit var redisOperation: RedisOperation
@@ -263,162 +259,152 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         private val executor = Executors.newFixedThreadPool(30)
     }
 
-    @Suppress("UNCHECKED_CAST", "LongParameterList", "LongMethod")
     private fun doList(
-        userId: String,
+        query: MarketAtomListQuery,
         userDeptList: List<Int>,
-        keyword: String?,
-        classifyCode: String?,
-        labelCode: String?,
-        score: Int?,
-        rdType: AtomTypeEnum?,
-        yamlFlag: Boolean?,
-        recommendFlag: Boolean?,
-        qualityFlag: Boolean?,
-        sortType: MarketAtomSortTypeEnum?,
-        desc: Boolean?,
-        page: Int?,
-        pageSize: Int?,
-        urlProtocolTrim: Boolean = false,
-        serviceScope: ServiceScopeEnum?
+        desc: Boolean?
     ): Future<MarketAtomResp> {
         val referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER)
-        return executor.submit(Callable<MarketAtomResp> {
-            referer?.let {
-                ThreadLocalUtil.set(REFERER, referer)
-            }
-            val results = mutableListOf<MarketItem>()
-            // 获取插件
-            val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode.split(",")
-            val count = marketAtomDao.count(
-                dslContext = dslContext,
-                keyword = keyword,
-                classifyCode = classifyCode,
-                labelCodeList = labelCodeList,
-                score = score,
-                rdType = rdType,
-                yamlFlag = yamlFlag,
-                recommendFlag = recommendFlag,
-                qualityFlag = qualityFlag,
-                serviceScope = serviceScope
-            )
-            val atoms = marketAtomDao.list(
-                dslContext = dslContext,
-                keyword = keyword,
-                classifyCode = classifyCode,
-                labelCodeList = labelCodeList,
-                score = score,
-                rdType = rdType,
-                yamlFlag = yamlFlag,
-                recommendFlag = recommendFlag,
-                qualityFlag = qualityFlag,
-                sortType = sortType,
-                desc = desc,
-                page = page,
-                pageSize = pageSize,
-                serviceScope = serviceScope
-            )
-                ?: return@Callable MarketAtomResp(0, page, pageSize, results)
-            val tAtom = TAtom.T_ATOM
-            val tAtomFeature = TAtomFeature.T_ATOM_FEATURE
-            val atomCodeList = atoms.map {
-                it[tAtom.ATOM_CODE] as String
-            }.toList()
-            // 获取可见范围
-            val storeType = StoreTypeEnum.ATOM
-            val atomVisibleData = storeCommonService.generateStoreVisibleData(atomCodeList, storeType)
-            val atomStatisticData = storeTotalStatisticService.getStatisticByCodeList(
-                storeType = storeType.type.toByte(),
-                storeCodeList = atomCodeList
-            )
-            val atomHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(
-                storeType = storeType,
-                storeCodes = atomCodeList,
-                userId = userId
-            )
-            val atomIndexInfosMap = storeIndexManageService.getStoreIndexInfosByStoreCodes(storeType, atomCodeList)
-            // 获取用户
-            val memberData = atomMemberService.batchListMember(atomCodeList, storeType).data
-
-            // 获取分类（如果指定了 serviceScope，传入以获取对应服务范围的分类）
-            val classifyList = classifyService.getAllClassify(storeType.type.toByte(), serviceScope).data
-            val classifyMap = mutableMapOf<String, String>()
-            classifyList?.forEach {
-                classifyMap[it.id] = it.classifyCode
-            }
+        return executor.submit(Callable {
+            referer?.let { ThreadLocalUtil.set(REFERER, it) }
             try {
-                atoms.forEach {
-                    val atomCode = it[tAtom.ATOM_CODE] as String
-                    val visibleList = atomVisibleData?.get(atomCode)
-                    val statistic = atomStatisticData[atomCode]
-                    val atomHonorInfos = atomHonorInfoMap[atomCode]
-                    val atomIndexInfos = atomIndexInfosMap[atomCode]
-                    val members = memberData?.get(atomCode)
-                    val defaultFlag = it[tAtom.DEFAULT_FLAG] as Boolean
-                    val flag = storeCommonService.generateInstallFlag(
-                        defaultFlag = defaultFlag,
-                        members = members,
-                        userId = userId,
-                        visibleList = visibleList,
-                        userDeptList = userDeptList
-                    )
-                    val classifyId = it[tAtom.CLASSIFY_ID] as String
-                    var logoUrl = it[tAtom.LOGO_URL]
-                    logoUrl = logoUrl?.let {
-                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
-                    }
-                    logoUrl = if (logoUrl?.contains("?") == true) {
-                        logoUrl.plus("&logo=true")
-                    } else {
-                        logoUrl?.plus("?logo=true")
-                    }
-                    if (urlProtocolTrim) { // #4796 LogoUrl跟随主站协议
-                        logoUrl = RegexUtils.trimProtocol(logoUrl)
-                    }
-                    val osStr = it[tAtom.OS]
-                    results.add(
-                        MarketItem(
-                            id = it[tAtom.ID] as String,
-                            name = it[tAtom.NAME] as String,
-                            code = atomCode,
-                            version = it[tAtom.VERSION] as String,
-                            status = AtomStatusEnum.getAtomStatus((it[tAtom.ATOM_STATUS] as Byte).toInt()),
-                            type = StoreTypeEnum.ATOM.name,
-                            rdType = AtomTypeEnum.getAtomType((it[tAtom.ATOM_TYPE] as Byte).toInt()),
-                            classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
-                            category = AtomCategoryEnum.getAtomCategory((it[tAtom.CATEGROY] as Byte).toInt()),
-                            logoUrl = logoUrl,
-                            publisher = it[tAtom.PUBLISHER] as String,
-                            os = if (!osStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(
-                                osStr,
-                                List::class.java
-                            ) as List<String> else null,
-                            downloads = statistic?.downloads ?: 0,
-                            score = statistic?.score ?: 0.toDouble(),
-                            summary = it[tAtom.SUMMARY],
-                            flag = flag,
-                            publicFlag = it[tAtom.DEFAULT_FLAG] as Boolean,
-                            buildLessRunFlag = if (it[tAtom.BUILD_LESS_RUN_FLAG] == null) {
-                                false
-                            } else it[tAtom.BUILD_LESS_RUN_FLAG] as Boolean,
-                            docsLink = if (it[tAtom.DOCS_LINK] == null) "" else it[tAtom.DOCS_LINK] as String,
-                            modifier = it[tAtom.MODIFIER] as String,
-                            updateTime = DateTimeUtil.toDateTime(it[tAtom.UPDATE_TIME] as LocalDateTime),
-                            recommendFlag = it[tAtomFeature.RECOMMEND_FLAG],
-                            yamlFlag = it[tAtomFeature.YAML_FLAG],
-                            recentExecuteNum = statistic?.recentExecuteNum ?: 0,
-                            indexInfos = atomIndexInfos,
-                            honorInfos = atomHonorInfos,
-                            hotFlag = statistic?.hotFlag
-                        )
-                    )
+                val emptyResp = MarketAtomResp(0, query.page, query.pageSize, emptyList())
+                val storeType = StoreTypeEnum.ATOM
+                // 分类code转ID：不存在则直接返回空结果
+                val classifyId = query.classifyCode?.takeIf { it.isNotEmpty() }?.let { code ->
+                    classifyDao.getClassifyByCode(dslContext, code, storeType, query.serviceScope)?.id
+                        ?: return@Callable emptyResp
                 }
+                // 标签code转ID：不存在则直接返回空结果
+                val labelIdList = query.labelCode?.takeIf { it.isNotEmpty() }?.split(",")?.let { codes ->
+                    labelDao.getIdsByCodes(dslContext, codes, storeType.type.toByte(), query.serviceScope)
+                        .takeIf { it.isNotEmpty() } ?: return@Callable emptyResp
+                }
+                val daoQuery = MarketAtomDaoQuery(
+                    keyword = query.keyword,
+                    classifyId = classifyId,
+                    labelIdList = labelIdList,
+                    score = query.score,
+                    rdType = query.rdType,
+                    yamlFlag = query.yamlFlag,
+                    recommendFlag = query.recommendFlag,
+                    qualityFlag = query.qualityFlag,
+                    serviceScope = query.serviceScope,
+                    sortType = query.sortType,
+                    desc = desc,
+                    page = query.page,
+                    pageSize = query.pageSize
+                )
+                val atoms = marketAtomDao.list(dslContext, daoQuery)
+                    ?: return@Callable emptyResp
+                val count = marketAtomDao.count(dslContext, daoQuery)
+                val atomCodeList = atoms.map { it[TAtom.T_ATOM.ATOM_CODE] as String }
+                val aggregateData = loadAtomAggregateData(atomCodeList, query.userId, query.serviceScope)
+                val results = atoms.map { record ->
+                    buildMarketItem(record, aggregateData, userDeptList, query)
+                }
+                MarketAtomResp(count, query.page, query.pageSize, results)
             } finally {
                 ThreadLocalUtil.remove(REFERER)
             }
-
-            return@Callable MarketAtomResp(count, page, pageSize, results)
         })
+    }
+
+    private data class AtomAggregateData(
+        val visibleData: HashMap<String, MutableList<Int>>?,
+        val statisticData: HashMap<String, StoreStatistic>,
+        val honorInfoMap: Map<String, List<HonorInfo>>,
+        val indexInfosMap: Map<String, List<StoreIndexInfo>>,
+        val memberData: HashMap<String, MutableList<String>>?,
+        val classifyMap: Map<String, String>
+    )
+
+    private fun loadAtomAggregateData(
+        atomCodeList: List<String>,
+        userId: String,
+        serviceScope: ServiceScopeEnum?
+    ): AtomAggregateData {
+        val storeType = StoreTypeEnum.ATOM
+        return AtomAggregateData(
+            visibleData = storeCommonService.generateStoreVisibleData(atomCodeList, storeType),
+            statisticData = storeTotalStatisticService.getStatisticByCodeList(
+                storeType = storeType.type.toByte(),
+                storeCodeList = atomCodeList
+            ),
+            honorInfoMap = storeHonorService.getHonorInfosByStoreCodes(
+                storeType = storeType,
+                storeCodes = atomCodeList,
+                userId = userId
+            ),
+            indexInfosMap = storeIndexManageService.getStoreIndexInfosByStoreCodes(storeType, atomCodeList),
+            memberData = atomMemberService.batchListMember(atomCodeList, storeType).data,
+            classifyMap = classifyService.getAllClassify(storeType.type.toByte(), serviceScope).data
+                ?.associate { it.id to it.classifyCode } ?: emptyMap()
+        )
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun buildMarketItem(
+        record: org.jooq.Record,
+        aggregateData: AtomAggregateData,
+        userDeptList: List<Int>,
+        query: MarketAtomListQuery
+    ): MarketItem {
+        val tAtom = TAtom.T_ATOM
+        val tAtomFeature = TAtomFeature.T_ATOM_FEATURE
+        val atomCode = record[tAtom.ATOM_CODE] as String
+        val statistic = aggregateData.statisticData[atomCode]
+        val classifyId = record[tAtom.CLASSIFY_ID] as String
+        val defaultFlag = record[tAtom.DEFAULT_FLAG] as Boolean
+        val flag = storeCommonService.generateInstallFlag(
+            defaultFlag = defaultFlag,
+            members = aggregateData.memberData?.get(atomCode),
+            userId = query.userId,
+            visibleList = aggregateData.visibleData?.get(atomCode),
+            userDeptList = userDeptList
+        )
+        val logoUrl = processLogoUrl(record[tAtom.LOGO_URL], query.urlProtocolTrim)
+        val osStr = record[tAtom.OS]
+        return MarketItem(
+            id = record[tAtom.ID] as String,
+            name = record[tAtom.NAME] as String,
+            code = atomCode,
+            version = record[tAtom.VERSION] as String,
+            status = AtomStatusEnum.getAtomStatus((record[tAtom.ATOM_STATUS] as Byte).toInt()),
+            type = StoreTypeEnum.ATOM.name,
+            rdType = AtomTypeEnum.getAtomType((record[tAtom.ATOM_TYPE] as Byte).toInt()),
+            classifyCode = aggregateData.classifyMap[classifyId] ?: "",
+            category = AtomCategoryEnum.getAtomCategory((record[tAtom.CATEGROY] as Byte).toInt()),
+            logoUrl = logoUrl,
+            publisher = record[tAtom.PUBLISHER] as String,
+            os = if (!osStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(
+                osStr, List::class.java
+            ) as List<String> else null,
+            downloads = statistic?.downloads ?: 0,
+            score = statistic?.score ?: 0.toDouble(),
+            summary = record[tAtom.SUMMARY],
+            flag = flag,
+            publicFlag = defaultFlag,
+            buildLessRunFlag = record[tAtom.BUILD_LESS_RUN_FLAG] ?: false,
+            docsLink = record[tAtom.DOCS_LINK] ?: "",
+            modifier = record[tAtom.MODIFIER] as String,
+            updateTime = DateTimeUtil.toDateTime(record[tAtom.UPDATE_TIME] as LocalDateTime),
+            recommendFlag = record[tAtomFeature.RECOMMEND_FLAG],
+            yamlFlag = record[tAtomFeature.YAML_FLAG],
+            recentExecuteNum = statistic?.recentExecuteNum ?: 0,
+            indexInfos = aggregateData.indexInfosMap[atomCode],
+            honorInfos = aggregateData.honorInfoMap[atomCode],
+            hotFlag = statistic?.hotFlag
+        )
+    }
+
+    private fun processLogoUrl(rawLogoUrl: String?, urlProtocolTrim: Boolean): String? {
+        // 装饰原始URL并拼接logo参数
+        val logoUrl = rawLogoUrl
+            ?.let { StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String }
+            ?.let { url -> url + if ("?" in url) "&logo=true" else "?logo=true" }
+        // 根据需要裁剪协议头
+        return if (urlProtocolTrim) RegexUtils.trimProtocol(logoUrl) else logoUrl
     }
 
     /**
@@ -432,148 +418,54 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         urlProtocolTrim: Boolean,
         serviceScope: ServiceScopeEnum?
     ): Result<List<MarketMainItem>> {
-        val result = mutableListOf<MarketMainItem>()
-        // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
-        val futureList = mutableListOf<Future<MarketAtomResp>>()
-        val labelInfoList = mutableListOf<MarketMainItemLabel>()
-        labelInfoList.add(
-            MarketMainItemLabel(LATEST, I18nUtil.getCodeLanMessage(LATEST))
+        val baseQuery = MarketAtomListQuery(
+            userId = userId,
+            page = page,
+            pageSize = pageSize,
+            urlProtocolTrim = urlProtocolTrim,
+            serviceScope = serviceScope
         )
-        futureList.add(
-            doList(
-                userId = userId,
+        // 辅助函数：构建标签与异步查询的配对
+        fun buildEntry(key: String, label: String, sortType: MarketAtomSortTypeEnum, classifyCode: String? = null) =
+            MarketMainItemLabel(key, label) to doList(
+                query = baseQuery.copy(classifyCode = classifyCode, sortType = sortType),
                 userDeptList = userDeptList,
-                keyword = null,
-                classifyCode = null,
-                labelCode = null,
-                score = null,
-                rdType = null,
-                yamlFlag = null,
-                recommendFlag = null,
-                qualityFlag = null,
-                sortType = MarketAtomSortTypeEnum.UPDATE_TIME,
-                desc = true,
-                page = page,
-                pageSize = pageSize,
-                urlProtocolTrim = urlProtocolTrim,
-                serviceScope = serviceScope
+                desc = true
             )
+        // 构建"最新"和"最热"固定分类
+        val entries = mutableListOf(
+            buildEntry(LATEST, I18nUtil.getCodeLanMessage(LATEST), MarketAtomSortTypeEnum.UPDATE_TIME),
+            buildEntry(HOTTEST, I18nUtil.getCodeLanMessage(HOTTEST), MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM)
         )
-        labelInfoList.add(
-            MarketMainItemLabel(
-                HOTTEST,
-                I18nUtil.getCodeLanMessage(HOTTEST)
-            )
-        )
-        futureList.add(
-            doList(
-                userId = userId,
-                userDeptList = userDeptList,
-                keyword = null,
-                classifyCode = null,
-                labelCode = null,
-                score = null,
-                rdType = null,
-                yamlFlag = null,
-                recommendFlag = null,
-                qualityFlag = null,
-                sortType = MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM,
-                desc = true,
-                page = page,
-                pageSize = pageSize,
-                urlProtocolTrim = urlProtocolTrim,
-                serviceScope = serviceScope
-            )
-        )
-
-        val classifyList = marketAtomClassifyDao.getAllAtomClassify(dslContext, serviceScope)
-        classifyList.forEach {
-            val classifyCode = it[KEY_CLASSIFY_CODE] as String
-            if (classifyCode != "trigger") {
-                val classifyName = it[KEY_CLASSIFY_NAME] as String
+        // 构建按分类聚合的条目（排除trigger）
+        marketAtomClassifyDao.getAllAtomClassify(dslContext, serviceScope)
+            .filter { (it[KEY_CLASSIFY_CODE] as String) != "trigger" }
+            .forEach {
+                val classifyCode = it[KEY_CLASSIFY_CODE] as String
                 val classifyLanName = I18nUtil.getCodeLanMessage(
                     messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
-                    defaultMessage = classifyName,
+                    defaultMessage = it[KEY_CLASSIFY_NAME] as String,
                     language = I18nUtil.getLanguage(userId)
                 )
-                labelInfoList.add(MarketMainItemLabel(classifyCode, classifyLanName))
-                futureList.add(
-                    doList(
-                        userId = userId,
-                        userDeptList = userDeptList,
-                        keyword = null,
-                        classifyCode = classifyCode,
-                        labelCode = null,
-                        score = null,
-                        rdType = null,
-                        yamlFlag = null,
-                        recommendFlag = null,
-                        qualityFlag = null,
-                        sortType = MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM,
-                        desc = true,
-                        page = page,
-                        pageSize = pageSize,
-                        urlProtocolTrim = urlProtocolTrim,
-                        serviceScope = serviceScope
-                    )
+                entries.add(
+                    buildEntry(classifyCode, classifyLanName, MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM, classifyCode)
                 )
             }
-        }
-        for (index in futureList.indices) {
-            val labelInfo = labelInfoList[index]
-            result.add(
-                MarketMainItem(
-                    key = labelInfo.key,
-                    label = labelInfo.label,
-                    records = futureList[index].get().records
-                )
-            )
-        }
-        return Result(result)
+
+        // 收集异步结果并组装返回值
+        return Result(entries.map { (label, future) ->
+            MarketMainItem(key = label.key, label = label.label, records = future.get().records)
+        })
     }
 
     /**
      * 插件市场，查询插件列表
      */
     @BkTimed(extraTags = ["web_operation", "getAtomList"], value = "store_web_operation")
-    override fun list(
-        userId: String,
-        keyword: String?,
-        classifyCode: String?,
-        labelCode: String?,
-        score: Int?,
-        rdType: AtomTypeEnum?,
-        yamlFlag: Boolean?,
-        recommendFlag: Boolean?,
-        qualityFlag: Boolean?,
-        sortType: MarketAtomSortTypeEnum?,
-        page: Int?,
-        pageSize: Int?,
-        urlProtocolTrim: Boolean,
-        serviceScope: ServiceScopeEnum?
-    ): MarketAtomResp {
-        // 获取用户组织架构
-        val userDeptList = storeUserService.getUserDeptList(userId)
-
-        return doList(
-            userId = userId,
-            userDeptList = userDeptList,
-            keyword = keyword,
-            classifyCode = classifyCode,
-            labelCode = labelCode,
-            score = score,
-            rdType = rdType,
-            sortType = sortType,
-            yamlFlag = yamlFlag,
-            recommendFlag = recommendFlag,
-            qualityFlag = qualityFlag,
-            desc = true,
-            page = page,
-            pageSize = pageSize,
-            urlProtocolTrim = urlProtocolTrim,
-            serviceScope = serviceScope
-        ).get()
+    override fun list(query: MarketAtomListQuery): MarketAtomResp {
+        val userDeptList = storeUserService.getUserDeptList(query.userId)
+        return doList(query = query, userDeptList = userDeptList, desc = true).get()
     }
 
     /**
@@ -586,93 +478,74 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         pageSize: Int
     ): Result<MyAtomResp?> {
         logger.info("getMyAtoms params:[$userId|$atomName|$page|$pageSize]")
-        // 获取有权限的插件代码列表
         val records = marketAtomDao.getMyAtoms(dslContext, userId, atomName, page, pageSize)
         val count = marketAtomDao.countMyAtoms(dslContext, userId, atomName)
-        // 获取项目ID对应的名称
-        val projectCodeList = mutableListOf<String>()
-        val atomCodeList = mutableListOf<String>()
-        val atomProjectMap = mutableMapOf<String, String>()
         val tAtom = TAtom.T_ATOM
         val tAtomEnvInfo = TAtomEnvInfo.T_ATOM_ENV_INFO
-        records?.forEach {
-            val atomCode = it[tAtom.ATOM_CODE] as String
-            atomCodeList.add(atomCode)
-            val testProjectCode = storeProjectRelDao.getUserStoreTestProjectCode(
-                dslContext = dslContext,
-                userId = userId,
-                storeCode = atomCode,
-                storeType = StoreTypeEnum.ATOM
+
+        val atomProjectMap = mutableMapOf<String, String>()
+        val atomCodeList = records?.map { record ->
+            val atomCode = record[tAtom.ATOM_CODE] as String
+            storeProjectRelDao.getUserStoreTestProjectCode(
+                dslContext = dslContext, userId = userId,
+                storeCode = atomCode, storeType = StoreTypeEnum.ATOM
+            )?.let { atomProjectMap[atomCode] = it }
+            atomCode
+        } ?: emptyList()
+
+        val projectMap = client.get(ServiceProjectResource::class)
+            .getNameByCode(atomProjectMap.values.joinToString(",")).data
+
+        val processingVersionInfoMap = buildProcessingVersionInfoMap(atomCodeList)
+
+        val myAtoms = records?.map { record ->
+            val atomCode = record[tAtom.ATOM_CODE] as String
+            val logoUrl = record[tAtom.LOGO_URL]
+            MyAtomRespItem(
+                atomId = record[tAtom.ID] as String,
+                name = record[tAtom.NAME] as String,
+                atomCode = atomCode,
+                language = record[tAtomEnvInfo.LANGUAGE]?.let { I18nUtil.getCodeLanMessage(it) },
+                category = AtomCategoryEnum.getAtomCategory((record[tAtom.CATEGROY] as Byte).toInt()),
+                logoUrl = logoUrl?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                },
+                version = record[tAtom.VERSION] as String,
+                atomStatus = AtomStatusEnum.getAtomStatus((record[tAtom.ATOM_STATUS] as Byte).toInt()),
+                projectName = projectMap?.get(atomProjectMap[atomCode]) ?: "",
+                releaseFlag = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode) > 0,
+                creator = record[tAtom.CREATOR] as String,
+                modifier = record[tAtom.MODIFIER] as String,
+                createTime = DateTimeUtil.toDateTime(record[tAtom.CREATE_TIME] as LocalDateTime),
+                updateTime = DateTimeUtil.toDateTime(record[tAtom.UPDATE_TIME] as LocalDateTime),
+                processingVersionInfos = processingVersionInfoMap?.get(atomCode),
+                codeSrc = record[tAtom.CODE_SRC]
             )
-            if (null != testProjectCode) {
-                projectCodeList.add(testProjectCode)
-                atomProjectMap[atomCode] = testProjectCode
-            }
-        }
-        val projectMap = client.get(ServiceProjectResource::class).getNameByCode(projectCodeList.joinToString(",")).data
+        } ?: emptyList()
+        return Result(MyAtomResp(count, page, pageSize, myAtoms))
+    }
+
+    private fun buildProcessingVersionInfoMap(
+        atomCodeList: List<String>
+    ): Map<String, List<AtomBaseInfo>>? {
+        if (atomCodeList.isEmpty()) return null
         val processingAtomRecords = marketAtomDao.getAtomsByConditions(
             dslContext = dslContext,
             atomCodeList = atomCodeList,
             atomStatusList = AtomStatusEnum.getProcessingStatusList()
-        )
-        // 获取插件处于流程中的版本信息
-        var processingVersionInfoMap: MutableMap<String, MutableList<AtomBaseInfo>>? = null
-        processingAtomRecords?.forEach { processingAtomRecord ->
-            if (processingAtomRecord.version == INIT_VERSION || processingAtomRecord.version.isNullOrBlank() ||
-                processingAtomRecord.branchTestFlag
-            ) {
-                return@forEach
-            }
-            if (processingVersionInfoMap == null) {
-                processingVersionInfoMap = mutableMapOf()
-            }
-            val atomCode = processingAtomRecord.atomCode
-            val atomBaseInfo = AtomBaseInfo(
-                atomId = processingAtomRecord.id,
-                atomCode = atomCode,
-                version = processingAtomRecord.version,
-                atomStatus = AtomStatusEnum.getAtomStatus(processingAtomRecord.atomStatus.toInt())
-            )
-            if (processingVersionInfoMap!!.containsKey(atomCode)) {
-                val atomBaseInfoList = processingVersionInfoMap!![atomCode]
-                atomBaseInfoList?.add(atomBaseInfo)
-            } else {
-                processingVersionInfoMap!![atomCode] = mutableListOf(atomBaseInfo)
-            }
-        }
-        val myAtoms = mutableListOf<MyAtomRespItem?>()
-        records?.forEach {
-            val atomCode = it[tAtom.ATOM_CODE] as String
-            var releaseFlag = false // 是否有处于上架状态的插件插件版本
-            val releaseAtomNum = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode)
-            if (releaseAtomNum > 0) {
-                releaseFlag = true
-            }
-            val logoUrl = it[tAtom.LOGO_URL]
-            myAtoms.add(
-                MyAtomRespItem(
-                    atomId = it[tAtom.ID] as String,
-                    name = it[tAtom.NAME] as String,
-                    atomCode = atomCode,
-                    language = it[tAtomEnvInfo.LANGUAGE]?.let { I18nUtil.getCodeLanMessage(it) },
-                    category = AtomCategoryEnum.getAtomCategory((it[tAtom.CATEGROY] as Byte).toInt()),
-                    logoUrl = logoUrl?.let {
-                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
-                    },
-                    version = it[tAtom.VERSION] as String,
-                    atomStatus = AtomStatusEnum.getAtomStatus((it[tAtom.ATOM_STATUS] as Byte).toInt()),
-                    projectName = projectMap?.get(atomProjectMap[atomCode]) ?: "",
-                    releaseFlag = releaseFlag,
-                    creator = it[tAtom.CREATOR] as String,
-                    modifier = it[tAtom.MODIFIER] as String,
-                    createTime = DateTimeUtil.toDateTime(it[tAtom.CREATE_TIME] as LocalDateTime),
-                    updateTime = DateTimeUtil.toDateTime(it[tAtom.UPDATE_TIME] as LocalDateTime),
-                    processingVersionInfos = processingVersionInfoMap?.get(atomCode),
-                    codeSrc = it[tAtom.CODE_SRC]
+        ) ?: return null
+
+        val result = processingAtomRecords
+            .filter { it.version != INIT_VERSION && !it.version.isNullOrBlank() && !it.branchTestFlag }
+            .groupBy({ it.atomCode }) { record ->
+                AtomBaseInfo(
+                    atomId = record.id,
+                    atomCode = record.atomCode,
+                    version = record.version,
+                    atomStatus = AtomStatusEnum.getAtomStatus(record.atomStatus.toInt())
                 )
-            )
-        }
-        return Result(MyAtomResp(count, page, pageSize, myAtoms))
+            }
+        return result.ifEmpty { null }
     }
 
     /**
@@ -792,126 +665,129 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         userId: String,
         serviceScope: ServiceScopeEnum? = null
     ): Result<AtomVersion?> {
-        val record = marketAtomDao.getAtomById(dslContext, atomId, serviceScope)
-        return if (null == record) {
-            Result(data = null)
-        } else {
-            val tAtom = TAtom.T_ATOM
-            val tAtomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
-            val tClassify = TClassify.T_CLASSIFY
-            val atomCode = record[tAtom.ATOM_CODE] as String
-            val defaultFlag = record[tAtom.DEFAULT_FLAG] as Boolean
-            val htmlTemplateVersion = record[tAtom.HTML_TEMPLATE_VERSION] as String
-            val projectCode = if (htmlTemplateVersion == FrontendTypeEnum.HISTORY.typeVersion) {
-                ""
-            } else {
-                storeProjectRelDao.getInitProjectCodeByStoreCode(
-                    dslContext = dslContext,
-                    storeCode = atomCode,
-                    storeType = StoreTypeEnum.ATOM.type.toByte()
-                )
-            }
-            val repositoryHashId = record[tAtom.REPOSITORY_HASH_ID]
-            var repositoryInfo: Repository? = null
-            try {
-                repositoryInfo = getRepositoryInfo(projectCode, repositoryHashId).data
-            } catch (ignored: Throwable) {
-                logger.warn("atom($atomCode) getAtomVersion|get repository info failed", ignored)
-            }
-            val flag = storeUserService.isCanInstallStoreComponent(defaultFlag, userId, atomCode, StoreTypeEnum.ATOM)
-            val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, atomCode, StoreTypeEnum.ATOM)
-            val feature = marketAtomFeatureDao.getAtomFeature(dslContext, atomCode)
-            // 单个字段（classifyCode、classifyName、labelList、jobType）根据传入的 serviceScope 返回对应的值
-            // 如果没有传入 serviceScope，则使用 PIPELINE 服务范围的值
-            val classifyCode = record[tClassify.CLASSIFY_CODE]
-            val classifyName = record[tClassify.CLASSIFY_NAME]
-            val classifyLanName = if (classifyCode != null) {
-                I18nUtil.getCodeLanMessage(
-                    messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
-                    defaultMessage = classifyName
-                )
-            } else classifyName
-            val jobType = record[tAtom.JOB_TYPE]
-            val labelList = atomLabelService.getLabelsByAtomId(atomId, serviceScope) ?: emptyList()
-            // serviceScopeDetails 返回所有 scope 的详情（包含分类名称和标签对象）
-            val serviceScopeDetails = atomServiceScopeUtil.buildServiceScopeDetails(
+        val record = marketAtomDao.getAtomById(dslContext, atomId, serviceScope) ?: return Result(data = null)
+
+        val tAtom = TAtom.T_ATOM
+        val tAtomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
+        val tClassify = TClassify.T_CLASSIFY
+        val atomCode = record[tAtom.ATOM_CODE] as String
+        val defaultFlag = record[tAtom.DEFAULT_FLAG] as Boolean
+        val htmlTemplateVersion = record[tAtom.HTML_TEMPLATE_VERSION] as String
+
+        val projectCode = resolveInitProjectCode(htmlTemplateVersion, atomCode)
+        val repositoryInfo = loadRepositoryInfoSafely(atomCode, projectCode, record[tAtom.REPOSITORY_HASH_ID])
+        val classifyLanName = resolveClassifyLanName(record[tClassify.CLASSIFY_CODE], record[tClassify.CLASSIFY_NAME])
+
+        val serviceScopeDetails = atomServiceScopeUtil.buildServiceScopeDetails(
+            atomId = atomId,
+            serviceScopeStr = record[tAtom.SERVICE_SCOPE],
+            classifyIdMapJson = record[tAtom.CLASSIFY_ID_MAP],
+            pipelineClassifyIdFallback = record[tAtom.CLASSIFY_ID]?.toString(),
+            jobTypeValue = record[tAtom.JOB_TYPE],
+            jobTypeMapValue = record[tAtom.JOB_TYPE_MAP],
+            osValue = record[tAtom.OS],
+            osMapValue = record[tAtom.OS_MAP]
+        )
+        val releaseType = record[tAtomVersionLog.RELEASE_TYPE]?.let {
+            ReleaseTypeEnum.getReleaseTypeObj(it.toInt())
+        }
+        val osStr = record[tAtom.OS]
+        val logoUrl = record[tAtom.LOGO_URL]
+        val description = record[tAtom.DESCRIPTION]
+
+        return Result(
+            AtomVersion(
                 atomId = atomId,
-                serviceScopeStr = record[tAtom.SERVICE_SCOPE],
-                classifyIdMapJson = record[tAtom.CLASSIFY_ID_MAP],
-                pipelineClassifyIdFallback = record[tAtom.CLASSIFY_ID]?.toString(),
-                jobTypeValue = record[tAtom.JOB_TYPE],
-                jobTypeMapValue = record[tAtom.JOB_TYPE_MAP],
-                osValue = record[tAtom.OS],
-                osMapValue = record[tAtom.OS_MAP]
+                atomCode = atomCode,
+                name = record[tAtom.NAME] as String,
+                logoUrl = logoUrl?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                },
+                classifyCode = record[tClassify.CLASSIFY_CODE],
+                classifyName = classifyLanName,
+                category = AtomCategoryEnum.getAtomCategory((record[tAtom.CATEGROY] as Byte).toInt()),
+                docsLink = record[tAtom.DOCS_LINK],
+                htmlTemplateVersion = htmlTemplateVersion,
+                atomType = AtomTypeEnum.getAtomType((record[tAtom.ATOM_TYPE] as Byte).toInt()),
+                jobType = record[tAtom.JOB_TYPE],
+                os = if (!osStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(
+                    osStr, List::class.java
+                ) as List<String> else null,
+                summary = record[tAtom.SUMMARY],
+                description = description?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(description) as? String
+                },
+                version = record[tAtom.VERSION],
+                atomStatus = AtomStatusEnum.getAtomStatus((record[tAtom.ATOM_STATUS] as Byte).toInt()),
+                releaseType = releaseType?.name,
+                versionContent = record[tAtomVersionLog.CONTENT],
+                language = marketAtomEnvInfoDao.getDefaultAtomEnvInfo(dslContext, atomId)
+                    ?.language?.let { I18nUtil.getCodeLanMessage(it) },
+                codeSrc = record[tAtom.CODE_SRC],
+                publisher = record[tAtom.PUBLISHER] as String,
+                modifier = record[tAtom.MODIFIER] as String,
+                creator = record[tAtom.CREATOR] as String,
+                createTime = DateTimeUtil.toDateTime(record[tAtom.CREATE_TIME] as LocalDateTime),
+                updateTime = DateTimeUtil.toDateTime(record[tAtom.UPDATE_TIME] as LocalDateTime),
+                flag = storeUserService.isCanInstallStoreComponent(
+                    defaultFlag, userId, atomCode, StoreTypeEnum.ATOM
+                ),
+                repositoryAuthorizer = repositoryInfo?.userName,
+                defaultFlag = defaultFlag,
+                projectCode = storeProjectRelDao.getUserStoreTestProjectCode(
+                    dslContext = dslContext, userId = userId,
+                    storeCode = atomCode, storeType = StoreTypeEnum.ATOM
+                ),
+                initProjectCode = projectCode,
+                labelList = atomLabelService.getLabelsByAtomId(atomId, serviceScope) ?: emptyList(),
+                userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, atomCode, StoreTypeEnum.ATOM),
+                visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(record[tAtom.VISIBILITY_LEVEL] as Int),
+                privateReason = record[tAtom.PRIVATE_REASON],
+                recommendFlag = marketAtomFeatureDao.getAtomFeature(dslContext, atomCode)?.recommendFlag,
+                frontendType = FrontendTypeEnum.getFrontendTypeObj(htmlTemplateVersion),
+                yamlFlag = true,
+                dailyStatisticList = getRecentDailyStatisticList(atomCode),
+                editFlag = marketAtomCommonService.checkEditCondition(atomCode),
+                honorInfos = storeHonorService.getStoreHonor(userId, StoreTypeEnum.ATOM, atomCode),
+                indexInfos = storeIndexManageService.getStoreIndexInfosByStoreCode(StoreTypeEnum.ATOM, atomCode),
+                serviceScopeDetails = serviceScopeDetails
             )
-            val releaseType = if (record[tAtomVersionLog.RELEASE_TYPE] != null) {
-                ReleaseTypeEnum.getReleaseTypeObj((record[tAtomVersionLog.RELEASE_TYPE] as Byte).toInt())
-            } else null
-            val atomStatus = AtomStatusEnum.getAtomStatus((record[tAtom.ATOM_STATUS] as Byte).toInt())
-            val version = record[tAtom.VERSION]
-            val osStr = record[tAtom.OS]
-            val defaultAtomEnvRecord = marketAtomEnvInfoDao.getDefaultAtomEnvInfo(dslContext, atomId)
-            val logoUrl = record[tAtom.LOGO_URL]
-            val description = record[tAtom.DESCRIPTION]
-            Result(
-                AtomVersion(
-                    atomId = atomId,
-                    atomCode = atomCode,
-                    name = record[tAtom.NAME] as String,
-                    logoUrl = logoUrl?.let {
-                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
-                    },
-                    classifyCode = classifyCode,
-                    classifyName = classifyLanName,
-                    category = AtomCategoryEnum.getAtomCategory((record[tAtom.CATEGROY] as Byte).toInt()),
-                    docsLink = record[tAtom.DOCS_LINK],
-                    htmlTemplateVersion = htmlTemplateVersion,
-                    atomType = AtomTypeEnum.getAtomType((record[tAtom.ATOM_TYPE] as Byte).toInt()),
-                    jobType = jobType,
-                    os = if (!osStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(
-                        osStr,
-                        List::class.java
-                    ) as List<String> else null,
-                    summary = record[tAtom.SUMMARY],
-                    description = description?.let {
-                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(description) as? String
-                    },
-                    version = version,
-                    atomStatus = atomStatus,
-                    releaseType = releaseType?.name,
-                    versionContent = record[tAtomVersionLog.CONTENT],
-                    language = defaultAtomEnvRecord?.language?.let { I18nUtil.getCodeLanMessage(it) },
-                    codeSrc = record[tAtom.CODE_SRC],
-                    publisher = record[tAtom.PUBLISHER] as String,
-                    modifier = record[tAtom.MODIFIER] as String,
-                    creator = record[tAtom.CREATOR] as String,
-                    createTime = DateTimeUtil.toDateTime(record[tAtom.CREATE_TIME] as LocalDateTime),
-                    updateTime = DateTimeUtil.toDateTime(record[tAtom.UPDATE_TIME] as LocalDateTime),
-                    flag = flag,
-                    repositoryAuthorizer = repositoryInfo?.userName,
-                    defaultFlag = defaultFlag,
-                    projectCode = storeProjectRelDao.getUserStoreTestProjectCode(
-                        dslContext = dslContext,
-                        userId = userId,
-                        storeCode = atomCode,
-                        storeType = StoreTypeEnum.ATOM
-                    ),
-                    initProjectCode = projectCode,
-                    labelList = labelList,
-                    userCommentInfo = userCommentInfo,
-                    visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(record[tAtom.VISIBILITY_LEVEL] as Int),
-                    privateReason = record[tAtom.PRIVATE_REASON],
-                    recommendFlag = feature?.recommendFlag,
-                    frontendType = FrontendTypeEnum.getFrontendTypeObj(htmlTemplateVersion),
-                    // 开启插件yml显示
-                    yamlFlag = true,
-                    dailyStatisticList = getRecentDailyStatisticList(atomCode),
-                    editFlag = marketAtomCommonService.checkEditCondition(atomCode),
-                    honorInfos = storeHonorService.getStoreHonor(userId, StoreTypeEnum.ATOM, atomCode),
-                    indexInfos = storeIndexManageService.getStoreIndexInfosByStoreCode(StoreTypeEnum.ATOM, atomCode),
-                    serviceScopeDetails = serviceScopeDetails
-                )
+        )
+    }
+
+    private fun resolveInitProjectCode(htmlTemplateVersion: String, atomCode: String): String? {
+        return if (htmlTemplateVersion == FrontendTypeEnum.HISTORY.typeVersion) {
+            ""
+        } else {
+            storeProjectRelDao.getInitProjectCodeByStoreCode(
+                dslContext = dslContext,
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM.type.toByte()
             )
+        }
+    }
+
+    private fun loadRepositoryInfoSafely(
+        atomCode: String,
+        projectCode: String?,
+        repositoryHashId: String?
+    ): Repository? {
+        return try {
+            getRepositoryInfo(projectCode, repositoryHashId).data
+        } catch (ignored: Throwable) {
+            logger.warn("atom($atomCode) getAtomVersion|get repository info failed", ignored)
+            null
+        }
+    }
+
+    private fun resolveClassifyLanName(classifyCode: String?, classifyName: String?): String? {
+        return if (classifyCode != null) {
+            I18nUtil.getCodeLanMessage(
+                messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
+                defaultMessage = classifyName
+            )
+        } else {
+            classifyName
         }
     }
 
@@ -921,7 +797,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         // 统计昨天为截止日期的最近一周的数据
         val endTime = DateTimeUtil.convertDateToFormatLocalDateTime(
             date = DateTimeUtil.getFutureDateFromNow(Calendar.DAY_OF_MONTH, -1),
-            format = "yyyy-MM-dd"
+            format = DateTimeUtil.YYYY_MM_DD
         )
         return storeDailyStatisticService.getDailyStatisticListByCode(
             storeCode = atomCode,
@@ -1117,71 +993,67 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     override fun deleteAtom(userId: String, atomCode: String): Result<Boolean> {
         logger.info("deleteAtom userId: $userId , atomCode: $atomCode")
         val type = StoreTypeEnum.ATOM.type.toByte()
-        val isOwner = storeMemberDao.isStoreAdmin(dslContext, userId, atomCode, type)
-        if (!isOwner) {
+        val typeName = StoreTypeEnum.ATOM.name
+        val language = I18nUtil.getLanguage(userId)
+        // 校验是否为管理员
+        if (!storeMemberDao.isStoreAdmin(dslContext, userId, atomCode, type)) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = NO_COMPONENT_ADMIN_PERMISSION,
                 params = arrayOf(atomCode),
-                language = I18nUtil.getLanguage(userId)
+                language = language
             )
         }
+        // 校验是否有已发布版本
         val releasedCount = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode)
         logger.info("releasedCount: $releasedCount")
         if (releasedCount > 0) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_COMPONENT_RELEASED_IS_NOT_ALLOW_DELETE,
                 params = arrayOf(atomCode),
-                language = I18nUtil.getLanguage(userId)
+                language = language
             )
         }
-        // 如果已经有流水线在使用该插件，则不能删除
-        val pipelineStat =
-            client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(atomCode, null).data
-        val pipelines = pipelineStat?.get(atomCode) ?: 0
+        // 校验是否有流水线在使用该插件
+        val pipelines = client.get(ServiceMeasurePipelineResource::class)
+            .batchGetPipelineCountByAtomCode(atomCode, null).data?.get(atomCode) ?: 0
         if (pipelines > 0) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_ATOM_USED_IS_NOT_ALLOW_DELETE,
                 params = arrayOf(atomCode),
-                language = I18nUtil.getLanguage(userId)
+                language = language
             )
         }
         // 删除仓库插件包文件
         val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
             dslContext = dslContext,
             storeCode = atomCode,
-            storeType = StoreTypeEnum.ATOM.type.toByte()
+            storeType = type
         ) ?: ""
-        val deleteAtomFileResult =
-            client.get(ServiceArchiveAtomResource::class).deleteAtomFile(userId, initProjectCode, atomCode)
-        if (deleteAtomFileResult.isNotOk()) {
-            return deleteAtomFileResult
-        }
+        client.get(ServiceArchiveAtomResource::class)
+            .deleteAtomFile(userId, initProjectCode, atomCode)
+            .takeIf { it.isNotOk() }?.let { return it }
         // 删除代码库
         val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
-        val deleteAtomRepositoryResult = deleteAtomRepository(
+        deleteAtomRepository(
             userId = userId,
             projectCode = initProjectCode,
             repositoryHashId = atomRecord!!.repositoryHashId,
             tokenType = TokenTypeEnum.PRIVATE_KEY
-        )
-        if (deleteAtomRepositoryResult.isNotOk()) {
-            return deleteAtomRepositoryResult
-        }
+        ).takeIf { it.isNotOk() }?.let { return it }
+        // 执行事务删除数据库记录和缓存
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            storeCommonService.deleteStoreInfo(context, atomCode, StoreTypeEnum.ATOM.type.toByte())
+            storeCommonService.deleteStoreInfo(context, atomCode, type)
             atomApproveRelDao.deleteByAtomCode(context, atomCode)
             marketAtomEnvInfoDao.deleteAtomEnvInfoByCode(context, atomCode)
             marketAtomFeatureDao.deleteAtomFeature(context, atomCode)
             atomLabelRelDao.deleteByAtomCode(context, atomCode)
             marketAtomVersionLogDao.deleteByAtomCode(context, atomCode)
             marketAtomDao.deleteByAtomCode(context, atomCode)
-            // 删除插件默认标识缓存
-            redisOperation.removeSetMember(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
-            // 清空插件post信息缓存
+            // 清理缓存
+            redisOperation.removeSetMember(StoreUtils.getStorePublicFlagKey(typeName), atomCode)
             redisOperation.delete("$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode")
-            // 清空插件运行时信息缓存
-            redisOperation.delete(StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode))
+            redisOperation.delete(StoreUtils.getStoreRunInfoKey(typeName, atomCode))
         }
         return Result(true)
     }
@@ -1191,333 +1063,23 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         os: String?,
         classType: String?,
         defaultShowFlag: Boolean?
-    ): String {
-        val atomCodeList = if (atomCode.isNullOrBlank()) {
-            marketAtomDao.getSupportGitCiAtom(dslContext, os, classType).map { it.value1() }
-        } else {
-            listOf(atomCode)
-        }
-
-        val buf = StringBuilder()
-        atomCodeList.filterNotNull().forEach {
-            val atom = marketAtomDao.getLatestAtomByCode(dslContext, it) ?: return@forEach
-            val feature = marketAtomFeatureDao.getAtomFeature(dslContext, it) ?: return@forEach
-            if (null == feature.recommendFlag || feature.recommendFlag) {
-                buf.append(generateYaml(atom, defaultShowFlag))
-                buf.append("\r\n")
-                buf.append("\r\n")
-            } else {
-                return@forEach
-            }
-        }
-
-        return buf.toString()
-    }
+    ): String = atomYamlGenerateService.generateCiYaml(atomCode, os, classType, defaultShowFlag)
 
     override fun generateCiV2Yaml(
         atomCode: String,
         os: String?,
         classType: String?,
         defaultShowFlag: Boolean?
-    ): String {
-        val atom = marketAtomDao.getLatestAtomByCode(dslContext, atomCode) ?: return ""
-        val feature = marketAtomFeatureDao.getAtomFeature(dslContext, atomCode) ?: return ""
-        return if (null == feature.recommendFlag || feature.recommendFlag) {
-            generateV2Yaml(atom, defaultShowFlag)
-        } else {
-            ""
-        }
-    }
+    ): String = atomYamlGenerateService.generateCiV2Yaml(atomCode, os, classType, defaultShowFlag)
 
-    override fun getAtomOutput(atomCode: String): List<AtomOutput> {
-        val atom = marketAtomDao.getLatestAtomByCode(dslContext, atomCode) ?: return emptyList()
-        val propJsonStr = storeI18nMessageService.parseJsonStrI18nInfo(
-            jsonStr = atom.props,
-            keyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atom.atomCode, atom.version)
-        )
-        val propMap = JsonUtil.toMap(propJsonStr)
-        val outputDataMap = propMap[ATOM_OUTPUT] as? Map<String, Any>
-        return outputDataMap?.keys?.map { outputKey ->
-            val outputDataObj = outputDataMap[outputKey]
-            AtomOutput(
-                name = outputKey,
-                desc = if (outputDataObj is Map<*, *>) outputDataObj[OUTPUT_DESC]?.toString() else null
-            )
-        } ?: emptyList()
-    }
+    override fun getAtomOutput(atomCode: String): List<AtomOutput> =
+        atomPropsService.getAtomOutput(atomCode)
 
-    override fun getAtomsRely(getRelyAtom: GetRelyAtom): Map<String, Map<String, Any>> {
-        val atomList = marketAtomDao.getLatestAtomListByCodes(
-            dslContext = dslContext,
-            atomCodes = getRelyAtom.thirdPartyElementList.map { it.atomCode }
-        )
-        val getMap = getRelyAtom.thirdPartyElementList.map { it.atomCode to it.version }.toMap()
-        val result = mutableMapOf<String, Map<String, Any>>()
-        atomList.forEach lit@{
-            if (it == null) return@lit
-            var value = it
-            val atom = getMap[it.atomCode]
-            if (atom?.contains("*") == true &&
-                !it.version.startsWith(atom.replace("*", ""))
-            ) {
-                value = atomDao.getPipelineAtom(dslContext, it.atomCode, atom) ?: return@lit
-            }
-            val itemMap = mutableMapOf<String, Any>()
-            val propJsonStr = storeI18nMessageService.parseJsonStrI18nInfo(
-                jsonStr = value.props,
-                keyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, value.atomCode, value.version)
-            )
-            val props: Map<String, Any> = jacksonObjectMapper().readValue(propJsonStr)
-            if (null != props["input"]) {
-                val input = props["input"] as? Map<String, Any>
-                input?.forEach { inputIt ->
-                    val paramKey = inputIt.key
-                    val paramValueMap = inputIt.value as? Map<String, Any>
-                    val rely = paramValueMap?.get("rely")
-                    if (rely != null) {
-                        itemMap[paramKey] = rely
-                    }
-                }
-            }
-            result[it.atomCode] = itemMap
-        }
-        return result
-    }
+    override fun getAtomsRely(getRelyAtom: GetRelyAtom): Map<String, Map<String, Any>> =
+        atomPropsService.getAtomsRely(getRelyAtom)
 
-    override fun getAtomsDefaultValue(atom: ElementThirdPartySearchParam): Map<String, Any> {
-        val atomInfo = atomDao.getPipelineAtom(dslContext, atom.atomCode, atom.version) ?: return emptyMap()
-        val res = mutableMapOf<String, Any>()
-        val props: Map<String, Any> = jacksonObjectMapper().readValue(atomInfo.props)
-        if (null != props["input"]) {
-            val input = props["input"] as Map<*, *>
-            input.forEach { inputIt ->
-                val paramKey = inputIt.key.toString()
-                val paramValueMap = inputIt.value as Map<*, *>
-                if (paramValueMap["default"] != null) {
-                    res[paramKey] = paramValueMap["default"]!!
-                }
-            }
-        }
-        return res
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun generateYaml(atom: TAtomRecord, defaultShowFlag: Boolean?): String {
-        val sb = StringBuilder()
-        if (defaultShowFlag != null && defaultShowFlag) {
-            sb.append("h2. ${atom.name}\r\n")
-                .append("{code:theme=Midnight|linenumbers=true|language=YAML|collapse=false}\r\n")
-        }
-        sb.append("- taskType: marketBuild@latest\r\n")
-            .append("  displayName: ${atom.name}\r\n")
-            .append("  inputs:\r\n")
-            .append("    atomCode: ${atom.atomCode}\r\n")
-            .append("    name: ${atom.name}\r\n")
-            .append("    version: ${atom.version}\r\n")
-            .append("    data:\r\n")
-            .append("      input:\r\n")
-        val propJsonStr = storeI18nMessageService.parseJsonStrI18nInfo(
-            jsonStr = atom.props,
-            keyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atom.atomCode, atom.version)
-        )
-        val props: Map<String, Any> = jacksonObjectMapper().readValue(propJsonStr)
-        if (null != props["input"]) {
-            val input = props["input"] as Map<String, Any>
-            input.forEach {
-                val paramKey = it.key
-                val paramValueMap = it.value as Map<String, Any>
-
-                val label = paramValueMap["label"]
-                val text = paramValueMap["text"]
-                val desc = paramValueMap["desc"]
-                val description = if (label?.toString().isNullOrBlank()) {
-                    if (text?.toString().isNullOrBlank()) {
-                        desc
-                    } else {
-                        text
-                    }
-                } else {
-                    label
-                }
-                val type = paramValueMap["type"]
-                val required = paramValueMap["required"]
-                val defaultValue = paramValueMap["default"]
-                val multipleMap = paramValueMap["optionsConf"]
-                val multiple = if (null != multipleMap && null != (multipleMap as Map<String, String>)["multiple"]) {
-                    "true".equals(multipleMap["multiple"].toString(), true)
-                } else {
-                    false
-                }
-                val requiredName = I18nUtil.getCodeLanMessage(
-                    messageCode = REQUIRED
-                )
-                val defaultName = I18nUtil.getCodeLanMessage(
-                    messageCode = DEFAULT
-                )
-                if ((type == "selector" && multiple) ||
-                    type in listOf("atom-checkbox-list", "staff-input", "company-staff-input", "parameter")
-                ) {
-                    sb.append("        $paramKey: ")
-                    sb.append("\t\t# $description")
-                    if (null != required && "true".equals(required.toString(), true)) {
-                        sb.append(", $requiredName")
-                    }
-                    if (null != defaultValue && (defaultValue.toString()).isNotBlank()) {
-                        sb.append(", $defaultName: ${defaultValue.toString().replace("\n", "")}")
-                    }
-                    sb.append("\r\n")
-                    sb.append("        - string\r\n")
-                    sb.append("        - string\r\n")
-                } else {
-                    sb.append("        $paramKey: ")
-                    if (type == "atom-checkbox") {
-                        sb.append("boolean")
-                    } else {
-                        sb.append("string")
-                    }
-                    sb.append("\t\t# ${description.toString().replace("\n", "")}")
-                    if (null != required && "true".equals(required.toString(), true)) {
-                        sb.append(", $requiredName")
-                    }
-                    if (null != defaultValue && (defaultValue.toString()).isNotBlank()) {
-                        sb.append(", $defaultName: ${defaultValue.toString().replace("\n", "")}")
-                    }
-                    sb.append("\r\n")
-                }
-            }
-        }
-
-        if (null != props["output"]) {
-            sb.append("      output: \r\n")
-            val output = props["output"] as Map<String, Any>
-            output.forEach {
-                sb.append("        ${it.key}: string \r\n")
-            }
-        } else {
-            sb.append("      output: {}\r\n")
-        }
-        if (defaultShowFlag != null && defaultShowFlag) {
-            sb.append("{code}\r\n \r\n")
-        }
-        return sb.toString()
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun generateV2Yaml(atom: TAtomRecord, defaultShowFlag: Boolean?): String {
-        val userId = I18nUtil.getRequestUserId()
-        val sb = StringBuilder()
-        if (defaultShowFlag != null && defaultShowFlag) {
-            sb.append("h2. ${atom.name}\r\n")
-                .append("{code:theme=Midnight|linenumbers=true|language=YAML|collapse=false}\r\n")
-        }
-        val latestVersion = "${atom.version.split('.').first()}.*"
-        sb.append("- uses: ${atom.atomCode}@$latestVersion\r\n")
-            .append("  name: ${atom.name}\r\n")
-        val propJsonStr = storeI18nMessageService.parseJsonStrI18nInfo(
-            jsonStr = atom.props,
-            keyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atom.atomCode, atom.version)
-        )
-        val props: Map<String, Any> = jacksonObjectMapper().readValue(propJsonStr)
-        if (null != props["input"]) {
-            sb.append("  with:\r\n")
-            val input = props["input"] as Map<String, Any>
-            input.forEach {
-                val paramKey = it.key
-                val paramValueMap = it.value as Map<String, Any>
-
-                val label = paramValueMap["label"]
-                val text = paramValueMap["text"]
-                val desc = paramValueMap["desc"]
-                val description = if (!label?.toString().isNullOrBlank()) {
-                    label.toString()
-                } else if (!text?.toString().isNullOrBlank()) {
-                    text.toString()
-                } else if (!desc?.toString().isNullOrBlank()) {
-                    desc.toString()
-                } else {
-                    I18nUtil.getCodeLanMessage(NO_LABEL)
-                }
-                val type = paramValueMap["type"]
-                val required = null != paramValueMap["required"] &&
-                    "true".equals(paramValueMap["required"].toString(), true)
-                val defaultValue = paramValueMap["default"]
-                val multipleMap = paramValueMap["optionsConf"]
-                val multiple = if (null != multipleMap && null != (multipleMap as Map<String, String>)["multiple"]) {
-                    "true".equals(multipleMap["multiple"].toString(), true)
-                } else {
-                    false
-                }
-                val requiredName = I18nUtil.getCodeLanMessage(REQUIRED)
-                val defaultName = I18nUtil.getCodeLanMessage(DEFAULT)
-                val optionsName = I18nUtil.getCodeLanMessage(OPTIONS)
-                val multipleName =
-                    I18nUtil.getCodeLanMessage(MULTIPLE_SELECTOR)
-                val singleName =
-                    I18nUtil.getCodeLanMessage(SINGLE_SELECTOR)
-                try {
-                    if ((type == "selector" && multiple) ||
-                        type in listOf("atom-checkbox-list", "staff-input", "company-staff-input", "parameter")
-                    ) {
-                        addParamComment(
-                            builder = sb,
-                            description = description,
-                            paramKey = paramKey,
-                            required = required,
-                            optionsName = optionsName,
-                            selectorTypeName = multipleName,
-                            paramValueMap = paramValueMap,
-                            requiredName = requiredName,
-                            defaultValue = defaultValue,
-                            defaultName = defaultName
-                        )
-                        sb.append("\r\n")
-                        sb.append("    $paramKey:\r\n")
-                        sb.append("        - string\r\n")
-                        sb.append("        - string\r\n")
-                    } else {
-                        addParamComment(
-                            builder = sb,
-                            description = description,
-                            paramKey = paramKey,
-                            required = required,
-                            optionsName = optionsName,
-                            selectorTypeName = singleName,
-                            paramValueMap = paramValueMap,
-                            requiredName = requiredName,
-                            defaultValue = defaultValue,
-                            defaultName = defaultName
-                        )
-                        sb.append("\r\n")
-                        sb.append("    $paramKey: ")
-                        when (type) {
-                            "atom-checkbox" -> sb.append("boolean")
-                            "key-value-normal" -> sb.append(
-                                "\n    - key: string" +
-                                    "\n      value: string"
-                            )
-
-                            else -> sb.append("string")
-                        }
-                        sb.append("\r\n")
-                    }
-                } catch (ignored: Throwable) {
-                    sb.insert(
-                        0,
-                        MessageUtil.getMessageByLocale(
-                            TASK_JSON_CONFIGURE_FORMAT_ERROR,
-                            I18nUtil.getLanguage(userId),
-                            arrayOf(paramKey, "${ignored.message}")
-                        )
-                    )
-                }
-            }
-        }
-
-        if (defaultShowFlag != null && defaultShowFlag) {
-            sb.append("{code}\r\n \r\n")
-        }
-        return sb.toString()
-    }
+    override fun getAtomsDefaultValue(atom: ElementThirdPartySearchParam): Map<String, Any> =
+        atomPropsService.getAtomsDefaultValue(atom)
 
     override fun getPostAtoms(projectCode: String, atomItems: Set<AtomPostReqItem>): Result<AtomPostResp> {
         logger.info("getPostAtoms projectCode:$projectCode,atomItems:$atomItems")
@@ -1555,95 +1117,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         filePath: String
     ): Result<Boolean>
 
-    @Suppress("UNCHECKED_CAST")
-    private fun addParamComment(
-        builder: StringBuilder,
-        description: String,
-        paramKey: String,
-        required: Boolean,
-        optionsName: String,
-        selectorTypeName: String,
-        paramValueMap: Map<String, Any>,
-        requiredName: Any?,
-        defaultValue: Any?,
-        defaultName: Any?
-    ) {
-        builder.append("    # ${description.replace("\n", "")}")
-        if (required) {
-            builder.append(", $requiredName")
-        }
-        if (null != defaultValue && (defaultValue.toString()).isNotBlank()) {
-            builder.append(", $defaultName: ${defaultValue.toString().replace("\n", "")}")
-        }
-        val rely = paramValueMap["rely"]
-        if (null != rely) {
-            parseRely(builder, rely as Map<String, Any>)
-        }
-        val options = paramValueMap["options"]
-        if (null != options) {
-            builder.append(", $selectorTypeName")
-            builder.append(", $optionsName:")
-            parseOptions(builder, options as List<Map<String, Any>>)
-        }
-        val list = paramValueMap["list"]
-        if (null != list) {
-            builder.append(", $optionsName:")
-            parseList(builder, list as List<Map<String, Any>>)
-        }
-    }
-
-    private fun parseRely(builder: StringBuilder, rely: Map<String, Any>) {
-        val dang = I18nUtil.getCodeLanMessage(messageCode = DANG)
-        val and = I18nUtil.getCodeLanMessage(messageCode = AND)
-        val or = I18nUtil.getCodeLanMessage(messageCode = OR)
-        val timeToSelect =
-            I18nUtil.getCodeLanMessage(messageCode = TIMETOSELECT)
-        try {
-            if (null != rely["expression"]) {
-                val expression = rely["expression"] as List<Map<String, Any>>
-                builder.append(", $dang")
-                val link = if (rely["operation"] == "AND") and else or
-                expression.map { " [${it["key"]}] = [${it["value"]}] " }.forEachIndexed { index, value ->
-                    builder.append(value)
-                    if (index < expression.size - 1) {
-                        builder.append(link)
-                    }
-                }
-                builder.append(timeToSelect)
-            }
-        } catch (ignored: Throwable) {
-            logger.warn("load atom input[rely] with error", ignored)
-        }
-    }
-
-    private fun parseOptions(builder: StringBuilder, options: List<Map<String, Any>>) {
-        try {
-            options.forEachIndexed { index, map ->
-                if (index == options.size - 1) builder.append(" ${map["id"]}[${map["name"]}]")
-                else builder.append(" ${map["id"]}[${map["name"]}] |")
-            }
-            builder.removeSuffix("|")
-        } catch (ignored: Throwable) {
-            logger.warn("load atom input[options] with error", ignored)
-        }
-    }
-
-    private fun parseList(builder: StringBuilder, list: List<Map<String, Any>>) {
-        try {
-            list.forEachIndexed { index, map ->
-                val key = if (null != map["label"]) map["label"] else if (null != map["id"]) map["id"] else
-                    null ?: return
-                val value = if (null != map["value"]) map["value"] else if (null != map["name"]) map["name"] else
-                    null ?: return
-                if (index == list.size - 1) builder.append(" $key[$value]")
-                else builder.append(" $key[$value] |")
-            }
-            builder.removeSuffix("|")
-        } catch (ignored: Throwable) {
-            logger.warn("load atom input[list] with error", ignored)
-        }
-    }
-
     override fun updateAtomConfigCache(
         atomCode: String,
         atomVersion: String,
@@ -1651,45 +1124,47 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         props: String?
     ) {
         try {
-            val propsJsonStr = if (props.isNullOrBlank()) {
-                atomDao.getAtomProps(dslContext, atomCode, atomVersion)
-            } else {
-                props
-            }
+            val propsJsonStr = props?.takeIf { it.isNotBlank() }
+                ?: atomDao.getAtomProps(dslContext, atomCode, atomVersion)
             if (propsJsonStr.isNullOrBlank()) return
-            if (kProperty == AtomRunInfo::sensitiveParams.name) {
-                val params = marketAtomCommonService.getAtomSensitiveParams(propsJsonStr)
-                // 去缓存中获取插件运行时信息
-                val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
-                val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, atomVersion)
-                if (!atomRunInfoJson.isNullOrEmpty() && !params.isNullOrEmpty()) {
-                    val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
-                    atomRunInfo.sensitiveParams = params.joinToString(",")
-                    redisOperation.hset(
-                        key = atomRunInfoKey,
-                        hashKey = atomVersion,
-                        values = JsonUtil.toJson(atomRunInfo)
-                    )
-                }
-            }
 
-            if (kProperty == AtomRunInfo::canPauseBeforeRun.name) {
-                val canPauseBeforeRun = marketAtomCommonService.getAtomCanPauseBeforeRun(propsJsonStr)
-                // 去缓存中获取插件运行时信息
-                val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
-                val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, atomVersion)
-                if (!atomRunInfoJson.isNullOrEmpty() && canPauseBeforeRun) {
-                    val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
-                    atomRunInfo.canPauseBeforeRun = true
-                    redisOperation.hset(
-                        key = atomRunInfoKey,
-                        hashKey = atomVersion,
-                        values = JsonUtil.toJson(atomRunInfo)
-                    )
+            when (kProperty) {
+                AtomRunInfo::sensitiveParams.name -> {
+                    val params = marketAtomCommonService.getAtomSensitiveParams(propsJsonStr)
+                    if (!params.isNullOrEmpty()) {
+                        updateAtomRunInfoCache(atomCode, atomVersion) {
+                            it.sensitiveParams = params.joinToString(",")
+                        }
+                    }
+                }
+                AtomRunInfo::canPauseBeforeRun.name -> {
+                    if (marketAtomCommonService.getAtomCanPauseBeforeRun(propsJsonStr)) {
+                        updateAtomRunInfoCache(atomCode, atomVersion) {
+                            it.canPauseBeforeRun = true
+                        }
+                    }
                 }
             }
-        } catch (e: Exception) {
-            logger.warn("updateAtomSensitiveCacheConfig atomCode:$atomCode |atomVersion:$atomVersion failed", e)
+        } catch (ignored: Throwable) {
+            logger.warn("updateAtomSensitiveCacheConfig atomCode:$atomCode |atomVersion:$atomVersion failed", ignored)
+        }
+    }
+
+    private fun updateAtomRunInfoCache(
+        atomCode: String,
+        atomVersion: String,
+        updater: (AtomRunInfo) -> Unit
+    ) {
+        val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
+        val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, atomVersion)
+        if (!atomRunInfoJson.isNullOrEmpty()) {
+            val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
+            updater(atomRunInfo)
+            redisOperation.hset(
+                key = atomRunInfoKey,
+                hashKey = atomVersion,
+                values = JsonUtil.toJson(atomRunInfo)
+            )
         }
     }
 }
