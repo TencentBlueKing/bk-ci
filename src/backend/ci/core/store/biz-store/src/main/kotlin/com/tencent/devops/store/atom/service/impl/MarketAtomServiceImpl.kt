@@ -61,7 +61,6 @@ import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.AtomLabelRelDao
 import com.tencent.devops.store.atom.dao.MarketAtomClassifyDao
 import com.tencent.devops.store.atom.dao.MarketAtomDao
-import com.tencent.devops.store.pojo.atom.MarketAtomDaoQuery
 import com.tencent.devops.store.atom.dao.MarketAtomEnvInfoDao
 import com.tencent.devops.store.atom.dao.MarketAtomFeatureDao
 import com.tencent.devops.store.atom.dao.MarketAtomVersionLogDao
@@ -72,17 +71,16 @@ import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.atom.service.MarketAtomEnvService
 import com.tencent.devops.store.atom.service.MarketAtomService
 import com.tencent.devops.store.atom.util.AtomServiceScopeUtil
+import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.StoreBuildInfoDao
 import com.tencent.devops.store.common.dao.StoreErrorCodeInfoDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
-import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.common.service.StoreCommentService
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreDailyStatisticService
 import com.tencent.devops.store.common.service.StoreHonorService
-import com.tencent.devops.store.common.service.StoreI18nMessageService
 import com.tencent.devops.store.common.service.StoreIndexManageService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.StoreTotalStatisticService
@@ -104,6 +102,7 @@ import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
+import com.tencent.devops.store.pojo.atom.MarketAtomDaoQuery
 import com.tencent.devops.store.pojo.atom.MarketAtomListQuery
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.MyAtomResp
@@ -234,9 +233,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     lateinit var storeDailyStatisticService: StoreDailyStatisticService
 
     @Autowired
-    lateinit var storeI18nMessageService: StoreI18nMessageService
-
-    @Autowired
     lateinit var atomYamlGenerateService: AtomYamlGenerateService
 
     @Autowired
@@ -259,14 +255,13 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         private val executor = Executors.newFixedThreadPool(30)
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun doList(
         query: MarketAtomListQuery,
         userDeptList: List<Int>,
         desc: Boolean?
     ): Future<MarketAtomResp> {
         val referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER)
-        return executor.submit(Callable<MarketAtomResp> {
+        return executor.submit(Callable {
             referer?.let { ThreadLocalUtil.set(REFERER, it) }
             try {
                 val daoQuery = MarketAtomDaoQuery(
@@ -315,27 +310,21 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         serviceScope: ServiceScopeEnum?
     ): AtomAggregateData {
         val storeType = StoreTypeEnum.ATOM
-        val visibleData = storeCommonService.generateStoreVisibleData(atomCodeList, storeType)
-        val statisticData = storeTotalStatisticService.getStatisticByCodeList(
-            storeType = storeType.type.toByte(),
-            storeCodeList = atomCodeList
-        )
-        val honorInfoMap = storeHonorService.getHonorInfosByStoreCodes(
-            storeType = storeType,
-            storeCodes = atomCodeList,
-            userId = userId
-        )
-        val indexInfosMap = storeIndexManageService.getStoreIndexInfosByStoreCodes(storeType, atomCodeList)
-        val memberData = atomMemberService.batchListMember(atomCodeList, storeType).data
-        val classifyList = classifyService.getAllClassify(storeType.type.toByte(), serviceScope).data
-        val classifyMap = classifyList?.associate { it.id to it.classifyCode } ?: emptyMap()
         return AtomAggregateData(
-            visibleData = visibleData,
-            statisticData = statisticData,
-            honorInfoMap = honorInfoMap,
-            indexInfosMap = indexInfosMap,
-            memberData = memberData,
-            classifyMap = classifyMap
+            visibleData = storeCommonService.generateStoreVisibleData(atomCodeList, storeType),
+            statisticData = storeTotalStatisticService.getStatisticByCodeList(
+                storeType = storeType.type.toByte(),
+                storeCodeList = atomCodeList
+            ),
+            honorInfoMap = storeHonorService.getHonorInfosByStoreCodes(
+                storeType = storeType,
+                storeCodes = atomCodeList,
+                userId = userId
+            ),
+            indexInfosMap = storeIndexManageService.getStoreIndexInfosByStoreCodes(storeType, atomCodeList),
+            memberData = atomMemberService.batchListMember(atomCodeList, storeType).data,
+            classifyMap = classifyService.getAllClassify(storeType.type.toByte(), serviceScope).data
+                ?.associate { it.id to it.classifyCode } ?: emptyMap()
         )
     }
 
@@ -395,18 +384,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     }
 
     private fun processLogoUrl(rawLogoUrl: String?, urlProtocolTrim: Boolean): String? {
-        var logoUrl = rawLogoUrl?.let {
-            StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
-        }
-        logoUrl = if (logoUrl?.contains("?") == true) {
-            logoUrl.plus("&logo=true")
-        } else {
-            logoUrl?.plus("?logo=true")
-        }
-        if (urlProtocolTrim) {
-            logoUrl = RegexUtils.trimProtocol(logoUrl)
-        }
-        return logoUrl
+        // 装饰原始URL并拼接logo参数
+        val logoUrl = rawLogoUrl
+            ?.let { StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String }
+            ?.let { url -> url + if ("?" in url) "&logo=true" else "?logo=true" }
+        // 根据需要裁剪协议头
+        return if (urlProtocolTrim) RegexUtils.trimProtocol(logoUrl) else logoUrl
     }
 
     /**
@@ -421,9 +404,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         serviceScope: ServiceScopeEnum?
     ): Result<List<MarketMainItem>> {
         val userDeptList = storeUserService.getUserDeptList(userId)
-        val futureList = mutableListOf<Future<MarketAtomResp>>()
-        val labelInfoList = mutableListOf<MarketMainItemLabel>()
-
         val baseQuery = MarketAtomListQuery(
             userId = userId,
             page = page,
@@ -431,58 +411,37 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             urlProtocolTrim = urlProtocolTrim,
             serviceScope = serviceScope
         )
-
-        labelInfoList.add(MarketMainItemLabel(LATEST, I18nUtil.getCodeLanMessage(LATEST)))
-        futureList.add(
-            doList(
-                query = baseQuery.copy(sortType = MarketAtomSortTypeEnum.UPDATE_TIME),
+        // 辅助函数：构建标签与异步查询的配对
+        fun buildEntry(key: String, label: String, sortType: MarketAtomSortTypeEnum, classifyCode: String? = null) =
+            MarketMainItemLabel(key, label) to doList(
+                query = baseQuery.copy(classifyCode = classifyCode, sortType = sortType),
                 userDeptList = userDeptList,
                 desc = true
             )
+        // 构建"最新"和"最热"固定分类
+        val entries = mutableListOf(
+            buildEntry(LATEST, I18nUtil.getCodeLanMessage(LATEST), MarketAtomSortTypeEnum.UPDATE_TIME),
+            buildEntry(HOTTEST, I18nUtil.getCodeLanMessage(HOTTEST), MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM)
         )
-
-        labelInfoList.add(MarketMainItemLabel(HOTTEST, I18nUtil.getCodeLanMessage(HOTTEST)))
-        futureList.add(
-            doList(
-                query = baseQuery.copy(sortType = MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM),
-                userDeptList = userDeptList,
-                desc = true
-            )
-        )
-
-        val classifyList = marketAtomClassifyDao.getAllAtomClassify(dslContext, serviceScope)
-        classifyList.forEach {
-            val classifyCode = it[KEY_CLASSIFY_CODE] as String
-            if (classifyCode != "trigger") {
-                val classifyName = it[KEY_CLASSIFY_NAME] as String
+        // 构建按分类聚合的条目（排除trigger）
+        marketAtomClassifyDao.getAllAtomClassify(dslContext, serviceScope)
+            .filter { (it[KEY_CLASSIFY_CODE] as String) != "trigger" }
+            .forEach {
+                val classifyCode = it[KEY_CLASSIFY_CODE] as String
                 val classifyLanName = I18nUtil.getCodeLanMessage(
                     messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
-                    defaultMessage = classifyName,
+                    defaultMessage = it[KEY_CLASSIFY_NAME] as String,
                     language = I18nUtil.getLanguage(userId)
                 )
-                labelInfoList.add(MarketMainItemLabel(classifyCode, classifyLanName))
-                futureList.add(
-                    doList(
-                        query = baseQuery.copy(
-                            classifyCode = classifyCode,
-                            sortType = MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM
-                        ),
-                        userDeptList = userDeptList,
-                        desc = true
-                    )
+                entries.add(
+                    buildEntry(classifyCode, classifyLanName, MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM, classifyCode)
                 )
             }
-        }
 
-        val result = futureList.indices.map { index ->
-            val labelInfo = labelInfoList[index]
-            MarketMainItem(
-                key = labelInfo.key,
-                label = labelInfo.label,
-                records = futureList[index].get().records
-            )
-        }
-        return Result(result)
+        // 收集异步结果并组装返回值
+        return Result(entries.map { (label, future) ->
+            MarketMainItem(key = label.key, label = label.label, records = future.get().records)
+        })
     }
 
     /**
@@ -715,7 +674,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             osMapValue = record[tAtom.OS_MAP]
         )
         val releaseType = record[tAtomVersionLog.RELEASE_TYPE]?.let {
-            ReleaseTypeEnum.getReleaseTypeObj((it as Byte).toInt())
+            ReleaseTypeEnum.getReleaseTypeObj(it.toInt())
         }
         val osStr = record[tAtom.OS]
         val logoUrl = record[tAtom.LOGO_URL]
@@ -823,7 +782,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         // 统计昨天为截止日期的最近一周的数据
         val endTime = DateTimeUtil.convertDateToFormatLocalDateTime(
             date = DateTimeUtil.getFutureDateFromNow(Calendar.DAY_OF_MONTH, -1),
-            format = "yyyy-MM-dd"
+            format = DateTimeUtil.YYYY_MM_DD
         )
         return storeDailyStatisticService.getDailyStatisticListByCode(
             storeCode = atomCode,
@@ -1019,71 +978,67 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     override fun deleteAtom(userId: String, atomCode: String): Result<Boolean> {
         logger.info("deleteAtom userId: $userId , atomCode: $atomCode")
         val type = StoreTypeEnum.ATOM.type.toByte()
-        val isOwner = storeMemberDao.isStoreAdmin(dslContext, userId, atomCode, type)
-        if (!isOwner) {
+        val atomName = StoreTypeEnum.ATOM.name
+        val language = I18nUtil.getLanguage(userId)
+        // 校验是否为管理员
+        if (!storeMemberDao.isStoreAdmin(dslContext, userId, atomCode, type)) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = NO_COMPONENT_ADMIN_PERMISSION,
                 params = arrayOf(atomCode),
-                language = I18nUtil.getLanguage(userId)
+                language = language
             )
         }
+        // 校验是否有已发布版本
         val releasedCount = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode)
         logger.info("releasedCount: $releasedCount")
         if (releasedCount > 0) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_COMPONENT_RELEASED_IS_NOT_ALLOW_DELETE,
                 params = arrayOf(atomCode),
-                language = I18nUtil.getLanguage(userId)
+                language = language
             )
         }
-        // 如果已经有流水线在使用该插件，则不能删除
-        val pipelineStat =
-            client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(atomCode, null).data
-        val pipelines = pipelineStat?.get(atomCode) ?: 0
+        // 校验是否有流水线在使用该插件
+        val pipelines = client.get(ServiceMeasurePipelineResource::class)
+            .batchGetPipelineCountByAtomCode(atomCode, null).data?.get(atomCode) ?: 0
         if (pipelines > 0) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_ATOM_USED_IS_NOT_ALLOW_DELETE,
                 params = arrayOf(atomCode),
-                language = I18nUtil.getLanguage(userId)
+                language = language
             )
         }
         // 删除仓库插件包文件
         val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
             dslContext = dslContext,
             storeCode = atomCode,
-            storeType = StoreTypeEnum.ATOM.type.toByte()
+            storeType = type
         ) ?: ""
-        val deleteAtomFileResult =
-            client.get(ServiceArchiveAtomResource::class).deleteAtomFile(userId, initProjectCode, atomCode)
-        if (deleteAtomFileResult.isNotOk()) {
-            return deleteAtomFileResult
-        }
+        client.get(ServiceArchiveAtomResource::class)
+            .deleteAtomFile(userId, initProjectCode, atomCode)
+            .takeIf { it.isNotOk() }?.let { return it }
         // 删除代码库
         val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
-        val deleteAtomRepositoryResult = deleteAtomRepository(
+        deleteAtomRepository(
             userId = userId,
             projectCode = initProjectCode,
             repositoryHashId = atomRecord!!.repositoryHashId,
             tokenType = TokenTypeEnum.PRIVATE_KEY
-        )
-        if (deleteAtomRepositoryResult.isNotOk()) {
-            return deleteAtomRepositoryResult
-        }
+        ).takeIf { it.isNotOk() }?.let { return it }
+        // 执行事务删除数据库记录和缓存
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            storeCommonService.deleteStoreInfo(context, atomCode, StoreTypeEnum.ATOM.type.toByte())
+            storeCommonService.deleteStoreInfo(context, atomCode, type)
             atomApproveRelDao.deleteByAtomCode(context, atomCode)
             marketAtomEnvInfoDao.deleteAtomEnvInfoByCode(context, atomCode)
             marketAtomFeatureDao.deleteAtomFeature(context, atomCode)
             atomLabelRelDao.deleteByAtomCode(context, atomCode)
             marketAtomVersionLogDao.deleteByAtomCode(context, atomCode)
             marketAtomDao.deleteByAtomCode(context, atomCode)
-            // 删除插件默认标识缓存
-            redisOperation.removeSetMember(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
-            // 清空插件post信息缓存
+            // 清理缓存
+            redisOperation.removeSetMember(StoreUtils.getStorePublicFlagKey(atomName), atomCode)
             redisOperation.delete("$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode")
-            // 清空插件运行时信息缓存
-            redisOperation.delete(StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode))
+            redisOperation.delete(StoreUtils.getStoreRunInfoKey(atomName, atomCode))
         }
         return Result(true)
     }
@@ -1175,8 +1130,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     }
                 }
             }
-        } catch (e: Exception) {
-            logger.warn("updateAtomSensitiveCacheConfig atomCode:$atomCode |atomVersion:$atomVersion failed", e)
+        } catch (ignored: Throwable) {
+            logger.warn("updateAtomSensitiveCacheConfig atomCode:$atomCode |atomVersion:$atomVersion failed", ignored)
         }
     }
 
