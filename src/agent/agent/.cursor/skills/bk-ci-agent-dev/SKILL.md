@@ -24,10 +24,34 @@ description: 蓝鲸CI Agent（Go语言）项目开发迭代指南。包含项目
 src/agent/agent/
 ├── src/
 │   ├── cmd/                    # 入口程序（4个可执行文件）
-│   │   ├── agent/main.go       # Agent 主程序
-│   │   ├── daemon/main.go      # 守护进程（保活Agent）
-│   │   ├── upgrader/main.go    # 升级器（替换二进制）
-│   │   └── installer/main.go   # 安装器（首次安装）
+│   │   ├── agent/main.go       # Agent 主程序（含 CLI 子命令入口）
+│   │   ├── daemon/             # 守护进程（保活Agent）
+│   │   │   ├── main.go         #   Linux/macOS 入口
+│   │   │   ├── main_win.go     #   Windows 入口（kardianos/service）
+│   │   │   └── session_windows.go # Windows用户会话启动（WTS API）
+│   │   └── upgrader/main.go    # 升级器（替换二进制）
+│   ├── pkg/
+│   │   ├── agentcli/           # Agent CLI 子命令系统（含 i18n、状态检测、重装）
+│   │   │   ├── cli.go          #   子命令路由、preserveSet、reinstall/repair 逻辑
+│   │   │   ├── cli_test.go     #   通用函数测试
+│   │   │   ├── i18n.go         #   国际化核心（msg/msgf/initLang/printUsage）
+│   │   │   ├── i18n_test.go    #   i18n 测试
+│   │   │   ├── i18n_nowin.go   #   非 Windows detectPlatformLang stub
+│   │   │   ├── i18n_win.go     #   Windows UTF-8 控制台 + GetUserDefaultUILanguage
+│   │   │   ├── service_linux.go #  Linux systemd/direct 服务管理
+│   │   │   ├── service_darwin.go # macOS launchd 服务管理
+│   │   │   ├── service_win.go  #   Windows sc.exe 服务管理
+│   │   │   ├── status_linux.go #   Linux 状态检测（systemd/进程/JDK）
+│   │   │   ├── status_linux_test.go # Linux 状态检测测试
+│   │   │   ├── status_darwin.go #  macOS 状态检测（launchd/进程/JDK）
+│   │   │   ├── status_win.go  #    Windows 状态检测（服务/LSA/AutoLogon/计划任务）
+│   │   │   ├── session_win.go  #   Windows Session 配置（LSA/AutoLogon/凭据验证）
+│   │   │   ├── session_win_test.go # Windows Session 测试
+│   │   │   ├── session_nowin.go #  非Windows stub
+│   │   │   ├── diagnose.go     #   健康检查核心（网络4步诊断/磁盘可写/证书/代理检测）
+│   │   │   ├── diagnose_unix.go #  Linux/macOS 磁盘空间 (syscall.Statfs)
+│   │   │   ├── diagnose_win.go #   Windows 磁盘空间 (GetDiskFreeSpaceEx)
+│   │   │   └── diagnose_test.go #  健康检查测试
 │   ├── pkg/                    # 核心业务包
 │   │   ├── agent/              # Agent主循环与任务分发
 │   │   ├── api/                # 与BK-CI后台HTTP API通信
@@ -36,7 +60,6 @@ src/agent/agent/
 │   │   ├── job_docker/         # Docker CLI参数解析
 │   │   ├── upgrade/            # 升级流程管理
 │   │   ├── upgrader/           # upgrader进程逻辑
-│   │   ├── installer/          # installer进程逻辑
 │   │   ├── imagedebug/         # Docker镜像调试
 │   │   ├── mcp/                # MCP Server（Streamable HTTP，使用 go-mcp SDK）
 │   │   ├── pipeline/           # 流水线引擎(实验性)
@@ -86,6 +109,79 @@ agent.Run()
 - `agent.go` — 主循环、初始化、Ask轮询、safeGo、MCP启动
 - `ask.go` — 处理轮询返回的不同任务类型
 - `heartbeat.go` — 心跳上报(Agent状态、版本、系统信息)
+
+### Agent CLI 子命令系统 (`pkg/agentcli/`)
+
+Agent 二进制 `devopsAgent` 同时作为 CLI 工具使用，通过 `main.go` 中的 `agentcli.IsSubcommand()` 判定后分流。
+
+**子命令一览**:
+
+```
+devopsAgent <command> [options]
+
+服务管理:
+  install [--mode <service|session|task>] [options]
+                       安装并启动 Agent 守护进程
+    --mode service     (默认) 安装为 Windows 服务
+    --mode session     安装为 Windows 服务 + 配置桌面会话访问
+      --user USER      Windows 登录账号
+      --password PASS  密码 (--user 时必填)
+      --auto-logon     配置 Windows 自动登录
+    --mode task        [已废弃] 安装为计划任务
+  uninstall            停止并卸载守护进程服务
+  start                启动守护进程
+  stop                 停止守护进程
+
+维护:
+  repair               修复文件: 停止 → 重新解压依赖 → 重启
+  reinstall [-y]       完全重装: 内置下载 agent.zip (无需安装脚本)
+  status               运行状态 + 健康检查 (网络/磁盘/证书诊断)
+
+调试:
+  debug [on|off]       切换调试模式 (通过 .debug 文件, 重启生效)
+  version              打印版本号
+  fullVersion          打印完整版本信息
+
+会话模式 (仅 Windows):
+  configure-session    配置桌面会话访问 (也可通过 install --mode session 一步到位)
+    --user USER        Windows 登录账号
+    --password PASS    密码 (--user 时必填)
+    --auto-logon       配置 Windows 自动登录
+    --disable          取消会话模式
+```
+
+**i18n 机制** (`i18n.go`):
+- `initLang()` 按优先级检测语言: `LANG` → `LC_ALL` → `LANGUAGE` → `.agent.properties` 中的 `devops.language` → 平台 API (Windows: `GetUserDefaultUILanguage`)
+- 所有 CLI 输出通过 `msg(en, zh)` / `msgf(en, zh, args...)` 双语包装
+- Windows 通过 `SetConsoleOutputCP(65001)` 确保 UTF-8 输出不乱码
+
+**reinstall 流程**:
+```
+devopsAgent reinstall [-y]
+  → 步骤 1: handleStop()  停止进程（不清除会话配置和 .install_type）
+  → 步骤 2: 清理文件（保留 preserveSet 中的身份文件）
+  → 步骤 3: 运行 install.sh / download_install.ps1 从服务端重新下载安装
+```
+不依赖 Agent 内置升级机制，直接使用安装脚本从服务端拉取完整包。
+
+**preserveSet** (重装时保留的文件):
+| 文件 | 说明 |
+|------|------|
+| `.agent.properties` | Agent 身份配置 |
+| `.install_type` | Windows 安装模式标记 (SERVICE/SESSION) |
+| `.cert` | TLS 证书信任文件 |
+| `workspace/` | 构建工作空间 |
+| `devopsAgent[.exe]` | 当前运行的 Agent 二进制 |
+| `install.sh` / `download_install.ps1` | 安装脚本 |
+
+**status 命令** 输出内容 (按平台):
+| 项目 | Linux | macOS | Windows |
+|------|-------|-------|---------|
+| 运行模式 | root+systemd / root+direct / non-root | root (LaunchDaemons) / user (LaunchAgents) | SERVICE / SESSION / TASK(legacy) |
+| 服务状态 | systemctl is-active | plist 文件检测 | sc.exe query |
+| 进程检测 | syscall.Kill(pid, 0) | syscall.Kill(pid, 0) | OpenProcess |
+| 配置文件检查 | ini.Load 解析 + 必填项校验 | ini.Load 解析 + 必填项校验 | ini.Load 解析 + 必填项校验 |
+| 会话详情 | — | — | LSA Secret 凭据 + AutoLogon 状态 |
 
 ### API 通信 (`pkg/api/`)
 
@@ -177,6 +273,9 @@ devops.slave.user=                      # 构建运行用户(Unix)
 devops.agent.detect.shell=false         # 检测Shell
 devops.language=zh_CN                   # 语言
 devops.imagedebug.portrange=30000-32767 # 调试端口范围
+
+# Windows Session 凭据通过 LSA Secret 存储(configure_session.ps1 写入)
+# 键名: BkCiSessionUser / BkCiSessionPassword，daemon 运行时读取
 ```
 
 **全局配置对象**: `config.GAgentConfig` — 所有模块直接引用
@@ -232,6 +331,7 @@ AgentUpgrade(upgradeItem, hasBuild)
 | 功能 | Unix | Windows |
 |------|------|---------|
 | **进程管理** | `Setpgid` + `syscall.Kill(-pgId)` | Windows Job Object (`JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`) |
+| **Daemon启动Agent** | `exec.Command` 直接启动 | 服务模式: WTS API `CreateProcessAsUser` 在用户Session启动; 交互模式: `exec.Command` 直接启动 |
 | **构建启动** | 写Shell脚本 → `/bin/bash` 执行 | 直接 `java -jar` |
 | **用户切换** | `syscall.Credential{Uid, Gid}` | 不支持(空操作) |
 | **环境变量** | `os.Environ()` | 注册表轮询(每3秒) + PATH合并 |
@@ -387,6 +487,9 @@ func handleNewTool(ctx context.Context, req *protocol.CallToolRequest) (*protoco
 - [ ] 锁操作是否使用了 `defer Unlock()`？禁止手动多路径 Unlock
 - [ ] 是否需要通过 MCP 暴露新信息？在 `mcp/tools.go` 新增 Tool
 - [ ] 新增环境变量开关？在 `constant/constant.go` 添加常量
+- [ ] **测试用例**：新增/修改的可测试函数是否编写了单元测试？使用 table-driven + `t.Run()` 风格
+- [ ] **功能文档**：是否需要更新 SKILL.md 中的架构描述、目录树、子命令说明？
+- [ ] CLI 子命令新增/修改？更新 `agentcli/` 的 `IsSubcommand()`、`printUsageLocalized()` 和 SKILL.md
 
 ## 构建与测试
 
@@ -396,14 +499,17 @@ func handleNewTool(ctx context.Context, req *protocol.CallToolRequest) (*protoco
 # Linux (amd64)
 make build_linux
 
-# Windows (当前386，计划升级amd64)
+# Windows (默认amd64)
 make build_windows
+
+# Windows (386, 带_386后缀)
+make build_windows_386
 
 # macOS
 make build_macos
 
 # 全平台
-make build_all
+make all
 ```
 
 ### 编译注入变量
@@ -418,8 +524,31 @@ config.AgentVersion = 版本号(version.go中声明)
 ### 运行测试
 
 ```bash
+# 全部测试
 go test ./...
+
+# 仅 agentcli 包（带详细输出）
+go test -v ./src/pkg/agentcli/
+
+# 运行特定测试
+go test -v -run TestPidStatus ./src/pkg/agentcli/
 ```
+
+**测试规范**:
+- 使用 table-driven + `t.Run()` 风格（参考 `agentcli/cli_test.go`）
+- 文件系统相关测试使用 `t.TempDir()`
+- 全局状态（如 `useChinese`）测试前保存、测试后恢复
+- 平台特定测试使用 build tag（如 `//go:build linux`）
+- 进程检测测试使用 `os.Getpid()` 验证存活进程
+
+**已有测试覆盖的 agentcli 模块**:
+| 文件 | 覆盖内容 |
+|------|---------|
+| `cli_test.go` | IsSubcommand、readProperty、preserveSet、cleanup、handleDebug、DebugFileExists、parsePropertiesFile、requiredKeyStatus、intKeyStatus |
+| `i18n_test.go` | msg/msgf、initLang 环境变量优先级、tryReadLang |
+| `status_linux_test.go` | dirStatus、fileStatus、readPid、pidStatus、currentUser |
+| `session_win_test.go` | splitUserDomain、readInstallTypeFile、handleInstall 模式分发和校验 |
+| `diagnose_test.go` | normalizeGateway、buildProxyFunc (含 NoProxy 排除)、loadCertIfExists、detectProxyUsed、tlsVersionName、checkDiskWritable、checkDiskSpace |
 
 ### 关键第三方依赖
 
@@ -514,8 +643,7 @@ go func() {
 bin/
 ├── devopsDaemon[.exe]
 ├── devopsAgent[.exe]
-├── upgrader[.exe]
-└── installer[.exe]
+└── upgrader[.exe]
 ```
 
 ## 调试技巧
@@ -525,7 +653,7 @@ bin/
 3. **Docker构建日志**: `docker_build_tmp/logs/{buildId}/{vmSeqId}/`
 4. **HTTP通信调试**: 日志中搜索请求URL和响应状态码
 5. **升级问题**: 检查 `tmp/` 目录下载的文件和MD5
-6. **Windows服务问题**: 使用 `wintask` 包检测启动方式
+6. **Windows服务问题**: 使用 `wintask` 包检测启动方式。服务模式下 daemon 按优先级尝试: ① WTS API (`CreateProcessAsUser`) 在已登录用户 Session 中启动 agent ② `LogonUser` + `SetTokenInformation` 使用 `.agent.properties` 中的 `devops.agent.session.user/password` 凭据在控制台 Session 创建进程 ③ 回退为直接启动。推荐使用 `configure_session.ps1` 一键切换 Session 模式（自动迁移 schtasks→service、配置 Auto-logon + LSA Secret 加密存储密码、重启 daemon、提示 reboot），机器开机自动登录后 daemon 即可通过 ① 路径工作
 7. **MCP调试**: 设置 `DEVOPS_AGENT_ENABLE_MCP=true`，agent 启动后 MCP Server 在 `127.0.0.1` 监听 Streamable HTTP，端口号持久化到 `.agent.properties` 的 `devops.mcp.server.port`。可在 CodeBuddy/Claude Desktop 中配置 `http://127.0.0.1:{PORT}/mcp` 进行交互式调试
 
 ## 环境变量开关
@@ -536,6 +664,7 @@ bin/
 | `DEVOPS_AGENT_ENABLE_EXIT_GROUP` | false | 启动杀掉构建进程组的兜底逻辑 |
 | `DEVOPS_AGENT_DOCKER_CAP_ADD` | 空 | Docker启动时的capadd参数 |
 | `DEVOPS_AGENT_TIMEOUT_EXIT_TIME` | 空 | 超时次数阈值，达到后Agent进程退出 |
+| `DEVOPS_AGENT_CLOSE_FD_INHERIT` | false | Unix 构建进程关闭 fd 继承 (Setpgid + /dev/null + ExtraFiles 清空)，等同 Windows NoInheritHandles |
 | `DEVOPS_AGENT_ENABLE_MCP` | false | 随 agent 主进程启动 MCP Server 协程（Streamable HTTP） |
 
 ## 注意事项

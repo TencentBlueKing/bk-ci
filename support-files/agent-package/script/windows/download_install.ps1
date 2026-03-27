@@ -3,13 +3,31 @@ function Unzip-File {
         [string]$ZipFile,
         [string]$Destination
     )
-    $psMajor = $PSVersionTable.PSVersion.Major
-
-    if ($psMajor -ge 5) {
-        Expand-Archive -Path $ZipFile -DestinationPath $Destination -Force
-    } else {
-        Add-Type -AssemblyName System.IO.Compression.FileSystem
-        [System.IO.Compression.ZipFile]::ExtractToDirectory($ZipFile, $Destination)
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $archive = [System.IO.Compression.ZipFile]::OpenRead($ZipFile)
+    try {
+        foreach ($entry in $archive.Entries) {
+            $destPath = Join-Path $Destination $entry.FullName
+            if ($entry.FullName.EndsWith('/') -or $entry.FullName.EndsWith('\')) {
+                New-Item -ItemType Directory -Force -Path $destPath | Out-Null
+                continue
+            }
+            $destDir = Split-Path -Parent $destPath
+            if (-not (Test-Path $destDir)) {
+                New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+            }
+            try {
+                $stream = $entry.Open()
+                $file = [System.IO.File]::Create($destPath)
+                $stream.CopyTo($file)
+                $file.Close()
+                $stream.Close()
+            } catch {
+                Write-Host "[WARN] skip locked file: $($entry.FullName) ($($_.Exception.Message))" -ForegroundColor Yellow
+            }
+        }
+    } finally {
+        $archive.Dispose()
     }
 }
 
@@ -33,9 +51,25 @@ $InvalidHeaders = @{
     'X-DEVOPS-PROJECT-ID' = '##projectId##'
 }
 Write-Host "start download agent.zip"
-Invoke-WebRequest -Uri $Uri -Headers $InvalidHeaders -OutFile agent.zip
-if (-not $?) {
-    Write-Host "Invoke-WebRequest agent.zip error" -ForegroundColor Red
+try {
+    $response = Invoke-WebRequest -Uri $Uri -Headers $InvalidHeaders -OutFile agent.zip -PassThru -UseBasicParsing
+    Write-Host "download complete (HTTP $($response.StatusCode))" -ForegroundColor Green
+} catch {
+    $statusCode = $_.Exception.Response.StatusCode.value__
+    Write-Host "download agent.zip failed (HTTP $statusCode)" -ForegroundColor Red
+    try {
+        $errStream = $_.Exception.Response.GetResponseStream()
+        if ($errStream) {
+            $reader = New-Object System.IO.StreamReader($errStream)
+            $errBody = $reader.ReadToEnd()
+            $reader.Close()
+            Write-Host "server response:" -ForegroundColor Yellow
+            Write-Host $errBody
+        }
+    } catch {
+        Write-Host "error detail: $($_.Exception.Message)" -ForegroundColor Yellow
+    }
+    Remove-Item -Path agent.zip -Force -ErrorAction SilentlyContinue
     Pause
     return
 }
@@ -94,32 +128,23 @@ if (Test-Path "jre.zip") {
 New-Item -ItemType Directory -Force -Path "$work_dir\logs" | Out-Null
 New-Item -ItemType Directory -Force -Path "$work_dir\workspace" | Out-Null
 
-if ([string]::IsNullOrEmpty($install_type) -or $install_type -eq "SERVICE") {
-    $service = Get-Service -Name $service_name -ErrorAction SilentlyContinue
-    if (-not $service) {
-        sc.exe create $service_name binPath= "$work_dir\devopsDaemon.exe" start= auto
-        Write-Host "install agent service" -ForegroundColor Green
-    }
-    sc.exe start $service_name
-    Write-Host "start agent service" -ForegroundColor Green
-    if (![string]::IsNullOrEmpty($service_username) -and (![string]::IsNullOrEmpty($service_password))) {
-        Write-Host "both service_username and service_password are defined"
-        sc.exe config $service_name obj= $service_username password= $service_password
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host "service login credentials updated successfully" -ForegroundColor Green
-        } else {
-            Write-Host "failed to update service login credentials" -ForegroundColor Red
-        }
-    }
-} elseif ($install_type -eq "TASK") {
-    Write-Host "Creating scheduled task to run $service_name when any user logs on..."
-    schtasks /create /tn $service_name /tr "cscript  $work_dir\devopsctl.vbs" /sc ONLOGON /F
-    cscript devopsctl.vbs
-    Write-Host "start agent task" -ForegroundColor Green
+$agent_exe = "$work_dir\devopsAgent.exe"
+Write-Host "Installing agent service via CLI..."
+& $agent_exe install
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "agent service installed and started" -ForegroundColor Green
 } else {
-    Write-Host "Unknown install_type: $install_type" -ForegroundColor Red
+    Write-Host "agent install failed (exit $LASTEXITCODE)" -ForegroundColor Red
 }
 
-Remove-Item -Path "$work_dir\download_install.ps1" -Force
+if (![string]::IsNullOrEmpty($service_username) -and (![string]::IsNullOrEmpty($service_password))) {
+    Write-Host "configuring service login credentials..."
+    sc.exe config $service_name obj= $service_username password= $service_password
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "service login credentials updated" -ForegroundColor Green
+    } else {
+        Write-Host "failed to update service login credentials" -ForegroundColor Red
+    }
+}
 
 Pause

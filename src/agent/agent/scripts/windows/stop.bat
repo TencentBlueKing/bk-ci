@@ -7,7 +7,7 @@ set service_name=devops_agent_%agent_id%
 
 schtasks /query | findstr %service_name%
 
-IF ERRORLEVEL 1 GOTO :stop_service
+IF ERRORLEVEL 1 GOTO :check_service
 GOTO :stop_schtasks
 
 :stop_schtasks
@@ -19,16 +19,14 @@ set /p agentPid=<runtime\agent.pid
 echo "kill devopsAgent.exe process %agentPid%"
 tskill %agentPid%
 
-GOTO :stop_service
+GOTO :check_service
 
-
-:stop_service
+:check_service
 sc query %service_name%
-
 IF ERRORLEVEL 1 GOTO :finally_end
-GOTO :stop_service
+GOTO :do_stop_service
 
-:stop_service
+:do_stop_service
 echo "stop devops service"
 sc stop %service_name%
 GOTO :finally_end

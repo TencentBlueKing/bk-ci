@@ -40,29 +40,66 @@ import (
 
 // GetCpuAndGpuInfo 获取 CPU 和 GPU 型号信息
 func GetCpuAndGpuInfo() (string, string) {
-	cpu, err := ghw.CPU()
-	cpuInfoBuf := bytes.Buffer{}
-	if err != nil {
-		logs.WithError(err).Error("get cpu info error")
-	} else {
-		for _, c := range cpu.Processors {
-			cpuInfoBuf.WriteString(c.Model)
-			cpuInfoBuf.WriteString(";")
-		}
-	}
-	cpuInfo := strings.TrimSuffix(cpuInfoBuf.String(), ";")
-
-	gpuInfoBuf := bytes.Buffer{}
-	gpu, err := ghw.GPU()
-	if err != nil {
-		logs.WithError(err).Error("get gpu info error")
-	} else {
-		for _, card := range gpu.GraphicsCards {
-			gpuInfoBuf.WriteString(card.DeviceInfo.Product.Name)
-			gpuInfoBuf.WriteString(";")
-		}
-	}
-	gpuInfo := strings.TrimSuffix(gpuInfoBuf.String(), ";")
+	cpuInfo := getCPUProductInfo()
+	gpuInfo := getGPUProductInfo()
 	logs.Infof("cpu: %s, gpu: %s", cpuInfo, gpuInfo)
 	return cpuInfo, gpuInfo
+}
+
+func getCPUProductInfo() (cpuInfo string) {
+	defer func() {
+		if r := recover(); r != nil {
+			logs.Warnf("get cpu info panic, skip cpu detection: %v", r)
+			cpuInfo = ""
+		}
+	}()
+
+	cpu, err := ghw.CPU()
+	if err != nil {
+		logs.WithError(err).Warn("get cpu info error, skip cpu detection")
+		return ""
+	}
+	if cpu == nil {
+		logs.Warn("get cpu info empty result, skip cpu detection")
+		return ""
+	}
+
+	cpuInfoBuf := bytes.Buffer{}
+	for _, c := range cpu.Processors {
+		if c == nil || c.Model == "" {
+			continue
+		}
+		cpuInfoBuf.WriteString(c.Model)
+		cpuInfoBuf.WriteString(";")
+	}
+	return strings.TrimSuffix(cpuInfoBuf.String(), ";")
+}
+
+func getGPUProductInfo() (gpuInfo string) {
+	defer func() {
+		if r := recover(); r != nil {
+			logs.Warnf("get gpu info panic, skip gpu detection: %v", r)
+			gpuInfo = ""
+		}
+	}()
+
+	gpu, err := ghw.GPU()
+	if err != nil {
+		logs.WithError(err).Warn("get gpu info error, skip gpu detection")
+		return ""
+	}
+	if gpu == nil {
+		logs.Warn("get gpu info empty result, skip gpu detection")
+		return ""
+	}
+
+	gpuInfoBuf := bytes.Buffer{}
+	for _, card := range gpu.GraphicsCards {
+		if card == nil || card.DeviceInfo == nil || card.DeviceInfo.Product == nil || card.DeviceInfo.Product.Name == "" {
+			continue
+		}
+		gpuInfoBuf.WriteString(card.DeviceInfo.Product.Name)
+		gpuInfoBuf.WriteString(";")
+	}
+	return strings.TrimSuffix(gpuInfoBuf.String(), ";")
 }

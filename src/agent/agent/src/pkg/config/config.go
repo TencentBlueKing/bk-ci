@@ -67,7 +67,6 @@ const (
 	KeyRequestTimeoutSec = "devops.agent.request.timeout.sec"
 	KeyDetectShell       = "devops.agent.detect.shell"
 	KeyIgnoreLocalIps    = "devops.agent.ignoreLocalIps"
-	KeyBatchInstall      = "devops.agent.batch.install"
 	KeyLogsKeepHours     = "devops.agent.logs.keep.hours"
 	// KeyJdkDirPath 这个key不会预先出现在配置文件中，因为workdir未知，需要第一次动态获取
 	KeyJdkDirPath = "devops.agent.jdk.dir.path"
@@ -99,7 +98,6 @@ type AgentConfig struct {
 	TimeoutSec              int64
 	DetectShell             bool
 	IgnoreLocalIps          string
-	BatchInstallKey         string
 	LogsKeepHours           int
 	JdkDirPath              string
 	Jdk17DirPath            string
@@ -183,7 +181,15 @@ func LoadAgentEnv() {
 	} else {
 		GAgentEnv.OsVersion = osVersion
 	}
-	cpuInfo, gpuInfo := GetCpuAndGpuInfo()
+	cpuInfo, gpuInfo := "", ""
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logs.Warnf("get cpu/gpu info panic, skip hardware detection: %v", r)
+			}
+		}()
+		cpuInfo, gpuInfo = GetCpuAndGpuInfo()
+	}()
 	GAgentEnv.CPUProductInfo = cpuInfo
 	GAgentEnv.GPUProductInfo = gpuInfo
 }
@@ -392,9 +398,6 @@ func LoadAgentConfig() error {
 
 	GAgentConfig.IgnoreLocalIps = ignoreLocalIps
 	logs.Info("IgnoreLocalIps: ", GAgentConfig.IgnoreLocalIps)
-
-	GAgentConfig.BatchInstallKey = strings.TrimSpace(conf.Section("").Key(KeyBatchInstall).String())
-	logs.Info("BatchInstallKey: ", GAgentConfig.BatchInstallKey)
 
 	GAgentConfig.LogsKeepHours = logsKeepHours
 	logs.Info("logsKeepHours: ", GAgentConfig.LogsKeepHours)

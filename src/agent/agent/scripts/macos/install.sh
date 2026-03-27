@@ -63,50 +63,16 @@ function download_agent()
     echo "agent.zip already exist, skip download"
     return
   fi
-  local download_ok=false
   if exists curl; then
-    echo "download using curl"
-    local http_code
-    http_code=$(curl -sS -w "%{http_code}" -H "X-DEVOPS-PROJECT-ID: ##projectId##" -o agent.zip "##agent_url##")
-    if [[ $? -ne 0 ]] || [[ "$http_code" -lt 200 ]] || [[ "$http_code" -ge 400 ]]; then
-      echo "curl download failed (HTTP $http_code), response body:"
-      cat agent.zip 2>/dev/null
-      echo ""
-      rm -f agent.zip
-      if exists wget; then
-        echo "retrying with wget..."
-        wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##" 2>&1
-        if [[ $? -eq 0 ]]; then
-          download_ok=true
-        fi
-      fi
-    else
-      download_ok=true
+    curl -H "X-DEVOPS-PROJECT-ID: ##projectId##" -o agent.zip "##agent_url##"
+    if [[ $? -ne 0 ]]; then
+      echo "fail to use curl to download the agent, use wget"
+      wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##"
     fi
   elif exists wget; then
-    echo "download using wget"
-    wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##" 2>&1
-    if [[ $? -eq 0 ]]; then
-      download_ok=true
-    fi
+    wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##"
   else
     echo "curl & wget command don't exist, download fail"
-    exit 1
-  fi
-
-  if [[ "$download_ok" != "true" ]]; then
-    echo "download agent.zip failed, response body:"
-    cat agent.zip 2>/dev/null
-    echo ""
-    rm -f agent.zip
-    exit 1
-  fi
-
-  if ! unzip -t agent.zip >/dev/null 2>&1; then
-    echo "downloaded file is not a valid zip, server may have returned an error:"
-    cat agent.zip
-    echo ""
-    rm -f agent.zip
     exit 1
   fi
 }
@@ -166,7 +132,64 @@ function installAgentService()
 
 function writeSSHConfig()
 {
-  echo "no need write ssh config"
+  config_file=$HOME/.ssh/config
+  if [[ ! -d $HOME/.ssh ]];then
+    mkdir -p $HOME/.ssh
+  fi
+  
+  if [[ -f ${config_file} ]];then
+    
+    if [[ $(cat ${config_file}| grep "\-svn.tencent.com"  | wc -l) -lt 1 ]];then
+      echo "" >> ${config_file}
+      echo "Host *-svn.tencent.com" >> ${config_file}
+      echo "StrictHostKeyChecking no" >> ${config_file}
+      echo "Port 22" >> $config_file
+    fi
+    if [[ $(cat ${config_file}| grep "\-scm.tencent.com"  | wc -l) -lt 1 ]];then
+      echo "" >> ${config_file}
+      echo "Host *-scm.tencent.com" >> ${config_file}
+      echo "StrictHostKeyChecking no" >> ${config_file}
+      echo "Port 22" >> ${config_file}
+    fi
+    if [[ $(cat $config_file| grep "\-cd1.tencent.com"  | wc -l) -lt 1 ]];then
+      echo "" >> ${config_file}
+      echo "Host *-cd1.tencent.com" >> ${config_file}
+      echo "StrictHostKeyChecking no" >> ${config_file}
+      echo "Port 22" >> ${config_file}
+    fi
+    if [[ $(cat ${config_file}| grep "Host git.code.oa.com"  | wc -l) -lt 1 ]];then
+      echo "" >> ${config_file}
+      echo "Host git.code.oa.com" >> ${config_file}
+      echo "StrictHostKeyChecking no" >> ${config_file}
+      echo "Port 22" >> ${config_file}
+    fi
+    if [[ $(cat ${config_file}| grep "Host git.woa.com"  | wc -l) -lt 1 ]];then
+      echo "" >> ${config_file}
+      echo "Host git.woa.com" >> ${config_file}
+      echo "StrictHostKeyChecking no" >> ${config_file}
+      echo "Port 22" >> ${config_file}
+    fi
+  else
+      cat > ${config_file} <<EOF
+Host *-svn.tencent.com
+StrictHostKeyChecking no
+Port 22
+Host *-scm.tencent.com
+StrictHostKeyChecking no
+Port 22
+Host *-cd1.tencent.com
+StrictHostKeyChecking no
+Port 22
+Host git.code.oa.com
+StrictHostKeyChecking no
+Port 22
+Host git.woa.com
+StrictHostKeyChecking no
+Port 22
+EOF
+    chmod 600 ${config_file}
+  fi
+  echo "write ssh config done"
 }
 
 # ----------------------------------
@@ -217,8 +240,5 @@ fi
 echo "check if write ssh config"
 writeSSHConfig
 
-cd $workspace
-chmod +x devopsAgent devopsDaemon 2>/dev/null
-
-echo "installing agent service via CLI..."
-./devopsAgent install
+uninstallAgentService
+installAgentService

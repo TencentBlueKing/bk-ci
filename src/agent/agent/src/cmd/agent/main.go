@@ -39,6 +39,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/agent"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/agentcli"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
@@ -51,23 +52,16 @@ const (
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
-	isDebug := false
-	if len(os.Args) == 2 {
-		switch os.Args[1] {
-		case "version":
-			fmt.Println(config.AgentVersion)
-			systemutil.ExitProcess(0)
-		case "fullVersion":
-			fmt.Println(config.AgentVersion)
-			fmt.Println(config.GitCommit)
-			fmt.Println(config.BuildTime)
-			systemutil.ExitProcess(0)
-		case "debug":
-			isDebug = true
-		}
+	if len(os.Args) >= 2 && agentcli.IsSubcommand(os.Args[1]) {
+		workDir := systemutil.GetExecutableDir()
+		os.Chdir(workDir)
+		agentcli.Run(workDir, os.Args[1:])
+		return
 	}
 
-	// 初始化日志
+	workDir := systemutil.GetExecutableDir()
+	isDebug := agentcli.DebugFileExists(workDir)
+
 	logFilePath := filepath.Join(systemutil.GetWorkDir(), "logs", "devopsAgent.log")
 	err := logs.Init(logFilePath, isDebug, false)
 	if err != nil {
@@ -77,8 +71,6 @@ func main() {
 
 	logs.Infof("GOOS=%s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
 
-	// 以agent安装目录为工作目录
-	workDir := systemutil.GetExecutableDir()
 	err = os.Chdir(workDir)
 	if err != nil {
 		logs.Info("change work dir failed, err: ", err.Error())
