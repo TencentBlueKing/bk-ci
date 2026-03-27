@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 )
@@ -325,6 +326,9 @@ func handleReinstall(workDir string, args []string) error {
 		}
 	}
 
+	// Wait for backend heartbeat timeout if agent was recently alive
+	waitForHeartbeatExpiry(workDir)
+
 	printStep(msg("Step 3: downloading agent.zip from server ...", "步骤 3: 从服务端下载 agent.zip ..."))
 	zipPath := filepath.Join(workDir, "agent.zip")
 	if err := downloadAgentZip(workDir, gateway, agentId, zipPath); err != nil {
@@ -367,6 +371,38 @@ func handleReinstall(workDir string, args []string) error {
 	printStep(msg("Reinstall complete", "重装完成"))
 	printDivider()
 	return nil
+}
+
+// waitForHeartbeatExpiry checks if the agent process was recently running.
+// The backend blocks re-install for ~50s after the last heartbeat. If the agent PID
+// file indicates a recently-alive process, we wait for the heartbeat to expire.
+func waitForHeartbeatExpiry(workDir string) {
+	pidFile := filepath.Join(workDir, "runtime", "agent.pid")
+	data, err := os.ReadFile(pidFile)
+	if err != nil {
+		return
+	}
+	pid, err := strconv.Atoi(strings.TrimSpace(string(data)))
+	if err != nil || pid <= 0 {
+		return
+	}
+
+	// Check if the agent PID file was recently active (written within the last 60s),
+	// which means the agent was sending heartbeats shortly before we stopped it.
+	info, err := os.Stat(pidFile)
+	if err != nil || time.Since(info.ModTime()) > 60*time.Second {
+		return
+	}
+
+	const waitSec = 55
+	printStep(msgf(
+		"Agent was recently running (PID %d). Waiting %ds for backend heartbeat to expire ...",
+		"Agent 近期有运行记录 (PID %d)。等待 %d 秒让后台心跳过期 ...", pid, waitSec))
+	for i := waitSec; i > 0; i-- {
+		fmt.Printf("\r[BK-CI]   %ds remaining ...  ", i)
+		time.Sleep(time.Second)
+	}
+	fmt.Println()
 }
 
 // downloadAgentZip downloads agent.zip from the BK-CI server using credentials from .agent.properties.

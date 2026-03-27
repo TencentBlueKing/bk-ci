@@ -76,7 +76,7 @@ func printUsageLocalized() {
   repair               修复文件: 停止 → 重新解压依赖 → 重启
   reinstall            完全重装: 保留身份配置, 删除其余文件, 从服务端重新下载
     -y                 跳过二次确认
-  status               显示当前运行模式和配置状态
+  status               显示运行状态 + 健康检查 (网络/磁盘/证书诊断)
 `)
 		if isWin {
 			fmt.Print(`
@@ -124,7 +124,7 @@ Maintenance:
   repair               Repair files: stop -> re-extract dependencies -> restart
   reinstall            Full reinstall: keep identity, re-download everything from server
     -y                 Skip confirmation prompt
-  status               Show current running mode and configuration
+  status               Show status + health checks (network/disk/cert diagnostics)
 `)
 		if isWin {
 			fmt.Print(`
