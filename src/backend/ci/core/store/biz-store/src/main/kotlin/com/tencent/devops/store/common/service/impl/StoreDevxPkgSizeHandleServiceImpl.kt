@@ -149,14 +149,16 @@ class StoreDevxPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
                     pkgSize = JsonUtil.toJson(storePackageInfoReqs)
                 )
             } else {
-                // 如果已存在，追加新的包信息到现有列表
+                // 如果已存在，使用Map去重合并，以 osName_arch 为键，新数据覆盖旧数据
                 val atomPackageInfoList = JsonUtil.to(size, object : TypeReference<List<StorePackageInfoReq>>() {})
-                val mutableList = atomPackageInfoList.toMutableList()
-                mutableList.addAll(storePackageInfoReqs)
+                val packageMap = atomPackageInfoList.associateBy { "${it.osName}_${it.arch}" }.toMutableMap()
+                storePackageInfoReqs.forEach { newPackage ->
+                    packageMap["${newPackage.osName}_${newPackage.arch}"] = newPackage
+                }
                 storeVersionLogDao.updateComponentVersionInfo(
                     dslContext = dslContext,
                     storeId = storeId,
-                    pkgSize = JsonUtil.toJson(mutableList)
+                    pkgSize = JsonUtil.toJson(packageMap.values.toList())
                 )
             }
         } finally {
