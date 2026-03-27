@@ -3,7 +3,11 @@
 
 package agentcli
 
-import "testing"
+import (
+	"os"
+	"path/filepath"
+	"testing"
+)
 
 func TestSplitUserDomain(t *testing.T) {
 	tests := []struct {
@@ -50,6 +54,62 @@ func TestReadInstallTypeFile(t *testing.T) {
 		got := readInstallTypeFile(dir)
 		if got == "" {
 			t.Error("readInstallTypeFile should return default when file missing")
+		}
+	})
+}
+
+func TestHandleInstall_ModeDispatch(t *testing.T) {
+	old := useChinese
+	useChinese = false
+	defer func() { useChinese = old }()
+
+	dir := t.TempDir()
+
+	tests := []struct {
+		name    string
+		args    []string
+		wantErr bool
+	}{
+		{"default_mode", []string{}, true},
+		{"service_mode", []string{"--mode", "service"}, true},
+		{"session_mode", []string{"--mode", "session"}, true},
+		{"task_mode", []string{"--mode", "task"}, true},
+		{"invalid_mode", []string{"--mode", "invalid"}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := handleInstall(dir, tt.args)
+			if tt.wantErr && err == nil {
+				t.Error("expected error with temp dir (no .agent.properties)")
+			}
+			if tt.name == "invalid_mode" && err != nil {
+				if got := err.Error(); got == "" {
+					t.Error("invalid mode should return descriptive error")
+				}
+			}
+		})
+	}
+}
+
+func TestHandleInstall_SessionValidation(t *testing.T) {
+	old := useChinese
+	useChinese = false
+	defer func() { useChinese = old }()
+
+	dir := t.TempDir()
+	os.WriteFile(filepath.Join(dir, ".agent.properties"), []byte("devops.agent.id=test1\n"), 0644)
+
+	t.Run("session_user_no_password", func(t *testing.T) {
+		err := handleInstall(dir, []string{"--mode", "session", "--user", "admin"})
+		if err == nil {
+			t.Error("expected error: --password required with --user")
+		}
+	})
+
+	t.Run("session_autologon_no_user", func(t *testing.T) {
+		err := handleInstall(dir, []string{"--mode", "session", "--auto-logon"})
+		if err == nil {
+			t.Error("expected error: --auto-logon requires --user")
 		}
 	})
 }
