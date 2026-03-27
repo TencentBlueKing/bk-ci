@@ -54,6 +54,8 @@ func handleStatus(workDir string) error {
 	statusLine(msg("Daemon PID", "守护进程 PID"), pidStatus(daemonPid))
 	statusLine(msg("Agent PID", "Agent PID"), pidStatus(agentPid))
 
+	checkPropertiesFile(workDir)
+
 	// JDK
 	statusLine("JDK 17", dirStatus(filepath.Join(workDir, "jdk17")))
 	statusLine("JDK 8", dirStatus(filepath.Join(workDir, "jdk")))

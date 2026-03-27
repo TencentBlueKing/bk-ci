@@ -96,6 +96,8 @@ func handleStatus(workDir string) error {
 		statusLine(msg("Auto-logon password", "自动登录密码"), msg("missing!", "缺失!")+" ✗")
 	}
 
+	checkPropertiesFile(workDir)
+
 	// Dependencies
 	fmt.Println()
 	printStep(msg("Dependencies", "依赖组件"))
