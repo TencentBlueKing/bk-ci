@@ -45,7 +45,7 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
     private val batchInstallAgentService: BatchInstallAgentService
 ) : ExternalThirdPartyAgentResource {
     override fun downloadAgentInstallScript(agentId: String) =
-        downloadAgentInstallService.downloadInstallScript(agentId, false, null, null, null)
+        downloadAgentInstallService.downloadInstallScript(agentId, null, null, null)
 
     override fun downloadAgent(
         agentId: String,

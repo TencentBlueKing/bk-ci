@@ -45,6 +45,12 @@ import jakarta.ws.rs.NotFoundException
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.StreamingOutput
+import java.io.ByteArrayInputStream
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileNotFoundException
+import java.nio.charset.Charset
+import java.util.Locale
 import org.apache.commons.compress.archivers.ArchiveOutputStream
 import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
@@ -55,12 +61,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.io.ByteArrayInputStream
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileNotFoundException
-import java.nio.charset.Charset
-import java.util.Locale
 
 @Service
 @Suppress("TooManyFunctions", "LongMethod")
@@ -86,7 +86,6 @@ class DownloadAgentInstallService @Autowired constructor(
 
     fun downloadInstallScript(
         agentId: String,
-        isWinDownload: Boolean,
         loginName: String?,
         loginPassword: String?,
         installType: TPAInstallType?
@@ -109,15 +108,7 @@ class DownloadAgentInstallService @Autowired constructor(
          * agentSecretKey
          * gateWay
          */
-        val fileName = if (agentRecord.os == OS.WINDOWS.name) {
-            if (isWinDownload) {
-                "download_install.ps1"
-            } else {
-                "install.bat"
-            }
-        } else {
-            "install.sh"
-        }
+        val fileName = getDownloadFile(agentRecord.os)
         val scriptFile = File(agentPackage, "script/${agentRecord.os.lowercase()}/$fileName")
 
         if (!scriptFile.exists()) {
@@ -278,13 +269,20 @@ class DownloadAgentInstallService @Autowired constructor(
         installType: TPAInstallType?
     ): Map<String, String> {
         val file = File(agentPackage, "script/${agentRecord.os.lowercase()}")
-        val scripts = file.listFiles()
+        val scripts = file.listFiles()?.toMutableList()
+        scripts?.removeIf { it.name == getDownloadFile(agentRecord.os) }
         val map = getAgentReplaceProperties(agentRecord, false, loginName, loginPassword, installType)
         return scripts?.associate {
             var content = it.readText(Charsets.UTF_8)
             map.forEach { (key, value) -> content = content.replace("##$key##", value) }
             it.name to content
         } ?: emptyMap()
+    }
+
+    private fun getDownloadFile(os: String) = if (os == OS.WINDOWS.name) {
+        "download_install.ps1"
+    } else {
+        "install.sh"
     }
 
     private fun getPropertyFile(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String, String> {

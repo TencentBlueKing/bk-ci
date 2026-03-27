@@ -2,8 +2,9 @@ package agentcli
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -240,42 +241,11 @@ func preserveSet() map[string]bool {
 		".agent.properties": true,
 		".install_type":     true,
 		".cert":             true,
+		".debug":            true,
 		"workspace":         true,
 	}
 	m[agentBinary()] = true
-	m[installScriptName()] = true
 	return m
-}
-
-func installScriptName() string {
-	if runtime.GOOS == "windows" {
-		return "download_install.ps1"
-	}
-	return "install.sh"
-}
-
-func runInstallScript(workDir string) error {
-	script := installScriptName()
-	scriptPath := filepath.Join(workDir, script)
-	if _, err := os.Stat(scriptPath); os.IsNotExist(err) {
-		return fmt.Errorf(msgf(
-			"install script %s not found, cannot re-download. Please re-download manually.",
-			"安装脚本 %s 未找到, 无法重新下载。请手动重新下载安装。", script))
-	}
-
-	printStep(msgf("Running %s to download and install ...", "运行 %s 下载并安装 ...", script))
-
-	var cmd *exec.Cmd
-	if runtime.GOOS == "windows" {
-		cmd = exec.Command("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", scriptPath)
-	} else {
-		os.Chmod(scriptPath, 0755)
-		cmd = exec.Command("bash", scriptPath)
-	}
-	cmd.Dir = workDir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
 }
 
 func handleReinstall(workDir string, args []string) error {
@@ -286,12 +256,17 @@ func handleReinstall(workDir string, args []string) error {
 		}
 	}
 
-	scriptName := installScriptName()
-	scriptPath := filepath.Join(workDir, scriptName)
-	if _, err := os.Stat(scriptPath); os.IsNotExist(err) {
+	gateway, err := readProperty(workDir, "landun.gateway")
+	if err != nil {
 		return fmt.Errorf(msgf(
-			"install script %s not found in %s. Cannot reinstall without it.",
-			"安装脚本 %s 不在 %s 中, 无法执行重装。", scriptName, workDir))
+			"cannot read gateway from .agent.properties: %v",
+			"无法从 .agent.properties 读取网关地址: %v", err))
+	}
+	agentId, err := readProperty(workDir, "devops.agent.id")
+	if err != nil {
+		return fmt.Errorf(msgf(
+			"cannot read agent ID from .agent.properties: %v",
+			"无法从 .agent.properties 读取 Agent ID: %v", err))
 	}
 
 	printDivider()
@@ -301,14 +276,14 @@ func handleReinstall(workDir string, args []string) error {
 
 	printStep(msg("This will:", "本操作将:"))
 	printStep(msg(
-		"  1. Uninstall the daemon service",
-		"  1. 卸载守护进程服务"))
+		"  1. Stop agent",
+		"  1. 停止 Agent"))
 	printStep(msg(
-		"  2. Delete all files EXCEPT identity and install script",
-		"  2. 删除除身份文件和安装脚本外的所有内容"))
-	printStep(msgf(
-		"  3. Run %s to re-download and install from server",
-		"  3. 运行 %s 从服务端重新下载并安装", scriptName))
+		"  2. Delete all files EXCEPT identity files",
+		"  2. 删除除身份文件外的所有内容"))
+	printStep(msg(
+		"  3. Download agent.zip from server and install",
+		"  3. 从服务端下载 agent.zip 并安装"))
 	fmt.Println()
 	printStep(msg("Files preserved:", "保留的文件:"))
 	for name := range preserveSet() {
@@ -329,12 +304,9 @@ func handleReinstall(workDir string, args []string) error {
 
 	keep := preserveSet()
 
-	// Step 1: stop (don't uninstall — preserve session config / .install_type on Windows;
-	// the install script's "devopsAgent install" will re-register the service)
 	printStep(msg("Step 1: stopping agent ...", "步骤 1: 停止 Agent ..."))
 	_ = handleStop(workDir)
 
-	// Step 2: clean
 	printStep(msg("Step 2: cleaning files ...", "步骤 2: 清理文件 ..."))
 	entries, err := os.ReadDir(workDir)
 	if err != nil {
@@ -353,18 +325,86 @@ func handleReinstall(workDir string, args []string) error {
 		}
 	}
 
-	// Step 3: re-download and install via script
-	printStep(msgf("Step 3: re-downloading via %s ...", "步骤 3: 通过 %s 重新下载 ...", scriptName))
-	if err := runInstallScript(workDir); err != nil {
-		return fmt.Errorf(msgf(
-			"install script failed: %v",
-			"安装脚本执行失败: %v", err))
+	printStep(msg("Step 3: downloading agent.zip from server ...", "步骤 3: 从服务端下载 agent.zip ..."))
+	zipPath := filepath.Join(workDir, "agent.zip")
+	if err := downloadAgentZip(workDir, gateway, agentId, zipPath); err != nil {
+		return err
+	}
+
+	printStep(msg("Step 4: extracting agent.zip ...", "步骤 4: 解压 agent.zip ..."))
+	if runtime.GOOS == "windows" {
+		printStep(msg(
+			"NOTE: devopsAgent.exe is locked while running, skip overwrite is expected.",
+			"提示: devopsAgent.exe 运行中被锁定, 解压时跳过覆盖属正常现象。"))
+	}
+	if err := unzipFile(zipPath, workDir); err != nil {
+		return fmt.Errorf(msgf("extract agent.zip failed: %v", "解压 agent.zip 失败: %v", err))
+	}
+
+	printStep(msg("Step 5: preparing work directory ...", "步骤 5: 准备工作目录 ..."))
+	prepareWorkDir(workDir)
+	if runtime.GOOS != "windows" {
+		os.Chmod(filepath.Join(workDir, "devopsAgent"), 0755)
+		os.Chmod(filepath.Join(workDir, "devopsDaemon"), 0755)
+	}
+
+	printStep(msg("Step 6: installing service ...", "步骤 6: 安装服务 ..."))
+	if err := handleInstall(workDir, []string{}); err != nil {
+		return err
 	}
 
 	fmt.Println()
 	printDivider()
 	printStep(msg("Reinstall complete", "重装完成"))
 	printDivider()
+	return nil
+}
+
+// downloadAgentZip downloads agent.zip from the BK-CI server using credentials from .agent.properties.
+func downloadAgentZip(workDir, gateway, agentId, savePath string) error {
+	if !strings.HasPrefix(gateway, "http") {
+		gateway = "http://" + gateway
+	}
+	url := gateway + "/external/agents/" + agentId + "/install"
+
+	projectId, _ := readProperty(workDir, "devops.project.id")
+	secretKey, _ := readProperty(workDir, "devops.agent.secret.key")
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return fmt.Errorf(msgf("create request failed: %v", "创建请求失败: %v", err))
+	}
+	req.Header.Set("X-DEVOPS-PROJECT-ID", projectId)
+	req.Header.Set("X-DEVOPS-AGENT-ID", agentId)
+	req.Header.Set("X-DEVOPS-AGENT-SECRET-KEY", secretKey)
+
+	printStep(msgf("  GET %s", "  GET %s", url))
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf(msgf("download failed: %v", "下载失败: %v", err))
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf(msgf(
+			"server returned HTTP %d: %s",
+			"服务端返回 HTTP %d: %s", resp.StatusCode, strings.TrimSpace(string(body))))
+	}
+
+	out, err := os.Create(savePath)
+	if err != nil {
+		return fmt.Errorf(msgf("create file failed: %v", "创建文件失败: %v", err))
+	}
+	defer out.Close()
+
+	written, err := io.Copy(out, resp.Body)
+	if err != nil {
+		return fmt.Errorf(msgf("save file failed: %v", "保存文件失败: %v", err))
+	}
+
+	printStep(msgf("  downloaded %.1f MB", "  已下载 %.1f MB", float64(written)/1024/1024))
 	return nil
 }
 

@@ -33,6 +33,7 @@ import (
 	"net/url"
 	"os"
 	"os/user"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -40,8 +41,8 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 
 	"github.com/gofrs/flock"
 )
@@ -113,12 +114,23 @@ func GetRuntimeDir() string {
 	return GetWorkDir()
 }
 
-// GetExecutableDir get excutable jar dir
+// GetExecutableDir returns the absolute directory containing the current executable.
 func GetExecutableDir() string {
 	if len(GExecutableDir) == 0 {
 		executable := strings.Replace(os.Args[0], "\\", "/", -1)
 		index := strings.LastIndex(executable, "/")
-		GExecutableDir = executable[0:index]
+		var dir string
+		if index >= 0 {
+			dir = executable[0:index]
+		} else {
+			dir = "."
+		}
+		if !filepath.IsAbs(dir) {
+			if abs, err := filepath.Abs(dir); err == nil {
+				dir = abs
+			}
+		}
+		GExecutableDir = dir
 	}
 	return GExecutableDir
 }
