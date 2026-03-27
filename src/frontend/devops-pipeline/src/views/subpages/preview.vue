@@ -21,7 +21,7 @@
         </div>
         <template v-else>
             <div
-                v-if="!isDebugPipeline && !pacEnabled"
+                v-show="!isDebugPipeline && !pacEnabled"
                 class="pipeline-execute-version-select params-content-item"
             >
                 <span>
@@ -329,7 +329,7 @@
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
-    import { UPDATE_PREVIEW_PIPELINE_NAME, PAC_BRANCH_CHANGE, UPDATE_PAC_ERROR_STATUS, bus } from '@/utils/bus'
+    import { UPDATE_PREVIEW_PIPELINE_NAME, PAC_BRANCH_CHANGE, UPDATE_PAC_ERROR_STATUS, PAC_BRANCH_LOADING, bus } from '@/utils/bus'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { getParamsValuesMap, isObject, isShallowEqual } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
@@ -755,10 +755,15 @@
              */
             async handleBranchChange (branchName) {
                 this.selectedBranch = branchName
+                bus.$emit(PAC_BRANCH_LOADING, true)
                 // 切换分支前重置执行参数，确保使用新接口返回的数据
                 this.resetExecuteConfig(this.pipelineId)
                 // 重新获取编排和参数数据
-                await this.init(branchName)
+                try {
+                    await this.init(branchName)
+                } finally {
+                    bus.$emit(PAC_BRANCH_LOADING, false)
+                }
             },
             async executePipeline () {
                 let message, theme

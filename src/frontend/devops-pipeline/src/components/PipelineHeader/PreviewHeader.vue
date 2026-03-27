@@ -20,8 +20,8 @@
         <aside class="pipeline-preview-right-aside">
             <bk-button
                 theme="primary"
-                :disabled="executeStatus || hasPacError"
-                :loading="executeStatus"
+                :disabled="executeStatus || hasPacError || branchLoading"
+                :loading="executeStatus || branchLoading"
                 v-if="isDebugPipeline"
                 v-perm="{
                     hasPermission: canExecute,
@@ -42,8 +42,8 @@
             <span v-bk-tooltips="execTips">
                 <bk-button
                     theme="primary"
-                    :disabled="executeStatus || versionNotMatch || hasPacError"
-                    :loading="executeStatus"
+                    :disabled="executeStatus || versionNotMatch || hasPacError || branchLoading"
+                    :loading="executeStatus || branchLoading"
                     v-if="!isDebugPipeline"
                     v-perm="{
                         hasPermission: canExecute,
@@ -65,7 +65,7 @@
 </template>
 
 <script>
-    import { UPDATE_PREVIEW_PIPELINE_NAME, PAC_BRANCH_CHANGE, UPDATE_PAC_ERROR_STATUS, bus } from '@/utils/bus'
+    import { UPDATE_PREVIEW_PIPELINE_NAME, PAC_BRANCH_CHANGE, UPDATE_PAC_ERROR_STATUS, PAC_BRANCH_LOADING, bus } from '@/utils/bus'
     import {
         RESOURCE_ACTION,
         RESOURCE_TYPE
@@ -82,7 +82,8 @@
             return {
                 paramsValid: true,
                 previewPipelineName: '',
-                hasPacError: false
+                hasPacError: false,
+                branchLoading: false
             }
         },
         computed: {
@@ -157,10 +158,12 @@
         mounted () {
             bus.$on(UPDATE_PREVIEW_PIPELINE_NAME, this.updatePipelineName)
             bus.$on(UPDATE_PAC_ERROR_STATUS, this.updatePacErrorStatus)
+            bus.$on(PAC_BRANCH_LOADING, this.updateBranchLoading)
         },
         beforeDestroy () {
             bus.$off(UPDATE_PREVIEW_PIPELINE_NAME, this.updatePipelineName)
             bus.$off(UPDATE_PAC_ERROR_STATUS, this.updatePacErrorStatus)
+            bus.$off(PAC_BRANCH_LOADING, this.updateBranchLoading)
             this.selectPipelineVersion(null)
         },
         methods: {
@@ -170,6 +173,9 @@
             },
             updatePacErrorStatus (hasError) {
                 this.hasPacError = hasError
+            },
+            updateBranchLoading (isLoading) {
+                this.branchLoading = isLoading
             },
             handleClick () {
                 bus.$emit('start-execute')
