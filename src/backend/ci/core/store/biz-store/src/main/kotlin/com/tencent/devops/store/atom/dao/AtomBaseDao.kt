@@ -95,6 +95,21 @@ abstract class AtomBaseDao {
     }
 
     /**
+     * 构建 SERVICE_SCOPE 过滤条件：要求插件的 SERVICE_SCOPE JSON 数组包含指定的服务范围值。
+     * 例如 serviceScope=CREATIVE_STREAM 时，生成 JSON_CONTAINS(SERVICE_SCOPE, '"CREATIVE_STREAM"')。
+     *
+     * @param ta TAtom 表
+     * @param serviceScope 服务范围枚举值
+     * @return 查询条件
+     */
+    protected fun buildServiceScopeCondition(ta: TAtom, serviceScope: ServiceScopeEnum): Condition {
+        val normalizedScope = ServiceScopeUtil.normalize(serviceScope.name) ?: serviceScope.name
+        return jsonValidCondition(ta.SERVICE_SCOPE).and(
+            jsonContainsCondition(ta.SERVICE_SCOPE, normalizedScope)
+        )
+    }
+
+    /**
      * 设置插件市场可见插件查询条件
      */
     protected fun setAtomVisibleCondition(a: TAtom): MutableList<Condition> {

@@ -97,6 +97,7 @@ class MarketAtomDao : AtomBaseDao() {
         val ta = TAtom.T_ATOM
         val conditions = setAtomVisibleCondition(ta).apply {
             add(ta.DELETE_FLAG.eq(false))
+            query.serviceScope?.let { add(buildServiceScopeCondition(ta, it)) }
             // 关键字模糊搜索：匹配名称、简介或插件代码
             query.keyword?.takeIf { it.isNotEmpty() }?.let { keyword ->
                 add(
