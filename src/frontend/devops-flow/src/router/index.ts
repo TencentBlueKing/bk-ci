@@ -4,7 +4,6 @@ import { FLOW_GROUP_TYPES } from '../constants/flowGroup'
 import { ROUTE_NAMES } from '../constants/routes'
 import { VERSION_STATUS_ENUM } from '../utils/flowConst'
 
-
 declare module 'vue-router' {
   interface RouteMeta {
     websocket?: boolean
@@ -22,7 +21,7 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/creative-stream/:projectId',
+      path: '/:projectId',
       redirect: (to) => ({
         name: ROUTE_NAMES.FLOW_LIST,
         params: {
@@ -318,7 +317,7 @@ router.beforeEach(async (to) => {
 
   const projectId = to.params.projectId as string
   const flowId = to.params.flowId as string
-  
+
   try {
     // 获取 flowInfo，拿到 releaseVersion
     const flowInfo = await fetchFlowInfo({ projectId, flowId })
