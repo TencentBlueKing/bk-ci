@@ -33,9 +33,25 @@ $InvalidHeaders = @{
     'X-DEVOPS-PROJECT-ID' = '##projectId##'
 }
 Write-Host "start download agent.zip"
-Invoke-WebRequest -Uri $Uri -Headers $InvalidHeaders -OutFile agent.zip
-if (-not $?) {
-    Write-Host "Invoke-WebRequest agent.zip error" -ForegroundColor Red
+try {
+    $response = Invoke-WebRequest -Uri $Uri -Headers $InvalidHeaders -OutFile agent.zip -PassThru -UseBasicParsing
+    Write-Host "download complete (HTTP $($response.StatusCode))" -ForegroundColor Green
+} catch {
+    $statusCode = $_.Exception.Response.StatusCode.value__
+    Write-Host "download agent.zip failed (HTTP $statusCode)" -ForegroundColor Red
+    try {
+        $errStream = $_.Exception.Response.GetResponseStream()
+        if ($errStream) {
+            $reader = New-Object System.IO.StreamReader($errStream)
+            $errBody = $reader.ReadToEnd()
+            $reader.Close()
+            Write-Host "server response:" -ForegroundColor Yellow
+            Write-Host $errBody
+        }
+    } catch {
+        Write-Host "error detail: $($_.Exception.Message)" -ForegroundColor Yellow
+    }
+    Remove-Item -Path agent.zip -Force -ErrorAction SilentlyContinue
     Pause
     return
 }

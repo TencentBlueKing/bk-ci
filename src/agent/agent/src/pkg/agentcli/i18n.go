@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -48,38 +49,46 @@ func msgf(en, zh string, a ...interface{}) string {
 	return fmt.Sprintf(en, a...)
 }
 
-// printUsageLocalized prints help in the detected language.
+// printUsageLocalized prints help in the detected language, filtered by current OS.
 func printUsageLocalized() {
-	if useChinese {
-		fmt.Print(`用法: devopsAgent <命令> [选项]
+	isWin := runtime.GOOS == "windows"
 
-服务管理:
-  install [选项]       安装并启动 Agent 守护进程
+	if useChinese {
+		fmt.Print("用法: devopsAgent <命令> [选项]\n\n")
+		fmt.Print("服务管理:\n")
+		if isWin {
+			fmt.Print(`  install [选项]       安装并启动 Agent 守护进程
     --mode service     (默认) 安装为 Windows 服务
     --mode session     安装为 Windows 服务 + 配置桌面会话访问
     --mode task        [已废弃] 安装为计划任务 (建议使用 session 模式)
-  uninstall            停止并卸载守护进程服务
+    --user 用户名      session 模式: Windows 登录账号 (可选)
+    --password 密码    session 模式: 账号密码 (指定 --user 时必填)
+    --auto-logon       session 模式: 配置 Windows 自动登录
+`)
+		} else {
+			fmt.Print("  install              安装并启动 Agent 守护进程\n")
+		}
+		fmt.Print(`  uninstall            停止并卸载守护进程服务
   start                启动守护进程
   stop                 停止守护进程
-
-  install --mode session 选项 (仅 Windows):
-    --user 用户名      Windows 登录账号 (可选)
-    --password 密码    账号密码 (指定 --user 时必填)
-    --auto-logon       配置 Windows 自动登录
 
 维护:
   repair               修复文件: 停止 → 重新解压依赖 → 重启
   reinstall            完全重装: 保留身份配置, 删除其余文件, 从服务端重新下载
     -y                 跳过二次确认
   status               显示当前运行模式和配置状态
-
-会话模式 (仅 Windows):
+`)
+		if isWin {
+			fmt.Print(`
+会话模式:
   configure-session    配置桌面会话访问 (也可通过 install --mode session 一步到位)
     --user 用户名      Windows 登录账号 (可选)
     --password 密码    账号密码 (指定 --user 时必填)
     --auto-logon       配置 Windows 自动登录
     --disable          取消会话模式
-
+`)
+		}
+		fmt.Print(`
 调试:
   debug [on|off]       切换调试模式 (修改后需重启 Agent 生效)
                        · 日志级别降低到 DEBUG, 输出更详细的运行信息
@@ -93,35 +102,41 @@ func printUsageLocalized() {
   (无参数)             正常运行 Agent
 `)
 	} else {
-		fmt.Print(`Usage: devopsAgent <command> [options]
-
-Service management:
-  install [options]    Install and start agent daemon
+		fmt.Print("Usage: devopsAgent <command> [options]\n\n")
+		fmt.Print("Service management:\n")
+		if isWin {
+			fmt.Print(`  install [options]    Install and start agent daemon
     --mode service     (default) Install as Windows service
-    --mode session     Install as Windows service + configure session mode
+    --mode session     Install as service + configure desktop session access
     --mode task        [deprecated] Install as scheduled task (use session instead)
-  uninstall            Stop and remove agent daemon service
+    --user USER        session mode: Windows logon account (optional)
+    --password PASS    session mode: Password (required with --user)
+    --auto-logon       session mode: Enable Windows auto-logon on reboot
+`)
+		} else {
+			fmt.Print("  install              Install and start agent daemon\n")
+		}
+		fmt.Print(`  uninstall            Stop and remove agent daemon service
   start                Start agent daemon
   stop                 Stop agent daemon
-
-  install --mode session options (Windows only):
-    --user USER        Windows logon account (optional)
-    --password PASS    Password (required with --user)
-    --auto-logon       Enable Windows auto-logon on reboot
 
 Maintenance:
   repair               Repair files: stop -> re-extract dependencies -> restart
   reinstall            Full reinstall: keep identity, re-download everything from server
     -y                 Skip confirmation prompt
   status               Show current running mode and configuration
-
-Session mode (Windows only):
+`)
+		if isWin {
+			fmt.Print(`
+Session mode:
   configure-session    Configure desktop session access (or use install --mode session)
     --user USER        Windows logon account (optional)
     --password PASS    Password (required with --user)
     --auto-logon       Enable Windows auto-logon on reboot
     --disable          Revert to plain service mode
-
+`)
+		}
+		fmt.Print(`
 Debug:
   debug [on|off]       Toggle debug mode (restart agent to take effect)
                        Differences from normal mode:
