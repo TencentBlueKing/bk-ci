@@ -8,13 +8,18 @@ Agent 二进制（`devopsAgent`）内置了服务管理和 Session 配置的 CLI
 devopsAgent <command> [options]
 
 服务管理:
-  install              安装并启动 daemon 服务
+  install [options]    安装并启动 daemon
+    --mode service     (默认) 安装为 Windows 服务
+    --mode session     安装为服务 + 配置桌面会话 (一步到位)
+    --mode task        [已废弃] 安装为计划任务
   uninstall            停止并卸载 daemon 服务
   start                启动 daemon
   stop                 停止 daemon
 
 维护:
   repair               停止 → 重新解压 JDK/依赖 → 重启
+  reinstall [-y]       完全重装: 保留身份, 从服务端重新下载
+  status               显示运行模式和配置状态
 
 Session 模式 (仅 Windows):
   configure-session    配置桌面 Session 访问
@@ -22,6 +27,7 @@ Session 模式 (仅 Windows):
 其他:
   version              打印版本号
   fullVersion          打印完整版本信息
+  -h, --help           显示帮助
   (无参数)             正常运行 agent
 ```
 
@@ -31,32 +37,22 @@ Session 模式 (仅 Windows):
 
 ### install
 
-注册 daemon 为系统服务并启动。自动处理 JDK 解压和目录创建。
+注册 daemon 并启动。自动处理 JDK 解压和目录创建。Windows 支持 `--mode` 选择安装模式。
 
 ```bash
-# Linux (root + systemd)
+# Linux / macOS (--mode 参数忽略，始终使用系统服务)
 sudo ./devopsAgent install
-# → 创建 systemd unit → systemctl enable --now
 
-# Linux (root + 无 systemd，如容器)
-sudo ./devopsAgent install
-# → 检测到无 systemd，直接后台启动 daemon
-
-# Linux (非 root)
-./devopsAgent install
-# → 直接后台启动 daemon
-
-# macOS (root)
-sudo ./devopsAgent install
-# → 创建 /Library/LaunchDaemons 系统级 plist → launchctl load
-
-# macOS (非 root)
-./devopsAgent install
-# → 创建 ~/Library/LaunchAgents 用户级 plist → launchctl load
-
-# Windows (管理员)
+# Windows - 默认服务模式
 .\devopsAgent.exe install
-# → 清理旧 schtasks → sc.exe create → sc.exe start
+.\devopsAgent.exe install --mode service   # 同上
+
+# Windows - 服务 + Session 模式 (一步到位，替代 install + configure-session)
+.\devopsAgent.exe install --mode session --user builduser --password P@ssw0rd
+.\devopsAgent.exe install --mode session --user builduser --password P@ssw0rd --auto-logon
+
+# Windows - 计划任务模式 [已废弃，建议用 session]
+.\devopsAgent.exe install --mode task
 ```
 
 ### uninstall

@@ -36,7 +36,7 @@ func isRoot() bool {
 	return u != nil && u.Uid == "0"
 }
 
-func handleInstall(workDir string) error {
+func handleInstall(workDir string, _ []string) error {
 	printDivider()
 	printStep(msg("Installing agent daemon service (Linux)", "安装 Agent 守护进程服务 (Linux)"))
 	printDivider()

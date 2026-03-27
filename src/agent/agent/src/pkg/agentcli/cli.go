@@ -25,7 +25,7 @@ func Run(workDir string, args []string) {
 		printUsageLocalized()
 		return
 	case "install":
-		err = handleInstall(workDir)
+		err = handleInstall(workDir, args[1:])
 	case "uninstall":
 		err = handleUninstall(workDir)
 	case "start":
