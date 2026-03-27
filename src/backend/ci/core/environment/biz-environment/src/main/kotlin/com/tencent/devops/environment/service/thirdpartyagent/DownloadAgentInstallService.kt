@@ -86,7 +86,6 @@ class DownloadAgentInstallService @Autowired constructor(
 
     fun downloadInstallScript(
         agentId: String,
-        isWinDownload: Boolean,
         loginName: String?,
         loginPassword: String?,
         installType: TPAInstallType?
@@ -109,15 +108,7 @@ class DownloadAgentInstallService @Autowired constructor(
          * agentSecretKey
          * gateWay
          */
-        val fileName = if (agentRecord.os == OS.WINDOWS.name) {
-            if (isWinDownload) {
-                "download_install.ps1"
-            } else {
-                "install.bat"
-            }
-        } else {
-            "install.sh"
-        }
+        val fileName = getDownloadFile(agentRecord.os)
         val scriptFile = File(agentPackage, "script/${agentRecord.os.lowercase()}/$fileName")
 
         if (!scriptFile.exists()) {
@@ -278,13 +269,20 @@ class DownloadAgentInstallService @Autowired constructor(
         installType: TPAInstallType?
     ): Map<String, String> {
         val file = File(agentPackage, "script/${agentRecord.os.lowercase()}")
-        val scripts = file.listFiles()
+        val scripts = file.listFiles()?.toMutableList()
+        scripts?.removeIf { it.name == getDownloadFile(agentRecord.os) }
         val map = getAgentReplaceProperties(agentRecord, false, loginName, loginPassword, installType)
         return scripts?.associate {
             var content = it.readText(Charsets.UTF_8)
             map.forEach { (key, value) -> content = content.replace("##$key##", value) }
             it.name to content
         } ?: emptyMap()
+    }
+
+    private fun getDownloadFile(os: String) = if (os == OS.WINDOWS.name) {
+        "download_install.ps1"
+    } else {
+        "install.sh"
     }
 
     private fun getPropertyFile(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String, String> {

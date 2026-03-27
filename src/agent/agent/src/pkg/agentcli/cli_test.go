@@ -139,9 +139,9 @@ func TestPreserveSet(t *testing.T) {
 		".agent.properties",
 		".install_type",
 		".cert",
+		".debug",
 		"workspace",
 		agentBinary(),
-		installScriptName(),
 	}
 	for _, name := range required {
 		if !ps[name] {
@@ -150,19 +150,6 @@ func TestPreserveSet(t *testing.T) {
 	}
 	if len(ps) != len(required) {
 		t.Errorf("preserveSet has %d entries, want %d", len(ps), len(required))
-	}
-}
-
-func TestInstallScriptName(t *testing.T) {
-	name := installScriptName()
-	if runtime.GOOS == "windows" {
-		if name != "download_install.ps1" {
-			t.Errorf("installScriptName() = %q on windows, want download_install.ps1", name)
-		}
-	} else {
-		if name != "install.sh" {
-			t.Errorf("installScriptName() = %q on %s, want install.sh", name, runtime.GOOS)
-		}
 	}
 }
 

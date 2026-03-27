@@ -3,13 +3,31 @@ function Unzip-File {
         [string]$ZipFile,
         [string]$Destination
     )
-    $psMajor = $PSVersionTable.PSVersion.Major
-
-    if ($psMajor -ge 5) {
-        Expand-Archive -Path $ZipFile -DestinationPath $Destination -Force
-    } else {
-        Add-Type -AssemblyName System.IO.Compression.FileSystem
-        [System.IO.Compression.ZipFile]::ExtractToDirectory($ZipFile, $Destination)
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $archive = [System.IO.Compression.ZipFile]::OpenRead($ZipFile)
+    try {
+        foreach ($entry in $archive.Entries) {
+            $destPath = Join-Path $Destination $entry.FullName
+            if ($entry.FullName.EndsWith('/') -or $entry.FullName.EndsWith('\')) {
+                New-Item -ItemType Directory -Force -Path $destPath | Out-Null
+                continue
+            }
+            $destDir = Split-Path -Parent $destPath
+            if (-not (Test-Path $destDir)) {
+                New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+            }
+            try {
+                $stream = $entry.Open()
+                $file = [System.IO.File]::Create($destPath)
+                $stream.CopyTo($file)
+                $file.Close()
+                $stream.Close()
+            } catch {
+                Write-Host "[WARN] skip locked file: $($entry.FullName) ($($_.Exception.Message))" -ForegroundColor Yellow
+            }
+        }
+    } finally {
+        $archive.Dispose()
     }
 }
 
