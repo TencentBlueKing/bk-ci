@@ -978,7 +978,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     override fun deleteAtom(userId: String, atomCode: String): Result<Boolean> {
         logger.info("deleteAtom userId: $userId , atomCode: $atomCode")
         val type = StoreTypeEnum.ATOM.type.toByte()
-        val atomName = StoreTypeEnum.ATOM.name
+        val typeName = StoreTypeEnum.ATOM.name
         val language = I18nUtil.getLanguage(userId)
         // 校验是否为管理员
         if (!storeMemberDao.isStoreAdmin(dslContext, userId, atomCode, type)) {
@@ -1036,9 +1036,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             marketAtomVersionLogDao.deleteByAtomCode(context, atomCode)
             marketAtomDao.deleteByAtomCode(context, atomCode)
             // 清理缓存
-            redisOperation.removeSetMember(StoreUtils.getStorePublicFlagKey(atomName), atomCode)
+            redisOperation.removeSetMember(StoreUtils.getStorePublicFlagKey(typeName), atomCode)
             redisOperation.delete("$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode")
-            redisOperation.delete(StoreUtils.getStoreRunInfoKey(atomName, atomCode))
+            redisOperation.delete(StoreUtils.getStoreRunInfoKey(typeName, atomCode))
         }
         return Result(true)
     }
