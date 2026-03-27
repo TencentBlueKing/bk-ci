@@ -19,7 +19,7 @@ devopsAgent <command> [options]
 维护:
   repair               停止 → 重新解压 JDK/依赖 → 重启
   reinstall [-y]       完全重装: 保留身份, 从服务端重新下载
-  status               显示运行模式和配置状态
+  status               运行状态 + 健康检查 (网络/磁盘/证书诊断)
 
 Session 模式 (仅 Windows):
   configure-session    配置桌面 Session 访问

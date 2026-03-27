@@ -47,7 +47,11 @@ src/agent/agent/
 │   │   │   ├── status_win.go  #    Windows 状态检测（服务/LSA/AutoLogon/计划任务）
 │   │   │   ├── session_win.go  #   Windows Session 配置（LSA/AutoLogon/凭据验证）
 │   │   │   ├── session_win_test.go # Windows Session 测试
-│   │   │   └── session_nowin.go #  非Windows stub
+│   │   │   ├── session_nowin.go #  非Windows stub
+│   │   │   ├── diagnose.go     #   健康检查核心（网络4步诊断/磁盘可写/证书/代理检测）
+│   │   │   ├── diagnose_unix.go #  Linux/macOS 磁盘空间 (syscall.Statfs)
+│   │   │   ├── diagnose_win.go #   Windows 磁盘空间 (GetDiskFreeSpaceEx)
+│   │   │   └── diagnose_test.go #  健康检查测试
 │   ├── pkg/                    # 核心业务包
 │   │   ├── agent/              # Agent主循环与任务分发
 │   │   ├── api/                # 与BK-CI后台HTTP API通信
@@ -130,8 +134,13 @@ devopsAgent <command> [options]
 
 维护:
   repair               修复文件: 停止 → 重新解压依赖 → 重启
-  reinstall [-y]       完全重装: 保留身份配置, 从服务端重新下载安装
-  status               显示当前运行模式和配置状态
+  reinstall [-y]       完全重装: 内置下载 agent.zip (无需安装脚本)
+  status               运行状态 + 健康检查 (网络/磁盘/证书诊断)
+
+调试:
+  debug [on|off]       切换调试模式 (通过 .debug 文件, 重启生效)
+  version              打印版本号
+  fullVersion          打印完整版本信息
 
 会话模式 (仅 Windows):
   configure-session    配置桌面会话访问 (也可通过 install --mode session 一步到位)
@@ -534,10 +543,11 @@ go test -v -run TestPidStatus ./src/pkg/agentcli/
 **已有测试覆盖的 agentcli 模块**:
 | 文件 | 覆盖内容 |
 |------|---------|
-| `cli_test.go` | IsSubcommand、readProperty、preserveSet、cleanup 逻辑 |
+| `cli_test.go` | IsSubcommand、readProperty、preserveSet、cleanup、handleDebug、DebugFileExists |
 | `i18n_test.go` | msg/msgf、initLang 环境变量优先级、tryReadLang |
 | `status_linux_test.go` | dirStatus、fileStatus、readPid、pidStatus、currentUser |
-| `session_win_test.go` | splitUserDomain、readInstallTypeFile |
+| `session_win_test.go` | splitUserDomain、readInstallTypeFile、handleInstall 模式分发和校验 |
+| `diagnose_test.go` | normalizeGateway、buildProxyFunc (含 NoProxy 排除)、loadCertIfExists、detectProxyUsed、tlsVersionName、checkDiskWritable、checkDiskSpace |
 
 ### 关键第三方依赖
 

@@ -59,6 +59,8 @@ func handleStatus(workDir string) error {
 	statusLine("JDK 8", dirStatus(filepath.Join(workDir, "jdk")))
 	statusLine("worker-agent.jar", fileStatus(filepath.Join(workDir, "worker-agent.jar")))
 
+	printHealthChecks(workDir)
+
 	return nil
 }
 
