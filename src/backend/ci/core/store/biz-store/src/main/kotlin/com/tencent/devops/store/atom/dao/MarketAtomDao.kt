@@ -35,7 +35,6 @@ import com.tencent.devops.model.store.tables.TAtomFeature
 import com.tencent.devops.model.store.tables.TAtomLabelRel
 import com.tencent.devops.model.store.tables.TAtomVersionLog
 import com.tencent.devops.model.store.tables.TClassify
-import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TAtomRecord
@@ -72,7 +71,7 @@ class MarketAtomDao : AtomBaseDao() {
      * 插件商店搜索结果，总数
      */
     fun count(dslContext: DSLContext, query: MarketAtomDaoQuery): Int {
-        val (ta, conditions) = formatConditions(query, dslContext)
+        val (ta, conditions) = formatConditions(query)
         val taf = TAtomFeature.T_ATOM_FEATURE
         val baseStep = dslContext.select(DSL.countDistinct(ta.ID)).from(ta).leftJoin(taf)
             .on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
@@ -91,8 +90,7 @@ class MarketAtomDao : AtomBaseDao() {
     }
 
     private fun formatConditions(
-        query: MarketAtomDaoQuery,
-        dslContext: DSLContext
+        query: MarketAtomDaoQuery
     ): Pair<TAtom, MutableList<Condition>> {
         val ta = TAtom.T_ATOM
         val conditions = setAtomVisibleCondition(ta).apply {
@@ -108,14 +106,9 @@ class MarketAtomDao : AtomBaseDao() {
             }
             // 研发类型过滤
             query.rdType?.let { add(ta.ATOM_TYPE.eq(it.type.toByte())) }
-            // 分类过滤：根据 classifyCode 和 serviceScope 构建分类条件
-            query.classifyCode?.takeIf { it.isNotEmpty() }?.let {
-                val classifyId = getClassifyIdByCode(
-                    dslContext = dslContext,
-                    classifyCode = it,
-                    serviceScope = query.serviceScope
-                )
-                buildClassifyCondition(ta, classifyId, query.serviceScope)?.let(::add)
+            // 分类过滤：根据 classifyId 和 serviceScope 构建分类条件
+            query.classifyId?.let {
+                buildClassifyCondition(ta, it, query.serviceScope)?.let(::add)
             }
         }
         return ta to conditions
@@ -125,7 +118,7 @@ class MarketAtomDao : AtomBaseDao() {
      * 插件商店搜索结果列表
      */
     fun list(dslContext: DSLContext, query: MarketAtomDaoQuery): Result<out Record>? {
-        val (ta, conditions) = formatConditions(query, dslContext)
+        val (ta, conditions) = formatConditions(query)
         val taf = TAtomFeature.T_ATOM_FEATURE
         val classifyIdField = buildClassifyIdField(ta, query.serviceScope)
         val baseStep = dslContext.select(
@@ -191,20 +184,11 @@ class MarketAtomDao : AtomBaseDao() {
         query: MarketAtomDaoQuery,
         storeType: Byte
     ) {
-        // 标签过滤：根据标签代码查询标签ID列表，并关联标签关系表
-        query.labelCodeList?.takeIf { it.isNotEmpty() }?.let { labelCodes ->
-            val tLabel = TLabel.T_LABEL
-            val labelIdList = dslContext.select(tLabel.ID)
-                .from(tLabel)
-                .where(
-                    tLabel.LABEL_CODE.`in`(labelCodes)
-                        .and(tLabel.TYPE.eq(storeType))
-                        .and(query.serviceScope?.let { tLabel.SERVICE_SCOPE.eq(it.name) } ?: DSL.noCondition())
-                )
-                .fetch().map { it[tLabel.ID] as String }
+        // 标签过滤：关联标签关系表，筛选匹配指定标签的插件
+        query.labelIdList?.takeIf { it.isNotEmpty() }?.let { labelIds ->
             val talr = TAtomLabelRel.T_ATOM_LABEL_REL
             baseStep.leftJoin(talr).on(ta.ID.eq(talr.ATOM_ID))
-            conditions.add(talr.LABEL_ID.`in`(labelIdList))
+            conditions.add(talr.LABEL_ID.`in`(labelIds))
         }
         // 评分过滤：关联统计表，筛选平均评分达标的插件
         query.score?.let { score ->

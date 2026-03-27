@@ -82,7 +82,8 @@ interface UserMarketAtomResource {
         userId: String,
         @Parameter(description = "支持的服务范围", required = false)
         @QueryParam("serviceScope")
-        serviceScope: ServiceScopeEnum?,
+        @DefaultValue("PIPELINE")
+        serviceScope: ServiceScopeEnum? = ServiceScopeEnum.PIPELINE,
         @Parameter(description = "页码", required = false)
         @QueryParam("page")
         @DefaultValue("1")
@@ -133,7 +134,8 @@ interface UserMarketAtomResource {
         sortType: MarketAtomSortTypeEnum? = MarketAtomSortTypeEnum.CREATE_TIME,
         @Parameter(description = "支持的服务范围", required = false)
         @QueryParam("serviceScope")
-        serviceScope: ServiceScopeEnum?,
+        @DefaultValue("PIPELINE")
+        serviceScope: ServiceScopeEnum? = ServiceScopeEnum.PIPELINE,
         @Parameter(description = "页码", required = false)
         @QueryParam("page")
         @DefaultValue("1")

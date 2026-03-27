@@ -33,8 +33,8 @@ import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 
 data class MarketAtomDaoQuery(
     val keyword: String? = null,
-    val classifyCode: String? = null,
-    val labelCodeList: List<String>? = null,
+    val classifyId: String? = null,
+    val labelIdList: List<String>? = null,
     val score: Int? = null,
     val rdType: AtomTypeEnum? = null,
     val yamlFlag: Boolean? = null,

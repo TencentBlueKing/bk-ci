@@ -61,6 +61,7 @@ import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.AtomLabelRelDao
 import com.tencent.devops.store.atom.dao.MarketAtomClassifyDao
 import com.tencent.devops.store.atom.dao.MarketAtomDao
+import com.tencent.devops.store.pojo.atom.MarketAtomDaoQuery
 import com.tencent.devops.store.atom.dao.MarketAtomEnvInfoDao
 import com.tencent.devops.store.atom.dao.MarketAtomFeatureDao
 import com.tencent.devops.store.atom.dao.MarketAtomVersionLogDao
@@ -71,11 +72,12 @@ import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.atom.service.MarketAtomEnvService
 import com.tencent.devops.store.atom.service.MarketAtomService
 import com.tencent.devops.store.atom.util.AtomServiceScopeUtil
-import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.StoreBuildInfoDao
 import com.tencent.devops.store.common.dao.StoreErrorCodeInfoDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
+import com.tencent.devops.store.common.dao.ClassifyDao
+import com.tencent.devops.store.common.dao.LabelDao
 import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.common.service.StoreCommentService
 import com.tencent.devops.store.common.service.StoreCommonService
@@ -102,7 +104,6 @@ import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
-import com.tencent.devops.store.pojo.atom.MarketAtomDaoQuery
 import com.tencent.devops.store.pojo.atom.MarketAtomListQuery
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.MyAtomResp
@@ -156,6 +157,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     @Autowired
     lateinit var classifyDao: ClassifyDao
+
+    @Autowired
+    lateinit var labelDao: LabelDao
 
     @Autowired
     lateinit var storeProjectRelDao: StoreProjectRelDao
@@ -264,10 +268,22 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         return executor.submit(Callable {
             referer?.let { ThreadLocalUtil.set(REFERER, it) }
             try {
+                val emptyResp = MarketAtomResp(0, query.page, query.pageSize, emptyList())
+                val storeType = StoreTypeEnum.ATOM
+                // 分类code转ID：不存在则直接返回空结果
+                val classifyId = query.classifyCode?.takeIf { it.isNotEmpty() }?.let { code ->
+                    classifyDao.getClassifyByCode(dslContext, code, storeType, query.serviceScope)?.id
+                        ?: return@Callable emptyResp
+                }
+                // 标签code转ID：不存在则直接返回空结果
+                val labelIdList = query.labelCode?.takeIf { it.isNotEmpty() }?.split(",")?.let { codes ->
+                    labelDao.getIdsByCodes(dslContext, codes, storeType.type.toByte(), query.serviceScope)
+                        .takeIf { it.isNotEmpty() } ?: return@Callable emptyResp
+                }
                 val daoQuery = MarketAtomDaoQuery(
                     keyword = query.keyword,
-                    classifyCode = query.classifyCode,
-                    labelCodeList = query.labelCode?.takeIf { it.isNotEmpty() }?.split(","),
+                    classifyId = classifyId,
+                    labelIdList = labelIdList,
                     score = query.score,
                     rdType = query.rdType,
                     yamlFlag = query.yamlFlag,
@@ -279,10 +295,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     page = query.page,
                     pageSize = query.pageSize
                 )
-                val count = marketAtomDao.count(dslContext, daoQuery)
                 val atoms = marketAtomDao.list(dslContext, daoQuery)
-                    ?: return@Callable MarketAtomResp(0, query.page, query.pageSize, emptyList())
-
+                    ?: return@Callable emptyResp
+                val count = marketAtomDao.count(dslContext, daoQuery)
                 val atomCodeList = atoms.map { it[TAtom.T_ATOM.ATOM_CODE] as String }
                 val aggregateData = loadAtomAggregateData(atomCodeList, query.userId, query.serviceScope)
                 val results = atoms.map { record ->
