@@ -276,7 +276,10 @@
                                 <bk-checkbox v-model="createReleaseForm.enableDevxAccess">
                                     {{ $t('experience.allow_dev_cloud_access') }}
                                 </bk-checkbox>
-                                <bk-checkbox v-model="createReleaseForm.enablePublicAccess">
+                                <bk-checkbox
+                                    v-if="showPublicAccessCheckbox"
+                                    v-model="createReleaseForm.enablePublicAccess"
+                                >
                                     {{ $t('experience.allow_public_access') }}
                                     <span
                                         v-bk-tooltips="{
@@ -651,6 +654,9 @@
             },
             isAlphaApk () {
                 return !!this.metaList.find(item => item.key === 'BK-CI-APP-STAGE' && item.value === 'Alpha')
+            },
+            showPublicAccessCheckbox () {
+                return this.experienceRange === 'internals'
             },
             
             createInnerApkExpTips () {
