@@ -132,7 +132,8 @@ class ExperienceDao {
         createDateEnd: LocalDateTime?,
         endDateBegin: LocalDateTime?,
         endDateEnd: LocalDateTime?,
-        creator: String?
+        creator: String?,
+        enablePublicAccess: Boolean? = null
     ): Result<TExperienceRecord> {
         with(TExperience.T_EXPERIENCE) {
             return dslContext.selectFrom(this)
@@ -149,6 +150,7 @@ class ExperienceDao {
                 .let { if (endDateBegin != null) it.and(END_DATE.gt(endDateBegin)) else it }
                 .let { if (endDateEnd != null) it.and(END_DATE.lt(endDateEnd)) else it }
                 .let { if (creator != null) it.and(CREATOR.like("%$creator%")) else it }
+                .let { if (null == enablePublicAccess) it else it.and(ENABLE_PUBLIC_ACCESS.eq(enablePublicAccess)) }
                 .orderBy(CREATE_TIME.desc())
                 .limit(offset, limit)
                 .fetch()
@@ -204,6 +206,7 @@ class ExperienceDao {
         classify: String,
         repoCreateTime: LocalDateTime,
         appNameI18n: String?,
+        enablePublicAccess: Boolean,
     ): Long {
         val now = LocalDateTime.now()
         with(TExperience.T_EXPERIENCE) {
@@ -242,7 +245,8 @@ class ExperienceDao {
                 PIPELINE_ID,
                 CLASSIFY,
                 REPO_CREATE_TIME,
-                APP_NAME_I18N
+                APP_NAME_I18N,
+                ENABLE_PUBLIC_ACCESS
             ).values(
                 projectId,
                 name,
@@ -277,7 +281,8 @@ class ExperienceDao {
                 pipelineId,
                 classify,
                 repoCreateTime,
-                appNameI18n
+                appNameI18n,
+                enablePublicAccess
             )
                 .returning(ID)
                 .fetchOne()!!
@@ -382,7 +387,8 @@ class ExperienceDao {
         createDateEnd: LocalDateTime?,
         endDateBegin: LocalDateTime?,
         endDateEnd: LocalDateTime?,
-        creator: String?
+        creator: String?,
+        enablePublicAccess: Boolean? = null
     ): Int {
         return with(TExperience.T_EXPERIENCE) {
             dslContext.selectCount().from(this)
@@ -398,6 +404,7 @@ class ExperienceDao {
                 .let { if (endDateBegin != null) it.and(END_DATE.gt(endDateBegin)) else it }
                 .let { if (endDateEnd != null) it.and(END_DATE.lt(endDateEnd)) else it }
                 .let { if (creator != null) it.and(CREATOR.like("%$creator%")) else it }
+                .let { if (null == enablePublicAccess) it else it.and(ENABLE_PUBLIC_ACCESS.eq(enablePublicAccess)) }
                 .fetchOne()!!.value1()
         }
     }
@@ -410,13 +417,15 @@ class ExperienceDao {
         online: Boolean,
         offset: Int,
         limit: Int,
-        experienceName: String?
+        experienceName: String?,
+        enablePublicAccess: Boolean? = null
     ): Result<TExperienceRecord> {
         return with(TExperience.T_EXPERIENCE) {
             dslContext.selectFrom(this)
                 .where(ID.`in`(ids))
                 .let { if (null == platform) it else it.and(PLATFORM.eq(platform)) }
                 .let { if (null == experienceName) it else it.and(EXPERIENCE_NAME.like("%$experienceName%")) }
+                .let { if (null == enablePublicAccess) it else it.and(ENABLE_PUBLIC_ACCESS.eq(enablePublicAccess)) }
                 .and(END_DATE.gt(expireTime))
                 .and(ONLINE.eq(online))
                 .orderBy(CREATE_TIME.desc())
@@ -430,7 +439,8 @@ class ExperienceDao {
         ids: Set<Long>,
         expireTime: LocalDateTime,
         online: Boolean,
-        projectId: String? = null
+        projectId: String? = null,
+        enablePublicAccess: Boolean? = null
     ): Result<Record1<Long>> {
         with(TExperience.T_EXPERIENCE) {
             return dslContext.select(DSL.max(ID))
@@ -439,6 +449,7 @@ class ExperienceDao {
                 .and(END_DATE.gt(expireTime))
                 .and(ONLINE.eq(online))
                 .let { if (null != projectId) it.and(PROJECT_ID.eq(projectId)) else it }
+                .let { if (null == enablePublicAccess) it else it.and(ENABLE_PUBLIC_ACCESS.eq(enablePublicAccess)) }
                 .groupBy(PROJECT_ID, BUNDLE_IDENTIFIER, PLATFORM, CLASSIFY)
                 .fetch()
         }
@@ -458,12 +469,14 @@ class ExperienceDao {
         ids: Set<Long>,
         platform: String?,
         expireTime: LocalDateTime,
-        online: Boolean
+        online: Boolean,
+        enablePublicAccess: Boolean? = null
     ): Int {
         return with(TExperience.T_EXPERIENCE) {
             dslContext.selectCount().from(this)
                 .where(ID.`in`(ids))
                 .let { if (null == platform) it else it.and(PLATFORM.eq(platform)) }
+                .let { if (null == enablePublicAccess) it else it.and(ENABLE_PUBLIC_ACCESS.eq(enablePublicAccess)) }
                 .and(END_DATE.gt(expireTime))
                 .and(ONLINE.eq(online))
                 .fetchOne()!!.value1()

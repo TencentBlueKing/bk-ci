@@ -40,6 +40,7 @@ import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.ApkDefenderRequest
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.artifactory.pojo.enums.Permission
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
 import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -512,6 +513,14 @@ class ExperienceService @Autowired constructor(
             }
         }
 
+        // 允许合研环境访问、允许基地公网访问仅在Windows且非公开体验下才能开启
+        validateAccessParams(
+            enablePublicAccess = experience.enablePublicAccess,
+            enableDevxAccess = experience.enableDevxAccess,
+            platform = platform,
+            isPublic = isPublic
+        )
+
         val fileDetail =
             client.get(ServiceArtifactoryResource::class).show(userId, projectId, artifactoryType, experience.path).data
 
@@ -618,7 +627,8 @@ class ExperienceService @Autowired constructor(
             pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID] ?: "",
             classify = experience.classify ?: "",
             repoCreateTime = DateTimeUtil.convertTimestampToLocalDateTime(fileDetail.createdTime),
-            appNameI18n = appNameI18n
+            appNameI18n = appNameI18n,
+            enablePublicAccess = experience.enablePublicAccess,
         )
         // IAM权限
         experiencePermissionService.createTaskResource(
@@ -913,6 +923,15 @@ class ExperienceService @Autowired constructor(
 
         val isPublic = experience.experienceGroups.contains(HashUtil.encodeLongId(ExperienceConstant.PUBLIC_GROUP))
 
+        val inputPlatform = if (experience.platform != null) PlatformEnum.ofName(experience.platform!!) else null
+        // 允许合研环境访问、允许基地公网访问仅在Windows且非公开体验下才能开启
+        validateAccessParams(
+            enablePublicAccess = experience.enablePublicAccess,
+            enableDevxAccess = experience.enableDevxAccess,
+            platform = inputPlatform,
+            isPublic = isPublic
+        )
+
         val path = experience.path
         val artifactoryType =
             com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
@@ -976,7 +995,9 @@ class ExperienceService @Autowired constructor(
             classify = experience.classify,
             platform = experience.platform,
             bundleIdentifier = experience.bundleIdentifier,
-            version = experience.version
+            version = experience.version,
+            enableDevxAccess = experience.enableDevxAccess,
+            enablePublicAccess = experience.enablePublicAccess
         )
 
         val (experienceId, platform) = createExperience(
@@ -1616,6 +1637,33 @@ class ExperienceService @Autowired constructor(
                     // TODO 可能还得清理其他
                 }.onFailure { exception -> logger.warn("delete failed , id: ${e.id}", exception) }
             }
+        }
+    }
+
+    /**
+     * 校验允许合研环境访问、允许基地公网访问参数
+     * enablePublicAccess 仅在Windows且非公开体验下才能开启
+     * enableDevxAccess 仅在Windows下才能开启
+     */
+    private fun validateAccessParams(
+        enablePublicAccess: Boolean,
+        enableDevxAccess: Boolean,
+        platform: PlatformEnum?,
+        isPublic: Boolean
+    ) {
+        if (enablePublicAccess && (platform != PlatformEnum.WIN || isPublic)) {
+            throw ErrorCodeException(
+                errorCode = ERROR_INVALID_PARAM_,
+                params = arrayOf("enablePublicAccess"),
+                defaultMessage = "enablePublicAccess is only supported for non-public Windows experience"
+            )
+        }
+        if (enableDevxAccess && platform != PlatformEnum.WIN) {
+            throw ErrorCodeException(
+                errorCode = ERROR_INVALID_PARAM_,
+                params = arrayOf("enableDevxAccess"),
+                defaultMessage = "enableDevxAccess is only supported for Windows experience"
+            )
         }
     }
 
