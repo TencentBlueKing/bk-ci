@@ -8,6 +8,8 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 )
 
 // Run dispatches CLI subcommands. Called from agent main() before process lock.
@@ -24,6 +26,16 @@ func Run(workDir string, args []string) {
 	case "-h", "--help", "help":
 		printUsageLocalized()
 		return
+	case "version":
+		fmt.Println(config.AgentVersion)
+		return
+	case "fullVersion":
+		fmt.Println(config.AgentVersion)
+		fmt.Println(config.GitCommit)
+		fmt.Println(config.BuildTime)
+		return
+	case "debug":
+		err = handleDebug(workDir, args[1:])
 	case "install":
 		err = handleInstall(workDir, args[1:])
 	case "uninstall":
@@ -56,10 +68,52 @@ func Run(workDir string, args []string) {
 func IsSubcommand(arg string) bool {
 	switch arg {
 	case "install", "uninstall", "start", "stop", "repair", "reinstall", "status", "configure-session",
+		"version", "fullVersion", "debug",
 		"-h", "--help", "help":
 		return true
 	}
 	return false
+}
+
+const debugFile = ".debug"
+
+func handleDebug(workDir string, args []string) error {
+	debugPath := filepath.Join(workDir, debugFile)
+
+	if len(args) == 0 {
+		_, err := os.Stat(debugPath)
+		if err == nil {
+			printStep(msg("Debug mode: ON (.debug file exists)", "调试模式: 开启 (.debug 文件存在)"))
+		} else {
+			printStep(msg("Debug mode: OFF", "调试模式: 关闭"))
+		}
+		return nil
+	}
+
+	switch args[0] {
+	case "on", "enable":
+		if err := os.WriteFile(debugPath, []byte("1"), 0644); err != nil {
+			return err
+		}
+		printStep(msg(
+			"Debug mode enabled. Restart agent to take effect.",
+			"调试模式已开启。重启 Agent 后生效。"))
+	case "off", "disable":
+		os.Remove(debugPath)
+		printStep(msg(
+			"Debug mode disabled. Restart agent to take effect.",
+			"调试模式已关闭。重启 Agent 后生效。"))
+	default:
+		return fmt.Errorf(msgf("unknown debug action: %s (use: on/off)",
+			"未知调试操作: %s (可用: on/off)", args[0]))
+	}
+	return nil
+}
+
+// DebugFileExists checks if the .debug file exists in the given directory.
+func DebugFileExists(workDir string) bool {
+	_, err := os.Stat(filepath.Join(workDir, debugFile))
+	return err == nil
 }
 
 // ── Output helpers ───────────────────────────────────────────────────────

@@ -80,6 +80,12 @@ func printUsageLocalized() {
     --auto-logon       配置 Windows 自动登录
     --disable          取消会话模式
 
+调试:
+  debug [on|off]       切换调试模式 (修改后需重启 Agent 生效)
+                       · 日志级别降低到 DEBUG, 输出更详细的运行信息
+                       · 禁止自动升级, 方便本地调试
+                       · Docker 构建结束后不自动删除容器, 便于排查问题
+
 其他:
   version              打印版本号
   fullVersion          打印完整版本信息
@@ -115,6 +121,13 @@ Session mode (Windows only):
     --password PASS    Password (required with --user)
     --auto-logon       Enable Windows auto-logon on reboot
     --disable          Revert to plain service mode
+
+Debug:
+  debug [on|off]       Toggle debug mode (restart agent to take effect)
+                       Differences from normal mode:
+                       · Log level set to DEBUG — more verbose output
+                       · Auto-upgrade disabled — convenient for local debugging
+                       · Docker containers kept after build — easier troubleshooting
 
 Other:
   version              Print version

@@ -90,7 +90,6 @@ func Run(isDebug bool) {
 
 	for {
 		doAsk()
-		// 请求完更新下IP
 		config.LoadAgentIp()
 		time.Sleep(5 * time.Second)
 	}
