@@ -333,12 +333,21 @@ func handleReinstall(workDir string, args []string) error {
 
 	printStep(msg("Step 4: extracting agent.zip ...", "步骤 4: 解压 agent.zip ..."))
 	if runtime.GOOS == "windows" {
-		printStep(msg(
-			"NOTE: devopsAgent.exe is locked while running, skip overwrite is expected.",
-			"提示: devopsAgent.exe 运行中被锁定, 解压时跳过覆盖属正常现象。"))
+		// Windows locks running exe files. Rename self so extraction can write the new binary.
+		agentExe := filepath.Join(workDir, agentBinary())
+		agentBak := agentExe + ".bak"
+		os.Remove(agentBak)
+		if err := os.Rename(agentExe, agentBak); err == nil {
+			printStep(msg(
+				"Renamed running binary to avoid file lock conflict",
+				"已重命名运行中的二进制以避免文件锁冲突"))
+		}
 	}
 	if err := unzipFile(zipPath, workDir); err != nil {
 		return fmt.Errorf(msgf("extract agent.zip failed: %v", "解压 agent.zip 失败: %v", err))
+	}
+	if runtime.GOOS == "windows" {
+		os.Remove(filepath.Join(workDir, agentBinary()+".bak"))
 	}
 
 	printStep(msg("Step 5: preparing work directory ...", "步骤 5: 准备工作目录 ..."))
