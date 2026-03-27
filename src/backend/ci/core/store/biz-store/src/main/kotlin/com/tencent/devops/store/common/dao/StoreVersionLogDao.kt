@@ -169,10 +169,10 @@ class StoreVersionLogDao {
             .fetchOne(0, String::class.java)
     }
 
-    fun countComponent(dslContext: DSLContext, storeStatus: Byte): Long {
+    fun countComponent(dslContext: DSLContext, storeType: Byte): Long {
         with(TStoreBase.T_STORE_BASE) {
             return dslContext.selectCount().from(this)
-                .where(STORE_TYPE.eq(storeStatus).and(STATUS.eq(AtomStatusEnum.RELEASED.name)))
+                .where(STORE_TYPE.eq(storeType).and(STATUS.eq(AtomStatusEnum.RELEASED.name)))
                 .fetchOne(0, Long::class.java)!!
         }
     }

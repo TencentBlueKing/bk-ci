@@ -12,13 +12,13 @@ import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.math.BigDecimal
-import java.math.RoundingMode
-import java.time.LocalDateTime
 
 abstract class StoreComponentVersionLogService {
 
@@ -136,7 +136,7 @@ abstract class StoreComponentVersionLogService {
             )
             "prod-v$version-$updateTimeStr"
         } else {
-            " "
+            ""
         }
     }
 

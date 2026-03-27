@@ -246,6 +246,7 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
     }
 
     override fun getStoreVersionLogs(
+        userId: String,
         storeCode: String,
         storeType: StoreTypeEnum,
         page: Int,
@@ -260,6 +261,7 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
     }
 
     override fun getStoreVersionSize(
+        userId: String,
         storeCode: String,
         storeType: StoreTypeEnum,
         version: String,
