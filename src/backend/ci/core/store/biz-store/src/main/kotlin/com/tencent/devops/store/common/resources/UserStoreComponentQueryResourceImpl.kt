@@ -46,6 +46,8 @@ import com.tencent.devops.store.pojo.common.media.StoreMediaInfo
 import com.tencent.devops.store.pojo.common.test.StoreTestItem
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
+import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
+import com.tencent.devops.store.pojo.common.version.StoreVersionSizeInfo
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -237,6 +239,38 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
                 storeType = storeType,
                 projectCode = projectCode,
                 instanceId = instanceId,
+                osName = osName,
+                osArch = osArch
+            )
+        )
+    }
+
+    override fun getStoreVersionLogs(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<StoreVersionLogInfo>> {
+        return storeComponentQueryService.getStoreVersionLogs(
+            storeCode = storeCode,
+            storeType = storeType,
+            page = page,
+            pageSize = pageSize
+        )
+    }
+
+    override fun getStoreVersionSize(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        version: String,
+        osName: String?,
+        osArch: String?
+    ): Result<StoreVersionSizeInfo> {
+        return Result(
+            storeComponentQueryService.getStoreVersionSize(
+                storeCode = storeCode,
+                storeType = storeType,
+                version = version,
                 osName = osName,
                 osArch = osArch
             )

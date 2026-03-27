@@ -36,6 +36,7 @@ import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
+import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
@@ -49,6 +50,7 @@ import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
@@ -259,7 +261,7 @@ interface ServiceStoreComponentResource {
     ): Result<VersionInfo?>
 
     @Operation(summary = "根据组件code和版本号获取组件状态信息")
-    @Path("/types/{storeType}/codes/{storeCode}/component/upgrade/status/info/get")
+    @Path("/types/{storeType}/codes/{storeCode}/status/get")
     @GET
     fun getStoreUpgradeStatusInfo(
         @Parameter(description = "userId", required = true)
@@ -277,4 +279,15 @@ interface ServiceStoreComponentResource {
         @QueryParam("version")
         version: String
     ): Result<String?>
+
+    @Operation(summary = "更新组件版本大小")
+    @PUT
+    @Path("/storeId/{storeId}/version/info/update")
+    fun updateComponentVersionSize(
+        @Parameter(description = "组件ID", required = true)
+        @PathParam("storeId")
+        storeId: String,
+        @Parameter(description = "组件版本包大小", required = true)
+        storePackageInfoReqs: List<StorePackageInfoReq>
+    ): Result<Boolean>
 }

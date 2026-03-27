@@ -34,6 +34,7 @@ import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import okhttp3.Credentials
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 
@@ -63,6 +64,14 @@ class SampleArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgToBkRepoServiceI
                 throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
             }
         }
+    }
+
+    override fun getRepoStoreConfig(storeType: StoreTypeEnum): Triple<String, String, String> {
+        return Triple(
+            bkRepoStoreConfig.bkrepoStoreProjectName,
+            Credentials.basic(bkRepoStoreConfig.bkrepoStoreUserName, bkRepoStoreConfig.bkrepoStorePassword),
+            getBkRepoName(storeType)
+        )
     }
 
     override fun deleteStorePkg(userId: String, storeCode: String, storeType: StoreTypeEnum) {

@@ -39,6 +39,7 @@ import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
+import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
@@ -191,5 +192,12 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
             storeCode = storeCode,
             version = version
         )
+    }
+
+    override fun updateComponentVersionSize(
+        storeId: String,
+        storePackageInfoReqs: List<StorePackageInfoReq>
+    ): Result<Boolean> {
+        return Result(storeComponentManageService.updateComponentVersionSize(storeId, storePackageInfoReqs))
     }
 }

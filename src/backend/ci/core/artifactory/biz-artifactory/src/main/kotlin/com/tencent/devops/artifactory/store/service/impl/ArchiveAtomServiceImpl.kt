@@ -51,12 +51,20 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomArchiveResource
+import com.tencent.devops.store.api.common.ServiceStoreComponentResource
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.ATOM_UPLOAD_ID_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.KEY_PACKAGE_PATH
+import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.io.File
+import java.io.InputStream
+import java.nio.file.Files
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.TimeUnit
 import org.apache.commons.io.FileUtils
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
@@ -64,10 +72,6 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.util.FileSystemUtils
-import java.io.File
-import java.io.InputStream
-import java.nio.file.Files
-import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
 abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
@@ -91,6 +95,9 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
 
     @Autowired
     lateinit var bkRepoClient: BkRepoClient
+
+    @Autowired
+    lateinit var atomPkgSizeExecutor: ExecutorService
 
     override fun archiveAtom(
         userId: String,
@@ -136,6 +143,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             taskDataMap = atomConfigResult!!.taskDataMap
             atomEnvRequests = atomConfigResult.atomEnvRequests!!
             packageFileInfos = mutableListOf()
+            val storePackageInfos = mutableListOf<StorePackageInfoReq>()
             atomEnvRequests.forEach { atomEnvRequest ->
                 val pkgLocalPath = atomEnvRequest.pkgLocalPath
                 if (atomEnvRequest.target.isNullOrBlank() && pkgLocalPath.isNullOrBlank()) {
@@ -156,10 +164,18 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
                     packageFileSize = packageFile.length(),
                     sha256Content = packageFile.inputStream().use { ShaUtils.sha256InputStream(it) }
                 )
+                val storePackageInfo = StorePackageInfoReq(
+                    storeType = StoreTypeEnum.ATOM,
+                    osName = atomEnvRequest.osName,
+                    arch = atomEnvRequest.osArch,
+                    size = packageFileInfo.packageFileSize
+                )
+                storePackageInfos.add(storePackageInfo)
                 atomEnvRequest.shaContent = packageFileInfo.sha256Content
                 atomEnvRequest.pkgName = packageFileInfo.packageFileName
                 packageFileInfos.add(packageFileInfo)
             }
+            asyncHandleAtomPkgSize(storePackageInfos, version, atomCode)
         } finally {
             // 清理服务器的解压的临时文件
             clearServerTmpFile(projectCode, atomCode, version)
@@ -364,5 +380,28 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             file.delete()
         }
         return true
+    }
+
+    private fun asyncHandleAtomPkgSize(
+        storePackageInfoReqs: List<StorePackageInfoReq>,
+        version: String,
+        atomCode: String
+    ) {
+        atomPkgSizeExecutor.submit {
+            try {
+                val atomId = client.get(ServiceAtomResource::class).getAtomId(atomCode, version).data
+                    ?: throw ErrorCodeException(
+                        errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                        params = arrayOf("$atomCode:$version")
+                    )
+                val updateAtomInfoResult = client.get(ServiceStoreComponentResource::class).updateComponentVersionSize(
+                    storeId = atomId,
+                    storePackageInfoReqs = storePackageInfoReqs
+                )
+                logger.info("asyncHandleAtomPkgSize is $updateAtomInfoResult")
+            } catch (ignored: Throwable) {
+                logger.warn("asyncHandleAtomPkgSize execute error", ignored)
+            }
+        }
     }
 }
