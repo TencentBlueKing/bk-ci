@@ -180,6 +180,7 @@ devopsAgent reinstall [-y]
 | 运行模式 | root+systemd / root+direct / non-root | root (LaunchDaemons) / user (LaunchAgents) | SERVICE / SESSION / TASK(legacy) |
 | 服务状态 | systemctl is-active | plist 文件检测 | sc.exe query |
 | 进程检测 | syscall.Kill(pid, 0) | syscall.Kill(pid, 0) | OpenProcess |
+| 配置文件检查 | ini.Load 解析 + 必填项校验 | ini.Load 解析 + 必填项校验 | ini.Load 解析 + 必填项校验 |
 | 会话详情 | — | — | LSA Secret 凭据 + AutoLogon 状态 |
 
 ### API 通信 (`pkg/api/`)
@@ -543,7 +544,7 @@ go test -v -run TestPidStatus ./src/pkg/agentcli/
 **已有测试覆盖的 agentcli 模块**:
 | 文件 | 覆盖内容 |
 |------|---------|
-| `cli_test.go` | IsSubcommand、readProperty、preserveSet、cleanup、handleDebug、DebugFileExists |
+| `cli_test.go` | IsSubcommand、readProperty、preserveSet、cleanup、handleDebug、DebugFileExists、parsePropertiesFile、requiredKeyStatus、intKeyStatus |
 | `i18n_test.go` | msg/msgf、initLang 环境变量优先级、tryReadLang |
 | `status_linux_test.go` | dirStatus、fileStatus、readPid、pidStatus、currentUser |
 | `session_win_test.go` | splitUserDomain、readInstallTypeFile、handleInstall 模式分发和校验 |

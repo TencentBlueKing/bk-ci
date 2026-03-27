@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"gopkg.in/ini.v1"
 )
 
 // Run dispatches CLI subcommands. Called from agent main() before process lock.
@@ -233,6 +234,86 @@ func unzipIfNeeded(zipPath, destDir string, force bool) {
 
 func unzipFile(src, dest string) error {
 	return platformUnzip(src, dest)
+}
+
+// ── Properties file validation ───────────────────────────────────────────
+
+// checkPropertiesFile validates .agent.properties, replicating the checks
+// performed by the agent process in config.LoadAgentConfig().
+func checkPropertiesFile(workDir string) {
+	fmt.Println()
+	printStep(msg("Configuration (.agent.properties)", "配置文件 (.agent.properties)"))
+	printStep("--------------------------------------------")
+
+	propPath := filepath.Join(workDir, ".agent.properties")
+	status, conf := parsePropertiesFile(propPath)
+	statusLine(msg("  File", "  文件"), status)
+	if conf == nil {
+		return
+	}
+
+	type rk struct {
+		key, label string
+		mask       bool
+	}
+	for _, k := range []rk{
+		{"devops.project.id", "Project ID", false},
+		{"devops.agent.id", "Agent ID", false},
+		{"devops.agent.secret.key", "Secret Key", true},
+		{"landun.gateway", "Gateway", false},
+		{"landun.env", "Env Type", false},
+	} {
+		statusLine("  "+k.label, requiredKeyStatus(conf, k.key, k.mask))
+	}
+
+	statusLine(
+		msg("  Parallel tasks", "  并行任务数"),
+		intKeyStatus(conf, "devops.parallel.task.count", 0),
+	)
+}
+
+// parsePropertiesFile checks existence and parses as INI (matching agent's ini.Load behavior).
+func parsePropertiesFile(path string) (string, *ini.File) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return msg("MISSING", "缺失") + " ✗", nil
+	}
+	if info.IsDir() {
+		return msg("ERROR: is a directory", "错误: 是目录") + " ✗", nil
+	}
+	conf, err := ini.Load(path)
+	if err != nil {
+		return fmt.Sprintf("%s: %v ✗", msg("PARSE ERROR", "解析失败"), err), nil
+	}
+	return fmt.Sprintf("%s ✓ (%d bytes)", msg("OK", "正常"), info.Size()), conf
+}
+
+// requiredKeyStatus checks that a config key is present and non-empty.
+func requiredKeyStatus(conf *ini.File, key string, mask bool) string {
+	val := strings.TrimSpace(conf.Section("").Key(key).String())
+	if val == "" {
+		return msg("missing or empty", "缺失或为空") + " ✗"
+	}
+	if mask {
+		return msg("configured", "已配置") + " ✓"
+	}
+	return val + " ✓"
+}
+
+// intKeyStatus checks that a config key is a valid integer >= minVal.
+func intKeyStatus(conf *ini.File, key string, minVal int) string {
+	raw := conf.Section("").Key(key).String()
+	if raw == "" {
+		return msg("missing", "缺失") + " ✗"
+	}
+	v, err := conf.Section("").Key(key).Int()
+	if err != nil {
+		return fmt.Sprintf("%s: %q ✗", msg("invalid number", "无效数值"), raw)
+	}
+	if v < minVal {
+		return fmt.Sprintf("%s: %d < %d ✗", msg("too small", "值过小"), v, minVal)
+	}
+	return fmt.Sprintf("%d ✓", v)
 }
 
 // ── Reinstall ────────────────────────────────────────────────────────────
