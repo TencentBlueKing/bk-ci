@@ -427,6 +427,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 projectId = projectId, pipelineId = pipelineId,
                 versions = versions, expireTime = expireTime
             )
+            logger.info("clearPipelineDraftVersionData|$projectId|$pipelineId|${expiredVersionMap.keys}")
             if (expiredVersionMap.isEmpty()) break
             try {
                 processDataClearService.deletePipelineDraftData(

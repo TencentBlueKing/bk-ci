@@ -23,7 +23,6 @@ class PipelineSettingDraftVersionDao {
     fun create(
         dslContext: DSLContext,
         setting: PipelineSetting,
-        version: Int,
         draftVersion: Int
     ) {
         val successSubscriptionList = setting.successSubscriptionList ?: emptyList()
@@ -33,7 +32,7 @@ class PipelineSettingDraftVersionDao {
                 this,
                 PROJECT_ID,
                 PIPELINE_ID,
-                VERSION,
+                SETTING_VERSION,
                 DRAFT_VERSION,
                 NAME,
                 DESC,
@@ -53,7 +52,7 @@ class PipelineSettingDraftVersionDao {
             ).values(
                 setting.projectId,
                 setting.pipelineId,
-                version,
+                setting.version,
                 draftVersion,
                 setting.pipelineName,
                 setting.desc,
@@ -78,14 +77,14 @@ class PipelineSettingDraftVersionDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        version: Int,
+        settingVersion: Int,
         draftVersion: Int
     ): PipelineSettingDraftVersion? {
         with(T_PIPELINE_SETTING_DRAFT_VERSION) {
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(PROJECT_ID.eq(projectId))
-                .and(VERSION.eq(version))
+                .and(SETTING_VERSION.eq(settingVersion))
                 .and(DRAFT_VERSION.eq(draftVersion))
                 .fetchOne(mapper)
         }
@@ -94,7 +93,6 @@ class PipelineSettingDraftVersionDao {
     fun update(
         dslContext: DSLContext,
         setting: PipelineSetting,
-        version: Int,
         draftVersion: Int
     ) {
         val successSubscriptionList = setting.successSubscriptionList ?: emptyList()
@@ -118,7 +116,7 @@ class PipelineSettingDraftVersionDao {
                 .set(BUILD_CANCEL_POLICY, setting.buildCancelPolicy.value)
                 .where(PROJECT_ID.eq(setting.projectId))
                 .and(PIPELINE_ID.eq(setting.pipelineId))
-                .and(VERSION.eq(version))
+                .and(SETTING_VERSION.eq(setting.version))
                 .and(DRAFT_VERSION.eq(draftVersion))
                 .execute()
         }
@@ -131,7 +129,7 @@ class PipelineSettingDraftVersionDao {
                 PipelineSettingDraftVersion(
                     projectId = r.projectId,
                     pipelineId = r.pipelineId,
-                    version = r.version,
+                    settingVersion = r.settingVersion,
                     draftVersion = r.draftVersion,
                     pipelineName = r.name,
                     desc = r.desc,

@@ -190,7 +190,7 @@ class PipelineSettingVersionService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = version,
+                settingVersion = version,
                 draftVersion = draftVersion
             )?.let {
                 convertFromDraftVersion(it)
@@ -242,7 +242,7 @@ class PipelineSettingVersionService @Autowired constructor(
             projectId = draft.projectId,
             pipelineId = draft.pipelineId,
             pipelineName = draft.pipelineName,
-            version = draft.version,
+            version = draft.settingVersion,
             desc = draft.desc,
             labels = draft.labels,
             buildNumRule = draft.buildNumRule,

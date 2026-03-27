@@ -13,7 +13,7 @@ data class PipelineSettingDraftVersion(
     @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
     @get:Schema(title = "版本号", required = true)
-    val version: Int,
+    val settingVersion: Int,
     @get:Schema(title = "草稿版本", required = true)
     val draftVersion: Int,
     @get:Schema(title = "流水线名称", required = false)

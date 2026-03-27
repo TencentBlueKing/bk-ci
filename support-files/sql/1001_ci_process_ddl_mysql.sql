@@ -1542,7 +1542,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_RESOURCE_DRAFT_VERSION` (
 CREATE TABLE IF NOT EXISTS `T_PIPELINE_SETTING_DRAFT_VERSION` (
     `PROJECT_ID`                         varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin           NOT NULL COMMENT '项目ID',
     `PIPELINE_ID`                        varchar(34)   NOT NULL COMMENT '流水线ID',
-    `VERSION`                            int(11)       NOT NULL DEFAULT '1' COMMENT '版本号',
+    `SETTING_VERSION`                    int(11)       NOT NULL DEFAULT '1' COMMENT '版本号',
     `DRAFT_VERSION`          int(11)                                               NOT NULL DEFAULT '1' COMMENT '草稿版本',
     `NAME`                               varchar(255)           DEFAULT NULL COMMENT '名称',
     `DESC`                               varchar(1024)          DEFAULT NULL COMMENT '描述',
@@ -1575,7 +1575,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_SETTING_DRAFT_VERSION` (
     `MAX_CON_RUNNING_QUEUE_SIZE`         int(11)                DEFAULT NULL COMMENT '并发构建数量限制,值为-1时表示取系统默认值。',
     `FAIL_IF_VARIABLE_INVALID`           bit(1)                 DEFAULT NULL COMMENT '是否配置流水线变量值超长时终止执行',
     `BUILD_CANCEL_POLICY`                varchar(32)            DEFAULT 'EXECUTE_PERMISSION' COMMENT '构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消',
-    PRIMARY KEY (`PROJECT_ID`, `PIPELINE_ID`, `VERSION`, `DRAFT_VERSION`)
+    PRIMARY KEY (`PROJECT_ID`, `PIPELINE_ID`, `SETTING_VERSION`, `DRAFT_VERSION`)
 ) ENGINE = InnoDB
     DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT ='流水线草稿基础配置版本表';
 
