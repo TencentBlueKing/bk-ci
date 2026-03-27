@@ -169,6 +169,23 @@ BEGIN
             ADD COLUMN `BEFORE_TEMPLATE_VERSION` bigint(20) DEFAULT NULL COMMENT '更新前模板版本',
             ADD COLUMN `AFTER_TEMPLATE_VERSION` bigint(20) DEFAULT NULL COMMENT '更新后模板版本';
     END IF;
+
+    IF EXISTS(SELECT 1
+              FROM information_schema.STATISTICS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_PIPELINE_YAML_INFO'
+                AND INDEX_NAME = 'UQE_PIPELINE') THEN
+        ALTER TABLE `T_PIPELINE_YAML_INFO` DROP INDEX `UQE_PIPELINE`;
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.STATISTICS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_YAML_INFO'
+                    AND INDEX_NAME = 'IDX_PIPELINE') THEN
+        ALTER TABLE `T_PIPELINE_YAML_INFO`
+            ADD INDEX `IDX_PIPELINE` (`PROJECT_ID`, `PIPELINE_ID`);
+    END IF;
 COMMIT;
 
 END <CI_UBF>

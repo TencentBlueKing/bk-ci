@@ -153,6 +153,8 @@ class PipelineYamlInfoDao {
             val record = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
+                .orderBy(UPDATE_TIME.desc())
+                .limit(1)
                 .fetchOne()
             return record?.let { convert(it) }
         }

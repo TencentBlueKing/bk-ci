@@ -268,9 +268,6 @@ class PipelineYamlFileManager @Autowired constructor(
         }
     }
 
-    /**
-     * 先删除源流水线,再创建新流水线
-     */
     fun renameYamlFile(event: PipelineYamlFileEvent) {
         with(event) {
             logger.info(
@@ -281,11 +278,134 @@ class PipelineYamlFileManager @Autowired constructor(
                 logger.error("old file path cannot be empty")
                 return
             }
-            val oldFileEvent = event.copy(filePath = oldFilePath)
-            if (deleteYamlFile(event = oldFileEvent)) {
-                createOrUpdateYamlFile(event = event)
+
+            // 按字典序排序后依次加锁，保证所有线程加锁顺序一致，避免死锁
+            val paths = listOf(oldFilePath, filePath).sorted()
+            val lock1 = PipelineYamlTriggerLock(
+                redisOperation = redisOperation,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = paths[0]
+            )
+            val lock2 = PipelineYamlTriggerLock(
+                redisOperation = redisOperation,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = paths[1]
+            )
+            val context = PipelineYamlChangeContext(
+                projectId = projectId,
+                filePath = filePath,
+                eventId = eventId,
+                actionType = YamlPipelineActionType.UPDATE
+            )
+            try {
+                lock1.lock()
+                lock2.lock()
+                renameYamlPipeline(context = context)
+                webhookTriggerManager.fireChangeSuccess(
+                    context = context
+                )
+            } catch (ignored: Exception) {
+                logger.error(
+                    "[PAC_PIPELINE]|Failed to rename yaml" +
+                        "|$eventId|$projectId|$repoHashId|$oldFilePath->$filePath|$ref",
+                    ignored
+                )
+                webhookTriggerManager.fireChangeError(
+                    context = context, exception = ignored
+                )
+            } finally {
+                lock2.unlock()
+                lock1.unlock()
             }
         }
+    }
+
+    /**
+     * 重命名 YAML 文件时保留原有流水线
+     */
+    private fun PipelineYamlFileEvent.renameYamlPipeline(
+        context: PipelineYamlChangeContext
+    ) {
+        val oldYamlInfo = pipelineYamlService.getPipelineYamlInfo(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = oldFilePath!!
+        )
+        if (oldYamlInfo == null) {
+            logger.warn(
+                "[PAC_PIPELINE]|old path yaml info not found" +
+                    "|$projectId|$repoHashId|$oldFilePath|fallback to createOrUpdateYamlFile"
+            )
+            createOrUpdateYamlPipeline(context = context)
+            return
+        }
+
+        val pipelineId = oldYamlInfo.pipelineId
+        val newYamlInfo = pipelineYamlService.getPipelineYamlInfo(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath
+        )
+        if (newYamlInfo != null && newYamlInfo.pipelineId != pipelineId) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PAC_YAML_FILE_BINDTO_OTHER_PIPELINE,
+                params = arrayOf(filePath, newYamlInfo.pipelineId)
+            )
+        }
+
+        val content = pipelineYamlFileService.getFileContent(
+            projectId = projectId,
+            path = filePath,
+            ref = commit!!.commitId,
+            authRepository = authRepository!!
+        )
+        val resourceType = GitActionCommon.getYamlResourceType(
+            filePath = filePath,
+            fileContent = content.content
+        )
+        val deployResult = pipelineYamlResourceManager.updateYamlPipeline(
+            userId = authUser,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            yaml = content.content,
+            event = this
+        )
+
+        context.pipelineId = pipelineId
+        context.pipelineName = deployResult.pipelineName
+        context.versionName = deployResult.versionName
+
+        val directory = GitActionCommon.getCiDirectory(filePath)
+        val isDefaultBranch = ref == defaultBranch
+        pipelineYamlService.save(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath,
+            directory = directory,
+            defaultBranch = defaultBranch,
+            pipelineId = pipelineId,
+            status = if (isDefaultBranch) {
+                PipelineYamlStatus.OK.name
+            } else {
+                PipelineYamlStatus.UN_MERGED.name
+            },
+            userId = userId,
+            blobId = content.blobId!!,
+            commitId = commit.commitId,
+            commitTime = commit.commitTime,
+            ref = ref,
+            version = deployResult.version,
+            resourceType = resourceType
+        )
+        pipelineYamlService.updateBranchAction(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = oldFilePath,
+            ref = ref,
+            branchAction = BranchVersionAction.INACTIVE.name
+        )
     }
 
     /**
