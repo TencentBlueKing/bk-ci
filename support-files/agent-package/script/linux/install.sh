@@ -62,18 +62,51 @@ function download_agent()
     echo "agent.zip already exist, skip download"
     return
   fi
+  local download_ok=false
   if exists curl; then
     echo "download using curl"
-    curl -H "X-DEVOPS-PROJECT-ID: ##projectId##" -o agent.zip "##agent_url##"
-    if [[ $? -ne 0 ]]; then
-      echo "Fail to use curl to download the agent, use wget"
-      wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##"
+    local http_code
+    http_code=$(curl -sS -w "%{http_code}" -H "X-DEVOPS-PROJECT-ID: ##projectId##" -o agent.zip "##agent_url##")
+    if [[ $? -ne 0 ]] || [[ "$http_code" -lt 200 ]] || [[ "$http_code" -ge 400 ]]; then
+      echo "curl download failed (HTTP $http_code), response body:"
+      cat agent.zip 2>/dev/null
+      echo ""
+      rm -f agent.zip
+      if exists wget; then
+        echo "retrying with wget..."
+        wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##" 2>&1
+        if [[ $? -eq 0 ]]; then
+          download_ok=true
+        fi
+      fi
+    else
+      download_ok=true
     fi
-    elif exists wget; then
+  elif exists wget; then
     echo "download using wget"
-    wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##"
+    wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##" 2>&1
+    if [[ $? -eq 0 ]]; then
+      download_ok=true
+    fi
   else
     echo "curl & wget command don't exist, download fail"
+    exit 1
+  fi
+
+  if [[ "$download_ok" != "true" ]]; then
+    echo "download agent.zip failed, response body:"
+    cat agent.zip 2>/dev/null
+    echo ""
+    rm -f agent.zip
+    exit 1
+  fi
+
+  # verify the file is a valid zip (not an HTML/JSON error page)
+  if ! unzip -t agent.zip >/dev/null 2>&1; then
+    echo "downloaded file is not a valid zip, server may have returned an error:"
+    cat agent.zip
+    echo ""
+    rm -f agent.zip
     exit 1
   fi
 }
