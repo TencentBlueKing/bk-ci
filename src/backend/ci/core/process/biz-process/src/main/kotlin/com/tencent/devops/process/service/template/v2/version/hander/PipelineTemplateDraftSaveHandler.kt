@@ -138,10 +138,21 @@ class PipelineTemplateDraftSaveHandler @Autowired constructor(
     private fun PipelineTemplateVersionCreateContext.updateDraftVersion(
         draftResource: PipelineTemplateResource
     ): PTemplateResourceOnlyVersion {
+        val draftVersion = pipelineTemplateGenerator.incrementDraftVersion(
+            projectId = projectId,
+            templateId = templateId,
+            version = draftResource.version
+        )
         val resourceOnlyVersion = if (pTemplateResourceWithoutVersion.baseVersion == null) {
-            PTemplateResourceOnlyVersion(draftResource)
+            PTemplateResourceOnlyVersion(
+                pipelineTemplateResource = draftResource,
+                draftVersion = draftVersion
+            )
         } else {
-            PTemplateResourceOnlyVersion(draftResource).copy(
+            PTemplateResourceOnlyVersion(
+                pipelineTemplateResource = draftResource,
+                draftVersion = draftVersion
+            ).copy(
                 baseVersion = pTemplateResourceWithoutVersion.baseVersion,
                 baseVersionName = pTemplateResourceWithoutVersion.baseVersionName
             )

@@ -38,6 +38,10 @@ import com.tencent.devops.model.process.tables.TPipelineBuildHistoryDebug
 import com.tencent.devops.model.process.tables.TPipelineDataClear
 import com.tencent.devops.model.process.tables.TPipelineInfo
 import com.tencent.devops.model.process.tables.TPipelineOperationLog
+import com.tencent.devops.model.process.tables.TPipelineResourceDraftVersion
+import com.tencent.devops.model.process.tables.TPipelineTemplateInfo
+import com.tencent.devops.model.process.tables.TPipelineTemplateResourceDraftVersion
+import com.tencent.devops.model.process.tables.TPipelineTemplateResourceVersion
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.pojo.PipelineOperationLog
 import org.jooq.Condition
@@ -435,6 +439,100 @@ class ProcessDao {
                 pipelineOperationLog.params,
                 pipelineOperationLog.description
             ).execute()
+        }
+    }
+
+    fun listPipelineDraftVersions(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        limit: Int,
+        offset: Int
+    ): List<Int> {
+        with(TPipelineResourceDraftVersion.T_PIPELINE_RESOURCE_DRAFT_VERSION) {
+            return dslContext.selectDistinct(VERSION)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .orderBy(VERSION)
+                .limit(limit).offset(offset)
+                .fetch(VERSION)
+        }
+    }
+
+    fun getExpiredPipelineVersions(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        versions: List<Int>,
+        expireTime: LocalDateTime
+    ): Map<Int, Int> {
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            return dslContext.select(VERSION, SETTING_VERSION)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(VERSION.`in`(versions))
+                .and(RELEASE_TIME.isNotNull)
+                .and(RELEASE_TIME.lt(expireTime))
+                .fetch { it[VERSION] to it[SETTING_VERSION] }
+                .toMap()
+        }
+    }
+
+    fun listTemplateIdsByProjectId(
+        dslContext: DSLContext,
+        projectId: String,
+        gapDays: Long,
+        limit: Int,
+        offset: Int
+    ): List<String> {
+        with(TPipelineTemplateInfo.T_PIPELINE_TEMPLATE_INFO) {
+            return dslContext.select(ID)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(UPDATE_TIME.ge(LocalDateTime.now().minusDays(gapDays)))
+                .orderBy(UPDATE_TIME.asc())
+                .limit(limit).offset(offset)
+                .fetch(ID)
+        }
+    }
+
+    fun listTemplateDraftVersions(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String,
+        limit: Int,
+        offset: Int
+    ): List<Long> {
+        with(TPipelineTemplateResourceDraftVersion.T_PIPELINE_TEMPLATE_RESOURCE_DRAFT_VERSION) {
+            return dslContext.selectDistinct(VERSION)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TEMPLATE_ID.eq(templateId))
+                .orderBy(VERSION)
+                .limit(limit).offset(offset)
+                .fetch(VERSION)
+        }
+    }
+
+    fun getExpiredTemplateVersions(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String,
+        versions: List<Long>,
+        expireTime: LocalDateTime
+    ): Map<Long, Int> {
+        with(TPipelineTemplateResourceVersion.T_PIPELINE_TEMPLATE_RESOURCE_VERSION) {
+            return dslContext.select(VERSION, SETTING_VERSION)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TEMPLATE_ID.eq(templateId))
+                .and(VERSION.`in`(versions))
+                .and(RELEASE_TIME.isNotNull)
+                .and(RELEASE_TIME.lt(expireTime))
+                .fetch { it[VERSION] to it[SETTING_VERSION] }
+                .toMap()
         }
     }
 }

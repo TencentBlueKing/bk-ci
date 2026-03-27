@@ -64,6 +64,7 @@ class PipelineResourceVersionDao {
         versionName: String,
         model: Model,
         baseVersion: Int?,
+        draftVersion: Int? = null,
         yamlStr: String?,
         yamlVersion: String?,
         versionNum: Int?,
@@ -101,6 +102,7 @@ class PipelineResourceVersionDao {
                 .set(BRANCH_ACTION, branchAction?.name)
                 .set(DESCRIPTION, description)
                 .set(BASE_VERSION, baseVersion)
+                .set(DRAFT_VERSION, draftVersion)
                 .set(REFER_FLAG, false)
                 .set(RELEASE_TIME, releaseTime)
                 .onDuplicateKeyUpdate()
@@ -111,6 +113,7 @@ class PipelineResourceVersionDao {
                 .set(VERSION_NUM, versionNum)
                 .set(VERSION_NAME, versionName)
                 .set(BASE_VERSION, baseVersion)
+                .set(DRAFT_VERSION, draftVersion)
                 .set(PIPELINE_VERSION, pipelineVersion)
                 .set(TRIGGER_VERSION, triggerVersion)
                 .set(SETTING_VERSION, settingVersion)
@@ -685,7 +688,8 @@ class PipelineResourceVersionDao {
                     branchAction = record.branchAction?.let { BranchVersionAction.valueOf(it) },
                     description = record.description,
                     debugBuildId = record.debugBuildId,
-                    baseVersion = record.baseVersion
+                    baseVersion = record.baseVersion,
+                    draftVersion = record.draftVersion
                 )
             }
         }

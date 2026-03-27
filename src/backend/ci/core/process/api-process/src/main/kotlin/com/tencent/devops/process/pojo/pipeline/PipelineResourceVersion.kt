@@ -81,8 +81,10 @@ data class PipelineResourceVersion(
     val description: String? = null,
     @get:Schema(title = "调试构建ID", required = false)
     val debugBuildId: String? = null,
-    @get:Schema(title = "该版本的来源版本（空时一定为主路径）", required = false)
-    val baseVersion: Int? = null
+    @get:Schema(title = "该版本来源的正式版本（空时一定为主路径）", required = false)
+    val baseVersion: Int? = null,
+    @get:Schema(title = "该版本来源的草稿版本,草稿保存时传入", required = false)
+    val draftVersion: Int? = null
 ) {
     constructor(
         pipelineResourceWithoutVersion: PipelineResourceWithoutVersion,
@@ -106,7 +108,8 @@ data class PipelineResourceVersion(
         status = pipelineResourceWithoutVersion.status,
         branchAction = pipelineResourceWithoutVersion.branchAction,
         description = pipelineResourceWithoutVersion.description,
-        baseVersion = pipelineResourceOnlyVersion.baseVersion
+        baseVersion = pipelineResourceOnlyVersion.baseVersion,
+        draftVersion = pipelineResourceOnlyVersion.draftVersion
     )
 
     fun toSimple() = PipelineVersionSimple(

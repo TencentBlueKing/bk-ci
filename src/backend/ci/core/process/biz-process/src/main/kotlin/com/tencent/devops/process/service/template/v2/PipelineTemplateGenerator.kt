@@ -54,6 +54,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_LAT
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_TYPE_INVALID
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_VERSION_NOT_EXISTS
+import com.tencent.devops.process.dao.PipelineTemplateResourceDraftVersionDao
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.service.PipelineInfoExtService
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
@@ -71,6 +72,7 @@ import com.tencent.devops.process.yaml.PipelineYamlCommonService
 import com.tencent.devops.process.yaml.transfer.TransferMapper
 import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -86,7 +88,9 @@ class PipelineTemplateGenerator @Autowired constructor(
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplateSettingService: PipelineTemplateSettingService,
     private val pipelineInfoExtService: PipelineInfoExtService,
-    private val pipelineYamlCommonService: PipelineYamlCommonService
+    private val pipelineYamlCommonService: PipelineYamlCommonService,
+    private val dslContext: DSLContext,
+    private val pipelineTemplateResourceDraftVersionDao: PipelineTemplateResourceDraftVersionDao
 ) {
 
     fun getDefaultTemplateModel(
@@ -222,8 +226,27 @@ class PipelineTemplateGenerator @Autowired constructor(
             number = latestResource.number + 1,
             settingVersion = latestResource.settingVersion + 1,
             baseVersion = baseResource?.version ?: latestResource.version,
-            baseVersionName = baseResource?.versionName ?: latestResource.versionName
+            baseVersionName = baseResource?.versionName ?: latestResource.versionName,
+            draftVersion = PipelineTemplateConstant.INIT_VERSION
         )
+    }
+
+    /**
+     * 自增草稿版本
+     */
+    fun incrementDraftVersion(
+        projectId: String,
+        templateId: String,
+        version: Long
+    ): Int {
+        // 获取当前的draftVersion，如果存在则+1，否则为1
+        val latestDraftVersion = pipelineTemplateResourceDraftVersionDao.getLatest(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
+        return (latestDraftVersion?.draftVersion ?: 0) + 1
     }
 
     /**

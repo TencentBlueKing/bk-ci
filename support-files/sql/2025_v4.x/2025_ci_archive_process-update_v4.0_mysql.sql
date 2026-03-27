@@ -63,6 +63,26 @@ BEGIN
             COMMENT '构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PIPELINE_RESOURCE_VERSION'
+                        AND COLUMN_NAME = 'DRAFT_VERSION') THEN
+        ALTER TABLE T_PIPELINE_RESOURCE_VERSION
+            ADD COLUMN `DRAFT_VERSION` int(11) DEFAULT NULL
+                    COMMENT '来源的草稿版本';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY_DEBUG'
+                            AND COLUMN_NAME = 'DRAFT_VERSION') THEN
+        ALTER TABLE T_PIPELINE_BUILD_HISTORY_DEBUG
+            ADD COLUMN `DRAFT_VERSION` int(11) DEFAULT NULL
+                        COMMENT '来源的草稿版本';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

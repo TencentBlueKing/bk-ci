@@ -60,7 +60,9 @@ data class PipelineResourceWithoutVersion(
     @get:Schema(title = "版本变更说明", required = false)
     val description: String? = null,
     @get:Schema(title = "该版本的来源版本（空时一定为主路径）", required = false)
-    val baseVersion: Int? = null
+    val baseVersion: Int? = null,
+    @get:Schema(title = "该版本的来源版本名", required = false)
+    val baseVersionName: String? = null
 ) {
     constructor(pipelineResource: PipelineResourceVersion) : this(
         projectId = pipelineResource.projectId,

@@ -83,5 +83,7 @@ data class PipelineTemplateInfoResponse(
     @get:Schema(title = "yaml文件在默认分支是否存在", required = false)
     var yamlExist: Boolean? = false,
     @get:Schema(title = "流水线模版研发商店相关", required = false)
-    val pipelineTemplateMarketRelatedInfo: PipelineTemplateMarketRelatedInfo?
+    val pipelineTemplateMarketRelatedInfo: PipelineTemplateMarketRelatedInfo?,
+    @get:Schema(title = "草稿版本号", required = false)
+    val draftVersion: Int? = null
 )

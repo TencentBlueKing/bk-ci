@@ -37,8 +37,10 @@ import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.dao.PipelineSettingDraftVersionDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.pojo.PipelineDetailInfo
+import com.tencent.devops.process.pojo.setting.PipelineSettingDraftVersion
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.label.PipelineGroupService
@@ -55,7 +57,8 @@ class PipelineSettingVersionService @Autowired constructor(
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineSettingVersionDao: PipelineSettingVersionDao,
-    private val pipelineAsCodeService: PipelineAsCodeService
+    private val pipelineAsCodeService: PipelineAsCodeService,
+    private val pipelineSettingDraftVersionDao: PipelineSettingDraftVersionDao
 ) {
 
     /**
@@ -69,7 +72,8 @@ class PipelineSettingVersionService @Autowired constructor(
         detailInfo: PipelineDetailInfo?,
         channelCode: ChannelCode = ChannelCode.BS,
         version: Int,
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        draftVersion: Int? = null
     ): PipelineSetting {
         val finalDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
         // 获取正式版本的流水线设置
@@ -126,7 +130,8 @@ class PipelineSettingVersionService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version,
-                queryDslContext = finalDslContext
+                queryDslContext = finalDslContext,
+                draftVersion = draftVersion
             )?.let { ve ->
                 settingInfo.version = ve.version
                 settingInfo.successSubscriptionList = ve.successSubscriptionList ?: settingInfo.successSubscriptionList
@@ -177,14 +182,27 @@ class PipelineSettingVersionService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int,
-        queryDslContext: DSLContext? = null
+        queryDslContext: DSLContext? = null,
+        draftVersion: Int? = null
     ): PipelineSettingVersion? {
-        return pipelineSettingVersionDao.getSettingVersion(
-            dslContext = queryDslContext ?: dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = version
-        )
+        return if (draftVersion != null) {
+            pipelineSettingDraftVersionDao.get(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                settingVersion = version,
+                draftVersion = draftVersion
+            )?.let {
+                convertFromDraftVersion(it)
+            }
+        } else {
+            pipelineSettingVersionDao.getSettingVersion(
+                dslContext = queryDslContext ?: dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
+            )
+        }
     }
 
     fun getLatestSettingVersion(
@@ -217,5 +235,28 @@ class PipelineSettingVersionService @Autowired constructor(
                 newSetting = PipelineSettingVersion.convertFromSetting(setting)
             ) else latest.version
         } ?: 1
+    }
+
+    private fun convertFromDraftVersion(draft: PipelineSettingDraftVersion): PipelineSettingVersion {
+        return PipelineSettingVersion(
+            projectId = draft.projectId,
+            pipelineId = draft.pipelineId,
+            pipelineName = draft.pipelineName,
+            version = draft.settingVersion,
+            desc = draft.desc,
+            labels = draft.labels,
+            buildNumRule = draft.buildNumRule,
+            successSubscriptionList = draft.successSubscriptionList,
+            failSubscriptionList = draft.failSubscriptionList,
+            runLockType = draft.runLockType,
+            waitQueueTimeMinute = draft.waitQueueTimeSecond,
+            maxQueueSize = draft.maxQueueSize,
+            concurrencyGroup = draft.concurrencyGroup,
+            concurrencyCancelInProgress = draft.concurrencyCancelInProgress,
+            maxConRunningQueueSize = draft.maxConRunningQueueSize,
+            pipelineAsCodeSettings = draft.pipelineAsCodeSettings,
+            failIfVariableInvalid = draft.failIfVariableInvalid,
+            buildCancelPolicy = draft.buildCancelPolicy
+        )
     }
 }

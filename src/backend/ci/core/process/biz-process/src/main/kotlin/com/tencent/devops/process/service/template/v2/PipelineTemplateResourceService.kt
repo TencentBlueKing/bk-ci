@@ -6,11 +6,13 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_VERSION_NOT_EXISTS
+import com.tencent.devops.process.dao.PipelineTemplateResourceDraftVersionDao
 import com.tencent.devops.process.dao.template.PipelineTemplateInfoDao
 import com.tencent.devops.process.dao.template.PipelineTemplateResourceDao
 import com.tencent.devops.process.pojo.PipelineTemplateVersionSimple
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelated
+import com.tencent.devops.process.pojo.template.PipelineTemplateDraftVersionSimple
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceUpdateInfo
@@ -28,7 +30,8 @@ import org.springframework.stereotype.Service
 class PipelineTemplateResourceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineTemplateResourceDao: PipelineTemplateResourceDao,
-    private val pipelineTemplateInfoDao: PipelineTemplateInfoDao
+    private val pipelineTemplateInfoDao: PipelineTemplateInfoDao,
+    private val pipelineTemplateResourceDraftVersionDao: PipelineTemplateResourceDraftVersionDao
 ) {
 
     fun getTemplateResourceVersion(
@@ -387,6 +390,54 @@ class PipelineTemplateResourceService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(
             PipelineTemplateResourceService::class.java
+        )
+    }
+
+    fun countTemplateDraftVersion(
+        projectId: String,
+        templateId: String,
+        version: Long
+    ): Long {
+        return pipelineTemplateResourceDraftVersionDao.count(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
+    }
+
+    fun listTemplateDraftVersions(
+        projectId: String,
+        templateId: String,
+        version: Long,
+        limit: Int,
+        offset: Int
+    ): List<PipelineTemplateDraftVersionSimple> {
+        return pipelineTemplateResourceDraftVersionDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId,
+            version = version,
+            limit = limit,
+            offset = offset
+        )
+    }
+
+    fun getTemplateDraftVersion(
+        projectId: String,
+        templateId: String,
+        version: Long,
+        draftVersion: Int
+    ): PipelineTemplateResource {
+        return pipelineTemplateResourceDraftVersionDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId,
+            version = version,
+            draftVersion = draftVersion
+        )?.convertTemplateResource() ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_TEMPLATE_RESOURCE_DRAFT_VERSION_NOT_EXISTS,
+            params = arrayOf(draftVersion.toString())
         )
     }
 }

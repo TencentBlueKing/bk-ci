@@ -167,4 +167,64 @@ class ProcessMiscService @Autowired constructor(
             geTimeFlag = geTimeFlag
         )
     }
+
+    fun getTemplateIdsByProjectId(
+        projectId: String,
+        gapDays: Long,
+        limit: Int,
+        offset: Int
+    ): List<String> {
+        return processDao.listTemplateIdsByProjectId(
+            dslContext = dslContext, projectId = projectId,
+            gapDays = gapDays, limit = limit, offset = offset
+        )
+    }
+
+    fun listPipelineDraftVersions(
+        projectId: String,
+        pipelineId: String,
+        limit: Int,
+        offset: Int
+    ): List<Int> {
+        return processDao.listPipelineDraftVersions(
+            dslContext = dslContext, projectId = projectId,
+            pipelineId = pipelineId, limit = limit, offset = offset
+        )
+    }
+
+    fun getExpiredPipelineVersions(
+        projectId: String,
+        pipelineId: String,
+        versions: List<Int>,
+        expireTime: LocalDateTime
+    ): Map<Int, Int> {
+        return processDao.getExpiredPipelineVersions(
+            dslContext = dslContext, projectId = projectId,
+            pipelineId = pipelineId, versions = versions, expireTime = expireTime
+        )
+    }
+
+    fun listTemplateDraftVersions(
+        projectId: String,
+        templateId: String,
+        limit: Int,
+        offset: Int
+    ): List<Long> {
+        return processDao.listTemplateDraftVersions(
+            dslContext = dslContext, projectId = projectId,
+            templateId = templateId, limit = limit, offset = offset
+        )
+    }
+
+    fun getExpiredTemplateVersions(
+        projectId: String,
+        templateId: String,
+        versions: List<Long>,
+        expireTime: LocalDateTime
+    ): Map<Long, Int> {
+        return processDao.getExpiredTemplateVersions(
+            dslContext = dslContext, projectId = projectId,
+            templateId = templateId, versions = versions, expireTime = expireTime
+        )
+    }
 }
