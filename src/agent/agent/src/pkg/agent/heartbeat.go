@@ -82,33 +82,38 @@ func agentHeartbeat(heartbeatResponse *api.AgentHeartbeatResponse) {
 		configChanged = true
 	}
 
-	if configChanged {
-		_ = config.GAgentConfig.SaveConfig()
-	}
-
 	// agent环境变量
 	if heartbeatResponse.Envs != nil {
+		envChanged := false
 		if envs.GApiEnvVars.Size() <= 0 {
 			envs.GApiEnvVars.SetEnvs(heartbeatResponse.Envs)
+			envChanged = true
 		} else {
-			changed := false
 			// 检查数量是否变化（新增或删除了 key）
 			if envs.GApiEnvVars.Size() != len(heartbeatResponse.Envs) {
-				changed = true
+				envChanged = true
 			} else {
 				// 数量相同时，检查旧值在新 map 中是否有变化
 				envs.GApiEnvVars.RangeDo(func(k, v string) bool {
 					if heartbeatResponse.Envs[k] != v {
-						changed = true
+						envChanged = true
 						return false
 					}
 					return true
 				})
 			}
-			if changed {
+			if envChanged {
 				envs.GApiEnvVars.SetEnvs(heartbeatResponse.Envs)
 			}
 		}
+
+		if config.GAgentConfig.SyncPersistedProxyEnvs(heartbeatResponse.Envs) {
+			configChanged = true
+		}
+	}
+
+	if configChanged {
+		_ = config.GAgentConfig.SaveConfig()
 	}
 
 	// 根据环境变量动态启停 MCP Server

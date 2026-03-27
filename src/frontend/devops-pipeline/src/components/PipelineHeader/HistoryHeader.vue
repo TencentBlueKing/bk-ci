@@ -210,7 +210,7 @@
             breadCrumbProps () {
                 return this.isTemplate
                     ? {
-                        templateName: this.pipeline?.name,
+                        templateName: this.pipelineInfo?.name ?? this.pipeline?.name,
                         isLoading: !this.pipeline
                     }
                     : {

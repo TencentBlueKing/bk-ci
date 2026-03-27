@@ -821,9 +821,12 @@
                 immediate: true
             },
             'releaseParams.repoHashId': {
-                handler: function (val) {
-                    if (this.isCommitToBranch) {
+                handler: function (val, oldVal) {
+                    // 只有当 repoHashId 真正变化时才清空 targetBranch，避免初始化或相同值赋值时误清空
+                    if (this.isCommitToBranch && val !== oldVal && oldVal !== undefined) {
                         this.releaseParams.targetBranch = ''
+                    }
+                    if (val) {
                         this.$nextTick(() => {
                             this.fetchBranchList()
                         })
