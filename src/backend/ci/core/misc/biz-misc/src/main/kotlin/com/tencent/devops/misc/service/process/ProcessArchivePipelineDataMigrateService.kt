@@ -46,6 +46,7 @@ import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.ApiAccessLimitCacheManager
 import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.misc.dao.process.ProcessDao
@@ -154,6 +155,8 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             throw ignored
         }
         try {
+            // 睡眠下，等到本地缓存过期再执行迁移任务以保证迁移准确性
+            Thread.sleep(ApiAccessLimitCacheManager.STATUS_CACHE_EXPIRE_SECONDS)
             // 迁移流水线数据
             PipelineMigrationTask(migratePipelineDataParam).run()
             // 执行迁移完成后的逻辑
@@ -189,8 +192,15 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             key = BkApiUtil.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
             item = pipelineId
         )
+        // 清除该流水线的迁移状态缓存，立即生效
+        ApiAccessLimitCacheManager.invalidateMigratingPipelineCache(
+            moduleCode = SystemModuleEnum.PROCESS.name,
+            pipelineId = pipelineId
+        )
         // 解锁流水线,允许用户发起新构建等操作
         redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)
+        // 清除该流水线的限制状态缓存，立即生效
+        ApiAccessLimitCacheManager.invalidatePipelineLimitCache(pipelineId)
     }
 
     private fun doMigrationErrorBus(
@@ -387,8 +397,15 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             key = BkApiUtil.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
             item = pipelineId
         )
+        // 清除该流水线的迁移状态缓存，立即生效
+        ApiAccessLimitCacheManager.invalidateMigratingPipelineCache(
+            moduleCode = SystemModuleEnum.PROCESS.name,
+            pipelineId = pipelineId
+        )
         // 锁定流水线,不允许用户发起新构建等操作
         redisOperation.addSetValue(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)
+        // 清除该流水线的限制状态缓存，立即生效
+        ApiAccessLimitCacheManager.invalidatePipelineLimitCache(pipelineId)
     }
 
     private fun sendMigrateProcessDataSuccessMsg(
