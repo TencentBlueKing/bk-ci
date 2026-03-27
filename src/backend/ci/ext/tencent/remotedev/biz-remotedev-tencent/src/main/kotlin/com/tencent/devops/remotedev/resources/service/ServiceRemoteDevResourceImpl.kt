@@ -957,7 +957,7 @@ class ServiceRemoteDevResourceImpl(
         workspaceName: String
     ): Result<Boolean> {
         val workspace = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
-        if (workspace == null || !workspace.ownerType.projectUse() || workspace.projectId != projectId) {
+        if (workspace == null || workspace.projectId != projectId) {
             logger.warn("get project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
             return Result(false)
         }
