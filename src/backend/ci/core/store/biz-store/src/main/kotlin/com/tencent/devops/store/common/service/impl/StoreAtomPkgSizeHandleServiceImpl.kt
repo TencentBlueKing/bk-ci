@@ -40,18 +40,18 @@ class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
     override fun batchUpdateComponentsVersionSize() {
         val count = atomDao.countComponent(dslContext, AtomStatusEnum.RELEASED.status.toByte())
         var offset = 0L
-        val bathSize = 100L
+        val batchSize = 100L
 
         while (offset < count) {
             val storeIds = atomDao.selectComponentIds(
                 dslContext = dslContext,
                 offset = offset,
-                batchSize = bathSize
+                batchSize = batchSize
             )
             if (storeIds.isNullOrEmpty()) {
                 break
             }
-            offset += bathSize
+            offset += batchSize
             processAtomEnvInfos(storeIds)
         }
     }

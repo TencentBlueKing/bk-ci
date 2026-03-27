@@ -62,6 +62,7 @@ class StoreDevxPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
         // 查询当前批次的组件ID列表
         val storeIds = storeVersionLogDao.selectComponentIds(
             dslContext = dslContext,
+            storeType = StoreTypeEnum.DEVX.type.toByte(),
             offset = offset,
             batchSize = batchSize
         )

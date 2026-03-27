@@ -152,7 +152,7 @@ abstract class StoreComponentVersionLogService {
         val size = record.get("PACKAGE_SIZE") as? String ?: return ""
         if (size.isNotEmpty()) {
             val atomPackageInfo = JsonUtil.to(size, object : TypeReference<List<StorePackageInfoReq>>() {})
-            return calculateTotalSize(atomPackageInfo)
+            return calculateAverageSize(atomPackageInfo)
         }
         return ""
     }
@@ -165,7 +165,7 @@ abstract class StoreComponentVersionLogService {
         return ""
     }
 
-    private fun calculateTotalSize(atomPackageInfos: List<StorePackageInfoReq>): String {
+    private fun calculateAverageSize(atomPackageInfos: List<StorePackageInfoReq>): String {
         if (atomPackageInfos.isNotEmpty()) {
             val totalSize = atomPackageInfos.map { info -> BigDecimal(info.size) }.reduce(BigDecimal::add)
             return formatSizeInMB(totalSize.divide(BigDecimal(atomPackageInfos.size), 2, RoundingMode.HALF_UP))

@@ -130,8 +130,8 @@ class StoreVersionLogDao {
             .join(tsvl)
             .on(tsb.ID.eq(tsvl.STORE_ID))
             .where(tsb.STORE_CODE.eq(storeCode))
-            .and(tsb.STORE_TYPE.eq(storeType)
-            .and(tsb.STATUS.eq(StoreStatusEnum.RELEASED.name)))
+            .and(tsb.STORE_TYPE.eq(storeType))
+            .and(tsb.STATUS.eq(StoreStatusEnum.RELEASED.name))
             .orderBy(tsb.UPDATE_TIME.desc())
         baseStep.limit((page - 1) * pageSize, pageSize)
         return baseStep.fetch()
@@ -187,9 +187,11 @@ class StoreVersionLogDao {
         }
     }
 
-    fun selectComponentIds(dslContext: DSLContext, offset: Long, batchSize: Long): List<String>? {
+    fun selectComponentIds(dslContext: DSLContext, storeType: Byte, offset: Long, batchSize: Long): List<String>? {
         with(TStoreBase.T_STORE_BASE) {
-            return dslContext.select(ID).from(this).where(STATUS.eq(StoreStatusEnum.RELEASED.name))
+            return dslContext.select(ID).from(this)
+                .where(STORE_TYPE.eq(storeType))
+                .and(STATUS.eq(StoreStatusEnum.RELEASED.name))
                 .limit(offset, batchSize)
                 .fetch().into(String::class.java)
         }

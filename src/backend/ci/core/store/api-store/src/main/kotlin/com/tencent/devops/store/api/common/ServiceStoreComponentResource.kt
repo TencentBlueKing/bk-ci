@@ -282,7 +282,7 @@ interface ServiceStoreComponentResource {
 
     @Operation(summary = "更新组件版本大小")
     @PUT
-    @Path("/storeId/{storeId}/version/info/update")
+    @Path("/storeIds/{storeId}/version/info/update")
     fun updateComponentVersionSize(
         @Parameter(description = "组件ID", required = true)
         @PathParam("storeId")
