@@ -68,7 +68,7 @@
         .manage-detail-header {
             position: absolute;
             right: 32px;
-            top: calc(-26px - 3.2vh);
+            top: calc(-20px - 3.2vh);
             span {
                 cursor: pointer;
                 color: #1592ff;

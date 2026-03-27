@@ -84,6 +84,7 @@
             property="description"
         >
             <mavon-editor
+                ref="mdEditor"
                 v-model="basicInfo.description"
                 :toolbars="toolbars"
                 :external-link="false"
@@ -91,6 +92,7 @@
                 preview-background="#fff"
                 :language="$i18n.locale === 'en-US' ? 'en' : $i18n.locale"
                 @change="handleDescriptionChange"
+                @imgAdd="handleImageUpload"
             />
         </bk-form-item>
     </div>
@@ -116,6 +118,7 @@
 
     const classifyList = ref([])
     const classifyLoading = ref(false)
+    const mdEditor = ref(null)
 
     const logoUploadUrl = LOGO_UPLOAD_URL
 
@@ -186,6 +189,27 @@
             theme: 'error',
             message: $t('store.请先删除当前错误Logo图片')
         })
+    }
+
+    // mavon-editor 图片上传处理
+    async function handleImageUpload (pos, file) {
+        const formData = new FormData()
+        formData.append('file', file)
+
+        try {
+            const res = await $store.dispatch('store/uploadMdImg', formData)
+            const imageUrl = res
+            
+            // 将上传的图片URL插入到编辑器
+            mdEditor.value.$img2Url(pos, imageUrl)
+        } catch (err) {
+            $bkMessage({
+                theme: 'error',
+                message: err.message || err
+            })
+            // 上传失败，删除编辑器中的占位图片
+            mdEditor.value.$refs.toolbar_left.$imgDel(pos)
+        }
     }
 </script>
 

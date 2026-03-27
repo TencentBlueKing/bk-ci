@@ -50,6 +50,7 @@
             error-display-type="normal"
         >
             <mavon-editor
+                ref="mdEditor"
                 v-model="versionInfo.versionContent"
                 :toolbars="toolbars"
                 :external-link="false"
@@ -57,6 +58,7 @@
                 preview-background="#fff"
                 :language="$i18n.locale === 'en-US' ? 'en' : $i18n.locale"
                 @change="handleVersionContentChange"
+                @imgAdd="handleImageUpload"
             />
         </bk-form-item>
     </div>
@@ -93,9 +95,10 @@
     const emit = defineEmits(['update:versionInfo', 'inputChange', 'updateReleaseType'])
 
     const { proxy } = UseInstance()
-    const { $store, $bkInfo, $t } = proxy
+    const { $store, $bkInfo, $t, $bkMessage } = proxy
 
     const publisherList = ref([])
+    const mdEditor = ref(null)
     
     // 尝试注入父组件的表单实例
     const formRef = inject('formRef', null)
@@ -159,6 +162,25 @@
             })
         } else {
             updateField('version', value)
+        }
+    }
+
+    // mavon-editor 图片上传处理
+    async function handleImageUpload (pos, file) {
+        const formData = new FormData()
+        formData.append('file', file)
+
+        try {
+            const res = await $store.dispatch('store/uploadMdImg', formData)
+            const imageUrl = res.data || res
+            
+            mdEditor.value.$img2Url(pos, imageUrl)
+        } catch (err) {
+            $bkMessage({
+                theme: 'error',
+                message: err.message || err
+            })
+            mdEditor.value.$refs.toolbar_left.$imgDel(pos)
         }
     }
 </script>

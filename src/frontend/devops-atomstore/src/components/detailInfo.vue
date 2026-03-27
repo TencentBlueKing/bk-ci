@@ -210,6 +210,9 @@
                     case 'COMPATIBILITY_FIX':
                         res = local.$t('store.兼容式问题修正')
                         break
+                    case 'HIS_VERSION_UPGRADE':
+                        res = local.$t('store.历史大版本问题修复')
+                        break
                 }
                 return res
             }
