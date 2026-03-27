@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_store
 
-**文档版本：** 1.0.14
+**文档版本：** 1.0.15
 
 **文档描述：** devops_ci_store 的数据库文档
 | 表名                  | 说明       |
@@ -10,7 +10,7 @@
 | T_APPS | 编译环境信息表 |
 | T_APP_ENV | 编译环境变量表 |
 | T_APP_VERSION | 编译环境版本信息表 |
-| T_ATOM | 流水线原子表 |
+| T_ATOM | 流水线插件表 |
 | T_ATOM_APPROVE_REL | 插件审核关联关系表 |
 | T_ATOM_BUILD_APP_REL | 流水线原子构建与编译环境关联关系表 |
 | T_ATOM_BUILD_INFO | 流水线原子构建信息表 |
@@ -84,6 +84,8 @@
 | T_TEMPLATE | 模板信息表 |
 | T_TEMPLATE_CATEGORY_REL | 模板与范畴关联关系表 |
 | T_TEMPLATE_LABEL_REL | 模板与标签关联关系表 |
+| T_TEMPLATE_VERSION_INSTALL_HISTORY | 模板版本安装历史表 |
+| T_TEMPLATE_VERSION_RELEASED_REL | 模板上架研发商店版本记录表 |
 
 **表名：** <a>T_APPS</a>
 
@@ -126,7 +128,7 @@
 
 **表名：** <a>T_ATOM</a>
 
-**说明：** 流水线原子表
+**说明：** 流水线插件表
 
 **数据列：**
 
@@ -142,7 +144,7 @@
 |  8   | CLASSIFY_ID |   varchar   | 32 |   0    |    N     |  N   |       | 所属分类 ID  |
 |  9   | DOCS_LINK |   varchar   | 256 |   0    |    Y     |  N   |       | 文档跳转链接  |
 |  10   | ATOM_TYPE |   tinyint   | 4 |   0    |    N     |  N   |   1    | 原子类型  |
-|  11   | ATOM_STATUS |   tinyint   | 4 |   0    |    N     |  N   |       | 原子状态  |
+|  11   | ATOM_STATUS |   tinyint   | 4 |   0    |    N     |  N   |       | 插件状态  |
 |  12   | ATOM_STATUS_MSG |   varchar   | 1024 |   0    |    Y     |  N   |       | 插件状态信息  |
 |  13   | SUMMARY |   varchar   | 256 |   0    |    Y     |  N   |       | 简介  |
 |  14   | DESCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 描述  |
@@ -172,6 +174,7 @@
 |  38   | BRANCH |   varchar   | 128 |   0    |    Y     |  N   |   master    | 代码库分支  |
 |  39   | BRANCH_TEST_FLAG |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否是分支测试版本  |
 |  40   | LATEST_TEST_FLAG |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否为最新测试版本原子，TRUE：最新 FALSE：非最新  |
+|  41   | CLASSIFY_ID_MAP |   text   | 65535 |   0    |    Y     |  N   |       | 多服务范围分类映射，JSON 格式：{"PIPELINE":"classifyId1","CREATIVE_STREAM":"classifyId2"}  |
 
 **表名：** <a>T_ATOM_APPROVE_REL</a>
 
@@ -462,6 +465,7 @@
 |  7   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  8   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 |  9   | TYPE |   tinyint   | 4 |   0    |    N     |  N   |   0    | 类型  |
+|  10   | SERVICE_SCOPE |   varchar   | 64 |   0    |    Y     |  N   |       | 服务范围，PIPELINE：流水线 CREATIVE_STREAM：创作流  |
 
 **表名：** <a>T_CONTAINER</a>
 
@@ -635,6 +639,7 @@
 |  6   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  7   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 |  8   | TYPE |   tinyint   | 4 |   0    |    N     |  N   |   0    | 类型  |
+|  9   | SERVICE_SCOPE |   varchar   | 64 |   0    |    Y     |  N   |       | 服务范围，PIPELINE：流水线 CREATIVE_STREAM：创作流  |
 
 **表名：** <a>T_LOGO</a>
 
@@ -756,16 +761,17 @@
 |  5   | PKG_NAME |   varchar   | 256 |   0    |    Y     |  N   |       | 包名称  |
 |  6   | PKG_PATH |   varchar   | 1024 |   0    |    Y     |  N   |       | 包路径  |
 |  7   | TARGET |   varchar   | 256 |   0    |    Y     |  N   |       | 执行入口  |
-|  8   | SHA_CONTENT |   varchar   | 1024 |   0    |    Y     |  N   |       | SHA 签名串  |
-|  9   | PRE_CMD |   text   | 65535 |   0    |    Y     |  N   |       | 执行前置命令  |
-|  10   | OS_NAME |   varchar   | 128 |   0    |    Y     |  N   |       | 支持的操作系统名称  |
-|  11   | OS_ARCH |   varchar   | 128 |   0    |    Y     |  N   |       | 支持的操作系统架构  |
-|  12   | RUNTIME_VERSION |   varchar   | 128 |   0    |    Y     |  N   |       | 运行时版本  |
-|  13   | DEFAULT_FLAG |   bit   | 1 |   0    |    N     |  N   |   b'1'    | 是否为默认环境信息  |
-|  14   | CREATOR |   varchar   | 50 |   0    |    N     |  N   |   system    | 创建人  |
-|  15   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 最近修改人  |
-|  16   | UPDATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 修改时间  |
-|  17   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 创建时间  |
+|  8   | SHA_CONTENT |   varchar   | 1024 |   0    |    Y     |  N   |       | SHA1 签名串  |
+|  9   | SHA256_CONTENT |   varchar   | 1024 |   0    |    Y     |  N   |       | SHA256 签名串  |
+|  10   | PRE_CMD |   text   | 65535 |   0    |    Y     |  N   |       | 执行前置命令  |
+|  11   | OS_NAME |   varchar   | 128 |   0    |    Y     |  N   |       | 支持的操作系统名称  |
+|  12   | OS_ARCH |   varchar   | 128 |   0    |    Y     |  N   |       | 支持的操作系统架构  |
+|  13   | RUNTIME_VERSION |   varchar   | 128 |   0    |    Y     |  N   |       | 运行时版本  |
+|  14   | DEFAULT_FLAG |   bit   | 1 |   0    |    N     |  N   |   b'1'    | 是否为默认环境信息  |
+|  15   | CREATOR |   varchar   | 50 |   0    |    N     |  N   |   system    | 创建人  |
+|  16   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 最近修改人  |
+|  17   | UPDATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 修改时间  |
+|  18   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 创建时间  |
 
 **表名：** <a>T_STORE_BASE_ENV_EXT</a>
 
@@ -1591,3 +1597,41 @@
 |  5   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 修改者  |
 |  6   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  7   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+
+**表名：** <a>T_TEMPLATE_VERSION_INSTALL_HISTORY</a>
+
+**说明：** 模板版本安装历史表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       |   |
+|  2   | SRC_MARKET_TEMPLATE_PROJECT_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 研发商店模板项目 ID  |
+|  3   | SRC_MARKET_TEMPLATE_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 研发商店模板代码（对应 process 数据库的 ID）  |
+|  4   | VERSION |   bigint   | 20 |   0    |    N     |  N   |       | 安装的父模板版本号  |
+|  5   | VERSION_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 安装的父模板版本号  |
+|  6   | NUMBER |   int   | 10 |   0    |    N     |  N   |       | 安装的父模板版本排序号  |
+|  7   | PROJECT_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 项目 ID  |
+|  8   | TEMPLATE_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 模板代码（对应 process 数据库的 ID）  |
+|  9   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
+|  10   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+
+**表名：** <a>T_TEMPLATE_VERSION_RELEASED_REL</a>
+
+**说明：** 模板上架研发商店版本记录表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
+|  2   | TEMPLATE_CODE |   varchar   | 32 |   0    |    N     |  Y   |       | 模板代码（对应 process 数据库的 ID）  |
+|  3   | VERSION |   bigint   | 20 |   0    |    N     |  Y   |       | 模板版本号  |
+|  4   | NUMBER |   int   | 10 |   0    |    N     |  N   |       | 版本排序号  |
+|  5   | VERSION_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 模板版本号  |
+|  6   | PUBLISHED |   bit   | 1 |   0    |    N     |  N   |       | 是否上架研发商店  |
+|  7   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
+|  8   | UPDATER |   varchar   | 64 |   0    |    Y     |  N   |       | 修改人  |
+|  9   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  10   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
