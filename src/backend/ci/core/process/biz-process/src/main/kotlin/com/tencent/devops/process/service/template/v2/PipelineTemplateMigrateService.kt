@@ -50,18 +50,24 @@ import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.template.PipelineTemplateMigrationDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
+import com.tencent.devops.process.pojo.template.TemplateMigrateByPercentageRequest
+import com.tencent.devops.process.pojo.template.TemplateMigrateByPercentageResult
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateVersion
+import com.tencent.devops.process.pojo.template.v2.FixBadParamsItem
 import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoV2
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelated
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelatedCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceUpdateInfo
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingCommonCondition
 import com.tencent.devops.process.pojo.template.v2.TemplateVersionPair
 import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.service.template.validation.PipelineTemplateMigrationValidationService
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
@@ -77,6 +83,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.Executors
+import java.util.zip.CRC32
 
 @Service
 @Suppress("LongParameterList")
@@ -122,6 +129,92 @@ class PipelineTemplateMigrateService(
         } while (projectCodes.size == limit)
     }
 
+    fun migrateTemplatesByPercentage(
+        request: TemplateMigrateByPercentageRequest
+    ): TemplateMigrateByPercentageResult {
+        require(request.targetPercent in 1..100) { "targetPercent must be between 1 and 100" }
+        logger.info(
+            "migrateTemplatesByPercentage start|" +
+                "targetPercent=${request.targetPercent}|channelCode=${request.channelCode}|" +
+                "dryRun=${request.dryRun}"
+        )
+
+        val blacklist = client.get(ServiceProjectTagResource::class).getBlacklist().data
+            ?: throw IllegalStateException("Failed to fetch routing blacklist from project service")
+        logger.info("migrateTemplatesByPercentage blacklistSize=${blacklist.size}")
+
+        val condition = ProjectConditionDTO(channelCode = request.channelCode)
+        var totalProjectCount = 0
+        var alreadyDoneCount = 0
+        val candidates = mutableListOf<String>()
+        val traceId = MDC.get(TraceTag.BIZID)
+
+        var offset = 0
+        val limit = PageUtil.MAX_PAGE_SIZE
+        do {
+            val projectCodes = client.get(ServiceProjectResource::class).listProjectsByCondition(
+                projectConditionDTO = condition,
+                limit = limit,
+                offset = offset
+            ).data ?: break
+            totalProjectCount += projectCodes.size
+            projectCodes.forEach { project ->
+                val englishName = project.englishName
+                if (englishName in blacklist) return@forEach
+                if (hashBucket(englishName) >= request.targetPercent) return@forEach
+                val migrationRecord = pipelineTemplateMigrationDao.get(dslContext, englishName)
+                if (migrationRecord?.status == MigrationStatus.SUCCESS.name ||
+                    migrationRecord?.status == MigrationStatus.SKIPPED.name
+                ) {
+                    alreadyDoneCount++
+                    return@forEach
+                }
+                candidates.add(englishName)
+            }
+            offset += limit
+        } while (projectCodes.size == limit)
+
+        val migratedCount: Int
+        if (request.dryRun) {
+            migratedCount = candidates.size
+        } else {
+            candidates.forEach { projectId ->
+                migrateProjectTemplateExecutorService.execute {
+                    MDC.put(TraceTag.BIZID, traceId)
+                    migrateTemplates(projectId)
+                }
+            }
+            migratedCount = candidates.size
+        }
+
+        logger.info(
+            "migrateTemplatesByPercentage done|dryRun=${request.dryRun}|" +
+                "total=$totalProjectCount|target=${candidates.size + alreadyDoneCount}|" +
+                "alreadyDone=$alreadyDoneCount|migrated=$migratedCount"
+        )
+        return TemplateMigrateByPercentageResult(
+            dryRun = request.dryRun,
+            targetPercent = request.targetPercent,
+            totalProjectCount = totalProjectCount,
+            targetCount = candidates.size + alreadyDoneCount,
+            alreadyDoneCount = alreadyDoneCount,
+            migratedCount = migratedCount,
+            failedCount = 0,
+            failedProjects = emptyList()
+        )
+    }
+
+    /**
+     * 确定性哈希分桶：CRC32(projectId) % 100
+     * 结果范围 [0, 99]，与项目总数无关，同一 projectId 永远映射到相同桶。
+     * 算法与 ProjectTagService.hashBucket 保持一致。
+     */
+    private fun hashBucket(projectId: String): Int {
+        val crc = CRC32()
+        crc.update(projectId.toByteArray(Charsets.UTF_8))
+        return (crc.value % 100).toInt()
+    }
+
     fun migratePublicTemplates() {
         migrateTemplates("")
     }
@@ -146,6 +239,11 @@ class PipelineTemplateMigrateService(
         val templateCount = templateDao.countTemplate(dslContext, projectId)
         if (templateCount == 0) {
             logger.warn("The template does not exist under project {}. Skipping.", projectId)
+            pipelineTemplateMigrationDao.create(
+                dslContext = dslContext,
+                projectId = projectId,
+                status = MigrationStatus.SKIPPED
+            )
             return
         }
 
@@ -964,6 +1062,132 @@ class PipelineTemplateMigrateService(
         val countBeforeCleanup: Int,
         val countAfterCleanup: Int
     )
+
+    fun fixBadParams(
+        projectId: String,
+        templateId: String?,
+        dryRun: Boolean
+    ): List<FixBadParamsItem> {
+        logger.info(
+            "fixBadParams start|projectId={}|templateId={}|dryRun={}",
+            projectId, templateId, dryRun
+        )
+        val badItems = mutableListOf<FixBadParamsItem>()
+        var page = 1
+        val pageSize = 100
+        do {
+            val condition = PipelineTemplateCommonCondition(
+                projectId = projectId,
+                templateId = templateId,
+                page = page,
+                pageSize = pageSize
+            )
+            val templateInfos = pipelineTemplateInfoService.list(condition)
+            templateInfos.forEach { templateInfo ->
+                val badVersions = fixTemplateVersionParams(
+                    projectId = projectId,
+                    templateId = templateInfo.id,
+                    dryRun = dryRun
+                )
+                if (badVersions.isNotEmpty()) {
+                    badItems.add(
+                        FixBadParamsItem(
+                            templateId = templateInfo.id,
+                            versions = badVersions
+                        )
+                    )
+                }
+            }
+            page++
+        } while (templateInfos.size == pageSize)
+        logger.info(
+            "fixBadParams done|projectId={}|dryRun={}|affectedTemplates={}",
+            projectId, dryRun, badItems.size
+        )
+        return badItems
+    }
+
+    private fun fixTemplateVersionParams(
+        projectId: String,
+        templateId: String,
+        dryRun: Boolean
+    ): List<Long> {
+        val badVersions = mutableListOf<Long>()
+        var page = 1
+        val pageSize = 100
+        do {
+            val condition = PipelineTemplateResourceCommonCondition(
+                projectId = projectId,
+                templateId = templateId,
+                page = page,
+                pageSize = pageSize
+            )
+            val templateResources = pipelineTemplateResourceService.list(condition)
+            templateResources.forEach { templateResource ->
+                if (fixVersionParams(
+                        projectId = projectId,
+                        templateId = templateId,
+                        templateResource = templateResource,
+                        dryRun = dryRun
+                    )
+                ) {
+                    badVersions.add(templateResource.version)
+                }
+            }
+            page++
+        } while (templateResources.size == pageSize)
+        return badVersions
+    }
+
+    private fun fixVersionParams(
+        projectId: String,
+        templateId: String,
+        templateResource: PipelineTemplateResource,
+        dryRun: Boolean
+    ): Boolean {
+        val model = templateResource.model
+        if (model !is Model) {
+            return false
+        }
+        val triggerContainer = model.getTriggerContainer()
+        val params = triggerContainer.params
+        val badParams = params.filter {
+            !it.required && it.asInstanceInput == false &&
+                it.id !in PipelineUtils.VERSION_PARAMS
+        }
+        if (badParams.isEmpty()) return false
+
+        val badParamIds = badParams.map { it.id }
+        logger.info(
+            "fixBadParams found bad params|" +
+                "projectId={}|templateId={}|version={}|params={}",
+            projectId, templateId, templateResource.version, badParamIds
+        )
+        if (!dryRun) {
+            val fixedParams = params.map { param ->
+                if (!param.required && param.asInstanceInput == false &&
+                    param.id !in PipelineUtils.VERSION_PARAMS
+                ) {
+                    param.copy(required = true)
+                } else {
+                    param
+                }
+            }
+            triggerContainer.params = fixedParams
+            pipelineTemplateResourceService.update(
+                record = PipelineTemplateResourceUpdateInfo(
+                    params = fixedParams,
+                    model = model
+                ),
+                commonCondition = PipelineTemplateResourceCommonCondition(
+                    projectId = projectId,
+                    templateId = templateId,
+                    version = templateResource.version
+                )
+            )
+        }
+        return true
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineTemplateMigrateService::class.java)

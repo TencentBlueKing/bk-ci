@@ -37,12 +37,14 @@ import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
+import com.tencent.devops.process.pojo.pipeline.PipelineTemplateInstanceBasicInfo
 import com.tencent.devops.process.pojo.pipeline.version.PipelineDraftSaveReq
 import com.tencent.devops.process.pojo.pipeline.version.PipelineVersionCreateReq
 import com.tencent.devops.process.service.pipeline.PipelineModelParser
@@ -125,7 +127,11 @@ class PipelineDraftSaveReqConverter(
                 Pair(newModelAndSetting, newYaml)
             }
             // 生成流水线ID
-            val newPipelineId = pipelineId ?: pipelineIdGenerator.getNextId()
+            val newPipelineId = if (pipelineId.isNullOrBlank()) {
+                pipelineIdGenerator.getNextId()
+            } else {
+                pipelineId
+            }
             val pipelineSettingWithoutVersion = modelAndSetting.setting.copy(
                 projectId = projectId,
                 pipelineId = newPipelineId
@@ -153,10 +159,16 @@ class PipelineDraftSaveReqConverter(
             if (context.templateInstanceBasicInfo != null) {
                 val inputParams = request.modelAndSetting!!.model.getTriggerContainer().params
                 val instanceParams = context.templateInstanceBasicInfo.instanceModel.getTriggerContainer().params
-                TemplateInstanceUtil.assertParams(
+                TemplateInstanceUtil.assertInstanceParamProps(
                     projectId = projectId,
                     pipelineId = newPipelineId,
                     inputParams = inputParams,
+                    instanceParams = instanceParams
+                )
+                validateOptionalParamsNotOverridden(
+                    projectId = projectId,
+                    pipelineId = newPipelineId,
+                    info = context.templateInstanceBasicInfo,
                     instanceParams = instanceParams
                 )
             }
@@ -171,6 +183,19 @@ class PipelineDraftSaveReqConverter(
         // 前端传过来的model是完整的model,如果是模版实例化的,需要转换成引用的方式
         val model = modelAndSetting!!.model
         return if (model.template != null) {
+            // 如果修改流水线,不能把非约束的流水线改成约束的流水线
+            pipelineId?.let {
+                val pipelineTemplateRelated = pipelineTemplateRelatedService.get(
+                    projectId = projectId, pipelineId = pipelineId
+                )
+                if (pipelineTemplateRelated == null ||
+                    pipelineTemplateRelated.instanceType != PipelineInstanceTypeEnum.CONSTRAINT
+                ) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_NON_CONSTRAINED_PIPELINE_CANNOT_SAVE_AS_CONSTRAINED
+                    )
+                }
+            }
             val template = model.template!!
             val templateResource = pipelineModelParser.parseTemplateDescriptor(
                 projectId = projectId,
@@ -279,6 +304,45 @@ class PipelineDraftSaveReqConverter(
                 overrideTemplateField = overrideTemplateField
             )
         }
+    }
+
+    /**
+     * 校验流水线的"其他变量"（required=false）在保存草稿时是否被异常覆盖。
+     *
+     * 检测逻辑：
+     * 1. 若流水线是新建（beforeTemplateVersion 为 null），跳过校验
+     * 2. 获取实例化前的旧模板参数、当前模板参数和旧流水线参数
+     * 3. 委托 TemplateInstanceUtil.assertOptionalParamsNotOverridden 执行纯参数比对
+     */
+    private fun validateOptionalParamsNotOverridden(
+        projectId: String,
+        pipelineId: String,
+        info: PipelineTemplateInstanceBasicInfo,
+        instanceParams: List<BuildFormProperty>
+    ) {
+        val beforeTemplateVersion = info.beforeTemplateVersion ?: return
+        val beforeTemplateModel = pipelineTemplateResourceService.getOrNull(
+            projectId = projectId,
+            templateId = info.templateId,
+            version = beforeTemplateVersion
+        )?.model as? Model ?: return
+        val beforePipelineResource = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: return
+        val currentTemplateModel = pipelineTemplateResourceService.getOrNull(
+            projectId = projectId,
+            templateId = info.templateId,
+            version = info.templateVersion
+        )?.model as? Model ?: return
+        TemplateInstanceUtil.assertOptionalParamsNotOverridden(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            beforeTemplateParams = beforeTemplateModel.getTriggerContainer().params,
+            currentTemplateParams = currentTemplateModel.getTriggerContainer().params,
+            beforePipelineParams = beforePipelineResource.model.getTriggerContainer().params,
+            instanceParams = instanceParams
+        )
     }
 
     companion object {

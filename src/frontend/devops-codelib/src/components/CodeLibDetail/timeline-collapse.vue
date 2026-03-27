@@ -312,6 +312,9 @@
                 this.pagination.current = 1
                 this.activeIndex === index ? this.activeIndex = -1 : this.activeIndex = index
                 if (this.activeIndex === -1) return
+                // 清空上一次的数据，避免展开时显示旧数据
+                this.eventDetailList = []
+                this.reasonNumMap = {}
                 this.eventId = data.eventId
                 await this.handleFetchTriggerReasonNum()
                 await this.getEventDetail()
