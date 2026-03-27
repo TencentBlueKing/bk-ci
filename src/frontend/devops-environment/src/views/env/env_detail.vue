@@ -75,7 +75,7 @@
     import EnvParam from './components/EnvParam/index.vue'
     import Node from './components/Node/index.vue'
     import Settings from './components/Settings/index.vue'
-    import AdvancedTab from './components/SharedSetting/advancedTab.vue'
+    import AdvancedSetting from './components/AdvancedSetting/index.vue'
     import SharedSettings from './components/SharedSetting/index.vue'
     
     export default {
@@ -89,7 +89,7 @@
             DeployTask,
             Settings,
             emptyNode,
-            AdvancedTab
+            AdvancedSetting
         },
         setup () {
             const { proxy } = useInstance()
@@ -125,7 +125,7 @@
                     deployTask: DeployTask,
                     settings: Settings,
                     auth: AuthManage,
-                    advancedSetting: AdvancedTab
+                    advancedSetting: AdvancedSetting
                 }
                 return comMap[tabActive.value]
             })
