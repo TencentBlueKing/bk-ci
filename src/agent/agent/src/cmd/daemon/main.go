@@ -43,10 +43,10 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 
 	"github.com/gofrs/flock"
 )
@@ -169,13 +169,12 @@ func doCheckAndLaunchAgent(isDebug bool) {
 }
 
 func launch(agentPath string, isDebug bool) (*os.Process, error) {
-	var cmd *exec.Cmd
 	if isDebug {
-		cmd = exec.Command(agentPath, "debug")
-	} else {
-		cmd = exec.Command(agentPath)
+		debugFile := filepath.Join(systemutil.GetWorkDir(), ".debug")
+		_ = os.WriteFile(debugFile, []byte("1"), 0644)
 	}
 
+	cmd := exec.Command(agentPath)
 	cmd.Dir = systemutil.GetWorkDir()
 
 	logs.Infof("start devops agent: %s", cmd.String())

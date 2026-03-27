@@ -23,9 +23,10 @@ func TestIsSubcommand(t *testing.T) {
 		{"-h", true},
 		{"--help", true},
 		{"help", true},
+		{"version", true},
+		{"fullVersion", true},
+		{"debug", true},
 		{"unknown", false},
-		{"version", false},
-		{"debug", false},
 		{"", false},
 		{"INSTALL", false},
 	}
@@ -270,6 +271,69 @@ func TestUnzipIfNeeded_DestExists(t *testing.T) {
 	// dest still exists (no error, no removal)
 	if _, err := os.Stat(destDir); os.IsNotExist(err) {
 		t.Error("dest should still exist when force=false")
+	}
+}
+
+func TestHandleDebug(t *testing.T) {
+	old := useChinese
+	useChinese = false
+	defer func() { useChinese = old }()
+
+	dir := t.TempDir()
+	debugPath := filepath.Join(dir, ".debug")
+
+	t.Run("status_off", func(t *testing.T) {
+		err := handleDebug(dir, []string{})
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("enable", func(t *testing.T) {
+		err := handleDebug(dir, []string{"on"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := os.Stat(debugPath); os.IsNotExist(err) {
+			t.Error(".debug file should exist after 'debug on'")
+		}
+	})
+
+	t.Run("status_on", func(t *testing.T) {
+		err := handleDebug(dir, []string{})
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("disable", func(t *testing.T) {
+		err := handleDebug(dir, []string{"off"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := os.Stat(debugPath); !os.IsNotExist(err) {
+			t.Error(".debug file should not exist after 'debug off'")
+		}
+	})
+
+	t.Run("invalid_action", func(t *testing.T) {
+		err := handleDebug(dir, []string{"invalid"})
+		if err == nil {
+			t.Error("expected error for invalid debug action")
+		}
+	})
+}
+
+func TestDebugFileExists(t *testing.T) {
+	dir := t.TempDir()
+
+	if DebugFileExists(dir) {
+		t.Error("DebugFileExists should return false when .debug doesn't exist")
+	}
+
+	os.WriteFile(filepath.Join(dir, ".debug"), []byte("1"), 0644)
+	if !DebugFileExists(dir) {
+		t.Error("DebugFileExists should return true when .debug exists")
 	}
 }
 
