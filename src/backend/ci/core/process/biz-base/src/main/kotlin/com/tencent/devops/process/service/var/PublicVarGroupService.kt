@@ -560,68 +560,50 @@ class PublicVarGroupService @Autowired constructor(
         if (varGroupRefs.isEmpty()) {
             return emptyList()
         }
+
+        // 第一阶段：批量查询所有变量组记录
+        val groupNameVersionPairs = varGroupRefs.map { ref ->
+            // version 优先；version 为 null 时 DAO 按 LATEST_FLAG=true 查最新版本
+            ref.groupName to ref.version
+        }
+        val groupRecords = publicVarGroupDao.batchGetRecordsByGroupNameAndVersion(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupNameVersionPairs = groupNameVersionPairs
+        )
+        val groupRecordMap = groupRecords.associateBy { it.groupName }
+
+        // 第二阶段：批量查询所有变量组的变量
+        val groupNameVersionList = groupRecords.map { it.groupName to it.version }
+        val allVarPOs = publicVarDao.batchListVarsByGroupNameAndVersion(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupNameVersionList = groupNameVersionList
+        )
+        val varPOsMap = allVarPOs.groupBy { it.groupName to it.version }
+
+        // 第三阶段：按原始顺序组装结果
         val publicVarGroupVariables = mutableListOf<PublicVarGroupVariable>()
         val processedVarNames = mutableSetOf<String>()
         var currentIndex = 0
 
         varGroupRefs.forEach { varGroupRef ->
-            currentIndex = processVarGroupRef(
-                projectId = projectId,
-                varGroupRef = varGroupRef,
+            val groupRecord = groupRecordMap[varGroupRef.groupName]
+            if (groupRecord == null) {
+                logger.warn("Variable group ${varGroupRef.groupName} not found in project $projectId")
+                return@forEach
+            }
+            val varPOs = varPOsMap[groupRecord.groupName to groupRecord.version] ?: emptyList()
+            currentIndex = processVarPOs(
+                varPOs = varPOs,
+                groupName = groupRecord.groupName,
+                groupVersion = groupRecord.version,
                 publicVarGroupVariables = publicVarGroupVariables,
                 processedVarNames = processedVarNames,
                 currentIndex = currentIndex
             )
         }
         return publicVarGroupVariables
-    }
-
-    /**
-     * 处理单个变量组引用
-     */
-    private fun processVarGroupRef(
-        projectId: String,
-        varGroupRef: PublicVarGroupRef,
-        publicVarGroupVariables: MutableList<PublicVarGroupVariable>,
-        processedVarNames: MutableSet<String>,
-        currentIndex: Int
-    ): Int {
-        try {
-            val groupName = varGroupRef.groupName
-            val versionName = varGroupRef.versionName
-            val groupRecord = publicVarGroupDao.getRecordByGroupName(
-                dslContext = dslContext,
-                projectId = projectId,
-                groupName = groupName,
-                versionName = versionName
-            ) ?: run {
-                logger.warn("Variable group $groupName not found in project $projectId")
-                return currentIndex
-            }
-
-            // 获取变量组中的变量
-            val varPOs = publicVarService.getGroupPublicVar(
-                projectId = projectId,
-                groupName = groupName,
-                version = groupRecord.version
-            )
-
-            // 转换为PublicVarGroupVariable并检查同名变量
-            return processVarPOs(
-                varPOs = varPOs,
-                groupName = groupName,
-                groupVersion = groupRecord.version,
-                publicVarGroupVariables = publicVarGroupVariables,
-                processedVarNames = processedVarNames,
-                currentIndex = currentIndex
-            )
-        } catch (t: Throwable) {
-            logger.warn("Failed to get variables from group ${varGroupRef.groupName}", t)
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_GET_VARIABLES_FAILED,
-                params = arrayOf(varGroupRef.groupName)
-            )
-        }
     }
 
     /**

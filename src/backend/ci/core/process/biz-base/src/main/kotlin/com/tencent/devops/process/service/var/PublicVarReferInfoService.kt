@@ -36,11 +36,10 @@ import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.VarRefDetail
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.constant.ProcessMessageCode.DYNAMIC_VERSION
 import com.tencent.devops.process.dao.VarRefDetailDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
-import com.tencent.devops.process.engine.dao.template.TemplateDao
-import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.pojo.`var`.CleanupVarGroupReferenceRequest
 import com.tencent.devops.process.pojo.`var`.PublicGroupKey
 import com.tencent.devops.process.pojo.`var`.ResourceReferenceQueryParams
@@ -65,8 +64,6 @@ class PublicVarReferInfoService @Autowired constructor(
     private val publicVarGroupDao: PublicVarGroupDao,
     private val publicVarReferInfoDao: PublicVarReferInfoDao,
     private val publicVarReferCountService: PublicVarReferCountService,
-    private val templateDao: TemplateDao,
-    private val templatePipelineDao: TemplatePipelineDao,
     private val varRefDetailDao: VarRefDetailDao
 ) {
 
@@ -77,11 +74,8 @@ class PublicVarReferInfoService @Autowired constructor(
 
     /**
      * 处理资源的变量引用关系（带锁保护的公共方法）
-     * 使用资源级分布式锁保护整个操作流程，引用关系处理和引用计数更新在同一个数据库事务中完成，
-     * 保证原子性——要么全部成功，要么全部回滚
      * 线程安全说明：
      * - 使用资源级分布式锁：RESOURCE_VAR_REFER_LOCK:$projectId:$resourceType:$resourceId:$resourceVersion
-     * - 锁保护范围：整个操作流程（事务处理 + 计数更新在同一事务中）
      * - 所有内部方法调用（包括 cleanupRemovedVarGroupReferences）都在此锁保护下执行
      * @param request 变量引用请求DTO（带锁版本）
      */
@@ -376,7 +370,7 @@ class PublicVarReferInfoService @Autowired constructor(
             referId = queryParams.resourceId,
             referType = queryParams.referType,
             referVersion = queryParams.resourceVersion
-        ).groupBy { PublicGroupKey(it.groupName, if (it.version == -1) null else it.version) }
+        ).groupBy { PublicGroupKey(it.groupName, if (it.version == DYNAMIC_VERSION ) null else it.version) }
             .mapValues { (_, records) -> records.map { it.varName }.toSet() }
     }
 
@@ -614,7 +608,7 @@ class PublicVarReferInfoService @Autowired constructor(
                     projectId = projectId,
                     groupName = record.groupName,
                     varName = record.varName,
-                    version = record.version ?: -1
+                    version = record.version ?: DYNAMIC_VERSION
                 )
             }.distinctBy {
                 "${it.projectId}:${it.groupName}:${it.varName}:${it.version}"
@@ -634,7 +628,7 @@ class PublicVarReferInfoService @Autowired constructor(
             // 按固定顺序处理，避免死锁
             val sortedGroups = groupsToCleanup.sortedWith(
                 compareBy<PublicGroupKey> { it.groupName }
-                    .thenBy { it.version ?: -1 }
+                    .thenBy { it.version ?: DYNAMIC_VERSION }
             )
 
             sortedGroups.forEach { groupKey ->
@@ -660,7 +654,7 @@ class PublicVarReferInfoService @Autowired constructor(
                             projectId = projectId,
                             groupName = record.groupName,
                             varName = record.varName,
-                            version = record.version ?: -1
+                            version = record.version ?: DYNAMIC_VERSION
                         )
                     }.distinctBy {
                         "${it.projectId}:${it.groupName}:${it.varName}:${it.version}"

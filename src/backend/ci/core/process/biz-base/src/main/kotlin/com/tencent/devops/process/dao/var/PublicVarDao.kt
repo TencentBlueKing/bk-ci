@@ -203,6 +203,51 @@ class PublicVarDao {
     }
 
     /**
+     * 批量查询多个变量组指定版本的变量列表
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupNameVersionList (变量组名, 版本号) 列表
+     * @return 所有匹配的公共变量PO列表
+     */
+    fun batchListVarsByGroupNameAndVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        groupNameVersionList: List<Pair<String, Int>>
+    ): List<PublicVarPO> {
+        if (groupNameVersionList.isEmpty()) return emptyList()
+
+        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
+            val conditions = groupNameVersionList.map { (groupName, version) ->
+                GROUP_NAME.eq(groupName).and(VERSION.eq(version))
+            }.reduce { acc, condition -> acc.or(condition) }
+
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(conditions)
+                .fetch()
+                .map {
+                    PublicVarPO(
+                        id = it.id,
+                        projectId = it.projectId,
+                        varName = it.varName,
+                        alias = it.alias,
+                        type = PublicVarTypeEnum.valueOf(it.type),
+                        valueType = BuildFormPropertyType.valueOf(it.valueType),
+                        defaultValue = it.defaultValue,
+                        desc = it.desc,
+                        groupName = it.groupName,
+                        version = it.version,
+                        buildFormProperty = it.buildFormProperty,
+                        creator = it.creator,
+                        modifier = it.modifier,
+                        createTime = it.createTime,
+                        updateTime = it.updateTime
+                    )
+                }
+        }
+    }
+
+    /**
      * 根据变量组名删除所有版本的变量
      * @param dslContext 数据库上下文
      * @param projectId 项目ID

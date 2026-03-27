@@ -594,15 +594,22 @@ class PublicVarService @Autowired constructor(
         projectId: String,
         groupToVersion: Map<String, Int>
     ): Map<String, List<BuildFormProperty>> {
-        return groupToVersion.mapValues { (groupName, version) ->
-            publicVarDao.listVarByGroupName(
-                dslContext = dslContext,
-                projectId = projectId,
-                groupName = groupName,
-                version = version
-            ).map { publicVarPO ->
-                JsonUtil.to(publicVarPO.buildFormProperty, BuildFormProperty::class.java)
+        if (groupToVersion.isEmpty()) return emptyMap()
+
+        val groupNameVersionList = groupToVersion.map { (groupName, version) -> groupName to version }
+        val allVarPOs = publicVarDao.batchListVarsByGroupNameAndVersion(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupNameVersionList = groupNameVersionList
+        )
+
+        // 按 groupName 分组，转换为 BuildFormProperty
+        val result = allVarPOs.groupBy { it.groupName }
+            .mapValues { (_, varPOs) ->
+                varPOs.map { JsonUtil.to(it.buildFormProperty, BuildFormProperty::class.java) }
             }
-        }
+
+        // 保证所有请求的 groupName 都有对应的 key（即使变量列表为空）
+        return groupToVersion.keys.associateWith { result[it] ?: emptyList() }
     }
 }
