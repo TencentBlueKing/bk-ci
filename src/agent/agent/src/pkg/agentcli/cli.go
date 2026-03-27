@@ -277,14 +277,14 @@ func handleReinstall(workDir string, args []string) error {
 
 	printStep(msg("This will:", "本操作将:"))
 	printStep(msg(
-		"  1. Stop agent",
-		"  1. 停止 Agent"))
+		"  1. Download agent.zip from server (verify before any changes)",
+		"  1. 从服务端下载 agent.zip (先验证, 再变更)"))
 	printStep(msg(
-		"  2. Delete all files EXCEPT identity files",
-		"  2. 删除除身份文件外的所有内容"))
+		"  2. Stop agent and clean files",
+		"  2. 停止 Agent 并清理文件"))
 	printStep(msg(
-		"  3. Download agent.zip from server and install",
-		"  3. 从服务端下载 agent.zip 并安装"))
+		"  3. Extract and install",
+		"  3. 解压并安装"))
 	fmt.Println()
 	printStep(msg("Files preserved:", "保留的文件:"))
 	for name := range preserveSet() {
@@ -305,17 +305,28 @@ func handleReinstall(workDir string, args []string) error {
 
 	keep := preserveSet()
 
-	printStep(msg("Step 1: stopping agent ...", "步骤 1: 停止 Agent ..."))
+	// Step 1: download FIRST — verify before making any destructive changes
+	// Check heartbeat before download (pid file still exists at this point)
+	waitForHeartbeatExpiry(workDir)
+
+	printStep(msg("Step 1: downloading agent.zip from server ...", "步骤 1: 从服务端下载 agent.zip ..."))
+	zipPath := filepath.Join(workDir, "agent.zip")
+	if err := downloadAgentZip(workDir, gateway, agentId, zipPath); err != nil {
+		return err
+	}
+
+	// Step 2: stop + clean (only after download succeeded)
+	printStep(msg("Step 2: stopping agent ...", "步骤 2: 停止 Agent ..."))
 	_ = handleStop(workDir)
 
-	printStep(msg("Step 2: cleaning files ...", "步骤 2: 清理文件 ..."))
+	printStep(msg("Step 3: cleaning files ...", "步骤 3: 清理文件 ..."))
 	entries, err := os.ReadDir(workDir)
 	if err != nil {
 		return fmt.Errorf("read workdir: %w", err)
 	}
 	for _, entry := range entries {
 		name := entry.Name()
-		if keep[name] {
+		if keep[name] || name == "agent.zip" {
 			continue
 		}
 		path := filepath.Join(workDir, name)
@@ -326,18 +337,9 @@ func handleReinstall(workDir string, args []string) error {
 		}
 	}
 
-	// Wait for backend heartbeat timeout if agent was recently alive
-	waitForHeartbeatExpiry(workDir)
-
-	printStep(msg("Step 3: downloading agent.zip from server ...", "步骤 3: 从服务端下载 agent.zip ..."))
-	zipPath := filepath.Join(workDir, "agent.zip")
-	if err := downloadAgentZip(workDir, gateway, agentId, zipPath); err != nil {
-		return err
-	}
-
+	// Step 4: extract
 	printStep(msg("Step 4: extracting agent.zip ...", "步骤 4: 解压 agent.zip ..."))
 	if runtime.GOOS == "windows" {
-		// Windows locks running exe files. Rename self so extraction can write the new binary.
 		agentExe := filepath.Join(workDir, agentBinary())
 		agentBak := agentExe + ".bak"
 		os.Remove(agentBak)
@@ -410,7 +412,7 @@ func downloadAgentZip(workDir, gateway, agentId, savePath string) error {
 	if !strings.HasPrefix(gateway, "http") {
 		gateway = "http://" + gateway
 	}
-	url := gateway + "/external/agents/" + agentId + "/install"
+	url := gateway + "/external/agents/" + agentId + "/agent"
 
 	projectId, _ := readProperty(workDir, "devops.project.id")
 	secretKey, _ := readProperty(workDir, "devops.agent.secret.key")
@@ -425,31 +427,52 @@ func downloadAgentZip(workDir, gateway, agentId, savePath string) error {
 
 	printStep(msgf("  GET %s", "  GET %s", url))
 
-	resp, err := http.DefaultClient.Do(req)
+	httpProxy, _ := readProperty(workDir, "HTTP_PROXY")
+	httpsProxy, _ := readProperty(workDir, "HTTPS_PROXY")
+	noProxy, _ := readProperty(workDir, "NO_PROXY")
+	certPath := filepath.Join(workDir, ".cert")
+	tlsConfig := loadCertIfExists(certPath)
+	proxyFunc := buildProxyFunc(httpProxy, httpsProxy, noProxy)
+	httpClient := &http.Client{
+		Transport: &http.Transport{TLSClientConfig: tlsConfig, Proxy: proxyFunc},
+		Timeout:   120 * time.Second,
+	}
+
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf(msgf("download failed: %v", "下载失败: %v", err))
 	}
 	defer resp.Body.Close()
 
+	// Read body first to handle both error responses and zip content
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf(msgf("read response failed: %v", "读取响应失败: %v", err))
+	}
+
 	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
-		body, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf(msgf(
 			"server returned HTTP %d: %s",
 			"服务端返回 HTTP %d: %s", resp.StatusCode, strings.TrimSpace(string(body))))
 	}
 
-	out, err := os.Create(savePath)
-	if err != nil {
-		return fmt.Errorf(msgf("create file failed: %v", "创建文件失败: %v", err))
+	// Validate zip magic bytes (PK\x03\x04)
+	if len(body) < 4 || body[0] != 'P' || body[1] != 'K' || body[2] != 3 || body[3] != 4 {
+		snippet := string(body)
+		if len(snippet) > 500 {
+			snippet = snippet[:500]
+		}
+		return fmt.Errorf(msgf(
+			"server returned HTTP %d but response is not a valid zip file.\nResponse body: %s",
+			"服务端返回 HTTP %d 但响应不是有效的 zip 文件。\n响应内容: %s",
+			resp.StatusCode, strings.TrimSpace(snippet)))
 	}
-	defer out.Close()
 
-	written, err := io.Copy(out, resp.Body)
-	if err != nil {
+	if err := os.WriteFile(savePath, body, 0644); err != nil {
 		return fmt.Errorf(msgf("save file failed: %v", "保存文件失败: %v", err))
 	}
 
-	printStep(msgf("  downloaded %.1f MB", "  已下载 %.1f MB", float64(written)/1024/1024))
+	printStep(msgf("  downloaded %.1f MB", "  已下载 %.1f MB", float64(len(body))/1024/1024))
 	return nil
 }
 
