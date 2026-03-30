@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.service
 
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
@@ -34,10 +35,14 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
-import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.CoffeeAIToken
-import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.WorkspaceRegistration
+import com.tencent.devops.remotedev.pojo.CoffeeAIToken
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WorkspaceAiInfo
+import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithWindows
+import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
+import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.common.QueryType
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import java.util.Date
@@ -57,7 +62,9 @@ class CoffeeAIService @Autowired constructor(
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
     private val windowsResourceZoneDao: WindowsResourceZoneDao,
     private val workspaceDao: WorkspaceDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val workspaceRecordService: WorkspaceRecordService,
+    private val workspaceService: WorkspaceService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(CoffeeAIService::class.java)
@@ -144,5 +151,43 @@ class CoffeeAIService @Autowired constructor(
     fun enableCoffeeAI(workspaceNames: List<String>) {
         logger.info("批量开启工作空间CoffeeAI功能：workspaceNames={}", workspaceNames)
         workspaceDao.enableCoffeeAI(dslContext, workspaceNames)
+    }
+
+    fun openClawOn(userId: String): WorkspaceRegistration? {
+        // 暂时采用这个方法，待后续能传入ip，再根据ip获取
+        val openClawWs = workspaceService.limitFetchProjectWorkspace(
+            limit = PageUtil.convertPageSizeToSQLLimit(1, 10),
+            queryType = QueryType.SERVICE,
+            search = WorkspaceSearch(
+                owner = listOf(userId),
+                logicalArea = listOf(WindowsResourceZoneConfigType.DEVCLOUD)
+            )
+        ).maxByOrNull { it.createTime } as? WorkspaceRecordWithWindows ?: run {
+            logger.warn("openClawOn: workspace not found|$userId")
+            return null
+        }
+
+        enableCoffeeAI(listOf(openClawWs.workspaceName))
+        workspaceRecordService.enableRecord(
+            workspaceName = openClawWs.workspaceName,
+            enableUser = userId
+        )
+        val organization = kotlin.runCatching {
+            client.get(ServiceTxUserResource::class).get(userId).data?.let {
+                "${it.bgName}/${it.businessLineName}/${it.deptName}/${it.centerName}/${it.groupName}"
+            }
+        }.onFailure { logger.warn("get user $userId info error|${it.message}") }
+            .getOrElse { null }
+        val envIdMap = dispatchWorkspaceDao.getEnvIdsByWorkspaceNames(listOf(openClawWs.workspaceName), dslContext)
+        return WorkspaceRegistration(
+            workspaceName = openClawWs.workspaceName,
+            envId = envIdMap[openClawWs.workspaceName] ?: "",
+            hostIp = openClawWs.ip ?: "",
+            owner = userId,
+            description = openClawWs.displayName,
+            projectId = openClawWs.projectId,
+            zoneConfigType = WindowsResourceZoneConfigType.DEVCLOUD.name,
+            organization = organization ?: ""
+        )
     }
 }

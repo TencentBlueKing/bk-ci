@@ -27,6 +27,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
+import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
@@ -944,25 +945,7 @@ class ServiceRemoteDevResourceImpl(
         return Result(tGitBindService.bindTGitProject(userId, data.tgitId, data.tgitUrl, data.projectIds))
     }
 
-    override fun openClawOn(userId: String): Result<Boolean> {
-        // 暂时采用这个方法，待后续能传入ip，再根据ip获取
-        val openClawWs = workspaceService.limitFetchProjectWorkspace(
-            limit = PageUtil.convertPageSizeToSQLLimit(1, 10),
-            queryType = QueryType.SERVICE,
-            search = WorkspaceSearch(
-                owner = listOf(userId),
-                logicalArea = listOf(WindowsResourceZoneConfigType.DEVCLOUD)
-            )
-        ).maxByOrNull { it.createTime } ?: run {
-            logger.warn("openClawOn: workspace not found|$userId")
-            return Result(false)
-        }
-
-        coffeeAIService.enableCoffeeAI(listOf(openClawWs.workspaceName))
-        workspaceRecordService.enableRecord(
-            workspaceName = openClawWs.workspaceName,
-            enableUser = userId
-        )
-        return Result(true)
+    override fun openClawOn(userId: String): Result<WorkspaceRegistration?> {
+        return Result(coffeeAIService.openClawOn(userId))
     }
 }

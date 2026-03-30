@@ -20,6 +20,7 @@ import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
+import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
@@ -781,7 +782,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).tgitBindRemotedevProject(userId, data)
     }
 
-    override fun openClawOn(userId: String): Result<Boolean> {
+    override fun openClawOn(userId: String): Result<WorkspaceRegistration?> {
         logger.info("openClawOn |$userId")
         return client.get(ServiceRemoteDevResource::class).openClawOn(userId)
     }
