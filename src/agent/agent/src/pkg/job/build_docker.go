@@ -153,15 +153,11 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	runner := newBuildDockerRunner(buildInfo)
 
 	imageName := strings.TrimSpace(dockerBuildInfo.Image)
-	localExist, err := runner.ImageExists(ctx, imageName)
-	if err != nil {
-		logs.WithError(err).Error("DOCKER_JOB|inspect docker image error")
-		dockerBuildFinish(buildInfo.ToFinish(false, i18n.Localize("GetDockerImagesError", map[string]interface{}{"err": err}), api.DockerImagesFetchErrorEnum))
-		return
-	}
 	imageStr := strings.TrimPrefix(strings.TrimPrefix(imageName, "http://"), "https://")
+	var err error
 
 	imageStrSub := strings.Split(imageStr, ":")
+	localExist := false
 	isLatest := false
 	// mirrors.tencent.com/ruotiantang/image-test:latest
 	// 长度为2说明第二个就是tag
@@ -170,6 +166,15 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	} else if len(imageStr) == 1 {
 		// 等于1说明没填tag按照docker的规则默认会去拉取最新的为 latest
 		isLatest = true
+	}
+
+	if job_docker.NeedLocalImageInspect(isLatest, dockerBuildInfo.ImagePullPolicy) {
+		localExist, err = runner.ImageExists(ctx, imageName)
+		if err != nil {
+			logs.WithError(err).Error("DOCKER_JOB|inspect docker image error")
+			dockerBuildFinish(buildInfo.ToFinish(false, i18n.Localize("GetDockerImagesError", map[string]interface{}{"err": err}), api.DockerImagesFetchErrorEnum))
+			return
+		}
 	}
 
 	if job_docker.IfPullImage(localExist, isLatest, dockerBuildInfo.ImagePullPolicy) {

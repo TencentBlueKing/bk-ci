@@ -18,10 +18,27 @@ import (
 
 type LogFunc func(format string, args ...interface{})
 
+type LogLevel string
+
+const (
+	LogLevelDebug LogLevel = "DEBUG"
+	LogLevelInfo  LogLevel = "INFO"
+	LogLevelWarn  LogLevel = "WARN"
+	LogLevelError LogLevel = "ERROR"
+)
+
+type LogEntry struct {
+	Level   LogLevel
+	Message string
+}
+
+type EventLogFunc func(LogEntry)
+
 type Runner struct {
 	workDir string
 	binary  string
 	logf    LogFunc
+	eventf  EventLogFunc
 }
 
 type ContainerInfo struct {
@@ -49,6 +66,14 @@ func NewRunner(workDir string, logf LogFunc) *Runner {
 		workDir: workDir,
 		binary:  RuntimeBinary(),
 		logf:    logf,
+	}
+}
+
+func NewRunnerWithEvent(workDir string, eventf EventLogFunc) *Runner {
+	return &Runner{
+		workDir: workDir,
+		binary:  RuntimeBinary(),
+		eventf:  eventf,
 	}
 }
 
@@ -185,9 +210,7 @@ func (r *Runner) run(ctx context.Context, stdin []byte, args ...string) (string,
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	if r.logf != nil {
-		r.logf("%s", formatCommand(r.binary, args))
-	}
+	r.log(classifyCommandLevel(args), "%s", formatCommand(r.binary, args))
 	cmd := exec.CommandContext(ctx, r.binary, args...)
 	cmd.Dir = r.workDir
 	cmd.Env = envs.Envs()
@@ -201,18 +224,29 @@ func (r *Runner) run(ctx context.Context, stdin []byte, args ...string) (string,
 	err := cmd.Run()
 	stdout := stdoutBuf.String()
 	stderr := stderrBuf.String()
-	if r.logf != nil {
-		if strings.TrimSpace(stdout) != "" {
-			r.logf("[stdout]\n%s", strings.TrimSpace(stdout))
-		}
-		if strings.TrimSpace(stderr) != "" {
-			r.logf("[stderr]\n%s", strings.TrimSpace(stderr))
-		}
+	if strings.TrimSpace(stdout) != "" {
+		r.log(classifyStreamLevel(false, err, stdout), "[stdout]\n%s", strings.TrimSpace(stdout))
+	}
+	if strings.TrimSpace(stderr) != "" {
+		r.log(classifyStreamLevel(true, err, stderr), "[stderr]\n%s", strings.TrimSpace(stderr))
 	}
 	if err != nil {
 		return stdout, stderr, fmt.Errorf("%s failed: %w", formatCommand(r.binary, args), err)
 	}
 	return stdout, stderr, nil
+}
+
+func (r *Runner) log(level LogLevel, format string, args ...interface{}) {
+	if r.eventf != nil {
+		r.eventf(LogEntry{
+			Level:   level,
+			Message: fmt.Sprintf(format, args...),
+		})
+		return
+	}
+	if r.logf != nil {
+		r.logf(format, args...)
+	}
 }
 
 func formatCommand(binary string, args []string) string {
@@ -244,6 +278,33 @@ func isNotFound(stderr string) bool {
 	return strings.Contains(s, "no such image") ||
 		strings.Contains(s, "not found") ||
 		strings.Contains(s, "unable to find")
+}
+
+func classifyCommandLevel(args []string) LogLevel {
+	if len(args) >= 2 && args[0] == "image" && args[1] == "inspect" {
+		return LogLevelDebug
+	}
+	return LogLevelInfo
+}
+
+func classifyStreamLevel(isStderr bool, runErr error, output string) LogLevel {
+	if runErr != nil {
+		if isStderr {
+			return LogLevelError
+		}
+		return LogLevelWarn
+	}
+	if isStderr && looksLikeWarning(output) {
+		return LogLevelWarn
+	}
+	return LogLevelInfo
+}
+
+func looksLikeWarning(output string) bool {
+	s := strings.ToLower(output)
+	return strings.Contains(s, "warning") ||
+		strings.Contains(s, "warn:") ||
+		strings.Contains(s, "deprecated")
 }
 
 func DebugContainerCreatedLongAgo(createdAt string, maxAge time.Duration) bool {

@@ -9,6 +9,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/dockercli"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 )
 
@@ -103,5 +104,27 @@ func TestBuildDockerCreateArgs_RespectsCustomNetwork(t *testing.T) {
 	}
 	if !strings.Contains(joined, "--network customnet") {
 		t.Fatalf("expected custom network in args: %s", joined)
+	}
+}
+
+func TestMapDockerRunnerLogLevel(t *testing.T) {
+	tests := []struct {
+		name string
+		in   dockercli.LogLevel
+		want api.LogType
+	}{
+		{"debug", dockercli.LogLevelDebug, api.LogtypeDebug},
+		{"info", dockercli.LogLevelInfo, api.LogtypeLog},
+		{"warn", dockercli.LogLevelWarn, api.LogtypeWarn},
+		{"error", dockercli.LogLevelError, api.LogtypeError},
+		{"unknown_defaults_to_log", dockercli.LogLevel("OTHER"), api.LogtypeLog},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := mapDockerRunnerLogLevel(tt.in); got != tt.want {
+				t.Errorf("mapDockerRunnerLogLevel(%q) = %q, want %q", tt.in, got, tt.want)
+			}
+		})
 	}
 }

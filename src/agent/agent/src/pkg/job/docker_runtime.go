@@ -25,17 +25,48 @@ const (
 )
 
 func newBuildDockerRunner(buildInfo *api.ThirdPartyBuildInfo) *dockercli.Runner {
-	return dockercli.NewRunner(systemutil.GetWorkDir(), func(format string, args ...interface{}) {
-		msg := fmt.Sprintf(format, args...)
-		logs.Infof("DOCKER_JOB|%s", msg)
-		postLog(false, "[docker] "+msg, buildInfo, api.LogtypeLog)
+	return dockercli.NewRunnerWithEvent(systemutil.GetWorkDir(), func(entry dockercli.LogEntry) {
+		msg := entry.Message
+		switch entry.Level {
+		case dockercli.LogLevelDebug:
+			logs.Debugf("DOCKER_JOB|%s", msg)
+		case dockercli.LogLevelWarn:
+			logs.Warnf("DOCKER_JOB|%s", msg)
+		case dockercli.LogLevelError:
+			logs.Errorf("DOCKER_JOB|%s", msg)
+		default:
+			logs.Infof("DOCKER_JOB|%s", msg)
+		}
+		postLog(false, "[docker] "+msg, buildInfo, mapDockerRunnerLogLevel(entry.Level))
 	})
 }
 
 func newPlainDockerRunner(workDir string) *dockercli.Runner {
-	return dockercli.NewRunner(workDir, func(format string, args ...interface{}) {
-		logs.Infof(format, args...)
+	return dockercli.NewRunnerWithEvent(workDir, func(entry dockercli.LogEntry) {
+		switch entry.Level {
+		case dockercli.LogLevelDebug:
+			logs.Debug(entry.Message)
+		case dockercli.LogLevelWarn:
+			logs.Warn(entry.Message)
+		case dockercli.LogLevelError:
+			logs.Error(entry.Message)
+		default:
+			logs.Info(entry.Message)
+		}
 	})
+}
+
+func mapDockerRunnerLogLevel(level dockercli.LogLevel) api.LogType {
+	switch level {
+	case dockercli.LogLevelDebug:
+		return api.LogtypeDebug
+	case dockercli.LogLevelWarn:
+		return api.LogtypeWarn
+	case dockercli.LogLevelError:
+		return api.LogtypeError
+	default:
+		return api.LogtypeLog
+	}
 }
 
 func buildDockerCreateArgs(containerName, image string, buildInfo *api.ThirdPartyBuildInfo) ([]string, error) {
