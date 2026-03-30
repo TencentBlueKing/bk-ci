@@ -21,6 +21,7 @@ import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
+import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
@@ -1122,4 +1123,13 @@ interface ApigwRemoteDevResource {
         userId: String,
         data: TGitBindRemotedevData
     ): Result<Map<String, Boolean>>
+
+    @Operation(summary = "龙虾云桌面一键加白", tags = ["v4_app_remotedev_openClaw_on"])
+    @POST
+    @Path("/openClaw_on")
+    fun openClawOn(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<WorkspaceRegistration?>
 }
