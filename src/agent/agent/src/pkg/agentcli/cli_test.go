@@ -28,7 +28,6 @@ func TestIsSubcommand(t *testing.T) {
 		{"--help", true},
 		{"help", true},
 		{"version", true},
-		{"fullVersion", true},
 		{"debug", true},
 		{"unknown", false},
 		{"", false},
@@ -311,6 +310,24 @@ func TestHandleDebug(t *testing.T) {
 		err := handleDebug(dir, []string{"invalid"})
 		if err == nil {
 			t.Error("expected error for invalid debug action")
+		}
+	})
+}
+
+func TestHandleVersion(t *testing.T) {
+	t.Run("plain", func(t *testing.T) {
+		if err := handleVersion([]string{}); err != nil {
+			t.Fatal(err)
+		}
+	})
+	t.Run("full", func(t *testing.T) {
+		if err := handleVersion([]string{"-f"}); err != nil {
+			t.Fatal(err)
+		}
+	})
+	t.Run("invalid_flag", func(t *testing.T) {
+		if err := handleVersion([]string{"--bad"}); err == nil {
+			t.Fatal("expected invalid flag error")
 		}
 	})
 }

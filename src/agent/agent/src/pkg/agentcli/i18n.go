@@ -97,7 +97,7 @@ func printUsageLocalized() {
 
 其他:
   version              打印版本号
-  fullVersion          打印完整版本信息
+    -f                 打印完整版本信息 (版本号 / Git Commit / 构建时间)
   -h, --help           显示此帮助
   (无参数)             正常运行 Agent
 `)
@@ -146,7 +146,7 @@ Debug:
 
 Other:
   version              Print version
-  fullVersion          Print full version info
+    -f                 Print full version info (version / Git commit / build time)
   -h, --help           Show this help
   (no command)         Run agent (normal mode)
 `)

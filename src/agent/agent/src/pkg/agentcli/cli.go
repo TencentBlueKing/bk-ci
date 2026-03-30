@@ -1,6 +1,7 @@
 package agentcli
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
@@ -30,13 +31,7 @@ func Run(workDir string, args []string) {
 		printUsageLocalized()
 		return
 	case "version":
-		fmt.Println(config.AgentVersion)
-		return
-	case "fullVersion":
-		fmt.Println(config.AgentVersion)
-		fmt.Println(config.GitCommit)
-		fmt.Println(config.BuildTime)
-		return
+		err = handleVersion(args[1:])
 	case "debug":
 		err = handleDebug(workDir, args[1:])
 	case "install":
@@ -71,11 +66,25 @@ func Run(workDir string, args []string) {
 func IsSubcommand(arg string) bool {
 	switch arg {
 	case "install", "uninstall", "start", "stop", "repair", "reinstall", "status", "configure-session",
-		"version", "fullVersion", "debug",
+		"version", "debug",
 		"-h", "--help", "help":
 		return true
 	}
 	return false
+}
+
+func handleVersion(args []string) error {
+	fs := flag.NewFlagSet("version", flag.ContinueOnError)
+	full := fs.Bool("f", false, "")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	fmt.Println(config.AgentVersion)
+	if *full {
+		fmt.Println(config.GitCommit)
+		fmt.Println(config.BuildTime)
+	}
+	return nil
 }
 
 const debugFile = ".debug"
