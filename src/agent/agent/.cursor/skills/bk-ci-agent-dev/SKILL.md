@@ -563,17 +563,28 @@ go test -v -run TestPidStatus ./src/pkg/agentcli/
 - 平台特定测试使用 build tag（如 `//go:build linux`）
 - 进程检测测试使用 `os.Getpid()` 验证存活进程
 
-**已有测试覆盖的 agentcli 模块**:
-| 文件 | 覆盖内容 |
-|------|---------|
-| `cli_test.go` | IsSubcommand、readProperty、preserveSet、cleanup、handleDebug、DebugFileExists、parsePropertiesFile、requiredKeyStatus、intKeyStatus |
-| `i18n_test.go` | msg/msgf、initLang 环境变量优先级、tryReadLang |
-| `status_linux_test.go` | dirStatus、fileStatus、readPid、pidStatus、currentUser |
-| `session_win_test.go` | splitUserDomain、readInstallTypeFile、handleInstall 模式分发和校验 |
-| `diagnose_test.go` | normalizeGateway、buildProxyFunc (含 NoProxy 排除)、loadCertIfExists、detectProxyUsed、tlsVersionName、checkDiskWritable、checkDiskSpace |
-| `dockercli_test.go` | RuntimeBinary、registryFromImage、formatCommand、容器创建时间判断、运行时 socket 选择、`DOCKER_HOST` 优先级 |
-| `options_test.go` | Docker/Podman CLI 参数构建、network 判断 |
-| `docker_runtime_test.go` | 构建容器默认 network/entrypoint/env/mount 参数拼装 |
+**已有测试覆盖**:
+
+| 包 | 文件 | 覆盖内容 |
+|----|------|---------|
+| `agentcli` | `cli_test.go` | IsSubcommand、readProperty、preserveSet、cleanup、handleDebug、DebugFileExists、parsePropertiesFile、requiredKeyStatus、intKeyStatus |
+| `agentcli` | `i18n_test.go` | msg/msgf、initLang 环境变量优先级、tryReadLang |
+| `agentcli` | `status_linux_test.go` | dirStatus、fileStatus、readPid、pidStatus、currentUser |
+| `agentcli` | `session_win_test.go` | splitUserDomain、readInstallTypeFile、handleInstall 模式分发和校验 |
+| `agentcli` | `diagnose_test.go` | normalizeGateway、buildProxyFunc (含 NoProxy 排除)、loadCertIfExists、detectProxyUsed、tlsVersionName、checkDiskWritable、checkDiskSpace |
+| `dockercli` | `dockercli_test.go` | RuntimeBinary、registryFromImage、formatCommand、容器创建时间判断、运行时 socket 选择、`DOCKER_HOST` 优先级 |
+| `dockercli` | `options_test.go` | Docker/Podman CLI 参数构建、network 判断 |
+| `job` | `docker_runtime_test.go` | 构建容器默认 network/entrypoint/env/mount 参数拼装 |
+| `upgrade` | `upgrade_test.go` | upgradeItems.NoChange |
+| `upgrader` | `upgrader_linux_test.go` | checkUpgradeFileChange、replaceAgentFile、modifyScriptPrivateTmp (含权限保留) |
+| `upgrader` | `upgrader_win_test.go` | replaceAgentFile (含重试)、replaceMaxRetries |
+| `cmd/daemon` | `daemon_win_test.go` | waitForUpgradeFinish (无锁/阻塞/连续调用) |
+| `config` | `config_test.go` | GetGateWay、GetAuthHeaderMap、GetPersistedProxyEnvs、SyncPersistedProxyEnvs |
+| `config` | `config_linux_test.go` | parseOSRelease、charsToString |
+| `httputil` | `devops_test.go` | DevopsResult.IsOk/IsNotOk、AgentResult.IsAgentDelete、HttpResult.IntoDevopsResult/IntoAgentResult |
+| `exiterror` | `exiterror_test.go` | AddExitError、GetAndResetExitError、CheckOsIoError、CheckSignalJdkError/WorkerError、CheckTimeoutError、WriteFileWithCheck |
+| `envs` | `env_test.go` | GEnvVarsT.Get/SetEnvs/GetAll/Size/RangeDo、FetchEnvAndCheck |
+| `util/fileutil` | `fileutil_test.go` | AtomicWriteFile (创建/覆盖/空文件/大文件/临时文件清理) |
 
 ### 关键第三方依赖
 
