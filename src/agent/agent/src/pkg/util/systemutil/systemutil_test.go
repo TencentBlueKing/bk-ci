@@ -30,6 +30,7 @@ package systemutil
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
@@ -90,11 +91,21 @@ func TestGetExecutableDir_AbsoluteUnchanged(t *testing.T) {
 	}()
 
 	GExecutableDir = ""
-	os.Args[0] = "/opt/bk-ci/agent/devopsAgent"
 
-	got := GetExecutableDir()
-	if got != "/opt/bk-ci/agent" {
-		t.Errorf("GetExecutableDir() = %q, want %q", got, "/opt/bk-ci/agent")
+	var testPath, wantDir string
+	if runtime.GOOS == "windows" {
+		testPath = `C:\opt\bk-ci\agent\devopsAgent.exe`
+		wantDir = `C:\opt\bk-ci\agent`
+	} else {
+		testPath = "/opt/bk-ci/agent/devopsAgent"
+		wantDir = "/opt/bk-ci/agent"
+	}
+
+	os.Args[0] = testPath
+	got := filepath.Clean(GetExecutableDir())
+	want := filepath.Clean(wantDir)
+	if got != want {
+		t.Errorf("GetExecutableDir() = %q, want %q", got, want)
 	}
 }
 
