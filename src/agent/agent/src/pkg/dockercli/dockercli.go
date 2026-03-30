@@ -86,15 +86,14 @@ func (r *Runner) ServerOS(ctx context.Context) (string, error) {
 	return strings.TrimSpace(stdout), err
 }
 
+// ImageExists checks whether a container image exists locally by running
+// "image inspect". It relies solely on the exit code (0 = exists) rather
+// than parsing stderr text, which varies across Docker/Podman versions.
+// If the daemon is unreachable, this returns (false, nil) and the
+// subsequent pull or create will surface the real error.
 func (r *Runner) ImageExists(ctx context.Context, image string) (bool, error) {
-	_, stderr, err := r.run(ctx, nil, "image", "inspect", image)
-	if err == nil {
-		return true, nil
-	}
-	if isNotFound(stderr) {
-		return false, nil
-	}
-	return false, err
+	_, _, err := r.run(ctx, nil, "image", "inspect", image)
+	return err == nil, nil
 }
 
 func (r *Runner) PullImage(ctx context.Context, image, user, password string) (string, error) {
@@ -272,13 +271,6 @@ func registryFromImage(image string) string {
 		return first
 	}
 	return ""
-}
-
-func isNotFound(stderr string) bool {
-	s := strings.ToLower(stderr)
-	return strings.Contains(s, "no such image") ||
-		strings.Contains(s, "not found") ||
-		strings.Contains(s, "unable to find")
 }
 
 func classifyCommandLevel(args []string) LogLevel {

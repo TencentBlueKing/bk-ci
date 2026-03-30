@@ -260,6 +260,21 @@ runDockerBuild(buildInfo)
   → 执行 `docker logs` 读取容器日志
   → dockerBuildFinish() 上报
 
+**Docker CLI 流程控制原则**（参考 GitHub Actions Runner `ContainerOperationProvider.cs`、Jenkins `DockerClient.java` 的 CLI 封装模式）:
+
+所有 Docker/Podman CLI 交互 **只通过退出码和结构化输出控制流程**，禁止解析 stderr 文本做分支判断：
+
+| 信息类型 | 获取方式 | 稳定性 |
+|---------|---------|--------|
+| 命令成功/失败 | 退出码 (`err != nil`) | 稳定 — 所有 Docker/Podman 版本一致 |
+| 容器 ID | `docker create` stdout 最后一行 | 稳定 — Docker CLI 契约 |
+| 容器退出码 | `docker wait` stdout 数字 | 稳定 — Docker CLI 契约 |
+| 结构化查询 | `--format` Go template 输出 | 稳定 — 由模板语法控制，非自由文本 |
+| 镜像是否存在 | `docker image inspect` 退出码 (0=存在) | 稳定 — 不解析 stderr |
+| 日志级别分类 | stderr 中的 warning/deprecated 关键词 | 可接受 — 仅影响日志级别，不影响流程 |
+
+**禁止**：通过 `strings.Contains(stderr, "xxx")` 判断镜像/容器/网络是否存在。stderr 文本因 Docker/Podman 版本、containerd 后端、操作系统语言等因素在不同环境下不一致。
+
 **运行时切换**:
 - 默认使用 `docker` 命令行
 - 通过环境变量 `DEVOPS_AGENT_CONTAINER_RUNTIME=podman` 可切换为 `podman`
@@ -647,7 +662,7 @@ go test -mod=mod -v -run TestStartProcessCmd ./src/pkg/job/...
 | `agentcli` | `status_linux_test.go` | dirStatus、fileStatus、readPid、pidStatus、currentUser |
 | `agentcli` | `session_win_test.go` | splitUserDomain、readInstallTypeFile、handleInstall 模式分发和校验、configure-session 收尾摘要本地化 |
 | `agentcli` | `diagnose_test.go` | normalizeGateway、buildProxyFunc (含 NoProxy 排除)、loadCertIfExists、detectProxyUsed、tlsVersionName、checkDiskWritable、checkDiskSpace |
-| `dockercli` | `dockercli_test.go` | RuntimeBinary、registryFromImage、formatCommand、容器创建时间判断、运行时 socket 选择、`DOCKER_HOST` 优先级、classifyCommandLevel、classifyStreamLevel、looksLikeWarning、NewRunnerWithEvent |
+| `dockercli` | `dockercli_test.go` | RuntimeBinary、registryFromImage、formatCommand、ImageExists 退出码行为、容器创建时间判断、运行时 socket 选择、`DOCKER_HOST` 优先级、classifyCommandLevel、classifyStreamLevel、looksLikeWarning、NewRunnerWithEvent |
 | `job_docker` | `options_test.go` | Docker/Podman CLI 参数构建、network 判断、NeedLocalImageInspect |
 | `job` | `docker_runtime_test.go` | 构建容器默认 network/entrypoint/env/mount 参数拼装、Docker CLI 级别到后台 `LogType` 映射、`ERROR/WARN/LOG` 到 `red/yellow/normal` 路由 |
 | `api` | `api_test.go` | 构建日志接口路径选择：`/logs`、`/logs/red`、`/logs/yellow` |

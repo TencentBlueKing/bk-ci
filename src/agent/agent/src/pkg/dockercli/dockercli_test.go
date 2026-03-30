@@ -1,6 +1,7 @@
 package dockercli
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"os"
@@ -56,20 +57,30 @@ func TestFormatCommand(t *testing.T) {
 	}
 }
 
-func TestIsNotFound(t *testing.T) {
+func TestImageExists_ExitCodeOnly(t *testing.T) {
+	r := NewRunner(t.TempDir(), nil)
+
 	tests := []struct {
-		input string
+		name  string
+		image string
 		want  bool
 	}{
-		{"Error: No such image: x", true},
-		{"not found", true},
-		{"unable to find image", true},
-		{"permission denied", false},
+		{
+			name:  "nonexistent_image_returns_false",
+			image: "this-image-does-not-exist-anywhere:never",
+			want:  false,
+		},
 	}
 	for _, tt := range tests {
-		if got := isNotFound(tt.input); got != tt.want {
-			t.Fatalf("isNotFound(%q)=%v, want %v", tt.input, got, tt.want)
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := r.ImageExists(context.Background(), tt.image)
+			if err != nil {
+				t.Fatalf("ImageExists(%q) returned unexpected error: %v", tt.image, err)
+			}
+			if got != tt.want {
+				t.Errorf("ImageExists(%q) = %v, want %v", tt.image, got, tt.want)
+			}
+		})
 	}
 }
 
