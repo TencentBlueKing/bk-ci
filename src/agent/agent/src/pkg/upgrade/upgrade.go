@@ -136,7 +136,7 @@ func AgentUpgrade(upgradeItem *api.UpgradeItem, hasBuild bool) {
 }
 
 func SyncDockerInitFileMd5() error {
-	if !systemutil.IsLinux() || !config.GAgentConfig.EnableDockerBuild {
+	if !config.GAgentConfig.EnableDockerBuild {
 		DockerFileMd5.NeedUpgrade = false
 		return nil
 	}

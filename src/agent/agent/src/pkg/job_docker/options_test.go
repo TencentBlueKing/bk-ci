@@ -1,0 +1,55 @@
+package job_docker
+
+import (
+	"strings"
+	"testing"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
+)
+
+func TestBuildUserDockerArgs(t *testing.T) {
+	args, err := BuildUserDockerArgs(api.DockerOptions{
+		Volumes:    []string{"./data:/data:ro"},
+		Mounts:     []string{"type=bind,source=/tmp,target=/tmp,readonly"},
+		Gpus:       "all",
+		Privileged: true,
+		Network:    []string{"bridge"},
+		User:       "root",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(args) == 0 {
+		t.Fatal("expected docker args")
+	}
+	foundVolume := false
+	for i := 0; i < len(args)-1; i++ {
+		if args[i] == "--volume" {
+			foundVolume = true
+			if !strings.Contains(args[i+1], ":/data:ro") {
+				t.Fatalf("unexpected normalized volume: %s", args[i+1])
+			}
+		}
+	}
+	if !foundVolume {
+		t.Fatal("expected --volume in args")
+	}
+}
+
+func TestBuildUserDockerArgs_Invalid(t *testing.T) {
+	_, err := BuildUserDockerArgs(api.DockerOptions{
+		Volumes: []string{""},
+	})
+	if err == nil {
+		t.Fatal("expected error for empty volume")
+	}
+}
+
+func TestHasCustomNetwork(t *testing.T) {
+	if HasCustomNetwork(api.DockerOptions{}) {
+		t.Fatal("expected false")
+	}
+	if !HasCustomNetwork(api.DockerOptions{Network: []string{"bridge"}}) {
+		t.Fatal("expected true")
+	}
+}

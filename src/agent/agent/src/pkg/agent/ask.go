@@ -113,7 +113,7 @@ func checkUpgrade() bool {
 }
 
 func checkDockerDebug() bool {
-	if systemutil.IsLinux() && config.GAgentConfig.EnableDockerBuild {
+	if config.GAgentConfig.EnableDockerBuild {
 		return true
 	}
 	return false

@@ -1,10 +1,14 @@
 package agentcli
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
+
+	"gopkg.in/ini.v1"
 )
 
 func TestIsSubcommand(t *testing.T) {
@@ -322,6 +326,167 @@ func TestDebugFileExists(t *testing.T) {
 	if !DebugFileExists(dir) {
 		t.Error("DebugFileExists should return true when .debug exists")
 	}
+}
+
+func TestParsePropertiesFile(t *testing.T) {
+	old := useChinese
+	useChinese = false
+	defer func() { useChinese = old }()
+
+	t.Run("missing_file", func(t *testing.T) {
+		status, conf := parsePropertiesFile("/tmp/nonexistent_agentcli_test_42/.agent.properties")
+		if conf != nil {
+			t.Error("expected nil conf for missing file")
+		}
+		if !strings.Contains(status, "MISSING") {
+			t.Errorf("status = %q, expected MISSING", status)
+		}
+	})
+
+	t.Run("is_directory", func(t *testing.T) {
+		dir := t.TempDir()
+		status, conf := parsePropertiesFile(dir)
+		if conf != nil {
+			t.Error("expected nil conf for directory")
+		}
+		if !strings.Contains(status, "directory") {
+			t.Errorf("status = %q, expected directory error", status)
+		}
+	})
+
+	t.Run("invalid_ini", func(t *testing.T) {
+		dir := t.TempDir()
+		path := filepath.Join(dir, ".agent.properties")
+		os.WriteFile(path, []byte("[invalid section\n"), 0644)
+		status, conf := parsePropertiesFile(path)
+		if conf != nil {
+			t.Error("expected nil conf for invalid INI")
+		}
+		if !strings.Contains(status, "PARSE ERROR") {
+			t.Errorf("status = %q, expected PARSE ERROR", status)
+		}
+	})
+
+	t.Run("valid_file", func(t *testing.T) {
+		dir := t.TempDir()
+		path := filepath.Join(dir, ".agent.properties")
+		content := "devops.project.id=proj1\ndevops.agent.id=agent1\n"
+		os.WriteFile(path, []byte(content), 0644)
+		status, conf := parsePropertiesFile(path)
+		if conf == nil {
+			t.Fatal("expected non-nil conf for valid file")
+		}
+		if !strings.Contains(status, "OK") {
+			t.Errorf("status = %q, expected OK", status)
+		}
+		if !strings.Contains(status, fmt.Sprintf("%d bytes", len(content))) {
+			t.Errorf("status = %q, expected byte count", status)
+		}
+	})
+}
+
+func TestRequiredKeyStatus(t *testing.T) {
+	old := useChinese
+	useChinese = false
+	defer func() { useChinese = old }()
+
+	content := []byte("devops.project.id=proj1\ndevops.agent.secret.key=s3cret\ndevops.empty=\n")
+	conf, err := ini.Load(content)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name     string
+		key      string
+		mask     bool
+		wantSub  string
+		wantFail bool
+	}{
+		{"present_unmasked", "devops.project.id", false, "proj1", false},
+		{"present_masked", "devops.agent.secret.key", true, "configured", false},
+		{"empty_value", "devops.empty", false, "missing or empty", true},
+		{"missing_key", "nonexistent.key", false, "missing or empty", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := requiredKeyStatus(conf, tt.key, tt.mask)
+			if !strings.Contains(got, tt.wantSub) {
+				t.Errorf("requiredKeyStatus(%q, mask=%v) = %q, want substring %q", tt.key, tt.mask, got, tt.wantSub)
+			}
+			hasCross := strings.Contains(got, "✗")
+			if tt.wantFail && !hasCross {
+				t.Errorf("requiredKeyStatus(%q) = %q, expected ✗", tt.key, got)
+			}
+			if !tt.wantFail && hasCross {
+				t.Errorf("requiredKeyStatus(%q) = %q, unexpected ✗", tt.key, got)
+			}
+		})
+	}
+}
+
+func TestIntKeyStatus(t *testing.T) {
+	old := useChinese
+	useChinese = false
+	defer func() { useChinese = old }()
+
+	content := []byte("devops.parallel.task.count=4\nbad.count=abc\nneg.count=-1\nzero.count=0\n")
+	conf, err := ini.Load(content)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name     string
+		key      string
+		minVal   int
+		wantSub  string
+		wantFail bool
+	}{
+		{"valid", "devops.parallel.task.count", 0, "4", false},
+		{"missing", "nonexistent.key", 0, "missing", true},
+		{"not_a_number", "bad.count", 0, "invalid number", true},
+		{"negative_below_min", "neg.count", 0, "too small", true},
+		{"zero_at_min", "zero.count", 0, "0", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := intKeyStatus(conf, tt.key, tt.minVal)
+			if !strings.Contains(got, tt.wantSub) {
+				t.Errorf("intKeyStatus(%q, %d) = %q, want substring %q", tt.key, tt.minVal, got, tt.wantSub)
+			}
+			hasCross := strings.Contains(got, "✗")
+			if tt.wantFail && !hasCross {
+				t.Errorf("intKeyStatus(%q) = %q, expected ✗", tt.key, got)
+			}
+			if !tt.wantFail && hasCross {
+				t.Errorf("intKeyStatus(%q) = %q, unexpected ✗", tt.key, got)
+			}
+		})
+	}
+}
+
+func TestParsePropertiesFile_Chinese(t *testing.T) {
+	old := useChinese
+	useChinese = true
+	defer func() { useChinese = old }()
+
+	t.Run("missing", func(t *testing.T) {
+		status, _ := parsePropertiesFile("/tmp/nonexistent_agentcli_test_42/.agent.properties")
+		if !strings.Contains(status, "缺失") {
+			t.Errorf("status = %q, expected 缺失", status)
+		}
+	})
+
+	t.Run("valid", func(t *testing.T) {
+		dir := t.TempDir()
+		path := filepath.Join(dir, ".agent.properties")
+		os.WriteFile(path, []byte("k=v\n"), 0644)
+		status, _ := parsePropertiesFile(path)
+		if !strings.Contains(status, "正常") {
+			t.Errorf("status = %q, expected 正常", status)
+		}
+	})
 }
 
 func TestHandleInstall_AcceptsArgs(t *testing.T) {

@@ -3,7 +3,6 @@ module github.com/TencentBlueKing/bk-ci/agent
 go 1.19
 
 require (
-	github.com/docker/docker v24.0.9+incompatible
 	github.com/gofrs/flock v0.8.1
 	// 1.24 以上的版本引入了memcall和memguard会导致
 	// 1、ulimit corefile被设置为0 https://github.com/ci-plugins/memguard/blob/master/core/init.go
@@ -67,7 +66,7 @@ require (
 
 require (
 	github.com/ThinkInAIXYZ/go-mcp v0.2.24
-	github.com/fsouza/go-dockerclient v1.9.7
+	github.com/creack/pty v1.1.24
 	github.com/gorilla/websocket v1.5.0
 	github.com/jaypipes/ghw v0.20.0
 	golang.org/x/sync v0.10.0
@@ -98,6 +97,8 @@ require (
 	github.com/containerd/containerd v1.6.26 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
+	github.com/docker/docker v23.0.2+incompatible // indirect
+	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/s2a-go v0.1.4 // indirect
@@ -139,8 +140,6 @@ require (
 require (
 	// 非稳定库，目前只在windows升级中简单使用且主要做对go-ole的封装简化，大规模使用前需要评估
 	github.com/capnspacehook/taskmaster v0.0.0-20210519235353-1629df7c85e9
-	github.com/docker/cli v23.0.1+incompatible
-	github.com/docker/go-connections v0.4.0
 	github.com/kardianos/service v1.2.2
 	github.com/shirou/gopsutil/v4 v4.24.5
 	github.com/spf13/pflag v1.0.6
