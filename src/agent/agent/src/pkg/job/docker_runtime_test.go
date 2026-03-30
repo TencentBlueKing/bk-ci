@@ -1,0 +1,107 @@
+package job
+
+import (
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
+)
+
+func TestBuildDockerCreateArgs_DefaultNetworkAndEntrypoint(t *testing.T) {
+	logs.UNTestDebugInit()
+	envs.Init()
+	workDir := t.TempDir()
+	oldWd, _ := os.Getwd()
+	defer os.Chdir(oldWd)
+	_ = os.Chdir(workDir)
+
+	config.GAgentConfig = &config.AgentConfig{
+		ProjectId:    "p1",
+		Gateway:      "http://devops.example.com",
+		JdkDirPath:   filepath.Join(workDir, "jdk"),
+		Jdk17DirPath: "",
+	}
+	_ = os.MkdirAll(config.GAgentConfig.JdkDirPath, 0755)
+	_ = os.WriteFile(filepath.Join(workDir, config.WorkAgentFile), []byte("x"), 0644)
+	_ = os.WriteFile(filepath.Join(workDir, config.DockerInitFile), []byte("x"), 0644)
+
+	buildInfo := &api.ThirdPartyBuildInfo{
+		BuildId:    "b1",
+		VmSeqId:    "vm1",
+		PipelineId: "ppl1",
+		DockerBuildInfo: &api.ThirdPartyDockerBuildInfo{
+			AgentId:   "a1",
+			SecretKey: "s1",
+			Image:     "ubuntu:latest",
+		},
+	}
+
+	args, err := buildDockerCreateArgs("c1", "ubuntu:latest", buildInfo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	joined := strings.Join(args, " ")
+	for _, mustContain := range []string{
+		"--name c1",
+		"--network bridge",
+		"--entrypoint /bin/sh",
+		"ubuntu:latest -c /data/init.sh",
+		"devops_project_id=p1",
+		"devops_agent_id=a1",
+		"devops_agent_secret_key=s1",
+		"agent_build_env=DOCKER",
+	} {
+		if !strings.Contains(joined, mustContain) {
+			t.Fatalf("expected args to contain %q, got: %s", mustContain, joined)
+		}
+	}
+}
+
+func TestBuildDockerCreateArgs_RespectsCustomNetwork(t *testing.T) {
+	logs.UNTestDebugInit()
+	envs.Init()
+	workDir := t.TempDir()
+	oldWd, _ := os.Getwd()
+	defer os.Chdir(oldWd)
+	_ = os.Chdir(workDir)
+
+	config.GAgentConfig = &config.AgentConfig{
+		ProjectId:  "p1",
+		Gateway:    "http://devops.example.com",
+		JdkDirPath: filepath.Join(workDir, "jdk"),
+	}
+	_ = os.MkdirAll(config.GAgentConfig.JdkDirPath, 0755)
+	_ = os.WriteFile(filepath.Join(workDir, config.WorkAgentFile), []byte("x"), 0644)
+	_ = os.WriteFile(filepath.Join(workDir, config.DockerInitFile), []byte("x"), 0644)
+
+	buildInfo := &api.ThirdPartyBuildInfo{
+		BuildId:    "b1",
+		VmSeqId:    "vm1",
+		PipelineId: "ppl1",
+		DockerBuildInfo: &api.ThirdPartyDockerBuildInfo{
+			AgentId:   "a1",
+			SecretKey: "s1",
+			Image:     "ubuntu:latest",
+			Options: api.DockerOptions{
+				Network: []string{"customnet"},
+			},
+		},
+	}
+
+	args, err := buildDockerCreateArgs("c1", "ubuntu:latest", buildInfo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	joined := strings.Join(args, " ")
+	if strings.Contains(joined, "--network bridge") {
+		t.Fatalf("did not expect default bridge when custom network exists: %s", joined)
+	}
+	if !strings.Contains(joined, "--network customnet") {
+		t.Fatalf("expected custom network in args: %s", joined)
+	}
+}

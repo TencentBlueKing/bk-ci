@@ -154,9 +154,7 @@ func acquireBuildSlot(buildInfo *api.ThirdPartyBuildInfo) buildSlotType {
 func CheckParallelTaskCount() (dockerCanRun bool, normalCanRun bool) {
 	// 检查docker任务
 	dockerInstanceCount := GBuildDockerManager.GetInstanceCount()
-	if !systemutil.IsLinux() {
-		dockerCanRun = false
-	} else if config.GAgentConfig.DockerParallelTaskCount != 0 &&
+	if config.GAgentConfig.DockerParallelTaskCount != 0 &&
 		dockerInstanceCount >= config.GAgentConfig.DockerParallelTaskCount {
 		dockerCanRun = false
 	} else {

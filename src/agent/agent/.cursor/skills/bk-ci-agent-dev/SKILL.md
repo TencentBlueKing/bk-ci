@@ -57,7 +57,8 @@ src/agent/agent/
 │   │   ├── api/                # 与BK-CI后台HTTP API通信
 │   │   ├── config/             # 配置加载与管理
 │   │   ├── job/                # 构建任务执行（核心）
-│   │   ├── job_docker/         # Docker CLI参数解析
+│   │   ├── job_docker/         # Docker CLI 参数转换与策略判断
+│   │   ├── dockercli/          # Docker/Podman CLI 运行层（命令执行/拉镜像/创建/等待/日志）
 │   │   ├── upgrade/            # 升级流程管理
 │   │   ├── upgrader/           # upgrader进程逻辑
 │   │   ├── imagedebug/         # Docker镜像调试
@@ -158,11 +159,14 @@ devopsAgent <command> [options]
 **reinstall 流程**:
 ```
 devopsAgent reinstall [-y]
-  → 步骤 1: handleStop()  停止进程（不清除会话配置和 .install_type）
-  → 步骤 2: 清理文件（保留 preserveSet 中的身份文件）
-  → 步骤 3: 运行 install.sh / download_install.ps1 从服务端重新下载安装
+  → 步骤 1: 下载 agent.zip（先验证，失败则不动本地文件）
+  → 步骤 2: handleStop() 停止进程（不清除会话配置和 .install_type）
+  → 步骤 3: 清理文件（保留 preserveSet 中的身份文件）
+  → 步骤 4: 解压 agent.zip
+  → 步骤 5: prepareWorkDir() 解压 JDK / 创建目录
+  → 步骤 6: handleInstall() 重新注册服务
 ```
-不依赖 Agent 内置升级机制，直接使用安装脚本从服务端拉取完整包。
+不依赖 Agent 内置升级机制，也不再依赖安装脚本；Agent 直接调用服务端接口下载 `agent.zip`。
 
 **preserveSet** (重装时保留的文件):
 | 文件 | 说明 |
@@ -170,9 +174,9 @@ devopsAgent reinstall [-y]
 | `.agent.properties` | Agent 身份配置 |
 | `.install_type` | Windows 安装模式标记 (SERVICE/SESSION) |
 | `.cert` | TLS 证书信任文件 |
+| `.debug` | Debug 模式标记文件 |
 | `workspace/` | 构建工作空间 |
 | `devopsAgent[.exe]` | 当前运行的 Agent 二进制 |
-| `install.sh` / `download_install.ps1` | 安装脚本 |
 
 **status 命令** 输出内容 (按平台):
 | 项目 | Linux | macOS | Windows |
@@ -231,22 +235,30 @@ DoBuild(buildInfo)
 #### Docker构建流程:
 ```
 runDockerBuild(buildInfo)
-  → Docker client 创建
+  → dockercli.Runner 创建 (默认 docker，可通过环境变量切换 podman)
   → 镜像拉取(根据策略)
-  → 创建容器:
+  → 组装 `docker create` 参数:
        挂载: JRE(只读), worker-agent.jar(只读), init.sh(只读), workspace(读写), logs(读写)
        环境变量: project_id, agent_id, secret_key, gateway, build_env=DOCKER
        CapAdd: SYS_PTRACE
-       网络: bridge
-  → 启动容器
-  → ContainerWait() 等待
-  → 读取 docker.log / 容器日志
+       网络: bridge (用户未指定 network 时)
+  → 执行 `docker create`
+  → 执行 `docker start`
+  → 执行 `docker wait`
+  → 执行 `docker logs` 读取容器日志
   → dockerBuildFinish() 上报
+
+**运行时切换**:
+- 默认使用 `docker` 命令行
+- 通过环境变量 `DEVOPS_AGENT_CONTAINER_RUNTIME=podman` 可切换为 `podman`
+- 所有核心容器生命周期操作（pull/create/start/wait/logs/rm/stop/ps）统一走 `pkg/dockercli/`
+- 会将完整命令、stdout、stderr 打到 Agent 日志；构建任务还会将关键命令输出上报到构建日志
 ```
 
 **关键文件**:
 - `build.go` — runBuild()、workerBuildFinish()
-- `build_docker.go` — runDockerBuild()、Docker相关逻辑
+- `build_docker.go` — runDockerBuild()、Docker/Podman CLI 运行逻辑
+- `docker_runtime.go` — 构建容器参数拼装（create/mount/env）
 - `build_manager.go` — BuildManager管理并发构建实例
 - `do_build.go` — Unix平台doBuild()实现
 - `do_build_win.go` — Windows平台doBuild()实现
@@ -549,12 +561,15 @@ go test -v -run TestPidStatus ./src/pkg/agentcli/
 | `status_linux_test.go` | dirStatus、fileStatus、readPid、pidStatus、currentUser |
 | `session_win_test.go` | splitUserDomain、readInstallTypeFile、handleInstall 模式分发和校验 |
 | `diagnose_test.go` | normalizeGateway、buildProxyFunc (含 NoProxy 排除)、loadCertIfExists、detectProxyUsed、tlsVersionName、checkDiskWritable、checkDiskSpace |
+| `dockercli_test.go` | RuntimeBinary、registryFromImage、formatCommand、容器创建时间判断、运行时 socket 选择、`DOCKER_HOST` 优先级 |
+| `options_test.go` | Docker/Podman CLI 参数构建、network 判断 |
+| `docker_runtime_test.go` | 构建容器默认 network/entrypoint/env/mount 参数拼装 |
 
 ### 关键第三方依赖
 
 | 依赖 | 版本 | 用途 | 注意事项 |
 |------|------|------|---------|
-| `docker/docker` | v24.0.9 | Docker API客户端 | 与telegraf版本绑定 |
+| `creack/pty` | v1.1.24 | 镜像调试 WebSocket exec 的 PTY 转发 | 与 `docker/podman exec -it` 组合使用，兼容 Go 1.19 |
 | `influxdata/telegraf` | v1.24.4 | 系统指标采集 | 有版本限制，不可随意升级 |
 | `shirou/gopsutil/v3` | v3.22.9 | 系统信息获取 | 与telegraf绑定 |
 | `pkg/errors` | v0.9.1 | 错误包装 | 项目统一使用 |
@@ -662,7 +677,8 @@ bin/
 |---------|------|------|
 | `DEVOPS_AGENT_ENABLE_NEW_CONSOLE` | false | Windows 启动进程时使用 newConsole |
 | `DEVOPS_AGENT_ENABLE_EXIT_GROUP` | false | 启动杀掉构建进程组的兜底逻辑 |
-| `DEVOPS_AGENT_DOCKER_CAP_ADD` | 空 | Docker启动时的capadd参数 |
+| `DEVOPS_AGENT_DOCKER_CAP_ADD` | 空 | Docker/Podman 启动容器时追加的 `--cap-add` 参数 |
+| `DEVOPS_AGENT_CONTAINER_RUNTIME` | docker | 容器运行时命令，可切换为 `podman` |
 | `DEVOPS_AGENT_TIMEOUT_EXIT_TIME` | 空 | 超时次数阈值，达到后Agent进程退出 |
 | `DEVOPS_AGENT_CLOSE_FD_INHERIT` | false | Unix 构建进程关闭 fd 继承 (Setpgid + /dev/null + ExtraFiles 清空)，等同 Windows NoInheritHandles |
 | `DEVOPS_AGENT_ENABLE_MCP` | false | 随 agent 主进程启动 MCP Server 协程（Streamable HTTP） |

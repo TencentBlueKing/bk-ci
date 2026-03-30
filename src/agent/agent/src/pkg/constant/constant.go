@@ -38,6 +38,8 @@ const (
 	DevopsAgentEnableExitGroup = "DEVOPS_AGENT_ENABLE_EXIT_GROUP"
 	// DevopsAgentDockerCapAdd 启动docker时的capadd参数，为空则不添加
 	DevopsAgentDockerCapAdd = "DEVOPS_AGENT_DOCKER_CAP_ADD"
+	// DevopsAgentContainerRuntime 容器运行时命令，默认 docker，可切换为 podman
+	DevopsAgentContainerRuntime = "DEVOPS_AGENT_CONTAINER_RUNTIME"
 
 	// CommonFileModePerm 公共文件权限
 	CommonFileModePerm os.FileMode = 0644

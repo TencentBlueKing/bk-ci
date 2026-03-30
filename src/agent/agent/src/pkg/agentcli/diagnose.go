@@ -210,7 +210,6 @@ func detectProxyUsed(target *url.URL, proxyFunc func(*http.Request) (*url.URL, e
 func printCertStatus(certPath string) {
 	data, err := os.ReadFile(certPath)
 	if err != nil {
-		statusLine(msg("  Cert (.cert)", "  证书 (.cert)"), msg("not configured", "未配置"))
 		return
 	}
 	pool := x509.NewCertPool()

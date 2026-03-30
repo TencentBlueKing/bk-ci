@@ -218,3 +218,20 @@ Invoke-WebRequest -Uri "https://your-server/download_install.ps1" -OutFile dl.ps
 | `install.sh`（Linux/macOS） | 首次下载 agent.zip + 解压 + 调用 `devopsAgent install` |
 | `download_install.ps1`（Windows） | 首次下载 agent.zip + 解压 + 调用 `devopsAgent install` |
 | `agent_docker_init.sh`（Linux） | Docker 容器初始化 |
+
+---
+
+## Docker Runtime
+
+Docker 构建相关逻辑已改为**优先调用容器运行时命令行**，默认使用 `docker`，可通过环境变量切换为 `podman`：
+
+```bash
+export DEVOPS_AGENT_CONTAINER_RUNTIME=podman
+```
+
+设计说明：
+
+- Agent 在构建、镜像调试容器创建/启动/等待/日志、调试容器清理等场景下，统一通过容器命令行执行
+- 会将完整命令和 stdout/stderr 记录到 Agent 日志；Docker 构建任务还会将命令和关键输出上报到构建日志
+- 这样可以避免 Go 版本与 Docker SDK 版本绑定导致的 API 兼容问题
+- 镜像调试的 WebSocket `exec` 交互终端也已改为 `docker/podman exec` + PTY 转发，不再依赖 Docker SDK
