@@ -63,7 +63,7 @@
                         :editable="canSwitchVersion"
                         :show-draft-tag="!canSwitchVersion"
                         :show-extension="false"
-                        :draft-version="draftVersion"
+                        :draft-version="(diffMode && currentEditingData) ? draftVersion : undefined"
                         v-model="activeVersion"
                         @change="diffActiveVersion"
                         v-bind="baseVersionSelectorConf"
@@ -294,7 +294,8 @@
             },
             async initDiff (version) {
                 this.activeVersion = this.version
-                this.currentVersion = this.latestVersion
+                // 如果存在 draftVersion，传递父草稿版本号，VersionSelector 会自动选中最新的子草稿
+                this.currentVersion = this.draftVersion || this.latestVersion
                 this.showVersionDiffDialog = true
                 this.isLoadYaml = true
                 
@@ -324,11 +325,6 @@
                     this.isLoadYaml = false
                     return
                 }
-                
-                // 原有逻辑：正常的版本对比
-                this.activeVersion = this.version
-                // 如果存在 draftVersion，传递父草稿版本号，VersionSelector 会自动选中最新的子草稿
-                this.currentVersion = this.draftVersion || this.latestVersion
 
                 if (this.instanceCompareWithTemplate) {
                     try {
@@ -385,7 +381,7 @@
                 if (this.instanceCompareWithTemplate) {
                     this.initDiff(versionId)
                 } else {
-                    this.currentVersion = version
+                    this.currentVersion = versionId
                     this.isLoadYaml = true
                     const version = versionData.isDraftVersion ? versionData.initialVersion : versionId
                     this.currentYaml = await this.fetchPipelineYaml(version, versionData.draftVersion || undefined)
