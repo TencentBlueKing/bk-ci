@@ -114,6 +114,86 @@ function _M:get_ticket(bk_ticket)
     return result.data
 end
 
+function _M:get_info(bk_ticket)
+    local user_cache = ngx.shared.user_info_store
+    local cache_key = "get_info_" .. bk_ticket
+    local user_cache_value = user_cache:get(cache_key)
+
+    --- 命中缓存
+    if user_cache_value then
+        local cached_result = json.decode(user_cache_value)
+        if cached_result == nil then
+            ngx.log(ngx.WARN, "failed to decode get_info cached value, removing cache")
+            user_cache:delete(cache_key)
+        else
+            local cached_ret = cached_result.ret
+            if cached_ret == nil then
+                cached_ret = cached_result.code
+            end
+            if cached_ret == 0 then
+                return cached_result.data
+            end
+            ngx.log(ngx.WARN, "cached invalid get_info, bk_ticket: ", bk_ticket)
+            ngx.exit(401)
+            return
+        end
+    end
+
+    --- 初始化HTTP连接
+    local httpc = http.new()
+    httpc:set_timeout(3000)
+    local get_info_ip = config.oauth.get_info_ip or config.oauth.ip
+    local get_info_port = config.oauth.get_info_port or config.oauth.port
+    httpc:connect(get_info_ip, get_info_port)
+
+    local get_info_url = config.oauth.get_info_url or "/user/get_info"
+    local request_path = get_info_url .. "?" .. ngx.encode_args({["bk_ticket"] = bk_ticket})
+
+    --- 发送请求
+    local res, err = httpc:request({
+        path = request_path,
+        method = "GET",
+        headers = {
+            ["Host"] = config.oauth.get_info_host or config.oauth.host,
+            ["Accept"] = "application/json"
+        }
+    })
+    if not res then
+        ngx.log(ngx.ERR, "failed to request get_info: ", err)
+        ngx.exit(401)
+        return
+    end
+
+    local responseBody = res:read_body()
+    if res.status ~= 200 then
+        ngx.log(ngx.ERR, "failed to request get_info, status: ", res.status, " , responseBody: ", responseBody)
+        ngx.exit(401)
+        return
+    end
+    httpc:set_keepalive(60000, 5)
+
+    local result = json.decode(responseBody)
+    if result == nil then
+        ngx.log(ngx.ERR, "failed to parse get_info response: ", responseBody)
+        ngx.exit(500)
+        return
+    end
+
+    user_cache:set(cache_key, responseBody, config.oauth.get_info_cache_expire or 180)
+
+    local ret = result.ret
+    if ret == nil then
+        ret = result.code
+    end
+    if ret ~= 0 then
+        ngx.log(ngx.WARN, "invalid get_info: ", result.msg or result.message, " , bk_ticket: ", bk_ticket)
+        ngx.exit(401)
+        return
+    end
+
+    return result.data
+end
+
 function _M:get_prebuild_ticket(bk_ticket)
     -- 通过bk_ticket获取用户信息
     local user_info_http = http.new()

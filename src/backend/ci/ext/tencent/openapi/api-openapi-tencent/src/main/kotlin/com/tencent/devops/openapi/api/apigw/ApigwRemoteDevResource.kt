@@ -707,7 +707,10 @@ interface ApigwRemoteDevResource {
         appId: Long,
         @Parameter(description = "实例IP", required = true)
         @QueryParam("ip")
-        ip: String
+        ip: String,
+        @Parameter(description = "是否是录屏灰度", required = true)
+        @QueryParam("mediaGary")
+        mediaGary: Boolean?
     ): Result<CheckWorkspaceRecordData>
 
     @Operation(
@@ -927,7 +930,8 @@ interface ApigwRemoteDevResource {
     ): Result<String>
 
     @Operation(
-        summary = "获取工作空间缩略图加密密钥"
+        summary = "获取工作空间缩略图加密密钥",
+        tags = ["v4_app_get_thumbnail_encrypted_ticket"]
     )
     @GET
     @Path("/get_thumbnail_encrypted_ticket")

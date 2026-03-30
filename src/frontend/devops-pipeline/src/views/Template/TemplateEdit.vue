@@ -6,7 +6,7 @@
         <template>
             <header class="template-edit-header">
                 <TemplateBreadCrumb
-                    :template-name="pipeline?.name"
+                    :template-name="templateName"
                     :is-loading="!pipeline"
                 >
                     <span class="template-edit-header-tag">
@@ -126,6 +126,9 @@
                     return this.$t('editPage.draftVersion', [this.getDraftBaseVersionName])
                 }
                 return this.versionName
+            },
+            templateName () {
+                return this?.pipelineInfo?.name ?? this.pipeline?.name
             }
         },
         watch: {

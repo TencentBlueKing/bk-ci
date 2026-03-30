@@ -88,7 +88,6 @@ class OpProjectServiceImpl @Autowired constructor(
 
     override fun updateProjectFromOp(
         userId: String,
-        accessToken: String,
         projectInfoRequest: OpProjectUpdateInfoRequest
     ): Int {
         logger.info("the projectInfoRequest is: $projectInfoRequest")

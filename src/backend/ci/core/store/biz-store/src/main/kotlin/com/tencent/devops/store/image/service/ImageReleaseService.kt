@@ -59,7 +59,7 @@ import com.tencent.devops.store.common.dao.StoreReleaseDao
 import com.tencent.devops.store.common.dao.StoreStatisticTotalDao
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StorePipelineService
-import com.tencent.devops.store.utils.VersionUtils
+import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.IMAGE_ADD_NO_PROJECT_MEMBER
 import com.tencent.devops.store.constant.StoreMessageCode.IMAGE_PUBLISH_REPO_NO_PERMISSION
@@ -93,6 +93,7 @@ import com.tencent.devops.store.pojo.image.request.ImageStatusInfoUpdateRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.pojo.image.response.ImageAgentTypeInfo
+import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import java.time.LocalDateTime
 import java.util.Base64
@@ -340,7 +341,7 @@ abstract class ImageReleaseService {
             params = arrayOf(imageName),
             language = I18nUtil.getLanguage(userId)
         )
-        val imageRecord = marketImageDao.getNewestImageByCode(dslContext, imageCode)!!
+        val imageRecord = marketImageDao.getMaxVersionImageByCode(dslContext, imageCode)!!
         val imageSourceType = marketImageUpdateRequest.imageSourceType
         val imageRepoName = marketImageUpdateRequest.imageRepoName
         if (imageSourceType == ImageType.BKDEVOPS) {
@@ -1021,47 +1022,13 @@ abstract class ImageReleaseService {
             }
             dslContext.transaction { t ->
                 val context = DSL.using(t)
-                val releaseImageRecords = marketImageDao.getReleaseImagesByCode(context, validImageCode)
-                if (null != releaseImageRecords && releaseImageRecords.size > 0) {
-                    marketImageDao.updateImageStatusInfoById(
-                        dslContext = context,
-                        imageId = imageRecord.id,
-                        userId = validUserId,
-                        imageStatusInfoUpdateRequest = ImageStatusInfoUpdateRequest(
-                            imageStatus = ImageStatusEnum.UNDERCARRIAGED,
-                            imageStatusMsg = reason,
-                            latestFlag = false
-                        )
-                    )
-                    val newestReleaseImageRecord = releaseImageRecords[0]
-                    if (newestReleaseImageRecord.id == imageRecord.id) {
-                        if (releaseImageRecords.size == 1) {
-                            val newestUndercarriagedImage =
-                                marketImageDao.getNewestUndercarriagedImageByCode(context, validImageCode)
-                            if (null != newestUndercarriagedImage) {
-                                marketImageDao.updateImageStatusInfoById(
-                                    dslContext = context,
-                                    imageId = newestUndercarriagedImage.id,
-                                    userId = validUserId,
-                                    imageStatusInfoUpdateRequest = ImageStatusInfoUpdateRequest(
-                                        latestFlag = true
-                                    )
-                                )
-                            }
-                        } else {
-                            // 把前一个发布的版本的latestFlag置为true
-                            val tmpImageRecord = releaseImageRecords[1]
-                            marketImageDao.updateImageStatusInfoById(
-                                dslContext = context,
-                                imageId = tmpImageRecord.id,
-                                userId = validUserId,
-                                imageStatusInfoUpdateRequest = ImageStatusInfoUpdateRequest(
-                                    latestFlag = true
-                                )
-                            )
-                        }
-                    }
-                }
+                handleOfflineImageByVersion(
+                    context = context,
+                    imageCode = validImageCode,
+                    imageId = imageRecord.id,
+                    userId = validUserId,
+                    reason = reason
+                )
             }
         } else {
             // 把镜像所有已发布的版本全部下架
@@ -1087,6 +1054,55 @@ abstract class ImageReleaseService {
         }
         logger.info("$interfaceName:offlineMarketImage:Output:true")
         return Result(true)
+    }
+
+    private fun handleOfflineImageByVersion(
+        context: DSLContext,
+        imageCode: String,
+        imageId: String,
+        userId: String,
+        reason: String?
+    ) {
+        marketImageDao.updateImageStatusInfoById(
+            dslContext = context,
+            imageId = imageId,
+            userId = userId,
+            imageStatusInfoUpdateRequest = ImageStatusInfoUpdateRequest(
+                imageStatus = ImageStatusEnum.UNDERCARRIAGED,
+                imageStatusMsg = reason,
+                latestFlag = false
+            )
+        )
+        // get released image count
+        val releaseCount = marketImageDao.countReleaseImageByCode(context, imageCode)
+        val tmpImageId = if (releaseCount > 0) {
+            // get max version released image record
+            val maxReleaseVersionRecord = marketImageDao.getMaxVersionImageByCode(
+                dslContext = context,
+                imageCode = imageCode,
+                imageStatus = ImageStatusEnum.RELEASED
+            )
+            maxReleaseVersionRecord?.id
+        } else {
+            // get max version undercarriaged image record
+            val maxUndercarriagedVersionRecord = marketImageDao.getMaxVersionImageByCode(
+                dslContext = context,
+                imageCode = imageCode,
+                imageStatus = ImageStatusEnum.UNDERCARRIAGED
+            )
+            maxUndercarriagedVersionRecord?.id
+        }
+        if (null != tmpImageId) {
+            marketImageDao.cleanLatestFlag(context, imageCode)
+            marketImageDao.updateImageStatusInfoById(
+                dslContext = context,
+                imageId = tmpImageId,
+                userId = userId,
+                imageStatusInfoUpdateRequest = ImageStatusInfoUpdateRequest(
+                    latestFlag = true
+                )
+            )
+        }
     }
 
     /**
@@ -1185,11 +1201,9 @@ abstract class ImageReleaseService {
         rdType: ImageRDTypeEnum?,
         weight: Int?
     ) {
-        val latestFlag = approveResult == PASS
+        var latestFlag: Boolean? = null
         var pubTime: LocalDateTime? = null
-        if (latestFlag) {
-            // 清空旧版本LATEST_FLAG
-            marketImageDao.cleanLatestFlag(context, image.imageCode)
+        if (approveResult == PASS) {
             pubTime = LocalDateTime.now()
             // 记录发布信息
             storeReleaseDao.addStoreReleaseInfo(
@@ -1202,6 +1216,20 @@ abstract class ImageReleaseService {
                     latestUpgradeTime = pubTime
                 )
             )
+            val newestVersionFlag = marketImageDao.getLatestImageByCode(context, image.imageCode)?.let {
+                StoreUtils.isGreaterVersion(image.version, it.version)
+            } ?: true
+            val imageVersion = marketImageVersionLogDao.getImageVersion(context, image.id)
+            val releaseType = imageVersion.releaseType
+            latestFlag =
+                if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE.releaseType.toByte() && !newestVersionFlag) {
+                // 历史大版本下的小版本更新不把latestFlag置为true（利用这种发布方式发布最新版本除外）
+                null
+            } else {
+                // 清空旧版本LATEST_FLAG
+                marketImageDao.cleanLatestFlag(context, image.imageCode)
+                true
+            }
             imageFeatureDao.update(
                 dslContext = context,
                 imageCode = image.imageCode,
@@ -1213,13 +1241,19 @@ abstract class ImageReleaseService {
                 weight = weight
             )
         }
-        marketImageDao.updateImageStatusInfo(
+        val targetImageStatus = ImageStatusEnum.getImageStatus(
+            ImageStatusEnum.getImageStatus(imageStatus.toInt())
+        )
+        marketImageDao.updateImageStatusInfoById(
             dslContext = context,
             imageId = image.id,
-            imageStatus = imageStatus,
-            imageStatusMsg = imageStatusMsg,
-            latestFlag = latestFlag,
-            pubTime = pubTime
+            userId = userId,
+            imageStatusInfoUpdateRequest = ImageStatusInfoUpdateRequest(
+                imageStatus = targetImageStatus,
+                imageStatusMsg = imageStatusMsg,
+                latestFlag = latestFlag,
+                pubTime = pubTime
+            )
         )
         saveImageAgentTypeToFeature(
             context,

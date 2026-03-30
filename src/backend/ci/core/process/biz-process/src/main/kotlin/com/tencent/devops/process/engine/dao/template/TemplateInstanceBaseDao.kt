@@ -230,6 +230,40 @@ class TemplateInstanceBaseDao {
         }
     }
 
+    fun hasInstancingTask(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String,
+        excludeBaseId: String? = null
+    ): Boolean {
+        return with(TTemplateInstanceBase.T_TEMPLATE_INSTANCE_BASE) {
+            val query = dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TEMPLATE_ID.eq(templateId))
+                .and(STATUS.eq(TemplateInstanceStatus.INSTANCING.name))
+            if (excludeBaseId != null) {
+                query.and(ID.ne(excludeBaseId))
+            }
+            (query.fetchOne(0, Int::class.java) ?: 0) > 0
+        }
+    }
+
+    fun getNextInitBase(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String
+    ): PipelineTemplateInstanceBase? {
+        return with(TTemplateInstanceBase.T_TEMPLATE_INSTANCE_BASE) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TEMPLATE_ID.eq(templateId))
+                .and(STATUS.eq(TemplateInstanceStatus.INIT.name))
+                .orderBy(CREATE_TIME.asc())
+                .limit(1)
+                .fetchOne()?.convert()
+        }
+    }
+
     private fun TTemplateInstanceBaseRecord.convert(): PipelineTemplateInstanceBase {
         return PipelineTemplateInstanceBase(
             baseId = id,

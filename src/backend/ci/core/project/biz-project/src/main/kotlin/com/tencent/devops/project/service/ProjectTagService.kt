@@ -42,15 +42,18 @@ import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectTagDao
 import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
+import com.tencent.devops.project.pojo.ProjectPercentageRoutingRequest
+import com.tencent.devops.project.pojo.ProjectPercentageRoutingResult
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.enums.SystemEnums
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.zip.CRC32
 
 @Suppress("ALL")
 @Service
@@ -401,9 +404,129 @@ class ProjectTagService @Autowired constructor(
         }
     }
 
+    // ======================== 路由名单管理（黑名单） ========================
+
+    fun addToBlacklist(projectCodes: List<String>): Long {
+        if (projectCodes.isEmpty()) return 0L
+        redisOperation.sadd(BLACKLIST_KEY, *projectCodes.toTypedArray())
+        logger.info("addToBlacklist count=${projectCodes.size}")
+        return redisOperation.getSetMembers(BLACKLIST_KEY)?.size?.toLong() ?: 0L
+    }
+
+    fun removeFromBlacklist(projectCodes: List<String>): Long {
+        if (projectCodes.isEmpty()) return 0L
+        redisOperation.sremove(BLACKLIST_KEY, *projectCodes.toTypedArray())
+        logger.info("removeFromBlacklist count=${projectCodes.size}")
+        return redisOperation.getSetMembers(BLACKLIST_KEY)?.size?.toLong() ?: 0L
+    }
+
+    fun getBlacklist(): Set<String> = redisOperation.getSetMembers(BLACKLIST_KEY) ?: emptySet()
+
+    // ======================== 百分比放量路由 ========================
+
+    fun percentageRouting(request: ProjectPercentageRoutingRequest): ProjectPercentageRoutingResult {
+        require(request.targetPercent in 1..100) { "targetPercent must be between 1 and 100" }
+        require(request.targetTag.isNotBlank()) { "targetTag must not be blank" }
+        require(request.sourceTag.isNotBlank()) { "sourceTag must not be blank" }
+        checkRouteTag(request.targetTag)
+
+        val watcher = Watcher("percentageRouting ${request.targetPercent}% -> ${request.targetTag}")
+        logger.info(
+            "percentageRouting start|targetPercent=${request.targetPercent}|" +
+                "sourceTag=${request.sourceTag}|targetTag=${request.targetTag}|dryRun=${request.dryRun}"
+        )
+
+        val blacklist = getBlacklist()
+        logger.info(
+            "percentageRouting lists loaded|blacklistSize=${blacklist.size}"
+        )
+
+        val threshold = request.targetPercent
+
+        var totalProjectCount = 0
+        var alreadyDoneCount = 0
+        val candidates = mutableListOf<String>()
+
+        var offset = 0
+        var pageSize: Int
+        do {
+            val page = projectDao.listProjectsByCondition(dslContext, request.condition, PAGE_SIZE, offset)
+            pageSize = page.size
+            totalProjectCount += pageSize
+
+            for (record in page) {
+                val projectCode = record.englishName ?: continue
+                if (projectCode in blacklist) continue
+                val alreadyAtTarget = record.routerTag == request.targetTag
+                if (hashBucket(projectCode) < threshold) {
+                    if (alreadyAtTarget) {
+                        alreadyDoneCount++
+                    } else {
+                        candidates.add(projectCode)
+                    }
+                }
+            }
+            offset += pageSize
+        } while (pageSize == PAGE_SIZE)
+
+        val failedProjects = mutableListOf<String>()
+        val switchedCount: Int
+
+        if (request.dryRun) {
+            switchedCount = candidates.size
+        } else {
+            var actualSwitched = 0
+            candidates.chunked(BATCH_SIZE).forEach { batch ->
+                try {
+                    projectTagDao.updateProjectTags(
+                        dslContext = dslContext,
+                        englishNames = batch,
+                        routerTag = request.targetTag
+                    )
+                    refreshRouterByProject(
+                        routerTag = request.targetTag,
+                        redisOperation = redisOperation,
+                        projectIds = batch
+                    )
+                    actualSwitched += batch.size
+                } catch (e: Exception) {
+                    logger.error("percentageRouting batch update failed|batch=${batch.size}", e)
+                    failedProjects.addAll(batch)
+                }
+            }
+            switchedCount = actualSwitched
+        }
+
+        LogUtils.printCostTimeWE(watcher)
+        return ProjectPercentageRoutingResult(
+            dryRun = request.dryRun,
+            targetPercent = request.targetPercent,
+            totalProjectCount = totalProjectCount,
+            targetCount = candidates.size + alreadyDoneCount,
+            alreadyDoneCount = alreadyDoneCount,
+            switchedCount = switchedCount,
+            failedCount = failedProjects.size,
+            failedProjects = failedProjects
+        )
+    }
+
+    /**
+     * 确定性哈希分桶：CRC32(englishName) % 100
+     * 结果范围 [0, 99]，与项目总数无关，同一 englishName 永远映射到相同桶。
+     */
+    fun hashBucket(englishName: String): Int {
+        val crc = CRC32()
+        crc.update(englishName.toByteArray(Charsets.UTF_8))
+        return (crc.value % HASH_BUCKET_SIZE).toInt()
+    }
+
     companion object {
         private const val grayLabel = 1
         private const val prodLabel = 2
+        private const val HASH_BUCKET_SIZE = 100L
+        private const val BATCH_SIZE = 500
+        private const val PAGE_SIZE = 1000
+        const val BLACKLIST_KEY = "project:percentage:routing:blacklist"
         private val logger = LoggerFactory.getLogger(ProjectTagService::class.java)
     }
 }

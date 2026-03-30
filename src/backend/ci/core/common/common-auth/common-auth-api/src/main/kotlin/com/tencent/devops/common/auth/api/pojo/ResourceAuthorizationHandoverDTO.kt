@@ -7,7 +7,7 @@ data class ResourceAuthorizationHandoverDTO(
     @get:Schema(title = "项目ID")
     override val projectCode: String,
     @get:Schema(title = "资源类型")
-    override val resourceType: String,
+    override var resourceType: String,
     @get:Schema(title = "资源名称")
     override val resourceName: String,
     @get:Schema(title = "资源code")

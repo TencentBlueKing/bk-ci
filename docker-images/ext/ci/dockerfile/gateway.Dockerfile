@@ -11,3 +11,9 @@ RUN rm -rf /usr/local/openresty/nginx/conf &&\
     mkdir -p /usr/local/openresty/nginx/run/ &&\
     mkdir -p /data/bkee/logs/ci/nginx/ /data/bkee/ci/frontend /data/bkee/codecc/frontend &&\
     chown nobody:nobody /data/bkee/logs/ci/nginx/
+
+RUN mkdir -p /data/bkee/ci/frontend-rbac &&\
+    mkdir -p /data/bkee/ci/frontend-rbac-gray &&\
+    mkdir -p /data/bkee/ci/frontend-rbac-devx &&\
+    mkdir -p /data/bkee/ci/frontend-stream &&\
+    mkdir -p /data/bkee/ci/frontend-stream-gray

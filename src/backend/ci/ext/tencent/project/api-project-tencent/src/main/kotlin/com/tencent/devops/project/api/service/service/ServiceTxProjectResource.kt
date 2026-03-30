@@ -27,7 +27,6 @@
 
 package com.tencent.devops.project.api.service.service
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BG_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_DEPT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_ID
@@ -75,10 +74,7 @@ interface ServiceTxProjectResource {
     fun list(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String?,
-        @Parameter(description = "PAAS_CC Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?
+        userId: String?
     ): Result<List<ProjectVO>>
 
     @GET
@@ -168,10 +164,7 @@ interface ServiceTxProjectResource {
     fun getPreUserProject(
         @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
-        userId: String,
-        @Parameter(description = "accessToken", required = true)
-        @QueryParam("accessToken")
-        accessToken: String
+        userId: String
     ): Result<ProjectVO?>
 
     @GET
@@ -250,9 +243,6 @@ interface ServiceTxProjectResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "PAAS_CC Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @Parameter(description = "项目信息", required = true)
         projectCreateInfo: ProjectCreateInfo,
         @QueryParam("routerTag")
@@ -272,9 +262,6 @@ interface ServiceTxProjectResource {
     @Path("/{projectCode}/users/{userId}/verifyWithToken")
     @Operation(summary = " 校验用户是否项目成员")
     fun verifyUserProjectPermission(
-        @Parameter(description = "PAAS_CC Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,

@@ -653,12 +653,14 @@ class ServiceRemoteDevResourceImpl(
     override fun checkWorkspaceEnableAddress(
         userId: String,
         appId: Long,
-        ip: String
+        ip: String,
+        mediaGary: Boolean?
     ): Result<CheckWorkspaceRecordData> {
         val (enable, address) = workspaceRecordService.checkRecordAndAddress(
             userId = userId,
             appId = appId,
-            ip = ip
+            ip = ip,
+            mediaGary = mediaGary
         )
         return Result(CheckWorkspaceRecordData(enable, address))
     }

@@ -42,13 +42,13 @@ type ContainerCreateInfo struct {
 
 func parseApiDockerOptions(o api.DockerOptions) []string {
 	var args []string
-	if o.Volumes != nil && len(o.Volumes) > 0 {
+	if len(o.Volumes) > 0 {
 		for _, v := range o.Volumes {
 			args = append(args, "--volume", strings.TrimSpace(v))
 		}
 	}
 
-	if o.Mounts != nil && len(o.Mounts) > 0 {
+	if len(o.Mounts) > 0 {
 		for _, m := range o.Mounts {
 			args = append(args, "--mount", strings.TrimSpace(m))
 		}
@@ -60,6 +60,16 @@ func parseApiDockerOptions(o api.DockerOptions) []string {
 
 	if o.Privileged != false {
 		args = append(args, "--privileged")
+	}
+
+	if len(o.Network) > 0 {
+		for _, n := range o.Network {
+			args = append(args, "--network", strings.TrimSpace(n))
+		}
+	}
+
+	if o.User != "" {
+		args = append(args, "--user", strings.TrimSpace(o.User))
 	}
 
 	return args

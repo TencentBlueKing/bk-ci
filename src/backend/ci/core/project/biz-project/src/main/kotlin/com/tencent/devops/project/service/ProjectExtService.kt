@@ -40,7 +40,6 @@ interface ProjectExtService {
     fun createExtProjectInfo(
         userId: String,
         authProjectId: String,
-        accessToken: String?,
         projectCreateInfo: ProjectCreateInfo,
         createExtInfo: ProjectCreateExtInfo,
         logoAddress: String?
@@ -53,7 +52,6 @@ interface ProjectExtService {
      */
     fun createOldAuthProject(
         userId: String,
-        accessToken: String?,
         projectCreateInfo: ProjectCreateInfo
     ): String?
 

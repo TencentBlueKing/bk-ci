@@ -4,24 +4,19 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
-import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.TencentActionAuditContent
 import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.auth.api.TencentResourceTypeId
-import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -41,7 +36,6 @@ import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceShared.AssignType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
-import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.CreateExpertSupportConfigData
@@ -70,7 +64,6 @@ import com.tencent.devops.remotedev.service.BKNodemanService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.client.StartCloudClient
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
-import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_EXPORT_CONFIG_INFO
 import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_QUERY_CGS_PWD
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
@@ -104,179 +97,6 @@ class ExpertSupportService @Autowired constructor(
     private val configCacheService: ConfigCacheService,
     private val remoteDevServiceFactory: RemoteDevServiceFactory
 ) {
-    @Deprecated("等客户端版本都升级到支持createNew接口后，当前接口废弃")
-    @Suppress("ComplexMethod")
-    fun createSupport(
-        userId: String,
-        data: CreateSupportData
-    ) {
-        // 校验机器在不在
-        val record = workspaceJoinDao.fetchAnyWindowsWorkspace(
-            dslContext = dslContext,
-            workspaceName = data.workspaceName
-        ) ?: throw ErrorCodeException(
-            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-            params = arrayOf(data.workspaceName)
-        )
-
-        if (!permissionService.hasManagerOrViewerPermission(userId, record.projectId, record.workspaceName)) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf(
-                    "We're sorry but you don't have permission to " +
-                        "apply for assistance in ${record.workspaceName}"
-                )
-            )
-        }
-        if (record.status.checkDeleted() || record.status.checkInProcess()) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
-                params = arrayOf(data.workspaceName)
-            )
-        }
-
-        val fetchExpertSupportData = expertSupportDao.fetchSupports(
-            dslContext = dslContext,
-            projectId = data.projectId,
-            hostIp = data.hostIp,
-            creator = data.creator,
-            status = ExpertSupportStatus.CREATE,
-            content = data.content,
-            internalTime = DEFAULT_WAIT_TIME
-        )
-        if (fetchExpertSupportData.isNotEmpty()) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.REAPPLY_EXPERT_SUPPORT_ERROR.errorCode,
-                params = arrayOf(data.content)
-            )
-        }
-
-        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
-        val requestIp = attributes?.request?.getHeader("X-Forwarded-For")?.split(",")
-            ?.firstOrNull { it.isNotBlank() }?.trim()
-        val clientVersion = attributes?.request?.getHeader("Bk-Ci-Client-Version")
-        val projectInfo = kotlin.runCatching {
-            client.get(ServiceProjectResource::class).get(data.projectId)
-        }.onFailure { logger.warn("get project ${data.projectId} info error|${it.message}") }
-            .getOrElse { null }?.data ?: throw RemoteServiceException(
-            "not find project ${data.projectId}", HTTP_400
-        )
-        val owner: String?
-        var viewers: Set<String>? = null
-        if (record.ownerType == WorkspaceOwnerType.PERSONAL) {
-            owner = record.createUserId
-        } else {
-            val sharedInfo = workspaceSharedDao.fetchWorkspaceSharedInfo(dslContext, data.workspaceName)
-            owner = sharedInfo.firstOrNull { it.type == AssignType.OWNER }?.sharedUser
-            viewers = sharedInfo.filter { it.type == AssignType.VIEWER }.map { it.sharedUser }.toSet().ifEmpty { null }
-        }
-        val projectManager = permissionService.managers(data.projectId).toSet()
-        val recordInfo = SupRecordInfo(
-            requestIp = requestIp,
-            projectManager = projectManager,
-            clientVersion = clientVersion,
-            machineStatus = record.status.name,
-            cdsVersion = null,
-            cdsRegion = null,
-            cdsStatus = null,
-            cdsPort = null,
-            agentStatus = null,
-            owner = owner,
-            viewers = viewers
-        )
-
-        val id = expertSupportDao.addSupport(
-            dslContext = dslContext,
-            projectId = data.projectId,
-            hostIp = data.hostIp,
-            workspaceName = data.workspaceName,
-            creator = data.creator,
-            status = ExpertSupportStatus.CREATE,
-            content = data.content,
-            city = data.city,
-            machineType = data.machineType,
-            info = recordInfo
-        )
-        val taiUserCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = mutableSetOf(data.creator))
-            .mapValues {
-                if ((it.value["USER_NAME"] as String).isNotBlank()) {
-                    Triple(
-                        "${it.value["USER_NAME"]}@${it.value["COMPANY_NAME"]}",
-                        it.value["PHONE"] as String,
-                        it.value["PHONE_COUNTRY_CODE"] as String
-                    )
-                } else {
-                    Triple(it.key, "", "")
-                }
-            }
-
-        // 异步执行流水线完成其他动作
-        /**
-         * redis 中，xxx 为需要替换
-         * {
-         *     "userId": "xxx",
-         *     "projectId": "xxx",
-         *     "pipelineId": "xxx",
-         *     "buildParam": {
-         *         "xxx": "ip",
-         *         "xxx": "projectId",
-         *         "xxx": "projectName",
-         *         "xxx": "ticketId",
-         *         "xxx": "creator",
-         *         "xxx": "content",
-         *         "xxx": "city",
-         *         "xxx": "machineType"
-         *     }
-         * }
-         */
-        val infoS = configCacheService.get(PIPELINE_EXPORT_CONFIG_INFO) ?: return
-        val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
-        val newParam = mutableMapOf<String, String>()
-        val hostIdSub = data.hostIp.split(".")
-        val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
-
-        info.buildParam.forEach { (k, v) ->
-            when (v) {
-                "ip" -> newParam[k] = record.regionId.toString().plus(":").plus(ip)
-                "projectId" -> newParam[k] = data.projectId
-                "projectName" -> newParam[k] = projectInfo.projectName
-                "ticketId" -> newParam[k] = id.toString()
-                "creator" -> newParam[k] = taiUserCN[data.creator]?.first ?: data.creator
-                "content" -> newParam[k] = data.content
-                "city" -> newParam[k] = data.city
-                "machineType" -> newParam[k] = data.machineType
-                "createTime" -> newParam[k] = DateTimeUtil.toDateTime(
-                    LocalDateTime.now(), DateTimeUtil.YYYY_MM_DD_HH_MM_SS
-                )
-
-                "zone" -> newParam[k] = record.regionId.toString()
-                "workspaceName" -> newParam[k] = data.workspaceName
-                "phone" -> newParam[k] = taiUserCN[data.creator]?.second ?: ""
-                "phoneCountryCode" -> newParam[k] = taiUserCN[data.creator]?.third ?: ""
-                "taiUser" -> newParam[k] = if (UserUtil.isTaiUser(data.creator)) {
-                    UserUtil.removeTaiSuffix(data.creator)
-                } else {
-                    ""
-                }
-
-                "managers" -> newParam[k] = projectManager.joinToString(separator = ";")
-                "requestIp" -> newParam[k] = requestIp ?: ""
-                "displayName" -> newParam[k] = record.displayName
-
-                else -> newParam[k] = v
-            }
-        }
-        AsyncExecute.dispatch(
-            streamBridge,
-            AsyncPipelineEvent(
-                userId = info.userId ?: "",
-                projectId = info.projectId,
-                pipelineId = info.pipelineId,
-                values = newParam
-            )
-        )
-    }
-
     fun createSupportNew(
         userId: String,
         data: CreateSupportData

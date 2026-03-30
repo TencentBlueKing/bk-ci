@@ -36,10 +36,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/agent"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
 
@@ -97,6 +98,8 @@ func main() {
 	logs.Info("current user userName: ", systemutil.GetCurrentUser().Username)
 	logs.Info("work dir: ", systemutil.GetWorkDir())
 
+	go envs.InitEnvPolling()
+
 	logEnv()
 
 	agent.Run(isDebug)
@@ -104,8 +107,9 @@ func main() {
 
 func logEnv() {
 	logs.Info("agent envs: ")
-	for _, v := range os.Environ() {
-		index := strings.Index(v, "=")
-		logs.Info("    " + v[0:index] + " = " + v[index+1:])
+	for _, v := range envs.Envs() {
+		if index := strings.Index(v, "="); index >= 0 {
+			logs.Info("    " + v[0:index] + " = " + v[index+1:])
+		}
 	}
 }

@@ -314,7 +314,7 @@ class VariableTransfer {
                     asInstanceInput = if (allowModifyAtStartup) {
                         variable.asInstanceInput ?: true
                     } else null,
-                    sensitive = variable.sensitive ?: false
+                    sensitive = variable.sensitive
                 )
             )
         }

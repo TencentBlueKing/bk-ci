@@ -27,16 +27,24 @@
 
 package com.tencent.devops.process.api.template.v2
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
+import com.tencent.devops.process.pojo.template.TemplateMigrateByPercentageRequest
+import com.tencent.devops.process.pojo.template.TemplateMigrateByPercentageResult
+import com.tencent.devops.process.pojo.template.TemplateOperationRet
+import com.tencent.devops.process.pojo.template.v2.FixBadParamsItem
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "op_TEMPLATE_V2", description = "op-模板资源-v2")
@@ -51,6 +59,14 @@ interface OpPipelineTemplateResource {
     fun migrateTemplatesByCondition(
         projectConditionDTO: ProjectConditionDTO
     ): Result<Boolean>
+
+    @Operation(summary = "迁移模板-按百分比灰度（支持 dry-run 预览和 execute 执行）")
+    @POST
+    @Path("/migrate/percentage")
+    fun migrateTemplatesByPercentage(
+        @Parameter(description = "按比例灰度迁移请求入参", required = true)
+        request: TemplateMigrateByPercentageRequest
+    ): Result<TemplateMigrateByPercentageResult>
 
 
     @Operation(summary = "迁移模板-根据项目ID")
@@ -78,4 +94,52 @@ interface OpPipelineTemplateResource {
         @PathParam("templateId")
         templateId: String
     ): Result<Boolean>
+
+    @Operation(summary = "回滚模板实例化任务")
+    @POST
+    @Path("/projects/{projectId}/instances/{baseId}/rollback")
+    fun rollbackTemplateInstances(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "实例任务ID", required = true)
+        @PathParam("baseId")
+        baseId: String
+    ): Result<TemplateOperationRet>
+
+    @Operation(summary = "回滚单个模板实例项")
+    @POST
+    @Path("/projects/{projectId}/instanceItems/{itemId}/rollback")
+    fun rollbackTemplateInstanceByItemId(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "实例项ID", required = true)
+        @PathParam("itemId")
+        itemId: String
+    ): Result<TemplateOperationRet>
+
+    @Operation(summary = "修复模板迁移产生的错误参数")
+    @POST
+    @Path("/migrate/{projectId}/fixBadParams")
+    fun fixBadParams(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "模板ID", required = false)
+        @QueryParam("templateId")
+        templateId: String?,
+        @Parameter(
+            description = "是否仅预览(true=只打印日志不执行, false=执行修复)",
+            required = true
+        )
+        @QueryParam("dryRun")
+        dryRun: Boolean
+    ): Result<List<FixBadParamsItem>>
 }

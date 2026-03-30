@@ -29,12 +29,12 @@ package com.tencent.devops.process.service.pipeline.version.handler
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.control.lock.PipelineModelLock
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReqSource
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionPersistenceService
@@ -54,8 +54,12 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
         context.versionAction == PipelineVersionAction.TEMPLATE_INSTANCE
 
     override fun handle(context: PipelineVersionCreateContext): DeployPipelineResult {
-        logger.info("template instance with context={}", JsonUtil.toJson(context, false))
         with(context) {
+            logger.info(
+                "handle template instance|" +
+                        "$projectId|$pipelineId|$version|" +
+                        "${templateInstanceBasicInfo?.templateId}|${templateInstanceBasicInfo?.templateVersion}"
+            )
             if (templateInstanceBasicInfo == null) {
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.PARAMETER_IS_NULL,
@@ -153,7 +157,8 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
         val yamlFileReleaseResult = enablePac.takeIf { it }?.let {
             pipelineVersionPersistenceService.releaseYamlFile(
                 context = this,
-                resourceOnlyVersion = resourceOnlyVersion
+                resourceOnlyVersion = resourceOnlyVersion,
+                source = PipelineYamlFileReleaseReqSource.TEMPLATE_INSTANCE
             )
         }
 

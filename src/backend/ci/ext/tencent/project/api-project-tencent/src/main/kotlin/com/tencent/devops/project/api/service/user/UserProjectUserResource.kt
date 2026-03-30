@@ -27,7 +27,6 @@
 
 package com.tencent.devops.project.api.service.user
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
@@ -80,9 +79,6 @@ interface UserProjectUserResource {
     @Path("/projects/{projectCode}/list")
     @Operation(summary = "查看项目下的成员列表")
     fun getProjectUsers(
-        @Parameter(description = "PAAS_CC Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
@@ -95,9 +91,6 @@ interface UserProjectUserResource {
     @Path("/projects/{projectCode}/roles/list")
     @Operation(summary = "查看项目下的成员列表")
     fun getProjectUserRoles(
-        @Parameter(description = "PAAS_CC Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,

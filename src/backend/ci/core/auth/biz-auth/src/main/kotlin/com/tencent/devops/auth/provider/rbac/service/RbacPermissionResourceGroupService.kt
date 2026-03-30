@@ -714,9 +714,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             projectCode = projectCode,
             resourceType = resourceType,
             resourceCode = resourceCode
-        ).filter {
-            it.groupCode != DefaultGroupType.MANAGER.value
-        }
+        )
         records.forEach {
             logger.info("delete subset manage default group|$managerId|${it.relationId}")
             iamV2ManagerService.deleteRoleGroupV2(it.relationId)

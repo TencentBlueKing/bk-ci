@@ -24,19 +24,6 @@ import jakarta.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExpertSupportResource {
-
-    @Deprecated("等客户端版本都升级到支持createNew接口后，当前接口废弃")
-    @Operation(summary = "创建专家协助单据")
-    @POST
-    @Path("/create")
-    fun addExpertSup(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "创建数据")
-        data: CreateSupportData
-    ): Result<Boolean>
-
     @Operation(summary = "创建专家协助单据新")
     @POST
     @Path("/createNew")

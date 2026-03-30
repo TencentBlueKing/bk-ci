@@ -47,7 +47,8 @@ class RemotedevBkRepoClient @Autowired constructor(
         projectId: String,
         repoName: String,
         userId: String,
-        media: Boolean
+        media: Boolean,
+        gray: Boolean?
     ): String? {
         val config = bkRepoConfig.getRegionConfig(region, media)
         var url = "${config.url}/media/api/user/stream/create/$projectId/$repoName?display=false"
@@ -56,7 +57,7 @@ class RemotedevBkRepoClient @Autowired constructor(
         }
         val request = Request.Builder()
             .url(url)
-            .headers(getCommonHeaders(region, userId, media).toHeaders())
+            .headers(getCommonHeaders(region, userId, media, gray).toHeaders())
             .post(
                 objectMapper.writeValueAsString(JsonUtil.toJson(mapOf<String, String>()))
                     .toRequestBody(MediaTypes.APPLICATION_JSON.toMediaTypeOrNull())
@@ -307,12 +308,16 @@ class RemotedevBkRepoClient @Autowired constructor(
     private fun getCommonHeaders(
         region: BkRepoRegion,
         userId: String,
-        media: Boolean = false
+        media: Boolean = false,
+        gray: Boolean? = null
     ): MutableMap<String, String> {
         val config = bkRepoConfig.getRegionConfig(region, media)
         val headers = mutableMapOf<String, String>()
         headers["Authorization"] = config.headerUserAuth
         headers["X-BKREPO-UID"] = userId
+        if (gray == true) {
+            headers["X-GATEWAY-TAG"] = "GRAY"
+        }
         return headers
     }
 

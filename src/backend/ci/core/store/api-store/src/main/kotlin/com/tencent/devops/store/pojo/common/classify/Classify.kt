@@ -39,6 +39,8 @@ data class Classify(
     val classifyName: String,
     @get:Schema(title = "类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件", required = true)
     val classifyType: String,
+    @get:Schema(title = "服务范围", required = false)
+    val serviceScope: String ? = null,
     @get:Schema(title = "权重（数值越大代表权重越高）", required = false)
     val weight: Int?,
     @get:Schema(title = "创建日期")

@@ -47,6 +47,7 @@ import com.tencent.devops.store.pojo.atom.UpdateAtomInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -404,7 +405,7 @@ class MarketAtomDao : AtomBaseDao() {
                     marketAtomCreateRequest.name,
                     marketAtomCreateRequest.atomCode,
                     "",
-                    "",
+                    "[ \"${ServiceScopeEnum.PIPELINE.name}\" ]",
                     "",
                     "",
                     "",

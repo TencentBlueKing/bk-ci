@@ -197,7 +197,6 @@ class ProjectApprovalService @Autowired constructor(
             projectExtService.createExtProjectInfo(
                 userId = applicant,
                 authProjectId = authProjectId,
-                accessToken = null,
                 projectCreateInfo = projectCreateInfo,
                 createExtInfo = ProjectCreateExtInfo(needValidate = true, needAuth = true),
                 logoAddress = projectInfo.logoAddr

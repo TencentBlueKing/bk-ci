@@ -190,6 +190,7 @@ class RebuildWorkspaceHandler @Autowired constructor(
                     imageCosFile = rebuildReq.imageCosFile,
                     appName = gameId.first,
                     formatDataDisk = rebuildReq.formatDataDisk ?: false,
+                    resetDataDisk = rebuildReq.resetDataDisk ?: false,
                     rebuildRemoveOwner = rebuildReq.removeOwner ?: false
                 )
             )
