@@ -32,7 +32,6 @@ import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseEnv
 import com.tencent.devops.model.store.tables.TStoreVersionLog
 import com.tencent.devops.model.store.tables.records.TStoreVersionLogRecord
-import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import java.time.LocalDateTime
@@ -149,10 +148,9 @@ class StoreVersionLogDao {
             .from(tsb)
             .join(tsvl)
             .on(tsb.ID.eq(tsvl.STORE_ID))
-            .where(
-                tsb.STORE_CODE.eq(storeCode)
-                    .and(tsb.STORE_TYPE.eq(storeType).and(tsb.STATUS.eq(StoreStatusEnum.RELEASED.name)))
-            )
+            .where(tsb.STORE_CODE.eq(storeCode))
+            .and(tsb.STORE_TYPE.eq(storeType))
+            .and(tsb.STATUS.eq(StoreStatusEnum.RELEASED.name))
         return baseStep.fetchOne(0, Long::class.java) ?: 0L
     }
 
@@ -172,7 +170,7 @@ class StoreVersionLogDao {
     fun countComponent(dslContext: DSLContext, storeType: Byte): Long {
         with(TStoreBase.T_STORE_BASE) {
             return dslContext.selectCount().from(this)
-                .where(STORE_TYPE.eq(storeType).and(STATUS.eq(AtomStatusEnum.RELEASED.name)))
+                .where(STORE_TYPE.eq(storeType).and(STATUS.eq(StoreStatusEnum.RELEASED.name)))
                 .fetchOne(0, Long::class.java)!!
         }
     }
