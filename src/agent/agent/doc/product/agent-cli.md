@@ -26,7 +26,7 @@ Session 模式 (仅 Windows):
 
 其他:
   version              打印版本号
-  fullVersion          打印完整版本信息
+    -f                 打印完整版本信息 (版本号 / Git Commit / 构建时间)
   -h, --help           显示帮助
   (无参数)             正常运行 agent
 ```

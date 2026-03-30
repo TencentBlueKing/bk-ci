@@ -68,16 +68,22 @@ func BuildUserDockerArgs(userOptions api.DockerOptions) ([]string, error) {
 }
 
 func normalizeVolumeArg(v string) string {
-	host, target, ok := strings.Cut(v, ":")
-	if !ok {
-		return v
-	}
-	if host == "." || strings.HasPrefix(host, "."+string(filepath.Separator)) {
+	// Only normalize relative host paths. Absolute Unix/Windows paths and named volumes
+	// are returned as-is to avoid incorrectly splitting Windows drive-letter paths.
+	if v == "." || strings.HasPrefix(v, "."+string(filepath.Separator)) || strings.HasPrefix(v, "./") || strings.HasPrefix(v, ".\\") {
+		host, target, ok := strings.Cut(v, ":")
+		if !ok {
+			return v
+		}
 		if abs, err := filepath.Abs(host); err == nil {
 			host = abs
 		}
+		return host + ":" + target
 	}
-	return host + ":" + target
+	if !strings.Contains(v, ":") {
+		return v
+	}
+	return v
 }
 
 func HasCustomNetwork(userOptions api.DockerOptions) bool {

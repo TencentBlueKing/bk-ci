@@ -1,6 +1,7 @@
 package job_docker
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -42,6 +43,28 @@ func TestBuildUserDockerArgs_Invalid(t *testing.T) {
 	})
 	if err == nil {
 		t.Fatal("expected error for empty volume")
+	}
+}
+
+func TestNormalizeVolumeArg_RelativePath(t *testing.T) {
+	got := normalizeVolumeArg("./data:/data:ro")
+	if got == "./data:/data:ro" {
+		t.Fatal("expected relative volume host path to be normalized to absolute path")
+	}
+	if !strings.HasSuffix(got, string(filepath.Separator)+"data:/data:ro") && !strings.Contains(got, "data:/data:ro") {
+		t.Fatalf("unexpected normalized relative volume: %s", got)
+	}
+}
+
+func TestNormalizeVolumeArg_WindowsDrivePathUnchanged(t *testing.T) {
+	tests := []string{
+		`C:\data:/data:ro`,
+		`D:\cache:C:\container\cache`,
+	}
+	for _, tt := range tests {
+		if got := normalizeVolumeArg(tt); got != tt {
+			t.Fatalf("normalizeVolumeArg(%q)=%q, want unchanged", tt, got)
+		}
 	}
 }
 
