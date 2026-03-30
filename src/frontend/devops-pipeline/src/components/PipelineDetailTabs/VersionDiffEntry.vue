@@ -303,8 +303,6 @@
                 if (this.diffMode && this.currentEditingData) {
                     if (this.diffMode === 'CONFLICT') {
                         // 冲突状态：对比最后保存的草稿 vs 当前编辑内容
-                        this.activeVersion = this.version
-                        
                         const [activeYaml, currentYaml] = await Promise.all([
                             this.fetchPipelineYaml(this.version, this.draftVersion || undefined),
                             this.fetchCurrentEditingYaml()
@@ -313,8 +311,6 @@
                         this.currentYaml = currentYaml
                     } else if (this.diffMode === 'PUBLISHED') {
                         // 已发布状态：对比最新发布版本 vs 当前编辑内容
-                        this.activeVersion = this.version
-                        
                         const [activeYaml, currentYaml] = await Promise.all([
                             this.fetchPipelineYaml(this.version),
                             this.fetchCurrentEditingYaml()
