@@ -251,7 +251,7 @@ class PipelineBuildFacadeService(
             )
         }
         val targetVersion = version ?: branch?.takeIf { it.isNotBlank() }?.let {
-            pipelineYamlFacadeService.getPipelineYamlInfo(
+            pipelineYamlFacadeService.getPipelineYamlVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 branch = branch,
@@ -459,7 +459,7 @@ class PipelineBuildFacadeService(
             val yamlParams = mutableMapOf<String, BuildParameters>()
             // 优先使用version参数，如果version为空，则使用branchName
             val targetVersion = version ?: branch?.takeIf { it.isNotBlank() }?.let {
-                pipelineYamlFacadeService.getPipelineYamlInfo(
+                pipelineYamlFacadeService.getPipelineYamlVersion(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     branch = it,
@@ -3207,12 +3207,12 @@ class PipelineBuildFacadeService(
         }
     }
 
-    fun getPipelineYamlInfo(
+    fun getPipelineYamlVersion(
         projectId: String,
         pipelineId: String,
         branchName: String,
         yamlParams: MutableMap<String, BuildParameters>
-    ) = pipelineYamlFacadeService.getPipelineYamlInfo(
+    ) = pipelineYamlFacadeService.getPipelineYamlVersion(
         projectId = projectId,
         pipelineId = pipelineId,
         branch = branchName,

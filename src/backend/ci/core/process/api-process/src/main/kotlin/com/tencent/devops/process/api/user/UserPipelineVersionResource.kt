@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
+import com.tencent.devops.process.pojo.PipelineYamlVersionInfo
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
@@ -426,4 +427,22 @@ interface UserPipelineVersionResource {
         @QueryParam("source")
         source: PipelineGetVersionSource? = PipelineGetVersionSource.VIEW
     ): Result<PipelineVersionWithModel>
+
+    @Operation(summary = "获取PAC分支版本信息")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/listPacVersions")
+    fun listPacVersions(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "查询分支", required = true)
+        @QueryParam("search")
+        search: String?
+    ): Result<List<PipelineYamlVersionInfo>>
 }
