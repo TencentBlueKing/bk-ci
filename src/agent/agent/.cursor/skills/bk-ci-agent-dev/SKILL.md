@@ -314,6 +314,12 @@ AgentUpgrade(upgradeItem, hasBuild)
 
 **升级器** (`pkg/upgrader/`): 独立进程，负责替换Agent/Daemon二进制文件并重启。平台差异大——Unix使用文件替换+进程信号，Windows需要等待进程退出再替换。
 
+**Daemon-Upgrader 协调机制** (`total-lock`):
+- Upgrader 在 `DoUpgradeAgent()` 中持有 `total-lock` 直到文件替换完成
+- Linux/macOS daemon: `watch()` 每次检查/启动 agent 前都持有 `total-lock`，天然避免竞争
+- Windows daemon: `watch()` 在启动 agent 前调用 `waitForUpgradeFinish()` 获取并立即释放 `total-lock`（gate 模式），确保 upgrader 不在运行
+- Windows 文件替换: `replaceAgentFile()` 含重试机制（最多 10 次、递增间隔），防止因 Windows 文件锁（如杀毒软件扫描、系统休眠后 daemon 先于 upgrader 拉起 agent 导致 exe 被锁）导致 rename 失败
+
 ## 跨平台开发指南
 
 ### 平台文件命名约定
@@ -429,6 +435,7 @@ config.GAgentConfig.EventBus.Publish("IpEvent", data)
 - `i18n.Localize()` 只加一次 RLock，内部 `getLocalizerLocked()` 不再加锁
 - EventBus `Publish` 使用全非阻塞 select 模式，丢弃和写入分两步各用 select 防止并发竞争
 - 升级期间通过 `BuildTotalManager.Upgrading` 原子标志阻止 Ask 轮询请求新构建任务，防止 Agent 二进制升级重启时阻塞中的构建丢失
+- Daemon 启动 agent 前必须先通过 `total-lock` 确认无 upgrader 在运行（Linux/macOS 持有锁，Windows 使用 gate 模式），避免 daemon 在 upgrader 替换二进制期间拉起新 agent 导致文件锁冲突
 
 ### MCP Server (`pkg/mcp/`)
 
@@ -499,7 +506,7 @@ func handleNewTool(ctx context.Context, req *protocol.CallToolRequest) (*protoco
 - [ ] 锁操作是否使用了 `defer Unlock()`？禁止手动多路径 Unlock
 - [ ] 是否需要通过 MCP 暴露新信息？在 `mcp/tools.go` 新增 Tool
 - [ ] 新增环境变量开关？在 `constant/constant.go` 添加常量
-- [ ] **测试用例**：新增/修改的可测试函数是否编写了单元测试？使用 table-driven + `t.Run()` 风格
+- [ ] **测试用例**：新增/修改的可测试函数是否编写了单元测试？使用 table-driven + `t.Run()` 风格，平台特定代码需编写对应的 `_win_test.go` / `_unix_test.go`
 - [ ] **功能文档**：是否需要更新 SKILL.md 中的架构描述、目录树、子命令说明？
 - [ ] CLI 子命令新增/修改？更新 `agentcli/` 的 `IsSubcommand()`、`printUsageLocalized()` 和 SKILL.md
 
@@ -550,23 +557,88 @@ go test -v -run TestPidStatus ./src/pkg/agentcli/
 - `doc/test/manual-test-agent-features.md` — 单测无法覆盖的人工上机验证清单（CLI / reinstall / status / Docker/Podman / 镜像调试 / 旧脚本兼容）
 
 **测试规范**:
-- 使用 table-driven + `t.Run()` 风格（参考 `agentcli/cli_test.go`）
-- 文件系统相关测试使用 `t.TempDir()`
-- 全局状态（如 `useChinese`）测试前保存、测试后恢复
-- 平台特定测试使用 build tag（如 `//go:build linux`）
-- 进程检测测试使用 `os.Getpid()` 验证存活进程
 
-**已有测试覆盖的 agentcli 模块**:
-| 文件 | 覆盖内容 |
-|------|---------|
-| `cli_test.go` | IsSubcommand、readProperty、preserveSet、cleanup、handleDebug、DebugFileExists、parsePropertiesFile、requiredKeyStatus、intKeyStatus |
-| `i18n_test.go` | msg/msgf、initLang 环境变量优先级、tryReadLang |
-| `status_linux_test.go` | dirStatus、fileStatus、readPid、pidStatus、currentUser |
-| `session_win_test.go` | splitUserDomain、readInstallTypeFile、handleInstall 模式分发和校验 |
-| `diagnose_test.go` | normalizeGateway、buildProxyFunc (含 NoProxy 排除)、loadCertIfExists、detectProxyUsed、tlsVersionName、checkDiskWritable、checkDiskSpace |
-| `dockercli_test.go` | RuntimeBinary、registryFromImage、formatCommand、容器创建时间判断、运行时 socket 选择、`DOCKER_HOST` 优先级 |
-| `options_test.go` | Docker/Podman CLI 参数构建、network 判断 |
-| `docker_runtime_test.go` | 构建容器默认 network/entrypoint/env/mount 参数拼装 |
+#### 基本原则
+- **所有包含 Go 代码的目录都应尽可能编写单元测试**，新增/修改的可测试函数必须有对应测试
+- 使用 table-driven + `t.Run()` 子测试风格（参考 `agentcli/cli_test.go`）
+- 仅使用标准库 `testing`，手动断言 `if + t.Errorf/t.Fatalf`，不引入 testify 等第三方断言库
+- 文件系统相关测试使用 `t.TempDir()`
+- 全局状态（如 `useChinese`）测试前保存、测试后 `defer` 恢复
+
+#### 日志初始化
+- 凡是被测代码路径中调用了 `logs.Info/Error/...` 的测试文件，必须在 `init()` 中调用 `logs.UNTestDebugInit()`
+- 同理，使用 `envs.FetchEnv` 的包需要 `envs.Init()`
+
+```go
+func init() {
+    logs.UNTestDebugInit()
+    envs.Init()
+}
+```
+
+#### 平台特定测试
+- **按编译条件为不同操作系统编写专属测试用例**，测试文件命名和 build tag 遵循以下约定:
+
+| 测试文件命名 | Build Tag | 适用场景 |
+|-------------|-----------|---------|
+| `xxx_win_test.go` | `//go:build windows` | Windows 专属（Job Object、WTS Session、句柄继承、服务模式等） |
+| `xxx_unix_test.go` | `//go:build linux \|\| darwin` | Unix 通用（Setpgid、信号处理、Shell 检测等） |
+| `xxx_linux_test.go` | `//go:build linux` | 仅 Linux（Docker、cgroup、oom_score_adj 等） |
+| `xxx_darwin_test.go` | `//go:build darwin` | 仅 macOS |
+| `xxx_test.go` | 无 tag | 跨平台通用逻辑 |
+
+- 同时使用旧格式 `// +build` 保持 Go 1.19 兼容:
+
+```go
+//go:build windows
+// +build windows
+```
+
+#### 权限与环境敏感测试
+- 需要管理员/SYSTEM 权限的测试（如 `WTSQueryUserToken`、`CreateProcessAsUser`），应在失败时使用 `t.Skipf()` 而非 `t.Fatalf()`
+- 进程检测测试使用 `os.Getpid()` 验证存活进程
+- 依赖外部服务或网络的测试应有超时保护，避免测试挂起
+
+#### 运行测试
+
+```bash
+# 全部测试（Go 1.21+ 工具链需加 -mod=mod 避免修改 go.mod）
+go test -mod=mod ./...
+
+# 仅特定包
+go test -mod=mod -v ./src/pkg/job/...
+
+# 运行特定测试
+go test -mod=mod -v -run TestStartProcessCmd ./src/pkg/job/...
+```
+
+#### 测试覆盖目标
+- 每个包含业务逻辑的 `*.go` 文件应有对应的 `*_test.go`
+- 平台特定的 `_win.go` / `_unix.go` 文件应有对应的 `_win_test.go` / `_unix_test.go`
+- 优先覆盖: 进程管理、配置解析、API 通信、构建流程、升级逻辑
+
+**已有测试覆盖**:
+
+| 包 | 文件 | 覆盖内容 |
+|----|------|---------|
+| `agentcli` | `cli_test.go` | IsSubcommand、readProperty、preserveSet、cleanup、handleDebug、DebugFileExists、parsePropertiesFile、requiredKeyStatus、intKeyStatus |
+| `agentcli` | `i18n_test.go` | msg/msgf、initLang 环境变量优先级、tryReadLang |
+| `agentcli` | `status_linux_test.go` | dirStatus、fileStatus、readPid、pidStatus、currentUser |
+| `agentcli` | `session_win_test.go` | splitUserDomain、readInstallTypeFile、handleInstall 模式分发和校验 |
+| `agentcli` | `diagnose_test.go` | normalizeGateway、buildProxyFunc (含 NoProxy 排除)、loadCertIfExists、detectProxyUsed、tlsVersionName、checkDiskWritable、checkDiskSpace |
+| `dockercli` | `dockercli_test.go` | RuntimeBinary、registryFromImage、formatCommand、容器创建时间判断、运行时 socket 选择、`DOCKER_HOST` 优先级 |
+| `dockercli` | `options_test.go` | Docker/Podman CLI 参数构建、network 判断 |
+| `job` | `docker_runtime_test.go` | 构建容器默认 network/entrypoint/env/mount 参数拼装 |
+| `upgrade` | `upgrade_test.go` | upgradeItems.NoChange |
+| `upgrader` | `upgrader_linux_test.go` | checkUpgradeFileChange、replaceAgentFile、modifyScriptPrivateTmp (含权限保留) |
+| `upgrader` | `upgrader_win_test.go` | replaceAgentFile (含重试)、replaceMaxRetries |
+| `cmd/daemon` | `daemon_win_test.go` | waitForUpgradeFinish (无锁/阻塞/连续调用) |
+| `config` | `config_test.go` | GetGateWay、GetAuthHeaderMap、GetPersistedProxyEnvs、SyncPersistedProxyEnvs |
+| `config` | `config_linux_test.go` | parseOSRelease、charsToString |
+| `httputil` | `devops_test.go` | DevopsResult.IsOk/IsNotOk、AgentResult.IsAgentDelete、HttpResult.IntoDevopsResult/IntoAgentResult |
+| `exiterror` | `exiterror_test.go` | AddExitError、GetAndResetExitError、CheckOsIoError、CheckSignalJdkError/WorkerError、CheckTimeoutError、WriteFileWithCheck |
+| `envs` | `env_test.go` | GEnvVarsT.Get/SetEnvs/GetAll/Size/RangeDo、FetchEnvAndCheck |
+| `util/fileutil` | `fileutil_test.go` | AtomicWriteFile (创建/覆盖/空文件/大文件/临时文件清理) |
 
 ### 关键第三方依赖
 
@@ -585,6 +657,7 @@ go test -v -run TestPidStatus ./src/pkg/agentcli/
 - 自定义 `min`/`max` 函数会与内置冲突（本项目无此问题）
 - `for range` 循环变量语义变化（每次迭代独立变量）
 - 最低系统要求提升：Windows 10+, CentOS 7+(边缘)
+- **`unsafe.Pointer` 已修复**: `process_exit_group_win.go` 的 `AddProcess()` 已从 `unsafe.Pointer` 方案改为 `windows.OpenProcess()` 通过 PID 获取句柄，不再有 Go 版本布局兼容性问题
 
 ## 常见开发场景
 
@@ -689,7 +762,7 @@ bin/
 ## 注意事项
 
 1. **Go版本锁定**: `go.mod` 中 `go 1.19` 不可随意升级。引入新依赖时必须确认其最低Go版本要求兼容1.19。**禁止**使用 `go mod tidy`（Go 1.21+工具链会自动将go指令升级到1.21），应使用 `GOFLAGS=-mod=mod go build` 来自动更新 go.mod，或通过 gvm 切换到 Go 1.19 后再执行 `go mod tidy`
-2. **`unsafe.Pointer` 使用**: `process_exit_group_win.go` 中通过 unsafe 读取 `os.Process` 内部字段，Go版本升级时需验证内存布局
+2. **`unsafe.Pointer`**: `process_exit_group_win.go` 已改用 `windows.OpenProcess()` 方案，不再依赖 `os.Process` 内部字段布局，Go 版本升级无兼容性问题
 3. **Telegraf版本锁定**: `go.mod` 中注释说明了 telegraf/gopsutil/docker 版本绑定关系，不可独立升级
 4. **环境变量优先级**: API配置变量 > 系统环境变量
 5. **构建成功等待**: 构建成功后会 `time.Sleep(8*time.Second)` 等待日志写入
