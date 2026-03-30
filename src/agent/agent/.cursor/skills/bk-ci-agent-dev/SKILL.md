@@ -242,6 +242,8 @@ DoBuild(buildInfo)
 runDockerBuild(buildInfo)
   → dockercli.Runner 创建 (默认 docker，可通过环境变量切换 podman)
   → 镜像拉取(根据策略)
+       ├─ `Always` / 默认 `latest`: 直接 `pull`，跳过本地 `image inspect`
+       └─ `IfNotPresent` / 默认非 `latest`: 先 `image inspect` 判断本地是否存在
   → 组装 `docker create` 参数:
        挂载: JRE(只读), worker-agent.jar(只读), init.sh(只读), workspace(读写), logs(读写)
        环境变量: project_id, agent_id, secret_key, gateway, build_env=DOCKER
@@ -257,7 +259,12 @@ runDockerBuild(buildInfo)
 - 默认使用 `docker` 命令行
 - 通过环境变量 `DEVOPS_AGENT_CONTAINER_RUNTIME=podman` 可切换为 `podman`
 - 所有核心容器生命周期操作（pull/create/start/wait/logs/rm/stop/ps）统一走 `pkg/dockercli/`
-- 会将完整命令、stdout、stderr 打到 Agent 日志；构建任务还会将关键命令输出上报到构建日志
+- Docker CLI 日志按级别产生日志事件并同步到 Agent 日志 / 构建日志
+- 命令本身: 普通命令记 `LOG`，`image inspect` 记 `DEBUG`
+- 成功时 `stdout`: 记 `LOG`
+- 成功时 `stderr`: 默认记 `LOG`，若包含 `warning` / `deprecated` 等提示则记 `WARN`
+- 失败时 `stdout`: 记 `WARN`
+- 失败时 `stderr`: 记 `ERROR`
 ```
 
 **关键文件**:
@@ -631,9 +638,9 @@ go test -mod=mod -v -run TestStartProcessCmd ./src/pkg/job/...
 | `agentcli` | `status_linux_test.go` | dirStatus、fileStatus、readPid、pidStatus、currentUser |
 | `agentcli` | `session_win_test.go` | splitUserDomain、readInstallTypeFile、handleInstall 模式分发和校验 |
 | `agentcli` | `diagnose_test.go` | normalizeGateway、buildProxyFunc (含 NoProxy 排除)、loadCertIfExists、detectProxyUsed、tlsVersionName、checkDiskWritable、checkDiskSpace |
-| `dockercli` | `dockercli_test.go` | RuntimeBinary、registryFromImage、formatCommand、容器创建时间判断、运行时 socket 选择、`DOCKER_HOST` 优先级 |
-| `dockercli` | `options_test.go` | Docker/Podman CLI 参数构建、network 判断 |
-| `job` | `docker_runtime_test.go` | 构建容器默认 network/entrypoint/env/mount 参数拼装 |
+| `dockercli` | `dockercli_test.go` | RuntimeBinary、registryFromImage、formatCommand、容器创建时间判断、运行时 socket 选择、`DOCKER_HOST` 优先级、classifyCommandLevel、classifyStreamLevel、looksLikeWarning、NewRunnerWithEvent |
+| `job_docker` | `options_test.go` | Docker/Podman CLI 参数构建、network 判断、NeedLocalImageInspect |
+| `job` | `docker_runtime_test.go` | 构建容器默认 network/entrypoint/env/mount 参数拼装、Docker CLI 级别到后台 `LogType` 映射 |
 | `upgrade` | `upgrade_test.go` | upgradeItems.NoChange |
 | `upgrader` | `upgrader_linux_test.go` | checkUpgradeFileChange、replaceAgentFile、modifyScriptPrivateTmp (含权限保留) |
 | `upgrader` | `upgrader_win_test.go` | replaceAgentFile (含重试)、replaceMaxRetries |

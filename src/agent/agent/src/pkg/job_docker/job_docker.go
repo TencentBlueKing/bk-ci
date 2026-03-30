@@ -116,6 +116,17 @@ func IfPullImage(localExist, isLatest bool, policy string) bool {
 	}
 }
 
+func NeedLocalImageInspect(isLatest bool, policy string) bool {
+	switch policy {
+	case api.ImagePullPolicyAlways.String():
+		return false
+	case api.ImagePullPolicyIfNotPresent.String():
+		return true
+	default:
+		return !isLatest
+	}
+}
+
 func EnsureDockerWorkspaceDirs() error {
 	if err := os.MkdirAll(LocalDockerBuildTmpDirName, os.ModePerm); err != nil {
 		return err

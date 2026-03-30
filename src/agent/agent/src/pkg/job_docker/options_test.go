@@ -76,3 +76,29 @@ func TestHasCustomNetwork(t *testing.T) {
 		t.Fatal("expected true")
 	}
 }
+
+func TestNeedLocalImageInspect(t *testing.T) {
+	tests := []struct {
+		name     string
+		isLatest bool
+		policy   string
+		want     bool
+	}{
+		{"always_latest", true, api.ImagePullPolicyAlways.String(), false},
+		{"always_non_latest", false, api.ImagePullPolicyAlways.String(), false},
+		{"if_not_present_latest", true, api.ImagePullPolicyIfNotPresent.String(), true},
+		{"if_not_present_non_latest", false, api.ImagePullPolicyIfNotPresent.String(), true},
+		{"default_latest", true, "", false},
+		{"default_non_latest", false, "", true},
+		{"unknown_policy_latest", true, "unknown", false},
+		{"unknown_policy_non_latest", false, "unknown", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NeedLocalImageInspect(tt.isLatest, tt.policy); got != tt.want {
+				t.Errorf("NeedLocalImageInspect(%v, %q) = %v, want %v", tt.isLatest, tt.policy, got, tt.want)
+			}
+		})
+	}
+}

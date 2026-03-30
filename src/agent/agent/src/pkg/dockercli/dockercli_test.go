@@ -126,6 +126,26 @@ func TestNewRunner(t *testing.T) {
 	}
 }
 
+func TestNewRunnerWithEvent(t *testing.T) {
+	called := false
+	r := NewRunnerWithEvent("/tmp", func(entry LogEntry) {
+		called = true
+		if entry.Level != LogLevelInfo {
+			t.Errorf("Level = %q, want %q", entry.Level, LogLevelInfo)
+		}
+		if entry.Message != "hello world" {
+			t.Errorf("Message = %q, want %q", entry.Message, "hello world")
+		}
+	})
+	if r == nil || r.workDir != "/tmp" || r.binary == "" {
+		t.Fatal("NewRunnerWithEvent should initialize fields")
+	}
+	r.log(LogLevelInfo, "hello %s", "world")
+	if !called {
+		t.Fatal("event logger should be called")
+	}
+}
+
 func TestListContainersParse(t *testing.T) {
 	lines := "id1\tname1\t2024-01-01 00:00:00 +0000 UTC\trunning\tUp 1 hour\nid2\tname2\t2024-01-02 00:00:00 +0000 UTC\texited\tExited (0)"
 	_ = lines
@@ -140,5 +160,66 @@ func TestProxyRequestShape(t *testing.T) {
 	req := &http.Request{URL: &url.URL{Scheme: "http", Host: "example.com"}}
 	if req.URL.Host != "example.com" {
 		t.Fatal("sanity check failed")
+	}
+}
+
+func TestClassifyCommandLevel(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+		want LogLevel
+	}{
+		{"image_inspect", []string{"image", "inspect", "nginx:latest"}, LogLevelDebug},
+		{"container_inspect", []string{"inspect", "cid"}, LogLevelInfo},
+		{"pull", []string{"pull", "nginx:latest"}, LogLevelInfo},
+		{"empty", nil, LogLevelInfo},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := classifyCommandLevel(tt.args); got != tt.want {
+				t.Errorf("classifyCommandLevel(%v) = %q, want %q", tt.args, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestClassifyStreamLevel(t *testing.T) {
+	runErr := &url.Error{Op: "run", URL: "docker", Err: os.ErrPermission}
+	tests := []struct {
+		name     string
+		isStderr bool
+		runErr   error
+		output   string
+		want     LogLevel
+	}{
+		{"success_stdout", false, nil, "ok", LogLevelInfo},
+		{"success_stderr_normal_progress", true, nil, "Pulling fs layer", LogLevelInfo},
+		{"success_stderr_warning", true, nil, "WARNING: deprecated config", LogLevelWarn},
+		{"failed_stdout", false, runErr, "partial output", LogLevelWarn},
+		{"failed_stderr", true, runErr, "permission denied", LogLevelError},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := classifyStreamLevel(tt.isStderr, tt.runErr, tt.output); got != tt.want {
+				t.Errorf("classifyStreamLevel(%v, %v, %q) = %q, want %q", tt.isStderr, tt.runErr != nil, tt.output, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestLooksLikeWarning(t *testing.T) {
+	tests := []struct {
+		input string
+		want  bool
+	}{
+		{"WARNING: deprecated", true},
+		{"warn: something odd", true},
+		{"This feature is deprecated", true},
+		{"Pulling fs layer", false},
+	}
+	for _, tt := range tests {
+		if got := looksLikeWarning(tt.input); got != tt.want {
+			t.Errorf("looksLikeWarning(%q) = %v, want %v", tt.input, got, tt.want)
+		}
 	}
 }
