@@ -52,10 +52,10 @@ const (
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
-	if len(os.Args) >= 2 && agentcli.IsSubcommand(os.Args[1]) {
+	if cliArgs, ok := resolveCLIArgs(os.Args); ok {
 		workDir := systemutil.GetExecutableDir()
 		os.Chdir(workDir)
-		agentcli.Run(workDir, os.Args[1:])
+		agentcli.Run(workDir, cliArgs)
 		return
 	}
 
@@ -95,6 +95,13 @@ func main() {
 	logEnv()
 
 	agent.Run(isDebug)
+}
+
+func resolveCLIArgs(args []string) ([]string, bool) {
+	if len(args) < 2 {
+		return nil, false
+	}
+	return args[1:], true
 }
 
 func logEnv() {

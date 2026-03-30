@@ -115,6 +115,11 @@ agent.Run()
 
 Agent 二进制 `devopsAgent` 同时作为 CLI 工具使用，通过 `main.go` 中的 `agentcli.IsSubcommand()` 判定后分流。
 
+**入口分流规则**:
+- 无参数: 正常启动 agent 主进程
+- 有参数: 一律进入 CLI 分发
+- 若参数不是已注册子命令: 直接输出 `unknown command` 和帮助信息并退出，**不会**再回落成启动 agent 主进程
+
 **子命令一览**:
 
 ```
