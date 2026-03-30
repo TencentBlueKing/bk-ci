@@ -141,7 +141,10 @@ config = {
         host = "frontend-bk-ci-frontend"
     },
     tag_service_table = __BK_CI_TAG_SERVICE_TABLE__,
-    tag_project_table = __BK_CI_TAG_PROJECT_TABLE__
+    tag_project_table = __BK_CI_TAG_PROJECT_TABLE__,
+    scc = {
+        domain = "__BK_SCC_FQDN__"
+    }
 }
 
 -- 特殊域名
