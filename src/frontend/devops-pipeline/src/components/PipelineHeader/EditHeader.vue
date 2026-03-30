@@ -106,7 +106,7 @@
         RESOURCE_ACTION,
         RESOURCE_TYPE
     } from '@/utils/permission'
-    import { UI_MODE } from '@/utils/pipelineConst'
+    import { UI_MODE, DRAFT_STATUS } from '@/utils/pipelineConst'
     import { showPipelineCheckMsg, convertTime } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
@@ -433,9 +433,9 @@
                         actionType: 'SAVE'
                     })
                     this.lasterDraftInfo = draftStatus
-                    if (this.lasterDraftInfo.status === 'NORMAL') {
+                    if (this.lasterDraftInfo.status === DRAFT_STATUS.NORMAL) {
                         return await this.executeSaveDraft()
-                    } else if (this.lasterDraftInfo.status === 'CONFLICT' || this.lasterDraftInfo.status === 'PUBLISHED') {
+                    } else if (this.lasterDraftInfo.status === DRAFT_STATUS.CONFLICT || this.lasterDraftInfo.status === DRAFT_STATUS.PUBLISHED) {
                         this.isConflictDraft = true
                         return false
                     }

@@ -116,7 +116,7 @@
                         :show-button="false"
                         :draft-version="conflictDraftInfo.draftVersion"
                         :current-editing-data="currentEditingData"
-                        :diff-mode="'CONFLICT'"
+                        :diff-mode="DRAFT_STATUS.CONFLICT"
                     >
                         <Logo
                             name="diff"
@@ -143,7 +143,7 @@
                         :disabled="!hasDraftPipeline"
                         :version="publishedInfo?.version"
                         :current-editing-data="currentEditingData"
-                        :diff-mode="'PUBLISHED'"
+                        :diff-mode="DRAFT_STATUS.PUBLISHED"
                     >
                         <Logo
                             name="diff"
@@ -190,6 +190,7 @@
     import { mapState, mapActions } from 'vuex'
     import { convertTime } from '@/utils/util'
     import Logo from '@/components/Logo'
+    import { DRAFT_STATUS } from '@/utils/pipelineConst'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry.vue'
 
     export default {
@@ -255,10 +256,10 @@
             },
             // 冲突状态相关的computed
             isConflictStatus () {
-                return this.lasterDraftInfo?.status === 'CONFLICT'
+                return this.lasterDraftInfo?.status === DRAFT_STATUS.CONFLICT
             },
             isPublishedStatus () {
-                return this.lasterDraftInfo?.status === 'PUBLISHED'
+                return this.lasterDraftInfo?.status === DRAFT_STATUS.PUBLISHED
             },
             conflictDraftInfo () {
                 return this.lasterDraftInfo?.draft
@@ -308,6 +309,9 @@
                 },
                 immediate: true
             }
+        },
+        created () {
+            this.DRAFT_STATUS = DRAFT_STATUS
         },
         mounted () {
             // 监听全局点击事件

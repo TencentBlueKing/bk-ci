@@ -45,13 +45,13 @@
                                 'develop-txt-disabled': !hasDraftPipeline
                             }
                         ]"
-                        :text="true"
+                        text
                         :can-switch-version="false"
                         :show-button="false"
                         :disabled="!hasDraftPipeline"
                         :version="lasterDraftInfo?.version"
                         :current-editing-data="currentEditingData"
-                        :diff-mode="'PUBLISHED'"
+                        :diff-mode="DRAFT_STATUS.PUBLISHED"
                     >
                         <Logo
                             name="diff"
@@ -87,6 +87,7 @@
     import Logo from '@/components/Logo'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry.vue'
     import { convertTime } from "@/utils/util"
+    import { DRAFT_STATUS } from '@/utils/pipelineConst'
     
     export default {
         components: {
@@ -161,6 +162,9 @@
                 }
             }
         },
+        created () {
+            this.DRAFT_STATUS = DRAFT_STATUS
+        },
         methods: {
             ...mapActions('atom', [
                 'requestPipelineSummary',
@@ -196,7 +200,7 @@
                     this.draftStatus = draftStatus
                     
                     // 如果状态是 PUBLISHED，显示已发布弹窗
-                    if (draftStatus.status === 'PUBLISHED') {
+                    if (draftStatus.status === DRAFT_STATUS.PUBLISHED) {
                         this.lasterDraftInfo = draftStatus.release
                         this.isPublishedDialogShow = true
                     } else {

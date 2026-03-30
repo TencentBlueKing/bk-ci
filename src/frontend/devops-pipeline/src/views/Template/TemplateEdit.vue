@@ -31,7 +31,7 @@
                         :release-version="releaseVersion"
                         :project-id="projectId"
                         :unique-id="templateId"
-                        :is-template="true"
+                        is-template
                         :current-editing-data="currentEditingData"
                         @rollback="handleRollback"
                         @new-draft="handleNewDraft"
@@ -80,6 +80,7 @@
         convertTime,
         showPipelineCheckMsg
     } from '@/utils/util'
+    import { DRAFT_STATUS } from '@/utils/pipelineConst'
     import Edit from '@/views/subpages/edit'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import DraftManager from '@/components/DraftManager'
@@ -416,9 +417,9 @@
                     actionType: 'SAVE'
                 })
                 this.lasterDraftInfo = draftStatus
-                if (this.lasterDraftInfo.status === 'NORMAL') {
+                if (this.lasterDraftInfo.status === DRAFT_STATUS.NORMAL) {
                     return await this.executeSaveDraft()
-                } else if (this.lasterDraftInfo.status === 'CONFLICT' || this.lasterDraftInfo.status === 'PUBLISHED') {
+                } else if (this.lasterDraftInfo.status === DRAFT_STATUS.CONFLICT || this.lasterDraftInfo.status === DRAFT_STATUS.PUBLISHED) {
                     this.isConflictDraft = true
                     return false
                 }

@@ -46,7 +46,7 @@
                     {{ activeBranchVersionInfo }}
                 </p>
                 <div v-else>
-                    <div v-if="isVersionList || isRollbackBtn">{{ $t('dropDraftTips', [versionName]) }}</div>
+                    <div v-if="isCreateNewVersion">{{ $t('dropDraftTips', [versionName]) }}</div>
                     <div v-else>
                         <p class="draft-info">
                             <i18n
@@ -58,7 +58,7 @@
                             </i18n>
                             <VersionDiffEntry
                                 style="cursor: pointer;"
-                                :text="true"
+                                text
                                 :latest-version="draftSaveInfo?.draftVersion"
                                 :version="draftSaveInfo?.releaseVersion"
                             >
@@ -69,7 +69,7 @@
                             </VersionDiffEntry>
                         </p>
                         <div
-                            v-if="draftStatus === 'OUTDATED'"
+                            v-if="draftStatus === DRAFT_STATUS.OUTDATED"
                             class="is-active-branch-version"
                         >
                             <i18n path="draftBaselineIsEarlierThanCurrentVersionNotice">
@@ -81,7 +81,7 @@
                             <p>{{ $t('draftNoticeTip2') }}</p>
                         </div>
                         <div
-                            v-if="draftStatus === 'EXISTS'"
+                            v-if="draftStatus === DRAFT_STATUS.EXISTS"
                             class="is-active-branch-version"
                         >{{ $t('regenerateDraftOrEditExisting') }}</div>
                     </div>
@@ -92,7 +92,7 @@
                     theme="primary"
                     @click="rollback"
                 >
-                    {{ $t(isActiveBranchVersion ? 'resume' : (isVersionList || isRollbackBtn) ? 'newVersion' : 'newDraft') }}
+                    {{ $t(isActiveBranchVersion ? 'resume' : isCreateNewVersion ? 'newVersion' : 'newDraft') }}
                 </bk-button>
                 <bk-button
                     v-if="hasDraftPipeline && !isActiveBranchVersion"
@@ -114,7 +114,7 @@
         RESOURCE_TYPE,
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
-    import { pipelineTabIdMap } from '@/utils/pipelineConst'
+    import { pipelineTabIdMap, DRAFT_STATUS } from '@/utils/pipelineConst'
     import Logo from '@/components/Logo'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
     import dayjs from 'dayjs'
@@ -172,7 +172,7 @@
             // 草稿状态
             draftStatus: {
                 type: String,
-                default: 'NORMAL'
+                default: DRAFT_STATUS.NORMAL
             },
             draftSaveInfo: {
                 type: Object,
@@ -214,6 +214,9 @@
                 const isReleaseVersion = this.version === releaseVersion
                 return !(this.isActiveDraft || baseVersion === this.version || this.isActiveBranchVersion || (isReleaseVersion && !this.hasDraftPipeline))
             },
+            isCreateNewVersion () {
+                return this.isVersionList || this.isRollbackBtn
+            },
             operateName () {
                 return this.isRollback
                     ? this.$t('rollback')
@@ -225,7 +228,7 @@
                         return this.$t('template.templateCoverWarning')
                     case this.hasDraftPipeline:
                         // 版本列表和回滚按钮保持原有逻辑，编辑操作需检测是否有草稿冲突
-                        return (this.isVersionList || this.isRollbackBtn) ? this.$t('hasDraftTips', [this.draftBaseVersionName]) : this.$t('hasDraft')
+                        return this.isCreateNewVersion ? this.$t('hasDraftTips', [this.draftBaseVersionName]) : this.$t('hasDraft')
                     default:
                         return this.$t(this.isActiveBranchVersion ? 'createBranchDraftTips' : 'createDraftTips', [this.versionName])
                 }
@@ -240,6 +243,9 @@
             formatDraftCreateTime () {
                 return dayjs(this.draftCreateTime).format('YYYY-MM-DD HH:mm:ss')
             }
+        },
+        created () {
+            this.DRAFT_STATUS = DRAFT_STATUS
         },
         methods: {
             ...mapActions({
@@ -284,7 +290,7 @@
                 }
 
                 // 详情页：无草稿冲突，直接编辑
-                if (this.draftStatus === 'NORMAL') {
+                if (this.draftStatus === DRAFT_STATUS.NORMAL) {
                     this.goEdit(this.draftVersion ?? this.version)
                     return
                 }

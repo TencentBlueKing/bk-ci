@@ -154,7 +154,7 @@
         RESOURCE_TYPE,
         TEMPLATE_RESOURCE_ACTION,
     } from '@/utils/permission'
-    import { pipelineTabIdMap } from '@/utils/pipelineConst'
+    import { pipelineTabIdMap, DRAFT_STATUS } from '@/utils/pipelineConst'
     import dayjs from 'dayjs'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import MoreActions from './MoreActions.vue'
@@ -180,7 +180,7 @@
                 RESOURCE_TYPE,
                 RESOURCE_ACTION,
                 showVersionSideslider: false,
-                draftStatus: 'NORMAL',
+                draftStatus: DRAFT_STATUS.NORMAL,
                 draftSaveInfo: null,
                 isPipelineIdChanged: false
             }

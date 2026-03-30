@@ -294,7 +294,7 @@
                     }
                     
                     // 判断是否存在 draftVersion
-                    const hasDraftVersion = this.draftVersion ? true : false
+                    const hasDraftVersion = !!this.draftVersion
                     
                     // 根据是否存在 draftVersion 选择不同的接口和参数
                     const idKey = this.isTemplate ? 'templateId' : 'pipelineId'

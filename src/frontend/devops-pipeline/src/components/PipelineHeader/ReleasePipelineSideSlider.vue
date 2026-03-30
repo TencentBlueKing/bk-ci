@@ -17,7 +17,7 @@
                     }]"
                 >
                     <bk-alert
-                        v-if="draftStatus && draftStatus.status === 'OUTDATED'"
+                        v-if="draftStatus && draftStatus.status === DRAFT_STATUS.OUTDATED"
                         type="warning"
                     >
                         <template slot="title">
@@ -521,7 +521,7 @@
         SHOW_TASK_DETAIL
     } from '@/store/modules/templates/constants'
     import { RESOURCE_TYPE } from '@/utils/permission'
-    import { TARGET_ACTION_ENUM, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
+    import { TARGET_ACTION_ENUM, VERSION_STATUS_ENUM, DRAFT_STATUS } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
     export default {
         components: {
@@ -870,6 +870,9 @@
                 },
                 immediate: true
             }
+        },
+        created () {
+            this.DRAFT_STATUS = DRAFT_STATUS
         },
         mounted () {
             this.preZIndex = window.__bk_zIndex_manager.zIndex

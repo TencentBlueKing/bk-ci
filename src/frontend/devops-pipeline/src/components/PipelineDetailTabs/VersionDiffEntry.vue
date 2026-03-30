@@ -115,6 +115,7 @@
     import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
     import YamlDiff from '@/components/YamlDiff'
     import { mapActions, mapGetters } from 'vuex'
+    import { DRAFT_STATUS } from '@/utils/pipelineConst'
     import dayjs from 'dayjs'
     export default {
         components: {
@@ -180,7 +181,7 @@
             diffMode: {
                 type: String,
                 default: null,
-                validator: (value) => !value || ['CONFLICT', 'PUBLISHED'].includes(value)
+                validator: (value) => !value || [DRAFT_STATUS.CONFLICT, DRAFT_STATUS.PUBLISHED].includes(value)
             }
         },
         data () {
@@ -301,23 +302,15 @@
                 
                 // 处理特殊的差异对比模式（CONFLICT 或 PUBLISHED）
                 if (this.diffMode && this.currentEditingData) {
-                    if (this.diffMode === 'CONFLICT') {
-                        // 冲突状态：对比最后保存的草稿 vs 当前编辑内容
-                        const [activeYaml, currentYaml] = await Promise.all([
-                            this.fetchPipelineYaml(this.version, this.draftVersion || undefined),
-                            this.fetchCurrentEditingYaml()
-                        ])
-                        this.activeYaml = activeYaml
-                        this.currentYaml = currentYaml
-                    } else if (this.diffMode === 'PUBLISHED') {
-                        // 已发布状态：对比最新发布版本 vs 当前编辑内容
-                        const [activeYaml, currentYaml] = await Promise.all([
-                            this.fetchPipelineYaml(this.version),
-                            this.fetchCurrentEditingYaml()
-                        ])
-                        this.activeYaml = activeYaml
-                        this.currentYaml = currentYaml
-                    }
+                    // CONFLICT冲突状态：对比最后保存的草稿 vs 当前编辑内容
+                    // PUBLISHED已发布状态：对比最新发布版本 vs 当前编辑内容
+                    const draftVersion = this.diffMode === DRAFT_STATUS.CONFLICT ? (this.draftVersion || undefined) : undefined
+                    const [activeYaml, currentYaml] = await Promise.all([
+                        this.fetchPipelineYaml(this.version, draftVersion),
+                        this.fetchCurrentEditingYaml()
+                    ])
+                    this.activeYaml = activeYaml
+                    this.currentYaml = currentYaml
                     this.isLoadYaml = false
                     return
                 }
