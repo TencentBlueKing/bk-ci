@@ -464,21 +464,7 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun remindUserOfRelatedProduct(userId: String, englishName: String): Boolean {
-        val projectInfo = getByEnglishName(englishName) ?: return false
-        // 1、判断项目是否是preci项目
-        if (projectInfo.channelCode != ProjectChannelCode.PREBUILD.name) {
-            return false
-        }
-        // 2、判断项目是否未关联OBS产品
-        if (projectInfo.productId != null) {
-            return false
-        }
-        // 3、判断用户是否是管理员
-        return verifyUserProjectPermission(
-            userId = userId,
-            projectId = englishName,
-            permission = AuthPermission.MANAGE
-        )
+        return false
     }
 
     override fun validateProjectRelateProduct(
