@@ -6,5 +6,5 @@ package agentcli
 import "fmt"
 
 func handleConfigureSession(_ string, _ []string) error {
-	return fmt.Errorf("configure-session is only supported on Windows")
+	return fmt.Errorf(msg("configure-session is only supported on Windows", "configure-session 仅支持 Windows"))
 }

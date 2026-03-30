@@ -128,3 +128,26 @@ func TestMapDockerRunnerLogLevel(t *testing.T) {
 		})
 	}
 }
+
+func TestRouteLogByType(t *testing.T) {
+	tests := []struct {
+		name    string
+		red     bool
+		logType api.LogType
+		want    logRoute
+	}{
+		{"explicit_red_wins", true, api.LogtypeLog, logRouteRed},
+		{"error_routes_red", false, api.LogtypeError, logRouteRed},
+		{"warn_routes_yellow", false, api.LogtypeWarn, logRouteYellow},
+		{"debug_routes_normal", false, api.LogtypeDebug, logRouteNormal},
+		{"log_routes_normal", false, api.LogtypeLog, logRouteNormal},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := routeLogByType(tt.red, tt.logType); got != tt.want {
+				t.Errorf("routeLogByType(%v, %q) = %q, want %q", tt.red, tt.logType, got, tt.want)
+			}
+		})
+	}
+}

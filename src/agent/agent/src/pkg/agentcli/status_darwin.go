@@ -13,6 +13,7 @@ import (
 )
 
 func handleStatus(workDir string) error {
+	beginStatusSummary()
 	printDivider()
 	printStep(msg("BK-CI Agent Status", "BK-CI Agent 状态"))
 	printDivider()
@@ -50,6 +51,8 @@ func handleStatus(workDir string) error {
 	statusLine("worker-agent.jar", fileStatus(filepath.Join(workDir, "worker-agent.jar")))
 
 	printHealthChecks(workDir)
+	fmt.Println()
+	printStatusSummaryLine()
 
 	return nil
 }
@@ -104,5 +107,6 @@ func fileStatus(path string) string {
 }
 
 func statusLine(label, value string) {
+	trackStatusLine(label, value)
 	fmt.Printf("  %-24s %s\n", label+":", value)
 }

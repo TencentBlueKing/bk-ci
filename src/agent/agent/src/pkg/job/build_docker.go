@@ -327,6 +327,14 @@ func dockerBuildFinish(buildInfo *api.ThirdPartyBuildWithStatus) {
 	logs.Info("DOCKER_JOB|workerBuildFinish done")
 }
 
+type logRoute string
+
+const (
+	logRouteNormal logRoute = "normal"
+	logRouteYellow logRoute = "yellow"
+	logRouteRed    logRoute = "red"
+)
+
 // postLog 向后台上报日志
 func postLog(red bool, message string, buildInfo *api.ThirdPartyBuildInfo, logType api.LogType) {
 	taskId := "startVM-" + buildInfo.VmSeqId
@@ -342,12 +350,25 @@ func postLog(red bool, message string, buildInfo *api.ThirdPartyBuildInfo, logTy
 	}
 
 	var err error
-	if red {
+	switch routeLogByType(red, logType) {
+	case logRouteRed:
 		_, err = api.AddLogRedLine(buildInfo.BuildId, logMessage, buildInfo.VmSeqId)
-	} else {
+	case logRouteYellow:
+		_, err = api.AddLogYellowLine(buildInfo.BuildId, logMessage, buildInfo.VmSeqId)
+	default:
 		_, err = api.AddLogLine(buildInfo.BuildId, logMessage, buildInfo.VmSeqId)
 	}
 	if err != nil {
 		logs.Error("DOCKER_JOB|api post log error", err)
 	}
+}
+
+func routeLogByType(red bool, logType api.LogType) logRoute {
+	if red || logType == api.LogtypeError {
+		return logRouteRed
+	}
+	if logType == api.LogtypeWarn {
+		return logRouteYellow
+	}
+	return logRouteNormal
 }

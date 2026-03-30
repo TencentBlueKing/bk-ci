@@ -85,12 +85,12 @@ func installService(workDir string) error {
 	binPath := fmt.Sprintf(`"%s"`, daemonPath)
 	printStep(msgf("Creating service %s ...", "创建服务 %s ...", serviceName))
 	if out, err := exec.Command("sc.exe", "create", serviceName, "binPath=", binPath, "start=", "auto").CombinedOutput(); err != nil {
-		return fmt.Errorf("sc.exe create: %s (%w)", string(out), err)
+		return cliErrorf("sc.exe create failed: %s (%v)", "sc.exe create 失败: %s (%v)", string(out), err)
 	}
 
 	printStep(msg("Step 3: starting service ...", "步骤 3: 启动服务 ..."))
 	if out, err := exec.Command("sc.exe", "start", serviceName).CombinedOutput(); err != nil {
-		printWarn(fmt.Sprintf("sc.exe start: %s", string(out)))
+		printWarn(msgf("sc.exe start: %s", "sc.exe start: %s", string(out)))
 	}
 
 	time.Sleep(2 * time.Second)
@@ -143,7 +143,7 @@ func installTask(workDir string) error {
 	out, err := exec.Command("schtasks", "/create", "/tn", serviceName,
 		"/tr", tr, "/sc", "onlogon", "/rl", "highest", "/f").CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("schtasks create: %s (%w)", strings.TrimSpace(string(out)), err)
+		return cliErrorf("schtasks create failed: %s (%v)", "schtasks create 失败: %s (%v)", strings.TrimSpace(string(out)), err)
 	}
 	printStep(msgf("Scheduled task %s created (trigger: on logon)",
 		"计划任务 %s 已创建 (触发: 用户登录时)", serviceName))
@@ -153,7 +153,7 @@ func installTask(workDir string) error {
 	printStep(msg("Step 3: starting scheduled task ...", "步骤 3: 启动计划任务 ..."))
 	out, err = exec.Command("schtasks", "/run", "/tn", serviceName).CombinedOutput()
 	if err != nil {
-		printWarn(fmt.Sprintf("schtasks run: %s", strings.TrimSpace(string(out))))
+		printWarn(msgf("schtasks run: %s", "schtasks run: %s", strings.TrimSpace(string(out))))
 	} else {
 		printStep(msgf("Scheduled task %s started", "计划任务 %s 已启动", serviceName))
 	}
@@ -206,7 +206,7 @@ func handleStart(workDir string) error {
 		printStep(msgf("Starting service %s ...", "启动服务 %s ...", serviceName))
 		out, err := exec.Command("sc.exe", "start", serviceName).CombinedOutput()
 		if err != nil {
-			return fmt.Errorf("sc.exe start: %s (%w)", string(out), err)
+			return cliErrorf("sc.exe start failed: %s (%v)", "sc.exe start 失败: %s (%v)", string(out), err)
 		}
 		printStep(msgf("Service %s started", "服务 %s 已启动", serviceName))
 		return nil

@@ -134,9 +134,81 @@ func printStep(m string)                    { fmt.Printf("[BK-CI] %s\n", m) }
 func printWarn(m string)                    { fmt.Printf("[BK-CI][WARN] %s\n", m) }
 func printErr(m string)                     { fmt.Fprintf(os.Stderr, "[BK-CI][ERROR] %s\n", m) }
 func printStepf(f string, a ...interface{}) { fmt.Printf("[BK-CI] "+f+"\n", a...) }
+func cliErrorf(en, zh string, a ...interface{}) error {
+	return fmt.Errorf(msgf(en, zh, a...))
+}
 
 func printDivider() {
 	printStep("============================================")
+}
+
+type statusSummaryState struct {
+	hasIssue bool
+}
+
+var currentStatusSummary *statusSummaryState
+
+func beginStatusSummary() {
+	currentStatusSummary = &statusSummaryState{}
+}
+
+func trackStatusLine(label, value string) {
+	if currentStatusSummary == nil {
+		return
+	}
+	if statusValueHasIssue(label, value) {
+		currentStatusSummary.hasIssue = true
+	}
+}
+
+func printStatusSummaryLine() {
+	if currentStatusSummary == nil {
+		return
+	}
+	summary := msg("Normal ✓", "正常 ✓")
+	if currentStatusSummary.hasIssue {
+		summary = msg("Abnormal ✗", "异常 ✗")
+	}
+	fmt.Printf("  %-24s %s\n", msg("Summary", "汇总")+":", summary)
+}
+
+func statusValueHasIssue(label, value string) bool {
+	lowerValue := strings.ToLower(value)
+	if strings.Contains(value, "✗") || strings.Contains(value, "⚠") || strings.Contains(lowerValue, "fail:") {
+		return true
+	}
+
+	lowerLabel := strings.ToLower(label)
+	isPidLabel := strings.Contains(lowerLabel, "daemon pid") || strings.Contains(lowerLabel, "agent pid") ||
+		strings.Contains(label, "守护进程 PID") || strings.Contains(label, "Agent PID")
+	if isPidLabel {
+		return strings.Contains(lowerValue, "not running") || strings.Contains(value, "未运行") || strings.Contains(value, "已退出")
+	}
+
+	return false
+}
+
+func configureSessionSummaryLines(user string, hasCredentials, autoLogon bool) []string {
+	if autoLogon {
+		return []string{
+			msg("The agent is active in your current session NOW.", "Agent 已在当前桌面会话中生效。"),
+			msgf("On future reboots Windows auto-logs in as %s.", "后续重启后 Windows 会自动登录为 %s。", user),
+			msg("If the password changes, re-run with the new password.", "如果密码变更，请使用新密码重新执行命令。"),
+		}
+	}
+	if hasCredentials {
+		return []string{
+			msg("The agent is active in your current session NOW.", "Agent 已在当前桌面会话中生效。"),
+			msg("When no user is logged in, daemon uses LogonUser fallback.", "当无人登录时，daemon 会使用 LogonUser 回退启动。"),
+			msg("To also auto-logon on reboot, add --auto-logon.", "如需在重启后也自动登录，请添加 --auto-logon。"),
+			msg("If the password changes, re-run with the new password.", "如果密码变更，请使用新密码重新执行命令。"),
+		}
+	}
+	return []string{
+		msg("The agent is active in your current session NOW.", "Agent 已在当前桌面会话中生效。"),
+		msg("When no user is logged in, agent falls back to Session 0.", "当无人登录时，agent 会回退到 Session 0。"),
+		msg("To enable fallback, add --user and --password.", "如需启用登录凭据回退，请添加 --user 和 --password。"),
+	}
 }
 
 // ── Property / config helpers ────────────────────────────────────────────
@@ -144,7 +216,7 @@ func printDivider() {
 func readProperty(workDir, key string) (string, error) {
 	data, err := os.ReadFile(filepath.Join(workDir, ".agent.properties"))
 	if err != nil {
-		return "", fmt.Errorf("cannot read .agent.properties: %w", err)
+		return "", cliErrorf("cannot read .agent.properties: %v", "无法读取 .agent.properties: %v", err)
 	}
 	prefix := key + "="
 	for _, line := range strings.Split(string(data), "\n") {
@@ -156,7 +228,7 @@ func readProperty(workDir, key string) (string, error) {
 			return strings.TrimPrefix(line, prefix), nil
 		}
 	}
-	return "", fmt.Errorf("key %s not found in .agent.properties", key)
+	return "", cliErrorf("key %s not found in .agent.properties", "未在 .agent.properties 中找到键 %s", key)
 }
 
 func getServiceName(workDir string) (string, error) {
@@ -412,7 +484,7 @@ func handleReinstall(workDir string, args []string) error {
 	printStep(msg("Step 3: cleaning files ...", "步骤 3: 清理文件 ..."))
 	entries, err := os.ReadDir(workDir)
 	if err != nil {
-		return fmt.Errorf("read workdir: %w", err)
+		return cliErrorf("read workdir failed: %v", "读取工作目录失败: %v", err)
 	}
 	for _, entry := range entries {
 		name := entry.Name()
@@ -491,7 +563,7 @@ func waitForHeartbeatExpiry(workDir string) {
 		"Agent was recently running (PID %d). Waiting %ds for backend heartbeat to expire ...",
 		"Agent 近期有运行记录 (PID %d)。等待 %d 秒让后台心跳过期 ...", pid, waitSec))
 	for i := waitSec; i > 0; i-- {
-		fmt.Printf("\r[BK-CI]   %ds remaining ...  ", i)
+		fmt.Printf("\r[BK-CI]   %s  ", msgf("%ds remaining ...", "剩余 %d 秒 ...", i))
 		time.Sleep(time.Second)
 	}
 	fmt.Println()

@@ -84,7 +84,7 @@ func handleStart(workDir string) error {
 		printStep(msgf("Loading %s via launchctl ...", "通过 launchctl 加载 %s ...", serviceName))
 		out, err := exec.Command("launchctl", "load", "-w", pp).CombinedOutput()
 		if err != nil {
-			return fmt.Errorf("launchctl load: %s (%w)", strings.TrimSpace(string(out)), err)
+			return cliErrorf("launchctl load failed: %s (%v)", "launchctl load 失败: %s (%v)", strings.TrimSpace(string(out)), err)
 		}
 		printStep(msgf("Service %s started", "服务 %s 已启动", serviceName))
 		return nil
@@ -147,7 +147,7 @@ func writePlist(workDir, serviceName string) error {
 
 	pp := plistPath(serviceName)
 	if err := os.WriteFile(pp, []byte(plist), 0644); err != nil {
-		return fmt.Errorf("write plist: %w", err)
+		return cliErrorf("write plist failed: %v", "写入 plist 失败: %v", err)
 	}
 
 	level := msg("user-level (LaunchAgents)", "用户级 (LaunchAgents)")
@@ -162,7 +162,7 @@ func loadPlist(serviceName string) error {
 	pp := plistPath(serviceName)
 	out, err := exec.Command("launchctl", "load", "-w", pp).CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("launchctl load: %s (%w)", strings.TrimSpace(string(out)), err)
+		return cliErrorf("launchctl load failed: %s (%v)", "launchctl load 失败: %s (%v)", strings.TrimSpace(string(out)), err)
 	}
 	printStep(msgf("Service %s loaded", "服务 %s 已加载", serviceName))
 	return nil

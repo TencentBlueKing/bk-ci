@@ -13,7 +13,7 @@ import (
 func checkDiskSpace(workDir string) {
 	pathPtr, err := windows.UTF16PtrFromString(workDir)
 	if err != nil {
-		statusLine(msg("  Disk space", "  磁盘空间"), fmt.Sprintf("FAIL: %v ✗", err))
+		statusLine(msg("  Disk space", "  磁盘空间"), msgf("FAIL: %v ✗", "失败: %v ✗", err))
 		return
 	}
 
@@ -25,7 +25,7 @@ func checkDiskSpace(workDir string) {
 		(*uint64)(unsafe.Pointer(&totalFreeBytes)),
 	)
 	if err != nil {
-		statusLine(msg("  Disk space", "  磁盘空间"), fmt.Sprintf("FAIL: %v ✗", err))
+		statusLine(msg("  Disk space", "  磁盘空间"), msgf("FAIL: %v ✗", "失败: %v ✗", err))
 		return
 	}
 

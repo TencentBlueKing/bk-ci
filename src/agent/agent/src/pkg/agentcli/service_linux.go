@@ -109,7 +109,7 @@ func handleStart(workDir string) error {
 		printStep(msgf("Starting service %s via systemctl ...", "通过 systemctl 启动服务 %s ...", serviceName))
 		out, err := exec.Command("systemctl", "start", serviceName).CombinedOutput()
 		if err != nil {
-			return fmt.Errorf("systemctl start: %s (%w)", strings.TrimSpace(string(out)), err)
+			return cliErrorf("systemctl start failed: %s (%v)", "systemctl start 失败: %s (%v)", strings.TrimSpace(string(out)), err)
 		}
 		printStep(msgf("Service %s started", "服务 %s 已启动", serviceName))
 		return nil
@@ -128,7 +128,7 @@ func handleStop(workDir string) error {
 		printStep(msgf("Stopping service %s via systemctl ...", "通过 systemctl 停止服务 %s ...", serviceName))
 		out, err := exec.Command("systemctl", "stop", serviceName).CombinedOutput()
 		if err != nil {
-			printWarn(fmt.Sprintf("systemctl stop: %s", strings.TrimSpace(string(out))))
+			printWarn(msgf("systemctl stop: %s", "systemctl stop: %s", strings.TrimSpace(string(out))))
 		}
 		printStep(msgf("Service %s stopped", "服务 %s 已停止", serviceName))
 		return nil
@@ -176,15 +176,15 @@ WantedBy=multi-user.target
 
 	unitPath := systemdUnitPath(serviceName)
 	if err := os.WriteFile(unitPath, []byte(unit), 0644); err != nil {
-		return fmt.Errorf("write systemd unit: %w", err)
+		return cliErrorf("write systemd unit failed: %v", "写入 systemd 单元失败: %v", err)
 	}
 	printStep(msgf("Created systemd unit: %s", "已创建 systemd 单元: %s", unitPath))
 
 	if err := exec.Command("systemctl", "daemon-reload").Run(); err != nil {
-		return fmt.Errorf("systemctl daemon-reload: %w", err)
+		return cliErrorf("systemctl daemon-reload failed: %v", "systemctl daemon-reload 失败: %v", err)
 	}
 	if err := exec.Command("systemctl", "enable", "--now", serviceName).Run(); err != nil {
-		return fmt.Errorf("systemctl enable --now: %w", err)
+		return cliErrorf("systemctl enable --now failed: %v", "systemctl enable --now 失败: %v", err)
 	}
 	printStep(msgf("Service %s enabled and started", "服务 %s 已启用并启动", serviceName))
 	return nil
