@@ -60,7 +60,7 @@ func checkEndpoint(label, host, path string, tlsConfig *tls.Config, proxyFunc fu
 	baseURL := normalizeGateway(host)
 	u, err := url.Parse(baseURL)
 	if err != nil {
-		statusLine("  "+label, fmt.Sprintf("FAIL: invalid URL %q ✗", host))
+		statusLine("  "+label, msgf("FAIL: invalid URL %q ✗", "失败: 无效 URL %q ✗", host))
 		return
 	}
 	printStep(fmt.Sprintf("  %s (%s):", label, u.Host))
@@ -70,7 +70,7 @@ func checkEndpoint(label, host, path string, tlsConfig *tls.Config, proxyFunc fu
 	ips, err := net.LookupHost(u.Hostname())
 	elapsed := time.Since(start)
 	if err != nil {
-		statusLine("    DNS resolve", fmt.Sprintf("FAIL: %v ✗", err))
+		statusLine("    DNS resolve", msgf("FAIL: %v ✗", "失败: %v ✗", err))
 		return
 	}
 	statusLine("    DNS resolve", fmt.Sprintf("%s (%v) ✓", strings.Join(ips, ", "), elapsed.Round(time.Millisecond)))
@@ -89,7 +89,7 @@ func checkEndpoint(label, host, path string, tlsConfig *tls.Config, proxyFunc fu
 	conn, err := net.DialTimeout("tcp", addr, 5*time.Second)
 	elapsed = time.Since(start)
 	if err != nil {
-		statusLine("    TCP connect", fmt.Sprintf("FAIL: %v ✗", err))
+		statusLine("    TCP connect", msgf("FAIL: %v ✗", "失败: %v ✗", err))
 		return
 	}
 	conn.Close()
@@ -102,7 +102,7 @@ func checkEndpoint(label, host, path string, tlsConfig *tls.Config, proxyFunc fu
 		tlsConn, err := tls.DialWithDialer(dialer, "tcp", u.Host, tlsConfig)
 		elapsed = time.Since(start)
 		if err != nil {
-			statusLine("    TLS handshake", fmt.Sprintf("FAIL: %v ✗", err))
+			statusLine("    TLS handshake", msgf("FAIL: %v ✗", "失败: %v ✗", err))
 			return
 		}
 		state := tlsConn.ConnectionState()
@@ -126,7 +126,7 @@ func checkEndpoint(label, host, path string, tlsConfig *tls.Config, proxyFunc fu
 	resp, err := httpClient.Do(req)
 	elapsed = time.Since(start)
 	if err != nil {
-		statusLine("    HTTP GET", fmt.Sprintf("FAIL: %v ✗", err))
+		statusLine("    HTTP GET", msgf("FAIL: %v ✗", "失败: %v ✗", err))
 		return
 	}
 	resp.Body.Close()
@@ -142,7 +142,7 @@ func checkDiskWritable(workDir string) {
 	testFile := filepath.Join(workDir, ".health_check_write_test")
 	err := os.WriteFile(testFile, []byte("ok"), 0644)
 	if err != nil {
-		statusLine(msg("  Disk writable", "  磁盘可写"), fmt.Sprintf("FAIL: %v ✗", err))
+		statusLine(msg("  Disk writable", "  磁盘可写"), msgf("FAIL: %v ✗", "失败: %v ✗", err))
 		return
 	}
 	os.Remove(testFile)
@@ -199,7 +199,7 @@ func detectProxyUsed(target *url.URL, proxyFunc func(*http.Request) (*url.URL, e
 	req := &http.Request{URL: target}
 	proxyURL, err := proxyFunc(req)
 	if err != nil {
-		return fmt.Sprintf("error: %v", err)
+		return msgf("error: %v", "错误: %v", err)
 	}
 	if proxyURL == nil {
 		return msg("direct (no proxy)", "直连 (无代理)")

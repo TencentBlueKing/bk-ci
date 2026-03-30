@@ -529,3 +529,27 @@ func TestHandleInstall_AcceptsArgs(t *testing.T) {
 		}
 	}
 }
+
+func TestStatusValueHasIssue(t *testing.T) {
+	tests := []struct {
+		name  string
+		label string
+		value string
+		want  bool
+	}{
+		{"ok_value", "JDK 17", "OK ✓", false},
+		{"fail_marker", "Disk writable", "FAIL: permission denied ✗", true},
+		{"warning_marker", "Scheduled task", "exists (legacy) ⚠", true},
+		{"daemon_not_running", "Daemon PID", "not running", true},
+		{"daemon_running", "Daemon PID", "1234 (running)", false},
+		{"session_not_configured_not_counted", "Session credentials", "not configured", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := statusValueHasIssue(tt.label, tt.value); got != tt.want {
+				t.Errorf("statusValueHasIssue(%q, %q) = %v, want %v", tt.label, tt.value, got, tt.want)
+			}
+		})
+	}
+}

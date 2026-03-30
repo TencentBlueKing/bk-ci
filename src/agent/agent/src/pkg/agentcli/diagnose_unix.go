@@ -11,7 +11,7 @@ import (
 func checkDiskSpace(workDir string) {
 	var stat syscall.Statfs_t
 	if err := syscall.Statfs(workDir, &stat); err != nil {
-		statusLine(msg("  Disk space", "  磁盘空间"), fmt.Sprintf("FAIL: %v ✗", err))
+		statusLine(msg("  Disk space", "  磁盘空间"), msgf("FAIL: %v ✗", "失败: %v ✗", err))
 		return
 	}
 	free := stat.Bavail * uint64(stat.Bsize)

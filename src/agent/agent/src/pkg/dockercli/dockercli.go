@@ -221,7 +221,8 @@ func (r *Runner) run(ctx context.Context, stdin []byte, args ...string) (string,
 	if stdin != nil {
 		cmd.Stdin = bytes.NewReader(stdin)
 	}
-	err := cmd.Run()
+	var err error
+	err = cmd.Run()
 	stdout := stdoutBuf.String()
 	stderr := stderrBuf.String()
 	if strings.TrimSpace(stdout) != "" {

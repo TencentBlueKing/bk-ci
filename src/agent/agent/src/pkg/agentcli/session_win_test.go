@@ -6,6 +6,7 @@ package agentcli
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -110,6 +111,56 @@ func TestHandleInstall_SessionValidation(t *testing.T) {
 		err := handleInstall(dir, []string{"--mode", "session", "--auto-logon"})
 		if err == nil {
 			t.Error("expected error: --auto-logon requires --user")
+		}
+	})
+}
+
+func TestConfigureSessionSummaryLines(t *testing.T) {
+	old := useChinese
+	defer func() { useChinese = old }()
+
+	t.Run("english_no_credentials", func(t *testing.T) {
+		useChinese = false
+		lines := configureSessionSummaryLines("", false, false)
+		if len(lines) != 3 {
+			t.Fatalf("len(lines) = %d, want 3", len(lines))
+		}
+		if !strings.Contains(lines[0], "current session NOW") {
+			t.Errorf("line[0] = %q", lines[0])
+		}
+		if !strings.Contains(lines[1], "Session 0") {
+			t.Errorf("line[1] = %q", lines[1])
+		}
+	})
+
+	t.Run("english_with_credentials", func(t *testing.T) {
+		useChinese = false
+		lines := configureSessionSummaryLines("builduser", true, false)
+		if len(lines) != 4 {
+			t.Fatalf("len(lines) = %d, want 4", len(lines))
+		}
+		if !strings.Contains(lines[1], "LogonUser fallback") {
+			t.Errorf("line[1] = %q", lines[1])
+		}
+		if !strings.Contains(lines[2], "--auto-logon") {
+			t.Errorf("line[2] = %q", lines[2])
+		}
+	})
+
+	t.Run("chinese_auto_logon", func(t *testing.T) {
+		useChinese = true
+		lines := configureSessionSummaryLines("构建用户", true, true)
+		if len(lines) != 3 {
+			t.Fatalf("len(lines) = %d, want 3", len(lines))
+		}
+		if !strings.Contains(lines[0], "当前桌面会话") {
+			t.Errorf("line[0] = %q", lines[0])
+		}
+		if !strings.Contains(lines[1], "自动登录") {
+			t.Errorf("line[1] = %q", lines[1])
+		}
+		if !strings.Contains(lines[2], "重新执行命令") {
+			t.Errorf("line[2] = %q", lines[2])
 		}
 	})
 }

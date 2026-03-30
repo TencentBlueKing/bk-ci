@@ -19,7 +19,7 @@ devopsAgent <command> [options]
 维护:
   repair               停止 → 重新解压 JDK/依赖 → 重启
   reinstall [-y]       完全重装: 保留身份, 从服务端重新下载
-  status               运行状态 + 健康检查 (网络/磁盘/证书诊断)
+  status               运行状态 + 健康检查 (网络/磁盘/证书诊断，末尾附汇总)
 
 Session 模式 (仅 Windows):
   configure-session    配置桌面 Session 访问
@@ -107,6 +107,8 @@ sudo ./devopsAgent uninstall       # Linux/macOS
 | `--password` | 账号密码（指定 `--user` 时必填，配置前会通过 LogonUser API 验证） |
 | `--auto-logon` | 配置 Windows 自动登录（系统级设置，每次重启自动登录，需要 `--user`） |
 | `--disable` | 取消 Session 模式，清理 LSA Secret 和自动登录配置 |
+
+命令完成后的摘要提示会根据系统语言自动切换中英文。Windows CLI 启动时会尝试切换控制台到 UTF-8，以尽量减少中文乱码。
 
 ### 各层级效果对比
 

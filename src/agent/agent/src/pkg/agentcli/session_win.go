@@ -65,10 +65,10 @@ func handleConfigureSession(workDir string, args []string) error {
 	}
 
 	if *autoLogon && *userFlag == "" {
-		return fmt.Errorf("--auto-logon requires --user and --password")
+		return cliErrorf("--auto-logon requires --user and --password", "--auto-logon 需要同时指定 --user 和 --password")
 	}
 	if *userFlag != "" && *passFlag == "" {
-		return fmt.Errorf("--password is required when --user is specified")
+		return cliErrorf("--password is required when --user is specified", "指定 --user 时必须提供 --password")
 	}
 
 	return enableSession(workDir, *userFlag, *passFlag, *autoLogon)
@@ -76,7 +76,7 @@ func handleConfigureSession(workDir string, args []string) error {
 
 func enableSession(workDir, user, password string, autoLogon bool) error {
 	printStep("============================================")
-	printStep(" BK-CI Agent Session Mode Configuration")
+	printStep(msg(" BK-CI Agent Session Mode Configuration", " BK-CI Agent 会话模式配置"))
 	printStep("============================================")
 
 	hasCredentials := user != ""
@@ -102,66 +102,59 @@ func enableSession(workDir, user, password string, autoLogon bool) error {
 	}
 
 	daemonPath := fmt.Sprintf(`"%s\%s"`, workDir, daemonBinary())
-	printStepf("creating service %s", serviceName)
+	printStepf("%s", msgf("creating service %s", "创建服务 %s", serviceName))
 	if out, err := runSc("create", serviceName, "binPath=", daemonPath, "start=", "auto"); err != nil {
-		return fmt.Errorf("sc.exe create: %s (%w)", out, err)
+		return cliErrorf("sc.exe create failed: %s (%v)", "sc.exe create 失败: %s (%v)", out, err)
 	}
 
 	if hasCredentials {
 		storeLsaSecret(lsaKeyUser, user)
 		storeLsaSecret(lsaKeyPassword, password)
-		printStep("session credentials stored in LSA Secret (encrypted)")
+		printStep(msg("session credentials stored in LSA Secret (encrypted)", "会话凭据已加密存储到 LSA Secret"))
 	}
 
 	if autoLogon {
 		if err := enableAutoLogon(user, password); err != nil {
-			return fmt.Errorf("enable auto-logon: %w", err)
+			return cliErrorf("enable auto-logon failed: %v", "启用自动登录失败: %v", err)
 		}
 	}
 
 	writeInstallType(workDir, "SESSION")
 
-	printStepf("starting service %s", serviceName)
+	printStepf("%s", msgf("starting service %s", "启动服务 %s", serviceName))
 	runSc("start", serviceName)
 	time.Sleep(3 * time.Second)
 
 	printStep("")
 	printStep("============================================")
-	printStep(" Done")
+	printStep(msg(" Done", " 完成"))
 	printStep("============================================")
-	printStepf("Service      : %s", serviceName)
+	printStepf("%-13s %s", msg("Service", "服务"), serviceName)
 
 	if autoLogon {
-		printStepf("Session user : %s", user)
-		printStep("LogonUser    : enabled")
-		printStep("Auto-logon   : enabled (every reboot)")
+		printStepf("%-13s %s", msg("Session user", "会话用户"), user)
+		printStepf("%-13s %s", msg("LogonUser", "凭据回退"), msg("enabled", "已启用"))
+		printStepf("%-13s %s", msg("Auto-logon", "自动登录"), msg("enabled (every reboot)", "已启用 (每次重启)"))
 		printStep("")
-		printStep("The agent is active in your current session NOW.")
-		printStepf("On future reboots Windows auto-logs in as %s.", user)
-		printStep("If the password changes, re-run with the new password.")
 	} else if hasCredentials {
-		printStepf("Session user : %s", user)
-		printStep("LogonUser    : enabled")
-		printStep("Auto-logon   : not configured")
+		printStepf("%-13s %s", msg("Session user", "会话用户"), user)
+		printStepf("%-13s %s", msg("LogonUser", "凭据回退"), msg("enabled", "已启用"))
+		printStepf("%-13s %s", msg("Auto-logon", "自动登录"), msg("not configured", "未配置"))
 		printStep("")
-		printStep("The agent is active in your current session NOW.")
-		printStep("When no user is logged in, daemon uses LogonUser fallback.")
-		printStep("To also auto-logon on reboot, add --auto-logon.")
-		printStep("If the password changes, re-run with the new password.")
 	} else {
-		printStep("Session user : (current logged-in user)")
-		printStep("LogonUser    : not configured")
-		printStep("Auto-logon   : not configured")
+		printStepf("%-13s %s", msg("Session user", "会话用户"), msg("(current logged-in user)", "(当前登录用户)"))
+		printStepf("%-13s %s", msg("LogonUser", "凭据回退"), msg("not configured", "未配置"))
+		printStepf("%-13s %s", msg("Auto-logon", "自动登录"), msg("not configured", "未配置"))
 		printStep("")
-		printStep("The agent is active in your current session NOW.")
-		printStep("When no user is logged in, agent falls back to Session 0.")
-		printStep("To enable fallback, add --user and --password.")
+	}
+	for _, line := range configureSessionSummaryLines(user, hasCredentials, autoLogon) {
+		printStep(line)
 	}
 	return nil
 }
 
 func disableSession(workDir string) error {
-	printStep("Disabling session mode...")
+	printStep(msg("Disabling session mode...", "正在禁用会话模式..."))
 	removeSessionSecrets()
 	removeAutoLogon()
 	writeInstallType(workDir, "SERVICE")
@@ -176,7 +169,7 @@ func disableSession(workDir string) error {
 		runSc("start", serviceName)
 		time.Sleep(2 * time.Second)
 	}
-	printStep("Session mode disabled. Agent will run in Session 0 unless a user is logged in.")
+	printStep(msg("Session mode disabled. Agent will run in Session 0 unless a user is logged in.", "会话模式已禁用。除非有用户登录，否则 Agent 将运行在 Session 0。"))
 	return nil
 }
 
@@ -184,7 +177,7 @@ func disableSession(workDir string) error {
 
 func validateCredentials(account, password string) error {
 	user, domain := splitUserDomain(account)
-	printStepf("validating credentials for %s@%s ...", user, domain)
+	printStepf("%s", msgf("validating credentials for %s@%s ...", "正在校验凭据 %s@%s ...", user, domain))
 
 	var token windows.Handle
 	ret, _, err := procLogonUserW.Call(
@@ -208,10 +201,10 @@ func validateCredentials(account, password string) error {
 		case 1331:
 			msg = "account disabled"
 		}
-		return fmt.Errorf("credential validation failed: %s (Win32 %d)", msg, code)
+		return cliErrorf("credential validation failed: %s (Win32 %d)", "凭据校验失败: %s (Win32 %d)", msg, code)
 	}
 	windows.CloseHandle(token)
-	printStep("credentials verified OK")
+	printStep(msg("credentials verified OK", "凭据校验通过"))
 	return nil
 }
 
@@ -244,7 +237,7 @@ func lsaOpenPolicy(access uint32) (uintptr, error) {
 		uintptr(unsafe.Pointer(&handle)),
 	)
 	if ret != 0 {
-		return 0, fmt.Errorf("LsaOpenPolicy: NTSTATUS 0x%x: %w", ret, err)
+		return 0, cliErrorf("LsaOpenPolicy failed: NTSTATUS 0x%x: %v", "LsaOpenPolicy 失败: NTSTATUS 0x%x: %v", ret, err)
 	}
 	return handle, nil
 }
@@ -272,7 +265,7 @@ func storeLsaSecret(key, value string) error {
 		uintptr(unsafe.Pointer(&v)),
 	)
 	if ret != 0 {
-		return fmt.Errorf("LsaStorePrivateData(%s): NTSTATUS 0x%x: %w", key, ret, callErr)
+		return cliErrorf("LsaStorePrivateData(%s) failed: NTSTATUS 0x%x: %v", "LsaStorePrivateData(%s) 失败: NTSTATUS 0x%x: %v", key, ret, callErr)
 	}
 	return nil
 }
@@ -291,14 +284,14 @@ func deleteLsaSecret(key string) {
 func removeSessionSecrets() {
 	deleteLsaSecret(lsaKeyUser)
 	deleteLsaSecret(lsaKeyPassword)
-	printStep("session credentials removed from LSA Secret")
+	printStep(msg("session credentials removed from LSA Secret", "会话凭据已从 LSA Secret 中移除"))
 }
 
 // ── Auto-logon (registry + LSA) ──────────────────────────────────────────
 
 func enableAutoLogon(account, password string) error {
 	user, domain := splitUserDomain(account)
-	printStepf("configuring Windows auto-logon: user=%s, domain=%s", user, domain)
+	printStepf("%s", msgf("configuring Windows auto-logon: user=%s, domain=%s", "正在配置 Windows 自动登录: 用户=%s, 域=%s", user, domain))
 
 	k, _, err := registry.CreateKey(
 		registry.LOCAL_MACHINE,
@@ -306,7 +299,7 @@ func enableAutoLogon(account, password string) error {
 		registry.SET_VALUE,
 	)
 	if err != nil {
-		return fmt.Errorf("open Winlogon key: %w", err)
+		return cliErrorf("open Winlogon key failed: %v", "打开 Winlogon 注册表键失败: %v", err)
 	}
 	defer k.Close()
 
@@ -317,9 +310,9 @@ func enableAutoLogon(account, password string) error {
 	k.DeleteValue("AutoLogonCount")
 
 	if err := storeLsaSecret("DefaultPassword", password); err != nil {
-		return fmt.Errorf("store auto-logon password: %w", err)
+		return cliErrorf("store auto-logon password failed: %v", "存储自动登录密码失败: %v", err)
 	}
-	printStep("auto-logon password stored via LSA Secret (encrypted)")
+	printStep(msg("auto-logon password stored via LSA Secret (encrypted)", "自动登录密码已通过 LSA Secret 加密存储"))
 
 	pk, _, _ := registry.CreateKey(
 		registry.LOCAL_MACHINE,
@@ -332,7 +325,7 @@ func enableAutoLogon(account, password string) error {
 		pk.Close()
 	}
 
-	printStep("auto-logon configured (activates on next reboot)")
+	printStep(msg("auto-logon configured (activates on next reboot)", "自动登录已配置 (下次重启生效)"))
 	return nil
 }
 
@@ -350,7 +343,7 @@ func removeAutoLogon() {
 	k.SetStringValue("AutoAdminLogon", "0")
 	k.DeleteValue("DefaultPassword")
 	deleteLsaSecret("DefaultPassword")
-	printStep("Windows auto-logon disabled")
+	printStep(msg("Windows auto-logon disabled", "Windows 自动登录已禁用"))
 }
 
 // ── Install type marker ──────────────────────────────────────────────────
@@ -360,10 +353,10 @@ const installTypeFile = ".install_type"
 func writeInstallType(workDir, mode string) {
 	p := filepath.Join(workDir, installTypeFile)
 	if err := os.WriteFile(p, []byte(mode), 0644); err != nil {
-		printWarn(fmt.Sprintf("failed to write %s: %v", installTypeFile, err))
+		printWarn(msgf("failed to write %s: %v", "写入 %s 失败: %v", installTypeFile, err))
 		return
 	}
-	printStepf("install type set to %s", mode)
+	printStepf("%s", msgf("install type set to %s", "安装类型已设置为 %s", mode))
 }
 
 // ── sc.exe helper ────────────────────────────────────────────────────────

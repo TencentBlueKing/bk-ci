@@ -153,6 +153,7 @@
 - 创建 Windows 服务 `devops_agent_{id}`
 - `status` 中运行模式为 `SERVICE`
 - 服务能正常拉起 daemon 和 agent
+- `status` 末尾汇总为“正常”
 
 ### 5.2 Session 模式
 
@@ -176,8 +177,10 @@
   - Session credentials
   - Session password
   - Auto-logon 状态
+- `status` 末尾新增汇总词条：全部正常时显示“正常”，出现失败/告警时显示“异常”
 - 当前登录用户 Session 内可以启动 agent
 - 开启 auto-logon 后重启机器，状态仍正确
+- `configure-session` 完成后的摘要文案会根据系统语言切换中英文，中文 Windows 控制台下不出现明显乱码
 
 ### 5.3 Task 模式（已废弃）
 
