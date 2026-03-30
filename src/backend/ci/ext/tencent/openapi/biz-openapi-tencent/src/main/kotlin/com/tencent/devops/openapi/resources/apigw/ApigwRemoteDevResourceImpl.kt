@@ -780,4 +780,9 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         logger.info("tgitBindRemotedevProject |$userId|$data")
         return client.get(ServiceRemoteDevResource::class).tgitBindRemotedevProject(userId, data)
     }
+
+    override fun openClawOn(userId: String): Result<Boolean> {
+        logger.info("openClawOn |$userId")
+        return client.get(ServiceRemoteDevResource::class).openClawOn(userId)
+    }
 }

@@ -1122,4 +1122,13 @@ interface ApigwRemoteDevResource {
         userId: String,
         data: TGitBindRemotedevData
     ): Result<Map<String, Boolean>>
+
+    @Operation(summary = "龙虾云桌面一键加白", tags = ["v4_app_remotedev_openClaw_on"])
+    @POST
+    @Path("/openClaw_on")
+    fun openClawOn(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<Boolean>
 }
