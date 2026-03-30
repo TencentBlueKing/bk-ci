@@ -384,7 +384,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     users = git.includeUsers,
                     usersIgnore = git.excludeUsers,
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
-                    action = git.includeMrAction
+                    action = git.includeMrAction,
+                    labels = git.includeLabels?.disjoin(),
+                    labelsIgnore = git.excludeLabels?.disjoin()
                 )
 
                 else -> {}
