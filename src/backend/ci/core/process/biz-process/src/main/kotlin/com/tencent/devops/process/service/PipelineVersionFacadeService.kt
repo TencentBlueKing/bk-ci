@@ -955,13 +955,13 @@ class PipelineVersionFacadeService @Autowired constructor(
     ) :List<PipelineYamlVersionInfo> {
         val list = mutableListOf<PipelineYamlVersionInfo>()
         // 默认返回当前最新的正式版本
-        pipelineRepositoryService.getPipelineInfo(
+        pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId
         )?.let {
             list.add(
                 PipelineYamlVersionInfo(
-                    name = it.versionName,
+                    name = it.versionName ?: "",
                     version = it.version,
                     versionStatus = VersionStatus.RELEASED
                 )
