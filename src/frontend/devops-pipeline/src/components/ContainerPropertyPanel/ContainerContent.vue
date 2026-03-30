@@ -488,6 +488,10 @@
         ></image-selector>
         <MacDebugDialog
             :is-show="isShowDebug"
+            :pipeline-id="pipelineId"
+            :container-id="container.containerId"
+            :build-id="buildId"
+            :execute-count="container.executeCount"
             @close="closeDebugDialog"
         />
     </section>

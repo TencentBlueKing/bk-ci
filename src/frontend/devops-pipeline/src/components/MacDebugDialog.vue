@@ -52,63 +52,65 @@
                 </div>
 
                 <!-- 右侧详情内容 -->
-                <div class="debug-detail">
+                <div
+                    class="debug-detail"
+                    v-bkloading="{ isLoading: isLoading }"
+                >
                     <span class="debugging">{{ $t('debugging') }}</span>
                     
                     <div class="debug-info-box">
                         <div
-                            v-for="field in currentToolFields"
-                            :key="field.key"
                             class="debug-info-item"
-                            :class="{ 'vnc-info': field.isFieldGroup }"
+                            v-if="currentTool === 'command'"
                         >
-                            <template v-if="!field.isFieldGroup">
-                                <div class="info-label">{{ $t(field.labelKey) }}</div>
-                                <div
-                                    class="info-value"
-                                    :class="{ 'password-value': field.isPassword }"
-                                >
-                                    <code v-if="!field.isPassword">{{ getFieldValue(field.key) }}</code>
-                                    <span
-                                        v-else
-                                        class="password-dots"
-                                    >{{ showPassword ? getFieldValue(field.key) : '●●●●●●●●' }}</span>
+                            <div class="info-label">{{ $t('loginCommand') }}</div>
+                            <div class="info-value">
+                                <code>{{ debugData.ssh }}</code>
+                                <i
+                                    class="bk-icon icon-copy"
+                                    @click="copy(debugData.ssh)"
+                                ></i>
+                            </div>
+                        </div>
+                        <div
+                            class="debug-info-item"
+                            v-else-if="currentTool === 'vnc'"
+                        >
+                            <div class="info-label">{{ $t('vncAddress') }}</div>
+                            <div class="info-value">
+                                <code>{{ debugData.vnc }}</code>
+                                <i
+                                    class="bk-icon icon-copy"
+                                    @click="copy(debugData.vnc)"
+                                ></i>
+                            </div>
+                        </div>
+
+                        <div class="debug-info-item vnc-info">
+                            <div v-if="debugData.username">
+                                <div class="info-label">{{ $t('loginUsername') }}</div>
+                                <div class="info-value">
+                                    <span class="password-dots">{{ debugData.username }}</span>
+                                    <i
+                                        class="bk-icon icon-copy"
+                                        @click="copy(debugData.username)"
+                                    ></i>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="info-label">{{ $t('loginPassword') }}</div>
+                                <div class="info-value password-value">
+                                    <span class="password-dots">{{ showPassword ? debugData.password : '●●●●●●●●' }}</span>
                                     <bk-icon
-                                        v-if="field.isPassword"
-                                        @click="showPassword = !showPassword"
                                         :type="showPassword ? 'eye' : 'eye-slash'"
+                                        @click="showPassword = !showPassword"
                                     />
                                     <i
                                         class="bk-icon icon-copy"
-                                        @click="copy(getFieldValue(field.key))"
+                                        @click="copy(debugData.password)"
                                     ></i>
                                 </div>
-                            </template>
-                            
-                            <!-- 分组字段（VNC 用户名和密码） -->
-                            <template v-else>
-                                <div
-                                    v-for="subField in field.fields"
-                                    :key="subField.key"
-                                >
-                                    <div class="info-label">{{ $t(subField.labelKey) }}</div>
-                                    <div
-                                        class="info-value"
-                                        :class="{ 'password-value': subField.isPassword }"
-                                    >
-                                        <span class="password-dots">{{ subField.isPassword && !showPassword ? '●●●●●●●●' : getFieldValue(subField.key) }}</span>
-                                        <bk-icon
-                                            v-if="subField.isPassword"
-                                            @click="showPassword = !showPassword"
-                                            :type="showPassword ? 'eye' : 'eye-slash'"
-                                        />
-                                        <i
-                                            class="bk-icon icon-copy"
-                                            @click="copy(getFieldValue(subField.key))"
-                                        ></i>
-                                    </div>
-                                </div>
-                            </template>
+                            </div>
                         </div>
                     </div>
 
@@ -146,6 +148,7 @@
 <script>
     import Logo from '@/components/Logo'
     import { copyToClipboard } from '@/utils/util'
+    import { mapActions } from 'vuex'
     export default {
         components: {
             Logo
@@ -154,12 +157,27 @@
             isShow: {
                 type: Boolean,
                 default: false
+            },
+            pipelineId: {
+                type: String,
+                required: true
+            },
+            buildId: {
+                type: String,
+                required: true
+            },
+            containerId: {
+                type: String
+            },
+            executeCount: {
+                type: Number
             }
         },
         data () {
             return {
                 showPassword: false,
                 currentTool: 'command', // 当前选中的工具：command 或 vnc
+                isLoading: false,
                 toolList: [
                     {
                         type: 'command',
@@ -172,50 +190,87 @@
                         descKey: 'likeMacScreenShare'
                     }
                 ],
-                // 工具对应的数据，后续从接口获取
-                toolData: {
-                    command: {
-                        loginCommand: 'ssh -p 15901 bkdevops@30.28.134.21',
-                        password: 'Abc123456'
-                    },
-                    vnc: {
-                        address: 'vnc://30.28.134.21:15902',
-                        username: 'bkdevops',
-                        password: 'Abc123456'
-                    }
-                },
-                // 工具字段配置
-                toolFieldsConfig: {
-                    command: [
-                        { key: 'loginCommand', labelKey: 'loginCommand', isPassword: false },
-                        { key: 'password', labelKey: 'loginPassword', isPassword: true }
-                    ],
-                    vnc: [
-                        { key: 'address', labelKey: 'vncAddress', isPassword: false },
-                        {
-                            isFieldGroup: true,
-                            fields: [
-                                { key: 'username', labelKey: 'loginUsername', isPassword: false },
-                                { key: 'password', labelKey: 'loginPassword', isPassword: true }
-                            ]
-                        }
-                    ]
+                // 调试数据，从接口获取
+                debugData: {
+                    ssh: '',
+                    vnc: '',
+                    username: '',
+                    password: ''
                 }
             }
         },
-        computed: {
-            currentToolFields () {
-                return this.toolFieldsConfig[this.currentTool] || []
+        computed: {},
+        watch: {
+            isShow: {
+                handler (val) {
+                    if (val) {
+                        this.fetchDebugInfo()
+                    }
+                },
+                immediate: true
             }
         },
         methods: {
+            ...mapActions('atom',[
+                'startVmSeqDebug',
+                'stopVmSeqDebug'
+            ]),
+            async fetchDebugInfo () {
+                try {
+                    this.isLoading = true
+                    const response = await this.startVmSeqDebug({
+                        pipelineId: this.pipelineId,
+                        buildId: this.buildId,
+                        containerId: this.containerId,
+                        executeCount: this.executeCount
+                    })
+                    
+                    if (response.data?.actionCode !== 200) {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: response.data?.actionMessage
+                        })
+                        this.$emit('close')
+                        this.showPassword = false
+                        return
+                    }
+                    
+                    const data = response.data?.data
+                    if (!data) return
+                    
+                    this.debugData = data
+                } catch (err) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: err.message || err
+                    })
+                    this.$emit('close')
+                    this.showPassword = false
+                } finally {
+                    this.isLoading = false
+                }
+            },
             exitDebug () {
                 this.$bkInfo({
                     subTitle: this.$t('confirmExitDebugSession'),
                     okText: this.$t('exit'),
-                    confirmFn: () => {
-                        this.$emit('close')
-                        // 退出调试确认逻辑
+                    confirmFn: async () => {
+                        try {
+                            await this.stopVmSeqDebug({
+                                pipelineId: this.pipelineId,
+                                buildId: this.buildId,
+                                containerId: this.containerId,
+                                executeCount: this.executeCount
+                            })
+                        } catch (err) {
+                            this.$bkMessage({
+                                theme: 'error',
+                                message: err.message || err
+                            })
+                        } finally {
+                            this.$emit('close')
+                            this.showPassword = false
+                        }
                     }
                 })
             },
@@ -233,9 +288,6 @@
             viewMoreGuide () {
                 // TODO打开更多指引文档
                 window.open('', '_blank')
-            },
-            getFieldValue (key) {
-                return this.toolData[this.currentTool]?.[key] || ''
             }
         }
     }

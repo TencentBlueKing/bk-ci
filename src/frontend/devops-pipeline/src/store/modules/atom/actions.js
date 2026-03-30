@@ -213,9 +213,9 @@ export default {
             return response.data
         })
     },
-    requestTemplate: async ({ dispatch, commit }, { projectId, templateId, version, editMode, query }) => {
+    requestTemplate: async ({ dispatch, commit }, { projectId, templateId, version, source, query }) => {
         const [templateRes, atomPropRes] = await Promise.all([
-            dispatch('fetchTemplateByVersion', { projectId, templateId, version, editMode}),
+            dispatch('fetchTemplateByVersion', { projectId, templateId,source, version}),
             request.get(`/${PROCESS_API_URL_PREFIX}/user/template/v2/atoms/projects/${projectId}/templates/${templateId}/atom/prop/list`, {
                 params: {
                     ...query,
@@ -283,10 +283,9 @@ export default {
             return res.data
         })
     },
-    fetchTemplateByVersion ({ commit }, { projectId, templateId, version, editMode }) {
-        const query = {}
-        if (editMode) {
-            query.editMode = true
+    fetchTemplateByVersion ({ commit }, { projectId, templateId, version, source = 'VIEW' }) {
+        const query = {
+            source
         }
         return request.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/${version}/details/`, {
             params: query
@@ -898,10 +897,10 @@ export default {
     },
 
     fetchDevcloudSettings ({ commit }, { projectId, pipelineId, templateId }) {
-        return request.get(`/dispatch-devcloud/api/user/dispatchDevcloud/v2/project/${projectId}/pipeline/${pipelineId}/performanceConfig/list?templateId=${templateId}`)
+        return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/dispatchDevcloud/v2/project/${projectId}/pipeline/${pipelineId}/performanceConfig/list?templateId=${templateId}`)
     },
     getHistoryDevcloudSettings ({ commit }, { username, projectId, uid }) {
-        return request.get(`/dispatch-devcloud/api/user/dispatchDevcloud/v2/project/${username}/pipeline/${projectId}/uid/${uid}/performanceConfig/info`)
+        return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/dispatchDevcloud/v2/project/${username}/pipeline/${projectId}/uid/${uid}/performanceConfig/info`)
     },
     
     fetchDockerSettings ({ commit }, { projectId, buildType }) {
@@ -1002,6 +1001,22 @@ export default {
 
     pausePlugin ({ commit }, { projectId, pipelineId, buildId, taskId, isContinue, stageId, containerId, element }) {
         return request.post(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildId}/taskIds/${taskId}/execution/pause?isContinue=${isContinue}&stageId=${stageId}&containerId=${containerId}`, element)
+    },
+
+    startVmSeqDebug ({ commit }, { pipelineId, containerId, buildId, executeCount }) {
+        const query = Object.entries({ buildId, executeCount })
+            .filter(([, value]) => value !== undefined && value !== null && value !== '')
+            .map(([key, value]) => `${key}=${value}`)
+            .join('&')
+        return request.post(`${DEVCLOUD_API_URL_PREFIX}/user/macos/debug/startDebug/pipeline/${pipelineId}/vmSeq/${containerId}${query ? `?${query}` : ''}`)
+    },
+
+    stopVmSeqDebug ({ commit }, { pipelineId, containerId, buildId, executeCount }) {
+        const query = Object.entries({ buildId, executeCount })
+            .filter(([, value]) => value !== undefined && value !== null && value !== '')
+            .map(([key, value]) => `${key}=${value}`)
+            .join('&')
+        return request.post(`${DEVCLOUD_API_URL_PREFIX}/user/macos/debug/stopDebug/pipeline/${pipelineId}/vmSeq/${containerId}${query ? `?${query}` : ''}`)
     },
 
     download (_, { url, name, params, type }) {
