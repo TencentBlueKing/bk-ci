@@ -9,7 +9,6 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
-	"github.com/pkg/errors"
 )
 
 func getServerFileArch() string {
@@ -47,5 +46,7 @@ func DownloadJdkFile(saveDir string) (string, error) {
 }
 
 func DownloadDockerInitFile(saveDir string) (string, error) {
-	return "", errors.New("not support macos use docker agent")
+	return api.DownloadUpgradeFile(
+		"script/linux/agent_docker_init.sh", saveDir+"/"+config.DockerInitFile,
+	)
 }
