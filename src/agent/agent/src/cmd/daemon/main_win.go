@@ -47,6 +47,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
+	"github.com/gofrs/flock"
 	"github.com/kardianos/service"
 	"golang.org/x/sys/windows"
 )
@@ -186,6 +187,12 @@ func watch() {
 				return
 			}
 
+			if !waitForUpgradeFinish() {
+				logs.Info("restart after 30 seconds")
+				time.Sleep(30 * time.Second)
+				return
+			}
+
 			if isServiceMode && isSessionMode {
 				if launchAgentInUserSession(agentPath, workDir) {
 					return
@@ -195,6 +202,20 @@ func watch() {
 			launchAgentDirect(agentPath, workDir)
 		}()
 	}
+}
+
+// waitForUpgradeFinish acquires and immediately releases total-lock to ensure
+// no upgrader process is currently replacing the agent binary. On Windows the
+// daemon does not hold total-lock across the agent lifetime (unlike the Linux
+// daemon) because it blocks on cmd.Wait / WaitForSingleObject.
+func waitForUpgradeFinish() bool {
+	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock))
+	if err := totalLock.Lock(); err != nil {
+		logs.WithError(err).Error("wait for upgrade finish: failed to get total lock")
+		return false
+	}
+	_ = totalLock.Unlock()
+	return true
 }
 
 // launchAgentInUserSession tries to start the agent in a user desktop session.
