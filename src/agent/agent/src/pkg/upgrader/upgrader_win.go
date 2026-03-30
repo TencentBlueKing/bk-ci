@@ -263,12 +263,13 @@ func checkUpgradeFileChange(fileName string) (change bool, err error) {
 	return oldMd5 != newMd5, nil
 }
 
+const replaceMaxRetries = 10
+
 func replaceAgentFile(fileName string) error {
 	logs.Info("replace agent file: ", fileName)
 	src := systemutil.GetUpgradeDir() + "/" + fileName
 	dst := systemutil.GetWorkDir() + "/" + fileName
 
-	// 查询 dst 的状态，如果没有的话使用预设权限
 	var perm os.FileMode = 0600
 	if stat, err := os.Stat(dst); err != nil {
 		logs.WithError(err).Warnf("replaceAgentFile %s stat error", dst)
@@ -277,14 +278,26 @@ func replaceAgentFile(fileName string) error {
 	}
 	logs.Infof("replaceAgentFile dst file permissions: %v", perm)
 
-	srcFile, err := os.Open(src)
-	if err != nil {
-		return errors.Wrapf(err, "replaceAgentFile open %s error", src)
+	var lastErr error
+	for attempt := 1; attempt <= replaceMaxRetries; attempt++ {
+		srcFile, err := os.Open(src)
+		if err != nil {
+			return errors.Wrapf(err, "replaceAgentFile open %s error", src)
+		}
+
+		err = innerFileUtil.AtomicWriteFile(dst, srcFile, perm)
+		srcFile.Close()
+		if err == nil {
+			return nil
+		}
+
+		lastErr = err
+		if attempt < replaceMaxRetries {
+			logs.WithError(err).Warnf("replaceAgentFile attempt %d/%d failed, retrying in %ds",
+				attempt, replaceMaxRetries, attempt)
+			time.Sleep(time.Duration(attempt) * time.Second)
+		}
 	}
 
-	if err := innerFileUtil.AtomicWriteFile(dst, srcFile, perm); err != nil {
-		return errors.Wrapf(err, "replaceAgentFile AtomicWriteFile %s error", dst)
-	}
-
-	return nil
+	return errors.Wrapf(lastErr, "replaceAgentFile failed after %d attempts for %s", replaceMaxRetries, dst)
 }

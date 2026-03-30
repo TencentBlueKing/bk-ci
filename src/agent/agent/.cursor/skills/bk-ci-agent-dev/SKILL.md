@@ -314,6 +314,12 @@ AgentUpgrade(upgradeItem, hasBuild)
 
 **升级器** (`pkg/upgrader/`): 独立进程，负责替换Agent/Daemon二进制文件并重启。平台差异大——Unix使用文件替换+进程信号，Windows需要等待进程退出再替换。
 
+**Daemon-Upgrader 协调机制** (`total-lock`):
+- Upgrader 在 `DoUpgradeAgent()` 中持有 `total-lock` 直到文件替换完成
+- Linux/macOS daemon: `watch()` 每次检查/启动 agent 前都持有 `total-lock`，天然避免竞争
+- Windows daemon: `watch()` 在启动 agent 前调用 `waitForUpgradeFinish()` 获取并立即释放 `total-lock`（gate 模式），确保 upgrader 不在运行
+- Windows 文件替换: `replaceAgentFile()` 含重试机制（最多 10 次、递增间隔），防止因 Windows 文件锁（如杀毒软件扫描、系统休眠后 daemon 先于 upgrader 拉起 agent 导致 exe 被锁）导致 rename 失败
+
 ## 跨平台开发指南
 
 ### 平台文件命名约定
@@ -429,6 +435,7 @@ config.GAgentConfig.EventBus.Publish("IpEvent", data)
 - `i18n.Localize()` 只加一次 RLock，内部 `getLocalizerLocked()` 不再加锁
 - EventBus `Publish` 使用全非阻塞 select 模式，丢弃和写入分两步各用 select 防止并发竞争
 - 升级期间通过 `BuildTotalManager.Upgrading` 原子标志阻止 Ask 轮询请求新构建任务，防止 Agent 二进制升级重启时阻塞中的构建丢失
+- Daemon 启动 agent 前必须先通过 `total-lock` 确认无 upgrader 在运行（Linux/macOS 持有锁，Windows 使用 gate 模式），避免 daemon 在 upgrader 替换二进制期间拉起新 agent 导致文件锁冲突
 
 ### MCP Server (`pkg/mcp/`)
 
