@@ -956,32 +956,6 @@ class ServiceRemoteDevResourceImpl(
         projectId: String,
         workspaceName: String
     ): Result<Boolean> {
-        val workspace = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
-        if (workspace == null || workspace.projectId != projectId) {
-            logger.warn("get project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
-            return Result(false)
-        }
-
-        if (!permissionService.hasManagerOrViewerPermission(userId, workspace.projectId, workspace.workspaceName)) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("We're sorry but you don't have permission to get $workspaceName info")
-            )
-        }
-
-        val workspaceInfo = workspaceService.getWorkspaceList4WeSec(
-            workspaceName = workspace.workspaceName,
-            notStatus = null,
-            hasCurrentUser = true,
-            userId = userId
-        ).firstOrNull()
-
-        if (workspace.coffeeAi == true) {
-            return Result(workspaceInfo?.owner == userId)
-        }
-
-        return Result(
-            workspaceInfo?.owner == userId || (workspaceInfo?.viewers?.contains(userId) == true)
-        )
+        return Result(workspaceRecordService.checkViewLive(userId, projectId, workspaceName))
     }
 }

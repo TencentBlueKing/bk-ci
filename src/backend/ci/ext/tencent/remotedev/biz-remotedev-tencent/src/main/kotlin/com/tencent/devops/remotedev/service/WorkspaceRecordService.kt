@@ -17,10 +17,12 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceRecordTicketDao
 import com.tencent.devops.remotedev.dao.WorkspaceRecordUserApprovalDao
+import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.remotedev.pojo.FeatureSwitchType
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
+import com.tencent.devops.remotedev.pojo.WorkspaceShared.AssignType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.record.CheckEnableRecordLiveResp
 import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
@@ -62,7 +64,8 @@ class WorkspaceRecordService @Autowired constructor(
     private val permissionService: PermissionService,
     private val configCacheService: ConfigCacheService,
     private val featureSwitchService: FeatureSwitchService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val workspaceSharedDao: WorkspaceSharedDao
 ) {
 
     private val objectMapper = ObjectMapper()
@@ -154,7 +157,7 @@ class WorkspaceRecordService @Autowired constructor(
                 ?: return Pair(false, null)
         }
 
-        // cafeAI场景
+        // cafeAI场景默认启动
         if (recordInfo.coffeeAIEnable) {
             val region = genRegion(recordInfo.hostIp)
             val token = permissionService.init1Password(
@@ -178,34 +181,33 @@ class WorkspaceRecordService @Autowired constructor(
 
         // 没开启录屏就看看有没有开启直播
         if (recordInfo.enableUser.isNullOrBlank()) {
-            if (featureSwitchService.isEnabled(
-                    projectId = recordInfo.workspaceName,
+            if (!featureSwitchService.isEnabled(
+                    projectId = projectId,
                     userId = userId,
                     workspaceName = recordInfo.workspaceName,
                     featureType = FeatureSwitchType.LIVE_STREAMING
                 )
             ) {
-                val region = genRegion(recordInfo.hostIp)
-                val token = permissionService.init1Password(
-                    userId = userId,
-                    workspaceName = recordInfo.workspaceName,
-                    projectId = null,
-                    expiredInSecond = 7 * 24 * 3600
-                )
-                return Pair(
-                    true,
-                    remotedevBkRepoClient.repoStreamCreate(
-                        region = region,
-                        projectId = projectId,
-                        repoName = genRepoName(recordInfo.workspaceName),
-                        userId = userId,
-                        media = true,
-                        gray = mediaGary
-                    ) + "&skToken=$token&recordUser=$userId"
-                )
-            } else {
                 return Pair(false, null)
             }
+            val region = genRegion(recordInfo.hostIp)
+            val token = permissionService.init1Password(
+                userId = userId,
+                workspaceName = recordInfo.workspaceName,
+                projectId = null,
+                expiredInSecond = 7 * 24 * 3600
+            )
+            return Pair(
+                true,
+                remotedevBkRepoClient.repoStreamCreate(
+                    region = region,
+                    projectId = projectId,
+                    repoName = genRepoName(recordInfo.workspaceName),
+                    userId = userId,
+                    media = true,
+                    gray = mediaGary
+                ) + "&skToken=$token&recordUser=$userId"
+            )
         }
         // 否则完全按录屏的逻辑走
         val region = genRegion(recordInfo.hostIp)
@@ -238,7 +240,7 @@ class WorkspaceRecordService @Autowired constructor(
             return CheckEnableRecordLiveResp(recordEnable = false, liveEnable = false)
         }
 
-        // cafeAI场景
+        // cafeAI场景默认开启
         if (recordInfo.coffeeAIEnable) {
             return CheckEnableRecordLiveResp(recordEnable = false, liveEnable = true)
         }
@@ -259,6 +261,39 @@ class WorkspaceRecordService @Autowired constructor(
         }
         // 否则完全按录屏的逻辑走
         return CheckEnableRecordLiveResp(recordEnable = true, liveEnable = false)
+    }
+
+    fun checkViewLive(
+        userId: String,
+        projectId: String,
+        workspaceName: String
+    ): Boolean {
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+        if (workspace == null || workspace.projectId != projectId) {
+            logger.warn("get project workspace with invalid workspace: $userId|$projectId|$workspaceName")
+            return false
+        }
+
+        if (!permissionService.hasManagerOrViewerPermission(userId, workspace.projectId, workspace.workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("We're sorry but you don't have permission to get $workspaceName info")
+            )
+        }
+
+        val workspaceInfo = workspaceSharedDao.fetchWorkspaceSharedInfo(
+            dslContext = dslContext,
+            workspaceName = workspace.workspaceName,
+        )
+
+        if (workspace.coffeeAi == true) {
+            return workspaceInfo.any { it.type == AssignType.OWNER && it.sharedUser == userId }
+        }
+
+        return workspaceInfo.any {
+            (it.type == AssignType.OWNER && it.sharedUser == userId) ||
+                    (it.type == AssignType.VIEWER && it.sharedUser == userId)
+        }
     }
 
     // 审批流程 -> leader -> 安全
