@@ -83,5 +83,9 @@ data class Experience(
     @get:Schema(title = "分类", required = true)
     val classify: String,
     @get:Schema(title = "APP名字I18n", required = false)
-    val appNameI18n: String?
+    val appNameI18n: String?,
+    @get:Schema(title = "允许合研环境访问", required = false)
+    val enableDevxAccess: Boolean,
+    @get:Schema(title = "允许基地公网访问", required = false)
+    val enablePublicAccess: Boolean
 )

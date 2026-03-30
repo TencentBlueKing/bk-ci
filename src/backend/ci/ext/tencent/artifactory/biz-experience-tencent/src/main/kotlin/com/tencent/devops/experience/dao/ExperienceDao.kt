@@ -207,6 +207,7 @@ class ExperienceDao {
         repoCreateTime: LocalDateTime,
         appNameI18n: String?,
         enablePublicAccess: Boolean,
+        enableDevxAccess: Boolean
     ): Long {
         val now = LocalDateTime.now()
         with(TExperience.T_EXPERIENCE) {
@@ -246,7 +247,8 @@ class ExperienceDao {
                 CLASSIFY,
                 REPO_CREATE_TIME,
                 APP_NAME_I18N,
-                ENABLE_PUBLIC_ACCESS
+                ENABLE_PUBLIC_ACCESS,
+                ENABLE_DEVX_ACCESS
             ).values(
                 projectId,
                 name,
@@ -282,7 +284,8 @@ class ExperienceDao {
                 classify,
                 repoCreateTime,
                 appNameI18n,
-                enablePublicAccess
+                enablePublicAccess,
+                enableDevxAccess
             )
                 .returning(ID)
                 .fetchOne()!!
@@ -319,7 +322,9 @@ class ExperienceDao {
         versionTitle: String,
         category: Int,
         productOwner: String,
-        classify: String
+        classify: String,
+        enablePublicAccess: Boolean,
+        enableDevxAccess: Boolean
     ) {
         val now = LocalDateTime.now()
         with(TExperience.T_EXPERIENCE) {
@@ -340,6 +345,8 @@ class ExperienceDao {
                 .set(CATEGORY, category)
                 .set(PRODUCT_OWNER, productOwner)
                 .set(CLASSIFY, classify)
+                .set(ENABLE_PUBLIC_ACCESS, enablePublicAccess)
+                .set(ENABLE_DEVX_ACCESS, enableDevxAccess)
                 .where(ID.eq(id))
                 .execute()
         }

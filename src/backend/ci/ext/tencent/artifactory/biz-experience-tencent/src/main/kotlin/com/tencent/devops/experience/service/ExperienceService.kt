@@ -364,7 +364,9 @@ class ExperienceService @Autowired constructor(
             categoryId = experienceRecord.category,
             productOwner = objectMapper.readValue(experienceRecord.productOwner),
             classify = experienceRecord.classify,
-            appNameI18n = experienceRecord.appNameI18n
+            appNameI18n = experienceRecord.appNameI18n,
+            enablePublicAccess = experienceRecord.enablePublicAccess ?: false,
+            enableDevxAccess = experienceRecord.enableDevxAccess ?: false
         )
     }
 
@@ -629,6 +631,7 @@ class ExperienceService @Autowired constructor(
             repoCreateTime = DateTimeUtil.convertTimestampToLocalDateTime(fileDetail.createdTime),
             appNameI18n = appNameI18n,
             enablePublicAccess = experience.enablePublicAccess,
+            enableDevxAccess = experience.enableDevxAccess
         )
         // IAM权限
         experiencePermissionService.createTaskResource(
@@ -756,7 +759,9 @@ class ExperienceService @Autowired constructor(
             versionTitle = experience.versionTitle ?: experienceRecord.versionTitle,
             category = experience.categoryId ?: ProductCategoryEnum.LIFE.id,
             productOwner = objectMapper.writeValueAsString(experience.productOwner ?: emptyList<String>()),
-            classify = experience.classify ?: ""
+            classify = experience.classify ?: "",
+            enablePublicAccess = experience.enablePublicAccess ?: experienceRecord.enablePublicAccess,
+            enableDevxAccess = experience.enableDevxAccess ?: experienceRecord.enableDevxAccess
         )
 
         // 更新组
