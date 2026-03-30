@@ -428,6 +428,9 @@ config.AgentVersion = 版本号(version.go中声明)
 go test ./...
 ```
 
+**人工测试文档**:
+- `doc/test/manual-test-agent-features.md` — 单测无法覆盖的人工上机验证清单（CLI / reinstall / status / Docker/Podman / 镜像调试 / 旧脚本兼容）
+
 ### 关键第三方依赖
 
 | 依赖 | 版本 | 用途 | 注意事项 |

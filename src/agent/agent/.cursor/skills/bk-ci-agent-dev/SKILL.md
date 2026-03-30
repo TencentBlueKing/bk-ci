@@ -141,7 +141,7 @@ devopsAgent <command> [options]
 调试:
   debug [on|off]       切换调试模式 (通过 .debug 文件, 重启生效)
   version              打印版本号
-  fullVersion          打印完整版本信息
+    -f                 打印完整版本信息 (版本号 / Git Commit / 构建时间)
 
 会话模式 (仅 Windows):
   configure-session    配置桌面会话访问 (也可通过 install --mode session 一步到位)
@@ -545,6 +545,9 @@ go test -v ./src/pkg/agentcli/
 # 运行特定测试
 go test -v -run TestPidStatus ./src/pkg/agentcli/
 ```
+
+**人工测试文档**:
+- `doc/test/manual-test-agent-features.md` — 单测无法覆盖的人工上机验证清单（CLI / reinstall / status / Docker/Podman / 镜像调试 / 旧脚本兼容）
 
 **测试规范**:
 - 使用 table-driven + `t.Run()` 风格（参考 `agentcli/cli_test.go`）
