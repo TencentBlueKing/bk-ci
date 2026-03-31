@@ -77,6 +77,7 @@ import {
     SET_STAGE_TAG_LIST,
     SET_STORE_LOADING,
     SET_STORE_SEARCH,
+    SET_TEMP_PARAM_SET,
     SET_TEMPLATE,
     SWITCHING_PIPELINE_VERSION,
     TOGGLE_ATOM_SELECTOR_POPUP,
@@ -151,9 +152,9 @@ export default {
         Vue.set(state, 'pipelineInfo', pipelineInfo)
     },
     [SET_PIPELINE]: (state, pipeline = null) => {
-        if (pipeline && !pipeline.overrideTemplateField) {
-            Object.assign(pipeline, { overrideTemplateField: {} })
-        }
+        // if (pipeline && !pipeline.overrideTemplateField) {
+        //     Object.assign(pipeline, { overrideTemplateField: {} })
+        // }
 
         if (!state.pipeline || !pipeline) {
             Vue.set(state, 'pipeline', pipeline)
@@ -381,7 +382,9 @@ export default {
         containers.push(newContainer)
     },
     [UPDATE_CONTAINER]: (state, { container, newParam }) => {
-        Object.assign(container, newParam)
+        Object.keys(newParam).forEach(key => {
+            Vue.set(container, key, newParam[key])
+        })
     },
     [INSERT_ATOM]: (state, { elements, insertIndex }) => {
         elements.splice(insertIndex, 0, {
@@ -520,6 +523,11 @@ export default {
     [SET_PARAM_SET_LIST]: (state, paramSets) => {
         return Object.assign(state, {
             paramSets
+        })
+    },
+    [SET_TEMP_PARAM_SET]: (state, tempParamSet) => {
+        return Object.assign(state, {
+            tempParamSet
         })
     },
     [UPDATE_TEMPLATE_CONSTRAINT]: (state, { classify, constraintList }) => {

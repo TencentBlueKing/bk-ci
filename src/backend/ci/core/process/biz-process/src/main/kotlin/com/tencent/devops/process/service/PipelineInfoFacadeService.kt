@@ -108,6 +108,7 @@ import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
+import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
@@ -163,7 +164,8 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val pipelineAuthorizationService: PipelineAuthorizationService,
     private val auditService: AuditService,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
-    private val pipelineTemplateResourceService: PipelineTemplateResourceService
+    private val pipelineTemplateResourceService: PipelineTemplateResourceService,
+    private val pipelineTemplateInfoService: PipelineTemplateInfoService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -548,12 +550,10 @@ class PipelineInfoFacadeService @Autowired constructor(
             val templateId = model.templateId
             if (templateId != null) {
                 // 如果是根据模板创建的流水线需为model设置srcTemplateId
-                model.srcTemplateId = templateDao.getSrcTemplateId(
-                    dslContext = dslContext,
+                model.srcTemplateId = pipelineTemplateInfoService.getOrNull(
                     projectId = projectId,
-                    templateId = templateId,
-                    type = TemplateType.CONSTRAINT.name
-                )
+                    templateId = templateId
+                )?.srcTemplateId
             }
 
             // 如果为分支版本的报错，必须指定分支名称
@@ -1636,28 +1636,30 @@ class PipelineInfoFacadeService @Autowired constructor(
             return
         }
         model.templateId = pipelineTemplateRelated.templateId
-        // 如果是最新版本,并且模版信息,说明是老的实例化流水线,需要补全模版信息
-        if (isLatestVersion && model.template == null) {
-            pipelineTemplateResourceService.getOrNull(
-                projectId = projectId,
-                templateId = pipelineTemplateRelated.templateId,
-                version = pipelineTemplateRelated.version
-            )?.let {
-                model.template = TemplateInstanceDescriptor(
-                    templateRefType = TemplateRefType.ID,
-                    templateId = pipelineTemplateRelated.templateId,
-                    templateVersionName = it.versionName,
-                    templateVariables = triggerContainer.params.filter { param ->
-                        param.value != null && param.constant != true
-                    }.map { param ->
-                        TemplateVariable(key = param.id, value = param.value!!)
-                    }
-                )
-            }
+        val templateResource = pipelineTemplateResourceService.getByRelatedPipeline(
+            projectId = projectId,
+            pipelineTemplateRelated = pipelineTemplateRelated
+        ) ?: return
+        val templateModel = templateResource.model
+        if (templateModel !is Model) {
+            return
         }
         // 老的模版实例参数和设置都是流水线自定义,不跟随模版
         if (model.overrideTemplateField == null) {
-            model.overrideTemplateField = TemplateInstanceField.initFromTrigger(triggerContainer = triggerContainer)
+            model.overrideTemplateField = TemplateInstanceField.initFromTemplate(model = templateModel)
+        }
+        // 如果是最新版本,并且模版信息,说明是老的实例化流水线,需要补全模版信息
+        if (isLatestVersion && model.template == null) {
+            model.template = TemplateInstanceDescriptor(
+                templateRefType = TemplateRefType.ID,
+                templateId = pipelineTemplateRelated.templateId,
+                templateVersionName = templateResource.versionName,
+                templateVariables = triggerContainer.params.filter { param ->
+                    param.constant != true
+                }.map { param ->
+                    TemplateVariable(key = param.id, value = param.defaultValue)
+                }
+            )
         }
     }
 

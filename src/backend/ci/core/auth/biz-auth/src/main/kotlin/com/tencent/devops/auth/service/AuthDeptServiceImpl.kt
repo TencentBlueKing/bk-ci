@@ -593,6 +593,7 @@ class AuthDeptServiceImpl(
 
     fun getUserDeptTreeIds(responseData: String): Set<String> {
         val deptInfo = JsonUtil.to(responseData, object : TypeReference<List<UserDeptTreeInfo>>() {})
+        if (deptInfo.isEmpty()) return emptySet()
         val deptTreeId = mutableSetOf<String>()
         val deptTree = deptInfo[0]
         deptTreeId.add(deptTree.id)

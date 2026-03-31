@@ -1,6 +1,6 @@
 package com.tencent.devops.common.pipeline.pojo
 
-import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSettingGroupType
 
 /**
@@ -18,18 +18,24 @@ data class TemplateInstanceField(
         // 推荐版本号
         const val BK_CI_BUILD_NO = "BK_CI_BUILD_NO"
 
-        fun initFromTrigger(
-            triggerContainer: TriggerContainer
+        /**
+         * 模版中默认可以被流水线自定义的参数/触发器
+         *
+         * 模版中只有入参参数才能被流水线自定义,常量和其他变量都不能被流水线自定义
+         */
+        fun initFromTemplate(
+            model: Model
         ): TemplateInstanceField {
+            val triggerContainer = model.getTriggerContainer()
             val paramIds = triggerContainer.params.filter {
-                it.constant != true
+                it.constant != true && it.required
             }.map { it.id }.toMutableList()
             if (triggerContainer.buildNo != null) {
                 paramIds.add(BK_CI_BUILD_NO)
             }
             return TemplateInstanceField(
                 paramIds = paramIds,
-                settingGroups = PipelineSettingGroupType.values().map { it }
+                settingGroups = PipelineSettingGroupType.entries.map { it }
             )
         }
     }
@@ -41,7 +47,7 @@ data class TemplateInstanceField(
     /**
      * 是否覆盖推荐版本,推荐版本号也放在参数中传递
      */
-    fun overrideRecommendedVersion(): Boolean {
+    fun overrideBuildNo(): Boolean {
         return overrideParam(BK_CI_BUILD_NO)
     }
 

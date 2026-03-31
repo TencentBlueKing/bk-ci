@@ -46,6 +46,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceSe
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
 import com.tencent.devops.store.api.template.ServiceTemplateResource
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -75,6 +76,9 @@ class PipelineTemplateMarketCreateReqConverter @Autowired constructor(
     ): PipelineTemplateVersionCreateContext {
         request as PipelineTemplateMarketCreateReq
         with(request) {
+            logger.info(
+                "Start to convert market create request|$projectId|$templateId|$templateId|$version"
+            )
             val marketTemplateDetails = client.get(ServiceTemplateResource::class).getTemplateDetailByCode(
                 userId = userId,
                 templateCode = marketTemplateId
@@ -112,6 +116,7 @@ class PipelineTemplateMarketCreateReqConverter @Autowired constructor(
                     settingVersion = marketTemplateResource.settingVersion
                 )
                 srcTemplateSetting.copy(
+                    desc = "",
                     pipelineId = newTemplateId,
                     projectId = projectId,
                     pipelineName = templateName,
@@ -125,7 +130,7 @@ class PipelineTemplateMarketCreateReqConverter @Autowired constructor(
                     templateId = newTemplateId,
                     creator = userId,
                     templateName = templateName,
-                    desc = marketTemplateDetails.description
+                    desc = ""
                 )
             }
 
@@ -138,7 +143,7 @@ class PipelineTemplateMarketCreateReqConverter @Autowired constructor(
                 id = newTemplateId,
                 projectId = projectId,
                 name = templateName,
-                desc = marketTemplateDetails.description,
+                desc = "",
                 mode = TemplateType.CONSTRAINT,
                 type = marketTemplateInfo.type,
                 enablePac = templateInfo?.enablePac ?: false,
@@ -179,5 +184,9 @@ class PipelineTemplateMarketCreateReqConverter @Autowired constructor(
                 pTemplateSettingWithoutVersion = setting
             )
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineTemplateMarketCreateReqConverter::class.java)
     }
 }

@@ -30,6 +30,7 @@ package com.tencent.devops.auth.resources.open
 import com.tencent.devops.auth.api.open.OpenProjectAuthResource
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.auth.service.iam.PermissionProjectService
+import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -41,7 +42,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpenProjectAuthResourceImpl @Autowired constructor(
-    val permissionProjectService: PermissionProjectService
+    val permissionProjectService: PermissionProjectService,
+    val permissionResourceMemberService: PermissionResourceMemberService
 ) : OpenProjectAuthResource {
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun getProjectUsers(
@@ -180,6 +182,20 @@ class OpenProjectAuthResourceImpl @Autowired constructor(
         return Result(
             permissionProjectService.getProjectPermissionInfo(
                 projectCode = projectCode
+            )
+        )
+    }
+
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
+    override fun getMemberGroupsInProject(
+        token: String,
+        projectCode: String,
+        memberId: String
+    ): Result<List<Int>> {
+        return Result(
+            permissionResourceMemberService.getMemberGroupsInProject(
+                projectCode = projectCode,
+                memberId = memberId
             )
         )
     }

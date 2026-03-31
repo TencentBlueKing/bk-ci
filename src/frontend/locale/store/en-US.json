@@ -626,6 +626,7 @@
   "离开将会导致未保存信息丢失": "Your changes will be lost if you close without saving.",
   "离开": "Leave",
   "无该项目的模板安装权限": "No permission to install the project template",
+  "历史大版本下的小版本更新": "Minor version update under historical major version",
   "研发商店模板名称": "Development Store Template Name",
   "模板信息": "Template Information",
   "源模板名称": "Source Template Name",

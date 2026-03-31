@@ -128,7 +128,8 @@
         SET_TEMPLATE_DETAIL,
         SET_INSTANCE_LIST,
         UPDATE_USE_TEMPLATE_SETTING,
-        INSTANCE_OPERATE_TYPE
+        INSTANCE_OPERATE_TYPE,
+        SET_FETCH_PIPELINES_ERROR
     } from '@/store/modules/templates/constants'
     import { deepClone } from '@/utils/util'
     import Logo from '@/components/Logo'
@@ -158,6 +159,10 @@
     const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
     const instanceName = computed(() => {
         return renderInstanceList.value[editingIndex.value]?.pipelineName ?? ''
+    })
+    watch(() => currentVersion.value,  () => {
+        if (isInstanceCreateType.value) return
+        fetchPipelinesDetails()
     })
     watch(() => curTemplateDetail.value, (val) => {
         if (instanceList.value.length) return
@@ -239,15 +244,18 @@
     async function fetchPipelinesDetails () {
         try {
             proxy.$store.dispatch('templates/updateInstancePageLoading', true)
-            const pipelineIds = renderInstanceList.value.map(i => i.pipelineId)
+            proxy.$store.commit(`templates/${SET_FETCH_PIPELINES_ERROR}`, false)
+            const initialInstanceListValue = proxy.$store?.state?.templates?.initialInstanceList
+            const pipelineIds = initialInstanceListValue.map(i => i.pipelineId)
             const res = await proxy.$store.dispatch('templates/fetchPipelineDetailById', {
                 pipelineIds,
                 projectId: projectId.value,
+                version: currentVersion.value,
                 templateId: templateId.value
             })
-            const list = renderInstanceList.value.map(i => {
+            const list = initialInstanceListValue.map(i => {
                 const triggerElements = res[i.pipelineId]?.triggerElements
-                const overrideTemplateField = res[i.pipelineId]?.overrideTemplateField ?? []
+                const overrideTemplateField = res[i.pipelineId]?.overrideTemplateField ?? {}
                 return {
                     ...i,
                     ...res[i.pipelineId],
@@ -289,10 +297,13 @@
                     proxy.$set(item?.buildNo, 'isFollowTemplate', !overrideTemplateField?.paramIds?.includes('BK_CI_BUILD_NO'))
                 }
             })
-            proxy.$store.dispatch('templates/updateInstancePageLoading', false)
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, { list })
+            proxy.$store.commit('templates/TRIGGER_MERGE_INSTANCES', true)
         } catch (e) {
+            proxy.$store.commit(`templates/${SET_FETCH_PIPELINES_ERROR}`, true)
             console.error(e)
+        } finally {
+            proxy.$store.dispatch('templates/updateInstancePageLoading', false)
         }
     }
     function handleShowInstanceCreate () {
@@ -304,8 +315,23 @@
     }
     function handleAddInstance (name) {
         const instanceParams = deepClone(curTemplateDetail.value)
+        // 处理新增实例时参数的 isRequiredParam 属性
+        // 只有当 asInstanceInput 为 true , 才设置为入参
+        if (instanceParams?.param?.length) {
+            instanceParams.param = instanceParams.param.map(p => ({
+                ...p,
+                readOnlyCheck: false,
+                isRequiredParam: p.required && p.asInstanceInput
+            }))
+        }
         const newInstance = {
             ...instanceParams,
+            ...(instanceParams?.buildNo ? {
+                buildNo: {
+                    ...instanceParams.buildNo,
+                    isRequiredParam: instanceParams.buildNo.required && instanceParams.buildNo.asInstanceInput
+                }
+            } : {}),
             pipelineName: name ?? pipelineName.value ?? ''
         }
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, { list: [...instanceList.value, newInstance] })
@@ -327,6 +353,7 @@
                         }
                     ]
                 })
+                fetchPipelinesDetails()
             }
 
             if (instanceViewType.value === INSTANCE_OPERATE_TYPE.UPGRADE  && !instanceList.value.length) {
@@ -339,7 +366,6 @@
                 })
                 return
             }
-            await fetchPipelinesDetails()
             proxy.$nextTick(() => {
                 handleInstanceClick(instanceActiveIndex.value)
             })

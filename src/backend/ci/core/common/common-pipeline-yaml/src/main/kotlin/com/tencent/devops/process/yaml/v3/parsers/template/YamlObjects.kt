@@ -90,7 +90,9 @@ object YamlObjects {
             const = getNullValue("const", variable)?.toBoolean(),
             allowModifyAtStartup = getNullValue("allow-modify-at-startup", variable)?.toBoolean(),
             props = props,
-            ifCondition = transNullValue<Map<String, String>>(fromPath, "if", "if", variable)
+            ifCondition = transNullValue<Map<String, String>>(fromPath, "if", "if", variable),
+            sensitive = getNullValue("sensitive", variable)?.toBoolean(),
+            asInstanceInput = getNullValue("asInstanceInput", variable)?.toBoolean()
         )
 
         // 只有列表需要判断
@@ -328,7 +330,13 @@ object YamlObjects {
                     } else {
                         transValue<List<String>>(fromPath, "mounts", optionsMap["mounts"])
                     },
-                    privileged = getNullValue("privileged", optionsMap)?.toBoolean()
+                    privileged = getNullValue("privileged", optionsMap)?.toBoolean(),
+                    network = if (optionsMap["network"] == null) {
+                        null
+                    } else {
+                        transValue<List<String>>(fromPath, "network", optionsMap["network"])
+                    },
+                    user = getNullValue("user", optionsMap),
                 )
             },
             imagePullPolicy = getNullValue(key = "image-pull-policy", map = containerMap)

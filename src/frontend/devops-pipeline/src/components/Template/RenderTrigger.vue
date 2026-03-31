@@ -14,14 +14,14 @@
                     >
                         <bk-radio
                             :value="false"
-                            :disabled="trigger.isFollowTemplate"
+                            :disabled="trigger.isFollowTemplate || isNoStepId"
                             class="mr20"
                         >
                             {{ $t('template.enable') }}
                         </bk-radio>
                         <bk-radio
                             :value="true"
-                            :disabled="trigger.isFollowTemplate"
+                            :disabled="trigger.isFollowTemplate || isNoStepId"
                         >
                             {{ $t('template.close') }}
                         </bk-radio>
@@ -36,7 +36,7 @@
                     <section class="component-row">
                         <bk-input
                             v-model="trigger.cron"
-                            :disabled="trigger.isFollowTemplate"
+                            :disabled="trigger.isFollowTemplate || isDisabled"
                             @focus="handleShowTimeCronCom"
                         />
                     </section>
@@ -45,7 +45,7 @@
                     name="variables"
                     :title="$t('details.startupParams')"
                     :value="trigger.variables"
-                    :disabled="trigger.isFollowTemplate"
+                    :disabled="trigger.isFollowTemplate || isDisabled"
                     :param="timerTriggerParamConfig"
                     :handle-change="handleChangeStartParam"
                 />
@@ -54,8 +54,10 @@
         <bk-dialog
             v-model="showTimeCronCom"
             :title="$t('template.setTimeCron')"
+            ext-cls="time-cron-dialog"
             header-position="left"
-            width="700px"
+            width="700"
+            :position="dialogPosition"
             render-directive="if"
             :mask-close="false"
             @confirm="handleConfirmChangeCron"
@@ -81,13 +83,24 @@
     const props = defineProps({
         index: Boolean,
         trigger: Object,
-        handleChangeTrigger: Function
+        handleChangeTrigger: Function,
+        isDisabled: {
+            type: Boolean,
+            default: false
+        },
+        isNoStepId: {
+            type: Boolean,
+            default: false
+        }
     })
     const showTimeCronCom = ref(false)
     const isTimerTriggerV2 = computed(() => {
         const { version, atomCode } = props.trigger
         return atomCode === 'timerTrigger' && version.startsWith('2.')
     })
+    const dialogPosition = {
+        top: '120'
+    }
     const newCron = ref('')
     const timerTriggerParamConfig = computed(() => {
         return {
@@ -123,5 +136,13 @@
         display: grid;
         grid-template-columns: repeat(2, minmax(200px, 1fr));
         grid-gap: 0 24px;
+    }
+</style>
+<style lang="scss">
+    .time-cron-dialog {
+        .bk-dialog-body {
+            min-height: 470px !important;
+            overflow-y: auto;
+        }
     }
 </style>
