@@ -157,11 +157,11 @@ class WorkspaceRecordService @Autowired constructor(
                 ?: return Pair(false, null)
         }
 
-        // cafeAI场景默认启动
-        if (recordInfo.coffeeAIEnable) {
+        // 如果有录屏按录屏走
+        if (!recordInfo.enableUser.isNullOrBlank()) {
             val region = genRegion(recordInfo.hostIp)
             val token = permissionService.init1Password(
-                userId = userId,
+                userId = recordInfo.enableUser,
                 workspaceName = recordInfo.workspaceName,
                 projectId = null,
                 expiredInSecond = 7 * 24 * 3600
@@ -172,24 +172,21 @@ class WorkspaceRecordService @Autowired constructor(
                     region = region,
                     projectId = projectId,
                     repoName = genRepoName(recordInfo.workspaceName),
-                    userId = userId,
+                    userId = recordInfo.enableUser,
                     media = true,
                     gray = mediaGary
                 ) + "&skToken=$token&recordUser=$userId"
             )
         }
 
-        // 没开启录屏就看看有没有开启直播
-        if (recordInfo.enableUser.isNullOrBlank()) {
-            if (!featureSwitchService.isEnabled(
-                    projectId = projectId,
-                    userId = userId,
-                    workspaceName = recordInfo.workspaceName,
-                    featureType = FeatureSwitchType.LIVE_STREAMING
-                )
-            ) {
-                return Pair(false, null)
-            }
+        // cafeAI场景默认启动直播
+        if (recordInfo.coffeeAIEnable || featureSwitchService.isEnabled(
+                projectId = projectId,
+                userId = userId,
+                workspaceName = recordInfo.workspaceName,
+                featureType = FeatureSwitchType.LIVE_STREAMING
+            )
+        ) {
             val region = genRegion(recordInfo.hostIp)
             val token = permissionService.init1Password(
                 userId = userId,
@@ -209,25 +206,7 @@ class WorkspaceRecordService @Autowired constructor(
                 ) + "&skToken=$token&recordUser=$userId"
             )
         }
-        // 否则完全按录屏的逻辑走
-        val region = genRegion(recordInfo.hostIp)
-        val token = permissionService.init1Password(
-            userId = recordInfo.enableUser,
-            workspaceName = recordInfo.workspaceName,
-            projectId = null,
-            expiredInSecond = 7 * 24 * 3600
-        )
-        return Pair(
-            true,
-            remotedevBkRepoClient.repoStreamCreate(
-                region = region,
-                projectId = projectId,
-                repoName = genRepoName(recordInfo.workspaceName),
-                userId = recordInfo.enableUser,
-                media = true,
-                gray = mediaGary
-            ) + "&skToken=$token&recordUser=$userId"
-        )
+        return Pair(false, null)
     }
 
     fun checkEnableRecordLive(
@@ -240,27 +219,26 @@ class WorkspaceRecordService @Autowired constructor(
             return CheckEnableRecordLiveResp(recordEnable = false, liveEnable = false)
         }
 
-        // cafeAI场景默认开启
+        // 是否开启录屏
+        val recordEnable = !recordInfo.enableUser.isNullOrBlank()
+
+        // cafeAI场景默认开启直播
         if (recordInfo.coffeeAIEnable) {
-            return CheckEnableRecordLiveResp(recordEnable = false, liveEnable = true)
+            return CheckEnableRecordLiveResp(recordEnable = recordEnable, liveEnable = true)
         }
 
-        // 没开启录屏就看看有没有开启直播
-        if (recordInfo.enableUser.isNullOrBlank()) {
-            return if (featureSwitchService.isEnabled(
-                    projectId = recordInfo.workspaceName,
-                    userId = userId,
-                    workspaceName = recordInfo.workspaceName,
-                    featureType = FeatureSwitchType.LIVE_STREAMING
-                )
-            ) {
-                CheckEnableRecordLiveResp(recordEnable = false, liveEnable = true)
-            } else {
-                CheckEnableRecordLiveResp(recordEnable = false, liveEnable = false)
-            }
+        // 看看有没有开直播
+        if (featureSwitchService.isEnabled(
+                projectId = recordInfo.workspaceName,
+                userId = userId,
+                workspaceName = recordInfo.workspaceName,
+                featureType = FeatureSwitchType.LIVE_STREAMING
+            )
+        ) {
+            return CheckEnableRecordLiveResp(recordEnable = recordEnable, liveEnable = true)
         }
-        // 否则完全按录屏的逻辑走
-        return CheckEnableRecordLiveResp(recordEnable = true, liveEnable = false)
+
+        return CheckEnableRecordLiveResp(recordEnable = recordEnable, liveEnable = false)
     }
 
     fun checkViewLive(
