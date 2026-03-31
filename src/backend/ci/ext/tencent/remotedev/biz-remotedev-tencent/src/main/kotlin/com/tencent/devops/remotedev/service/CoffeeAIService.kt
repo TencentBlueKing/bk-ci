@@ -160,9 +160,10 @@ class CoffeeAIService @Autowired constructor(
             queryType = QueryType.SERVICE,
             search = WorkspaceSearch(
                 owner = listOf(userId),
+                status = listOf(WorkspaceStatus.RUNNING),
                 logicalArea = listOf(WindowsResourceZoneConfigType.DEVCLOUD)
             )
-        ).maxByOrNull { it.createTime } as? WorkspaceRecordWithWindows ?: run {
+        ).maxByOrNull { it.lastStatusUpdateTime!! } as? WorkspaceRecordWithWindows ?: run {
             logger.warn("openClawOn: workspace not found|$userId")
             return null
         }
