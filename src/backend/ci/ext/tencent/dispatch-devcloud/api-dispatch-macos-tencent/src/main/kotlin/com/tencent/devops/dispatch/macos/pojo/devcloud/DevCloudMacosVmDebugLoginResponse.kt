@@ -6,5 +6,5 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class DevCloudMacosVmDebugLoginResponse(
     val actionCode: Int,
     val actionMessage: String,
-    val data: DevCloudMacosVmDebugLoginInfo
+    val data: DevCloudMacosVmDebugLoginInfo? = null
 )
