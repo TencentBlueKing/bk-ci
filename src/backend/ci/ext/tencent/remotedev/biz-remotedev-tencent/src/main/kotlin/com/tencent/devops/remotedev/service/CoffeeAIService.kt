@@ -29,6 +29,7 @@ package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -167,11 +168,14 @@ class CoffeeAIService @Autowired constructor(
             logger.warn("openClawOn: workspace not found|$userId")
             return null
         }
-
+        // 恶心的逻辑，录屏需要校验管理员的权限，所以需要获取管理员
+        val manager = client.get(ServiceTxProjectResource::class).getProjectManagers(
+            openClawWs.projectId
+        ).data?.first()
         enableCoffeeAI(listOf(openClawWs.workspaceName))
         workspaceRecordService.enableRecord(
             workspaceName = openClawWs.workspaceName,
-            enableUser = userId
+            enableUser = manager
         )
         val organization = kotlin.runCatching {
             client.get(ServiceTxUserResource::class).get(userId).data?.let {
