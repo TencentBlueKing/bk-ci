@@ -1,0 +1,24 @@
+/* Stage Property Panel 样式 */
+
+/* 注意：样式已移至 global.css 中的 .bkci-property-panel 类 */
+
+.stagePanelContent {
+  &.stagePropertyContent {
+    padding: var(--spacing-xl) var(--spacing-xxl);
+  }
+  flex: 1;
+  overflow-y: auto;
+}
+
+.stagePanelFooter {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-start;
+}
+
+.fieldTips {
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  line-height: var(--line-height-sm);
+}

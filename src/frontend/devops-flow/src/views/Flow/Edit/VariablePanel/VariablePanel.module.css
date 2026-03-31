@@ -1,0 +1,315 @@
+/* 变量面板容器 */
+.variablePanel {
+  position: fixed;
+  top: 52px;
+  right: 0;
+  bottom: 0;
+  width: 480px;
+  z-index: 2018;
+  transform: translateX(0);
+  transition: transform var(--transition-slow) ease;
+}
+
+.rotate90deg {
+  transform: rotate(90deg);
+}
+
+.rotate270deg {
+  transform: rotate(270deg);
+}
+
+.searchInputIcon {
+  align-self: center;
+  color: var(--color-text-tertiary);
+  margin-right: var(--spacing-xs);
+}
+
+/* 面板展开状态 */
+.panelOpen {
+  transform: translateX(0);
+}
+
+/* 面板收起状态 */
+.variablePanel:not(.panelOpen) {
+  transform: translateX(480px);
+}
+
+/* 展开/收起按钮 */
+.toggleButton {
+  position: absolute;
+  left: -20px;
+  top: calc(50% - 50px);
+  z-index: 2020;
+  writing-mode: vertical-lr;
+  padding: 30px 2px;
+  background: var(--color-primary-hover);
+  cursor: pointer;
+  border-radius: var(--border-radius-large) 0 0 var(--border-radius-large);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-xs);
+  color: #fff;
+  transition: all var(--transition-slow) ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 按钮收起状态 */
+.buttonClosed {
+  background: #699df4;
+}
+
+.buttonClosed .bk-icon {
+  display: inline-block;
+  transform: rotate(180deg);
+}
+
+/* 面板内容 */
+.panelContent {
+  height: 100%;
+  width: 100%;
+  background-color: var(--bg-primary);
+  border-left: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 变量列表容器 */
+.variableList {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-md);
+}
+
+/* Tab 内容区域样式 */
+.panelTab :global(.bk-tab-content) {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* 变量列表 */
+.variableList {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* 列表头部 */
+.listHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.searchInput {
+  flex: 1;
+}
+
+/* 列表内容 */
+.listContent {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: var(--spacing-md);
+}
+
+/* 空状态提示 */
+.emptyTip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+/* 编辑表单容器 */
+.editFormContainer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  overflow-y: auto;
+}
+
+/* 编辑表单头部 */
+.editFormHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: var(--spacing-sm);
+}
+
+.editFormBackIcon {
+  cursor: pointer;
+  color: var(--color-primary);
+  font-size: 0;
+
+  &:hover {
+    color: var(--color-primary-hover);
+  }
+}
+
+.editFormTitle {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* 顶级Tab样式 */
+.panelTab {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.panelTab :global(.bk-tab-header) {
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 0;
+}
+
+/* 操作按钮区域 - 严格按照设计图实现 */
+.actionButtons {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin: var(--spacing-md) 0 0 0;
+  flex-wrap: wrap;
+}
+
+.addButton {
+  flex-shrink: 0;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 180px;
+  height: 28px;
+}
+
+.collapseHeader {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: calc(100% - 26px);
+
+  /* HACK: 解决Collapse组件header左侧缩进问题 */
+  .categorySum {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+  }
+}
+
+.listContent :global(.bk-collapse-item > div:first-child) {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+:global(.bk-collapse-content) {
+  padding: 0;
+}
+
+.variableGroup {
+  margin-bottom: var(--spacing-md);
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+}
+
+.groupLabel {
+  font-size: var(--font-size-xs);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+
+  &:before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 12px;
+    background-color: var(--color-primary);
+    border-radius: var(--border-radius);
+    margin-right: var(--spacing-sm);
+  }
+}
+
+.groupName {
+  composes: text-ellipsis from '@/styles/global.css';
+}
+
+.groupCount {
+  flex-shrink: 0;
+  justify-self: flex-end;
+  margin-left: auto;
+  margin-right: var(--spacing-sm);
+}
+
+.groupContent {
+  flex: 1;
+  overflow: hidden;
+  padding: 0;
+  background-color: transparent;
+  border: none;
+  margin: 0;
+}
+
+/* Drag and drop styles - 优化拖拽视觉反馈 */
+.draggableList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm, 8px);
+  min-height: 40px;
+  padding: var(--sapcing-xs);
+  border-radius: var(--sapcing-xs);
+  transition: all var(--transition-normal) ease;
+}
+
+.draggableList:hover {
+  background: var(--bg-tertiary);
+}
+
+/* 拖拽占位符样式 */
+.dragGhost {
+  opacity: 0.3;
+  background: var(--bg-drag);
+  border: 2px dashed var(--color-primary);
+  transform: scale(0.95);
+}
+
+/* 被选中拖拽的元素样式 */
+.dragChosen {
+  cursor: grabbing;
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(58, 132, 255, 0.2);
+  border-color: var(--color-primary);
+  z-index: 1000;
+}
+
+/* 拖拽过程中的样式 */
+.dragging {
+  cursor: grabbing;
+  opacity: 0.9;
+  transform: rotate(1deg);
+}
+
+/* Group content styles for drag - 优化拖拽区域 */
+.groupContent {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs);
+  border-radius: var(--spacing-xs);
+  transition: background-color var(--transition-normal) ease;
+}
+
+/* Flat variable list for read-only variables (no grouping) */
+.flatVariableList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding-top: 0;
+}

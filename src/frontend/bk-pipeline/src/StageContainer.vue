@@ -9,7 +9,7 @@
         }"
     >
         <Logo
-            v-if="reactiveData.editable && !isTriggerStage"
+            v-if="showLeftCruveLine"
             size="12"
             name="right-shape"
             class="container-connect-triangle"
@@ -50,114 +50,127 @@
         <Component
             :is="jobComponentName"
             v-bind="jobComponentProps"
-            v-on="$listeners"
+            v-on="listeners"
             ref="jobBox"
         />
     </div>
 </template>
 
-<script>
+<script setup>
+    import { ref, computed, onMounted, onBeforeUnmount, nextTick, inject } from 'vue'
+    import { useListeners } from './hooks/useListeners'
     import CruveLine from './CruveLine'
     import Job from './Job'
     import Logo from './Logo'
     import MatrixGroup from './MatrixGroup'
-    import {
-        getOuterHeight
-    } from './util'
+    import { getOuterHeight } from './util'
 
-    export default {
-        components: {
-            CruveLine,
-            MatrixGroup,
-            Logo,
-            Job
+    const props = defineProps({
+        stage: {
+            type: Object,
+            required: true
         },
-        props: {
-            stage: {
-                type: Object,
-                required: true
-            },
-            container: {
-                type: Object,
-                required: true
-            },
-            stageIndex: Number,
-            containerIndex: Number,
-            stageLength: Number,
-            containerLength: Number,
-            stageDisabled: Boolean,
-            isTriggerStage: {
-                type: Boolean,
-                default: false
-            },
-            isFinallyStage: {
-                type: Boolean,
-                default: false
-            },
-            handleChange: {
-                type: Function,
-                required: true
-            }
+        container: {
+            type: Object,
+            required: true
         },
-        inject: [
-            'reactiveData'
-        ],
-        data () {
-            return {
-                cruveHeight: 0
-            }
+        stageIndex: Number,
+        containerIndex: Number,
+        stageLength: Number,
+        containerLength: Number,
+        stageDisabled: Boolean,
+        isTriggerStage: {
+            type: Boolean,
+            default: false
         },
-        computed: {
-            containerDisabled () {
-                return !!(this.container.jobControlOption && this.container.jobControlOption.enable === false) || this.stageDisabled
-            },
-            isMatrix () {
-                return this.reactiveData.isExecDetail && this.container.matrixGroupFlag && this.container.groupContainers
-            },
-            showLastCruveLine () {
-                return (this.stageIndex !== this.stageLength - 1 || this.reactiveData.editable) && !this.isFinallyStage
-            },
-            showLeftCruveLine () {
-                return (this.reactiveData.editable && !this.isTriggerStage) || this.stageIndex > 0
-            },
-            jobComponentName () {
-                return this.isMatrix ? MatrixGroup : Job
-            },
-            jobComponentProps () {
-                return {
-                    ...(this.isMatrix
-                        ? {
-                            matrix: this.container
-                        }
-                        : {
-                            container: this.container
-                        }),
-                    updateCruveConnectHeight: this.updateCruveConnectHeight,
-                    disabled: this.containerDisabled,
-                    ...this.$props
-                }
-            }
+        isFinallyStage: {
+            type: Boolean,
+            default: false
         },
-        mounted () {
-            this.resizeObserver = new ResizeObserver((entries) => {
-                this.updateCruveConnectHeight()
-            })
-            this.resizeObserver.observe(this.$el)
-        },
-
-        beforeDestroy () {
-            this.resizeObserver?.unobserve?.(this.$el)
-        },
-        methods: {
-            updateCruveConnectHeight () {
-                this.$nextTick(() => {
-                    if (this.$refs.stageContainer) {
-                        this.cruveHeight = getOuterHeight(this.$refs.stageContainer)
-                    }
-                })
-            }
+        handleChange: {
+            type: Function,
+            required: true
         }
+    })
+
+    const reactiveData = inject('reactiveData')
+    const stageContainer = ref(null)
+    const jobBox = ref(null)
+    const cruveHeight = ref(0)
+    let resizeObserver = null
+
+    // 使用统一的useListeners Hook处理事件监听器兼容性
+    const listeners = useListeners()
+
+    const containerDisabled = computed(() => {
+        return !!(props.container.jobControlOption && props.container.jobControlOption.enable === false) || props.stageDisabled
+    })
+
+    const isMatrix = computed(() => {
+        return reactiveData.isExecDetail && props.container.matrixGroupFlag && props.container.groupContainers
+    })
+
+    const showLastCruveLine = computed(() => {
+        return (props.stageIndex !== props.stageLength - 1 || reactiveData.editable) && !props.isFinallyStage
+    })
+
+    const showLeftCruveLine = computed(() => {
+        return props.stageIndex > 0
+    })
+
+    const jobComponentName = computed(() => {
+        return isMatrix.value ? MatrixGroup : Job
+    })
+
+    const jobComponentProps = computed(() => {
+        return {
+            ...(isMatrix.value
+                ? {
+                    matrix: props.container
+                }
+                : {
+                    container: props.container
+                }),
+            updateCruveConnectHeight: updateCruveConnectHeight,
+            disabled: containerDisabled.value,
+            stage: props.stage,
+            stageIndex: props.stageIndex,
+            containerIndex: props.containerIndex,
+            stageLength: props.stageLength,
+            containerLength: props.containerLength,
+            stageDisabled: props.stageDisabled,
+            isTriggerStage: props.isTriggerStage,
+            isFinallyStage: props.isFinallyStage,
+            handleChange: props.handleChange
+        }
+    })
+
+    const updateCruveConnectHeight = () => {
+        nextTick(() => {
+            if (stageContainer.value) {
+                cruveHeight.value = getOuterHeight(stageContainer.value)
+            }
+        })
     }
+
+    onMounted(() => {
+        resizeObserver = new ResizeObserver(() => {
+            updateCruveConnectHeight()
+        })
+        if (stageContainer.value) {
+            resizeObserver.observe(stageContainer.value)
+        }
+    })
+
+    onBeforeUnmount(() => {
+        if (resizeObserver && stageContainer.value) {
+            resizeObserver.unobserve(stageContainer.value)
+        }
+    })
+
+    defineExpose({
+        jobBox
+    })
 </script>
 
 <style lang="scss">
@@ -181,7 +194,7 @@
             }
             border-radius: 50%;
         }
-        
+
         // 三角箭头
         .container-connect-triangle {
             position: absolute;

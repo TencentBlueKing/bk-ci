@@ -43,11 +43,12 @@
 
 <style lang="scss" scoped>
     .manage-detail {
+        height: 100%;
         background: #fff;
         .manage-detail-header {
             position: absolute;
             right: 32px;
-            top: calc(-26px - 3.2vh);
+            top: calc(-20px - 3.2vh);
             a {
                 cursor: pointer;
                 color: #1592ff;
@@ -59,6 +60,7 @@
         }
         .detail-main {
             height: 100%;
+            overflow: auto;
         }
         .detail-show {
             padding: 3.2vh;

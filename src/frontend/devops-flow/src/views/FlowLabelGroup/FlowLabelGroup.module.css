@@ -1,0 +1,296 @@
+.flowLabelGroup {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  padding: 20px 24px;
+  background: #fff;
+  border-bottom: 1px solid #dcdee5;
+}
+
+.header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #313238;
+}
+
+.content {
+  flex: 1;
+  height: calc(100vh - 65px);
+  padding: 20px 24px;
+  overflow-y: auto;
+}
+
+/* 提示信息 */
+.groupHint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: #f5f7fa;
+  border-radius: 2px;
+  font-size: 12px;
+  color: #979ba5;
+}
+
+/* 标签组卡片容器 */
+.groupCards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 24px;
+  margin-bottom: 16px;
+  background: #fff;
+  border-radius: 2px;
+}
+
+/* 标签组标题 */
+.groupTitle {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.titleText {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: #313238;
+}
+
+.titleText b {
+  font-weight: 600;
+}
+
+.groupTitleInput {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  margin-left: 8px;
+}
+
+.groupTitleBtns {
+  width: 100px;
+  text-align: right;
+}
+
+.entryLink {
+  margin-left: 16px;
+  font-size: 12px;
+  color: #3a84ff;
+  cursor: pointer;
+}
+
+.entryLink:hover {
+  color: #699df4;
+}
+
+/* 标签卡片 */
+.groupCard {
+  position: relative;
+  width: 300px;
+  height: 54px;
+  background: #fff;
+  border: 1px solid #dcdee5;
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+
+.groupCard:hover {
+  border-color: #3a84ff;
+}
+
+.groupCard:hover .groupCardTools {
+  display: flex;
+}
+
+.groupCardTitle {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 16px;
+  font-size: 14px;
+  color: #63656e;
+}
+
+.tagText {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.groupCardTitle :global(.bk-input.is-focused:not(.is-readonly)) {
+  box-shadow: none !important;
+}
+
+.tagInput {
+  display: none;
+  width: 100%;
+  height: 100%;
+  line-height: 52px;
+  border: none;
+}
+
+.groupCardTools,
+.groupCardEditTools {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+  display: none;
+  align-items: center;
+  gap: 12px;
+}
+
+.groupCardIcon,
+.groupCardEditIcon {
+  cursor: pointer;
+  color: #979ba5;
+  transition: color 0.2s;
+}
+
+.groupCardIcon:hover,
+.groupCardEditIcon:hover {
+  color: #3a84ff;
+}
+
+/* 编辑状态 */
+.groupEdit {
+  border-color: #3a84ff;
+}
+
+.groupEdit .tagText {
+  display: none;
+}
+
+.groupEdit .tagInput {
+  display: block;
+}
+
+.groupEdit .groupCardTools {
+  display: none;
+}
+
+.groupEdit .groupCardEditTools {
+  display: flex;
+}
+
+/* 新增按钮 */
+.groupCardAdd {
+  width: 300px;
+  height: 54px;
+  border: 1px dashed #c4c6cc;
+  background: #fafbfd;
+}
+
+.groupCardAdd:hover {
+  border-color: #3a84ff;
+  background: #f0f5ff;
+}
+
+.groupCardCreate {
+  width: 100%;
+  height: 54px;
+  border: 1px dashed #c4c6cc;
+  background: #fafbfd;
+}
+
+.groupCardCreate:hover {
+  border-color: #3a84ff;
+  background: #f0f5ff;
+}
+
+/* 空状态 */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+}
+
+.emptyContent {
+  margin: 16px 0;
+  text-align: center;
+  font-size: 12px;
+  color: #979ba5;
+  line-height: 20px;
+}
+
+.emptyContent p {
+  margin: 4px 0;
+  padding-left: 20px;
+  position: relative;
+}
+
+.emptyContent {
+  counter-reset: item;
+}
+
+.emptyAction {
+  margin-top: 24px;
+}
+
+.emptyIcon {
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.emptyTitle {
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #313238;
+}
+
+.emptyDesc {
+  margin-bottom: 24px;
+  text-align: center;
+  font-size: 12px;
+  color: #979ba5;
+  line-height: 20px;
+}
+
+.emptyDesc p {
+  margin: 0;
+}
+
+/* 弹窗内容 */
+.dialogContent {
+  padding: 20px 0;
+}
+
+.formItem {
+  margin-bottom: 20px;
+}
+
+.formLabel {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #63656e;
+}
+
+.formLabel::before {
+  content: '*';
+  margin-right: 4px;
+  color: #ea3636;
+}
+
+.inputError {
+  border-color: #ea3636 !important;
+}
+
+.errorText {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #ea3636;
+  line-height: 16px;
+}

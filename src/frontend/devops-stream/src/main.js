@@ -14,7 +14,8 @@ import router from '@/router'
 import store from '@/store'
 import log from '@blueking/log'
 import { bkMessage } from '@tencent/bk-magic-vue'
-import bkPipeline from 'bkui-pipeline'
+import bkPipeline from 'bkui-pipeline/vue2'
+import 'bkui-pipeline/dist/bk-pipeline.css'
 import VeeValidate from 'vee-validate'
 
 import {

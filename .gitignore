@@ -61,6 +61,7 @@ CHANGELOG/bundledVersionLog*.json
 pre-*-bkcodeai
 
 .codebuddy/
+bkcodeai.json
 .cursor/
 specs/
 .specify/
