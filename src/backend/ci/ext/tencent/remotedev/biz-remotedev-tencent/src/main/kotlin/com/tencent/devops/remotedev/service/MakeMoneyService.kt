@@ -53,6 +53,7 @@ class MakeMoneyService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(MakeMoneyService::class.java)
+        private const val BK_CLOUD_DEV_PROPERTY = "蓝盾云研发"
     }
 
     /**
@@ -265,7 +266,7 @@ class MakeMoneyService @Autowired constructor(
             val detail = cmdbAssetMap[name]
             detail != null &&
                 detail.propertyManagementBelongs.isNotBlank() &&
-                detail.propertyManagementBelongs != "蓝盾云研发"
+                detail.propertyManagementBelongs != BK_CLOUD_DEV_PROPERTY
         }
         if (nonBkDevNames.isNotEmpty()) {
             val targetDate = lastDay.toLocalDate()
@@ -277,7 +278,7 @@ class MakeMoneyService @Autowired constructor(
             )
             logger.info(
                 "Reduced ${nonBkDevNames.size} workspaces " +
-                    "with non-蓝盾云研发 property management"
+                    "with non-$BK_CLOUD_DEV_PROPERTY property management"
             )
         }
     }
