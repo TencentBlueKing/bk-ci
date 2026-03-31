@@ -511,15 +511,17 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun checkWorkspaceEnableAddress(
         userId: String,
         appId: Long,
-        ip: String,
-        mediaGary: Boolean?
+        ip: String?,
+        mediaGary: Boolean?,
+        envUid: String?
     ): Result<CheckWorkspaceRecordData> {
-        logger.info("checkWorkspaceEnableAddress |$userId|$appId|$ip|$mediaGary")
+        logger.info("checkWorkspaceEnableAddress |$userId|$appId|$ip|$mediaGary|$envUid")
         return client.get(ServiceRemoteDevResource::class).checkWorkspaceEnableAddress(
             userId = userId,
             appId = appId,
             ip = ip,
-            mediaGary = mediaGary
+            mediaGary = mediaGary,
+            envUid = envUid
         )
     }
 
