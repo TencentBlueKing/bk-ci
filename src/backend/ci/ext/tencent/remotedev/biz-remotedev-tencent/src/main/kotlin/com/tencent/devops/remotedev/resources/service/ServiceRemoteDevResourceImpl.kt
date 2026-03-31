@@ -28,6 +28,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
+import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
@@ -51,7 +52,6 @@ import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
-import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordTicketType
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
@@ -59,6 +59,7 @@ import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordTicketType
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmResp
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
@@ -72,6 +73,7 @@ import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.remotedev.resources.op.OpProjectWorkspaceResourceImpl
 import com.tencent.devops.remotedev.service.BKItsmService
+import com.tencent.devops.remotedev.service.CoffeeAIService
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.ProjectStrategyService
@@ -141,7 +143,8 @@ class ServiceRemoteDevResourceImpl(
     private val bkItsmService: BKItsmService,
     private val projectStrategyService: ProjectStrategyService,
     private val tGitBindService: TGitService,
-    private val gitTransfer: RemoteDevGitTransfer
+    private val gitTransfer: RemoteDevGitTransfer,
+    private val coffeeAIService: CoffeeAIService
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -960,5 +963,9 @@ class ServiceRemoteDevResourceImpl(
             )
         )
         return Result(true)
+    }
+
+    override fun openClawOn(userId: String): Result<WorkspaceRegistration?> {
+        return Result(coffeeAIService.openClawOn(userId))
     }
 }
