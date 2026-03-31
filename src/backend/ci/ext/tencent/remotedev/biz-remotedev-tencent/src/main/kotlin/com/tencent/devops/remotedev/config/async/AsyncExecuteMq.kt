@@ -3,6 +3,8 @@ package com.tencent.devops.remotedev.config.async
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.remotedev.listener.AsyncExecuteListener
+import com.tencent.devops.remotedev.listener.CdsWebhookEventListener
+import com.tencent.devops.remotedev.listener.event.CdsWebhookEvent
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
 
@@ -15,4 +17,9 @@ class AsyncExecuteMq {
     fun asyncExecuteConsumer(
         @Autowired asyncExecuteListener: AsyncExecuteListener
     ) = ScsConsumerBuilder.build<AsyncExecuteEvent> { asyncExecuteListener.listenAsyncExecuteEvent(it) }
+
+    @EventConsumer
+    fun cdsWebhookConsumer(
+        @Autowired cdsWebhookEventListener: CdsWebhookEventListener
+    ) = ScsConsumerBuilder.build<CdsWebhookEvent> { cdsWebhookEventListener.execute(it) }
 }

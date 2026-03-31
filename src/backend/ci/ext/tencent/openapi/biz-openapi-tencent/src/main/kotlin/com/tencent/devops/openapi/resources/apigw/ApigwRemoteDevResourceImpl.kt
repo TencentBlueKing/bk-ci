@@ -20,6 +20,7 @@ import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
+import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
@@ -779,5 +780,27 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Map<String, Boolean>> {
         logger.info("tgitBindRemotedevProject |$userId|$data")
         return client.get(ServiceRemoteDevResource::class).tgitBindRemotedevProject(userId, data)
+    }
+
+    override fun cdsWebhookEvent(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        type: String,
+        workspaceName: String?,
+        envId: String?
+    ): Result<Boolean> {
+        logger.info("cgsReportNotify ,type:$type,envId:$envId")
+        return client.get(ServiceRemoteDevResource::class).cdsWebhookEvent(
+            userId = userId,
+            type = type,
+            workspaceName = workspaceName,
+            envId = envId
+        )
+    }
+
+    override fun openClawOn(userId: String): Result<WorkspaceRegistration?> {
+        logger.info("openClawOn |$userId")
+        return client.get(ServiceRemoteDevResource::class).openClawOn(userId)
     }
 }
