@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.utils.ModelVarRefValidator
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -50,7 +51,8 @@ import org.springframework.stereotype.Service
 class PipelineVersionValidator @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val projectCacheService: ProjectCacheService
+    private val projectCacheService: ProjectCacheService,
+    private val modelCheckPlugin: ModelCheckPlugin
 ) {
 
     fun validate(context: PipelineVersionCreateContext) {
@@ -58,6 +60,7 @@ class PipelineVersionValidator @Autowired constructor(
             validateBasicInfo()
             validateModelBasicInfo()
             validatePermission()
+            validateSetting()
         }
     }
 
@@ -138,8 +141,8 @@ class PipelineVersionValidator @Autowired constructor(
                 permission = permission,
                 message = MessageUtil.getMessageByLocale(
                     USER_NOT_PERMISSIONS_OPERATE_PIPELINE, language, arrayOf(
-                    userId, projectId, permission.getI18n(I18nUtil.getLanguage(userId)), "*"
-                )
+                        userId, projectId, permission.getI18n(I18nUtil.getLanguage(userId)), "*"
+                    )
                 )
             )
         } else {
@@ -151,11 +154,16 @@ class PipelineVersionValidator @Autowired constructor(
                 permission = permission,
                 message = MessageUtil.getMessageByLocale(
                     USER_NOT_PERMISSIONS_OPERATE_PIPELINE, I18nUtil.getLanguage(userId), arrayOf(
-                    userId, projectId, permission.getI18n(I18nUtil.getLanguage(userId)), pipelineId
-                )
+                        userId, projectId, permission.getI18n(I18nUtil.getLanguage(userId)), pipelineId
+                    )
                 )
             )
         }
+    }
+
+    fun PipelineVersionCreateContext.validateSetting() {
+        pipelineSettingWithoutVersion.fixSubscriptions()
+        modelCheckPlugin.checkSettingIntegrity(pipelineSettingWithoutVersion, projectId)
     }
 
     companion object {
