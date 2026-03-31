@@ -229,7 +229,7 @@ class WorkspaceRecordService @Autowired constructor(
 
         // 看看有没有开直播
         if (featureSwitchService.isEnabled(
-                projectId = recordInfo.workspaceName,
+                projectId = projectId,
                 userId = userId,
                 workspaceName = recordInfo.workspaceName,
                 featureType = FeatureSwitchType.LIVE_STREAMING
