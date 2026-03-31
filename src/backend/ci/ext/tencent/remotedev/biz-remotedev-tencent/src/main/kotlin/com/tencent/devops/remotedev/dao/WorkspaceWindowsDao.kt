@@ -212,7 +212,7 @@ class WorkspaceWindowsDao {
                 )
             )
         val res = if (!workspaceName.isNullOrBlank()) {
-            dsl.and(TWorkspace.T_WORKSPACE.NAME.eq(ip)).fetchAny() ?: return null
+            dsl.and(TWorkspace.T_WORKSPACE.NAME.eq(workspaceName)).fetchAny() ?: return null
         } else {
             dsl.and(TWorkspace.T_WORKSPACE.IP.eq(ip)).fetchAny() ?: return null
         }
