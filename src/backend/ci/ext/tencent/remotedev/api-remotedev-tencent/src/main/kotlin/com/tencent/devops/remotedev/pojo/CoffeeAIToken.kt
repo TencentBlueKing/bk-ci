@@ -1,4 +1,4 @@
-package com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo
+package com.tencent.devops.remotedev.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
