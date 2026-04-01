@@ -46,6 +46,7 @@ import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.atom.dao.AtomDao
+import com.tencent.devops.store.atom.util.AtomServiceScopeUtil
 import com.tencent.devops.store.util.ServiceScopeUtil
 import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomFeatureDao
@@ -122,7 +123,8 @@ class OpAtomServiceImpl @Autowired constructor(
     private val storeFileService: StoreFileService,
     private val redisOperation: RedisOperation,
     private val client: Client,
-    private val marketAtomService: MarketAtomService
+    private val marketAtomService: MarketAtomService,
+    private val atomServiceScopeUtil: AtomServiceScopeUtil
 ) : OpAtomService {
 
     private val logger = LoggerFactory.getLogger(OpAtomServiceImpl::class.java)
@@ -233,6 +235,17 @@ class OpAtomServiceImpl @Autowired constructor(
     @Suppress("UNCHECKED_CAST")
     private fun convert(atomRecord: TAtomRecord, classify: Classify?): Atom {
         val atomFeature = atomFeatureDao.getAtomFeature(dslContext, atomRecord.atomCode)
+        // 构建服务范围详情
+        val serviceScopeDetails = atomServiceScopeUtil.buildServiceScopeDetails(
+            atomId = atomRecord.id,
+            serviceScopeStr = atomRecord.serviceScope,
+            classifyIdMapJson = atomRecord.classifyIdMap,
+            pipelineClassifyIdFallback = atomRecord.classifyId,
+            jobTypeValue = atomRecord.jobType,
+            jobTypeMapValue = atomRecord.jobTypeMap,
+            osValue = atomRecord.os,
+            osMapValue = atomRecord.osMap
+        )
         return Atom(
             id = atomRecord.id,
             name = atomRecord.name,
@@ -287,7 +300,8 @@ class OpAtomServiceImpl @Autowired constructor(
             certificationFlag = atomFeature?.certificationFlag,
             publisher = atomRecord.publisher,
             visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(atomRecord.visibilityLevel as Int),
-            privateReason = atomRecord.privateReason
+            privateReason = atomRecord.privateReason,
+            serviceScopeDetails = serviceScopeDetails
         )
     }
 
