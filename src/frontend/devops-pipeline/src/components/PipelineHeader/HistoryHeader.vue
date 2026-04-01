@@ -358,11 +358,16 @@
                 }
             },
             goExecPreview () {
+                const query = {
+                    ...(this.isActiveDraftVersion ? { debug: '' } : {})
+                }
+                // 带上 versionName 用于 PAC 分支选择器匹配
+                if (this.activePipelineVersion?.versionName) {
+                    query.versionName = this.activePipelineVersion.versionName
+                }
                 this.$router.push({
                     name: 'executePreview',
-                    query: {
-                        ...(this.isActiveDraftVersion ? { debug: '' } : {})
-                    },
+                    query,
                     params: {
                         ...this.$route.params,
                         version: this.currentVersion

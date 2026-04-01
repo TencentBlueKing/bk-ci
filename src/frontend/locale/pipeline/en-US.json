@@ -913,7 +913,9 @@
     "branchVersionNotFound": "Pipeline not found, please select another branch!",
     "branchVersionCreateFailed": "Branch version creation failed",
     "errorBranch": "Branch: ",
-    "errorPipelinePath": "Pipeline: "
+    "errorPipelinePath": "Pipeline: ",
+    "releasedVersion": "Released",
+    "defaultBranch": "Default"
   },
   "details": {
     "pipelineVersionDiffTips": "The pipeline config version has changed",

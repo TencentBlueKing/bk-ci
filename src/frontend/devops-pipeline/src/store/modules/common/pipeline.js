@@ -368,36 +368,16 @@ export const actions = {
         return request.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repoHashId}/ciSubDir`)
     },
     /**
-     * 获取PAC仓库信息（用于获取默认分支）
-     * @param {String} projectId 项目ID
-     * @param {String} repoHashIdOrName 代码库hashId
-     * @returns {Promise}
-     */
-    getPACRepoInfo: (_, { projectId, repoHashIdOrName }) => {
-        return request.get(`${REPOSITORY_API_URL_PREFIX}/user/scm/repository/api/${projectId}/getRepository`, {
-            params: {
-                repoHashIdOrName,
-                repositoryType: 'ID'
-            }
-        }).then(response => response.data)
-    },
-    /**
      * 获取PAC分支列表
      * @param {String} projectId 项目ID
-     * @param {String} repoHashIdOrName 代码库hashId
+     * @param {String} pipelineId 流水线ID
      * @param {String} search 搜索关键字
-     * @param {Number} page 页码
-     * @param {Number} pageSize 每页大小
      * @returns {Promise}
      */
-    getPACBranchList: (_, { projectId, repoHashIdOrName, search = '', page = 1, pageSize = 100 }) => {
-        return request.get(`${REPOSITORY_API_URL_PREFIX}/user/scm/repository/api/${projectId}/listBranches`, {
+    getPACBranchList: (_, { projectId, pipelineId, search = '' }) => {
+        return request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/listPacVersions`, {
             params: {
-                repoHashIdOrName,
-                repositoryType: 'ID',
-                search,
-                page,
-                pageSize
+                search
             }
         }).then(response => response.data)
     },

@@ -663,7 +663,7 @@
                     }
                 })
             },
-            async init (branch) {
+            async init (branch, branchInfo) {
                 try {
                     this.isLoading = true
                     const params = {
@@ -671,29 +671,51 @@
                         pipelineId: this.pipelineId
                     }
                     
-                    // 如果有选择分支，添加分支参数；PAC 模式下指定分支时不传 version
+                    // 判断是否选择了正式版本（RELEASED）
+                    const isReleasedVersion = branchInfo?.versionStatus === 'RELEASED'
+                    
+                    // 如果有选择分支/版本，根据类型添加不同参数
                     if (branch && this.pacEnabled) {
-                        params.branch = branch
+                        if (isReleasedVersion) {
+                            // 正式版本使用 version 参数
+                            params.version = branchInfo.version
+                        } else {
+                            // 分支使用 branch 参数
+                            params.branch = branch
+                        }
                     } else {
                         params.version = this.$route.params.version ?? this.pipelineInfo?.[this.isDebugPipeline ? 'version' : 'releaseVersion']
                     }
                     
                     let pipelineRes
                     
-                    // 如果选择了分支，使用 PAC 分支编排接口
+                    // 如果选择了分支/版本，根据类型使用不同接口
                     if (branch && this.pacEnabled) {
-                        const [res, branchPipelineRes] = await Promise.all([
-                            this.requestStartupInfo(params),
-                            this.fetchPacBranchPipeline({
-                                projectId: this.projectId,
-                                pipelineId: this.pipelineId,
-                                branch
-                            })
-                        ])
-                        this.startupInfo = res
-                        pipelineRes = branchPipelineRes
-                        // 保存分支版本号，用于启动构建时指定 version
-                        this.branchVersion = branchPipelineRes?.version ?? null
+                        if (isReleasedVersion) {
+                            // 正式版本使用普通版本接口
+                            const [res, versionPipelineRes] = await Promise.all([
+                                this.requestStartupInfo(params),
+                                this.fetchPipelineByVersion(params)
+                            ])
+                            this.startupInfo = res
+                            pipelineRes = versionPipelineRes
+                            // 保存版本号，用于启动构建时指定 version
+                            this.branchVersion = branchInfo.version
+                        } else {
+                            // 分支使用 PAC 分支编排接口
+                            const [res, branchPipelineRes] = await Promise.all([
+                                this.requestStartupInfo(params),
+                                this.fetchPacBranchPipeline({
+                                    projectId: this.projectId,
+                                    pipelineId: this.pipelineId,
+                                    branch
+                                })
+                            ])
+                            this.startupInfo = res
+                            pipelineRes = branchPipelineRes
+                            // 保存分支版本号，用于启动构建时指定 version
+                            this.branchVersion = branchPipelineRes?.version ?? null
+                        }
                     } else {
                         const [res, normalPipelineRes] = await Promise.all([
                             this.requestStartupInfo(params),
@@ -752,15 +774,16 @@
             /**
              * 处理分支变更
              * @param {String} branchName 分支名
+             * @param {Object} branchInfo 分支信息对象
              */
-            async handleBranchChange (branchName) {
+            async handleBranchChange (branchName, branchInfo) {
                 this.selectedBranch = branchName
                 bus.$emit(PAC_BRANCH_LOADING, true)
                 // 切换分支前重置执行参数，确保使用新接口返回的数据
                 this.resetExecuteConfig(this.pipelineId)
                 // 重新获取编排和参数数据
                 try {
-                    await this.init(branchName)
+                    await this.init(branchName, branchInfo)
                 } finally {
                     bus.$emit(PAC_BRANCH_LOADING, false)
                 }

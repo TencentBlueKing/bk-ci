@@ -907,7 +907,9 @@
     "branchVersionNotFound": "パイプラインが存在しません、ブランチを再選択してください！",
     "branchVersionCreateFailed": "ブランチバージョンの作成に失敗しました",
     "errorBranch": "ブランチ：",
-    "errorPipelinePath": "パイプライン："
+    "errorPipelinePath": "パイプライン：",
+    "releasedVersion": "正式バージョン",
+    "defaultBranch": "デフォルトブランチ"
   },
   "details": {
     "executorInfo": "{0} {1}が{2}にトリガー",

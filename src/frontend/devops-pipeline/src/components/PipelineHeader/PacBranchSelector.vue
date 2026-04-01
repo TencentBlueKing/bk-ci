@@ -13,8 +13,6 @@
                 searchable
                 :clearable="false"
                 :remote-method="handleSearch"
-                :scroll-loading="scrollLoading"
-                @scroll-end="handleScrollEnd"
                 @change="handleBranchChange"
                 @toggle="handleToggle"
             >
@@ -28,7 +26,21 @@
                         class="branch-option-item"
                         :title="branch.name"
                     >
-                        {{ branch.name }}
+                        <span>{{ branch.name }}</span>
+                        <bk-tag
+                            v-if="branch.versionStatus === 'RELEASED'"
+                            theme="success"
+                            class="branch-tag"
+                        >
+                            {{ $t('preview.releasedVersion') }}
+                        </bk-tag>
+                        <bk-tag
+                            v-else-if="branch.defaultBranch"
+                            theme="info"
+                            class="branch-tag"
+                        >
+                            {{ $t('preview.defaultBranch') }}
+                        </bk-tag>
                     </div>
                 </bk-option>
             </bk-select>
@@ -53,76 +65,39 @@
             const selectedBranch = ref('')
             const branchList = ref([])
             const isLoading = ref(false)
-            const scrollLoading = ref(false)
             const searchKey = ref('')
             const isInitializing = ref(false) // 标记是否正在初始化
-            const defaultBranch = ref('') // 默认分支名称
-            const pagination = ref({
-                page: 1,
-                pageSize: 100,
-                hasMore: true
-            })
+            const initialVersionName = ref('')
 
             // 计算属性
             const projectId = computed(() => proxy.$route.params.projectId)
-            const pipelineInfo = computed(() => proxy.$store.state.atom.pipelineInfo)
+            const pipelineId = computed(() => proxy.$route.params.pipelineId)
             const pacEnabled = computed(() => proxy.$store.getters['atom/pacEnabled'])
-            const repoHashId = computed(() => pipelineInfo.value?.yamlInfo?.repoHashId)
-
-            // 获取仓库信息（用于获取默认分支）
-            const fetchRepoInfo = async () => {
-                if (!repoHashId.value) return
-                try {
-                    const data = await proxy.$store.dispatch('common/getPACRepoInfo', {
-                        projectId: projectId.value,
-                        repoHashIdOrName: repoHashId.value
-                    })
-                    defaultBranch.value = data?.defaultBranch || ''
-                } catch (error) {
-                    console.error('Failed to fetch repo info:', error)
-                }
-            }
 
             // 获取分支列表
-            const fetchBranchList = async (isLoadMore = false) => {
-                if (!repoHashId.value) return
+            const fetchBranchList = async () => {
+                if (!pipelineId.value) return
 
-                if (isLoadMore) {
-                    scrollLoading.value = true
-                } else {
-                    isLoading.value = true
-                    pagination.value.page = 1
-                    pagination.value.hasMore = true
-                }
+                isLoading.value = true
 
                 try {
                     const data = await proxy.$store.dispatch('common/getPACBranchList', {
                         projectId: projectId.value,
-                        repoHashIdOrName: repoHashId.value,
-                        search: searchKey.value,
-                        page: pagination.value.page,
-                        pageSize: pagination.value.pageSize
+                        pipelineId: pipelineId.value,
+                        search: searchKey.value
                     })
                     
-                    if (isLoadMore) {
-                        branchList.value = [...branchList.value, ...data]
-                    } else {
-                        branchList.value = data || []
-                    }
+                    branchList.value = data || []
 
-                    // 判断是否还有更多数据
-                    pagination.value.hasMore = data?.length >= pagination.value.pageSize
-
-                    // 如果没有选中分支且有分支数据，则选中默认分支或第一个分支
+                    // 如果没有选中分支且有分支数据，则选中对应分支
                     if (!selectedBranch.value && branchList.value.length > 0) {
-                        // 优先使用从仓库信息获取的默认分支
                         let targetBranch = null
-                        if (defaultBranch.value) {
-                            targetBranch = branchList.value.find(b => b.name === defaultBranch.value)
-                        }
-                        // 如果没找到默认分支，则使用第一个分支
-                        if (!targetBranch) {
-                            targetBranch = branchList.value[0]
+                        
+                        // 优先匹配初始化时保存的 versionName
+                        if (initialVersionName.value) {
+                            targetBranch = branchList.value.find(b => b.name === initialVersionName.value)
+                        } else {
+                            targetBranch = branchList.value.find(b => b.versionStatus === 'RELEASED')
                         }
                         // 设置初始化标记，避免 @change 重复触发
                         isInitializing.value = true
@@ -138,7 +113,6 @@
                     console.error('Failed to fetch branch list:', error)
                 } finally {
                     isLoading.value = false
-                    scrollLoading.value = false
                 }
             }
 
@@ -152,15 +126,8 @@
                     clearTimeout(searchTimer)
                 }
                 searchTimer = setTimeout(() => {
-                    fetchBranchList(false)
+                    fetchBranchList()
                 }, 300)
-            }
-
-            // 滚动加载更多
-            const handleScrollEnd = () => {
-                if (!pagination.value.hasMore || scrollLoading.value) return
-                pagination.value.page++
-                fetchBranchList(true)
             }
 
             // 分支变更（用户手动选择时触发）
@@ -174,25 +141,22 @@
             // 下拉框展开/收起
             const handleToggle = (isOpen) => {
                 if (isOpen && branchList.value.length === 0) {
-                    fetchBranchList(false)
+                    fetchBranchList()
                 }
             }
 
-            // 监听 repoHashId 变化，重新获取分支列表
-            watch(repoHashId, async (newVal) => {
+            // 监听 pipelineId 变化，重新获取分支列表
+            watch(pipelineId, (newVal) => {
                 if (newVal) {
                     selectedBranch.value = ''
-                    defaultBranch.value = ''
-                    await fetchRepoInfo()
-                    fetchBranchList(false)
+                    fetchBranchList()
                 }
             })
 
-            // 组件挂载时获取分支列表
-            onMounted(async () => {
-                if (repoHashId.value) {
-                    await fetchRepoInfo()
-                    fetchBranchList(false)
+            onMounted(() => {
+                initialVersionName.value = proxy.$route.query.versionName || ''
+                if (pipelineId.value) {
+                    fetchBranchList()
                 }
             })
 
@@ -200,11 +164,9 @@
                 selectedBranch,
                 branchList,
                 isLoading,
-                scrollLoading,
                 pacEnabled,
-                repoHashId,
+                pipelineId,
                 handleSearch,
-                handleScrollEnd,
                 handleBranchChange,
                 handleToggle
             }
@@ -263,9 +225,25 @@
 }
 
 .branch-option-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     width: 100%;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
+    
+    > span {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .branch-tag {
+        flex-shrink: 0;
+        margin-left: 8px;
+        height: 20px;
+        line-height: 18px;
+        font-size: 12px;
+    }
 }
 </style>

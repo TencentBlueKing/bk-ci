@@ -910,7 +910,9 @@
     "branchVersionNotFound": "流水线不存在，请重新选择分支！",
     "branchVersionCreateFailed": "分支版本创建失败",
     "errorBranch": "分支：",
-    "errorPipelinePath": "流水线："
+    "errorPipelinePath": "流水线：",
+    "releasedVersion": "正式版本",
+    "defaultBranch": "默认分支"
   },
   "details": {
     "executorInfo": "{0} {1}触发于 {2}",
