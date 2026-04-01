@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,9 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.atom.enums
+package com.tencent.devops.auth.pojo.request
 
-enum class ServiceScopeEnum(val scopeType: String) {
-    PIPELINE("pipeline"),
-    QUALITY("quality")
-}
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "操作创建请求")
+data class ActionCreateRequest(
+    @get:Schema(title = "操作代码", required = true, example = "creative_stream_view")
+    val action: String,
+    @get:Schema(title = "所属资源类型", required = true, example = "creative_stream")
+    val resourceType: String,
+    @get:Schema(title = "关联资源类型", required = true, example = "creative_stream")
+    val relatedResourceType: String,
+    @get:Schema(title = "中文名称", required = true, example = "查看创作流")
+    val actionName: String,
+    @get:Schema(title = "英文名称", required = true, example = "Creative Stream View")
+    val englishName: String,
+    @get:Schema(title = "操作类型", required = true, example = "view")
+    val actionType: String
+)

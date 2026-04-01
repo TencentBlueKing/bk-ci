@@ -127,7 +127,11 @@ class PipelineDraftSaveReqConverter(
                 Pair(newModelAndSetting, newYaml)
             }
             // 生成流水线ID
-            val newPipelineId = pipelineId ?: pipelineIdGenerator.getNextId()
+            val newPipelineId = if (pipelineId.isNullOrBlank()) {
+                pipelineIdGenerator.getNextId()
+            } else {
+                pipelineId
+            }
             val pipelineSettingWithoutVersion = modelAndSetting.setting.copy(
                 projectId = projectId,
                 pipelineId = newPipelineId

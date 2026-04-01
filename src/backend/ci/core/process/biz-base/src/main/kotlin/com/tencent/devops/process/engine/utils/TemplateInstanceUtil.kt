@@ -595,7 +595,7 @@ object TemplateInstanceUtil {
         val templateVariables = mutableListOf<TemplateVariable>()
         val pipelineParamMap = pipelineParams.associateBy { it.id }
         templateParams.filterNot {
-            it.constant == true || !it.required || VERSION_PARAMS.contains(it.id)
+            it.constant == true || !it.required || PipelineUtils.VERSION_PARAMS.contains(it.id)
         }.forEach { templateParam ->
             val pipelineParam = pipelineParamMap[templateParam.id] ?: return@forEach
             // 是否覆盖模版的值
@@ -658,10 +658,32 @@ object TemplateInstanceUtil {
                     pipelineProps = pipelineParam.cascadeProps,
                     templateProps = templateParam.cascadeProps
                 )
-                pipelineParam.options = templateParam.options
+                pipelineParam.options = mergeOptions(
+                    templateOptions = templateParam.options,
+                    defaultValue = pipelineParam.defaultValue
+                )
+                pipelineParam.searchUrl = templateParam.searchUrl
+                pipelineParam.replaceKey = templateParam.replaceKey
             }
             pipelineParam
         }
+    }
+
+    /**
+     * 合并模版options与流水线默认值:
+     * 如果模版options中不包含流水线的默认值,则将默认值追加到options中
+     */
+    private fun mergeOptions(
+        templateOptions: List<BuildFormValue>?,
+        defaultValue: Any
+    ): List<BuildFormValue>? {
+        if (templateOptions == null) return null
+        if (defaultValue !is String) return templateOptions
+        if (templateOptions.any { it.key == defaultValue }) return templateOptions
+        val merged = mutableListOf<BuildFormValue>()
+        merged.addAll(templateOptions)
+        merged.add(BuildFormValue(key = defaultValue, value = defaultValue))
+        return merged
     }
 
     /**
@@ -785,7 +807,7 @@ object TemplateInstanceUtil {
         val beforePipelineParamMap = beforePipelineParams.associateBy { it.id }
 
         val overriddenParamIds = beforeTemplateParamMap.values
-            .filter { !it.required && it.id !in VERSION_PARAMS }
+            .filter { !it.required && it.id !in PipelineUtils.VERSION_PARAMS }
             .mapNotNull { beforeTemplateParam ->
                 val paramId = beforeTemplateParam.id
                 val currentTemplateParam = currentTemplateParamMap[paramId] ?: return@mapNotNull null
@@ -812,5 +834,4 @@ object TemplateInstanceUtil {
     }
 
     private val logger = LoggerFactory.getLogger(TemplateInstanceUtil::class.java)
-    private val VERSION_PARAMS = listOf(MAJORVERSION, MINORVERSION, FIXVERSION)
 }

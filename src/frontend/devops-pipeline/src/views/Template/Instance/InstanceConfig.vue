@@ -659,9 +659,9 @@
                 // 在 instanceParams 中存在，但在 templateParams 中不存在，标记为isDelete
                 i.isDelete = true
             } else {
-                if (templateParam.constant) {
-                    i.constant = templateParam.constant
-                }
+                // 同步 constant 字段，处理模板常量删除后新增同名变量的场景
+                // 如果模板参数是常量则设置为 true，否则清除 constant 标记
+                i.constant = templateParam?.constant ?? false
                 // 常量 其他变量直接赋值为模板对应参数的值（版本号除外）
                 // hasChange(控制一键填入默认值按钮是否显示, 如果变量值与模板默认值不同则显示)
                 // isChange(控制默认值输入框是否高亮，默认值变更则高亮)

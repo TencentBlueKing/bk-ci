@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.atom.service
 
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.label.Label
 
 /**
@@ -37,12 +38,12 @@ import com.tencent.devops.store.pojo.common.label.Label
 interface AtomLabelService {
 
     /**
-     * 根据插件ID查找插件标签
+     * 根据插件ID和服务范围查找插件标签
      */
-    fun getLabelsByAtomId(atomId: String): List<Label>?
+    fun getLabelsByAtomId(atomId: String, serviceScope: ServiceScopeEnum? = null): List<Label>?
 
     /**
-     * 根据插件ID批量查找插件标签
+     * 根据插件ID批量查找插件标签（支持服务范围）
      */
-    fun getLabelsByAtomIds(atomIds: Set<String>): Map<String, List<Label>>?
+    fun getLabelsByAtomIds(atomIds: Set<String>, serviceScope: ServiceScopeEnum? = null): Map<String, List<Label>>?
 }
