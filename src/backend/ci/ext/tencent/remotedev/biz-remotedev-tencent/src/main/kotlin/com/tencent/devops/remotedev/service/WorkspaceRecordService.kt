@@ -24,7 +24,6 @@ import com.tencent.devops.remotedev.pojo.FeatureSwitchType
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared.AssignType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
-import com.tencent.devops.remotedev.pojo.record.CheckEnableRecordLiveResp
 import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
