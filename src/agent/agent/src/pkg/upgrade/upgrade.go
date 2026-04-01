@@ -29,6 +29,7 @@ package upgrade
 
 import (
 	"os"
+	"runtime"
 	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
@@ -136,7 +137,8 @@ func AgentUpgrade(upgradeItem *api.UpgradeItem, hasBuild bool) {
 }
 
 func SyncDockerInitFileMd5() error {
-	if !config.GAgentConfig.EnableDockerBuild {
+	// macOS/Windows 的 docker init 脚本与 Linux 独立管理，不参与升级流程
+	if !config.GAgentConfig.EnableDockerBuild || runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
 		DockerFileMd5.NeedUpgrade = false
 		return nil
 	}

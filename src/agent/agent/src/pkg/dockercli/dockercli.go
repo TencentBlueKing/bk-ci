@@ -225,10 +225,10 @@ func (r *Runner) run(ctx context.Context, stdin []byte, args ...string) (string,
 	stdout := stdoutBuf.String()
 	stderr := stderrBuf.String()
 	if strings.TrimSpace(stdout) != "" {
-		r.log(classifyStreamLevel(false, err, stdout), "[stdout]\n%s", strings.TrimSpace(stdout))
+		r.log(classifyStreamLevel(false, err, stdout, args), "[stdout]\n%s", strings.TrimSpace(stdout))
 	}
 	if strings.TrimSpace(stderr) != "" {
-		r.log(classifyStreamLevel(true, err, stderr), "[stderr]\n%s", strings.TrimSpace(stderr))
+		r.log(classifyStreamLevel(true, err, stderr, args), "[stderr]\n%s", strings.TrimSpace(stderr))
 	}
 	if err != nil {
 		return stdout, stderr, fmt.Errorf("%s failed: %w", formatCommand(r.binary, args), err)
@@ -280,8 +280,13 @@ func classifyCommandLevel(args []string) LogLevel {
 	return LogLevelInfo
 }
 
-func classifyStreamLevel(isStderr bool, runErr error, output string) LogLevel {
+func classifyStreamLevel(isStderr bool, runErr error, output string, args []string) LogLevel {
 	if runErr != nil {
+		// image inspect failure is expected (image not found locally),
+		// not a real error — downstream will pull the image.
+		if isExpectedFailure(args) {
+			return LogLevelInfo
+		}
 		if isStderr {
 			return LogLevelError
 		}
@@ -291,6 +296,10 @@ func classifyStreamLevel(isStderr bool, runErr error, output string) LogLevel {
 		return LogLevelWarn
 	}
 	return LogLevelInfo
+}
+
+func isExpectedFailure(args []string) bool {
+	return len(args) >= 2 && args[0] == "image" && args[1] == "inspect"
 }
 
 func looksLikeWarning(output string) bool {
