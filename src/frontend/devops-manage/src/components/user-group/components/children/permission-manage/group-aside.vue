@@ -692,8 +692,11 @@ export default {
   flex: 1;
   min-width: 0; /* 重要：允许 flex 项目收缩到小于内容宽度 */
   overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  word-break: break-all;
+  line-height: 1;
   margin-right: 10px;
 }
 .user-num,
