@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.client.consul.ConsulConstants.DEFAULT_TAG_REDIS_KEY
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_CODECC_REDIS_KEY
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
@@ -41,6 +42,8 @@ import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectTagDao
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
+import com.tencent.devops.project.pojo.ProjectClusterPercentageResult
 import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
 import com.tencent.devops.project.pojo.ProjectPercentageRoutingRequest
 import com.tencent.devops.project.pojo.ProjectPercentageRoutingResult
@@ -404,6 +407,19 @@ class ProjectTagService @Autowired constructor(
         }
     }
 
+    // ======================== 默认路由 tag 管理 ========================
+
+    fun setDefaultTag(tag: String): Boolean {
+        checkRouteTag(tag)
+        redisOperation.set(DEFAULT_TAG_REDIS_KEY, tag)
+        logger.info("setDefaultTag|tag=$tag")
+        return true
+    }
+
+    fun getDefaultTag(): String {
+        return redisOperation.get(DEFAULT_TAG_REDIS_KEY) ?: ""
+    }
+
     // ======================== 路由名单管理（黑名单） ========================
 
     fun addToBlacklist(projectCodes: List<String>): Long {
@@ -433,7 +449,8 @@ class ProjectTagService @Autowired constructor(
         val watcher = Watcher("percentageRouting ${request.targetPercent}% -> ${request.targetTag}")
         logger.info(
             "percentageRouting start|targetPercent=${request.targetPercent}|" +
-                "sourceTag=${request.sourceTag}|targetTag=${request.targetTag}|dryRun=${request.dryRun}"
+                "sourceTag=${request.sourceTag}|targetTag=${request.targetTag}|" +
+                "seed=${request.seed}|dryRun=${request.dryRun}"
         )
 
         val blacklist = getBlacklist()
@@ -458,7 +475,7 @@ class ProjectTagService @Autowired constructor(
                 val projectCode = record.englishName ?: continue
                 if (projectCode in blacklist) continue
                 val alreadyAtTarget = record.routerTag == request.targetTag
-                if (hashBucket(projectCode) < threshold) {
+                if (hashBucket(projectCode, request.seed) < threshold) {
                     if (alreadyAtTarget) {
                         alreadyDoneCount++
                     } else {
@@ -511,13 +528,36 @@ class ProjectTagService @Autowired constructor(
     }
 
     /**
-     * 确定性哈希分桶：CRC32(englishName) % 100
-     * 结果范围 [0, 99]，与项目总数无关，同一 englishName 永远映射到相同桶。
+     * 确定性哈希分桶：CRC32("$seed:$englishName") % 100
+     * 结果范围 [0, 99]，与项目总数无关。
+     * 相同 seed + englishName 永远映射到相同桶；不同 seed 产生不同分桶，
+     * 使每次发布可以让相同百分比路由到不同的项目集合。
      */
-    fun hashBucket(englishName: String): Int {
+    fun hashBucket(englishName: String, seed: Int = 0): Int {
         val crc = CRC32()
-        crc.update(englishName.toByteArray(Charsets.UTF_8))
+        crc.update("$seed:$englishName".toByteArray(Charsets.UTF_8))
         return (crc.value % HASH_BUCKET_SIZE).toInt()
+    }
+
+    // ======================== 集群项目百分比统计 ========================
+
+    fun getClusterPercentage(
+        condition: ProjectConditionDTO
+    ): ProjectClusterPercentageResult {
+        require(condition.routerTag != null) { "routerTag must not be null" }
+        val totalCondition = condition.copy(routerTag = null)
+        val totalCount = projectDao.countByCondition(dslContext, totalCondition)
+        val tagCount = projectDao.countByCondition(dslContext, condition)
+        val percentage = if (totalCount > 0) {
+            (tagCount * 10000.0 / totalCount).toLong() / 100.0
+        } else {
+            0.0
+        }
+        return ProjectClusterPercentageResult(
+            totalProjectCount = totalCount,
+            tagCount = tagCount,
+            percentage = percentage
+        )
     }
 
     companion object {

@@ -9,6 +9,8 @@ import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
+import com.tencent.devops.project.pojo.ProjectClusterPercentageResult
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
@@ -16,6 +18,7 @@ import jakarta.ws.rs.POST
 import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "OP_PROJECT_TAG", description = "项目TAG")
@@ -84,4 +87,26 @@ interface OpProjectTagResource {
     @GET
     @Path("/blacklist")
     fun getBlacklist(): Result<Set<String>>
+
+    @Operation(summary = "设置默认路由 tag（用于无项目请求的兜底路由）")
+    @PUT
+    @Path("/defaultTag")
+    fun setDefaultTag(
+        @Parameter(description = "目标 tag，必须为合法的 routerTag", required = true)
+        @QueryParam("tag")
+        tag: String
+    ): Result<Boolean>
+
+    @Operation(summary = "获取当前默认路由 tag")
+    @GET
+    @Path("/defaultTag")
+    fun getDefaultTag(): Result<String>
+
+    @Operation(summary = "查询指定 tag 下的项目数量与百分比（condition 中 routerTag 必填）")
+    @POST
+    @Path("/clusterPercentage")
+    fun getClusterPercentage(
+        @Parameter(description = "项目查询条件（routerTag 必填）", required = true)
+        condition: ProjectConditionDTO
+    ): Result<ProjectClusterPercentageResult>
 }

@@ -29,5 +29,12 @@ data class ProjectPercentageRoutingRequest(
         title = "是否预览模式（true=仅统计不落库，false=执行切换）",
         description = "dryRun"
     )
-    val dryRun: Boolean = true
+    val dryRun: Boolean = true,
+
+    @get:JsonProperty(value = "seed", required = false)
+    @get:Schema(
+        title = "哈希随机种子（不同 seed 使相同百分比路由到不同项目集合，默认 0）",
+        description = "seed"
+    )
+    val seed: Int = 0
 )
