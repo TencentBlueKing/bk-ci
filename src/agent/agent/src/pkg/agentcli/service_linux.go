@@ -10,6 +10,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"strings"
+	"syscall"
 )
 
 func platformUnzip(src, dest string) error {
@@ -99,7 +100,11 @@ func handleUninstall(workDir string) error {
 	return nil
 }
 
-func handleStart(workDir string) error {
+func handleStart(workDir string, args []string) error {
+	if hasLegacyFlag(args) {
+		return handleStartLegacy(workDir)
+	}
+
 	serviceName, err := getServiceName(workDir)
 	if err != nil {
 		return err
@@ -118,7 +123,11 @@ func handleStart(workDir string) error {
 	return startDirect(workDir)
 }
 
-func handleStop(workDir string) error {
+func handleStop(workDir string, args []string) error {
+	if hasLegacyFlag(args) {
+		return handleStopLegacy(workDir)
+	}
+
 	serviceName, err := getServiceName(workDir)
 	if err != nil {
 		return err
@@ -137,6 +146,34 @@ func handleStop(workDir string) error {
 	stopProcesses(workDir)
 	printStep(msg("Agent stopped", "Agent 已停止"))
 	return nil
+}
+
+// handleStartLegacy mimics the old start.sh process-start behavior:
+// check if already running, then direct start (inheriting shell env).
+// Does NOT prepare workdir — use "install" or "repair" for that.
+func handleStartLegacy(workDir string) error {
+	printStep(msg("Legacy mode (-o): direct start", "兼容模式 (-o): 直接启动"))
+
+	pidFile := filepath.Join(workDir, "runtime", "daemon.pid")
+	if pid := readPid(pidFile); pid > 0 && isProcessAlive(pid) {
+		printStep(msgf("Daemon already running, PID=%d", "守护进程已在运行, PID=%d", pid))
+		return nil
+	}
+
+	return startDirect(workDir)
+}
+
+// handleStopLegacy mimics the old stop.sh behavior: kill processes by PID
+// file only, without any systemctl/service-manager involvement.
+func handleStopLegacy(workDir string) error {
+	printStep(msg("Legacy mode (-o): kill by PID", "兼容模式 (-o): 通过 PID 终止"))
+	stopProcesses(workDir)
+	printStep(msg("Agent stopped", "Agent 已停止"))
+	return nil
+}
+
+func isProcessAlive(pid int) bool {
+	return syscall.Kill(pid, 0) == nil
 }
 
 // ── systemd ──────────────────────────────────────────────────────────────
