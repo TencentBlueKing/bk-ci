@@ -81,6 +81,11 @@ func handleStart(workDir string) error {
 
 	pp := plistPath(serviceName)
 	if _, err := os.Stat(pp); err == nil {
+		// Unload first: if the job is already registered (e.g. process exited on
+		// its own without going through "stop"), a subsequent "load" silently
+		// succeeds but never re-triggers RunAtLoad, leaving runs=0.
+		_ = exec.Command("launchctl", "unload", pp).Run()
+
 		printStep(msgf("Loading %s via launchctl ...", "通过 launchctl 加载 %s ...", serviceName))
 		out, err := exec.Command("launchctl", "load", "-w", pp).CombinedOutput()
 		if err != nil {
