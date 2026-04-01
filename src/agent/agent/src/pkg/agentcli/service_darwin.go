@@ -10,6 +10,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"strings"
+	"syscall"
 )
 
 func platformUnzip(src, dest string) error {
@@ -38,13 +39,14 @@ func handleInstall(workDir string, _ []string) error {
 	}
 
 	printStep(msg("Step 2: registering launchd service ...", "步骤 2: 注册 launchd 服务 ..."))
-	unloadPlist(serviceName)
+	bootoutService(serviceName)
+	cleanupLegacyPlist(serviceName)
 	if err := writePlist(workDir, serviceName); err != nil {
 		return err
 	}
 
 	printStep(msg("Step 3: starting service ...", "步骤 3: 启动服务 ..."))
-	if err := loadPlist(serviceName); err != nil {
+	if err := bootstrapAndStart(serviceName); err != nil {
 		return err
 	}
 
@@ -63,7 +65,8 @@ func handleUninstall(workDir string) error {
 	}
 
 	printStep(msg("Removing launchd service ...", "移除 launchd 服务 ..."))
-	unloadPlist(serviceName)
+	bootoutService(serviceName)
+	cleanupLegacyPlist(serviceName)
 	removePlist(serviceName)
 
 	printStep(msg("Stopping processes ...", "停止进程 ..."))
@@ -73,7 +76,11 @@ func handleUninstall(workDir string) error {
 	return nil
 }
 
-func handleStart(workDir string) error {
+func handleStart(workDir string, args []string) error {
+	if hasLegacyFlag(args) {
+		return handleStartLegacy(workDir)
+	}
+
 	serviceName, err := getServiceName(workDir)
 	if err != nil {
 		return err
@@ -81,15 +88,13 @@ func handleStart(workDir string) error {
 
 	pp := plistPath(serviceName)
 	if _, err := os.Stat(pp); err == nil {
-		// Unload first: if the job is already registered (e.g. process exited on
-		// its own without going through "stop"), a subsequent "load" silently
-		// succeeds but never re-triggers RunAtLoad, leaving runs=0.
-		_ = exec.Command("launchctl", "unload", pp).Run()
+		printStep(msgf("Starting %s via launchctl ...", "通过 launchctl 启动 %s ...", serviceName))
 
-		printStep(msgf("Loading %s via launchctl ...", "通过 launchctl 加载 %s ...", serviceName))
-		out, err := exec.Command("launchctl", "load", "-w", pp).CombinedOutput()
-		if err != nil {
-			return cliErrorf("launchctl load failed: %s (%v)", "launchctl load 失败: %s (%v)", strings.TrimSpace(string(out)), err)
+		// bootout first to clear stale state (e.g. process exited on its own),
+		// then bootstrap + kickstart for a reliable fresh spawn.
+		bootoutService(serviceName)
+		if err := bootstrapAndStart(serviceName); err != nil {
+			return err
 		}
 		printStep(msgf("Service %s started", "服务 %s 已启动", serviceName))
 		return nil
@@ -98,19 +103,67 @@ func handleStart(workDir string) error {
 	return startDirect(workDir)
 }
 
-func handleStop(workDir string) error {
+func handleStop(workDir string, args []string) error {
+	if hasLegacyFlag(args) {
+		return handleStopLegacy(workDir)
+	}
+
 	serviceName, err := getServiceName(workDir)
 	if err != nil {
 		return err
 	}
 
-	unloadPlist(serviceName)
+	bootoutService(serviceName)
 	stopProcesses(workDir)
 	printStep(msg("Agent stopped", "Agent 已停止"))
 	return nil
 }
 
-// ── launchd ──────────────────────────────────────────────────────────────
+// handleStartLegacy mimics the old start.sh process-start behavior:
+// check if already running, then direct start (inheriting shell env).
+// Does NOT prepare workdir — use "install" or "repair" for that.
+func handleStartLegacy(workDir string) error {
+	printStep(msg("Legacy mode (-o): direct start", "兼容模式 (-o): 直接启动"))
+
+	pidFile := filepath.Join(workDir, "runtime", "daemon.pid")
+	if pid := readPid(pidFile); pid > 0 && isProcessAlive(pid) {
+		printStep(msgf("Daemon already running, PID=%d", "守护进程已在运行, PID=%d", pid))
+		return nil
+	}
+
+	return startDirect(workDir)
+}
+
+// handleStopLegacy mimics the old stop.sh behavior: kill processes by PID
+// file only, without any launchctl/service-manager involvement.
+func handleStopLegacy(workDir string) error {
+	printStep(msg("Legacy mode (-o): kill by PID", "兼容模式 (-o): 通过 PID 终止"))
+	stopProcesses(workDir)
+	printStep(msg("Agent stopped", "Agent 已停止"))
+	return nil
+}
+
+// ── launchd (modern API: bootstrap/bootout/kickstart) ────────────────────
+
+// launchdDomain returns the launchctl domain target.
+// Uses "user/UID" (not "gui/UID") so the service works in headless / SSH
+// scenarios, matching the approach taken by GitHub Actions Runner.
+// For root, uses the "system" domain.
+func launchdDomain() string {
+	if isRoot() {
+		return "system"
+	}
+	u, _ := user.Current()
+	if u != nil {
+		return "user/" + u.Uid
+	}
+	return "user/" + fmt.Sprint(os.Getuid())
+}
+
+// serviceTarget returns the launchctl service target "domain/serviceName".
+func serviceTarget(serviceName string) string {
+	return launchdDomain() + "/" + serviceName
+}
 
 func plistDir() string {
 	if isRoot() {
@@ -163,24 +216,42 @@ func writePlist(workDir, serviceName string) error {
 	return nil
 }
 
-func loadPlist(serviceName string) error {
+// bootstrapAndStart registers the plist with launchd and force-starts it.
+// Uses the modern launchctl API (macOS 10.10+): bootstrap + kickstart.
+func bootstrapAndStart(serviceName string) error {
 	pp := plistPath(serviceName)
-	out, err := exec.Command("launchctl", "load", "-w", pp).CombinedOutput()
+	target := serviceTarget(serviceName)
+	domain := launchdDomain()
+
+	out, err := exec.Command("launchctl", "bootstrap", domain, pp).CombinedOutput()
 	if err != nil {
-		return cliErrorf("launchctl load failed: %s (%v)", "launchctl load 失败: %s (%v)", strings.TrimSpace(string(out)), err)
+		outStr := strings.TrimSpace(string(out))
+		// 36: "Operation already in progress" — job already bootstrapped; safe to proceed with kickstart.
+		if !strings.Contains(outStr, "36:") {
+			return cliErrorf("launchctl bootstrap failed: %s (%v)", "launchctl bootstrap 失败: %s (%v)", outStr, err)
+		}
 	}
-	printStep(msgf("Service %s loaded", "服务 %s 已加载", serviceName))
+
+	out, err = exec.Command("launchctl", "kickstart", target).CombinedOutput()
+	if err != nil {
+		return cliErrorf("launchctl kickstart failed: %s (%v)", "launchctl kickstart 失败: %s (%v)",
+			strings.TrimSpace(string(out)), err)
+	}
 	return nil
 }
 
-func unloadPlist(serviceName string) {
-	pp := plistPath(serviceName)
-	if _, err := os.Stat(pp); err == nil {
-		_ = exec.Command("launchctl", "unload", pp).Run()
-	}
+// bootoutService removes the service from launchd (stops it if running).
+func bootoutService(serviceName string) {
+	target := serviceTarget(serviceName)
+	_ = exec.Command("launchctl", "bootout", target).Run()
+}
+
+// cleanupLegacyPlist removes a plist that might exist in the "other" location
+// (e.g. LaunchDaemons vs LaunchAgents) from a previous installation.
+func cleanupLegacyPlist(serviceName string) {
 	other := otherPlistPath(serviceName)
 	if _, err := os.Stat(other); err == nil {
-		_ = exec.Command("launchctl", "unload", other).Run()
+		_ = exec.Command("launchctl", "bootout", serviceTarget(serviceName)).Run()
 		os.Remove(other)
 		printStep(msgf("Cleaned up legacy plist %s", "已清理旧 plist %s", other))
 	}
@@ -200,6 +271,10 @@ func otherPlistPath(serviceName string) string {
 		return filepath.Join(home, "Library", "LaunchAgents", serviceName+".plist")
 	}
 	return filepath.Join("/Library/LaunchDaemons", serviceName+".plist")
+}
+
+func isProcessAlive(pid int) bool {
+	return syscall.Kill(pid, 0) == nil
 }
 
 func startDirect(workDir string) error {

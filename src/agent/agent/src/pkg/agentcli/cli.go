@@ -39,9 +39,9 @@ func Run(workDir string, args []string) {
 	case "uninstall":
 		err = handleUninstall(workDir)
 	case "start":
-		err = handleStart(workDir)
+		err = handleStart(workDir, args[1:])
 	case "stop":
-		err = handleStop(workDir)
+		err = handleStop(workDir, args[1:])
 	case "repair":
 		err = handleRepair(workDir)
 	case "reinstall":
@@ -136,6 +136,16 @@ func printErr(m string)                     { fmt.Fprintf(os.Stderr, "[BK-CI][ER
 func printStepf(f string, a ...interface{}) { fmt.Printf("[BK-CI] "+f+"\n", a...) }
 func cliErrorf(en, zh string, a ...interface{}) error {
 	return fmt.Errorf(msgf(en, zh, a...))
+}
+
+// hasLegacyFlag returns true if args contain "-o" (use legacy script behavior).
+func hasLegacyFlag(args []string) bool {
+	for _, a := range args {
+		if a == "-o" {
+			return true
+		}
+	}
+	return false
 }
 
 func printDivider() {
@@ -479,7 +489,7 @@ func handleReinstall(workDir string, args []string) error {
 
 	// Step 2: stop + clean (only after download succeeded)
 	printStep(msg("Step 2: stopping agent ...", "步骤 2: 停止 Agent ..."))
-	_ = handleStop(workDir)
+	_ = handleStop(workDir, nil)
 
 	printStep(msg("Step 3: cleaning files ...", "步骤 3: 清理文件 ..."))
 	entries, err := os.ReadDir(workDir)
@@ -646,13 +656,13 @@ func handleRepair(workDir string) error {
 	printDivider()
 
 	printStep(msg("Step 1: stopping agent ...", "步骤 1: 停止 Agent ..."))
-	_ = handleStop(workDir)
+	_ = handleStop(workDir, nil)
 
 	printStep(msg("Step 2: re-extracting dependencies ...", "步骤 2: 重新解压依赖 ..."))
 	repairWorkDir(workDir)
 
 	printStep(msg("Step 3: restarting agent ...", "步骤 3: 重启 Agent ..."))
-	if err := handleStart(workDir); err != nil {
+	if err := handleStart(workDir, nil); err != nil {
 		return err
 	}
 

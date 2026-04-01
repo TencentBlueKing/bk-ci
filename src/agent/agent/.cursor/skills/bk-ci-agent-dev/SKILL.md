@@ -140,8 +140,10 @@ devopsAgent <command> [options]
       --auto-logon     配置 Windows 自动登录
     --mode task        [已废弃] 安装为计划任务
   uninstall            停止并卸载守护进程服务
-  start                启动守护进程
-  stop                 停止守护进程
+  start [-o]           启动守护进程
+    -o                 兼容模式: 使用旧脚本逻辑 (直接启动, 不通过服务管理器)
+  stop  [-o]           停止守护进程
+    -o                 兼容模式: 仅通过 PID 终止, 不操作服务管理器
 
 维护:
   repair               修复文件: 停止 → 重新解压依赖 → 重启
@@ -188,10 +190,17 @@ devopsAgent reinstall [-y]
 | `workspace/` | 构建工作空间 |
 | `devopsAgent[.exe]` | 当前运行的 Agent 二进制 |
 
+**macOS launchd 服务管理** (参考 GitHub Actions Runner 的做法):
+- 使用**现代 launchctl API** (macOS 10.10+): `bootstrap`/`bootout`/`kickstart` 替代已弃用的 `load`/`unload`
+- 使用 **`user/UID`** 域上下文（而非 `gui/UID`），支持无头/SSH 环境
+- root 用户使用 `system` 域 + `LaunchDaemons`
+- 服务生命周期: `install` → `bootout` + `bootstrap` + `kickstart` | `start` → `bootout` + `bootstrap` + `kickstart` | `stop` → `bootout` + kill 进程
+- `startDirect` 作为无 plist 时的 fallback（直接 `exec.Command` 启动 daemon）
+
 **status 命令** 输出内容 (按平台):
 | 项目 | Linux | macOS | Windows |
 |------|-------|-------|---------|
-| 运行模式 | root+systemd / root+direct / non-root | root (LaunchDaemons) / user (LaunchAgents) | SERVICE / SESSION / TASK(legacy) |
+| 运行模式 | root+systemd / root+direct / non-root | root (LaunchDaemons, system) / user (LaunchAgents, user/UID) | SERVICE / SESSION / TASK(legacy) |
 | 服务状态 | systemctl is-active | plist 文件检测 | sc.exe query |
 | 进程检测 | syscall.Kill(pid, 0) | syscall.Kill(pid, 0) | OpenProcess |
 | 配置文件检查 | ini.Load 解析 + 必填项校验 | ini.Load 解析 + 必填项校验 | ini.Load 解析 + 必填项校验 |

@@ -24,10 +24,11 @@ func handleStatus(workDir string) error {
 	statusLine(msg("Service name", "服务名"), serviceName)
 	statusLine(msg("Current user", "当前用户"), currentUser())
 
+	domain := launchdDomain()
 	if isRoot() {
-		statusLine(msg("Run mode", "运行模式"), msg("root (LaunchDaemons - system level)", "root (LaunchDaemons - 系统级)"))
+		statusLine(msg("Run mode", "运行模式"), msgf("root (LaunchDaemons - system, domain: %s)", "root (LaunchDaemons - 系统级, 域: %s)", domain))
 	} else {
-		statusLine(msg("Run mode", "运行模式"), msg("user (LaunchAgents - user level)", "普通用户 (LaunchAgents - 用户级)"))
+		statusLine(msg("Run mode", "运行模式"), msgf("user (LaunchAgents - user level, domain: %s)", "普通用户 (LaunchAgents - 用户级, 域: %s)", domain))
 	}
 
 	if serviceName != "" {

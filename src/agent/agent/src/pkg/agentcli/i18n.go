@@ -69,8 +69,10 @@ func printUsageLocalized() {
 			fmt.Print("  install              安装并启动 Agent 守护进程\n")
 		}
 		fmt.Print(`  uninstall            停止并卸载守护进程服务
-  start                启动守护进程
-  stop                 停止守护进程
+  start [-o]           启动守护进程
+    -o                 兼容模式: 使用旧脚本逻辑 (直接启动, 不通过服务管理器)
+  stop  [-o]           停止守护进程
+    -o                 兼容模式: 仅通过 PID 终止, 不操作服务管理器
 
 维护:
   repair               修复文件: 停止 → 重新解压依赖 → 重启
@@ -117,8 +119,10 @@ func printUsageLocalized() {
 			fmt.Print("  install              Install and start agent daemon\n")
 		}
 		fmt.Print(`  uninstall            Stop and remove agent daemon service
-  start                Start agent daemon
-  stop                 Stop agent daemon
+  start [-o]           Start agent daemon
+    -o                 Legacy mode: direct start without service manager (like old scripts)
+  stop  [-o]           Stop agent daemon
+    -o                 Legacy mode: kill by PID only, skip service manager
 
 Maintenance:
   repair               Repair files: stop -> re-extract dependencies -> restart

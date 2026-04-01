@@ -196,7 +196,7 @@ func handleUninstall(workDir string) error {
 	return nil
 }
 
-func handleStart(workDir string) error {
+func handleStart(workDir string, _ []string) error {
 	serviceName, err := getServiceName(workDir)
 	if err != nil {
 		return err
@@ -216,7 +216,7 @@ func handleStart(workDir string) error {
 	return nil
 }
 
-func handleStop(workDir string) error {
+func handleStop(workDir string, _ []string) error {
 	serviceName, err := getServiceName(workDir)
 	if err != nil {
 		return err
