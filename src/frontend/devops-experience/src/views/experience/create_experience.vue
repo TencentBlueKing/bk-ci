@@ -270,6 +270,7 @@
                             </bk-select>
                         </bk-form-item>
                         <bk-form-item
+                            v-if="isWindowsPlatform"
                             :label="$t('experience.experience_env')"
                         >
                             <div class="bkdevop-checkbox-group">
@@ -682,18 +683,25 @@
                     this.metaList = []
                     this.query.initDate = ''
                     this.createReleaseForm = {
+                        platform: platformMap.ANDROID,
                         name: '',
                         version_no: '',
+                        versionTitle: '',
                         desc: '',
+                        experienceName: '',
+                        bundleIdentifier: '',
+                        categoryId: null,
+                        productOwner: [],
                         end_date: '',
                         internal_list: [],
                         external_list: [],
                         notice_list: '',
-                        versionTitle: '',
-                        experienceName: '',
-                        categoryId: null,
-                        productOwner: [],
-                        experienceGroups: []
+                        wechatGroups: '',
+                        enableWechatGroups: false,
+                        experienceGroups: [],
+                        classify: '',
+                        enableDevxAccess: false,
+                        enablePublicAccess: false
                     }
                 }
             },
@@ -783,6 +791,8 @@
                     this.createReleaseForm.enableWechatGroups = res.enableWechatGroups
                     this.createReleaseForm.experienceGroups = res.experienceGroups
                     this.createReleaseForm.classify = res.classify
+                    this.createReleaseForm.enableDevxAccess = res.enableDevxAccess
+                    this.createReleaseForm.enablePublicAccess = res.enablePublicAccess
                     // 体验组如果为kygplomw,选中公开体验
                     const publicGroup = this.createReleaseForm.experienceGroups.find(item => item.groupHashId === 'kygplomw')
                     this.experienceRange = publicGroup ? 'public' : 'internals'
