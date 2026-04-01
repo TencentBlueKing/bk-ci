@@ -950,14 +950,6 @@ class ServiceRemoteDevResourceImpl(
         return Result(coffeeAIService.openClawOn(userId))
     }
 
-    override fun checkEnableRecordLive(
-        userId: String,
-        projectId: String,
-        workspaceName: String
-    ): Result<CheckEnableRecordLiveResp> {
-        return Result(workspaceRecordService.checkEnableRecordLive(userId, projectId, workspaceName))
-    }
-
     override fun checkViewLive(
         userId: String,
         projectId: String,

@@ -45,6 +45,7 @@ import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
 import com.tencent.devops.remotedev.pojo.project.UpdateRemotedevDataManagers
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
+import com.tencent.devops.remotedev.pojo.record.CheckEnableRecordLiveResp
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
@@ -787,5 +788,14 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun openClawOn(userId: String): Result<WorkspaceRegistration?> {
         logger.info("openClawOn |$userId")
         return client.get(ServiceRemoteDevResource::class).openClawOn(userId)
+    }
+
+    override fun checkViewLive(
+        userId: String,
+        projectId: String,
+        workspaceName: String
+    ): Result<Boolean> {
+        logger.info("checkViewLive |$userId|$projectId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).checkViewLive(userId, projectId, workspaceName)
     }
 }

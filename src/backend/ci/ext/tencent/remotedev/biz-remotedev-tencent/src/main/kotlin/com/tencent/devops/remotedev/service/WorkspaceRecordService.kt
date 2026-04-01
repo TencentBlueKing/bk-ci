@@ -29,6 +29,7 @@ import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordTicketType
+import com.tencent.devops.remotedev.service.client.MediaMod
 import com.tencent.devops.remotedev.service.client.NodeSearchBody
 import com.tencent.devops.remotedev.service.client.NodeSearchPage
 import com.tencent.devops.remotedev.service.client.NodeSearchRule
@@ -157,88 +158,65 @@ class WorkspaceRecordService @Autowired constructor(
                 ?: return Pair(false, null)
         }
 
-        // 如果有录屏按录屏走
-        if (!recordInfo.enableUser.isNullOrBlank()) {
-            val region = genRegion(recordInfo.hostIp)
-            val token = permissionService.init1Password(
-                userId = recordInfo.enableUser,
-                workspaceName = recordInfo.workspaceName,
-                projectId = null,
-                expiredInSecond = 7 * 24 * 3600
-            )
-            return Pair(
-                true,
-                remotedevBkRepoClient.repoStreamCreate(
-                    region = region,
-                    projectId = projectId,
-                    repoName = genRepoName(recordInfo.workspaceName),
-                    userId = recordInfo.enableUser,
-                    media = true,
-                    gray = mediaGary
-                ) + "&skToken=$token&recordUser=$userId"
-            )
-        }
-
         // cafeAI场景默认启动直播
-        if (recordInfo.coffeeAIEnable || featureSwitchService.isEnabled(
-                projectId = projectId,
-                userId = userId,
-                workspaceName = recordInfo.workspaceName,
-                featureType = FeatureSwitchType.LIVE_STREAMING
-            )
-        ) {
-            val region = genRegion(recordInfo.hostIp)
-            val token = permissionService.init1Password(
-                userId = userId,
-                workspaceName = recordInfo.workspaceName,
-                projectId = null,
-                expiredInSecond = 7 * 24 * 3600
-            )
-            return Pair(
-                true,
-                remotedevBkRepoClient.repoStreamCreate(
-                    region = region,
-                    projectId = projectId,
-                    repoName = genRepoName(recordInfo.workspaceName),
+        val liveEnable = recordInfo.coffeeAIEnable || featureSwitchService.isEnabled(
+            projectId = projectId,
+            userId = userId,
+            workspaceName = recordInfo.workspaceName,
+            featureType = FeatureSwitchType.LIVE_STREAMING
+        )
+
+        if (recordInfo.enableUser.isNullOrBlank()) {
+            if (liveEnable) {
+                val region = genRegion(recordInfo.hostIp)
+                val token = permissionService.init1Password(
                     userId = userId,
-                    media = true,
-                    gray = mediaGary
-                ) + "&skToken=$token&recordUser=$userId"
-            )
-        }
-        return Pair(false, null)
-    }
-
-    fun checkEnableRecordLive(
-        userId: String,
-        projectId: String,
-        workspaceName: String
-    ): CheckEnableRecordLiveResp {
-        val recordInfo = workspaceWindowsDao.fetchRecordByProjectIp(dslContext, projectId, null, workspaceName) ?: run {
-            logger.warn("checkEnableRecordLive $projectId|$workspaceName|$userId no found workspace")
-            return CheckEnableRecordLiveResp(recordEnable = false, liveEnable = false)
-        }
-
-        // 是否开启录屏
-        val recordEnable = !recordInfo.enableUser.isNullOrBlank()
-
-        // cafeAI场景默认开启直播
-        if (recordInfo.coffeeAIEnable) {
-            return CheckEnableRecordLiveResp(recordEnable = recordEnable, liveEnable = true)
+                    workspaceName = recordInfo.workspaceName,
+                    projectId = null,
+                    expiredInSecond = 7 * 24 * 3600
+                )
+                return Pair(
+                    true,
+                    remotedevBkRepoClient.repoStreamCreate(
+                        region = region,
+                        projectId = projectId,
+                        repoName = genRepoName(recordInfo.workspaceName),
+                        userId = userId,
+                        media = true,
+                        gray = mediaGary,
+                        mediaMod = MediaMod.LIVE
+                    ) + "&skToken=$token&recordUser=$userId&mediaMod=${MediaMod.LIVE.name}"
+                )
+            } else {
+                return Pair(false, null)
+            }
         }
 
-        // 看看有没有开直播
-        if (featureSwitchService.isEnabled(
+        val mediaMod = if (liveEnable) {
+            MediaMod.ALL
+        } else {
+            MediaMod.RECORD
+        }
+        // 如果有录屏按录屏走
+        val region = genRegion(recordInfo.hostIp)
+        val token = permissionService.init1Password(
+            userId = recordInfo.enableUser,
+            workspaceName = recordInfo.workspaceName,
+            projectId = null,
+            expiredInSecond = 7 * 24 * 3600
+        )
+        return Pair(
+            true,
+            remotedevBkRepoClient.repoStreamCreate(
+                region = region,
                 projectId = projectId,
-                userId = userId,
-                workspaceName = recordInfo.workspaceName,
-                featureType = FeatureSwitchType.LIVE_STREAMING
-            )
-        ) {
-            return CheckEnableRecordLiveResp(recordEnable = recordEnable, liveEnable = true)
-        }
-
-        return CheckEnableRecordLiveResp(recordEnable = recordEnable, liveEnable = false)
+                repoName = genRepoName(recordInfo.workspaceName),
+                userId = recordInfo.enableUser,
+                media = true,
+                gray = mediaGary,
+                mediaMod = mediaMod
+            ) + "&skToken=$token&recordUser=$userId&mediaMod=${mediaMod.name}"
+        )
     }
 
     fun checkViewLive(

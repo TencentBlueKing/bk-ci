@@ -1031,21 +1031,6 @@ interface ServiceRemoteDevResource {
         userId: String
     ): Result<WorkspaceRegistration?>
 
-    @Operation(summary = "校验是否开启了了录屏或直播")
-    @GET
-    @Path("/check_enable_record_live")
-    fun checkEnableRecordLive(
-        @Parameter(description = "用户", required = true)
-        @QueryParam("userId")
-        userId: String,
-        @Parameter(description = "项目id", required = true)
-        @QueryParam("projectId")
-        projectId: String,
-        @Parameter(description = "工作空间名", required = true)
-        @QueryParam("workspaceName")
-        workspaceName: String
-    ): Result<CheckEnableRecordLiveResp>
-
     @Operation(summary = "校验是否有权限查看直播")
     @GET
     @Path("/check_view_live")
