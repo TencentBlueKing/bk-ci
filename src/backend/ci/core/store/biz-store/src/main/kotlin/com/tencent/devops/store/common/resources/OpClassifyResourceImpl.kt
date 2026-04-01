@@ -49,7 +49,6 @@ class OpClassifyResourceImpl @Autowired constructor(private val classifyService:
         return classifyService.updateClassify(id, classifyRequest, classifyType.type.toByte())
     }
 
-
     override fun listAllClassifys(
         classifyType: StoreTypeEnum,
         serviceScope: ServiceScopeEnum?
