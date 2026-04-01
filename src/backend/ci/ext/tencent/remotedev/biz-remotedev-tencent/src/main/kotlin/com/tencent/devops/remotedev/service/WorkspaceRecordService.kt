@@ -169,12 +169,6 @@ class WorkspaceRecordService @Autowired constructor(
         if (recordInfo.enableUser.isNullOrBlank()) {
             if (liveEnable) {
                 val region = genRegion(recordInfo.hostIp)
-                val token = permissionService.init1Password(
-                    userId = userId,
-                    workspaceName = recordInfo.workspaceName,
-                    projectId = null,
-                    expiredInSecond = 7 * 24 * 3600
-                )
                 return Pair(
                     true,
                     remotedevBkRepoClient.repoStreamCreate(
@@ -185,7 +179,7 @@ class WorkspaceRecordService @Autowired constructor(
                         media = true,
                         gray = mediaGary,
                         mediaMod = MediaMod.LIVE
-                    ) + "&skToken=$token&recordUser=$userId&mediaMod=${MediaMod.LIVE.name}"
+                    ) + "&recordUser=$userId&mediaMod=${MediaMod.LIVE.name}"
                 )
             } else {
                 return Pair(false, null)
