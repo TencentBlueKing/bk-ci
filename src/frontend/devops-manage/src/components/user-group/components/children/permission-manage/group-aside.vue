@@ -3,7 +3,7 @@
     placement="left"
     :initial-divide="240"
     :min="240"
-    :max="320"
+    :max="360"
     :border="false"
     class="group-aside-container"
   >

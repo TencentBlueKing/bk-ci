@@ -4,7 +4,7 @@
       placement="left"
       :initial-divide="220"
       :min="220"
-      :max="320"
+      :max="360"
       :border="false"
       class="permission-wrapper"
     >
