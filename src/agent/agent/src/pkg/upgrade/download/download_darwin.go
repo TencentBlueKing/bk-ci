@@ -47,6 +47,6 @@ func DownloadJdkFile(saveDir string) (string, error) {
 
 func DownloadDockerInitFile(saveDir string) (string, error) {
 	return api.DownloadUpgradeFile(
-		"script/linux/agent_docker_init.sh", saveDir+"/"+config.DockerInitFile,
+		"script/macos/agent_docker_init.sh", saveDir+"/"+config.DockerInitFile,
 	)
 }

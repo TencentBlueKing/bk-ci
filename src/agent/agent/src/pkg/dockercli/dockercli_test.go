@@ -196,23 +196,28 @@ func TestClassifyCommandLevel(t *testing.T) {
 
 func TestClassifyStreamLevel(t *testing.T) {
 	runErr := &url.Error{Op: "run", URL: "docker", Err: os.ErrPermission}
+	inspectArgs := []string{"image", "inspect", "nginx:latest"}
+	pullArgs := []string{"pull", "nginx:latest"}
 	tests := []struct {
 		name     string
 		isStderr bool
 		runErr   error
 		output   string
+		args     []string
 		want     LogLevel
 	}{
-		{"success_stdout", false, nil, "ok", LogLevelInfo},
-		{"success_stderr_normal_progress", true, nil, "Pulling fs layer", LogLevelInfo},
-		{"success_stderr_warning", true, nil, "WARNING: deprecated config", LogLevelWarn},
-		{"failed_stdout", false, runErr, "partial output", LogLevelWarn},
-		{"failed_stderr", true, runErr, "permission denied", LogLevelError},
+		{"success_stdout", false, nil, "ok", pullArgs, LogLevelInfo},
+		{"success_stderr_normal_progress", true, nil, "Pulling fs layer", pullArgs, LogLevelInfo},
+		{"success_stderr_warning", true, nil, "WARNING: deprecated config", pullArgs, LogLevelWarn},
+		{"failed_stdout", false, runErr, "partial output", pullArgs, LogLevelWarn},
+		{"failed_stderr", true, runErr, "permission denied", pullArgs, LogLevelError},
+		{"image_inspect_failed_stderr", true, runErr, "image not known", inspectArgs, LogLevelInfo},
+		{"image_inspect_failed_stdout", false, runErr, "partial", inspectArgs, LogLevelInfo},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := classifyStreamLevel(tt.isStderr, tt.runErr, tt.output); got != tt.want {
-				t.Errorf("classifyStreamLevel(%v, %v, %q) = %q, want %q", tt.isStderr, tt.runErr != nil, tt.output, got, tt.want)
+			if got := classifyStreamLevel(tt.isStderr, tt.runErr, tt.output, tt.args); got != tt.want {
+				t.Errorf("classifyStreamLevel(%v, %v, %q, %v) = %q, want %q", tt.isStderr, tt.runErr != nil, tt.output, tt.args, got, tt.want)
 			}
 		})
 	}
