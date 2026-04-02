@@ -195,7 +195,7 @@ class PipelineYamlVersionResolver @Autowired constructor(
                 )
             } else {
                 logger.warn(
-                    "fail to get file content|$projectId|${repoHashId}|$ref|$filePath", ignored
+                    "fail to get file content|$projectId|$repoHashId|$ref|$filePath", ignored
                 )
                 null
             }
@@ -224,7 +224,6 @@ class PipelineYamlVersionResolver @Autowired constructor(
             )
         )
     }
-
 
     private fun trimRef(branch: String): String {
         return when {
