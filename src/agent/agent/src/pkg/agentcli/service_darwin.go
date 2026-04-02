@@ -81,7 +81,6 @@ func handleInstall(workDir string, args []string) error {
 	return nil
 }
 
-// hasPlist checks if a plist file exists for the current agent.
 func cleanupBeforeInstall(workDir, targetMode string) {
 	p := filepath.Join(workDir, installTypeFile)
 	if _, err := os.Stat(p); err == nil {
