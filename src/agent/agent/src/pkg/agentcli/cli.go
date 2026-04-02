@@ -524,7 +524,8 @@ func handleReinstall(workDir string, args []string) error {
 	}
 
 	printStep(msg("Step 6: installing service ...", "步骤 6: 安装服务 ..."))
-	if err := handleInstall(workDir, []string{}); err != nil {
+	mode := strings.ToLower(readInstallMode(workDir))
+	if err := handleInstall(workDir, []string{"--mode", mode}); err != nil {
 		return err
 	}
 

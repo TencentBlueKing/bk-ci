@@ -66,6 +66,21 @@ func isProcessAlive(pid int) bool {
 	return true
 }
 
+func readInstallMode(workDir string) string {
+	data, err := os.ReadFile(filepath.Join(workDir, ".install_type"))
+	if err != nil {
+		return "SERVICE"
+	}
+	m := strings.TrimSpace(string(data))
+	switch strings.ToUpper(m) {
+	case "SESSION":
+		return "SESSION"
+	case "TASK":
+		return "TASK"
+	}
+	return "SERVICE"
+}
+
 func cleanupBeforeInstallWin(workDir string) {
 	if _, err := os.Stat(filepath.Join(workDir, ".install_type")); err == nil {
 		currentMode := readInstallTypeFile(workDir)
