@@ -29,6 +29,7 @@ package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.entity.SearchUserAndDeptEntity
+import com.tencent.devops.auth.pojo.BkUserInfo
 import com.tencent.devops.auth.pojo.vo.BkDeptDetailsVo
 import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
@@ -94,6 +95,10 @@ class DefaultDeptServiceImpl : DeptService {
     }
 
     override fun getUserInfoFromExternal(userId: String): UserAndDeptInfoVo? {
+        return null
+    }
+
+    override fun getLeader(userId: String): BkUserInfo? {
         return null
     }
 

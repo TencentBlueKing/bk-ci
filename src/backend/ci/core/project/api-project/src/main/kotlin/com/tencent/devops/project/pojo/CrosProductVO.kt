@@ -13,5 +13,7 @@ data class CrosProductVO(
     val kpiName: String,
     @get:Schema(title = "是否有效")
     @JsonProperty(value = "cros_check", required = true)
-    val crosCheck: Int
+    val crosCheck: Int,
+    @get:Schema(title = "对账人,多个用分号;分隔")
+    val principal: String
 )

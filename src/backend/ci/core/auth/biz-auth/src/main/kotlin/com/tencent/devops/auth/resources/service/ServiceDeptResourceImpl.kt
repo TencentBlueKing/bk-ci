@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServiceDeptResource
+import com.tencent.devops.auth.pojo.BkUserInfo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 import com.tencent.devops.auth.service.DeptService
@@ -53,5 +54,9 @@ class ServiceDeptResourceImpl @Autowired constructor(
 
     override fun checkUserDeparted(name: String): Result<Boolean> {
         return Result(deptService.isUserDeparted(name))
+    }
+
+    override fun getLeader(userId: String): Result<BkUserInfo?> {
+        return Result(deptService.getLeader(userId))
     }
 }

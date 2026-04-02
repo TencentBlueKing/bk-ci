@@ -394,6 +394,10 @@ class AuthDeptServiceImpl(
         }
     }
 
+    override fun getLeader(userId: String): BkUserInfo? {
+        return getUserInfoFromExternal(userId)?.leader?.firstOrNull()
+    }
+
     private fun fetchMemberInfos(
         memberIds: List<String>,
         memberType: ManagerScopesEnum
