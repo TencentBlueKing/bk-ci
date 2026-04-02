@@ -53,6 +53,8 @@ func msgf(en, zh string, a ...interface{}) string {
 func printUsageLocalized() {
 	isWin := runtime.GOOS == "windows"
 
+	isMac := runtime.GOOS == "darwin"
+
 	if useChinese {
 		fmt.Print("用法: devopsAgent <命令> [选项]\n\n")
 		fmt.Print("服务管理:\n")
@@ -65,14 +67,17 @@ func printUsageLocalized() {
     --password 密码    session 模式: 账号密码 (指定 --user 时必填)
     --auto-logon       session 模式: 配置 Windows 自动登录
 `)
+		} else if isMac {
+			fmt.Print(`  install [选项]       安装并启动 Agent 守护进程
+    --mode login       (默认) 需要用户登录桌面, 直接启动进程
+    --mode background  无需登录, SSH/无头环境可用 (类似 GitHub Actions Runner)
+`)
 		} else {
 			fmt.Print("  install              安装并启动 Agent 守护进程\n")
 		}
 		fmt.Print(`  uninstall            停止并卸载守护进程服务
-  start [-o]           启动守护进程
-    -o                 兼容模式: 使用旧脚本逻辑 (直接启动, 不通过服务管理器)
-  stop  [-o]           停止守护进程
-    -o                 兼容模式: 仅通过 PID 终止, 不操作服务管理器
+  start                启动守护进程
+  stop                 停止守护进程
 
 维护:
   repair               修复文件: 停止 → 重新解压依赖 → 重启
@@ -88,6 +93,15 @@ func printUsageLocalized() {
     --password 密码    账号密码 (指定 --user 时必填)
     --auto-logon       配置 Windows 自动登录
     --disable          取消会话模式
+`)
+		}
+		if isMac {
+			fmt.Print(`
+服务模式 (仅 macOS):
+  configure-service    切换 launchd 服务模式 (也可通过 install --mode 一步到位)
+    --mode login       切换为登录模式 (需要用户已登录桌面)
+    --mode background  切换为后台模式 (无需登录, SSH/无头可用)
+    --disable          恢复为登录模式
 `)
 		}
 		fmt.Print(`
@@ -115,14 +129,17 @@ func printUsageLocalized() {
     --password PASS    session mode: Password (required with --user)
     --auto-logon       session mode: Enable Windows auto-logon on reboot
 `)
+		} else if isMac {
+			fmt.Print(`  install [options]    Install and start agent daemon
+    --mode login       (default) Requires user login session, direct process start
+    --mode background  No login needed, works over SSH and headless (like GitHub Actions Runner)
+`)
 		} else {
 			fmt.Print("  install              Install and start agent daemon\n")
 		}
 		fmt.Print(`  uninstall            Stop and remove agent daemon service
-  start [-o]           Start agent daemon
-    -o                 Legacy mode: direct start without service manager (like old scripts)
-  stop  [-o]           Stop agent daemon
-    -o                 Legacy mode: kill by PID only, skip service manager
+  start                Start agent daemon
+  stop                 Stop agent daemon
 
 Maintenance:
   repair               Repair files: stop -> re-extract dependencies -> restart
@@ -138,6 +155,15 @@ Session mode:
     --password PASS    Password (required with --user)
     --auto-logon       Enable Windows auto-logon on reboot
     --disable          Revert to plain service mode
+`)
+		}
+		if isMac {
+			fmt.Print(`
+Service mode (macOS only):
+  configure-service    Switch launchd service mode (or use install --mode)
+    --mode login       Switch to login mode (requires user login session)
+    --mode background  Switch to background mode (no login needed, works headless)
+    --disable          Revert to login mode
 `)
 		}
 		fmt.Print(`

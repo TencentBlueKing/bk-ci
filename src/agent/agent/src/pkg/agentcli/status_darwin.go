@@ -19,16 +19,19 @@ func handleStatus(workDir string) error {
 	printDivider()
 
 	serviceName, _ := getServiceName(workDir)
+	installMode := readInstallMode(workDir)
+
 	statusLine(msg("Platform", "平台"), "macOS")
 	statusLine(msg("Work directory", "工作目录"), workDir)
 	statusLine(msg("Service name", "服务名"), serviceName)
 	statusLine(msg("Current user", "当前用户"), currentUser())
+	statusLine(msg("Install mode", "安装模式"), installMode)
 
-	domain := launchdDomain()
+	domain := launchdDomain(installMode)
 	if isRoot() {
-		statusLine(msg("Run mode", "运行模式"), msgf("root (LaunchDaemons - system, domain: %s)", "root (LaunchDaemons - 系统级, 域: %s)", domain))
+		statusLine(msg("Run mode", "运行模式"), msgf("root (LaunchDaemons, domain: %s)", "root (LaunchDaemons, 域: %s)", domain))
 	} else {
-		statusLine(msg("Run mode", "运行模式"), msgf("user (LaunchAgents - user level, domain: %s)", "普通用户 (LaunchAgents - 用户级, 域: %s)", domain))
+		statusLine(msg("Run mode", "运行模式"), msgf("user (LaunchAgents, domain: %s)", "普通用户 (LaunchAgents, 域: %s)", domain))
 	}
 
 	if serviceName != "" {

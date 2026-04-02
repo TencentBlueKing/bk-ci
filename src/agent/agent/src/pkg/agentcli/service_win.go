@@ -196,7 +196,11 @@ func handleUninstall(workDir string) error {
 	return nil
 }
 
-func handleStart(workDir string, _ []string) error {
+func handleConfigureService(_ string, _ []string) error {
+	return fmt.Errorf(msg("configure-service is only supported on macOS", "configure-service 仅支持 macOS"))
+}
+
+func handleStart(workDir string) error {
 	serviceName, err := getServiceName(workDir)
 	if err != nil {
 		return err
@@ -216,7 +220,7 @@ func handleStart(workDir string, _ []string) error {
 	return nil
 }
 
-func handleStop(workDir string, _ []string) error {
+func handleStop(workDir string) error {
 	serviceName, err := getServiceName(workDir)
 	if err != nil {
 		return err
