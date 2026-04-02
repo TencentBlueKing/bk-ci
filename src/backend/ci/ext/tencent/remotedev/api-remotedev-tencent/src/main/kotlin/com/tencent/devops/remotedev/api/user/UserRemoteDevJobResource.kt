@@ -41,7 +41,10 @@ interface UserRemoteDevJobResource {
         userId: String,
         @Parameter(description = "类型一次性，周期等", required = true)
         @QueryParam("type")
-        type: JobType
+        type: JobType,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String
     ): Result<List<JobSchemaShort>>
 
     @Operation(summary = "获取所有正在运行的机型")
@@ -77,19 +80,11 @@ interface UserRemoteDevJobResource {
         userId: String,
         @Parameter(description = "schemaId", required = true)
         @QueryParam("schemaId")
-        schemaId: String
+        schemaId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String
     ): Result<JobSchema?>
-
-    @Operation(summary = "创建job")
-    @POST
-    @Path("/create")
-    fun createJob(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "创建数据", required = true)
-        data: JobCreateData
-    ): Result<Boolean>
 
     @Operation(summary = "获取执行记录")
     @POST
@@ -122,7 +117,10 @@ interface UserRemoteDevJobResource {
         userId: String,
         @Parameter(description = "任务ID")
         @PathParam("id")
-        id: Long
+        id: Long,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String
     ): Result<Boolean>
 
     @Operation(summary = "获取JOB执行详情")
@@ -134,6 +132,9 @@ interface UserRemoteDevJobResource {
         userId: String,
         @Parameter(description = "任务ID")
         @PathParam("id")
-        id: Long
+        id: Long,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String
     ): Result<JobDetail?>
 }

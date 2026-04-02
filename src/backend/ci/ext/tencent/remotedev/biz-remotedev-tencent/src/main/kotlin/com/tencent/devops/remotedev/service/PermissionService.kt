@@ -82,9 +82,6 @@ class PermissionService @Autowired constructor(
         private const val EXPIRED_SECOND = 5L
     }
 
-    @Value("\${remoteDev.enablePermission:true}")
-    private val enablePermission: Boolean = true
-
     @Value("\${remoteDev.aes.key:}")
     private val aesKey: String = ""
 
@@ -154,8 +151,6 @@ class PermissionService @Autowired constructor(
     fun getWorkspaceOwner(workspaceName: String): List<String> = workspaceOwnerCache.get(workspaceName)
 
     fun checkOwnerPermission(userId: String, workspaceName: String, projectId: String, ownerType: WorkspaceOwnerType) {
-        if (!enablePermission) return
-
         if (!workspaceOwnerCache.get(workspaceName).contains(userId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
@@ -168,6 +163,20 @@ class PermissionService @Autowired constructor(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("We're sorry but you don't have permission to access project $projectId")
             )
+        }
+    }
+
+    fun checkViewerPermissionList(
+        userId: String,
+        workspaceNameList: List<String>
+    ) {
+        for (workspaceName in workspaceNameList) {
+            if (!workspaceViewerCache.get(workspaceName).contains(userId)) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                    params = arrayOf("We're sorry you don't have view permission to access workspace $workspaceName")
+                )
+            }
         }
     }
 
@@ -204,8 +213,6 @@ class PermissionService @Autowired constructor(
     }
 
     fun checkViewerPermission(userId: String, workspaceName: String, projectId: String) {
-        if (!enablePermission) return
-
         if (!workspaceViewerCache.get(workspaceName).contains(userId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
@@ -364,12 +371,7 @@ class PermissionService @Autowired constructor(
     }
 
     fun checkUserPermission(userId: String, workspaceName: String): Boolean {
-        if (!enablePermission) return true
-
-        if (!workspaceViewerCache.get(workspaceName).contains(userId)) {
-            return false
-        }
-        return true
+        return workspaceViewerCache.get(workspaceName).contains(userId)
     }
 
     fun getCDIOauth(workspaceName: String, appId: String): Oauth2AccessTokenVo {

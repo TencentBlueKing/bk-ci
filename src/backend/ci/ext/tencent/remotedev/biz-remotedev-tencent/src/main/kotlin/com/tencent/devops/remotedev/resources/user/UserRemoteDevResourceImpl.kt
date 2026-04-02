@@ -218,6 +218,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     ): Result<Map<String, String>> {
         logger.info("batchGetThumbnails|userId=$userId|workspaceNames=$workspaceNames|width=$width|high=$high|jpegQuality=$jpegQuality")
 
+        permissionService.checkViewerPermissionList(userId, workspaceNames)
+
         // 同步获取截图地址
         val thumbnails = workspaceThumbnailService.batchGetThumbnails(
             userId = userId,

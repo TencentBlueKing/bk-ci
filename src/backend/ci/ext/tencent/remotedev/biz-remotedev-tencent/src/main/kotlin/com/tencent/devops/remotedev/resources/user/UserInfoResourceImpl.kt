@@ -14,6 +14,7 @@ import com.tencent.devops.remotedev.pojo.userinfo.UserInfoAuthCheck
 import com.tencent.devops.remotedev.pojo.userinfo.UserInfoCheckData
 import com.tencent.devops.remotedev.pojo.userinfo.UserInfoCheckResult
 import com.tencent.devops.remotedev.pojo.userinfo.UserInfoMoaCheckConfig
+import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.TrustDeviceService
 import com.tencent.devops.remotedev.service.UserInfoCertService
 import com.tencent.devops.remotedev.service.WorkspaceService
@@ -23,24 +24,26 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserInfoResourceImpl @Autowired constructor(
     private val userInfoCertService: UserInfoCertService,
     private val trustDeviceService: TrustDeviceService,
-    private val workspaceService: WorkspaceService
+    private val workspaceService: WorkspaceService,
+    private val permissionService: PermissionService
 ) : UserInfoResource {
     override fun realNameCert(name: String): Result<Boolean> {
         return Result(userInfoCertService.needRealNameCert(name))
     }
 
     override fun multipleCert(
-        userId: String?,
+        userId: String,
         deviceId: String?,
         token: String?,
         data: UserInfoCheckData
     ): Result<UserInfoCheckResult> {
+        permissionService.checkViewerPermission(userId, data.workspaceName, data.projectId)
         val res = userInfoCertService.multipleCert(data)
         // 产品要求：集团员工跳过人脸识别
-        if (userId != null && !UserUtil.isTaiUser(userId)) {
+        if (!UserUtil.isTaiUser(userId)) {
             res.faceRecognition = FaceRecognition(0, "", false)
         }
-        if (userId != null && deviceId != null && token != null) {
+        if (deviceId != null && token != null) {
             // 如果是云桌面拥有者 + token有效，才豁免ioa认证。
             if (workspaceService.checkExistWorkspaceSharedInfo(
                 workspaceName = data.workspaceName,

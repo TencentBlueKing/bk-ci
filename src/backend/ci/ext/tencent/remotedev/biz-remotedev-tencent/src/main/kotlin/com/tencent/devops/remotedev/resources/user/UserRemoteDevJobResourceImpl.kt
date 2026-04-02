@@ -28,88 +28,44 @@ class UserRemoteDevJobResourceImpl @Autowired constructor(
     private val remoteDevJobService: RemoteDevJobService,
     private val permissionService: PermissionService
 ) : UserRemoteDevJobResource {
-    override fun fetchJobSchemaList(userId: String, type: JobType): Result<List<JobSchemaShort>> {
-        // TODO: 是否需要鉴权
+    override fun fetchJobSchemaList(userId: String, type: JobType, projectId: String): Result<List<JobSchemaShort>> {
+        permissionService.checkUserManager(userId, projectId)
         return Result(remoteDevSchemaService.getJobIdAndNames(type))
     }
 
     override fun fetchMachineTypeList(userId: String, projectId: String): Result<Set<String>> {
-        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
-            )
-        }
+        permissionService.checkUserManager(userId, projectId)
         return Result(remoteDevJobService.getMachineTypes(projectId))
     }
 
     override fun fetchOwners(userId: String, projectId: String): Result<Set<String>> {
-        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
-            )
-        }
+        permissionService.checkUserManager(userId, projectId)
         return Result(remoteDevJobService.getOwners(projectId))
     }
 
-    override fun getJobSchema(userId: String, schemaId: String): Result<JobSchema?> {
+    override fun getJobSchema(userId: String, schemaId: String, projectId: String): Result<JobSchema?> {
+        permissionService.checkUserManager(userId, projectId)
         return Result(remoteDevSchemaService.getSchema(schemaId, false))
     }
 
-    override fun createJob(userId: String, data: JobCreateData): Result<Boolean> {
-        if (!permissionService.checkUserVisitPermission(userId, data.projectId)) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("We're sorry but you don't have permission to access project ${data.projectId}")
-            )
-        }
-        // 参数校验
-        when (data.jobScope) {
-            JobScope.MACHINE_TYPE -> {
-                if (data.machineType.isNullOrBlank()) {
-                    throw ParamBlankException("Invalid machineType")
-                }
-            }
-
-            JobScope.OWNER -> {
-                if (data.owners.isNullOrEmpty()) {
-                    throw ParamBlankException("Invalid owners")
-                }
-            }
-
-            else -> {}
-        }
-        remoteDevJobService.createJob(userId, data)
-        return Result(true)
-    }
-
     override fun fetchJobRecord(userId: String, search: JobRecordSearchParam): Result<Page<JobRecord>> {
-        if (!permissionService.checkUserVisitPermission(userId, search.projectId)) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("We're sorry but you don't have permission to access project ${search.projectId}")
-            )
-        }
+        permissionService.checkUserManager(userId, search.projectId)
         return Result(remoteDevJobService.fetchJobRecord(search))
     }
 
     override fun fetchCronList(userId: String, search: CronJobSearchParam): Result<Page<CronJob>> {
-        if (!permissionService.checkUserVisitPermission(userId, search.projectId)) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("We're sorry but you don't have permission to access project ${search.projectId}")
-            )
-        }
+        permissionService.checkUserManager(userId, search.projectId)
         return Result(remoteDevJobService.fetchCronJob(search))
     }
 
-    override fun recordRerun(userId: String, id: Long): Result<Boolean> {
+    override fun recordRerun(userId: String, id: Long, projectId: String): Result<Boolean> {
+        permissionService.checkUserManager(userId, projectId)
         remoteDevJobService.recordRerun(userId, id)
         return Result(true)
     }
 
-    override fun fetchJobDetail(userId: String, id: Long): Result<JobDetail?> {
+    override fun fetchJobDetail(userId: String, id: Long, projectId: String): Result<JobDetail?> {
+        permissionService.checkUserManager(userId, projectId)
         return Result(remoteDevJobService.fetchJobDetail(id))
     }
 }
