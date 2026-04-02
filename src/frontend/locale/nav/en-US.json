@@ -271,5 +271,14 @@
     "countdownFresh": "Auto redirect in {0} seconds",
     "disclosureTip0": "<em>After signing, strictly comply with confidentiality obligations. It is prohibited to disclose any information related to {0} to third parties in any way (including but not limited to photography, screenshots, written descriptions, verbal accounts, etc.)</em>",
     "disclosureTip1": "In case of information leakage, we will conduct thorough investigation and impose severe penalties. <em>The leaker (both company and individual)</em> will face <em>criminal charges, compensation for breach of NDA, and other punitive measures.</em>",
-    "请输入移交人": "Please enter the transferee"
+    "请输入移交人": "Please enter the transferee",
+    "蓝盾 APP": "Blue Shield APP",
+    "产品下载": "Product Download",
+    "APP 下载": "APP Download",
+    "制品库客户端": "Artifact Repository Client",
+    "敬请期待": "Coming Soon",
+    "支持将 CI 编译产物安装至移动设备，便于测试与体验。": "Supports installing CI build artifacts to mobile devices for testing and experience.",
+    "桌面端制品库，支持预约下载与下载加速，支持Windows 应用的版本体验。": "Desktop artifact repository, supports scheduled download and download acceleration, supports version experience of Windows applications.",
+    "点击下载": "Click to Download",
+    "扫码下载": "Scan to Download"
 }
