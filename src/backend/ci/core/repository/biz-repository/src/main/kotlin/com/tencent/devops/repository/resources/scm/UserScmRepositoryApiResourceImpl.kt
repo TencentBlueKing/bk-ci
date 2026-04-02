@@ -34,7 +34,6 @@ import com.tencent.devops.repository.api.scm.UserScmRepositoryApiResource
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.service.hub.ScmRepositoryApiService
 import com.tencent.devops.scm.api.pojo.Reference
-import com.tencent.devops.scm.api.pojo.repository.ScmServerRepository
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -100,22 +99,6 @@ class UserScmRepositoryApiResourceImpl @Autowired constructor(
                 search = search,
                 page = page,
                 pageSize = pageSize
-            )
-        )
-    }
-
-    override fun getRepository(
-        userId: String,
-        projectId: String,
-        repositoryType: RepositoryType,
-        repoHashIdOrName: String
-    ): Result<ScmServerRepository> {
-        return Result(
-            repositoryApiService.getRepository(
-                userId = userId,
-                projectId = projectId,
-                repositoryType = repositoryType,
-                repoHashIdOrName = repoHashIdOrName
             )
         )
     }

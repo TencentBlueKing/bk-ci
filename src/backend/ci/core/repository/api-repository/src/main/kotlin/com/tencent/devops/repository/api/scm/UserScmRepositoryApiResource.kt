@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.scm.api.pojo.Reference
-import com.tencent.devops.scm.api.pojo.repository.ScmServerRepository
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -127,22 +126,4 @@ interface UserScmRepositoryApiResource {
         @QueryParam("pageSize")
         pageSize: Int = 20
     ): Result<List<Reference>>
-
-    @Operation(summary = "获取远端仓库信息")
-    @GET
-    @Path("/getRepository")
-    fun getRepository(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "代码库类型,ID或Name", required = true)
-        @QueryParam("repositoryType")
-        repositoryType: RepositoryType,
-        @Parameter(description = "代码库ID或名称", required = true)
-        @QueryParam("repoHashIdOrName")
-        repoHashIdOrName: String
-    ): Result<ScmServerRepository>
 }
