@@ -49,17 +49,7 @@ func handleInstall(workDir string, args []string) error {
 			"未知安装模式: %s (可选: login, background)", *mode)
 	}
 
-	currentMode := readInstallMode(workDir)
-	if currentMode == installMode {
-		printStep(msgf("Agent is already installed in %s mode. Nothing to do.",
-			"Agent 已以 %s 模式安装, 无需操作。", installMode))
-		return nil
-	}
-	if currentMode != modeLogin || hasPlist(workDir) {
-		printStep(msgf("Switching from %s to %s mode, uninstalling previous installation ...",
-			"从 %s 切换到 %s 模式, 正在卸载之前的安装 ...", currentMode, installMode))
-		_ = handleUninstall(workDir)
-	}
+	cleanupBeforeInstall(workDir, installMode)
 
 	printDivider()
 	printStep(msgf("Installing agent daemon service (macOS, mode: %s)", "安装 Agent 守护进程服务 (macOS, 模式: %s)", installMode))
@@ -92,13 +82,25 @@ func handleInstall(workDir string, args []string) error {
 }
 
 // hasPlist checks if a plist file exists for the current agent.
-func hasPlist(workDir string) bool {
-	serviceName, err := getServiceName(workDir)
-	if err != nil {
-		return false
+func cleanupBeforeInstall(workDir, targetMode string) {
+	p := filepath.Join(workDir, installTypeFile)
+	if _, err := os.Stat(p); err == nil {
+		currentMode := readInstallMode(workDir)
+		printStep(msgf("Cleaning up previous %s installation ...",
+			"清理之前的 %s 安装 ...", currentMode))
+		_ = handleUninstall(workDir)
+		return
 	}
-	_, err = os.Stat(plistPath(serviceName))
-	return err == nil
+	printStep(msgf("Cleaning up %s mode before install ...",
+		"安装前清理 %s 模式 ...", targetMode))
+	serviceName, _ := getServiceName(workDir)
+	if serviceName != "" {
+		bootoutService(serviceName, modeLogin)
+		bootoutService(serviceName, modeBackground)
+		cleanupLegacyPlist(serviceName)
+		removePlist(serviceName)
+	}
+	stopProcesses(workDir)
 }
 
 func handleUninstall(workDir string) error {
