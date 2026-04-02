@@ -39,9 +39,9 @@ func Run(workDir string, args []string) {
 	case "uninstall":
 		err = handleUninstall(workDir)
 	case "start":
-		err = handleStart(workDir, args[1:])
+		err = handleStart(workDir)
 	case "stop":
-		err = handleStop(workDir, args[1:])
+		err = handleStop(workDir)
 	case "repair":
 		err = handleRepair(workDir)
 	case "reinstall":
@@ -50,6 +50,8 @@ func Run(workDir string, args []string) {
 		err = handleStatus(workDir)
 	case "configure-session":
 		err = handleConfigureSession(workDir, args[1:])
+	case "configure-service":
+		err = handleConfigureService(workDir, args[1:])
 	default:
 		printErr(msgf("unknown command: %s", "未知命令: %s", args[0]))
 		printUsageLocalized()
@@ -65,7 +67,7 @@ func Run(workDir string, args []string) {
 // IsSubcommand returns true if the argument is a known CLI subcommand.
 func IsSubcommand(arg string) bool {
 	switch arg {
-	case "install", "uninstall", "start", "stop", "repair", "reinstall", "status", "configure-session",
+	case "install", "uninstall", "start", "stop", "repair", "reinstall", "status", "configure-session", "configure-service",
 		"version", "debug",
 		"-h", "--help", "help":
 		return true
@@ -138,15 +140,6 @@ func cliErrorf(en, zh string, a ...interface{}) error {
 	return fmt.Errorf(msgf(en, zh, a...))
 }
 
-// hasLegacyFlag returns true if args contain "-o" (use legacy script behavior).
-func hasLegacyFlag(args []string) bool {
-	for _, a := range args {
-		if a == "-o" {
-			return true
-		}
-	}
-	return false
-}
 
 func printDivider() {
 	printStep("============================================")
@@ -489,7 +482,7 @@ func handleReinstall(workDir string, args []string) error {
 
 	// Step 2: stop + clean (only after download succeeded)
 	printStep(msg("Step 2: stopping agent ...", "步骤 2: 停止 Agent ..."))
-	_ = handleStop(workDir, nil)
+	_ = handleStop(workDir)
 
 	printStep(msg("Step 3: cleaning files ...", "步骤 3: 清理文件 ..."))
 	entries, err := os.ReadDir(workDir)
@@ -656,13 +649,13 @@ func handleRepair(workDir string) error {
 	printDivider()
 
 	printStep(msg("Step 1: stopping agent ...", "步骤 1: 停止 Agent ..."))
-	_ = handleStop(workDir, nil)
+	_ = handleStop(workDir)
 
 	printStep(msg("Step 2: re-extracting dependencies ...", "步骤 2: 重新解压依赖 ..."))
 	repairWorkDir(workDir)
 
 	printStep(msg("Step 3: restarting agent ...", "步骤 3: 重启 Agent ..."))
-	if err := handleStart(workDir, nil); err != nil {
+	if err := handleStart(workDir); err != nil {
 		return err
 	}
 

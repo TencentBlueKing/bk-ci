@@ -554,24 +554,3 @@ func TestStatusValueHasIssue(t *testing.T) {
 	}
 }
 
-func TestHasLegacyFlag(t *testing.T) {
-	tests := []struct {
-		name string
-		args []string
-		want bool
-	}{
-		{"nil_args", nil, false},
-		{"empty", []string{}, false},
-		{"has_o", []string{"-o"}, true},
-		{"mixed", []string{"--verbose", "-o", "--debug"}, true},
-		{"no_o", []string{"-v", "--help"}, false},
-		{"similar_but_not_o", []string{"-O", "--old"}, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := hasLegacyFlag(tt.args); got != tt.want {
-				t.Errorf("hasLegacyFlag(%v) = %v, want %v", tt.args, got, tt.want)
-			}
-		})
-	}
-}
