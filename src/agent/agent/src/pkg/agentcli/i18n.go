@@ -70,7 +70,7 @@ func printUsageLocalized() {
 		} else if isMac {
 			fmt.Print(`  install [选项]       安装并启动 Agent 守护进程
     --mode login       (默认) 需要用户登录桌面, 直接启动进程
-    --mode background  无需登录, SSH/无头环境可用 (类似 GitHub Actions Runner)
+    --mode background  无需登录, SSH/无头环境可用
 `)
 		} else {
 			fmt.Print(`  install [选项]       安装并启动 Agent 守护进程
@@ -119,7 +119,7 @@ func printUsageLocalized() {
 		} else if isMac {
 			fmt.Print(`  install [options]    Install and start agent daemon
     --mode login       (default) Requires user login session, direct process start
-    --mode background  No login needed, works over SSH and headless (like GitHub Actions Runner)
+    --mode background  No login needed, works over SSH and headless
 `)
 		} else {
 			fmt.Print(`  install [options]    Install and start agent daemon
