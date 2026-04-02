@@ -61,27 +61,21 @@ function download_agent()
   local download_ok=false
   if exists curl; then
     echo "download using curl"
-    local http_code
-    http_code=$(curl -sS -w "%{http_code}" -H "X-DEVOPS-PROJECT-ID: ##projectId##" -o agent.zip "##agent_url##")
-    if [[ $? -ne 0 ]] || [[ "$http_code" -lt 200 ]] || [[ "$http_code" -ge 400 ]]; then
-      echo "curl download failed (HTTP $http_code), response body:"
-      cat agent.zip 2>/dev/null
-      echo ""
+    if curl -sSL --fail -H "X-DEVOPS-PROJECT-ID: ##projectId##" -o agent.zip "##agent_url##"; then
+      download_ok=true
+    else
+      echo "curl download failed (exit code $?)"
       rm -f agent.zip
       if exists wget; then
         echo "retrying with wget..."
-        wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##" 2>&1
-        if [[ $? -eq 0 ]]; then
+        if wget -q --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##"; then
           download_ok=true
         fi
       fi
-    else
-      download_ok=true
     fi
   elif exists wget; then
     echo "download using wget"
-    wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##" 2>&1
-    if [[ $? -eq 0 ]]; then
+    if wget -q --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##"; then
       download_ok=true
     fi
   else
@@ -90,16 +84,19 @@ function download_agent()
   fi
 
   if [[ "$download_ok" != "true" ]]; then
-    echo "download agent.zip failed, response body:"
-    cat agent.zip 2>/dev/null
-    echo ""
-    rm -f agent.zip
+    echo "download agent.zip failed"
+    if [[ -f agent.zip ]]; then
+      echo "server response (first 500 bytes):"
+      head -c 500 agent.zip 2>/dev/null
+      echo ""
+      rm -f agent.zip
+    fi
     exit 1
   fi
 
   if ! unzip -t agent.zip >/dev/null 2>&1; then
     echo "downloaded file is not a valid zip, server may have returned an error:"
-    cat agent.zip
+    head -c 500 agent.zip 2>/dev/null
     echo ""
     rm -f agent.zip
     exit 1
