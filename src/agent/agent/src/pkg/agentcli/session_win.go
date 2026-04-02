@@ -4,7 +4,6 @@
 package agentcli
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -50,28 +49,6 @@ type lsaObjectAttributes struct {
 	Attributes               uint32
 	SecurityDescriptor       uintptr
 	SecurityQualityOfService uintptr
-}
-
-func handleConfigureSession(workDir string, args []string) error {
-	fs := flag.NewFlagSet("configure-session", flag.ExitOnError)
-	userFlag := fs.String("user", "", "Windows logon account")
-	passFlag := fs.String("password", "", "Account password")
-	autoLogon := fs.Bool("auto-logon", false, "Enable Windows auto-logon on reboot")
-	disable := fs.Bool("disable", false, "Disable session mode")
-	fs.Parse(args)
-
-	if *disable {
-		return disableSession(workDir)
-	}
-
-	if *autoLogon && *userFlag == "" {
-		return cliErrorf("--auto-logon requires --user and --password", "--auto-logon 需要同时指定 --user 和 --password")
-	}
-	if *userFlag != "" && *passFlag == "" {
-		return cliErrorf("--password is required when --user is specified", "指定 --user 时必须提供 --password")
-	}
-
-	return enableSession(workDir, *userFlag, *passFlag, *autoLogon)
 }
 
 func enableSession(workDir, user, password string, autoLogon bool) error {

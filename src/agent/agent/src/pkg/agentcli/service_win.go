@@ -31,6 +31,20 @@ func handleInstall(workDir string, args []string) error {
 		return err
 	}
 
+	targetMode := strings.ToUpper(*mode)
+	currentMode := readInstallTypeFile(workDir)
+
+	if currentMode != "" && strings.EqualFold(currentMode, targetMode) {
+		printStep(msgf("Agent is already installed in %s mode. Nothing to do.",
+			"Agent 已以 %s 模式安装, 无需操作。", targetMode))
+		return nil
+	}
+	if currentMode != "" {
+		printStep(msgf("Switching from %s to %s mode, uninstalling previous installation ...",
+			"从 %s 切换到 %s 模式, 正在卸载之前的安装 ...", currentMode, targetMode))
+		_ = handleUninstall(workDir)
+	}
+
 	switch strings.ToLower(*mode) {
 	case "service":
 		return installService(workDir)
@@ -53,6 +67,15 @@ func handleInstall(workDir string, args []string) error {
 		return fmt.Errorf(msgf("unknown install mode: %s (valid: service, session, task)",
 			"未知安装模式: %s (可选: service, session, task)", *mode))
 	}
+}
+
+func isProcessAlive(pid int) bool {
+	proc, err := os.FindProcess(pid)
+	if err != nil {
+		return false
+	}
+	proc.Release()
+	return true
 }
 
 func installService(workDir string) error {
@@ -194,10 +217,6 @@ func handleUninstall(workDir string) error {
 
 	printStep(msg("Uninstall complete", "卸载完成"))
 	return nil
-}
-
-func handleConfigureService(_ string, _ []string) error {
-	return fmt.Errorf(msg("configure-service is only supported on macOS", "configure-service 仅支持 macOS"))
 }
 
 func handleStart(workDir string) error {
