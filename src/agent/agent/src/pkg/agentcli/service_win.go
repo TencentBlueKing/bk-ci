@@ -31,19 +31,7 @@ func handleInstall(workDir string, args []string) error {
 		return err
 	}
 
-	targetMode := strings.ToUpper(*mode)
-	currentMode := readInstallTypeFile(workDir)
-
-	if currentMode != "" && strings.EqualFold(currentMode, targetMode) {
-		printStep(msgf("Agent is already installed in %s mode. Nothing to do.",
-			"Agent 已以 %s 模式安装, 无需操作。", targetMode))
-		return nil
-	}
-	if currentMode != "" {
-		printStep(msgf("Switching from %s to %s mode, uninstalling previous installation ...",
-			"从 %s 切换到 %s 模式, 正在卸载之前的安装 ...", currentMode, targetMode))
-		_ = handleUninstall(workDir)
-	}
+	cleanupBeforeInstallWin(workDir)
 
 	switch strings.ToLower(*mode) {
 	case "service":
@@ -76,6 +64,26 @@ func isProcessAlive(pid int) bool {
 	}
 	proc.Release()
 	return true
+}
+
+func cleanupBeforeInstallWin(workDir string) {
+	if _, err := os.Stat(filepath.Join(workDir, ".install_type")); err == nil {
+		currentMode := readInstallTypeFile(workDir)
+		printStep(msgf("Cleaning up previous %s installation ...",
+			"清理之前的 %s 安装 ...", currentMode))
+		_ = handleUninstall(workDir)
+		return
+	}
+	printStep(msg("Cleaning up before install ...", "安装前清理 ..."))
+	serviceName, _ := getServiceName(workDir)
+	if serviceName != "" {
+		if serviceExists(serviceName) {
+			stopService(serviceName)
+			deleteService(serviceName)
+		}
+		cleanupLegacySchtasks(serviceName)
+	}
+	stopProcesses(workDir)
 }
 
 func installService(workDir string) error {

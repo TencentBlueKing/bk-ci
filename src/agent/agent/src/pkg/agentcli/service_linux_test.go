@@ -171,22 +171,27 @@ func TestInstallModeConstants(t *testing.T) {
 	}
 }
 
-func TestHasInstalledService(t *testing.T) {
-	t.Run("empty_dir", func(t *testing.T) {
+func TestCleanupBeforeInstall(t *testing.T) {
+	old := useChinese
+	useChinese = false
+	defer func() { useChinese = old }()
+
+	t.Run("no_install_type_file", func(t *testing.T) {
 		dir := t.TempDir()
-		if hasInstalledService(dir) {
-			t.Error("hasInstalledService(empty) = true, want false")
+		os.WriteFile(filepath.Join(dir, ".agent.properties"), []byte("devops.agent.id=test1\n"), 0644)
+		cleanupBeforeInstall(dir, modeDirect)
+		if _, err := os.Stat(filepath.Join(dir, installTypeFile)); err == nil {
+			t.Error(".install_type should not exist after cleanup without prior install")
 		}
 	})
 
-	t.Run("with_daemon_pid", func(t *testing.T) {
+	t.Run("with_install_type_file", func(t *testing.T) {
 		dir := t.TempDir()
-		os.WriteFile(filepath.Join(dir, ".agent.properties"), []byte("devops.agent.id=test1\n"), 0644)
-		runtimeDir := filepath.Join(dir, "runtime")
-		os.MkdirAll(runtimeDir, 0755)
-		os.WriteFile(filepath.Join(runtimeDir, "daemon.pid"), []byte("12345"), 0644)
-		if !hasInstalledService(dir) {
-			t.Error("hasInstalledService(with pid) = false, want true")
+		os.WriteFile(filepath.Join(dir, ".agent.properties"), []byte("devops.agent.id=test2\n"), 0644)
+		os.WriteFile(filepath.Join(dir, installTypeFile), []byte("SERVICE"), 0644)
+		cleanupBeforeInstall(dir, modeUser)
+		if _, err := os.Stat(filepath.Join(dir, installTypeFile)); err == nil {
+			t.Error(".install_type should be deleted after cleanup (uninstall removes it)")
 		}
 	})
 }

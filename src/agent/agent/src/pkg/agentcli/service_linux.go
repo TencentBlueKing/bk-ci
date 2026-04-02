@@ -74,19 +74,7 @@ func handleInstall(workDir string, args []string) error {
 		return err
 	}
 
-	currentMode := readInstallMode(workDir)
-	if currentMode == installMode {
-		printStep(msgf("Agent is already installed in %s mode. Nothing to do.",
-			"Agent 已以 %s 模式安装, 无需操作。", installMode))
-		printStep(msg("To reinstall, run 'devopsAgent uninstall' first.",
-			"如需重装, 请先执行 'devopsAgent uninstall'。"))
-		return nil
-	}
-	if currentMode != modeDirect || hasInstalledService(workDir) {
-		printStep(msgf("Switching from %s to %s mode, uninstalling previous installation ...",
-			"从 %s 切换到 %s 模式, 正在卸载之前的安装 ...", currentMode, installMode))
-		_ = handleUninstall(workDir)
-	}
+	cleanupBeforeInstall(workDir, installMode)
 
 	printDivider()
 	printStep(msgf("Installing agent daemon service (Linux, mode: %s)", "安装 Agent 守护进程服务 (Linux, 模式: %s)", installMode))
@@ -127,19 +115,38 @@ func handleInstall(workDir string, args []string) error {
 	return nil
 }
 
-// hasInstalledService checks if any systemd unit or pid file indicates a prior installation.
-func hasInstalledService(workDir string) bool {
-	serviceName, err := getServiceName(workDir)
-	if err != nil {
-		return false
+// cleanupBeforeInstall stops and removes any previous installation before a fresh install.
+// If .install_type exists, uninstalls that recorded mode.
+// If .install_type is missing, uninstalls the target mode to clean up orphaned artifacts.
+func cleanupBeforeInstall(workDir, targetMode string) {
+	p := filepath.Join(workDir, installTypeFile)
+	if _, err := os.Stat(p); err == nil {
+		currentMode := readInstallMode(workDir)
+		printStep(msgf("Cleaning up previous %s installation ...",
+			"清理之前的 %s 安装 ...", currentMode))
+		_ = handleUninstall(workDir)
+		return
 	}
-	if hasSystemdUnit(serviceName) || hasUserSystemdUnit(serviceName) {
-		return true
+	printStep(msgf("Cleaning up %s mode before install ...",
+		"安装前清理 %s 模式 ...", targetMode))
+	cleanupMode(workDir, targetMode)
+}
+
+// cleanupMode removes service artifacts for a specific mode without a full uninstall flow.
+func cleanupMode(workDir, mode string) {
+	serviceName, _ := getServiceName(workDir)
+	if serviceName == "" {
+		stopProcesses(workDir)
+		return
 	}
-	if _, err := os.Stat(filepath.Join(workDir, "runtime", "daemon.pid")); err == nil {
-		return true
+	switch mode {
+	case modeService:
+		_ = uninstallSystemd(serviceName)
+		cleanRcLocal(serviceName)
+	case modeUser:
+		_ = uninstallUserSystemd(serviceName)
 	}
-	return false
+	stopProcesses(workDir)
 }
 
 // resolveInstallMode determines the effective install mode from the --mode flag value.

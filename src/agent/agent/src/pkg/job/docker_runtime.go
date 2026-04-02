@@ -117,15 +117,13 @@ func parseContainerMountArgs(buildInfo *api.ThirdPartyBuildInfo) ([]string, erro
 
 	workDir := systemutil.GetWorkDir()
 	dataDir := fmt.Sprintf("%s/%s/data/%s/%s", workDir, job_docker.LocalDockerWorkSpaceDirName, buildInfo.PipelineId, buildInfo.VmSeqId)
-	targetDir := constant.DockerDataDir
 	if buildInfo.Workspace != "" {
 		dataDir = buildInfo.Workspace
-		targetDir = buildInfo.Workspace
 	}
 	if err := systemutil.MkDir(dataDir); err != nil {
 		return nil, err
 	}
-	args = append(args, "--mount", fmt.Sprintf("type=bind,source=%s,target=%s", dataDir, targetDir))
+	args = append(args, "--mount", fmt.Sprintf("type=bind,source=%s,target=%s", dataDir, constant.DockerDataDir))
 
 	logsDir := fmt.Sprintf("%s/%s/logs/%s/%s", workDir, job_docker.LocalDockerWorkSpaceDirName, buildInfo.BuildId, buildInfo.VmSeqId)
 	if err := systemutil.MkDir(logsDir); err != nil {
