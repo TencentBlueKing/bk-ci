@@ -21,11 +21,6 @@ function initArch()
   esac
 }
 
-function getServiceName()
-{
-  echo "devops_agent_"${agent_id}
-}
-
 function unzip_jdk()
 {
   if [ -f "./jdk17.zip" ]; then
@@ -111,59 +106,6 @@ function download_agent()
   fi
 }
 
-function addRunAtLoad()
-{
-  mkdir -p ~/Library/LaunchAgents
-  cat > ~/Library/LaunchAgents/$(getServiceName).plist <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-        <string>$(getServiceName)</string>
-
-    <key>Program</key>
-        <string>${workspace}/devopsDaemon</string>
-
-    <key>RunAtLoad</key>
-        <true/>
-
-    <key>WorkingDirectory</key>
-        <string>${workspace}</string>
-
-    <key>KeepAlive</key>
-        <false/>
-</dict>
-</plist>
-EOF
-}
-
-function uninstallAgentService()
-{
-  echo "uninstall agent services $service_name to reinstall"
-  if [[ "$user" != "root"  && -f ~/Library/LaunchAgents/$(getServiceName).plist ]]; then
-    echo "remove run at load"
-    rm -f ~/Library/LaunchAgents/$(getServiceName).plist
-  fi
-  cd $workspace
-  chmod +x *.sh
-  ${workspace}/stop.sh
-  echo "service $service_name has been uninstalled"
-}
-
-function installAgentService()
-{
-  echo "install agent services $service_name"
-  if [[ "$user" != "root" ]]; then
-    echo "add run at load with user $user"
-    addRunAtLoad
-  fi
-  cd $workspace
-  chmod +x *.sh
-  ${workspace}/start.sh
-  echo "service $service_name has been installed"
-}
-
 function writeSSHConfig()
 {
   echo "no need write ssh config"
@@ -180,8 +122,6 @@ agent_id='##agentId##'
 echo "AgentId: $agent_id"
 enable_check_files='##enableCheckFiles##'
 echo "EnableCheckFiles: $enable_check_files"
-service_name=$(getServiceName)
-echo "Service name: $service_name"
 
 cd $workspace
 

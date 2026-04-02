@@ -25,11 +25,6 @@ function initArch() {
   esac
 }
 
-function getServiceName()
-{
-  echo "devops_agent_"${agent_id}
-}
-
 function unzip_jdk()
 {
   if [ -f "./jdk17.zip" ]; then
@@ -109,111 +104,6 @@ function download_agent()
     rm -f agent.zip
     exit 1
   fi
-}
-
-function installRcLocal()
-{
-  echo "install agent service with rc.local"
-  grep_result=$(grep "$service_name" /etc/rc.d/rc.local)
-  if test -x "/etc/rc.d/rc.local" ; then
-    if [[ -z "$grep_result" ]]; then
-      echo "add $service_name to rc.local"
-      echo "cd $workspace && ./devopsDaemon & # $service_name" >> /etc/rc.d/rc.local
-    else
-      echo "already add $service_name to rc.local, no repeated install"
-    fi
-  fi
-  cd $workspace
-  chmod +x *.sh
-  ${workspace}/start.sh
-}
-
-# no using systemd KillMode, will affect Agent self-upgrade
-function installSystemd()
-{
-  echo "install agent service with systemd"
-  cat <<EOL > /etc/systemd/system/${service_name}.service
-[Unit]
-Description=bkdevops agent
-After=network.target
-
-[Service]
-Type=forking
-ExecStartPre=/bin/rm -f $workspace/runtime/*.pid 
-ExecStart=$workspace/start.sh
-ExecStop=$workspace/stop.sh
-WorkingDirectory=$workspace
-PrivateTmp=false
-KillMode=none
-
-[Install]
-WantedBy=multi-user.target
-EOL
-  cd ${workspace}
-  chmod +x *.sh
-  systemctl daemon-reload
-  systemctl enable --now $service_name
-}
-
-function installAgentService()
-{
-  if exists systemctl; then
-    installSystemd
-  else
-    installRcLocal
-  fi
-  echo "service $service_name has been installed"
-}
-
-function doUninstallRcLocal()
-{
-  if [[ -x "/etc/rc.d/rc.local" ]]; then
-    if grep -q "$service_name" "/etc/rc.d/rc.local"; then
-      sed -i "/${service_name}/d" "/etc/rc.d/rc.local"
-    fi
-  fi
-}
-
-function uninstallRcLocal()
-{
-  echo "uninstall agent service $service_name on rc.local"
-  doUninstallRcLocal
-  cd $workspace
-  chmod +x *.sh
-  ${workspace}/stop.sh
-}
-
-function uninstallSystemd()
-{
-  echo "uninstall agent service $service_name on systemd"
-  # compatible with old data
-  doUninstallRcLocal
-  if systemctl list-unit-files | grep -q "^${service_name}"; then
-    if systemctl is-active --quiet $service_name; then
-      systemctl stop $service_name
-    fi
-    if systemctl is-enabled --quiet $service_name; then
-      systemctl disable $service_name
-    fi
-    if systemctl is-failed --quiet $service_name; then
-      systemctl reset-failed $service_name
-    fi
-  fi
-  local SERVICE_FILE="/etc/systemd/system/${service_name}.service"
-  if [ -f "$SERVICE_FILE" ]; then
-    rm -f "$SERVICE_FILE"
-  fi
-}
-
-function uninstallAgentService()
-{
-  echo "uninstall agent services $service_name to reinstall"
-  if exists systemctl; then
-    uninstallSystemd
-  else
-    uninstallRcLocal
-  fi
-  echo "service $service_name has been uninstalled"
 }
 
 function writeSSHConfig()
