@@ -73,11 +73,17 @@ func printUsageLocalized() {
     --mode background  无需登录, SSH/无头环境可用 (类似 GitHub Actions Runner)
 `)
 		} else {
-			fmt.Print("  install              安装并启动 Agent 守护进程\n")
+			fmt.Print(`  install [选项]       安装并启动 Agent 守护进程
+    --mode service     (root 默认) 安装为系统级 systemd 服务
+    --mode user        安装为用户级 systemd 服务 (非 root, 注销后仍运行)
+    --mode direct      直接启动进程 (非 root 默认)
+`)
 		}
 		fmt.Print(`  uninstall            停止并卸载守护进程服务
   start                启动守护进程
   stop                 停止守护进程
+
+  注: 模式相同时 install 不重复执行; 模式不同时自动先卸载再安装。
 
 维护:
   repair               修复文件: 停止 → 重新解压依赖 → 重启
@@ -85,25 +91,6 @@ func printUsageLocalized() {
     -y                 跳过二次确认
   status               显示运行状态 + 健康检查 (网络/磁盘/证书诊断)
 `)
-		if isWin {
-			fmt.Print(`
-会话模式:
-  configure-session    配置桌面会话访问 (也可通过 install --mode session 一步到位)
-    --user 用户名      Windows 登录账号 (可选)
-    --password 密码    账号密码 (指定 --user 时必填)
-    --auto-logon       配置 Windows 自动登录
-    --disable          取消会话模式
-`)
-		}
-		if isMac {
-			fmt.Print(`
-服务模式 (仅 macOS):
-  configure-service    切换 launchd 服务模式 (也可通过 install --mode 一步到位)
-    --mode login       切换为登录模式 (需要用户已登录桌面)
-    --mode background  切换为后台模式 (无需登录, SSH/无头可用)
-    --disable          恢复为登录模式
-`)
-		}
 		fmt.Print(`
 调试:
   debug [on|off]       切换调试模式 (修改后需重启 Agent 生效)
@@ -135,11 +122,17 @@ func printUsageLocalized() {
     --mode background  No login needed, works over SSH and headless (like GitHub Actions Runner)
 `)
 		} else {
-			fmt.Print("  install              Install and start agent daemon\n")
+			fmt.Print(`  install [options]    Install and start agent daemon
+    --mode service     (root default) Install as system-level systemd service
+    --mode user        Install as user-level systemd service (non-root, survives logout)
+    --mode direct      Direct process start (non-root default)
+`)
 		}
 		fmt.Print(`  uninstall            Stop and remove agent daemon service
   start                Start agent daemon
   stop                 Stop agent daemon
+
+  Note: install skips if same mode; auto-uninstalls if switching modes.
 
 Maintenance:
   repair               Repair files: stop -> re-extract dependencies -> restart
@@ -147,25 +140,6 @@ Maintenance:
     -y                 Skip confirmation prompt
   status               Show status + health checks (network/disk/cert diagnostics)
 `)
-		if isWin {
-			fmt.Print(`
-Session mode:
-  configure-session    Configure desktop session access (or use install --mode session)
-    --user USER        Windows logon account (optional)
-    --password PASS    Password (required with --user)
-    --auto-logon       Enable Windows auto-logon on reboot
-    --disable          Revert to plain service mode
-`)
-		}
-		if isMac {
-			fmt.Print(`
-Service mode (macOS only):
-  configure-service    Switch launchd service mode (or use install --mode)
-    --mode login       Switch to login mode (requires user login session)
-    --mode background  Switch to background mode (no login needed, works headless)
-    --disable          Revert to login mode
-`)
-		}
 		fmt.Print(`
 Debug:
   debug [on|off]       Toggle debug mode (restart agent to take effect)

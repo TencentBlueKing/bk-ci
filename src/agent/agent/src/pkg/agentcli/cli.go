@@ -48,10 +48,6 @@ func Run(workDir string, args []string) {
 		err = handleReinstall(workDir, args[1:])
 	case "status":
 		err = handleStatus(workDir)
-	case "configure-session":
-		err = handleConfigureSession(workDir, args[1:])
-	case "configure-service":
-		err = handleConfigureService(workDir, args[1:])
 	default:
 		printErr(msgf("unknown command: %s", "未知命令: %s", args[0]))
 		printUsageLocalized()
@@ -67,7 +63,7 @@ func Run(workDir string, args []string) {
 // IsSubcommand returns true if the argument is a known CLI subcommand.
 func IsSubcommand(arg string) bool {
 	switch arg {
-	case "install", "uninstall", "start", "stop", "repair", "reinstall", "status", "configure-session", "configure-service",
+	case "install", "uninstall", "start", "stop", "repair", "reinstall", "status",
 		"version", "debug",
 		"-h", "--help", "help":
 		return true
@@ -139,7 +135,6 @@ func printStepf(f string, a ...interface{}) { fmt.Printf("[BK-CI] "+f+"\n", a...
 func cliErrorf(en, zh string, a ...interface{}) error {
 	return fmt.Errorf(msgf(en, zh, a...))
 }
-
 
 func printDivider() {
 	printStep("============================================")

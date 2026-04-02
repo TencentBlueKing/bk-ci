@@ -265,17 +265,3 @@ func TestCurrentUID(t *testing.T) {
 		t.Errorf("currentUID() = %q, want %q", uid, u.Uid)
 	}
 }
-
-func TestHandleConfigureService_ShowCurrent(t *testing.T) {
-	old := useChinese
-	useChinese = false
-	defer func() { useChinese = old }()
-
-	dir := t.TempDir()
-	os.WriteFile(filepath.Join(dir, ".agent.properties"), []byte("devops.agent.id=testid\n"), 0644)
-
-	err := handleConfigureService(dir, []string{})
-	if err != nil {
-		t.Errorf("handleConfigureService(no args) returned error: %v", err)
-	}
-}

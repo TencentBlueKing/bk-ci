@@ -23,7 +23,8 @@ func TestIsSubcommand(t *testing.T) {
 		{"repair", true},
 		{"reinstall", true},
 		{"status", true},
-		{"configure-session", true},
+		{"configure-session", false},
+		{"configure-service", false},
 		{"-h", true},
 		{"--help", true},
 		{"help", true},
@@ -507,26 +508,14 @@ func TestParsePropertiesFile_Chinese(t *testing.T) {
 }
 
 func TestHandleInstall_AcceptsArgs(t *testing.T) {
-	// On non-Windows, handleInstall accepts args but ignores mode flags.
-	// On Windows, it parses --mode. Either way, it should not panic with empty args.
-	// We can't do a full install in tests, but we can verify the function signature
-	// is correct by calling with empty args and checking it returns an error
+	// All platforms parse --mode flags in handleInstall.
+	// We can't do a full install in tests, but we can verify the function
+	// does not panic with empty args and returns an error
 	// (because .agent.properties doesn't exist in temp dir).
-	if runtime.GOOS == "windows" {
-		// On Windows, handleInstall parses flags and tries to install.
-		// Without .agent.properties it will fail, which is expected.
-		dir := t.TempDir()
-		err := handleInstall(dir, []string{})
-		if err == nil {
-			t.Error("handleInstall with empty dir should return error")
-		}
-	} else {
-		// On Linux/macOS, handleInstall ignores args
-		dir := t.TempDir()
-		err := handleInstall(dir, []string{})
-		if err == nil {
-			t.Error("handleInstall with empty dir should return error")
-		}
+	dir := t.TempDir()
+	err := handleInstall(dir, []string{})
+	if err == nil {
+		t.Error("handleInstall with empty dir should return error")
 	}
 }
 
@@ -553,4 +542,3 @@ func TestStatusValueHasIssue(t *testing.T) {
 		})
 	}
 }
-

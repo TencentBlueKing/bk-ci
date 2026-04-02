@@ -20,33 +20,55 @@ func handleStatus(workDir string) error {
 	printDivider()
 
 	serviceName, _ := getServiceName(workDir)
+	installMode := readInstallMode(workDir)
+
 	statusLine(msg("Platform", "平台"), "Linux")
 	statusLine(msg("Work directory", "工作目录"), workDir)
 	statusLine(msg("Service name", "服务名"), serviceName)
 	statusLine(msg("Current user", "当前用户"), currentUser())
+	statusLine(msg("Install mode", "安装模式"), installMode)
 
 	// Run mode
-	if isRoot() {
-		if hasSystemd() {
-			statusLine(msg("Run mode", "运行模式"), msg("root + systemd (service)", "root + systemd (系统服务)"))
+	switch installMode {
+	case modeService:
+		statusLine(msg("Run mode", "运行模式"), msg("root + systemd (service)", "root + systemd (系统服务)"))
+	case modeUser:
+		statusLine(msg("Run mode", "运行模式"), msg("user systemd (survives logout with linger)", "用户级 systemd (启用 linger 后注销仍运行)"))
+	default:
+		if isRoot() {
+			statusLine(msg("Run mode", "运行模式"), msg("root + direct", "root + 直接启动"))
 		} else {
-			statusLine(msg("Run mode", "运行模式"), msg("root + direct (no systemd, e.g. container)", "root + 直接启动 (无 systemd, 如容器环境)"))
+			statusLine(msg("Run mode", "运行模式"), msg("non-root + direct", "非 root + 直接启动"))
 		}
-	} else {
-		statusLine(msg("Run mode", "运行模式"), msg("non-root + direct", "非 root + 直接启动"))
 	}
 
 	// Service status
-	if serviceName != "" && hasSystemdUnit(serviceName) {
-		out, _ := exec.Command("systemctl", "is-active", serviceName).CombinedOutput()
-		state := strings.TrimSpace(string(out))
-		statusLine(msg("Service state", "服务状态"), state)
-
-		out, _ = exec.Command("systemctl", "is-enabled", serviceName).CombinedOutput()
-		enabled := strings.TrimSpace(string(out))
-		statusLine(msg("Auto start", "开机启动"), enabled)
-	} else {
-		statusLine(msg("Service state", "服务状态"), msg("not registered", "未注册"))
+	switch installMode {
+	case modeService:
+		if serviceName != "" && hasSystemdUnit(serviceName) {
+			out, _ := exec.Command("systemctl", "is-active", serviceName).CombinedOutput()
+			statusLine(msg("Service state", "服务状态"), strings.TrimSpace(string(out)))
+			out, _ = exec.Command("systemctl", "is-enabled", serviceName).CombinedOutput()
+			statusLine(msg("Auto start", "开机启动"), strings.TrimSpace(string(out)))
+		} else {
+			statusLine(msg("Service state", "服务状态"), msg("not registered", "未注册"))
+		}
+	case modeUser:
+		if serviceName != "" && hasUserSystemdUnit(serviceName) {
+			out, _ := exec.Command("systemctl", "--user", "is-active", serviceName).CombinedOutput()
+			statusLine(msg("Service state", "服务状态"), strings.TrimSpace(string(out)))
+			out, _ = exec.Command("systemctl", "--user", "is-enabled", serviceName).CombinedOutput()
+			statusLine(msg("Auto start", "自动启动"), strings.TrimSpace(string(out)))
+			if hasLinger() {
+				statusLine("Linger", msg("enabled (survives logout) ✓", "已启用 (注销后仍运行) ✓"))
+			} else {
+				statusLine("Linger", msg("disabled (service stops on logout) ✗", "未启用 (注销后服务将停止) ✗"))
+			}
+		} else {
+			statusLine(msg("Service state", "服务状态"), msg("not registered", "未注册"))
+		}
+	default:
+		statusLine(msg("Service state", "服务状态"), msg("direct mode (no service)", "直接启动模式 (无服务)"))
 	}
 
 	// Process status
