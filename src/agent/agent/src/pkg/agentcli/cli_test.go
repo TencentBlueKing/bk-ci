@@ -508,12 +508,12 @@ func TestParsePropertiesFile_Chinese(t *testing.T) {
 }
 
 func TestHandleInstall_AcceptsArgs(t *testing.T) {
-	// All platforms parse --mode flags in handleInstall.
-	// We can't do a full install in tests, but we can verify the function
-	// does not panic with empty args and returns an error
-	// (because .agent.properties doesn't exist in temp dir).
+	// Use --mode background so that readInstallMode (defaults to LOGIN)
+	// differs from the requested mode, avoiding the "already installed"
+	// short-circuit. This forces the function to reach getServiceName,
+	// which fails because .agent.properties is missing.
 	dir := t.TempDir()
-	err := handleInstall(dir, []string{})
+	err := handleInstall(dir, []string{"--mode", "background"})
 	if err == nil {
 		t.Error("handleInstall with empty dir should return error")
 	}
