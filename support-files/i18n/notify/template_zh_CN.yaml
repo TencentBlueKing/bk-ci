@@ -1093,3 +1093,26 @@
     emailType: 1
   creator: "system"
   modifior: "system"
+- index: 53
+  id: "a3b4c5d6e7f84196b2bb32addc6dd510"
+  templateCode: "KPI_CODE_CHANGE_NOTIFY_TEMPLATE"
+  templateName: "蓝盾项目KPI归属变更通知模板"
+  notifyTypeScope:
+    - "EMAIL"
+    - "WEWORK"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "d6e7f8a9b0c14496b2bb32addc6dd513"
+    title: "蓝盾项目归属变更提醒"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"1000\" style=\"margin: 0 auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\"><tbody><tr><td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\"><table><tbody><tr><td valign=\"top\" align=\"center\"><table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\" class=\"layout layout-table root-table\" width=\"100%\" style=\"mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"><tbody><tr style=\"height: 150px; background: #252935;\"><td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img src=\"http://gw.open.oa.com/email/logo.png\" width=\"52\" style=\"display: block\"></td><td style=\"padding-left: 6px;\"><img src=\"http://gw.open.oa.com/email/title.png\" width=\"176\" style=\"display: block\"></td></tr></tbody></table></td></tr><tr><td valign=\"top\" style=\"padding: 0 24px;\" bgcolor=\"#f9f8f6\" align=\"center\"><table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 16px; margin: 0 auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"><tr><td style=\"background: #fff; border-radius: 10px; box-shadow: 0 2px 10px 0 #19192926; position: relative; top: -30px;\"><div style=\"padding: 20px 36px; background-color: #fff; border-radius: 10px;\"><p style=\"padding-bottom: 20px; line-height: 2; border-bottom: 1px solid #e6e6e6; font-size: 24px;\">蓝盾项目归属变更提醒</p><div class=\"content-wrapper\" style=\"color: #313238; font-size: 15px; line-height: 2;\"><p style=\"margin: 0; padding: 0;\">你好：</p><p style=\"margin: 0; padding: 0;\">${userId} 于 ${operateTime} 新建了蓝盾项目 [${englishName}][${projectName}]，归属信息选择了运营产品 ${productDisplay}，后续产生的费用将提报至对应的 KPI 业务 ${kpiDisplay} 。</p><p style=\"margin: 0; padding: 0;\">请确认蓝盾项目归属是否正确，若不正确，请联系项目创建人沟通调整。</p><br/><p style=\"font-size: 14px; color: #666;\">Q&amp;A：</p><p style=\"font-size: 14px; color: #666;\">1. Q：我为什么收到此邮件？</p><p style=\"font-size: 14px; color: #666;\">A：你为 KPI 业务对应的 ICOS 账单对账人，后续此项目使用蓝盾产生的费用将由你确认，需提前评估项目归属是否正确。</p><p style=\"font-size: 14px; color: #666;\">或者你为操作人的 Leader，请协助操作人评估蓝盾项目归属是否正确。</p></div></div></td></tr></table></td></tr></tbody></table></td></tr></tbody></table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "a9b0c1d2e3f44796b2bb32addc6dd516"
+    sender: "DevOps"
+    title: "蓝盾项目归属变更提醒"
+    body: "【蓝盾项目归属变更提醒】\n操作人：${userId}\n操作时间：${operateTime}\n项目名称：[${englishName}]${projectName}\n运营产品：${productDisplay}\nKPI 业务：${kpiDisplay}\n\n请确认蓝盾项目归属是否正确，若不正确，请联系项目创建人沟通调整。"
+  creator: "system"
+  modifior: "system"

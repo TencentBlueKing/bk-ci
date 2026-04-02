@@ -54,7 +54,7 @@ class ProjectOperationalProductService(
 
     private val productInfoList = mutableListOf<OperationalProductVO>()
 
-    private val crosProductList = mutableListOf<CrosProductVO>()
+    private val kpiCodeList = mutableListOf<CrosProductVO>()
 
     @Value("\${obs.url:#{null}}")
     private var obsUrl: String = ""
@@ -92,14 +92,14 @@ class ProjectOperationalProductService(
                 dictType = ProjectProductDictType.BG
             )
             // 获取映射关系
-            val iCosProductVOs = getICosProduct()
+            val productMapping = getICosProductMapping()
             // 获取kpi信息
-            val crosProductVOs = getCrosProduct()
+            val kpiCodeInfo = getKpiCodeInfo()
             // 同步时，清空缓存，防止数据重复
             productInfoList.clear()
             bgName2ProductList.clear()
-            crosProductList.clear()
-            crosProductList.addAll(crosProductVOs)
+            kpiCodeList.clear()
+            kpiCodeList.addAll(kpiCodeInfo)
             obsProductList.forEach { obsProductInfo ->
                 val planProductInfo = planProductList.firstOrNull {
                     it.planProductId == obsProductInfo.planProductId
@@ -112,18 +112,18 @@ class ProjectOperationalProductService(
                 }
                 val productId = obsProductInfo.productId!!.toInt()
 
-                val iCosProductVO = iCosProductVOs.firstOrNull {
+                val iCosProductVO = productMapping.firstOrNull {
                     it.productId == productId && !it.iCosProductCode.isNullOrBlank()
                 }
                 val crosProductVO = iCosProductVO?.let { iCosProduct ->
-                    crosProductVOs.firstOrNull {
+                    kpiCodeInfo.firstOrNull {
                         iCosProduct.iCosProductCode == it.kpiCode
                     }
                 }
                 val crosCheck = crosProductVO?.crosCheck
 
                 val operationalProductVO = OperationalProductVO(
-                    productId = obsProductInfo.productId!!.toInt(),
+                    productId = obsProductInfo.productId!!,
                     productName = obsProductInfo.productName ?: "",
                     planProductName = planProductInfo?.planProductName ?: "",
                     deptName = deptInfo?.deptName ?: "",
@@ -198,7 +198,7 @@ class ProjectOperationalProductService(
     }
 
     // 获取KPI产品列表
-    fun getCrosProduct(): List<CrosProductVO> {
+    fun getKpiCodeInfo(): List<CrosProductVO> {
         val request = Request.Builder().url(crosUrl).get().build()
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
@@ -220,7 +220,7 @@ class ProjectOperationalProductService(
         }
     }
 
-    private fun getICosProduct(): List<ICosProductVO> {
+    private fun getICosProductMapping(): List<ICosProductVO> {
         val url = "$bkCostsUrl$BK_COSTS_GET_FULL_MAPPING_DATA"
         val responseDTO = doGetBkCostsRequest<List<ICosProductVO>>(url)
         return responseDTO.data ?: emptyList()
@@ -231,11 +231,11 @@ class ProjectOperationalProductService(
      * @param kpiName KPI产品名称（模糊搜索），为空时返回全部
      */
     fun getKpiProducts(kpiName: String? = null): List<CrosProductVO> {
-        val products = if (crosProductList.isNotEmpty()) {
-            crosProductList.toList()
+        val products = if (kpiCodeList.isNotEmpty()) {
+            kpiCodeList.toList()
         } else {
             try {
-                getCrosProduct()
+                getKpiCodeInfo()
             } catch (e: Exception) {
                 logger.warn("getKpiProducts failed: ${e.message}")
                 emptyList()

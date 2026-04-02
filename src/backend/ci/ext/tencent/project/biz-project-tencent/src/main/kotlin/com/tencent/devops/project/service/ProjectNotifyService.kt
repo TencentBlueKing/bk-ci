@@ -1,6 +1,7 @@
 package com.tencent.devops.project.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -23,7 +24,10 @@ import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import jakarta.ws.rs.NotFoundException
@@ -39,7 +43,8 @@ class ProjectNotifyService constructor(
     val projectUserService: ProjectUserService,
     val dslContext: DSLContext,
     val projectUpdateHistoryDao: ProjectUpdateHistoryDao,
-    val redisOperation: RedisOperation
+    val redisOperation: RedisOperation,
+    val projectOperationalProductService: ProjectOperationalProductService
 ) {
     companion object {
         private val projectNotifyThreadPool = Executors.newFixedThreadPool(10)
@@ -54,7 +59,12 @@ class ProjectNotifyService constructor(
         private const val VERIFY_PROJECT_MANAGER_ORGANIZATION_BG = "send_email_for_verify_project_organization"
         private const val PROJECT_NOTIFY_USER = "project_notify_user"
         private const val IS_SEND_EMAIL_FLAG = "is_send_email_flag"
+        private const val KPI_CODE_CHANGE_NOTIFY_TEMPLATE = "KPI_CODE_CHANGE_NOTIFY_TEMPLATE"
+        private val KPI_CHANGE_OPERATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     }
+
+    @Value("\${notify.kpiChange.fixedCc:}")
+    private val kpiChangeFixedCc: String = ""
 
     private val projectInfoShowUri = "${config.devopsHostGateway}/console/manage/%s/show"
     private val projectEditUri = "${config.devopsHostGateway}/console/manage/%s/edit"
@@ -569,6 +579,178 @@ class ProjectNotifyService constructor(
                 receives = mutableSetOf(manager),
                 templateCode = templateCode
             )
+        }
+    }
+
+    @Suppress("LongMethod")
+    fun sendEmailForKpiCodeChange(
+        userId: String,
+        projectName: String,
+        englishName: String,
+        kpiCode: String,
+        kpiName: String?,
+        productId: Int?,
+        productName: String?
+    ) {
+        // todo
+        // val isSendEmail = redisOperation.get(IS_SEND_EMAIL_FLAG)?.toBoolean() ?: true
+        // if (!isSendEmail) return
+        val traceId = MDC.get(TraceTag.BIZID)
+        projectNotifyThreadPool.submit {
+            MDC.put(TraceTag.BIZID, traceId)
+            try {
+                doSendEmailForKpiCodeChange(
+                    userId = userId,
+                    projectName = projectName,
+                    englishName = englishName,
+                    kpiCode = kpiCode,
+                    kpiName = kpiName,
+                    productId = productId,
+                    productName = productName
+                )
+            } catch (e: Exception) {
+                logger.warn(
+                    "sendEmailForKpiCodeChange fail|" +
+                        "$englishName|$kpiCode|${e.message}", e
+                )
+            }
+        }
+    }
+
+    private fun doSendEmailForKpiCodeChange(
+        userId: String,
+        projectName: String,
+        englishName: String,
+        kpiCode: String,
+        kpiName: String?,
+        productId: Int?,
+        productName: String?
+    ) {
+        logger.info(
+            "doSendEmailForKpiCodeChange start|project=$englishName|" +
+                "operator=$userId|kpiCode=$kpiCode"
+        )
+
+        val receivers = mutableSetOf<String>()
+
+        val kpiProducts = projectOperationalProductService.getKpiProducts()
+
+        val kpiProduct = kpiProducts.firstOrNull { it.kpiCode == kpiCode }
+        if (kpiProduct != null) {
+            logger.info(
+                "doSendEmailForKpiCodeChange|found kpi product|" +
+                    "kpiCode=$kpiCode|principal=${kpiProduct.principal}"
+            )
+            val principals = kpiProduct.principal
+                .split(";")
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+            // receivers.addAll(principals)
+            logger.info(
+                "doSendEmailForKpiCodeChange|add principals to receivers|" +
+                    "principals=$principals"
+            )
+        } else {
+            logger.warn(
+                "doSendEmailForKpiCodeChange|kpi product not found|" +
+                    "kpiCode=$kpiCode"
+            )
+        }
+
+        val leader = getOperatorLeader(userId)
+        if (leader != null) {
+            // receivers.add(leader)
+            logger.info(
+                "doSendEmailForKpiCodeChange|add operator leader|" +
+                    "operator=$userId|leader=$leader"
+            )
+        } else {
+            logger.warn(
+                "doSendEmailForKpiCodeChange|operator leader not found|" +
+                    "operator=$userId"
+            )
+        }
+
+        /*if (receivers.isEmpty()) {
+            logger.warn(
+                "doSendEmailForKpiCodeChange|no receivers, skip sending|" +
+                    "project=$englishName|kpiCode=$kpiCode"
+            )
+            return
+        }*/
+
+        val cc = mutableSetOf(userId)
+        val fixedCc = kpiChangeFixedCc
+            .split(",")
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+        cc.addAll(fixedCc)
+        logger.info(
+            "doSendEmailForKpiCodeChange|cc list|" +
+                "operator=$userId|fixedCc=$fixedCc|totalCc=$cc"
+        )
+
+        val operateTime = LocalDateTime.now().format(KPI_CHANGE_OPERATE_TIME_FORMATTER)
+        val productDisplay = if (productId != null) {
+            "[$productId]${productName.orEmpty()}"
+        } else {
+            ""
+        }
+        val kpiDisplay = "[$kpiCode]${kpiName.orEmpty()}"
+        val bodyParams = mapOf(
+            "userId" to userId,
+            "operateTime" to operateTime,
+            "projectName" to projectName,
+            "englishName" to englishName,
+            "productDisplay" to productDisplay,
+            "kpiDisplay" to kpiDisplay
+        )
+        logger.debug(
+            "doSendEmailForKpiCodeChange|bodyParams|$bodyParams"
+        )
+
+        val request = SendNotifyMessageTemplateRequest(
+            templateCode = KPI_CODE_CHANGE_NOTIFY_TEMPLATE,
+            bodyParams = bodyParams,
+            notifyType = mutableSetOf("EMAIL", "WEWORK"),
+            receivers = receivers,
+            cc = cc
+        )
+
+        logger.info(
+            "doSendEmailForKpiCodeChange|sending notification|" +
+                "project=$englishName|kpiCode=$kpiCode|" +
+                "receivers=$receivers|cc=$cc|" +
+                "template=$KPI_CODE_CHANGE_NOTIFY_TEMPLATE"
+        )
+        kotlin.runCatching {
+            client.get(ServiceNotifyMessageTemplateResource::class)
+                .sendNotifyMessageByTemplate(request)
+        }.onSuccess {
+            logger.info(
+                "doSendEmailForKpiCodeChange success|" +
+                    "project=$englishName|receivers=$receivers"
+            )
+        }.onFailure {
+            logger.error(
+                "doSendEmailForKpiCodeChange failed|" +
+                    "project=$englishName|error=${it.message}",
+                it
+            )
+        }
+    }
+
+    private fun getOperatorLeader(userId: String): String? {
+        return try {
+            client.get(ServiceDeptResource::class)
+                .getLeader(userId)
+                .data
+                ?.userName
+        } catch (e: Exception) {
+            logger.warn(
+                "getOperatorLeader fail|$userId|${e.message}"
+            )
+            null
         }
     }
 

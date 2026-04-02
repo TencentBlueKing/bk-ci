@@ -13,6 +13,7 @@ import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
+import com.tencent.devops.project.service.ProjectNotifyService
 import com.tencent.devops.project.service.ProjectOperationalProductService
 import com.tencent.devops.project.service.ProjectPaasCCService
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -30,7 +31,8 @@ class TxProjectExtServiceImpl(
     private val projectDispatcher: SampleEventDispatcher,
     private val authProperties: BkAuthProperties,
     private val objectMapper: ObjectMapper,
-    private val projectOperationalProductService: ProjectOperationalProductService
+    private val projectOperationalProductService: ProjectOperationalProductService,
+    private val projectNotifyService: ProjectNotifyService
 ) : AbsProjectExtServiceImpl() {
 
     companion object {
@@ -68,6 +70,26 @@ class TxProjectExtServiceImpl(
 
         // 同步 KPI 产品绑定到 bkCosts
         projectOperationalProductService.syncKpiProductOnCreate(projectCreateInfo)
+
+        if (!projectCreateInfo.kpiCode.isNullOrBlank()) {
+            val needMonetization = projectOperationalProductService.checkNeedMonetization(
+                bgId = projectCreateInfo.bgId.toString(),
+                businessLineId = projectCreateInfo.businessLineId?.toString(),
+                deptId = projectCreateInfo.deptId.toString(),
+                centerId = projectCreateInfo.centerId.toString()
+            )
+            if (needMonetization) {
+                projectNotifyService.sendEmailForKpiCodeChange(
+                    userId = userId,
+                    projectName = projectCreateInfo.projectName,
+                    englishName = projectCreateInfo.englishName,
+                    kpiCode = projectCreateInfo.kpiCode!!,
+                    kpiName = projectCreateInfo.kpiName,
+                    productId = projectCreateInfo.productId,
+                    productName = projectCreateInfo.productName
+                )
+            }
+        }
     }
 
     override fun createOldAuthProject(
