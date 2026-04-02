@@ -137,111 +137,64 @@
                     <h2>
                         {{ $t("产品下载") }}
                     </h2>
-                    <div class="download-section">
+                    <div
+                        v-for="(section, sIndex) in downloadSections"
+                        :key="sIndex"
+                        class="download-section"
+                    >
                         <div class="section-header">
-                            <p class="section-title">{{ $t("蓝盾 APP") }}</p>
-                            <p class="section-desc">{{ $t("支持将 CI 编译产物安装至移动设备，便于测试与体验。") }}</p>
+                            <p class="section-title">{{ section.title }}</p>
+                            <p class="section-desc">{{ section.desc }}</p>
                         </div>
                         <div class="platform-cards">
-                            <div class="platform-card">
+                            <div
+                                v-for="(platform, pIndex) in section.platforms"
+                                :key="pIndex"
+                                class="platform-card"
+                                :class="{
+                                    disabled: platform.disabled,
+                                    repo: platform.isRepo
+                                }"
+                            >
                                 <div class="card-header">
                                     <Icon
-                                        name="apple"
+                                        :name="platform.icon"
                                         size="32"
                                     />
-                                    <span class="corner-badge qr-code">
-                                        <Icon
-                                            name="qrcode"
-                                            size="14"
-                                        />
-                                    </span>
-                                </div>
-                                <div class="card-body">
-                                    <span class="platform-name">iOS</span>
-                                </div>
-                                <span class="qr-hover">
-                                    <img
-                                        src=""
-                                        alt=""
+                                    <span
+                                        v-if="platform.hasCornerBadge"
+                                        class="corner-badge"
+                                        :class="{ 'qr-code': platform.cornerBadgeType === 'qr-code' }"
                                     >
-                                    {{ $t("扫码下载") }}
-                                </span>
-                            </div>
-                            <div class="platform-card">
-                                <div class="card-header">
-                                    <Icon
-                                        name="android-full"
-                                        size="32"
-                                    />
-                                    <span class="corner-badge qr-code">
                                         <Icon
-                                            name="qrcode"
-                                            size="14"
+                                            :name="platform.cornerBadgeType === 'qr-code' ? 'qrcode' : 'download'"
+                                            :size="platform.cornerBadgeType === 'qr-code' ? 14 : 12"
                                         />
                                     </span>
                                 </div>
                                 <div class="card-body">
-                                    <span class="platform-name">Android</span>
+                                    <span class="platform-name">{{ platform.name }}</span>
+                                    <span
+                                        v-if="platform.comingSoon"
+                                        class="coming-soon"
+                                    >{{ $t("敬请期待") }}</span>
                                 </div>
-                                <span class="qr-hover">
-                                    <img
-                                        src=""
-                                        alt=""
-                                    >
-                                    {{ $t("扫码下载") }}
-                                </span>
-                            </div>
-                            <div class="platform-card">
-                                <div class="card-header">
-                                    <Icon
-                                        name="harmony"
-                                        size="32"
-                                    />
-                                    <span class="corner-badge qr-code">
-                                        <Icon
-                                            name="qrcode"
-                                            size="14"
-                                        />
-                                    </span>
-                                </div>
-                                <div class="card-body">
-                                    <span class="platform-name">HarmonyOS</span>
-                                </div>
-                                <span class="qr-hover">
-                                    <img
-                                        src=""
-                                        alt=""
-                                    >
-                                    {{ $t("扫码下载") }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="download-section">
-                        <div class="section-header">
-                            <p class="section-title">{{ $t("制品库客户端") }}</p>
-                            <p class="section-desc">{{ $t("桌面端制品库，支持预约下载与下载加速，支持Windows 应用的版本体验。") }}</p>
-                        </div>
-                        <div class="platform-cards">
-                            <div class="platform-card repo">
-                                <div class="card-header">
-                                    <Icon
-                                        name="windows"
-                                        size="32"
-                                    />
-                                    <span class="corner-badge">
-                                        <Icon
-                                            name="download"
-                                            size="12"
-                                        />
-                                    </span>
-                                </div>
-                                <div class="card-body">
-                                    <span class="platform-name">Windows</span>
-                                </div>
+                                <!-- 二维码悬浮显示 -->
                                 <span
+                                    v-if="platform.type === 'qr'"
+                                    class="qr-hover"
+                                >
+                                    <img
+                                        :src="platform.qrSrc"
+                                        alt=""
+                                    >
+                                    {{ $t("扫码下载") }}
+                                </span>
+                                <!-- 下载按钮悬浮显示 -->
+                                <span
+                                    v-if="platform.type === 'download'"
                                     class="download-hover"
-                                    @click="downloadRepoClient"
+                                    @click="handlePlatformClick(platform)"
                                 >
                                     <span class="down-icon">
                                         <Icon
@@ -250,26 +203,8 @@
                                         />
                                     </span>
                                     {{ $t("点击下载") }}
-                                    <span class="file-name">xxx.exe</span>
+                                    <span class="file-name">{{ platform.fileName }}</span>
                                 </span>
-                            </div>
-                            <div class="platform-card disabled">
-                                <div class="card-header">
-                                    <Icon
-                                        name="apple"
-                                        size="32"
-                                    />
-                                    <span class="corner-badge">
-                                        <Icon
-                                            name="download"
-                                            size="12"
-                                        />
-                                    </span>
-                                </div>
-                                <div class="card-body">
-                                    <span class="platform-name">macOS</span>
-                                    <span class="coming-soon">{{ $t("敬请期待") }}</span>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -385,6 +320,66 @@
             return count - 1
         }
 
+        get downloadSections (): any[] {
+            return [
+                {
+                    title: this.$t('蓝盾 APP'),
+                    desc: this.$t('支持将 CI 编译产物安装至移动设备，便于测试与体验。'),
+                    platforms: [
+                        {
+                            icon: 'apple',
+                            name: 'iOS',
+                            type: 'qr',
+                            qrSrc: '',
+                            hasCornerBadge: true,
+                            cornerBadgeType: 'qr-code'
+                        },
+                        {
+                            icon: 'android-full',
+                            name: 'Android',
+                            type: 'qr',
+                            qrSrc: '',
+                            hasCornerBadge: true,
+                            cornerBadgeType: 'qr-code'
+                        },
+                        {
+                            icon: 'harmony',
+                            name: 'HarmonyOS',
+                            type: 'qr',
+                            qrSrc: '',
+                            hasCornerBadge: true,
+                            cornerBadgeType: 'qr-code'
+                        }
+                    ]
+                },
+                {
+                    title: this.$t('制品库客户端'),
+                    desc: this.$t('桌面端制品库，支持预约下载与下载加速，支持Windows 应用的版本体验。'),
+                    platforms: [
+                        {
+                            icon: 'windows',
+                            name: 'Windows',
+                            type: 'download',
+                            downloadUrl: '/path/to/repo-client.exe',
+                            fileName: 'xxx.exe',
+                            hasCornerBadge: true,
+                            cornerBadgeType: 'download',
+                            isRepo: true
+                        },
+                        {
+                            icon: 'apple',
+                            name: 'macOS',
+                            type: 'disabled',
+                            disabled: true,
+                            comingSoon: true,
+                            hasCornerBadge: true,
+                            cornerBadgeType: 'download'
+                        }
+                    ]
+                }
+            ]
+        }
+
         updateShowAllService (show: boolean): void {
             this.isAllServiceListShow = show
         }
@@ -404,6 +399,13 @@
 
         downloadRepoClient () {
             window.location.href = '/path/to/repo-client.exe'
+        }
+
+        handlePlatformClick (platform: any) {
+            if (platform.disabled || !platform.downloadUrl) {
+                return
+            }
+            window.location.href = platform.downloadUrl
         }
 
         created () {
