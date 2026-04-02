@@ -151,6 +151,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import kotlin.collections.orEmpty
 
 /**
  * 插件业务逻辑类
@@ -1070,6 +1071,15 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                             )
                         )
                     }
+                }
+                // 更新标签信息
+                val labelIdList = atomUpdateRequest.serviceScopeConfigs
+                    ?.flatMap { it.labelIdList.orEmpty() }
+                    ?.distinct()
+                    ?.takeIf { it.isNotEmpty() }
+                if (labelIdList?.isNotEmpty() == true) {
+                    atomLabelRelDao.deleteByAtomId(context, id)
+                    atomLabelRelDao.batchAdd(context, userId, id, labelIdList)
                 }
                 if (atomUpdateRequest.defaultFlag) {
                     redisOperation.addSetValue(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
