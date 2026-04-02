@@ -34,6 +34,7 @@ import com.tencent.devops.project.listener.CountLoginConsumer
 import com.tencent.devops.project.listener.ProjectEventListener
 import com.tencent.devops.project.listener.TencentProjectEventListener
 import com.tencent.devops.project.pojo.UserCountLogin
+import com.tencent.devops.project.service.ProjectNotifyService
 import com.tencent.devops.project.service.ProjectOperationalProductService
 import com.tencent.devops.project.service.ProjectPaasCCService
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,11 +53,13 @@ class TencentProjectMQConfiguration {
     fun projectEventListener(
         @Autowired projectPaasCCService: ProjectPaasCCService,
         @Autowired bkAccessTokenApi: BkAccessTokenApi,
-        @Autowired projectOperationalProductService: ProjectOperationalProductService
+        @Autowired projectOperationalProductService: ProjectOperationalProductService,
+        @Autowired projectNotifyService: ProjectNotifyService
     ): ProjectEventListener = TencentProjectEventListener(
         projectPaasCCService = projectPaasCCService,
         bkAccessTokenApi = bkAccessTokenApi,
-        projectOperationalProductService = projectOperationalProductService
+        projectOperationalProductService = projectOperationalProductService,
+        projectNotifyService = projectNotifyService
     )
 
     @EventConsumer
