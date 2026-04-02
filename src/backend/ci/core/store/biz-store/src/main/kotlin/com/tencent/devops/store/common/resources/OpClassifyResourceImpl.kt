@@ -34,6 +34,7 @@ import com.tencent.devops.store.pojo.common.classify.Classify
 import com.tencent.devops.store.pojo.common.classify.ClassifyRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.ClassifyService
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -48,8 +49,11 @@ class OpClassifyResourceImpl @Autowired constructor(private val classifyService:
         return classifyService.updateClassify(id, classifyRequest, classifyType.type.toByte())
     }
 
-    override fun listAllClassifys(classifyType: StoreTypeEnum): Result<List<Classify>> {
-        return classifyService.getAllClassify(classifyType.type.toByte())
+    override fun listAllClassifys(
+        classifyType: StoreTypeEnum,
+        serviceScope: ServiceScopeEnum?
+    ): Result<List<Classify>> {
+        return classifyService.getAllClassify(classifyType.type.toByte(), serviceScope)
     }
 
     override fun getClassifyById(id: String): Result<Classify?> {
