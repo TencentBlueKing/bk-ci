@@ -52,7 +52,10 @@
                         </bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
-                <bk-form-item>
+                <bk-form-item
+                    v-bind="suggestFormItemProps"
+                    error-display-type="normal"
+                >
                     <bk-input
                         style="width: 98%"
                         type="textarea"
@@ -134,11 +137,17 @@
                     status: '',
                     suggest: '',
                     desc: '',
-                    params: []
+                    params: [],
+                    suggestRequired: false
                 },
                 requireRule: {
                     required: true,
                     message: this.$t('editPage.checkResultTip'),
+                    trigger: 'blur'
+                },
+                suggestRequireRule: {
+                    required: true,
+                    message: this.$t('editPage.checkSuggestTips'),
                     trigger: 'blur'
                 },
                 paramRequiredTips: {
@@ -154,6 +163,23 @@
             },
             isReviewer () {
                 return !this.data.buildId
+            },
+            suggestRequired () {
+                return this.data.suggestRequired ?? false
+            },
+            suggestFormItemProps () {
+                if (this.suggestRequired) {
+                    return {
+                        label: this.$t('editPage.checkSuggest'),
+                        required: true,
+                        property: 'suggest',
+                        rules: [this.suggestRequireRule],
+                        errorDisplayType: 'normal'
+                    }
+                }
+                return {
+                    label: this.$t('editPage.checkSuggest')
+                }
             }
         },
         watch: {
