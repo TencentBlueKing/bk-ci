@@ -94,9 +94,7 @@ object PipelineParamUtils {
     ): List<BuildParameters> {
         val key = param.key
         val paramValue = CascadePropertyUtils.parseDefaultValue(key, param.value, param.valueType)
-        val cascadeParam = param.copy(value = paramValue)
-
-        val allParams = mutableListOf(cascadeParam)
+        val allParams = mutableListOf(param)
         CascadePropertyUtils.getCascadeVariableKeyMap(
             key = key,
             type = param.valueType!!
@@ -105,7 +103,7 @@ object PipelineParamUtils {
         }
 
         allParams.forEach { fillContextPrefix(it, originStartContexts) }
-        return listOf(cascadeParam)
+        return allParams
     }
 
     /**
@@ -132,8 +130,7 @@ object PipelineParamUtils {
             logger.warn("parse custom param error, key: $key, defaultValue: $value")
             listOf()
         }
-        val customParam = param.copy(value = paramValue)
-        val allParams = mutableListOf(customParam)
+        val allParams = mutableListOf(param)
         // 下级参数，填充住参数名前缀
         paramValue.forEachIndexed { index, map ->
             map.forEach { (subKey, subValue) ->
@@ -142,7 +139,7 @@ object PipelineParamUtils {
         }
         // 添加variables前缀
         allParams.forEach { fillContextPrefix(it, originStartContexts) }
-        return listOf(customParam)
+        return allParams
     }
 
     /**
