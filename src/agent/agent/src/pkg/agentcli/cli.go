@@ -595,8 +595,11 @@ func downloadAgentZip(workDir, gateway, agentId, savePath string) error {
 	tlsConfig := loadCertIfExists(certPath)
 	proxyFunc := buildProxyFunc(httpProxy, httpsProxy, noProxy)
 	httpClient := &http.Client{
-		Transport: &http.Transport{TLSClientConfig: tlsConfig, Proxy: proxyFunc},
-		Timeout:   120 * time.Second,
+		Transport: &http.Transport{
+			TLSClientConfig:       tlsConfig,
+			Proxy:                 proxyFunc,
+			ResponseHeaderTimeout: 60 * time.Second,
+		},
 	}
 
 	resp, err := httpClient.Do(req)
@@ -605,35 +608,53 @@ func downloadAgentZip(workDir, gateway, agentId, savePath string) error {
 	}
 	defer resp.Body.Close()
 
-	// Read body first to handle both error responses and zip content
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf(msgf("read response failed: %v", "读取响应失败: %v", err))
-	}
-
 	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
 		return fmt.Errorf(msgf(
 			"server returned HTTP %d: %s",
 			"服务端返回 HTTP %d: %s", resp.StatusCode, strings.TrimSpace(string(body))))
 	}
 
+	tmpPath := savePath + ".tmp"
+	f, err := os.Create(tmpPath)
+	if err != nil {
+		return fmt.Errorf(msgf("create temp file failed: %v", "创建临时文件失败: %v", err))
+	}
+	defer func() {
+		f.Close()
+		os.Remove(tmpPath)
+	}()
+
+	written, err := io.Copy(f, resp.Body)
+	if err != nil {
+		return fmt.Errorf(msgf("download interrupted: %v", "下载中断: %v", err))
+	}
+	f.Close()
+
 	// Validate zip magic bytes (PK\x03\x04)
-	if len(body) < 4 || body[0] != 'P' || body[1] != 'K' || body[2] != 3 || body[3] != 4 {
-		snippet := string(body)
+	zf, err := os.Open(tmpPath)
+	if err != nil {
+		return fmt.Errorf(msgf("open temp file failed: %v", "打开临时文件失败: %v", err))
+	}
+	var magic [4]byte
+	_, err = io.ReadFull(zf, magic[:])
+	zf.Close()
+	if err != nil || magic[0] != 'P' || magic[1] != 'K' || magic[2] != 3 || magic[3] != 4 {
+		snippet, _ := os.ReadFile(tmpPath)
 		if len(snippet) > 500 {
 			snippet = snippet[:500]
 		}
 		return fmt.Errorf(msgf(
 			"server returned HTTP %d but response is not a valid zip file.\nResponse body: %s",
 			"服务端返回 HTTP %d 但响应不是有效的 zip 文件。\n响应内容: %s",
-			resp.StatusCode, strings.TrimSpace(snippet)))
+			resp.StatusCode, strings.TrimSpace(string(snippet))))
 	}
 
-	if err := os.WriteFile(savePath, body, 0644); err != nil {
+	if err := os.Rename(tmpPath, savePath); err != nil {
 		return fmt.Errorf(msgf("save file failed: %v", "保存文件失败: %v", err))
 	}
 
-	printStep(msgf("  downloaded %.1f MB", "  已下载 %.1f MB", float64(len(body))/1024/1024))
+	printStep(msgf("  downloaded %.1f MB", "  已下载 %.1f MB", float64(written)/1024/1024))
 	return nil
 }
 
