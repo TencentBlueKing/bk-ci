@@ -20,6 +20,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 
 @Service
@@ -32,7 +33,7 @@ class TxProjectExtServiceImpl(
     private val authProperties: BkAuthProperties,
     private val objectMapper: ObjectMapper,
     private val projectOperationalProductService: ProjectOperationalProductService,
-    private val projectNotifyService: ProjectNotifyService
+    @param:Lazy private val projectNotifyService: ProjectNotifyService
 ) : AbsProjectExtServiceImpl() {
 
     companion object {
