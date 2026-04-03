@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
@@ -45,6 +46,7 @@ import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
+import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -628,6 +630,39 @@ interface ApigwPipelineResourceV4 {
         @QueryParam("pageSize")
         pageSize: Int? = null
     ): Result<PipelineViewPipelinePage<PipelineInfo>>
+
+    @Operation(
+        summary = "查询我有权限的某用户(权限代持人)公开的流水线",
+        tags = ["v4_app_pipeline_visibility_list", "v4_user_pipeline_visibility_list"]
+    )
+    @GET
+    @Path("/visibility")
+    fun listVisiblePipelines(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "目标用户ID(权限代持人)", required = true)
+        @QueryParam("targetUserId")
+        targetUserId: String,
+        @Parameter(description = "流水线名称(模糊匹配)", required = false)
+        @QueryParam("pipelineName")
+        pipelineName: String? = null,
+        @Parameter(description = "页码", required = false)
+        @QueryParam("page")
+        page: Int? = null,
+        @Parameter(description = "每页数量", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int? = null
+    ): Result<SQLPage<SimplePipeline>>
 
     @Operation(
         summary = "启用/禁用流水线（修改流水线的并发设置）",

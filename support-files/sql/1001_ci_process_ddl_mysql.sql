@@ -1540,4 +1540,19 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_EVENT_SUBSCRIPTION` (
     KEY `IDX_EVENT_SOURCE_TYPE` (`EVENT_CODE`,`EVENT_SOURCE`,`EVENT_TYPE`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线事件订阅表';
 
+-- ----------------------------
+-- Table structure for T_PIPELINE_VISIBILITY
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_VISIBILITY`
+(
+    `PROJECT_ID`  varchar(64)   NOT NULL COMMENT '项目ID',
+    `PIPELINE_ID` varchar(34)   NOT NULL COMMENT '流水线ID',
+    `TYPE`        varchar(16)   NOT NULL COMMENT '可见范围类型: DEPT/USER',
+    `SCOPE_ID`    varchar(64)   NOT NULL COMMENT '部门ID或用户ID',
+    `SCOPE_NAME`  varchar(1024) NOT NULL COMMENT '部门名称或用户名',
+    `CREATOR`     varchar(64)   NOT NULL COMMENT '创建者',
+    `CREATE_TIME` datetime      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`PROJECT_ID`, `PIPELINE_ID`, `TYPE`, `SCOPE_ID`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='流水线可见范围表';
+
 SET FOREIGN_KEY_CHECKS = 1;

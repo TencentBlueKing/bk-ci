@@ -440,6 +440,19 @@ class PermissionAuthorizationServiceImpl(
         }
     }
 
+    override fun listResourceCodesByHandoverFrom(
+        projectCode: String,
+        resourceType: String,
+        handoverFrom: String
+    ): List<String> {
+        return authAuthorizationDao.listResourceCodes(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            handoverFrom = handoverFrom
+        )
+    }
+
     private fun addHandoverFromCnName(
         resourceAuthorizationList: List<ResourceAuthorizationDTO>
     ) {

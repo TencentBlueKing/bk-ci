@@ -86,6 +86,7 @@ import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineDetailInfo
 import com.tencent.devops.process.pojo.PipelineIdAndName
+import com.tencent.devops.process.pojo.PipelineInfoQueryCondition
 import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelinePermissions
 import com.tencent.devops.process.pojo.PipelineSortType
@@ -150,7 +151,8 @@ class PipelineListFacadeService @Autowired constructor(
     private val pipelineRecentUseService: PipelineRecentUseService,
     private val pipelineListQueryParamService: PipelineListQueryParamService,
     private val pipelineYamlService: PipelineYamlService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val pipelineVisibilityService: PipelineVisibilityService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -2320,6 +2322,45 @@ class PipelineListFacadeService @Autowired constructor(
         return pipelineInfoDao.listDisabledPipelineIds(
             dslContext = dslContext,
             projectId = projectId
+        )
+    }
+
+    fun listVisiblePipelines(
+        userId: String,
+        projectId: String,
+        targetUserId: String,
+        pipelineName: String? = null,
+        page: Int,
+        pageSize: Int
+    ): SQLPage<SimplePipeline> {
+        val visiblePipelineIds = pipelineVisibilityService.listVisiblePipelineIds(
+            requestUserId = userId,
+            projectId = projectId,
+            targetUserId = targetUserId
+        )
+        if (visiblePipelineIds.isEmpty()) {
+            return SQLPage(count = 0, records = emptyList())
+        }
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+        val condition = PipelineInfoQueryCondition(
+            projectId = projectId,
+            pipelineIds = visiblePipelineIds,
+            pipelineName = pipelineName,
+            limit = sqlLimit.limit,
+            offset = sqlLimit.offset
+        )
+        val count = pipelineInfoDao.countByCondition(
+            dslContext = dslContext,
+            condition = condition
+        )
+        val records = pipelineInfoDao.listByCondition(
+            dslContext = dslContext,
+            condition = condition
+        )
+
+        return SQLPage(
+            count = count,
+            records = generateSimplePipelines(records)
         )
     }
 }

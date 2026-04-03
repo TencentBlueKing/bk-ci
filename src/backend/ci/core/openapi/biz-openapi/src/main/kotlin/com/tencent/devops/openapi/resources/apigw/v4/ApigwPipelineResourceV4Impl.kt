@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.openapi.resources.apigw.v4
 
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
@@ -44,6 +45,7 @@ import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
+import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -312,6 +314,27 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
             pipelineName = pipelineName,
             page = page ?: 1,
             pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
+        )
+    }
+
+    override fun listVisiblePipelines(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        targetUserId: String,
+        pipelineName: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<SQLPage<SimplePipeline>> {
+        logger.info("OPENAPI_PIPELINE_V4|$userId|listVisiblePipelines|$projectId|$targetUserId")
+        return client.get(ServicePipelineResource::class).listVisiblePipelines(
+            userId = userId,
+            projectId = projectId,
+            targetUserId = targetUserId,
+            pipelineName = pipelineName,
+            page = page,
+            pageSize = pageSize
         )
     }
 

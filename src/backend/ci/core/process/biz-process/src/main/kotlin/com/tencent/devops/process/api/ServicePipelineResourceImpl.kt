@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_HAVE_PR
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
@@ -694,6 +695,26 @@ class ServicePipelineResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 projectId = projectId,
                 userId = userId
+            )
+        )
+    }
+
+    override fun listVisiblePipelines(
+        userId: String,
+        projectId: String,
+        targetUserId: String,
+        pipelineName: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<SQLPage<SimplePipeline>> {
+        return Result(
+            pipelineListFacadeService.listVisiblePipelines(
+                userId = userId,
+                projectId = projectId,
+                targetUserId = targetUserId,
+                pipelineName = pipelineName,
+                page = page ?: PageUtil.DEFAULT_PAGE,
+                pageSize = pageSize ?: PageUtil.DEFAULT_PAGE_SIZE
             )
         )
     }

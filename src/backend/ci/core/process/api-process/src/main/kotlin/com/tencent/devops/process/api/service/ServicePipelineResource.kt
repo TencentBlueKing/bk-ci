@@ -30,6 +30,7 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
@@ -654,6 +655,30 @@ interface ServicePipelineResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<PipelineRemoteToken>
+
+    @Operation(summary = "查询我有权限的、某个用户(权限代持人)公开的流水线列表")
+    @GET
+    @Path("/projects/{projectId}/visibility")
+    fun listVisiblePipelines(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "目标用户ID(权限代持人)", required = true)
+        @QueryParam("targetUserId")
+        targetUserId: String,
+        @Parameter(description = "流水线名称(模糊匹配)", required = false)
+        @QueryParam("pipelineName")
+        pipelineName: String? = null,
+        @Parameter(description = "页码", required = false)
+        @QueryParam("page")
+        page: Int? = null,
+        @Parameter(description = "每页数量", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int? = null
+    ): Result<SQLPage<SimplePipeline>>
 
     @Operation(summary = "启用/禁用流水线（修改流水线的并发设置）")
     @POST

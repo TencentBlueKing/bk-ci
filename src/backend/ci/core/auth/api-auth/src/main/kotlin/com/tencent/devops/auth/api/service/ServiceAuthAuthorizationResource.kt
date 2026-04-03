@@ -111,4 +111,19 @@ interface ServiceAuthAuthorizationResource {
         @Parameter(description = "资源授权交接条件实体", required = true)
         condition: ResourceAuthorizationHandoverConditionRequest
     ): Result<Map<ResourceAuthorizationHandoverStatus, List<ResourceAuthorizationHandoverDTO>>>
+
+    @GET
+    @Path("/{resourceType}/listResourceCodesByHandoverFrom/{handoverFrom}")
+    @Operation(summary = "根据权限代持人查询资源code列表")
+    fun listResourceCodesByHandoverFrom(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "资源类型", required = true)
+        @PathParam("resourceType")
+        resourceType: String,
+        @Parameter(description = "权限代持人用户ID", required = true)
+        @PathParam("handoverFrom")
+        handoverFrom: String
+    ): Result<List<String>>
 }
