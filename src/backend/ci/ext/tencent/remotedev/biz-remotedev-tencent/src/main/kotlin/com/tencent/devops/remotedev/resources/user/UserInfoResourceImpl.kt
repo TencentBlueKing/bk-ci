@@ -33,7 +33,7 @@ class UserInfoResourceImpl @Autowired constructor(
         if (userId != name) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("you not $name")
+                params = arrayOf("Permission denied for user $name")
             )
         }
         return Result(userInfoCertService.needRealNameCert(name))
@@ -73,7 +73,7 @@ class UserInfoResourceImpl @Autowired constructor(
         if (userId != data.username) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("you not ${data.username}")
+                params = arrayOf("Permission denied for user ${data.username}")
             )
         }
         return Result(userInfoCertService.faceRecognition(data))
@@ -83,7 +83,7 @@ class UserInfoResourceImpl @Autowired constructor(
         if (userId != data.userId) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("you not ${data.userId}")
+                params = arrayOf("Permission denied for user ${data.userId}")
             )
         }
         userInfoCertService.asyncAuthCheck(userId, data)
