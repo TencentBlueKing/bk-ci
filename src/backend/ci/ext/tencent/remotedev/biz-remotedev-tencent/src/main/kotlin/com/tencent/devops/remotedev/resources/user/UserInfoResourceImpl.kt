@@ -49,7 +49,7 @@ class UserInfoResourceImpl @Autowired constructor(
         // 获取工作空间基本信息（轻量查询）
         val ws = workspaceService.getWorkspaceDetail(userId, data.workspaceName, false)
             ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FOUND.errorCode,
                 params = arrayOf("Workspace ${data.workspaceName} not found")
             )
         // TODO 公共云桌面打开时候也会调用，这里客户端要改，不然加上校验后会失败。先只对团队个人云桌面做校验。
