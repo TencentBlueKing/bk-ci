@@ -174,16 +174,6 @@ interface UserRemoteDevResource {
         cdsToken: String
     ): Result<WeSecProjectWorkspace?>
 
-    @Operation(summary = "点击进入云桌面时客户端获取加载时Tips")
-    @GET
-    @Path("/client/tips")
-    fun clientTips(
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @QueryParam("projectId")
-        projectId: String?
-    ): Result<List<ClientTips>>
-
     @Operation(summary = "获取云研发项目的云研发审批管理员")
     @GET
     @Path("/managers")
