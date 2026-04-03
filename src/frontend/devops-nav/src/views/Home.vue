@@ -266,6 +266,7 @@
     import Logo from '../components/Logo/index.vue'
     import NavBox from '../components/NavBox/index.vue'
     import Icon from '../components/Icon/index.vue'
+    import devopsAppQrcode from '../assets/images/devopsapp-qrcode.png'
 
     @Component({
         components: {
@@ -330,7 +331,7 @@
                             icon: 'apple',
                             name: 'iOS',
                             type: 'qr',
-                            qrSrc: '',
+                            qrSrc: devopsAppQrcode,
                             hasCornerBadge: true,
                             cornerBadgeType: 'qr-code'
                         },
@@ -338,7 +339,7 @@
                             icon: 'android-full',
                             name: 'Android',
                             type: 'qr',
-                            qrSrc: '',
+                            qrSrc: devopsAppQrcode,
                             hasCornerBadge: true,
                             cornerBadgeType: 'qr-code'
                         },
@@ -346,7 +347,7 @@
                             icon: 'harmony',
                             name: 'HarmonyOS',
                             type: 'qr',
-                            qrSrc: '',
+                            qrSrc: devopsAppQrcode,
                             hasCornerBadge: true,
                             cornerBadgeType: 'qr-code'
                         }
