@@ -53,6 +53,12 @@ import java.time.LocalDateTime
 @Repository
 class ProcessDao {
 
+    companion object {
+        private val DELETABLE_BUILD_STATUS = BuildStatus.values()
+            .filter { it.isFinish() || it == BuildStatus.STAGE_SUCCESS || it == BuildStatus.UNEXEC }
+            .map { it.ordinal }
+    }
+
     fun addBuildHisDataClear(
         dslContext: DSLContext,
         projectId: String,
@@ -210,6 +216,7 @@ class ProcessDao {
         val conditions = mutableListOf<Condition>()
         conditions.add(PROJECT_ID.eq(projectId))
         conditions.add(PIPELINE_ID.eq(pipelineId))
+        conditions.add(STATUS.`in`(DELETABLE_BUILD_STATUS))
         if (maxBuildNum != null) {
             conditions.add(BUILD_NUM.le(maxBuildNum))
         }

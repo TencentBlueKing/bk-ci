@@ -40,6 +40,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildHistoryDataClearEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.AgentReuseMutex
@@ -293,6 +294,16 @@ class BuildEndControl @Autowired constructor(
                 userId = userId,
                 buildId = buildId,
                 refreshTypes = RefreshType.HISTORY.binary
+            )
+        )
+
+        // 异步驱动misc服务检查并清理当前流水线的过期/超量构建记录
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildHistoryDataClearEvent(
+                source = "build_finish_$buildId",
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId
             )
         )
 
