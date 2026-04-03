@@ -365,7 +365,7 @@ interface ServicePipelineVersionResource {
     @Operation(summary = "根据分支名获取流水线指定版本的两种编排[PAC 流水线]")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/branches/{branch}")
-    fun getBranch(
+    fun getVersionByBranch(
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,

@@ -900,7 +900,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         )
     }
 
-    fun getByBranch(
+    fun getVersionByBranch(
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -927,7 +927,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         )
     }
 
-    fun getByBranch(
+    fun getVersionByBranch(
         projectId: String,
         pipelineId: String,
         branch: String

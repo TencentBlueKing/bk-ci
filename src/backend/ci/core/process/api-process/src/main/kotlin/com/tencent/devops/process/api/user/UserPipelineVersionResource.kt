@@ -407,7 +407,7 @@ interface UserPipelineVersionResource {
     @Operation(summary = "根据分支名获取流水线指定版本的两种编排[PAC 流水线]")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/branches/{branch}")
-    fun getBranch(
+    fun getVersionByBranch(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

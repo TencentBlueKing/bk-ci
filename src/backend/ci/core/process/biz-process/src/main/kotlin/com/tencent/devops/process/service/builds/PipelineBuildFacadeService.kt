@@ -536,8 +536,8 @@ class PipelineBuildFacadeService(
                 userId = userId, projectId = projectId, pipelineId = pipelineId,
                 paramProperties = triggerContainer.params, paramValues = values
             )
-            // 如果是PAC流水线,需要加上代码库hashId,给checkout:self使用
-            paramMap.putAll(yamlParams)
+            // 如果是PAC流水线,需要加上代码库hashId,给checkout:self使用，如果用户已有yaml参数, 则以用户侧为准
+            yamlParams.forEach { paramMap.putIfAbsent(it.key, it.value) }
 
             return pipelineBuildService.startPipeline(
                 userId = userId,

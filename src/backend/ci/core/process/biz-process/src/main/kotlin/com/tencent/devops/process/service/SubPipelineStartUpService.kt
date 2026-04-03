@@ -277,9 +277,12 @@ class SubPipelineStartUpService @Autowired constructor(
         if (readyToBuildPipelineInfo.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
         }
-        if (readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
-        )
+        // 引用分支版本时，无需校验是否存在正式版本
+        if (branch.isNullOrBlank() && readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
+            )
+        }
         val parentPipelineInfo = getPipelineInfo(
             projectId = parentProjectId,
             pipelineId = parentPipelineId

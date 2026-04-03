@@ -530,7 +530,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun getBranch(
+    override fun getVersionByBranch(
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -547,7 +547,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             permission = AuthPermission.VIEW
         )
         return Result(
-            pipelineVersionFacadeService.getByBranch(
+            pipelineVersionFacadeService.getVersionByBranch(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,

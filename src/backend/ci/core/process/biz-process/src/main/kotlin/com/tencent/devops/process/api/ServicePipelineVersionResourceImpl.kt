@@ -485,13 +485,13 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getBranch(
+    override fun getVersionByBranch(
         projectId: String,
         pipelineId: String,
         branch: String
     ): Result<PipelineResourceVersion?> {
         return Result(
-            pipelineVersionFacadeService.getByBranch(
+            pipelineVersionFacadeService.getVersionByBranch(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 branch = branch

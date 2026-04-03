@@ -415,7 +415,7 @@ class SubPipelineCheckService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         branch: String
-    ) = client.get(ServicePipelineVersionResource::class).getBranch(
+    ) = client.get(ServicePipelineVersionResource::class).getVersionByBranch(
         projectId = projectId,
         pipelineId = pipelineId,
         branch = branch
