@@ -86,6 +86,7 @@ data class ManualReviewUserTaskElement(
             markdownContent?.run { put(::markdownContent.name, this) }
             notifyGroup?.ifEmpty { null }?.run { put(::notifyGroup.name, this) }
             reminderTime?.run { put(::reminderTime.name, this) }
+            suggestRequired?.run { put(::suggestRequired.name, this) }
         }
         return PreStep(
             name = name,
