@@ -420,6 +420,57 @@ function _M:verify_token(access_token)
     return result.data
 end
 
+--- BKAuth OAuth 2.0 Token Introspection (RFC 7662)
+--- @return result table|nil, aud_mismatch boolean
+function _M:introspect_token(access_token)
+    local httpc = http.new()
+    httpc:set_timeout(3000)
+    httpc:connect(config.bkauth.ip, config.bkauth.port)
+
+    local path = "/realms/" .. config.bkauth.realm .. "/oauth2/introspect"
+    local body = "token=" .. ngx.escape_uri(access_token)
+
+    local res, err = httpc:request({
+        path = path,
+        method = "POST",
+        headers = {
+            ["Host"] = config.bkauth.host,
+            ["Content-Type"] = "application/x-www-form-urlencoded",
+            ["X-Bk-App-Code"] = config.bkauth.app_code,
+            ["X-Bk-App-Secret"] = config.bkauth.app_secret
+        },
+        body = body
+    })
+
+    if not res then
+        ngx.log(ngx.ERR, "failed to request introspect_token: ", err)
+        return nil
+    end
+
+    local responseBody = res:read_body()
+
+    if res.status ~= 200 then
+        ngx.log(ngx.ERR, "failed to request introspect_token, status: ", res.status, " , responseBody: ", responseBody)
+        return nil
+    end
+
+    httpc:set_keepalive(60000, 5)
+
+    local result = json.decode(responseBody)
+    if result == nil then
+        ngx.log(ngx.ERR, "failed to parse introspect_token response: ", responseBody)
+        return nil
+    end
+
+    if not result.active then
+        local err_msg = result.error and result.error.message or "unknown"
+        ngx.log(ngx.WARN, "introspect_token inactive, error: ", err_msg, " , access_token: ", access_token)
+        return nil
+    end
+
+    return result
+end
+
 function _M:verify_tai_token(bk_token)
     -- 创建HTTP客户端实例
     local httpc = http.new()

@@ -21,6 +21,22 @@ if x_gw_token ~= nil and x_gw_token == config.gw_token and ngx.var.http_x_devops
     return
 end
 
+-- BKAuth Token Introspection
+if config.bkauth then
+    local auth_header = ngx.var.http_authorization
+    if auth_header then
+        local bearer_token = string.match(auth_header, "^Bearer%s+(.+)$")
+        if bearer_token and string.sub(bearer_token, 1, 5) == "bkci_" then
+            local result = oauthUtil:introspect_token(bearer_token)
+            if result then
+                ngx.header["x-devops-uid"] = result.username
+                ngx.header["x-devops-access-token"] = bearer_token
+                ngx.exit(200)
+            end
+        end
+    end
+end
+
 -- 判断devx访问
 local is_devx = string.find(ngx.var.http_host, "devx") ~= nil or ngx.var.http_x_devops_env == "devx"
 
@@ -178,6 +194,8 @@ else
             ngx.exit(200)
         end
     end
+
+
 end
 
 ngx.log(ngx.WARN, "auth user failed")
