@@ -128,8 +128,15 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     }
 
     override fun onePassword(userId: String, workspaceName: String): Result<String> {
-        // 只是用它校验查看权限
-        workspaceService.getWorkspaceDetail(userId, workspaceName)
+        // 校验查看权限
+        if (!permissionService.checkUserPermission(userId, workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf(
+                    "You don't have permission to access workspace $workspaceName"
+                )
+            )
+        }
         return Result(
             permissionService.init1Password(
                 userId = userId,
