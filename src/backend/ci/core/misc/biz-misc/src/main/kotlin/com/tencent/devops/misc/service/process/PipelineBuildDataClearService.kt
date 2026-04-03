@@ -76,7 +76,9 @@ class PipelineBuildDataClearService @Autowired constructor(
         val maxKeepNum = projectDataClearConfig.maxKeepNum
         val maxBuildNum = maxPipelineBuildNum - maxKeepNum
         if (maxBuildNum > 0) {
-            logger.info("cleanNormalPipelineData|$projectId|$pipelineId|exceed maxKeepNum, cleaning $maxBuildNum builds")
+            logger.info(
+                "cleanNormalPipelineData|$projectId|$pipelineId|exceed maxKeepNum, cleaning $maxBuildNum builds"
+            )
             cleanBuildHistoryData(
                 pipelineId = pipelineId,
                 projectId = projectId,
