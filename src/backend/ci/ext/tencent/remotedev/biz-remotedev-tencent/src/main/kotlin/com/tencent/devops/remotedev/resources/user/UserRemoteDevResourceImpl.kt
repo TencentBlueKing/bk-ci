@@ -157,7 +157,12 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     }
 
     override fun remoteAuditManagers(userId: String, projectId: String): Result<List<String>> {
-        permissionService.checkUserManager(userId, projectId)
+        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
+            )
+        }
         return Result(permissionService.auditManagers(projectId))
     }
 
