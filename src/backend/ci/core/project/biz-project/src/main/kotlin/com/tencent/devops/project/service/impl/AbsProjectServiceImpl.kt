@@ -837,7 +837,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         enabled: Boolean?,
         unApproved: Boolean,
         sortType: ProjectSortType?,
-        collation: ProjectCollation?
+        collation: ProjectCollation?,
+        hidden: Boolean?
     ): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
@@ -871,6 +872,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     dslContext = dslContext,
                     englishNameList = projectsWithVisitPermission.toList(),
                     enabled = enabled,
+                    hidden = hidden,
                     sortType = sortType,
                     collation = collation
                 ).forEach {
@@ -1732,6 +1734,22 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     override fun getPipelineDialect(projectId: String): String {
         return getByEnglishName(englishName = projectId)?.properties?.pipelineDialect
             ?: PipelineDialectType.CLASSIC.name
+    }
+
+    override fun isHidden(englishName: String): Boolean {
+        val record = projectDao.getByEnglishName(dslContext, englishName)
+            ?: throw ProjectNotExistException("projectCode=$englishName")
+        return record.hidden ?: false
+    }
+
+    override fun updateHiddenStatus(englishName: String, hidden: Boolean) {
+        projectDao.getByEnglishName(dslContext, englishName)
+            ?: throw ProjectNotExistException("projectCode=$englishName")
+        projectDao.updateHiddenStatus(
+            dslContext = dslContext,
+            englishName = englishName,
+            hidden = hidden
+        )
     }
 
     private fun validateProperties(properties: ProjectProperties?) {
