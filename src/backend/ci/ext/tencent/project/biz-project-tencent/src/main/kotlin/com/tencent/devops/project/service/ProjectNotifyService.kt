@@ -713,7 +713,8 @@ class ProjectNotifyService constructor(
             templateCode = KPI_CODE_CHANGE_NOTIFY_TEMPLATE,
             bodyParams = bodyParams,
             notifyType = mutableSetOf("EMAIL", "WEWORK"),
-            receivers = receivers,
+            // todo 到时候得改成receivers
+            receivers = cc,
             cc = cc
         )
 
