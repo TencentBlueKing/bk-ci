@@ -48,10 +48,8 @@ class ProjectStrategyService @Autowired constructor(
     }
 
     fun getStrategy(
-        userId: String,
         info: ProjectStrategyFetchInfo
     ): ProjectStrategyResp {
-        permissionService.checkUserManager(userId, info.projectId)
         val resp = ProjectStrategyResp(null, null)
         val records = projectStrategyDao.fetchStrategyList(
             dslContext = dslContext,
