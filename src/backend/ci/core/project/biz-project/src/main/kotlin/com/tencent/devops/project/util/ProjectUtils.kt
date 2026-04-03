@@ -92,6 +92,7 @@ object ProjectUtils {
                 extra = extra ?: "",
                 offlined = isOfflined,
                 secrecy = isSecrecy,
+                hidden = hidden,
                 helmChartEnabled = isHelmChartEnabled,
                 kind = kind,
                 logoAddr = logoAddr ?: "",

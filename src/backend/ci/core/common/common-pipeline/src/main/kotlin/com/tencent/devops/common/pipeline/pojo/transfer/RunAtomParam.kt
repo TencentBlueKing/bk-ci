@@ -3,7 +3,8 @@ package com.tencent.devops.common.pipeline.pojo.transfer
 data class RunAtomParam(
     val shell: String? = null,
     val script: String? = null,
-    val charsetType: CharsetType? = null
+    val charsetType: CharsetType? = null,
+    val manualCommand: String? = null,
 ) {
     enum class CharsetType {
         /*默认类型*/
