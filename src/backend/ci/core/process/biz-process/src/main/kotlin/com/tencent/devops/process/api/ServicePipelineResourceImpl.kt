@@ -73,6 +73,7 @@ import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.process.service.PipelineInfoFacadeService
+import com.tencent.devops.process.service.PipelineAutoSummaryService
 import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
@@ -88,7 +89,8 @@ class ServicePipelineResourceImpl @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val pipelineRemoteAuthService: PipelineRemoteAuthService
+    private val pipelineRemoteAuthService: PipelineRemoteAuthService,
+    private val pipelineAutoSummaryService: PipelineAutoSummaryService
 ) : ServicePipelineResource {
 
     override fun status(
@@ -713,6 +715,24 @@ class ServicePipelineResourceImpl @Autowired constructor(
             enable = enable
         )
         return Result(true)
+    }
+
+    override fun updateAutoSummary(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        autoSummary: String,
+        version: Int
+    ): Result<Boolean> {
+        checkParam(userId, projectId)
+        return Result(
+            pipelineAutoSummaryService.updateAutoSummary(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                autoSummary = autoSummary,
+                version = version
+            )
+        )
     }
 
     private fun checkParams(userId: String, projectId: String) {

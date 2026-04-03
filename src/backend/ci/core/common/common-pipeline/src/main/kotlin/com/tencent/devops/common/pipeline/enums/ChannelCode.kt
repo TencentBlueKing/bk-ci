@@ -44,7 +44,9 @@ enum class ChannelCode {
     @Schema(title = "开源扫描")
     GONGFENGSCAN,
     @Schema(title = "codecc回迁")
-    CODECC_EE;
+    CODECC_EE,
+    @Schema(title = "创意流")
+    CREATIVE_STREAM;
 
     companion object {
         // Only BS need to check the authentication for now
