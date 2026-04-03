@@ -10,7 +10,6 @@ import com.tencent.devops.remotedev.pojo.gitproxy.LinktgitData
 import com.tencent.devops.remotedev.pojo.gitproxy.ReBindingLinkData
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitNamespace
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
-import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import org.springframework.beans.factory.annotation.Autowired
 

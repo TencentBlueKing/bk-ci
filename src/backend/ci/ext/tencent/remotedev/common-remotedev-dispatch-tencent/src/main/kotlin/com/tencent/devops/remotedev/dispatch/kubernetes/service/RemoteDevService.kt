@@ -27,7 +27,6 @@
 
 package com.tencent.devops.remotedev.dispatch.kubernetes.service
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction
