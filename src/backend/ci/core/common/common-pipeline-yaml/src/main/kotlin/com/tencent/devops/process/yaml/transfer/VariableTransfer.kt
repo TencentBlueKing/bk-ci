@@ -287,7 +287,7 @@ class VariableTransfer {
         }
     }
 
-    private fun convertBuildFormProperty(key: String, variable: Variable) : BuildFormProperty {
+    private fun convertBuildFormProperty(key: String, variable: Variable): BuildFormProperty {
         val type = VariablePropType.findType(variable.props?.type)?.toBuildFormPropertyType()
             ?: BuildFormPropertyType.STRING
         check(key, variable)

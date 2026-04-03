@@ -40,7 +40,7 @@ object PipelineParamUtils {
                     val customParams = paramDefaultValue as List<Map<String, String>>
                     customParams.forEachIndexed { index, map ->
                         map.forEach { (key, value) ->
-                            startParams["$paramKey.${index}.$key"] = value
+                            startParams["$paramKey.$index.$key"] = value
                         }
                     }
                 } catch (ignored: Exception) {
@@ -118,7 +118,7 @@ object PipelineParamUtils {
         val key = param.key
         val value = param.value
         val paramValue = try {
-            when(value) {
+            when (value) {
                 is String -> {
                     JsonUtil.to(value, object : TypeReference<List<Map<String, String>>>() {})
                 }
@@ -134,7 +134,7 @@ object PipelineParamUtils {
         // 下级参数，填充住参数名前缀
         paramValue.forEachIndexed { index, map ->
             map.forEach { (subKey, subValue) ->
-                allParams.add(param.copy(key = "${key}.${index}.${subKey}", value = subValue ?: ""))
+                allParams.add(param.copy(key = "$key.$index.$subKey", value = subValue ?: ""))
             }
         }
         // 添加variables前缀
