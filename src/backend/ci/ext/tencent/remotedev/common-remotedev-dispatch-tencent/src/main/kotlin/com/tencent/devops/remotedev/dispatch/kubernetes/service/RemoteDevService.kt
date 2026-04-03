@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.dispatch.kubernetes.service
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction
@@ -44,6 +45,7 @@ import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -148,11 +150,29 @@ class RemoteDevService @Autowired constructor(
         dispatchWorkspaceDao.deleteWorkspace(dslContext, workspaceName, bakWorkspaceName)
     }
 
+    @Deprecated("被废弃")
     fun workspaceTaskCallback(
         taskStatus: TaskStatus,
         mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD
     ): Boolean {
         logger.info("workspaceTaskCallback|${taskStatus.uid}|$taskStatus")
+        return remoteDevServiceFactory.loadRemoteDevService(mountType).workspaceTaskCallback(taskStatus)
+    }
+
+    /*请求合法性校验时使用的密钥*/
+    @Value("\${workspaceTaskCallExternalKey:#{null}}")
+    val workspaceTaskCallExternalKey: String? = null
+
+    fun workspaceTaskCallbackNew(
+        taskStatus: TaskStatus,
+        key: String,
+        mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD
+    ): Boolean {
+        if (key != workspaceTaskCallExternalKey) {
+            return false
+        }
+
+        logger.info("workspaceTaskCallbackNew|${taskStatus.uid}|$taskStatus")
         return remoteDevServiceFactory.loadRemoteDevService(mountType).workspaceTaskCallback(taskStatus)
     }
 

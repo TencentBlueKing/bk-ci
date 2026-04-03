@@ -33,6 +33,9 @@ interface UserInfoResource {
     @GET
     @Path("/cert/checkRealName")
     fun realNameCert(
+        @Parameter(description = "用户ID", required = false, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @QueryParam("name")
         name: String
     ): Result<Boolean>
@@ -57,6 +60,9 @@ interface UserInfoResource {
     @POST
     @Path("/cert/faceRecognition")
     fun faceRecognition(
+        @Parameter(description = "用户ID", required = false, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         data: FaceRecognitionData
     ): Result<FaceRecognitionResult>
 

@@ -886,7 +886,7 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun getProjectStrategy(userId: String, data: ProjectStrategyFetchInfo): Result<ProjectStrategyResp> {
-        return Result(projectStrategyService.getStrategy(data))
+        return Result(projectStrategyService.getStrategy(userId, data))
     }
 
     override fun updateProjectStrategy(userId: String, data: ProjectStrategyInfo): Result<Boolean> {

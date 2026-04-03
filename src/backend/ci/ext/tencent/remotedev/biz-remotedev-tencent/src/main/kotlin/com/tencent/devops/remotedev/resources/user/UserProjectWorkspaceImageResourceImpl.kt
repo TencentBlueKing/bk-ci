@@ -70,6 +70,7 @@ class UserProjectWorkspaceImageResourceImpl @Autowired constructor(
 
     override fun getVmStandardImages(userId: String, projectId: String): Result<List<StandardVmImage>> {
         logger.info("UserImageManageResourceImpl|getVmStandardImages|userId|$userId|projectId|$projectId")
+        permissionService.checkUserVisitPermission(userId, projectId)
         return Result(projectImageManageService.getVmStandardImages())
     }
 

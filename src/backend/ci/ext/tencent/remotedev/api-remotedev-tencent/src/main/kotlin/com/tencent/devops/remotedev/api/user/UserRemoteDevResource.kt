@@ -154,48 +154,6 @@ interface UserRemoteDevResource {
         workspaceName: String
     ): Result<String>
 
-    @Operation(summary = "一键认领求助问题")
-    @GET
-    @Path("/addExpSup")
-    fun addExpSup(
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "工单id", required = true)
-        @QueryParam("id")
-        id: Long,
-        @Parameter(description = "工作空间ID", required = true)
-        @QueryParam("workspaceName")
-        workspaceName: String
-    ): Result<Boolean>
-
-    @Operation(summary = "获取兔小巢用户登录态token")
-    @GET
-    @Path("/txc/token")
-    fun getTxcToken(
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "用户唯一标识", required = true)
-        @QueryParam("openId")
-        openId: String,
-        @Parameter(description = "用户昵称", required = true)
-        @QueryParam("nickName")
-        nickName: String,
-        @Parameter(description = "用户头像", required = true)
-        @QueryParam("avatar")
-        avatar: String
-    ): Result<String>
-
-    @Operation(summary = "一键查询CGS密码")
-    @GET
-    @Path("/queryCgsPwd")
-    fun queryCgsPwd(
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "cgsId", required = true)
-        @QueryParam("cgsId")
-        cgsId: String
-    ): Result<Boolean>
-
     @Operation(summary = "客户端查询是否可以升级")
     @POST
     @Path("/client/upgrade")

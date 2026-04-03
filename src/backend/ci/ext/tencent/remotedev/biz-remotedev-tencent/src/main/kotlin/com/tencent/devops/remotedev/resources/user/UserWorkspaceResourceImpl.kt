@@ -264,6 +264,6 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun getProjectStrategy(userId: String, data: ProjectStrategyFetchInfo): Result<ProjectStrategyResp> {
-        return Result(projectStrategyService.getStrategy(data))
+        return Result(projectStrategyService.getStrategy(userId, data))
     }
 }

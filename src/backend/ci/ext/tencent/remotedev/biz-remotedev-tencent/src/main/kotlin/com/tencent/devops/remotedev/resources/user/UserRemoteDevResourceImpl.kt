@@ -140,24 +140,6 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         )
     }
 
-    override fun addExpSup(userId: String, id: Long, workspaceName: String): Result<Boolean> {
-        val (res, message) = expertSupportService.assignExpSup(userId, id, workspaceName)
-        return if (message.isNullOrBlank()) {
-            Result(res)
-        } else {
-            Result(message, res)
-        }
-    }
-
-    override fun queryCgsPwd(userId: String, cgsId: String): Result<Boolean> {
-        val (res, message) = expertSupportService.queryCgsPwd(userId, cgsId)
-        return if (message.isNullOrBlank()) {
-            Result(res)
-        } else {
-            Result(message, res)
-        }
-    }
-
     override fun clientUpgrade(userId: String, data: ClientUpgradeData): Result<ClientUpgradeResp> {
         return Result(clientUpgradeService.checkUpgrade(userId, data))
     }
@@ -167,17 +149,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     }
 
     override fun remoteAuditManagers(userId: String, projectId: String): Result<List<String>> {
+        permissionService.checkUserManager(userId, projectId)
         return Result(permissionService.auditManagers(projectId))
-    }
-
-    override fun getTxcToken(userId: String, openId: String, nickName: String, avatar: String): Result<String> {
-        return Result(
-            txcService.getTxcToken(
-                openId = openId,
-                nickName = nickName,
-                avatar = avatar
-            )
-        )
     }
 
     override fun getProjectWorkspace(userId: String, cdsToken: String): Result<WeSecProjectWorkspace?> {

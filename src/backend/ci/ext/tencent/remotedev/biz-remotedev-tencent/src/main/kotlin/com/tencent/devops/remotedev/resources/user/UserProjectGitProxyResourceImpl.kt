@@ -10,6 +10,7 @@ import com.tencent.devops.remotedev.pojo.gitproxy.LinktgitData
 import com.tencent.devops.remotedev.pojo.gitproxy.ReBindingLinkData
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitNamespace
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
+import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -29,7 +30,7 @@ class UserProjectGitProxyResourceImpl @Autowired constructor(
 
     @AuditEntry(actionId = TencentActionId.TGIT_LINK_LIST)
     override fun tgitList(userId: String, projectId: String): Result<List<TGitRepoData>> {
-        return Result(gitProxyTGitService.tgitLinkList(projectId))
+        return Result(gitProxyTGitService.tgitLinkList(userId, projectId))
     }
 
     @AuditEntry(actionId = TencentActionId.TGIT_LINK_DELETE)

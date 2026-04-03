@@ -1,9 +1,11 @@
 package com.tencent.devops.remotedev.resources.user
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserInfoResource
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.pojo.TrustDeviceInfo
 import com.tencent.devops.remotedev.pojo.TrustDeviceTokenGetData
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
@@ -27,7 +29,13 @@ class UserInfoResourceImpl @Autowired constructor(
     private val workspaceService: WorkspaceService,
     private val permissionService: PermissionService
 ) : UserInfoResource {
-    override fun realNameCert(name: String): Result<Boolean> {
+    override fun realNameCert(userId: String, name: String): Result<Boolean> {
+        if (userId != name) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("you not $name")
+            )
+        }
         return Result(userInfoCertService.needRealNameCert(name))
     }
 
@@ -61,11 +69,23 @@ class UserInfoResourceImpl @Autowired constructor(
         return Result(res)
     }
 
-    override fun faceRecognition(data: FaceRecognitionData): Result<FaceRecognitionResult> {
+    override fun faceRecognition(userId: String, data: FaceRecognitionData): Result<FaceRecognitionResult> {
+        if (userId != data.username) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("you not ${data.username}")
+            )
+        }
         return Result(userInfoCertService.faceRecognition(data))
     }
 
     override fun asyncAuthCheck(userId: String, data: UserInfoAuthCheck): Result<Boolean> {
+        if (userId != data.userId) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("you not ${data.userId}")
+            )
+        }
         userInfoCertService.asyncAuthCheck(userId, data)
         return Result(true)
     }

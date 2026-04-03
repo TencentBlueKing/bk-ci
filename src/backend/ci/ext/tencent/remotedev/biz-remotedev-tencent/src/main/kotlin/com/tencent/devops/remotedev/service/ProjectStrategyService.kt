@@ -16,7 +16,8 @@ import org.springframework.stereotype.Service
 @Service
 class ProjectStrategyService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val projectStrategyDao: ProjectStrategyDao
+    private val projectStrategyDao: ProjectStrategyDao,
+    private val permissionService: PermissionService
 ) {
     fun createOrUpdateStrategy(
         info: ProjectStrategyInfo
@@ -47,8 +48,10 @@ class ProjectStrategyService @Autowired constructor(
     }
 
     fun getStrategy(
+        userId: String,
         info: ProjectStrategyFetchInfo
     ): ProjectStrategyResp {
+        permissionService.checkUserManager(userId, info.projectId)
         val resp = ProjectStrategyResp(null, null)
         val records = projectStrategyDao.fetchStrategyList(
             dslContext = dslContext,
