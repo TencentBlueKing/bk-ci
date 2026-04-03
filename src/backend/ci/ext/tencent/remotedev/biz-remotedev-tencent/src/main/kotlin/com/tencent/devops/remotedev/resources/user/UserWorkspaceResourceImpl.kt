@@ -212,6 +212,14 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun checkMoa2fa(userId: String, workspaceName: String): Result<Boolean> {
+        if (!permissionService.checkUserPermission(userId, workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf(
+                    "You don't have permission to access workspace $workspaceName"
+                )
+            )
+        }
         return Result(workspaceService.checkMoa2fa(userId, workspaceName))
     }
 

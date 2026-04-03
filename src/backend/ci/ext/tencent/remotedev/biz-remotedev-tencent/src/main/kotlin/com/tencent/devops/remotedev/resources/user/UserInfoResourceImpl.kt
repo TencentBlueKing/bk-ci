@@ -45,7 +45,8 @@ class UserInfoResourceImpl @Autowired constructor(
         token: String?,
         data: UserInfoCheckData
     ): Result<UserInfoCheckResult> {
-        permissionService.checkViewerPermission(userId, data.workspaceName, data.projectId)
+        // TODO 公共云桌面打开时候也会调用，这里客户端要改，不然加上校验后会失败。
+        // permissionService.checkViewerPermission(userId, data.workspaceName, data.projectId)
         val res = userInfoCertService.multipleCert(data)
         // 产品要求：集团员工跳过人脸识别
         if (!UserUtil.isTaiUser(userId)) {
