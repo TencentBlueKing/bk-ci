@@ -55,7 +55,6 @@ import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
 import org.apache.commons.io.IOUtils
-import org.apache.tools.zip.ZipEntry
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -164,9 +163,7 @@ class DownloadAgentInstallService @Autowired constructor(
             }
 
             (packageFiles?.let { jarFiles.plus(packageFiles) } ?: jarFiles).forEach {
-                val entry = ZipArchiveEntry(it, it.name)
-                entry.method = ZipEntry.STORED
-                zipOut.putArchiveEntry(entry)
+                zipOut.putArchiveEntry(ZipArchiveEntry(it, it.name))
                 IOUtils.copy(FileInputStream(it), zipOut)
                 zipOut.closeArchiveEntry()
             }
@@ -212,7 +209,6 @@ class DownloadAgentInstallService @Autowired constructor(
             fileName
         }
         val devopsAgentEntry = ZipArchiveEntry(goAgentFile, finalFilename)
-        devopsAgentEntry.method = ZipEntry.STORED
         devopsAgentEntry.unixMode = AGENT_FILE_MODE
         zipOut.putArchiveEntry(devopsAgentEntry)
         IOUtils.copy(FileInputStream(goAgentFile), zipOut)
