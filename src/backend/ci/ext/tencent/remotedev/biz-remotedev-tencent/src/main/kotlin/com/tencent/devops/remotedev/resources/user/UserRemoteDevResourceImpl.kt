@@ -116,6 +116,7 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         userId: String,
         searchCustom: Boolean?
     ): Result<Map<String, Map<String, Int>>> {
+        permissionService.checkUserManager(userId, projectId)
         return Result(
             windowsResourceConfigService.allWindowsQuota(
                 searchCustom = searchCustom,
@@ -187,6 +188,12 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     }
 
     override fun getSignatureStatus(userId: String, projectId: String): Result<UserSignatureStatusResponse> {
+        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
+            )
+        }
         return Result(workspaceService.getSignatureStatus(userId, projectId))
     }
 
