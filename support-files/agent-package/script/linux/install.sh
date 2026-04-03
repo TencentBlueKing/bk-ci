@@ -57,47 +57,14 @@ function download_agent()
     echo "agent.zip already exist, skip download"
     return
   fi
-  local download_ok=false
   if exists curl; then
-    echo "download using curl"
-    if curl -sSL --fail -H "X-DEVOPS-PROJECT-ID: ##projectId##" -o agent.zip "##agent_url##"; then
-      download_ok=true
-    else
-      echo "curl download failed (exit code $?)"
-      rm -f agent.zip
-      if exists wget; then
-        echo "retrying with wget..."
-        if wget -q --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##"; then
-          download_ok=true
-        fi
-      fi
-    fi
-  elif exists wget; then
-    echo "download using wget"
-    if wget -q --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##"; then
-      download_ok=true
+    curl -H "X-DEVOPS-PROJECT-ID: ##projectId##" -o agent.zip "##agent_url##"
+    if [[ $? -ne 0 ]]; then
+      echo "fail to download the agent"
+      exit 1
     fi
   else
-    echo "curl & wget command don't exist, download fail"
-    exit 1
-  fi
-
-  if [[ "$download_ok" != "true" ]]; then
-    echo "download agent.zip failed"
-    if [[ -f agent.zip ]]; then
-      echo "server response (first 500 bytes):"
-      head -c 500 agent.zip 2>/dev/null
-      echo ""
-      rm -f agent.zip
-    fi
-    exit 1
-  fi
-
-  if ! unzip -t agent.zip >/dev/null 2>&1; then
-    echo "downloaded file is not a valid zip, server may have returned an error:"
-    head -c 500 agent.zip 2>/dev/null
-    echo ""
-    rm -f agent.zip
+    echo "no curl command, download fail"
     exit 1
   fi
 }

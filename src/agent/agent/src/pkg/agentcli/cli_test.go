@@ -333,6 +333,24 @@ func TestHandleVersion(t *testing.T) {
 	})
 }
 
+func TestAgentArch(t *testing.T) {
+	arch := agentArch()
+	switch runtime.GOARCH {
+	case "arm64":
+		if arch != "arm64" {
+			t.Fatalf("agentArch()=%q on arm64, want arm64", arch)
+		}
+	case "mips64", "mips64le":
+		if arch != "mips64" {
+			t.Fatalf("agentArch()=%q on mips64, want mips64", arch)
+		}
+	default:
+		if arch != "" {
+			t.Fatalf("agentArch()=%q on %s, want empty", arch, runtime.GOARCH)
+		}
+	}
+}
+
 func TestDebugFileExists(t *testing.T) {
 	dir := t.TempDir()
 
