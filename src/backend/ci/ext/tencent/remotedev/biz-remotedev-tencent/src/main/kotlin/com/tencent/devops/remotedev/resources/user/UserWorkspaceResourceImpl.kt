@@ -157,38 +157,6 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(workspaceService.getEnvs4PublicWorkspace(userId))
     }
 
-    override fun getAuthorizedGitRepository(
-        userId: String,
-        search: String?,
-        page: Int?,
-        pageSize: Int?,
-        gitType: RemoteDevGitType
-    ): Result<List<RemoteDevRepository>> {
-        return Result(
-            repositoryService.getAuthorizedGitRepository(
-                userId = userId,
-                search = search,
-                page = page,
-                pageSize = pageSize,
-                gitType = gitType
-            )
-        )
-    }
-
-    override fun getRepositoryBranch(
-        userId: String,
-        pathWithNamespace: String,
-        gitType: RemoteDevGitType
-    ): Result<List<String>> {
-        return Result(
-            repositoryService.getRepositoryBranch(
-                userId = userId,
-                pathWithNamespace = pathWithNamespace,
-                gitType = gitType
-            )
-        )
-    }
-
     override fun getWorkspaceTimeline(
         userId: String,
         workspaceName: String,
