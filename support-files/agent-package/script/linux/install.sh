@@ -57,16 +57,43 @@ function download_agent()
     echo "agent.zip already exist, skip download"
     return
   fi
-  if exists curl; then
-    curl -H "X-DEVOPS-PROJECT-ID: ##projectId##" -o agent.zip "##agent_url##"
-    if [[ $? -ne 0 ]]; then
-      echo "fail to download the agent"
-      exit 1
-    fi
-  else
+  if ! exists curl; then
     echo "no curl command, download fail"
     exit 1
   fi
+
+  echo "GET -H 'X-DEVOPS-PROJECT-ID: ##projectId##' ##agent_url##"
+
+  local http_code
+  http_code=$(curl -v --show-error \
+    -H "X-DEVOPS-PROJECT-ID: ##projectId##" \
+    -o agent.zip \
+    -w '%{http_code}' \
+    "##agent_url##")
+  local curl_exit=$?
+
+  echo ""
+  echo "--- download result ---"
+  echo "HTTP Status: $http_code"
+
+  if [[ $curl_exit -ne 0 ]]; then
+    echo "curl exit code: $curl_exit"
+    rm -f agent.zip
+    exit 1
+  fi
+
+  if [[ "$http_code" -ge 400 ]]; then
+    echo "server response body:"
+    cat agent.zip 2>/dev/null
+    echo ""
+    rm -f agent.zip
+    exit 1
+  fi
+
+  local file_size
+  file_size=$(stat -c%s agent.zip 2>/dev/null || stat -f%z agent.zip 2>/dev/null || echo "unknown")
+  echo "file size: ${file_size} bytes"
+  echo "download OK"
 }
 
 function writeSSHConfig()
