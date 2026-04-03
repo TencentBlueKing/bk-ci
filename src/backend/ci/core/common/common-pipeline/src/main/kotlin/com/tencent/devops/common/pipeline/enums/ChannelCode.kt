@@ -45,7 +45,7 @@ enum class ChannelCode {
     GONGFENGSCAN,
     @Schema(title = "codecc回迁")
     CODECC_EE,
-    @Schema(title = "创意流")
+    @Schema(title = "创作流")
     CREATIVE_STREAM;
 
     companion object {

@@ -79,6 +79,9 @@ object StreamBinding {
 
     const val PIPELINE_TEMPLATE_MIGRATE = "engine.pipeline.template.migrate"
 
+    // AI摘要生成事件
+    const val PIPELINE_AI_SUMMARY = "engine.pipeline.ai.summary"
+
     // 监控相关的队列
     const val PIPELINE_BUILD_MONITOR = "engine.pipeline.listener.monitor"
     const val PIPELINE_BUILD_HEART_BEAT = "engine.pipeline.build.hb"
@@ -242,7 +245,4 @@ object StreamBinding {
     const val PIPELINE_YAML_FILE_SCHEDULER = "pipeline.yaml.file.scheduler"
     // yaml文件执行事件
     const val PIPELINE_YAML_FILE_EXECUTOR = "pipeline.yaml.file.executor"
-
-    // AI摘要生成事件
-    const val PIPELINE_AI_SUMMARY = "engine.pipeline.ai.summary"
 }
