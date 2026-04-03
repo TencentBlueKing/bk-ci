@@ -26,6 +26,7 @@ import com.tencent.devops.project.pojo.BkDataSourceBillsDTO
 import com.tencent.devops.project.pojo.BkSummaryBillDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.enums.BkBillKind
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -97,7 +98,8 @@ class ProjectBillsService(
                     projectConditionDTO = projectConditionDTO.copy(
                         excludedCreateTime = LocalDate.now().minusMonths(2).format(DATE_FORMATTER),
                         routerTag = AuthSystemType.RBAC_AUTH_TYPE,
-                        enabled = true
+                        enabled = true,
+                        channelCode = ProjectChannelCode.BS.name
                     ),
                     limit = limit,
                     offset = offset
