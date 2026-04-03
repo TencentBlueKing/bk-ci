@@ -62,7 +62,7 @@ class WeworkGroupNotifier @Autowired constructor(
         }
         val title = NotifierUtils.replaceContentParams(
             request.titleParams,
-            rtxTplRecord?.title ?: weworkGroupTplRecord!!.title
+            rtxTplRecord?.title ?: weworkGroupTplRecord?.title ?: ""
         )
         // 替换内容里的动态参数
         val body = NotifierUtils.replaceContentParams(
