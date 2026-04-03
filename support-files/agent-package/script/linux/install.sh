@@ -57,49 +57,43 @@ function download_agent()
     echo "agent.zip already exist, skip download"
     return
   fi
-  local download_ok=false
-  if exists curl; then
-    echo "download using curl"
-    if curl -sSL --fail -H "X-DEVOPS-PROJECT-ID: ##projectId##" -o agent.zip "##agent_url##"; then
-      download_ok=true
-    else
-      echo "curl download failed (exit code $?)"
-      rm -f agent.zip
-      if exists wget; then
-        echo "retrying with wget..."
-        if wget -q --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##"; then
-          download_ok=true
-        fi
-      fi
-    fi
-  elif exists wget; then
-    echo "download using wget"
-    if wget -q --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##"; then
-      download_ok=true
-    fi
-  else
-    echo "curl & wget command don't exist, download fail"
+  if ! exists curl; then
+    echo "no curl command, download fail"
     exit 1
   fi
 
-  if [[ "$download_ok" != "true" ]]; then
-    echo "download agent.zip failed"
-    if [[ -f agent.zip ]]; then
-      echo "server response (first 500 bytes):"
-      head -c 500 agent.zip 2>/dev/null
-      echo ""
-      rm -f agent.zip
-    fi
+  echo "GET -H 'X-DEVOPS-PROJECT-ID: ##projectId##' ##agent_url##"
+
+  local http_code
+  http_code=$(curl -v --show-error \
+    -H "X-DEVOPS-PROJECT-ID: ##projectId##" \
+    -o agent.zip \
+    -w '%{http_code}' \
+    "##agent_url##")
+  local curl_exit=$?
+
+  echo ""
+  echo "--- download result ---"
+  echo "HTTP Status: $http_code"
+
+  if [[ $curl_exit -ne 0 ]]; then
+    echo "curl exit code: $curl_exit"
+    rm -f agent.zip
     exit 1
   fi
 
-  if ! unzip -t agent.zip >/dev/null 2>&1; then
-    echo "downloaded file is not a valid zip, server may have returned an error:"
-    head -c 500 agent.zip 2>/dev/null
+  if [[ "$http_code" -ge 400 ]]; then
+    echo "server response body:"
+    cat agent.zip 2>/dev/null
     echo ""
     rm -f agent.zip
     exit 1
   fi
+
+  local file_size
+  file_size=$(stat -c%s agent.zip 2>/dev/null || stat -f%z agent.zip 2>/dev/null || echo "unknown")
+  echo "file size: ${file_size} bytes"
+  echo "download OK"
 }
 
 function writeSSHConfig()

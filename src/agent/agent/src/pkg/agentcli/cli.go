@@ -568,12 +568,29 @@ func waitForHeartbeatExpiry(workDir string) {
 	fmt.Println()
 }
 
+// agentArch returns the arch query parameter for the backend download API.
+// The backend recognizes "arm64" and "mips64"; anything else (amd64, 386, loong64)
+// is treated as the default x86_64 package.
+func agentArch() string {
+	switch runtime.GOARCH {
+	case "arm64":
+		return "arm64"
+	case "mips64", "mips64le":
+		return "mips64"
+	default:
+		return ""
+	}
+}
+
 // downloadAgentZip downloads agent.zip from the BK-CI server using credentials from .agent.properties.
 func downloadAgentZip(workDir, gateway, agentId, savePath string) error {
 	if !strings.HasPrefix(gateway, "http") {
 		gateway = "http://" + gateway
 	}
 	url := gateway + "/external/agents/" + agentId + "/agent"
+	if arch := agentArch(); arch != "" {
+		url += "?arch=" + arch
+	}
 
 	projectId, _ := readProperty(workDir, "devops.project.id")
 	secretKey, _ := readProperty(workDir, "devops.agent.secret.key")
