@@ -53,12 +53,7 @@ class UserProjectWorkspaceImageResourceImpl @Autowired constructor(
     }
 
     override fun getProjectImageList(userId: String, projectId: String): Result<List<ProjectImage>> {
-        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
-            )
-        }
+        permissionService.checkUserManager(userId, projectId)
         logger.info("UserImageManageResourceImpl|getProjectImageList|userId|$userId|projectId|$projectId")
         return Result(projectImageManageService.getProjectImageList(projectId, null))
     }
@@ -70,17 +65,12 @@ class UserProjectWorkspaceImageResourceImpl @Autowired constructor(
 
     override fun getVmStandardImages(userId: String, projectId: String): Result<List<StandardVmImage>> {
         logger.info("UserImageManageResourceImpl|getVmStandardImages|userId|$userId|projectId|$projectId")
-        permissionService.checkUserVisitPermission(userId, projectId)
+        permissionService.checkUserManager(userId, projectId)
         return Result(projectImageManageService.getVmStandardImages())
     }
 
     override fun updateImageName(userId: String, projectId: String, data: UpdateImageNameInfo): Result<Boolean> {
-        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
-            )
-        }
+        permissionService.checkUserManager(userId, projectId)
         logger.info("UserImageManageResourceImpl|updateImageName|userId|$userId|projectId|$projectId|data|$data")
         projectImageManageService.updateImageName(data.id, data.imageName)
         return Result(true)
