@@ -159,8 +159,8 @@ class RemoteDevService @Autowired constructor(
     }
 
     /*请求合法性校验时使用的密钥*/
-    @Value("\${workspaceTaskCallExternalKey:#{null}}")
-    val workspaceTaskCallExternalKey: String? = null
+    @Value("\${workspaceTaskCallExternalKey:}")
+    val workspaceTaskCallExternalKey = ""
 
     fun workspaceTaskCallbackNew(
         taskStatus: TaskStatus,
