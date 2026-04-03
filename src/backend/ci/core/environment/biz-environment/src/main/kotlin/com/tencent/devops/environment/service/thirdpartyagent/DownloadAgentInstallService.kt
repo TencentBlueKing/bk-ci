@@ -50,17 +50,19 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.nio.charset.Charset
-import java.util.Locale
 import org.apache.commons.compress.archivers.ArchiveOutputStream
 import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
-import org.apache.commons.compress.utils.IOUtils
+import org.apache.commons.io.IOUtils
+import org.apache.tools.zip.ZipEntry
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.Locale
+import java.util.Locale.getDefault
 
 @Service
 @Suppress("TooManyFunctions", "LongMethod")
@@ -136,14 +138,12 @@ class DownloadAgentInstallService @Autowired constructor(
         arch: AgentArchType?
     ): Response {
         logger.info("Trying to download the agent($agentId) arch($arch)")
-
         val jarFiles = getGoAgentJarFiles(record.os, arch)
         val goDaemonFile = getGoFile(record.os, "devopsDaemon", arch)
         val goAgentFile = getGoFile(record.os, "devopsAgent", arch)
-        val goInstallerFile = getGoFile(record.os, "installer", arch)
         val goUpgraderFile = getGoFile(record.os, "upgrader", arch)
         val packageFiles = getAgentPackageFiles(record.os)
-        val scriptFiles = getGoAgentScriptFiles(record, null, null, null)
+        val scriptFiles = getGoAgentScriptFiles(record)
         val propertyFile = getPropertyFile(record)
 
         logger.info("Get the script files (${scriptFiles.keys})")
@@ -164,14 +164,15 @@ class DownloadAgentInstallService @Autowired constructor(
             }
 
             (packageFiles?.let { jarFiles.plus(packageFiles) } ?: jarFiles).forEach {
-                zipOut.putArchiveEntry(ZipArchiveEntry(it, it.name))
+                val entry = ZipArchiveEntry(it, it.name)
+                entry.method = ZipEntry.STORED
+                zipOut.putArchiveEntry(entry)
                 IOUtils.copy(FileInputStream(it), zipOut)
                 zipOut.closeArchiveEntry()
             }
 
             zipBinaryFile(os = record.os, goAgentFile = goAgentFile, fileName = "devopsAgent", zipOut = zipOut)
             zipBinaryFile(os = record.os, goAgentFile = goDaemonFile, fileName = "devopsDaemon", zipOut = zipOut)
-            zipBinaryFile(os = record.os, goAgentFile = goInstallerFile, fileName = "tmp/installer", zipOut = zipOut)
             zipBinaryFile(os = record.os, goAgentFile = goUpgraderFile, fileName = "tmp/upgrader", zipOut = zipOut)
 
             scriptFiles.forEach { (name, content) ->
@@ -211,6 +212,7 @@ class DownloadAgentInstallService @Autowired constructor(
             fileName
         }
         val devopsAgentEntry = ZipArchiveEntry(goAgentFile, finalFilename)
+        devopsAgentEntry.method = ZipEntry.STORED
         devopsAgentEntry.unixMode = AGENT_FILE_MODE
         zipOut.putArchiveEntry(devopsAgentEntry)
         IOUtils.copy(FileInputStream(goAgentFile), zipOut)
@@ -230,7 +232,7 @@ class DownloadAgentInstallService @Autowired constructor(
     }
 
     private fun getAgentPackageFiles(os: String) =
-        File(agentPackage, "packages/${os.toLowerCase()}/").listFiles()
+        File(agentPackage, "packages/${os.lowercase(getDefault())}/").listFiles()
 
     private fun getGoAgentJarFiles(os: String, arch: AgentArchType?): List<File> {
         val agentJar = getAgentJarFile()
@@ -263,18 +265,13 @@ class DownloadAgentInstallService @Autowired constructor(
     }
 
     private fun getGoAgentScriptFiles(
-        agentRecord: TEnvironmentThirdpartyAgentRecord,
-        loginName: String?,
-        loginPassword: String?,
-        installType: TPAInstallType?
+        agentRecord: TEnvironmentThirdpartyAgentRecord
     ): Map<String, String> {
         val file = File(agentPackage, "script/${agentRecord.os.lowercase()}")
         val scripts = file.listFiles()?.toMutableList()
         scripts?.removeIf { it.name == getDownloadFile(agentRecord.os) }
-        val map = getAgentReplaceProperties(agentRecord, false, loginName, loginPassword, installType)
         return scripts?.associate {
-            var content = it.readText(Charsets.UTF_8)
-            map.forEach { (key, value) -> content = content.replace("##$key##", value) }
+            val content = it.readText(Charsets.UTF_8)
             it.name to content
         } ?: emptyMap()
     }
@@ -403,7 +400,7 @@ class DownloadAgentInstallService @Autowired constructor(
                 }
             }
 
-            getGoAgentScriptFiles(record, null, null, null).forEach { (name, content) ->
+            getGoAgentScriptFiles(record).forEach { (name, content) ->
                 logger.info("zip the script files ($name)")
                 val entry = ZipArchiveEntry(name)
                 val bytes = content.toByteArray()
