@@ -248,7 +248,9 @@ class ProcessDataDeleteService @Autowired constructor(
                 processDataDeleteDao::deletePipelineOperationLog,
                 processDataDeleteDao::deletePipelineWebhookVersion,
                 processDataDeleteDao::deletePipelineCallback,
-                processDataDeleteDao::deletePipelineSubRef
+                processDataDeleteDao::deletePipelineSubRef,
+                processDataDeleteDao::deletePipelineBuildParamCombinationDetail,
+                processDataDeleteDao::deletePipelineBuildParamCombination
             ).forEach { function ->
                 function(dslContext, projectId, pipelineId)
             }

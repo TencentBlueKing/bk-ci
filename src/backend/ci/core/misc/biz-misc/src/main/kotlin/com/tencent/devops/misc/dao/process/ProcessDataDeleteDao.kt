@@ -34,6 +34,8 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElem
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.model.process.tables.TAuditResource
 import com.tencent.devops.model.process.tables.TPipelineBuildContainer
+import com.tencent.devops.model.process.tables.TPipelineBuildParamCombination
+import com.tencent.devops.model.process.tables.TPipelineBuildParamCombinationDetail
 import com.tencent.devops.model.process.tables.TPipelineBuildDetail
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.TPipelineBuildHistoryDebug
@@ -646,6 +648,22 @@ class ProcessDataDeleteDao {
 
     fun deletePipelineSubRef(dslContext: DSLContext, projectId: String, pipelineId: String) {
         with(TPipelineSubRef.T_PIPELINE_SUB_REF) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .execute()
+        }
+    }
+
+    fun deletePipelineBuildParamCombination(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        with(TPipelineBuildParamCombination.T_PIPELINE_BUILD_PARAM_COMBINATION) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .execute()
+        }
+    }
+
+    fun deletePipelineBuildParamCombinationDetail(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        with(TPipelineBuildParamCombinationDetail.T_PIPELINE_BUILD_PARAM_COMBINATION_DETAIL) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
                 .execute()

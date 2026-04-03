@@ -94,6 +94,8 @@ class ProcessDataClearService @Autowired constructor(
                 processDataDeleteDao.deletePipelineRemoteAuth(dslContext, projectId, pipelineId)
                 processDataDeleteDao.deletePipelineWebhook(dslContext, projectId, pipelineId)
                 processDataDeleteDao.deletePipelineTimer(dslContext, projectId, pipelineId)
+                processDataDeleteDao.deletePipelineBuildParamCombinationDetail(dslContext, projectId, pipelineId)
+                processDataDeleteDao.deletePipelineBuildParamCombination(dslContext, projectId, pipelineId)
                 // 添加删除记录，插入要实现幂等
                 processDao.addPipelineDataClear(
                     dslContext = context,
