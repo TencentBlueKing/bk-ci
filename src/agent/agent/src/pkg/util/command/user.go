@@ -83,7 +83,9 @@ func SetUser(cmd *exec.Cmd, runUser string) error {
 	}
 	uid, _ := strconv.Atoi(rUser.Uid)
 	gid, _ := strconv.Atoi(rUser.Gid)
-	cmd.SysProcAttr = &syscall.SysProcAttr{}
+	if cmd.SysProcAttr == nil {
+		cmd.SysProcAttr = &syscall.SysProcAttr{}
+	}
 	cmd.SysProcAttr.Credential = &syscall.Credential{Uid: uint32(uid), Gid: uint32(gid)}
 
 	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", envHome, rUser.HomeDir))
