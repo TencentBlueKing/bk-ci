@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
+import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceEnv
 import com.tencent.devops.remotedev.pojo.WorkspaceGroupByOrg
@@ -214,6 +215,44 @@ interface UserWorkspaceResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<WorkspaceOpHistory>>
+
+    @Operation(summary = "获取用户已授权代码库列表")
+    @GET
+    @Path("/repository")
+    fun getAuthorizedGitRepository(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "模糊搜索代码库", required = false)
+        @QueryParam("search")
+        search: String?,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页多少条", required = false, example = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @Parameter(description = "git 类型", required = true)
+        @QueryParam("gitType")
+        @DefaultValue("GIT")
+        gitType: RemoteDevGitType = RemoteDevGitType.GIT
+    ): Result<List<RemoteDevRepository>>
+
+    @Operation(summary = "获取目标授权代码库分支")
+    @GET
+    @Path("/repository_branch")
+    fun getRepositoryBranch(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "代码库项目全路径", required = true)
+        @QueryParam("pathWithNamespace")
+        pathWithNamespace: String,
+        @Parameter(description = "git 类型", required = true)
+        @QueryParam("gitType")
+        @DefaultValue("GIT")
+        gitType: RemoteDevGitType = RemoteDevGitType.GIT
+    ): Result<List<String>>
 
     @Operation(summary = "根据用户ID判断用户是否已经oauth认证")
     @GET

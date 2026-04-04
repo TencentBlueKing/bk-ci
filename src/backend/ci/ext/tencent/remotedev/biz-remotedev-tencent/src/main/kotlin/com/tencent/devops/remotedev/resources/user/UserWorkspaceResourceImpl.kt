@@ -37,6 +37,7 @@ import com.tencent.devops.remotedev.api.user.UserWorkspaceResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
+import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceEnv
 import com.tencent.devops.remotedev.pojo.WorkspaceGroupByOrg
@@ -156,6 +157,38 @@ class UserWorkspaceResourceImpl @Autowired constructor(
 
     override fun getEnvs4PublicWorkspace(userId: String): Result<List<WorkspaceEnv>> {
         return Result(workspaceService.getEnvs4PublicWorkspace(userId))
+    }
+
+    override fun getAuthorizedGitRepository(
+        userId: String,
+        search: String?,
+        page: Int?,
+        pageSize: Int?,
+        gitType: RemoteDevGitType
+    ): Result<List<RemoteDevRepository>> {
+        return Result(
+            repositoryService.getAuthorizedGitRepository(
+                userId = userId,
+                search = search,
+                page = page,
+                pageSize = pageSize,
+                gitType = gitType
+            )
+        )
+    }
+
+    override fun getRepositoryBranch(
+        userId: String,
+        pathWithNamespace: String,
+        gitType: RemoteDevGitType
+    ): Result<List<String>> {
+        return Result(
+            repositoryService.getRepositoryBranch(
+                userId = userId,
+                pathWithNamespace = pathWithNamespace,
+                gitType = gitType
+            )
+        )
     }
 
     override fun getWorkspaceTimeline(
