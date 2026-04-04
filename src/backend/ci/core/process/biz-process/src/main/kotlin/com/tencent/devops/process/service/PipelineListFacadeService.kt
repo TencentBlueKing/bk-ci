@@ -1701,6 +1701,8 @@ class PipelineListFacadeService @Autowired constructor(
                     projectId = it.projectId,
                     pipelineId = pipelineId,
                     pipelineName = it.pipelineName,
+                    pipelineDesc = it.pipelineDesc,
+                    autoSummary = it.autoSummary,
                     taskCount = it.taskCount,
                     lock = it.locked,
                     canManualStartup = it.manualStartup == 1,
