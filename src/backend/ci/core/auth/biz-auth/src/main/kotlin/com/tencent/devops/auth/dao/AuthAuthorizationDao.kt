@@ -224,22 +224,6 @@ class AuthAuthorizationDao {
         }
     }
 
-    fun listResourceCodes(
-        dslContext: DSLContext,
-        projectCode: String,
-        resourceType: String,
-        handoverFrom: String
-    ): List<String> {
-        return with(TAuthResourceAuthorization.T_AUTH_RESOURCE_AUTHORIZATION) {
-            dslContext.select(RESOURCE_CODE)
-                .from(this)
-                .where(PROJECT_CODE.eq(projectCode))
-                .and(RESOURCE_TYPE.eq(resourceType))
-                .and(HANDOVER_FROM.eq(handoverFrom))
-                .fetch().map { it.value1() }
-        }
-    }
-
     fun TAuthResourceAuthorizationRecord.convert(): ResourceAuthorizationResponse {
         return ResourceAuthorizationResponse(
             id = id,

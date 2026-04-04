@@ -19,6 +19,7 @@ class PipelineVisibilityDao {
         userId: String,
         projectId: String,
         pipelineId: String,
+        authUser: String,
         visibilityList: List<PipelineVisibility>
     ) {
         with(TPipelineVisibility.T_PIPELINE_VISIBILITY) {
@@ -31,6 +32,7 @@ class PipelineVisibilityDao {
                     TYPE,
                     SCOPE_ID,
                     SCOPE_NAME,
+                    AUTH_USER,
                     CREATOR,
                     CREATE_TIME
                 ).values(
@@ -39,11 +41,13 @@ class PipelineVisibilityDao {
                     it.type.name,
                     it.scopeId,
                     it.scopeName,
+                    authUser,
                     userId,
                     now
                 )
                     .onDuplicateKeyUpdate()
                     .set(SCOPE_NAME, it.scopeName)
+                    .set(AUTH_USER, authUser)
                     .set(CREATOR, userId)
                     .set(CREATE_TIME, now)
                     .execute()
@@ -101,6 +105,24 @@ class PipelineVisibilityDao {
         }
     }
 
+    fun deleteByScopeIds(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        scopeIds: List<String>
+    ) {
+        if (scopeIds.isEmpty()) {
+            return
+        }
+        with(TPipelineVisibility.T_PIPELINE_VISIBILITY) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(SCOPE_ID.`in`(scopeIds))
+                .execute()
+        }
+    }
+
     fun deleteByPipelineId(
         dslContext: DSLContext,
         projectId: String,
@@ -114,24 +136,68 @@ class PipelineVisibilityDao {
         }
     }
 
+    fun updateAuthUser(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        authUser: String
+    ) {
+        with(TPipelineVisibility.T_PIPELINE_VISIBILITY) {
+            dslContext.update(this)
+                .set(AUTH_USER, authUser)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
+    }
+
     fun listVisiblePipelineIds(
         dslContext: DSLContext,
         projectId: String,
-        pipelineIds: Set<String>,
+        authUser: String,
         requestUserId: String,
-        userDeptIds: Set<String>
-    ): Set<String> {
+        userDeptIds: Set<String>,
+        pipelineIds: Set<String>? = null,
+        limit: Int? = null,
+        offset: Int? = null
+    ): List<String> {
         return with(TPipelineVisibility.T_PIPELINE_VISIBILITY) {
-            val deptCondition = TYPE.eq(PipelineVisibilityType.DEPT.name)
-                .and(SCOPE_ID.`in`(userDeptIds))
-            val userCondition = TYPE.eq(PipelineVisibilityType.USER.name)
-                .and(SCOPE_ID.eq(requestUserId))
-            dslContext.selectDistinct(PIPELINE_ID)
+            val conditions = buildVisibilityConditions(
+                projectId = projectId,
+                authUser = authUser,
+                requestUserId = requestUserId,
+                userDeptIds = userDeptIds,
+                pipelineIds = pipelineIds
+            )
+            val query = dslContext.selectDistinct(PIPELINE_ID)
                 .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.`in`(pipelineIds))
-                .and(DSL.or(deptCondition, userCondition))
-                .fetch().map { it.value1() }.toSet()
+                .where(conditions)
+            if (limit != null && offset != null) {
+                query.limit(limit).offset(offset)
+            }
+            query.fetch().map { it.value1() }
         }
+    }
+
+    private fun TPipelineVisibility.buildVisibilityConditions(
+        projectId: String,
+        authUser: String,
+        requestUserId: String,
+        userDeptIds: Set<String>,
+        pipelineIds: Set<String>? = null
+    ): List<org.jooq.Condition> {
+        val deptCondition = TYPE.eq(PipelineVisibilityType.DEPT.name)
+            .and(SCOPE_ID.`in`(userDeptIds))
+        val userCondition = TYPE.eq(PipelineVisibilityType.USER.name)
+            .and(SCOPE_ID.eq(requestUserId))
+        val conditions = mutableListOf(
+            PROJECT_ID.eq(projectId),
+            AUTH_USER.eq(authUser),
+            DSL.or(deptCondition, userCondition)
+        )
+        if (!pipelineIds.isNullOrEmpty()) {
+            conditions.add(PIPELINE_ID.`in`(pipelineIds))
+        }
+        return conditions
     }
 }

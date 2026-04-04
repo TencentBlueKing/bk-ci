@@ -656,7 +656,7 @@ interface ServicePipelineResource {
         pipelineId: String
     ): Result<PipelineRemoteToken>
 
-    @Operation(summary = "查询我有权限的、某个用户(权限代持人)公开的流水线列表")
+    @Operation(summary = "查询指定用户(权限代持人)公开的可见流水线列表")
     @GET
     @Path("/projects/{projectId}/visibility")
     fun listVisiblePipelines(

@@ -76,17 +76,4 @@ class ServiceAuthAuthorizationResourceImpl constructor(
         )
     }
 
-    override fun listResourceCodesByHandoverFrom(
-        projectId: String,
-        resourceType: String,
-        handoverFrom: String
-    ): Result<List<String>> {
-        return Result(
-            permissionAuthorizationService.listResourceCodesByHandoverFrom(
-                projectCode = projectId,
-                resourceType = resourceType,
-                handoverFrom = handoverFrom
-            )
-        )
-    }
 }

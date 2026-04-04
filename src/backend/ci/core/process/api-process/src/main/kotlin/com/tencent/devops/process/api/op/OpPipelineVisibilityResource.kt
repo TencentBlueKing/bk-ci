@@ -13,7 +13,6 @@ import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
-import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
@@ -56,25 +55,8 @@ interface OpPipelineVisibilityResource {
         @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "可见范围列表", required = true)
-        visibilityList: List<PipelineVisibility>
-    ): Result<Boolean>
-
-    @Operation(summary = "全量更新流水线可见范围")
-    @PUT
-    @Path("/{projectId}/{pipelineId}")
-    fun updateVisibility(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @Parameter(description = "可见范围列表", required = true)
-        visibilityList: List<PipelineVisibility>
+        @Parameter(description = "可见范围ID列表", required = true)
+        scopeIds: List<String>
     ): Result<Boolean>
 
     @Operation(summary = "查询流水线可见范围列表")

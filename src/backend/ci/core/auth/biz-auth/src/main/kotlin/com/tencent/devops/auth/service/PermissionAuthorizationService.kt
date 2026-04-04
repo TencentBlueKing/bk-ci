@@ -167,13 +167,4 @@ interface PermissionAuthorizationService {
         handoverFrom: String,
         handoverTo: String
     )
-
-    /**
-     * 根据权限代持人查询资源code列表
-     */
-    fun listResourceCodesByHandoverFrom(
-        projectCode: String,
-        resourceType: String,
-        handoverFrom: String
-    ): List<String>
 }

@@ -632,7 +632,7 @@ interface ApigwPipelineResourceV4 {
     ): Result<PipelineViewPipelinePage<PipelineInfo>>
 
     @Operation(
-        summary = "查询我有权限的某用户(权限代持人)公开的流水线",
+        summary = "查询指定用户(权限代持人)公开的可见流水线",
         tags = ["v4_app_pipeline_visibility_list", "v4_user_pipeline_visibility_list"]
     )
     @GET

@@ -20,7 +20,7 @@ import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "USER_PIPELINE_VISIBILITY", description = "用户-流水线-可见范围")
-@Path("/user/pipelineVisibilities/projects/{projectId}/pipelines/{pipelineId}")
+@Path("/user/pipelineVisibilities/{projectId}/{pipelineId}")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserPipelineVisibilityResource {
@@ -73,7 +73,7 @@ interface UserPipelineVisibilityResource {
         @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "可见范围列表", required = true)
-        visibilityList: List<PipelineVisibility>
+        @Parameter(description = "可见范围ID列表", required = true)
+        scopeIds: List<String>
     ): Result<Boolean>
 }

@@ -86,8 +86,8 @@ import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineDetailInfo
 import com.tencent.devops.process.pojo.PipelineIdAndName
-import com.tencent.devops.process.pojo.PipelineInfoQueryCondition
 import com.tencent.devops.process.pojo.PipelineIdInfo
+import com.tencent.devops.process.pojo.PipelineInfoQueryCondition
 import com.tencent.devops.process.pojo.PipelinePermissions
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.app.PipelinePage
@@ -2333,21 +2333,39 @@ class PipelineListFacadeService @Autowired constructor(
         page: Int,
         pageSize: Int
     ): SQLPage<SimplePipeline> {
+        // 1. 如果有流水线名称，先从 T_PIPELINE_INFO 按名称搜索得到候选 ID
+        val candidatePipelineIds = if (!pipelineName.isNullOrBlank()) {
+            val pipelineIds = pipelineInfoDao.searchPipelineIdsByName(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineName = pipelineName
+            )
+            if (pipelineIds.isEmpty()) {
+                return SQLPage(count = 0, records = emptyList())
+            }
+            pipelineIds
+        } else {
+            null
+        }
+
+        // 2. 在 T_PIPELINE_VISIBILITY 分页查询可见流水线 ID
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         val visiblePipelineIds = pipelineVisibilityService.listVisiblePipelineIds(
             requestUserId = userId,
             projectId = projectId,
-            targetUserId = targetUserId
+            targetUserId = targetUserId,
+            pipelineIds = candidatePipelineIds,
+            limit = sqlLimit.limit,
+            offset = sqlLimit.offset
         )
         if (visiblePipelineIds.isEmpty()) {
             return SQLPage(count = 0, records = emptyList())
         }
-        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+
+        // 3. 根据分页后的流水线 ID 查询 T_PIPELINE_INFO 获取详情
         val condition = PipelineInfoQueryCondition(
             projectId = projectId,
-            pipelineIds = visiblePipelineIds,
-            pipelineName = pipelineName,
-            limit = sqlLimit.limit,
-            offset = sqlLimit.offset
+            pipelineIds = visiblePipelineIds.toSet()
         )
         val count = pipelineInfoDao.countByCondition(
             dslContext = dslContext,
@@ -2357,7 +2375,6 @@ class PipelineListFacadeService @Autowired constructor(
             dslContext = dslContext,
             condition = condition
         )
-
         return SQLPage(
             count = count,
             records = generateSimplePipelines(records)

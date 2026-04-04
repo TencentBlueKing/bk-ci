@@ -56,13 +56,13 @@ class UserPipelineVisibilityResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        visibilityList: List<PipelineVisibility>
+        scopeIds: List<String>
     ): Result<Boolean> {
         checkPermission(userId, projectId, pipelineId, AuthPermission.EDIT)
         pipelineVisibilityService.deleteVisibility(
             projectId = projectId,
             pipelineId = pipelineId,
-            visibilityList = visibilityList
+            scopeIds = scopeIds
         )
         return Result(true)
     }

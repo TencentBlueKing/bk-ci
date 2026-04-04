@@ -628,6 +628,21 @@ class PipelineInfoDao {
         }
     }
 
+    fun searchPipelineIdsByName(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineName: String
+    ): Set<String> {
+        return with(T_PIPELINE_INFO) {
+            dslContext.select(PIPELINE_ID)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(DELETE.eq(false))
+                .and(PIPELINE_NAME.like("%$pipelineName%"))
+                .fetch().map { it.value1() }.toSet()
+        }
+    }
+
     fun getPipelineInfo(
         dslContext: DSLContext,
         projectId: String,

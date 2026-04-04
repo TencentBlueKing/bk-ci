@@ -460,6 +460,8 @@ object ProcessMessageCode {
     const val ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN = "2101364"
     // 模型变量引用表达式不合规：仅允许双大括号${{xxx}}，且前缀须为 variables./stages./jobs./steps.。不合规项（含位置 positionPath）：{0}
     const val ERROR_PIPELINE_MODEL_VAR_REF_INVALID = "2101376"
+    // 流水线{0}的权限代持人不存在
+    const val ERROR_PIPELINE_AUTH_USER_NOT_EXISTS = "2101365"
 
     const val BUILD_MSG_TRIGGER_EVENT = "2101368" // 通用事件触发
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件

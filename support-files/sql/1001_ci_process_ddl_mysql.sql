@@ -1545,14 +1545,16 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_EVENT_SUBSCRIPTION` (
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS `T_PIPELINE_VISIBILITY`
 (
-    `PROJECT_ID`  varchar(64)   NOT NULL COMMENT '项目ID',
-    `PIPELINE_ID` varchar(34)   NOT NULL COMMENT '流水线ID',
-    `TYPE`        varchar(16)   NOT NULL COMMENT '可见范围类型: DEPT/USER',
-    `SCOPE_ID`    varchar(64)   NOT NULL COMMENT '部门ID或用户ID',
-    `SCOPE_NAME`  varchar(1024) NOT NULL COMMENT '部门名称或用户名',
-    `CREATOR`     varchar(64)   NOT NULL COMMENT '创建者',
-    `CREATE_TIME` datetime      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY (`PROJECT_ID`, `PIPELINE_ID`, `TYPE`, `SCOPE_ID`)
+    `PROJECT_ID`    varchar(64)   NOT NULL COMMENT '项目ID',
+    `PIPELINE_ID`   varchar(34)   NOT NULL COMMENT '流水线ID',
+    `TYPE`          varchar(16)   NOT NULL COMMENT '可见范围类型: DEPT/USER',
+    `SCOPE_ID`      varchar(64)   NOT NULL COMMENT '部门ID或用户ID',
+    `SCOPE_NAME`    varchar(1024) NOT NULL COMMENT '部门名称或用户名',
+    `AUTH_USER`     varchar(64)   NOT NULL DEFAULT '' COMMENT '权限代持人',
+    `CREATOR`       varchar(64)   NOT NULL COMMENT '创建者',
+    `CREATE_TIME`   datetime      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`PROJECT_ID`, `PIPELINE_ID`, `TYPE`, `SCOPE_ID`),
+    KEY `IDX_PROJECT_AUTH_USER` (`PROJECT_ID`, `AUTH_USER`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='流水线可见范围表';
 
 SET FOREIGN_KEY_CHECKS = 1;

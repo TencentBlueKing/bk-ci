@@ -31,27 +31,12 @@ class OpPipelineVisibilityResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        visibilityList: List<PipelineVisibility>
+        scopeIds: List<String>
     ): Result<Boolean> {
         pipelineVisibilityService.deleteVisibility(
             projectId = projectId,
             pipelineId = pipelineId,
-            visibilityList = visibilityList
-        )
-        return Result(true)
-    }
-
-    override fun updateVisibility(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        visibilityList: List<PipelineVisibility>
-    ): Result<Boolean> {
-        pipelineVisibilityService.updateVisibility(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            visibilityList = visibilityList
+            scopeIds = scopeIds
         )
         return Result(true)
     }
