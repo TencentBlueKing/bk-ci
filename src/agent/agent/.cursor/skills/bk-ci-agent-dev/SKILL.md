@@ -442,20 +442,24 @@ go test ./...
 
 **用户文档**（`doc/` 目录下，面向用户和 AI 查询）:
 - `doc/README.md` — 文档索引总览，快速入门指引
-- `doc/installation.md` — 安装部署指南（前置条件、各平台安装步骤、部署场景）
-- `doc/agent-cli.md` — CLI 命令参考（install/uninstall/start/stop/status/reinstall/repair/debug/version）
-- `doc/architecture.md` — 架构与模块说明（进程模型、主循环、模块清单）
-- `doc/configuration.md` — 配置参考（`.agent.properties` 参数详解、辅助文件、环境变量开关）
-- `doc/platform-linux.md` — Linux 平台指南（systemd 模式、Root/非 Root、容器部署、login shell）
-- `doc/platform-macos.md` — macOS 平台指南（launchd 模式、无头模式、JDK 路径差异）
-- `doc/platform-windows.md` — Windows 平台指南（服务/Session 模式、环境变量自动刷新）
-- `doc/build-and-workspace.md` — 构建系统与工作空间（Worker、JDK、磁盘占用与清理）
-- `doc/docker-builds.md` — Docker/Podman 容器构建（运行时切换、挂载规则、镜像调试）
-- `doc/upgrade-and-reinstall.md` — 升级与重装机制（自动升级流程、reinstall 完全重装）
-- `doc/troubleshooting.md` — 故障排查与状态检查（status 解读、健康检查、常见故障）
+- `doc/guide/installation.md` — 安装部署指南（前置条件、各平台安装步骤、部署场景）
+- `doc/guide/agent-cli.md` — CLI 命令参考（install/uninstall/start/stop/status/reinstall/repair/debug/version）
+- `doc/guide/architecture.md` — 架构与模块说明（进程模型、主循环、模块清单）
+- `doc/guide/configuration.md` — 配置参考（`.agent.properties` 参数详解、辅助文件、环境变量开关）
+- `doc/guide/platform-linux.md` — Linux 平台指南（systemd 模式、Root/非 Root、容器部署、login shell）
+- `doc/guide/platform-macos.md` — macOS 平台指南（launchd 模式、无头模式、JDK 路径差异）
+- `doc/guide/platform-windows.md` — Windows 平台指南（服务/Session 模式、环境变量自动刷新）
+- `doc/guide/build-and-workspace.md` — 构建系统与工作空间（Worker、JDK、磁盘占用与清理）
+- `doc/guide/docker-builds.md` — Docker/Podman 容器构建（运行时切换、挂载规则、镜像调试）
+- `doc/guide/upgrade-and-reinstall.md` — 升级与重装机制（自动升级流程、reinstall 完全重装）
+- `doc/guide/troubleshooting.md` — 故障排查与状态检查（status 解读、健康检查、常见故障）
 
 **人工测试文档**:
-- `doc/manual-test-agent-features.md` — 单测无法覆盖的人工上机验证清单（CLI / reinstall / status / Docker/Podman / 镜像调试 / 旧脚本兼容）
+- `doc/testing/manual-test-agent-features.md` — 单测无法覆盖的人工上机验证清单（CLI / reinstall / status / Docker/Podman / 镜像调试 / 旧脚本兼容）
+
+**常见问题（FAQ）**:
+- `doc/faq/macos-env-missing.md` — macOS 构建环境变量缺失（launchd 极简环境、.zshrc 不被加载）
+- `doc/faq/macos-root-agent-offline.md` — macOS root 安装的 Agent 构建后掉线（SetUser 覆盖 Setpgid 导致误杀 daemon）
 
 ### 关键第三方依赖
 
