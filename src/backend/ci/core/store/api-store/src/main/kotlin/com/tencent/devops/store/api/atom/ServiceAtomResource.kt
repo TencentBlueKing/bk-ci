@@ -33,10 +33,13 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
 import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomProp
+import com.tencent.devops.store.pojo.atom.AtomResp
+import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.PipelineAtom
+import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import io.swagger.v3.oas.annotations.Operation
@@ -170,4 +173,55 @@ interface ServiceAtomResource {
         @PathParam("atomCode")
         atomCode: String
     ): Result<AtomClassifyInfo?>
+
+    @Operation(summary = "获取所有流水线插件信息")
+    @GET
+    @Path("/projectCodes/{projectCode}/list/all")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["ATOM", "{data.records[*].atomCode}", "{data.records[*].version}", "releaseInfo"]
+    )
+    fun listAllPipelineAtoms(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "支持的服务范围（pipeline/quality/all 分别表示流水线/质量红线/全部）", required = false)
+        @QueryParam("serviceScope")
+        serviceScope: String?,
+        @Parameter(description = "job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = false)
+        @QueryParam("jobType")
+        jobType: String?,
+        @Parameter(description = "操作系统（ALL/WINDOWS/LINUX/MACOS）", required = false)
+        @QueryParam("os")
+        os: String?,
+        @Parameter(description = "项目编码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @Parameter(description = "插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = false)
+        @QueryParam("category")
+        category: String? = AtomCategoryEnum.TASK.name,
+        @Parameter(description = "插件分类id", required = false)
+        @QueryParam("classifyId")
+        classifyId: String?,
+        @Parameter(description = "是否推荐", required = false)
+        @QueryParam("recommendFlag")
+        recommendFlag: Boolean?,
+        @Parameter(description = "搜索关键字", required = false)
+        @QueryParam("keyword")
+        keyword: String?,
+        @Parameter(description = "查询项目插件标识", required = true)
+        @QueryParam("queryProjectAtomFlag")
+        queryProjectAtomFlag: Boolean = true,
+        @Parameter(description = "是否适配操作系统标识", required = false)
+        @QueryParam("fitOsFlag")
+        fitOsFlag: Boolean? = true,
+        @Parameter(description = "查询支持有编译环境下的无编译环境插件标识", required = false)
+        @QueryParam("queryFitAgentBuildLessAtomFlag")
+        queryFitAgentBuildLessAtomFlag: Boolean? = true,
+        @Parameter(description = "页码", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "每页数量", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 10
+    ): Result<AtomResp<AtomRespItem>?>
 }

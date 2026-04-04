@@ -36,6 +36,8 @@ import com.tencent.devops.store.atom.service.MarketAtomService
 import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
 import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomProp
+import com.tencent.devops.store.pojo.atom.AtomResp
+import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
@@ -111,5 +113,39 @@ class ServiceAtomResourceImpl @Autowired constructor(
 
     override fun getAtomClassifyInfo(atomCode: String): Result<AtomClassifyInfo?> {
         return atomClassifyService.getAtomClassifyInfo(atomCode)
+    }
+
+    override fun listAllPipelineAtoms(
+        userId: String,
+        serviceScope: String?,
+        jobType: String?,
+        os: String?,
+        projectCode: String,
+        category: String?,
+        classifyId: String?,
+        recommendFlag: Boolean?,
+        keyword: String?,
+        queryProjectAtomFlag: Boolean,
+        fitOsFlag: Boolean?,
+        queryFitAgentBuildLessAtomFlag: Boolean?,
+        page: Int,
+        pageSize: Int
+    ): Result<AtomResp<AtomRespItem>?> {
+        return atomService.serviceGetPipelineAtoms(
+            userId = userId,
+            serviceScope = serviceScope,
+            jobType = jobType,
+            os = os,
+            projectCode = projectCode,
+            category = category,
+            classifyId = classifyId,
+            recommendFlag = recommendFlag,
+            keyword = keyword,
+            queryProjectAtomFlag = queryProjectAtomFlag,
+            fitOsFlag = fitOsFlag,
+            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
+            page = page,
+            pageSize = pageSize
+        )
     }
 }

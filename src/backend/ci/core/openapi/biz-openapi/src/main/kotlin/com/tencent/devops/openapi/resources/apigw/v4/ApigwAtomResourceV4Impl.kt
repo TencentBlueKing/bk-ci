@@ -37,10 +37,13 @@ import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.api.common.ServiceStoreStatisticResource
 import com.tencent.devops.store.pojo.atom.AtomPipeline
+import com.tencent.devops.store.pojo.atom.AtomResp
+import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.PipelineAtom
+import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -146,6 +149,47 @@ class ApigwAtomResourceV4Impl @Autowired constructor(private val client: Client)
             recommendFlag = recommendFlag,
             qualityFlag = qualityFlag,
             sortType = sortType,
+            page = page,
+            pageSize = pageSize
+        )
+    }
+
+    override fun listAllPipelineAtoms(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectCode: String,
+        serviceScope: String?,
+        jobType: String?,
+        os: String?,
+        category: String?,
+        classifyId: String?,
+        recommendFlag: Boolean?,
+        keyword: String?,
+        queryProjectAtomFlag: Boolean,
+        fitOsFlag: Boolean?,
+        queryFitAgentBuildLessAtomFlag: Boolean?,
+        page: Int,
+        pageSize: Int
+    ): Result<AtomResp<AtomRespItem>?> {
+        logger.info(
+            "OPENAPI_ATOM_V4|$appCode|$userId|listAllPipelineAtoms: $projectCode, $serviceScope," +
+                " $jobType, $os, $category, $classifyId, $recommendFlag, $keyword," +
+                " $queryProjectAtomFlag, $fitOsFlag, $queryFitAgentBuildLessAtomFlag, $page, $pageSize"
+        )
+        return client.get(ServiceAtomResource::class).listAllPipelineAtoms(
+            userId = userId.trim(),
+            serviceScope = serviceScope,
+            jobType = jobType,
+            os = os,
+            projectCode = projectCode,
+            category = category,
+            classifyId = classifyId,
+            recommendFlag = recommendFlag,
+            keyword = keyword?.trim(),
+            queryProjectAtomFlag = queryProjectAtomFlag,
+            fitOsFlag = fitOsFlag,
+            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
             page = page,
             pageSize = pageSize
         )
