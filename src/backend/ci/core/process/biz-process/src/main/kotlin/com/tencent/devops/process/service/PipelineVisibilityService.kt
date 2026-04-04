@@ -36,6 +36,7 @@ class PipelineVisibilityService @Autowired constructor(
         visibilityList: List<PipelineVisibility>
     ) {
         val authUser = getAuthUser(projectId, pipelineId)
+        logger.info("add pipeline visibility|$userId|$projectId|$pipelineId|$authUser")
         pipelineVisibilityDao.create(
             dslContext = dslContext,
             userId = userId,
