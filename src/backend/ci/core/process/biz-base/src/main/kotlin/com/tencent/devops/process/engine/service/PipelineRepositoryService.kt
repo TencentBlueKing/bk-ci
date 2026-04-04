@@ -81,6 +81,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_FIRST_STAGE_ENV_NOT_EMPTY
 import com.tencent.devops.process.dao.PipelineCallbackDao
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.dao.PipelineVisibilityDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.dao.template.PipelineTemplateInfoDao
@@ -185,7 +186,8 @@ class PipelineRepositoryService constructor(
     private val pipelineCallbackDao: PipelineCallbackDao,
     private val subPipelineTaskService: SubPipelineTaskService,
     private val pipelineInfoService: PipelineInfoService,
-    private val pipelineTemplateInfoDao: PipelineTemplateInfoDao
+    private val pipelineTemplateInfoDao: PipelineTemplateInfoDao,
+    private val pipelineVisibilityDao: PipelineVisibilityDao
 ) {
 
     companion object {
@@ -1748,6 +1750,7 @@ class PipelineRepositoryService constructor(
                     templatePipelineDao.delete(transactionContext, projectId, pipelineId)
                     pipelineYamlInfoDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
                     pipelineYamlVersionDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
+                    pipelineVisibilityDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
                 } else {
                     // 删除前改名，防止名称占用
                     val deleteTime = org.joda.time.LocalDateTime.now().toString("yyMMddHHmmSS")
