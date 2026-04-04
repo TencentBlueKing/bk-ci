@@ -20,7 +20,7 @@ import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "USER_PIPELINE_VISIBILITY", description = "用户-流水线-可见范围")
-@Path("/user/pipelineVisibilities/{projectId}/{pipelineId}")
+@Path("/user/pipeline/visibilities/{projectId}/{pipelineId}")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserPipelineVisibilityResource {
