@@ -96,7 +96,11 @@ interface ApigwPipelineViewResourceV4 {
         @Parameter(description = "按视图过滤", required = false)
         @QueryParam("filterByViewIds")
         filterByViewIds: String? = null,
-        @Parameter(description = "用户视图ID,表示用户当前所在视图 viewId和viewName 选其一填入", required = false)
+        @Parameter(
+            description = "用户视图ID,表示用户当前所在视图 viewId和viewName 选其一填入，" +
+                "特殊viewId取值：collect（我的收藏的流水线）、myPipeline（我创建的流水线）",
+            required = false
+        )
         @QueryParam("viewId")
         viewId: String?,
         @Parameter(description = "用户视图名称,表示用户当前所在视图 viewId和viewName 选其一填入", required = false)
