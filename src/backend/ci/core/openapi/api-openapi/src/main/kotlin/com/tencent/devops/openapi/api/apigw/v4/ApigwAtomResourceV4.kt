@@ -225,7 +225,7 @@ interface ApigwAtomResourceV4 {
         tags = ["v4_user_atom_list_all", "v4_app_atom_list_all"]
     )
     @GET
-    @Path("/projects/{projectCode}/atom_list")
+    @Path("/atom_list")
     fun listAllPipelineAtoms(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -237,7 +237,7 @@ interface ApigwAtomResourceV4 {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @Parameter(description = "项目编码", required = true)
-        @PathParam("projectCode")
+        @QueryParam("projectCode")
         projectCode: String,
         @Parameter(description = "支持的服务范围（pipeline/quality/all 分别表示流水线/质量红线/全部）", required = false)
         @QueryParam("serviceScope")
