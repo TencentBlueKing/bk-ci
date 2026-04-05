@@ -151,6 +151,26 @@ class PipelineVisibilityDao {
         }
     }
 
+    fun countVisibility(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        userId: String,
+        userDeptIds: Set<String>
+    ): Int {
+        return with(TPipelineVisibility.T_PIPELINE_VISIBILITY) {
+            val userCondition = TYPE.eq(PipelineVisibilityType.USER.name)
+                .and(SCOPE_ID.eq(userId))
+            val deptCondition = TYPE.eq(PipelineVisibilityType.DEPT.name)
+                .and(SCOPE_ID.`in`(userDeptIds))
+            dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(DSL.or(userCondition, deptCondition))
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
     fun listVisiblePipelineIds(
         dslContext: DSLContext,
         projectId: String,

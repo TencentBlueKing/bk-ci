@@ -12,11 +12,14 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_IP
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_NAME
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.pojo.trigger.GenericWebhookEventBody
 import com.tencent.devops.process.pojo.trigger.MarketEventStartRequest
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
 import com.tencent.devops.process.service.CreateStreamTriggerSupportService
+import com.tencent.devops.process.service.PipelineVisibilityService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.WebhookTriggerBuildService
 import com.tencent.devops.process.trigger.enums.MatchStatus
@@ -41,7 +44,8 @@ class MarketEventTriggerBuildService @Autowired constructor(
     private val marketEventTriggerMatcher: MarketEventTriggerMatcher,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val webhookTriggerBuildService: WebhookTriggerBuildService,
-    private val creativeStreamService: CreateStreamTriggerSupportService
+    private val creativeStreamService: CreateStreamTriggerSupportService,
+    private val pipelineVisibilityService: PipelineVisibilityService
 ) {
 
     fun cdsWebhookTrigger(event: CdsWebhookTriggerEvent) {
@@ -167,6 +171,19 @@ class MarketEventTriggerBuildService @Autowired constructor(
         logger.info(
             "receive market event trigger request|$projectId|$pipelineId|$eventCode"
         )
+
+        if (!pipelineVisibilityService.hasVisibility(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_USER_NOT_VISIBLE,
+                params = arrayOf(userId, pipelineId)
+            )
+        }
+
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId, pipelineId
         ) ?: throw ErrorCodeException(
@@ -213,7 +230,9 @@ class MarketEventTriggerBuildService @Autowired constructor(
                 val atomResponse = marketEventTriggerMatcher.matches(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    triggerEventBody = request.eventBody,
+                    triggerEventBody = GenericWebhookEventBody(
+                        body = request.eventBody.body
+                    ),
                     variables = variables,
                     element = element,
                     extStartParam = extStartParam
@@ -258,8 +277,8 @@ class MarketEventTriggerBuildService @Autowired constructor(
      * 创作流流水线随机获取环境节点参数
      */
     private fun resolveCreativeStreamParams(
-        pipelineInfo: com.tencent.devops.process.engine.pojo.PipelineInfo,
-        userId: String
+        userId: String,
+        pipelineInfo: PipelineInfo,
     ): Map<String, String> {
         if (pipelineInfo.channelCode != ChannelCode.CREATIVE_STREAM) {
             return emptyMap()
@@ -276,8 +295,12 @@ class MarketEventTriggerBuildService @Autowired constructor(
             )
             return emptyMap()
         }
+        val pipelineAuthorizer = pipelineRepositoryService.getPipelineOauthUser(
+            projectId = pipelineInfo.projectId,
+            pipelineId = pipelineInfo.pipelineId
+        ) ?: pipelineInfo.lastModifyUser
         val nodeList = creativeStreamService.getEnvNodeList(
-            userId = userId,
+            userId = pipelineAuthorizer,
             projectId = pipelineInfo.projectId,
             envHashId = envHashId
         ).filter { it.isNotBlank() }

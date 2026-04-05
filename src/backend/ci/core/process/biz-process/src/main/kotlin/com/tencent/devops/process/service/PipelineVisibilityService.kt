@@ -105,6 +105,24 @@ class PipelineVisibilityService @Autowired constructor(
     }
 
     /**
+     * 检查用户是否在流水线可见范围内（无记录视为无限制）
+     */
+    fun hasVisibility(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): Boolean {
+        val userDeptIds = getUserDeptIds(userId)
+        return pipelineVisibilityDao.countVisibility(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            userDeptIds = userDeptIds
+        ) > 0
+    }
+
+    /**
      * 查询目标用户(权限代持人)公开的、请求者可见的流水线ID列表（支持分页和候选ID过滤）
      */
     fun listVisiblePipelineIds(
