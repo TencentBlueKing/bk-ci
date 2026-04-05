@@ -2525,12 +2525,12 @@ class PipelineRepositoryService constructor(
      */
     fun getTriggerParams(
         triggerContainer: TriggerContainer,
-        startParams: Map<String, String>? = null
+        inputParams: Map<String, String>? = null
     ): Map<String, String> {
         val startParams = mutableMapOf<String, String>()
         triggerContainer.params.forEach { param ->
             val paramKey = param.id
-            val paramDefaultValue = param.defaultValue
+            val paramDefaultValue = inputParams?.get(param.id) ?: param.defaultValue
             val paramType = param.type
             if (CascadePropertyUtils.supportCascadeParam(paramType)) {
                 CascadePropertyUtils.parseDefaultValue(
