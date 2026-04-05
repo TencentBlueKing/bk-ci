@@ -66,10 +66,7 @@ class AiCreativeBotClient @Autowired constructor(
     }
 
     private fun buildPrompt(pipelineModelJson: String): String {
-        return """请为以下 CI/CD 流水线编排生成一段简洁的中文摘要，概括流水线的主要功能、步骤和目的。
-摘要应当简明扼要，不超过200字。
-
-流水线编排JSON：
+        return """请为以下 CI/CD 流水线编排生成一段简洁的中文摘要，流水线编排JSON：
 $pipelineModelJson"""
     }
 
