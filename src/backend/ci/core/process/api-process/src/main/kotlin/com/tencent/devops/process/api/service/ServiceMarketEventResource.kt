@@ -6,6 +6,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_WORKSPACE_NAME
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.pojo.trigger.MarketEventStartRequest
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -47,4 +49,24 @@ interface ServiceMarketEventResource {
         eventCode: String,
         body: Map<String, String>? = null
     ): Result<Boolean>
+
+    @Operation(summary = "通过触发器插件启动流水线")
+    @POST
+    @Path("projects/{projectId}/pipelines/{pipelineId}/{eventCode}/start")
+    fun start(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "事件编码", required = true)
+        @PathParam("eventCode")
+        eventCode: String,
+        @Parameter(description = "启动请求", required = true)
+        request: MarketEventStartRequest
+    ): Result<BuildId>
 }

@@ -5,6 +5,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwMarketEventResourceV4
 import com.tencent.devops.process.api.service.ServiceMarketEventResource
+import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.pojo.trigger.MarketEventStartRequest
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -35,6 +37,27 @@ class ApigwMarketEventResourceV4Impl @Autowired constructor(
             eventType = eventType,
             eventCode = eventCode,
             body = body
+        )
+    }
+
+    override fun start(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        eventCode: String,
+        request: MarketEventStartRequest
+    ): Result<BuildId> {
+        logger.info(
+            "OPENAPI_MARKET_EVENT_V4|$userId|start|$projectId|$pipelineId|$eventCode"
+        )
+        return client.get(ServiceMarketEventResource::class).start(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            eventCode = eventCode,
+            request = request
         )
     }
 
