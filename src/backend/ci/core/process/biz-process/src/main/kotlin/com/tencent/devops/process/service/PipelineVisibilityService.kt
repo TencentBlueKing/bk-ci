@@ -131,7 +131,7 @@ class PipelineVisibilityService @Autowired constructor(
     private fun getAuthUser(projectId: String, pipelineId: String): String {
         return client.get(ServiceAuthAuthorizationResource::class).getResourceAuthorization(
             projectId = projectId,
-            resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+            resourceType = AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT).value,
             resourceCode = pipelineId
         ).data?.handoverFrom ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_AUTH_USER_NOT_EXISTS,
