@@ -81,8 +81,8 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_FIRST_STAGE_ENV_NOT_EMPTY
 import com.tencent.devops.process.dao.PipelineCallbackDao
 import com.tencent.devops.process.dao.PipelineSettingDao
-import com.tencent.devops.process.dao.PipelineVisibilityDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
+import com.tencent.devops.process.dao.PipelineVisibilityDao
 import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.dao.template.PipelineTemplateInfoDao
 import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
@@ -115,6 +115,8 @@ import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineSortType
+import com.tencent.devops.process.pojo.PipelineVisibility
+import com.tencent.devops.process.pojo.PipelineVisibilityType
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
@@ -906,6 +908,23 @@ class PipelineRepositoryService constructor(
                     channel = channelCode.name,
                     modelTasks = modelTasks.toList()
                 )
+                // 创作流,可见性默认添加创建者
+                if (channelCode == ChannelCode.CREATIVE_STREAM) {
+                    pipelineVisibilityDao.create(
+                        dslContext = transactionContext,
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        authUser = userId,
+                        visibilityList = listOf(
+                            PipelineVisibility(
+                                type = PipelineVisibilityType.USER,
+                                scopeId = userId,
+                                scopeName = userId
+                            )
+                        )
+                    )
+                }
             }
         } finally {
             lock.unlock()
