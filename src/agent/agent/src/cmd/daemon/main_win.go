@@ -104,6 +104,8 @@ func main() {
 		return
 	}
 
+	cleanupOldDaemonBinary(workDir)
+
 	logs.Info("devops daemon start")
 	logs.Info("pid: ", os.Getpid())
 	logs.Info("workDir: ", workDir)
@@ -196,6 +198,11 @@ func watch() {
 				logs.Info("restart after 30 seconds")
 				time.Sleep(30 * time.Second)
 				return
+			}
+
+			if checkDaemonUpgradeSignal() {
+				logs.Warn("daemon upgrade detected, exiting to let SCM restart with new binary")
+				systemutil.ExitProcess(1)
 			}
 
 			if isServiceMode && isSessionMode {
@@ -379,4 +386,35 @@ func tryLogonFallback(agentPath, cmdLine, workDir string) (*SessionProcessInfo, 
 	}
 	logs.Infof("attempting LogonUser fallback with user=%s", user)
 	return StartProcessWithLogon(user, password, agentPath, cmdLine, workDir)
+}
+
+const daemonUpgradeFile = ".daemon_upgrade"
+
+// checkDaemonUpgradeSignal checks whether the upgrader has written a signal
+// file indicating the daemon binary was replaced. If found, the file is removed
+// and true is returned so the caller can exit and let SCM restart the service
+// with the new binary.
+func checkDaemonUpgradeSignal() bool {
+	signalPath := filepath.Join(systemutil.GetWorkDir(), daemonUpgradeFile)
+	if _, err := os.Stat(signalPath); err != nil {
+		return false
+	}
+	if err := os.Remove(signalPath); err != nil {
+		logs.WithError(err).Warn("failed to remove daemon upgrade signal file")
+	}
+	return true
+}
+
+// cleanupOldDaemonBinary removes the .old daemon binary left over from a
+// previous rename-based upgrade.
+func cleanupOldDaemonBinary(workDir string) {
+	oldPath := filepath.Join(workDir, "devopsDaemon.exe.old")
+	if _, err := os.Stat(oldPath); err != nil {
+		return
+	}
+	if err := os.Remove(oldPath); err != nil {
+		logs.WithError(err).Warn("failed to remove old daemon binary")
+	} else {
+		logs.Info("cleaned up old daemon binary: devopsDaemon.exe.old")
+	}
 }

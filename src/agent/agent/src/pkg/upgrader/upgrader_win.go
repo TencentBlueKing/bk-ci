@@ -58,10 +58,18 @@ const (
 	daemonProcess = "daemon"
 )
 
-// DoUpgradeAgent 升级agent
-// 1、通过service启动的daemon因为go本身内部注册了daemon导致权限模型有些未知问题，无法更新daemon后启动，只能更新agent
-// 2、通过执行计划启动的daemon因为具有登录态，可以直接执行脚本拉起，如果执行计划存在问题，则无法拉起，需要使用 1 中的方式更新
-// 3、用户双击启动的daemon和service一样，无法更新daemon，只能更新agent
+// DoUpgradeAgent upgrades the agent (and daemon when possible).
+//
+// SERVICE mode: agent binary is replaced via AtomicWriteFile (with retry).
+// Daemon binary is replaced via rename-and-copy (Windows allows renaming a
+// running .exe). A signal file (.daemon_upgrade) is written so the daemon's
+// watch loop can detect the change and exit, letting SCM restart the service
+// with the new binary (SCM failure-recovery must be configured at install time).
+//
+// TASK mode: both agent and daemon are killed, files replaced, then the
+// scheduled task is re-launched.
+//
+// MANUAL mode: only the agent is upgraded; daemon update requires manual restart.
 func DoUpgradeAgent() error {
 	logs.Info("start upgrade agent")
 	config.Init(false)
@@ -106,14 +114,14 @@ func DoUpgradeAgent() error {
 
 	var err error
 	daemonChange := false
-	if startT == wintask.TaskStart {
+	if startT == wintask.TaskStart || startT == wintask.ServiceStart {
 		daemonChange, err = checkUpgradeFileChange(config.GetClientDaemonFile())
 		if err != nil {
 			logs.WithError(err).Warn("check daemon upgrade file change failed")
 		}
 	}
 	daemonPid := 0
-	if daemonChange {
+	if daemonChange && startT == wintask.TaskStart {
 		daemonPid, err = tryKillAgentProcess(daemonProcess)
 		if err != nil {
 			logs.WithError(err).Error("try kill daemon process failed")
@@ -137,7 +145,7 @@ func DoUpgradeAgent() error {
 		return nil
 	}
 
-	// 检查进程是否被杀掉
+	// Wait for killed processes to exit (SERVICE mode keeps daemon alive)
 	daemonExist := true
 	agentExist := true
 	for i := 0; i < 15; i++ {
@@ -155,18 +163,18 @@ func DoUpgradeAgent() error {
 			}
 			agentExist = exist
 		}
-		if (!daemonChange || !daemonExist) && !agentExist {
+		daemonReady := !daemonChange || startT == wintask.ServiceStart || !daemonExist
+		if daemonReady && !agentExist {
 			logs.Infof("wait %d seconds for agent to stop done", i+1)
 			break
 		} else if i == 14 {
-			logs.Errorf("upgrade daemon exist %t, agent exist %t, can't upgrade", !daemonChange || !daemonExist, agentExist)
+			logs.Errorf("upgrade daemon exist %t, agent exist %t, can't upgrade", daemonReady, agentExist)
 			return nil
 		}
 		logs.Infof("wait %d seconds for agent to stop", i+1)
 		time.Sleep(1 * time.Second)
 	}
 
-	// 替换更新文件
 	if agentChange {
 		err = replaceAgentFile(config.GetClienAgentFile())
 		if err != nil {
@@ -174,19 +182,24 @@ func DoUpgradeAgent() error {
 		}
 	}
 	if daemonChange {
-		err = replaceAgentFile(config.GetClientDaemonFile())
+		if startT == wintask.ServiceStart {
+			err = replaceDaemonFileByRename(config.GetClientDaemonFile())
+		} else {
+			err = replaceAgentFile(config.GetClientDaemonFile())
+		}
 		if err != nil {
 			logs.WithError(err).Error("replace daemon file failed")
 		}
 	}
 
-	// 只有 daemon 被杀才启动，没被杀等待被 daemon 拉起来
 	if daemonChange {
 		switch startT {
 		case wintask.TaskStart:
 			if _, err = winTask.Run(); err != nil {
 				return errors.Wrapf(err, "start win task failed")
 			}
+		case wintask.ServiceStart:
+			writeDaemonUpgradeSignal()
 		}
 	}
 
@@ -300,4 +313,47 @@ func replaceAgentFile(fileName string) error {
 	}
 
 	return errors.Wrapf(lastErr, "replaceAgentFile failed after %d attempts for %s", replaceMaxRetries, dst)
+}
+
+const DaemonUpgradeFile = ".daemon_upgrade"
+
+// replaceDaemonFileByRename replaces the daemon binary while it is still
+// running as a Windows Service. Windows allows renaming (but not deleting or
+// overwriting) a running .exe, so we:
+//  1. rename  devopsDaemon.exe → devopsDaemon.exe.old
+//  2. copy    tmp/devopsDaemon.exe → devopsDaemon.exe
+//
+// If step 2 fails, we attempt to roll back by renaming .old back.
+func replaceDaemonFileByRename(fileName string) error {
+	logs.Info("replaceDaemonFileByRename: ", fileName)
+	src := systemutil.GetUpgradeDir() + "/" + fileName
+	dst := systemutil.GetWorkDir() + "/" + fileName
+	oldDst := dst + ".old"
+
+	_ = os.Remove(oldDst)
+
+	if err := os.Rename(dst, oldDst); err != nil {
+		return errors.Wrapf(err, "rename running daemon %s → %s", dst, oldDst)
+	}
+	logs.Infof("renamed running daemon to %s", oldDst)
+
+	if _, err := fileutil.CopyFile(src, dst, false); err != nil {
+		logs.WithError(err).Error("copy new daemon failed, attempting rollback")
+		if rbErr := os.Rename(oldDst, dst); rbErr != nil {
+			logs.WithError(rbErr).Error("rollback rename also failed")
+		}
+		return errors.Wrapf(err, "copy new daemon to %s", dst)
+	}
+
+	logs.Info("replaceDaemonFileByRename done")
+	return nil
+}
+
+func writeDaemonUpgradeSignal() {
+	signalPath := systemutil.GetWorkDir() + "/" + DaemonUpgradeFile
+	if err := os.WriteFile(signalPath, []byte("upgrade"), 0644); err != nil {
+		logs.WithError(err).Error("write daemon upgrade signal failed")
+	} else {
+		logs.Info("wrote daemon upgrade signal for SCM restart")
+	}
 }

@@ -164,6 +164,72 @@ func TestDoWaitBeforeRestart(t *testing.T) {
 	})
 }
 
+func TestCheckDaemonUpgradeSignal(t *testing.T) {
+	origDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	tmpDir := t.TempDir()
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chdir(origDir)
+
+	t.Run("no_signal_file", func(t *testing.T) {
+		if checkDaemonUpgradeSignal() {
+			t.Error("should return false when no signal file exists")
+		}
+	})
+
+	t.Run("signal_file_present", func(t *testing.T) {
+		signalPath := fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), daemonUpgradeFile)
+		if err := os.WriteFile(signalPath, []byte("upgrade"), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		if !checkDaemonUpgradeSignal() {
+			t.Error("should return true when signal file exists")
+		}
+
+		if _, err := os.Stat(signalPath); !os.IsNotExist(err) {
+			t.Error("signal file should be removed after detection")
+		}
+	})
+
+	t.Run("second_call_returns_false", func(t *testing.T) {
+		signalPath := fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), daemonUpgradeFile)
+		if err := os.WriteFile(signalPath, []byte("upgrade"), 0644); err != nil {
+			t.Fatal(err)
+		}
+		checkDaemonUpgradeSignal()
+
+		if checkDaemonUpgradeSignal() {
+			t.Error("second call should return false after signal consumed")
+		}
+	})
+}
+
+func TestCleanupOldDaemonBinary(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	t.Run("no_old_file", func(t *testing.T) {
+		cleanupOldDaemonBinary(tmpDir)
+	})
+
+	t.Run("old_file_removed", func(t *testing.T) {
+		oldPath := fmt.Sprintf("%s/devopsDaemon.exe.old", tmpDir)
+		if err := os.WriteFile(oldPath, []byte("old binary"), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		cleanupOldDaemonBinary(tmpDir)
+
+		if _, err := os.Stat(oldPath); !os.IsNotExist(err) {
+			t.Error(".old file should be removed after cleanup")
+		}
+	})
+}
+
 func TestWaitForUpgradeFinish(t *testing.T) {
 	logs.UNTestDebugInit()
 
