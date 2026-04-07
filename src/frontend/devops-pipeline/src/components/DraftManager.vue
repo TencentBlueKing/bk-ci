@@ -177,7 +177,7 @@
                 </bk-button>
                 <bk-button
                     v-if="isConflictStatus"
-                    @click="value = false"
+                    @click="handleClose"
                 >
                     {{ $t('returnToEditing') }}
                 </bk-button>
@@ -416,6 +416,9 @@
             },
             goPipelineModel () {
                 this.$emit('go-pipeline-model')
+            },
+            handleClose () {
+                this.$emit('input', false)
             },
             // 供父组件调用的刷新方法
             async refresh () {

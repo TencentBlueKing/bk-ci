@@ -92,6 +92,8 @@ import {
     UPDATE_STAGE,
     UPDATE_STORESTATUS,
     UPDATE_TEMPLATE_CONSTRAINT,
+    SAVE_PIPELINE_SNAPSHOT,
+    CLEAR_PIPELINE_SNAPSHOT,
     UPDATE_WHOLE_ATOM_INPUT
 } from './constants'
 
@@ -185,7 +187,12 @@ export default {
         })
     },
     [UPDATE_PIPELINE_SETTING_MUNTATION]: (state, { setting, param }) => {
-        Object.assign(setting, param)
+        // 使用 Vue.set 或解构赋值确保响应式更新
+        Object.keys(param).forEach(key => {
+            if (setting[key] !== param[key]) {
+                Vue.set(setting, key, param[key])
+            }
+        })
         return state
     },
     [SET_EDIT_FROM]: (state, editfromImport = false) => {
@@ -542,4 +549,12 @@ export default {
             storeStatus
         })
     },
+    [SAVE_PIPELINE_SNAPSHOT]: (state, { snapshot }) => {
+        Vue.set(state, 'originalPipelineSnapshot', snapshot)
+        return state
+    },
+    [CLEAR_PIPELINE_SNAPSHOT]: (state) => {
+        Vue.set(state, 'originalPipelineSnapshot', null)
+        return state
+    }
 }

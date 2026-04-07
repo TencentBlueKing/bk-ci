@@ -89,8 +89,11 @@ import {
     UPDATE_STAGE,
     UPDATE_STORESTATUS,
     UPDATE_TEMPLATE_CONSTRAINT,
+    SAVE_PIPELINE_SNAPSHOT,
+    CLEAR_PIPELINE_SNAPSHOT,
     UPDATE_WHOLE_ATOM_INPUT
 } from './constants'
+import { buildPipelineSnapshot } from '@/utils/pipelineSnapshotUtil'
 
 function rootCommit (commit, ACTION_CONST, payload) {
     commit(ACTION_CONST, payload, { root: true })
@@ -140,6 +143,10 @@ export function dealPipelineRes ({ getters, dispatch, commit, state }, {
         }
         commit(SET_PIPELINE_YAML_HIGHLIGHT_MAP, highlightMap)
     }
+
+    setTimeout(() => {
+        dispatch('savePipelineSnapshot')
+    }, 500) // 延迟500ms确保所有组件初始化和副作用完成
 }
 
 export default {
@@ -475,6 +482,16 @@ export default {
     setPipelineSetting: actionCreator(PIPELINE_SETTING_MUTATION),
     setEditFrom: actionCreator(SET_EDIT_FROM),
     setPipelineEditing: actionCreator(SET_PIPELINE_EDITING),
+    // 保存流水线快照
+    savePipelineSnapshot ({ commit, state, rootState }) {
+        const currentMode = rootState.pipelineMode
+        const snapshot = buildPipelineSnapshot(state, currentMode)
+        commit(SAVE_PIPELINE_SNAPSHOT, { snapshot })
+    },
+    // 清除流水线快照
+    clearPipelineSnapshot ({ commit }) {
+        commit(CLEAR_PIPELINE_SNAPSHOT)
+    },
     fetchContainers: async ({ commit }, { projectCode }) => {
         try {
             const { data: containers } = await request.get(`${STORE_API_URL_PREFIX}/user/pipeline/container/${projectCode}`)

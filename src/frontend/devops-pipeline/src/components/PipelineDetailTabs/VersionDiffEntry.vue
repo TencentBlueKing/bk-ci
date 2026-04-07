@@ -64,6 +64,7 @@
                         :show-draft-tag="!canSwitchVersion"
                         :show-extension="false"
                         :draft-version="(diffMode && currentEditingData) ? draftVersion : undefined"
+                        :need-draft-list="!!draftVersion"
                         v-model="activeVersion"
                         @change="diffActiveVersion"
                         v-bind="baseVersionSelectorConf"
@@ -95,6 +96,7 @@
                     <yaml-diff
                         :old-yaml="activeYaml"
                         height="100%"
+                        read-only
                         :new-yaml="currentYaml"
                     />
                 </div>

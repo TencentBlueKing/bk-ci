@@ -190,6 +190,7 @@
             this.setPipeline(null)
             this.setPipelineEditing(false)
             this.setAtomEditing(false)
+            this.clearPipelineSnapshot() // 清除流水线快照，防止内存泄漏
             this.removeLeaveListenr()
             this.errors.clear()
         },
@@ -203,6 +204,8 @@
                 'requestTemplateSummary',
                 'requestPipeline',
                 'fetchTemplateByVersion',
+                'savePipelineSnapshot',
+                'clearPipelineSnapshot',
                 'updateContainer'
             ]),
             ...mapActions({
@@ -346,7 +349,7 @@
                             message: `${this.pipeline.name}${' '}${this.$t('updateSuc')}`,
                             theme: 'success'
                         })
-                        this.setPipelineEditing(false)
+                        await this.savePipelineSnapshot()
 
                         await this.requestTemplateSummary(this.$route.params)
 

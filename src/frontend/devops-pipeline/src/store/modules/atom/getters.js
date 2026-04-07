@@ -18,6 +18,7 @@
  */
 
 import { buildEnvMap, jobConst, semverVersionKeySet, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
+import { buildPipelineSnapshot, isPipelineModified } from '@/utils/pipelineSnapshotUtil'
 import Vue from 'vue'
 import { getAtomModalKey, isCodePullAtom, isNewAtomTemplate, isNormalContainer, isTriggerContainer, isVmContainer } from './atomUtil'
 import { buildNoRules, defaultBuildNo, platformList } from './constants'
@@ -187,8 +188,25 @@ export default {
         })
     },
     getEditingElementPos: state => state.editingElementPos,
-    isEditing: state => {
-        return state.isPipelineEditing
+    isEditing: (state, getters, rootState) => {
+        if (!state.originalPipelineSnapshot) {
+            return false
+        }
+        
+        // 显式访问响应式属性，让 Vue 追踪依赖
+        const _ = {
+            pipeline: state.pipeline,
+            pipelineSetting: state.pipelineSetting,
+            pipelineWithoutTrigger: state.pipelineWithoutTrigger,
+            mode: rootState.pipelineMode
+        }
+        
+        // 构建当前快照
+        const currentSnapshot = buildPipelineSnapshot(state, _.mode)
+        
+        // 直接深度对比快照
+        const result = isPipelineModified(currentSnapshot, state.originalPipelineSnapshot)
+        return result
     },
     checkPipelineInvalid: (state, getters) => (stages, pipelineSetting) => {
         try {

@@ -226,6 +226,7 @@
                 'setSaveStatus',
                 'requestPipelineSummary',
                 'requestPipeline',
+                'savePipelineSnapshot',
                 'updateContainer'
             ]),
             // 构建 modelAndSetting 对象
@@ -372,7 +373,7 @@
                     modelAndSetting,
                     yaml: pipelineYaml
                 })
-                this.setPipelineEditing(false)
+                await this.savePipelineSnapshot()
 
                 await this.requestPipelineSummary(this.$route.params)
                 this.$router.replace({

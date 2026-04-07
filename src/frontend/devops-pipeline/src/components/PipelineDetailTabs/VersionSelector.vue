@@ -203,6 +203,11 @@
                 type: Number,
                 default: undefined
             },
+            // 是否需要同时加载草稿版本列表（用于编辑页版本对比）
+            needDraftList: {
+                type: Boolean,
+                default: false
+            },
             uniqueId: {
                 type: [String, Number],
                 required: true
@@ -282,6 +287,105 @@
                 requestPipelineSummary: 'atom/requestPipelineSummary'
             }),
 
+            // 将草稿版本数据转换为统一格式
+            transformDraftVersion (item) {
+                return {
+                    ...item,
+                    version: `draft-${item.draftVersion}`,
+                    displayName: convertTime(item.updateTime) + `  ${item.updater}`,
+                    description: this.$t('baseOn', [item.baseVersionName]),
+                    isBranchVersion: false,
+                    isDraft: true,
+                    isRelease: false,
+                    isDraftVersion: true,
+                    initialVersion: item.version
+                }
+            },
+            
+            // 将正式版本数据转换为统一格式
+            transformReleaseVersion (item) {
+                const isDraft = item.status === VERSION_STATUS_ENUM.COMMITTING
+                const isBranchVersion = item.status === VERSION_STATUS_ENUM.BRANCH
+                const isRelease = item.status === VERSION_STATUS_ENUM.RELEASED
+                
+                return {
+                    ...item,
+                    displayName: isDraft ? this.$t('draft') : item.versionName,
+                    description: isDraft ? this.$t('baseOn', [item.baseVersionName]) : (item.description || '--'),
+                    isBranchVersion,
+                    isDraft,
+                    isRelease
+                }
+            },
+            
+            // 更新分页信息
+            updatePagination (response) {
+                const { page, count } = response
+                const { limit } = this.pagination
+                
+                this.pagination.page = page
+                this.hasNext = count > page * limit
+            },
+            
+            // 加载草稿版本和正式版本（第一页）
+            async loadDraftAndReleaseVersions (params) {
+                const draftDataSource = this.isTemplate ? this.getTemplateDraftVersion : this.getDraftVersion
+                const releaseDataSource = this.isTemplate ? this.requestTemplateVersionList : this.requestPipelineVersionList
+                
+                const [draftRes, releaseRes] = await Promise.all([
+                    draftDataSource(params),
+                    releaseDataSource(params)
+                ])
+                
+                // 转换草稿版本数据
+                const draftVersions = draftRes.records.map(item => this.transformDraftVersion(item))
+                
+                // 查找第一个正式发布版本
+                const firstReleasedVersion = releaseRes.records.find(
+                    item => item.status === VERSION_STATUS_ENUM.RELEASED
+                )
+                
+                // 合并数据：第一个正式发布版本 + 草稿版本列表
+                let versions = draftVersions
+                if (firstReleasedVersion) {
+                    const releasedVersionData = this.transformReleaseVersion(firstReleasedVersion)
+                    versions = [releasedVersionData, ...draftVersions]
+                }
+                
+                this.updatePagination(draftRes)
+                return versions
+            },
+            
+            // 只加载草稿版本（后续分页）
+            async loadDraftVersions (params) {
+                const draftDataSource = this.isTemplate ? this.getTemplateDraftVersion : this.getDraftVersion
+                const draftRes = await draftDataSource(params)
+                
+                const versions = draftRes.records.map(item => this.transformDraftVersion(item))
+                
+                this.updatePagination(draftRes)
+                return versions
+            },
+            
+            // 只加载正式版本
+            async loadReleaseVersions (params) {
+                const dataSource = this.isTemplate ? this.requestTemplateVersionList : this.requestPipelineVersionList
+                
+                const extendedParams = {
+                    ...params,
+                    fuzzyVersionName: this.searchKeyword,
+                    includeDraft: this.includeDraft,
+                    buildOnly: this.buildOnly,
+                    archiveFlag: this.$route.query.archiveFlag
+                }
+                
+                const res = await dataSource(extendedParams)
+                const versions = res.records.map(item => this.transformReleaseVersion(item))
+                
+                this.updatePagination(res)
+                return versions
+            },
+            
             async loadMore (page) {
                 try {
                     const { projectId, pagination, pipelineInfo } = this
@@ -293,91 +397,50 @@
                         this.bottomLoadingOptions.isLoading = true
                     }
                     
-                    // 判断是否存在 draftVersion
-                    const hasDraftVersion = !!this.draftVersion
-                    
-                    // 根据是否存在 draftVersion 选择不同的接口和参数
+                    // needDraftList 为 true 时，无论是否传入 draftVersion 都会同时加载草稿和正式版本列表
+                    const shouldLoadDraftList = this.needDraftList || !!this.draftVersion
                     const idKey = this.isTemplate ? 'templateId' : 'pipelineId'
-                    const dataSource = hasDraftVersion
-                        ? (this.isTemplate ? this.getTemplateDraftVersion : this.getDraftVersion)
-                        : (this.isTemplate ? this.requestTemplateVersionList : this.requestPipelineVersionList)
                     
-                    const params = {
+                    const baseParams = {
                         projectId,
                         [idKey]: this.uniqueId,
                         page: nextPage,
-                        pageSize: pagination.limit,
-                        ...(hasDraftVersion
-                            ? { version: pipelineInfo?.version }
-                            : {
-                                fuzzyVersionName: this.searchKeyword,
-                                includeDraft: this.includeDraft,
-                                buildOnly: this.buildOnly,
-                                archiveFlag: this.$route.query.archiveFlag
-                            }
-                        )
+                        pageSize: pagination.limit
                     }
-                    const res = await dataSource(params)
-
-                    this.pagination.page = res.page
-                    this.hasNext = res.count > res.page * pagination.limit
-                    const versions = res.records.map(item => {
-                        if (hasDraftVersion) {
-                            return {
-                                ...item,
-                                version: `draft-${item.draftVersion}`, // 使用 draft- 前缀作为唯一标识
-                                displayName: convertTime(item.updateTime) + `  ${item.updater}`,
-                                description: this.$t('baseOn', [item.baseVersionName]),
-                                isBranchVersion: false,
-                                isDraft: true,
-                                isRelease: false,
-                                isDraftVersion: true,
-                                initialVersion: item.version // 保留原始 version 供接口调用
-                            }
-                        }
-
-                        const isDraft = item.status === VERSION_STATUS_ENUM.COMMITTING
-                        const isBranchVersion = item.status === VERSION_STATUS_ENUM.BRANCH
-
-                        return {
-                            ...item,
-                            displayName: isDraft ? this.$t('draft') : item.versionName,
-                            description: isDraft ? this.$t('baseOn', [item.baseVersionName]) : (item.description || '--'),
-                            isBranchVersion,
-                            isDraft,
-                            isRelease: item.status === VERSION_STATUS_ENUM.RELEASED
-
-                        }
-                    })
-                    if (page === 1) {
-                        // 如果存在 draftVersion 且不是激活草稿时，需要在第一条拼接最新发布版本数据
-                        if (hasDraftVersion && !this.isActiveDraft) {
-                            const releaseVersionData = {
-                                status: pipelineInfo.latestVersionStatus,
-                                displayName: pipelineInfo.releaseVersionName,
-                                versionName: pipelineInfo.releaseVersionName,
-                                version: pipelineInfo.releaseVersion,
-                                description: pipelineInfo.releaseVersionName || '--',
-                                isDraft: false,
-                                isBranchVersion: false,
-                                isRelease: pipelineInfo.latestVersionStatus === VERSION_STATUS_ENUM.RELEASED
-                            }
-                            this.versionList = [releaseVersionData, ...versions]
-                        } else {
-                            this.versionList = versions
+                    
+                    let versions = []
+                    
+                    if (shouldLoadDraftList) {
+                        const params = {
+                            ...baseParams,
+                            version: pipelineInfo?.version
                         }
                         
+                        // 第一页同时加载草稿和正式版本，后续分页只加载草稿版本
+                        versions = nextPage === 1
+                            ? await this.loadDraftAndReleaseVersions(params)
+                            : await this.loadDraftVersions(params)
+                    } else {
+                        // 只加载正式版本
+                        versions = await this.loadReleaseVersions(baseParams)
+                    }
+                    
+                    // 更新版本列表
+                    if (page === 1) {
+                        this.versionList = versions
                         const releaseVersion = versions.find(item => item.status === VERSION_STATUS_ENUM.RELEASED)
                         if (releaseVersion?.version > pipelineInfo.releaseVersion) {
                             await this.requestPipelineSummary(this.$route.params)
                             this.switchVersion(this.activeVersion.version)
                         }
-                        
+
                     } else {
                         this.versionList.push(...versions)
                     }
+                    
+                    // 设置初始选中版本
                     if (!this.activeVersion) {
-                        if (hasDraftVersion && this.value === this.draftVersion) {
+                        if (this.draftVersion && this.value === this.draftVersion) {
                             const version = this.versionList.find(item => item.draftVersion === this.draftVersion)
                             if (version) {
                                 this.switchVersion(version.version)
