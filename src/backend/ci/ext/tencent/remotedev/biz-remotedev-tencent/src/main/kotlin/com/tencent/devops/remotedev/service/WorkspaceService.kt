@@ -1602,6 +1602,16 @@ class WorkspaceService @Autowired constructor(
         macAddress: String,
         projectId: String?
     ): Map<String, ProjectAccessDevicePermissionsResp> {
+        projectId?.let {
+            if (!permissionService.checkUserVisitPermission(userId, it)) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                    params = arrayOf(
+                        "You don't have permission to access project $it"
+                    )
+                )
+            }
+        }
         // 获取用户当前的项目列表
         val projects = projectId?.let { listOf(it) } ?: workspaceJoinDao.fetchProjectFromUser(dslContext, userId)
         if (projects.isEmpty()) {

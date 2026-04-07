@@ -34,7 +34,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.pojo.UserSignatureStatusResponse
 import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.pojo.ClientTips
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
@@ -116,6 +115,7 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         userId: String,
         searchCustom: Boolean?
     ): Result<Map<String, Map<String, Int>>> {
+        permissionService.checkUserManager(userId, projectId)
         return Result(
             windowsResourceConfigService.allWindowsQuota(
                 searchCustom = searchCustom,
@@ -128,6 +128,15 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     }
 
     override fun onePassword(userId: String, workspaceName: String): Result<String> {
+        // 校验查看权限
+        if (!permissionService.checkUserPermission(userId, workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf(
+                    "You don't have permission to access workspace $workspaceName"
+                )
+            )
+        }
         return Result(
             permissionService.init1Password(
                 userId = userId,
@@ -138,44 +147,18 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         )
     }
 
-    override fun addExpSup(userId: String, id: Long, workspaceName: String): Result<Boolean> {
-        val (res, message) = expertSupportService.assignExpSup(userId, id, workspaceName)
-        return if (message.isNullOrBlank()) {
-            Result(res)
-        } else {
-            Result(message, res)
-        }
-    }
-
-    override fun queryCgsPwd(userId: String, cgsId: String): Result<Boolean> {
-        val (res, message) = expertSupportService.queryCgsPwd(userId, cgsId)
-        return if (message.isNullOrBlank()) {
-            Result(res)
-        } else {
-            Result(message, res)
-        }
-    }
-
     override fun clientUpgrade(userId: String, data: ClientUpgradeData): Result<ClientUpgradeResp> {
         return Result(clientUpgradeService.checkUpgrade(userId, data))
     }
 
-    override fun clientTips(userId: String, projectId: String?): Result<List<ClientTips>> {
-        return Result(clientTipsService.fetchTips(projectId = projectId, userId = userId))
-    }
-
     override fun remoteAuditManagers(userId: String, projectId: String): Result<List<String>> {
-        return Result(permissionService.auditManagers(projectId))
-    }
-
-    override fun getTxcToken(userId: String, openId: String, nickName: String, avatar: String): Result<String> {
-        return Result(
-            txcService.getTxcToken(
-                openId = openId,
-                nickName = nickName,
-                avatar = avatar
+        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
             )
-        )
+        }
+        return Result(permissionService.auditManagers(projectId))
     }
 
     override fun getProjectWorkspace(userId: String, cdsToken: String): Result<WeSecProjectWorkspace?> {
@@ -205,6 +188,12 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     }
 
     override fun getSignatureStatus(userId: String, projectId: String): Result<UserSignatureStatusResponse> {
+        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
+            )
+        }
         return Result(workspaceService.getSignatureStatus(userId, projectId))
     }
 
@@ -217,6 +206,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         screenId: Int
     ): Result<Map<String, String>> {
         logger.info("batchGetThumbnails|userId=$userId|workspaceNames=$workspaceNames|width=$width|high=$high|jpegQuality=$jpegQuality")
+
+        permissionService.checkViewerPermissionList(userId, workspaceNames)
 
         // 同步获取截图地址
         val thumbnails = workspaceThumbnailService.batchGetThumbnails(
