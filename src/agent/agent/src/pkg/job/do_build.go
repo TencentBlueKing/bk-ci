@@ -68,6 +68,7 @@ func doBuild(
 		return err
 	}
 
+	// arm64机器目前无法通过worker杀进程
 	enableExitGroup := envs.FetchEnvAndCheck(constant.DevopsAgentEnableExitGroup, "true") ||
 		(systemutil.IsMacos() && runtime.GOARCH == "arm64")
 	if enableExitGroup {
