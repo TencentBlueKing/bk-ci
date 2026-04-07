@@ -214,6 +214,18 @@ AgentUpgrade(upgradeItem, hasBuild)
 
 **升级器** (`pkg/upgrader/`): 独立进程，负责替换Agent/Daemon二进制文件并重启。平台差异大——Unix使用文件替换+进程信号，Windows需要等待进程退出再替换。
 
+**Daemon-Upgrader 协调机制** (`total-lock`):
+- Upgrader 在 `DoUpgradeAgent()` 中持有 `total-lock` 直到文件替换完成
+- Linux/macOS daemon: `watch()` 每次检查/启动 agent 前都持有 `total-lock`，天然避免竞争
+- Windows daemon: `watch()` 在启动 agent 前调用 `waitForUpgradeFinish()` 获取并立即释放 `total-lock`（gate 模式），确保 upgrader 不在运行
+- Windows 文件替换: `replaceAgentFile()` 含重试机制（最多 10 次、递增间隔），防止因 Windows 文件锁导致 rename 失败
+
+**Windows SERVICE 模式下 Daemon 自升级**（参考 GitHub Actions Runner 的 SCM 崩溃恢复机制）:
+- `replaceDaemonFileByRename`: Windows 允许 rename 运行中的 exe，因此先 rename→.old 再 copy 新文件；失败时自动回滚
+- SCM 恢复选项在 `install` 时通过 `sc.exe failure` 配置: `restart/5000/restart/10000/restart/30000`
+- `.daemon_upgrade` 标记文件由 upgrader 写入、daemon 的 `watch()` 消费后 `os.Exit(1)` 触发 SCM 重启
+- 旧 daemon 二进制 (`.old`) 在新 daemon 启动时由 `cleanupOldDaemonBinary()` 清理
+
 ## 跨平台开发指南
 
 ### 平台文件命名约定
