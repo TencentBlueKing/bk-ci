@@ -7,7 +7,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_WORKSPACE_NAME
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.process.pojo.trigger.MarketEventStartRequest
+import com.tencent.devops.process.pojo.trigger.GenericEventStartRequest
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -67,6 +67,6 @@ interface ServiceMarketEventResource {
         @PathParam("eventCode")
         eventCode: String,
         @Parameter(description = "启动请求", required = true)
-        request: MarketEventStartRequest
+        request: GenericEventStartRequest
     ): Result<BuildId>
 }

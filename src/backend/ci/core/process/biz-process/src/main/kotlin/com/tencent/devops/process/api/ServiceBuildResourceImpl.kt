@@ -69,9 +69,13 @@ import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
+import com.tencent.devops.process.pojo.trigger.GenericEventStartRequest
+import com.tencent.devops.process.pojo.trigger.WeMateStartRequest
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildMaintainFacadeService
 import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
+import com.tencent.devops.process.trigger.market.MarketEventTriggerBuildService
+import com.tencent.devops.store.pojo.common.BK_STORE_CREATIVE_STREAM_WEMATE_MESSAGE_REMINDER_TRIGGER
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -83,7 +87,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
     private val engineVMBuildService: EngineVMBuildService,
     private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val containerBuildRecordService: ContainerBuildRecordService
+    private val containerBuildRecordService: ContainerBuildRecordService,
+    private val marketEventTriggerBuildService: MarketEventTriggerBuildService
 ) : ServiceBuildResource {
 
     companion object {
@@ -960,6 +965,47 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 debug = debug ?: false
+            )
+        )
+    }
+
+    override fun weMateBuildStart(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        request: WeMateStartRequest
+    ): Result<BuildId> {
+        checkUserId(userId)
+        checkParam(projectId, pipelineId)
+        return Result(
+            marketEventTriggerBuildService.genericEventTrigger(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                eventCode = BK_STORE_CREATIVE_STREAM_WEMATE_MESSAGE_REMINDER_TRIGGER,
+                request = GenericEventStartRequest(
+                    eventBody = mapOf(
+                        WeMateStartRequest::triggerUser.name to request.triggerUser,
+                        WeMateStartRequest::message.name to request.message
+                    ),
+                    startParams = request.startParams
+                )
+            )
+        )
+    }
+
+    override fun visibilityManualStartupInfo(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): Result<BuildManualStartupInfo> {
+        checkUserId(userId)
+        checkParam(projectId, pipelineId)
+        return Result(
+            pipelineBuildFacadeService.visibilityManualStartupInfo(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId
             )
         )
     }

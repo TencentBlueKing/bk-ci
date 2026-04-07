@@ -16,7 +16,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.trigger.GenericWebhookEventBody
-import com.tencent.devops.process.pojo.trigger.MarketEventStartRequest
+import com.tencent.devops.process.pojo.trigger.GenericEventStartRequest
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
 import com.tencent.devops.process.service.CreateStreamTriggerSupportService
 import com.tencent.devops.process.service.PipelineVisibilityService
@@ -161,12 +161,12 @@ class MarketEventTriggerBuildService @Autowired constructor(
     }
 
     @Suppress("NestedBlockDepth")
-    fun openapiTrigger(
+    fun genericEventTrigger(
         userId: String,
         projectId: String,
         pipelineId: String,
         eventCode: String,
-        request: MarketEventStartRequest
+        request: GenericEventStartRequest
     ): BuildId {
         logger.info(
             "receive market event trigger request|$projectId|$pipelineId|$eventCode"
@@ -290,8 +290,7 @@ class MarketEventTriggerBuildService @Autowired constructor(
         val envHashId = setting?.envHashId
         if (envHashId.isNullOrBlank()) {
             logger.warn(
-                "creative stream pipeline has no envHashId|" +
-                    "${pipelineInfo.projectId}|${pipelineInfo.pipelineId}"
+                "creative stream pipeline has no envHashId|${pipelineInfo.projectId}|${pipelineInfo.pipelineId}"
             )
             return emptyMap()
         }
@@ -306,8 +305,7 @@ class MarketEventTriggerBuildService @Autowired constructor(
         ).filter { it.isNotBlank() }
         if (nodeList.isEmpty()) {
             logger.warn(
-                "creative stream env node list is empty|" +
-                    "${pipelineInfo.projectId}|$envHashId"
+                "creative stream env node list is empty|${pipelineInfo.projectId}|$envHashId"
             )
             return emptyMap()
         }

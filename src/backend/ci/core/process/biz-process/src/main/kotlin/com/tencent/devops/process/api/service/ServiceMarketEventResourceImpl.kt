@@ -4,7 +4,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.process.pojo.trigger.MarketEventStartRequest
+import com.tencent.devops.process.pojo.trigger.GenericEventStartRequest
 import com.tencent.devops.process.trigger.event.CdsWebhookRequestEvent
 import com.tencent.devops.process.trigger.market.MarketEventTriggerBuildService
 import org.springframework.beans.factory.annotation.Autowired
@@ -42,10 +42,10 @@ class ServiceMarketEventResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         eventCode: String,
-        request: MarketEventStartRequest
+        request: GenericEventStartRequest
     ): Result<BuildId> {
         return Result(
-            marketEventTriggerBuildService.openapiTrigger(
+            marketEventTriggerBuildService.genericEventTrigger(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
