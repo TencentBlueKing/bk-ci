@@ -134,6 +134,8 @@ func installService(workDir string) error {
 		return cliErrorf("sc.exe create failed: %s (%v)", "sc.exe create 失败: %s (%v)", string(out), err)
 	}
 
+	configureSCMRecovery(serviceName)
+
 	printStep(msg("Step 3: starting service ...", "步骤 3: 启动服务 ..."))
 	if out, err := exec.Command("sc.exe", "start", serviceName).CombinedOutput(); err != nil {
 		printWarn(msgf("sc.exe start: %s", "sc.exe start: %s", string(out)))
@@ -274,6 +276,20 @@ func handleStop(workDir string) error {
 	stopProcesses(workDir)
 	printStep(msg("Agent stopped", "Agent 已停止"))
 	return nil
+}
+
+// configureSCMRecovery sets SCM failure recovery options so that the service
+// automatically restarts when the daemon exits unexpectedly (e.g., after a
+// daemon binary upgrade). Delays: 5s / 10s / 30s for 1st / 2nd / 3rd failure.
+// Inspired by GitHub Actions Runner's approach to self-updating service hosts.
+func configureSCMRecovery(serviceName string) {
+	if out, err := exec.Command("sc.exe", "failure", serviceName,
+		"reset=", "86400",
+		"actions=", "restart/5000/restart/10000/restart/30000",
+	).CombinedOutput(); err != nil {
+		printWarn(msgf("sc.exe failure config warning: %s (%v)",
+			"sc.exe failure 配置警告: %s (%v)", strings.TrimSpace(string(out)), err))
+	}
 }
 
 // ── sc.exe helpers ───────────────────────────────────────────────────────

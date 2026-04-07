@@ -526,13 +526,9 @@ func handleReinstall(workDir string, args []string) error {
 	printStep(msg("Step 6: installing and starting service ...", "步骤 6: 安装并启动服务 ..."))
 	mode := strings.ToLower(readInstallMode(workDir))
 	if err := handleInstall(workDir, []string{"--mode", mode}); err != nil {
-		printWarn(msgf("install failed: %v, attempting to start directly ...",
-			"安装失败: %v, 尝试直接启动 ...", err))
-		if startErr := handleStart(workDir); startErr != nil {
-			return fmt.Errorf(msgf(
-				"reinstall failed: install error: %v, start error: %v",
-				"重装失败: 安装错误: %v, 启动错误: %v", err, startErr))
-		}
+		return fmt.Errorf(msgf(
+			"reinstall failed at install step: %v",
+			"重装在安装步骤失败: %v", err))
 	}
 
 	fmt.Println()

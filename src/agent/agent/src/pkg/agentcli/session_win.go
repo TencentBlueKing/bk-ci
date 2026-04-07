@@ -84,6 +84,8 @@ func enableSession(workDir, user, password string, autoLogon bool) error {
 		return cliErrorf("sc.exe create failed: %s (%v)", "sc.exe create 失败: %s (%v)", out, err)
 	}
 
+	configureSCMRecovery(serviceName)
+
 	if hasCredentials {
 		storeLsaSecret(lsaKeyUser, user)
 		storeLsaSecret(lsaKeyPassword, password)

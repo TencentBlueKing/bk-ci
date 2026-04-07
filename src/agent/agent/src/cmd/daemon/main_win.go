@@ -52,7 +52,12 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-const daemonProcess = "daemon"
+const (
+	daemonProcess    = "daemon"
+	restartBaseDelay = 3 * time.Second
+	restartMaxWait   = 30 * time.Second
+	restartPollTick  = 500 * time.Millisecond
+)
 
 func main() {
 	isDebug := false
@@ -98,6 +103,8 @@ func main() {
 		logs.Info("get process lock failed, exit")
 		return
 	}
+
+	cleanupOldDaemonBinary(workDir)
 
 	logs.Info("devops daemon start")
 	logs.Info("pid: ", os.Getpid())
@@ -193,6 +200,11 @@ func watch() {
 				return
 			}
 
+			if checkDaemonUpgradeSignal() {
+				logs.Warn("daemon upgrade detected, exiting to let SCM restart with new binary")
+				systemutil.ExitProcess(1)
+			}
+
 			if isServiceMode && isSessionMode {
 				if launchAgentInUserSession(agentPath, workDir) {
 					return
@@ -216,6 +228,49 @@ func waitForUpgradeFinish() bool {
 	}
 	_ = totalLock.Unlock()
 	return true
+}
+
+// waitBeforeRestart polls the total-lock to detect when the upgrader (if any)
+// has finished, so the daemon can restart the agent as soon as possible.
+// A short base delay prevents rapid restart loops; 30s is the hard timeout.
+func waitBeforeRestart() {
+	doWaitBeforeRestart(restartBaseDelay, restartMaxWait, restartPollTick)
+}
+
+func doWaitBeforeRestart(baseDelay, maxWait, pollTick time.Duration) {
+	logs.Infof("waitBeforeRestart: base delay %s, max wait %s", baseDelay, maxWait)
+	time.Sleep(baseDelay)
+
+	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock))
+
+	remaining := maxWait - baseDelay
+	if remaining <= 0 {
+		return
+	}
+
+	deadline := time.NewTimer(remaining)
+	defer deadline.Stop()
+	ticker := time.NewTicker(pollTick)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-deadline.C:
+			logs.Warn("waitBeforeRestart: reached timeout, proceeding with restart")
+			return
+		case <-ticker.C:
+			locked, err := totalLock.TryLock()
+			if err != nil {
+				logs.WithError(err).Warn("waitBeforeRestart: TryLock error, retrying")
+				continue
+			}
+			if locked {
+				_ = totalLock.Unlock()
+				logs.Info("waitBeforeRestart: no upgrader running, proceeding with restart")
+				return
+			}
+		}
+	}
 }
 
 // launchAgentInUserSession tries to start the agent in a user desktop session.
@@ -257,8 +312,7 @@ func launchAgentInUserSession(agentPath, workDir string) bool {
 	}
 
 	logs.Infof("agent process exited with code %d", exitCode)
-	logs.Info("restart after 30 seconds")
-	time.Sleep(30 * time.Second)
+	waitBeforeRestart()
 	return true
 }
 
@@ -271,8 +325,7 @@ func launchAgentDirect(agentPath, workDir string) {
 	err := cmd.Start()
 	if err != nil {
 		logs.WithError(err).Error("agent start failed, err")
-		logs.Info("restart after 30 seconds")
-		time.Sleep(30 * time.Second)
+		waitBeforeRestart()
 		return
 	}
 
@@ -298,9 +351,7 @@ func launchAgentDirect(agentPath, workDir string) {
 		logs.WithError(err).Error("agent process error")
 	}
 	logs.Info("agent process exited")
-
-	logs.Info("restart after 30 seconds")
-	time.Sleep(30 * time.Second)
+	waitBeforeRestart()
 }
 
 type program struct{}
@@ -335,4 +386,35 @@ func tryLogonFallback(agentPath, cmdLine, workDir string) (*SessionProcessInfo, 
 	}
 	logs.Infof("attempting LogonUser fallback with user=%s", user)
 	return StartProcessWithLogon(user, password, agentPath, cmdLine, workDir)
+}
+
+const daemonUpgradeFile = ".daemon_upgrade"
+
+// checkDaemonUpgradeSignal checks whether the upgrader has written a signal
+// file indicating the daemon binary was replaced. If found, the file is removed
+// and true is returned so the caller can exit and let SCM restart the service
+// with the new binary.
+func checkDaemonUpgradeSignal() bool {
+	signalPath := filepath.Join(systemutil.GetWorkDir(), daemonUpgradeFile)
+	if _, err := os.Stat(signalPath); err != nil {
+		return false
+	}
+	if err := os.Remove(signalPath); err != nil {
+		logs.WithError(err).Warn("failed to remove daemon upgrade signal file")
+	}
+	return true
+}
+
+// cleanupOldDaemonBinary removes the .old daemon binary left over from a
+// previous rename-based upgrade.
+func cleanupOldDaemonBinary(workDir string) {
+	oldPath := filepath.Join(workDir, "devopsDaemon.exe.old")
+	if _, err := os.Stat(oldPath); err != nil {
+		return
+	}
+	if err := os.Remove(oldPath); err != nil {
+		logs.WithError(err).Warn("failed to remove old daemon binary")
+	} else {
+		logs.Info("cleaned up old daemon binary: devopsDaemon.exe.old")
+	}
 }
