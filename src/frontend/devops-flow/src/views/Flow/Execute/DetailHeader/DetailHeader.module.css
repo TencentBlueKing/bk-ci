@@ -1,4 +1,4 @@
-.rebuildDropdownTrigger {
+.replayTrigger {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -10,57 +10,29 @@
   color: var(--color-text-secondary);
 }
 
-.rebuildDropdownTrigger:hover {
+.replayTrigger:hover:not(.replayTriggerDisabled) {
   cursor: pointer;
   border-color: var(--color-text-tertiary);
 }
 
-.iconAngleDown {
+.replayTriggerDisabled {
+  cursor: not-allowed;
+  color: var(--border-color);
+}
+
+.replayInfoWrap {
+  display: inline-flex;
   margin-left: 5px;
-  font-size: 16px;
+}
+
+.replayInfoWrap:hover .infoIcon {
+  color: var(--color-primary);
 }
 
 .spin {
   margin-right: 5px;
 }
 
-.rebuildDropdownContent {
-  padding: var(--spacing-xs) 0;
-  text-align: left;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  :global(.bk-pop2-arrow) {
-    background-color: #333333 !important;
-  }
-}
-
-.dropdownItem {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  height: 32px;
-  font-size: var(--font-size-sm);
-  padding: 0 var(--spacing-sm);
-  white-space: nowrap;
-  color: var(--color-text-secondary);
-}
-
-.dropdownItem:hover {
-  background-color: var(--bg-hover);
-  color: var(--color-primary);
-}
-
-.dropdownItem:hover .infoIcon {
-  color: var(--color-primary);
-}
-
-.dropdownItem.disabled {
-  cursor: not-allowed;
-  color: var(--border-color);
-}
-
-.dropdownItem .infoIcon {
-  margin-left: 5px;
+.replayTrigger .infoIcon {
   font-size: var(--font-size-xs);
 }
