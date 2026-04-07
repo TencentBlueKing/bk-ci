@@ -123,6 +123,8 @@ func AgentUpgrade(upgradeItem *api.UpgradeItem, hasBuild bool) {
 	logs.Infof("agentUpgrade|download upgrade files start %+v", upItems)
 	downloadUpgradeFiles(upItems)
 	if upItems.NoChange() {
+		logs.Info("agentUpgrade|all files already up-to-date, nothing to replace")
+		success = true
 		return
 	}
 

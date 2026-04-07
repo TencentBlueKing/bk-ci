@@ -523,10 +523,16 @@ func handleReinstall(workDir string, args []string) error {
 		os.Chmod(filepath.Join(workDir, "devopsDaemon"), 0755)
 	}
 
-	printStep(msg("Step 6: installing service ...", "步骤 6: 安装服务 ..."))
+	printStep(msg("Step 6: installing and starting service ...", "步骤 6: 安装并启动服务 ..."))
 	mode := strings.ToLower(readInstallMode(workDir))
 	if err := handleInstall(workDir, []string{"--mode", mode}); err != nil {
-		return err
+		printWarn(msgf("install failed: %v, attempting to start directly ...",
+			"安装失败: %v, 尝试直接启动 ...", err))
+		if startErr := handleStart(workDir); startErr != nil {
+			return fmt.Errorf(msgf(
+				"reinstall failed: install error: %v, start error: %v",
+				"重装失败: 安装错误: %v, 启动错误: %v", err, startErr))
+		}
 	}
 
 	fmt.Println()
