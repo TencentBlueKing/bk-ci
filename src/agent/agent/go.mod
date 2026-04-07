@@ -1,6 +1,6 @@
 module github.com/TencentBlueKing/bk-ci/agent
 
-go 1.19
+go 1.21
 
 require (
 	github.com/gofrs/flock v0.8.1
