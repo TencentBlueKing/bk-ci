@@ -447,7 +447,7 @@ interface ServiceThirdPartyAgentResource {
         @Parameter(description = "Environment name", required = true)
         @PathParam("envName")
         envName: String
-    ): Result<Pair<Long?, List<EnvNodeAgent>>>
+    ): Result<Pair<Long, List<EnvNodeAgent>>>
 
     @Operation(summary = "批量查询Agent环境变量")
     @POST
@@ -502,4 +502,15 @@ interface ServiceThirdPartyAgentResource {
         @QueryParam("projectId")
         projectId: String
     ): Result<List<NodeTag>>
+
+    @Operation(summary = "按节点ID批量查询节点标签值ID集合")
+    @POST
+    @Path("/projects/{projectId}/nodes/tagValueIds")
+    fun fetchNodeTagValueIds(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "节点ID列表", required = true)
+        nodeHashIds: Set<String>
+    ): Result<Map<Long, Set<Long>>>
 }

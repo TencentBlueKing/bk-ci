@@ -11,19 +11,18 @@ import com.tencent.devops.dispatch.constants.BK_AGENT_IS_BUSY
 import com.tencent.devops.dispatch.constants.BK_ENV_DISPATCH_AGENT
 import com.tencent.devops.dispatch.constants.BK_ENV_NODE_DISABLE
 import com.tencent.devops.dispatch.constants.BK_ENV_WORKER_ERROR_IGNORE
-import com.tencent.devops.dispatch.constants.BK_MAX_BUILD_SEARCHING_AGENT
 import com.tencent.devops.dispatch.constants.BK_NO_AGENT_AVAILABLE
 import com.tencent.devops.dispatch.constants.BK_QUEUE_TIMEOUT_MINUTES
-import com.tencent.devops.dispatch.constants.BK_SEARCHING_AGENT
-import com.tencent.devops.dispatch.constants.BK_SEARCHING_AGENT_MOST_IDLE
-import com.tencent.devops.dispatch.constants.BK_SEARCHING_AGENT_PARALLEL_AVAILABLE
 import com.tencent.devops.dispatch.constants.BK_THIRD_JOB_ENV_CURR
 import com.tencent.devops.dispatch.constants.BK_THIRD_JOB_NODE_CURR
 import com.tencent.devops.dispatch.exception.ErrorCodeEnum
+import com.tencent.devops.dispatch.pojo.DispatchStrategyConfig
 import com.tencent.devops.dispatch.pojo.EnvQueueContext
 import com.tencent.devops.dispatch.pojo.QueueDataContext
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
+import com.tencent.devops.dispatch.service.EnvDispatchStrategyService
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
+import com.tencent.devops.dispatch.utils.DispatchStrategyExecutor
 import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.dispatch.utils.TPACommonUtil.Companion.tagError
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
@@ -43,7 +42,8 @@ class TPAEnvQueueService @Autowired constructor(
     private val client: Client,
     private val commonUtil: TPACommonUtil,
     private val thirdPartyAgentService: ThirdPartyAgentService,
-    private val tpaSingleQueueService: TPASingleQueueService
+    private val tpaSingleQueueService: TPASingleQueueService,
+    private val envDispatchStrategyService: EnvDispatchStrategyService
 ) {
     fun initEnvContext(dataContext: QueueDataContext): EnvQueueContext {
         val data = dataContext.data
@@ -132,7 +132,7 @@ class TPAEnvQueueService @Autowired constructor(
     private fun fetchEnvIdAndAgents(
         dataContext: QueueDataContext,
         env: String
-    ): Pair<Long?, List<EnvNodeAgent>> {
+    ): Pair<Long, List<EnvNodeAgent>> {
         val data = dataContext.data
 
         val agentsResult = try {
@@ -180,7 +180,7 @@ class TPAEnvQueueService @Autowired constructor(
                 (agentsResult.data as List<EnvNodeAgent>)
             )
         } else {
-            (agentsResult.data as Pair<Long?, List<EnvNodeAgent>>)
+            (agentsResult.data as Pair<Long, List<EnvNodeAgent>>)
         }
 
         if (agentResData.isEmpty()) {
@@ -344,178 +344,87 @@ class TPAEnvQueueService @Autowired constructor(
         val data = dataContext.data
 
         if (!data.dispatchType.isEnv()) {
-            // 理论上不可能但是逻辑上有可能所以打印日志切不进行选取
             logger.tagError("PickupAgentCheck|not env|${data.toLog()}")
             return false
         }
 
         val activeAgents = context.agents
-        // 这里拿之前构建过的 agent 需要动态的去拿因为不同编排的 agents，因为前面可能的 check 而导致最后选择结果不同导致 agents 不同
-        // 同时因为不存在说是之前构建过的机器突然不构建了所以每次即使去拿也不会对同一组的构建机器产生不同结果
-        val agentMaps = activeAgents.associateBy { it.agentId }
-        val preBuildAgents = ArrayList<ThirdPartyAgent>(agentMaps.size)
-        thirdPartyAgentService.getPreBuildAgentIds(
+        val preBuildAgentIds = thirdPartyAgentService.getPreBuildAgentIds(
             projectId = data.projectId,
             pipelineId = data.pipelineId,
             vmSeqId = data.vmSeqId,
             size = activeAgents.size.coerceAtLeast(1)
-        ).forEach { agentId -> agentMaps[agentId]?.let { agent -> preBuildAgents.add(agent) } }
+        ).toSet()
 
-        val pbAgents = sortAgent(
-            data = data,
-            agents = preBuildAgents,
-            context = context
+        val isDocker = data.dispatchType.dockerInfo != null
+        val runningCounts = mutableMapOf<String, Int>()
+        val dockerRunningCounts = mutableMapOf<String, Int>()
+        activeAgents.forEach { agent ->
+            val rc = context.agentRunningCnt[agent.agentId]
+                ?: thirdPartyAgentService.getRunningBuilds(agent.agentId).also {
+                    context.agentRunningCnt[agent.agentId] = it
+                }
+            runningCounts[agent.agentId] = rc
+
+            if (isDocker) {
+                val drc = context.dockerRunningCnt[agent.agentId]
+                    ?: thirdPartyAgentService.getDockerRunningBuilds(agent.agentId).also {
+                        context.dockerRunningCnt[agent.agentId] = it
+                    }
+                dockerRunningCounts[agent.agentId] = drc
+            }
+
+            commonUtil.logDebug(
+                data,
+                "[${agent.agentId}]${agent.hostname}/${agent.ip}" +
+                    ", Jobs:${runningCounts[agent.agentId]}, DockerJobs:${dockerRunningCounts[agent.agentId] ?: 0}"
+            )
+        }
+
+        val strategies = envDispatchStrategyService.getEnabledStrategies(
+            projectId = data.projectId,
+            envId = context.envId
         )
 
-        /**
-         * 1. 最高优先级的agent:
-         *     a. 最近构建机中使用过这个构建机,并且
-         *     b. 当前没有任何构建机任务
-         * 2. 次高优先级的agent:
-         *     a. 最近构建机中使用过这个构建机,并且
-         *     b. 当前有构建任务,选当前正在运行任务最少的构建机(没有达到当前构建机的最大并发数)
-         * 3. 第三优先级的agent:
-         *     a. 当前没有任何构建机任务
-         * 4. 第四优先级的agent:
-         *     a. 当前有构建任务,选当前正在运行任务最少的构建机(没有达到当前构建机的最大并发数)
-         */
-
-        val retryMsg = "retry: ${dataContext.retryTime} | "
-
-        /**
-         * 最高优先级的agent: 根据哪些agent没有任何任务并且是在最近构建中使用到的Agent
-         */
-        commonUtil.logDebugI18n(data, BK_SEARCHING_AGENT, preMsg = retryMsg)
-        if (matchAgents(context, dataContext, pbAgents, idleAgentMatcher)) {
-            return true
-        }
-
-        /**
-         * 次高优先级的agent: 最近构建机中使用过这个构建机,并且当前有构建任务,选当前正在运行任务最少的构建机(没有达到当前构建机的最大并发数)
-         */
-        commonUtil.logDebugI18n(data, BK_MAX_BUILD_SEARCHING_AGENT, preMsg = retryMsg)
-        if (matchAgents(context, dataContext, pbAgents, availableAgentMatcher)) {
-            return true
-        }
-
-        val allAgents = sortAgent(
-            data = data,
+        val agentTagValues = fetchAgentTagValues(
+            projectId = data.projectId,
             agents = activeAgents,
-            context = context
+            strategies = strategies
         )
 
-        /**
-         * 第三优先级的agent: 当前没有任何构建机任务
-         */
-        commonUtil.logDebugI18n(data, BK_SEARCHING_AGENT_MOST_IDLE, preMsg = retryMsg)
-        if (matchAgents(context, dataContext, allAgents, idleAgentMatcher)) {
-            return true
+        val executor = DispatchStrategyExecutor(
+            input = DispatchStrategyExecutor.StrategyInput(
+                allAgents = activeAgents,
+                preBuildAgentIds = preBuildAgentIds,
+                agentRunningCounts = runningCounts,
+                dockerRunningCounts = dockerRunningCounts,
+                agentTagValues = agentTagValues,
+                isDockerBuilder = isDocker
+            ),
+            logAction = { msg -> commonUtil.logDebug(data, msg) }
+        )
+
+        val matched = executor.execute(strategies) { agent ->
+            dataContext.buildAgent = agent
+            val ok = tpaSingleQueueService.genAgentBuild(context, dataContext)
+            if (ok) {
+                commonUtil.logWithAgentUrl(
+                    data = data,
+                    messageCode = BK_ENV_DISPATCH_AGENT,
+                    param = arrayOf("[${agent.agentId}]${agent.hostname}/${agent.ip}"),
+                    nodeHashId = agent.nodeId,
+                    agentHashId = agent.agentId
+                )
+            }
+            ok
         }
 
-        /**
-         * 第四优先级的agent: 当前有构建任务,选当前正在运行任务最少的构建机(没有达到当前构建机的最大并发数)
-         */
-        commonUtil.logDebugI18n(data, BK_SEARCHING_AGENT_PARALLEL_AVAILABLE, preMsg = retryMsg)
-        if (matchAgents(context, dataContext, allAgents, availableAgentMatcher)) {
+        if (matched != null) {
             return true
         }
 
         commonUtil.logWarnI18n(data, BK_NO_AGENT_AVAILABLE)
-
         return false
-    }
-
-    private fun matchAgents(
-        context: EnvQueueContext,
-        dataContext: QueueDataContext,
-        agents: Collection<AgentAndCount>,
-        agentMatcher: AgentMatcher
-    ): Boolean {
-        if (agents.isEmpty()) {
-            return false
-        }
-
-        val data = dataContext.data
-        agents.forEach {
-            val agent = it.agent
-            if (context.hasTryAgents.contains(agent.agentId)) {
-                return@forEach
-            }
-
-            val matchOk = agentMatcher.match(
-                agent = agent,
-                runningCnt = it.runningCnt,
-                dockerBuilder = data.dispatchType.dockerInfo != null,
-                dockerRunningCnt = it.dockerRunningCnt
-            )
-            if (!matchOk) {
-                return@forEach
-            }
-
-            dataContext.buildAgent = agent
-            if (!tpaSingleQueueService.genAgentBuild(context, dataContext)) {
-                context.hasTryAgents.add(agent.agentId)
-                return@forEach
-            }
-
-            commonUtil.logWithAgentUrl(
-                data = data,
-                messageCode = BK_ENV_DISPATCH_AGENT,
-                param = arrayOf("[${agent.agentId}]${agent.hostname}/${agent.ip}"),
-                nodeHashId = agent.nodeId,
-                agentHashId = agent.agentId
-            )
-            return true
-        }
-
-        return false
-    }
-
-    private fun sortAgent(
-        data: ThirdPartyAgentDispatchData,
-        agents: Collection<ThirdPartyAgent>,
-        context: EnvQueueContext
-    ): MutableList<AgentAndCount> {
-        val sortQ = mutableListOf<AgentAndCount>()
-        agents.forEach {
-            val runningCnt = getRunningCnt(context, it.agentId)
-            val dockerRunningCnt = if (data.dispatchType.dockerInfo == null) {
-                0
-            } else {
-                getDockerRunningCnt(context, it.agentId)
-            }
-            sortQ.add(AgentAndCount(it, runningCnt, dockerRunningCnt))
-            commonUtil.logDebug(
-                data,
-                "[${it.agentId}]${it.hostname}/${it.ip}, Jobs:$runningCnt, DockerJobs:$dockerRunningCnt"
-            )
-        }
-        // 这里应该根据不同的构建使用不同的排序
-        if (data.dispatchType.dockerInfo == null) {
-            sortQ.sortBy { it.runningCnt }
-        } else {
-            sortQ.sortBy { it.dockerRunningCnt }
-        }
-        return sortQ
-    }
-
-    // runningCnt，每次拿取的都是指定 agent 范围的，所以即使不裁剪也不会影响拿取结果
-    private fun getRunningCnt(context: EnvQueueContext, agentId: String): Int {
-        var runningCnt = context.agentRunningCnt[agentId]
-        if (runningCnt == null) {
-            runningCnt = thirdPartyAgentService.getRunningBuilds(agentId)
-            context.agentRunningCnt[agentId] = runningCnt
-        }
-        return runningCnt
-    }
-
-    private fun getDockerRunningCnt(context: EnvQueueContext, agentId: String): Int {
-        var dockerRunningCnt = context.dockerRunningCnt[agentId]
-        if (dockerRunningCnt == null) {
-            dockerRunningCnt = thirdPartyAgentService.getDockerRunningBuilds(agentId)
-            context.dockerRunningCnt[agentId] = dockerRunningCnt
-        }
-        return dockerRunningCnt
     }
 
     fun afterGenAgentBuild(context: EnvQueueContext, dataContext: QueueDataContext) {
@@ -532,45 +441,39 @@ class TPAEnvQueueService @Autowired constructor(
         context.hasTryAgents.remove(agentId)
     }
 
+    private fun fetchAgentTagValues(
+        projectId: String,
+        agents: List<ThirdPartyAgent>,
+        strategies: List<DispatchStrategyConfig>
+    ): Map<String, Set<Long>> {
+        val needLabels = strategies.any { !it.labelSelector.isNullOrEmpty() }
+        if (!needLabels) return emptyMap()
+
+        val nodeHashIds = agents.mapNotNull { it.nodeId }.toSet()
+        if (nodeHashIds.isEmpty()) return emptyMap()
+
+        val nodeTagMap = try {
+            client.get(ServiceThirdPartyAgentResource::class)
+                .fetchNodeTagValueIds(projectId, nodeHashIds)
+                .data ?: emptyMap()
+        } catch (e: Exception) {
+            logger.warn("fetchAgentTagValues failed: ${e.message}")
+            emptyMap()
+        }
+
+        val nodeIdToAgentId = mutableMapOf<Long, String>()
+        agents.forEach { agent ->
+            agent.nodeId?.let { nodeIdToAgentId[HashUtil.decodeIdToLong(it)] = agent.agentId }
+        }
+
+        val result = mutableMapOf<String, Set<Long>>()
+        nodeTagMap.forEach { (nodeId, tagValueIds) ->
+            nodeIdToAgentId[nodeId]?.let { agentId -> result[agentId] = tagValueIds }
+        }
+        return result
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(TPAEnvQueueService::class.java)
-        private val availableAgentMatcher = AvailableAgent()
-        private val idleAgentMatcher = IdleAgent()
-    }
-}
-
-data class AgentAndCount(
-    val agent: ThirdPartyAgent,
-    val runningCnt: Int,
-    val dockerRunningCnt: Int
-)
-
-interface AgentMatcher {
-    fun match(runningCnt: Int, agent: ThirdPartyAgent, dockerBuilder: Boolean, dockerRunningCnt: Int): Boolean
-}
-
-class IdleAgent : AgentMatcher {
-    override fun match(
-        runningCnt: Int,
-        agent: ThirdPartyAgent,
-        dockerBuilder: Boolean,
-        dockerRunningCnt: Int
-    ): Boolean = if (dockerBuilder) {
-        dockerRunningCnt == 0
-    } else {
-        runningCnt == 0
-    }
-}
-
-class AvailableAgent : AgentMatcher {
-    override fun match(
-        runningCnt: Int,
-        agent: ThirdPartyAgent,
-        dockerBuilder: Boolean,
-        dockerRunningCnt: Int
-    ) = if (dockerBuilder) {
-        agent.dockerParallelTaskCount == 0 || (agent.dockerParallelTaskCount?.let { it > dockerRunningCnt } ?: false)
-    } else {
-        agent.parallelTaskCount == 0 || (agent.parallelTaskCount?.let { it > runningCnt } ?: false)
     }
 }

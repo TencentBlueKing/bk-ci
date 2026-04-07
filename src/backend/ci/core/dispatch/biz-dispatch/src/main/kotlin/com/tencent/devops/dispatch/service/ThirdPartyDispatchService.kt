@@ -50,19 +50,17 @@ import com.tencent.devops.dispatch.constants.BK_AGENT_IS_BUSY
 import com.tencent.devops.dispatch.constants.BK_ENV_BUSY
 import com.tencent.devops.dispatch.constants.BK_ENV_NODE_DISABLE
 import com.tencent.devops.dispatch.constants.BK_ENV_WORKER_ERROR_IGNORE
-import com.tencent.devops.dispatch.constants.BK_MAX_BUILD_SEARCHING_AGENT
 import com.tencent.devops.dispatch.constants.BK_NO_AGENT_AVAILABLE
 import com.tencent.devops.dispatch.constants.BK_QUEUE_TIMEOUT_MINUTES
-import com.tencent.devops.dispatch.constants.BK_SEARCHING_AGENT
-import com.tencent.devops.dispatch.constants.BK_SEARCHING_AGENT_MOST_IDLE
-import com.tencent.devops.dispatch.constants.BK_SEARCHING_AGENT_PARALLEL_AVAILABLE
 import com.tencent.devops.dispatch.constants.BK_THIRD_JOB_ENV_CURR
 import com.tencent.devops.dispatch.constants.BK_THIRD_JOB_NODE_CURR
 import com.tencent.devops.dispatch.exception.DispatchRetryMQException
 import com.tencent.devops.dispatch.exception.ErrorCodeEnum
+import com.tencent.devops.dispatch.pojo.DispatchStrategyConfig
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.service.tpaqueue.TPAQueueService
 import com.tencent.devops.dispatch.service.tpaqueue.TPASingleQueueService
+import com.tencent.devops.dispatch.utils.DispatchStrategyExecutor
 import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentEnvLock
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
@@ -87,7 +85,8 @@ class ThirdPartyDispatchService @Autowired constructor(
     private val commonUtil: TPACommonUtil,
     private val thirdPartyAgentBuildService: ThirdPartyAgentService,
     private val tpaQueueService: TPAQueueService,
-    private val tpaSingleQueueService: TPASingleQueueService
+    private val tpaSingleQueueService: TPASingleQueueService,
+    private val envDispatchStrategyService: EnvDispatchStrategyService
 ) {
     fun canDispatch(event: PipelineAgentStartupEvent) =
         event.dispatchType is ThirdPartyAgentIDDispatchType ||
@@ -403,7 +402,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                 (agentsResult.data!! as List<EnvNodeAgent>)
             )
         } else {
-            (agentsResult.data as Pair<Long?, List<EnvNodeAgent>>)
+            (agentsResult.data as Pair<Long, List<EnvNodeAgent>>)
         }
 
         if (agentResData.isEmpty()) {
@@ -492,7 +491,7 @@ class ThirdPartyDispatchService @Autowired constructor(
         dispatchMessage: DispatchMessage,
         dispatchType: ThirdPartyAgentEnvDispatchType,
         agents: List<ThirdPartyAgent>,
-        envId: Long?
+        envId: Long
     ) {
         ThirdPartyAgentEnvLock(redisOperation, dispatchMessage.event.projectId, dispatchType.envName).use { redisLock ->
             val lock = redisLock.tryLock(timeout = 5000) // # 超时尝试锁定，防止环境过热锁定时间过长，影响其他环境构建
@@ -555,13 +554,13 @@ class ThirdPartyDispatchService @Autowired constructor(
 
     private fun checkSingleNodeConcurrency(
         dispatchMessage: DispatchMessage,
-        envId: Long?,
+        envId: Long,
         activeAgents: List<ThirdPartyAgent>
     ): List<ThirdPartyAgent> {
         if (dispatchMessage.event.singleNodeConcurrency == null) {
             return activeAgents
         }
-        if (envId == null || dispatchMessage.event.jobId.isNullOrBlank()) {
+        if (dispatchMessage.event.jobId.isNullOrBlank()) {
             logger.warn(
                 "buildByEnvId|{} has singleNodeConcurrency {} but env {}|job {} null",
                 dispatchMessage.event.buildId,
@@ -614,13 +613,13 @@ class ThirdPartyDispatchService @Autowired constructor(
     }
 
     private fun checkAllNodeConcurrency(
-        envId: Long?,
+        envId: Long,
         dispatchMessage: DispatchMessage
     ) {
         if (dispatchMessage.event.allNodeConcurrency == null) {
             return
         }
-        if (envId != null && !dispatchMessage.event.jobId.isNullOrBlank()) {
+        if (!dispatchMessage.event.jobId.isNullOrBlank()) {
             val c = thirdPartyAgentBuildService.countProjectJobRunningAndQueueAll(
                 pipelineId = dispatchMessage.event.pipelineId,
                 envId = envId,
@@ -660,124 +659,57 @@ class ThirdPartyDispatchService @Autowired constructor(
         activeAgents: List<ThirdPartyAgent>,
         dispatchMessage: DispatchMessage,
         dispatchType: ThirdPartyAgentEnvDispatchType,
-        envId: Long?
+        envId: Long
     ): Boolean {
-        val agentMaps = activeAgents.associateBy { it.agentId }
-
-        val preBuildAgents = ArrayList<ThirdPartyAgent>(agentMaps.size)
-        thirdPartyAgentBuildService.getPreBuildAgentIds(
+        val preBuildAgentIds = thirdPartyAgentBuildService.getPreBuildAgentIds(
             projectId = dispatchMessage.event.projectId,
             pipelineId = dispatchMessage.event.pipelineId,
             vmSeqId = dispatchMessage.event.vmSeqId,
             size = activeAgents.size.coerceAtLeast(1)
-        ).forEach { agentId -> agentMaps[agentId]?.let { agent -> preBuildAgents.add(agent) } }
+        ).toSet()
 
-        val hasTryAgents = HashSet<String>()
-        val runningBuildsMapper = HashMap<String/*AgentId*/, Int/*running builds*/>()
-        // docker和二进制任务区分开，所以单独设立一个
-        val dockerRunningBuildsMapper = HashMap<String/*AgentId*/, Int/*running builds*/>()
-
-        val pbAgents = sortAgent(
-            dispatchMessage = dispatchMessage,
-            dispatchType = dispatchType,
-            agents = preBuildAgents,
-            runningBuildsMapper = runningBuildsMapper,
-            dockerRunningBuildsMapper = dockerRunningBuildsMapper
-        )
-        /**
-         * 1. 最高优先级的agent:
-         *     a. 最近构建机中使用过这个构建机,并且
-         *     b. 当前没有任何构建机任务
-         * 2. 次高优先级的agent:
-         *     a. 最近构建机中使用过这个构建机,并且
-         *     b. 当前有构建任务,选当前正在运行任务最少的构建机(没有达到当前构建机的最大并发数)
-         * 3. 第三优先级的agent:
-         *     a. 当前没有任何构建机任务
-         * 4. 第四优先级的agent:
-         *     a. 当前有构建任务,选当前正在运行任务最少的构建机(没有达到当前构建机的最大并发数)
-         */
-
-        /**
-         * 最高优先级的agent: 根据哪些agent没有任何任务并且是在最近构建中使用到的Agent
-         */
-        logDebug(
-            dispatchMessage.event,
-            "retry: ${dispatchMessage.event.retryTime} | " +
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = BK_SEARCHING_AGENT,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    )
-        )
-        if (startEmptyAgents(dispatchMessage, dispatchType, pbAgents, hasTryAgents, envId)) {
-            logger.info(
-                "${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
-                        "dispatchType=$dispatchType|Get Lv.1"
+        val runningBuildsMapper = HashMap<String, Int>()
+        val dockerRunningBuildsMapper = HashMap<String, Int>()
+        activeAgents.forEach {
+            runningBuildsMapper[it.agentId] = thirdPartyAgentBuildService.getRunningBuilds(it.agentId)
+            if (dispatchType.dockerInfo != null) {
+                dockerRunningBuildsMapper[it.agentId] = thirdPartyAgentBuildService.getDockerRunningBuilds(it.agentId)
+            }
+            logDebug(
+                dispatchMessage.event,
+                "[${it.agentId}]${it.hostname}/${it.ip}, Jobs:${runningBuildsMapper[it.agentId]}" +
+                    ", DockerJobs:${dockerRunningBuildsMapper[it.agentId] ?: 0}"
             )
-            return true
         }
 
-        logDebug(
-            dispatchMessage.event,
-            "retry: ${dispatchMessage.event.retryTime} | " +
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = BK_MAX_BUILD_SEARCHING_AGENT,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    )
+        val strategies = envDispatchStrategyService.getEnabledStrategies(
+            projectId = dispatchMessage.event.projectId,
+            envId = envId
         )
-        /**
-         * 次高优先级的agent: 最近构建机中使用过这个构建机,并且当前有构建任务,选当前正在运行任务最少的构建机(没有达到当前构建机的最大并发数)
-         */
-        if (startAvailableAgents(dispatchMessage, dispatchType, pbAgents, hasTryAgents, envId)) {
-            logger.info(
-                "${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
-                        "dispatchType=$dispatchType|Get Lv.2"
-            )
-            return true
-        }
 
-        logDebug(
-            dispatchMessage.event,
-            "retry: ${dispatchMessage.event.retryTime} | " +
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = BK_SEARCHING_AGENT_MOST_IDLE,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    )
-        )
-        val allAgents = sortAgent(
-            dispatchMessage = dispatchMessage,
-            dispatchType = dispatchType,
+        val agentTagValues = fetchAgentTagValues(
+            projectId = dispatchMessage.event.projectId,
             agents = activeAgents,
-            runningBuildsMapper = runningBuildsMapper,
-            dockerRunningBuildsMapper = dockerRunningBuildsMapper
+            strategies = strategies
         )
-        /**
-         * 第三优先级的agent: 当前没有任何构建机任务
-         */
-        if (startEmptyAgents(dispatchMessage, dispatchType, allAgents, hasTryAgents, envId)) {
-            logger.info(
-                "${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
-                        "dispatchType=$dispatchType|pickup Lv.3"
-            )
-            return true
+
+        val executor = DispatchStrategyExecutor(
+            input = DispatchStrategyExecutor.StrategyInput(
+                allAgents = activeAgents,
+                preBuildAgentIds = preBuildAgentIds,
+                agentRunningCounts = runningBuildsMapper,
+                dockerRunningCounts = dockerRunningBuildsMapper,
+                agentTagValues = agentTagValues,
+                isDockerBuilder = dispatchType.dockerInfo != null
+            ),
+            logAction = { msg -> logDebug(dispatchMessage.event, msg) }
+        )
+
+        val matched = executor.execute(strategies) { agent ->
+            agentInQueue(dispatchMessage, dispatchType, agent, envId)
         }
 
-        logDebug(
-            dispatchMessage.event,
-            "retry: ${dispatchMessage.event.retryTime} | " +
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = BK_SEARCHING_AGENT_PARALLEL_AVAILABLE,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    )
-        )
-        /**
-         * 第四优先级的agent: 当前有构建任务,选当前正在运行任务最少的构建机(没有达到当前构建机的最大并发数)
-         */
-        if (startAvailableAgents(dispatchMessage, dispatchType, allAgents, hasTryAgents, envId)
-        ) {
-            logger.info(
-                "${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
-                        "dispatchType=$dispatchType|Get Lv.4"
-            )
+        if (matched != null) {
             return true
         }
 
@@ -791,151 +723,6 @@ class ThirdPartyDispatchService @Autowired constructor(
             )
         }
         return false
-    }
-
-    private fun startEmptyAgents(
-        dispatchMessage: DispatchMessage,
-        dispatchType: ThirdPartyAgentEnvDispatchType,
-        agents: Collection<Triple<ThirdPartyAgent, Int, Int>>,
-        hasTryAgents: HashSet<String>,
-        envId: Long?
-    ): Boolean {
-        return startAgentsForEnvBuild(dispatchMessage, dispatchType, agents, hasTryAgents, idleAgentMatcher, envId)
-    }
-
-    private fun startAvailableAgents(
-        dispatchMessage: DispatchMessage,
-        dispatchType: ThirdPartyAgentEnvDispatchType,
-        agents: Collection<Triple<ThirdPartyAgent, Int, Int>>,
-        hasTryAgents: HashSet<String>,
-        envId: Long?
-    ): Boolean {
-        return startAgentsForEnvBuild(dispatchMessage, dispatchType, agents, hasTryAgents, availableAgentMatcher, envId)
-    }
-
-    private fun startAgentsForEnvBuild(
-        dispatchMessage: DispatchMessage,
-        dispatchType: ThirdPartyAgentEnvDispatchType,
-        agents: Collection<Triple<ThirdPartyAgent, Int, Int>>,
-        hasTryAgents: HashSet<String>,
-        agentMatcher: AgentMatcher,
-        envId: Long?
-    ): Boolean {
-        if (agents.isNotEmpty()) {
-            // 当前正在运行任务少升序开始遍历(通常任务少是负载最低,但不完全是,负载取决于构建机上运行的任务大小,目前未有采集,先只按任务数来判断)
-            agents.forEach {
-                if (hasTryAgents.contains(it.first.agentId)) {
-                    return@forEach
-                }
-
-                if (agentMatcher.match(
-                        agent = it.first,
-                        runningCnt = it.second,
-                        dockerBuilder = dispatchType.dockerInfo != null,
-                        dockerRunningCnt = it.third
-                    )
-                ) {
-                    val agent = it.first
-                    if (startEnvAgentBuild(dispatchMessage, agent, dispatchType, hasTryAgents, envId)) {
-                        logger.info(
-                            "[${dispatchMessage.event.projectId}|$[${dispatchMessage.event.pipelineId}|" +
-                                    "${dispatchMessage.event.buildId}|${agent.agentId}] Success to start the build"
-                        )
-                        return true
-                    }
-                }
-            }
-        }
-        return false
-    }
-
-    private fun startEnvAgentBuild(
-        dispatchMessage: DispatchMessage,
-        agent: ThirdPartyAgent,
-        dispatchType: ThirdPartyAgentEnvDispatchType,
-        hasTryAgents: HashSet<String>,
-        envId: Long?
-    ): Boolean {
-        if (hasTryAgents.contains(agent.agentId)) {
-            return false
-        }
-        hasTryAgents.add(agent.agentId)
-        return agentInQueue(dispatchMessage, dispatchType, agent, envId)
-    }
-
-    private fun getRunningCnt(agentId: String, runningBuildsMapper: HashMap<String, Int>): Int {
-        var runningCnt = runningBuildsMapper[agentId]
-        if (runningCnt == null) {
-            runningCnt = thirdPartyAgentBuildService.getRunningBuilds(agentId)
-            runningBuildsMapper[agentId] = runningCnt
-        }
-        return runningCnt
-    }
-
-    private fun getDockerRunningCnt(agentId: String, dockerRunningBuildsMapper: HashMap<String, Int>): Int {
-        var dockerRunningCnt = dockerRunningBuildsMapper[agentId]
-        if (dockerRunningCnt == null) {
-            dockerRunningCnt = thirdPartyAgentBuildService.getDockerRunningBuilds(agentId)
-            dockerRunningBuildsMapper[agentId] = dockerRunningCnt
-        }
-        return dockerRunningCnt
-    }
-
-    interface AgentMatcher {
-        fun match(runningCnt: Int, agent: ThirdPartyAgent, dockerBuilder: Boolean, dockerRunningCnt: Int): Boolean
-    }
-
-    class IdleAgent : AgentMatcher {
-        override fun match(
-            runningCnt: Int,
-            agent: ThirdPartyAgent,
-            dockerBuilder: Boolean,
-            dockerRunningCnt: Int
-        ): Boolean = if (dockerBuilder) dockerRunningCnt == 0 else runningCnt == 0
-    }
-
-    class AvailableAgent : AgentMatcher {
-        override fun match(
-            runningCnt: Int,
-            agent: ThirdPartyAgent,
-            dockerBuilder: Boolean,
-            dockerRunningCnt: Int
-        ): Boolean {
-            return if (dockerBuilder) {
-                (agent.dockerParallelTaskCount == 0) || (agent.dockerParallelTaskCount != null &&
-                        agent.dockerParallelTaskCount!! > 0 &&
-                        agent.dockerParallelTaskCount!! > dockerRunningCnt)
-            } else {
-                (agent.parallelTaskCount == 0) || (agent.parallelTaskCount != null &&
-                        agent.parallelTaskCount!! > 0 &&
-                        agent.parallelTaskCount!! > runningCnt)
-            }
-        }
-    }
-
-    private fun sortAgent(
-        dispatchMessage: DispatchMessage,
-        dispatchType: ThirdPartyAgentEnvDispatchType,
-        agents: Collection<ThirdPartyAgent>,
-        runningBuildsMapper: HashMap<String, Int>,
-        dockerRunningBuildsMapper: HashMap<String, Int>
-    ): MutableList<Triple<ThirdPartyAgent, Int/*runningCnt*/, Int/*dockerRunningCnt*/>> {
-        val sortQ = mutableListOf<Triple<ThirdPartyAgent, Int/*runningCnt*/, Int/*dockerRunningCnt*/>>()
-        agents.forEach {
-            val runningCnt = getRunningCnt(it.agentId, runningBuildsMapper)
-            val dockerRunningCnt = if (dispatchType.dockerInfo == null) {
-                0
-            } else {
-                getDockerRunningCnt(it.agentId, dockerRunningBuildsMapper)
-            }
-            sortQ.add(Triple(it, runningCnt, dockerRunningCnt))
-            logDebug(
-                dispatchMessage.event,
-                "[${it.agentId}]${it.hostname}/${it.ip}, Jobs:$runningCnt, DockerJobs:$dockerRunningCnt"
-            )
-        }
-        sortQ.sortBy { it.second + it.third }
-        return sortQ
     }
 
     private fun log(event: PipelineAgentStartupEvent, logMessage: String) {
@@ -983,6 +770,42 @@ class ThirdPartyDispatchService @Autowired constructor(
         ).data?.get(AgentReuseMutex.genAgentContextKey(jobId))
     }
 
+    /**
+     * 按需获取 agent 标签映射。仅当策略中包含 labelSelector 时才发起 RPC 调用。
+     * @return agentId -> 该 agent 拥有的 tagValueId 集合
+     */
+    private fun fetchAgentTagValues(
+        projectId: String,
+        agents: List<ThirdPartyAgent>,
+        strategies: List<DispatchStrategyConfig>
+    ): Map<String, Set<Long>> {
+        val needLabels = strategies.any { !it.labelSelector.isNullOrEmpty() }
+        if (!needLabels) return emptyMap()
+
+        val nodeHashIds = agents.mapNotNull { it.nodeId }.toSet()
+        if (nodeHashIds.isEmpty()) return emptyMap()
+
+        val nodeTagMap = try {
+            client.get(ServiceThirdPartyAgentResource::class)
+                .fetchNodeTagValueIds(projectId, nodeHashIds)
+                .data ?: emptyMap()
+        } catch (e: Exception) {
+            logger.warn("fetchAgentTagValues failed: ${e.message}")
+            emptyMap()
+        }
+
+        val nodeIdToAgentId = mutableMapOf<Long, String>()
+        agents.forEach { agent ->
+            agent.nodeId?.let { nodeIdToAgentId[HashUtil.decodeIdToLong(it)] = agent.agentId }
+        }
+
+        val result = mutableMapOf<String, Set<Long>>()
+        nodeTagMap.forEach { (nodeId, tagValueIds) ->
+            nodeIdToAgentId[nodeId]?.let { agentId -> result[agentId] = tagValueIds }
+        }
+        return result
+    }
+
     fun finishBuild(event: PipelineAgentShutdownEvent) {
         tpaQueueService.finishQueue(event.buildId, event.vmSeqId)
         thirdPartyAgentBuildService.finishBuild(event.buildId, event.vmSeqId, event.buildResult, event.executeCount)
@@ -990,8 +813,6 @@ class ThirdPartyDispatchService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ThirdPartyDispatchService::class.java)
-        private val availableAgentMatcher = AvailableAgent()
-        private val idleAgentMatcher = IdleAgent()
         const val DISPATCH_QUEUE_GRAY_PROJECT_PIPELINE = "DISPATCH_REDIS_QUEUE_GRAY_PROJECT_PIPELINE"
     }
 }

@@ -29,6 +29,7 @@ package com.tencent.devops.environment.resources.thirdpartyagent
 
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
@@ -307,7 +308,7 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     override fun getAgentsByEnvNameWithId(
         projectId: String,
         envName: String
-    ): Result<Pair<Long?, List<EnvNodeAgent>>> {
+    ): Result<Pair<Long, List<EnvNodeAgent>>> {
         return Result(thirdPartyAgentService.getAgentByEnvName(projectId, envName))
     }
 
@@ -355,5 +356,22 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(
             nodeTagService.fetchTagAndNodeCount(projectId)
         )
+    }
+
+    override fun fetchNodeTagValueIds(
+        projectId: String,
+        nodeHashIds: Set<String>
+    ): Result<Map<Long, Set<Long>>> {
+        val nodeIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }.toSet()
+        val tagMap = nodeTagService.fetchNodeTags(projectId, nodeIds)
+        val result = mutableMapOf<Long, Set<Long>>()
+        tagMap.forEach { (nodeId, tags) ->
+            val valueIds = mutableSetOf<Long>()
+            tags.forEach { tag ->
+                tag.tagValues.forEach { valueIds.add(it.tagValueId) }
+            }
+            result[nodeId] = valueIds
+        }
+        return Result(result)
     }
 }
