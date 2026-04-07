@@ -574,7 +574,13 @@ interface ServiceBuildResource {
         buildNoStart: Int? = null,
         @Parameter(description = "构件号结束", required = false)
         @QueryParam("buildNoEnd")
-        buildNoEnd: Int? = null
+        buildNoEnd: Int? = null,
+        @Parameter(
+            description = "利用updateTime进行排序，True为降序，False为升序，null时以Build number 降序",
+            required = false, example = "null"
+        )
+        @QueryParam("updateTimeDesc")
+        updateTimeDesc: Boolean? = null
     ): Result<Page<LightBuildHistory>>
 
     @Operation(summary = "获取构建详情")
