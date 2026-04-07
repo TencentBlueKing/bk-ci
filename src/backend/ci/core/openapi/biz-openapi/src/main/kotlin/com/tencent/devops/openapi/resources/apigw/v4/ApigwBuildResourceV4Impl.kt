@@ -52,7 +52,6 @@ import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
-import com.tencent.devops.process.pojo.trigger.WeMateStartRequest
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -495,38 +494,6 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             endTimeTo = endTimeTo,
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
-        )
-    }
-
-    override fun weMateBuildStart(
-        appCode: String?,
-        apigwType: String?,
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        request: WeMateStartRequest
-    ): Result<BuildId> {
-        logger.info("OPENAPI_BUILD_V4|$userId|weMate build start|$projectId|$pipelineId")
-        return client.get(ServiceBuildResource::class).weMateBuildStart(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            request = request
-        )
-    }
-
-    override fun visibilityManualStartupInfo(
-        appCode: String?,
-        apigwType: String?,
-        userId: String,
-        projectId: String,
-        pipelineId: String
-    ): Result<BuildManualStartupInfo> {
-        logger.info("OPENAPI_BUILD_V4|$userId|visibility startup info|$projectId|$pipelineId")
-        return client.get(ServiceBuildResource::class).visibilityManualStartupInfo(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId
         )
     }
 
