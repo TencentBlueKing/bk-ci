@@ -209,7 +209,9 @@ func watch() {
 				if launchAgentInUserSession(agentPath, workDir) {
 					return
 				}
-				logs.Warn("session launch failed, falling back to direct start")
+				logs.Warn("no user session available, waiting for user login")
+				time.Sleep(30 * time.Second)
+				return
 			}
 			launchAgentDirect(agentPath, workDir)
 		}()
@@ -280,12 +282,8 @@ func launchAgentInUserSession(agentPath, workDir string) bool {
 
 	proc, err := StartProcessAsUser(agentPath, cmdLine, workDir)
 	if err != nil {
-		logs.WithError(err).Warn("StartProcessAsUser failed, trying LogonUser fallback")
-		proc, err = tryLogonFallback(agentPath, cmdLine, workDir)
-		if err != nil {
-			logs.WithError(err).Warn("LogonUser fallback also failed")
-			return false
-		}
+		logs.WithError(err).Warn("StartProcessAsUser failed, no active user session")
+		return false
 	}
 
 	agentMu.Lock()
@@ -374,18 +372,6 @@ func (p *program) tryStopAgent() {
 	} else if agentProcess != nil {
 		agentProcess.Kill()
 	}
-}
-
-// tryLogonFallback attempts to launch the agent using LogonUser when no active
-// user session exists. Reads credentials from LSA Secret store (written by
-// configure_session.ps1).
-func tryLogonFallback(agentPath, cmdLine, workDir string) (*SessionProcessInfo, error) {
-	user, password := ReadSessionCredentials()
-	if user == "" {
-		return nil, fmt.Errorf("no session credentials in LSA Secret (run: devopsAgent configure-session --user ... --password ...)")
-	}
-	logs.Infof("attempting LogonUser fallback with user=%s", user)
-	return StartProcessWithLogon(user, password, agentPath, cmdLine, workDir)
 }
 
 const daemonUpgradeFile = ".daemon_upgrade"

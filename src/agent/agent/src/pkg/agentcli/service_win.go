@@ -24,8 +24,6 @@ func platformUnzip(src, dest string) error {
 func handleInstall(workDir string, args []string) error {
 	fs := flag.NewFlagSet("install", flag.ContinueOnError)
 	mode := fs.String("mode", "service", "")
-	user := fs.String("user", "", "")
-	pass := fs.String("password", "", "")
 	autoLogon := fs.Bool("auto-logon", false, "")
 	if err := fs.Parse(args); err != nil {
 		return err
@@ -37,15 +35,16 @@ func handleInstall(workDir string, args []string) error {
 	case "service":
 		return installService(workDir)
 	case "session":
-		if *autoLogon && *user == "" {
-			return fmt.Errorf(msg("--auto-logon requires --user and --password",
-				"--auto-logon 需要同时指定 --user 和 --password"))
+		var user, pass string
+		if *autoLogon {
+			remaining := fs.Args()
+			if len(remaining) < 2 {
+				return fmt.Errorf(msg("--auto-logon requires USER and PASSWORD, e.g.: --auto-logon admin P@ssw0rd",
+					"--auto-logon 需要跟用户名和密码, 例如: --auto-logon admin P@ssw0rd"))
+			}
+			user, pass = remaining[0], remaining[1]
 		}
-		if *user != "" && *pass == "" {
-			return fmt.Errorf(msg("--password is required when --user is specified",
-				"指定 --user 时必须提供 --password"))
-		}
-		return enableSession(workDir, *user, *pass, *autoLogon)
+		return enableSession(workDir, user, pass, *autoLogon)
 	case "task":
 		printWarn(msg(
 			"[DEPRECATED] Task mode is deprecated. Consider using '--mode session' for desktop access.",

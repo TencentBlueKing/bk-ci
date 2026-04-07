@@ -63,9 +63,8 @@ func printUsageLocalized() {
     --mode service     (默认) 安装为 Windows 服务
     --mode session     安装为 Windows 服务 + 配置桌面会话访问
     --mode task        [已废弃] 安装为计划任务 (建议使用 session 模式)
-    --user 用户名      session 模式: Windows 登录账号 (可选)
-    --password 密码    session 模式: 账号密码 (指定 --user 时必填)
-    --auto-logon       session 模式: 配置 Windows 自动登录
+    --auto-logon 用户名 密码
+                       session 模式: 配置 Windows 自动登录 (注销/重启后自动恢复)
 `)
 		} else if isMac {
 			fmt.Print(`  install [选项]       安装并启动 Agent 守护进程
@@ -112,9 +111,8 @@ func printUsageLocalized() {
     --mode service     (default) Install as Windows service
     --mode session     Install as service + configure desktop session access
     --mode task        [deprecated] Install as scheduled task (use session instead)
-    --user USER        session mode: Windows logon account (optional)
-    --password PASS    session mode: Password (required with --user)
-    --auto-logon       session mode: Enable Windows auto-logon on reboot
+    --auto-logon USER PASSWORD
+                       session mode: Enable auto-logon (recovers after logoff/reboot)
 `)
 		} else if isMac {
 			fmt.Print(`  install [options]    Install and start agent daemon

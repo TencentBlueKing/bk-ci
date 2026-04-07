@@ -273,9 +273,15 @@ AgentUpgrade(upgradeItem, hasBuild)
 |------|---------|------|------|
 | **Linux** | `service` / `user` / `direct` | root: `service`; 非 root: `direct` | `service` = 系统级 systemd (`/etc/systemd/system/`)；`user` = 用户级 systemd (`~/.config/systemd/user/`, 需 `loginctl enable-linger`)；`direct` = 直接启动 |
 | **macOS** | `login` / `background` | `login` | `login` = 需登录桌面, 直接启动；`background` = 无头模式 (`user/UID` 域 + `LimitLoadToSessionType=Background`) |
-| **Windows** | `service` / `session` / `task` | `service` | `service` = Windows 服务；`session` = 服务 + 桌面会话；`task` = 已废弃计划任务 |
+| **Windows** | `service` / `session` / `task` | `service` | `service` = Windows 服务；`session` = 服务 + 桌面会话（可选 `--auto-logon` 自动登录）；`task` = 已废弃计划任务 |
 
 通过 `.install_type` 文件持久化当前模式，`start`/`stop` 自动检测并使用对应的启停方式。
+
+**Windows SESSION 模式行为**:
+- Daemon 通过 WTS API (`CreateProcessAsUser`) 在已登录用户的桌面会话中启动 Agent
+- 无用户登录时 **等待** 用户登录（每 30s 重试），**不会**回退到 SYSTEM 身份直接启动
+- 注销会导致 Agent 被终止，未配置 auto-logon 时需等待手动登录后自动恢复
+- `--auto-logon USER PASSWORD`：配置 Windows 自动登录，注销/重启后自动恢复用户会话
 
 ### 内外版差异 (`constant/`)
 

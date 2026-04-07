@@ -186,7 +186,7 @@ func statusValueHasIssue(label, value string) bool {
 	return false
 }
 
-func configureSessionSummaryLines(user string, hasCredentials, autoLogon bool) []string {
+func configureSessionSummaryLines(user string, autoLogon bool) []string {
 	if autoLogon {
 		return []string{
 			msg("The agent is active in your current session NOW.", "Agent 已在当前桌面会话中生效。"),
@@ -194,18 +194,11 @@ func configureSessionSummaryLines(user string, hasCredentials, autoLogon bool) [
 			msg("If the password changes, re-run with the new password.", "如果密码变更，请使用新密码重新执行命令。"),
 		}
 	}
-	if hasCredentials {
-		return []string{
-			msg("The agent is active in your current session NOW.", "Agent 已在当前桌面会话中生效。"),
-			msg("When no user is logged in, daemon uses LogonUser fallback.", "当无人登录时，daemon 会使用 LogonUser 回退启动。"),
-			msg("To also auto-logon on reboot, add --auto-logon.", "如需在重启后也自动登录，请添加 --auto-logon。"),
-			msg("If the password changes, re-run with the new password.", "如果密码变更，请使用新密码重新执行命令。"),
-		}
-	}
 	return []string{
 		msg("The agent is active in your current session NOW.", "Agent 已在当前桌面会话中生效。"),
-		msg("When no user is logged in, agent falls back to Session 0.", "当无人登录时，agent 会回退到 Session 0。"),
-		msg("To enable fallback, add --user and --password.", "如需启用登录凭据回退，请添加 --user 和 --password。"),
+		msg("When no user is logged in, agent waits until a user logs in.", "当无人登录时，agent 会等待用户登录后再启动。"),
+		msg("To auto-logon on reboot, add --auto-logon --user USER --password PASS.",
+			"如需在重启/注销后自动登录，请添加 --auto-logon --user 用户名 --password 密码。"),
 	}
 }
 

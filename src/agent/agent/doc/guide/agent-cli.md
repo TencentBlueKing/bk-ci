@@ -92,9 +92,9 @@ sudo ./devopsAgent install --mode service   # 同上
 .\devopsAgent.exe install
 .\devopsAgent.exe install --mode service   # 同上
 
-# 服务 + Session 模式（一步到位）
-.\devopsAgent.exe install --mode session --user builduser --password P@ssw0rd
-.\devopsAgent.exe install --mode session --user builduser --password P@ssw0rd --auto-logon
+# 服务 + Session 模式
+.\devopsAgent.exe install --mode session
+.\devopsAgent.exe install --mode session --auto-logon builduser P@ssw0rd
 ```
 
 ---
@@ -139,43 +139,41 @@ sudo ./devopsAgent install --mode service   # 同上
 通过 `install --mode session` 配置：
 
 ```powershell
-# 最简单：依赖当前已登录用户的 Session
+# 基本模式：依赖当前已登录用户的 Session
 .\devopsAgent.exe install --mode session
 
-# 配置 LogonUser：没人登录时也能创建 Session
-.\devopsAgent.exe install --mode session --user builduser --password P@ssw0rd
-
-# 完整：配置 Windows 自动登录，重启后会自动登录，也有 Session
-.\devopsAgent.exe install --mode session --user builduser --password P@ssw0rd --auto-logon
+# 带自动登录：注销/重启后自动恢复用户会话
+.\devopsAgent.exe install --mode session --auto-logon builduser P@ssw0rd
 ```
 
 | 参数 | 说明 |
 |------|------|
-| `--user` | Windows 登录账号（可选，支持 `DOMAIN\user` 或 `user@domain` 格式） |
-| `--password` | 账号密码（指定 `--user` 时必填，配置前会通过 LogonUser API 验证） |
-| `--auto-logon` | 配置 Windows 自动登录（系统级设置，每次重启自动登录，需要 `--user`） |
+| `--auto-logon USER PASSWORD` | 配置 Windows 自动登录，注销/重启后自动恢复用户会话。用户名支持 `DOMAIN\user` 或 `user@domain`，安装前会验证凭据 |
 
-### 各层级效果对比
+### 行为对比
 
-| 场景 | 无参数 | 有凭据 | 凭据 + --auto-logon |
-|------|--------|--------|---------------------|
-| 当前有用户登录 | daemon 通过 WTS API 在用户 Session 中启动 agent | 同左 | 同左 |
-| 没人登录 | agent 回退到 Session 0 | daemon 用 LogonUser 在控制台 Session 创建进程 | Windows 自动登录 → 产生 Session |
-| 系统影响 | 无 | 凭据加密存储在 LSA Secret | 同左 + 修改注册表自动登录 |
+| 场景 | 无 `--auto-logon` | 有 `--auto-logon` |
+|------|-------------------|-------------------|
+| 当前有用户登录 | daemon 通过 WTS API 在用户 Session 中启动 agent | 同左 |
+| 用户注销 | Agent 被终止，daemon 等待用户重新登录后恢复 | Windows 自动登录 → Agent 自动恢复 |
+| 系统重启 | 需等待用户手动登录 | Windows 自动登录 → Agent 自动恢复 |
+| 锁屏 (Win+L) | 不受影响 | 不受影响 |
+
+> **注意**：无用户登录时 daemon **不会**回退到 SYSTEM 身份启动 Agent，而是等待用户登录后在用户会话中恢复，避免 SYSTEM 下构建的权限/环境问题。
 
 ### 密码变更
 
 如果 Windows 账号密码变更，需要用新密码重新运行 install（会自动 uninstall 旧配置再安装）：
 
 ```powershell
-.\devopsAgent.exe install --mode session --user builduser --password NewP@ssw0rd
+.\devopsAgent.exe install --mode session --auto-logon builduser NewP@ssw0rd
 ```
 
-### 凭据安全
+### 自动登录安全
 
-- Session 凭据通过 **LSA Secret** (Local Security Authority) 加密存储
+- 自动登录密码通过 **LSA Secret** (Local Security Authority) 加密存储
 - 不在任何配置文件中以明文出现
-- `uninstall` 会清理所有凭据和自动登录配置
+- `uninstall` 会清理自动登录配置
 
 ---
 
@@ -215,7 +213,7 @@ sudo ./devopsAgent install --mode service   # 同上
 | macOS | `--mode background` (非 root) | `~/Library/LaunchAgents/devops_agent_{id}.plist` | `devops_agent_{id}` |
 | macOS | root | `/Library/LaunchDaemons/devops_agent_{id}.plist` | `devops_agent_{id}` |
 | Windows | `--mode service` | Windows 服务 (`sc.exe create`) | `devops_agent_{id}` |
-| Windows | `--mode session` | Windows 服务 + LSA Secret 凭据 | `devops_agent_{id}` |
+| Windows | `--mode session` | Windows 服务 + 桌面会话（可选 auto-logon） | `devops_agent_{id}` |
 
 ---
 

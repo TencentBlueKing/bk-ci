@@ -100,17 +100,17 @@ func TestHandleInstall_SessionValidation(t *testing.T) {
 	dir := t.TempDir()
 	os.WriteFile(filepath.Join(dir, ".agent.properties"), []byte("devops.agent.id=test1\n"), 0644)
 
-	t.Run("session_user_no_password", func(t *testing.T) {
-		err := handleInstall(dir, []string{"--mode", "session", "--user", "admin"})
+	t.Run("autologon_no_args", func(t *testing.T) {
+		err := handleInstall(dir, []string{"--mode", "session", "--auto-logon"})
 		if err == nil {
-			t.Error("expected error: --password required with --user")
+			t.Error("expected error: --auto-logon requires USER and PASSWORD")
 		}
 	})
 
-	t.Run("session_autologon_no_user", func(t *testing.T) {
-		err := handleInstall(dir, []string{"--mode", "session", "--auto-logon"})
+	t.Run("autologon_only_user", func(t *testing.T) {
+		err := handleInstall(dir, []string{"--mode", "session", "--auto-logon", "admin"})
 		if err == nil {
-			t.Error("expected error: --auto-logon requires --user")
+			t.Error("expected error: --auto-logon requires USER and PASSWORD")
 		}
 	})
 }
@@ -119,37 +119,34 @@ func TestConfigureSessionSummaryLines(t *testing.T) {
 	old := useChinese
 	defer func() { useChinese = old }()
 
-	t.Run("english_no_credentials", func(t *testing.T) {
+	t.Run("english_no_autologon", func(t *testing.T) {
 		useChinese = false
-		lines := configureSessionSummaryLines("", false, false)
+		lines := configureSessionSummaryLines("", false)
 		if len(lines) != 3 {
 			t.Fatalf("len(lines) = %d, want 3", len(lines))
 		}
 		if !strings.Contains(lines[0], "current session NOW") {
 			t.Errorf("line[0] = %q", lines[0])
 		}
-		if !strings.Contains(lines[1], "Session 0") {
-			t.Errorf("line[1] = %q", lines[1])
+		if !strings.Contains(lines[1], "waits until") {
+			t.Errorf("line[1] = %q, want 'waits until'", lines[1])
 		}
 	})
 
-	t.Run("english_with_credentials", func(t *testing.T) {
+	t.Run("english_auto_logon", func(t *testing.T) {
 		useChinese = false
-		lines := configureSessionSummaryLines("builduser", true, false)
-		if len(lines) != 4 {
-			t.Fatalf("len(lines) = %d, want 4", len(lines))
+		lines := configureSessionSummaryLines("builduser", true)
+		if len(lines) != 3 {
+			t.Fatalf("len(lines) = %d, want 3", len(lines))
 		}
-		if !strings.Contains(lines[1], "LogonUser fallback") {
+		if !strings.Contains(lines[1], "auto-logs in") {
 			t.Errorf("line[1] = %q", lines[1])
-		}
-		if !strings.Contains(lines[2], "--auto-logon") {
-			t.Errorf("line[2] = %q", lines[2])
 		}
 	})
 
 	t.Run("chinese_auto_logon", func(t *testing.T) {
 		useChinese = true
-		lines := configureSessionSummaryLines("构建用户", true, true)
+		lines := configureSessionSummaryLines("构建用户", true)
 		if len(lines) != 3 {
 			t.Fatalf("len(lines) = %d, want 3", len(lines))
 		}
@@ -158,9 +155,6 @@ func TestConfigureSessionSummaryLines(t *testing.T) {
 		}
 		if !strings.Contains(lines[1], "自动登录") {
 			t.Errorf("line[1] = %q", lines[1])
-		}
-		if !strings.Contains(lines[2], "重新执行命令") {
-			t.Errorf("line[2] = %q", lines[2])
 		}
 	})
 }
