@@ -214,6 +214,10 @@ AgentUpgrade(upgradeItem, hasBuild)
 
 **升级器** (`pkg/upgrader/`): 独立进程，负责替换Agent/Daemon二进制文件并重启。平台差异大——Unix使用文件替换+进程信号，Windows需要等待进程退出再替换。
 
+**Daemon 重启机制**（升级后如何启动新 Agent）:
+- **Linux/macOS**: Daemon 通过 5 秒 ticker + `flock` 文件锁轮询检测 Agent 存活，发现 Agent 锁可获取即重新拉起
+- **Windows**: Daemon 在 Agent 退出后调用 `waitBeforeRestart()` — 先等 3 秒 base delay（防止重启风暴），然后每 500ms 轮询 total-lock（TryLock），锁可用则立即重启，最长等 30 秒兜底超时。接着 `waitForUpgradeFinish()` 再次确认 upgrader 完成后启动新 Agent
+
 ## 跨平台开发指南
 
 ### 平台文件命名约定
@@ -251,6 +255,7 @@ AgentUpgrade(upgradeItem, hasBuild)
 | **Docker** | 完整支持 | 不支持 |
 | **文件权限** | `os.Chmod` | 空操作 |
 | **进程替换** | 文件替换 + 进程信号 | 等待退出 + 文件替换 |
+| **Daemon 重启延迟** | 5s ticker 轮询 flock | 3s base + 500ms 轮询 total-lock（30s 兜底） |
 | **硬件信息采集** | Linux/Windows 可走通用 `ghw` 采集；macOS 需用 `_darwin.go` 单独兜底，当前跳过 GPU 采集以规避 `ghw` 未实现报错 | GPU 标签主要用于指标补充，不应影响 Agent 启动 |
 
 ### 安装模式 (`install --mode`)
@@ -451,7 +456,7 @@ go test ./...
 - `doc/platform-windows.md` — Windows 平台指南（服务/Session 模式、环境变量自动刷新）
 - `doc/build-and-workspace.md` — 构建系统与工作空间（Worker、JDK、磁盘占用与清理）
 - `doc/docker-builds.md` — Docker/Podman 容器构建（运行时切换、挂载规则、镜像调试）
-- `doc/upgrade-and-reinstall.md` — 升级与重装机制（自动升级流程、reinstall 完全重装）
+- `doc/upgrade-and-reinstall.md` — 升级与重装机制（自动升级流程、Daemon 重启机制、reinstall 完全重装）
 - `doc/troubleshooting.md` — 故障排查与状态检查（status 解读、健康检查、常见故障）
 
 **人工测试文档**:
