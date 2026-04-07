@@ -155,7 +155,6 @@
                         toggleConstraint(props.classify, fieldAlias.value, props.field)
                         instance?.hide?.()
                     }
-                    
                 },
                 instanceFromTemplate,
                 isOverrideField,

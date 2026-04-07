@@ -197,7 +197,6 @@ class ProjectApprovalService @Autowired constructor(
             projectExtService.createExtProjectInfo(
                 userId = applicant,
                 authProjectId = authProjectId,
-                accessToken = null,
                 projectCreateInfo = projectCreateInfo,
                 createExtInfo = ProjectCreateExtInfo(needValidate = true, needAuth = true),
                 logoAddress = projectInfo.logoAddr
@@ -325,6 +324,13 @@ class ProjectApprovalService @Autowired constructor(
                 )
             }
         }
+        // 同步共享制品开关变更到 BkRepo
+        projectExtService.syncShareArtifactIfChanged(
+            userId = applicant,
+            projectId = projectId,
+            oldProperties = projectProperties,
+            newProperties = updateProjectProperties
+        )
     }
 
     fun updateRejectOrRevoke(

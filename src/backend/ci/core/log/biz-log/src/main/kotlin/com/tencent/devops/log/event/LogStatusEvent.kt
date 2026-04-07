@@ -34,7 +34,7 @@ import com.tencent.devops.common.stream.constants.StreamBinding
 
 @Event(
     destination = StreamBinding.LOG_STATUS_EVENT_DESTINATION,
-    binder = StreamBinder.EXTEND_RABBIT
+    binder = StreamBinder.CUSTOM
 )
 data class LogStatusEvent(
     override val buildId: String,

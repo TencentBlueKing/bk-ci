@@ -80,10 +80,10 @@ class PipelineVersionPersistenceService @Autowired constructor(
         resourceOnlyVersion: PipelineResourceOnlyVersion
     ) {
         with(context) {
-            pipelineResourceWithoutVersion.model.latestVersion = resourceOnlyVersion.version
             operationLogType = OperationLogType.fetchType(pipelineResourceWithoutVersion.status)
             operationLogParams = resourceOnlyVersion.versionName ?: ""
 
+            pipelineResourceWithoutVersion.model.latestVersion = resourceOnlyVersion.version
             val pipelineResourceVersion = PipelineResourceVersion(
                 pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
                 pipelineResourceOnlyVersion = resourceOnlyVersion
@@ -148,10 +148,10 @@ class PipelineVersionPersistenceService @Autowired constructor(
         with(context) {
             val watcher = Watcher("createReleaseVersion|$projectId|$pipelineId")
             try {
-                pipelineResourceWithoutVersion.model.latestVersion = resourceOnlyVersion.version
                 operationLogType = OperationLogType.RELEASE_MASTER_VERSION
                 operationLogParams = resourceOnlyVersion.versionName!!
 
+                pipelineResourceWithoutVersion.model.latestVersion = resourceOnlyVersion.version
                 val pipelineResourceVersion = PipelineResourceVersion(
                     pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
                     pipelineResourceOnlyVersion = resourceOnlyVersion
@@ -205,6 +205,16 @@ class PipelineVersionPersistenceService @Autowired constructor(
                             )
                         }
                     }
+                    pipelineSetting.maxPipelineResNum?.let {
+                        val deleteVersionCnt = pipelineResourceVersionDao.deleteEarlyVersion(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            currentVersion = pipelineResourceVersion.version,
+                            maxPipelineResNum = it
+                        )
+                        logger.info("delete early version|$projectId|$pipelineId|$deleteVersionCnt")
+                    }
                     postProcessInTransactionVersionCreate(
                         transactionContext = transactionContext,
                         context = context,
@@ -233,6 +243,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
             operationLogType = OperationLogType.CREATE_DRAFT_VERSION
             operationLogParams = resourceOnlyVersion.baseVersionName ?: ""
 
+            pipelineResourceWithoutVersion.model.latestVersion = resourceOnlyVersion.version
             val pipelineResourceVersion = PipelineResourceVersion(
                 pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
                 pipelineResourceOnlyVersion = resourceOnlyVersion
@@ -262,6 +273,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
         with(context) {
             operationLogType = OperationLogType.UPDATE_DRAFT_VERSION
 
+            pipelineResourceWithoutVersion.model.latestVersion = resourceOnlyVersion.version
             val pipelineResourceVersion = PipelineResourceVersion(
                 pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
                 pipelineResourceOnlyVersion = resourceOnlyVersion
@@ -289,6 +301,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
         resourceOnlyVersion: PipelineResourceOnlyVersion
     ) {
         with(context) {
+            pipelineResourceWithoutVersion.model.latestVersion = resourceOnlyVersion.version
             val pipelineResourceVersion = PipelineResourceVersion(
                 pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
                 pipelineResourceOnlyVersion = resourceOnlyVersion
@@ -365,6 +378,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
             operationLogType = OperationLogType.RELEASE_MASTER_VERSION
             operationLogParams = resourceOnlyVersion.versionName!!
 
+            pipelineResourceWithoutVersion.model.latestVersion = resourceOnlyVersion.version
             val pipelineResourceVersion = PipelineResourceVersion(
                 pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
                 pipelineResourceOnlyVersion = resourceOnlyVersion
@@ -401,6 +415,16 @@ class PipelineVersionPersistenceService @Autowired constructor(
                     dslContext = transactionContext,
                     setting = pipelineSetting
                 )
+                pipelineSetting.maxPipelineResNum?.let {
+                    val deleteVersionCnt = pipelineResourceVersionDao.deleteEarlyVersion(
+                        dslContext = transactionContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        currentVersion = pipelineResourceVersion.version,
+                        maxPipelineResNum = it
+                    )
+                    logger.info("delete early version|$projectId|$pipelineId|$deleteVersionCnt")
+                }
                 postProcessInTransactionVersionCreate(
                     transactionContext = transactionContext,
                     context = context,
@@ -424,6 +448,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
         resourceOnlyVersion: PipelineResourceOnlyVersion
     ) {
         with(context) {
+            pipelineResourceWithoutVersion.model.latestVersion = resourceOnlyVersion.version
             val pipelineResourceVersion = PipelineResourceVersion(
                 pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
                 pipelineResourceOnlyVersion = resourceOnlyVersion
@@ -494,7 +519,8 @@ class PipelineVersionPersistenceService @Autowired constructor(
      */
     fun releaseYamlFile(
         context: PipelineVersionCreateContext,
-        resourceOnlyVersion: PipelineResourceOnlyVersion
+        resourceOnlyVersion: PipelineResourceOnlyVersion,
+        source: PipelineYamlFileReleaseReqSource
     ): PipelineYamlFileReleaseResult {
         with(context) {
             val yamlFileReleaseReq = PipelineYamlFileReleaseReq(
@@ -511,7 +537,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
                     ?: "update template ${pipelineBasicInfo.pipelineName}",
                 targetAction = targetAction!!,
                 targetBranch = branchName,
-                source = PipelineYamlFileReleaseReqSource.TEMPLATE_INSTANCE,
+                source = source,
                 templateName = templateInstanceBasicInfo?.templateName
             )
             val yamlFileReleaseResult = pipelineYamlFacadeService.releaseYamlFile(

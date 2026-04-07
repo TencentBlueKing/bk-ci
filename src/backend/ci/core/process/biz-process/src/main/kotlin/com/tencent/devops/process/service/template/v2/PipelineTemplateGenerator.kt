@@ -28,7 +28,6 @@
 package com.tencent.devops.process.service.template.v2
 
 import com.tencent.devops.common.api.check.Preconditions
-import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
@@ -51,10 +50,11 @@ import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.common.pipeline.template.StageTemplateModel
 import com.tencent.devops.common.pipeline.template.StepTemplateModel
 import com.tencent.devops.process.constant.PipelineTemplateConstant
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_LATEST_VERSION_NOT_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_TYPE_INVALID
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_VERSION_NOT_EXISTS
+import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.service.PipelineInfoExtService
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
@@ -67,11 +67,10 @@ import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService.C
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService.Companion.setting_key
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService.Companion.trigger_key
 import com.tencent.devops.process.utils.PipelineVersionUtils
+import com.tencent.devops.process.yaml.PipelineYamlCommonService
 import com.tencent.devops.process.yaml.transfer.TransferMapper
 import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
-import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
-import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -80,12 +79,14 @@ import org.springframework.stereotype.Service
  * 生成流水线模版模型
  */
 @Service
+@Suppress("LongParameterList")
 class PipelineTemplateGenerator @Autowired constructor(
     private val client: Client,
     private val transferService: PipelineTransferYamlService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplateSettingService: PipelineTemplateSettingService,
-    private val pipelineInfoExtService: PipelineInfoExtService
+    private val pipelineInfoExtService: PipelineInfoExtService,
+    private val pipelineYamlCommonService: PipelineYamlCommonService
 ) {
 
     fun getDefaultTemplateModel(
@@ -202,18 +203,26 @@ class PipelineTemplateGenerator @Autowired constructor(
      */
     fun generateDraftVersion(
         projectId: String,
-        templateId: String
+        templateId: String,
+        baseVersion: Long?
     ): PTemplateResourceOnlyVersion {
         val latestResource = pipelineTemplateResourceService.getLatestVersionResource(
             projectId = projectId,
             templateId = templateId
         ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_LATEST_VERSION_NOT_EXIST)
+        val baseResource = baseVersion?.let {
+            pipelineTemplateResourceService.get(
+                projectId = projectId,
+                templateId = templateId,
+                version = it
+            )
+        }
         return PTemplateResourceOnlyVersion(
             version = generateTemplateVersion(),
             number = latestResource.number + 1,
             settingVersion = latestResource.settingVersion + 1,
-            baseVersion = latestResource.version,
-            baseVersionName = latestResource.versionName
+            baseVersion = baseResource?.version ?: latestResource.version,
+            baseVersionName = baseResource?.versionName ?: latestResource.versionName
         )
     }
 
@@ -223,6 +232,7 @@ class PipelineTemplateGenerator @Autowired constructor(
     fun generateBranchVersion(
         projectId: String,
         templateId: String,
+        draftResource: PipelineTemplateResource? = null,
         branchName: String
     ): PTemplateResourceOnlyVersion {
         val latestResource = pipelineTemplateResourceService.getLatestVersionResource(
@@ -235,13 +245,24 @@ class PipelineTemplateGenerator @Autowired constructor(
             templateId = templateId,
             branchName = branchName
         )
+        // 如果从草稿发布,number和setting不需要生成,直接使用草稿版本,否则使用最新版本+1
+        val (version, number, settingVersion) = if (draftResource == null) {
+            Triple(
+                generateTemplateVersion(),
+                latestResource.number + 1,
+                latestResource.settingVersion + 1
+            )
+        } else {
+            Triple(draftResource.version, draftResource.number, draftResource.settingVersion)
+        }
         return PTemplateResourceOnlyVersion(
-            version = generateTemplateVersion(),
-            number = latestResource.number + 1,
+            version = version,
+            number = number,
             versionName = branchName,
-            settingVersion = latestResource.settingVersion + 1,
-            baseVersion = branchResource?.version ?: latestResource.version,
-            baseVersionName = branchResource?.versionName ?: latestResource.versionName
+            settingVersion = settingVersion,
+            baseVersion = draftResource?.baseVersion ?: branchResource?.version ?: latestResource.version,
+            baseVersionName =
+                draftResource?.baseVersionName ?: branchResource?.versionName ?: latestResource.versionName
         )
     }
 
@@ -282,22 +303,6 @@ class PipelineTemplateGenerator @Autowired constructor(
                 customVersionName = customVersionName
             )
             Pair(VersionStatus.RELEASED, resourceOnlyVersion)
-        }.also {
-            val versionStatus = it.first
-            if (versionStatus == VersionStatus.RELEASED) {
-                val versionName = it.second.versionName!!
-                pipelineTemplateResourceService.getLatestResource(
-                    projectId = projectId,
-                    templateId = templateId,
-                    status = VersionStatus.RELEASED,
-                    versionName = it.second.versionName!!
-                )?.let {
-                    throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_TEMPLATE_VERSION_NAME_DUPLICATION,
-                        params = arrayOf(versionName)
-                    )
-                }
-            }
         }
     }
 
@@ -331,19 +336,27 @@ class PipelineTemplateGenerator @Autowired constructor(
                     pipelineTemplateResourceService.get(
                         projectId = projectId, templateId = templateId, version = it
                     )
-                } ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_NOT_EXISTS)
+                } ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_VERSION_NOT_EXISTS)
                 if (baseResource.status != VersionStatus.BRANCH) {
                     throw ErrorCodeException(errorCode = ERROR_TEMPLATE_NOT_EXISTS)
                 }
-                val resourceOnlyVersion =
-                    PTemplateResourceOnlyVersion(draftResource).copy(versionName = baseResource.versionName)
+                val resourceOnlyVersion = generateBranchVersion(
+                    projectId = projectId,
+                    templateId = templateId,
+                    draftResource = draftResource,
+                    branchName = baseResource.versionName!!
+                )
                 Pair(VersionStatus.BRANCH, resourceOnlyVersion)
             }
 
             CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE -> {
-                val versionName = "${PAC_TEMPLATE_BRANCH_PREFIX}$templateId-${draftResource.number}"
-                val resourceOnlyVersion =
-                    PTemplateResourceOnlyVersion(draftResource).copy(versionName = versionName)
+                val checkoutBranch = "${PAC_TEMPLATE_BRANCH_PREFIX}$templateId-${draftResource.number}"
+                val resourceOnlyVersion = generateBranchVersion(
+                    projectId = projectId,
+                    templateId = templateId,
+                    draftResource = draftResource,
+                    branchName = checkoutBranch
+                )
                 Pair(VersionStatus.BRANCH, resourceOnlyVersion)
             }
 
@@ -351,18 +364,11 @@ class PipelineTemplateGenerator @Autowired constructor(
                 if (targetBranch == null) {
                     throw IllegalArgumentException("targetBranch is null")
                 }
-                val serverRepository = client.get(ServiceScmRepositoryApiResource::class).getServerRepositoryById(
-                    projectId = projectId,
-                    repositoryType = RepositoryType.ID,
-                    repoHashIdOrName = repoHashId
-                ).data
-                if (serverRepository !is GitScmServerRepository) {
-                    throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC
-                    )
-                }
+                val defaultBranch = pipelineYamlCommonService.getDefaultBranch(
+                    projectId = projectId, repoHashId = repoHashId
+                )
                 // 如果选择的是默认分支,则应该发布正式版本
-                if (targetBranch == serverRepository.defaultBranch) {
+                if (targetBranch == defaultBranch) {
                     val resourceOnlyVersion = generateReleaseVersion(
                         projectId = projectId,
                         templateId = templateId,
@@ -373,8 +379,12 @@ class PipelineTemplateGenerator @Autowired constructor(
                     )
                     Pair(VersionStatus.RELEASED, resourceOnlyVersion)
                 } else {
-                    val resourceOnlyVersion =
-                        PTemplateResourceOnlyVersion(draftResource).copy(versionName = targetBranch)
+                    val resourceOnlyVersion = generateBranchVersion(
+                        projectId = projectId,
+                        templateId = templateId,
+                        draftResource = draftResource,
+                        branchName = targetBranch
+                    )
                     Pair(VersionStatus.BRANCH, resourceOnlyVersion)
                 }
             }
@@ -390,6 +400,7 @@ class PipelineTemplateGenerator @Autowired constructor(
      *
      * @param draftResource 草稿版本,草稿发布时需传入,直接生成正式版本为空
      */
+    @Suppress("CyclomaticComplexMethod")
     fun generateReleaseVersion(
         projectId: String,
         templateId: String,
@@ -482,7 +493,9 @@ class PipelineTemplateGenerator @Autowired constructor(
                 pipelineVersion = pipelineVersion,
                 triggerVersion = triggerVersion,
                 settingVersion = settingVersion,
-                settingVersionNum = settingVersionNum
+                settingVersionNum = settingVersionNum,
+                baseVersion = draftResource?.version ?: latestReleaseResource.version,
+                baseVersionName = draftResource?.versionName ?: latestReleaseResource.versionName
             )
         }
     }
@@ -495,131 +508,249 @@ class PipelineTemplateGenerator @Autowired constructor(
         templateModel: ITemplateModel?,
         templateSetting: PipelineSetting?,
         params: List<BuildFormProperty>?,
-        yaml: String?
+        yaml: String?,
+        fallbackOnError: Boolean = false
     ): PTemplateModelTransferResult {
         return if (storageType == PipelineStorageType.YAML) {
-            val newYaml = Preconditions.checkNotNull(
-                yaml,
-                "yaml must not be null"
-            )
-            val transferResult = transferService.transfer(
+            // YAML 转 Model
+            transferYamlToModel(
                 userId = userId,
                 projectId = projectId,
-                pipelineId = null,
-                actionType = TransferActionType.TEMPLATE_YAML2MODEL_PIPELINE,
-                data = TransferBody(
-                    oldYaml = newYaml
-                )
-            )
-            val newTemplateModel = Preconditions.checkNotNull(
-                transferResult.templateModelAndSetting?.templateModel,
-                "The transfer data is incorrect, so the modelAndYaml.templateModel.model must not be null"
-            )
-            val newTemplateSetting = Preconditions.checkNotNull(
-                transferResult.templateModelAndSetting?.setting,
-                "The transfer data is incorrect, " +
-                    "so the modelAndYaml.templateModel.templateSetting must not be null"
-            )
-            PTemplateModelTransferResult(
-                templateType = PipelineTemplateType.PIPELINE,
-                templateModel = newTemplateModel,
-                templateSetting = newTemplateSetting,
-                yamlWithVersion = transferResult.yamlWithVersion,
-                // TODO pac模板 需要改造，由code转化接口中获取。
-                params = (newTemplateModel as Model).getTriggerContainer().params
+                templateType = templateType,
+                params = params,
+                yaml = yaml
             )
         } else {
-            val newTemplateType = Preconditions.checkNotNull(
-                templateType,
-                "template type must not be null"
+            // Model 转 YAML
+            transferModelToYamlWithFallback(
+                userId = userId,
+                projectId = projectId,
+                templateType = templateType,
+                templateModel = templateModel,
+                templateSetting = templateSetting,
+                params = params,
+                fallbackOnError = fallbackOnError
             )
-            val newTemplateModel = Preconditions.checkNotNull(
-                templateModel,
-                "template model must not be null"
-            )
-            val newTemplateSetting = Preconditions.checkNotNull(
-                templateSetting,
-                "template setting must not be null"
-            )
-            val result = when (templateType) {
-                PipelineTemplateType.PIPELINE -> {
-                    transferService.transfer(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = null,
-                        actionType = TransferActionType.TEMPLATE_MODEL2YAML_PIPELINE,
-                        data = TransferBody(
-                            templateModelAndSetting = TemplateModelAndSetting(
-                                templateModel = newTemplateModel,
-                                setting = newTemplateSetting
-                            ),
-                            oldYaml = ""
-                        )
-                    )
-                }
+        }
+    }
 
-                PipelineTemplateType.STAGE -> {
-                    transferService.transfer(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = null,
-                        actionType = TransferActionType.TEMPLATE_MODEL2YAML_STAGE,
-                        data = TransferBody(
-                            templateModelAndSetting = TemplateModelAndSetting(
-                                templateModel = templateModel!!,
-                                setting = newTemplateSetting
-                            ),
-                            oldYaml = ""
-                        )
-                    )
-                }
+    /**
+     * YAML 转 Model
+     */
+    private fun transferYamlToModel(
+        userId: String,
+        projectId: String,
+        templateType: PipelineTemplateType?,
+        params: List<BuildFormProperty>?,
+        yaml: String?
+    ): PTemplateModelTransferResult {
+        val validYaml = Preconditions.checkNotNull(yaml, "yaml must not be null")
 
-                PipelineTemplateType.JOB -> {
-                    transferService.transfer(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = null,
-                        actionType = TransferActionType.TEMPLATE_MODEL2YAML_JOB,
-                        data = TransferBody(
-                            templateModelAndSetting = TemplateModelAndSetting(
-                                templateModel = templateModel!!,
-                                setting = newTemplateSetting
-                            ),
-                            oldYaml = ""
-                        )
-                    )
-                }
+        val transferResult = transferService.transfer(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = null,
+            actionType = TransferActionType.TEMPLATE_YAML2MODEL_PIPELINE,
+            data = TransferBody(oldYaml = validYaml)
+        )
 
-                PipelineTemplateType.STEP -> {
-                    transferService.transfer(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = null,
-                        actionType = TransferActionType.TEMPLATE_MODEL2YAML_STEP,
-                        data = TransferBody(
-                            templateModelAndSetting = TemplateModelAndSetting(
-                                templateModel = templateModel!!,
-                                setting = newTemplateSetting
-                            ),
-                            oldYaml = ""
-                        )
-                    )
-                }
+        val resultTemplateModel = Preconditions.checkNotNull(
+            transferResult.templateModelAndSetting?.templateModel,
+            "The transfer data is incorrect, so the modelAndYaml.templateModel.model must not be null"
+        )
+        val resultSetting = Preconditions.checkNotNull(
+            transferResult.templateModelAndSetting?.setting,
+            "The transfer data is incorrect, so the modelAndYaml.templateModel.templateSetting must not be null"
+        )
 
-                else -> {
-                    throw IllegalArgumentException("unknown template type: $templateType")
+        val finalType = templateType ?: PipelineTemplateType.PIPELINE
+        val finalParams = extractParams(finalType, resultTemplateModel, params)
+
+        return PTemplateModelTransferResult(
+            templateType = finalType,
+            templateModel = resultTemplateModel,
+            templateSetting = resultSetting,
+            yamlWithVersion = transferResult.yamlWithVersion,
+            params = finalParams
+        )
+    }
+
+    /**
+     * Model 转 YAML (带异常兜底)
+     */
+    private fun transferModelToYamlWithFallback(
+        userId: String,
+        projectId: String,
+        templateType: PipelineTemplateType?,
+        templateModel: ITemplateModel?,
+        templateSetting: PipelineSetting?,
+        params: List<BuildFormProperty>?,
+        fallbackOnError: Boolean
+    ): PTemplateModelTransferResult {
+        // 前置处理：参数验证和合并
+        val prepareTransferResult = prepareModelTransfer(
+            templateType = templateType,
+            templateModel = templateModel,
+            templateSetting = templateSetting,
+            params = params
+        )
+
+        return with(prepareTransferResult) {
+            try {
+                // 执行转换
+                val actionType = getTransferActionType(validType)
+                val transferResult = transferService.transfer(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = null,
+                    actionType = actionType,
+                    data = TransferBody(
+                        templateModelAndSetting = TemplateModelAndSetting(
+                            templateModel = validModel,
+                            setting = validSetting
+                        ),
+                        oldYaml = ""
+                    )
+                )
+
+                PTemplateModelTransferResult(
+                    templateType = validType,
+                    templateModel = validModel,
+                    yamlWithVersion = transferResult.yamlWithVersion,
+                    templateSetting = validSetting,
+                    params = finalParams
+                )
+            } catch (ex: Exception) {
+                if (fallbackOnError) {
+                    logger.warn(
+                        "Model to YAML transfer failed for projectId={}, templateType={}: {}",
+                        projectId, templateType, ex.message, ex
+                    )
+                    // 兜底返回原始数据(参数已在前置处理中合并)
+                    PTemplateModelTransferResult(
+                        templateType = validType,
+                        templateModel = validModel,
+                        templateSetting = validSetting,
+                        yamlWithVersion = null,
+                        params = finalParams
+                    )
+                } else {
+                    throw ex
                 }
             }
-            PTemplateModelTransferResult(
-                templateType = newTemplateType,
-                templateModel = newTemplateModel,
-                yamlWithVersion = result.yamlWithVersion,
-                templateSetting = newTemplateSetting,
-                // TODO pac模板 局部模板时，需要优化
-                params = takeIf { templateType == PipelineTemplateType.PIPELINE }?.let {
-                    (newTemplateModel as Model).getTriggerContainer().params
-                } ?: emptyList(),
-            )
+        }
+    }
+
+    /**
+     * 准备 Model 转换：验证参数、合并模板参数、提取最终参数
+     * @return (validType, validModel, validSetting, finalParams)
+     */
+    private fun prepareModelTransfer(
+        templateType: PipelineTemplateType?,
+        templateModel: ITemplateModel?,
+        templateSetting: PipelineSetting?,
+        params: List<BuildFormProperty>?
+    ): PrepareTransferResult {
+        val validType = Preconditions.checkNotNull(
+            obj = templateType,
+            message = "template type must not be null"
+        )
+        val validModel = Preconditions.checkNotNull(
+            obj = templateModel,
+            message = "template model must not be null"
+        )
+        val validSetting = Preconditions.checkNotNull(
+            obj = templateSetting,
+            message = "template setting must not be null"
+        )
+
+        // Pipeline 模板需要特殊处理:合并 templateParams和params，并置空templateParams。
+        // templateParams 新版本中废除，不再使用。
+        if (validType == PipelineTemplateType.PIPELINE) {
+            mergeTemplateParamsIfNeeded(validModel as Model)
+            // 兼容旧版模板参数入参和构建号入参
+            fixTemplateRequiredParam(model = validModel)
+        }
+        val finalParams = extractParams(validType, validModel, params)
+        return PrepareTransferResult(validType, validModel, validSetting, finalParams)
+    }
+
+    /**
+     * Model 转换准备结果
+     */
+    private data class PrepareTransferResult(
+        val validType: PipelineTemplateType,
+        val validModel: ITemplateModel,
+        val validSetting: PipelineSetting,
+        val finalParams: List<BuildFormProperty>
+    )
+
+    /**
+     * 合并模板参数到触发器参数(仅适用于 Pipeline 模板)
+     */
+    private fun mergeTemplateParamsIfNeeded(model: Model) {
+        val triggerContainer = model.getTriggerContainer()
+        if (!triggerContainer.templateParams.isNullOrEmpty()) {
+            triggerContainer.params = BuildPropertyCompatibilityTools.mergeProperties(
+                from = triggerContainer.templateParams!!.map { it.copy(constant = true) },
+                to = triggerContainer.params
+            ).toMutableList()
+            triggerContainer.templateParams = null
+        }
+    }
+
+    private fun fixTemplateRequiredParam(model: Model) {
+        val triggerContainer = model.getTriggerContainer()
+        // 存量模版除了「模版常量」，其他变量升级后均为模版入参
+        triggerContainer.params.forEach { param ->
+            if (param.constant == true || param.asInstanceInput != null) return@forEach
+            // 旧变量若勾选了[执行时显示],[默认为实例入参]= true
+            if (param.required) {
+                param.asInstanceInput = true
+            } else {
+                // 旧变量若去掉了[执行时显示],升级后均为模版入参, [默认为实例入参]= false
+                param.required = true
+                param.asInstanceInput = false
+            }
+        }
+        triggerContainer.buildNo?.let {
+            if (it.asInstanceInput != null) return@let
+            // 旧构建号若勾选了[执行时显示],[默认为实例入参]= true
+            if (it.required == true) {
+                it.asInstanceInput = true
+            } else {
+                // 旧构建号若去掉了[执行时显示],升级后均为模版入参, [默认为实例入参]= false
+                it.required = true
+                it.asInstanceInput = false
+            }
+        }
+    }
+
+    /**
+     * 提取最终参数列表
+     */
+    private fun extractParams(
+        templateType: PipelineTemplateType,
+        templateModel: ITemplateModel,
+        fallbackParams: List<BuildFormProperty>?
+    ): List<BuildFormProperty> {
+        return if (templateType == PipelineTemplateType.PIPELINE) {
+            (templateModel as Model).getTriggerContainer().params
+        } else {
+            fallbackParams
+        } ?: emptyList()
+    }
+
+    /**
+     * 根据模板类型获取对应的转换动作类型
+     */
+    private fun getTransferActionType(templateType: PipelineTemplateType): TransferActionType {
+        return when (templateType) {
+            PipelineTemplateType.PIPELINE -> TransferActionType.TEMPLATE_MODEL2YAML_PIPELINE
+            PipelineTemplateType.STAGE -> TransferActionType.TEMPLATE_MODEL2YAML_STAGE
+            PipelineTemplateType.JOB -> TransferActionType.TEMPLATE_MODEL2YAML_JOB
+            PipelineTemplateType.STEP -> TransferActionType.TEMPLATE_MODEL2YAML_STEP
+            else -> throw IllegalArgumentException("unknown template type: $templateType")
         }
     }
 

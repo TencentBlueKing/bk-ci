@@ -24,7 +24,7 @@ bk-ci provides seven core services, namely Process, CodeCheck, Repository, Ticke
 - **Environment**: It can host the internal agents of the enterprise on bk-ci.
 - **Store**: It consists of pipeline plugins and pipeline templates. Plugins are used to integrate with various third-party services of the enterprise and templates help to standardize its internal R&D process.
 - **Turbo**: Based on self-developed acceleration engine, it supports acceleration in multiple scenarios such as C/C++ compilation, UE4 code compilation, and UE4 Shader compilation, making construction tasks faster
-
+- **Cloud Desktop**: A cloud-based virtual desktop service based on video streaming technology that provides high-performance graphical interface access capabilities, supporting remote use of graphical development and compilation tools for code development and compilation.
 
 ## Overview
 
