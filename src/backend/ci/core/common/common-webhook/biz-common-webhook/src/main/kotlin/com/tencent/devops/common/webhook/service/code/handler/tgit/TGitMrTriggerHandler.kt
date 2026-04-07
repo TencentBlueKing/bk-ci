@@ -278,7 +278,11 @@ class TGitMrTriggerHandler(
             val labelFilter = ListContainsFilter(
                 pipelineId = pipelineId,
                 filterName = "mrLabel",
-                triggerOn = event.object_attributes.labels?.mapNotNull { it.title }?.toSet() ?: setOf(),
+                triggerOn = if (repository is CodeGitlabRepository) {
+                    event.labels
+                } else {
+                    event.object_attributes.labels
+                }?.mapNotNull { it.title }?.toSet() ?: setOf(),
                 included = convert(includeLabels),
                 excluded = convert(excludeLabels),
                 includeFailedReason = { item ->

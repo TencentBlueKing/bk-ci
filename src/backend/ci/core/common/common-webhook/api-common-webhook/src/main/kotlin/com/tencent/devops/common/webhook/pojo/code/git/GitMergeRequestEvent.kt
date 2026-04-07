@@ -30,12 +30,16 @@ package com.tencent.devops.common.webhook.pojo.code.git
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
+import io.swagger.v3.oas.annotations.Parameter
 
 @Suppress("ALL")
 data class GitMergeRequestEvent(
     val user: GitUser,
     val manual_unlock: Boolean? = false,
-    val object_attributes: GitMRAttributes
+    val object_attributes: GitMRAttributes,
+    @JsonProperty("labels")
+    @Parameter(description = "gitlab标签信息")
+    val labels: List<GitLabel>? = null
 ) : GitEvent() {
 
     // 新建
