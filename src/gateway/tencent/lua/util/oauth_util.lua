@@ -425,14 +425,14 @@ end
 function _M:introspect_token(access_token)
     local httpc = http.new()
     httpc:set_timeout(3000)
-    httpc:connect(config.bkauth.ip, config.bkauth.port)
 
-    local path = "/realms/" .. config.bkauth.realm .. "/oauth2/introspect"
+    local path = "https://" .. config.bkauth.host .. ":" .. tostring(config.bkauth.port) ..
+        "/realms/" .. config.bkauth.realm .. "/oauth2/introspect"
     local body = "token=" .. ngx.escape_uri(access_token)
 
-    local res, err = httpc:request({
-        path = path,
+    local res, err = httpc:request_uri(path, {
         method = "POST",
+        ssl_verify = true,
         headers = {
             ["Host"] = config.bkauth.host,
             ["Content-Type"] = "application/x-www-form-urlencoded",
@@ -447,14 +447,12 @@ function _M:introspect_token(access_token)
         return nil
     end
 
-    local responseBody = res:read_body()
+    local responseBody = res.body
 
     if res.status ~= 200 then
         ngx.log(ngx.ERR, "failed to request introspect_token, status: ", res.status, " , responseBody: ", responseBody)
         return nil
     end
-
-    httpc:set_keepalive(60000, 5)
 
     local result = json.decode(responseBody)
     if result == nil then
