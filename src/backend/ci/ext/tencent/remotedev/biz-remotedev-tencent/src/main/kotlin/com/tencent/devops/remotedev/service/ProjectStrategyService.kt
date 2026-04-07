@@ -16,7 +16,8 @@ import org.springframework.stereotype.Service
 @Service
 class ProjectStrategyService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val projectStrategyDao: ProjectStrategyDao
+    private val projectStrategyDao: ProjectStrategyDao,
+    private val permissionService: PermissionService
 ) {
     fun createOrUpdateStrategy(
         info: ProjectStrategyInfo
