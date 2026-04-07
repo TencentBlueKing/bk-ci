@@ -153,7 +153,8 @@
                                 class="platform-card"
                                 :class="{
                                     disabled: platform.disabled,
-                                    repo: platform.isRepo
+                                    repo: section.isRepo,
+                                    large: platform.isLarge
                                 }"
                             >
                                 <div class="card-header">
@@ -174,10 +175,6 @@
                                 </div>
                                 <div class="card-body">
                                     <span class="platform-name">{{ platform.name }}</span>
-                                    <span
-                                        v-if="platform.comingSoon"
-                                        class="coming-soon"
-                                    >{{ $t("敬请期待") }}</span>
                                 </div>
                                 <!-- 二维码悬浮显示 -->
                                 <span
@@ -356,23 +353,24 @@
                 {
                     title: this.$t('制品库客户端'),
                     desc: this.$t('桌面端制品库，支持预约下载与下载加速，支持Windows 应用的版本体验。'),
+                    isRepo: true,
                     platforms: [
                         {
                             icon: 'windows',
                             name: 'Windows',
                             type: 'download',
-                            downloadUrl: '/path/to/repo-client.exe',
-                            fileName: 'xxx.exe',
+                            downloadUrl: 'https://bkrepo.woa.com/generic/bk-repo/public/bkdrive/BKDrive-x64.exe',
+                            fileName: 'BKDrive-x64.exe',
                             hasCornerBadge: true,
                             cornerBadgeType: 'download',
-                            isRepo: true
+                            isLarge: true
                         },
                         {
                             icon: 'apple',
                             name: 'macOS',
-                            type: 'disabled',
-                            disabled: true,
-                            comingSoon: true,
+                            type: 'download',
+                            downloadUrl: 'https://bkrepo.woa.com/generic/bk-repo/public/bkdrive/BKDrive-arm64.pkg',
+                            fileName: 'BKDrive-arm64.pkg',
                             hasCornerBadge: true,
                             cornerBadgeType: 'download'
                         }
@@ -648,7 +646,7 @@
                             align-items: center;
                             justify-content: center;
                             position: relative;
-                            width: 97px;
+                            flex: 1;
                             height: 108px;
                             padding: 8px 16px;
                             background: #FFFFFF;
@@ -773,8 +771,15 @@
                             }
                         }
 
-                        .repo {
+                        .large {
                             width: 203px;
+                            flex: none;
+                        }
+
+                        .repo {
+                            &.large {
+                                width: 203px;
+                            }
 
                             &:hover:not(.disabled) {
                                 .card-header,
@@ -804,7 +809,10 @@
                                     }
 
                                     .file-name {
+                                        display: inline-block;
                                         color: #979BA5;
+                                        word-break: break-all;
+                                        text-align: center;
                                     }
                                 }
                             }
