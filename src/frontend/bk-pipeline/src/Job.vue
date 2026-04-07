@@ -69,14 +69,19 @@
                 :class="matrixFoldLogoCls"
             >
             </Logo>
-            <bk-button
+            <hover-slide-btn
                 v-if="showDebugBtn"
-                class="debug-btn"
-                theme="warning"
+                class="debug-slide-btn"
+                icon="debug"
+                :icon-size="10"
+                color="#ffb400"
+                text-color="white"
+                :width="80"
+                :height="42"
                 @click.stop="debugDocker"
             >
                 {{ t("debugConsole") }}
-            </bk-button>
+            </hover-slide-btn>
             <Logo
                 v-if="container.locateActive"
                 name="location-right"
@@ -113,6 +118,7 @@
 
     import AtomList from './AtomList'
     import ContainerType from './ContainerType'
+    import HoverSlideBtn from './HoverSlideBtn'
     import Logo from './Logo'
     import StatusIcon from './StatusIcon'
     import {
@@ -131,7 +137,8 @@
             StatusIcon,
             ContainerType,
             AtomList,
-            Logo
+            Logo,
+            HoverSlideBtn
         },
         mixins: [localeMixins],
         props: {
@@ -241,23 +248,39 @@
                     return DOCKER_BUILD_TYPE
                 }
             },
+            isThirdDockerContainer () {
+                const { dispatchType } = this.container || {}
+                return dispatchType?.buildType?.indexOf('THIRD_PARTY_') > -1
+                    && dispatchType?.dockerInfo
+                    && Object.keys(dispatchType.dockerInfo).length > 0
+            },
+            isMacOSNonVMware () {
+                const { dispatchType } = this.container || {}
+                return dispatchType?.buildType === 'MACOS'
+                    && typeof dispatchType?.macOSHwSpec === 'string'
+                    && dispatchType.macOSHwSpec !== 'VMware'
+            },
             showDebugBtn () {
-                const {
-                    reactiveData,
-                    container: { baseOS, status }
-                } = this
-                const isshowDebugType = [
-                    DOCKER_BUILD_TYPE,
-                    PUBLIC_DEVCLOUD_BUILD_TYPE,
-                    PUBLIC_BCS_BUILD_TYPE
-                ].includes(this.buildResourceType)
-                return (
-                    baseOS === 'LINUX'
-                    && isshowDebugType
-                    && reactiveData.isExecDetail
-                    && reactiveData.isLatestBuild
-                    && status === STATUS_MAP.FAILED
+                const { reactiveData, container } = this
+                const { baseOS, status } = container
+                const buildType = this.buildResourceType
+
+                const isLinuxDebugable = baseOS === 'LINUX' && (
+                    buildType === DOCKER_BUILD_TYPE
+                    || buildType === PUBLIC_DEVCLOUD_BUILD_TYPE
+                    || buildType === PUBLIC_BCS_BUILD_TYPE
+                    || this.isThirdDockerContainer
                 )
+                const isMacOSDebugable = this.isMacOSNonVMware
+                console.log('isLinuxDebugable', isLinuxDebugable)
+                console.log('isMacOSDebugable', isMacOSDebugable)
+                console.log('status', status)
+                console.log('reactiveData.isExecDetail', reactiveData.isExecDetail)
+                console.log('reactiveData.isLatestBuild', reactiveData.isLatestBuild)
+                if (!isLinuxDebugable && !isMacOSDebugable) return false
+
+                return status === STATUS_MAP.FAILED
+                    && (reactiveData.isExecDetail && reactiveData.isLatestBuild)
             },
             isUnExecThisTime () {
                 return this.container?.executeCount < this.reactiveData.currentExecCount
@@ -436,10 +459,10 @@
             }
         }
 
-        .debug-btn {
+        .debug-slide-btn {
             position: absolute;
-            height: 100%;
             right: 0;
+            top: 0;
         }
 
         .container-locate-icon {
