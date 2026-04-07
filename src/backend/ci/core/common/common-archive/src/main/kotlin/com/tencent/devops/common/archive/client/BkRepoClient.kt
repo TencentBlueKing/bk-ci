@@ -256,7 +256,8 @@ class BkRepoClient constructor(
             .headers(getCommonHeaders(userId, projectId).toHeaders())
             .get()
             .build()
-        return doRequest(request).resolveResponse<Response<Map<String, String>>>()!!.data!!
+        return doRequest(request).resolveResponse<Response<Map<String, Any>>>()!!.data!!
+            .mapValues { it.value.toString() }
     }
 
     @Deprecated(message = "api已废弃", replaceWith = ReplaceWith("listFilePage"))
