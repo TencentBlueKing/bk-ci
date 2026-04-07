@@ -150,7 +150,6 @@ import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.CreateStreamTriggerSupportService
 import com.tencent.devops.process.service.ParamFacadeService
-import com.tencent.devops.process.service.PipelineVisibilityService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.strategy.bus.impl.UserNormalPipelinePermissionCheckStrategy
@@ -213,8 +212,7 @@ class PipelineBuildFacadeService(
     private val pipelineTemplatePermissionService: PipelineTemplatePermissionService,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val historyConditionQueryStrategyFactory: HistoryConditionQueryStrategyFactory,
-    private val createStreamService: CreateStreamTriggerSupportService,
-    private val pipelineVisibilityService: PipelineVisibilityService
+    private val createStreamService: CreateStreamTriggerSupportService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -3189,21 +3187,6 @@ class PipelineBuildFacadeService(
         }
     }
 
-    fun visibilityManualStartupInfo(
-        userId: String,
-        projectId: String,
-        pipelineId: String
-    ): BuildManualStartupInfo {
-        checkVisibility(userId, projectId, pipelineId)
-        return buildManualStartupInfo(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            channelCode = ChannelCode.getRequestChannelCode(),
-            checkPermission = false
-        )
-    }
-
     private fun getBuildManualParams(
         projectId: String,
         pipelineId: String,
@@ -3446,21 +3429,4 @@ class PipelineBuildFacadeService(
         }
     }
 
-    private fun checkVisibility(
-        userId: String,
-        projectId: String,
-        pipelineId: String
-    ) {
-        if (!pipelineVisibilityService.hasVisibility(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
-        ) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_USER_NOT_VISIBLE,
-                params = arrayOf(userId, pipelineId)
-            )
-        }
-    }
 }

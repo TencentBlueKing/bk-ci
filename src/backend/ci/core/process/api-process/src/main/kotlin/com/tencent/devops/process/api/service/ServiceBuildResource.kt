@@ -55,7 +55,6 @@ import com.tencent.devops.process.pojo.BuildHistoryVariables
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
-import com.tencent.devops.process.pojo.trigger.WeMateStartRequest
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
@@ -1048,35 +1047,4 @@ interface ServiceBuildResource {
         debug: Boolean?
     ): Result<BuildInfo?>
 
-    @Operation(summary = "weMate消息提醒启动流水线(可见性校验)")
-    @POST
-    @Path("/{projectId}/{pipelineId}/weMateBuildStart")
-    fun weMateBuildStart(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @Parameter(description = "weMate启动请求", required = true)
-        request: WeMateStartRequest
-    ): Result<BuildId>
-
-    @Operation(summary = "获取可见性流水线手动启动参数")
-    @GET
-    @Path("/{projectId}/{pipelineId}/visibility/ManualStartupInfo")
-    fun visibilityManualStartupInfo(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String
-    ): Result<BuildManualStartupInfo>
 }
