@@ -66,22 +66,8 @@ func handleStatus(workDir string) error {
 	printStep(msg("Session Mode Details", "会话模式详情"))
 	printStep("--------------------------------------------")
 
-	hasUser := checkLsaSecretExists(lsaKeyUser)
-	hasPass := checkLsaSecretExists(lsaKeyPassword)
 	autoLogon := checkAutoLogonEnabled()
 	autoLogonUser := readAutoLogonUser()
-
-	if hasUser {
-		userName := readLsaSecretSafe(lsaKeyUser)
-		statusLine(msg("Session credentials", "会话凭据"), msgf("stored (user: %s)", "已存储 (用户: %s)", userName)+" ✓")
-	} else {
-		statusLine(msg("Session credentials", "会话凭据"), msg("not configured", "未配置"))
-	}
-	if hasPass {
-		statusLine(msg("Session password", "会话密码"), msg("stored in LSA Secret", "已加密存储于 LSA Secret")+" ✓")
-	} else {
-		statusLine(msg("Session password", "会话密码"), msg("not configured", "未配置"))
-	}
 
 	if autoLogon {
 		statusLine(msg("Windows auto-logon", "Windows 自动登录"),

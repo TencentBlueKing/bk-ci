@@ -56,9 +56,7 @@ func enableSession(workDir, user, password string, autoLogon bool) error {
 	printStep(msg(" BK-CI Agent Session Mode Configuration", " BK-CI Agent 会话模式配置"))
 	printStep("============================================")
 
-	hasCredentials := user != ""
-
-	if hasCredentials {
+	if autoLogon {
 		if err := validateCredentials(user, password); err != nil {
 			return err
 		}
@@ -86,12 +84,6 @@ func enableSession(workDir, user, password string, autoLogon bool) error {
 
 	configureSCMRecovery(serviceName)
 
-	if hasCredentials {
-		storeLsaSecret(lsaKeyUser, user)
-		storeLsaSecret(lsaKeyPassword, password)
-		printStep(msg("session credentials stored in LSA Secret (encrypted)", "会话凭据已加密存储到 LSA Secret"))
-	}
-
 	if autoLogon {
 		if err := enableAutoLogon(user, password); err != nil {
 			return cliErrorf("enable auto-logon failed: %v", "启用自动登录失败: %v", err)
@@ -112,21 +104,14 @@ func enableSession(workDir, user, password string, autoLogon bool) error {
 
 	if autoLogon {
 		printStepf("%-13s %s", msg("Session user", "会话用户"), user)
-		printStepf("%-13s %s", msg("LogonUser", "凭据回退"), msg("enabled", "已启用"))
 		printStepf("%-13s %s", msg("Auto-logon", "自动登录"), msg("enabled (every reboot)", "已启用 (每次重启)"))
-		printStep("")
-	} else if hasCredentials {
-		printStepf("%-13s %s", msg("Session user", "会话用户"), user)
-		printStepf("%-13s %s", msg("LogonUser", "凭据回退"), msg("enabled", "已启用"))
-		printStepf("%-13s %s", msg("Auto-logon", "自动登录"), msg("not configured", "未配置"))
 		printStep("")
 	} else {
 		printStepf("%-13s %s", msg("Session user", "会话用户"), msg("(current logged-in user)", "(当前登录用户)"))
-		printStepf("%-13s %s", msg("LogonUser", "凭据回退"), msg("not configured", "未配置"))
 		printStepf("%-13s %s", msg("Auto-logon", "自动登录"), msg("not configured", "未配置"))
 		printStep("")
 	}
-	for _, line := range configureSessionSummaryLines(user, hasCredentials, autoLogon) {
+	for _, line := range configureSessionSummaryLines(user, autoLogon) {
 		printStep(line)
 	}
 	return nil
