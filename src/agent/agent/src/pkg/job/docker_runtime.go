@@ -140,7 +140,8 @@ func parseContainerEnv(dockerBuildInfo *api.ThirdPartyDockerBuildInfo) []string 
 	vars = append(vars, "devops_agent_secret_key="+dockerBuildInfo.SecretKey)
 	vars = append(vars, "devops_gateway="+config.GetGateWay())
 	vars = append(vars, "agent_build_env=DOCKER")
-	if hasJdk17Dir() {
+	// mac和win无法使用agent自带的JDK，需用户自行设置
+	if hasJdk17Dir() && systemutil.IsLinux() {
 		vars = append(vars, "DEVOPS_AGENT_JDK_8_PATH="+(targetJre8Dir+"/bin/java"))
 		vars = append(vars, "DEVOPS_AGENT_JDK_17_PATH="+(targetJreDir+"/bin/java"))
 	}
