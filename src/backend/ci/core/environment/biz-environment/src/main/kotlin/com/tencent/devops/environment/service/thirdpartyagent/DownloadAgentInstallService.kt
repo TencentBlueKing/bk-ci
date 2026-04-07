@@ -265,6 +265,7 @@ class DownloadAgentInstallService @Autowired constructor(
     ): Map<String, String> {
         val file = File(agentPackage, "script/${agentRecord.os.lowercase()}")
         val scripts = file.listFiles()?.toMutableList()
+        scripts?.removeIf { it.name == getDownloadFile(agentRecord.os) }
         return scripts?.associate {
             val content = it.readText(Charsets.UTF_8)
             it.name to content
@@ -274,7 +275,7 @@ class DownloadAgentInstallService @Autowired constructor(
     private fun getDownloadFile(os: String) = if (os == OS.WINDOWS.name) {
         "download_install.ps1"
     } else {
-        "install.sh"
+        "download_install.sh"
     }
 
     private fun getPropertyFile(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String, String> {
