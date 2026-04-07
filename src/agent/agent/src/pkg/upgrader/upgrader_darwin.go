@@ -72,20 +72,19 @@ func DoUpgradeAgent() error {
 	defer func() { totalLock.Unlock() }()
 
 	daemonChange, _ := checkUpgradeFileChange(config.GetClientDaemonFile())
-
 	agentChange, _ := checkUpgradeFileChange(config.GetClienAgentFile())
-	if agentChange {
-		tryKillAgentProcess(agentProcess)
-	}
 
 	if !agentChange && !daemonChange {
 		logs.Info("upgrade nothing, exit")
 		return nil
 	}
 
-	logs.Info("wait 2 seconds for agent to stop")
-	time.Sleep(2 * time.Second)
-
+	// Replace files BEFORE killing processes.
+	// macOS allows replacing files that are in use; the running process
+	// keeps the old inode in memory. When the daemon restarts the agent
+	// it will pick up the new binary from disk.
+	// If we kill first, the daemon immediately restarts the agent with
+	// the OLD binary (race condition).
 	if agentChange {
 		err = replaceAgentFile(config.GetClienAgentFile())
 		if err != nil {
@@ -99,6 +98,14 @@ func DoUpgradeAgent() error {
 			logs.WithError(err).Error("replace daemon file failed")
 		}
 	}
+
+	if agentChange {
+		tryKillAgentProcess(agentProcess)
+	}
+
+	logs.Info("wait 2 seconds for agent to stop")
+	time.Sleep(2 * time.Second)
+
 	logs.Info("agent upgrade done, upgrade process exiting")
 	return nil
 }
