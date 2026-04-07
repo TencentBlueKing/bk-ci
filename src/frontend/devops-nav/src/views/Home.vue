@@ -686,7 +686,6 @@
                             .card-header {
                                 margin-bottom: 10px;
                                 color: #3A84FF;
-                                transition: opacity 0.3s ease;
 
                                 .corner-badge {
                                     position: absolute;
@@ -708,7 +707,6 @@
                                 flex-direction: column;
                                 align-items: center;
                                 position: relative;
-                                transition: opacity 0.3s ease;
 
                                 .platform-name {
                                     font-size: 12px;
@@ -722,7 +720,6 @@
                                     right: -35px;
                                     color: #3A84FF;
                                     opacity: 0;
-                                    transition: opacity 0.3s ease;
                                 }
 
                                 .coming-soon {
@@ -744,7 +741,6 @@
                                 color: #3A84FF;
                                 font-size: 12px;
                                 opacity: 0;
-                                transition: opacity 0.3s ease;
                                 pointer-events: none;
 
                                 img {
@@ -764,7 +760,6 @@
                                 font-size: 14px;
                                 color: #3A84FF;
                                 opacity: 0;
-                                transition: opacity 0.3s ease;
                                 pointer-events: none;
                                 white-space: nowrap;
                                 cursor: pointer;
