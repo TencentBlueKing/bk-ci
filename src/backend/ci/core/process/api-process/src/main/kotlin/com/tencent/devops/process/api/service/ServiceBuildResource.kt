@@ -576,7 +576,7 @@ interface ServiceBuildResource {
         @QueryParam("buildNoEnd")
         buildNoEnd: Int? = null,
         @Parameter(
-            description = "利用updateTime进行排序，True为降序，False为升序，null时以Build number 降序",
+            description = "利用updateTime进行排序，true为降序，false为升序，null时以Build number 降序",
             required = false, example = "null"
         )
         @QueryParam("updateTimeDesc")
