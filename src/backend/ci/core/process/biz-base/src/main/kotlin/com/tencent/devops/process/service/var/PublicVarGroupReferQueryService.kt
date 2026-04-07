@@ -423,7 +423,8 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                 referType = queryReq.referType,
                 referIdsWithActualVar = referIdsWithActualVar,
                 page = queryReq.page,
-                pageSize = queryReq.pageSize
+                pageSize = queryReq.pageSize,
+                groupName = groupName
             )
 
             // Step3: 推断 totalCount，首页且结果不满一页时直接计算，避免重复执行 UNION ALL count 查询
@@ -435,7 +436,8 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                     projectId = projectId,
                     referIds = referIdsWithActualVar,
                     referType = queryReq.referType,
-                    referIdsWithActualVar = referIdsWithActualVar
+                    referIdsWithActualVar = referIdsWithActualVar,
+                    groupName = groupName
                 )
             }
 

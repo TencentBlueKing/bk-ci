@@ -494,13 +494,15 @@ class PublicVarGroupReferInfoDao {
         projectId: String,
         referIds: List<String>,
         referType: PublicVarGroupReferenceTypeEnum?,
-        referIdsWithActualVar: List<String>
+        referIdsWithActualVar: List<String>,
+        groupName: String? = null
     ): Int {
         if (referIds.isEmpty()) return 0
 
         val unionQuery = buildLatestActiveReferUnionQuery(
             dslContext = dslContext,
             projectId = projectId,
+            groupName = groupName,
             referIds = referIds,
             referType = referType,
             referIdsWithActualVar = referIdsWithActualVar
@@ -523,7 +525,8 @@ class PublicVarGroupReferInfoDao {
         referType: PublicVarGroupReferenceTypeEnum?,
         referIdsWithActualVar: List<String>,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        groupName: String? = null
     ): List<ResourcePublicVarGroupReferPO> {
         if (referIds.isEmpty()) return emptyList()
 
@@ -531,6 +534,7 @@ class PublicVarGroupReferInfoDao {
         val unionQuery = buildLatestActiveReferUnionQuery(
             dslContext = dslContext,
             projectId = projectId,
+            groupName = groupName,
             referIds = referIds,
             referType = referType,
             referIdsWithActualVar = referIdsWithActualVar
