@@ -471,7 +471,12 @@ class ExperienceAppService(
         }
     }
 
-    fun downloadUrl(userId: String, experienceHashId: String, organization: String?, enablePublicAccess: Boolean = false): DownloadUrl {
+    fun downloadUrl(
+        userId: String,
+        experienceHashId: String,
+        organization: String?,
+        enablePublicAccess: Boolean = false
+    ): DownloadUrl {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         // 移除红点
         removeRedPoint(userId, experienceId)
