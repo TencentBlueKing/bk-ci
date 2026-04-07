@@ -49,6 +49,7 @@ import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
+import com.tencent.devops.process.pojo.trigger.WeMateStartRequest
 import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
@@ -651,4 +652,73 @@ interface ApigwBuildResourceV4 {
         @Parameter(description = "要操作的构建ID列表[最大50个]", required = true)
         buildIds: Set<String>
     ): Result<Boolean>
+
+    @Operation(
+        summary = "weMate消息提醒启动流水线",
+        tags = ["v4_app_weMate_build_start", "v4_user_weMate_build_start"]
+    )
+    @POST
+    @Path("/weMate_build_start")
+    fun weMateBuildStart(
+        @Parameter(
+            description = "appCode",
+            required = true,
+            example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(
+            description = "用户ID",
+            required = true,
+            example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "weMate消息提醒请求体", required = true)
+        request: WeMateStartRequest
+    ): Result<BuildId>
+
+    @Operation(
+        summary = "获取可见性流水线手动启动参数",
+        tags = [
+            "v4_app_visibility_build_startInfo",
+            "v4_user_visibility_build_startInfo"
+        ]
+    )
+    @GET
+    @Path("/visibility_build_manual_startup_info")
+    fun visibilityManualStartupInfo(
+        @Parameter(
+            description = "appCode",
+            required = true,
+            example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(
+            description = "用户ID",
+            required = true,
+            example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String
+    ): Result<BuildManualStartupInfo>
 }

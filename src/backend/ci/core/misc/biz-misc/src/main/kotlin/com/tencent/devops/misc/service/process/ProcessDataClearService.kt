@@ -92,6 +92,7 @@ class ProcessDataClearService @Autowired constructor(
                 processDataDeleteDao.deletePipelineWebhookVersion(dslContext, projectId, pipelineId)
                 processDataDeleteDao.deletePipelineCallback(dslContext, projectId, pipelineId)
                 processDataDeleteDao.deletePipelineSubRef(dslContext, projectId, pipelineId)
+                processDataDeleteDao.deletePipelineVisibility(dslContext, projectId, pipelineId)
                 processDataDeleteDao.deletePipelineRemoteAuth(dslContext, projectId, pipelineId)
                 processDataDeleteDao.deletePipelineWebhook(dslContext, projectId, pipelineId)
                 processDataDeleteDao.deletePipelineTimer(dslContext, projectId, pipelineId)

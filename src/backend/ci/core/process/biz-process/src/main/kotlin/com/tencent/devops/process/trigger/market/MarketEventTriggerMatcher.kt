@@ -87,6 +87,7 @@ class MarketEventTriggerMatcher @Autowired constructor(
             val startParams = mutableMapOf<String, Any>()
             startParams.putAll(variables)
             startParams.putAll(eventVariables)
+            startParams.putAll(extStartParam)
             startParams[PIPELINE_BUILD_MSG] = componentDetail.name
             WebhookAtomResponse(
                 matchStatus = MatchStatus.SUCCESS,
