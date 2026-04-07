@@ -750,9 +750,12 @@
                             }
 
                             .download-hover {
+                                width: 100%;
+                                height: 100%;
                                 display: flex;
                                 align-items: center;
                                 justify-content: center;
+                                flex-direction: column;
                                 position: absolute;
                                 top: 50%;
                                 left: 50%;
