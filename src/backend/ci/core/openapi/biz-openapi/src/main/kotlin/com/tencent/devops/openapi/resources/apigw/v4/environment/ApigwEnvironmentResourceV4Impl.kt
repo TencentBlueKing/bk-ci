@@ -52,6 +52,16 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwEnvironmentResourceV4Impl @Autowired constructor(
     private val client: Client
 ) : ApigwEnvironmentResourceV4 {
+    override fun listEnvs(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String
+    ): Result<List<EnvWithPermission>> {
+        logger.info("OPENAPI_ENVIRONMENT_V4|$userId|list envs|$projectId")
+        return client.get(ServiceEnvironmentResource::class).list(userId, projectId)
+    }
+
     override fun listUsableServerCMDBNodes(
         appCode: String?,
         apigwType: String?,
@@ -117,6 +127,21 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("OPENAPI_ENVIRONMENT_V4|$userId|delete nodes|$projectId|$nodeHashIds")
         return client.get(ServiceNodeResource::class).deleteNodes(userId, projectId, nodeHashIds)
+    }
+
+    override fun listNodesNew(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        envHashId: String
+    ): Result<Page<NodeBaseInfo>> {
+        logger.info("OPENAPI_ENVIRONMENT_V4|$userId|list nodes new|$projectId|$envHashId|$page|$pageSize")
+        return client.get(ServiceEnvironmentResource::class).listNodesNew(
+            userId, projectId, page, pageSize, envHashId
+        )
     }
 
     override fun listUsableServerEnvs(

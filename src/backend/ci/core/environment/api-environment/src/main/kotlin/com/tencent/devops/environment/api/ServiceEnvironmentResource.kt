@@ -189,6 +189,27 @@ interface ServiceEnvironmentResource {
         envHashIds: List<String>
     ): Result<Page<NodeBaseInfo>>
 
+    @Operation(summary = "获取环境的节点列表")
+    @GET
+    @Path("/projects/{projectId}/envs/{envHashId}/listNodesNew")
+    fun listNodesNew(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "第几页", required = false)
+        @QueryParam("page")
+        page: Int? = 1,
+        @Parameter(description = "每页多少条", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int? = 20,
+        @Parameter(description = "环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String
+    ): Result<Page<NodeBaseInfo>>
+
     @Operation(summary = "获取用户有权限使用的环境列表")
     @GET
     @Path("/projects/{projectId}/listUsableServerEnvs")
