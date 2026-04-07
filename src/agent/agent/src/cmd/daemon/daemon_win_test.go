@@ -87,6 +87,83 @@ func TestDuplicateUserToken(t *testing.T) {
 	t.Logf("Successfully duplicated token for session %d", sessionID)
 }
 
+func TestDoWaitBeforeRestart(t *testing.T) {
+	logs.UNTestDebugInit()
+
+	origDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	tmpDir := t.TempDir()
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chdir(origDir)
+
+	t.Run("no_lock_returns_quickly", func(t *testing.T) {
+		start := time.Now()
+		doWaitBeforeRestart(100*time.Millisecond, 5*time.Second, 50*time.Millisecond)
+		elapsed := time.Since(start)
+
+		if elapsed < 100*time.Millisecond {
+			t.Errorf("returned too fast (%s), expected at least base delay", elapsed)
+		}
+		if elapsed > 2*time.Second {
+			t.Errorf("took too long (%s) with no lock held, expected ~150ms", elapsed)
+		}
+	})
+
+	t.Run("waits_for_lock_release", func(t *testing.T) {
+		lockPath := fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock)
+		fl := flock.New(lockPath)
+		if err := fl.Lock(); err != nil {
+			t.Fatal(err)
+		}
+
+		done := make(chan time.Duration, 1)
+		start := time.Now()
+		go func() {
+			doWaitBeforeRestart(50*time.Millisecond, 5*time.Second, 50*time.Millisecond)
+			done <- time.Since(start)
+		}()
+
+		time.Sleep(300 * time.Millisecond)
+		_ = fl.Unlock()
+
+		select {
+		case elapsed := <-done:
+			if elapsed < 300*time.Millisecond {
+				t.Errorf("returned before lock release (%s)", elapsed)
+			}
+			if elapsed > 2*time.Second {
+				t.Errorf("took too long after lock release (%s)", elapsed)
+			}
+		case <-time.After(5 * time.Second):
+			t.Error("doWaitBeforeRestart did not return after lock was released")
+		}
+	})
+
+	t.Run("timeout_when_lock_held", func(t *testing.T) {
+		lockPath := fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock)
+		fl := flock.New(lockPath)
+		if err := fl.Lock(); err != nil {
+			t.Fatal(err)
+		}
+		defer fl.Unlock()
+
+		start := time.Now()
+		doWaitBeforeRestart(50*time.Millisecond, 500*time.Millisecond, 50*time.Millisecond)
+		elapsed := time.Since(start)
+
+		if elapsed < 450*time.Millisecond {
+			t.Errorf("returned before timeout (%s), expected ~500ms", elapsed)
+		}
+		if elapsed > 2*time.Second {
+			t.Errorf("took too long (%s), expected ~500ms", elapsed)
+		}
+	})
+}
+
 func TestWaitForUpgradeFinish(t *testing.T) {
 	logs.UNTestDebugInit()
 

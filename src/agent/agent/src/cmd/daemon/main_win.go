@@ -52,7 +52,12 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-const daemonProcess = "daemon"
+const (
+	daemonProcess    = "daemon"
+	restartBaseDelay = 3 * time.Second
+	restartMaxWait   = 30 * time.Second
+	restartPollTick  = 500 * time.Millisecond
+)
 
 func main() {
 	isDebug := false
@@ -218,6 +223,49 @@ func waitForUpgradeFinish() bool {
 	return true
 }
 
+// waitBeforeRestart polls the total-lock to detect when the upgrader (if any)
+// has finished, so the daemon can restart the agent as soon as possible.
+// A short base delay prevents rapid restart loops; 30s is the hard timeout.
+func waitBeforeRestart() {
+	doWaitBeforeRestart(restartBaseDelay, restartMaxWait, restartPollTick)
+}
+
+func doWaitBeforeRestart(baseDelay, maxWait, pollTick time.Duration) {
+	logs.Infof("waitBeforeRestart: base delay %s, max wait %s", baseDelay, maxWait)
+	time.Sleep(baseDelay)
+
+	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock))
+
+	remaining := maxWait - baseDelay
+	if remaining <= 0 {
+		return
+	}
+
+	deadline := time.NewTimer(remaining)
+	defer deadline.Stop()
+	ticker := time.NewTicker(pollTick)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-deadline.C:
+			logs.Warn("waitBeforeRestart: reached timeout, proceeding with restart")
+			return
+		case <-ticker.C:
+			locked, err := totalLock.TryLock()
+			if err != nil {
+				logs.WithError(err).Warn("waitBeforeRestart: TryLock error, retrying")
+				continue
+			}
+			if locked {
+				_ = totalLock.Unlock()
+				logs.Info("waitBeforeRestart: no upgrader running, proceeding with restart")
+				return
+			}
+		}
+	}
+}
+
 // launchAgentInUserSession tries to start the agent in a user desktop session.
 // Priority: 1) WTS active session  2) LogonUser with stored credentials  3) give up (return false).
 func launchAgentInUserSession(agentPath, workDir string) bool {
@@ -257,8 +305,7 @@ func launchAgentInUserSession(agentPath, workDir string) bool {
 	}
 
 	logs.Infof("agent process exited with code %d", exitCode)
-	logs.Info("restart after 30 seconds")
-	time.Sleep(30 * time.Second)
+	waitBeforeRestart()
 	return true
 }
 
@@ -271,8 +318,7 @@ func launchAgentDirect(agentPath, workDir string) {
 	err := cmd.Start()
 	if err != nil {
 		logs.WithError(err).Error("agent start failed, err")
-		logs.Info("restart after 30 seconds")
-		time.Sleep(30 * time.Second)
+		waitBeforeRestart()
 		return
 	}
 
@@ -298,9 +344,7 @@ func launchAgentDirect(agentPath, workDir string) {
 		logs.WithError(err).Error("agent process error")
 	}
 	logs.Info("agent process exited")
-
-	logs.Info("restart after 30 seconds")
-	time.Sleep(30 * time.Second)
+	waitBeforeRestart()
 }
 
 type program struct{}
