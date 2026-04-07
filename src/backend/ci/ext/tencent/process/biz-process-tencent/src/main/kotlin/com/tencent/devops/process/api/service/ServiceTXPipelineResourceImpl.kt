@@ -28,7 +28,9 @@
 package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.pojo.PipelineExportV2YamlData
@@ -96,5 +98,26 @@ class ServiceTXPipelineResourceImpl @Autowired constructor(
         projectId: String
     ): Result<List<String>> {
         return Result(pipelineListFacadeService.listDisabledPipelines(projectId))
+    }
+
+    override fun listVisiblePipelines(
+        userId: String,
+        projectId: String,
+        targetUserId: String,
+        pipelineName: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<SQLPage<SimplePipeline>> {
+        checkParam(userId, projectId)
+        return Result(
+            pipelineListFacadeService.listVisiblePipelines(
+                userId = userId,
+                projectId = projectId,
+                targetUserId = targetUserId,
+                pipelineName = pipelineName,
+                page = page ?: PageUtil.DEFAULT_PAGE,
+                pageSize = pageSize ?: PageUtil.DEFAULT_PAGE_SIZE
+            )
+        )
     }
 }
