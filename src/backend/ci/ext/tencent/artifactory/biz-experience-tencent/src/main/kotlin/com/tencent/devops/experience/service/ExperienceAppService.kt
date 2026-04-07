@@ -56,6 +56,7 @@ import com.tencent.devops.experience.constant.ExperienceConstant.ORGANIZATION_OU
 import com.tencent.devops.experience.constant.ExperienceMessageCode.EXCLUSIVE_EXPERIENCE
 import com.tencent.devops.experience.constant.ExperienceMessageCode.GRANT_EXPERIENCE_PERMISSION
 import com.tencent.devops.experience.constant.ExperienceMessageCode.NO_PERMISSION_QUERY_EXPERIENCE
+import com.tencent.devops.experience.constant.ExperienceMessageCode.PUBLIC_ACCESS_NOT_ENABLED
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
@@ -135,6 +136,24 @@ class ExperienceAppService(
         return ExperienceList(privateExperiences, publicExperiences, redPointCount)
     }
 
+    /**
+     * 桌面端体验列表：只返回私有体验且enablePublicAccess为true的体验
+     */
+    fun listForDesktop(userId: String, platform: Int, organization: String?): ExperienceList {
+        logger.debug("listForDesktop , userId:$userId , platform:$platform, organization:$organization")
+        val privateExperiences = experienceBaseService.list(
+            userId = userId,
+            offset = 0,
+            limit = 100,
+            groupByBundleId = true,
+            platform = platform,
+            isOuter = organization == ORGANIZATION_OUTER,
+            enablePublicAccess = true
+        ).records
+        val redPointCount = privateExperiences.count { it.redPointEnabled }
+        return ExperienceList(privateExperiences, emptyList(), redPointCount)
+    }
+
     @SuppressWarnings("ComplexMethod", "LongMethod")
     @ActionAuditRecord(
         actionId = ActionId.EXPERIENCE_TASK_CREATE,
@@ -149,10 +168,17 @@ class ExperienceAppService(
         platform: Int,
         appVersion: String?,
         organization: String?,
-        forceNew: Boolean
+        forceNew: Boolean,
+        enablePublicAccess: Boolean = false
     ): AppExperienceDetail {
         var experienceId = HashUtil.decodeIdToLong(experienceHashId)
         var experience = experienceDao.get(dslContext, experienceId)
+        if (enablePublicAccess && !experience.enablePublicAccess) {
+            throw ErrorCodeException(
+                errorCode = PUBLIC_ACCESS_NOT_ENABLED
+            )
+        }
+
         val projectId = experience.projectId
 
         val bundleIdentifier = experience.bundleIdentifier
@@ -293,10 +319,16 @@ class ExperienceAppService(
         createDateEnd: Long?,
         endDateBegin: Long?,
         endDateEnd: Long?,
-        creator: String?
+        creator: String?,
+        enablePublicAccess: Boolean = false
     ): Pagination<ExperienceChangeLog> {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         val experience = experienceDao.get(dslContext, experienceId)
+        if (enablePublicAccess && !experience.enablePublicAccess) {
+            throw ErrorCodeException(
+                errorCode = PUBLIC_ACCESS_NOT_ENABLED
+            )
+        }
         val changeLog =
             getChangeLog(
                 userId = userId,
@@ -316,7 +348,8 @@ class ExperienceAppService(
                 createDateEnd = createDateEnd,
                 endDateBegin = endDateBegin,
                 endDateEnd = endDateEnd,
-                creator = creator
+                creator = creator,
+                enablePublicAccess = if (enablePublicAccess) true else null
             )
         val hasNext = if (changeLog.size < pageSize) {
             false
@@ -334,7 +367,8 @@ class ExperienceAppService(
                 createDateEnd = createDateEnd?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
                 endDateBegin = endDateBegin?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
                 endDateEnd = endDateEnd?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
-                creator = creator
+                creator = creator,
+                enablePublicAccess = if (enablePublicAccess) true else null
             ) > page * pageSize
         }
 
@@ -359,7 +393,8 @@ class ExperienceAppService(
         createDateEnd: Long? = null,
         endDateBegin: Long? = null,
         endDateEnd: Long? = null,
-        creator: String? = null
+        creator: String? = null,
+        enablePublicAccess: Boolean? = null
     ): List<ExperienceChangeLog> {
         val groupIdTypeEnum = if (showAll) GroupIdTypeEnum.ALL else GroupIdTypeEnum.JUST_PRIVATE
         val recordIds = experienceBaseService.getRecordIdsByUserId(userId, groupIdTypeEnum, isOuter)
@@ -390,7 +425,8 @@ class ExperienceAppService(
             createDateEnd = createDateEnd?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
             endDateBegin = endDateBegin?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
             endDateEnd = endDateEnd?.let { DateTimeUtil.convertTimestampToLocalDateTime(it) },
-            creator = creator
+            creator = creator,
+            enablePublicAccess = enablePublicAccess
         )
 
         return experienceList.map {
@@ -435,14 +471,20 @@ class ExperienceAppService(
         }
     }
 
-    fun downloadUrl(userId: String, experienceHashId: String, organization: String?): DownloadUrl {
+    fun downloadUrl(
+        userId: String,
+        experienceHashId: String,
+        organization: String?,
+        enablePublicAccess: Boolean = false
+    ): DownloadUrl {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         // 移除红点
         removeRedPoint(userId, experienceId)
         return experienceDownloadService.getExternalDownloadUrl(
             userId = userId,
             experienceId = experienceId,
-            isOuter = organization == ORGANIZATION_OUTER
+            isOuter = organization == ORGANIZATION_OUTER,
+            enablePublicAccess = enablePublicAccess
         )
     }
 
@@ -534,7 +576,8 @@ class ExperienceAppService(
         platform: Int,
         appVersion: String?,
         organization: String?,
-        experienceHashId: String
+        experienceHashId: String,
+        enablePublicAccess: Boolean = false
     ): Pagination<AppExperienceInstallPackage> {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         if (!experienceBaseService.userCanExperience(userId, experienceId, organization == ORGANIZATION_OUTER)) {
@@ -544,6 +587,11 @@ class ExperienceAppService(
             )
         }
         val experience = experienceDao.get(dslContext, experienceId)
+        if (enablePublicAccess && !experience.enablePublicAccess) {
+            throw ErrorCodeException(
+                errorCode = PUBLIC_ACCESS_NOT_ENABLED
+            )
+        }
         val projectId = experience.projectId
         val artifactoryPath = experience.artifactoryPath
         val artifactoryType =

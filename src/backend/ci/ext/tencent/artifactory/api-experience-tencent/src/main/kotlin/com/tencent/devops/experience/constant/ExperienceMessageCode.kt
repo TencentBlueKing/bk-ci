@@ -85,6 +85,7 @@ object ExperienceMessageCode {
     const val USER_NEED_TAI_ACCOUNT = "2106035" // 内部用户不能通过太湖账号登录
     const val OUTER_LOGIN_WRONG_PASSWORD = "2106036" // 密码错误
     const val EXCLUSIVE_EXPERIENCE = "2106037" // 专属体验
+    const val PUBLIC_ACCESS_NOT_ENABLED = "2106038" // 当前体验未开启公网访问
 
     const val BK_UPDATED_SUCCESSFULLY_AND_SET = "bkUpdatedSuccessfullyAndSet" // 更新成功,已置为
     const val BK_UPDATED_SUCCESSFULLY = "bkUpdatedSuccessfully" // 更新成功
