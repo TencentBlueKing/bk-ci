@@ -278,7 +278,7 @@
     "制品库客户端": "Artifact Repository Client",
     "敬请期待": "Coming Soon",
     "支持将 CI 编译产物安装至移动设备，便于测试与体验。": "Supports installing CI build artifacts to mobile devices for testing and experience.",
-    "桌面端制品库，支持预约下载与下载加速，支持Windows 应用的版本体验。": "Desktop artifact repository, supports scheduled download and download acceleration, supports version experience of Windows applications.",
+    "桌面端制品库，支持预约下载与下载加速，支持 Windows 应用的版本体验。": "Desktop artifact repository, supports scheduled download and download acceleration, supports version experience of Windows applications.",
     "点击下载": "Click to Download",
     "扫码下载": "Scan to Download"
 }

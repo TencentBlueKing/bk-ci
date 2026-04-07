@@ -352,7 +352,7 @@
                 },
                 {
                     title: this.$t('制品库客户端'),
-                    desc: this.$t('桌面端制品库，支持预约下载与下载加速，支持Windows 应用的版本体验。'),
+                    desc: this.$t('桌面端制品库，支持预约下载与下载加速，支持 Windows 应用的版本体验。'),
                     isRepo: true,
                     platforms: [
                         {
