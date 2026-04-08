@@ -57,19 +57,23 @@ const (
 
 func DoUpgradeAgent() error {
 	logs.Info("start upgrade agent")
+
+	// Acquire totalLock before config/third_components init to minimise the
+	// window between CheckProcess releasing totalLock and us re-acquiring it.
+	// Without this, the daemon's watch loop can slip in, find the agent dead,
+	// and relaunch it with the OLD binary before we replace files.
+	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock))
+	if err := totalLock.Lock(); err != nil {
+		logs.WithError(err).Error("get total lock failed, exit")
+		return errors.New("get total lock failed")
+	}
+	defer func() { totalLock.Unlock() }()
+
 	config.Init(false)
 	if err := third_components.Init(); err != nil {
 		logs.WithError(err).Error("init third_components error")
 		systemutil.ExitProcess(1)
 	}
-
-	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock))
-	err := totalLock.Lock()
-	if err = totalLock.Lock(); err != nil {
-		logs.WithError(err).Error("get total lock failed, exit")
-		return errors.New("get total lock failed")
-	}
-	defer func() { totalLock.Unlock() }()
 
 	daemonChange, _ := checkUpgradeFileChange(config.GetClientDaemonFile())
 	agentChange, _ := checkUpgradeFileChange(config.GetClienAgentFile())
@@ -86,15 +90,13 @@ func DoUpgradeAgent() error {
 	// If we kill first, the daemon immediately restarts the agent with
 	// the OLD binary (race condition).
 	if agentChange {
-		err = replaceAgentFile(config.GetClienAgentFile())
-		if err != nil {
+		if err := replaceAgentFile(config.GetClienAgentFile()); err != nil {
 			logs.WithError(err).Error("replace agent file failed")
 		}
 	}
 
 	if daemonChange {
-		err = replaceAgentFile(config.GetClientDaemonFile())
-		if err != nil {
+		if err := replaceAgentFile(config.GetClientDaemonFile()); err != nil {
 			logs.WithError(err).Error("replace daemon file failed")
 		}
 	}
