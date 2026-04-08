@@ -4,7 +4,6 @@
 package agentcli
 
 import (
-	"fmt"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -220,21 +219,17 @@ func TestIsProcessAlive(t *testing.T) {
 	})
 }
 
-func TestStartLogin_AlreadyRunning(t *testing.T) {
+func TestStartByMode_NoPlist(t *testing.T) {
 	old := useChinese
 	useChinese = false
 	defer func() { useChinese = old }()
 
 	workDir := t.TempDir()
-	runtimeDir := filepath.Join(workDir, "runtime")
-	os.MkdirAll(runtimeDir, 0755)
-
-	pidFile := filepath.Join(runtimeDir, "daemon.pid")
-	os.WriteFile(pidFile, []byte(fmt.Sprintf("%d", os.Getpid())), 0644)
-
-	err := startLogin(workDir)
-	if err != nil {
-		t.Errorf("startLogin() with running PID returned error: %v", err)
+	// startByMode without a plist should fall back to startDirect,
+	// which will fail because there's no real daemon binary — that's expected.
+	err := startByMode(workDir, "devops_agent_noplist", modeLogin)
+	if err == nil {
+		t.Error("startByMode() with no plist and no daemon binary should return error")
 	}
 }
 
@@ -264,4 +259,27 @@ func TestCurrentUID(t *testing.T) {
 	if u != nil && uid != u.Uid {
 		t.Errorf("currentUID() = %q, want %q", uid, u.Uid)
 	}
+}
+
+func TestHasModernLaunchctl(t *testing.T) {
+	old := cachedModernLaunchctl
+	defer func() { cachedModernLaunchctl = old }()
+
+	t.Run("cache_hit", func(t *testing.T) {
+		cachedModernLaunchctl = 1
+		if !hasModernLaunchctl() {
+			t.Error("cached=1 should return true")
+		}
+		cachedModernLaunchctl = 0
+		if hasModernLaunchctl() {
+			t.Error("cached=0 should return false")
+		}
+	})
+
+	t.Run("probe_runs_on_real_system", func(t *testing.T) {
+		cachedModernLaunchctl = -1
+		// On any real macOS test environment (10.10+), this should return true.
+		// We just verify it doesn't panic or hang.
+		_ = hasModernLaunchctl()
+	})
 }

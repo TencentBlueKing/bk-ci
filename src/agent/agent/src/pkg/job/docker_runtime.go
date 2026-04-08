@@ -170,31 +170,6 @@ func hasJdk17Dir() bool {
 	return err == nil && info.IsDir()
 }
 
-func buildDebugContainerArgs(containerName, image string, debugInfo *api.ImageDebug) ([]string, error) {
-	userArgs, err := job_docker.BuildUserDockerArgs(debugInfo.Options)
-	if err != nil {
-		return nil, err
-	}
-	mountArgs, err := parseDebugContainerMountArgs(debugInfo)
-	if err != nil {
-		return nil, err
-	}
-	args := []string{"--name", containerName}
-	args = append(args, userArgs...)
-	if !job_docker.HasCustomNetwork(debugInfo.Options) {
-		args = append(args, "--network", "bridge")
-	}
-	for _, e := range parseDebugContainerEnv() {
-		args = append(args, "-e", e)
-	}
-	if v, ok := envs.FetchEnv(constant.DevopsAgentDockerCapAdd); ok && strings.TrimSpace(v) != "" {
-		args = append(args, "--cap-add", strings.TrimSpace(v))
-	}
-	args = append(args, mountArgs...)
-	args = append(args, "--entrypoint", "/bin/sh", image, "-c", debugEntryPointCmd)
-	return args, nil
-}
-
 func parseDebugContainerMountArgs(debugInfo *api.ImageDebug) ([]string, error) {
 	var args []string
 	if config.GAgentConfig.JdkDirPath != "" {

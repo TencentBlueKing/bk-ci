@@ -9,8 +9,8 @@ Windows 支持三种安装模式：
 | 模式 | 命令 | 适用场景 |
 |------|------|---------|
 | `service` | `devopsAgent.exe install` | 默认模式，后台服务运行，适合大多数场景 |
-| `session` | `devopsAgent.exe install --mode session` | 需要访问桌面 UI 的构建（如 GUI 测试、UWP 打包） |
-| `task` | `devopsAgent.exe install --mode task` | **已废弃**，计划任务模式，保留兼容 |
+| `session` | `devopsAgent.exe install session` | 需要访问桌面 UI 的构建（如 GUI 测试、UWP 打包） |
+| `task` | `devopsAgent.exe install task` | **已废弃**，计划任务模式，保留兼容 |
 
 ### Service 模式（默认）
 
@@ -18,7 +18,7 @@ Agent 以 Windows 服务方式运行，通过 `sc.exe` 注册：
 
 ```powershell
 .\devopsAgent.exe install
-.\devopsAgent.exe install --mode service   # 等同上面
+.\devopsAgent.exe install service   # 等同上面
 ```
 
 特点：
@@ -33,10 +33,10 @@ Agent 以 Windows 服务方式运行，通过 `sc.exe` 注册：
 
 ```powershell
 # 基本 Session 模式（依赖当前已登录用户）
-.\devopsAgent.exe install --mode session
+.\devopsAgent.exe install session
 
 # 带自动登录（重启/注销后自动恢复用户会话）
-.\devopsAgent.exe install --mode session --auto-logon builduser P@ssw0rd
+.\devopsAgent.exe install session --auto-logon builduser P@ssw0rd
 ```
 
 #### Session 参数
@@ -68,7 +68,7 @@ Agent 以 Windows 服务方式运行，通过 `sc.exe` 注册：
 密码变更后需要重新安装（会自动先卸载旧配置）：
 
 ```powershell
-.\devopsAgent.exe install --mode session --auto-logon builduser NewP@ssw0rd
+.\devopsAgent.exe install session --auto-logon builduser NewP@ssw0rd
 ```
 
 ### Task 模式（已废弃）

@@ -56,7 +56,30 @@ launchctl print gui/$(id -u)/devops_agent_<AGENT_ID>
 
 ## 解决方案
 
-### 方案一：将环境配置从 `.zshrc` 移到 `.zprofile`（推荐）
+### 方案一：在完整环境的终端中执行 stop + start（推荐）
+
+Agent 在 `install` 和 `start` 时会自动采集当前 shell 的 PATH 和常用开发变量（`JAVA_HOME`、`NVM_DIR`、`GOROOT` 等），保存到 `.path` 和 `.env` 文件中。daemon 启动时自动加载这些文件。
+
+因此，只需在**已配置好完整环境**的终端中重启 agent：
+
+```bash
+cd <agent安装目录>
+./devopsAgent stop
+./devopsAgent start
+```
+
+这次重启会重新快照当前 shell 的环境变量。即使系统重启后 launchd 以极简环境拉起 daemon，daemon 也会从 `.env`/`.path` 文件恢复之前快照的环境。
+
+如果日后修改了 shell 配置（如新增了 nvm），再次执行 `stop` + `start` 即可更新快照。
+
+也可以手动编辑 `.env` 文件添加自定义变量：
+```bash
+# <安装目录>/.env
+NVM_DIR=/Users/builder/.nvm
+CUSTOM_VAR=value
+```
+
+### 方案二：将环境配置从 `.zshrc` 移到 `.zprofile`
 
 这是最根本的解决方案。将 nvm、pyenv 等工具的初始化移到 `.zprofile`，这样非交互式 login shell 也能加载。
 
@@ -81,18 +104,6 @@ cd <agent安装目录>
 ./devopsAgent stop
 ./devopsAgent start
 ```
-
-### 方案二：在终端中重启 daemon
-
-在已配置好环境的终端（如 iTerm）中重启 agent，daemon 会继承终端的完整环境：
-
-```bash
-cd <agent安装目录>
-./devopsAgent stop
-./devopsAgent start
-```
-
-> **注意**：此方案的效果会在系统重启后失效——launchd 会以极简环境重新拉起 daemon。
 
 ### 方案三：在流水线脚本中手动 source
 

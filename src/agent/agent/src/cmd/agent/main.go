@@ -90,6 +90,8 @@ func main() {
 	logs.Info("current user userName: ", systemutil.GetCurrentUser().Username)
 	logs.Info("work dir: ", systemutil.GetWorkDir())
 
+	envs.LoadEnvFiles(workDir)
+
 	go envs.InitEnvPolling()
 
 	logEnv()

@@ -9,8 +9,8 @@ Linux 支持三种安装模式：
 | 模式 | 命令 | 适用场景 |
 |------|------|---------|
 | `service` | `sudo ./devopsAgent install` | Root 用户默认，系统级 systemd 服务 |
-| `user` | `./devopsAgent install --mode user` | 非 Root 用户的 systemd 服务，注销后仍运行 |
-| `direct` | `./devopsAgent install --mode direct` | 非 Root 默认，直接后台启动，无服务注册 |
+| `user` | `./devopsAgent install user` | 非 Root 用户的 systemd 服务，注销后仍运行 |
+| `direct` | `./devopsAgent install direct` | 非 Root 默认，直接后台启动，无服务注册 |
 
 ### Service 模式（Root 默认）
 
@@ -18,7 +18,7 @@ Linux 支持三种安装模式：
 
 ```bash
 sudo ./devopsAgent install
-sudo ./devopsAgent install --mode service   # 等同上面
+sudo ./devopsAgent install service   # 等同上面
 ```
 
 systemd 单元文件位置：`/etc/systemd/system/devops_agent_{id}.service`
@@ -29,6 +29,11 @@ systemd 单元文件位置：`/etc/systemd/system/devops_agent_{id}.service`
 - `ExecStartPre` — 清理残留 PID 文件
 - `KillMode=none` — 避免 systemd 杀死升级中的进程
 - `PrivateTmp=false` — 允许访问 `/tmp`
+
+环境变量处理：
+- `install` 和 `start` 命令执行时，Agent 会将当前 shell 的 PATH 和常用开发变量（`JAVA_HOME`、`GOROOT` 等）快照到 `.path` 和 `.env` 文件
+- daemon 启动后读取这些文件并合并到进程环境，解决 systemd 极简环境下构建进程找不到开发工具的问题
+- 修改 `.bashrc`/`.profile` 后，执行 `stop` + `start` 即可使变更生效
 
 启停命令：
 ```bash
@@ -46,7 +51,7 @@ sudo systemctl status devops_agent_{id}
 非 Root 用户的 systemd 用户级服务，适合需要注销后仍保持运行的场景：
 
 ```bash
-./devopsAgent install --mode user
+./devopsAgent install user
 ```
 
 特点：
@@ -80,7 +85,7 @@ systemctl --user stop devops_agent_{id}
 
 ```bash
 ./devopsAgent install
-./devopsAgent install --mode direct   # 非 Root 时的默认
+./devopsAgent install direct   # 非 Root 时的默认
 ```
 
 特点：

@@ -22,37 +22,42 @@ func platformUnzip(src, dest string) error {
 }
 
 func handleInstall(workDir string, args []string) error {
-	fs := flag.NewFlagSet("install", flag.ContinueOnError)
-	mode := fs.String("mode", "service", "")
-	autoLogon := fs.Bool("auto-logon", false, "")
-	if err := fs.Parse(args); err != nil {
-		return err
+	mode := "service"
+	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
+		mode = strings.ToLower(args[0])
+		args = args[1:]
 	}
 
 	cleanupBeforeInstallWin(workDir)
 
-	switch strings.ToLower(*mode) {
+	switch mode {
 	case "service":
 		return installService(workDir)
 	case "session":
 		var user, pass string
-		if *autoLogon {
+		var autoLogon bool
+		fs := flag.NewFlagSet("session", flag.ContinueOnError)
+		fs.BoolVar(&autoLogon, "auto-logon", false, "")
+		if err := fs.Parse(args); err != nil {
+			return err
+		}
+		if autoLogon {
 			remaining := fs.Args()
 			if len(remaining) < 2 {
-				return fmt.Errorf(msg("--auto-logon requires USER and PASSWORD, e.g.: --auto-logon admin P@ssw0rd",
-					"--auto-logon 需要跟用户名和密码, 例如: --auto-logon admin P@ssw0rd"))
+				return fmt.Errorf(msg("--auto-logon requires USER and PASSWORD, e.g.: install session --auto-logon admin P@ssw0rd",
+					"--auto-logon 需要跟用户名和密码, 例如: install session --auto-logon admin P@ssw0rd"))
 			}
 			user, pass = remaining[0], remaining[1]
 		}
-		return enableSession(workDir, user, pass, *autoLogon)
+		return enableSession(workDir, user, pass, autoLogon)
 	case "task":
 		printWarn(msg(
-			"[DEPRECATED] Task mode is deprecated. Consider using '--mode session' for desktop access.",
-			"[已废弃] 计划任务模式已废弃, 建议使用 '--mode session' 获取桌面访问能力。"))
+			"[DEPRECATED] Task mode is deprecated. Consider using 'install session' for desktop access.",
+			"[已废弃] 计划任务模式已废弃, 建议使用 'install session' 获取桌面访问能力。"))
 		return installTask(workDir)
 	default:
 		return fmt.Errorf(msgf("unknown install mode: %s (valid: service, session, task)",
-			"未知安装模式: %s (可选: service, session, task)", *mode))
+			"未知安装模式: %s (可选: service, session, task)", mode))
 	}
 }
 

@@ -80,13 +80,16 @@ func IsMacos() bool {
 	return runtime.GOOS == osMacos
 }
 
-// GetCurrentUser get current process user, log & exit when error was found
+// GetCurrentUser returns the current process user. If user.Current() fails
+// (e.g. in Docker containers without /etc/passwd, or with CGO disabled),
+// it falls back to OS primitives instead of crashing the process.
 func GetCurrentUser() *user.User {
 	currentUser, err := user.Current()
-	if currentUser == nil {
-		logs.Fatalf("GetCurrentUser cache return nil: error[%v]", err) //
+	if err == nil && currentUser != nil {
+		return currentUser
 	}
-	return currentUser
+	logs.Warnf("user.Current() failed: %v, using fallback", err)
+	return fallbackCurrentUser()
 }
 
 // GetWorkDir get agent work dir

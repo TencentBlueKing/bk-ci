@@ -72,10 +72,10 @@ func TestHandleInstall_ModeDispatch(t *testing.T) {
 		wantErr bool
 	}{
 		{"default_mode", []string{}, true},
-		{"service_mode", []string{"--mode", "service"}, true},
-		{"session_mode", []string{"--mode", "session"}, true},
-		{"task_mode", []string{"--mode", "task"}, true},
-		{"invalid_mode", []string{"--mode", "invalid"}, true},
+		{"service_mode", []string{"service"}, true},
+		{"session_mode", []string{"session"}, true},
+		{"task_mode", []string{"task"}, true},
+		{"invalid_mode", []string{"invalid"}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -101,14 +101,14 @@ func TestHandleInstall_SessionValidation(t *testing.T) {
 	os.WriteFile(filepath.Join(dir, ".agent.properties"), []byte("devops.agent.id=test1\n"), 0644)
 
 	t.Run("autologon_no_args", func(t *testing.T) {
-		err := handleInstall(dir, []string{"--mode", "session", "--auto-logon"})
+		err := handleInstall(dir, []string{"session", "--auto-logon"})
 		if err == nil {
 			t.Error("expected error: --auto-logon requires USER and PASSWORD")
 		}
 	})
 
 	t.Run("autologon_only_user", func(t *testing.T) {
-		err := handleInstall(dir, []string{"--mode", "session", "--auto-logon", "admin"})
+		err := handleInstall(dir, []string{"session", "--auto-logon", "admin"})
 		if err == nil {
 			t.Error("expected error: --auto-logon requires USER and PASSWORD")
 		}
