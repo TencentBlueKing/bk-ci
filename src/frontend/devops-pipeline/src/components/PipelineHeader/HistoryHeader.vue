@@ -343,8 +343,8 @@
                     const res = await request(params)
                     this.draftStatus = res.status
                     this.draftSaveInfo = {
-                        creator: res.draft?.creator,
-                        createTime: dayjs(res.draft?.createTime).format('YYYY-MM-DD HH:mm:ss'),
+                        updater: res.draft?.updater,
+                        updateTime: dayjs(res.draft?.updateTime).format('YYYY-MM-DD HH:mm:ss'),
                         draftVersionName: res.draft?.baseVersionName,
                         draftVersion: res.draft?.version,
                         releaseVersionName: res.release?.versionName || this.pipelineInfo?.releaseVersionName,

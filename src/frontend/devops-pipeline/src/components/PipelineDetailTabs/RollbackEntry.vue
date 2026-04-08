@@ -27,6 +27,7 @@
             :width="480"
             footer-position="center"
             theme="primary"
+            @cancel="close"
         >
             <header
                 class="draft-hint-title"
@@ -53,8 +54,8 @@
                                 path="existingDraft"
                                 class="existing-draft"
                             >
-                                <span>{{ draftSaveInfo?.creator }}</span>
-                                <span>{{ draftSaveInfo?.createTime }}</span>
+                                <span>{{ draftSaveInfo?.updater }}</span>
+                                <span>{{ draftSaveInfo?.updateTime }}</span>
                             </i18n>
                             <VersionDiffEntry
                                 style="cursor: pointer;"
