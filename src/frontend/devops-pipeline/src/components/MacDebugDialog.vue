@@ -201,13 +201,10 @@
         },
         computed: {},
         watch: {
-            isShow: {
-                handler (val) {
-                    if (val) {
-                        this.fetchDebugInfo()
-                    }
-                },
-                immediate: true
+            isShow (val) {
+                if (!val) {
+                    this.showPassword = false
+                }
             }
         },
         methods: {
@@ -215,39 +212,10 @@
                 'startVmSeqDebug',
                 'stopVmSeqDebug'
             ]),
-            async fetchDebugInfo () {
-                try {
-                    this.isLoading = true
-                    const response = await this.startVmSeqDebug({
-                        pipelineId: this.pipelineId,
-                        buildId: this.buildId,
-                        containerId: this.containerId,
-                        executeCount: this.executeCount
-                    })
-                    
-                    if (response.data?.actionCode !== 200) {
-                        this.$bkMessage({
-                            theme: 'error',
-                            message: response.data?.actionMessage
-                        })
-                        this.$emit('close')
-                        this.showPassword = false
-                        return
-                    }
-                    
-                    const data = response.data?.data
-                    if (!data) return
-                    
+            // 供父组件调用的设置数据
+            setDebugData (data) {
+                if (data) {
                     this.debugData = data
-                } catch (err) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: err.message || err
-                    })
-                    this.$emit('close')
-                    this.showPassword = false
-                } finally {
-                    this.isLoading = false
                 }
             },
             exitDebug () {

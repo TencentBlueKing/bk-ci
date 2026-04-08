@@ -18,12 +18,16 @@
                 :class="{ active: currentTab === 'setting' }"
             >{{ $t('execDetail.setting') }}</span>
         </span>
-        <span
+        <bk-button
             slot="tool"
             v-if="currentTab === 'setting' && showDebugDockerBtn"
             class="head-tool"
+            text
+            :loading="isDebugLoading"
             @click="handleDebug"
-        >{{ $t('editPage.docker.debugConsole') }}</span>
+        >
+            {{ $t('editPage.docker.debugConsole') }}
+        </bk-button>
         <template v-slot:content>
             <error-summary
                 v-if="activeErorr && currentTab === 'log'"
@@ -98,6 +102,7 @@
             return {
                 showTime: false,
                 searchStr: '',
+                isDebugLoading: false,
                 currentTab: 'log'
             }
         },
@@ -154,11 +159,13 @@
             }
         },
         methods: {
-            handleDebug () {
+            async handleDebug () {
                 if (this.currentJob.baseOS === 'LINUX') {
                     this.$refs.container.startDebug?.()
                 } else {
-                    this.$refs.container.openDebug?.()
+                    this.isDebugLoading = true
+                    await this.$refs.container.openDebug?.()
+                    this.isDebugLoading = false
                 }
             }
         }
@@ -172,5 +179,8 @@
         .bk-form-item.is-required .bk-label, .bk-form-inline-item.is-required .bk-label {
             margin-right: 10px;
         }
+    }
+    .head-tool {
+        line-height: 1.4;
     }
 </style>
