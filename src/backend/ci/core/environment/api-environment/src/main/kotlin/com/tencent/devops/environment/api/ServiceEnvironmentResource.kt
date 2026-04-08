@@ -63,7 +63,7 @@ import jakarta.ws.rs.core.MediaType
 interface ServiceEnvironmentResource {
     @Operation(summary = "获取环境列表")
     @GET
-    @Path("/projects/{projectId}")
+    @Path("/projects/{projectId}/list")
     fun list(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
