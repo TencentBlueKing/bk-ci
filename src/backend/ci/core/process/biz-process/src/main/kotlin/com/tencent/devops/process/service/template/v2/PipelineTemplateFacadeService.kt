@@ -1086,7 +1086,9 @@ class PipelineTemplateFacadeService @Autowired constructor(
         ) ?: return null
 
         val templateId = pipelineTemplateRelated.templateId
-        val templateInfo = pipelineTemplateInfoService.get(templateId)
+        val templateInfo = pipelineTemplateInfoService.get(
+            templateId = templateId
+        )
         val templateVersion = templateResource.version
 
         return if (templateDescriptor == null || templateDescriptor.templateRefType == TemplateRefType.ID) {
