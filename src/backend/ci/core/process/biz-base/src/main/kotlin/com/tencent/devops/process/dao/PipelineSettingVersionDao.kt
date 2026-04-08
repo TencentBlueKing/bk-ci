@@ -171,6 +171,7 @@ class PipelineSettingVersionDao {
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VERSION.eq(version))
                 .and(PROJECT_ID.eq(projectId))
+                .limit(1)
                 .fetchOne(mapper)
         }
     }

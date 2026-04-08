@@ -166,6 +166,7 @@ class PipelineTemplateSettingDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(TEMPLATE_ID.eq(templateId))
                 .and(SETTING_VERSION.eq(settingVersion))
+                .limit(1)
                 .fetchOne()?.convert()
         }
     }

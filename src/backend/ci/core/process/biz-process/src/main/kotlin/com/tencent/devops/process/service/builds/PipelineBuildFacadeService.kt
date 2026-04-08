@@ -3271,7 +3271,10 @@ class PipelineBuildFacadeService(
         val startType = StartType.toStartType(buildInfo.trigger)
         // 发起新构建
         return if (startType == StartType.WEB_HOOK) {
-            webhookBuildParameterService.getBuildParameters(buildId = buildInfo.buildId)?.forEach { param ->
+            webhookBuildParameterService.getBuildParameters(
+                projectId = projectId,
+                buildId = buildInfo.buildId
+            )?.forEach { param ->
                 startParameters[param.key] = param.value.toString()
             }
             webhookTriggerPipelineBuild(
