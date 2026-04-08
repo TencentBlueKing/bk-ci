@@ -651,5 +651,4 @@ interface ApigwBuildResourceV4 {
         @Parameter(description = "要操作的构建ID列表[最大50个]", required = true)
         buildIds: Set<String>
     ): Result<Boolean>
-
 }
