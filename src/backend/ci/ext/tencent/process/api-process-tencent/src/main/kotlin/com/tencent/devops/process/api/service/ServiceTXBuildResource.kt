@@ -69,7 +69,7 @@ interface ServiceTXBuildResource {
 
     @Operation(summary = "获取可见性流水线手动启动参数")
     @GET
-    @Path("/{projectId}/{pipelineId}/visibility/ManualStartupInfo")
+    @Path("/{projectId}/{pipelineId}/visibility/manualStartupInfo")
     fun visibilityManualStartupInfo(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
