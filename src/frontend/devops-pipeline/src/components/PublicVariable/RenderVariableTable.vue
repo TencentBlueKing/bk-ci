@@ -20,7 +20,6 @@
                     <bk-table-column
                         :label="$t('newui.pipelineParam.varName')"
                         prop="varName"
-                        show-overflow-tooltip
                     >
                         <template slot-scope="{ row }">
                             <span
@@ -28,7 +27,10 @@
                                     'is-required': row.buildFormProperty.valueNotEmpty
                                 }]"
                             >
-                                {{ row?.varName }}
+                                <span
+                                    class="var-name-text"
+                                    v-bk-overflow-tips
+                                >{{ row?.varName }}</span>
                                 <span
                                     v-if="row.buildFormProperty.readOnly"
                                     class="read-only"
@@ -223,14 +225,24 @@
         .bk-table-empty-text {
             padding: 15px 0 !important;
         }
-        .var-name.is-required {
-            padding-left: 8px;
-            &::before {
-                content: "* ";
-                color: red;
-                position: absolute;
-                left: 14px;
-                top: 14px;
+        .var-name {
+            display: flex;
+            align-items: center;
+            .var-name-text {
+                flex: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            &.is-required {
+                padding-left: 8px;
+                &::before {
+                    content: "* ";
+                    color: red;
+                    position: absolute;
+                    left: 14px;
+                    top: 14px;
+                }
             }
         }
         .read-only {

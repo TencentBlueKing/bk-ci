@@ -42,6 +42,10 @@
                                 :id="item.groupName"
                                 :name="item.groupName"
                                 :disabled="item.disabled"
+                                v-bk-tooltips="{
+                                    content: $t('publicVar.noUsePermission'),
+                                    disabled: !item.noUsePermission
+                                }"
                             >
                                 <div class="manage-var-page-group-option">
                                     <span class="group-name">{{ item.groupName }}</span>
@@ -244,10 +248,16 @@
         ]
     })
     const renderVarGroupList = computed(() => {
-        return varGroupList.value.map(i => ({
-            ...i,
-            disabled: allProjectVarGroup.value.some(group => group.groupName === i.groupName) || groupsMap.value.varGroups.some(group => group.groupName === i.groupName)
-        }))
+        return varGroupList.value.map(i => {
+            const isUsedInProject = allProjectVarGroup.value.some(group => group.groupName === i.groupName)
+            const isInPendingGroups = groupsMap.value.varGroups.some(group => group.groupName === i.groupName)
+            const noUsePermission = i?.permission?.canUse === false
+            return {
+                ...i,
+                disabled: isUsedInProject || isInPendingGroups || noUsePermission,
+                noUsePermission
+            }
+        })
     })
     watch(() => showAddComp.value, (val) => {
         if (val) {

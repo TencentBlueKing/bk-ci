@@ -2092,7 +2092,8 @@
     "lastModifiedBy": "更新人",
     "lastModifiedDate": "更新时间",
     "operation": "操作",
-    "importParamGroupLabel": "支持.yaml 类型文件，文件小于2M。格式请参考 {0}",
+    "importParamGroupLabel": "支持.yaml 类型文件，文件小于2M",
+    "importFileTypeError": "仅支持导入 .yaml 或 .yml 类型的文件",
     "templateFile": "模板文件",
     "release": "去发布",
     "basicInfo": "基础信息",
@@ -2192,7 +2193,8 @@
     "paramReferenceStatus": "变量引用情况",
     "repeatParamTips": "流水线（{0}）中存在同名变量，请先修改流水线变量或重选公共变量组",
     "publicVarGroup": "公共变量组 - {0}",
-    "repeatTips": "存在同名变量冲突问题，请移除对应的变量组，或删除同名变量后再添加。"
+    "repeatTips": "存在同名变量冲突问题，请移除对应的变量组，或删除同名变量后再添加。",
+    "noUsePermission": "无使用权限"
   },
   "showStageProgress": "展示 Stage 进度",
   "showBuildInfo": "展示构建信息",

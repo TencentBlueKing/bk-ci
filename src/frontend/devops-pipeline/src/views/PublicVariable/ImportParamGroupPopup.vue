@@ -11,18 +11,15 @@
     >
         <bk-upload
             v-if="isShow"
-            accept=".yaml, .yml, application/x-yaml"
             :with-credentials="true"
             :custom-request="handleSelect"
         >
         </bk-upload>
-        <i18n
+        <p
             class="import-tips"
-            tag="div"
-            path="publicVar.importParamGroupLabel"
         >
-            <span class="text-area">{{ $t('publicVar.templateFile') }}</span>
-        </i18n>
+            {{ $t('publicVar.importParamGroupLabel') }}
+        </p>
     </bk-dialog>
 </template>
 
@@ -36,6 +33,22 @@
         successFn: Function
     })
     function handleSelect ({ fileObj, onProgress, onSuccess, onDone }) {
+        const fileName = fileObj.name || ''
+        const fileExtension = fileName.split('.').pop()?.toLowerCase()
+        // 校验文件类型是否为 yaml
+        if (!['yaml', 'yml'].includes(fileExtension)) {
+            proxy.$bkMessage({
+                theme: 'error',
+                message: proxy.$t('publicVar.importFileTypeError')
+            })
+            onSuccess({
+                code: 1,
+                result: ''
+            }, fileObj)
+            onDone(fileObj)
+            return
+        }
+
         const reader = new FileReader()
         reader.readAsText(fileObj.origin)
         reader.addEventListener('loadend', async e => {

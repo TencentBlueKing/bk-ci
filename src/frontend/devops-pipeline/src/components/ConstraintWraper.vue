@@ -28,6 +28,7 @@
                 :classify-label="classifyLabel"
                 :is-loading="reverting"
                 :show-label="showLabel"
+                :disabled="disabled"
             />
         </div>
         <div

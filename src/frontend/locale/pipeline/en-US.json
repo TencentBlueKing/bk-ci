@@ -2095,7 +2095,8 @@
     "lastModifiedBy": "Last Updated By",
     "lastModifiedDate": "Last Updated",
     "operation": "Actions",
-    "importParamGroupLabel": "Supports .yaml files (≤2MB). Format reference: {0}",
+    "importParamGroupLabel": "Supports .yaml files (≤2MB)",
+    "importFileTypeError": "Only .yaml or .yml files are supported",
     "templateFile": "Template File",
     "release": "Publish",
     "basicInfo": "Basic Info",
@@ -2195,7 +2196,8 @@
     "paramReferenceStatus": "Param Usage Status",
     "repeatParamTips": "If there is a variable with the same name in the pipeline ({0}), please modify the pipeline variable or reselect the common variable group.",
     "publicVarGroup": "Public Variable Group - {0}",
-    "repeatTips": "There is a conflict with a variable with the same name. Please remove the corresponding variable group or delete the variable with the same name before adding it again."
+    "repeatTips": "There is a conflict with a variable with the same name. Please remove the corresponding variable group or delete the variable with the same name before adding it again.",
+    "noUsePermission": "No permission"
   },
   "showStageProgress": "Show Stage Progress",
   "showBuildInfo": "Show Build Information",

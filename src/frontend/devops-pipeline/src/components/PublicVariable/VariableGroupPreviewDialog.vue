@@ -26,6 +26,10 @@
                     }"
                     @click="handleToggle(index)"
                 >
+                    <i
+                        v-if="hasFieldChangeTips(item)"
+                        class="bk-icon icon-exclamation-circle-shape tab-tooltips-icon"
+                    />
                     <span class="operate-type">{{ item.operateTitle }}</span>
                     <span
                         class="var-name"
@@ -192,6 +196,14 @@
             return proxy.$t('publicVar.changeConstDefaultValueTips')
         }
         return proxy.$t('publicVar.changeFieldValueTips')
+    }
+    // 判断变量是否有需要提示的字段变更
+    function hasFieldChangeTips (item) {
+        if (item?.content?.operate !== OPERATE_TYPE.UPDATE) return false
+        const changes = item?.content?.changes || {}
+        return Object.keys(changes).some(key => {
+            return changeFieldsNeedTips.value.includes(key) && changes[key]?.oldValue !== changes[key]?.newValue
+        })
     }
     watch(() => curVarData.value, () => {
         isLoading.value = true
@@ -367,6 +379,12 @@
                     display: inline-block;
                     overflow: hidden;
                     text-overflow: ellipsis;
+                }
+                .tab-tooltips-icon {
+                    font-size: 14px;
+                    color: red;
+                    margin-right: 4px;
+                    flex-shrink: 0;
                 }
             }
         }

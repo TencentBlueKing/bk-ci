@@ -158,8 +158,9 @@
             :style="widthStyle"
         >
             <span
+                class="label-text"
                 :class="{ deleted: props.isDelete }"
-                :title="props.label"
+                v-bk-overflow-tips
             >
                 {{ props.label }}
             </span>
@@ -318,6 +319,14 @@
             pointer-events: auto;
         }
         .atom-form-label {
+            .label-text {
+                display: inline-block;
+                max-width: 500px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                vertical-align: middle;
+            }
             .deleted {
                 color: #a7a9ac !important;
                 text-decoration: line-through;
