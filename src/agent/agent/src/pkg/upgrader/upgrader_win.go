@@ -72,18 +72,23 @@ const (
 // MANUAL mode: only the agent is upgraded; daemon update requires manual restart.
 func DoUpgradeAgent() error {
 	logs.Info("start upgrade agent")
-	config.Init(false)
-	if err := third_components.Init(); err != nil {
-		logs.WithError(err).Error("init third_components error")
-		systemutil.ExitProcess(1)
-	}
 
+	// Acquire totalLock before config/third_components init to minimise the
+	// window between CheckProcess releasing totalLock and us re-acquiring it.
+	// Without this, the daemon's watch loop can slip in, find the agent dead,
+	// and relaunch it with the OLD binary before we replace files.
 	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock))
 	if err := totalLock.Lock(); err != nil {
 		logs.WithError(err).Error("get total lock failed, exit")
 		return errors.New("get total lock failed")
 	}
 	defer func() { totalLock.Unlock() }()
+
+	config.Init(false)
+	if err := third_components.Init(); err != nil {
+		logs.WithError(err).Error("init third_components error")
+		systemutil.ExitProcess(1)
+	}
 
 	startT := wintask.ManualStart
 	var winTask *taskmaster.RegisteredTask = nil

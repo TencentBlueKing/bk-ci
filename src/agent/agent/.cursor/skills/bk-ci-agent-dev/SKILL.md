@@ -220,6 +220,17 @@ AgentUpgrade(upgradeItem, hasBuild)
 - Windows daemon: `watch()` 在启动 agent 前调用 `waitForUpgradeFinish()` 获取并立即释放 `total-lock`（gate 模式），确保 upgrader 不在运行
 - Windows 文件替换: `replaceAgentFile()` 含重试机制（最多 10 次、递增间隔），防止因 Windows 文件锁导致 rename 失败
 
+**macOS Daemon 自升级**（`upgrader_darwin.go`）:
+- 替换文件在前、kill 进程在后（macOS 允许替换正在使用的文件，运行中进程保留旧 inode）
+- `totalLock` 在 `config.Init()` **之前**获取，最小化 CheckProcess 释放锁后的竞态窗口
+- Daemon 重启需满足三个前提条件（`restartDaemonViaLaunchd()`）:
+  1. `.path` 文件存在（新版 `snapshotEnvFiles()` 生成）
+  2. `.env` 文件存在（同上）
+  3. launchd plist 文件存在（通过 `devopsAgent install` 或 `install.sh` 注册）
+- 三个条件全部满足时使用 `launchctl kickstart -k`（modern）或 `unload+load`（legacy）重启 daemon
+- 任一条件不满足时**仅替换文件、不杀 daemon**，等下次手动重启生效，避免旧版本安装环境下 daemon 被杀后无法恢复
+- 新 daemon 启动后被 `totalLock` 阻塞，直到 upgrader 退出释放锁后才开始 watch agent
+
 **Windows SERVICE 模式下 Daemon 自升级**（参考 GitHub Actions Runner 的 SCM 崩溃恢复机制）:
 - `replaceDaemonFileByRename`: Windows 允许 rename 运行中的 exe，因此先 rename→.old 再 copy 新文件；失败时自动回滚
 - SCM 恢复选项在 `install` 时通过 `sc.exe failure` 配置: `restart/5000/restart/10000/restart/30000`
