@@ -240,7 +240,6 @@ class PipelineTemplateResourceDao {
         return with(TPipelineTemplateResourceVersion.T_PIPELINE_TEMPLATE_RESOURCE_VERSION) {
             dslContext.selectFrom(this)
                 .where(buildQueryCondition(commonCondition))
-                .limit(1)
                 .fetchOne()?.convert()
         }
     }
@@ -256,7 +255,6 @@ class PipelineTemplateResourceDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(TEMPLATE_ID.eq(templateId))
                 .and(VERSION.eq(version))
-                .limit(1)
                 .fetchOne()?.convert()
         }
     }

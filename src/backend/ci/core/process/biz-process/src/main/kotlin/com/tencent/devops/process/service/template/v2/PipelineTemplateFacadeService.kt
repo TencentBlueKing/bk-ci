@@ -1087,7 +1087,6 @@ class PipelineTemplateFacadeService @Autowired constructor(
 
         val templateId = pipelineTemplateRelated.templateId
         val templateInfo = pipelineTemplateInfoService.get(
-            projectId = projectId,
             templateId = templateId
         )
         val templateVersion = templateResource.version
