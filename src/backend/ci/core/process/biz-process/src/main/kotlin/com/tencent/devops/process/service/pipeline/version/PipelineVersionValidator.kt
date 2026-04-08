@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.pipeline.utils.ModelVarRefValidator
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.utils.ModelVarRefValidator
 import com.tencent.devops.common.web.utils.I18nUtil
