@@ -25,16 +25,6 @@ func TestLaunchdDomain(t *testing.T) {
 		{"login_mode", modeLogin, "gui/" + u.Uid},
 		{"background_mode", modeBackground, "user/" + u.Uid},
 	}
-	if u.Uid == "0" {
-		tests = []struct {
-			name string
-			mode string
-			want string
-		}{
-			{"root_login", modeLogin, "system"},
-			{"root_background", modeBackground, "system"},
-		}
-	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := launchdDomain(tt.mode)
@@ -71,16 +61,10 @@ func TestPlistDir(t *testing.T) {
 	if u == nil {
 		t.Skip("cannot get current user")
 	}
-	if u.Uid == "0" {
-		if dir != "/Library/LaunchDaemons" {
-			t.Errorf("plistDir() = %q for root, want /Library/LaunchDaemons", dir)
-		}
-	} else {
-		home, _ := os.UserHomeDir()
-		want := home + "/Library/LaunchAgents"
-		if dir != want {
-			t.Errorf("plistDir() = %q, want %q", dir, want)
-		}
+	home, _ := os.UserHomeDir()
+	want := home + "/Library/LaunchAgents"
+	if dir != want {
+		t.Errorf("plistDir() = %q, want %q", dir, want)
 	}
 }
 

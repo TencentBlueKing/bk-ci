@@ -11,10 +11,11 @@ macOS 支持两种安装模式：
 | `login` | `./devopsAgent install` | 默认模式，launchd gui 域，适合有桌面环境的机器 |
 | `background` | `./devopsAgent install background` | launchd 无头模式，适合 SSH/CI/无桌面环境 |
 
-两种模式都通过 launchd 管理服务生命周期，区别在于 launchd domain：
+两种模式都通过 launchd LaunchAgent 管理服务生命周期，区别在于 launchd domain：
 - `login` → `gui/{UID}`（需要桌面会话）
 - `background` → `user/{UID}`（无头模式，类似 GitHub Actions Runner）
-- Root → `system`
+
+> **Root 用户说明**：macOS 上 Root 与普通用户的处理方式完全一致，均使用 `~/Library/LaunchAgents/`（而非 `/Library/LaunchDaemons/`）。macOS 的 LaunchDaemon（Root 级服务）无法访问用户 Keychain、桌面会话和 iOS Simulator，不适合 CI 构建场景。**非必要场景建议不使用root，macos的root受限制很多**
 
 `install`/`start` 时自动快照当前 shell 的 PATH 和常用环境变量到 `.path`/`.env` 文件，daemon 启动时加载，解决 launchd 极简环境下构建进程找不到开发工具的问题。
 
@@ -48,9 +49,7 @@ macOS 支持两种安装模式：
 - 不依赖用户桌面登录
 - `RunAtLoad=true` 支持开机自启
 
-launchd plist 文件位置：
-- 非 Root：`~/Library/LaunchAgents/devops_agent_{id}.plist`
-- Root：`/Library/LaunchDaemons/devops_agent_{id}.plist`
+launchd plist 文件位置：`~/Library/LaunchAgents/devops_agent_{id}.plist`
 
 启停命令：
 ```bash
@@ -147,7 +146,7 @@ $ ./devopsAgent status
   服务名:                  devops_agent_abc123
   当前用户:                 builder
   安装模式:                 BACKGROUND
-  运行模式:                 普通用户 (LaunchAgents, 域: user/501)
+  运行模式:                 LaunchAgents (域: user/501)
   Plist 文件:              /Users/builder/Library/LaunchAgents/devops_agent_abc123.plist ✓
   launchd 状态:            已加载, 运行中 (PID 1234) ✓
   Daemon PID:             1234 (运行中)

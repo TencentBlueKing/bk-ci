@@ -258,11 +258,9 @@ func probeBootstrapSupport() bool {
 // launchdDomain returns the launchctl domain target for the given mode.
 // LOGIN uses "gui/UID" (requires logged-in GUI session).
 // BACKGROUND uses "user/UID" (works headless/SSH, matching GitHub Actions Runner).
-// Root always uses "system".
+// Root is treated the same as any other user (LaunchAgent, not LaunchDaemon),
+// consistent with GitLab Runner / GitHub Actions Runner / Azure DevOps Agent.
 func launchdDomain(mode string) string {
-	if isRoot() {
-		return "system"
-	}
 	uid := currentUID()
 	if mode == modeBackground {
 		return "user/" + uid
@@ -283,9 +281,6 @@ func serviceTarget(serviceName, mode string) string {
 }
 
 func plistDir() string {
-	if isRoot() {
-		return "/Library/LaunchDaemons"
-	}
 	home, _ := os.UserHomeDir()
 	return filepath.Join(home, "Library", "LaunchAgents")
 }
@@ -332,11 +327,7 @@ func writePlist(workDir, serviceName, mode string) error {
 		return cliErrorf("write plist failed: %v", "写入 plist 失败: %v", err)
 	}
 
-	level := msg("user-level (LaunchAgents)", "用户级 (LaunchAgents)")
-	if isRoot() {
-		level = msg("system-level (LaunchDaemons)", "系统级 (LaunchDaemons)")
-	}
-	printStep(msgf("Created %s (%s, mode: %s)", "已创建 %s (%s, 模式: %s)", pp, level, mode))
+	printStep(msgf("Created %s (LaunchAgents, mode: %s)", "已创建 %s (LaunchAgents, 模式: %s)", pp, mode))
 	return nil
 }
 
@@ -409,11 +400,10 @@ func removePlist(serviceName string) {
 	}
 }
 
+// otherPlistPath returns the legacy LaunchDaemons path for cleanup.
+// Older versions placed root plist into /Library/LaunchDaemons; this
+// lets cleanupLegacyPlist remove it when upgrading.
 func otherPlistPath(serviceName string) string {
-	if isRoot() {
-		home, _ := os.UserHomeDir()
-		return filepath.Join(home, "Library", "LaunchAgents", serviceName+".plist")
-	}
 	return filepath.Join("/Library/LaunchDaemons", serviceName+".plist")
 }
 

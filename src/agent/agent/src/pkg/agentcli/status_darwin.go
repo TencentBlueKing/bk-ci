@@ -101,11 +101,7 @@ func handleStatus(workDir string) error {
 	statusLine(msg("Install mode", "安装模式"), installMode)
 
 	domain := launchdDomain(installMode)
-	if isRoot() {
-		statusLine(msg("Run mode", "运行模式"), msgf("root (LaunchDaemons, domain: %s)", "root (LaunchDaemons, 域: %s)", domain))
-	} else {
-		statusLine(msg("Run mode", "运行模式"), msgf("user (LaunchAgents, domain: %s)", "普通用户 (LaunchAgents, 域: %s)", domain))
-	}
+	statusLine(msg("Run mode", "运行模式"), msgf("LaunchAgents (domain: %s)", "LaunchAgents (域: %s)", domain))
 
 	if serviceName != "" {
 		pp := plistPath(serviceName)

@@ -116,9 +116,9 @@
 
 验证：
 
-- root → `/Library/LaunchDaemons`
-- 非 root → `~/Library/LaunchAgents`
+- root 和非 root 均使用 `~/Library/LaunchAgents`（不使用 `/Library/LaunchDaemons`）
 - `status` 中 plist 路径正确
+- 从旧版 Root LaunchDaemon 升级时，`cleanupLegacyPlist` 自动清理 `/Library/LaunchDaemons` 中的旧 plist
 
 ### 4.2 start / stop / uninstall
 
