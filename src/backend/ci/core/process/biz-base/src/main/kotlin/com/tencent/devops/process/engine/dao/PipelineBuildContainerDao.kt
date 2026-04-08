@@ -164,7 +164,12 @@ class PipelineBuildContainerDao {
                     .set(COST, it.cost)
                     .set(EXECUTE_COUNT, it.executeCount)
                     .set(CONDITIONS, it.controlOption.let { self -> JsonUtil.toJson(self, formatted = false) })
-                    .where(BUILD_ID.eq(it.buildId).and(STAGE_ID.eq(it.stageId)).and(SEQ.eq(it.seq)))
+                    .where(
+                        BUILD_ID.eq(it.buildId)
+                            .and(PROJECT_ID.eq(it.projectId))
+                            .and(STAGE_ID.eq(it.stageId))
+                            .and(SEQ.eq(it.seq))
+                    )
                     .execute()
             }
         }

@@ -244,6 +244,7 @@ class PipelineTemplateResourceService @Autowired constructor(
     ): PipelineTemplateResource? {
         val pipelineTemplateInfo = pipelineTemplateInfoDao.get(
             dslContext = dslContext,
+            projectId = projectId,
             templateId = pipelineTemplateRelated.templateId
         ) ?: return null
         return if (pipelineTemplateInfo.mode == TemplateType.CONSTRAINT) {

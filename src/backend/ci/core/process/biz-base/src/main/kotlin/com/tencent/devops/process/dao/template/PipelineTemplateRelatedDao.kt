@@ -339,6 +339,7 @@ class PipelineTemplateRelatedDao {
         return with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             dslContext.selectFrom(this)
                 .where(buildQueryCondition(condition))
+                .limit(1)
                 .fetchOne()?.convert()
         }
     }

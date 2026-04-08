@@ -118,6 +118,7 @@ class TemplatePipelineDao {
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(INSTANCE_TYPE.eq(instanceType))
                 .and(PROJECT_ID.eq(projectId))
+                .limit(1)
                 .fetchOne()
         }
     }

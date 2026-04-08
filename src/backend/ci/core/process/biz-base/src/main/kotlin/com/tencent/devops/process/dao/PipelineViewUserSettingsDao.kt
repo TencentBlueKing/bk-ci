@@ -40,6 +40,7 @@ class PipelineViewUserSettingsDao {
             return dslContext.selectFrom(this)
                 .where(USER_ID.eq(userId))
                 .and(PROJECT_ID.eq(projectId))
+                .limit(1)
                 .fetchOne()
         }
     }
