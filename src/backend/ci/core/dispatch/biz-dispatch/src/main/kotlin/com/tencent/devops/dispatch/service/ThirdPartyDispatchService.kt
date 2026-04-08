@@ -772,13 +772,13 @@ class ThirdPartyDispatchService @Autowired constructor(
 
     /**
      * 按需获取 agent 标签映射。仅当策略中包含 labelSelector 时才发起 RPC 调用。
-     * @return agentId -> 该 agent 拥有的 tagValueId 集合
+     * @return agentId -> Map<tagKeyId, List<tagValueName>>
      */
     private fun fetchAgentTagValues(
         projectId: String,
         agents: List<ThirdPartyAgent>,
         strategies: List<DispatchStrategyConfig>
-    ): Map<String, Set<Long>> {
+    ): Map<String, Map<Long, List<String>>> {
         val needLabels = strategies.any { !it.labelSelector.isNullOrEmpty() }
         if (!needLabels) return emptyMap()
 
@@ -787,7 +787,7 @@ class ThirdPartyDispatchService @Autowired constructor(
 
         val nodeTagMap = try {
             client.get(ServiceThirdPartyAgentResource::class)
-                .fetchNodeTagValueIds(projectId, nodeHashIds)
+                .fetchNodeTagKeyValues(projectId, nodeHashIds)
                 .data ?: emptyMap()
         } catch (e: Exception) {
             logger.warn("fetchAgentTagValues failed: ${e.message}")
@@ -799,9 +799,9 @@ class ThirdPartyDispatchService @Autowired constructor(
             agent.nodeId?.let { nodeIdToAgentId[HashUtil.decodeIdToLong(it)] = agent.agentId }
         }
 
-        val result = mutableMapOf<String, Set<Long>>()
-        nodeTagMap.forEach { (nodeId, tagValueIds) ->
-            nodeIdToAgentId[nodeId]?.let { agentId -> result[agentId] = tagValueIds }
+        val result = mutableMapOf<String, Map<Long, List<String>>>()
+        nodeTagMap.forEach { (nodeId, keyValues) ->
+            nodeIdToAgentId[nodeId]?.let { agentId -> result[agentId] = keyValues }
         }
         return result
     }

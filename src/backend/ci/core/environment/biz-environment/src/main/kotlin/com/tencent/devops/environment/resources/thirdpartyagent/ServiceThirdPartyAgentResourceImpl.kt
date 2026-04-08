@@ -30,6 +30,8 @@ package com.tencent.devops.environment.resources.thirdpartyagent
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
@@ -78,7 +80,8 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     private val slaveGatewayService: SlaveGatewayService,
     private val nodeService: NodeService,
     private val nodeTagService: NodeTagService,
-    private val agentService: ThirdPartAgentService
+    private val agentService: ThirdPartAgentService,
+    private val environmentPermissionService: EnvironmentPermissionService
 ) : ServiceThirdPartyAgentResource {
     override fun getAgentById(projectId: String, agentId: String): AgentResult<ThirdPartyAgent?> {
         return thirdPartyAgentService.getAgent(projectId, agentId)
@@ -358,20 +361,31 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         )
     }
 
-    override fun fetchNodeTagValueIds(
+    override fun fetchNodeTagKeyValues(
         projectId: String,
         nodeHashIds: Set<String>
-    ): Result<Map<Long, Set<Long>>> {
+    ): Result<Map<Long, Map<Long, List<String>>>> {
         val nodeIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }.toSet()
         val tagMap = nodeTagService.fetchNodeTags(projectId, nodeIds)
-        val result = mutableMapOf<Long, Set<Long>>()
+        val result = mutableMapOf<Long, Map<Long, List<String>>>()
         tagMap.forEach { (nodeId, tags) ->
-            val valueIds = mutableSetOf<Long>()
+            val keyValues = mutableMapOf<Long, MutableList<String>>()
             tags.forEach { tag ->
-                tag.tagValues.forEach { valueIds.add(it.tagValueId) }
+                val valueNames = keyValues.getOrPut(tag.tagKeyId) { mutableListOf() }
+                tag.tagValues.forEach { valueNames.add(it.tagValueName) }
             }
-            result[nodeId] = valueIds
+            result[nodeId] = keyValues
         }
         return Result(result)
+    }
+
+    override fun checkEnvEditPermission(
+        userId: String,
+        projectId: String,
+        envId: Long
+    ): Result<Boolean> {
+        return Result(
+            environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)
+        )
     }
 }

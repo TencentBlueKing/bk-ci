@@ -503,14 +503,29 @@ interface ServiceThirdPartyAgentResource {
         projectId: String
     ): Result<List<NodeTag>>
 
-    @Operation(summary = "按节点ID批量查询节点标签值ID集合")
+    @Operation(summary = "按节点ID批量查询节点标签键值对")
     @POST
-    @Path("/projects/{projectId}/nodes/tagValueIds")
-    fun fetchNodeTagValueIds(
+    @Path("/projects/{projectId}/nodes/tagKeyValues")
+    fun fetchNodeTagKeyValues(
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "节点ID列表", required = true)
         nodeHashIds: Set<String>
-    ): Result<Map<Long, Set<Long>>>
+    ): Result<Map<Long, Map<Long, List<String>>>>
+
+    @Operation(summary = "校验用户是否有环境编辑权限")
+    @GET
+    @Path("/projects/{projectId}/envs/{envId}/checkEditPermission")
+    fun checkEnvEditPermission(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "环境ID", required = true)
+        @PathParam("envId")
+        envId: Long
+    ): Result<Boolean>
 }

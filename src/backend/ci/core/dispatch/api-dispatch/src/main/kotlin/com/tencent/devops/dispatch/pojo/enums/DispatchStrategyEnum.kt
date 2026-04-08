@@ -16,3 +16,15 @@ enum class DefaultStrategyCode(
 enum class StrategyScope { PRE_BUILD, ALL }
 
 enum class NodeRule { IDLE, AVAILABLE }
+
+enum class LabelOp(val symbol: String) {
+    EQUAL("=="),
+    GTE(">="),
+    LTE("<="),
+    GT(">"),
+    LT("<"),
+    START_WITH("StartWith"),
+    END_WITH("EndWith"),
+    CONTAINS("Contains"),
+    IN("in");
+}

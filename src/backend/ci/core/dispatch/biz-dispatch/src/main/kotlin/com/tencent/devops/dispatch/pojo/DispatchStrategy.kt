@@ -1,14 +1,16 @@
 package com.tencent.devops.dispatch.pojo
 
 import com.tencent.devops.dispatch.pojo.enums.DefaultStrategyCode
+import com.tencent.devops.dispatch.pojo.enums.LabelOp
 import com.tencent.devops.dispatch.pojo.enums.NodeRule
 import com.tencent.devops.dispatch.pojo.enums.StrategyScope
 import com.tencent.devops.dispatch.pojo.enums.StrategyType
 
 data class LabelSelector(
     val tagKeyId: Long,
-    val op: String,
-    val tagValueIds: Set<Long>
+    val tagKeyName: String? = null,
+    val op: LabelOp,
+    val values: List<String>
 )
 
 data class DispatchStrategyConfig(

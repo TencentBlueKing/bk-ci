@@ -19,6 +19,7 @@ import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "USER_DISPATCH_ENV_STRATEGY", description = "环境调度策略")
@@ -29,31 +30,31 @@ interface UserDispatchEnvStrategyResource {
 
     @Operation(summary = "获取环境的调度策略列表")
     @GET
-    @Path("/projects/{projectId}/envs/{envId}/strategies")
+    @Path("/strategies/list")
     fun listStrategies(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
+        @QueryParam("projectId")
         projectId: String,
         @Parameter(description = "环境ID", required = true)
-        @PathParam("envId")
+        @QueryParam("envId")
         envId: Long
     ): Result<List<DispatchEnvStrategyVO>>
 
     @Operation(summary = "创建自定义调度策略")
     @POST
-    @Path("/projects/{projectId}/envs/{envId}/strategies")
+    @Path("/strategies/create")
     fun createStrategy(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
+        @QueryParam("projectId")
         projectId: String,
         @Parameter(description = "环境ID", required = true)
-        @PathParam("envId")
+        @QueryParam("envId")
         envId: Long,
         @Parameter(description = "创建请求", required = true)
         request: DispatchEnvStrategyCreateReq
@@ -61,19 +62,19 @@ interface UserDispatchEnvStrategyResource {
 
     @Operation(summary = "更新调度策略")
     @PUT
-    @Path("/projects/{projectId}/envs/{envId}/strategies/{strategyId}")
+    @Path("/strategies/update")
     fun updateStrategy(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
+        @QueryParam("projectId")
         projectId: String,
         @Parameter(description = "环境ID", required = true)
-        @PathParam("envId")
+        @QueryParam("envId")
         envId: Long,
         @Parameter(description = "策略ID", required = true)
-        @PathParam("strategyId")
+        @QueryParam("strategyId")
         strategyId: Long,
         @Parameter(description = "更新请求", required = true)
         request: DispatchEnvStrategyUpdateReq
@@ -81,34 +82,34 @@ interface UserDispatchEnvStrategyResource {
 
     @Operation(summary = "删除调度策略")
     @DELETE
-    @Path("/projects/{projectId}/envs/{envId}/strategies/{strategyId}")
+    @Path("/strategies/delete")
     fun deleteStrategy(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
+        @QueryParam("projectId")
         projectId: String,
         @Parameter(description = "环境ID", required = true)
-        @PathParam("envId")
+        @QueryParam("envId")
         envId: Long,
         @Parameter(description = "策略ID", required = true)
-        @PathParam("strategyId")
+        @QueryParam("strategyId")
         strategyId: Long
     ): Result<Boolean>
 
     @Operation(summary = "批量删除调度策略")
     @DELETE
-    @Path("/projects/{projectId}/envs/{envId}/strategies")
+    @Path("/strategies/batchDelete")
     fun batchDeleteStrategy(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
+        @QueryParam("projectId")
         projectId: String,
         @Parameter(description = "环境ID", required = true)
-        @PathParam("envId")
+        @QueryParam("envId")
         envId: Long,
         @Parameter(description = "策略ID列表", required = true)
         strategyIds: Set<Long>
@@ -116,16 +117,16 @@ interface UserDispatchEnvStrategyResource {
 
     @Operation(summary = "调整调度策略排序")
     @POST
-    @Path("/projects/{projectId}/envs/{envId}/strategies/reorder")
+    @Path("/strategies/reorder")
     fun reorderStrategies(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
+        @QueryParam("projectId")
         projectId: String,
         @Parameter(description = "环境ID", required = true)
-        @PathParam("envId")
+        @QueryParam("envId")
         envId: Long,
         @Parameter(description = "排序请求", required = true)
         request: DispatchEnvStrategyReorderReq

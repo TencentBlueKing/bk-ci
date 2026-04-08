@@ -96,8 +96,8 @@ class EnvDispatchStrategyService @Autowired constructor(
             ?: throw InvalidParamException("Strategy not found: $id")
 
         if (existing.strategyType == StrategyType.DEFAULT) {
-            if (scope != null || nodeRule != null || labelSelector != null) {
-                throw InvalidParamException("Default strategy only allows changing enabled and priority")
+            if (strategyName != null || scope != null || nodeRule != null || labelSelector != null) {
+                throw InvalidParamException("Default strategy only allows toggling enabled")
             }
             if (enabled == false) {
                 enforceDefaultProtection(existing.projectId, existing.envId)

@@ -445,7 +445,7 @@ class TPAEnvQueueService @Autowired constructor(
         projectId: String,
         agents: List<ThirdPartyAgent>,
         strategies: List<DispatchStrategyConfig>
-    ): Map<String, Set<Long>> {
+    ): Map<String, Map<Long, List<String>>> {
         val needLabels = strategies.any { !it.labelSelector.isNullOrEmpty() }
         if (!needLabels) return emptyMap()
 
@@ -454,7 +454,7 @@ class TPAEnvQueueService @Autowired constructor(
 
         val nodeTagMap = try {
             client.get(ServiceThirdPartyAgentResource::class)
-                .fetchNodeTagValueIds(projectId, nodeHashIds)
+                .fetchNodeTagKeyValues(projectId, nodeHashIds)
                 .data ?: emptyMap()
         } catch (e: Exception) {
             logger.warn("fetchAgentTagValues failed: ${e.message}")
@@ -466,9 +466,9 @@ class TPAEnvQueueService @Autowired constructor(
             agent.nodeId?.let { nodeIdToAgentId[HashUtil.decodeIdToLong(it)] = agent.agentId }
         }
 
-        val result = mutableMapOf<String, Set<Long>>()
-        nodeTagMap.forEach { (nodeId, tagValueIds) ->
-            nodeIdToAgentId[nodeId]?.let { agentId -> result[agentId] = tagValueIds }
+        val result = mutableMapOf<String, Map<Long, List<String>>>()
+        nodeTagMap.forEach { (nodeId, keyValues) ->
+            nodeIdToAgentId[nodeId]?.let { agentId -> result[agentId] = keyValues }
         }
         return result
     }

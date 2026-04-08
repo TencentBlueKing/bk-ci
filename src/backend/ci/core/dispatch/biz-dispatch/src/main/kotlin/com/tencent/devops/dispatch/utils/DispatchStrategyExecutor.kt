@@ -2,6 +2,7 @@ package com.tencent.devops.dispatch.utils
 
 import com.tencent.devops.dispatch.pojo.DispatchStrategyConfig
 import com.tencent.devops.dispatch.pojo.LabelSelector
+import com.tencent.devops.dispatch.pojo.enums.LabelOp
 import com.tencent.devops.dispatch.pojo.enums.NodeRule
 import com.tencent.devops.dispatch.pojo.enums.StrategyScope
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
@@ -24,65 +25,59 @@ class DispatchStrategyExecutor(
         val preBuildAgentIds: Set<String>,
         val agentRunningCounts: Map<String, Int>,
         val dockerRunningCounts: Map<String, Int>,
-        /** agentId -> 该 agent 拥有的 tagValueId 集合 */
-        val agentTagValues: Map<String, Set<Long>>,
+        /** agentId -> 该 agent 拥有的标签键值: Map<tagKeyId, List<tagValueName>> */
+        val agentTagValues: Map<String, Map<Long, List<String>>>,
         val isDockerBuilder: Boolean
     )
 
     private val hasTryAgents = mutableSetOf<String>()
 
-    /**
-     * 按策略优先级依次尝试匹配 agent。
-     *
-     * @param strategies 按 priority 升序排列的策略列表（仅传入 enabled 的）
-     * @param tryAgent 尝试将任务分配给该 agent 的回调，
-     *        返回 true 表示成功（如 agentInQueue / genAgentBuild）
-     * @return 成功分配的 agent，或 null
-     */
     fun execute(
         strategies: List<DispatchStrategyConfig>,
         tryAgent: (ThirdPartyAgent) -> Boolean
     ): ThirdPartyAgent? {
-        pipelineLog("[Strategy] Start matching, ${strategies.size} strategies, " +
+        val envId = strategies.firstOrNull()?.envId
+        val tag = "[Strategy|env:$envId]"
+
+        pipelineLog("$tag Start matching, ${strategies.size} strategies, " +
             "${input.allAgents.size} agents, preBuild=${input.preBuildAgentIds.size}")
 
         for ((index, strategy) in strategies.withIndex()) {
             if (!strategy.enabled) continue
+            val lv = "$tag[Lv.${index + 1}]"
 
-            pipelineLog("[Strategy Lv.${index + 1}] " +
-                "\"${strategy.strategyName}\" scope=${strategy.scope} rule=${strategy.nodeRule}" +
+            pipelineLog("$lv \"${strategy.strategyName}\" scope=${strategy.scope} rule=${strategy.nodeRule}" +
                 if (!strategy.labelSelector.isNullOrEmpty()) " labels=${strategy.labelSelector.size}" else "")
 
             val candidates = getCandidates(strategy.scope)
             if (candidates.isEmpty()) {
-                pipelineLog("[Strategy Lv.${index + 1}] No candidates for scope=${strategy.scope}, skip")
+                pipelineLog("$lv No candidates for scope=${strategy.scope}, skip")
                 continue
             }
 
             val filtered = filterByLabels(candidates, strategy.labelSelector)
             if (filtered.isEmpty()) {
-                pipelineLog("[Strategy Lv.${index + 1}] All ${candidates.size} agents filtered out by labels, skip")
+                pipelineLog("$lv All ${candidates.size} agents filtered out by labels, skip")
                 continue
             }
             if (!strategy.labelSelector.isNullOrEmpty() && filtered.size < candidates.size) {
-                pipelineLog("[Strategy Lv.${index + 1}] Label filter: ${candidates.size} -> ${filtered.size} agents")
+                pipelineLog("$lv Label filter: ${candidates.size} -> ${filtered.size} agents")
             }
 
             val sorted = sortByLoad(filtered)
-            val matched = matchAndTry(sorted, strategy.nodeRule, tryAgent, index + 1)
+            val matched = matchAndTry(sorted, strategy.nodeRule, tryAgent, lv)
             if (matched != null) {
-                pipelineLog("[Strategy Lv.${index + 1}] Matched agent " +
-                    "[${matched.agentId}]${matched.hostname}/${matched.ip}")
+                pipelineLog("$lv Matched agent [${matched.agentId}]${matched.hostname}/${matched.ip}")
                 logger.info(
-                    "DispatchStrategyExecutor|matched|strategy=${strategy.strategyName}" +
+                    "DispatchStrategyExecutor|env:$envId|matched|strategy=${strategy.strategyName}" +
                         "|agent=${matched.agentId}|scope=${strategy.scope}|rule=${strategy.nodeRule}"
                 )
                 return matched
             }
-            pipelineLog("[Strategy Lv.${index + 1}] No agent matched for rule=${strategy.nodeRule}")
+            pipelineLog("$lv No agent matched for rule=${strategy.nodeRule}")
         }
 
-        pipelineLog("[Strategy] All strategies exhausted, no agent available")
+        pipelineLog("$tag All strategies exhausted, no agent available")
         return null
     }
 
@@ -102,11 +97,42 @@ class DispatchStrategyExecutor(
     ): List<ThirdPartyAgent> {
         if (labelSelector.isNullOrEmpty()) return agents
         return agents.filter { agent ->
-            val agentTags = input.agentTagValues[agent.agentId] ?: emptySet()
-            labelSelector.all { selector ->
-                selector.tagValueIds.any { it in agentTags }
-            }
+            val agentTags = input.agentTagValues[agent.agentId] ?: emptyMap()
+            labelSelector.all { selector -> matchLabel(selector, agentTags) }
         }
+    }
+
+    private fun matchLabel(
+        selector: LabelSelector,
+        agentTags: Map<Long, List<String>>
+    ): Boolean {
+        val agentValues = agentTags[selector.tagKeyId] ?: return false
+        val expected = selector.values
+        if (expected.isEmpty()) return false
+
+        return when (selector.op) {
+            LabelOp.IN -> agentValues.any { it in expected }
+            LabelOp.EQUAL -> expected.any { exp -> agentValues.any { it == exp } }
+            LabelOp.GT -> expected.any { exp -> agentValues.any { compareValues(it, exp) > 0 } }
+            LabelOp.GTE -> expected.any { exp -> agentValues.any { compareValues(it, exp) >= 0 } }
+            LabelOp.LT -> expected.any { exp -> agentValues.any { compareValues(it, exp) < 0 } }
+            LabelOp.LTE -> expected.any { exp -> agentValues.any { compareValues(it, exp) <= 0 } }
+            LabelOp.START_WITH -> expected.any { exp -> agentValues.any { it.startsWith(exp) } }
+            LabelOp.END_WITH -> expected.any { exp -> agentValues.any { it.endsWith(exp) } }
+            LabelOp.CONTAINS -> expected.any { exp -> agentValues.any { it.contains(exp) } }
+        }
+    }
+
+    /**
+     * 比较两个值：优先尝试数值比较，失败则回退到字符串字典序比较。
+     */
+    private fun compareValues(agentValue: String, expected: String): Int {
+        val aNum = agentValue.toDoubleOrNull()
+        val bNum = expected.toDoubleOrNull()
+        if (aNum != null && bNum != null) {
+            return aNum.compareTo(bNum)
+        }
+        return agentValue.compareTo(expected)
     }
 
     private fun sortByLoad(agents: List<ThirdPartyAgent>): List<AgentWithLoad> {
@@ -125,7 +151,7 @@ class DispatchStrategyExecutor(
         agents: List<AgentWithLoad>,
         nodeRule: NodeRule,
         tryAgent: (ThirdPartyAgent) -> Boolean,
-        level: Int
+        lv: String
     ): ThirdPartyAgent? {
         for (al in agents) {
             if (al.agent.agentId in hasTryAgents) continue
@@ -143,12 +169,12 @@ class DispatchStrategyExecutor(
             }
 
             if (!matched) {
-                pipelineLog("[Strategy Lv.$level] [${a.agentId}]${a.hostname}/${a.ip} " +
+                pipelineLog("$lv [${a.agentId}]${a.hostname}/${a.ip} " +
                     "$loadDesc -> ${nodeRule.name} not satisfied")
                 continue
             }
 
-            pipelineLog("[Strategy Lv.$level] [${a.agentId}]${a.hostname}/${a.ip} " +
+            pipelineLog("$lv [${a.agentId}]${a.hostname}/${a.ip} " +
                 "$loadDesc -> ${nodeRule.name} matched, trying to dispatch")
 
             hasTryAgents.add(al.agent.agentId)
@@ -156,7 +182,7 @@ class DispatchStrategyExecutor(
                 return al.agent
             }
 
-            pipelineLog("[Strategy Lv.$level] [${a.agentId}] dispatch failed, try next")
+            pipelineLog("$lv [${a.agentId}] dispatch failed, try next")
         }
         return null
     }
