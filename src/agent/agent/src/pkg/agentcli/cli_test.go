@@ -144,6 +144,8 @@ func TestPreserveSet(t *testing.T) {
 		".install_type",
 		".cert",
 		".debug",
+		".env",
+		".path",
 		"workspace",
 		agentBinary(),
 	}

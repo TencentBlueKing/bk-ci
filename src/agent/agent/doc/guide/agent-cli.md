@@ -18,8 +18,7 @@ devopsAgent <command> [options]
   reinstall [-y]            完全重装: 保留身份, 从服务端重新下载
   status                    运行状态 + 健康检查 (网络/磁盘，末尾附汇总)
 
-调试:
-  debug [on|off]            切换调试模式 (修改后需重启 Agent 生效)
+其他:
   version [-f]              打印版本号 (-f 显示完整信息)
   -h, --help                显示帮助
   (无参数)                   直接运行 agent

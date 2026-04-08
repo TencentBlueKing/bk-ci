@@ -32,7 +32,11 @@ package upgrader
 import (
 	"fmt"
 	"os"
+	"os/exec"
+	"os/user"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
@@ -57,19 +61,23 @@ const (
 
 func DoUpgradeAgent() error {
 	logs.Info("start upgrade agent")
+
+	// Acquire totalLock before config/third_components init to minimise the
+	// window between CheckProcess releasing totalLock and us re-acquiring it.
+	// Without this, the daemon's watch loop can slip in, find the agent dead,
+	// and relaunch it with the OLD binary before we replace files.
+	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock))
+	if err := totalLock.Lock(); err != nil {
+		logs.WithError(err).Error("get total lock failed, exit")
+		return errors.New("get total lock failed")
+	}
+	defer func() { totalLock.Unlock() }()
+
 	config.Init(false)
 	if err := third_components.Init(); err != nil {
 		logs.WithError(err).Error("init third_components error")
 		systemutil.ExitProcess(1)
 	}
-
-	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock))
-	err := totalLock.Lock()
-	if err = totalLock.Lock(); err != nil {
-		logs.WithError(err).Error("get total lock failed, exit")
-		return errors.New("get total lock failed")
-	}
-	defer func() { totalLock.Unlock() }()
 
 	daemonChange, _ := checkUpgradeFileChange(config.GetClientDaemonFile())
 	agentChange, _ := checkUpgradeFileChange(config.GetClienAgentFile())
@@ -86,15 +94,13 @@ func DoUpgradeAgent() error {
 	// If we kill first, the daemon immediately restarts the agent with
 	// the OLD binary (race condition).
 	if agentChange {
-		err = replaceAgentFile(config.GetClienAgentFile())
-		if err != nil {
+		if err := replaceAgentFile(config.GetClienAgentFile()); err != nil {
 			logs.WithError(err).Error("replace agent file failed")
 		}
 	}
 
 	if daemonChange {
-		err = replaceAgentFile(config.GetClientDaemonFile())
-		if err != nil {
+		if err := replaceAgentFile(config.GetClientDaemonFile()); err != nil {
 			logs.WithError(err).Error("replace daemon file failed")
 		}
 	}
@@ -105,6 +111,15 @@ func DoUpgradeAgent() error {
 
 	logs.Info("wait 2 seconds for agent to stop")
 	time.Sleep(2 * time.Second)
+
+	if daemonChange {
+		if err := restartDaemonViaLaunchd(); err != nil {
+			logs.WithError(err).Warn("skip daemon restart, file replaced on disk; " +
+				"new daemon will take effect on next manual restart")
+		} else {
+			logs.Info("daemon restarted via launchd")
+		}
+	}
 
 	logs.Info("agent upgrade done, upgrade process exiting")
 	return nil
@@ -219,4 +234,106 @@ func replaceAgentFile(fileName string) error {
 		return errors.Wrapf(err, "replaceAgentFile AtomicWriteFile %s error", dst)
 	}
 	return nil
+}
+
+// ── daemon restart via launchd (old-version safe) ────────────────────────
+
+const (
+	installModeLogin      = "LOGIN"
+	installModeBackground = "BACKGROUND"
+	installTypeFile       = ".install_type"
+)
+
+// restartDaemonViaLaunchd restarts the daemon through launchd.
+// It returns a non-nil error when no reliable restart path exists, in which
+// case the caller should NOT kill the daemon — the replaced binary on disk
+// will take effect on the next manual restart.
+//
+// Three preconditions must be met:
+//  1. A launchd plist exists (the service is managed by launchd).
+//  2. Both .path and .env env-snapshot files exist (created by the new
+//     install flow via snapshotEnvFiles). Without them, launchd would
+//     restart the daemon in a minimal environment, losing the user's
+//     PATH/JAVA_HOME/etc. that old installs relied on by inheriting the
+//     interactive shell.
+func restartDaemonViaLaunchd() error {
+	workDir := systemutil.GetWorkDir()
+
+	for _, name := range []string{".path", ".env"} {
+		p := filepath.Join(workDir, name)
+		if _, err := os.Stat(p); err != nil {
+			return fmt.Errorf("%s not found at %s; old install without env snapshot, "+
+				"launchd restart would lose user environment", name, p)
+		}
+	}
+
+	serviceName := "devops_agent_" + config.GAgentConfig.AgentId
+
+	pp := daemonPlistPath(serviceName)
+	if _, err := os.Stat(pp); err != nil {
+		return fmt.Errorf("plist not found at %s, cannot safely restart daemon", pp)
+	}
+
+	mode := readDaemonInstallMode()
+	domain := daemonLaunchdDomain(mode)
+	target := domain + "/" + serviceName
+
+	if hasDarwinModernLaunchctl() {
+		out, err := exec.Command("launchctl", "kickstart", "-k", target).CombinedOutput()
+		if err != nil {
+			return fmt.Errorf("launchctl kickstart -k %s failed: %s (%w)", target, strings.TrimSpace(string(out)), err)
+		}
+		return nil
+	}
+
+	// Legacy macOS (< 10.10): unload + load
+	_ = exec.Command("launchctl", "unload", pp).Run()
+	out, err := exec.Command("launchctl", "load", "-w", pp).CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("launchctl load %s failed: %s (%w)", pp, strings.TrimSpace(string(out)), err)
+	}
+	return nil
+}
+
+func daemonPlistPath(serviceName string) string {
+	if os.Geteuid() == 0 {
+		return filepath.Join("/Library/LaunchDaemons", serviceName+".plist")
+	}
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, "Library", "LaunchAgents", serviceName+".plist")
+}
+
+func daemonLaunchdDomain(mode string) string {
+	if os.Geteuid() == 0 {
+		return "system"
+	}
+	u, _ := user.Current()
+	uid := "0"
+	if u != nil {
+		uid = u.Uid
+	}
+	if mode == installModeBackground {
+		return "user/" + uid
+	}
+	return "gui/" + uid
+}
+
+func readDaemonInstallMode() string {
+	data, err := os.ReadFile(filepath.Join(systemutil.GetWorkDir(), installTypeFile))
+	if err != nil {
+		return installModeLogin
+	}
+	m := strings.TrimSpace(string(data))
+	if strings.EqualFold(m, installModeBackground) {
+		return installModeBackground
+	}
+	return installModeLogin
+}
+
+// hasDarwinModernLaunchctl probes whether launchctl supports the modern
+// bootstrap/bootout/kickstart API (macOS 10.10+).
+func hasDarwinModernLaunchctl() bool {
+	out, _ := exec.Command("launchctl", "bootstrap").CombinedOutput()
+	s := strings.ToLower(string(out))
+	return !strings.Contains(s, "unrecognized") && !strings.Contains(s, "unknown")
 }

@@ -63,7 +63,7 @@ func isRoot() bool {
 
 func handleInstall(workDir string, args []string) error {
 	mode := ""
-	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
+	if len(args) > 0 {
 		mode = args[0]
 	}
 
@@ -80,6 +80,7 @@ func handleInstall(workDir string, args []string) error {
 
 	printStep(msg("Step 1: preparing work directory ...", "步骤 1: 准备工作目录 ..."))
 	prepareWorkDir(workDir)
+	snapshotEnvFiles(workDir)
 
 	serviceName, err := getServiceName(workDir)
 	if err != nil {
@@ -147,7 +148,7 @@ func cleanupMode(workDir, mode string) {
 	stopProcesses(workDir)
 }
 
-// resolveInstallMode determines the effective install mode from the --mode flag value.
+// resolveInstallMode determines the effective install mode from the positional argument.
 func resolveInstallMode(flagMode string) (string, error) {
 	if flagMode == "" {
 		if isRoot() {
@@ -230,6 +231,8 @@ func handleUninstall(workDir string) error {
 // ── start / stop (auto-detect mode via .install_type) ────────────────────
 
 func handleStart(workDir string) error {
+	snapshotEnvFiles(workDir)
+
 	mode := readInstallMode(workDir)
 	serviceName, err := getServiceName(workDir)
 	if err != nil {

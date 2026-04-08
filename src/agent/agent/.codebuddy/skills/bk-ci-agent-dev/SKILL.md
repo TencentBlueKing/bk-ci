@@ -41,7 +41,7 @@ src/agent/agent/
 │   │   ├── imagedebug/         # Docker镜像调试
 │   │   ├── mcp/                # MCP Server（Streamable HTTP，使用 go-mcp SDK）
 │   │   ├── pipeline/           # 流水线引擎(实验性)
-│   │   ├── envs/               # 环境变量管理
+│   │   ├── envs/               # 环境变量管理（含 .env/.path 文件加载）
 │   │   ├── cron/               # 定时任务
 │   │   ├── collector/          # 系统信息采集(Telegraf)
 │   │   ├── exiterror/          # 结构化退出错误
@@ -52,7 +52,7 @@ src/agent/agent/
 │   │       ├── fileutil/       # 文件操作
 │   │       ├── httputil/       # HTTP客户端
 │   │       ├── process/        # 进程管理(Windows Job Object)
-│   │       ├── systemutil/     # 系统工具(路径/权限/目录)
+│   │       ├── systemutil/     # 系统工具(路径/权限/目录/用户检测fallback)
 │   │       └── wintask/        # Windows服务检测
 │   └── third_components/       # 第三方组件管理(JDK/Worker)
 ├── internal/
@@ -194,6 +194,14 @@ devops.imagedebug.portrange=30000-32767 # 调试端口范围
 
 **事件总线**: `config.EventBus` — 发布订阅模式，目前仅 `IpEvent`(IP变更通知)
 
+**环境文件** (Linux/macOS，解决 systemd/launchd 服务模式下环境变量缺失):
+- `.path` — 单行 PATH 值，`install`/`start` 时从用户交互式 shell 快照
+- `.env` — `KEY=VALUE` 格式，采集 `JAVA_HOME`、`GRADLE_HOME`、`GOROOT` 等常用开发变量
+- daemon 启动时由 `envs.LoadEnvFiles()` 读取并通过 `os.Setenv()` 合并到进程环境（`.path` 中的路径与当前 PATH 去重合并）
+- 构建进程通过 `cmd.Env = envs.Envs()` 继承这些环境变量；Docker 构建不受影响（容器环境变量通过 `-e` 显式传递）
+- 用户可手动编辑，`stop` + `start` 后重新采集生效
+- Windows 不需要（已有注册表轮询机制）
+
 ### 升级机制 (`pkg/upgrade/`)
 
 ```
@@ -217,6 +225,17 @@ AgentUpgrade(upgradeItem, hasBuild)
 **Daemon 重启机制**（升级后如何启动新 Agent）:
 - **Linux/macOS**: Daemon 通过 5 秒 ticker + `flock` 文件锁轮询检测 Agent 存活，发现 Agent 锁可获取即重新拉起
 - **Windows**: Daemon 在 Agent 退出后调用 `waitBeforeRestart()` — 先等 3 秒 base delay（防止重启风暴），然后每 500ms 轮询 total-lock（TryLock），锁可用则立即重启，最长等 30 秒兜底超时。接着 `waitForUpgradeFinish()` 再次确认 upgrader 完成后启动新 Agent
+
+**macOS Daemon 自升级**（`upgrader_darwin.go`）:
+- 替换文件在前、kill 进程在后（macOS 允许替换正在使用的文件，运行中进程保留旧 inode）
+- `totalLock` 在 `config.Init()` **之前**获取，最小化 CheckProcess 释放锁后的竞态窗口
+- Daemon 重启需满足三个前提条件（`restartDaemonViaLaunchd()`）:
+  1. `.path` 文件存在（新版 `snapshotEnvFiles()` 生成）
+  2. `.env` 文件存在（同上）
+  3. launchd plist 文件存在（通过 `devopsAgent install` 或 `install.sh` 注册）
+- 三个条件全部满足时使用 `launchctl kickstart -k`（modern）或 `unload+load`（legacy）重启 daemon
+- 任一条件不满足时**仅替换文件、不杀 daemon**，等下次手动重启生效，避免旧版本安装环境下 daemon 被杀后无法恢复
+- 新 daemon 启动后被 `totalLock` 阻塞，直到 upgrader 退出释放锁后才开始 watch agent
 
 ## 跨平台开发指南
 
@@ -250,22 +269,22 @@ AgentUpgrade(upgradeItem, hasBuild)
 |------|------|---------|
 | **进程管理** | `Setpgid` + `syscall.Kill(-pgId)` | Windows Job Object (`JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`) |
 | **构建启动** | 写Shell脚本 → `/bin/bash` 执行 | 直接 `java -jar` |
-| **用户切换** | `syscall.Credential{Uid, Gid}` | 不支持(空操作) |
-| **环境变量** | `os.Environ()` | 注册表轮询(每3秒) + PATH合并 |
+| **用户切换** | Linux only: `syscall.Credential{Uid, Gid}` + UID 比较 | macOS/Windows: 空操作 |
+| **环境变量** | `.env`/`.path` 文件加载 + `os.Environ()` | 注册表轮询(每3秒) + PATH合并 |
 | **Docker** | 完整支持 | 不支持 |
 | **文件权限** | `os.Chmod` | 空操作 |
 | **进程替换** | 文件替换 + 进程信号 | 等待退出 + 文件替换 |
 | **Daemon 重启延迟** | 5s ticker 轮询 flock | 3s base + 500ms 轮询 total-lock（30s 兜底） |
 | **硬件信息采集** | Linux/Windows 可走通用 `ghw` 采集；macOS 需用 `_darwin.go` 单独兜底，当前跳过 GPU 采集以规避 `ghw` 未实现报错 | GPU 标签主要用于指标补充，不应影响 Agent 启动 |
 
-### 安装模式 (`install --mode`)
+### 安装模式 (`install [mode]`)
 
-所有平台的 `install` 命令通过 `--mode` 选择安装模式。如果目标模式与当前已安装模式相同则跳过；不同则自动先 `uninstall` 再安装。
+所有平台的 `install` 命令通过位置参数选择安装模式。如果目标模式与当前已安装模式相同则跳过；不同则自动先 `uninstall` 再安装。
 
 | 平台 | 可选模式 | 默认 | 说明 |
 |------|---------|------|------|
 | **Linux** | `service` / `user` / `direct` | root: `service`; 非 root: `direct` | `service` = 系统级 systemd (`/etc/systemd/system/`)；`user` = 用户级 systemd (`~/.config/systemd/user/`, 需 `loginctl enable-linger`)；`direct` = 直接启动 |
-| **macOS** | `login` / `background` | `login` | `login` = 需登录桌面, 直接启动；`background` = 无头模式 (`user/UID` 域 + `LimitLoadToSessionType=Background`) |
+| **macOS** | `login` / `background` | `login` | 两种模式均通过 launchd 管理；`login` = `gui/UID` 域 (需桌面会话)；`background` = `user/UID` 域 (无头模式) |
 | **Windows** | `service` / `session` / `task` | `service` | `service` = Windows 服务；`session` = 服务 + 桌面会话；`task` = 已废弃计划任务 |
 
 通过 `.install_type` 文件持久化当前模式，`start`/`stop` 自动检测并使用对应的启停方式。
@@ -411,6 +430,7 @@ func handleNewTool(ctx context.Context, req *protocol.CallToolRequest) (*protoco
 - [ ] 锁操作是否使用了 `defer Unlock()`？禁止手动多路径 Unlock
 - [ ] 是否需要通过 MCP 暴露新信息？在 `mcp/tools.go` 新增 Tool
 - [ ] 新增环境变量开关？在 `constant/constant.go` 添加常量
+- [ ] 是否新增构建依赖的环境变量？在 `agentcli/envfile.go` 的 `snapshotVars` 列表中添加
 
 ## 构建与测试
 
@@ -529,6 +549,8 @@ go func() {
 ```
 {workDir}/                          # Agent工作目录
 ├── .agent.properties               # 主配置文件（含 MCP 端口 devops.mcp.server.port）
+├── .env                            # 环境变量快照(Linux/macOS, install/start时采集)
+├── .path                           # PATH快照(Linux/macOS, install/start时采集)
 ├── .cert                           # TLS证书(可选)
 ├── devopsAgent[.exe]               # Agent二进制
 ├── devopsDaemon[.exe]              # Daemon二进制
@@ -558,6 +580,16 @@ bin/
 ├── upgrader[.exe]
 └── installer[.exe]
 ```
+
+## status 命令的服务状态检测
+
+`status` 命令通过平台原生工具查询服务实际运行状态：
+
+| 平台 | 服务模式检测 | 直接启动模式检测 |
+|------|-------------|----------------|
+| **Linux** | `systemctl is-active/is-enabled` + `systemctl show` 获取 MainPID 和启动时间 | PID 文件 + `syscall.Kill` 探活 |
+| **macOS** | `launchctl list <serviceName>` 解析 loaded/running/PID/lastExitStatus | PID 文件 + `syscall.Kill` 探活 |
+| **Windows** | `sc.exe query` 判断运行状态 + `sc.exe qc` 获取启动类型 + `schtasks /query` 检测旧版计划任务 | PID 文件 + `OpenProcess` 探活 |
 
 ## 调试技巧
 
