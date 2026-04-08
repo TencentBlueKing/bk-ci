@@ -53,7 +53,6 @@ import com.tencent.devops.process.pojo.trigger.TriggerEventBody
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.countDistinct
 import org.jooq.impl.DSL.`when`
