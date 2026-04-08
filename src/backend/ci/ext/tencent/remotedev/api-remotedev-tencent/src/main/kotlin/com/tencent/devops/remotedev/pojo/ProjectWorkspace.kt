@@ -92,6 +92,6 @@ data class ProjectWorkspace(
     @get:Schema(title = "母机IP")
     val nodeIp: String? = null,
     @get:Schema(title = "云区域Id")
-    @get:JsonProperty("region_id")
+    @get:JsonProperty("regionId")
     val regionId: String? = null
 ) : IWorkspace
