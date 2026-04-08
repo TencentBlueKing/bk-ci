@@ -30,6 +30,11 @@ systemd 单元文件位置：`/etc/systemd/system/devops_agent_{id}.service`
 - `KillMode=none` — 避免 systemd 杀死升级中的进程
 - `PrivateTmp=false` — 允许访问 `/tmp`
 
+环境变量处理：
+- `install` 和 `start` 命令执行时，Agent 会将当前 shell 的 PATH 和常用开发变量（`JAVA_HOME`、`GOROOT` 等）快照到 `.path` 和 `.env` 文件
+- daemon 启动后读取这些文件并合并到进程环境，解决 systemd 极简环境下构建进程找不到开发工具的问题
+- 修改 `.bashrc`/`.profile` 后，执行 `stop` + `start` 即可使变更生效
+
 启停命令：
 ```bash
 sudo systemctl start devops_agent_{id}

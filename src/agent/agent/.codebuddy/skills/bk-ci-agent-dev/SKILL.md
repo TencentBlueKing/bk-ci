@@ -41,7 +41,7 @@ src/agent/agent/
 │   │   ├── imagedebug/         # Docker镜像调试
 │   │   ├── mcp/                # MCP Server（Streamable HTTP，使用 go-mcp SDK）
 │   │   ├── pipeline/           # 流水线引擎(实验性)
-│   │   ├── envs/               # 环境变量管理
+│   │   ├── envs/               # 环境变量管理（含 .env/.path 文件加载）
 │   │   ├── cron/               # 定时任务
 │   │   ├── collector/          # 系统信息采集(Telegraf)
 │   │   ├── exiterror/          # 结构化退出错误
@@ -194,6 +194,14 @@ devops.imagedebug.portrange=30000-32767 # 调试端口范围
 
 **事件总线**: `config.EventBus` — 发布订阅模式，目前仅 `IpEvent`(IP变更通知)
 
+**环境文件** (Linux/macOS，解决 systemd/launchd 服务模式下环境变量缺失):
+- `.path` — 单行 PATH 值，`install`/`start` 时从用户交互式 shell 快照
+- `.env` — `KEY=VALUE` 格式，采集 `JAVA_HOME`、`GRADLE_HOME`、`GOROOT` 等常用开发变量
+- daemon 启动时由 `envs.LoadEnvFiles()` 读取并通过 `os.Setenv()` 合并到进程环境（`.path` 中的路径与当前 PATH 去重合并）
+- 构建进程通过 `cmd.Env = envs.Envs()` 继承这些环境变量；Docker 构建不受影响（容器环境变量通过 `-e` 显式传递）
+- 用户可手动编辑，`stop` + `start` 后重新采集生效
+- Windows 不需要（已有注册表轮询机制）
+
 ### 升级机制 (`pkg/upgrade/`)
 
 ```
@@ -251,7 +259,7 @@ AgentUpgrade(upgradeItem, hasBuild)
 | **进程管理** | `Setpgid` + `syscall.Kill(-pgId)` | Windows Job Object (`JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`) |
 | **构建启动** | 写Shell脚本 → `/bin/bash` 执行 | 直接 `java -jar` |
 | **用户切换** | `syscall.Credential{Uid, Gid}` | 不支持(空操作) |
-| **环境变量** | `os.Environ()` | 注册表轮询(每3秒) + PATH合并 |
+| **环境变量** | `.env`/`.path` 文件加载 + `os.Environ()` | 注册表轮询(每3秒) + PATH合并 |
 | **Docker** | 完整支持 | 不支持 |
 | **文件权限** | `os.Chmod` | 空操作 |
 | **进程替换** | 文件替换 + 进程信号 | 等待退出 + 文件替换 |
@@ -265,7 +273,7 @@ AgentUpgrade(upgradeItem, hasBuild)
 | 平台 | 可选模式 | 默认 | 说明 |
 |------|---------|------|------|
 | **Linux** | `service` / `user` / `direct` | root: `service`; 非 root: `direct` | `service` = 系统级 systemd (`/etc/systemd/system/`)；`user` = 用户级 systemd (`~/.config/systemd/user/`, 需 `loginctl enable-linger`)；`direct` = 直接启动 |
-| **macOS** | `login` / `background` | `login` | `login` = 需登录桌面, 直接启动；`background` = 无头模式 (`user/UID` 域 + `LimitLoadToSessionType=Background`) |
+| **macOS** | `login` / `background` | `login` | 两种模式均通过 launchd 管理；`login` = `gui/UID` 域 (需桌面会话)；`background` = `user/UID` 域 (无头模式) |
 | **Windows** | `service` / `session` / `task` | `service` | `service` = Windows 服务；`session` = 服务 + 桌面会话；`task` = 已废弃计划任务 |
 
 通过 `.install_type` 文件持久化当前模式，`start`/`stop` 自动检测并使用对应的启停方式。
@@ -411,6 +419,7 @@ func handleNewTool(ctx context.Context, req *protocol.CallToolRequest) (*protoco
 - [ ] 锁操作是否使用了 `defer Unlock()`？禁止手动多路径 Unlock
 - [ ] 是否需要通过 MCP 暴露新信息？在 `mcp/tools.go` 新增 Tool
 - [ ] 新增环境变量开关？在 `constant/constant.go` 添加常量
+- [ ] 是否新增构建依赖的环境变量？在 `agentcli/envfile.go` 的 `snapshotVars` 列表中添加
 
 ## 构建与测试
 
@@ -529,6 +538,8 @@ go func() {
 ```
 {workDir}/                          # Agent工作目录
 ├── .agent.properties               # 主配置文件（含 MCP 端口 devops.mcp.server.port）
+├── .env                            # 环境变量快照(Linux/macOS, install/start时采集)
+├── .path                           # PATH快照(Linux/macOS, install/start时采集)
 ├── .cert                           # TLS证书(可选)
 ├── devopsAgent[.exe]               # Agent二进制
 ├── devopsDaemon[.exe]              # Daemon二进制

@@ -49,6 +49,13 @@ func handleInstall(workDir string, args []string) error {
 			"未知安装模式: %s (可选: login, background)", *mode)
 	}
 
+	if installMode == modeBackground && !hasModernLaunchctl() {
+		printWarn(msg(
+			"Background mode requires macOS 10.10+ (launchctl bootstrap). Falling back to login mode.",
+			"Background 模式需要 macOS 10.10+ (launchctl bootstrap)。回退为 login 模式。"))
+		installMode = modeLogin
+	}
+
 	cleanupBeforeInstall(workDir, installMode)
 
 	printDivider()
@@ -57,6 +64,7 @@ func handleInstall(workDir string, args []string) error {
 
 	printStep(msg("Step 1: preparing work directory ...", "步骤 1: 准备工作目录 ..."))
 	prepareWorkDir(workDir)
+	snapshotEnvFiles(workDir)
 
 	serviceName, err := getServiceName(workDir)
 	if err != nil {
@@ -129,6 +137,8 @@ func handleUninstall(workDir string) error {
 // ── start / stop (auto-detect mode via .install_type) ────────────────────
 
 func handleStart(workDir string) error {
+	snapshotEnvFiles(workDir)
+
 	mode := readInstallMode(workDir)
 	serviceName, err := getServiceName(workDir)
 	if err != nil {
@@ -149,47 +159,34 @@ func handleStop(workDir string) error {
 }
 
 func startByMode(workDir, serviceName, mode string) error {
-	if mode == modeBackground {
-		return startBackground(serviceName)
+	pp := plistPath(serviceName)
+	if _, err := os.Stat(pp); err != nil {
+		printWarn(msg(
+			"plist not found, falling back to direct start (run install first for launchd management)",
+			"plist 未找到, 回退为直接启动 (请先运行 install 以启用 launchd 管理)"))
+		return startDirect(workDir)
 	}
-	return startLogin(workDir)
-}
+	printStep(msgf("Starting %s via launchctl ...", "通过 launchctl 启动 %s ...", serviceName))
+	bootoutService(serviceName, mode)
 
-func stopByMode(workDir, serviceName, mode string) error {
-	if mode == modeBackground {
-		bootoutService(serviceName, modeBackground)
-		stopProcesses(workDir)
-		printStep(msg("Agent stopped", "Agent 已停止"))
-		return nil
+	if hasModernLaunchctl() {
+		if err := bootstrapAndStart(serviceName, mode); err != nil {
+			return err
+		}
+	} else {
+		if err := launchctlLoad(serviceName); err != nil {
+			return err
+		}
 	}
-	stopProcesses(workDir)
-	printStep(msg("Agent stopped", "Agent 已停止"))
+
+	printStep(msgf("Service %s started", "服务 %s 已启动", serviceName))
 	return nil
 }
 
-// startLogin: direct process start (like old start.sh), inherits shell env.
-func startLogin(workDir string) error {
-	pidFile := filepath.Join(workDir, "runtime", "daemon.pid")
-	if pid := readPid(pidFile); pid > 0 && isProcessAlive(pid) {
-		printStep(msgf("Daemon already running, PID=%d", "守护进程已在运行, PID=%d", pid))
-		return nil
-	}
-	return startDirect(workDir)
-}
-
-// startBackground: launchctl bootstrap + kickstart (user/UID domain).
-func startBackground(serviceName string) error {
-	pp := plistPath(serviceName)
-	if _, err := os.Stat(pp); err != nil {
-		return cliErrorf("plist not found: %s (run install --mode background first)",
-			"plist 未找到: %s (请先运行 install --mode background)", pp)
-	}
-	printStep(msgf("Starting %s via launchctl ...", "通过 launchctl 启动 %s ...", serviceName))
-	bootoutService(serviceName, modeBackground)
-	if err := bootstrapAndStart(serviceName); err != nil {
-		return err
-	}
-	printStep(msgf("Service %s started", "服务 %s 已启动", serviceName))
+func stopByMode(workDir, serviceName, mode string) error {
+	bootoutService(serviceName, mode)
+	stopProcesses(workDir)
+	printStep(msg("Agent stopped", "Agent 已停止"))
 	return nil
 }
 
@@ -214,6 +211,38 @@ func readInstallMode(workDir string) string {
 		return modeBackground
 	}
 	return modeLogin
+}
+
+// ── launchctl capability detection ───────────────────────────────────────
+
+// cachedModernLaunchctl caches the result of probing for bootstrap support.
+// -1 = not probed yet, 0 = legacy, 1 = modern.
+var cachedModernLaunchctl int = -1
+
+// hasModernLaunchctl probes whether launchctl supports the modern
+// bootstrap/bootout/kickstart API (macOS 10.10+). On older systems these
+// subcommands are unrecognized and we fall back to load/unload.
+// The result is cached after the first call.
+func hasModernLaunchctl() bool {
+	if cachedModernLaunchctl >= 0 {
+		return cachedModernLaunchctl == 1
+	}
+	result := probeBootstrapSupport()
+	if result {
+		cachedModernLaunchctl = 1
+	} else {
+		cachedModernLaunchctl = 0
+	}
+	return result
+}
+
+// probeBootstrapSupport runs `launchctl bootstrap` with no arguments.
+// Modern launchctl recognizes the subcommand and prints usage; legacy
+// launchctl prints "unrecognized subcommand" or "unknown subcommand".
+func probeBootstrapSupport() bool {
+	out, _ := exec.Command("launchctl", "bootstrap").CombinedOutput()
+	s := strings.ToLower(string(out))
+	return !strings.Contains(s, "unrecognized") && !strings.Contains(s, "unknown")
 }
 
 // ── launchd (modern API: bootstrap/bootout/kickstart) ────────────────────
@@ -304,11 +333,11 @@ func writePlist(workDir, serviceName, mode string) error {
 }
 
 // bootstrapAndStart registers the plist with launchd and force-starts it.
-// Always uses BACKGROUND domain (user/UID) since this path is only for background mode.
-func bootstrapAndStart(serviceName string) error {
+// LOGIN uses gui/UID domain, BACKGROUND uses user/UID domain, Root uses system.
+func bootstrapAndStart(serviceName, mode string) error {
 	pp := plistPath(serviceName)
-	target := serviceTarget(serviceName, modeBackground)
-	domain := launchdDomain(modeBackground)
+	target := serviceTarget(serviceName, mode)
+	domain := launchdDomain(mode)
 
 	out, err := exec.Command("launchctl", "bootstrap", domain, pp).CombinedOutput()
 	if err != nil {
@@ -329,15 +358,36 @@ func bootstrapAndStart(serviceName string) error {
 
 // bootoutService removes the service from launchd for the given domain mode.
 func bootoutService(serviceName, mode string) {
-	target := serviceTarget(serviceName, mode)
-	_ = exec.Command("launchctl", "bootout", target).Run()
+	if hasModernLaunchctl() {
+		target := serviceTarget(serviceName, mode)
+		_ = exec.Command("launchctl", "bootout", target).Run()
+	} else {
+		launchctlUnload(serviceName)
+	}
+}
+
+// ── launchd (legacy API: load/unload, macOS < 10.10) ─────────────────────
+
+func launchctlLoad(serviceName string) error {
+	pp := plistPath(serviceName)
+	out, err := exec.Command("launchctl", "load", "-w", pp).CombinedOutput()
+	if err != nil {
+		return cliErrorf("launchctl load failed: %s (%v)", "launchctl load 失败: %s (%v)",
+			strings.TrimSpace(string(out)), err)
+	}
+	return nil
+}
+
+func launchctlUnload(serviceName string) {
+	pp := plistPath(serviceName)
+	_ = exec.Command("launchctl", "unload", pp).Run()
 }
 
 func cleanupLegacyPlist(serviceName string) {
 	other := otherPlistPath(serviceName)
 	if _, err := os.Stat(other); err == nil {
-		_ = exec.Command("launchctl", "bootout", serviceTarget(serviceName, modeLogin)).Run()
-		_ = exec.Command("launchctl", "bootout", serviceTarget(serviceName, modeBackground)).Run()
+		bootoutService(serviceName, modeLogin)
+		bootoutService(serviceName, modeBackground)
 		os.Remove(other)
 		printStep(msgf("Cleaned up legacy plist %s", "已清理旧 plist %s", other))
 	}

@@ -111,6 +111,30 @@ Agent 的核心配置文件，使用 INI 格式（`key=value`），位于 Agent 
 | 用途 | 记录当前的安装模式，`start`/`stop` 命令据此选择启停方式 |
 | 管理 | 由 `install`/`uninstall` 命令自动管理，不建议手动修改 |
 
+### .env — 环境变量快照（Linux/macOS）
+
+| 项目 | 说明 |
+|------|------|
+| 路径 | `<安装目录>/.env` |
+| 格式 | `KEY=VALUE` 格式，每行一个，`#` 开头为注释 |
+| 用途 | 解决 systemd/launchd 服务模式下构建进程环境变量缺失的问题 |
+| 采集时机 | `install` 和 `start` 命令执行时，从当前 shell 环境快照 |
+| 加载时机 | daemon 启动时，由 `envs.LoadEnvFiles()` 读取并通过 `os.Setenv()` 设置到进程环境 |
+| 采集变量 | `JAVA_HOME`、`GRADLE_HOME`、`GOROOT`、`GOPATH`、`NVM_DIR`、`CARGO_HOME` 等常用开发变量 |
+| 可编辑 | 支持手动添加自定义变量，`stop` + `start` 后生效（手动添加的变量不会被自动采集覆盖） |
+| Windows | 不需要（Windows 已有注册表轮询机制自动同步环境变量） |
+
+### .path — PATH 快照（Linux/macOS）
+
+| 项目 | 说明 |
+|------|------|
+| 路径 | `<安装目录>/.path` |
+| 格式 | 单行文本，完整的 PATH 值 |
+| 用途 | 保存用户交互式 shell 的 PATH，服务模式下恢复 |
+| 采集时机 | 与 `.env` 相同 |
+| 加载时机 | daemon 启动时，与当前 PATH 去重合并（`.path` 中的路径优先） |
+| Windows | 不需要 |
+
 ## 环境变量开关
 
 以下环境变量可以通过操作系统环境变量或 BK-CI 服务端下发来控制 Agent 行为：

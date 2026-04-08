@@ -403,6 +403,8 @@ func preserveSet() map[string]bool {
 		".install_type":     true,
 		".cert":             true,
 		".debug":            true,
+		".env":              true,
+		".path":             true,
 		"workspace":         true,
 	}
 	m[agentBinary()] = true

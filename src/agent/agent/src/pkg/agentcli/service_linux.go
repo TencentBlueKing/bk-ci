@@ -82,6 +82,7 @@ func handleInstall(workDir string, args []string) error {
 
 	printStep(msg("Step 1: preparing work directory ...", "步骤 1: 准备工作目录 ..."))
 	prepareWorkDir(workDir)
+	snapshotEnvFiles(workDir)
 
 	serviceName, err := getServiceName(workDir)
 	if err != nil {
@@ -232,6 +233,8 @@ func handleUninstall(workDir string) error {
 // ── start / stop (auto-detect mode via .install_type) ────────────────────
 
 func handleStart(workDir string) error {
+	snapshotEnvFiles(workDir)
+
 	mode := readInstallMode(workDir)
 	serviceName, err := getServiceName(workDir)
 	if err != nil {
