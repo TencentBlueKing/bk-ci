@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VAL
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
-import com.tencent.devops.process.pojo.trigger.WeMateStartRequest
+import com.tencent.devops.process.pojo.pipeline.WeMateBuildStartRequest
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -76,7 +76,7 @@ interface ApigwTXBuildResourceV4 {
         @QueryParam("pipelineId")
         pipelineId: String,
         @Parameter(description = "weMate消息提醒请求体", required = true)
-        request: WeMateStartRequest
+        request: WeMateBuildStartRequest
     ): Result<BuildId>
 
     @Operation(

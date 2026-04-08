@@ -32,7 +32,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.trigger.GenericEventStartRequest
-import com.tencent.devops.process.pojo.trigger.WeMateStartRequest
+import com.tencent.devops.process.pojo.pipeline.WeMateBuildStartRequest
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.trigger.market.MarketEventTriggerBuildService
 import com.tencent.devops.store.pojo.common.BK_STORE_CREATIVE_STREAM_WEMATE_MESSAGE_REMINDER_TRIGGER
@@ -49,7 +49,7 @@ class TxPipelineBuildFacadeService(
         userId: String,
         projectId: String,
         pipelineId: String,
-        request: WeMateStartRequest
+        request: WeMateBuildStartRequest
     ): BuildId {
         checkVisibility(userId, projectId, pipelineId)
         return marketEventTriggerBuildService.genericEventTrigger(
@@ -59,8 +59,8 @@ class TxPipelineBuildFacadeService(
             eventCode = BK_STORE_CREATIVE_STREAM_WEMATE_MESSAGE_REMINDER_TRIGGER,
             request = GenericEventStartRequest(
                 eventBody = mapOf(
-                    WeMateStartRequest::triggerUser.name to request.triggerUser,
-                    WeMateStartRequest::message.name to request.message
+                    WeMateBuildStartRequest::triggerUser.name to request.triggerUser,
+                    WeMateBuildStartRequest::message.name to request.message
                 ),
                 startParams = request.startParams
             )

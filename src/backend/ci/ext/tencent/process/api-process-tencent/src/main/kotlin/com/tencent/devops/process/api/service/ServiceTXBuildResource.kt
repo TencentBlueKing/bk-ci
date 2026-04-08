@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
-import com.tencent.devops.process.pojo.trigger.WeMateStartRequest
+import com.tencent.devops.process.pojo.pipeline.WeMateBuildStartRequest
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -64,7 +64,7 @@ interface ServiceTXBuildResource {
         @PathParam("pipelineId")
         pipelineId: String,
         @Parameter(description = "weMate启动请求", required = true)
-        request: WeMateStartRequest
+        request: WeMateBuildStartRequest
     ): Result<BuildId>
 
     @Operation(summary = "获取可见性流水线手动启动参数")
