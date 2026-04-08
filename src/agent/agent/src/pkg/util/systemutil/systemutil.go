@@ -226,8 +226,9 @@ func GetAgentIp(ignoreIps []string) string {
 	return defaultIp
 }
 
-// ExitProcess Exit by code
+// ExitProcess flushes logs and exits with the given code.
 func ExitProcess(exitCode int) {
+	logs.Close()
 	os.Exit(exitCode)
 }
 
