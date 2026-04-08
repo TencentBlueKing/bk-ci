@@ -181,3 +181,55 @@ func TestCurrentUser(t *testing.T) {
 		t.Errorf("currentUser() = %q, want testuser", got)
 	}
 }
+
+func TestParseSystemdShow(t *testing.T) {
+	tests := []struct {
+		name        string
+		output      string
+		wantPID     int
+		wantStarted string
+	}{
+		{
+			name:        "normal",
+			output:      "1234\nThu 2026-04-08 10:00:00 CST\n",
+			wantPID:     1234,
+			wantStarted: "Thu 2026-04-08 10:00:00 CST",
+		},
+		{
+			name:        "pid_zero_inactive",
+			output:      "0\n\n",
+			wantPID:     0,
+			wantStarted: "",
+		},
+		{
+			name:        "pid_only",
+			output:      "5678\n",
+			wantPID:     5678,
+			wantStarted: "",
+		},
+		{
+			name:        "empty",
+			output:      "",
+			wantPID:     0,
+			wantStarted: "",
+		},
+		{
+			name:        "na_timestamp",
+			output:      "999\nn/a\n",
+			wantPID:     999,
+			wantStarted: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pid, started := parseSystemdShow(tt.output)
+			if pid != tt.wantPID {
+				t.Errorf("MainPID = %d, want %d", pid, tt.wantPID)
+			}
+			if started != tt.wantStarted {
+				t.Errorf("StartedAt = %q, want %q", started, tt.wantStarted)
+			}
+		})
+	}
+}

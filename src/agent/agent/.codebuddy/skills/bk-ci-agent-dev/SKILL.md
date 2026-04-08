@@ -570,6 +570,16 @@ bin/
 └── installer[.exe]
 ```
 
+## status 命令的服务状态检测
+
+`status` 命令通过平台原生工具查询服务实际运行状态：
+
+| 平台 | 服务模式检测 | 直接启动模式检测 |
+|------|-------------|----------------|
+| **Linux** | `systemctl is-active/is-enabled` + `systemctl show` 获取 MainPID 和启动时间 | PID 文件 + `syscall.Kill` 探活 |
+| **macOS** | `launchctl list <serviceName>` 解析 loaded/running/PID/lastExitStatus | PID 文件 + `syscall.Kill` 探活 |
+| **Windows** | `sc.exe query` 判断运行状态 + `sc.exe qc` 获取启动类型 + `schtasks /query` 检测旧版计划任务 | PID 文件 + `OpenProcess` 探活 |
+
 ## 调试技巧
 
 1. **Agent日志**: `{workDir}/logs/` 目录下的日志文件

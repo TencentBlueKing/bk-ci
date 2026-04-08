@@ -41,6 +41,7 @@ func handleStatus(workDir string) error {
 		} else {
 			statusLine(msg("Service state", "服务状态"), msg("stopped", "已停止")+" ✗")
 		}
+		statusLine(msg("Auto start", "开机启动"), queryServiceStartType(serviceName))
 	} else {
 		statusLine(msg("Service state", "服务状态"), msg("not registered", "未注册"))
 	}
@@ -253,4 +254,35 @@ func fileStatus(path string) string {
 func statusLine(label, value string) {
 	trackStatusLine(label, value)
 	fmt.Printf("  %-24s %s\n", label+":", value)
+}
+
+func queryServiceStartType(serviceName string) string {
+	out, err := exec.Command("sc.exe", "qc", serviceName).CombinedOutput()
+	if err != nil {
+		return msg("unknown", "未知")
+	}
+	return parseServiceStartType(string(out))
+}
+
+// parseServiceStartType extracts the start type from `sc.exe qc` output.
+// Looks for "START_TYPE" line containing AUTO_START or DEMAND_START.
+func parseServiceStartType(output string) string {
+	for _, line := range strings.Split(output, "\n") {
+		line = strings.TrimSpace(line)
+		if !strings.Contains(line, "START_TYPE") {
+			continue
+		}
+		upper := strings.ToUpper(line)
+		if strings.Contains(upper, "AUTO_START") {
+			return "auto ✓"
+		}
+		if strings.Contains(upper, "DEMAND_START") {
+			return "manual"
+		}
+		if strings.Contains(upper, "DISABLED") {
+			return msg("disabled", "已禁用") + " ✗"
+		}
+		return line
+	}
+	return msg("unknown", "未知")
 }

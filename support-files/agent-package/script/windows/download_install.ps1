@@ -32,13 +32,11 @@ function Unzip-File {
 }
 
 function Check-Files {
-    if ("##enableCheckFiles##" -eq "true") {
-        $fileCount = (Get-ChildItem -File -Path . | Measure-Object).Count
-        if ($fileCount -gt 0) {
-            Write-Host "fatal: current directory is not empty, please install in an empty directory" -ForegroundColor Red
-            Pause
-            return
-        }
+    $fileCount = (Get-ChildItem -File -Path . | Measure-Object).Count
+    if ($fileCount -gt 0) {
+        Write-Host "fatal: current directory is not empty, please install in an empty directory" -ForegroundColor Red
+        Pause
+        return
     }
 }
 

@@ -46,19 +46,13 @@ func handleStatus(workDir string) error {
 	switch installMode {
 	case modeService:
 		if serviceName != "" && hasSystemdUnit(serviceName) {
-			out, _ := exec.Command("systemctl", "is-active", serviceName).CombinedOutput()
-			statusLine(msg("Service state", "服务状态"), strings.TrimSpace(string(out)))
-			out, _ = exec.Command("systemctl", "is-enabled", serviceName).CombinedOutput()
-			statusLine(msg("Auto start", "开机启动"), strings.TrimSpace(string(out)))
+			printSystemdStatus(serviceName, false)
 		} else {
 			statusLine(msg("Service state", "服务状态"), msg("not registered", "未注册"))
 		}
 	case modeUser:
 		if serviceName != "" && hasUserSystemdUnit(serviceName) {
-			out, _ := exec.Command("systemctl", "--user", "is-active", serviceName).CombinedOutput()
-			statusLine(msg("Service state", "服务状态"), strings.TrimSpace(string(out)))
-			out, _ = exec.Command("systemctl", "--user", "is-enabled", serviceName).CombinedOutput()
-			statusLine(msg("Auto start", "自动启动"), strings.TrimSpace(string(out)))
+			printSystemdStatus(serviceName, true)
 			if hasLinger() {
 				statusLine("Linger", msg("enabled (survives logout) ✓", "已启用 (注销后仍运行) ✓"))
 			} else {
@@ -89,6 +83,55 @@ func handleStatus(workDir string) error {
 	printStatusSummaryLine()
 
 	return nil
+}
+
+func printSystemdStatus(serviceName string, userMode bool) {
+	args := []string{"is-active", serviceName}
+	if userMode {
+		args = []string{"--user", "is-active", serviceName}
+	}
+	out, _ := exec.Command("systemctl", args...).CombinedOutput()
+	statusLine(msg("Service state", "服务状态"), strings.TrimSpace(string(out)))
+
+	args = []string{"is-enabled", serviceName}
+	if userMode {
+		args = []string{"--user", "is-enabled", serviceName}
+	}
+	out, _ = exec.Command("systemctl", args...).CombinedOutput()
+	label := msg("Auto start", "开机启动")
+	if userMode {
+		label = msg("Auto start", "自动启动")
+	}
+	statusLine(label, strings.TrimSpace(string(out)))
+
+	args = []string{"show", "-p", "MainPID,ActiveEnterTimestamp", "--value", serviceName}
+	if userMode {
+		args = []string{"--user", "show", "-p", "MainPID,ActiveEnterTimestamp", "--value", serviceName}
+	}
+	out, _ = exec.Command("systemctl", args...).CombinedOutput()
+	mainPID, startedAt := parseSystemdShow(string(out))
+	if mainPID > 0 {
+		statusLine(msg("Service PID", "服务主进程 PID"), fmt.Sprintf("%d", mainPID))
+	}
+	if startedAt != "" {
+		statusLine(msg("Started at", "启动时间"), startedAt)
+	}
+}
+
+// parseSystemdShow parses output of `systemctl show -p MainPID,ActiveEnterTimestamp --value`.
+// The output has two lines: MainPID value, then ActiveEnterTimestamp value.
+func parseSystemdShow(output string) (mainPID int, startedAt string) {
+	lines := strings.Split(strings.TrimSpace(output), "\n")
+	if len(lines) >= 1 {
+		mainPID, _ = strconv.Atoi(strings.TrimSpace(lines[0]))
+	}
+	if len(lines) >= 2 {
+		ts := strings.TrimSpace(lines[1])
+		if ts != "" && ts != "n/a" {
+			startedAt = ts
+		}
+	}
+	return
 }
 
 func currentUser() string {
