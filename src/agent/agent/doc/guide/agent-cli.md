@@ -208,8 +208,7 @@ sudo ./devopsAgent install service   # 同上
 | Linux | 非 root + systemd (`user`) | `~/.config/systemd/user/devops_agent_{id}.service` | `devops_agent_{id}` |
 | Linux | `direct` 或无 systemd | 直接后台启动 daemon | 无 |
 | macOS | `login`（默认） | 直接后台启动 daemon | 无 |
-| macOS | `background` (非 root) | `~/Library/LaunchAgents/devops_agent_{id}.plist` | `devops_agent_{id}` |
-| macOS | root | `/Library/LaunchDaemons/devops_agent_{id}.plist` | `devops_agent_{id}` |
+| macOS | `background` | `~/Library/LaunchAgents/devops_agent_{id}.plist` | `devops_agent_{id}` |
 | Windows | `service`（默认） | Windows 服务 (`sc.exe create`) | `devops_agent_{id}` |
 | Windows | `session` | Windows 服务 + 桌面会话（可选 auto-logon） | `devops_agent_{id}` |
 
