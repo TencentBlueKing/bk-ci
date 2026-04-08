@@ -23,7 +23,7 @@ func platformUnzip(src, dest string) error {
 
 func handleInstall(workDir string, args []string) error {
 	mode := "service"
-	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
+	if len(args) > 0 {
 		mode = strings.ToLower(args[0])
 		args = args[1:]
 	}
@@ -212,8 +212,8 @@ func installTask(workDir string) error {
 
 	printStep(msg("Install complete", "安装完成"))
 	printWarn(msg(
-		"Task mode is deprecated. Use 'devopsAgent install --mode session' for desktop access.",
-		"计划任务模式已废弃。请使用 'devopsAgent install --mode session' 获取桌面访问能力。"))
+		"Task mode is deprecated. Use 'devopsAgent install session' for desktop access.",
+		"计划任务模式已废弃。请使用 'devopsAgent install session' 获取桌面访问能力。"))
 	return nil
 }
 

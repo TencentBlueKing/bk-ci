@@ -35,7 +35,7 @@ func isRoot() bool {
 
 func handleInstall(workDir string, args []string) error {
 	mode := "login"
-	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
+	if len(args) > 0 {
 		mode = args[0]
 	}
 

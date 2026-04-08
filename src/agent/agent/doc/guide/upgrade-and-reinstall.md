@@ -15,7 +15,6 @@ Agent 具备无感知热升级能力，由服务端统一控制。
   Agent 在 Ask 轮询中检测到升级指令
        │
        ├── 有构建正在运行 → 推迟升级（上报 skip）
-       ├── 调试模式开启 → 跳过升级
        │
        ▼
   锁定构建槽位（阻止新构建）
@@ -60,7 +59,6 @@ Agent 具备无感知热升级能力，由服务端统一控制。
 
 ### 升级的前提条件
 
-- Agent 没有开启调试模式（`.debug` 文件不存在）
 - 当前没有正在运行的构建任务
 - 没有其他升级正在进行
 
@@ -143,7 +141,8 @@ Windows 上的 `waitBeforeRestart()` 机制：
 | `.agent.properties` | Agent 身份信息，删除后无法重新连接服务端 |
 | `.install_type` | 安装模式记录，reinstall 后自动使用相同模式 |
 | `.cert` | 自定义 TLS 证书 |
-| `.debug` | 调试模式状态 |
+| `.env` | 环境变量快照（Linux/macOS） |
+| `.path` | PATH 快照（Linux/macOS） |
 | `workspace/` | 构建工作空间，包含用户代码和产物 |
 | Agent 二进制自身 | 重装命令正在运行，不能删除自己 |
 

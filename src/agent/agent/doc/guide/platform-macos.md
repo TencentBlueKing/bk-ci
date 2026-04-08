@@ -9,7 +9,7 @@ macOS 支持两种安装模式：
 | 模式 | 命令 | 适用场景 |
 |------|------|---------|
 | `login` | `./devopsAgent install` | 默认模式，launchd gui 域，适合有桌面环境的机器 |
-| `background` | `./devopsAgent install --mode background` | launchd 无头模式，适合 SSH/CI/无桌面环境 |
+| `background` | `./devopsAgent install background` | launchd 无头模式，适合 SSH/CI/无桌面环境 |
 
 两种模式都通过 launchd 管理服务生命周期，区别在于 launchd domain：
 - `login` → `gui/{UID}`（需要桌面会话）

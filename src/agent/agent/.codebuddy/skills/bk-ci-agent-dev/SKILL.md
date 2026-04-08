@@ -266,9 +266,9 @@ AgentUpgrade(upgradeItem, hasBuild)
 | **Daemon 重启延迟** | 5s ticker 轮询 flock | 3s base + 500ms 轮询 total-lock（30s 兜底） |
 | **硬件信息采集** | Linux/Windows 可走通用 `ghw` 采集；macOS 需用 `_darwin.go` 单独兜底，当前跳过 GPU 采集以规避 `ghw` 未实现报错 | GPU 标签主要用于指标补充，不应影响 Agent 启动 |
 
-### 安装模式 (`install --mode`)
+### 安装模式 (`install [mode]`)
 
-所有平台的 `install` 命令通过 `--mode` 选择安装模式。如果目标模式与当前已安装模式相同则跳过；不同则自动先 `uninstall` 再安装。
+所有平台的 `install` 命令通过位置参数选择安装模式。如果目标模式与当前已安装模式相同则跳过；不同则自动先 `uninstall` 再安装。
 
 | 平台 | 可选模式 | 默认 | 说明 |
 |------|---------|------|------|

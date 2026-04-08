@@ -63,7 +63,7 @@ func isRoot() bool {
 
 func handleInstall(workDir string, args []string) error {
 	mode := ""
-	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
+	if len(args) > 0 {
 		mode = args[0]
 	}
 
@@ -148,7 +148,7 @@ func cleanupMode(workDir, mode string) {
 	stopProcesses(workDir)
 }
 
-// resolveInstallMode determines the effective install mode from the --mode flag value.
+// resolveInstallMode determines the effective install mode from the positional argument.
 func resolveInstallMode(flagMode string) (string, error) {
 	if flagMode == "" {
 		if isRoot() {
