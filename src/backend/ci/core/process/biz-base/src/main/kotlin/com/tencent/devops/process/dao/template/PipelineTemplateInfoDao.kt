@@ -286,7 +286,7 @@ class PipelineTemplateInfoDao {
         return with(TPipelineTemplateInfo.T_PIPELINE_TEMPLATE_INFO) {
             dslContext.selectFrom(this)
                 .where(ID.eq(templateId))
-                .and(PROJECT_ID.eq(projectId)).limit(1)
+                .and(PROJECT_ID.eq(projectId))
                 .fetchOne()?.convert()
         }
     }

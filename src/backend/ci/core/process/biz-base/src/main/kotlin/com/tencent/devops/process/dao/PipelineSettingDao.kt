@@ -186,7 +186,6 @@ class PipelineSettingDao {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-                .limit(1)
                 .fetchOne(mapper)
         }
     }
@@ -200,7 +199,6 @@ class PipelineSettingDao {
             return dslContext.select(PIPELINE_AS_CODE_SETTINGS)
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-                .limit(1)
                 .fetchOne()?.component1()?.let { self ->
                     JsonUtil.to(self, PipelineAsCodeSettings::class.java)
                 }

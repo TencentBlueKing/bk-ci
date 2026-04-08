@@ -110,7 +110,6 @@ class PipelineYamlBranchFileDao {
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(BRANCH.eq(branch))
                 .and(FILE_PATH_MD5.eq(DigestUtils.md5Hex(filePath)))
-                .limit(1)
                 .fetchOne()
         }
     }

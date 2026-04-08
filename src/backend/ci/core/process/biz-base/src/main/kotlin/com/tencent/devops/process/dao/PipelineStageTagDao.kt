@@ -94,7 +94,6 @@ class PipelineStageTagDao {
         with(TPipelineStageTag.T_PIPELINE_STAGE_TAG) {
             return dslContext.selectFrom(this)
                 .where(ID.eq(id))
-                .limit(1)
                 .fetchOne()
         }
     }
