@@ -9,7 +9,7 @@ macOS 支持两种安装模式：
 | 模式 | 命令 | 适用场景 |
 |------|------|---------|
 | `login` | `./devopsAgent install` | 默认模式，launchd gui 域，适合有桌面环境的机器 |
-| `background` | `./devopsAgent install --mode background` | launchd user 域（无头模式），适合 SSH/CI/无桌面环境 |
+| `background` | `./devopsAgent install --mode background` | launchd 无头模式，适合 SSH/CI/无桌面环境 |
 
 两种模式都通过 launchd 管理服务生命周期，区别在于 launchd domain：
 - `login` → `gui/{UID}`（需要桌面会话）
@@ -23,8 +23,7 @@ macOS 支持两种安装模式：
 通过 launchd gui 域管理的服务，需要桌面会话：
 
 ```bash
-./devopsAgent install
-./devopsAgent install --mode login   # 等同上面
+./devopsAgent install   # login 为默认模式
 ```
 
 特点：
@@ -33,12 +32,14 @@ macOS 支持两种安装模式：
 - 适合开发者在本地 Mac 上使用
 - 构建进程可以访问桌面 UI（如 Xcode UI 测试）
 
+> **建议**：为确保 Mac 构建机重启后 Agent 能自动恢复运行，请在 **系统设置 > 用户与群组** 中开启 **自动以此身份登录**。否则重启后需手动登录桌面才能恢复。
+
 ### Background 模式
 
 通过 launchd user 域管理的无头服务：
 
 ```bash
-./devopsAgent install --mode background
+./devopsAgent install background
 ```
 
 特点：
@@ -97,6 +98,16 @@ export DEVOPS_AGENT_ENABLE_EXIT_GROUP=true
 首次运行 Agent 二进制时，macOS 可能会弹出安全警告：
 - 方法 1：在"系统偏好设置 → 安全性与隐私"中允许运行
 - 方法 2：使用 `xattr -d com.apple.quarantine devopsAgent devopsDaemon` 移除隔离标记
+
+### 自动登录（Login 模式推荐）
+
+Login 模式要求用户登录桌面才能运行。如果 Mac 构建机需要在重启后自动恢复 Agent，建议开启 macOS 自动登录：
+
+1. 打开 **系统设置 > 用户与群组**
+2. 将 **自动以此身份登录** 设置为构建用户
+3. 如果使用了 FileVault 磁盘加密，需要先关闭 FileVault 才能开启自动登录
+
+如果无法配置自动登录（如安全策略不允许），建议使用 `background` 模式，该模式不依赖用户登录。
 
 ### 休眠与屏保
 

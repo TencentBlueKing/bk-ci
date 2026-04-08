@@ -214,6 +214,18 @@ AgentUpgrade(upgradeItem, hasBuild)
 
 **升级器** (`pkg/upgrader/`): 独立进程，负责替换Agent/Daemon二进制文件并重启。平台差异大——Unix使用文件替换+进程信号，Windows需要等待进程退出再替换。
 
+**Daemon-Upgrader 协调机制** (`total-lock`):
+- Upgrader 在 `DoUpgradeAgent()` 中持有 `total-lock` 直到文件替换完成
+- Linux/macOS daemon: `watch()` 每次检查/启动 agent 前都持有 `total-lock`，天然避免竞争
+- Windows daemon: `watch()` 在启动 agent 前调用 `waitForUpgradeFinish()` 获取并立即释放 `total-lock`（gate 模式），确保 upgrader 不在运行
+- Windows 文件替换: `replaceAgentFile()` 含重试机制（最多 10 次、递增间隔），防止因 Windows 文件锁导致 rename 失败
+
+**Windows SERVICE 模式下 Daemon 自升级**（参考 GitHub Actions Runner 的 SCM 崩溃恢复机制）:
+- `replaceDaemonFileByRename`: Windows 允许 rename 运行中的 exe，因此先 rename→.old 再 copy 新文件；失败时自动回滚
+- SCM 恢复选项在 `install` 时通过 `sc.exe failure` 配置: `restart/5000/restart/10000/restart/30000`
+- `.daemon_upgrade` 标记文件由 upgrader 写入、daemon 的 `watch()` 消费后 `os.Exit(1)` 触发 SCM 重启
+- 旧 daemon 二进制 (`.old`) 在新 daemon 启动时由 `cleanupOldDaemonBinary()` 清理
+
 ## 跨平台开发指南
 
 ### 平台文件命名约定
@@ -253,17 +265,23 @@ AgentUpgrade(upgradeItem, hasBuild)
 | **进程替换** | 文件替换 + 进程信号 | 等待退出 + 文件替换 |
 | **硬件信息采集** | Linux/Windows 可走通用 `ghw` 采集；macOS 需用 `_darwin.go` 单独兜底，当前跳过 GPU 采集以规避 `ghw` 未实现报错 | GPU 标签主要用于指标补充，不应影响 Agent 启动 |
 
-### 安装模式 (`install --mode`)
+### 安装模式 (`install [mode]`)
 
-所有平台的 `install` 命令通过 `--mode` 选择安装模式。如果目标模式与当前已安装模式相同则跳过；不同则自动先 `uninstall` 再安装。
+所有平台的 `install` 命令通过子命令选择安装模式（如 `install session`）。不指定则使用默认模式。如果目标模式与当前已安装模式相同则跳过；不同则自动先 `uninstall` 再安装。
 
 | 平台 | 可选模式 | 默认 | 说明 |
 |------|---------|------|------|
-| **Linux** | `service` / `user` / `direct` | root: `service`; 非 root: `direct` | `service` = 系统级 systemd (`/etc/systemd/system/`)；`user` = 用户级 systemd (`~/.config/systemd/user/`, 需 `loginctl enable-linger`)；`direct` = 直接启动 |
-| **macOS** | `login` / `background` | `login` | `login` = 需登录桌面, 直接启动；`background` = 无头模式 (`user/UID` 域 + `LimitLoadToSessionType=Background`) |
-| **Windows** | `service` / `session` / `task` | `service` | `service` = Windows 服务；`session` = 服务 + 桌面会话；`task` = 已废弃计划任务 |
+| **Linux** | `service` / `user` / `direct` | root: `service`; 非 root: `direct` | `service` = 系统级 systemd；`user` = 用户级 systemd (需 `loginctl enable-linger`)；`direct` = 直接启动 |
+| **macOS** | (默认) / `background` | 默认: 需登录桌面 | `background` = 无头模式 (`user/UID` 域 + `LimitLoadToSessionType=Background`) |
+| **Windows** | (默认) / `session` / `task` | 默认: Windows 服务 | `session` = 服务 + 桌面会话（可选 `--auto-logon` 自动登录）；`task` = 已废弃计划任务 |
 
 通过 `.install_type` 文件持久化当前模式，`start`/`stop` 自动检测并使用对应的启停方式。
+
+**Windows SESSION 模式行为**:
+- Daemon 通过 WTS API (`CreateProcessAsUser`) 在已登录用户的桌面会话中启动 Agent
+- 无用户登录时 **等待** 用户登录（每 30s 重试），**不会**回退到 SYSTEM 身份直接启动
+- 注销会导致 Agent 被终止，未配置 auto-logon 时需等待手动登录后自动恢复
+- `install session --auto-logon USER PASSWORD`：配置 Windows 自动登录，注销/重启后自动恢复用户会话
 
 ### 内外版差异 (`constant/`)
 

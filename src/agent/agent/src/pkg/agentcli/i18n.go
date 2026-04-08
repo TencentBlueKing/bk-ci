@@ -59,24 +59,24 @@ func printUsageLocalized() {
 		fmt.Print("用法: devopsAgent <命令> [选项]\n\n")
 		fmt.Print("服务管理:\n")
 		if isWin {
-			fmt.Print(`  install [选项]       安装并启动 Agent 守护进程
-    --mode service     (默认) 安装为 Windows 服务
-    --mode session     安装为 Windows 服务 + 配置桌面会话访问
-    --mode task        [已废弃] 安装为计划任务 (建议使用 session 模式)
-    --user 用户名      session 模式: Windows 登录账号 (可选)
-    --password 密码    session 模式: 账号密码 (指定 --user 时必填)
-    --auto-logon       session 模式: 配置 Windows 自动登录
+			fmt.Print(`  install [模式] [选项]  安装并启动 Agent 守护进程
+    (默认)             安装为 Windows 服务
+    session            安装为 Windows 服务 + 配置桌面会话访问
+      --auto-logon 用户名 密码
+                       配置 Windows 自动登录 (注销/重启后自动恢复)
+    task               [已废弃] 安装为计划任务
 `)
 		} else if isMac {
-			fmt.Print(`  install [选项]       安装并启动 Agent 守护进程
-    --mode login       (默认) 需要用户登录桌面, 直接启动进程
-    --mode background  无需登录, SSH/无头环境可用
+			fmt.Print(`  install [模式]       安装并启动 Agent 守护进程
+    (默认)             需要用户登录桌面, 直接启动进程
+    background         无需登录, SSH/无头环境可用
 `)
 		} else {
-			fmt.Print(`  install [选项]       安装并启动 Agent 守护进程
-    --mode service     (root 默认) 安装为系统级 systemd 服务
-    --mode user        安装为用户级 systemd 服务 (非 root, 注销后仍运行)
-    --mode direct      直接启动进程 (非 root 默认)
+			fmt.Print(`  install [模式]       安装并启动 Agent 守护进程
+    (默认)             root: 系统级 systemd 服务 / 非 root: 直接启动
+    service            安装为系统级 systemd 服务 (需要 root)
+    user               安装为用户级 systemd 服务 (非 root, 注销后仍运行)
+    direct             直接启动进程
 `)
 		}
 		fmt.Print(`  uninstall            停止并卸载守护进程服务
@@ -108,24 +108,24 @@ func printUsageLocalized() {
 		fmt.Print("Usage: devopsAgent <command> [options]\n\n")
 		fmt.Print("Service management:\n")
 		if isWin {
-			fmt.Print(`  install [options]    Install and start agent daemon
-    --mode service     (default) Install as Windows service
-    --mode session     Install as service + configure desktop session access
-    --mode task        [deprecated] Install as scheduled task (use session instead)
-    --user USER        session mode: Windows logon account (optional)
-    --password PASS    session mode: Password (required with --user)
-    --auto-logon       session mode: Enable Windows auto-logon on reboot
+			fmt.Print(`  install [mode] [options]  Install and start agent daemon
+    (default)          Install as Windows service
+    session            Install as service + configure desktop session access
+      --auto-logon USER PASSWORD
+                       Enable auto-logon (recovers after logoff/reboot)
+    task               [deprecated] Install as scheduled task
 `)
 		} else if isMac {
-			fmt.Print(`  install [options]    Install and start agent daemon
-    --mode login       (default) Requires user login session, direct process start
-    --mode background  No login needed, works over SSH and headless
+			fmt.Print(`  install [mode]       Install and start agent daemon
+    (default)          Requires user login session, direct process start
+    background         No login needed, works over SSH and headless
 `)
 		} else {
-			fmt.Print(`  install [options]    Install and start agent daemon
-    --mode service     (root default) Install as system-level systemd service
-    --mode user        Install as user-level systemd service (non-root, survives logout)
-    --mode direct      Direct process start (non-root default)
+			fmt.Print(`  install [mode]       Install and start agent daemon
+    (default)          root: system systemd service / non-root: direct start
+    service            Install as system-level systemd service (root)
+    user               Install as user-level systemd service (non-root, survives logout)
+    direct             Direct process start
 `)
 		}
 		fmt.Print(`  uninstall            Stop and remove agent daemon service

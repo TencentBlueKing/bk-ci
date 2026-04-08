@@ -4,7 +4,6 @@
 package agentcli
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -63,13 +62,12 @@ func isRoot() bool {
 // ── install ──────────────────────────────────────────────────────────────
 
 func handleInstall(workDir string, args []string) error {
-	fs := flag.NewFlagSet("install", flag.ContinueOnError)
-	mode := fs.String("mode", "", "")
-	if err := fs.Parse(args); err != nil {
-		return err
+	mode := ""
+	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
+		mode = args[0]
 	}
 
-	installMode, err := resolveInstallMode(*mode)
+	installMode, err := resolveInstallMode(mode)
 	if err != nil {
 		return err
 	}
@@ -169,27 +167,27 @@ func resolveInstallMode(flagMode string) (string, error) {
 	case "service":
 		if !isRoot() {
 			return "", cliErrorf(
-				"--mode service requires root privileges. Use: sudo devopsAgent install --mode service",
-				"--mode service 需要 root 权限。请使用: sudo devopsAgent install --mode service")
+				"install service requires root privileges. Use: sudo devopsAgent install service",
+				"install service 需要 root 权限。请使用: sudo devopsAgent install service")
 		}
 		if !hasSystemd() {
 			return "", cliErrorf(
-				"--mode service requires systemd, but systemd is not available.",
-				"--mode service 需要 systemd, 但 systemd 不可用。")
+				"install service requires systemd, but systemd is not available.",
+				"install service 需要 systemd, 但 systemd 不可用。")
 		}
 		return modeService, nil
 	case "user":
 		if isRoot() {
 			return "", cliErrorf(
-				"--mode user is for non-root users. Root should use --mode service.",
-				"--mode user 仅用于非 root 用户。root 用户请使用 --mode service。")
+				"install user is for non-root users. Root should use: install service",
+				"install user 仅用于非 root 用户。root 用户请使用: install service")
 		}
 		if !hasUserSystemd() {
 			return "", cliErrorf(
-				"--mode user requires user systemd session, but it is not available.\n"+
+				"install user requires user systemd session, but it is not available.\n"+
 					"  Possible causes: systemd not running, or no user session bus.\n"+
 					"  Check: systemctl --user is-system-running",
-				"--mode user 需要用户级 systemd 会话, 但当前不可用。\n"+
+				"install user 需要用户级 systemd 会话, 但当前不可用。\n"+
 					"  可能原因: systemd 未运行, 或没有用户会话总线。\n"+
 					"  检查命令: systemctl --user is-system-running")
 		}

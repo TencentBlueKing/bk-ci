@@ -275,7 +275,7 @@ class DownloadAgentInstallService @Autowired constructor(
     private fun getDownloadFile(os: String) = if (os == OS.WINDOWS.name) {
         "download_install.ps1"
     } else {
-        "install.sh"
+        "download_install.sh"
     }
 
     private fun getPropertyFile(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String, String> {

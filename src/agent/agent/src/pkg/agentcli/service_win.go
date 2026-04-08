@@ -22,38 +22,42 @@ func platformUnzip(src, dest string) error {
 }
 
 func handleInstall(workDir string, args []string) error {
-	fs := flag.NewFlagSet("install", flag.ContinueOnError)
-	mode := fs.String("mode", "service", "")
-	user := fs.String("user", "", "")
-	pass := fs.String("password", "", "")
-	autoLogon := fs.Bool("auto-logon", false, "")
-	if err := fs.Parse(args); err != nil {
-		return err
+	mode := "service"
+	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
+		mode = strings.ToLower(args[0])
+		args = args[1:]
 	}
 
 	cleanupBeforeInstallWin(workDir)
 
-	switch strings.ToLower(*mode) {
+	switch mode {
 	case "service":
 		return installService(workDir)
 	case "session":
-		if *autoLogon && *user == "" {
-			return fmt.Errorf(msg("--auto-logon requires --user and --password",
-				"--auto-logon 需要同时指定 --user 和 --password"))
+		var user, pass string
+		var autoLogon bool
+		fs := flag.NewFlagSet("session", flag.ContinueOnError)
+		fs.BoolVar(&autoLogon, "auto-logon", false, "")
+		if err := fs.Parse(args); err != nil {
+			return err
 		}
-		if *user != "" && *pass == "" {
-			return fmt.Errorf(msg("--password is required when --user is specified",
-				"指定 --user 时必须提供 --password"))
+		if autoLogon {
+			remaining := fs.Args()
+			if len(remaining) < 2 {
+				return fmt.Errorf(msg("--auto-logon requires USER and PASSWORD, e.g.: install session --auto-logon admin P@ssw0rd",
+					"--auto-logon 需要跟用户名和密码, 例如: install session --auto-logon admin P@ssw0rd"))
+			}
+			user, pass = remaining[0], remaining[1]
 		}
-		return enableSession(workDir, *user, *pass, *autoLogon)
+		return enableSession(workDir, user, pass, autoLogon)
 	case "task":
 		printWarn(msg(
-			"[DEPRECATED] Task mode is deprecated. Consider using '--mode session' for desktop access.",
-			"[已废弃] 计划任务模式已废弃, 建议使用 '--mode session' 获取桌面访问能力。"))
+			"[DEPRECATED] Task mode is deprecated. Consider using 'install session' for desktop access.",
+			"[已废弃] 计划任务模式已废弃, 建议使用 'install session' 获取桌面访问能力。"))
 		return installTask(workDir)
 	default:
 		return fmt.Errorf(msgf("unknown install mode: %s (valid: service, session, task)",
-			"未知安装模式: %s (可选: service, session, task)", *mode))
+			"未知安装模式: %s (可选: service, session, task)", mode))
 	}
 }
 
@@ -133,6 +137,8 @@ func installService(workDir string) error {
 	if out, err := exec.Command("sc.exe", "create", serviceName, "binPath=", binPath, "start=", "auto").CombinedOutput(); err != nil {
 		return cliErrorf("sc.exe create failed: %s (%v)", "sc.exe create 失败: %s (%v)", string(out), err)
 	}
+
+	configureSCMRecovery(serviceName)
 
 	printStep(msg("Step 3: starting service ...", "步骤 3: 启动服务 ..."))
 	if out, err := exec.Command("sc.exe", "start", serviceName).CombinedOutput(); err != nil {
@@ -274,6 +280,20 @@ func handleStop(workDir string) error {
 	stopProcesses(workDir)
 	printStep(msg("Agent stopped", "Agent 已停止"))
 	return nil
+}
+
+// configureSCMRecovery sets SCM failure recovery options so that the service
+// automatically restarts when the daemon exits unexpectedly (e.g., after a
+// daemon binary upgrade). Delays: 5s / 10s / 30s for 1st / 2nd / 3rd failure.
+// Inspired by GitHub Actions Runner's approach to self-updating service hosts.
+func configureSCMRecovery(serviceName string) {
+	if out, err := exec.Command("sc.exe", "failure", serviceName,
+		"reset=", "86400",
+		"actions=", "restart/5000/restart/10000/restart/30000",
+	).CombinedOutput(); err != nil {
+		printWarn(msgf("sc.exe failure config warning: %s (%v)",
+			"sc.exe failure 配置警告: %s (%v)", strings.TrimSpace(string(out)), err))
+	}
 }
 
 // ── sc.exe helpers ───────────────────────────────────────────────────────

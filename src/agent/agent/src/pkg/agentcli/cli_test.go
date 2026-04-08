@@ -528,12 +528,12 @@ func TestParsePropertiesFile_Chinese(t *testing.T) {
 }
 
 func TestHandleInstall_AcceptsArgs(t *testing.T) {
-	// Use --mode background so that readInstallMode (defaults to LOGIN)
+	// Use "background" so that readInstallMode (defaults to LOGIN)
 	// differs from the requested mode, avoiding the "already installed"
 	// short-circuit. This forces the function to reach getServiceName,
 	// which fails because .agent.properties is missing.
 	dir := t.TempDir()
-	err := handleInstall(dir, []string{"--mode", "background"})
+	err := handleInstall(dir, []string{"background"})
 	if err == nil {
 		t.Error("handleInstall with empty dir should return error")
 	}

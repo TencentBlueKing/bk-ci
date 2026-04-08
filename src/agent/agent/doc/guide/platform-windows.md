@@ -9,8 +9,8 @@ Windows 支持三种安装模式：
 | 模式 | 命令 | 适用场景 |
 |------|------|---------|
 | `service` | `devopsAgent.exe install` | 默认模式，后台服务运行，适合大多数场景 |
-| `session` | `devopsAgent.exe install --mode session` | 需要访问桌面 UI 的构建（如 GUI 测试、UWP 打包） |
-| `task` | `devopsAgent.exe install --mode task` | **已废弃**，计划任务模式，保留兼容 |
+| `session` | `devopsAgent.exe install session` | 需要访问桌面 UI 的构建（如 GUI 测试、UWP 打包） |
+| `task` | `devopsAgent.exe install task` | **已废弃**，计划任务模式，保留兼容 |
 
 ### Service 模式（默认）
 
@@ -18,7 +18,7 @@ Agent 以 Windows 服务方式运行，通过 `sc.exe` 注册：
 
 ```powershell
 .\devopsAgent.exe install
-.\devopsAgent.exe install --mode service   # 等同上面
+.\devopsAgent.exe install service   # 等同上面
 ```
 
 特点：
@@ -33,44 +33,42 @@ Agent 以 Windows 服务方式运行，通过 `sc.exe` 注册：
 
 ```powershell
 # 基本 Session 模式（依赖当前已登录用户）
-.\devopsAgent.exe install --mode session
+.\devopsAgent.exe install session
 
-# 配置凭据（无人登录时也能创建 Session）
-.\devopsAgent.exe install --mode session --user builduser --password P@ssw0rd
-
-# 完整配置（包含自动登录，重启后自动恢复 Session）
-.\devopsAgent.exe install --mode session --user builduser --password P@ssw0rd --auto-logon
+# 带自动登录（重启/注销后自动恢复用户会话）
+.\devopsAgent.exe install session --auto-logon builduser P@ssw0rd
 ```
 
 #### Session 参数
 
 | 参数 | 说明 |
 |------|------|
-| `--user` | Windows 登录账号（支持 `DOMAIN\user` 或 `user@domain` 格式） |
-| `--password` | 账号密码（指定 `--user` 时必填，配置前会通过 LogonUser API 验证） |
-| `--auto-logon` | 配置 Windows 自动登录（需要 `--user`） |
+| `--auto-logon USER PASSWORD` | 配置 Windows 自动登录，注销/重启后自动恢复用户会话。用户名支持 `DOMAIN\user` 或 `user@domain` 格式，安装前会通过 LogonUser API 验证凭据 |
 
-#### 三层效果对比
+#### 行为对比
 
-| 场景 | 无参数 | 有凭据 | 凭据 + `--auto-logon` |
-|------|--------|--------|----------------------|
-| 当前有用户登录 | Daemon 通过 WTS API 在用户 Session 中启动 Agent | 同左 | 同左 |
-| 没人登录 | Agent 回退到 Session 0（无桌面） | Daemon 用 LogonUser 创建控制台 Session | Windows 自动登录 → 产生 Session |
-| 系统影响 | 无 | 凭据加密存储在 LSA Secret | 同左 + 修改注册表自动登录 |
+| 场景 | 无 `--auto-logon` | 有 `--auto-logon` |
+|------|-------------------|-------------------|
+| 当前有用户登录 | Daemon 通过 WTS API 在用户 Session 中启动 Agent | 同左 |
+| 用户注销 | Agent 被终止，Daemon 等待用户重新登录后自动恢复 | Windows 自动登录 → 新用户会话 → Agent 自动恢复 |
+| 系统重启 | 需等待用户手动登录 | Windows 自动登录 → Agent 自动恢复 |
+| 锁屏 (Win+L) | Agent 不受影响，继续运行 | 同左 |
 
-#### 凭据安全
+> **注意**：未配置 `--auto-logon` 时，注销后 Daemon 不会回退到 SYSTEM 身份启动 Agent，而是每 30 秒检测一次，等待用户登录后在用户会话中恢复。这避免了 SYSTEM 身份下执行构建可能带来的权限和环境问题。
 
-- 凭据通过 **LSA Secret**（Local Security Authority）加密存储
-- 与 Sysinternals Autologon 和 Azure DevOps Agent 使用相同的安全机制
+#### 自动登录安全
+
+- 自动登录密码通过 **LSA Secret**（Local Security Authority）加密存储
+- 与 Sysinternals Autologon 使用相同的安全机制
 - 不在任何配置文件中以明文出现
-- `uninstall` 会自动清理所有凭据和自动登录配置
+- `uninstall` 会自动清理自动登录配置
 
 #### 密码变更
 
 密码变更后需要重新安装（会自动先卸载旧配置）：
 
 ```powershell
-.\devopsAgent.exe install --mode session --user builduser --password NewP@ssw0rd
+.\devopsAgent.exe install session --auto-logon builduser NewP@ssw0rd
 ```
 
 ### Task 模式（已废弃）
@@ -133,7 +131,6 @@ PS> .\devopsAgent.exe status
   安装模式:                 SESSION
   运行模式:                 Windows 服务 + 桌面 Session
   服务状态:                 RUNNING
-  Session 凭据:            已配置 (LSA Secret)
   自动登录:                 已启用 (DefaultUserName=builduser)
   Daemon PID:             1234 (运行中)
   Agent PID:              5678 (运行中)
