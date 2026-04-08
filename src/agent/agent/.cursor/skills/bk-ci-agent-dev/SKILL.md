@@ -265,15 +265,15 @@ AgentUpgrade(upgradeItem, hasBuild)
 | **进程替换** | 文件替换 + 进程信号 | 等待退出 + 文件替换 |
 | **硬件信息采集** | Linux/Windows 可走通用 `ghw` 采集；macOS 需用 `_darwin.go` 单独兜底，当前跳过 GPU 采集以规避 `ghw` 未实现报错 | GPU 标签主要用于指标补充，不应影响 Agent 启动 |
 
-### 安装模式 (`install --mode`)
+### 安装模式 (`install [mode]`)
 
-所有平台的 `install` 命令通过 `--mode` 选择安装模式。如果目标模式与当前已安装模式相同则跳过；不同则自动先 `uninstall` 再安装。
+所有平台的 `install` 命令通过子命令选择安装模式（如 `install session`）。不指定则使用默认模式。如果目标模式与当前已安装模式相同则跳过；不同则自动先 `uninstall` 再安装。
 
 | 平台 | 可选模式 | 默认 | 说明 |
 |------|---------|------|------|
-| **Linux** | `service` / `user` / `direct` | root: `service`; 非 root: `direct` | `service` = 系统级 systemd (`/etc/systemd/system/`)；`user` = 用户级 systemd (`~/.config/systemd/user/`, 需 `loginctl enable-linger`)；`direct` = 直接启动 |
-| **macOS** | `login` / `background` | `login` | `login` = 需登录桌面, 直接启动；`background` = 无头模式 (`user/UID` 域 + `LimitLoadToSessionType=Background`) |
-| **Windows** | `service` / `session` / `task` | `service` | `service` = Windows 服务；`session` = 服务 + 桌面会话（可选 `--auto-logon` 自动登录）；`task` = 已废弃计划任务 |
+| **Linux** | `service` / `user` / `direct` | root: `service`; 非 root: `direct` | `service` = 系统级 systemd；`user` = 用户级 systemd (需 `loginctl enable-linger`)；`direct` = 直接启动 |
+| **macOS** | (默认) / `background` | 默认: 需登录桌面 | `background` = 无头模式 (`user/UID` 域 + `LimitLoadToSessionType=Background`) |
+| **Windows** | (默认) / `session` / `task` | 默认: Windows 服务 | `session` = 服务 + 桌面会话（可选 `--auto-logon` 自动登录）；`task` = 已废弃计划任务 |
 
 通过 `.install_type` 文件持久化当前模式，`start`/`stop` 自动检测并使用对应的启停方式。
 
@@ -281,7 +281,7 @@ AgentUpgrade(upgradeItem, hasBuild)
 - Daemon 通过 WTS API (`CreateProcessAsUser`) 在已登录用户的桌面会话中启动 Agent
 - 无用户登录时 **等待** 用户登录（每 30s 重试），**不会**回退到 SYSTEM 身份直接启动
 - 注销会导致 Agent 被终止，未配置 auto-logon 时需等待手动登录后自动恢复
-- `--auto-logon USER PASSWORD`：配置 Windows 自动登录，注销/重启后自动恢复用户会话
+- `install session --auto-logon USER PASSWORD`：配置 Windows 自动登录，注销/重启后自动恢复用户会话
 
 ### 内外版差异 (`constant/`)
 

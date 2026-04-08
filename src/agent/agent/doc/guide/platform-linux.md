@@ -9,8 +9,8 @@ Linux 支持三种安装模式：
 | 模式 | 命令 | 适用场景 |
 |------|------|---------|
 | `service` | `sudo ./devopsAgent install` | Root 用户默认，系统级 systemd 服务 |
-| `user` | `./devopsAgent install --mode user` | 非 Root 用户的 systemd 服务，注销后仍运行 |
-| `direct` | `./devopsAgent install --mode direct` | 非 Root 默认，直接后台启动，无服务注册 |
+| `user` | `./devopsAgent install user` | 非 Root 用户的 systemd 服务，注销后仍运行 |
+| `direct` | `./devopsAgent install direct` | 非 Root 默认，直接后台启动，无服务注册 |
 
 ### Service 模式（Root 默认）
 
@@ -18,7 +18,7 @@ Linux 支持三种安装模式：
 
 ```bash
 sudo ./devopsAgent install
-sudo ./devopsAgent install --mode service   # 等同上面
+sudo ./devopsAgent install service   # 等同上面
 ```
 
 systemd 单元文件位置：`/etc/systemd/system/devops_agent_{id}.service`
@@ -46,7 +46,7 @@ sudo systemctl status devops_agent_{id}
 非 Root 用户的 systemd 用户级服务，适合需要注销后仍保持运行的场景：
 
 ```bash
-./devopsAgent install --mode user
+./devopsAgent install user
 ```
 
 特点：
@@ -80,7 +80,7 @@ systemctl --user stop devops_agent_{id}
 
 ```bash
 ./devopsAgent install
-./devopsAgent install --mode direct   # 非 Root 时的默认
+./devopsAgent install direct   # 非 Root 时的默认
 ```
 
 特点：

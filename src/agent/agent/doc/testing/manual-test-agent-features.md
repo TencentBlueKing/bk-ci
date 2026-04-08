@@ -38,8 +38,8 @@
 验证：
 
 - Linux/macOS 不展示 Windows 独有参数：
-  - `--mode session`
-  - `--mode task`
+  - `session`（install 子模式）
+  - `task`（install 子模式）
   - `configure-session`
   - `--auto-logon`
 - Windows 展示完整 Windows 参数
@@ -160,14 +160,14 @@
 执行：
 
 ```powershell
-.\devopsAgent.exe install --mode session --user xxx --password yyy
+.\devopsAgent.exe install session --user xxx --password yyy
 .\devopsAgent.exe status
 ```
 
 再执行：
 
 ```powershell
-.\devopsAgent.exe install --mode session --user xxx --password yyy --auto-logon
+.\devopsAgent.exe install session --user xxx --password yyy --auto-logon
 ```
 
 验证：
@@ -187,7 +187,7 @@
 执行：
 
 ```powershell
-.\devopsAgent.exe install --mode task
+.\devopsAgent.exe install task
 .\devopsAgent.exe status
 ```
 
@@ -459,7 +459,7 @@ export DEVOPS_AGENT_CONTAINER_RUNTIME=podman
 
 每次发版前至少手测这几项：
 
-1. Windows `install --mode session`
+1. Windows `install session`
 2. Windows `reinstall`
 3. Linux root `install`（systemd 路径必须绝对）
 4. `status` 故障定位（DNS/TCP/TLS/HTTP）

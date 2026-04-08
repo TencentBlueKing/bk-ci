@@ -4,7 +4,6 @@
 package agentcli
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -35,18 +34,17 @@ func isRoot() bool {
 // ── install / uninstall ──────────────────────────────────────────────────
 
 func handleInstall(workDir string, args []string) error {
-	fs := flag.NewFlagSet("install", flag.ContinueOnError)
-	mode := fs.String("mode", "login", "")
-	if err := fs.Parse(args); err != nil {
-		return err
+	mode := "login"
+	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
+		mode = args[0]
 	}
 
-	installMode := strings.ToUpper(*mode)
+	installMode := strings.ToUpper(mode)
 	switch installMode {
 	case modeLogin, modeBackground:
 	default:
 		return cliErrorf("unknown install mode: %s (valid: login, background)",
-			"未知安装模式: %s (可选: login, background)", *mode)
+			"未知安装模式: %s (可选: login, background)", mode)
 	}
 
 	cleanupBeforeInstall(workDir, installMode)
@@ -78,6 +76,16 @@ func handleInstall(workDir string, args []string) error {
 	}
 
 	printStep(msg("Install complete", "安装完成"))
+
+	if installMode == modeLogin {
+		printStep("")
+		printWarn(msg(
+			"LOGIN mode requires a user to be logged in. To auto-recover after reboot,\n"+
+				"  enable auto-login in System Settings > Users & Groups.",
+			"LOGIN 模式需要用户已登录桌面。为确保重启后自动恢复，\n"+
+				"  建议在 系统设置 > 用户与群组  中开启自动以此身份登录。"))
+	}
+
 	return nil
 }
 
