@@ -84,6 +84,25 @@ class ExternalResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun softwareInstallCallbackV2(
+        type: String,
+        key: String,
+        projectId: String,
+        userId: String,
+        workspaceName: String,
+        softwareList: SoftwareCallbackRes
+    ): Result<Boolean> {
+        if (key != externalKey) return Result(false)
+        softwareManageService.softwareInstallationCompleteCallback(
+            type = type,
+            workspaceName = workspaceName,
+            projectId = projectId,
+            userId = userId,
+            softwareList = softwareList
+        )
+        return Result(true)
+    }
+
     override fun cdsMeshEnableAndDomain(
         ts: String,
         token: String,
