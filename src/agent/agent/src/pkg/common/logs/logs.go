@@ -16,6 +16,8 @@ const (
 
 var Logs *logrus.Entry
 
+var logWriter io.Closer
+
 func Init(filepath string, isDebug bool, logStd bool) error {
 	logInfo := logrus.WithFields(logrus.Fields{})
 
@@ -25,6 +27,7 @@ func Init(filepath string, isDebug bool, logStd bool) error {
 		MaxBackups: 7,
 		LocalTime:  true,
 	}
+	logWriter = lumLog
 
 	// 同时写入到 std
 	if logStd {
@@ -44,6 +47,14 @@ func Init(filepath string, isDebug bool, logStd bool) error {
 	Logs = logInfo
 
 	return nil
+}
+
+// Close flushes and closes the underlying log file. Safe to call before
+// os.Exit to ensure all buffered log entries are written to disk.
+func Close() {
+	if logWriter != nil {
+		logWriter.Close()
+	}
 }
 
 // SetDebugMode toggles the log level at runtime without restarting.
