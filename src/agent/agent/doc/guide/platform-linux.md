@@ -175,6 +175,8 @@ $ ./devopsAgent status
   运行模式:                 root + systemd (系统服务)
   服务状态:                 active
   开机启动:                 enabled
+  服务主进程 PID:           1234
+  启动时间:                 Thu 2026-04-08 10:00:00 CST
   Daemon PID:             1234 (运行中)
   Agent PID:              5678 (运行中)
   JDK 17:                 正常 ✓

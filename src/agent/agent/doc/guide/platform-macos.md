@@ -147,9 +147,9 @@ $ ./devopsAgent status
   服务名:                  devops_agent_abc123
   当前用户:                 builder
   安装模式:                 BACKGROUND
-  运行模式:                 launchd background (无头模式)
-  launchd 域:              gui/501
-  plist 路径:              /Users/builder/Library/LaunchAgents/devops_agent_abc123.plist
+  运行模式:                 普通用户 (LaunchAgents, 域: user/501)
+  Plist 文件:              /Users/builder/Library/LaunchAgents/devops_agent_abc123.plist ✓
+  launchd 状态:            已加载, 运行中 (PID 1234) ✓
   Daemon PID:             1234 (运行中)
   Agent PID:              5678 (运行中)
   JDK 17:                 正常 ✓
