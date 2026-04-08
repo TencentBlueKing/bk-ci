@@ -46,7 +46,6 @@ import jakarta.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ExternalResource {
 
-    @Deprecated(message = "被v2代替")
     @Operation(summary = "软件安装回调")
     @POST
     @Path("/software_install_callback")
@@ -54,24 +53,6 @@ interface ExternalResource {
         @QueryParam("type")
         type: String,
         @QueryParam("key")
-        key: String,
-        @QueryParam("projectId")
-        projectId: String,
-        @QueryParam("userId")
-        userId: String,
-        @QueryParam("workspaceName")
-        workspaceName: String,
-        @Parameter(description = "回调信息", required = true)
-        softwareList: SoftwareCallbackRes
-    ): Result<Boolean>
-
-    @Operation(summary = "软件安装回调V2")
-    @POST
-    @Path("/software_install_callback_v2")
-    fun softwareInstallCallbackV2(
-        @QueryParam("type")
-        type: String,
-        @HeaderParam("key")
         key: String,
         @QueryParam("projectId")
         projectId: String,
