@@ -135,6 +135,59 @@ Agent 的核心配置文件，使用 INI 格式（`key=value`），位于 Agent 
 | 加载时机 | daemon 启动时，与当前 PATH 去重合并（`.path` 中的路径优先） |
 | Windows | 不需要 |
 
+## 构建环境变量机制
+
+Agent 执行构建任务时，会为构建进程组装一套环境变量。不同平台使用不同的机制来确保构建进程能获取到完整的环境：
+
+### 各平台机制对比
+
+| 平台 | 机制 | 实时性 | 更新方式 |
+|------|------|--------|---------|
+| **Windows** | 注册表轮询（每 3 秒） | 自动刷新，无需重启 | 安装软件或修改系统环境变量后，3 秒内自动生效 |
+| **Linux** | `.env`/`.path` 文件快照 | 需要 `stop` + `start` | 在完整环境的终端中执行 `stop` + `start` |
+| **macOS** | `.env`/`.path` 文件快照 | 需要 `stop` + `start` | 在完整环境的终端中执行 `stop` + `start` |
+
+### Linux/macOS：`.env` 和 `.path` 文件
+
+当 Agent 以 systemd 服务（Linux）或 launchd 服务（macOS）运行时，daemon 进程继承的是系统提供的极简环境（通常只有基础 PATH），用户在 `.bashrc`/`.zshrc` 中配置的开发工具路径（如 nvm、pyenv、Go）不会自动生效。
+
+`.env`/`.path` 文件机制解决了这个问题：
+
+1. `install` 或 `start` 命令在用户终端中执行时，Agent 自动快照当前 shell 的 PATH 和常用开发变量
+2. daemon 启动时读取这些文件，合并到进程环境
+3. 构建进程通过 `envs.Envs()` 继承这些环境变量
+
+**自动采集的变量列表：**
+
+`LANG`、`LC_ALL`、`JAVA_HOME`、`JRE_HOME`、`ANT_HOME`、`M2_HOME`、`MAVEN_HOME`、`ANDROID_HOME`、`ANDROID_SDK_ROOT`、`GRADLE_HOME`、`NVM_DIR`、`NVM_BIN`、`LD_LIBRARY_PATH`、`GOPATH`、`GOROOT`、`PYENV_ROOT`、`CARGO_HOME`、`RUSTUP_HOME`、`NODE_PATH`、`PYTHONPATH`
+
+### 何时需要手动更新环境变量
+
+以下操作后需要在终端中执行 `stop` + `start` 以刷新 `.env`/`.path` 快照：
+
+- 安装了新的开发工具（如 nvm、pyenv、Go、Rust）
+- 修改了 `.bashrc`/`.zshrc`/`.profile` 中的 PATH 或环境变量
+- 升级了已有工具的版本（如 nvm 切换了 Node.js 版本）
+
+```bash
+cd <agent安装目录>
+./devopsAgent stop
+./devopsAgent start   # 自动重新快照当前 shell 环境
+```
+
+### Windows：注册表自动轮询
+
+Windows 平台不使用 `.env`/`.path` 文件。Agent 每 3 秒自动轮询系统注册表，获取最新的环境变量：
+
+- 用户级：`HKEY_CURRENT_USER\Environment`
+- 系统级：`HKEY_LOCAL_MACHINE\...\Session Manager\Environment`
+
+安装新软件或修改环境变量后，无需重启 Agent，3 秒内自动生效。详见 [Windows 平台指南](platform-windows.md)。
+
+### Docker 构建不受影响
+
+Docker 构建的容器环境变量由 Agent 通过 `-e` 参数显式传递（`project_id`、`agent_id` 等），不继承宿主机的 `.env`/`.path` 文件内容。
+
 ## 环境变量开关
 
 以下环境变量可以通过操作系统环境变量或 BK-CI 服务端下发来控制 Agent 行为：
