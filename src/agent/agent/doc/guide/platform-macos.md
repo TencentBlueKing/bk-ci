@@ -9,7 +9,7 @@ macOS 支持两种安装模式：
 | 模式 | 命令 | 适用场景 |
 |------|------|---------|
 | `login` | `./devopsAgent install` | 默认模式，launchd gui 域，适合有桌面环境的机器 |
-| `background` | `./devopsAgent install --mode background` | launchd 无头模式，适合 SSH/CI/无桌面环境 |
+| `background` | `./devopsAgent install background` | launchd 无头模式，适合 SSH/CI/无桌面环境 |
 
 两种模式都通过 launchd 管理服务生命周期，区别在于 launchd domain：
 - `login` → `gui/{UID}`（需要桌面会话）
@@ -147,9 +147,9 @@ $ ./devopsAgent status
   服务名:                  devops_agent_abc123
   当前用户:                 builder
   安装模式:                 BACKGROUND
-  运行模式:                 launchd background (无头模式)
-  launchd 域:              gui/501
-  plist 路径:              /Users/builder/Library/LaunchAgents/devops_agent_abc123.plist
+  运行模式:                 普通用户 (LaunchAgents, 域: user/501)
+  Plist 文件:              /Users/builder/Library/LaunchAgents/devops_agent_abc123.plist ✓
+  launchd 状态:            已加载, 运行中 (PID 1234) ✓
   Daemon PID:             1234 (运行中)
   Agent PID:              5678 (运行中)
   JDK 17:                 正常 ✓

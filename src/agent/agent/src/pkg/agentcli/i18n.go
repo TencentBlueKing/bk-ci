@@ -92,12 +92,6 @@ func printUsageLocalized() {
   status               显示运行状态 + 健康检查 (网络/磁盘/证书诊断)
 `)
 		fmt.Print(`
-调试:
-  debug [on|off]       切换调试模式 (修改后需重启 Agent 生效)
-                       · 日志级别降低到 DEBUG, 输出更详细的运行信息
-                       · 禁止自动升级, 方便本地调试
-                       · Docker 构建结束后不自动删除容器, 便于排查问题
-
 其他:
   version              打印版本号
     -f                 打印完整版本信息 (版本号 / Git Commit / 构建时间)
@@ -141,13 +135,6 @@ Maintenance:
   status               Show status + health checks (network/disk/cert diagnostics)
 `)
 		fmt.Print(`
-Debug:
-  debug [on|off]       Toggle debug mode (restart agent to take effect)
-                       Differences from normal mode:
-                       · Log level set to DEBUG — more verbose output
-                       · Auto-upgrade disabled — convenient for local debugging
-                       · Docker containers kept after build — easier troubleshooting
-
 Other:
   version              Print version
     -f                 Print full version info (version / Git commit / build time)
