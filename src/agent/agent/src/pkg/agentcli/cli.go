@@ -520,7 +520,7 @@ func handleReinstall(workDir string, args []string) error {
 
 	printStep(msg("Step 6: installing and starting service ...", "步骤 6: 安装并启动服务 ..."))
 	mode := strings.ToLower(readInstallMode(workDir))
-	if err := handleInstall(workDir, []string{"--mode", mode}); err != nil {
+	if err := handleInstall(workDir, []string{mode}); err != nil {
 		return fmt.Errorf(msgf(
 			"reinstall failed at install step: %v",
 			"重装在安装步骤失败: %v", err))

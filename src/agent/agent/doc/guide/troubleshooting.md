@@ -251,22 +251,6 @@ status 命令的输出分为四个部分：
 | 构建日志 | `logs/{buildId}_{vmSeqId}_agent.log` | 单次构建的 Worker 输出 |
 | Docker 构建日志 | `logs/docker/{buildId}/` | Docker 容器构建日志 |
 
-### 开启详细日志
-
-```bash
-./devopsAgent debug on
-./devopsAgent start   # 重启生效
-```
-
-开启后日志包含更多细节（HTTP 请求/响应、环境变量变化等），排查完毕后建议关闭：
-
-```bash
-./devopsAgent debug off
-./devopsAgent start   # 重启生效
-```
-
-注意：调试模式下 Agent 不会接受自动升级。
-
 ## 进程与服务管理命令速查
 
 ### Linux

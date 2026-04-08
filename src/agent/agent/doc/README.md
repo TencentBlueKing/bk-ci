@@ -65,7 +65,6 @@ Agent 安装后的典型目录结构：
 ├── .env                                # 环境变量快照（Linux/macOS，install/start 时自动采集）
 ├── .path                               # PATH 快照（Linux/macOS，install/start 时自动采集）
 ├── .cert                               # 自定义 TLS 证书（可选）
-├── .debug                              # 调试模式开关文件（可选）
 ├── jdk17/                              # JDK 17 运行时
 ├── jdk/                                # JDK 8 运行时（兼容旧构建）
 ├── logs/                               # Agent 运行日志
