@@ -52,7 +52,7 @@ src/agent/agent/
 │   │       ├── fileutil/       # 文件操作
 │   │       ├── httputil/       # HTTP客户端
 │   │       ├── process/        # 进程管理(Windows Job Object)
-│   │       ├── systemutil/     # 系统工具(路径/权限/目录)
+│   │       ├── systemutil/     # 系统工具(路径/权限/目录/用户检测fallback)
 │   │       └── wintask/        # Windows服务检测
 │   └── third_components/       # 第三方组件管理(JDK/Worker)
 ├── internal/
@@ -258,7 +258,7 @@ AgentUpgrade(upgradeItem, hasBuild)
 |------|------|---------|
 | **进程管理** | `Setpgid` + `syscall.Kill(-pgId)` | Windows Job Object (`JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`) |
 | **构建启动** | 写Shell脚本 → `/bin/bash` 执行 | 直接 `java -jar` |
-| **用户切换** | `syscall.Credential{Uid, Gid}` | 不支持(空操作) |
+| **用户切换** | Linux only: `syscall.Credential{Uid, Gid}` + UID 比较 | macOS/Windows: 空操作 |
 | **环境变量** | `.env`/`.path` 文件加载 + `os.Environ()` | 注册表轮询(每3秒) + PATH合并 |
 | **Docker** | 完整支持 | 不支持 |
 | **文件权限** | `os.Chmod` | 空操作 |

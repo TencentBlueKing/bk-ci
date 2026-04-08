@@ -25,7 +25,7 @@ Agent 的核心配置文件，使用 INI 格式（`key=value`），位于 Agent 
 |------|------|---------|--------|
 | `devops.parallel.task.count` | 普通构建最大并发数 | 节点页面配置 | 4 |
 | `devops.docker.parallel.task.count` | Docker 构建最大并发数 | 节点页面配置 | 4 |
-| `devops.slave.user` | 构建进程以哪个系统用户运行 | 本地可配 | 系统用户（windows不支持，使用install指定的用户） |
+| `devops.slave.user` | 构建进程以哪个系统用户运行 | 本地可配 | 系统用户（仅linux） |
 | `devops.agent.detect.shell` | 是否使用 `$SHELL` 环境变量指定的 shell | 本地可配 | `false`（使用 `/bin/bash`） |
 | `devops.docker.enable` | 是否启用 Docker 构建功能 | 流水线勾选 使用docker构建 开启 | `false` |
 
