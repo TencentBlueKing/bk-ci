@@ -954,11 +954,18 @@ class PipelineVersionFacadeService @Autowired constructor(
         search: String?
     ) :List<PipelineYamlVersionInfo> {
         val list = mutableListOf<PipelineYamlVersionInfo>()
-        // 默认返回当前最新的正式版本
+        // 默认返回当前最新的正式版本（当流水线仅有分支版本时不添加）
         pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId
-        )?.let {
+        )?.takeIf {
+            // 检查对应版本号是否为正式版本
+            pipelineRepositoryService.getPipelineResourceVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = it.version
+            )?.status == VersionStatus.RELEASED
+        }?.let {
             list.add(
                 PipelineYamlVersionInfo(
                     name = it.versionName ?: "",
