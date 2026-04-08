@@ -30,8 +30,6 @@ package com.tencent.devops.environment.resources.thirdpartyagent
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
@@ -41,7 +39,9 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
+import com.tencent.devops.environment.pojo.EnabledStrategiesWithTags
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.enums.NodeType
@@ -61,6 +61,7 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.UpdateAgentInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineSeqId
+import com.tencent.devops.environment.service.EnvDispatchStrategyService
 import com.tencent.devops.environment.service.NodeService
 import com.tencent.devops.environment.service.NodeTagService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
@@ -81,7 +82,9 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     private val nodeService: NodeService,
     private val nodeTagService: NodeTagService,
     private val agentService: ThirdPartAgentService,
-    private val environmentPermissionService: EnvironmentPermissionService
+    private val envDispatchStrategyService: EnvDispatchStrategyService,
+    private val envNodeDao: EnvNodeDao,
+    private val dslContext: org.jooq.DSLContext
 ) : ServiceThirdPartyAgentResource {
     override fun getAgentById(projectId: String, agentId: String): AgentResult<ThirdPartyAgent?> {
         return thirdPartyAgentService.getAgent(projectId, agentId)
@@ -361,31 +364,35 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         )
     }
 
-    override fun fetchNodeTagKeyValues(
-        projectId: String,
-        nodeHashIds: Set<String>
-    ): Result<Map<Long, Map<Long, List<String>>>> {
-        val nodeIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }.toSet()
-        val tagMap = nodeTagService.fetchNodeTags(projectId, nodeIds)
-        val result = mutableMapOf<Long, Map<Long, List<String>>>()
-        tagMap.forEach { (nodeId, tags) ->
-            val keyValues = mutableMapOf<Long, MutableList<String>>()
-            tags.forEach { tag ->
-                val valueNames = keyValues.getOrPut(tag.tagKeyId) { mutableListOf() }
-                tag.tagValues.forEach { valueNames.add(it.tagValueName) }
-            }
-            result[nodeId] = keyValues
-        }
-        return Result(result)
-    }
-
-    override fun checkEnvEditPermission(
-        userId: String,
+    override fun getEnabledStrategiesWithTags(
         projectId: String,
         envId: Long
-    ): Result<Boolean> {
-        return Result(
-            environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)
-        )
+    ): Result<EnabledStrategiesWithTags> {
+        val strategies = envDispatchStrategyService.getEnabledStrategies(projectId, envId)
+
+        val needLabels = strategies.any { !it.labelSelector.isNullOrEmpty() }
+        val nodeTagValues = if (needLabels) {
+            val envNodes = envNodeDao.list(dslContext, projectId, listOf(envId))
+            val nodeIds = envNodes.map { it.nodeId }.toSet()
+            if (nodeIds.isEmpty()) {
+                emptyMap()
+            } else {
+                val tagMap = nodeTagService.fetchNodeTags(projectId, nodeIds)
+                val result = mutableMapOf<Long, Map<Long, List<String>>>()
+                tagMap.forEach { (nodeId, tags) ->
+                    val keyValues = mutableMapOf<Long, MutableList<String>>()
+                    tags.forEach { tag ->
+                        val valueNames = keyValues.getOrPut(tag.tagKeyId) { mutableListOf() }
+                        tag.tagValues.forEach { valueNames.add(it.tagValueName) }
+                    }
+                    result[nodeId] = keyValues
+                }
+                result
+            }
+        } else {
+            emptyMap()
+        }
+
+        return Result(EnabledStrategiesWithTags(strategies, nodeTagValues))
     }
 }

@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.pojo.agent.UpgradeItem
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.EnvVar
+import com.tencent.devops.environment.pojo.EnabledStrategiesWithTags
 import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
@@ -503,29 +504,15 @@ interface ServiceThirdPartyAgentResource {
         projectId: String
     ): Result<List<NodeTag>>
 
-    @Operation(summary = "按节点ID批量查询节点标签键值对")
-    @POST
-    @Path("/projects/{projectId}/nodes/tagKeyValues")
-    fun fetchNodeTagKeyValues(
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "节点ID列表", required = true)
-        nodeHashIds: Set<String>
-    ): Result<Map<Long, Map<Long, List<String>>>>
-
-    @Operation(summary = "校验用户是否有环境编辑权限")
+    @Operation(summary = "获取环境已启用的调度策略及标签数据（合并接口）")
     @GET
-    @Path("/projects/{projectId}/envs/{envId}/checkEditPermission")
-    fun checkEnvEditPermission(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+    @Path("/projects/{projectId}/envs/{envId}/enabledStrategiesWithTags")
+    fun getEnabledStrategiesWithTags(
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "环境ID", required = true)
         @PathParam("envId")
         envId: Long
-    ): Result<Boolean>
+    ): Result<EnabledStrategiesWithTags>
 }

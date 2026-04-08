@@ -1,12 +1,12 @@
 package com.tencent.devops.dispatch
 
 import com.tencent.devops.common.api.enums.AgentStatus
-import com.tencent.devops.dispatch.pojo.DispatchStrategyConfig
-import com.tencent.devops.dispatch.pojo.LabelSelector
-import com.tencent.devops.dispatch.pojo.enums.LabelOp
-import com.tencent.devops.dispatch.pojo.enums.NodeRule
-import com.tencent.devops.dispatch.pojo.enums.StrategyScope
-import com.tencent.devops.dispatch.pojo.enums.StrategyType
+import com.tencent.devops.environment.pojo.DispatchStrategyConfig
+import com.tencent.devops.environment.pojo.LabelSelector
+import com.tencent.devops.environment.pojo.enums.LabelOp
+import com.tencent.devops.environment.pojo.enums.NodeRule
+import com.tencent.devops.environment.pojo.enums.StrategyScope
+import com.tencent.devops.environment.pojo.enums.StrategyType
 import com.tencent.devops.dispatch.utils.DispatchStrategyExecutor
 import com.tencent.devops.dispatch.utils.DispatchStrategyExecutor.StrategyInput
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent

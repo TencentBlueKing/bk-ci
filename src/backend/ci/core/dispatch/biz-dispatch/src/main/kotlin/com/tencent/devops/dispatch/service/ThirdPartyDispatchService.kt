@@ -56,7 +56,6 @@ import com.tencent.devops.dispatch.constants.BK_THIRD_JOB_ENV_CURR
 import com.tencent.devops.dispatch.constants.BK_THIRD_JOB_NODE_CURR
 import com.tencent.devops.dispatch.exception.DispatchRetryMQException
 import com.tencent.devops.dispatch.exception.ErrorCodeEnum
-import com.tencent.devops.dispatch.pojo.DispatchStrategyConfig
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.service.tpaqueue.TPAQueueService
 import com.tencent.devops.dispatch.service.tpaqueue.TPASingleQueueService
@@ -64,6 +63,7 @@ import com.tencent.devops.dispatch.utils.DispatchStrategyExecutor
 import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentEnvLock
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.DispatchStrategyConfig
 import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.process.api.service.ServiceVarResource
@@ -85,8 +85,7 @@ class ThirdPartyDispatchService @Autowired constructor(
     private val commonUtil: TPACommonUtil,
     private val thirdPartyAgentBuildService: ThirdPartyAgentService,
     private val tpaQueueService: TPAQueueService,
-    private val tpaSingleQueueService: TPASingleQueueService,
-    private val envDispatchStrategyService: EnvDispatchStrategyService
+    private val tpaSingleQueueService: TPASingleQueueService
 ) {
     fun canDispatch(event: PipelineAgentStartupEvent) =
         event.dispatchType is ThirdPartyAgentIDDispatchType ||
@@ -678,20 +677,31 @@ class ThirdPartyDispatchService @Autowired constructor(
             logDebug(
                 dispatchMessage.event,
                 "[${it.agentId}]${it.hostname}/${it.ip}, Jobs:${runningBuildsMapper[it.agentId]}" +
-                    ", DockerJobs:${dockerRunningBuildsMapper[it.agentId] ?: 0}"
+                        ", DockerJobs:${dockerRunningBuildsMapper[it.agentId] ?: 0}"
             )
         }
 
-        val strategies = envDispatchStrategyService.getEnabledStrategies(
-            projectId = dispatchMessage.event.projectId,
-            envId = envId
+        val strategyResult = try {
+            client.get(ServiceThirdPartyAgentResource::class)
+                .getEnabledStrategiesWithTags(dispatchMessage.event.projectId, envId)
+                .data
+        } catch (e: Exception) {
+            // TODO: 这里如果没拿到报错了，应该是结束还是重试还是回归原始
+            logger.warn("getEnabledStrategiesWithTags failed: ${e.message}")
+            null
+        }
+        val strategies = strategyResult?.strategies ?: DispatchStrategyConfig.buildDefaults(
+            dispatchMessage.event.projectId, envId, "system"
         )
 
-        val agentTagValues = fetchAgentTagValues(
-            projectId = dispatchMessage.event.projectId,
-            agents = activeAgents,
-            strategies = strategies
-        )
+        val nodeIdToAgentId = mutableMapOf<Long, String>()
+        activeAgents.forEach { agent ->
+            agent.nodeId?.let { nodeIdToAgentId[HashUtil.decodeIdToLong(it)] = agent.agentId }
+        }
+        val agentTagValues = mutableMapOf<String, Map<Long, List<String>>>()
+        strategyResult?.nodeTagValues?.forEach { (nodeId, kv) ->
+            nodeIdToAgentId[nodeId]?.let { agentId -> agentTagValues[agentId] = kv }
+        }
 
         val executor = DispatchStrategyExecutor(
             input = DispatchStrategyExecutor.StrategyInput(
@@ -768,42 +778,6 @@ class ThirdPartyDispatchService @Autowired constructor(
             buildId = event.buildId,
             varName = AgentReuseMutex.genAgentContextKey(jobId)
         ).data?.get(AgentReuseMutex.genAgentContextKey(jobId))
-    }
-
-    /**
-     * 按需获取 agent 标签映射。仅当策略中包含 labelSelector 时才发起 RPC 调用。
-     * @return agentId -> Map<tagKeyId, List<tagValueName>>
-     */
-    private fun fetchAgentTagValues(
-        projectId: String,
-        agents: List<ThirdPartyAgent>,
-        strategies: List<DispatchStrategyConfig>
-    ): Map<String, Map<Long, List<String>>> {
-        val needLabels = strategies.any { !it.labelSelector.isNullOrEmpty() }
-        if (!needLabels) return emptyMap()
-
-        val nodeHashIds = agents.mapNotNull { it.nodeId }.toSet()
-        if (nodeHashIds.isEmpty()) return emptyMap()
-
-        val nodeTagMap = try {
-            client.get(ServiceThirdPartyAgentResource::class)
-                .fetchNodeTagKeyValues(projectId, nodeHashIds)
-                .data ?: emptyMap()
-        } catch (e: Exception) {
-            logger.warn("fetchAgentTagValues failed: ${e.message}")
-            emptyMap()
-        }
-
-        val nodeIdToAgentId = mutableMapOf<Long, String>()
-        agents.forEach { agent ->
-            agent.nodeId?.let { nodeIdToAgentId[HashUtil.decodeIdToLong(it)] = agent.agentId }
-        }
-
-        val result = mutableMapOf<String, Map<Long, List<String>>>()
-        nodeTagMap.forEach { (nodeId, keyValues) ->
-            nodeIdToAgentId[nodeId]?.let { agentId -> result[agentId] = keyValues }
-        }
-        return result
     }
 
     fun finishBuild(event: PipelineAgentShutdownEvent) {

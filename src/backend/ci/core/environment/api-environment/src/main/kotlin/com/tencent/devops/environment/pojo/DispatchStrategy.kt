@@ -1,10 +1,10 @@
-package com.tencent.devops.dispatch.pojo
+package com.tencent.devops.environment.pojo
 
-import com.tencent.devops.dispatch.pojo.enums.DefaultStrategyCode
-import com.tencent.devops.dispatch.pojo.enums.LabelOp
-import com.tencent.devops.dispatch.pojo.enums.NodeRule
-import com.tencent.devops.dispatch.pojo.enums.StrategyScope
-import com.tencent.devops.dispatch.pojo.enums.StrategyType
+import com.tencent.devops.environment.pojo.enums.DefaultStrategyCode
+import com.tencent.devops.environment.pojo.enums.LabelOp
+import com.tencent.devops.environment.pojo.enums.NodeRule
+import com.tencent.devops.environment.pojo.enums.StrategyScope
+import com.tencent.devops.environment.pojo.enums.StrategyType
 
 data class LabelSelector(
     val tagKeyId: Long,
@@ -50,3 +50,9 @@ data class DispatchStrategyConfig(
         }
     }
 }
+
+data class EnabledStrategiesWithTags(
+    val strategies: List<DispatchStrategyConfig>,
+    /** nodeId -> (tagKeyId -> List of tagValueName) */
+    val nodeTagValues: Map<Long, Map<Long, List<String>>>
+)

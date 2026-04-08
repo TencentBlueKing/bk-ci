@@ -1,10 +1,10 @@
-package com.tencent.devops.dispatch.pojo
+package com.tencent.devops.environment.pojo
 
-import com.tencent.devops.dispatch.pojo.enums.DefaultStrategyCode
-import com.tencent.devops.dispatch.pojo.enums.LabelOp
-import com.tencent.devops.dispatch.pojo.enums.NodeRule
-import com.tencent.devops.dispatch.pojo.enums.StrategyScope
-import com.tencent.devops.dispatch.pojo.enums.StrategyType
+import com.tencent.devops.environment.pojo.enums.DefaultStrategyCode
+import com.tencent.devops.environment.pojo.enums.LabelOp
+import com.tencent.devops.environment.pojo.enums.NodeRule
+import com.tencent.devops.environment.pojo.enums.StrategyScope
+import com.tencent.devops.environment.pojo.enums.StrategyType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "标签选择器条件")

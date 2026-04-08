@@ -16,11 +16,9 @@ import com.tencent.devops.dispatch.constants.BK_QUEUE_TIMEOUT_MINUTES
 import com.tencent.devops.dispatch.constants.BK_THIRD_JOB_ENV_CURR
 import com.tencent.devops.dispatch.constants.BK_THIRD_JOB_NODE_CURR
 import com.tencent.devops.dispatch.exception.ErrorCodeEnum
-import com.tencent.devops.dispatch.pojo.DispatchStrategyConfig
 import com.tencent.devops.dispatch.pojo.EnvQueueContext
 import com.tencent.devops.dispatch.pojo.QueueDataContext
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
-import com.tencent.devops.dispatch.service.EnvDispatchStrategyService
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.dispatch.utils.DispatchStrategyExecutor
 import com.tencent.devops.dispatch.utils.TPACommonUtil
@@ -42,8 +40,7 @@ class TPAEnvQueueService @Autowired constructor(
     private val client: Client,
     private val commonUtil: TPACommonUtil,
     private val thirdPartyAgentService: ThirdPartyAgentService,
-    private val tpaSingleQueueService: TPASingleQueueService,
-    private val envDispatchStrategyService: EnvDispatchStrategyService
+    private val tpaSingleQueueService: TPASingleQueueService
 ) {
     fun initEnvContext(dataContext: QueueDataContext): EnvQueueContext {
         val data = dataContext.data
@@ -381,16 +378,27 @@ class TPAEnvQueueService @Autowired constructor(
             )
         }
 
-        val strategies = envDispatchStrategyService.getEnabledStrategies(
-            projectId = data.projectId,
-            envId = context.envId
-        )
+        val strategyResult = try {
+            client.get(ServiceThirdPartyAgentResource::class)
+                .getEnabledStrategiesWithTags(data.projectId, context.envId ?: 0L)
+                .data
+        } catch (e: Exception) {
+            logger.warn("getEnabledStrategiesWithTags failed: ${e.message}")
+            null
+        }
+        val strategies = strategyResult?.strategies
+            ?: com.tencent.devops.environment.pojo.DispatchStrategyConfig.buildDefaults(
+                data.projectId, context.envId ?: 0L, "system"
+            )
 
-        val agentTagValues = fetchAgentTagValues(
-            projectId = data.projectId,
-            agents = activeAgents,
-            strategies = strategies
-        )
+        val nodeIdToAgentId = mutableMapOf<Long, String>()
+        activeAgents.forEach { agent ->
+            agent.nodeId?.let { nodeIdToAgentId[HashUtil.decodeIdToLong(it)] = agent.agentId }
+        }
+        val agentTagValues = mutableMapOf<String, Map<Long, List<String>>>()
+        strategyResult?.nodeTagValues?.forEach { (nodeId, kv) ->
+            nodeIdToAgentId[nodeId]?.let { agentId -> agentTagValues[agentId] = kv }
+        }
 
         val executor = DispatchStrategyExecutor(
             input = DispatchStrategyExecutor.StrategyInput(
@@ -439,38 +447,6 @@ class TPAEnvQueueService @Autowired constructor(
         context.agentRunningCnt.remove(agentId)
         context.dockerRunningCnt.remove(agentId)
         context.hasTryAgents.remove(agentId)
-    }
-
-    private fun fetchAgentTagValues(
-        projectId: String,
-        agents: List<ThirdPartyAgent>,
-        strategies: List<DispatchStrategyConfig>
-    ): Map<String, Map<Long, List<String>>> {
-        val needLabels = strategies.any { !it.labelSelector.isNullOrEmpty() }
-        if (!needLabels) return emptyMap()
-
-        val nodeHashIds = agents.mapNotNull { it.nodeId }.toSet()
-        if (nodeHashIds.isEmpty()) return emptyMap()
-
-        val nodeTagMap = try {
-            client.get(ServiceThirdPartyAgentResource::class)
-                .fetchNodeTagKeyValues(projectId, nodeHashIds)
-                .data ?: emptyMap()
-        } catch (e: Exception) {
-            logger.warn("fetchAgentTagValues failed: ${e.message}")
-            emptyMap()
-        }
-
-        val nodeIdToAgentId = mutableMapOf<Long, String>()
-        agents.forEach { agent ->
-            agent.nodeId?.let { nodeIdToAgentId[HashUtil.decodeIdToLong(it)] = agent.agentId }
-        }
-
-        val result = mutableMapOf<String, Map<Long, List<String>>>()
-        nodeTagMap.forEach { (nodeId, keyValues) ->
-            nodeIdToAgentId[nodeId]?.let { agentId -> result[agentId] = keyValues }
-        }
-        return result
     }
 
     companion object {

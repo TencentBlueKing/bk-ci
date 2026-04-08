@@ -1,4 +1,4 @@
-package com.tencent.devops.dispatch.pojo.enums
+package com.tencent.devops.environment.pojo.enums
 
 enum class StrategyType { DEFAULT, CUSTOM }
 

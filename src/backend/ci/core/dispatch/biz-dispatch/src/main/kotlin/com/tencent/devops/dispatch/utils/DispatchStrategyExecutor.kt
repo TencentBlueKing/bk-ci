@@ -1,10 +1,10 @@
 package com.tencent.devops.dispatch.utils
 
-import com.tencent.devops.dispatch.pojo.DispatchStrategyConfig
-import com.tencent.devops.dispatch.pojo.LabelSelector
-import com.tencent.devops.dispatch.pojo.enums.LabelOp
-import com.tencent.devops.dispatch.pojo.enums.NodeRule
-import com.tencent.devops.dispatch.pojo.enums.StrategyScope
+import com.tencent.devops.environment.pojo.DispatchStrategyConfig
+import com.tencent.devops.environment.pojo.LabelSelector
+import com.tencent.devops.environment.pojo.enums.LabelOp
+import com.tencent.devops.environment.pojo.enums.NodeRule
+import com.tencent.devops.environment.pojo.enums.StrategyScope
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import org.slf4j.LoggerFactory
 
@@ -47,7 +47,7 @@ class DispatchStrategyExecutor(
             val lv = "$tag[Lv.${index + 1}]"
 
             pipelineLog("$lv \"${strategy.strategyName}\" scope=${strategy.scope} rule=${strategy.nodeRule}" +
-                if (!strategy.labelSelector.isNullOrEmpty()) " labels=${strategy.labelSelector.size}" else "")
+                if (!strategy.labelSelector.isNullOrEmpty()) " labels=${strategy.labelSelector?.size}" else "")
 
             val candidates = getCandidates(strategy.scope)
             if (candidates.isEmpty()) {
