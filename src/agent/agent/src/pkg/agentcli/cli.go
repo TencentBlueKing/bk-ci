@@ -197,8 +197,8 @@ func configureSessionSummaryLines(user string, autoLogon bool) []string {
 	return []string{
 		msg("The agent is active in your current session NOW.", "Agent 已在当前桌面会话中生效。"),
 		msg("When no user is logged in, agent waits until a user logs in.", "当无人登录时，agent 会等待用户登录后再启动。"),
-		msg("To auto-logon on reboot, add --auto-logon --user USER --password PASS.",
-			"如需在重启/注销后自动登录，请添加 --auto-logon --user 用户名 --password 密码。"),
+		msg("To auto-logon on reboot, add --auto-logon USER PASS.",
+			"如需在重启/注销后自动登录，请添加 --auto-logon 用户名 密码。"),
 	}
 }
 
