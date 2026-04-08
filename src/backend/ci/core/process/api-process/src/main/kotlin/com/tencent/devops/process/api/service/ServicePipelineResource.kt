@@ -656,30 +656,6 @@ interface ServicePipelineResource {
         pipelineId: String
     ): Result<PipelineRemoteToken>
 
-    @Operation(summary = "查询指定用户(权限代持人)公开的可见流水线列表")
-    @GET
-    @Path("/projects/{projectId}/visibility")
-    fun listVisiblePipelines(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "目标用户ID(权限代持人)", required = true)
-        @QueryParam("targetUserId")
-        targetUserId: String,
-        @Parameter(description = "流水线名称(模糊匹配)", required = false)
-        @QueryParam("pipelineName")
-        pipelineName: String? = null,
-        @Parameter(description = "页码", required = false)
-        @QueryParam("page")
-        page: Int? = null,
-        @Parameter(description = "每页数量", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int? = null
-    ): Result<SQLPage<SimplePipeline>>
-
     @Operation(summary = "启用/禁用流水线（修改流水线的并发设置）")
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/lock")

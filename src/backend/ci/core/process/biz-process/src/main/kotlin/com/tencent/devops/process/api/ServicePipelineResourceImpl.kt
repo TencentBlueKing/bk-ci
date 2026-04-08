@@ -699,26 +699,6 @@ class ServicePipelineResourceImpl @Autowired constructor(
         )
     }
 
-    override fun listVisiblePipelines(
-        userId: String,
-        projectId: String,
-        targetUserId: String,
-        pipelineName: String?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<SQLPage<SimplePipeline>> {
-        return Result(
-            pipelineListFacadeService.listVisiblePipelines(
-                userId = userId,
-                projectId = projectId,
-                targetUserId = targetUserId,
-                pipelineName = pipelineName,
-                page = page ?: PageUtil.DEFAULT_PAGE,
-                pageSize = pageSize ?: PageUtil.DEFAULT_PAGE_SIZE
-            )
-        )
-    }
-
     override fun lockPipeline(
         userId: String,
         projectId: String,
