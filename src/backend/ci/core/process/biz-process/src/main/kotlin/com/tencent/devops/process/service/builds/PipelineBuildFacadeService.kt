@@ -880,7 +880,7 @@ class PipelineBuildFacadeService(
                     if (el is ManualReviewUserTaskElement) {
                         trueElementId = el.id!!
                         checkReviewUser(
-                            reviewUsers = el.reviewUsers,
+                            reviewUsers = el.actualReviewUsers ?: el.reviewUsers,
                             projectId = projectId,
                             buildId = buildId,
                             userId = userId
@@ -901,7 +901,7 @@ class PipelineBuildFacadeService(
                                     projectId = projectId,
                                     buildId = buildId,
                                     userId = userId,
-                                    reviewUsers = el.reviewUsers ?: emptyList()
+                                    reviewUsers = el.actualReviewUsers ?: el.reviewUsers ?: emptyList()
                                 )
                             }
                         }
@@ -1276,7 +1276,7 @@ class PipelineBuildFacadeService(
                             buildId = buildId,
                             userId = userId,
                             pipelineId = pipelineId,
-                            reviewUsers = el.reviewUsers,
+                            reviewUsers = el.actualReviewUsers ?: el.reviewUsers,
                             params = el.params,
                             desc = el.desc ?: ""
                         )
@@ -1294,7 +1294,7 @@ class PipelineBuildFacadeService(
                                     buildId = buildId,
                                     userId = userId,
                                     pipelineId = pipelineId,
-                                    reviewUsers = el.reviewUsers ?: emptyList(),
+                                    reviewUsers = el.actualReviewUsers ?: el.reviewUsers ?: emptyList(),
                                     params = el.params ?: mutableListOf(),
                                     desc = el.desc ?: ""
                                 )

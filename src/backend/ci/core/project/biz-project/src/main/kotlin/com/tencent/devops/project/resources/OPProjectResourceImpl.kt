@@ -179,4 +179,17 @@ class OPProjectResourceImpl @Autowired constructor(
             projectService.setDisableWhenInactiveFlag(projectCodes)
         )
     }
+
+    override fun setHidden(
+        hidden: Boolean,
+        englishNames: List<String>
+    ): Result<Boolean> {
+        englishNames.forEach {
+            projectService.updateHiddenStatus(
+                englishName = it,
+                hidden = hidden
+            )
+        }
+        return Result(true)
+    }
 }
