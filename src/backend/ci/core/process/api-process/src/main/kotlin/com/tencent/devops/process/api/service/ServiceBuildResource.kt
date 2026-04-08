@@ -1046,5 +1046,4 @@ interface ServiceBuildResource {
         @BkField(required = false)
         debug: Boolean?
     ): Result<BuildInfo?>
-
 }
