@@ -551,13 +551,13 @@ func warnIfNetworkUser() {
 			"  resolve network users during early boot (before nslcd/sssd is ready).\n"+
 			"  The service will start when you log in, but NOT automatically after reboot.\n"+
 			"  For reliable auto-start, use root-level systemd service:\n"+
-			"    sudo ./devopsAgent install service",
+			"    sudo ./devopsAgent install",
 		"当前用户 %q 似乎是网络/目录账号 (LDAP/NIS/SSSD)。\n"+
 			"  基于 linger 的开机自启可能不生效, 因为 systemd-logind 在开机早期\n"+
 			"  无法解析网络用户 (nslcd/sssd 尚未就绪)。\n"+
 			"  服务会在用户登录后启动, 但重启后不会自动拉起。\n"+
 			"  如需可靠的开机自启, 建议使用 root 系统级 systemd 服务:\n"+
-			"    sudo ./devopsAgent install service",
+			"    sudo ./devopsAgent install",
 		username))
 }
 

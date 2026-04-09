@@ -18,7 +18,6 @@ Linux 支持三种安装模式：
 
 ```bash
 sudo ./devopsAgent install
-sudo ./devopsAgent install service   # 等同上面
 ```
 
 systemd 单元文件位置：`/etc/systemd/system/devops_agent_{id}.service`
@@ -106,7 +105,7 @@ grep "^$(whoami):" /etc/passwd
 **解决方案**：使用 root 权限安装为系统级 systemd 服务，不依赖用户解析：
 
 ```bash
-sudo ./devopsAgent install service
+sudo ./devopsAgent install
 ```
 
 ### Direct 模式（非 Root 默认）

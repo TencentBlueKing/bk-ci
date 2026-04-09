@@ -18,7 +18,6 @@ Agent 以 Windows 服务方式运行，通过 `sc.exe` 注册：
 
 ```powershell
 .\devopsAgent.exe install
-.\devopsAgent.exe install service   # 等同上面
 ```
 
 特点：
