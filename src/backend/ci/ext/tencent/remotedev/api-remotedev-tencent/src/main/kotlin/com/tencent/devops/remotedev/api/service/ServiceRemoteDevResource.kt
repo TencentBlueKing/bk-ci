@@ -621,10 +621,13 @@ interface ServiceRemoteDevResource {
         appId: Long,
         @Parameter(description = "实例IP", required = true)
         @QueryParam("ip")
-        ip: String,
+        ip: String?,
         @Parameter(description = "是否是录屏灰度", required = true)
         @QueryParam("mediaGary")
-        mediaGary: Boolean?
+        mediaGary: Boolean?,
+        @Parameter(description = "环境ID", required = true)
+        @QueryParam("envUid")
+        envUid: String?
     ): Result<CheckWorkspaceRecordData>
 
     @Deprecated("有了token后这个方法可能不会再使用，观察下如果不使用可以废弃")
@@ -1044,4 +1047,19 @@ interface ServiceRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<WorkspaceRegistration?>
+
+    @Operation(summary = "校验是否有权限查看直播")
+    @GET
+    @Path("/check_view_live")
+    fun checkViewLive(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
 }

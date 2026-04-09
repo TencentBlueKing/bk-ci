@@ -659,14 +659,16 @@ class ServiceRemoteDevResourceImpl(
     override fun checkWorkspaceEnableAddress(
         userId: String,
         appId: Long,
-        ip: String,
-        mediaGary: Boolean?
+        ip: String?,
+        mediaGary: Boolean?,
+        envUid: String?
     ): Result<CheckWorkspaceRecordData> {
         val (enable, address) = workspaceRecordService.checkRecordAndAddress(
             userId = userId,
             appId = appId,
             ip = ip,
-            mediaGary = mediaGary
+            mediaGary = mediaGary,
+            envUid = envUid
         )
         return Result(CheckWorkspaceRecordData(enable, address))
     }
@@ -967,5 +969,13 @@ class ServiceRemoteDevResourceImpl(
 
     override fun openClawOn(userId: String): Result<WorkspaceRegistration?> {
         return Result(coffeeAIService.openClawOn(userId))
+    }
+
+    override fun checkViewLive(
+        userId: String,
+        projectId: String,
+        workspaceName: String
+    ): Result<Boolean> {
+        return Result(workspaceRecordService.checkViewLive(userId, projectId, workspaceName))
     }
 }
