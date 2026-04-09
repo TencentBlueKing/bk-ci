@@ -105,7 +105,6 @@ class PipelineViewGroupVersionPostProcessor @Autowired constructor(
             if (pipelineResourceVersion.status != VersionStatus.RELEASED) {
                 return
             }
-            // 添加标签
             pipelineGroupService.updatePipelineLabel(
                 userId = userId,
                 projectId = projectId,
