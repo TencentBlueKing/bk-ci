@@ -164,23 +164,11 @@ func resolveInstallMode(flagMode string) (string, error) {
 	}
 
 	switch strings.ToLower(flagMode) {
-	case "service":
-		if !isRoot() {
-			return "", cliErrorf(
-				"install service requires root privileges. Use: sudo devopsAgent install service",
-				"install service 需要 root 权限。请使用: sudo devopsAgent install service")
-		}
-		if !hasSystemd() {
-			return "", cliErrorf(
-				"install service requires systemd, but systemd is not available.",
-				"install service 需要 systemd, 但 systemd 不可用。")
-		}
-		return modeService, nil
 	case "user":
 		if isRoot() {
 			return "", cliErrorf(
-				"install user is for non-root users. Root should use: install service",
-				"install user 仅用于非 root 用户。root 用户请使用: install service")
+				"install user is for non-root users. Root should use: sudo devopsAgent install",
+				"install user 仅用于非 root 用户。root 用户请使用: sudo devopsAgent install")
 		}
 		if !hasUserSystemd() {
 			return "", cliErrorf(
@@ -196,8 +184,8 @@ func resolveInstallMode(flagMode string) (string, error) {
 		return modeDirect, nil
 	default:
 		return "", cliErrorf(
-			"unknown install mode: %s (valid: service, user, direct)",
-			"未知安装模式: %s (可选: service, user, direct)", flagMode)
+			"unknown install mode: %s (valid: user, direct)",
+			"未知安装模式: %s (可选: user, direct)", flagMode)
 	}
 }
 
@@ -290,6 +278,10 @@ func stopByMode(workDir, serviceName, mode string) error {
 			if err != nil {
 				printWarn(msgf("systemctl stop: %s", "systemctl stop: %s", strings.TrimSpace(string(out))))
 			}
+			// KillMode=none means systemctl stop only marks the unit inactive
+			// but does not kill daemon/agent processes. Kill them via PID files
+			// so that the next start can acquire process locks cleanly.
+			stopProcesses(workDir)
 			printStep(msgf("Service %s stopped", "服务 %s 已停止", serviceName))
 			return nil
 		}
@@ -300,6 +292,8 @@ func stopByMode(workDir, serviceName, mode string) error {
 			if err != nil {
 				printWarn(msgf("systemctl --user stop: %s", "systemctl --user stop: %s", strings.TrimSpace(string(out))))
 			}
+			// Same as above: kill leftover processes for user-mode systemd.
+			stopProcesses(workDir)
 			printStep(msgf("Service %s stopped", "服务 %s 已停止", serviceName))
 			return nil
 		}
