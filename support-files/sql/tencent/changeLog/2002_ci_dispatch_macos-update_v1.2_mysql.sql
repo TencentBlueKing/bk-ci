@@ -35,6 +35,17 @@ BEGIN
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='MacOS调试历史记录表';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_BUILD_HISTORY'
+                    AND COLUMN_NAME = 'OS') THEN
+        ALTER TABLE `T_BUILD_HISTORY`
+            ADD COLUMN `OS` varchar(128) DEFAULT '' COMMENT '操作系统版本' AFTER `TASK_ID`,
+            ADD COLUMN `XCODE` varchar(128) DEFAULT '' COMMENT 'Xcode版本' AFTER `OS`,
+            ADD COLUMN `MACOS_HW_SPEC` varchar(128) DEFAULT '' COMMENT 'MacOS硬件规格' AFTER `XCODE`;
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

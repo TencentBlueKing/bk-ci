@@ -1,5 +1,6 @@
 package com.tencent.devops.dispatch.macos.service
 
+import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.dispatch.macos.dao.BuildHistoryDao
 import com.tencent.devops.dispatch.macos.dao.BuildTaskDao
 import com.tencent.devops.dispatch.macos.enums.MacJobStatus
@@ -51,6 +52,12 @@ class BuildHistoryService @Autowired constructor(
         rec.resourceType = resourceType
         rec.containerHashId = event.containerHashId
         rec.executeCount = event.executeCount
+
+        // 保存MacOS构建环境信息
+        val dispatchType = event.dispatchType as? MacOSDispatchType
+        rec.os = dispatchType?.systemVersion ?: ""
+        rec.xcode = dispatchType?.xcodeVersion ?: ""
+        rec.macosHwSpec = dispatchType?.macOSHwSpec ?: ""
 
         return buildHistoryDao.saveBuildHistory(dslContext, rec)
     }

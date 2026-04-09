@@ -669,7 +669,10 @@ class DevCloudMacosService @Autowired constructor(
         val taskId: String,
         val newCreatedVm: Boolean,
         val buildId: String,
-        val projectId: String
+        val projectId: String,
+        val os: String?,
+        val xcode: String?,
+        val macOSHwSpec: String?
     )
 
     /**
@@ -727,7 +730,10 @@ class DevCloudMacosService @Autowired constructor(
                     taskId = taskId,
                     newCreatedVm = false,
                     buildId = buildHistoryRecord.buildId,
-                    projectId = buildHistoryRecord.projectId
+                    projectId = buildHistoryRecord.projectId,
+                    os = buildHistoryRecord.os,
+                    xcode = buildHistoryRecord.xcode,
+                    macOSHwSpec = buildHistoryRecord.macosHwSpec
                 )
             }
             MacJobStatus.Done.name -> {
@@ -741,13 +747,19 @@ class DevCloudMacosService @Autowired constructor(
                     projectId = buildHistoryRecord.projectId,
                     pipelineId = pipelineId,
                     buildId = buildHistoryRecord.buildId,
-                    vmSeqId = vmSeqId
+                    vmSeqId = vmSeqId,
+                    os = buildHistoryRecord.os,
+                    xcode = buildHistoryRecord.xcode,
+                    macOSHwSpec = buildHistoryRecord.macosHwSpec
                 ) ?: return null
                 DebugTaskInfo(
                     taskId = newTaskId,
                     newCreatedVm = true,
                     buildId = buildHistoryRecord.buildId,
-                    projectId = buildHistoryRecord.projectId
+                    projectId = buildHistoryRecord.projectId,
+                    os = buildHistoryRecord.os,
+                    xcode = buildHistoryRecord.xcode,
+                    macOSHwSpec = buildHistoryRecord.macosHwSpec
                 )
             }
             else -> {
@@ -767,6 +779,9 @@ class DevCloudMacosService @Autowired constructor(
      * @param pipelineId 流水线ID
      * @param buildId 构建ID
      * @param vmSeqId 虚拟机序列ID
+     * @param os 操作系统版本
+     * @param xcode Xcode版本
+     * @param macOSHwSpec MacOS硬件规格
      * @return 新的taskId，创建失败返回null
      */
     private fun creatVmForDebug(
@@ -774,7 +789,10 @@ class DevCloudMacosService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        vmSeqId: String
+        vmSeqId: String,
+        os: String?,
+        xcode: String?,
+        macOSHwSpec: String?
     ): String? {
         val logTag = "[debug]$buildId"
         val createBody = DevCloudMacosVmCreate(
@@ -782,7 +800,12 @@ class DevCloudMacosService @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             vmSeqId = vmSeqId,
-            env = mapOf("IS_DEBUG_LOGIN" to "true")
+            os = os,
+            xcode = xcode,
+            env = mapOf(
+                "IS_DEBUG_LOGIN" to "true",
+                DockerConstants.ENV_KEY_DEVCLOUD_MODEL to (macOSHwSpec ?: DEFAULT_HW_TYPE)
+            )
         )
 
         val taskId = sendCreateVmRequest(createBody, userId, logTag)
