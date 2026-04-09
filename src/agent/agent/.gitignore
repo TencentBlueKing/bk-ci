@@ -1,2 +1,5 @@
 bin/
 .docker-gopath/
+.cursor
+.claude
+.codebuddy

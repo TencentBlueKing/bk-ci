@@ -33,6 +33,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	innerFileUtil "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
@@ -234,6 +235,15 @@ func tryKillAgentProcess(processName string) (int, error) {
 		return intPid, errors.Wrapf(err, "get process %d failed", intPid)
 	}
 
+	// Verify the process is actually the expected one to avoid killing a
+	// different process that reused the same PID.
+	if name, nameErr := p.Name(); nameErr == nil {
+		if !strings.Contains(strings.ToLower(name), processName) {
+			logs.Warnf("pid %d is now %s, not %s, skip kill", intPid, name, processName)
+			return intPid, nil
+		}
+	}
+
 	if err := p.Kill(); err != nil {
 		return intPid, errors.Wrapf(err, "kill process %d failed", intPid)
 	}
@@ -334,6 +344,12 @@ func replaceDaemonFileByRename(fileName string) error {
 	src := systemutil.GetUpgradeDir() + "/" + fileName
 	dst := systemutil.GetWorkDir() + "/" + fileName
 	oldDst := dst + ".old"
+
+	// Pre-check: verify source file is accessible before making any changes
+	// to avoid leaving the daemon binary missing if the copy would fail.
+	if _, err := os.Stat(src); err != nil {
+		return errors.Wrapf(err, "source file %s not accessible, aborting", src)
+	}
 
 	_ = os.Remove(oldDst)
 
