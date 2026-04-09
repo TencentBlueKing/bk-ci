@@ -10,8 +10,10 @@ import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants
 import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.dispatch.macos.dao.BuildHistoryDao
+import com.tencent.devops.dispatch.macos.dao.DebugHistoryDao
 import com.tencent.devops.dispatch.macos.dao.DevcloudVirtualMachineDao
 import com.tencent.devops.dispatch.macos.enums.DevCloudCreateMacVMStatus
+import com.tencent.devops.dispatch.macos.enums.MacJobStatus
 import com.tencent.devops.dispatch.macos.pojo.TaskResponse
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DMAllVmModelRsp
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmCreate
@@ -39,7 +41,8 @@ class DevCloudMacosService @Autowired constructor(
     private val dslContext: DSLContext,
     private val macVmTypeService: MacVmTypeService,
     private val devcloudVirtualMachineDao: DevcloudVirtualMachineDao,
-    private val buildHistoryDao: BuildHistoryDao
+    private val buildHistoryDao: BuildHistoryDao,
+    private val debugHistoryDao: DebugHistoryDao
 ) {
 
     companion object {
@@ -64,65 +67,97 @@ class DevCloudMacosService @Autowired constructor(
         dispatchMessage: DispatchMessage
     ): Pair<DevCloudMacosVmCreateInfo?, String> {
         val buildId = dispatchMessage.event.buildId
+        val userId = dispatchMessage.event.userId
+        val createBody = buildCreateBody(dispatchMessage)
 
-        var taskId = ""
+        val taskId = sendCreateVmRequest(createBody, userId, buildId)
+        if (taskId.isNullOrBlank()) return Pair(null, "")
+
+        val vmCreateInfo = waitForVmReady(taskId, userId, buildId)
+        return Pair(vmCreateInfo, taskId)
+    }
+
+    /**
+     * 发送创建VM的HTTP请求，解析响应并返回taskId
+     * @param createBody 创建VM的请求体
+     * @param userId 用户ID
+     * @param logTag 日志标识，用于区分调用来源
+     * @return taskId，请求失败返回null
+     */
+    private fun sendCreateVmRequest(
+        createBody: DevCloudMacosVmCreate,
+        userId: String,
+        logTag: String
+    ): String? {
         val realUrl = toIdcUrl("$devCloudUrl/api/mac/vm/create")
-        val body = ObjectMapper().writeValueAsString(buildCreateBody(dispatchMessage))
-        logger.info("$buildId DevCloud creatVM request realUrl: $realUrl body: $body")
+        val body = ObjectMapper().writeValueAsString(createBody)
+        logger.info("$logTag DevCloud creatVM request - realUrl: $realUrl, body: $body")
+
         val request = Request.Builder()
             .url(realUrl)
             .headers(
-                SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, dispatchMessage.event.userId)
-                    .toHeaders()
+                SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, userId).toHeaders()
             )
-            .post(body.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
 
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
-            logger.info("$buildId DevCloud creatVM http code is ${response.code}, $responseContent")
+            logger.info("$logTag DevCloud creatVM http code: ${response.code}, response: $responseContent")
             if (!response.isSuccessful) {
                 logger.error(
-                    "$buildId Fail to request to DevCloud creatVM, http response code: ${response.code}, " +
-                        "msg: $responseContent"
+                    "$logTag Failed to creatVM, http response code: ${response.code}, msg: $responseContent"
                 )
-                return Pair(null, "")
+                return null
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
             val code = responseData["actionCode"] as Int
             val message = responseData["actionMessage"] as String
             if (code != 200) {
-                logger.info("$buildId DevCloud fail to create MacOS,actionCode is $code ,actionMessage is $message")
-                return Pair(null, "")
+                logger.error("$logTag DevCloud fail to creatVM, actionCode: $code, actionMessage: $message")
+                return null
             }
             val temp = responseData["data"] as Map<String, Any>
-            taskId = temp["taskId"] as String
-            logger.info("$buildId success send creating VM request,enters the query process,taskId is $taskId")
+            val taskId = temp["taskId"] as String
+            logger.info("$logTag Success send creating VM request, taskId: $taskId")
+            return taskId
         }
+    }
 
-        // 轮训task执行结果，10min超时
+    /**
+     * 轮询等待VM创建任务完成，10min超时
+     * @param taskId 任务ID
+     * @param userId 用户ID
+     * @param logTag 日志标识，用于区分调用来源
+     * @return VM创建信息，失败/取消/超时返回null
+     */
+    private fun waitForVmReady(
+        taskId: String,
+        userId: String,
+        logTag: String
+    ): DevCloudMacosVmCreateInfo? {
         repeat(200) { times ->
-            val taskResponse = getTaskStatus(taskId, dispatchMessage.event.userId)
+            val taskResponse = getTaskStatus(taskId, userId)
             if (taskResponse?.data != null) {
                 when (taskResponse.data.status) {
                     DevCloudCreateMacVMStatus.failed.title, DevCloudCreateMacVMStatus.canceled.title -> {
-                        logger.info("$taskId status: failed or canceled, Try again")
-                        return Pair(null, taskId)
+                        logger.error("$logTag taskId: $taskId status: failed or canceled")
+                        return null
                     }
                     DevCloudCreateMacVMStatus.succeeded.title -> {
-                        logger.info("$taskId status: succeeded")
-                        return Pair(taskResponse.data, taskId)
+                        logger.info("$logTag taskId: $taskId status: succeeded")
+                        return taskResponse.data
                     }
                 }
             }
 
-            if (times % 50 == 0) logger.info("Query times is ${times + 1}")
+            if (times % 50 == 0) logger.info("$logTag Query times: ${times + 1}, taskId: $taskId")
 
             Thread.sleep(3000)
         }
 
-        logger.info("Loop task timout 10min")
-        return Pair(null, "")
+        logger.error("$logTag Loop task timeout 10min, taskId: $taskId")
+        return null
     }
 
     private fun buildCreateBody(dispatchMessage: DispatchMessage): DevCloudMacosVmCreate {
@@ -483,6 +518,10 @@ class DevCloudMacosService @Autowired constructor(
 
     /**
      * 开启MacOS虚拟机调试
+     * 根据构建历史记录的status判断：
+     * - Running：直接使用已有的taskId发起调试登录
+     * - Done：重新创建虚拟机，等待开机成功后使用新的taskId发起调试登录
+     * 调试成功后将taskId和是否新建VM等信息记录到debug表
      * @param userId 用户ID
      * @param pipelineId 流水线ID
      * @param vmSeqId 虚拟机序列ID
@@ -502,8 +541,8 @@ class DevCloudMacosService @Autowired constructor(
                 "buildId: $buildId, executeCount: $executeCount"
         )
 
-        val taskId = getTaskIdFromBuildHistory(pipelineId, vmSeqId, buildId, executeCount)
-        if (taskId == null) {
+        val debugTaskInfo = getTaskIdFromBuildHistory(pipelineId, vmSeqId, buildId, executeCount, userId)
+        if (debugTaskInfo == null) {
             logger.warn(
                 "TaskId not found for startDebug - pipelineId: $pipelineId, vmSeqId: $vmSeqId, " +
                     "buildId: $buildId, executeCount: $executeCount"
@@ -511,22 +550,40 @@ class DevCloudMacosService @Autowired constructor(
             return null
         }
 
-        logger.info("Found taskId: $taskId for pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: $buildId")
+        val (taskId, newCreatedVm, actualBuildId, projectId) = debugTaskInfo
+        logger.info(
+            "Found taskId: $taskId, newCreatedVm: $newCreatedVm for pipelineId: $pipelineId, " +
+                "vmSeqId: $vmSeqId, buildId: $actualBuildId"
+        )
 
         val debugLoginRequest = DevCloudMacosVmDebugLoginRequest(taskId = taskId)
         val debugLoginResponse = debugLogin(userId, debugLoginRequest)
-        
+
         if (debugLoginResponse != null) {
-            logger.info("Debug login successful for taskId: $taskId")
+            logger.info("Debug login successful for taskId: $taskId, saving debug history record")
+            // 记录debug信息到debug表
+            debugHistoryDao.saveDebugHistory(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = actualBuildId,
+                vmSeqId = vmSeqId,
+                executeCount = executeCount,
+                taskId = taskId,
+                newCreatedVm = newCreatedVm,
+                userId = userId
+            )
         } else {
             logger.error("Debug login failed for taskId: $taskId")
         }
-        
+
         return debugLoginResponse
     }
 
     /**
      * 停止MacOS虚拟机调试
+     * 首先查询debug表获取taskId和是否是新创建的VM信息
+     * 发起关闭调试登录请求，如果是新创建的VM则额外发起关机（deleteVM）
      * @param userId 用户ID
      * @param pipelineId 流水线ID
      * @param vmSeqId 虚拟机序列ID
@@ -546,43 +603,94 @@ class DevCloudMacosService @Autowired constructor(
                 "buildId: $buildId, executeCount: $executeCount"
         )
 
-        val taskId = getTaskIdFromBuildHistory(pipelineId, vmSeqId, buildId, executeCount)
-        if (taskId == null) {
+        // 优先从debug表查询调试记录
+        val debugRecord = if (buildId != null) {
+            debugHistoryDao.getDebuggingRecord(dslContext, buildId, vmSeqId, executeCount)
+        } else {
+            debugHistoryDao.getLatestDebuggingRecord(dslContext, pipelineId, vmSeqId)
+        }
+
+        if (debugRecord == null) {
             logger.warn(
-                "TaskId not found for stopDebug - pipelineId: $pipelineId, vmSeqId: $vmSeqId, " +
+                "Debug history record not found for stopDebug - pipelineId: $pipelineId, vmSeqId: $vmSeqId, " +
                     "buildId: $buildId, executeCount: $executeCount"
             )
             return false
         }
 
-        logger.info("Found taskId: $taskId for pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: $buildId")
+        val taskId = debugRecord.taskId
+        val newCreatedVm = debugRecord.newCreatedVm
+        logger.info(
+            "Found debug record - taskId: $taskId, newCreatedVm: $newCreatedVm, " +
+                "pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: ${debugRecord.buildId}"
+        )
 
+        // 发起关闭调试登录请求
         val debugCloseRequest = DevCloudMacosVmDebugLoginRequest(taskId = taskId)
-        val result = debugClose(userId, debugCloseRequest)
-        
-        if (result != null) {
-            logger.info("Debug close successful for taskId: $taskId")
-            return true
-        } else {
+        val closeResult = debugClose(userId, debugCloseRequest)
+
+        if (closeResult == null) {
             logger.error("Debug close failed for taskId: $taskId")
             return false
         }
+
+        logger.info("Debug close successful for taskId: $taskId")
+
+        // 更新debug记录状态为已停止
+        debugHistoryDao.updateStatusToStopped(dslContext, debugRecord.id)
+
+        // 如果是新创建的VM，需要发起关机
+        if (newCreatedVm) {
+            logger.info("VM was newly created for debug, deleting VM - taskId: $taskId")
+            val deleteResult = deleteVM(
+                creator = userId,
+                devCloudMacosVmDelete = DevCloudMacosVmDelete(
+                    project = debugRecord.projectId,
+                    pipelineId = debugRecord.pipelineId,
+                    buildId = debugRecord.buildId,
+                    vmSeqId = debugRecord.vmSeqId,
+                    id = taskId
+                )
+            )
+            if (deleteResult) {
+                logger.info("Successfully deleted debug VM for taskId: $taskId")
+            } else {
+                logger.error("Failed to delete debug VM for taskId: $taskId")
+            }
+        }
+
+        return true
     }
 
     /**
+     * 调试任务信息，包含taskId、是否新创建VM、构建ID和项目ID
+     */
+    data class DebugTaskInfo(
+        val taskId: String,
+        val newCreatedVm: Boolean,
+        val buildId: String,
+        val projectId: String
+    )
+
+    /**
      * 从buildHistory表中查询taskId
+     * 根据记录的status判断：
+     * - Running：直接返回已有的taskId，标记为非新建VM
+     * - Done：重新发起createVm，等待开机成功并获取新的taskId，标记为新建VM
      * @param pipelineId 流水线ID
      * @param vmSeqId 虚拟机序列ID
      * @param buildId 构建ID，可选
      * @param executeCount 执行次数
-     * @return taskId，如果查询不到或taskId为空则返回null
+     * @param userId 用户ID，用于Done状态下重新创建VM
+     * @return 调试任务信息，如果查询不到或创建失败则返回null
      */
     private fun getTaskIdFromBuildHistory(
         pipelineId: String,
         vmSeqId: String,
         buildId: String?,
-        executeCount: Int
-    ): String? {
+        executeCount: Int,
+        userId: String
+    ): DebugTaskInfo? {
         val buildHistoryRecord = if (buildId != null) {
             buildHistoryDao.getBuildHistory(dslContext, buildId, vmSeqId, executeCount)?.firstOrNull()
         } else {
@@ -597,12 +705,90 @@ class DevCloudMacosService @Autowired constructor(
             return null
         }
 
-        val taskId = buildHistoryRecord.taskId
-        if (taskId.isNullOrBlank()) {
-            logger.warn("TaskId is null or empty for pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: $buildId")
-            return null
-        }
+        val status = buildHistoryRecord.status
+        logger.info(
+            "Build history record status: $status for pipelineId: $pipelineId, " +
+                "vmSeqId: $vmSeqId, buildId: $buildId"
+        )
 
-        return taskId
+        return when (status) {
+            MacJobStatus.Running.name -> {
+                // 状态为Running，直接返回已有的taskId，非新建VM
+                val taskId = buildHistoryRecord.taskId
+                if (taskId.isNullOrBlank()) {
+                    logger.warn(
+                        "TaskId is null or empty for running record - pipelineId: $pipelineId, " +
+                            "vmSeqId: $vmSeqId, buildId: $buildId"
+                    )
+                    return null
+                }
+                logger.info("VM is running, reuse existing taskId: $taskId")
+                DebugTaskInfo(
+                    taskId = taskId,
+                    newCreatedVm = false,
+                    buildId = buildHistoryRecord.buildId,
+                    projectId = buildHistoryRecord.projectId
+                )
+            }
+            MacJobStatus.Done.name -> {
+                // 状态为Done，重新发起createVm等待开机成功并获取新的taskId，标记为新建VM
+                logger.info(
+                    "VM is done, re-creating VM for debug - pipelineId: $pipelineId, " +
+                        "vmSeqId: $vmSeqId, buildId: ${buildHistoryRecord.buildId}"
+                )
+                val newTaskId = creatVmForDebug(
+                    userId = userId,
+                    projectId = buildHistoryRecord.projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildHistoryRecord.buildId,
+                    vmSeqId = vmSeqId
+                ) ?: return null
+                DebugTaskInfo(
+                    taskId = newTaskId,
+                    newCreatedVm = true,
+                    buildId = buildHistoryRecord.buildId,
+                    projectId = buildHistoryRecord.projectId
+                )
+            }
+            else -> {
+                logger.warn(
+                    "Unexpected build history status: $status for pipelineId: $pipelineId, " +
+                        "vmSeqId: $vmSeqId, buildId: $buildId"
+                )
+                null
+            }
+        }
+    }
+
+    /**
+     * 为调试场景重新创建虚拟机，等待开机成功并返回新的taskId
+     * @param userId 用户ID
+     * @param projectId 项目ID
+     * @param pipelineId 流水线ID
+     * @param buildId 构建ID
+     * @param vmSeqId 虚拟机序列ID
+     * @return 新的taskId，创建失败返回null
+     */
+    private fun creatVmForDebug(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String
+    ): String? {
+        val logTag = "[debug]$buildId"
+        val createBody = DevCloudMacosVmCreate(
+            project = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            vmSeqId = vmSeqId,
+            env = mapOf("IS_DEBUG_LOGIN" to "true")
+        )
+
+        val taskId = sendCreateVmRequest(createBody, userId, logTag)
+        if (taskId.isNullOrBlank()) return null
+
+        val vmCreateInfo = waitForVmReady(taskId, userId, logTag)
+        return if (vmCreateInfo != null) taskId else null
     }
 }

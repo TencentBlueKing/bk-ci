@@ -45,7 +45,7 @@ class BuildHistoryDao {
     ) {
         with(TBuildHistory.T_BUILD_HISTORY) {
             dslContext.update(this)
-                .set(STATUS, MacJobStatus.Running.title)
+                .set(STATUS, MacJobStatus.Running.name)
                 .set(VM_IP, vmIp)
                 .set(VM_ID, vmId)
                 .set(TASK_ID, taskId)
