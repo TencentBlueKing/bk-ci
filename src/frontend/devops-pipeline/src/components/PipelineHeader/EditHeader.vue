@@ -94,6 +94,7 @@
                 :project-id="projectId"
                 :current-editing-data="currentEditingData"
                 :id="pipelineId"
+                @release-success="handleSuccess"
             />
         </aside>
     </div>
@@ -268,10 +269,8 @@
                             if (res?.version) {
                                 // 重新获取流水线摘要信息
                                 await this.requestPipelineSummary(this.$route.params)
-                                // 刷新草稿列表（通过子组件）
-                                if (this.$refs.draftManager) {
-                                    await this.$refs.draftManager.refresh()
-                                }
+                                // 刷新草稿列表
+                                await this.handleSuccess()
                                 // 获取回滚后的流水线完整数据并更新到 store
                                 await this.requestPipeline({
                                     source: 'EDIT',
@@ -382,10 +381,8 @@
                         version
                     }
                 })
-                // 刷新草稿列表（通过子组件）
-                if (this.$refs.draftManager) {
-                    await this.$refs.draftManager.refresh()
-                }
+                // 刷新草稿列表
+                await this.handleSuccess()
                 this.$bkMessage({
                     theme: 'success',
                     message: this.$t('editPage.saveDraftSuccess', [pipelineSetting.pipelineName]),
@@ -410,16 +407,21 @@
                 this.isConflictDraft = false
                 // 重新获取流水线摘要信息
                 await this.requestPipelineSummary(this.$route.params)
-                // 刷新草稿列表（通过子组件）
-                if (this.$refs.draftManager) {
-                    await this.$refs.draftManager.refresh()
-                }
+                // 刷新草稿列表
+                await this.handleSuccess()
                 await this.requestPipeline({
                     source: 'EDIT',
                     projectId: this.projectId,
                     pipelineId: this.pipelineId,
                     version: this.pipelineInfo?.version
                 })
+            },
+
+            async handleSuccess () {
+                // 发布成功后刷新草稿列表
+                if (this.$refs.draftManager) {
+                    await this.$refs.draftManager.refresh()
+                }
             },
 
             async saveDraft () {

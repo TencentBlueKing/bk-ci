@@ -56,6 +56,7 @@
                         :project-id="projectId"
                         :current-editing-data="currentEditingData"
                         :id="templateId"
+                        @release-success="handleSuccess"
                     />
                 </aside>
             </header>
@@ -254,10 +255,8 @@
                             if (res?.version) {
                                 // 重新获取模板摘要信息
                                 await this.requestTemplateSummary(this.$route.params)
-                                // 刷新草稿列表（通过子组件）
-                                if (this.$refs.draftManager) {
-                                    await this.$refs.draftManager.refresh()
-                                }
+                                // 刷新草稿列表
+                                await this.handleSuccess()
                                 // 获取回滚后的模板完整数据并更新到 store
                                 await this.requestPipeline({
                                     projectId: this.projectId,
@@ -285,6 +284,13 @@
                         }
                     }
                 })
+            },
+
+            async handleSuccess () {
+                // 发布成功后刷新草稿列表
+                if (this.$refs.draftManager) {
+                    await this.$refs.draftManager.refresh()
+                }
             },
             goPipelineModel () {
                 this.isConflictDraft = false
@@ -360,10 +366,8 @@
                                 version: data.version
                             }
                         })
-                        // 刷新草稿列表（通过子组件）
-                        if (this.$refs.draftManager) {
-                            await this.$refs.draftManager.refresh()
-                        }
+                        // 刷新草稿列表
+                        await this.handleSuccess()
                         result = true
                     } else {
                         this.$showTips({
@@ -397,10 +401,8 @@
                 this.isConflictDraft = false
                 // 重新获取流水线摘要信息
                 await this.requestTemplateSummary(this.$route.params)
-                // 刷新草稿列表（通过子组件）
-                if (this.$refs.draftManager) {
-                    await this.$refs.draftManager.refresh()
-                }
+                // 刷新草稿列表
+                await this.handleSuccess()
                 await this.requestPipeline({
                     source: 'EDIT',
                     projectId: this.projectId,

@@ -16,6 +16,7 @@
             :version="currentVersion"
             :draft-base-version-name="draftBaseVersionName"
             :draft-status="draftStatus"
+            @release-success="handleReleaseSuccess"
         />
         <bk-dialog
             v-model="isPublishedDialogShow"
@@ -242,6 +243,9 @@
                     query: this.$route.query
                 })
             },
+            handleReleaseSuccess () {
+                this.$emit('release-success')
+            }
         }
     }
 </script>

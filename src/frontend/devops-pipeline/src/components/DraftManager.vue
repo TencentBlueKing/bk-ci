@@ -33,13 +33,14 @@
                         <span class="update-info">{{ formatTime(item.updateTime) }} {{ item.updater }}</span>
                         <span
                             class="version-name"
-                            v-if="item.draftVersion !== 1 && item.baseVersionName"
+                            v-if="item.baseVersionName"
                         >{{ $t('basedOn', [item.baseVersionName]) }}</span>
                     </p>
-                    <span
-                        v-if="index !== 0"
-                        class="options"
-                    >
+                    <span class="options">
+                        <span
+                            v-if="index === 0"
+                            class="update-tip"
+                        >{{ $t('lastSaveTime') }}</span>
                         <VersionDiffEntry
                             :class="['diff-button',{
                                 'develop-txt-disabled': !hasDraftPipeline
@@ -56,6 +57,7 @@
                             />
                         </VersionDiffEntry>
                         <span
+                            v-if="index !== 0"
                             class="rollback-icon rollback-button"
                             @click.stop="handleRollback(item)"
                         >
@@ -66,10 +68,6 @@
                             />
                         </span>
                     </span>
-                    <span
-                        v-else
-                        class="update-tip"
-                    >{{ $t('lastSaveTime') }}</span>
                 </li>
                 <li
                     v-if="loading"
@@ -504,6 +502,7 @@
                 padding: 0 4px;
                 background: #FDEED8;
                 border-radius: 2px;
+                margin-right: 12px;
                 color: #E38B02;
             }
             .loading-item {

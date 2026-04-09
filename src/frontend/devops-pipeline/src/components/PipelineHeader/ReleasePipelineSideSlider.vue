@@ -1358,6 +1358,9 @@
                                 )
                             ])
                         })
+                        // 发布成功，触发事件通知父组件刷新草稿列表
+                        this.$emit('release-success')
+                        
                         this.hideReleaseSlider()
                     } catch (e) {
                         if (e.state === 'error') {
