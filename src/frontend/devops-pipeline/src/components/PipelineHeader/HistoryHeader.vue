@@ -68,8 +68,6 @@
                 :draft-creator="activePipelineVersion?.creator"
                 :draft-create-time="activePipelineVersion?.createTime"
                 :rollback-id="uniqueId"
-                :draft-status="draftStatus"
-                :draft-save-info="draftSaveInfo"
                 :is-rollback-btn="isRollback"
             >
                 {{ operateName }}
@@ -154,8 +152,7 @@
         RESOURCE_TYPE,
         TEMPLATE_RESOURCE_ACTION,
     } from '@/utils/permission'
-    import { pipelineTabIdMap, DRAFT_STATUS } from '@/utils/pipelineConst'
-    import dayjs from 'dayjs'
+    import { pipelineTabIdMap } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import MoreActions from './MoreActions.vue'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
@@ -180,8 +177,6 @@
                 RESOURCE_TYPE,
                 RESOURCE_ACTION,
                 showVersionSideslider: false,
-                draftStatus: DRAFT_STATUS.NORMAL,
-                draftSaveInfo: null,
                 isPipelineIdChanged: false
             }
         },
@@ -317,8 +312,6 @@
             } else {
                 this.init()
             }
-            // 获取草稿状态
-            this.getPipelineDraftStatus()
         },
         methods: {
             ...mapActions('atom', [
@@ -327,36 +320,6 @@
                 'setSwitchingPipelineVersion',
                 'setShowVariable'
             ]),
-            ...mapActions('common', [
-                'getDraftStatus',
-                'getTemplateDraftStatus',
-            ]),
-            async getPipelineDraftStatus () {
-                try {
-                    const request = this.isTemplate ? this.getTemplateDraftStatus : this.getDraftStatus
-                    const dynamicKey = this.isTemplate ? 'templateId' : 'pipelineId'
-                    const params = {
-                        projectId: this.projectId,
-                        actionType: 'EDIT',
-                        [dynamicKey]: this.uniqueId,
-                    }
-                    const res = await request(params)
-                    this.draftStatus = res.status
-                    this.draftSaveInfo = {
-                        updater: res.draft?.updater,
-                        updateTime: dayjs(res.draft?.updateTime).format('YYYY-MM-DD HH:mm:ss'),
-                        draftVersionName: res.draft?.baseVersionName,
-                        draftVersion: res.draft?.version,
-                        releaseVersionName: res.release?.versionName || this.pipelineInfo?.releaseVersionName,
-                        releaseVersion: res.release?.version || this.releaseVersion,
-                    }
-                } catch (error) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: error.message
-                    })
-                }
-            },
             goEdit () {
                 this.$router.push({
                     name: this.editRouteName,

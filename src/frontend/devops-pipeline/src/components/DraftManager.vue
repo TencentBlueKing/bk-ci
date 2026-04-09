@@ -85,6 +85,7 @@
             :mask-close="false"
             footer-position="center"
             ext-cls="draft-manager-dialog"
+            @cancel="handleClose"
         >
             <header
                 class="draft-hint-title"

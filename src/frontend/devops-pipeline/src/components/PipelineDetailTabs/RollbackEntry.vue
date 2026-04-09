@@ -170,15 +170,6 @@
                 default: ''
             },
             isVersionList: Boolean,
-            // 草稿状态
-            draftStatus: {
-                type: String,
-                default: DRAFT_STATUS.NORMAL
-            },
-            draftSaveInfo: {
-                type: Object,
-                default: () => ({})
-            },
             // 是否为回滚操作
             isRollbackBtn: {
                 type: Boolean,
@@ -191,6 +182,8 @@
             return {
                 loading: false,
                 isShowConfirmDialog: false,
+                draftStatus: DRAFT_STATUS.NORMAL,
+                draftSaveInfo: null,
                 RESOURCE_ACTION
             }
         },
@@ -254,6 +247,8 @@
                 requestTemplateSummary: 'atom/requestTemplateSummary',
                 rollbackPipelineVersion: 'pipelines/rollbackPipelineVersion',
                 rollbackTemplateVersion: 'templates/rollbackTemplateVersion',
+                getDraftStatus: 'common/getDraftStatus',
+                getTemplateDraftStatus: 'common/getTemplateDraftStatus',
                 checkTemplatePipelineRollback: 'templates/checkTemplatePipelineRollback'
             }),
             async handleClick () {
@@ -290,14 +285,45 @@
                     return
                 }
 
-                // 详情页：无草稿冲突，直接编辑
-                if (this.draftStatus === DRAFT_STATUS.NORMAL) {
-                    this.goEdit(this.draftVersion ?? this.version)
-                    return
+                // 详情页：实时获取最新的草稿状态
+                try {
+                    const latestDraftStatus = await this.fetchLatestDraftStatus()
+                    // 无草稿冲突，直接编辑
+                    if (latestDraftStatus === DRAFT_STATUS.NORMAL) {
+                        this.goEdit(this.draftVersion ?? this.version)
+                        return
+                    }
+                    // 有草稿冲突，弹窗确认
+                    this.showDraftConfirmDialog()
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
                 }
+            },
 
-                // 详情页：有草稿冲突，弹窗确认
-                this.showDraftConfirmDialog()
+            // 获取最新的草稿状态
+            async fetchLatestDraftStatus () {
+                const request = this.isTemplate ? this.getTemplateDraftStatus : this.getDraftStatus
+                const dynamicKey = this.isTemplate ? 'templateId' : 'pipelineId'
+                const params = {
+                    projectId: this.projectId,
+                    actionType: 'EDIT',
+                    [dynamicKey]: this.rollbackId,
+                }
+                const res = await request(params)
+                this.draftStatus = res.status
+                this.draftSaveInfo = {
+                    updater: res.draft?.updater,
+                    updateTime: dayjs(res.draft?.updateTime).format('YYYY-MM-DD HH:mm:ss'),
+                    draftVersionName: res.draft?.baseVersionName,
+                    draftVersion: res.draft?.version,
+                    releaseVersionName: res.release?.versionName || this.pipelineInfo?.releaseVersionName,
+                    releaseVersion: res.release?.version || this.pipelineInfo?.releaseVersion,
+                }
+                
+                return res.status
             },
 
             // 检查约束模式流水线是否允许回滚
