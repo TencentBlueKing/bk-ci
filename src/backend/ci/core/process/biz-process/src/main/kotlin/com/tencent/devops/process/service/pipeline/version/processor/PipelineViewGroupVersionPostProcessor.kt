@@ -106,7 +106,7 @@ class PipelineViewGroupVersionPostProcessor @Autowired constructor(
                 return
             }
             // 添加标签
-            pipelineGroupService.addPipelineLabel(
+            pipelineGroupService.updatePipelineLabel(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
