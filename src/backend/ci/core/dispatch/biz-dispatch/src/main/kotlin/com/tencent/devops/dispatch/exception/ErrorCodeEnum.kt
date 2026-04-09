@@ -128,6 +128,11 @@ enum class ErrorCodeEnum(
         ErrorType.USER,
         2103023,
         "获取构建资源超时"
+    ),
+    GET_ENV_STRATEGY_ERROR(
+        ErrorType.USER,
+        2103024,
+        "获取环境调度策略失败"
     );
 
     fun getErrorMessage(params: Array<String>? = null, language: String? = null): String {

@@ -90,11 +90,21 @@ class EnvDispatchStrategyDao {
 
     fun getById(dslContext: DSLContext, id: Long): DispatchStrategyConfig? {
         with(TEnvDispatchStrategy.T_ENV_DISPATCH_STRATEGY) {
-            return dslContext.selectFrom(this).where(ID.eq(id)).fetchOne(strategyMapper)
+            return dslContext.selectFrom(this).where(ID.eq(id)).fetchAny(strategyMapper)
         }
     }
 
-    fun listByEnv(dslContext: DSLContext, projectId: String, envId: Long): List<DispatchStrategyConfig> {
+    fun getByIds(dslContext: DSLContext, ids: Set<Long>): List<DispatchStrategyConfig> {
+        with(TEnvDispatchStrategy.T_ENV_DISPATCH_STRATEGY) {
+            return dslContext.selectFrom(this).where(ID.`in`(ids)).fetch(strategyMapper)
+        }
+    }
+
+    fun listByEnv(
+        dslContext: DSLContext,
+        projectId: String,
+        envId: Long
+    ): List<DispatchStrategyConfig> {
         with(TEnvDispatchStrategy.T_ENV_DISPATCH_STRATEGY) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId)).and(ENV_ID.eq(envId))
@@ -114,11 +124,12 @@ class EnvDispatchStrategyDao {
         }
     }
 
-    fun countCustomEnabled(dslContext: DSLContext, projectId: String, envId: Long): Long {
+    fun countEnabled(dslContext: DSLContext, projectId: String, envId: Long): Long {
         with(TEnvDispatchStrategy.T_ENV_DISPATCH_STRATEGY) {
             return dslContext.selectCount().from(this)
-                .where(PROJECT_ID.eq(projectId)).and(ENV_ID.eq(envId))
-                .and(STRATEGY_TYPE.eq(StrategyType.CUSTOM.name)).and(ENABLED.eq(true))
+                .where(PROJECT_ID.eq(projectId))
+                .and(ENV_ID.eq(envId))
+                .and(ENABLED.eq(true))
                 .fetchOne(0, Long::class.java)!!
         }
     }

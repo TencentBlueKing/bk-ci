@@ -8,7 +8,6 @@ import com.tencent.devops.environment.pojo.enums.StrategyType
 
 data class LabelSelector(
     val tagKeyId: Long,
-    val tagKeyName: String? = null,
     val op: LabelOp,
     val values: List<String>
 )

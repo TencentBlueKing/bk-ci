@@ -11,8 +11,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class LabelSelectorVO(
     @get:Schema(title = "标签Key ID", required = true)
     val tagKeyId: Long,
-    @get:Schema(title = "标签Key名称", required = false)
-    val tagKeyName: String? = null,
     @get:Schema(title = "操作符", required = true)
     val op: LabelOp,
     @get:Schema(title = "比较值列表", required = true)

@@ -62,7 +62,7 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
         userId: String, projectId: String, envId: Long, strategyId: Long
     ): Result<Boolean> {
         checkEnvEditPermission(userId, projectId, envId)
-        envDispatchStrategyService.deleteStrategy(strategyId)
+        envDispatchStrategyService.deleteStrategy(projectId, envId, strategyId)
         return Result(true)
     }
 
@@ -70,7 +70,7 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
         userId: String, projectId: String, envId: Long, strategyIds: Set<Long>
     ): Result<Boolean> {
         checkEnvEditPermission(userId, projectId, envId)
-        envDispatchStrategyService.batchDeleteStrategy(strategyIds)
+        envDispatchStrategyService.batchDeleteStrategy(projectId, envId, strategyIds)
         return Result(true)
     }
 
@@ -96,13 +96,13 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
             id = id ?: 0L, projectId = projectId, envId = envId,
             strategyType = strategyType, defaultStrategyCode = defaultStrategyCode,
             strategyName = strategyName, scope = scope, nodeRule = nodeRule,
-            labelSelector = labelSelector?.map { LabelSelectorVO(it.tagKeyId, it.tagKeyName, it.op, it.values) },
+            labelSelector = labelSelector?.map { LabelSelectorVO(it.tagKeyId, it.op, it.values) },
             enabled = enabled, priority = priority,
             createdUser = createdUser, updatedUser = updatedUser
         )
 
         private fun LabelSelectorVO.toInternal() = LabelSelector(
-            tagKeyId = tagKeyId, tagKeyName = tagKeyName, op = op, values = values
+            tagKeyId = tagKeyId, op = op, values = values
         )
     }
 }

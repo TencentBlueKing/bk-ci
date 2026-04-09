@@ -44,6 +44,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
@@ -54,6 +55,8 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDi
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
+import com.tencent.devops.dispatch.exception.DispatchRetryMQException
+import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentBuildInfo
@@ -63,11 +66,14 @@ import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyAskResp
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildDockerInfo
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildWithStatus
+import com.tencent.devops.dispatch.service.tpaqueue.TPAEnvQueueService
 import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentUtils
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.DispatchStrategyConfig
+import com.tencent.devops.environment.pojo.EnabledStrategiesWithTags
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentUpgradeByVersionInfo
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
@@ -211,7 +217,7 @@ class ThirdPartyAgentService @Autowired constructor(
             if (agentResult.data!!.secretKey != secretKey) {
                 logger.warn(
                     "The secretKey($secretKey) is not match the expect one(${agentResult.data!!.secretKey} " +
-                        "of project($projectId) and agent($agentId)"
+                            "of project($projectId) and agent($agentId)"
                 )
                 throw NotFoundException("Fail to get the agent")
             }
@@ -244,7 +250,7 @@ class ThirdPartyAgentService @Autowired constructor(
                 } catch (e: RemoteServiceException) {
                     logger.warn(
                         "notify agent task[$build.projectId|${build.buildId}|${build.vmSeqId}|$agentId]" +
-                            " claim failed, cause: ${e.message} agent project($projectId)"
+                                " claim failed, cause: ${e.message} agent project($projectId)"
                     )
                 }
                 pipelineEventDispatcher.dispatch(
@@ -259,15 +265,15 @@ class ThirdPartyAgentService @Autowired constructor(
                         type = PipelineBuildStatusBroadCastEventType.BUILD_AGENT_START,
                         labels = mapOf(
                             PipelineBuildStatusBroadCastEvent.Labels::nodeType.name to
-                                "SELF_HOST",
+                                    "SELF_HOST",
                             PipelineBuildStatusBroadCastEvent.Labels::agentId.name to
-                                build.agentId,
+                                    build.agentId,
                             PipelineBuildStatusBroadCastEvent.Labels::envHashId.name to
-                                (build.envId?.let { HashUtil.encodeLongId(it) } ?: ""),
+                                    (build.envId?.let { HashUtil.encodeLongId(it) } ?: ""),
                             PipelineBuildStatusBroadCastEvent.Labels::nodeHashId.name to
-                                (build.nodeId?.let { HashUtil.encodeLongId(it) } ?: ""),
+                                    (build.nodeId?.let { HashUtil.encodeLongId(it) } ?: ""),
                             PipelineBuildStatusBroadCastEvent.Labels::hostIp.name to
-                                build.agentIp
+                                    build.agentIp
                         )
                     )
                 )
@@ -286,9 +292,9 @@ class ThirdPartyAgentService @Autowired constructor(
                 // 只有凭据ID的参与计算
                 if (dockerInfo != null) {
                     if ((
-                            dockerInfo.credential?.user.isNullOrBlank() &&
-                                dockerInfo.credential?.password.isNullOrBlank()
-                            ) &&
+                                dockerInfo.credential?.user.isNullOrBlank() &&
+                                        dockerInfo.credential?.password.isNullOrBlank()
+                                ) &&
                         !(dockerInfo.credential?.credentialId.isNullOrBlank())
                     ) {
                         val (userName, password) = try {
@@ -512,7 +518,7 @@ class ThirdPartyAgentService @Autowired constructor(
     private fun finishBuild(record: TDispatchThirdpartyAgentBuildRecord, success: Boolean) {
         logger.info(
             "Finish the third party agent(${record.agentId}) build(${record.buildId}) " +
-                "of seq(${record.vmSeqId}) and status(${record.status})"
+                    "of seq(${record.vmSeqId}) and status(${record.status})"
         )
         val agentResult = client.get(ServiceThirdPartyAgentResource::class)
             .getAgentByIdGlobal(record.projectId, record.agentId)
@@ -549,15 +555,15 @@ class ThirdPartyAgentService @Autowired constructor(
                     type = PipelineBuildStatusBroadCastEventType.BUILD_AGENT_END,
                     labels = mapOf(
                         PipelineBuildStatusBroadCastEvent.Labels::nodeType.name to
-                            "SELF_HOST",
+                                "SELF_HOST",
                         PipelineBuildStatusBroadCastEvent.Labels::agentId.name to
-                            agentId,
+                                agentId,
                         PipelineBuildStatusBroadCastEvent.Labels::envHashId.name to
-                            (envId?.let { HashUtil.encodeLongId(it) } ?: ""),
+                                (envId?.let { HashUtil.encodeLongId(it) } ?: ""),
                         PipelineBuildStatusBroadCastEvent.Labels::nodeHashId.name to
-                            (nodeId?.let { HashUtil.encodeLongId(it) } ?: ""),
+                                (nodeId?.let { HashUtil.encodeLongId(it) } ?: ""),
                         PipelineBuildStatusBroadCastEvent.Labels::hostIp.name to
-                            agentIp
+                                agentIp
                     )
                 )
             )
@@ -587,9 +593,9 @@ class ThirdPartyAgentService @Autowired constructor(
             executeCount = buildInfo.executeCount
         )
         if (buildRecord != null && (
-                buildRecord.status != PipelineTaskStatus.DONE.status ||
-                    buildRecord.status != PipelineTaskStatus.FAILURE.status
-                )
+                    buildRecord.status != PipelineTaskStatus.DONE.status ||
+                            buildRecord.status != PipelineTaskStatus.FAILURE.status
+                    )
         ) {
             thirdPartyAgentBuildDao.updateStatus(
                 dslContext = dslContext,
@@ -645,9 +651,9 @@ class ThirdPartyAgentService @Autowired constructor(
         }
         // 构建需要使用构建的项目id跳转，防止是共享agent，agent链接使用上报的项目Id即可
         val buildUrl = "${HomeHostUtil.innerServerHost()}/console/pipeline/${buildRecord.projectId}/" +
-            "${buildRecord.pipelineId}/detail/${buildRecord.buildId}/executeDetail"
+                "${buildRecord.pipelineId}/detail/${buildRecord.buildId}/executeDetail"
         val agentUrl = "${HomeHostUtil.innerServerHost()}/console/environment/$projectId/" +
-            "nodeDetail/${agentResult.data!!.nodeId}"
+                "nodeDetail/${agentResult.data!!.nodeId}"
         client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
             SendNotifyMessageTemplateRequest(
                 templateCode = workerErrorRtxTemplate!!,
@@ -892,13 +898,43 @@ class ThirdPartyAgentService @Autowired constructor(
                         "oldIp" to agent.ip,
                         "newIp" to newIp,
                         "url" to "${HomeHostUtil.innerServerHost()}/console/environment/$projectId/" +
-                            "nodeDetail/$nodeHashId"
+                                "nodeDetail/$nodeHashId"
                     )
                 )
             )
         }.onFailure {
             logger.warn("agentStartup|sendNotifyMessageByTemplate|$projectId|$agentId")
         }
+    }
+
+    fun getEnvStrategiesWithTags(projectId: String, envId: Long?): EnabledStrategiesWithTags {
+        if (envId == null) {
+            return EnabledStrategiesWithTags(
+                strategies = DispatchStrategyConfig.buildDefaults(projectId, 0L, "system"),
+                nodeTagValues = emptyMap()
+            )
+        }
+        val strategyResult = try {
+            client.get(ServiceThirdPartyAgentResource::class).getEnabledStrategiesWithTags(projectId, envId)
+        } catch (e: Exception) {
+            throw DispatchRetryMQException(
+                errorCodeEnum = ErrorCodeEnum.GET_ENV_STRATEGY_ERROR,
+                errorMessage = if (e is RemoteServiceException) {
+                    e.errorMessage
+                } else {
+                    e.message ?: (ErrorCodeEnum.GET_VM_ERROR.getErrorMessage())
+                }
+            )
+        }
+
+        if (strategyResult.isNotOk() || strategyResult.data == null) {
+            throw DispatchRetryMQException(
+                errorCodeEnum = ErrorCodeEnum.GET_ENV_STRATEGY_ERROR,
+                errorMessage = ErrorCodeEnum.GET_VM_ERROR.getErrorMessage()
+            )
+        }
+
+        return strategyResult.data!!
     }
 
     companion object {

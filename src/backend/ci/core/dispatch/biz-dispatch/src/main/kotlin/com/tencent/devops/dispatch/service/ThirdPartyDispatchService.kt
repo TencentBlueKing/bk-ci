@@ -681,28 +681,18 @@ class ThirdPartyDispatchService @Autowired constructor(
             )
         }
 
-        val strategyResult = try {
-            client.get(ServiceThirdPartyAgentResource::class)
-                .getEnabledStrategiesWithTags(dispatchMessage.event.projectId, envId)
-                .data
-        } catch (e: Exception) {
-            // TODO: 这里如果没拿到报错了，应该是结束还是重试还是回归原始
-            logger.warn("getEnabledStrategiesWithTags failed: ${e.message}")
-            null
-        }
-        val strategies = strategyResult?.strategies ?: DispatchStrategyConfig.buildDefaults(
-            dispatchMessage.event.projectId, envId, "system"
+        val strategyResult = thirdPartyAgentBuildService.getEnvStrategiesWithTags(
+            projectId = dispatchMessage.event.projectId,
+            envId = envId
         )
-
         val nodeIdToAgentId = mutableMapOf<Long, String>()
         activeAgents.forEach { agent ->
             agent.nodeId?.let { nodeIdToAgentId[HashUtil.decodeIdToLong(it)] = agent.agentId }
         }
         val agentTagValues = mutableMapOf<String, Map<Long, List<String>>>()
-        strategyResult?.nodeTagValues?.forEach { (nodeId, kv) ->
+        strategyResult.nodeTagValues.forEach { (nodeId, kv) ->
             nodeIdToAgentId[nodeId]?.let { agentId -> agentTagValues[agentId] = kv }
         }
-
         val executor = DispatchStrategyExecutor(
             input = DispatchStrategyExecutor.StrategyInput(
                 allAgents = activeAgents,
@@ -714,11 +704,9 @@ class ThirdPartyDispatchService @Autowired constructor(
             ),
             logAction = { msg -> logDebug(dispatchMessage.event, msg) }
         )
-
-        val matched = executor.execute(strategies) { agent ->
+        val matched = executor.execute(strategyResult.strategies) { agent ->
             agentInQueue(dispatchMessage, dispatchType, agent, envId)
         }
-
         if (matched != null) {
             return true
         }

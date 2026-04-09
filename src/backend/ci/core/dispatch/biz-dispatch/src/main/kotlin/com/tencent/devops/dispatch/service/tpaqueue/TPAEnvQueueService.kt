@@ -24,6 +24,7 @@ import com.tencent.devops.dispatch.utils.DispatchStrategyExecutor
 import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.dispatch.utils.TPACommonUtil.Companion.tagError
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.DispatchStrategyConfig
 import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import org.slf4j.LoggerFactory
@@ -378,28 +379,15 @@ class TPAEnvQueueService @Autowired constructor(
             )
         }
 
-        val strategyResult = try {
-            client.get(ServiceThirdPartyAgentResource::class)
-                .getEnabledStrategiesWithTags(data.projectId, context.envId ?: 0L)
-                .data
-        } catch (e: Exception) {
-            logger.warn("getEnabledStrategiesWithTags failed: ${e.message}")
-            null
-        }
-        val strategies = strategyResult?.strategies
-            ?: com.tencent.devops.environment.pojo.DispatchStrategyConfig.buildDefaults(
-                data.projectId, context.envId ?: 0L, "system"
-            )
-
+        val strategyResult = thirdPartyAgentService.getEnvStrategiesWithTags(data.projectId, context.envId)
         val nodeIdToAgentId = mutableMapOf<Long, String>()
         activeAgents.forEach { agent ->
             agent.nodeId?.let { nodeIdToAgentId[HashUtil.decodeIdToLong(it)] = agent.agentId }
         }
         val agentTagValues = mutableMapOf<String, Map<Long, List<String>>>()
-        strategyResult?.nodeTagValues?.forEach { (nodeId, kv) ->
+        strategyResult.nodeTagValues.forEach { (nodeId, kv) ->
             nodeIdToAgentId[nodeId]?.let { agentId -> agentTagValues[agentId] = kv }
         }
-
         val executor = DispatchStrategyExecutor(
             input = DispatchStrategyExecutor.StrategyInput(
                 allAgents = activeAgents,
@@ -411,8 +399,7 @@ class TPAEnvQueueService @Autowired constructor(
             ),
             logAction = { msg -> commonUtil.logDebug(data, msg) }
         )
-
-        val matched = executor.execute(strategies) { agent ->
+        val matched = executor.execute(strategyResult.strategies) { agent ->
             dataContext.buildAgent = agent
             val ok = tpaSingleQueueService.genAgentBuild(context, dataContext)
             if (ok) {
@@ -426,7 +413,6 @@ class TPAEnvQueueService @Autowired constructor(
             }
             ok
         }
-
         if (matched != null) {
             return true
         }
