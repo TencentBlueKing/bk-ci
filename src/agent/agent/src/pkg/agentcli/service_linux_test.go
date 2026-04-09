@@ -140,7 +140,7 @@ func TestIsLocalUser(t *testing.T) {
 
 	t.Run("network_user_not_found", func(t *testing.T) {
 		tmp := filepath.Join(t.TempDir(), "passwd")
-		content := "root:x:0:0:root:/root:/bin/bash\nnobody:x:65534:65534::/:/sbin/nologin\n"
+		content := "fakeuser_not_me:x:99999:99999::/tmp:/sbin/nologin\nnobody:x:65534:65534::/:/sbin/nologin\n"
 		os.WriteFile(tmp, []byte(content), 0644)
 		passwdFile = tmp
 
