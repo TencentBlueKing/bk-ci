@@ -21,7 +21,7 @@
                     </p>
                 </div>
                 <template v-if="editable">
-                    <!-- <div
+                    <div
                         v-if="hasRefNum"
                         class="delete-icon"
                     >
@@ -29,8 +29,9 @@
                             class="devops-icon icon-minus-circle"
                             v-bk-tooltips="$t('publicVar.hasRefNumTips')"
                         />
-                    </div> -->
+                    </div>
                     <bk-popconfirm
+                        v-else
                         trigger="click"
                         class="delete-icon-popconfirm"
                         :title="$t('publicVar.deleteGroupTitle')"

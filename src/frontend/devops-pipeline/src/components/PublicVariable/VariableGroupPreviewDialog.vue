@@ -369,6 +369,7 @@
                     }
                 }
                 .operate-type {
+                    flex-shrink: 0;
                     color: #313238;
                 }
                 .var-name {
