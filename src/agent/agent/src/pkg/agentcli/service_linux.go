@@ -278,6 +278,10 @@ func stopByMode(workDir, serviceName, mode string) error {
 			if err != nil {
 				printWarn(msgf("systemctl stop: %s", "systemctl stop: %s", strings.TrimSpace(string(out))))
 			}
+			// KillMode=none means systemctl stop only marks the unit inactive
+			// but does not kill daemon/agent processes. Kill them via PID files
+			// so that the next start can acquire process locks cleanly.
+			stopProcesses(workDir)
 			printStep(msgf("Service %s stopped", "服务 %s 已停止", serviceName))
 			return nil
 		}
@@ -288,6 +292,8 @@ func stopByMode(workDir, serviceName, mode string) error {
 			if err != nil {
 				printWarn(msgf("systemctl --user stop: %s", "systemctl --user stop: %s", strings.TrimSpace(string(out))))
 			}
+			// Same as above: kill leftover processes for user-mode systemd.
+			stopProcesses(workDir)
 			printStep(msgf("Service %s stopped", "服务 %s 已停止", serviceName))
 			return nil
 		}
