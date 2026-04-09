@@ -79,6 +79,36 @@ systemctl --user stop devops_agent_{id}
   Linger:      已启用 (注销后仍运行) ✓
 ```
 
+#### LDAP/域账号限制
+
+如果当前用户是通过 LDAP、NIS 或 SSSD 管理的网络/目录账号（而非 `/etc/passwd` 中的本地用户），**linger 的开机自启功能可能不生效**。
+
+**现象**：linger 已启用（`status` 显示 `Linger: enabled ✓`），但系统重启后 Agent 未自动拉起，直到用户通过 SSH 或桌面登录后才恢复。
+
+**原因**：系统启动早期，`systemd-logind` 尝试为 linger 用户启动 `user@UID.service`，但此时负责用户解析的 `nslcd`/`sssd` 服务尚未就绪，导致用户名无法解析，logind 跳过该用户。日志表现为：
+
+```
+systemd-logind: Couldn't add lingering user <username>, ignoring: No such file or directory
+```
+
+**诊断**：
+
+```bash
+# 检查系统启动时 logind 是否报错
+sudo journalctl -b -u systemd-logind | grep -i linger
+
+# 确认用户是否在本地 passwd 中
+grep "^$(whoami):" /etc/passwd
+```
+
+如果 `grep` 无输出，说明当前用户是网络账号。Agent 在 `install user` 时也会自动检测并打印警告。
+
+**解决方案**：使用 root 权限安装为系统级 systemd 服务，不依赖用户解析：
+
+```bash
+sudo ./devopsAgent install service
+```
+
 ### Direct 模式（非 Root 默认）
 
 直接后台启动 Daemon 进程，不注册任何系统服务：

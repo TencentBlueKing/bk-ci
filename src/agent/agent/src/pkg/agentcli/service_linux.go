@@ -486,6 +486,7 @@ func hasLinger() bool {
 func ensureLinger() {
 	if hasLinger() {
 		printStep(msg("Linger already enabled for current user.", "当前用户的 linger 已启用。"))
+		warnIfNetworkUser()
 		return
 	}
 
@@ -499,6 +500,7 @@ func ensureLinger() {
 	if err == nil {
 		printStep(msgf("Linger enabled for user %s (service survives logout).",
 			"已为用户 %s 启用 linger (注销后服务仍运行)。", username))
+		warnIfNetworkUser()
 		return
 	}
 
@@ -510,6 +512,53 @@ func ensureLinger() {
 			"  未启用 linger 时, 注销后服务将停止。\n"+
 			"  手动启用命令: sudo loginctl enable-linger %s",
 		strings.TrimSpace(string(out)), username))
+}
+
+var passwdFile = "/etc/passwd"
+
+// isLocalUser checks whether the current user is defined in /etc/passwd.
+// LDAP/NIS/SSSD users are resolved via NSS and do not appear in /etc/passwd.
+func isLocalUser() bool {
+	u, _ := user.Current()
+	if u == nil {
+		return true
+	}
+	data, err := os.ReadFile(passwdFile)
+	if err != nil {
+		return true
+	}
+	prefix := u.Username + ":"
+	for _, line := range strings.Split(string(data), "\n") {
+		if strings.HasPrefix(line, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+func warnIfNetworkUser() {
+	if isLocalUser() {
+		return
+	}
+	u, _ := user.Current()
+	username := "unknown"
+	if u != nil {
+		username = u.Username
+	}
+	printWarn(msgf(
+		"Current user %q appears to be a network/directory account (LDAP/NIS/SSSD).\n"+
+			"  Linger-based auto-start at boot may NOT work because systemd-logind cannot\n"+
+			"  resolve network users during early boot (before nslcd/sssd is ready).\n"+
+			"  The service will start when you log in, but NOT automatically after reboot.\n"+
+			"  For reliable auto-start, use root-level systemd service:\n"+
+			"    sudo ./devopsAgent install service",
+		"当前用户 %q 似乎是网络/目录账号 (LDAP/NIS/SSSD)。\n"+
+			"  基于 linger 的开机自启可能不生效, 因为 systemd-logind 在开机早期\n"+
+			"  无法解析网络用户 (nslcd/sssd 尚未就绪)。\n"+
+			"  服务会在用户登录后启动, 但重启后不会自动拉起。\n"+
+			"  如需可靠的开机自启, 建议使用 root 系统级 systemd 服务:\n"+
+			"    sudo ./devopsAgent install service",
+		username))
 }
 
 // ── misc helpers ─────────────────────────────────────────────────────────
