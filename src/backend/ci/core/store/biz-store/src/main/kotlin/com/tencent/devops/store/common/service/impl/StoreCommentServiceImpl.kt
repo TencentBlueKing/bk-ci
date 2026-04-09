@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStoreCommentRecord
+import com.tencent.devops.store.common.configuration.StoreNotifyProperties
 import com.tencent.devops.store.common.dao.StoreCommentDao
 import com.tencent.devops.store.common.dao.StoreCommentPraiseDao
 import com.tencent.devops.store.common.dao.StoreCommentReplyDao
@@ -79,7 +80,8 @@ class StoreCommentServiceImpl @Autowired constructor(
     private val storeUserService: StoreUserService,
     private val storeNotifyService: StoreNotifyService,
     private val storeCommonService: StoreCommonService,
-    private val storeTotalStatisticService: StoreTotalStatisticService
+    private val storeTotalStatisticService: StoreTotalStatisticService,
+    private val storeNotifyProperties: StoreNotifyProperties
 ) : StoreCommentService {
 
     private val logger = LoggerFactory.getLogger(StoreCommentServiceImpl::class.java)
@@ -89,9 +91,6 @@ class StoreCommentServiceImpl @Autowired constructor(
 
     @Value("\${store.commentNotifyAdmin}")
     private lateinit var commentNotifyAdmin: String
-
-    @Value("\${store.storeNotifyWeworkGroupIds:}")
-    private var storeNotifyWeworkGroupIds: String = ""
 
     override fun getStoreComment(userId: String, commentId: String): Result<StoreCommentInfo?> {
         logger.info("getStoreComment params:[$userId|$commentId]")
@@ -266,16 +265,14 @@ class StoreCommentServiceImpl @Autowired constructor(
             bodyParams = bodyParams
         )
         // 发送评论通知到企业微信群
-        if (storeNotifyWeworkGroupIds.isNotBlank()) {
-            val weworkGroupIds = storeNotifyWeworkGroupIds.split(",").filter { it.isNotBlank() }.toSet()
-            if (weworkGroupIds.isNotEmpty()) {
-                storeNotifyService.sendNotifyMessageToWeworkGroup(
-                    userId = userId,
-                    templateCode = STORE_COMMENT_NOTIFY_TEMPLATE,
-                    weworkGroupIds = weworkGroupIds,
-                    bodyParams = bodyParams
-                )
-            }
+        val weworkGroupIds = storeNotifyProperties.groupIds.filter { it.isNotBlank() }.toSet()
+        if (weworkGroupIds.isNotEmpty()) {
+            storeNotifyService.sendNotifyMessageToWeworkGroup(
+                userId = userId,
+                templateCode = STORE_COMMENT_NOTIFY_TEMPLATE,
+                weworkGroupIds = weworkGroupIds,
+                bodyParams = bodyParams
+            )
         }
     }
 

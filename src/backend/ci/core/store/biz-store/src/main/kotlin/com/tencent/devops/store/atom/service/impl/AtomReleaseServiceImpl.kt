@@ -79,6 +79,7 @@ import com.tencent.devops.store.atom.service.AtomQualityService
 import com.tencent.devops.store.atom.service.AtomReleaseService
 import com.tencent.devops.store.atom.service.MarketAtomArchiveService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
+import com.tencent.devops.store.common.configuration.StoreNotifyProperties
 import com.tencent.devops.store.common.dao.StoreErrorCodeInfoDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
@@ -207,8 +208,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     @Value("\${store.defaultAtomPublishReviewers:#{null}}")
     private val defaultAtomPublishReviewers: String? = null
 
-    @Value("\${store.storeNotifyWeworkGroupIds:}")
-    private var storeNotifyWeworkGroupIds: String = ""
+    @Autowired
+    lateinit var storeNotifyProperties: StoreNotifyProperties
 
     companion object {
         private val logger = LoggerFactory.getLogger(AtomReleaseServiceImpl::class.java)
@@ -1546,17 +1547,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
         try {
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
-            if (storeNotifyWeworkGroupIds.isNotBlank()) {
-                val weworkGroupIds =
-                    storeNotifyWeworkGroupIds.split(",").filter { it.isNotBlank() }.toSet()
-                if (weworkGroupIds.isNotEmpty()) {
-                    storeNotifyService.sendNotifyMessageToWeworkGroup(
-                        userId = userId,
-                        templateCode = BK_STORE_ATOM_AUDIT_NOTIFY,
-                        weworkGroupIds = weworkGroupIds,
-                        bodyParams = bodyParams
-                    )
-                }
+            val weworkGroupIds = storeNotifyProperties.groupIds.filter { it.isNotBlank() }.toSet()
+            if (weworkGroupIds.isNotEmpty()) {
+                storeNotifyService.sendNotifyMessageToWeworkGroup(
+                    userId = userId,
+                    templateCode = BK_STORE_ATOM_AUDIT_NOTIFY,
+                    weworkGroupIds = weworkGroupIds,
+                    bodyParams = bodyParams
+                )
             }
         } catch (ignored: Throwable) {
             logger.warn("Failed to send notify message", ignored)
