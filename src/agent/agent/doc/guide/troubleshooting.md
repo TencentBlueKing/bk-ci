@@ -131,7 +131,7 @@ status 命令的输出分为四个部分：
 
 **解决方案**：切换为 root 系统级 systemd 服务：
 ```bash
-sudo ./devopsAgent install service
+sudo ./devopsAgent install
 ```
 
 详见 [Linux 平台指南 - LDAP/域账号限制](platform-linux.md#ldap域账号限制)。

@@ -127,7 +127,7 @@
 - `install user` 时打印网络账号警告（提示 linger 开机自启可能不可靠）
 - 重启机器后确认 Agent 是否自动拉起
 - `sudo journalctl -b -u systemd-logind | grep linger` 可见 "Couldn't add lingering user" 错误
-- 切换为 `sudo ./devopsAgent install service` 后重启可正常自启
+- 切换为 `sudo ./devopsAgent install` 后重启可正常自启
 
 #### macOS
 

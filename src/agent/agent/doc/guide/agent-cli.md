@@ -40,21 +40,19 @@ devopsAgent <command> [options]
 | **macOS** | `login` / `background` | `login` | `login` = 直接启动, 需登录桌面; `background` = launchd 无头模式 |
 | **Windows** | `service` / `session` / `task` | `service` | `service` = Windows 服务; `session` = 服务 + 桌面会话; `task` = [计划废弃] 计划任务 |
 
-### 模式自动切换
+### 重复执行与模式切换
 
-- 目标模式与当前已安装模式**相同** → 跳过，提示已安装
-- 目标模式与当前已安装模式**不同** → 自动先执行 `uninstall`，再安装新模式
+每次执行 `install` 都会先自动卸载已有安装，再重新安装目标模式。无需手动 `uninstall`：
 
 ```bash
 # 首次安装（root 默认 service 模式）
 sudo ./devopsAgent install
 
-# 切换模式：无需手动 uninstall，install 自动检测并切换
-./devopsAgent install user
+# 重复执行：自动卸载旧安装 → 重新安装
+sudo ./devopsAgent install
 
-# 重复执行相同模式：不会重复安装
+# 切换模式：自动卸载旧模式 → 安装新模式
 ./devopsAgent install user
-# => "Agent is already installed in USER mode. Nothing to do."
 ```
 
 ### Linux 示例
@@ -62,7 +60,6 @@ sudo ./devopsAgent install
 ```bash
 # root 用户 — 默认安装为系统级 systemd 服务
 sudo ./devopsAgent install
-sudo ./devopsAgent install service   # 同上
 
 # 非 root 用户 — 默认直接启动
 ./devopsAgent install
@@ -88,7 +85,6 @@ sudo ./devopsAgent install service   # 同上
 ```powershell
 # 默认服务模式
 .\devopsAgent.exe install
-.\devopsAgent.exe install service   # 同上
 
 # 服务 + Session 模式
 .\devopsAgent.exe install session

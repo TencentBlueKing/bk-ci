@@ -279,7 +279,7 @@ AgentUpgrade(upgradeItem, hasBuild)
 
 ### 安装模式 (`install [mode]`)
 
-所有平台的 `install` 命令通过位置参数选择安装模式。如果目标模式与当前已安装模式相同则跳过；不同则自动先 `uninstall` 再安装。
+所有平台的 `install` 命令通过子命令选择安装模式（如 `install session`）。不指定则使用默认模式。每次执行 `install` 都会先自动卸载已有安装再重新安装，无需手动 `uninstall`。
 
 | 平台 | 可选模式 | 默认 | 说明 |
 |------|---------|------|------|
