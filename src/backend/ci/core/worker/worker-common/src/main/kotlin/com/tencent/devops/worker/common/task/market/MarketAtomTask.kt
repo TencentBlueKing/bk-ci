@@ -466,22 +466,44 @@ open class MarketAtomTask : ITask() {
         logger.info("getDiskLruFileCache fileCacheDir:$fileCacheDir,maxFileCacheSize:$maxFileCacheSize")
         val bkDiskLruFileCache = BkDiskLruFileCacheFactory.getDiskLruFileCache(fileCacheDir, maxFileCacheSize)
         val fileCacheKey = "${atomData.atomCode}-${atomData.version}-$atomExecuteFileName"
+        val shaContent = atomData.shaContent
         bkDiskLruFileCache.get(fileCacheKey, atomExecuteFile)
         try {
             // 插件缓存文件本地缓存探测功能
             if (atomExecuteFile.exists() && atomExecuteFile.length() > 0) {
-                try {
-                    checkSha(atomExecuteFile, atomData.shaContent!!)
-                } catch (ignored: Throwable) {
-                    // 缓存文件损坏，删除并从缓存中移除，后续会重新下载
+                if (shaContent.isNullOrBlank()) {
                     LoggerService.addNormalLine(
-                        "getAtomExecuteFile Cached atom file is corrupted! " +
+                        "shaContent is null or blank for ${atomData.atomCode}:${atomData.version}, " +
+                            "discard cache and re-download to ensure integrity"
+                    )
+                    val deleted = atomExecuteFile.delete()
+                    if (!deleted) {
+                        LoggerService.addNormalLine(
+                            "Failed to delete cache file without shaContent: ${atomExecuteFile.absolutePath}. " +
+                                "Will attempt to re-download and overwrite."
+                        )
+                    }
+                    bkDiskLruFileCache.remove(fileCacheKey)
+                } else {
+                    try {
+                        checkSha(atomExecuteFile, shaContent)
+                    } catch (ignored: Throwable) {
+                        // 缓存文件损坏，删除并从缓存中移除，后续会重新下载
+                        LoggerService.addNormalLine(
+                            "getAtomExecuteFile Cached atom file is corrupted! " +
                                 "atomCode=${atomData.atomCode}, version=${atomData.version}, " +
                                 "file=${atomExecuteFile.absolutePath}, error=${ignored.message}"
-                    )
-                    atomExecuteFile.delete()
-                    bkDiskLruFileCache.remove(fileCacheKey)
-                    LoggerService.addNormalLine("Corrupted cache file deleted, will re-download from repo")
+                        )
+                        val deleted = atomExecuteFile.delete()
+                        if (!deleted) {
+                            LoggerService.addNormalLine(
+                                "Failed to delete corrupted cache file: ${atomExecuteFile.absolutePath}. " +
+                                    "Will attempt to re-download and overwrite."
+                            )
+                        }
+                        bkDiskLruFileCache.remove(fileCacheKey)
+                        LoggerService.addNormalLine("Corrupted cache file removed, will re-download from repo")
+                    }
                 }
             }
 
@@ -502,9 +524,11 @@ open class MarketAtomTask : ITask() {
                     containerType = containerType
                 )
 
-                val shouldCache = atomData.authFlag != true && checkSha(
-                    atomExecuteFile, atomData.shaContent!!
-                ) && cacheFlag && !fileCacheDir.contains(buildId)
+                val shouldCache = atomData.authFlag != true &&
+                    !shaContent.isNullOrBlank() &&
+                    checkSha(atomExecuteFile, shaContent) &&
+                    cacheFlag &&
+                    !fileCacheDir.contains(buildId)
 
                 if (shouldCache) {
                     // 无需鉴权的插件包且插件包内容是完整的才放入缓存中
