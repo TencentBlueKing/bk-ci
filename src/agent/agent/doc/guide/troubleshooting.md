@@ -99,6 +99,43 @@ status 命令的输出分为四个部分：
 
 ## 常见故障场景
 
+### User 模式重启后 Agent 未自动启动
+
+**症状**：以 `install user` 安装的 Agent，`status` 显示 linger 已启用，但系统重启后 Agent 不自动拉起，需要用户登录后才恢复。
+
+**排查步骤**：
+
+1. 确认 linger 状态：
+   ```bash
+   loginctl show-user $(whoami) | grep Linger
+   # 期望: Linger=yes
+   ```
+
+2. 检查启动时 logind 日志：
+   ```bash
+   sudo journalctl -b -u systemd-logind | grep -i linger
+   ```
+
+3. 如果看到以下日志，说明是 LDAP/域账号问题：
+   ```
+   Couldn't add lingering user <username>, ignoring: No such file or directory
+   ```
+
+4. 确认用户类型：
+   ```bash
+   grep "^$(whoami):" /etc/passwd
+   # 无输出 = 网络/域账号
+   ```
+
+**原因**：LDAP/NIS/SSSD 用户在系统启动早期无法被解析（此时 `nslcd`/`sssd` 尚未就绪），`systemd-logind` 跳过该用户的 linger 启动。
+
+**解决方案**：切换为 root 系统级 systemd 服务：
+```bash
+sudo ./devopsAgent install service
+```
+
+详见 [Linux 平台指南 - LDAP/域账号限制](platform-linux.md#ldap域账号限制)。
+
 ### Agent 在平台上显示离线
 
 **症状**：BK-CI 平台上 Agent 显示离线状态。

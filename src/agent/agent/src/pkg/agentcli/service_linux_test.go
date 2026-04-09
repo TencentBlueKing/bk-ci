@@ -5,6 +5,7 @@ package agentcli
 
 import (
 	"os"
+	"os/user"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -113,6 +114,56 @@ func TestHasLinger(t *testing.T) {
 
 		if hasLinger() {
 			t.Error("hasLinger() = true, want false when linger dir missing")
+		}
+	})
+}
+
+func TestIsLocalUser(t *testing.T) {
+	origPasswdFile := passwdFile
+	defer func() { passwdFile = origPasswdFile }()
+
+	u, _ := user.Current()
+	if u == nil {
+		t.Skip("cannot get current user")
+	}
+
+	t.Run("local_user_found", func(t *testing.T) {
+		tmp := filepath.Join(t.TempDir(), "passwd")
+		content := "root:x:0:0:root:/root:/bin/bash\n" + u.Username + ":x:" + u.Uid + ":" + u.Gid + "::/home/" + u.Username + ":/bin/bash\n"
+		os.WriteFile(tmp, []byte(content), 0644)
+		passwdFile = tmp
+
+		if !isLocalUser() {
+			t.Errorf("isLocalUser() = false, want true when user %q is in passwd", u.Username)
+		}
+	})
+
+	t.Run("network_user_not_found", func(t *testing.T) {
+		tmp := filepath.Join(t.TempDir(), "passwd")
+		content := "root:x:0:0:root:/root:/bin/bash\nnobody:x:65534:65534::/:/sbin/nologin\n"
+		os.WriteFile(tmp, []byte(content), 0644)
+		passwdFile = tmp
+
+		if isLocalUser() {
+			t.Errorf("isLocalUser() = true, want false when user %q is not in passwd", u.Username)
+		}
+	})
+
+	t.Run("passwd_missing", func(t *testing.T) {
+		passwdFile = "/tmp/nonexistent_passwd_test_42"
+
+		if !isLocalUser() {
+			t.Error("isLocalUser() = false, want true when passwd file is missing (safe default)")
+		}
+	})
+
+	t.Run("empty_passwd", func(t *testing.T) {
+		tmp := filepath.Join(t.TempDir(), "passwd")
+		os.WriteFile(tmp, []byte(""), 0644)
+		passwdFile = tmp
+
+		if isLocalUser() {
+			t.Errorf("isLocalUser() = true, want false when passwd is empty and user %q not found", u.Username)
 		}
 	})
 }

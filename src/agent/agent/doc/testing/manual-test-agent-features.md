@@ -112,6 +112,23 @@
 - daemon 直接后台启动
 - `status` 显示 `non-root + direct`
 
+#### Linux 非 root + user 模式
+
+验证：
+
+- `install user` 注册到 `~/.config/systemd/user/`
+- `systemctl --user status devops_agent_{id}` 正常
+- linger 自动启用
+
+#### Linux LDAP/域账号 + user 模式
+
+验证（需在 LDAP 用户环境下测试）：
+
+- `install user` 时打印网络账号警告（提示 linger 开机自启可能不可靠）
+- 重启机器后确认 Agent 是否自动拉起
+- `sudo journalctl -b -u systemd-logind | grep linger` 可见 "Couldn't add lingering user" 错误
+- 切换为 `sudo ./devopsAgent install service` 后重启可正常自启
+
 #### macOS
 
 验证：
