@@ -594,10 +594,13 @@ class PublicVarGroupService @Autowired constructor(
                 return@forEach
             }
             val varPOs = varPOsMap[groupRecord.groupName to groupRecord.version] ?: emptyList()
+            // 动态版本引用（varGroupRef.version == null）时 groupVersion 传 null，
+            // 使返回的 BuildFormProperty.varGroupVersion = null，不会被 processDynamicVarGroups
+            // 误判为固定版本引用
             currentIndex = processVarPOs(
                 varPOs = varPOs,
                 groupName = groupRecord.groupName,
-                groupVersion = groupRecord.version,
+                groupVersion = varGroupRef.version,
                 publicVarGroupVariables = publicVarGroupVariables,
                 processedVarNames = processedVarNames,
                 currentIndex = currentIndex
@@ -612,7 +615,7 @@ class PublicVarGroupService @Autowired constructor(
     private fun processVarPOs(
         varPOs: List<PublicVarPO>,
         groupName: String,
-        groupVersion: Int,
+        groupVersion: Int?,
         publicVarGroupVariables: MutableList<PublicVarGroupVariable>,
         processedVarNames: MutableSet<String>,
         currentIndex: Int

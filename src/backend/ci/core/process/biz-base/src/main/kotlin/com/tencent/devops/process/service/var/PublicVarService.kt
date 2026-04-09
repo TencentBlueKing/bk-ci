@@ -397,6 +397,16 @@ class PublicVarService @Autowired constructor(
                     params = params,
                     pipelineVarNames = pipelineVarNames
                 )
+                // 动态版本（始终最新）引用的变量组，diff 后 buildFormProperty 里的 varGroupVersion
+                // 可能被数据库中存储的具体版本号覆盖（如 5），需恢复为 null，否则下次保存时会
+                // 被 processDynamicVarGroups 误判为固定版本，导致 GROUP_REFER_INFO.VERSION 写错
+                if (varGroup.version == null) {
+                    params.forEach { param ->
+                        if (param.varGroupName == groupName) {
+                            param.varGroupVersion = null
+                        }
+                    }
+                }
                 // 将已移除的变量设置到 variables 中
                 varGroup.variables = removedVars
             }
