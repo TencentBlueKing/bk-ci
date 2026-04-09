@@ -74,7 +74,6 @@ func printUsageLocalized() {
 		} else {
 			fmt.Print(`  install [模式]       安装并启动 Agent 守护进程
     (默认)             root: 系统级 systemd 服务 / 非 root: 直接启动
-    service            安装为系统级 systemd 服务 (需要 root)
     user               安装为用户级 systemd 服务 (非 root, 注销后仍运行)
     direct             直接启动进程
 `)
@@ -117,7 +116,6 @@ func printUsageLocalized() {
 		} else {
 			fmt.Print(`  install [mode]       Install and start agent daemon
     (default)          root: system systemd service / non-root: direct start
-    service            Install as system-level systemd service (root)
     user               Install as user-level systemd service (non-root, survives logout)
     direct             Direct process start
 `)
