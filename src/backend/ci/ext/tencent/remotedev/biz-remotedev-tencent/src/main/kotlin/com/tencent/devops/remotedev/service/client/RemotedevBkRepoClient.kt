@@ -48,10 +48,12 @@ class RemotedevBkRepoClient @Autowired constructor(
         repoName: String,
         userId: String,
         media: Boolean,
-        gray: Boolean?
+        gray: Boolean?,
+        mediaMod: MediaMod
     ): String? {
         val config = bkRepoConfig.getRegionConfig(region, media)
-        var url = "${config.url}/media/api/user/stream/create/$projectId/$repoName?display=false"
+        var url = "${config.url}/media/api/user/stream/create/$projectId/$repoName" +
+                "?display=false&mediaMod=${mediaMod.name}"
         if (media && config.proxyUrl.isNotBlank()) {
             url = "${config.proxyUrl}${URLEncoder.encode(url, "UTF8")}"
         }
@@ -408,3 +410,9 @@ data class NodeSearchRulesItem(
     val value: Any,
     val operation: String
 )
+
+enum class MediaMod {
+    RECORD,
+    LIVE,
+    ALL
+}

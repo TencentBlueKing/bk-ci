@@ -737,4 +737,24 @@ CREATE TABLE IF NOT EXISTS `T_WINDOWS_VM_RESOURCE` (
                                                        PRIMARY KEY (`ZONE_ID`, `MACHINE_TYPE`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='windows虚拟机gpu卡资源使用情况';
 
+-- ----------------------------
+-- Table structure for T_FEATURE_SWITCH 功能开关配置表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_FEATURE_SWITCH` (
+    `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `PROJECT_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '项目ID，空字符串表示全局',
+    `USER_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '用户ID，空字符串表示所有用户',
+    `WORKSPACE_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '工作空间名称，空字符串表示所有工作空间',
+    `FEATURE_TYPE` varchar(64) NOT NULL COMMENT '功能类型，如LIVE_STREAMING',
+    `ENABLED` bit(1) DEFAULT b'0' NOT NULL COMMENT '是否启用，0-关闭，1-开启',
+    `CREATOR` varchar(64) NOT NULL DEFAULT '' COMMENT '创建人',
+    `UPDATER` varchar(64) NOT NULL DEFAULT '' COMMENT '更新人',
+    `CREATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`ID`),
+    UNIQUE KEY `uk_project_user_ws_feature` (`PROJECT_ID`, `USER_ID`, `WORKSPACE_NAME`, `FEATURE_TYPE`),
+    KEY `idx_feature_type` (`FEATURE_TYPE`),
+    KEY `idx_project_id` (`PROJECT_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='功能开关配置表';
+
 SET FOREIGN_KEY_CHECKS = 1;
