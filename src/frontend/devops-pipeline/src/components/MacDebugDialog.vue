@@ -257,7 +257,7 @@
                 }
             },
             viewMoreGuide () {
-                window.open('https://iwiki.woa.com/p/4016222953', '_blank')
+                window.open('https://iwiki.woa.com/p/4019636391', '_blank')
             }
         }
     }
