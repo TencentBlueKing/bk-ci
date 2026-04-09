@@ -42,7 +42,10 @@
                         </div>
                     </div>
 
-                    <p class="more-guide">
+                    <p
+                        class="more-guide"
+                        @click="viewMoreGuide"
+                    >
                         <Logo
                             name="jump"
                             size="12"
@@ -254,8 +257,7 @@
                 }
             },
             viewMoreGuide () {
-                // TODO打开更多指引文档
-                window.open('', '_blank')
+                window.open('https://iwiki.woa.com/p/4016222953', '_blank')
             }
         }
     }
