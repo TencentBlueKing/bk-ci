@@ -563,6 +563,9 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         storeId: String,
         storePackageInfoReqs: List<StorePackageInfoReq>
     ): Boolean {
+        if (storePackageInfoReqs.isEmpty()) {
+            return false
+        }
         val storeType = storePackageInfoReqs.first().storeType
         return getStoreComponentPkgSizeHandleService(storeType.name).updateComponentVersionSize(
             storeId = storeId,
