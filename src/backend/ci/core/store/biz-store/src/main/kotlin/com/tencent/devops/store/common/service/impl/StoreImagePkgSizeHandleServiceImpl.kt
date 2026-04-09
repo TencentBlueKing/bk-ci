@@ -8,6 +8,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreVersionSizeInfo
 import java.math.BigDecimal
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -20,8 +21,13 @@ class StoreImagePkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSe
     @Autowired
     lateinit var dslContext: DSLContext
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(StoreImagePkgSizeHandleServiceImpl::class.java)
+    }
+
     override fun batchUpdateComponentsVersionSize() {
-        TODO("Not yet implemented")
+        // IMAGE 类型暂不支持批量更新包大小，预留扩展
+        logger.info("batchUpdateComponentsVersionSize is not supported for IMAGE type, skip.")
     }
 
     override fun updateComponentVersionSize(
@@ -29,7 +35,9 @@ class StoreImagePkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSe
         storePackageInfoReqs: List<StorePackageInfoReq>,
         storeType: StoreTypeEnum
     ): Boolean {
-        TODO("Not yet implemented")
+        // IMAGE 类型暂不支持更新包大小，预留扩展
+        logger.info("updateComponentVersionSize is not supported for IMAGE type, skip. storeId: $storeId")
+        return true
     }
 
     override fun getComponentVersionSize(

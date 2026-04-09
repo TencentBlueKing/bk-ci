@@ -63,8 +63,8 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.apache.commons.io.FileUtils
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
@@ -97,7 +97,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
     lateinit var bkRepoClient: BkRepoClient
 
     @Autowired
-    lateinit var atomPkgSizeExecutor: ExecutorService
+    lateinit var atomPkgSizeExecutor: ThreadPoolTaskExecutor
 
     override fun archiveAtom(
         userId: String,
@@ -128,6 +128,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         val atomEnvRequests: List<AtomEnvRequest>
         val taskDataMap: Map<String, Any>
         val packageFileInfos: MutableList<PackageFileInfo>
+        val storePackageInfos = mutableListOf<StorePackageInfoReq>()
         try { // 校验taskJson配置是否正确
             val verifyAtomTaskJsonResult =
                 client.get(ServiceMarketAtomArchiveResource::class).verifyAtomTaskJson(
@@ -143,7 +144,6 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             taskDataMap = atomConfigResult!!.taskDataMap
             atomEnvRequests = atomConfigResult.atomEnvRequests!!
             packageFileInfos = mutableListOf()
-            val storePackageInfos = mutableListOf<StorePackageInfoReq>()
             atomEnvRequests.forEach { atomEnvRequest ->
                 val pkgLocalPath = atomEnvRequest.pkgLocalPath
                 if (atomEnvRequest.target.isNullOrBlank() && pkgLocalPath.isNullOrBlank()) {
@@ -175,7 +175,6 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
                 atomEnvRequest.pkgName = packageFileInfo.packageFileName
                 packageFileInfos.add(packageFileInfo)
             }
-            asyncHandleAtomPkgSize(storePackageInfos, version, atomCode)
         } finally {
             // 清理服务器的解压的临时文件
             clearServerTmpFile(projectCode, atomCode, version)
@@ -191,6 +190,8 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             // 普通发布类型会重新生成一条插件版本记录
             UUIDUtil.generate()
         }
+        // 在 finalAtomId 确定后再提交异步任务，避免竞态条件
+        asyncHandleAtomPkgSize(storePackageInfos, finalAtomId)
         if (!archiveAtomRequest.reUploadFlag) {
             val updateAtomInfoResult = client.get(ServiceMarketAtomArchiveResource::class)
                 .updateAtomPkgInfo(
@@ -384,18 +385,16 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
 
     private fun asyncHandleAtomPkgSize(
         storePackageInfoReqs: List<StorePackageInfoReq>,
-        version: String,
-        atomCode: String
+        storeId: String
     ) {
+        if (storePackageInfoReqs.isEmpty()) {
+            logger.info("asyncHandleAtomPkgSize|storePackageInfoReqs is empty, skip")
+            return
+        }
         atomPkgSizeExecutor.submit {
             try {
-                val atomId = client.get(ServiceAtomResource::class).getAtomId(atomCode, version).data
-                    ?: throw ErrorCodeException(
-                        errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
-                        params = arrayOf("$atomCode:$version")
-                    )
                 val updateAtomInfoResult = client.get(ServiceStoreComponentResource::class).updateComponentVersionSize(
-                    storeId = atomId,
+                    storeId = storeId,
                     storePackageInfoReqs = storePackageInfoReqs
                 )
                 logger.info("asyncHandleAtomPkgSize is $updateAtomInfoResult")

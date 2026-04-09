@@ -37,6 +37,7 @@ abstract class StoreComponentVersionLogService {
     companion object {
         val HAS_TAG = setOf(StoreTypeEnum.ATOM)
         private val logger = LoggerFactory.getLogger(StoreComponentVersionLogService::class.java)
+        private val ONE_MB = BigDecimal("1048576") // 1024 * 1024
     }
 
     fun getStoreComponentVersionLogs(
@@ -176,6 +177,6 @@ abstract class StoreComponentVersionLogService {
     private fun formatSizeInMB(sizeInBytes: BigDecimal): String =
         String.format(
             "%.2f M",
-            sizeInBytes.divide(BigDecimal(1024.0 * 1024.0), 2, RoundingMode.HALF_UP).toDouble()
+            sizeInBytes.divide(ONE_MB, 2, RoundingMode.HALF_UP).toDouble()
         )
 }

@@ -92,15 +92,15 @@ class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
      * 构建存储包信息
      */
     private fun buildStorePackageInfo(record: org.jooq.Record): StorePackageInfoReq? {
-        val pkgPath = record.get("PKG_PATH").toString()
+        val pkgPath = record.get("PKG_PATH")?.toString() ?: return null
         val nodeSize = client.get(ServiceArchiveComponentPkgResource::class)
             .getFileSize(StoreTypeEnum.ATOM, pkgPath).data
             ?: return null
 
         return StorePackageInfoReq(
             storeType = StoreTypeEnum.ATOM,
-            osName = record.get("OS_NAME").toString(),
-            arch = record.get("OS_ARCH").toString(),
+            osName = record.get("OS_NAME")?.toString(),
+            arch = record.get("OS_ARCH")?.toString(),
             size = nodeSize
         )
     }

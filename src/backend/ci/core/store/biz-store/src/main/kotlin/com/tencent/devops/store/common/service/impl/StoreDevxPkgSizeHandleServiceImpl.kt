@@ -106,7 +106,7 @@ class StoreDevxPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
      * @return 包信息请求对象，如果获取文件大小失败则返回null
      */
     private fun buildPackageInfoFromRecord(record: org.jooq.Record): StorePackageInfoReq? {
-        val pkgPath = record.get("PKG_PATH").toString()
+        val pkgPath = record.get("PKG_PATH")?.toString() ?: return null
         // 远程调用归档服务获取文件实际大小
         val nodeSize = client.get(ServiceArchiveComponentPkgResource::class)
             .getFileSize(StoreTypeEnum.DEVX, pkgPath).data
@@ -114,8 +114,8 @@ class StoreDevxPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
 
         return StorePackageInfoReq(
             storeType = StoreTypeEnum.DEVX,
-            osName = record.get("OS_NAME").toString(),
-            arch = record.get("OS_ARCH").toString(),
+            osName = record.get("OS_NAME")?.toString(),
+            arch = record.get("OS_ARCH")?.toString(),
             size = nodeSize
         )
     }

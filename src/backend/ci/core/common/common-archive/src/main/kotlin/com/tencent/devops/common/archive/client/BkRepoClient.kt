@@ -431,10 +431,12 @@ class BkRepoClient constructor(
     fun deleteNode(userName: String, projectId: String, repoName: String, path: String, authorization: String) {
         logger.info("delete,  projectId: $projectId, repoName: $repoName, path: $path")
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/delete/$projectId/$repoName/$path"
+        val headers = getCommonHeaders(userName, projectId).apply {
+            put("Authorization", authorization)
+        }
         val request = Request.Builder()
             .url(url)
-            .header("Authorization", authorization)
-            .headers(getCommonHeaders(userName, projectId).toHeaders())
+            .headers(headers.toHeaders())
             .delete()
             .build()
         doRequest(request).resolveResponse<Response<Void>>()

@@ -136,7 +136,6 @@ import com.tencent.devops.store.pojo.common.publication.StoreReleaseCreateReques
 import com.tencent.devops.store.utils.VersionUtils
 import java.time.LocalDateTime
 import java.util.Locale
-import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -203,8 +202,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
     @Value("\${store.defaultAtomPublishReviewers:#{null}}")
     private val defaultAtomPublishReviewers: String? = null
-
-    private val executorService = Executors.newFixedThreadPool(2)
 
     companion object {
         private val logger = LoggerFactory.getLogger(AtomReleaseServiceImpl::class.java)

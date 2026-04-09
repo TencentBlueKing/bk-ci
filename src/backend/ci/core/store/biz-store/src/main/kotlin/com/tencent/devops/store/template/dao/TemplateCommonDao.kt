@@ -168,10 +168,10 @@ class TemplateCommonDao : AbstractStoreCommonDao() {
 
     override fun countStoreComponentVersionLogs(dslContext: DSLContext, storeCode: String): Long {
         return with(TTemplate.T_TEMPLATE) {
-            val baseStep = dslContext.selectCount().from(this)
+            dslContext.selectCount().from(this)
                 .where(TEMPLATE_CODE.eq(storeCode))
-                .and(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()).and(TEMPLATE_CODE.eq(storeCode)))
-            baseStep.fetchOne(0, Long::class.java) ?: 0L
+                .and(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()))
+                .fetchOne(0, Long::class.java) ?: 0L
         }
     }
 }

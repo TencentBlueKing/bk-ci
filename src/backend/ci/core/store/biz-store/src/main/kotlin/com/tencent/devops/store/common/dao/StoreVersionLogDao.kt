@@ -124,7 +124,7 @@ class StoreVersionLogDao {
     ): Result<Record4<String, String, LocalDateTime, String>>? {
         val tsb = TStoreBase.T_STORE_BASE
         val tsvl = TStoreVersionLog.T_STORE_VERSION_LOG
-        val baseStep = dslContext.select(tsb.VERSION, tsvl.CONTENT, tsb.UPDATE_TIME, tsvl.MODIFIER)
+        return dslContext.select(tsb.VERSION, tsvl.CONTENT, tsb.UPDATE_TIME, tsvl.MODIFIER)
             .from(tsb)
             .join(tsvl)
             .on(tsb.ID.eq(tsvl.STORE_ID))
@@ -132,8 +132,8 @@ class StoreVersionLogDao {
             .and(tsb.STORE_TYPE.eq(storeType))
             .and(tsb.STATUS.eq(StoreStatusEnum.RELEASED.name))
             .orderBy(tsb.UPDATE_TIME.desc())
-        baseStep.limit((page - 1) * pageSize, pageSize)
-        return baseStep.fetch()
+            .limit((page - 1) * pageSize, pageSize)
+            .fetch()
     }
 
     fun countStoreComponentVersionLogs(
