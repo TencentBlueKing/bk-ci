@@ -2,7 +2,7 @@
 
 data class WorkspaceRecordInfo(
     val projectId: String,
-    val workspaceName:String,
+    val workspaceName: String,
     val coffeeAIEnable: Boolean,
     val enableUser: String?,
     val hostIp: String,
