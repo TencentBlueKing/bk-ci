@@ -53,6 +53,7 @@ data class PipelineResourceOnlyVersion(
     constructor(
         pipelineResource: PipelineResourceVersion,
         draftVersion: Int,
+        baseVersion: Int?,
         baseVersionName: String?
     ) : this(
         version = pipelineResource.version,
@@ -61,7 +62,7 @@ data class PipelineResourceOnlyVersion(
         pipelineVersion = pipelineResource.pipelineVersion,
         triggerVersion = pipelineResource.triggerVersion,
         settingVersion = pipelineResource.settingVersion,
-        baseVersion = pipelineResource.baseVersion,
+        baseVersion = baseVersion,
         draftVersion = draftVersion,
         baseVersionName = baseVersionName
     )

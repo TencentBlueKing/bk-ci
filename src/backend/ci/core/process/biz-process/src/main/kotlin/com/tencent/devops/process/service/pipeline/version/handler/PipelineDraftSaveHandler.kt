@@ -104,7 +104,9 @@ class PipelineDraftSaveHandler @Autowired constructor(
                     pipelineId = pipelineId,
                     version = draftVersionResource.version
                 )
-                val baseResource = pipelineResourceWithoutVersion.baseVersion?.let {
+                // 保存草稿时,pipelineResourceWithoutVersion没有传入baseVersion,回滚的时候会传入
+                val baseVersion = pipelineResourceWithoutVersion.baseVersion ?: draftVersionResource.baseVersion
+                val baseResource = baseVersion?.let {
                     pipelineRepositoryService.getPipelineVersionRecord(
                         projectId = projectId,
                         pipelineId = pipelineId,
@@ -114,6 +116,7 @@ class PipelineDraftSaveHandler @Autowired constructor(
                 val resourceOnlyVersion = PipelineResourceOnlyVersion(
                     pipelineResource = draftVersionResource,
                     draftVersion = draftVersion,
+                    baseVersion = baseVersion,
                     baseVersionName = baseResource?.versionName
                 )
                 pipelineVersionPersistenceService.updateDraftVersion(
