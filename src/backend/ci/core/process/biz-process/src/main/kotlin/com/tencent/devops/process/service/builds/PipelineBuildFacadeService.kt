@@ -2203,17 +2203,23 @@ class PipelineBuildFacadeService(
             permission = AuthPermission.VIEW
         )
 
-        // 查询总数
-        val newTotalCount = pipelineRuntimeService.getLightPipelineBuildHistoryCount(query)
-
         // 查询构建历史记录
         val newHistoryBuilds = pipelineRuntimeService.listLightPipelineBuildHistory(
             query = query
         )
+
+        val totalCount: Long = if (query.offset == 0 && newHistoryBuilds.size < query.limit) {
+            // 第一页且不满一页（包含空结果），总数为返回的记录数
+            newHistoryBuilds.size.toLong()
+        } else {
+            // 其他情况查询精确总数
+            pipelineRuntimeService.getLightPipelineBuildHistoryCount(query).toLong()
+        }
+
         return Page(
             page = page,
             pageSize = query.limit,
-            count = newTotalCount.toLong(),
+            count = totalCount,
             records = newHistoryBuilds
         )
     }
@@ -3315,7 +3321,10 @@ class PipelineBuildFacadeService(
         val startType = StartType.toStartType(buildInfo.trigger)
         // 发起新构建
         return if (startType == StartType.WEB_HOOK) {
-            webhookBuildParameterService.getBuildParameters(buildId = buildInfo.buildId)?.forEach { param ->
+            webhookBuildParameterService.getBuildParameters(
+                projectId = projectId,
+                buildId = buildInfo.buildId
+            )?.forEach { param ->
                 startParameters[param.key] = param.value.toString()
             }
             webhookTriggerPipelineBuild(

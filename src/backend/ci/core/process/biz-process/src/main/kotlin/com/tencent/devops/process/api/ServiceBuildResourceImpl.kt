@@ -476,7 +476,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         endTimeFrom: String?,
         endTimeTo: String?,
         buildNoStart: Int?,
-        buildNoEnd: Int?
+        buildNoEnd: Int?,
+        updateTimeDesc: Boolean?
     ): Result<Page<LightBuildHistory>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -492,7 +493,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
             offset = offset,
             limit = pageSize,
             buildNoStart = buildNoStart,
-            buildNoEnd = buildNoEnd
+            buildNoEnd = buildNoEnd,
+            updateTimeDesc = updateTimeDesc
         )
         val result = pipelineBuildFacadeService.getLightHistoryBuild(
             userId = userId,
