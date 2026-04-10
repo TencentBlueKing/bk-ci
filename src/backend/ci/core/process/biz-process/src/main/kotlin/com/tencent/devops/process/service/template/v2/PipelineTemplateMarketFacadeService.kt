@@ -2,10 +2,13 @@ package com.tencent.devops.process.service.template.v2
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.PipelineStorageType
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.common.pipeline.template.UpgradeStrategyEnum
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
@@ -17,15 +20,15 @@ import com.tencent.devops.process.engine.pojo.event.PipelineTemplateTriggerUpgra
 import com.tencent.devops.process.pojo.template.MarketTemplateRequest
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.v2.MarketTemplateV2Request
+import com.tencent.devops.process.pojo.template.v2.PTemplateResourceWithoutVersion
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoUpdateInfo
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoV2
-import com.tencent.devops.process.pojo.template.v2.PipelineTemplateMarketCreateReq
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceUpdateInfo
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingUpdateInfo
-import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionManager
 import com.tencent.devops.store.api.image.ServiceStoreImageResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.template.TemplatePublishedVersionInfo
@@ -36,6 +39,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 流水线市场模版门面类
@@ -49,7 +53,8 @@ class PipelineTemplateMarketFacadeService @Autowired constructor(
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val client: Client,
-    private val pipelineTemplateVersionManager: PipelineTemplateVersionManager,
+    private val pipelineTemplatePersistenceService: PipelineTemplatePersistenceService,
+    private val pipelineTemplateGenerator: PipelineTemplateGenerator,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation
 ) {
@@ -311,21 +316,29 @@ class PipelineTemplateMarketFacadeService @Autowired constructor(
                 } catch (e: Exception) {
                     logger.warn(
                         "Failed to install new version for template" +
-                            "(${templateInfo.id}) in project" +
-                            "(${templateInfo.projectId}), " +
-                            "srcTemplate=$templateId, version=$version" +
-                            "srcProjectId=$projectId",
+                                "(${templateInfo.id}) in project" +
+                                "(${templateInfo.projectId}), " +
+                                "srcTemplate=$templateId, version=$version" +
+                                "srcProjectId=$projectId",
                         e
                     )
                 }
             }
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch}) ms to release template($templateId) " +
-                    "version($version) and trigger upgrades"
+                        "version($version) and trigger upgrades"
             )
         }
     }
 
+    /**
+     * 自动安装新版本
+     *
+     * 借鉴 [PipelineTemplateMigrateService.migrateTemplate] 的直接数据库写入方式，
+     * 跳过 deployTemplate 中 Converter（远程 RPC / 权限校验）和 Validator（名称/模型校验）流程，
+     * 直接从父模板 resource 获取数据后写入数据库，确保自动升级过程更加可靠稳定。
+     */
+    @Suppress("LongMethod")
     fun installNewVersion(
         templateInfo: PipelineTemplateInfoV2,
         srcTemplateProjectId: String,
@@ -334,7 +347,7 @@ class PipelineTemplateMarketFacadeService @Autowired constructor(
         srcTemplateNumber: Int,
         srcTemplateVersionName: String
     ) {
-        // 查询父模板上架的版本是否已经安装过
+        // 1. 幂等检查：查询父模板上架的版本是否已经安装过
         val isInstalled = pipelineTemplateResourceService.getOrNull(
             commonCondition = PipelineTemplateResourceCommonCondition(
                 projectId = templateInfo.projectId,
@@ -344,22 +357,105 @@ class PipelineTemplateMarketFacadeService @Autowired constructor(
                 srcTemplateVersion = srcTemplateVersion
             )
         ) != null
-        if (isInstalled)
-            return
-        val isSyncSetting = templateInfo.settingSyncStrategy == UpgradeStrategyEnum.AUTO
-        val pipelineTemplateMarketCreateReq = PipelineTemplateMarketCreateReq(
-            marketTemplateProjectId = srcTemplateProjectId,
-            marketTemplateId = srcTemplateId,
-            marketTemplateVersion = srcTemplateVersion,
-            copySetting = isSyncSetting,
-            name = templateInfo.name
+        if (isInstalled) return
+
+        // 2. 获取父模板 resource 数据（model/yaml/params 等）
+        val srcResource = pipelineTemplateResourceService.get(
+            projectId = srcTemplateProjectId,
+            templateId = srcTemplateId,
+            version = srcTemplateVersion
         )
-        pipelineTemplateVersionManager.deployTemplate(
+        val srcModel = srcResource.model
+        val srcParams = srcResource.params
+
+        // 3. 构建子模板 setting
+        val isSyncSetting = templateInfo.settingSyncStrategy == UpgradeStrategyEnum.AUTO
+        val templateSetting = if (isSyncSetting) {
+            // 同步父模板 setting，替换 projectId/templateId/name
+            val srcSetting = pipelineTemplateSettingService.get(
+                projectId = srcTemplateProjectId,
+                templateId = srcTemplateId,
+                settingVersion = srcResource.settingVersion
+            )
+            srcSetting.copy(
+                projectId = templateInfo.projectId,
+                pipelineId = templateInfo.id,
+                pipelineName = templateInfo.name
+            )
+        } else {
+            // 使用默认 setting
+            pipelineTemplateGenerator.getDefaultSetting(
+                type = PipelineTemplateType.PIPELINE,
+                projectId = templateInfo.projectId,
+                templateId = templateInfo.id,
+                templateName = templateInfo.name,
+                desc = templateInfo.desc,
+                creator = templateInfo.creator
+            )
+        }
+
+        // 4. 模型转换（Model → YAML），fallbackOnError=true 保证转换失败不阻断流程
+        val transferResult = pipelineTemplateGenerator.transfer(
             userId = templateInfo.creator,
             projectId = templateInfo.projectId,
-            templateId = templateInfo.id,
-            request = pipelineTemplateMarketCreateReq
+            storageType = PipelineStorageType.MODEL,
+            templateType = PipelineTemplateType.PIPELINE,
+            templateModel = srcModel,
+            templateSetting = templateSetting,
+            params = srcParams,
+            yaml = null,
+            fallbackOnError = true
         )
+
+        // 5. 构建不含版本信息的 resource
+        val newResourceWithoutVersion = PTemplateResourceWithoutVersion(
+            projectId = templateInfo.projectId,
+            templateId = templateInfo.id,
+            type = PipelineTemplateType.PIPELINE,
+            srcTemplateProjectId = srcTemplateProjectId,
+            srcTemplateId = srcTemplateId,
+            srcTemplateVersion = srcTemplateVersion,
+            params = transferResult.params,
+            model = transferResult.templateModel,
+            yaml = transferResult.yamlWithVersion?.yamlStr,
+            status = VersionStatus.RELEASED,
+            sortWeight = 0,
+            creator = templateInfo.updater ?: templateInfo.creator,
+            updater = templateInfo.updater ?: templateInfo.creator
+        )
+
+        // 6. 计算版本号（与正常发布流程一致）
+        val resourceOnlyVersion = pipelineTemplateGenerator.generateReleaseVersion(
+            projectId = templateInfo.projectId,
+            templateId = templateInfo.id,
+            newResource = newResourceWithoutVersion,
+            newSetting = transferResult.templateSetting,
+            customVersionName = srcTemplateVersionName
+        )
+
+        // 7. 构建完整的 PipelineTemplateResource
+        val childResource = PipelineTemplateResource(
+            pTemplateResourceWithoutVersion = newResourceWithoutVersion,
+            pTemplateResourceOnlyVersion = resourceOnlyVersion
+        ).copy(
+            releaseTime = LocalDateTime.now().timestampmilli()
+        )
+
+        // 8. 直接写入数据库（syncPermission=false，自动安装无需同步权限）
+        val childSetting = transferResult.templateSetting.copy(
+            projectId = templateInfo.projectId,
+            pipelineId = templateInfo.id,
+            pipelineName = templateInfo.name,
+            version = resourceOnlyVersion.settingVersion
+        )
+        pipelineTemplatePersistenceService.createReleaseVersion(
+            userId = templateInfo.creator,
+            templateResource = childResource,
+            templateSetting = childSetting,
+            syncPermission = false
+        )
+
+        // 9. 记录安装历史至研发商店
         client.get(ServiceTemplateResource::class).createTemplateInstallHistory(
             TemplateVersionInstallHistoryInfo(
                 srcMarketTemplateProjectCode = srcTemplateProjectId,
@@ -374,26 +470,26 @@ class PipelineTemplateMarketFacadeService @Autowired constructor(
     }
 
     @Suppress("NestedBlockDepth")
-        /**
-         * 校验模板（指定版本）中引用的构建镜像是否全部处于【已发布】状态。
-         *
-         * 逻辑说明：
-         * 1. 获取模板资源与其模型，仅在模板类型为 PIPELINE 时检查镜像；否则直接返回 null。
-         * 2. 遍历所有阶段与容器，仅处理 VMBuildContainer 且分发类型为 StoreDispatchType 的场景。
-         * 3. 以 `imageCode@imageVersion` 作为唯一键去重，避免对相同镜像重复调用远端状态接口。
-         * 4. 一旦发现第一个未发布的镜像，立即短路返回该镜像的 imageCode；若全部发布则返回 null。
-         *
-         * 设计考量：
-         * - 命名参数：统一采用命名参数，降低参数顺序误用风险并提升可读性。
-         * - 安全转换：使用 `as?` 避免不必要的强转异常。
-         * - 早退出：非流水线类型模板直接返回，减少分支嵌套。
-         *
-         * @param userId 操作人 ID（用于审计/日志，当前逻辑不参与判定）
-         * @param projectId 项目 ID
-         * @param templateId 模板 ID
-         * @param version 模板版本号
-         * @return Result<String?> 未发布镜像的 imageCode；若全部发布或无需校验则为 null
-         */
+            /**
+             * 校验模板（指定版本）中引用的构建镜像是否全部处于【已发布】状态。
+             *
+             * 逻辑说明：
+             * 1. 获取模板资源与其模型，仅在模板类型为 PIPELINE 时检查镜像；否则直接返回 null。
+             * 2. 遍历所有阶段与容器，仅处理 VMBuildContainer 且分发类型为 StoreDispatchType 的场景。
+             * 3. 以 `imageCode@imageVersion` 作为唯一键去重，避免对相同镜像重复调用远端状态接口。
+             * 4. 一旦发现第一个未发布的镜像，立即短路返回该镜像的 imageCode；若全部发布则返回 null。
+             *
+             * 设计考量：
+             * - 命名参数：统一采用命名参数，降低参数顺序误用风险并提升可读性。
+             * - 安全转换：使用 `as?` 避免不必要的强转异常。
+             * - 早退出：非流水线类型模板直接返回，减少分支嵌套。
+             *
+             * @param userId 操作人 ID（用于审计/日志，当前逻辑不参与判定）
+             * @param projectId 项目 ID
+             * @param templateId 模板 ID
+             * @param version 模板版本号
+             * @return Result<String?> 未发布镜像的 imageCode；若全部发布或无需校验则为 null
+             */
     fun checkImageReleaseStatus(
         userId: String,
         projectId: String,
