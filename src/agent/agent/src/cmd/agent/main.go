@@ -28,7 +28,6 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 	"os"
 	"path/filepath"

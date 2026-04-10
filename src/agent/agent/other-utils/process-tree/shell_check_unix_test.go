@@ -53,7 +53,7 @@ func TestClassifyShellCheckResult(t *testing.T) {
 			t.Fatalf("expected FAIL, got %s", result.Status)
 		}
 	})
-	}
+}
 
 func TestScanInitFiles(t *testing.T) {
 	dir := t.TempDir()

@@ -32,6 +32,7 @@ package upgrader
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
