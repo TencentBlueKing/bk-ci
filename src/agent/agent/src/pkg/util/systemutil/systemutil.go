@@ -262,7 +262,7 @@ func CheckProcess(name string) bool {
 		return false
 	}
 	defer func() {
-		_ = totalLock.Unlock()
+		_ = totalLock.Unlock() // Unlock理论上不应失败，忽略错误
 	}()
 
 	if err = fileutil.WriteString(pidFile, fmt.Sprintf("%d", os.Getpid())); err != nil {

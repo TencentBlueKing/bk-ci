@@ -181,15 +181,7 @@ func LoadAgentEnv() {
 	} else {
 		GAgentEnv.OsVersion = osVersion
 	}
-	cpuInfo, gpuInfo := "", ""
-	func() {
-		defer func() {
-			if r := recover(); r != nil {
-				logs.Warnf("get cpu/gpu info panic, skip hardware detection: %v", r)
-			}
-		}()
-		cpuInfo, gpuInfo = GetCpuAndGpuInfo()
-	}()
+	cpuInfo, gpuInfo := GetCpuAndGpuInfo()
 	GAgentEnv.CPUProductInfo = cpuInfo
 	GAgentEnv.GPUProductInfo = gpuInfo
 }

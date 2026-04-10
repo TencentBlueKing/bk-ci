@@ -264,7 +264,7 @@ func UninstallAgent() error {
 	logs.Info("start uninstall agent")
 
 	workDir := systemutil.GetWorkDir()
-	agentBin := workDir + "/" + config.GetAgentBinary()
+	agentBin := filepath.Join(workDir, config.GetAgentBinary())
 	output, err := command.RunCommand(agentBin, []string{"uninstall"}, workDir, nil)
 	if err != nil {
 		logs.Error("agent uninstall failed: ", err.Error())

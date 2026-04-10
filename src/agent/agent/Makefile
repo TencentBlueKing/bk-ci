@@ -1,36 +1,58 @@
-# 可通过 make GO=go1.19 指定编译使用的go命令
-GO ?= go
-BINDIR := $(CURDIR)/bin
-CMDDIR := $(CURDIR)/src/cmd
-BuildTime := $(shell date '+%Y-%m-%d.%H:%M:%S%Z')
-GitCommit := $(shell git rev-parse HEAD)
-# 出包时通过变量写入为具体的版本号，需要符合如下写法
-AGENT_VERSION=v0.0.0-beta.0
-BUILD_FLAGS := -ldflags="-w -s -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.BuildTime=$(BuildTime) \
--X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.GitCommit=$(GitCommit) -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.AgentVersion=$(AGENT_VERSION)"
+# =============================================================================
+# Makefile — 兼容层，将 make 命令转发到 Taskfile.yml
+#
+# 所有构建逻辑已迁移至 Taskfile.yml（跨平台），此 Makefile 仅作为薄代理
+# 保持流水线中 make xxx 命令平稳过渡。
+#
+# 如果环境中没有 task 命令，会自动通过 go install 安装。
+#
+# 用法不变:
+#   make build_linux
+#   make build_linux GO=go1.19 AGENT_VERSION=v1.0.0
+#   make all
+# =============================================================================
 
-# 编译外部出包版本时需要设置当前变量为out
-BUILD_OUT_TAG=out
+# ── 变量透传 ────────────────────────────────────────────────────────────────
+GO              ?= go
+AGENT_VERSION   ?= v0.0.0-beta.0
+BUILD_OUT_TAG   ?= out
 
-format:
-	goimports -w .
-	find ./ -name "*.go" | xargs gofmt -w
+# 公共参数：将 make 变量导出为 task 变量
+TASK_VARS := GO=$(GO) AGENT_VERSION=$(AGENT_VERSION) BUILD_OUT_TAG=$(BUILD_OUT_TAG)
+
+# ── _ensure_task: 检测 task，不存在则 go install ──────────────────────────
+# 每个 target 依赖此 target，保证 task 可用
+# 用 command -v 检测（兼容 bash/sh），安装到 GOPATH/bin
+.PHONY: _ensure_task
+_ensure_task:
+	@command -v task >/dev/null 2>&1 || { \
+		echo "==> task not found in PATH, installing via: $(GO) install github.com/go-task/task/v3/cmd/task@latest"; \
+		GOFLAGS= $(GO) install github.com/go-task/task/v3/cmd/task@latest; \
+		echo "==> task installed to $$($(GO) env GOPATH)/bin/task"; \
+	}
+
+# ── 格式化 / 测试 / i18n ───────────────────────────────────────────────────
+.PHONY: format test test-unit i18nfilegen clean
+
+format: _ensure_task
+	$(TASK_VARS) task fmt
 
 test: test-unit
 
-.PHONY: test-unit
-test-unit:
-	@echo
-	@echo "==> Running unit tests <=="
-	GO111MODULE=on $(GO) test -tags=${BUILD_OUT_TAG} -run . ./...
+test-unit: _ensure_task
+	$(TASK_VARS) task test
 
-# 相对于代码生成器的位置
-I18N_DIR := "../../../../../../support-files/i18n/agent/"
+i18nfilegen: _ensure_task
+	$(TASK_VARS) task i18n
 
-i18nfilegen: 
-	I18N_DIR=${I18N_DIR} $(GO) generate -x src/pkg/i18n/i18n.go
+clean: _ensure_task
+	$(TASK_VARS) task clean
 
-all: linux windows macos_no_cgo
+# ── 全平台 ──────────────────────────────────────────────────────────────────
+.PHONY: all linux windows macos macos_no_cgo
+
+all: _ensure_task
+	$(TASK_VARS) task build:all
 
 linux: build_linux build_linux_arm64 build_linux_mips64 build_linux_loong64
 
@@ -40,72 +62,44 @@ macos: build_macos build_macos_arm64
 
 macos_no_cgo: build_macos_no_cgo build_macos_arm64_no_cgo
 
-build_linux: test clean i18nfilegen
-	mkdir -p $(BINDIR)
-	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon_linux $(CMDDIR)/daemon/
-	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_linux $(CMDDIR)/agent/main.go
-	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/upgrader_linux $(CMDDIR)/upgrader/main.go
-	ls -la $(BINDIR)
-build_linux_arm64: test clean i18nfilegen
-	mkdir -p $(BINDIR)
-	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon_linux_arm64 $(CMDDIR)/daemon/
-	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_linux_arm64 $(CMDDIR)/agent/main.go
-	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/upgrader_linux_arm64 $(CMDDIR)/upgrader/main.go
-	ls -la $(BINDIR)
-build_linux_mips64: test clean i18nfilegen
-	mkdir -p $(BINDIR)
-	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=mips64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon_linux_mips64 $(CMDDIR)/daemon/
-	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=mips64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_linux_mips64 $(CMDDIR)/agent/main.go
-	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=mips64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/upgrader_linux_mips64 $(CMDDIR)/upgrader/main.go
-	ls -la $(BINDIR)
-build_linux_loong64: test clean i18nfilegen
-	mkdir -p $(BINDIR)
-	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=loong64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon_linux_loong64 $(CMDDIR)/daemon/
-	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=loong64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_linux_loong64 $(CMDDIR)/agent/main.go
-	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=loong64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/upgrader_linux_loong64 $(CMDDIR)/upgrader/main.go
-	ls -la $(BINDIR)
+# ── Linux ───────────────────────────────────────────────────────────────────
+.PHONY: build_linux build_linux_arm64 build_linux_mips64 build_linux_loong64
 
-# Telegraf 的 cpu和diskio 插件采集使用的 shirou 包需要开启cgo才可以在darwin情况下采集成功
-build_macos: test clean i18nfilegen
-	mkdir -p $(BINDIR)
-	GO111MODULE=on CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon_macos $(CMDDIR)/daemon/
-	GO111MODULE=on CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_macos $(CMDDIR)/agent/main.go
-	GO111MODULE=on CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/upgrader_macos $(CMDDIR)/upgrader/main.go
-	ls -la $(BINDIR)
-build_macos_arm64: test clean i18nfilegen
-	mkdir -p $(BINDIR)
-	GO111MODULE=on CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon_macos_arm64 $(CMDDIR)/daemon/
-	GO111MODULE=on CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_macos_arm64 $(CMDDIR)/agent/main.go
-	GO111MODULE=on CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/upgrader_macos_arm64 $(CMDDIR)/upgrader/main.go
-	ls -la $(BINDIR)
+build_linux: _ensure_task
+	$(TASK_VARS) task build:linux
 
-# 方便统一交叉编译，这里会提供不开启cgo的macos编译，但是其监控的 cpu和diskio 会没有数据
-build_macos_no_cgo: test clean i18nfilegen
-	mkdir -p $(BINDIR)
-	GO111MODULE=on CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon_macos $(CMDDIR)/daemon/
-	GO111MODULE=on CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_macos $(CMDDIR)/agent/main.go
-	GO111MODULE=on CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/upgrader_macos $(CMDDIR)/upgrader/main.go
-	ls -la $(BINDIR)
-build_macos_arm64_no_cgo: test clean i18nfilegen
-	mkdir -p $(BINDIR)
-	GO111MODULE=on CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon_macos_arm64 $(CMDDIR)/daemon/
-	GO111MODULE=on CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_macos_arm64 $(CMDDIR)/agent/main.go
-	GO111MODULE=on CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/upgrader_macos_arm64 $(CMDDIR)/upgrader/main.go
-	ls -la $(BINDIR)
+build_linux_arm64: _ensure_task
+	$(TASK_VARS) task build:linux:arm64
 
-build_windows: test clean i18nfilegen
-	mkdir -p $(BINDIR)
-	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon.exe $(CMDDIR)/daemon/
-	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent.exe $(CMDDIR)/agent/main.go
-	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/upgrader.exe $(CMDDIR)/upgrader/main.go
-	ls -la $(BINDIR)
-build_windows_386: test clean i18nfilegen
-	mkdir -p $(BINDIR)
-	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=386 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon_386.exe $(CMDDIR)/daemon/
-	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=386 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_386.exe $(CMDDIR)/agent/main.go
-	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=386 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/upgrader_386.exe $(CMDDIR)/upgrader/main.go
-	ls -la $(BINDIR)
+build_linux_mips64: _ensure_task
+	$(TASK_VARS) task build:linux:mips64
 
-clean:
-	mkdir -p $(BINDIR)
-	rm -f $(BINDIR)/*
+build_linux_loong64: _ensure_task
+	$(TASK_VARS) task build:linux:loong64
+
+# ── Windows ─────────────────────────────────────────────────────────────────
+.PHONY: build_windows build_windows_386
+
+build_windows: _ensure_task
+	$(TASK_VARS) task build:windows
+
+build_windows_386: _ensure_task
+	$(TASK_VARS) task build:windows:386
+
+# ── macOS (CGO) ─────────────────────────────────────────────────────────────
+.PHONY: build_macos build_macos_arm64
+
+build_macos: _ensure_task
+	$(TASK_VARS) task build:macos:cgo
+
+build_macos_arm64: _ensure_task
+	$(TASK_VARS) task build:macos:arm64:cgo
+
+# ── macOS (no CGO) ──────────────────────────────────────────────────────────
+.PHONY: build_macos_no_cgo build_macos_arm64_no_cgo
+
+build_macos_no_cgo: _ensure_task
+	$(TASK_VARS) task build:macos
+
+build_macos_arm64_no_cgo: _ensure_task
+	$(TASK_VARS) task build:macos:arm64

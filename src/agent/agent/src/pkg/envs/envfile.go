@@ -1,10 +1,11 @@
 package envs
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 )
 
 const (
@@ -23,7 +24,7 @@ func LoadEnvFiles(workDir string) {
 
 	envVars, err := loadEnvFile(envPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[envfile] load %s error: %v\n", envPath, err)
+		logs.Warnf("[envfile] load %s error: %v", envPath, err)
 	}
 	for k, v := range envVars {
 		os.Setenv(k, v)
@@ -32,7 +33,7 @@ func LoadEnvFiles(workDir string) {
 
 	savedPath, err := loadPathFile(pathPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[envfile] load %s error: %v\n", pathPath, err)
+		logs.Warnf("[envfile] load %s error: %v", pathPath, err)
 	}
 	if savedPath != "" {
 		merged := mergePath(savedPath, os.Getenv("PATH"))
@@ -41,7 +42,7 @@ func LoadEnvFiles(workDir string) {
 	}
 
 	if loaded > 0 {
-		fmt.Printf("[envfile] loaded %d env entries from %s and %s\n", loaded, envFileName, pathFileName)
+		logs.Infof("[envfile] loaded %d env entries from %s and %s", loaded, envFileName, pathFileName)
 	}
 }
 

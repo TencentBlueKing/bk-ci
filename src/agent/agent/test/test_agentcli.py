@@ -42,8 +42,14 @@ from pathlib import Path
 # =============================================================================
 
 def _enable_ansi_on_windows():
-    """Windows 10+ 启用虚拟终端序列（ANSI 颜色）"""
+    """Windows 10+ 启用虚拟终端序列（ANSI 颜色）并强制 UTF-8 输出"""
     if sys.platform == "win32":
+        import io
+        # 强制 stdout/stderr 使用 UTF-8 编码，避免 GBK/CP936 无法编码 Unicode 字符
+        if hasattr(sys.stdout, "buffer"):
+            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+        if hasattr(sys.stderr, "buffer"):
+            sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
         try:
             import ctypes
             kernel32 = ctypes.windll.kernel32
@@ -78,26 +84,26 @@ def log_skip(msg):
     print(f"  {C.YELLOW}[SKIP]{C.RESET}  {msg}")
 
 def log_section(msg):
-    print(f"\n{C.BOLD}{C.CYAN}\u2500\u2500 {msg} \u2500\u2500{C.RESET}")
+    print(f"\n{C.BOLD}{C.CYAN}-- {msg} --{C.RESET}")
 
 def log_mode(mode):
-    print(f"\n{C.BOLD}{C.CYAN}\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557{C.RESET}")
+    print(f"\n{C.BOLD}{C.CYAN}+{'=' * 40}+{C.RESET}")
     print(f"{C.BOLD}{C.CYAN}  \u6a21\u5f0f: {mode}{C.RESET}")
-    print(f"{C.BOLD}{C.CYAN}\u255a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u255d{C.RESET}")
+    print(f"{C.BOLD}{C.CYAN}+{'=' * 40}+{C.RESET}")
 
 def log_test_header(name):
     print(f"\n  {C.BOLD}[TEST]{C.RESET} {name}")
 
 def log_banner(title, modes_str):
-    print(f"\n{C.BOLD}{C.CYAN}\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557{C.RESET}")
-    print(f"{C.BOLD}{C.CYAN}\u2551  {title:<40s}\u2551{C.RESET}")
-    print(f"{C.BOLD}{C.CYAN}\u2551  \u6a21\u5f0f: {modes_str:<34s}\u2551{C.RESET}")
-    print(f"{C.BOLD}{C.CYAN}\u255a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u255d{C.RESET}")
+    print(f"\n{C.BOLD}{C.CYAN}+{'=' * 42}+{C.RESET}")
+    print(f"{C.BOLD}{C.CYAN}|  {title:<40s}|{C.RESET}")
+    print(f"{C.BOLD}{C.CYAN}|  \u6a21\u5f0f: {modes_str:<34s}|{C.RESET}")
+    print(f"{C.BOLD}{C.CYAN}+{'=' * 42}+{C.RESET}")
 
 def log_summary_banner():
-    print(f"\n{C.BOLD}{C.CYAN}\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557{C.RESET}")
-    print(f"{C.BOLD}{C.CYAN}\u2551  \u6d4b\u8bd5\u7ed3\u679c\u6c47\u603b                                  \u2551{C.RESET}")
-    print(f"{C.BOLD}{C.CYAN}\u255a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u255d{C.RESET}")
+    print(f"\n{C.BOLD}{C.CYAN}+{'=' * 42}+{C.RESET}")
+    print(f"{C.BOLD}{C.CYAN}|  \u6d4b\u8bd5\u7ed3\u679c\u6c47\u603b                                  |{C.RESET}")
+    print(f"{C.BOLD}{C.CYAN}+{'=' * 42}+{C.RESET}")
 
 
 # =============================================================================
@@ -1209,7 +1215,7 @@ class AgentTestRunner:
             if install_type.exists():
                 saved = install_type.read_text().strip().upper()
                 if saved == mode.upper():
-                    log_info(f"reinstall \u540e .install_type={saved}\uff0c\u4e0e\u91cd\u88c5\u524d\u6a21\u5f0f\u4e00\u81f4 \u2713")
+                    log_info(f"reinstall \u540e .install_type={saved}\uff0c\u4e0e\u91cd\u88c5\u524d\u6a21\u5f0f\u4e00\u81f4 [OK]")
                 else:
                     log_fail(f"reinstall \u540e .install_type='{saved}'\uff0c\u671f\u671b '{mode.upper()}'")
                     return False
@@ -1458,7 +1464,7 @@ class AgentTestRunner:
         # start（install 可能已自动启动，忽略 already running）
         rc, out = self.agent_cmd("start")
         if rc == 0 or re.search(r"already.+running|1056", out, re.IGNORECASE):
-            log_info("Agent \u5df2\u6062\u590d\u8fd0\u884c \u2713")
+            log_info("Agent \u5df2\u6062\u590d\u8fd0\u884c [OK]")
         else:
             log_info(f"\u6062\u590d start \u5931\u8d25\uff08rc={rc}\uff09\uff0c\u8bf7\u624b\u52a8\u6267\u884c start")
 
@@ -1474,19 +1480,19 @@ class AgentTestRunner:
         for mode in modes:
             result = self.mode_results.get(mode, "\u672a\u6267\u884c")
             if result.startswith("PASS"):
-                print(f"    {C.GREEN}\u2713{C.RESET} {mode}: {result}")
+                print(f"    {C.GREEN}[OK]{C.RESET} {mode}: {result}")
             elif result.startswith("FAIL"):
-                print(f"    {C.RED}\u2717{C.RESET} {mode}: {result}")
+                print(f"    {C.RED}[X]{C.RESET} {mode}: {result}")
             else:
-                print(f"    {C.YELLOW}\u2013{C.RESET} {mode}: {result}")
+                print(f"    {C.YELLOW}-{C.RESET} {mode}: {result}")
 
         if self.failed_summary:
             print()
             print(f"  {C.RED}\u5931\u8d25\u660e\u7ec6:{C.RESET}")
             for t in self.failed_summary:
-                print(f"    {C.RED}\u2717{C.RESET} {t}")
+                print(f"    {C.RED}[X]{C.RESET} {t}")
 
-        print(f"{C.BOLD}{C.CYAN}\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550{C.RESET}")
+        print(f"{C.BOLD}{C.CYAN}{'=' * 42}{C.RESET}")
 
 
 # =============================================================================

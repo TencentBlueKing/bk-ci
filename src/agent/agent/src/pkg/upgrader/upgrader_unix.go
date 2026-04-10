@@ -172,7 +172,7 @@ func UninstallAgent() error {
 	logs.Info("start uninstall agent")
 
 	workDir := systemutil.GetWorkDir()
-	agentBin := workDir + "/" + config.GetAgentBinary()
+	agentBin := filepath.Join(workDir, config.GetAgentBinary())
 	output, err := command.RunCommand(agentBin, []string{"uninstall"}, workDir, nil)
 	if err != nil {
 		logs.Error("agent uninstall failed: ", err.Error())
@@ -249,7 +249,7 @@ func restartServiceViaSystemctl(serviceName string) error {
 	if err != nil {
 		return fmt.Errorf("failed to restart service %s: %v\nOutput: %s", serviceName, err, string(output))
 	}
-	fmt.Printf("Successfully issued restart command for %s. Output:\n%s\n", serviceName, string(output))
+	logs.Infof("Successfully issued restart command for %s. Output:\n%s", serviceName, string(output))
 	return nil
 }
 
