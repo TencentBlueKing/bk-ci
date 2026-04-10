@@ -58,6 +58,8 @@ class BuildHistoryService @Autowired constructor(
         rec.os = dispatchType?.systemVersion ?: ""
         rec.xcode = dispatchType?.xcodeVersion ?: ""
         rec.macosHwSpec = dispatchType?.macOSHwSpec ?: ""
+        val isStreamProject = event.projectId.startsWith("git_")
+        rec.source = if (isStreamProject) "gongfeng" else "landun"
 
         return buildHistoryDao.saveBuildHistory(dslContext, rec)
     }
