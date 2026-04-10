@@ -1,4 +1,5 @@
 bin/
+.bin/
 .docker-gopath/
 .cursor
 .claude

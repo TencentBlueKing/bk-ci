@@ -4,7 +4,7 @@
 # 所有构建逻辑已迁移至 Taskfile.yml（跨平台），此 Makefile 仅作为薄代理
 # 保持流水线中 make xxx 命令平稳过渡。
 #
-# 如果环境中没有 task 命令，会自动通过 go install 安装。
+# 如果环境中没有 task 命令，会自动下载预编译二进制（无需高版本 Go）。
 #
 # 用法不变:
 #   make build_linux
@@ -17,21 +17,23 @@ GO              ?= go
 AGENT_VERSION   ?= v0.0.0-beta.0
 BUILD_OUT_TAG   ?= out
 
-# ── 定位 task 二进制（绝对路径） ────────────────────────────────────────────
-# 优先用 PATH 中的 task，找不到则用 GOPATH/bin/task（go install 的安装位置）
-GOPATH_BIN := $(shell $(GO) env GOPATH 2>/dev/null)/bin
-TASK       := $(or $(shell command -v task 2>/dev/null),$(GOPATH_BIN)/task)
+# ── 定位 task 二进制 ──────────────────────────────────────────────────────
+# 优先用 PATH 中的 task；找不到则安装到项目 .bin/ 目录
+LOCAL_BIN   := $(CURDIR)/.bin
+TASK        := $(or $(shell command -v task 2>/dev/null),$(LOCAL_BIN)/task)
 
 # 公共参数：将 make 变量导出为 task 变量
 TASK_VARS := GO=$(GO) AGENT_VERSION=$(AGENT_VERSION) BUILD_OUT_TAG=$(BUILD_OUT_TAG)
 
-# ── _ensure_task: 检测 task，不存在则 go install ──────────────────────────
+# ── _ensure_task: 检测 task，不存在则下载预编译二进制 ────────────────────
 .PHONY: _ensure_task
 _ensure_task:
 	@if [ ! -x "$(TASK)" ]; then \
-		echo "==> task not found, installing via: $(GO) install github.com/go-task/task/v3/cmd/task@latest"; \
-		GOFLAGS= $(GO) install github.com/go-task/task/v3/cmd/task@latest; \
-		echo "==> task installed to $(TASK)"; \
+		echo "==> task not found, downloading pre-built binary to $(LOCAL_BIN) ..."; \
+		mkdir -p "$(LOCAL_BIN)"; \
+		sh -c "$$(curl --fail --location https://taskfile.dev/install.sh)" -- -d -b "$(LOCAL_BIN)" \
+		&& echo "==> task installed to $(TASK)" \
+		|| { echo "==> ERROR: failed to install task"; exit 1; }; \
 	fi
 
 # ── 格式化 / 测试 / i18n ───────────────────────────────────────────────────
