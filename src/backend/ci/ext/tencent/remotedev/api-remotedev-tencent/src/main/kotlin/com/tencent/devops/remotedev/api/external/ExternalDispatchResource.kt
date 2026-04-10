@@ -47,18 +47,6 @@ import jakarta.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ExternalDispatchResource {
 
-    @Deprecated(message = "被new代替")
-    @Operation(summary = "工作空间task回调")
-    @POST
-    @Path("/task/callback")
-    fun workspaceTaskCallback(
-        @Parameter(description = "云开发环境对接容器集群类型(DEVCLOUD、START、BCS)", required = false)
-        @QueryParam("type")
-        type: WorkspaceMountType? = WorkspaceMountType.DEVCLOUD,
-        @Parameter(description = "回调信息", required = true)
-        taskStatus: TaskStatus
-    ): Result<Boolean>
-
     @Operation(summary = "工作空间task回调新")
     @POST
     @Path("/task/callback/new")
