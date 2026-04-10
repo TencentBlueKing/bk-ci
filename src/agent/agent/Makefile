@@ -4,7 +4,7 @@
 # 所有构建逻辑已迁移至 Taskfile.yml（跨平台），此 Makefile 仅作为薄代理
 # 保持流水线中 make xxx 命令平稳过渡。
 #
-# 如果环境中没有 task 命令，会自动通过 go install 安装。
+# 如果环境中没有 task 命令，会自动下载预编译二进制（无需高版本 Go）。
 #
 # 用法不变:
 #   make build_linux
@@ -17,42 +17,47 @@ GO              ?= go
 AGENT_VERSION   ?= v0.0.0-beta.0
 BUILD_OUT_TAG   ?= inner
 
+# ── 定位 task 二进制 ──────────────────────────────────────────────────────
+# 优先用 PATH 中的 task；找不到则安装到项目 .bin/ 目录
+LOCAL_BIN   := $(CURDIR)/.bin
+TASK        := $(or $(shell command -v task 2>/dev/null),$(LOCAL_BIN)/task)
+
 # 公共参数：将 make 变量导出为 task 变量
 TASK_VARS := GO=$(GO) AGENT_VERSION=$(AGENT_VERSION) BUILD_OUT_TAG=$(BUILD_OUT_TAG)
 
-# ── _ensure_task: 检测 task，不存在则 go install ──────────────────────────
-# 每个 target 依赖此 target，保证 task 可用
-# 用 command -v 检测（兼容 bash/sh），安装到 GOPATH/bin
+# ── _ensure_task: 检测 task，不存在则下载预编译二进制 ────────────────────
 .PHONY: _ensure_task
 _ensure_task:
-	@command -v task >/dev/null 2>&1 || { \
-		echo "==> task not found in PATH, installing via: $(GO) install github.com/go-task/task/v3/cmd/task@latest"; \
-		GOFLAGS= $(GO) install github.com/go-task/task/v3/cmd/task@latest; \
-		echo "==> task installed to $$($(GO) env GOPATH)/bin/task"; \
-	}
+	@if [ ! -x "$(TASK)" ]; then \
+		echo "==> task not found, downloading pre-built binary to $(LOCAL_BIN) ..."; \
+		mkdir -p "$(LOCAL_BIN)"; \
+		sh -c "$$(curl --fail --location https://taskfile.dev/install.sh)" -- -d -b "$(LOCAL_BIN)" \
+		&& echo "==> task installed to $(TASK)" \
+		|| { echo "==> ERROR: failed to install task"; exit 1; }; \
+	fi
 
 # ── 格式化 / 测试 / i18n ───────────────────────────────────────────────────
 .PHONY: format test test-unit i18nfilegen clean
 
 format: _ensure_task
-	$(TASK_VARS) task fmt
+	$(TASK_VARS) $(TASK) fmt
 
 test: test-unit
 
 test-unit: _ensure_task
-	$(TASK_VARS) task test
+	$(TASK_VARS) $(TASK) test
 
 i18nfilegen: _ensure_task
-	$(TASK_VARS) task i18n
+	$(TASK_VARS) $(TASK) i18n
 
 clean: _ensure_task
-	$(TASK_VARS) task clean
+	$(TASK_VARS) $(TASK) clean
 
 # ── 全平台 ──────────────────────────────────────────────────────────────────
 .PHONY: all linux windows macos macos_no_cgo
 
 all: _ensure_task
-	$(TASK_VARS) task build:all
+	$(TASK_VARS) $(TASK) build:all
 
 linux: build_linux build_linux_arm64 build_linux_mips64 build_linux_loong64
 
@@ -66,40 +71,40 @@ macos_no_cgo: build_macos_no_cgo build_macos_arm64_no_cgo
 .PHONY: build_linux build_linux_arm64 build_linux_mips64 build_linux_loong64
 
 build_linux: _ensure_task
-	$(TASK_VARS) task build:linux
+	$(TASK_VARS) $(TASK) build:linux
 
 build_linux_arm64: _ensure_task
-	$(TASK_VARS) task build:linux:arm64
+	$(TASK_VARS) $(TASK) build:linux:arm64
 
 build_linux_mips64: _ensure_task
-	$(TASK_VARS) task build:linux:mips64
+	$(TASK_VARS) $(TASK) build:linux:mips64
 
 build_linux_loong64: _ensure_task
-	$(TASK_VARS) task build:linux:loong64
+	$(TASK_VARS) $(TASK) build:linux:loong64
 
 # ── Windows ─────────────────────────────────────────────────────────────────
 .PHONY: build_windows build_windows_386
 
 build_windows: _ensure_task
-	$(TASK_VARS) task build:windows
+	$(TASK_VARS) $(TASK) build:windows
 
 build_windows_386: _ensure_task
-	$(TASK_VARS) task build:windows:386
+	$(TASK_VARS) $(TASK) build:windows:386
 
 # ── macOS (CGO) ─────────────────────────────────────────────────────────────
 .PHONY: build_macos build_macos_arm64
 
 build_macos: _ensure_task
-	$(TASK_VARS) task build:macos:cgo
+	$(TASK_VARS) $(TASK) build:macos:cgo
 
 build_macos_arm64: _ensure_task
-	$(TASK_VARS) task build:macos:arm64:cgo
+	$(TASK_VARS) $(TASK) build:macos:arm64:cgo
 
 # ── macOS (no CGO) ──────────────────────────────────────────────────────────
 .PHONY: build_macos_no_cgo build_macos_arm64_no_cgo
 
 build_macos_no_cgo: _ensure_task
-	$(TASK_VARS) task build:macos
+	$(TASK_VARS) $(TASK) build:macos
 
 build_macos_arm64_no_cgo: _ensure_task
-	$(TASK_VARS) task build:macos:arm64
+	$(TASK_VARS) $(TASK) build:macos:arm64
