@@ -68,5 +68,7 @@ data class StoreBaseUpdateRequest(
     val baseFeatureInfo: StoreBaseFeatureRequest? = null,
     @get:Schema(title = "环境信息列表", required = false)
     @Valid
-    val baseEnvInfos: MutableList<StoreBaseEnvRequest>? = null
+    val baseEnvInfos: MutableList<StoreBaseEnvRequest>? = null,
+    @get:Schema(title = "归属应用标识", required = false)
+    val ownerStoreCode: String? = null
 )

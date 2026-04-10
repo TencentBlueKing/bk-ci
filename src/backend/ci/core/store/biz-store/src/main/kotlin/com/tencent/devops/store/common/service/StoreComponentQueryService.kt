@@ -202,4 +202,15 @@ interface StoreComponentQueryService {
         ownerStoreCode: String? = null,
         status: StoreStatusEnum? = null
     ): StoreDetailInfo?
+
+    /**
+     * 查询指定组件标识各版本要素信息，不校验用户权限
+     */
+    fun getComponentBaseInfoList(
+        storeType: String,
+        storeCode: String,
+        storeStatusList: List<StoreStatusEnum>? = null,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): List<StoreBaseInfo>
 }

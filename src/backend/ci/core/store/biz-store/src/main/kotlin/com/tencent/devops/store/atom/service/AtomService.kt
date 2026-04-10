@@ -37,6 +37,7 @@ import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
+import com.tencent.devops.store.pojo.atom.AtomUpgradeRequest
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.common.UnInstallReq
@@ -200,4 +201,14 @@ interface AtomService {
      * @return 插件默认版本号
      */
     fun getAtomDefaultValidVersion(projectCode: String, atomCode: String): Result<VersionInfo?>
+
+    /**
+     * 升级插件
+     */
+    fun upgradeAtom(userId: String, atomRequest: AtomUpgradeRequest): Result<Boolean>
+
+    /**
+     * 判断插件是否存在
+     */
+    fun exists(atomCode: String): Result<Boolean>
 }

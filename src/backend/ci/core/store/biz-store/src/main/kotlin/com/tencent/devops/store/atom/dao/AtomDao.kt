@@ -57,6 +57,7 @@ import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
+import com.tencent.devops.store.pojo.atom.AtomUpgradeRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
@@ -126,7 +127,8 @@ data class AtomQueryParam(
     val keyword: String?,
     val fitOsFlag: Boolean?,
     val queryFitAgentBuildLessAtomFlag: Boolean?,
-    val queryProjectAtomFlag: Boolean = true
+    val queryProjectAtomFlag: Boolean = true,
+    val ownerStoreCode: String? = null
 )
 
 /**
@@ -197,7 +199,8 @@ class AtomDao : AtomBaseDao() {
                 PROPS,
                 DATA,
                 CREATOR,
-                MODIFIER
+                MODIFIER,
+                OWNER_STORE_CODE
             )
                 .values(
                     id,
@@ -229,7 +232,8 @@ class AtomDao : AtomBaseDao() {
                     atomRequest.props,
                     atomRequest.data,
                     userId,
-                    userId
+                    userId,
+                    atomRequest.ownerStoreCode
                 )
                 .execute()
         }
@@ -1548,6 +1552,82 @@ class AtomDao : AtomBaseDao() {
                 .orderBy(CREATE_TIME, ID)
             if (offset != null && limit != null) step.offset(offset).limit(limit)
             return step.fetch()
+        }
+    }
+
+    fun upgradeAtom(
+        dslContext: DSLContext,
+        userId: String,
+        id: String,
+        classType: String,
+        atomRequest: AtomUpgradeRequest
+    ) {
+        with(TAtom.T_ATOM) {
+            val osMapJson = if (atomRequest.os.isNotEmpty() && atomRequest.jobType.isBuildEnv()) {
+                JsonUtil.toJson(mapOf(atomRequest.jobType.name to atomRequest.os), formatted = false)
+            } else null
+            dslContext.insertInto(
+                this,
+                ID,
+                NAME,
+                ATOM_CODE,
+                CLASS_TYPE,
+                SERVICE_SCOPE,
+                JOB_TYPE,
+                JOB_TYPE_MAP,
+                OS,
+                OS_MAP,
+                CLASSIFY_ID,
+                CLASSIFY_ID_MAP,
+                DOCS_LINK,
+                ATOM_TYPE,
+                ATOM_STATUS,
+                VERSION,
+                DEFAULT_FLAG,
+                LATEST_FLAG,
+                CATEGROY,
+                BUILD_LESS_RUN_FLAG,
+                WEIGHT,
+                PROPS,
+                DATA,
+                CREATOR,
+                MODIFIER,
+                OWNER_STORE_CODE
+            )
+                    .values(
+                        id,
+                        atomRequest.name,
+                        atomRequest.atomCode,
+                        classType,
+                        JsonUtil.toJson(atomRequest.serviceScope, formatted = false),
+                        atomRequest.jobType.name,
+                        JsonUtil.toJson(
+                            mapOf(ServiceScopeEnum.PIPELINE.name to listOf(atomRequest.jobType.name)),
+                            formatted = false
+                        ),
+                        JsonUtil.toJson(atomRequest.os, formatted = false),
+                        osMapJson,
+                        atomRequest.classifyId,
+                        JsonUtil.toJson(
+                            mapOf(ServiceScopeEnum.PIPELINE.name to atomRequest.classifyId),
+                            formatted = false
+                        ),
+                        atomRequest.docsLink,
+                        atomRequest.atomType.type.toByte(),
+                        AtomStatusEnum.RELEASED.status.toByte(),
+                        atomRequest.version,
+                        atomRequest.defaultFlag,
+                        true,
+                        atomRequest.category.category.toByte(),
+                        atomRequest.buildLessRunFlag,
+                        atomRequest.weight,
+                        atomRequest.props,
+                        atomRequest.data,
+                        userId,
+                        userId,
+                        atomRequest.ownerStoreCode
+                    )
+                    .execute()
         }
     }
 

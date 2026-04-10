@@ -554,6 +554,7 @@ class StoreBaseQueryDao {
         dslContext: DSLContext,
         storeCode: String,
         storeType: StoreTypeEnum,
+        storeStatusList: List<String>? = null,
         page: Int? = null,
         pageSize: Int? = null
     ): Result<TStoreBaseRecord> {
@@ -561,6 +562,12 @@ class StoreBaseQueryDao {
             val baseStep = dslContext.selectFrom(this)
                 .where(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .let {
+                    if (!storeStatusList.isNullOrEmpty()) {
+                        it.and(STATUS.`in`(storeStatusList))
+                    }
+                    it
+                }
                 .orderBy(CREATE_TIME.desc())
             if (null != page && null != pageSize) {
                 baseStep.limit((page - 1) * pageSize, pageSize).fetch()

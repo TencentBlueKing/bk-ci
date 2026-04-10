@@ -128,6 +128,7 @@ import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
 import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.common.dao.ClassifyDao
+import com.tencent.devops.store.pojo.atom.AtomUpgradeRequest
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.honor.HonorInfo
 import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
@@ -926,7 +927,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      * 添加插件信息
      */
     override fun savePipelineAtom(userId: String, atomRequest: AtomCreateRequest): Result<Boolean> {
-        val id = UUIDUtil.generate()
+        val id = atomRequest.id?.takeIf { it.isNotBlank() } ?: UUIDUtil.generate()
         logger.info("savePipelineAtom userId=$userId|atomRequest=$atomRequest")
         // 判断插件代码是否存在
         val atomCode = atomRequest.atomCode
@@ -1548,5 +1549,32 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             )
         }
         return Result(versionInfo)
+    }
+
+    override fun upgradeAtom(userId: String, atomRequest: AtomUpgradeRequest): Result<Boolean> {
+        val id = atomRequest.id?.takeIf { it.isNotBlank() } ?: UUIDUtil.generate()
+        logger.info("upgradeAtom userId=$userId|atomRequest=$atomRequest")
+        // 校验插件分类是否合法
+        classifyService.getClassify(atomRequest.classifyId).data
+            ?: return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomRequest.classifyId),
+                data = false,
+                language = I18nUtil.getLanguage(userId)
+            )
+        val classType = handleClassType(atomRequest.os)
+        atomRequest.os.sort() // 给操作系统排序
+        atomDao.upgradeAtom(
+            dslContext = dslContext,
+            userId = userId,
+            id = id,
+            classType = classType,
+            atomRequest = atomRequest
+        )
+        return Result(true)
+    }
+
+    override fun exists(atomCode: String): Result<Boolean> {
+        return Result(atomDao.countByCode(dslContext, atomCode) > 0)
     }
 }

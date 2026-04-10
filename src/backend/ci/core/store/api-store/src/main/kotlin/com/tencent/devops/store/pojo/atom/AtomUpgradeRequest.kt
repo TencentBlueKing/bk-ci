@@ -32,8 +32,8 @@ import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "流水线-插件信息请求报文体")
-data class AtomCreateRequest(
+@Schema(title = "流水线-插件升级信息请求报文体")
+data class AtomUpgradeRequest(
     @get:Schema(title = "指定插件ID, 不指定默认使用UUID", required = false)
     val id: String? = null,
     @get:Schema(title = "插件名称", required = true)
@@ -64,6 +64,8 @@ data class AtomCreateRequest(
     val props: String?,
     @get:Schema(title = "预留字段（设置规则等信息的json串）", required = false)
     val data: String?,
+    @get:Schema(title = "升级后的版本号", required = false)
+    val version: String,
     @get:Schema(title = "归属应用标识", required = false)
     val ownerStoreCode: String? = null
 )

@@ -194,7 +194,8 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
         getStoreSpecBusService(storeType).doStoreCreatePostBus(
             userId = userId,
             storeCode = storeCode,
-            storeType = storeType
+            storeType = storeType,
+            storeCreateRequest = storeCreateRequest
         )
     }
 

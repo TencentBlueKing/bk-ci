@@ -51,5 +51,7 @@ data class StoreBaseInfo(
     @get:Schema(title = "发布者")
     val publisher: String,
     @get:Schema(title = "分类ID")
-    val classifyId: String
+    val classifyId: String,
+    @get:Schema(title = "归属应用标识", required = false)
+    val ownerStoreCode: String? = null
 )
