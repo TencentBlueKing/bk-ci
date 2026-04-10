@@ -247,6 +247,10 @@ class PlatformVerifier:
         """返回 install 命令的额外参数"""
         return []
 
+    def install_cli_mode(self, mode):
+        """将内部模式名映射为 CLI install 命令实际使用的参数。默认直接小写。"""
+        return mode.lower()
+
     def is_pid_alive(self, pid_str):
         """Unix 默认实现：用 signal 0 检查进程存活"""
         if not pid_str or not pid_str.isdigit():
@@ -289,7 +293,18 @@ class LinuxVerifier(PlatformVerifier):
         return "Linux"
 
     def modes(self):
-        return ["DIRECT", "USER", "SERVICE"]
+        # root: 默认安装（自动走 systemd service）+ DIRECT
+        # 普通用户: DIRECT + USER
+        if os.getuid() == 0:
+            return ["DIRECT", "SERVICE"]
+        return ["DIRECT", "USER"]
+
+    # Linux agent CLI install 接受小写参数（user, direct），或留空让 agent 自动选择。
+    # SERVICE 模式不是有效的 CLI 参数，root 下留空即可自动走 systemd service。
+    def install_cli_mode(self, mode):
+        if mode.upper() == "SERVICE":
+            return ""  # root 下留空 → agent 自动选 systemd service
+        return mode.lower()
 
     def executable_name(self):
         return "devopsAgent"
@@ -298,7 +313,7 @@ class LinuxVerifier(PlatformVerifier):
         return "devopsDaemon"
 
     def service_name(self, agent_id):
-        return f"devops-agent-{agent_id}"
+        return f"devops_agent_{agent_id}"
 
     def _has_systemd(self):
         try:
@@ -323,6 +338,8 @@ class LinuxVerifier(PlatformVerifier):
             if not self._has_systemd():
                 return False, "SERVICE \u6a21\u5f0f\u9700\u8981 systemd"
         elif mode == "USER":
+            if os.getuid() == 0:
+                return False, "USER \u6a21\u5f0f\u4e0d\u652f\u6301 root \u7528\u6237\uff0c\u8bf7\u7528\u666e\u901a\u7528\u6237\u8fd0\u884c"
             if not self._has_user_systemd():
                 return False, "USER \u6a21\u5f0f\u9700\u8981 systemctl --user \u53ef\u7528"
         return True, None
@@ -511,7 +528,7 @@ class WindowsVerifier(PlatformVerifier):
         return "devopsDaemon.exe"
 
     def service_name(self, agent_id):
-        return f"devops-agent-{agent_id}"
+        return f"devops_agent_{agent_id}"
 
     def is_pid_alive(self, pid_str):
         if not pid_str or not pid_str.isdigit():
@@ -696,7 +713,7 @@ class AgentTestRunner:
     DAEMON_TIMEOUT = 20 if sys.platform == "win32" else 15
 
     # 可选的测试空间（section）名称
-    ALL_SECTIONS = ["version", "debug", "install", "start", "stop", "uninstall", "reinstall"]
+    ALL_SECTIONS = ["version", "debug", "install", "start", "stop", "reinstall", "uninstall"]
 
     def __init__(self, work_dir, verifier, session_user="", session_password="",
                  fail_fast=False, sections=None, agent_path=None):
@@ -736,6 +753,8 @@ class AgentTestRunner:
         UnicodeDecodeError。
         """
         exe = self.agent_path / self.verifier.executable_name()
+        cmd_display = f"{exe.name} {' '.join(args)}"
+        log_info(f"$ {cmd_display}")
         try:
             result = subprocess.run(
                 [str(exe)] + list(args),
@@ -747,10 +766,16 @@ class AgentTestRunner:
             stdout = _decode_bytes(result.stdout)
             stderr = _decode_bytes(result.stderr)
             output = (stdout + stderr).strip()
+            log_info(f"  rc={result.returncode}")
+            if output:
+                for line in output.splitlines():
+                    log_info(f"  | {line}")
             return result.returncode, output
         except subprocess.TimeoutExpired:
+            log_info("  rc=-1 (超时 300s)")
             return -1, "命令执行超时（300s）"
         except FileNotFoundError:
+            log_info("  rc=-1 (找不到文件)")
             return -1, f"找不到可执行文件: {exe}"
 
     # ── 测试框架 ──────────────────────────────────────────────────────────
@@ -926,7 +951,8 @@ class AgentTestRunner:
         install_type = self.work_dir / ".install_type"
         safe_unlink(install_type)
 
-        cmd_args = ["install", mode]
+        cli_mode = self.verifier.install_cli_mode(mode)
+        cmd_args = ["install"] + ([cli_mode] if cli_mode else [])
         extra = self.verifier.get_install_extra_args(
             mode, self.session_user, self.session_password
         )
@@ -942,10 +968,10 @@ class AgentTestRunner:
             log_fail(".install_type \u672a\u521b\u5efa")
             return False
 
-        saved = install_type.read_text().strip().lower()
+        saved = install_type.read_text().strip().upper()
         log_info(f".install_type={saved}")
-        if saved != mode.lower():
-            log_fail(f".install_type='{saved}'\uff0c\u671f\u671b '{mode.lower()}'")
+        if saved != mode.upper():
+            log_fail(f".install_type='{saved}'\uff0c\u671f\u671b '{mode.upper()}'")
             return False
 
         svc_name = self.verifier.service_name(self._agent_id)
@@ -1156,8 +1182,8 @@ class AgentTestRunner:
             return False
         return True
 
-    def _test_reinstall(self):
-        """reinstall \u2192 \u6210\u529f\u6216\u8fde\u63a5\u5931\u8d25\u5747\u4e3a\u5408\u7406"""
+    def _test_reinstall(self, mode):
+        """reinstall \u2192 \u6210\u529f\u540e\u9a8c\u8bc1\u5b89\u88c5\u6a21\u5f0f\u4e0e\u91cd\u88c5\u524d\u4e00\u81f4"""
         rc, out = self.agent_cmd("reinstall", "-y")
         log_info(f"reinstall \u8f93\u51fa: {out}")
         log_info(f"reinstall \u9000\u51fa\u7801: {rc}")
@@ -1171,12 +1197,27 @@ class AgentTestRunner:
             if not exe.exists():
                 log_fail(f"reinstall \u540e {self.verifier.executable_name()} \u4e0d\u5b58\u5728")
                 return False
+            # \u9a8c\u8bc1 reinstall \u540e\u5b89\u88c5\u6a21\u5f0f\u4e0e\u91cd\u88c5\u524d\u4e00\u81f4
+            install_type = self.work_dir / ".install_type"
+            if install_type.exists():
+                saved = install_type.read_text().strip().upper()
+                if saved == mode.upper():
+                    log_info(f"reinstall \u540e .install_type={saved}\uff0c\u4e0e\u91cd\u88c5\u524d\u6a21\u5f0f\u4e00\u81f4 \u2713")
+                else:
+                    log_fail(f"reinstall \u540e .install_type='{saved}'\uff0c\u671f\u671b '{mode.upper()}'")
+                    return False
+            else:
+                log_info("reinstall \u540e .install_type \u4e0d\u5b58\u5728\uff08\u53ef\u80fd server \u7248\u672c\u8f83\u65e7\uff09")
             log_info(f"reinstall \u6210\u529f\uff0c{self.verifier.executable_name()} \u53ef\u7528")
             return True
         else:
-            # 连接失败属于 server 不可达，标记为跳过
+            # \u4e0b\u8f7d\u6210\u529f\u4f46\u540e\u7eed\u6b65\u9aa4\uff08install \u7b49\uff09\u5931\u8d25\uff0c\u5c5e\u4e8e\u771f\u5b9e\u9519\u8bef
+            if re.search(r"downloaded\s+[\d.]+\s*MB", out, re.IGNORECASE):
+                log_fail(f"reinstall \u4e0b\u8f7d\u6210\u529f\u4f46\u540e\u7eed\u6b65\u9aa4\u5931\u8d25\uff08rc={rc}\uff09")
+                return False
+            # \u4e0b\u8f7d\u9636\u6bb5\u5c31\u5931\u8d25\uff08\u8fde\u63a5/\u7f51\u7edc\u95ee\u9898\uff09\uff0c\u6807\u8bb0\u4e3a\u8df3\u8fc7
             if re.search(
-                r"connect|dial|refused|timeout|error|failed|EOF|\u8d85\u65f6|\u4e0b\u8f7d|\u91cd\u65b0\u5b89\u88c5|\u5931\u8d25",
+                r"connect|dial|refused|timeout|EOF|download failed",
                 out, re.IGNORECASE
             ):
                 return "skip:reinstall \u8fde\u63a5\u5931\u8d25\uff08server \u4e0d\u53ef\u8fbe\uff09"
@@ -1315,6 +1356,12 @@ class AgentTestRunner:
             ]:
                 self.skip_test(name, f"{dn} \u4e0d\u5b58\u5728")
 
+        # ── reinstall（在 uninstall 之前，验证 reinstall 保持当前安装模式）──
+        if self._should_run_section("reinstall"):
+            log_section("reinstall")
+            self.run_test(f"reinstall \u2192 \u4fdd\u6301 {mode} \u6a21\u5f0f", self._test_reinstall, mode)
+            if self._should_abort(): return self._record_mode_result(mode, svc_name)
+
         # ── uninstall ──
         if self._should_run_section("uninstall"):
             log_section("uninstall")
@@ -1324,11 +1371,6 @@ class AgentTestRunner:
             log_section("status\uff08\u5378\u8f7d\u540e\uff09")
             self.run_test("status \u5378\u8f7d\u540e\u4e0d\u5d29\u6e83",       self._test_status_uninstalled)
             if self._should_abort(): return self._record_mode_result(mode, svc_name)
-
-        # ── reinstall ──
-        if self._should_run_section("reinstall"):
-            log_section("reinstall")
-            self.run_test("reinstall \u2192 \u6210\u529f\u6216\u8fde\u63a5\u5931\u8d25\u5747\u4e3a\u5408\u7406", self._test_reinstall)
 
         self._record_mode_result(mode, svc_name)
 
@@ -1380,8 +1422,38 @@ class AgentTestRunner:
             if self._abort:
                 break
 
+        # 测试结束后恢复 agent 到运行状态
+        self._restore_agent(modes_to_run)
+
         self.print_summary(modes_to_run)
         return 1 if self.total_fail > 0 else 0
+
+    def _restore_agent(self, modes_ran):
+        """测试结束后用最后一个模式重新 install + start，恢复 agent 正常运行"""
+        log_section("\u6062\u590d Agent \u8fd0\u884c\u72b6\u6001")
+
+        # 用最后实际跑过的模式恢复（如果有多个模式，最后一个被 cleanup 了）
+        restore_mode = modes_ran[-1] if modes_ran else None
+        if not restore_mode:
+            log_info("\u65e0\u6a21\u5f0f\u53ef\u6062\u590d")
+            return
+
+        cli_mode = self.verifier.install_cli_mode(restore_mode)
+        cmd_args = ["install"] + ([cli_mode] if cli_mode else [])
+        log_info(f"\u91cd\u65b0\u5b89\u88c5\uff08\u6a21\u5f0f: {restore_mode}\uff09...")
+        rc, out = self.agent_cmd(*cmd_args)
+        if rc != 0:
+            log_info(f"\u6062\u590d install \u5931\u8d25\uff08rc={rc}\uff09\uff0c\u8bf7\u624b\u52a8\u6267\u884c install")
+            return
+
+        log_info(f"\u6062\u590d install \u6210\u529f")
+
+        # start（install 可能已自动启动，忽略 already running）
+        rc, out = self.agent_cmd("start")
+        if rc == 0 or re.search(r"already.+running|1056", out, re.IGNORECASE):
+            log_info("Agent \u5df2\u6062\u590d\u8fd0\u884c \u2713")
+        else:
+            log_info(f"\u6062\u590d start \u5931\u8d25\uff08rc={rc}\uff09\uff0c\u8bf7\u624b\u52a8\u6267\u884c start")
 
     def print_summary(self, modes):
         """打印测试结果汇总"""
@@ -1437,8 +1509,8 @@ def main():
   install    - install + status\uff08\u5b89\u88c5\u540e\uff09
   start      - start + status\uff08\u8fd0\u884c\u4e2d\uff09+ debug\uff08\u8fd0\u884c\u65f6\uff09
   stop       - stop + status\uff08\u505c\u6b62\u540e\uff09+ \u518d\u6b21 start/stop
+  reinstall  - reinstall + \u9a8c\u8bc1\u5b89\u88c5\u6a21\u5f0f\u4fdd\u6301\u4e00\u81f4
   uninstall  - uninstall + status\uff08\u5378\u8f7d\u540e\uff09
-  reinstall  - reinstall \u5b50\u547d\u4ee4
 """
     )
     parser.add_argument(
