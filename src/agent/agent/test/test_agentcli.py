@@ -324,10 +324,17 @@ class LinuxVerifier(PlatformVerifier):
             return False
 
     def _has_user_systemd(self):
+        """检测 user systemd 是否可用（与 agent 代码 hasUserSystemd 逻辑一致）"""
+        if os.getuid() == 0:
+            return False
         try:
             r = run_cmd(["systemctl", "--user", "is-system-running"])
             out = r.stdout.strip()
-            return out in ("running", "degraded")
+            # is-system-running 成功时返回 "running"
+            # 失败时（rc!=0）stdout 可能是 "degraded" 或 "starting"，也算可用
+            if r.returncode == 0:
+                return True
+            return out in ("degraded", "starting")
         except (FileNotFoundError, subprocess.TimeoutExpired):
             return False
 
