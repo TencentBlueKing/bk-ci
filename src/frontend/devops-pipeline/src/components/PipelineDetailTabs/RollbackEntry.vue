@@ -22,90 +22,21 @@
                 {{ operateName }}
             </slot>
         </bk-button>
-        <bk-dialog
+        <DraftConfirmDialog
             v-model="isShowConfirmDialog"
-            :width="480"
-            footer-position="center"
-            theme="primary"
+            :has-draft-pipeline="hasDraftPipeline"
+            :draft-status="draftStatus"
+            :draft-save-info="draftSaveInfo"
+            :draft-hint-title="draftHintTitle"
+            :active-branch-version-info="activeBranchVersionInfo"
+            :version-name="versionName"
+            :is-active-branch-version="isActiveBranchVersion"
+            :is-rollback="isRollback"
+            :draft-version="draftVersion"
+            @confirm="rollback"
+            @edit-draft="goEdit"
             @cancel="close"
-        >
-            <header
-                class="draft-hint-title"
-                slot="header"
-            >
-                <i class="devops-icon icon-exclamation"></i>
-                {{ draftHintTitle }}
-            </header>
-            <div
-                v-if="hasDraftPipeline"
-                class="draft-hint-content"
-            >
-                <p
-                    v-if="isActiveBranchVersion"
-                    class="is-active-branch-version"
-                >
-                    {{ activeBranchVersionInfo }}
-                </p>
-                <div v-else>
-                    <div v-if="isCreateNewVersion">{{ $t('dropDraftTips', [versionName]) }}</div>
-                    <div v-else>
-                        <p class="draft-info">
-                            <i18n
-                                path="existingDraft"
-                                class="existing-draft"
-                            >
-                                <span>{{ draftSaveInfo?.updater }}</span>
-                                <span>{{ draftSaveInfo?.updateTime }}</span>
-                            </i18n>
-                            <VersionDiffEntry
-                                style="cursor: pointer;"
-                                text
-                                :latest-version="draftSaveInfo?.draftVersion"
-                                :version="draftSaveInfo?.releaseVersion"
-                            >
-                                <Logo
-                                    name="diff"
-                                    size="14"
-                                />
-                            </VersionDiffEntry>
-                        </p>
-                        <div
-                            v-if="draftStatus === DRAFT_STATUS.OUTDATED"
-                            class="is-active-branch-version"
-                        >
-                            <i18n path="draftBaselineIsEarlierThanCurrentVersionNotice">
-                                <span>{{ draftSaveInfo?.draftVersionName }}</span>
-                                <span class="earlier">{{ $t('Earlier') }}</span>
-                                <span>{{ draftSaveInfo?.releaseVersionName }}</span>
-                            </i18n>
-                            <p>{{ $t('draftNoticeTip1') }}</p>
-                            <p>{{ $t('draftNoticeTip2') }}</p>
-                        </div>
-                        <div
-                            v-if="draftStatus === DRAFT_STATUS.EXISTS"
-                            class="is-active-branch-version"
-                        >{{ $t('regenerateDraftOrEditExisting') }}</div>
-                    </div>
-                </div>
-            </div>
-            <footer slot="footer">
-                <bk-button
-                    theme="primary"
-                    @click="rollback"
-                >
-                    {{ $t(isActiveBranchVersion ? 'resume' : isCreateNewVersion ? 'newVersion' : 'newDraft') }}
-                </bk-button>
-                <bk-button
-                    v-if="hasDraftPipeline && !isActiveBranchVersion"
-                    @click="goEdit(draftVersion)"
-                >
-                    {{ $t('editDraft') }}
-                </bk-button>
-                <bk-button @click="close">
-                    {{ $t(isActiveBranchVersion ? 'cancel' : 'thinkthink') }}
-                </bk-button>
-            </footer>
-        </bk-dialog>
+        />
     </span>
 </template>
 
@@ -116,15 +47,14 @@
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
     import { pipelineTabIdMap, DRAFT_STATUS } from '@/utils/pipelineConst'
-    import Logo from '@/components/Logo'
-    import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
     import dayjs from 'dayjs'
     import { mapActions, mapGetters, mapState } from 'vuex'
+    import DraftConfirmDialog from '@/components/PipelineHeader/DraftConfirmDialog'
+    import useDraftStatus from '@/hook/useDraftStatus'
 
     export default {
         components: {
-            VersionDiffEntry,
-            Logo,
+            DraftConfirmDialog
         },
         props: {
             outline: Boolean,
@@ -170,13 +100,14 @@
                 default: ''
             },
             isVersionList: Boolean,
-            // 是否为回滚操作
-            isRollbackBtn: {
-                type: Boolean,
-                default: undefined
-            },
             isActiveDraft: Boolean,
             isActiveBranchVersion: Boolean
+        },
+        setup () {
+            const { fetchLatestDraftStatus } = useDraftStatus()
+            return {
+                fetchLatestDraftStatus
+            }
         },
         data () {
             return {
@@ -208,9 +139,6 @@
                 const isReleaseVersion = this.version === releaseVersion
                 return !(this.isActiveDraft || baseVersion === this.version || this.isActiveBranchVersion || (isReleaseVersion && !this.hasDraftPipeline))
             },
-            isCreateNewVersion () {
-                return this.isVersionList || this.isRollbackBtn
-            },
             operateName () {
                 return this.isRollback
                     ? this.$t('rollback')
@@ -221,8 +149,7 @@
                     case this.hasDraftPipeline && this.isActiveBranchVersion:
                         return this.$t('template.templateCoverWarning')
                     case this.hasDraftPipeline:
-                        // 版本列表和回滚按钮保持原有逻辑，编辑操作需检测是否有草稿冲突
-                        return this.isCreateNewVersion ? this.$t('hasDraftTips', [this.draftBaseVersionName]) : this.$t('hasDraft')
+                        return this.isRollback ? this.$t('hasDraftTips', [this.draftBaseVersionName]) : this.$t('hasDraft')
                     default:
                         return this.$t(this.isActiveBranchVersion ? 'createBranchDraftTips' : 'createDraftTips', [this.versionName])
                 }
@@ -247,8 +174,6 @@
                 requestTemplateSummary: 'atom/requestTemplateSummary',
                 rollbackPipelineVersion: 'pipelines/rollbackPipelineVersion',
                 rollbackTemplateVersion: 'templates/rollbackTemplateVersion',
-                getDraftStatus: 'common/getDraftStatus',
-                getTemplateDraftStatus: 'common/getTemplateDraftStatus',
                 checkTemplatePipelineRollback: 'templates/checkTemplatePipelineRollback'
             }),
             async handleClick () {
@@ -274,22 +199,26 @@
 
             // 处理编辑操作
             async handleEdit () {
-                // 版本列表页：分支版本且不是当前基准版本，需要确认
-                if (this.isVersionList) {
-                    const needConfirm = this.isActiveBranchVersion && this.version !== this.pipelineInfo?.baseVersion
-                    if (needConfirm) {
-                        this.showDraftConfirmDialog()
-                    } else {
-                        this.goEdit(this.draftVersion ?? this.version)
-                    }
+                // 版本列表页：分支版本且不是当前基准版本，直接确认
+                if (this.isVersionList && this.isActiveBranchVersion && this.version !== this.pipelineInfo?.baseVersion) {
+                    this.showDraftConfirmDialog()
                     return
                 }
 
-                // 详情页：实时获取最新的草稿状态
+                // 检测草稿状态
                 try {
-                    const latestDraftStatus = await this.fetchLatestDraftStatus()
+                    const result = await this.fetchLatestDraftStatus({
+                        projectId: this.projectId,
+                        id: this.rollbackId,
+                        actionType: 'EDIT',
+                        isTemplate: this.isTemplate,
+                        pipelineInfo: this.pipelineInfo
+                    })
+                    
+                    this.draftStatus = result.status
+                    this.draftSaveInfo = result.draftSaveInfo
                     // 无草稿冲突，直接编辑
-                    if (latestDraftStatus === DRAFT_STATUS.NORMAL) {
+                    if (this.draftStatus === DRAFT_STATUS.NORMAL) {
                         this.goEdit(this.draftVersion ?? this.version)
                         return
                     }
@@ -301,29 +230,6 @@
                         message: error.message || error
                     })
                 }
-            },
-
-            // 获取最新的草稿状态
-            async fetchLatestDraftStatus () {
-                const request = this.isTemplate ? this.getTemplateDraftStatus : this.getDraftStatus
-                const dynamicKey = this.isTemplate ? 'templateId' : 'pipelineId'
-                const params = {
-                    projectId: this.projectId,
-                    actionType: 'EDIT',
-                    [dynamicKey]: this.rollbackId,
-                }
-                const res = await request(params)
-                this.draftStatus = res.status
-                this.draftSaveInfo = {
-                    updater: res.draft?.updater,
-                    updateTime: dayjs(res.draft?.updateTime).format('YYYY-MM-DD HH:mm:ss'),
-                    draftVersionName: res.draft?.baseVersionName,
-                    draftVersion: res.draft?.version,
-                    releaseVersionName: res.release?.versionName || this.pipelineInfo?.releaseVersionName,
-                    releaseVersion: res.release?.version || this.pipelineInfo?.releaseVersion,
-                }
-                
-                return res.status
             },
 
             // 检查约束模式流水线是否允许回滚
@@ -409,52 +315,3 @@
         }
     }
 </script>
-
-<style lang="scss">
-    .draft-hint-title {
-        color: #313238;
-        font-size: 20px;
-        display: flex;
-        flex-direction: column;
-        grid-gap: 24px;
-        align-items: center;
-        > i {
-            border-radius: 50%;
-            background-color: #ffe8c3;
-            color: #ff9c01;
-            border-radius: 50%;
-            font-size: 24px;
-            height: 42px;
-            line-height: 42px;
-            width: 42px;
-        }
-    }
-    .draft-hint-content {
-        text-align: center;
-    }
-    .is-active-branch-version {
-        background: #F5F6FA;
-        padding: 16px 12px;
-        margin: 0 8px;
-        border-radius: 2px;
-        text-align: left;
-    }
-    .draft-info {
-        display: flex;
-        align-items: center;
-        text-align: left;
-        margin: 16px;
-        margin-left: 12px;
-    }
-    .earlier {
-        color: #fe6159;
-    }
-
-    .existing-draft {
-        color: #b4b4b7;
-        margin-right: 10px;
-        span {
-            color: #313239;
-        }
-    }
-</style>

@@ -29,11 +29,12 @@
                     :key="item.draftVersion"
                     :class="['draft-item', item.draftVersion === draftList[0]?.draftVersion ? 'draft-item-active' : '']"
                 >
-                    <p>
+                    <p class="left-tit">
                         <span class="update-info">{{ formatTime(item.updateTime) }} {{ item.updater }}</span>
                         <span
                             class="version-name"
                             v-if="item.baseVersionName"
+                            :title="$t('basedOn', [item.baseVersionName])"
                         >{{ $t('basedOn', [item.baseVersionName]) }}</span>
                     </p>
                     <span class="options">
@@ -476,7 +477,17 @@
                 &:hover .options {
                     visibility: inherit;
                 }
+                .left-tit {
+                    display: flex;
+                    align-items: center;
+                    line-height: 22px;
+                }
                 .version-name {
+                    max-width: 110px;
+                    display: inline-block;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
                     background-color: #F0F1F5;
                     border-radius: 2px;
                     padding: 0 8px;

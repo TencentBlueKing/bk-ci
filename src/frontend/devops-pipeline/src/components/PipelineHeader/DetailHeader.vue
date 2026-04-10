@@ -139,7 +139,7 @@
                 }"
                 :disabled="loading"
                 key="edit"
-                @click="goEdit"
+                @click="handleEdit"
             >
                 {{ $t("edit") }}
             </bk-button>
@@ -222,6 +222,18 @@
                 :id="pipelineId"
             />
         </aside>
+        <DraftConfirmDialog
+            v-model="isShowConfirmDialog"
+            :has-draft-pipeline="hasDraftPipeline"
+            :draft-status="draftStatus"
+            :draft-save-info="draftSaveInfo"
+            :draft-hint-title="$t('hasDraft')"
+            :version-name="pipelineInfo?.versionName"
+            :draft-version="pipelineInfo?.version"
+            @confirm="confirmEdit"
+            @edit-draft="goEditDraft"
+            @cancel="closeDialog"
+        />
     </div>
     <i
         v-else
@@ -236,10 +248,12 @@
         RESOURCE_ACTION,
         RESOURCE_TYPE
     } from '@/utils/permission'
-    import { TEMP_PARAM_SET_ID } from '@/utils/pipelineConst'
+    import { TEMP_PARAM_SET_ID, DRAFT_STATUS } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
     import ReleaseButton from './ReleaseButton'
+    import DraftConfirmDialog from './DraftConfirmDialog.vue'
+    import useDraftStatus from '@/hook/useDraftStatus'
     const PIPELINE_REPLAY_STATUS = {
         REPLAYING: 'REPLAYING',
         REPLAY_SUCCESS: 'REPLAY_SUCCESS',
@@ -249,19 +263,30 @@
     export default {
         components: {
             PipelineBreadCrumb,
+            DraftConfirmDialog,
             ReleaseButton
+        },
+        setup () {
+            const { fetchLatestDraftStatus } = useDraftStatus()
+            return {
+                fetchLatestDraftStatus
+            }
         },
         data () {
             return {
                 loading: false,
                 reuseParamsLoading: false,
                 timesNum: 1,
+                isShowConfirmDialog: false,
+                draftStatus: DRAFT_STATUS.NORMAL,
+                draftSaveInfo: null,
                 canReplay: true
             }
         },
         computed: {
             ...mapState('atom', ['execDetail', 'pipelineInfo', 'saveStatus']),
             ...mapGetters({
+                hasDraftPipeline: 'atom/hasDraftPipeline',
                 isCurPipelineLocked: 'atom/isCurPipelineLocked'
             }),
             ...mapState('pipelines', ['executeStatus']),
@@ -325,6 +350,8 @@
                     'requestTerminatePipeline',
                     'requestRePlayPipeline',
                     'requestPipelineRePlayStatus',
+                    'rollbackPipelineVersion',
+                    'requestPipelineSummary',
                     'requestRePlayEventDetail'
                 ]
             ),
@@ -471,9 +498,70 @@
                     }
                 })
             },
-            goEdit () {
+            async handleEdit () {
+                try {
+                    const result = await this.fetchLatestDraftStatus({
+                        projectId: this.projectId,
+                        id: this.pipelineId,
+                        actionType: 'EDIT',
+                        isTemplate: false,
+                        pipelineInfo: this.pipelineInfo
+                    })
+                    
+                    this.draftStatus = result.status
+                    this.draftSaveInfo = result.draftSaveInfo
+                    
+                    // 无草稿冲突，直接编辑
+                    if (this.draftStatus === DRAFT_STATUS.NORMAL) {
+                        this.goEdit()
+                        return
+                    }
+                    // 有草稿冲突，弹窗确认
+                    this.isShowConfirmDialog = true
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
+                }
+            },
+            async confirmEdit () {
+                try {
+                    this.loading = true
+                    const res = await this.rollbackPipelineVersion({
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.releaseVersion
+                    })
+                    await this.requestPipelineSummary(this.$route.params)
+                    
+                    if (res.version) {
+                        this.goEdit(res.version)
+                    }
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
+                } finally {
+                    this.loading = false
+                }
+            },
+            goEditDraft (version) {
                 this.$router.push({
-                    name: 'pipelinesEdit'
+                    name: 'pipelinesEdit',
+                    params: {
+                        ...this.$route.params,
+                        version
+                    }
+                })
+            },
+            closeDialog () {
+                this.isShowConfirmDialog = false
+            },
+            goEdit (version) {
+                this.$router.push({
+                    name: 'pipelinesEdit',
+                    version
                 })
             },
 

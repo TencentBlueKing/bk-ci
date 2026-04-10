@@ -16,18 +16,6 @@
                         'has-pac-tag': pacEnabled
                     }]"
                 >
-                    <bk-alert
-                        v-if="draftStatus && draftStatus.status === DRAFT_STATUS.OUTDATED"
-                        type="warning"
-                    >
-                        <template slot="title">
-                            <i18n path="template.draftPublished">
-                                <span>{{ draftStatus?.draft?.baseVersionName }}</span>
-                                <span class="red-tip">{{ $t('Earlier') }}</span>
-                                <span>{{ draftStatus?.release?.versionName }}</span>
-                            </i18n>
-                        </template>
-                    </bk-alert>
                     <template v-if="!isTemplateInstanceMode">
                         {{ $t(isTemplate ? "releaseTemplate" : "releasePipeline") }}
                         <PacTag
@@ -82,6 +70,18 @@
                         v-bkloading="{ isLoading: isLoading || releasing }"
                         class="release-pipeline-pac-form"
                     >
+                        <bk-alert
+                            v-if="draftStatus && draftStatus.status === DRAFT_STATUS.OUTDATED"
+                            type="warning"
+                        >
+                            <template slot="title">
+                                <i18n path="template.draftPublished">
+                                    <span>{{ draftStatus?.draft?.baseVersionName }}</span>
+                                    <span class="red-tip">{{ $t('Earlier') }}</span>
+                                    <span>{{ draftStatus?.release?.versionName }}</span>
+                                </i18n>
+                            </template>
+                        </bk-alert>
                         <!-- 构建号重置提醒 -->
                         <bk-alert
                             v-if="isTemplateInstanceMode && !!resetBuildNoInstanceCount"
