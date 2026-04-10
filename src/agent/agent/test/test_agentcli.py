@@ -756,13 +756,27 @@ class AgentTestRunner:
     # ── 测试框架 ──────────────────────────────────────────────────────────
 
     def run_test(self, name, fn, *args):
-        """执行单个测试，自动计数 + 彩色输出。返回 True=通过, False=失败/中止"""
+        """执行单个测试，自动计数 + 彩色输出。返回 True=通过, False=失败/中止
+
+        测试函数可返回:
+          True       → 通过
+          False      → 失败
+          "skip"     → 跳过（附带原因字符串 "skip:原因"）
+          "skip:msg" → 跳过并显示 msg
+        """
         if self._abort:
             return False
         log_test_header(name)
         try:
-            ok = fn(*args) if args else fn()
-            if ok:
+            result = fn(*args) if args else fn()
+            # 处理 skip 返回值
+            if isinstance(result, str) and result.startswith("skip"):
+                reason = result.split(":", 1)[1] if ":" in result else ""
+                log_skip(reason or name)
+                self._cur_skip += 1
+                self.total_skip += 1
+                return True  # skip 不算失败
+            if result:
                 log_pass(name)
                 self._cur_pass += 1
                 self.total_pass += 1
@@ -1150,8 +1164,7 @@ class AgentTestRunner:
 
         # 命令执行超时（subprocess 被 kill），server 不可达时 reinstall 可能卡住
         if rc == -1:
-            log_info("reinstall \u8d85\u65f6\uff08server \u4e0d\u53ef\u8fbe\u6216\u4e0b\u8f7d\u8017\u65f6\u8fc7\u957f\uff0c\u5c5e\u4e8e\u9884\u671f\uff09")
-            return True
+            return "skip:reinstall \u8d85\u65f6\uff08server \u4e0d\u53ef\u8fbe\u6216\u4e0b\u8f7d\u8017\u65f6\u8fc7\u957f\uff09"
 
         if rc == 0:
             exe = self.agent_path / self.verifier.executable_name()
@@ -1161,15 +1174,14 @@ class AgentTestRunner:
             log_info(f"reinstall \u6210\u529f\uff0c{self.verifier.executable_name()} \u53ef\u7528")
             return True
         else:
-            # 连接失败也属合理（server 不可达）
-            if not re.search(
-                r"connect|dial|refused|timeout|error|failed|\u8d85\u65f6|\u4e0b\u8f7d|\u91cd\u65b0\u5b89\u88c5|\u5931\u8d25",
+            # 连接失败属于 server 不可达，标记为跳过
+            if re.search(
+                r"connect|dial|refused|timeout|error|failed|EOF|\u8d85\u65f6|\u4e0b\u8f7d|\u91cd\u65b0\u5b89\u88c5|\u5931\u8d25",
                 out, re.IGNORECASE
             ):
-                log_fail("reinstall \u5931\u8d25\u4e14\u8f93\u51fa\u65e0\u9884\u671f\u7684\u9519\u8bef\u4fe1\u606f")
-                return False
-            log_info("reinstall \u8fde\u63a5\u5931\u8d25\uff08server \u4e0d\u53ef\u8fbe\uff0c\u5c5e\u4e8e\u9884\u671f\uff09")
-            return True
+                return "skip:reinstall \u8fde\u63a5\u5931\u8d25\uff08server \u4e0d\u53ef\u8fbe\uff09"
+            log_fail("reinstall \u5931\u8d25\u4e14\u8f93\u51fa\u65e0\u9884\u671f\u7684\u9519\u8bef\u4fe1\u606f")
+            return False
 
     # ── 模式测试流程 ──────────────────────────────────────────────────────
 
