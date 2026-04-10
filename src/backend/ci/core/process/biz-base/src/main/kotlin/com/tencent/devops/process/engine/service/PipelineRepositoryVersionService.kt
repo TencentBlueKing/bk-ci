@@ -50,8 +50,6 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.pojo.pipeline.PipelineDraftVersionSimple
-import com.tencent.devops.process.pojo.pipeline.PipelineResourceDraftVersion
-import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.utils.PipelineVersionUtils
@@ -602,45 +600,6 @@ class PipelineRepositoryVersionService(
             pageSize = pageSizeNotNull,
             count = count,
             records = records
-        )
-    }
-
-    fun getPipelineDraftVersion(
-        projectId: String,
-        pipelineId: String,
-        version: Int,
-        draftVersion: Int
-    ): PipelineResourceVersion? {
-        return pipelineResourceDraftVersionDao.get(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = version,
-            draftVersion = draftVersion
-        )?.let { convertDraftToVersion(it) }
-    }
-
-    private fun convertDraftToVersion(draft: PipelineResourceDraftVersion): PipelineResourceVersion {
-        return PipelineResourceVersion(
-            projectId = draft.projectId,
-            pipelineId = draft.pipelineId,
-            version = draft.version,
-            model = draft.model,
-            yaml = draft.yaml,
-            yamlVersion = draft.yamlVersion,
-            versionName = null,
-            creator = draft.creator ?: "",
-            createTime = draft.createTime,
-            updater = draft.updater,
-            updateTime = draft.updateTime,
-            versionNum = null,
-            pipelineVersion = null,
-            triggerVersion = null,
-            settingVersion = draft.settingVersion,
-            status = VersionStatus.COMMITTING,
-            branchAction = null,
-            baseVersion = draft.baseVersion,
-            draftVersion = draft.draftVersion
         )
     }
 }

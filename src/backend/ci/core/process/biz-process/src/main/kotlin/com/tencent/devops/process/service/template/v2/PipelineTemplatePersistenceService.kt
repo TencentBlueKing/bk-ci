@@ -320,6 +320,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     userId = userId,
                     templateId = pipelineTemplateResource.templateId,
                     setting = pipelineTemplateSetting,
+                    version = pipelineTemplateResource.version,
                     settingVersion = pipelineTemplateSetting.version,
                     draftVersion = pipelineTemplateResource.draftVersion!!
                 )
@@ -469,6 +470,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     userId = userId,
                     templateId = pipelineTemplateResource.templateId,
                     setting = pipelineTemplateSetting,
+                    version = pipelineTemplateResource.version,
                     settingVersion = pipelineTemplateSetting.version,
                     draftVersion = pipelineTemplateResource.draftVersion!!
                 )

@@ -95,7 +95,7 @@ class PipelineTemplateDraftRollbackReqConverter @Autowired constructor(
             pipelineTemplateSettingService.getDraftVersion(
                 projectId = projectId,
                 templateId = templateId,
-                settingVersion = baseResource.settingVersion,
+                version = baseResource.version,
                 draftVersion = draftVersion
             )
         } else {

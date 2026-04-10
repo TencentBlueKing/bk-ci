@@ -12,6 +12,8 @@ data class PipelineSettingDraftVersion(
     val projectId: String,
     @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
+    @get:Schema(title = "流水线版本号", required = true)
+    val version: Int,
     @get:Schema(title = "版本号", required = true)
     val settingVersion: Int,
     @get:Schema(title = "草稿版本", required = true)
@@ -46,4 +48,29 @@ data class PipelineSettingDraftVersion(
     val failIfVariableInvalid: Boolean?,
     @get:Schema(title = "构建取消权限策略", required = false)
     val buildCancelPolicy: BuildCancelPolicy?
-)
+) {
+    companion object {
+        fun convertFromDraftVersion(draft: PipelineSettingDraftVersion): PipelineSettingVersion {
+            return PipelineSettingVersion(
+                projectId = draft.projectId,
+                pipelineId = draft.pipelineId,
+                pipelineName = draft.pipelineName,
+                version = draft.settingVersion,
+                desc = draft.desc,
+                labels = draft.labels,
+                buildNumRule = draft.buildNumRule,
+                successSubscriptionList = draft.successSubscriptionList,
+                failSubscriptionList = draft.failSubscriptionList,
+                runLockType = draft.runLockType,
+                waitQueueTimeMinute = draft.waitQueueTimeSecond,
+                maxQueueSize = draft.maxQueueSize,
+                concurrencyGroup = draft.concurrencyGroup,
+                concurrencyCancelInProgress = draft.concurrencyCancelInProgress,
+                maxConRunningQueueSize = draft.maxConRunningQueueSize,
+                pipelineAsCodeSettings = draft.pipelineAsCodeSettings,
+                failIfVariableInvalid = draft.failIfVariableInvalid,
+                buildCancelPolicy = draft.buildCancelPolicy
+            )
+        }
+    }
+}

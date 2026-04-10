@@ -466,17 +466,16 @@ class ProcessDao {
         pipelineId: String,
         versions: List<Int>,
         expireTime: LocalDateTime
-    ): Map<Int, Int> {
+    ): List<Int> {
         with(T_PIPELINE_RESOURCE_VERSION) {
-            return dslContext.select(VERSION, SETTING_VERSION)
+            return dslContext.selectDistinct(VERSION)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(VERSION.`in`(versions))
                 .and(RELEASE_TIME.isNotNull)
                 .and(RELEASE_TIME.lt(expireTime))
-                .fetch { it[VERSION] to it[SETTING_VERSION] }
-                .toMap()
+                .fetch(VERSION)
         }
     }
 
@@ -522,17 +521,16 @@ class ProcessDao {
         templateId: String,
         versions: List<Long>,
         expireTime: LocalDateTime
-    ): Map<Long, Int> {
+    ): List<Long> {
         with(TPipelineTemplateResourceVersion.T_PIPELINE_TEMPLATE_RESOURCE_VERSION) {
-            return dslContext.select(VERSION, SETTING_VERSION)
+            return dslContext.selectDistinct(VERSION)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(TEMPLATE_ID.eq(templateId))
                 .and(VERSION.`in`(versions))
                 .and(RELEASE_TIME.isNotNull)
                 .and(RELEASE_TIME.lt(expireTime))
-                .fetch { it[VERSION] to it[SETTING_VERSION] }
-                .toMap()
+                .fetch(VERSION)
         }
     }
 }

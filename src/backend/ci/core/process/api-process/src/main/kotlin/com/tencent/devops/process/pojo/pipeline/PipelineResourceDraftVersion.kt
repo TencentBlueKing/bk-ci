@@ -1,6 +1,7 @@
 package com.tencent.devops.process.pojo.pipeline
 
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
@@ -36,4 +37,30 @@ data class PipelineResourceDraftVersion(
     val updater: String?,
     @get:Schema(title = "更新时间", required = true)
     val updateTime: LocalDateTime
-)
+) {
+    companion object {
+        fun convertDraftToVersion(draft: PipelineResourceDraftVersion): PipelineResourceVersion {
+            return PipelineResourceVersion(
+                projectId = draft.projectId,
+                pipelineId = draft.pipelineId,
+                version = draft.version,
+                model = draft.model,
+                yaml = draft.yaml,
+                yamlVersion = draft.yamlVersion,
+                versionName = null,
+                creator = draft.creator ?: "",
+                createTime = draft.createTime,
+                updater = draft.updater,
+                updateTime = draft.updateTime,
+                versionNum = null,
+                pipelineVersion = null,
+                triggerVersion = null,
+                settingVersion = draft.settingVersion,
+                status = VersionStatus.COMMITTING,
+                branchAction = null,
+                baseVersion = draft.baseVersion,
+                draftVersion = draft.draftVersion
+            )
+        }
+    }
+}

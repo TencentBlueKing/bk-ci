@@ -7,6 +7,7 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.service.PipelineInfoService
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRepositoryVersionService
 import com.tencent.devops.process.pojo.pipeline.version.PipelineRollbackDraftReq
 import com.tencent.devops.process.pojo.pipeline.version.PipelineVersionCreateReq
@@ -29,6 +30,7 @@ class PipelineRollbackDraftReqConverter @Autowired constructor(
     private val pipelineRepositoryVersionService: PipelineRepositoryVersionService,
     private val pipelineVersionCreateContextFactory: PipelineVersionCreateContextFactory,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) : PipelineVersionCreateReqConverter {
     override fun support(request: PipelineVersionCreateReq): Boolean {
         return request is PipelineRollbackDraftReq
@@ -67,15 +69,14 @@ class PipelineRollbackDraftReqConverter @Autowired constructor(
         )
         // 获取目标的版本用于更新草稿
         val targetResource = if (draftVersion != null) {
-            pipelineRepositoryVersionService.getPipelineDraftVersion(
+            pipelineRepositoryService.getPipelineResourceByDraftVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version,
                 draftVersion = draftVersion
             )
         } else {
-            pipelineResourceVersionDao.getVersionResource(
-                dslContext = dslContext,
+            pipelineRepositoryService.getPipelineResourceVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version,
@@ -86,18 +87,27 @@ class PipelineRollbackDraftReqConverter @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
             params = arrayOf(version.toString())
         )
-        val targetSetting = targetResource.settingVersion?.let {
-            pipelineSettingFacadeService.userGetSetting(
-                userId = userId,
+        val targetSetting = if (draftVersion != null) {
+            pipelineSettingFacadeService.getPipelineSettingByDraftVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = it
+                version = version,
+                draftVersion = draftVersion
             )
-        } ?: pipelineSettingFacadeService.userGetSetting(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId
-        )
+        } else {
+            targetResource.settingVersion?.let {
+                pipelineSettingFacadeService.userGetSetting(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = it
+                )
+            } ?: pipelineSettingFacadeService.userGetSetting(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
+        }
         val isPipelineInstanceFromTemplate = pipelineTemplateRelatedService.isPipelineInstanceFromTemplate(
             projectId = projectId,
             pipelineId = pipelineId

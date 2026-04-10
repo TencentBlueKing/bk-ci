@@ -261,8 +261,7 @@ class ProcessDataClearService @Autowired constructor(
     fun deletePipelineDraftData(
         projectId: String,
         pipelineId: String,
-        versions: List<Int>,
-        settingVersions: List<Int>
+        versions: List<Int>
     ) {
         dslContext.transaction { t ->
             val context = DSL.using(t)
@@ -270,12 +269,10 @@ class ProcessDataClearService @Autowired constructor(
                 dslContext = context, projectId = projectId,
                 pipelineId = pipelineId, versions = versions
             )
-            if (settingVersions.isNotEmpty()) {
-                processDataDeleteDao.deletePipelineSettingDraftVersion(
-                    dslContext = context, projectId = projectId,
-                    pipelineId = pipelineId, settingVersions = settingVersions
-                )
-            }
+            processDataDeleteDao.deletePipelineSettingDraftVersion(
+                dslContext = context, projectId = projectId,
+                pipelineId = pipelineId, versions = versions
+            )
             processDataDeleteDao.deletePipelineBuildHistoryDebug(
                 dslContext = context, projectId = projectId,
                 pipelineId = pipelineId, versions = versions
@@ -286,8 +283,7 @@ class ProcessDataClearService @Autowired constructor(
     fun deleteTemplateDraftData(
         projectId: String,
         templateId: String,
-        versions: List<Long>,
-        settingVersions: List<Int>
+        versions: List<Long>
     ) {
         dslContext.transaction { t ->
             val context = DSL.using(t)
@@ -295,12 +291,10 @@ class ProcessDataClearService @Autowired constructor(
                 dslContext = context, projectId = projectId,
                 templateId = templateId, versions = versions
             )
-            if (settingVersions.isNotEmpty()) {
-                processDataDeleteDao.deleteTemplateSettingDraftVersion(
-                    dslContext = context, projectId = projectId,
-                    templateId = templateId, settingVersions = settingVersions
-                )
-            }
+            processDataDeleteDao.deleteTemplateSettingDraftVersion(
+                dslContext = context, projectId = projectId,
+                templateId = templateId, versions = versions
+            )
         }
     }
 }

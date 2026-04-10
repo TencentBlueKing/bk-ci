@@ -25,6 +25,7 @@ class PipelineTemplateSettingDraftVersionDao {
         userId: String,
         templateId: String,
         setting: PipelineSetting,
+        version: Long,
         settingVersion: Int,
         draftVersion: Int
     ) {
@@ -36,6 +37,7 @@ class PipelineTemplateSettingDraftVersionDao {
                 this,
                 PROJECT_ID,
                 TEMPLATE_ID,
+                VERSION,
                 SETTING_VERSION,
                 DRAFT_VERSION,
                 NAME,
@@ -60,6 +62,7 @@ class PipelineTemplateSettingDraftVersionDao {
             ).values(
                 setting.projectId,
                 templateId,
+                version,
                 settingVersion,
                 draftVersion,
                 setting.pipelineName,
@@ -89,14 +92,14 @@ class PipelineTemplateSettingDraftVersionDao {
         dslContext: DSLContext,
         projectId: String,
         templateId: String,
-        settingVersion: Int,
+        version: Long,
         draftVersion: Int
     ): PipelineTemplateSettingDraftVersion? {
         with(T_PIPELINE_TEMPLATE_SETTING_DRAFT_VERSION) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(TEMPLATE_ID.eq(templateId))
-                .and(SETTING_VERSION.eq(settingVersion))
+                .and(VERSION.eq(version))
                 .and(DRAFT_VERSION.eq(draftVersion))
                 .fetchOne(mapper)
         }
@@ -107,6 +110,7 @@ class PipelineTemplateSettingDraftVersionDao {
         userId: String,
         setting: PipelineSetting,
         templateId: String,
+        version: Long,
         settingVersion: Int,
         draftVersion: Int
     ) {
@@ -134,7 +138,7 @@ class PipelineTemplateSettingDraftVersionDao {
                 .set(UPDATE_TIME, now)
                 .where(PROJECT_ID.eq(setting.projectId))
                 .and(TEMPLATE_ID.eq(templateId))
-                .and(SETTING_VERSION.eq(settingVersion))
+                .and(VERSION.eq(version))
                 .and(DRAFT_VERSION.eq(draftVersion))
                 .execute()
         }
@@ -147,6 +151,7 @@ class PipelineTemplateSettingDraftVersionDao {
                 PipelineTemplateSettingDraftVersion(
                     projectId = r.projectId,
                     templateId = r.templateId,
+                    version = r.version,
                     settingVersion = r.settingVersion,
                     draftVersion = r.draftVersion,
                     templateName = r.name,

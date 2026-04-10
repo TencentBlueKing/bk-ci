@@ -197,7 +197,7 @@ class ProcessMiscService @Autowired constructor(
         pipelineId: String,
         versions: List<Int>,
         expireTime: LocalDateTime
-    ): Map<Int, Int> {
+    ): List<Int> {
         return processDao.getExpiredPipelineVersions(
             dslContext = dslContext, projectId = projectId,
             pipelineId = pipelineId, versions = versions, expireTime = expireTime
@@ -221,7 +221,7 @@ class ProcessMiscService @Autowired constructor(
         templateId: String,
         versions: List<Long>,
         expireTime: LocalDateTime
-    ): Map<Long, Int> {
+    ): List<Long> {
         return processDao.getExpiredTemplateVersions(
             dslContext = dslContext, projectId = projectId,
             templateId = templateId, versions = versions, expireTime = expireTime

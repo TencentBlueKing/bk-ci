@@ -423,22 +423,20 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             )
             if (versions.isEmpty()) break
             // 2. 获取已经发布超过X天的版本
-            val expiredVersionMap = processMiscService.getExpiredPipelineVersions(
+            val expiredVersions = processMiscService.getExpiredPipelineVersions(
                 projectId = projectId, pipelineId = pipelineId,
                 versions = versions, expireTime = expireTime
             )
-            logger.info("clearPipelineDraftVersionData|$projectId|$pipelineId|${expiredVersionMap.keys}")
-            if (expiredVersionMap.isEmpty()) break
+            logger.info("clearPipelineDraftVersionData|$projectId|$pipelineId|$expiredVersions")
+            if (expiredVersions.isEmpty()) break
             try {
                 processDataClearService.deletePipelineDraftData(
                     projectId = projectId, pipelineId = pipelineId,
-                    versions = expiredVersionMap.keys.toList(),
-                    settingVersions = expiredVersionMap.values.distinct()
+                    versions = expiredVersions
                 )
             } catch (ignored: Throwable) {
                 logger.warn(
-                    "clearPipelineDraftVersionData failed" +
-                        "|$projectId|$pipelineId|${expiredVersionMap.keys}",
+                    "clearPipelineDraftVersionData failed|$projectId|$pipelineId|$expiredVersions",
                     ignored
                 )
             }
@@ -472,22 +470,20 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             )
             if (versions.isEmpty()) break
             // 2. 获取已经发布超过X天的版本
-            val expiredVersionMap = processMiscService.getExpiredTemplateVersions(
+            val expiredVersions = processMiscService.getExpiredTemplateVersions(
                 projectId = projectId, templateId = templateId,
                 versions = versions, expireTime = expireTime
             )
-            if (expiredVersionMap.isEmpty()) break
+            if (expiredVersions.isEmpty()) break
             try {
-                logger.info("clearTemplateDraftVersionData|$projectId|$templateId|${expiredVersionMap.keys}")
+                logger.info("clearTemplateDraftVersionData|$projectId|$templateId|$expiredVersions")
                 processDataClearService.deleteTemplateDraftData(
                     projectId = projectId, templateId = templateId,
-                    versions = expiredVersionMap.keys.toList(),
-                    settingVersions = expiredVersionMap.values.distinct()
+                    versions = expiredVersions
                 )
             } catch (ignored: Throwable) {
                 logger.warn(
-                    "clearTemplateDraftVersionData failed" +
-                            "|$projectId|$templateId|${expiredVersionMap.keys}",
+                    "clearTemplateDraftVersionData failed|$projectId|$templateId|$expiredVersions",
                     ignored
                 )
             }

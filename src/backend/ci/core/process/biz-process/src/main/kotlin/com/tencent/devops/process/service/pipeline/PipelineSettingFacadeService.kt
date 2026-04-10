@@ -219,8 +219,7 @@ class PipelineSettingFacadeService @Autowired constructor(
         version: Int = 0,
         checkPermission: Boolean = false,
         detailInfo: PipelineDetailInfo? = null,
-        archiveFlag: Boolean? = false,
-        draftVersion: Int? = null
+        archiveFlag: Boolean? = false
     ): PipelineSetting {
 
         if (checkPermission) {
@@ -240,8 +239,7 @@ class PipelineSettingFacadeService @Autowired constructor(
             detailInfo = detailInfo,
             channelCode = channelCode,
             version = version,
-            archiveFlag = archiveFlag,
-            draftVersion = draftVersion
+            archiveFlag = archiveFlag
         )
     }
 
@@ -351,6 +349,20 @@ class PipelineSettingFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             maxConRunningQueueSize = maxConRunningQueueSize
+        )
+    }
+
+    fun getPipelineSettingByDraftVersion(
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        draftVersion: Int
+    ): PipelineSetting {
+        return pipelineSettingVersionService.getPipelineSettingByDraftVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            draftVersion = draftVersion
         )
     }
 }

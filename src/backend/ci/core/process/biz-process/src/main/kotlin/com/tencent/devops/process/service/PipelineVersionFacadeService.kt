@@ -500,7 +500,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             permission = AuthPermission.EDIT
         )
         val resource = if (draftVersion != null) {
-            repositoryVersionService.getPipelineDraftVersion(
+            pipelineRepositoryService.getPipelineResourceByDraftVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version,
@@ -519,14 +519,22 @@ class PipelineVersionFacadeService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
             params = arrayOf(version.toString())
         )
-        val setting = pipelineSettingFacadeService.userGetSetting(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = resource.settingVersion ?: NUM_ZERO, // 历史没有关联过setting版本应该取正式版本
-            archiveFlag = archiveFlag,
-            draftVersion = draftVersion
-        )
+        val setting = if (draftVersion != null) {
+            pipelineSettingFacadeService.getPipelineSettingByDraftVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                draftVersion = draftVersion
+            )
+        } else {
+            pipelineSettingFacadeService.userGetSetting(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = resource.settingVersion ?: NUM_ZERO, // 历史没有关联过setting版本应该取正式版本
+                archiveFlag = archiveFlag
+            )
+        }
         val model = pipelineInfoFacadeService.getFixedModel(
             resource = resource,
             projectId = projectId,

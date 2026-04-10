@@ -15,6 +15,8 @@ data class PipelineTemplateSettingDraftVersion(
     val projectId: String,
     @get:Schema(title = "模板ID", required = true)
     val templateId: String,
+    @get:Schema(title = "模板版本号", required = true)
+    val version: Long,
     @get:Schema(title = "配置版本号", required = true)
     val settingVersion: Int,
     @get:Schema(title = "草稿版本", required = true)

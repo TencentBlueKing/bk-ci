@@ -137,14 +137,14 @@ class PipelineTemplateSettingService @Autowired constructor(
     fun getDraftVersion(
         projectId: String,
         templateId: String,
-        settingVersion: Int,
+        version: Long,
         draftVersion: Int
     ): PipelineSetting {
         return pipelineTemplateSettingDraftVersionDao.get(
             dslContext = dslContext,
             projectId = projectId,
             templateId = templateId,
-            settingVersion = settingVersion,
+            version = version,
             draftVersion = draftVersion
         )?.toPipelineSetting() ?: throw ErrorCodeException(
             errorCode = ERROR_TEMPLATE_SETTING_DRAFT_VERSION_NOT_EXISTS,

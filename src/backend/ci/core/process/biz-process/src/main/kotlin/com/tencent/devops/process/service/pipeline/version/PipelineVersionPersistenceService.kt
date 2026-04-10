@@ -285,6 +285,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
                 pipelineSettingDraftVersionDao.create(
                     dslContext = transactionContext,
                     setting = pipelineSetting,
+                    version = pipelineResourceVersion.version,
                     draftVersion = pipelineResourceVersion.draftVersion!!
                 )
                 postProcessInTransactionVersionCreate(
@@ -347,6 +348,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
                 pipelineSettingDraftVersionDao.create(
                     dslContext = transactionContext,
                     setting = pipelineSetting,
+                    version = pipelineResourceVersion.version,
                     draftVersion = pipelineResourceVersion.draftVersion!!
                 )
                 postProcessInTransactionVersionCreate(

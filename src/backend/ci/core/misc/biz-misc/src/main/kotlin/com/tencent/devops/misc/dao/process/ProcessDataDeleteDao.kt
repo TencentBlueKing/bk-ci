@@ -652,13 +652,13 @@ class ProcessDataDeleteDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        settingVersions: List<Int>
+        versions: List<Int>
     ): Int {
         with(TPipelineSettingDraftVersion.T_PIPELINE_SETTING_DRAFT_VERSION) {
             return dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-                .and(SETTING_VERSION.`in`(settingVersions))
+                .and(VERSION.`in`(versions))
                 .execute()
         }
     }
@@ -709,13 +709,13 @@ class ProcessDataDeleteDao {
         dslContext: DSLContext,
         projectId: String,
         templateId: String,
-        settingVersions: List<Int>
+        versions: List<Long>
     ): Int {
         with(TPipelineTemplateSettingDraftVersion.T_PIPELINE_TEMPLATE_SETTING_DRAFT_VERSION) {
             return dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(TEMPLATE_ID.eq(templateId))
-                .and(SETTING_VERSION.`in`(settingVersions))
+                .and(VERSION.`in`(versions))
                 .execute()
         }
     }
