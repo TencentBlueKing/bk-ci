@@ -313,7 +313,7 @@ class LinuxVerifier(PlatformVerifier):
         return "devopsDaemon"
 
     def service_name(self, agent_id):
-        return f"devops-agent-{agent_id}"
+        return f"devops_agent_{agent_id}"
 
     def _has_systemd(self):
         try:
@@ -528,7 +528,7 @@ class WindowsVerifier(PlatformVerifier):
         return "devopsDaemon.exe"
 
     def service_name(self, agent_id):
-        return f"devops-agent-{agent_id}"
+        return f"devops_agent_{agent_id}"
 
     def is_pid_alive(self, pid_str):
         if not pid_str or not pid_str.isdigit():
@@ -1211,9 +1211,13 @@ class AgentTestRunner:
             log_info(f"reinstall \u6210\u529f\uff0c{self.verifier.executable_name()} \u53ef\u7528")
             return True
         else:
-            # \u8fde\u63a5\u5931\u8d25\u5c5e\u4e8e server \u4e0d\u53ef\u8fbe\uff0c\u6807\u8bb0\u4e3a\u8df3\u8fc7
+            # \u4e0b\u8f7d\u6210\u529f\u4f46\u540e\u7eed\u6b65\u9aa4\uff08install \u7b49\uff09\u5931\u8d25\uff0c\u5c5e\u4e8e\u771f\u5b9e\u9519\u8bef
+            if re.search(r"downloaded\s+[\d.]+\s*MB", out, re.IGNORECASE):
+                log_fail(f"reinstall \u4e0b\u8f7d\u6210\u529f\u4f46\u540e\u7eed\u6b65\u9aa4\u5931\u8d25\uff08rc={rc}\uff09")
+                return False
+            # \u4e0b\u8f7d\u9636\u6bb5\u5c31\u5931\u8d25\uff08\u8fde\u63a5/\u7f51\u7edc\u95ee\u9898\uff09\uff0c\u6807\u8bb0\u4e3a\u8df3\u8fc7
             if re.search(
-                r"connect|dial|refused|timeout|error|failed|EOF|\u8d85\u65f6|\u4e0b\u8f7d|\u91cd\u65b0\u5b89\u88c5|\u5931\u8d25",
+                r"connect|dial|refused|timeout|EOF|download failed",
                 out, re.IGNORECASE
             ):
                 return "skip:reinstall \u8fde\u63a5\u5931\u8d25\uff08server \u4e0d\u53ef\u8fbe\uff09"
@@ -1418,8 +1422,38 @@ class AgentTestRunner:
             if self._abort:
                 break
 
+        # 测试结束后恢复 agent 到运行状态
+        self._restore_agent(modes_to_run)
+
         self.print_summary(modes_to_run)
         return 1 if self.total_fail > 0 else 0
+
+    def _restore_agent(self, modes_ran):
+        """测试结束后用最后一个模式重新 install + start，恢复 agent 正常运行"""
+        log_section("\u6062\u590d Agent \u8fd0\u884c\u72b6\u6001")
+
+        # 用最后实际跑过的模式恢复（如果有多个模式，最后一个被 cleanup 了）
+        restore_mode = modes_ran[-1] if modes_ran else None
+        if not restore_mode:
+            log_info("\u65e0\u6a21\u5f0f\u53ef\u6062\u590d")
+            return
+
+        cli_mode = self.verifier.install_cli_mode(restore_mode)
+        cmd_args = ["install"] + ([cli_mode] if cli_mode else [])
+        log_info(f"\u91cd\u65b0\u5b89\u88c5\uff08\u6a21\u5f0f: {restore_mode}\uff09...")
+        rc, out = self.agent_cmd(*cmd_args)
+        if rc != 0:
+            log_info(f"\u6062\u590d install \u5931\u8d25\uff08rc={rc}\uff09\uff0c\u8bf7\u624b\u52a8\u6267\u884c install")
+            return
+
+        log_info(f"\u6062\u590d install \u6210\u529f")
+
+        # start（install 可能已自动启动，忽略 already running）
+        rc, out = self.agent_cmd("start")
+        if rc == 0 or re.search(r"already.+running|1056", out, re.IGNORECASE):
+            log_info("Agent \u5df2\u6062\u590d\u8fd0\u884c \u2713")
+        else:
+            log_info(f"\u6062\u590d start \u5931\u8d25\uff08rc={rc}\uff09\uff0c\u8bf7\u624b\u52a8\u6267\u884c start")
 
     def print_summary(self, modes):
         """打印测试结果汇总"""

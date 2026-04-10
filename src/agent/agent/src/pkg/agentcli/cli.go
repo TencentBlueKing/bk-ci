@@ -519,8 +519,18 @@ func handleReinstall(workDir string, args []string) error {
 	}
 
 	printStep(msg("Step 6: installing and starting service ...", "步骤 6: 安装并启动服务 ..."))
-	mode := strings.ToLower(readInstallMode(workDir))
-	if err := handleInstall(workDir, []string{mode}); err != nil {
+	mode := readInstallMode(workDir)
+	// SERVICE 模式不是有效的 CLI 参数（Linux 上 resolveInstallMode 不接受 "service"），
+	// 传空字符串让 resolveInstallMode 根据当前环境（root + systemd）自动选择。
+	cliMode := strings.ToLower(mode)
+	if cliMode == "service" {
+		cliMode = ""
+	}
+	var installArgs []string
+	if cliMode != "" {
+		installArgs = []string{cliMode}
+	}
+	if err := handleInstall(workDir, installArgs); err != nil {
 		return fmt.Errorf(msgf(
 			"reinstall failed at install step: %v",
 			"重装在安装步骤失败: %v", err))
