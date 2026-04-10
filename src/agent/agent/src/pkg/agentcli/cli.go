@@ -580,6 +580,7 @@ func agentArch() string {
 }
 
 // downloadAgentZip downloads agent.zip from the BK-CI server using credentials from .agent.properties.
+// Retries up to 3 times on transient errors (EOF, timeout, connection reset).
 func downloadAgentZip(workDir, gateway, agentId, savePath string) error {
 	if !strings.HasPrefix(gateway, "http") {
 		gateway = "http://" + gateway
@@ -591,14 +592,6 @@ func downloadAgentZip(workDir, gateway, agentId, savePath string) error {
 
 	projectId, _ := readProperty(workDir, "devops.project.id")
 	secretKey, _ := readProperty(workDir, "devops.agent.secret.key")
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return fmt.Errorf(msgf("create request failed: %v", "创建请求失败: %v", err))
-	}
-	req.Header.Set("X-DEVOPS-PROJECT-ID", projectId)
-	req.Header.Set("X-DEVOPS-AGENT-ID", agentId)
-	req.Header.Set("X-DEVOPS-AGENT-SECRET-KEY", secretKey)
 
 	printStep(msgf("  GET %s", "  GET %s", url))
 
@@ -612,11 +605,74 @@ func downloadAgentZip(workDir, gateway, agentId, savePath string) error {
 		Transport: &http.Transport{
 			TLSClientConfig:       tlsConfig,
 			Proxy:                 proxyFunc,
-			ResponseHeaderTimeout: 60 * time.Second,
+			ResponseHeaderTimeout: 120 * time.Second,
 		},
 	}
 
-	resp, err := httpClient.Do(req)
+	headers := map[string]string{
+		"X-DEVOPS-PROJECT-ID":        projectId,
+		"X-DEVOPS-AGENT-ID":          agentId,
+		"X-DEVOPS-AGENT-SECRET-KEY":  secretKey,
+	}
+
+	const maxRetries = 3
+	var lastErr error
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		if attempt > 1 {
+			delay := time.Duration(attempt*5) * time.Second
+			printStep(msgf("  Retry %d/%d after %v ...", "  第 %d/%d 次重试, %v 后 ...",
+				attempt, maxRetries, delay))
+			time.Sleep(delay)
+		}
+
+		lastErr = doDownload(httpClient, url, headers, savePath)
+		if lastErr == nil {
+			return nil
+		}
+
+		errStr := lastErr.Error()
+		if isRetryableError(errStr) {
+			printWarn(msgf("  attempt %d failed: %v", "  第 %d 次尝试失败: %v", attempt, lastErr))
+			continue
+		}
+		// 非重试类错误直接返回（如 HTTP 4xx、非 zip 响应等）
+		return lastErr
+	}
+	return fmt.Errorf(msgf("download failed after %d attempts: %v",
+		"下载在 %d 次尝试后仍失败: %v", maxRetries, lastErr))
+}
+
+// isRetryableError checks if the error string indicates a transient network issue.
+func isRetryableError(errStr string) bool {
+	for _, keyword := range []string{
+		"EOF", "eof",
+		"connection reset",
+		"connection refused",
+		"broken pipe",
+		"timeout",
+		"i/o timeout",
+		"TLS handshake timeout",
+		"server closed",
+		"download interrupted",
+	} {
+		if strings.Contains(errStr, keyword) {
+			return true
+		}
+	}
+	return false
+}
+
+// doDownload performs a single download attempt: HTTP GET → write to tmp file → validate zip → rename.
+func doDownload(client *http.Client, url string, headers map[string]string, savePath string) error {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return fmt.Errorf(msgf("create request failed: %v", "创建请求失败: %v", err))
+	}
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf(msgf("download failed: %v", "下载失败: %v", err))
 	}

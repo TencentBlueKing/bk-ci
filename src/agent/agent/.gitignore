@@ -3,3 +3,4 @@ bin/
 .cursor
 .claude
 .codebuddy
+**.pyc
