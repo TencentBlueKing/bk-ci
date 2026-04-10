@@ -289,7 +289,9 @@ class LinuxVerifier(PlatformVerifier):
         return "Linux"
 
     def modes(self):
-        return ["DIRECT", "USER", "SERVICE"]
+        if os.getuid() == 0:
+            return ["DIRECT", "SERVICE"]
+        return ["DIRECT", "USER"]
 
     def executable_name(self):
         return "devopsAgent"
@@ -323,6 +325,8 @@ class LinuxVerifier(PlatformVerifier):
             if not self._has_systemd():
                 return False, "SERVICE \u6a21\u5f0f\u9700\u8981 systemd"
         elif mode == "USER":
+            if os.getuid() == 0:
+                return False, "USER \u6a21\u5f0f\u4e0d\u652f\u6301 root \u7528\u6237\uff0c\u8bf7\u7528\u666e\u901a\u7528\u6237\u8fd0\u884c"
             if not self._has_user_systemd():
                 return False, "USER \u6a21\u5f0f\u9700\u8981 systemctl --user \u53ef\u7528"
         return True, None
