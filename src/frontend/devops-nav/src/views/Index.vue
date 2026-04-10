@@ -15,7 +15,19 @@
             <main>
                 <template v-if="hasProjectList">
                     <empty-tips
-                        v-if="!hasProject"
+                        v-if="!isPersonalProject && isCreativeFlowPage"
+                        :title="$t('accessDeny.creativeFlowOnlySupportPersonalProject')"
+                        :desc="$t('accessDeny.switchToPersonalProject')"
+                    >
+                        <bk-button
+                            theme="primary"
+                            @click="switchProject"
+                        >
+                            {{ $t('accessDeny.switchProject') }}
+                        </bk-button>
+                    </empty-tips>
+                    <empty-tips
+                        v-else-if="!hasProject"
                         :title="$t('accessDeny.title')"
                         :desc="$t('accessDeny.desc')"
                     >
@@ -66,7 +78,7 @@
                         </bk-exception>
                     </section>
                 </template>
-                <router-view v-else-if="!hasProjectList || isOnlineProject || isApprovalingProject" />
+                <router-view v-else-if="!hasProjectList || ((isOnlineProject || isApprovalingProject) && !(!isPersonalProject && isCreativeFlowPage))" />
             </main>
         </template>
 
@@ -95,6 +107,7 @@
         @State currentNotice
         @State projectList
         @State headerConfig
+        @State currentPage
         @Getter showAnnounce
         @Getter enableProjectList
         @Getter disableProjectList
@@ -140,6 +153,14 @@
 
         get curProjectCode (): string {
             return this.$route.params.projectId
+        }
+
+        get isPersonalProject (): boolean {
+            return this.curProject.channelCode === 'PREBUILD'
+        }
+
+        get isCreativeFlowPage (): boolean {
+            return this.currentPage.code === 'creative-stream'
         }
 
         switchProject () {
