@@ -140,7 +140,7 @@ func currentUser() string {
 	if u := os.Getenv("USER"); u != "" {
 		return u
 	}
-	return "unknown"
+	return unknownUser
 }
 
 func readPid(path string) int {

@@ -13,6 +13,10 @@ import (
 	"time"
 )
 
+const (
+	modeTaskUpper = "TASK"
+)
+
 func platformUnzip(src, dest string) error {
 	cmd := exec.Command("powershell", "-NoProfile", "-Command",
 		fmt.Sprintf("Expand-Archive -Path '%s' -DestinationPath '%s' -Force", src, dest))
@@ -22,7 +26,7 @@ func platformUnzip(src, dest string) error {
 }
 
 func handleInstall(workDir string, args []string) error {
-	mode := "service"
+	mode := modeServiceLower
 	if len(args) > 0 {
 		mode = strings.ToLower(args[0])
 		args = args[1:]
@@ -31,7 +35,7 @@ func handleInstall(workDir string, args []string) error {
 	cleanupBeforeInstallWin(workDir)
 
 	switch mode {
-	case "service":
+	case modeServiceLower:
 		return installService(workDir)
 	case "session":
 		var user, pass string
@@ -79,8 +83,8 @@ func readInstallMode(workDir string) string {
 	switch strings.ToUpper(m) {
 	case "SESSION":
 		return "SESSION"
-	case "TASK":
-		return "TASK"
+	case modeTaskUpper:
+		return modeTaskUpper
 	}
 	return "SERVICE"
 }
@@ -202,7 +206,7 @@ func installTask(workDir string) error {
 	printStep(msgf("Scheduled task %s created (trigger: on logon)",
 		"计划任务 %s 已创建 (触发: 用户登录时)", serviceName))
 
-	writeInstallType(workDir, "TASK")
+	writeInstallType(workDir, modeTaskUpper)
 
 	printStep(msg("Step 3: starting scheduled task ...", "步骤 3: 启动计划任务 ..."))
 	out, err = exec.Command("schtasks", "/run", "/tn", serviceName).CombinedOutput()
@@ -259,7 +263,7 @@ func handleStart(workDir string) error {
 	mode := readInstallMode(workDir)
 
 	switch mode {
-	case "TASK":
+	case modeTaskUpper:
 		// task 模式优先用 schtasks，降级到 service
 		if schtasksExists(serviceName) {
 			printStep(msgf("Starting scheduled task %s ...", "启动计划任务 %s ...", serviceName))
