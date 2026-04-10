@@ -10,7 +10,7 @@ BUILD_FLAGS := -ldflags="-w -s -X github.com/TencentBlueKing/bk-ci/agent/src/pkg
 -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.GitCommit=$(GitCommit) -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.AgentVersion=$(AGENT_VERSION)"
 
 # 编译外部出包版本时需要设置当前变量为out
-BUILD_OUT_TAG=out
+BUILD_OUT_TAG=inner
 
 format:
 	goimports -w .
