@@ -30,6 +30,7 @@ package com.tencent.devops.auth.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
@@ -49,6 +50,7 @@ interface ServiceManagerResource {
 
     @GET
     @Path("/projects/{projectCode}")
+    @Operation(summary = "校验是否为超级管理员")
     fun validateManagerPermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @Parameter(description = "待校验用户ID", required = true)
