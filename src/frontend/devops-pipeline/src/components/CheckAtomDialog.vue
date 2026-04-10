@@ -146,7 +146,7 @@
                     trigger: 'blur'
                 },
                 suggestRequireRule: {
-                    required: true,
+                    regex: /\S+/,
                     message: this.$t('editPage.checkSuggestTips'),
                     trigger: 'blur'
                 },
