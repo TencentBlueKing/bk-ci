@@ -58,6 +58,7 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_CHANGE_USER_NOT_SUPPORT
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_DUPLICATE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_OR_ID_INVALID
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_CMDB_PRIMARY_BAK_OPERATOR
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_IMPORT_PERMISSION_NODES
@@ -725,9 +726,9 @@ class NodeService @Autowired constructor(
                     nodeDao.updateCreatedUser(dslContext, nodeId, userId)
                 } else {
                     throw ErrorCodeException(
-                        errorCode = ERROR_NODE_NO_EDIT_PERMISSSION,
+                        errorCode = ERROR_NODE_NOT_CMDB_PRIMARY_BAK_OPERATOR,
                         defaultMessage = MessageUtil.getMessageByLocale(
-                            messageCode = ERROR_NODE_NO_EDIT_PERMISSSION,
+                            messageCode = ERROR_NODE_NOT_CMDB_PRIMARY_BAK_OPERATOR,
                             language = I18nUtil.getLanguage(userId)
                         )
                     )
@@ -838,9 +839,9 @@ class NodeService @Autowired constructor(
                     true
                 } else {
                     throw ErrorCodeException(
-                        errorCode = ERROR_NODE_NO_EDIT_PERMISSSION,
+                        errorCode = ERROR_NODE_NOT_CMDB_PRIMARY_BAK_OPERATOR,
                         defaultMessage = MessageUtil.getMessageByLocale(
-                            messageCode = ERROR_NODE_NO_EDIT_PERMISSSION,
+                            messageCode = ERROR_NODE_NOT_CMDB_PRIMARY_BAK_OPERATOR,
                             language = I18nUtil.getLanguage(userId)
                         )
                     )
