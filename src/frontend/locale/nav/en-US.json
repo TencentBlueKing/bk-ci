@@ -38,7 +38,8 @@
     "noOperateAccess": "No operate access",
     "noOperateAccessTip": "Rejected，no operate access",
     "creativeFlowOnlySupportPersonalProject": "Creative flow only supports personal project",
-    "switchToPersonalProject": "Switch to personal project"
+    "switchToPersonalProject": "Switch to personal project",
+    "personalProjectNotExist": "Personal project does not exist, please create a personal project first"
   },
   "projectManage": "Project Management",
   "myPermission": "My Permission",

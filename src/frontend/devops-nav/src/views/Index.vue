@@ -21,7 +21,7 @@
                     >
                         <bk-button
                             theme="primary"
-                            @click="switchProject"
+                            @click="switchToPersonalProject"
                         >
                             {{ $t('accessDeny.switchProject') }}
                         </bk-button>
@@ -108,10 +108,12 @@
         @State projectList
         @State headerConfig
         @State currentPage
+        @State user
         @Getter showAnnounce
         @Getter enableProjectList
         @Getter disableProjectList
         @Getter approvalingProjectList
+        
 
         get loadingOption (): object {
             return {
@@ -165,6 +167,24 @@
 
         switchProject () {
             this.iframeUtil.toggleProjectMenu(true)
+        }
+
+        switchToPersonalProject () {
+          const projectId = `_${this.user?.username ?? ''}`
+          if (this.projectList.some(project => project.projectCode === projectId)) {
+            this.$router.push({
+              ...this.$route,
+              params: {
+                ...this.$route.params,
+                projectId: `_${this.user.username}`
+              }
+            })
+          } else {
+            this.$bkMessage({
+              theme: 'error',
+              message: this.$t('accessDeny.personalProjectNotExist')
+            })
+          }
         }
 
         @Watch('hasProject', {

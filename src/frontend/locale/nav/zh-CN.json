@@ -38,7 +38,8 @@
     "noOperateAccess": "没有操作权限",
     "noOperateAccessTip": "已驳回，没有操作权限",
     "creativeFlowOnlySupportPersonalProject": "创作流仅支持在个人项目下使用",
-    "switchToPersonalProject": "切换到个人项目"
+    "switchToPersonalProject": "切换到个人项目",
+    "personalProjectNotExist": "个人项目不存在，请先创建个人项目"
   },
   "projectManage": "项目管理",
   "myPermission": "我的权限",

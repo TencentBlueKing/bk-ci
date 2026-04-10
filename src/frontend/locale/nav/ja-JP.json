@@ -38,7 +38,8 @@
     "noOperateAccess": "操作権限がありません",
     "noOperateAccessTip": "却下されました、操作権限がありません",
     "creativeFlowOnlySupportPersonalProject": "創作ストリームは個人プロジェクトでのみ使用できます",
-    "switchToPersonalProject": "個人プロジェクトに切り替える"
+    "switchToPersonalProject": "個人プロジェクトに切り替える",
+    "personalProjectNotExist": "個人プロジェクトが存在しません。個人プロジェクトを作成してください"
   },
   "projectManage": "プロジェクト管理",
   "myPermission": "私の権限",
