@@ -131,14 +131,14 @@ func parseSystemdShow(output string) (mainPID int, startedAt string) {
 			startedAt = ts
 		}
 	}
-	return
+	return mainPID, startedAt
 }
 
 func currentUser() string {
 	if u := os.Getenv("USER"); u != "" {
 		return u
 	}
-	return "unknown"
+	return unknownUser
 }
 
 func readPid(path string) int {

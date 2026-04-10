@@ -85,7 +85,12 @@ func handleVersion(args []string) error {
 	return nil
 }
 
-const debugFile = ".debug"
+const (
+	debugFile       = ".debug"
+	osWindows       = "windows"
+	unknownUser     = "unknown"
+	modeServiceLower = "service"
+)
 
 func handleDebug(workDir string, args []string) error {
 	debugPath := filepath.Join(workDir, debugFile)
@@ -231,14 +236,14 @@ func getServiceName(workDir string) (string, error) {
 }
 
 func daemonBinary() string {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == osWindows {
 		return "devopsDaemon.exe"
 	}
 	return "devopsDaemon"
 }
 
 func agentBinary() string {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == osWindows {
 		return "devopsAgent.exe"
 	}
 	return "devopsAgent"
@@ -494,7 +499,7 @@ func handleReinstall(workDir string, args []string) error {
 
 	// Step 4: extract
 	printStep(msg("Step 4: extracting agent.zip ...", "步骤 4: 解压 agent.zip ..."))
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == osWindows {
 		agentExe := filepath.Join(workDir, agentBinary())
 		agentBak := agentExe + ".bak"
 		os.Remove(agentBak)
@@ -507,13 +512,13 @@ func handleReinstall(workDir string, args []string) error {
 	if err := unzipFile(zipPath, workDir); err != nil {
 		return fmt.Errorf(msgf("extract agent.zip failed: %v", "解压 agent.zip 失败: %v", err))
 	}
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == osWindows {
 		os.Remove(filepath.Join(workDir, agentBinary()+".bak"))
 	}
 
 	printStep(msg("Step 5: preparing work directory ...", "步骤 5: 准备工作目录 ..."))
 	prepareWorkDir(workDir)
-	if runtime.GOOS != "windows" {
+	if runtime.GOOS != osWindows {
 		os.Chmod(filepath.Join(workDir, "devopsAgent"), 0755)
 		os.Chmod(filepath.Join(workDir, "devopsDaemon"), 0755)
 	}
@@ -523,7 +528,7 @@ func handleReinstall(workDir string, args []string) error {
 	// SERVICE 模式不是有效的 CLI 参数（Linux 上 resolveInstallMode 不接受 "service"），
 	// 传空字符串让 resolveInstallMode 根据当前环境（root + systemd）自动选择。
 	cliMode := strings.ToLower(mode)
-	if cliMode == "service" {
+	if cliMode == modeServiceLower {
 		cliMode = ""
 	}
 	var installArgs []string

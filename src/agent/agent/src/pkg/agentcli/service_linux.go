@@ -485,7 +485,7 @@ func ensureLinger() {
 	}
 
 	u, _ := user.Current()
-	username := "unknown"
+	username := unknownUser
 	if u != nil {
 		username = u.Username
 	}
@@ -535,7 +535,7 @@ func warnIfNetworkUser() {
 		return
 	}
 	u, _ := user.Current()
-	username := "unknown"
+	username := unknownUser
 	if u != nil {
 		username = u.Username
 	}

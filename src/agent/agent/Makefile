@@ -16,6 +16,14 @@ format:
 	goimports -w .
 	find ./ -name "*.go" | xargs gofmt -w
 
+.PHONY: format-check
+format-check:
+	@echo "==> Checking goimports <=="
+	@bad=$$(goimports -l .); if [ -n "$$bad" ]; then echo "goimports needed on:"; echo "$$bad"; exit 1; fi
+	@echo "==> Checking gofmt <=="
+	@bad=$$(find ./ -name "*.go" | xargs gofmt -l); if [ -n "$$bad" ]; then echo "gofmt needed on:"; echo "$$bad"; exit 1; fi
+	@echo "All files formatted correctly."
+
 test: test-unit
 
 .PHONY: test-unit
