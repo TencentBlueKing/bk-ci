@@ -86,9 +86,9 @@ func handleVersion(args []string) error {
 }
 
 const (
-	debugFile       = ".debug"
-	osWindows       = "windows"
-	unknownUser     = "unknown"
+	debugFile        = ".debug"
+	osWindows        = "windows"
+	unknownUser      = "unknown"
 	modeServiceLower = "service"
 )
 
