@@ -37,22 +37,19 @@ import (
 	"strings"
 	"time"
 
-	innerFileUtil "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/wintask"
-	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"github.com/capnspacehook/taskmaster"
+	"github.com/gofrs/flock"
 	"github.com/pkg/errors"
+	"github.com/shirou/gopsutil/v4/process"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
+	innerFileUtil "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-
-	"github.com/gofrs/flock"
-
-	"github.com/shirou/gopsutil/v4/process"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/wintask"
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 )
 
 const (

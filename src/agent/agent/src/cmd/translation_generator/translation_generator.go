@@ -37,9 +37,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
-
 	"golang.org/x/text/language"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 )
 
 func main() {

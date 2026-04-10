@@ -34,7 +34,6 @@ import (
 	"path/filepath"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrader"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"

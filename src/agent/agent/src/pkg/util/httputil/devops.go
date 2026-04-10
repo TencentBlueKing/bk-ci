@@ -33,12 +33,12 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"github.com/pkg/errors"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	innerFileUtil "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
 )
 

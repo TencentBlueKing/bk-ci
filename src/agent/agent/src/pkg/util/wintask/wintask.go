@@ -32,9 +32,10 @@ package wintask
 import (
 	"strings"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/capnspacehook/taskmaster"
 	"golang.org/x/sys/windows/svc/mgr"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 )
 
 type StartType string

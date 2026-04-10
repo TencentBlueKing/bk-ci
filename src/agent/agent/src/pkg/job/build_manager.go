@@ -33,9 +33,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 )
 
 // buildManager 二进制构建对象管理

@@ -30,12 +30,12 @@ package i18n
 import (
 	"sync"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n/translation"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/text/language"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n/translation"
 )
 
 //go:generate go run ../../cmd/translation_generator/translation_generator.go $I18N_DIR

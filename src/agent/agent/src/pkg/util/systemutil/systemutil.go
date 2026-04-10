@@ -37,14 +37,12 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/gofrs/flock"
 	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
-
-	"github.com/gofrs/flock"
 )
 
 var GExecutableDir string

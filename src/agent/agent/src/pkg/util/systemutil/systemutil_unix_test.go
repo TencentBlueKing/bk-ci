@@ -6,7 +6,6 @@ package systemutil
 import (
 	"os"
 	"os/user"
-	"strconv"
 	"testing"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"

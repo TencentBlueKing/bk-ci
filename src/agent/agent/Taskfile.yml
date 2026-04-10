@@ -99,6 +99,7 @@ tasks:
     cmds:
       - goimports -w .
       - gofmt -w -l .
+      - goimports-reviser -rm-unused -set-alias -format ./...
 
   # ── i18n 代码生成 ─────────────────────────────────────────────────────
   i18n:
