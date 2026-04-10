@@ -12,8 +12,9 @@ import (
 	"strings"
 	"time"
 
+	ini "gopkg.in/ini.v1"
+
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
-	"gopkg.in/ini.v1"
 )
 
 // Run dispatches CLI subcommands. Called from agent main() before process lock.
@@ -133,10 +134,14 @@ func DebugFileExists(workDir string) bool {
 
 // ── Output helpers ───────────────────────────────────────────────────────
 
-func printStep(m string)                    { fmt.Printf("[BK-CI] %s\n", m) }
-func printWarn(m string)                    { fmt.Printf("[BK-CI][WARN] %s\n", m) }
-func printErr(m string)                     { fmt.Fprintf(os.Stderr, "[BK-CI][ERROR] %s\n", m) }
+func printStep(m string) { fmt.Printf("[BK-CI] %s\n", m) }
+
+func printWarn(m string) { fmt.Printf("[BK-CI][WARN] %s\n", m) }
+
+func printErr(m string) { fmt.Fprintf(os.Stderr, "[BK-CI][ERROR] %s\n", m) }
+
 func printStepf(f string, a ...interface{}) { fmt.Printf("[BK-CI] "+f+"\n", a...) }
+
 func cliErrorf(en, zh string, a ...interface{}) error {
 	return fmt.Errorf(msgf(en, zh, a...))
 }

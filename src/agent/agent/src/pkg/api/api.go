@@ -32,10 +32,9 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/httputil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 )
 
 func buildUrl(url string) string {

@@ -33,18 +33,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
-
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
-
 	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 )
 
 // UninstallAgent 卸载

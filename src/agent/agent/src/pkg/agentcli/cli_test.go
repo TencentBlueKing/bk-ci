@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"gopkg.in/ini.v1"
+	ini "gopkg.in/ini.v1"
 )
 
 func TestIsSubcommand(t *testing.T) {

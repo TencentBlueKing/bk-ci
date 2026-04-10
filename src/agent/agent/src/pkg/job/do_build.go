@@ -38,7 +38,6 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
@@ -51,6 +50,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
 	ucommand "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 )
 
 func doBuild(

@@ -39,19 +39,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
-	innerFileUtil "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
-	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
+	"github.com/gofrs/flock"
 	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
+	innerFileUtil "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-
-	"github.com/gofrs/flock"
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 )
 
 const (

@@ -34,9 +34,9 @@ import (
 	"fmt"
 	"unsafe"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-
 	"golang.org/x/sys/windows"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 )
 
 var (

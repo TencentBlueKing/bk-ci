@@ -38,12 +38,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"github.com/pkg/errors"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
@@ -51,6 +49,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/httputil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 )
 
 type BuildTotalManagerType struct {

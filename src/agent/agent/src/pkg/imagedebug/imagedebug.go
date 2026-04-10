@@ -8,9 +8,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/dockercli"
@@ -19,9 +22,6 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job_docker"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/sync/errgroup"
 )
 
 const (

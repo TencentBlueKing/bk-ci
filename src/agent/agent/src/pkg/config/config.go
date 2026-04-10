@@ -40,12 +40,10 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
-
 	languageUtil "golang.org/x/text/language"
-	"gopkg.in/ini.v1"
+	ini "gopkg.in/ini.v1"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
@@ -145,8 +143,11 @@ func (e *AgentEnv) SetAgentIp(ip string) {
 }
 
 var GAgentEnv *AgentEnv
+
 var GAgentConfig *AgentConfig
+
 var UseCert bool
+
 var IsDebug = false
 
 // Init 加载和初始化配置

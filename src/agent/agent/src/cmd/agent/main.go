@@ -35,10 +35,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/agent"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/agentcli"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"

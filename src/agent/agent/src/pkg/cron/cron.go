@@ -33,13 +33,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/dockercli"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/imagedebug"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job_docker"
-
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )

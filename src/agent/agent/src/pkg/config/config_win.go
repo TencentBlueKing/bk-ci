@@ -32,9 +32,10 @@ package config
 import (
 	"fmt"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/wintask"
 	"github.com/capnspacehook/taskmaster"
 	"golang.org/x/sys/windows"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/wintask"
 )
 
 func GetWinTaskType() string {

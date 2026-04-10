@@ -16,15 +16,19 @@ type fakeManager struct {
 }
 
 func (f *fakeManager) Start() error { return nil }
+
 func (f *fakeManager) CreateExecNoHttp(conf *WebSocketConfig) (*ExecRef, error) {
 	f.lastConf = conf
 	return &ExecRef{ID: "exec-1"}, nil
 }
+
 func (f *fakeManager) StartExec(http.ResponseWriter, *http.Request, *WebSocketConfig) {}
+
 func (f *fakeManager) CreateExec(w http.ResponseWriter, r *http.Request, conf *WebSocketConfig) {
 	f.lastConf = conf
 	_ = ResponseJSON(w, http.StatusOK, &ExecRef{ID: "exec-1"})
 }
+
 func (f *fakeManager) ResizeExec(w http.ResponseWriter, r *http.Request, conf *WebSocketConfig) {
 	f.lastConf = conf
 	_ = ResponseJSON(w, http.StatusOK, nil)
