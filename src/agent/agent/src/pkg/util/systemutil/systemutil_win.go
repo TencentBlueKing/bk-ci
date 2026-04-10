@@ -19,7 +19,11 @@ func fallbackCurrentUser() *user.User {
 		home = os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
 	}
 	if home == "" {
-		home = "C:\\Users\\" + username
+		drive := os.Getenv("SystemDrive")
+		if drive == "" {
+			drive = "C:"
+		}
+		home = drive + "\\Users\\" + username
 	}
 
 	return &user.User{

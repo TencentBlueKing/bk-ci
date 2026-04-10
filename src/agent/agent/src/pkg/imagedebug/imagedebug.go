@@ -25,10 +25,9 @@ import (
 )
 
 const (
-	imageDebugIntervalInSeconds = 5
-	entryPointCmd               = "while true; do sleep 5m; done"
-	ImageDebugMaxHoldHour       = 24
-	DebugContainerHeader        = "bkcidebug-"
+	entryPointCmd         = "while true; do sleep 5m; done"
+	ImageDebugMaxHoldHour = 24
+	DebugContainerHeader  = "bkcidebug-"
 )
 
 var imageDebugLogs *logrus.Entry

@@ -39,9 +39,9 @@ import (
 )
 
 // GetCpuAndGpuInfo 获取 CPU 和 GPU 型号信息
-func GetCpuAndGpuInfo() (string, string) {
-	cpuInfo := getCPUProductInfo()
-	gpuInfo := getGPUProductInfo()
+func GetCpuAndGpuInfo() (cpuInfo string, gpuInfo string) {
+	cpuInfo = getCPUProductInfo()
+	gpuInfo = getGPUProductInfo()
 	logs.Infof("cpu: %s, gpu: %s", cpuInfo, gpuInfo)
 	return cpuInfo, gpuInfo
 }

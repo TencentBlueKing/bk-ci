@@ -56,5 +56,7 @@ data class PipelineBuildQuery(
     @get:Schema(title = "构建号起始", required = false)
     val buildNoStart: Int? = null,
     @get:Schema(title = "构建号截止", required = false)
-    val buildNoEnd: Int? = null
+    val buildNoEnd: Int? = null,
+    @get:Schema(title = "利用updateTime排序，True为降序，False为升序，null时以Build number降序", required = false)
+    val updateTimeDesc: Boolean? = null
 )

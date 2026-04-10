@@ -620,9 +620,9 @@ func downloadAgentZip(workDir, gateway, agentId, savePath string) error {
 	}
 
 	headers := map[string]string{
-		"X-DEVOPS-PROJECT-ID":        projectId,
-		"X-DEVOPS-AGENT-ID":          agentId,
-		"X-DEVOPS-AGENT-SECRET-KEY":  secretKey,
+		"X-DEVOPS-PROJECT-ID":       projectId,
+		"X-DEVOPS-AGENT-ID":         agentId,
+		"X-DEVOPS-AGENT-SECRET-KEY": secretKey,
 	}
 
 	const maxRetries = 3

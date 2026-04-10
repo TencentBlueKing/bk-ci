@@ -28,7 +28,6 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -54,7 +53,10 @@ func main() {
 
 	if cliArgs, ok := resolveCLIArgs(os.Args); ok {
 		workDir := systemutil.GetExecutableDir()
-		os.Chdir(workDir)
+		if err := os.Chdir(workDir); err != nil {
+			logs.WithError(err).Errorf("Failed to change working directory to %s", workDir)
+			systemutil.ExitProcess(1)
+		}
 		agentcli.Run(workDir, cliArgs)
 		return
 	}
@@ -65,7 +67,7 @@ func main() {
 	logFilePath := filepath.Join(systemutil.GetWorkDir(), "logs", "devopsAgent.log")
 	err := logs.Init(logFilePath, isDebug, false)
 	if err != nil {
-		fmt.Printf("init agent log error %v\n", err)
+		logs.WithError(err).Error("init agent log error")
 		systemutil.ExitProcess(1)
 	}
 

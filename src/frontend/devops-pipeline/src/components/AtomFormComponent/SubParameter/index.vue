@@ -91,7 +91,8 @@
                 isLoading: false,
                 parameters: [],
                 subParamsKeyList: [],
-                pipelineRequiredParams: {}
+                pipelineRequiredParams: {},
+                paramIdCounter: 0
             }
         },
         computed: {
@@ -189,9 +190,10 @@
                     // 如果 key 为空，说明是新增的参数，hasKey 应该为 true（可选择状态）
                     // 如果 key 不为空但在 typeMap 中找不到，说明是无效的 key，hasKey 为 false（禁用状态）
                     const hasKey = !i.key || !!type
+                    const id = i.id || `param_${i.key || 'empty'}_${index}`
                     return {
                         ...i,
-                        id: i.id || `param_${Date.now()}_${index}`,
+                        id,
                         type: type || i.key || 'text',
                         value: isObject(i.value) ? JSON.stringify(i.value) : i.value,
                         hasKey,
@@ -201,7 +203,7 @@
             },
             addParam () {
                 this.parameters.push({
-                    id: `param_${Date.now()}_${this.parameters.length}`,
+                    id: `param_new_${this.paramIdCounter++}`,
                     key: '',
                     value: '',
                     hasKey: true
@@ -234,7 +236,7 @@
                 const res = this.parameters.map((parameter) => {
                     const key = parameter.key
                     const value = isObject(parameter.value) ? JSON.stringify(parameter.value) : parameter.value
-                    return { key, value }
+                    return { key, value, id: parameter.id }
                 })
                 this.handleChange(this.name, String(JSON.stringify(res)))
             },

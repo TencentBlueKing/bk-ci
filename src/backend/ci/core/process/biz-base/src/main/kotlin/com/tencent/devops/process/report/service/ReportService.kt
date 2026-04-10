@@ -76,6 +76,7 @@ class ReportService @Autowired constructor(
     ) {
         val taskInfo = reportDao.getAtomInfo(
                 dslContext = dslContext,
+                projectId = projectId,
                 buildId = buildId,
                 taskId = taskId
         )

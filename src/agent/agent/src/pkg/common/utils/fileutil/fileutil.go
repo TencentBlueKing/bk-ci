@@ -32,10 +32,12 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 func Exists(file string) bool {
@@ -159,8 +161,25 @@ func Unzip(archive, target string) error {
 		return err
 	}
 
+	// 获取目标目录的绝对路径，用于 Zip Slip 防护
+	absTarget, err := filepath.Abs(target)
+	if err != nil {
+		return err
+	}
+	absTarget = filepath.Clean(absTarget) + string(os.PathSeparator)
+
 	for _, file := range reader.File {
 		path := filepath.Join(target, file.Name)
+
+		// Zip Slip 防护：确保解压路径不会逃逸到目标目录之外
+		absPath, err := filepath.Abs(path)
+		if err != nil {
+			return err
+		}
+		if !strings.HasPrefix(absPath, absTarget) {
+			return fmt.Errorf("illegal file path in archive: %s", file.Name)
+		}
+
 		if file.FileInfo().IsDir() {
 			os.MkdirAll(path, os.ModePerm)
 			continue

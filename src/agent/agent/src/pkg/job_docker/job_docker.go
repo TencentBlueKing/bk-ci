@@ -80,9 +80,6 @@ func normalizeVolumeArg(v string) string {
 		}
 		return host + ":" + target
 	}
-	if !strings.Contains(v, ":") {
-		return v
-	}
 	return v
 }
 

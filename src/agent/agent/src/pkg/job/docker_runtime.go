@@ -18,7 +18,6 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
 
-const debugEntryPointCmd = "while true; do sleep 5m; done"
 const (
 	targetJreDir  = "/usr/local/jre"
 	targetJre8Dir = "/usr/local/jre8"
@@ -168,34 +167,4 @@ func hasJdk17Dir() bool {
 	}
 	info, err := os.Stat(config.GAgentConfig.Jdk17DirPath)
 	return err == nil && info.IsDir()
-}
-
-func parseDebugContainerMountArgs(debugInfo *api.ImageDebug) ([]string, error) {
-	var args []string
-	if config.GAgentConfig.JdkDirPath != "" {
-		args = append(args, "--mount", fmt.Sprintf("type=bind,source=%s,target=%s,readonly", config.GAgentConfig.JdkDirPath, "/usr/local/jre"))
-	}
-	workDir := systemutil.GetWorkDir()
-	dataDir := debugInfo.Workspace
-	if dataDir == "" {
-		dataDir = fmt.Sprintf("%s/%s/data/%s/%s", workDir, job_docker.LocalDockerWorkSpaceDirName, debugInfo.PipelineId, debugInfo.VmSeqId)
-	}
-	if err := systemutil.MkDir(dataDir); err != nil {
-		return nil, err
-	}
-	args = append(args, "--mount", fmt.Sprintf("type=bind,source=%s,target=%s", dataDir, constant.DockerDataDir))
-	logsDir := fmt.Sprintf("%s/%s/logs/%s/%s", workDir, job_docker.LocalDockerWorkSpaceDirName, debugInfo.BuildId, debugInfo.VmSeqId)
-	if err := systemutil.MkDir(logsDir); err != nil {
-		return nil, err
-	}
-	args = append(args, "--mount", fmt.Sprintf("type=bind,source=%s,target=%s", logsDir, job_docker.DockerLogDir))
-	return args, nil
-}
-
-func parseDebugContainerEnv() []string {
-	return []string{
-		"devops_project_id=" + config.GAgentConfig.ProjectId,
-		"devops_gateway=" + config.GetGateWay(),
-		"agent_build_env=DOCKER",
-	}
 }

@@ -43,12 +43,12 @@ type Win32Thread struct {
 
 // PipeHolder represents a process holding a pipe handle related to the target
 type PipeHolder struct {
-	PID          uint32
-	ProcessName  string
-	HandleValue  uint16
-	ObjectAddr   uintptr
-	PipeName     string
-	CMD          string
+	PID         uint32
+	ProcessName string
+	HandleValue uint16
+	ObjectAddr  uintptr
+	PipeName    string
+	CMD         string
 }
 
 // ProcessDiag holds diagnosis info for one process
@@ -574,11 +574,11 @@ func generateHTMLReport(reports []TargetReport, buildId, processName string, dia
 	var jsonReports []JSONReport
 	for _, r := range reports {
 		jr := JSONReport{
-			PID:     r.Target.ProcessId,
-			Name:    r.Target.Name,
-			CMD:     ptrStr(r.Target.CommandLine),
-			Handles: r.Target.HandleCount,
-			Threads: r.Target.ThreadCount,
+			PID:            r.Target.ProcessId,
+			Name:           r.Target.Name,
+			CMD:            ptrStr(r.Target.CommandLine),
+			Handles:        r.Target.HandleCount,
+			Threads:        r.Target.ThreadCount,
 			DirectChildren: len(r.Children),
 		}
 		if r.Target.CreationDate != nil {
@@ -1137,8 +1137,8 @@ func diagnoseProcess(p Win32Process, threadDiag, pipeScan bool) ProcessDiag {
 			}
 		}
 		if diag.WaitingCount == len(diag.Threads) && len(diag.Threads) > 0 {
-		diag.IsBlocked = true
-		diag.BlockReason = "所有线程均在等待"
+			diag.IsBlocked = true
+			diag.BlockReason = "所有线程均在等待"
 		}
 	}
 

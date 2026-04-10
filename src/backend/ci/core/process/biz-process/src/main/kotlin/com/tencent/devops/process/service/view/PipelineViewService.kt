@@ -704,7 +704,7 @@ class PipelineViewService @Autowired constructor(
                     )
                 }
             } else if (filter is PipelineViewFilterByLabel) {
-                val group = pipelineGroupDao.get(dslContext, decode(filter.groupId)) ?: continue
+                val group = pipelineGroupDao.get(dslContext, projectId, decode(filter.groupId)) ?: continue
                 val labels =
                     pipelineLabelDao.getByIds(dslContext, projectId, filter.labelIds.map { decode(it) }.toSet())
                 val labelIds = pipelineLabelPipelineDao.listLabels(dslContext, projectId, pipelineId).map { it.labelId }

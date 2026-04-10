@@ -236,7 +236,7 @@ func waitForUpgradeFinish() bool {
 		logs.WithError(err).Error("wait for upgrade finish: failed to get total lock")
 		return false
 	}
-	_ = totalLock.Unlock()
+	_ = totalLock.Unlock() // Unlock理论上不应失败，忽略错误
 	return true
 }
 
@@ -275,7 +275,7 @@ func doWaitBeforeRestart(baseDelay, maxWait, pollTick time.Duration) {
 				continue
 			}
 			if locked {
-				_ = totalLock.Unlock()
+				_ = totalLock.Unlock() // Unlock理论上不应失败，忽略错误
 				logs.Info("waitBeforeRestart: no upgrader running, proceeding with restart")
 				return
 			}
@@ -304,7 +304,7 @@ func launchAgentInUserSession(agentPath, workDir string) bool {
 	windows.WaitForSingleObject(proc.ProcessHandle, windows.INFINITE)
 
 	var exitCode uint32
-	_ = windows.GetExitCodeProcess(proc.ProcessHandle, &exitCode)
+	_ = windows.GetExitCodeProcess(proc.ProcessHandle, &exitCode) // 忽略错误：退出码在进程已退出时可能无法获取，但后续逻辑不依赖此值
 
 	agentMu.Lock()
 	agentProcessHandle = 0

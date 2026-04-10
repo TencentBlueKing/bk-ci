@@ -33,11 +33,12 @@ class WebhookBuildParameterDao {
 
     fun get(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String
     ): TPipelineWebhookBuildParameterRecord? {
         return with(TPipelineWebhookBuildParameter.T_PIPELINE_WEBHOOK_BUILD_PARAMETER) {
             dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
+                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
                 .fetchOne()
         }
     }

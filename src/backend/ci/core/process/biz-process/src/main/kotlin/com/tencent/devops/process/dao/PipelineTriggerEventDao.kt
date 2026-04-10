@@ -53,7 +53,6 @@ import com.tencent.devops.process.pojo.trigger.TriggerEventBody
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.countDistinct
 import org.jooq.impl.DSL.`when`
@@ -270,17 +269,6 @@ class PipelineTriggerEventDao {
             .fetchOne(0, Long::class.java)!!
     }
 
-    fun listByEventIds(
-        dslContext: DSLContext,
-        eventIds: List<String>
-    ): Result<TPipelineTriggerEventRecord> {
-        return with(T_PIPELINE_TRIGGER_EVENT) {
-            dslContext.selectFrom(this)
-                .where(EVENT_ID.`in`(eventIds))
-                .fetch()
-        }
-    }
-
     fun getEventIdsByEvent(
         dslContext: DSLContext,
         eventId: Long? = null,
@@ -434,11 +422,12 @@ class PipelineTriggerEventDao {
 
     fun listRepoTriggerEvent(
         dslContext: DSLContext,
+        projectId: String,
         eventIds: Set<Long>
     ): List<TPipelineTriggerEventRecord> {
         return with(T_PIPELINE_TRIGGER_EVENT) {
             dslContext.selectFrom(this)
-                .where(EVENT_ID.`in`(eventIds))
+                .where(EVENT_ID.`in`(eventIds).and(PROJECT_ID.eq(projectId)))
                 .orderBy(CREATE_TIME.desc())
                 .fetch()
         }

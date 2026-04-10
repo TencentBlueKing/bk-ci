@@ -152,6 +152,90 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-app/auth/authorization/{projectId}/pipelines/list_authorization:
+    get:
+      operationId: "v4_app_list_pipeline_authorization"
+      description: "获取流水线代持人列表"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/authorization/{projectId}/pipelines/list_authorization"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/authorization/{projectId}/pipelines/{pipelineId}/reset_authorization:
+    put:
+      operationId: "v4_app_reset_pipeline_authorization"
+      description: "重置流水线授权人"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "put"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/authorization/{projectId}/pipelines/{pipelineId}/reset_authorization"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/authorization/{projectId}/{resourceType}/{resourceCode}/get_resource_authorization:
+    get:
+      operationId: "v4_app_get_resource_authorization"
+      description: "获取资源授予记录"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/authorization/{projectId}/{resourceType}/{resourceCode}/get_resource_authorization"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/manager/getProjectManagers:
+    post:
+      operationId: "v4_app_get_project_managers"
+      description: "获取项目管理员列表"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/manager/getProjectManagers"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-app/auth/oauth2/endpoint/getAccessToken:
     post:
       operationId: "v4_app_oauth2_access_token"
@@ -442,6 +526,27 @@ paths:
           method: "get"
           name: "backend-1"
           path: "/openapi/api/apigw-app/v4/auth/validate/projects/{projectId}/permission/validate"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/environment/projects/{projectId}/enable_env_node:
+    put:
+      operationId: "v4_app_enable_env_node"
+      description: "环境中启用/停用节点"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "put"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/environment/projects/{projectId}/enable_env_node"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -1301,6 +1406,27 @@ paths:
           method: "get"
           name: "backend-1"
           path: "/openapi/api/apigw-app/v4/projects/{projectId}/build_histories"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/projects/{projectId}/build_histories/simple:
+    get:
+      operationId: "v4_app_build_list_simple"
+      description: "获取流水线轻量构建历史"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/projects/{projectId}/build_histories/simple"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -3923,6 +4049,69 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-user/auth/authorization/{projectId}/pipelines/list_authorization:
+    get:
+      operationId: "v4_user_list_pipeline_authorization"
+      description: "获取流水线代持人列表"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/authorization/{projectId}/pipelines/list_authorization"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/authorization/{projectId}/pipelines/{pipelineId}/reset_authorization:
+    put:
+      operationId: "v4_user_reset_pipeline_authorization"
+      description: "重置流水线授权人"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "put"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/authorization/{projectId}/pipelines/{pipelineId}/reset_authorization"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/authorization/{projectId}/{resourceType}/{resourceCode}/get_resource_authorization:
+    get:
+      operationId: "v4_user_get_resource_authorization"
+      description: "获取资源授予记录"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/authorization/{projectId}/{resourceType}/{resourceCode}/get_resource_authorization"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-user/auth/validate/projects/{projectId}/check_project_users:
     get:
       operationId: "v4_user_permission_project_check"
@@ -3961,6 +4150,27 @@ paths:
           method: "post"
           name: "backend-1"
           path: "/openapi/api/apigw-user/v4/dispatch/special_dockerhost/add"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/environment/projects/{projectId}/enable_env_node:
+    put:
+      operationId: "v4_user_enable_env_node"
+      description: "环境中启用/停用节点"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "put"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/environment/projects/{projectId}/enable_env_node"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -4757,6 +4967,27 @@ paths:
           method: "get"
           name: "backend-1"
           path: "/openapi/api/apigw-user/v4/projects/{projectId}/build_histories"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/projects/{projectId}/build_histories/simple:
+    get:
+      operationId: "v4_user_build_list_simple"
+      description: "获取流水线轻量构建历史"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/projects/{projectId}/build_histories/simple"
           timeout: 30
         enableWebsocket: false
         isPublic: true
