@@ -31,7 +31,7 @@ vars:
   # 环境变量 GO 指定 go 命令 (如 go1.19)，未设置时用 "go"
   GO_CMD: '{{.GO | default "go"}}'
   AGENT_VERSION: '{{.AGENT_VERSION | default "v0.0.0-beta.0"}}'
-  BUILD_OUT_TAG: '{{.BUILD_OUT_TAG | default "out"}}'
+  BUILD_OUT_TAG: '{{.BUILD_OUT_TAG | default "inner"}}'
   I18N_DIR: "../../../../../../support-files/i18n/agent/"
   # git / 时间戳在顶层用 sh 求值（只执行一次）
   GIT_COMMIT:

@@ -15,7 +15,7 @@
 # ── 变量透传 ────────────────────────────────────────────────────────────────
 GO              ?= go
 AGENT_VERSION   ?= v0.0.0-beta.0
-BUILD_OUT_TAG   ?= out
+BUILD_OUT_TAG   ?= inner
 
 # 公共参数：将 make 变量导出为 task 变量
 TASK_VARS := GO=$(GO) AGENT_VERSION=$(AGENT_VERSION) BUILD_OUT_TAG=$(BUILD_OUT_TAG)
