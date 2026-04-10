@@ -68,7 +68,8 @@
         SHOW_TASK_DETAIL,
         SET_TASK_DETAIL,
         SET_RELEASE_BASE_ID,
-        UPDATE_USE_TEMPLATE_SETTING
+        UPDATE_USE_TEMPLATE_SETTING,
+        SET_TEMPLATE_DETAIL
     } from '@/store/modules/templates/constants'
     defineProps({
         permData: Object
@@ -96,17 +97,23 @@
     }
     async function handleViewTaskDetail (task) {
         try {
-            const { templateId, baseId } = task
+            const { templateId, baseId, templateVersion } = task
             const res = await proxy.$store.dispatch('templates/fetchTaskDetailParams', {
                 projectId: projectId.value,
                 templateId,
                 baseId
             })
-            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, res.data?.request?.instanceReleaseInfos)
+            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, {
+                list: res.data?.request?.instanceReleaseInfos
+            })
             proxy.$store.commit(`templates/${UPDATE_USE_TEMPLATE_SETTING}`, res.data?.request?.useTemplateSetting)
             proxy.$store.commit(`templates/${SET_RELEASE_BASE_ID}`, baseId)
             proxy.$store.commit(`templates/${SHOW_TASK_DETAIL}`, true)
             proxy.$store.commit(`templates/${SET_TASK_DETAIL}`, res.data?.request)
+            proxy.$store.commit(`templates/${SET_TEMPLATE_DETAIL}`, {
+                templateDetail: proxy.$store.state.templates.templateDetail,
+                templateVersion
+            })
             
             proxy.$router.push({
                 name: 'instanceEntry',

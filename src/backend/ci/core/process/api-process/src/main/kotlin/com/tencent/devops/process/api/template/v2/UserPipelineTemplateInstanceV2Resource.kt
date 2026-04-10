@@ -173,14 +173,17 @@ interface UserPipelineTemplateInstanceV2Resource {
         @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
+        @Parameter(description = "模板版本", required = true)
+        @QueryParam("version")
+        version: Long,
         @Parameter(description = "创建实例", required = true)
         pipelineIds: Set<String>
     ): Result<Map<String/*pipelineId*/, TemplateInstanceParams>>
 
-    @Operation(summary = "通过ID方式获取模版实例化参数")
+    @Operation(summary = "通过ID方式获取模版参数")
     @GET
-    @Path("/templates/{templateId}/instanceParamsById")
-    fun getTemplateInstanceParamsById(
+    @Path("/templates/{templateId}/templateParamsById")
+    fun getTemplateParamsById(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -195,10 +198,10 @@ interface UserPipelineTemplateInstanceV2Resource {
         version: Long
     ): Result<TemplateInstanceParams>
 
-    @Operation(summary = "通过Ref方式获取模版实例化参数")
+    @Operation(summary = "通过Ref方式获取模版参数")
     @GET
-    @Path("/templates/{templateId}/instanceParamsByRef")
-    fun getTemplateInstanceParamsByRef(
+    @Path("/templates/{templateId}/templateParamsByRef")
+    fun getTemplateParamsByRef(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

@@ -20,6 +20,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.TemplateDescriptor
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
@@ -38,6 +39,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_TRA
 import com.tencent.devops.process.dao.label.PipelineLabelDao
 import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
 import com.tencent.devops.process.engine.dao.PipelineOperationLogDao
+import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
@@ -71,6 +73,8 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoUpdateInf
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoV2
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateMarketCreateReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateMarketRelatedInfo
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelated
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateReleaseCreateReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingCommonCondition
@@ -78,7 +82,6 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateStrategyUpdat
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateYamlWebhookReq
 import com.tencent.devops.process.pojo.template.v2.PreFetchTemplateReleaseResult
 import com.tencent.devops.process.pojo.template.v2.TemplateVersionPair
-import com.tencent.devops.process.service.PipelineVersionFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineModelParser
 import com.tencent.devops.process.service.pipeline.PipelineYamlVersionResolver
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionManager
@@ -99,6 +102,7 @@ import org.springframework.stereotype.Service
  * 流水线模版门面类
  */
 @Service
+@Suppress("LongParameterList")
 class PipelineTemplateFacadeService @Autowired constructor(
     private val pipelineTemplateInfoService: PipelineTemplateInfoService,
     private val pipelineTemplatePermissionService: PipelineTemplatePermissionService,
@@ -119,7 +123,6 @@ class PipelineTemplateFacadeService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     private val config: CommonConfig,
-    private val pipelineVersionFacadeService: PipelineVersionFacadeService,
     private val pipelineLabelDao: PipelineLabelDao,
     private val pipelineLabelPipelineDao: PipelineLabelPipelineDao,
     private val pipelineModelParser: PipelineModelParser
@@ -131,6 +134,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.PIPELINE_TEMPLATE_CREATE_CONTENT
     )
+    // 自定义创建
     fun create(
         userId: String,
         projectId: String,
@@ -141,6 +145,33 @@ class PipelineTemplateFacadeService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             request = request
+        ).also {
+            ActionAuditContext.current()
+                .setInstanceId(it.templateId)
+                .setInstanceName(it.templateName)
+        }
+    }
+
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_TEMPLATE_CREATE,
+        instance = AuditInstanceRecord(resourceType = ResourceTypeId.PIPELINE_TEMPLATE),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_TEMPLATE_CREATE_CONTENT
+    )
+    // 创建正式版本
+    fun createRelease(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        request: PipelineTemplateReleaseCreateReq
+    ): DeployTemplateResult {
+        logger.info("$userId create release template in project $projectId ,body is $request,templateId is $templateId")
+        return pipelineTemplateVersionManager.deployTemplate(
+            userId = userId,
+            projectId = projectId,
+            request = request,
+            templateId = templateId
         ).also {
             ActionAuditContext.current()
                 .setInstanceId(it.templateId)
@@ -973,31 +1004,40 @@ class PipelineTemplateFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int
+        pipelineVersion: Int
     ): PipelineTemplateDetailsResponse? {
         val pipelineResource = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,
-            version = version,
+            version = pipelineVersion,
             includeDraft = true
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
-            params = arrayOf(version.toString())
+            params = arrayOf(pipelineVersion.toString())
         )
 
-        val instanceFromTemplate = pipelineTemplateRelatedService.isPipelineInstanceFromTemplate(
+        val pipelineTemplateRelated = pipelineTemplateRelatedService.get(
             projectId = projectId,
             pipelineId = pipelineId
-        )
-        if (!instanceFromTemplate || pipelineResource.model.template == null) {
-            return null
-        }
+        ) ?: return null
 
-        val templateResource = pipelineModelParser.parseTemplateDescriptor(
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId = projectId,
-            descriptor = pipelineResource.model.template!!,
             pipelineId = pipelineId
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+            params = arrayOf(pipelineId)
         )
+        val templateDescriptor = pipelineResource.model.template
+        val templateResource = getRelatedTemplateResource(
+            templateDescriptor = templateDescriptor,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineInfo = pipelineInfo,
+            pipelineVersion = pipelineVersion,
+            pipelineTemplateRelated = pipelineTemplateRelated
+        ) ?: return null
 
         return getTemplateDetails(
             projectId = projectId,
@@ -1009,57 +1049,70 @@ class PipelineTemplateFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int
+        pipelineVersion: Int
     ): PTemplatePipelineRefInfo? {
         val pipelineResource = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,
-            version = version,
+            version = pipelineVersion,
             includeDraft = true
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
-            params = arrayOf(version.toString())
+            params = arrayOf(pipelineVersion.toString())
         )
 
-        val instanceFromTemplate = pipelineTemplateRelatedService.isPipelineInstanceFromTemplate(
+        val pipelineTemplateRelated = pipelineTemplateRelatedService.get(
             projectId = projectId,
             pipelineId = pipelineId
+        ) ?: return null
+
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+            params = arrayOf(pipelineId)
         )
+
         val templateDescriptor = pipelineResource.model.template
-        if (!instanceFromTemplate || templateDescriptor == null) {
-            return null
-        }
-
-        val templateResource = pipelineModelParser.parseTemplateDescriptor(
+        val templateResource = getRelatedTemplateResource(
+            templateDescriptor = templateDescriptor,
             projectId = projectId,
-            descriptor = templateDescriptor,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            pipelineInfo = pipelineInfo,
+            pipelineVersion = pipelineVersion,
+            pipelineTemplateRelated = pipelineTemplateRelated
+        ) ?: return null
+
+        val templateId = pipelineTemplateRelated.templateId
+        val templateInfo = pipelineTemplateInfoService.get(
+            templateId = templateId
         )
-
-        val templateId = templateResource.templateId
         val templateVersion = templateResource.version
-        val templateInfo = pipelineTemplateInfoService.get(templateId)
-        val templateRefType = templateDescriptor.templateRefType
 
-        return if (templateRefType == TemplateRefType.ID) {
+        return if (templateDescriptor == null || templateDescriptor.templateRefType == TemplateRefType.ID) {
             val templateDetailsUrl =
                 String.format(templateDetailRedirectUri, projectId, templateId, templateVersion).plus("/pipeline")
-            val pipelineReleaseVersion = pipelineVersionFacadeService.getPipelineDetailIncludeDraft(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId
-            ).releaseVersion
             // 当前流水版本为最新版本，并且关联的模板版本不是最新版本，则需要升级
-            val upgradeFlag = pipelineReleaseVersion == version && templateInfo.releasedVersion != templateVersion
+            val upgradeFlag =
+                pipelineInfo.version == pipelineVersion && templateInfo.releasedVersion != templateVersion
             val upgradeUrl = takeIf { upgradeFlag }?.let {
-                String.format(templateDetailRedirectUri, projectId, templateId, templateInfo.releasedVersion)
+                String.format(
+                    pipelineUpgradeRedirectUri,
+                    projectId,
+                    templateId,
+                    templateInfo.releasedVersion,
+                    pipelineId,
+                    pipelineInfo.pipelineName
+                )
             }
             PTemplatePipelineRefInfo(
                 templateName = templateInfo.name,
                 templateId = templateInfo.id,
                 templateVersionName = templateResource.versionName,
                 templateVersion = templateVersion,
-                refType = templateRefType,
+                refType = TemplateRefType.ID,
                 templateDetailsUrl = templateDetailsUrl,
                 upgradeFlag = upgradeFlag,
                 upgradeUrl = upgradeUrl
@@ -1075,7 +1128,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 templateId = templateInfo.id,
                 templateVersionName = templateResource.versionName,
                 templateVersion = templateVersion,
-                refType = templateRefType,
+                refType = TemplateRefType.PATH,
                 templateDetailsUrl = templateDetailsUrl,
                 upgradeFlag = false,
                 upgradeUrl = null
@@ -1083,6 +1136,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
         }
     }
 
+    @Suppress("CyclomaticComplexMethod", "LongMethod")
     fun getTemplateInfo(
         userId: String,
         projectId: String,
@@ -1158,6 +1212,12 @@ class PipelineTemplateFacadeService @Autowired constructor(
             if (it.srcTemplateProjectId == null || it.srcTemplateId == null) {
                 throw IllegalArgumentException("srcTemplateProjectId or srcTemplateId is null")
             }
+            // 查询父模板的数据是否迁移。
+            pipelineTemplateInfoService.getOrNull(
+                projectId = it.srcTemplateProjectId!!,
+                templateId = it.srcTemplateId!!
+            ) ?: return@let null
+
             val recentlyInstalledVersion = client.get(ServiceTemplateResource::class).getRecentlyInstalledVersion(
                 templateCode = templateId
             ).data ?: throw ErrorCodeException(
@@ -1180,7 +1240,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
             val marketTemplateDetails = client.get(ServiceTemplateResource::class).getTemplateDetailByCode(
                 userId = userId,
                 templateCode = it.srcTemplateId!!
-            ).data ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_SOURCE_TEMPLATE_NOT_EXISTS)
+            ).data ?: throw ErrorCodeException(errorCode = ERROR_SOURCE_TEMPLATE_NOT_EXISTS)
             PipelineTemplateMarketRelatedInfo(
                 srcMarketProjectId = srcMarketTemplateInfo.projectId,
                 srcMarketTemplateId = srcMarketTemplateInfo.id,
@@ -1619,6 +1679,60 @@ class PipelineTemplateFacadeService @Autowired constructor(
     }
 
     private val templateDetailRedirectUri = "${config.devopsHostGateway}/console/pipeline/%s/template/%s/%s"
+    private val pipelineUpgradeRedirectUri =
+        "${config.devopsHostGateway}/console/pipeline/%s/template/%s/%s/instance/upgrade?pipelineId=%s&pipelineName=%s"
+
+    /**
+     * 获取关联的模板资源
+     */
+    private fun getRelatedTemplateResource(
+        templateDescriptor: TemplateDescriptor?,
+        projectId: String,
+        pipelineId: String,
+        pipelineInfo: PipelineInfo,
+        pipelineVersion: Int,
+        pipelineTemplateRelated: PipelineTemplateRelated
+    ): PipelineTemplateResource? {
+        // 1. 如果有template字段，直接解析
+        templateDescriptor?.let {
+            return pipelineModelParser.parseTemplateDescriptor(
+                projectId = projectId,
+                descriptor = it,
+                pipelineId = pipelineId
+            )
+        }
+
+        // 2. 如果没有template字段，说明是历史实例化流水线
+        // 只有当前版本是最新版本时，才需要填充数据
+        if (pipelineInfo.version == pipelineVersion) {
+            val templateResource = pipelineTemplateResourceService.getByRelatedPipeline(
+                projectId = projectId,
+                pipelineTemplateRelated = pipelineTemplateRelated
+            )
+            if (templateResource != null) {
+                return templateResource
+            }
+        }
+
+        // 3. 找不到模板资源，记录日志并返回null
+        logger.info(
+            "template resource not found|$projectId|$pipelineId|$pipelineVersion|" +
+                "${pipelineTemplateRelated.version}"
+        )
+        return null
+    }
+
+    fun existsVersionName(
+        projectId: String,
+        templateId: String,
+        versionName: String
+    ): Boolean {
+        return pipelineTemplateResourceService.existsVersionName(
+            projectId = projectId,
+            templateId = templateId,
+            versionName = versionName
+        )
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineTemplateFacadeService::class.java)

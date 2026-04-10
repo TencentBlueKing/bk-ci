@@ -69,8 +69,11 @@ const actions = {
     requestTemplateVersionList (_, params) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${params.projectId}/${params.templateId}/versions`, params).then(response => response.data)
     },
-    fetchPipelineDetailById ({ commit }, { projectId, templateId, pipelineIds }) {
-        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/pipelines`, pipelineIds).then(res => {
+    checkTemplateVersionNameExist (_, { projectId, templateId, versionName }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/versionNameExist?versionName=${encodeURIComponent(versionName)}`).then(response => response.data)
+    },
+    fetchPipelineDetailById ({ commit }, { projectId, templateId, pipelineIds, version }) {
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/pipelines?version=${version}`, pipelineIds).then(res => {
             return res.data
         })
     },
@@ -124,10 +127,14 @@ const actions = {
             stepId: i.stepId ?? '',
             disabled: Object.hasOwnProperty.call(i?.additionalOptions ?? {}, 'enable') ? !i?.additionalOptions?.enable : false,
             cron: i.advanceExpression,
-            variables: i.startParams,
             name: i.name,
             version: i.version,
-            isFollowTemplate: true
+            isFollowTemplate: true,
+            ...(
+                i.startParams ? {
+                    variables: JSON.parse(i.startParams)
+                } : {}
+            )
         }))
         commit(SET_TEMPLATE_DETAIL, {
             templateDetail: {
@@ -164,14 +171,15 @@ const actions = {
     },
     // 根据模板ID，版本号获取模板配置参数
     fetchTemplateParamsById ({ commit }, { projectId, templateId, version }) {
-        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/instanceParamsById?version=${version}`).then(res => {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/templateParamsById?version=${version}`).then(res => {
             return res.data
         })
     },
     
+ 
     // 根据引用获取模板配置参数
     fetchTemplateParamsByRef ({ commit }, { projectId, templateId, ref }) {
-        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/instanceParamsByRef?ref=${ref}`).then(res => {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/templateParamsByRef?ref=${ref}`).then(res => {
             return res.data
         })
     },
@@ -181,7 +189,7 @@ const actions = {
     getTagsListByProjectId ({ commit }, { projectId, searchKey, repoHashId }) {
         return ajax.post(`${REPOSITORY_API_URL_PREFIX}/user/scm/repository/api/${projectId}/listTags?repositoryType=ID&repoHashIdOrName=${repoHashId}&page=1&pageSize=200&search=${searchKey}`)
     },
-    updateInstancePageLoading ({ commit} , value) {
+    updateInstancePageLoading ({ commit }, value) {
         commit(UPDATE_INSTANCE_PAGE_LOADING, value)
     },
     requestTemplatePreviewByVersion (_, { projectId, templateId, ...params }) {
@@ -191,6 +199,11 @@ const actions = {
             return response.data
         })
     },
+    checkTemplatePipelineRollback ({ commit }, { projectId, pipelineId, version }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/canRollback?version=${version}`).then(response => {
+            return response
+        })
+    }
 }
 
 export default actions

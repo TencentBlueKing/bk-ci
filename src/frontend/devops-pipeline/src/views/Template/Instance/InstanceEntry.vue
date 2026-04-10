@@ -6,7 +6,7 @@
         <template>
             <header class="instance-entry-header">
                 <TemplateBreadCrumb
-                    :template-name="pipeline?.name"
+                    :template-name="templateName"
                     :is-loading="!pipeline"
                 />
                 <aside
@@ -26,7 +26,7 @@
                     >
                         <bk-button
                             theme="primary"
-                            :disabled="(templateRefTypeById ? !templateVersion : !templateRef) || (isInstanceCreateViewType && !instanceList.length) || isEditing"
+                            :disabled="(templateRefTypeById ? !templateVersion : !templateRef) || (isInstanceCreateViewType && !instanceList.length) || isEditing || fetchPipelinesError"
                             @click="handleBatchUpgrade"
                         >
                             {{ releaseBtnText }}
@@ -59,6 +59,7 @@
                     </bk-exception>
                     <InstanceConfig
                         v-else
+                        ref="instanceConfigRef"
                         slot="main"
                         :is-instance-create-type="isInstanceCreateViewType"
                     />
@@ -66,6 +67,7 @@
             </main>
         </template>
         <ReleasePipelineSideSlider
+            ref="releaseSideSlider"
             v-model="showRelease"
             is-template-instance-mode
             :version="currentVersionId"
@@ -95,6 +97,7 @@
         UPDATE_TEMPLATE_REF_TYPE,
         INSTANCE_OPERATE_TYPE
     } from '@/store/modules/templates/constants'
+    import { deepClone } from '@/utils/util'
     import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
     import BatchEditConfig from './BatchEditConfig'
     import InstanceAside from './InstanceAside'
@@ -102,6 +105,8 @@
     import TemplateVersionSelector from './TemplateVersionSelector'
 
     const { proxy } = UseInstance()
+    const instanceConfigRef = ref(null)
+    const releaseSideSlider = ref(null)
     const isLoading = ref(false)
     const showRelease = ref(false)
     const showBatchEdit = ref(false)
@@ -119,6 +124,9 @@
     const templateRef = computed(() => proxy.$store?.state?.templates?.templateRef)
     const templateRefType = computed(() => proxy.$store?.state?.templates?.templateRefType)
     const templateRefTypeById = computed(() => templateRefType.value === 'ID')
+    const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
+    const fetchPipelinesError = computed(() => proxy.$store?.state?.templates?.fetchPipelinesError)
+    const templateName =  computed(() => pipelineInfo.value?.name ?? pipeline.value?.name)
 
     const releaseBtnText = computed(() => {
         const type = proxy.$route.params?.type
@@ -184,7 +192,7 @@
         const list = instanceList.value.map(i => i)
         proxy.$set(list[index], 'filePath', value)
         
-        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, list)
+        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, { list })
     }
     function checkInstanceListInValid () {
         let valid = true
@@ -214,6 +222,7 @@
                 theme: 'error',
                 message: proxy.$t(`unknown type, ${type}`)
             })
+            releaseSideSlider.value?.resetReleasing?.()
             return
         }
         const { valid, message } = checkInstanceListInValid()
@@ -222,6 +231,7 @@
                 theme: 'error',
                 message
             })
+            releaseSideSlider.value?.resetReleasing?.()
             throw new Error(message)
         }
         try {
@@ -229,21 +239,21 @@
                 return {
                     pipelineId: item.pipelineId,
                     pipelineName: item.pipelineName,
-                    ...(item.buildNo ? {
+                    ...(item.buildNo && !item.buildNo.isDelete ? {
                         buildNo: {
                             ...item?.buildNo,
                             required: item.buildNo?.isRequiredParam
                         }
                     } : undefined),
-                    param: item.param.map(i => ({
+                    param: item.param?.filter(i => !i?.isDelete).map(i => ({
                         ...i,
                         required: i.isRequiredParam
                     })),
                     resetBuildNo: item?.resetBuildNo ?? false,
                     timerTrigger: item.timerTrigger,
                     filePath: item.filePath,
-                    overrideTemplateField: item.overrideTemplateField,
-                    triggerConfigs: item.triggerConfigs
+                    overrideTemplateField: item?.overrideTemplateField ?? {},
+                    triggerConfigs: item?.triggerConfigs
                 }
             })
             const res = await proxy.$store.dispatch(`templates/${fn}`, {
@@ -258,26 +268,68 @@
                     ...value
                 }
             })
-            proxy.$store.commit(`templates/${SET_RELEASE_BASE_ID}`, res.data)
-            proxy.$store.commit(`templates/${SET_RELEASE_ING}`, true)
+            releaseSideSlider.value?.resetReleasing?.()
+            proxy.$nextTick(() => {
+                proxy.$store.commit(`templates/${SET_RELEASE_BASE_ID}`, res.data)
+                proxy.$store.commit(`templates/${SET_RELEASE_ING}`, true)
+            })
         } catch (e) {
-            console.error(e)
+            proxy.$showTips({
+                theme: 'error',
+                message: e.message || e
+            })
+            releaseSideSlider.value?.resetReleasing?.()
         }
     }
     function handleBatchEdit () {
         showBatchEdit.value = true
     }
+    const initialInstanceList = computed(() => proxy.$store?.state?.templates?.initialInstanceList)
+    const activeIndex = computed(() => proxy.$route?.query?.index)
     function handleBatchChange (params) {
         const updateMap = new Map(params.map(item => [item.id, item.defaultValue]))
+        // 创建模板参数的 Map，用于获取模板中对应变量的 defaultValue
+        const templateParamsMap = new Map((curTemplateDetail.value?.param ?? []).map(t => [t.id, t]))
+        const initialInstanceParams = activeIndex.value > 0 && activeIndex.value - 1 < initialInstanceList.value?.length
+            ? initialInstanceList.value[activeIndex.value - 1]?.param
+            : undefined
+        const initialInstanceParamsMap = initialInstanceParams ? new Map(initialInstanceParams.map(ip => [ip.id, ip])) : new Map()
 
-        for (const instance of instanceList.value) {
-            for (const p of instance.param) {
-                if (updateMap.has(p.id)) {
-                    p.defaultValue = updateMap.get(p.id)
+        const updatedList = instanceList.value.map(instance => {
+            // 深拷贝实例对象，确保触发响应式更新
+            const newInstance = deepClone(instance)
+        
+            newInstance.param = newInstance.param.map(p => {
+                if (p.isFollowTemplate) {
+                    return p // 如果参数跟随模板，则不进行更新
                 }
-            }
-        }
-        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value)
+                if (updateMap.has(p.id)) {
+                    const initialParam = initialInstanceParamsMap.get(p.id)
+                    const templateParam = templateParamsMap.get(p.id)
+                    const templateDefaultValue = templateParam?.defaultValue
+                    const newValue = updateMap.get(p.id)
+                    const propertyUpdates = instanceConfigRef.value?.collectPropertyUpdates({
+                    ...p,
+                    defaultValue: newValue
+                }, initialParam)
+                    return {
+                        ...p,
+                        defaultValue: newValue,
+                        isChange: newValue !== p.defaultValue,
+                        hasChange: newValue !== templateDefaultValue,
+                        propertyUpdates
+                    }
+                }
+                return p
+            })
+        
+            return newInstance
+        })
+    
+        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, {
+            list: updatedList,
+            init: false
+        })
     }
    
 </script>

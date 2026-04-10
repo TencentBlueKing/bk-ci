@@ -21,6 +21,28 @@
                 :editable="editable"
                 :pipeline="pipeline"
             />
+            <div
+                v-if="instanceFromTemplate"
+                class="constraint-pipeline-tips"
+                :class="{ 'when-show-variable': currentTab === 'pipeline' && showVariable }"
+            >
+                <bk-alert
+                    type="info"
+                >
+                    <div slot="title">
+                        <span>
+                            {{ $t('constraintPipelineEditTips') }}
+                        </span>
+                
+                        <a
+                            class="text-link ml10"
+                            @click="handleToUpgradePipeline"
+                        >
+                            {{ $t('template.goUpgrade') }}
+                        </a>
+                    </div>
+                </bk-alert>
+            </div>
             <header
                 class="choose-type-switcher"
                 :class="{ 'when-show-variable': currentTab === 'pipeline' && showVariable }"
@@ -129,7 +151,8 @@
                 'pipelineYaml',
                 'pipelineSetting',
                 'editfromImport',
-                'showVariable'
+                'showVariable',
+                'instanceFromTemplate'
             ]),
             editable () {
                 return !(this.instanceFromTemplate || this.pipelineInfo?.mode === 'CONSTRAINT')
@@ -296,6 +319,7 @@
                     this.isLoading = true
                     await this.requestPipeline({
                         ...this.$route.params,
+                        source: 'EDIT',
                         version: this.pipelineVersion
                     })
                     this.isLoading = false
@@ -360,6 +384,10 @@
                     projectId: this.projectId,
                     templateId
                 })
+            },
+            handleToUpgradePipeline () {
+                const { pipelineId, pipelineName, templateId, templateVersion } = this.pipelineInfo
+                window.open(`/console/pipeline/${this.projectId}/template/${templateId}/${templateVersion}/instance/upgrade?pipelineId=${pipelineId}&pipelineName=${pipelineName}`, '_blank')
             }
         }
     }
@@ -493,6 +521,12 @@
 
         .bk-tab-content {
             overflow: auto;
+        }
+    }
+    .constraint-pipeline-tips {
+        padding: 20px 20px 0;
+        &.when-show-variable {
+            margin-right: 476px;
         }
     }
 }

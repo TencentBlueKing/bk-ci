@@ -90,6 +90,12 @@
                             @click.stop="handleEditName(instanceIndex)"
                         />
                         <template v-if="isInstanceCreateType">
+                            <bk-icon
+                                type="copy"
+                                class="operate-icon copy-icon"
+                                v-bk-tooltips="$t('template.copyInstance')"
+                                @click.stop="handleCopyInstance(instance, instanceIndex)"
+                            />
                             <bk-popconfirm
                                 :title="$t('template.deleteInstanceTitleTips')"
                                 :content="$t('template.deleteInstanceContentTips')"
@@ -103,12 +109,6 @@
                                     v-bk-tooltips="$t('delete')"
                                 />
                             </bk-popconfirm>
-                            <bk-icon
-                                type="copy"
-                                class="operate-icon copy-icon"
-                                v-bk-tooltips="$t('template.copyInstance')"
-                                @click.stop="handleCopyInstance(instance, instanceIndex)"
-                            />
                         </template>
                     </div>
                 </template>
@@ -128,7 +128,8 @@
         SET_TEMPLATE_DETAIL,
         SET_INSTANCE_LIST,
         UPDATE_USE_TEMPLATE_SETTING,
-        INSTANCE_OPERATE_TYPE
+        INSTANCE_OPERATE_TYPE,
+        SET_FETCH_PIPELINES_ERROR
     } from '@/store/modules/templates/constants'
     import { deepClone } from '@/utils/util'
     import Logo from '@/components/Logo'
@@ -159,10 +160,16 @@
     const instanceName = computed(() => {
         return renderInstanceList.value[editingIndex.value]?.pipelineName ?? ''
     })
+    watch(() => currentVersion.value,  () => {
+        if (isInstanceCreateType.value) return
+        fetchPipelinesDetails()
+    })
     watch(() => curTemplateDetail.value, (val) => {
-        if (pipelineName.value) {
+        if (instanceList.value.length) return
+        if (pipelineName.value && isInstanceCreateType.value) {
             handleAddInstance()
             proxy.$store.commit(`templates/${UPDATE_USE_TEMPLATE_SETTING}`, useTemplateSettings.value)
+            handleInstanceClick()
         }
     })
     async function checkPipelineName (newVal) {
@@ -185,7 +192,7 @@
             isErrorName.value = false
         }
     }
-    function handleInstanceClick (index) {
+    function handleInstanceClick (index = -1) {
         if (editingIndex.value !== -1) return
         instanceActiveIndex.value = index
         proxy.$router.replace({
@@ -204,12 +211,14 @@
             const newIndex = instanceList.value.length - 1
             handleInstanceClick(newIndex)
             instanceActiveIndex.value = newIndex
-            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, index === 0 ? [] : instanceList.value)
+            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, {
+                list: index === 0 ? [] : instanceList.value
+            })
             return
         }
         if (!props.isInstanceCreateType && !value) return
         proxy.$set(instanceList.value[index], 'pipelineName', value.trim())
-        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value)
+        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, { list: instanceList.value })
         editingIndex.value = -1
         proxy.$emit('update:isEditing', false)
     }
@@ -222,31 +231,35 @@
     }
     function handleDeleteInstance (index) {
         instanceList.value.splice(index, 1)
-        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value)
+        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, { list: instanceList.value })
         handleInstanceClick(instanceList.value.length - 1)
     }
     function handleCopyInstance (instance, index) {
         const newInstance = deepClone(instance)
         newInstance.pipelineName += `_copy${newIndex.value}`
         newIndex.value += 1
-        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [...instanceList.value, newInstance])
+        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, { list: [...instanceList.value, newInstance] })
         handleInstanceClick(instanceList.value.length - 1)
     }
     async function fetchPipelinesDetails () {
         try {
-            const pipelineIds = renderInstanceList.value.map(i => i.pipelineId)
+            proxy.$store.dispatch('templates/updateInstancePageLoading', true)
+            proxy.$store.commit(`templates/${SET_FETCH_PIPELINES_ERROR}`, false)
+            const initialInstanceListValue = proxy.$store?.state?.templates?.initialInstanceList
+            const pipelineIds = initialInstanceListValue.map(i => i.pipelineId)
             const res = await proxy.$store.dispatch('templates/fetchPipelineDetailById', {
                 pipelineIds,
                 projectId: projectId.value,
+                version: currentVersion.value,
                 templateId: templateId.value
             })
-            const list = renderInstanceList.value.map(i => {
+            const list = initialInstanceListValue.map(i => {
                 const triggerElements = res[i.pipelineId]?.triggerElements
-                const overrideTemplateField = res[i.pipelineId]?.overrideTemplateField ?? []
+                const overrideTemplateField = res[i.pipelineId]?.overrideTemplateField ?? {}
                 return {
                     ...i,
                     ...res[i.pipelineId],
-                    pipelineName: proxy.$route.query.copyPipelineName || i.pipelineName,
+                    pipelineName: proxy.$route.query.pipelineName || i.pipelineName,
                     ...(
                         triggerElements?.length ? {
                             triggerConfigs: triggerElements.map(trigger => {
@@ -256,12 +269,16 @@
                                     stepId: trigger.stepId ?? '',
                                     disabled: Object.hasOwnProperty.call(trigger?.additionalOptions ?? {}, 'enable') ? !trigger?.additionalOptions?.enable : false,
                                     cron: trigger.advanceExpression,
-                                    variables: trigger.startParams,
                                     name: trigger.name,
                                     version: trigger.version,
                                     isFollowTemplate: !(overrideTemplateField?.triggerStepIds?.includes(trigger.stepId)),
                                     isDelete: false,
-                                    isNew: false
+                                    isNew: false,
+                                    ...(
+                                        trigger.startParams ? {
+                                            variables: JSON.parse(trigger.startParams)
+                                        } : {}
+                                    )
                                 }
                             })
                         }
@@ -280,9 +297,13 @@
                     proxy.$set(item?.buildNo, 'isFollowTemplate', !overrideTemplateField?.paramIds?.includes('BK_CI_BUILD_NO'))
                 }
             })
-            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, list)
+            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, { list })
+            proxy.$store.commit('templates/TRIGGER_MERGE_INSTANCES', true)
         } catch (e) {
+            proxy.$store.commit(`templates/${SET_FETCH_PIPELINES_ERROR}`, true)
             console.error(e)
+        } finally {
+            proxy.$store.dispatch('templates/updateInstancePageLoading', false)
         }
     }
     function handleShowInstanceCreate () {
@@ -294,41 +315,63 @@
     }
     function handleAddInstance (name) {
         const instanceParams = deepClone(curTemplateDetail.value)
+        // 处理新增实例时参数的 isRequiredParam 属性
+        // 只有当 asInstanceInput 为 true , 才设置为入参
+        if (instanceParams?.param?.length) {
+            instanceParams.param = instanceParams.param.map(p => ({
+                ...p,
+                readOnlyCheck: false,
+                isRequiredParam: p.required && p.asInstanceInput
+            }))
+        }
         const newInstance = {
             ...instanceParams,
+            ...(instanceParams?.buildNo ? {
+                buildNo: {
+                    ...instanceParams.buildNo,
+                    isRequiredParam: instanceParams.buildNo.required && instanceParams.buildNo.asInstanceInput
+                }
+            } : {}),
             pipelineName: name ?? pipelineName.value ?? ''
         }
-        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [...instanceList.value, newInstance])
+        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, { list: [...instanceList.value, newInstance] })
         proxy?.$nextTick(() => {
             const index = instanceList.value.length - 1
             handleInstanceClick(index)
+            proxy.$store.dispatch('templates/updateInstancePageLoading', false)
         }, 3000)
     }
     async function init () {
-        if (instanceViewType.value === INSTANCE_OPERATE_TYPE.UPGRADE  && !instanceList.value.length) {
-            proxy.$router.push({
-                name: 'TemplateOverview',
-                params: {
-                    type: 'instanceList',
-                    version: currentVersion.value
-                }
-            })
-            return
-        }
         if ([INSTANCE_OPERATE_TYPE.UPGRADE, INSTANCE_OPERATE_TYPE.COPY].includes(instanceViewType.value)) {
-            if (instanceViewType.value === INSTANCE_OPERATE_TYPE.COPY) {
-                const { from, copyPipelineName } = proxy.$route.query
-                proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [
-                    {
-                        pipelineName: copyPipelineName?.substring(0, 128),
-                        pipelineId: from
-                    }
-                ])
+            const { pipelineId, pipelineName } = proxy.$route.query
+            if (pipelineId && pipelineName) {
+                proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, {
+                    list: [
+                        {
+                            pipelineName: pipelineName?.substring(0, 128),
+                            pipelineId
+                        }
+                    ]
+                })
+                fetchPipelinesDetails()
             }
-            await fetchPipelinesDetails()
+
+            if (instanceViewType.value === INSTANCE_OPERATE_TYPE.UPGRADE  && !instanceList.value.length) {
+                proxy.$router.push({
+                    name: 'TemplateOverview',
+                    params: {
+                        type: 'instanceList',
+                        version: currentVersion.value
+                    }
+                })
+                return
+            }
             proxy.$nextTick(() => {
                 handleInstanceClick(instanceActiveIndex.value)
             })
+        }
+        if (instanceViewType.value === INSTANCE_OPERATE_TYPE.CREATE && !pipelineName.value) {
+            handleShowInstanceCreate()
         }
        
     }
@@ -345,7 +388,7 @@
             templateVersion: '',
             templateDetail: {}
         })
-        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [])
+        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, { list: [] })
         proxy.$store.commit(`templates/${UPDATE_USE_TEMPLATE_SETTING}`, false)
     })
 </script>
@@ -392,13 +435,13 @@
                 font-weight: 400 !important;
                 border: none;
             }
-            &.active,
-            &:hover {
+            &.active {
                 color: #3A84FF;
                 font-weight: 700;
-                background: #E1ECFF;
+                background: #E1ECFF !important;
             }
             &:hover {
+                background: #EAEBF0;
                 .instance-operate {
                     visibility: visible;
                 }

@@ -1,15 +1,23 @@
 package com.tencent.devops.process.service.template.v2
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_VERSION_NOT_EXISTS
+import com.tencent.devops.process.dao.template.PipelineTemplateInfoDao
 import com.tencent.devops.process.dao.template.PipelineTemplateResourceDao
 import com.tencent.devops.process.pojo.PipelineTemplateVersionSimple
+import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelated
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceUpdateInfo
+import com.tencent.devops.process.util.PipelineTemplateUtil
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -19,7 +27,8 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineTemplateResourceService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineTemplateResourceDao: PipelineTemplateResourceDao
+    private val pipelineTemplateResourceDao: PipelineTemplateResourceDao,
+    private val pipelineTemplateInfoDao: PipelineTemplateInfoDao
 ) {
 
     fun getTemplateResourceVersion(
@@ -177,6 +186,19 @@ class PipelineTemplateResourceService @Autowired constructor(
         )
     }
 
+    fun getOrNull(
+        projectId: String,
+        templateId: String,
+        version: Long
+    ): PipelineTemplateResource? {
+        return pipelineTemplateResourceDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
+    }
+
     fun get(
         projectId: String,
         templateId: String,
@@ -190,10 +212,82 @@ class PipelineTemplateResourceService @Autowired constructor(
         ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_VERSION_NOT_EXISTS)
     }
 
+    fun getOrNullBySrcTemplateVersion(
+        projectId: String,
+        templateId: String,
+        srcTemplateVersion: Long
+    ): PipelineTemplateResource? {
+        return pipelineTemplateResourceDao.getBySrcTemplateVersion(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId,
+            srcTemplateVersion = srcTemplateVersion
+        )
+    }
+
+    fun getBySrcTemplateVersion(
+        projectId: String,
+        templateId: String,
+        srcTemplateVersion: Long
+    ): PipelineTemplateResource {
+        return pipelineTemplateResourceDao.getBySrcTemplateVersion(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId,
+            srcTemplateVersion = srcTemplateVersion
+        ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_VERSION_NOT_EXISTS)
+    }
+
+    fun getByRelatedPipeline(
+        projectId: String,
+        pipelineTemplateRelated: PipelineTemplateRelated
+    ): PipelineTemplateResource? {
+        val pipelineTemplateInfo = pipelineTemplateInfoDao.get(
+            dslContext = dslContext,
+            templateId = pipelineTemplateRelated.templateId
+        ) ?: return null
+        return if (pipelineTemplateInfo.mode == TemplateType.CONSTRAINT) {
+            pipelineTemplateResourceDao.getBySrcTemplateVersion(
+                dslContext = dslContext,
+                projectId = projectId,
+                templateId = pipelineTemplateRelated.templateId,
+                srcTemplateVersion = pipelineTemplateRelated.version
+            )
+        } else {
+            pipelineTemplateResourceDao.get(
+                dslContext = dslContext,
+                projectId = projectId,
+                templateId = pipelineTemplateRelated.templateId,
+                version = pipelineTemplateRelated.version
+            )
+        }
+    }
+
     fun count(commonCondition: PipelineTemplateResourceCommonCondition): Int {
         return pipelineTemplateResourceDao.count(
             commonCondition = commonCondition,
             dslContext = dslContext
+        )
+    }
+
+    fun countVersions(projectId: String, templateId: String): Int {
+        return pipelineTemplateResourceDao.countVersions(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId
+        )
+    }
+
+    fun existsVersionName(
+        projectId: String,
+        templateId: String,
+        versionName: String
+    ): Boolean {
+        return pipelineTemplateResourceDao.existsVersionName(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId,
+            versionName = versionName
         )
     }
 
@@ -245,6 +339,54 @@ class PipelineTemplateResourceService @Autowired constructor(
             dslContext = transactionContext,
             projectId = projectId,
             templateId = templateId
+        )
+    }
+
+    fun renameExistingReleasedVersionIfDuplicate(
+        projectId: String,
+        templateId: String,
+        versionName: String?,
+        transactionContext: DSLContext? = null
+    ) {
+        if (versionName.isNullOrBlank()) return
+        val existingVersion = getLatestResource(
+            projectId = projectId,
+            templateId = templateId,
+            status = VersionStatus.RELEASED,
+            versionName = versionName
+        ) ?: return
+
+        val suffix = "-${existingVersion.version}"
+        val newName = PipelineTemplateUtil.buildVersionNameWithSuffix(versionName, suffix)
+        val i18nDesc = MessageUtil.getMessageByLocale(
+            messageCode = ProcessMessageCode
+                .BK_TEMPLATE_VERSION_REFACTOR_SUFFIX_DESC,
+            language = I18nUtil.getDefaultLocaleLanguage()
+        )
+        val affected = update(
+            transactionContext = transactionContext,
+            record = PipelineTemplateResourceUpdateInfo(
+                versionName = newName,
+                description = i18nDesc,
+                status = VersionStatus.DELETE
+            ),
+            commonCondition = PipelineTemplateResourceCommonCondition(
+                projectId = projectId,
+                templateId = templateId,
+                versionName = versionName,
+                status = VersionStatus.RELEASED
+            )
+        )
+        logger.info(
+            "renamed duplicate released version|" +
+                "$projectId|$templateId|" +
+                "from=$versionName|to=$newName|affected=$affected"
+        )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(
+            PipelineTemplateResourceService::class.java
         )
     }
 }

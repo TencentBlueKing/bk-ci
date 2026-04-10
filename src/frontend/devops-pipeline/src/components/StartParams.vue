@@ -7,9 +7,10 @@
             only-save-as-set
             ref="paramSet"
             is-start-up
+            :disabled="!isBuildParamReady"
             :is-visible-version="isVisibleVersion"
             :build-num="execDetail?.buildNum"
-            :all-params="allParams"
+            :all-params="buildParamProperities"
         />
         <div class="startup-parameter-wrapper">
             <div
@@ -87,6 +88,7 @@
         data () {
             return {
                 isLoading: false,
+                isBuildParamReady: false,
                 params: [],
                 defaultParamMap: {},
                 activeParam: null,
@@ -102,18 +104,6 @@
             }),
             archiveFlag () {
                 return this.$route.query.archiveFlag
-            },
-            allParams () {
-                const valueMap = this.params.reduce((acc, item) => {
-                    acc[item.key] = item.value
-                    return acc
-                }, {})
-                return this.buildParamProperities.map(item => {
-                    return {
-                        ...item,
-                        value: valueMap[item.id]
-                    }
-                })
             }
             
         },
@@ -134,6 +124,17 @@
             hideDetail () {
                 this.activeParam = null
             },
+            async fetchBuildParamProperties (urlParams) {
+                try {
+                    this.isBuildParamReady = false
+                    const buildParamProperities = await this.fetchBuildParamsByBuildId(urlParams)
+                    this.buildParamProperities = buildParamProperities
+                    this.isVisibleVersion = buildParamProperities.some(item => allVersionKeyList.includes(item.id))
+                    this.isBuildParamReady = true
+                } catch (e) {
+                    console.error(e)
+                }
+            },
             async init () {
                 try {
                     this.isLoading = true
@@ -144,12 +145,8 @@
                         buildId,
                         ...(this.archiveFlag ? { archiveFlag: this.archiveFlag } : {})
                     }
-                    const [res, buildParamProperities] = await Promise.all([
-                        this.requestBuildParams(urlParams),
-                        this.fetchBuildParamsByBuildId(urlParams)
-                    ])
-                    this.buildParamProperities = buildParamProperities
-                    this.isVisibleVersion = buildParamProperities.some(item => allVersionKeyList.includes(item.id))
+                    this.fetchBuildParamProperties(urlParams)
+                    const res = await this.requestBuildParams(urlParams)
                     this.defaultParamMap = res.reduce((acc, item) => {
                         acc[item.key] = item.defaultValue
                         return acc

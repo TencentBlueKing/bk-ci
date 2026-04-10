@@ -33,7 +33,6 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.process.constant.PipelineTemplateConstant
 import com.tencent.devops.process.pojo.template.TemplateType
-import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
 import com.tencent.devops.process.pojo.template.v2.PTemplateResourceWithoutVersion
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCompatibilityCreateReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoV2
@@ -69,33 +68,23 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
     ): PipelineTemplateVersionCreateContext {
         request as PipelineTemplateCompatibilityCreateReq
         with(request) {
-            logger.info("compatibility create converter:$userId|$projectId|$templateId|$version|$request")
+            logger.info("compatibility create converter:$userId|$projectId|$templateId|$version|$v1VersionName")
             if (templateId == null) {
                 throw IllegalArgumentException("templateId is null")
             }
             val isNewTemplate = pipelineTemplateInfoService.getOrNull(projectId, templateId) == null
 
-            val transferResult = try {
-                pipelineTemplateGenerator.transfer(
-                    userId = userId,
-                    projectId = projectId,
-                    storageType = PipelineStorageType.MODEL,
-                    templateType = PipelineTemplateType.PIPELINE,
-                    templateModel = model,
-                    templateSetting = setting,
-                    params = model.getTriggerContainer().params,
-                    yaml = null
-                )
-            } catch (ex: Exception) {
-                logger.warn("TRANSFER_TEMPLATE_YAML_FAILED|$projectId|$templateId", ex)
-                PTemplateModelTransferResult(
-                    templateType = PipelineTemplateType.PIPELINE,
-                    templateModel = model,
-                    templateSetting = setting,
-                    params = model.getTriggerContainer().params,
-                    yamlWithVersion = null
-                )
-            }
+            val transferResult = pipelineTemplateGenerator.transfer(
+                userId = userId,
+                projectId = projectId,
+                storageType = PipelineStorageType.MODEL,
+                templateType = PipelineTemplateType.PIPELINE,
+                templateModel = model,
+                templateSetting = setting,
+                params = model.getTriggerContainer().params,
+                yaml = null,
+                fallbackOnError = true
+            )
 
             val pipelineTemplateInfo = PipelineTemplateInfoV2(
                 id = templateId,
@@ -132,7 +121,6 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 templateId = templateId,
-                v1VersionName = v1VersionName,
                 customVersionName = v1VersionName,
                 versionAction = PipelineVersionAction.CREATE_RELEASE,
                 pipelineTemplateInfo = pipelineTemplateInfo,

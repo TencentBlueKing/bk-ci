@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
+import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.template.ITemplateModel
@@ -205,6 +206,8 @@ class TemplateModelTransfer @Autowired constructor(
             baseYaml.customBuildNum = setting.buildNumRule
             baseYaml.disablePipeline = (setting.runLockType == PipelineRunLockType.LOCK).nullIfDefault(false)
             baseYaml.failIfVariableInvalid = setting.failIfVariableInvalid.nullIfDefault(false)
+            baseYaml.cancelPolicy =
+                setting.buildCancelPolicy.nullIfDefault(BuildCancelPolicy.EXECUTE_PERMISSION)?.yamlCode()
             modelInput.aspectWrapper.setYaml4Yaml(baseYaml, PipelineTransferAspectWrapper.AspectType.AFTER)
         }
         return baseYaml

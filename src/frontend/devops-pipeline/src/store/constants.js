@@ -51,3 +51,10 @@ export const PIPELINE_TABLE_LIMIT_CACHE = 'pipeline_table_limit_cache'
 export const PIPELINE_ASIDE_PANEL_TOGGLE = 'pipeline_aside_panel_toggle'
 export const PIPELINE_GROUP_ASIDE_WIDTH_CACHE = 'pipeline_group_aside_width_cache'
 export const VAR_MAX_LENGTH = 4096
+
+// Build Cancel Policy Enum
+export const BUILD_CANCEL_POLICY = {
+    EXECUTE_PERMISSION: 'EXECUTE_PERMISSION',
+    RESTRICTED: 'RESTRICTED'
+}
+export const BUILD_CANCEL_POLICY_DEFAULT = BUILD_CANCEL_POLICY.EXECUTE_PERMISSION

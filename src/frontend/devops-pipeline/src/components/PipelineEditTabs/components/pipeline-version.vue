@@ -7,20 +7,34 @@
             @toggleConstraint="toggleBuildNoConstraint"
         >
             <template #constraint-title="{ props: { isOverride } }">
-                <atom-checkbox
-                    :disabled="disabled && !isOverride"
-                    :text="$t('newui.enableVersions')"
-                    :value="showVersions"
-                    :handle-change="(name, value) => toggleVersions(name, value)"
-                />
-                <atom-checkbox
-                    v-if="showVersions"
-                    :disabled="disabled && !isOverride"
-                    name="required"
-                    :text="$t('newui.isBuildParam')"
-                    :value="execuVisible"
-                    :handle-change="handleBuildNoChange"
-                />
+                <div class="version-config-options">
+                    <atom-checkbox
+                        :disabled="disabled"
+                        :text="$t('newui.enableVersions')"
+                        :value="showVersions"
+                        :handle-change="(name, value) => toggleVersions(name, value)"
+                    />
+                    <div>
+                        <atom-checkbox
+                            v-if="showVersions"
+                            :disabled="disabled && !isOverride"
+                            name="required"
+                            :text="$t('newui.isBuildParam')"
+                            :value="isRequired"
+                            :handle-change="handleBuildNoChange"
+                        />
+                        <atom-checkbox
+                            v-if="!!templateId && showVersions && isRequired"
+                            name="asInstanceInput"
+                            class="ml10"
+                            :disabled="disabled && !isOverride"
+                            :desc="$t('editPage.instanceRequiredTips')"
+                            :text="$t('editPage.instanceRequired')"
+                            :value="asInstanceInput"
+                            :handle-change="handleBuildNoChange"
+                        />
+                    </div>
+                </div>
             </template>
             <template #constraint-area="{ props: { isOverride } }">
                 <bk-button
@@ -326,7 +340,6 @@
             return {
                 CLASSIFY_ENUM,
                 showVersions: false,
-                isRequired: false,
                 showEditVersion: false,
                 renderBuildNo: {},
                 editBuildNo: {},
@@ -378,16 +391,22 @@
                 return getVersionConfig()
             },
             buildNo () {
-                return this.container?.buildNo || {}
+                return this.container?.buildNo ?? {}
             },
-            execuVisible () {
-                return this.buildNo && this.buildNo.required ? this.buildNo.required : false
+            isRequired () {
+                return !!this.buildNo?.required
+            },
+            asInstanceInput () {
+                return !!this.buildNo?.asInstanceInput
             },
             buildNoBaselineTips () {
                 return Array(7).fill(0).map((_, i) => this.$t(`buildNoBaseline.tips${i + 1}`))
             },
             resetBuildNo () {
                 return this.buildNo.buildNo + 1
+            },
+            templateId () {
+                return this.$route.params.templateId
             }
         },
         watch: {
@@ -411,7 +430,6 @@
             bkVarWrapper,
             ...mapActions('atom', ['updateBuildNo', 'fetchPipelineByVersion']),
             toggleBuildNoConstraint (isOverride) {
-                console.log(isOverride, 'toggleBuildNoConstraint')
                 this.overrideConstraint = isOverride
                 this.$nextTick(() => {
                     if (!isOverride) {
@@ -435,10 +453,16 @@
                 Object.assign(this.editBuildNo, { [name]: value })
             },
             handleBuildNoChange (name, value) {
-                Object.assign(this.renderBuildNo, { [name]: value })
-                this.updateContainerParams('buildNo', {
-                    ...this.renderBuildNo
-                })
+                // 创建新对象以触发响应式更新
+                const newBuildNo = {
+                    ...this.buildNo,
+                    [name]: value
+                }
+                if (name === 'required') {
+                    // 如果设置为入参，则更新默认为实例入参
+                    newBuildNo.asInstanceInput = value
+                }
+                this.updateContainerParams('buildNo', newBuildNo)
             },
             getLabelByBuildType (type) {
                 const item = this.buildNoRules.find(item => item.value === type)
@@ -456,14 +480,18 @@
                         required: false,
                         type: versionConfig[v].type
                     }))
-                    this.renderBuildNo = Object.assign({}, this.defaultBuildNo)
+                    this.renderBuildNo = Object.assign({}, {
+                        ...this.defaultBuildNo,
+                        required: false,
+                        asInstanceInput: false
+                    })
 
                     this.updateContainerParams('params', [
                         ...this.globalParams,
                         ...newVersions
                     ])
                     this.updateContainerParams('buildNo', {
-                        ...this.defaultBuildNo
+                        ...this.renderBuildNo
                     })
                 } else {
                     this.updateContainerParams('params', this.globalParams)
@@ -472,7 +500,7 @@
             },
             editVersions () {
                 this.editVersionValues = Object.assign({}, this.versionValues)
-                this.editBuildNo = Object.assign({}, this.renderBuildNo)
+                this.editBuildNo = Object.assign({}, this.buildNo)
                 this.showEditVersion = true
             },
             handleSaveVersion () {
@@ -491,9 +519,10 @@
                             ...newVersions
                         ])
                         this.updateContainerParams('buildNo', {
+                            ...this.buildNo,
                             ...this.editBuildNo
                         })
-                        this.renderBuildNo = Object.assign({}, this.editBuildNo)
+                        this.renderBuildNo = Object.assign({}, this.buildNo, this.editBuildNo)
                         this.showEditVersion = false
                     }
                 })
@@ -548,6 +577,11 @@
         & > :first-child {
             flex: 1;
         }
+    }
+    .version-config-options {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
     }
     
     .version-list {

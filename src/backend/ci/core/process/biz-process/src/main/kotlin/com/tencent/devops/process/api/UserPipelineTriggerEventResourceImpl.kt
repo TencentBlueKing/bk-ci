@@ -191,13 +191,12 @@ class UserPipelineTriggerEventResourceImpl(
         projectId: String,
         detailId: Long
     ): Result<Boolean> {
-        return Result(
-            pipelineTriggerEventService.replay(
-                userId = userId,
-                projectId = projectId,
-                detailId = detailId
-            )
+        pipelineTriggerEventService.replay(
+            userId = userId,
+            projectId = projectId,
+            detailId = detailId
         )
+        return Result(true)
     }
 
     override fun replayAll(
@@ -205,12 +204,11 @@ class UserPipelineTriggerEventResourceImpl(
         projectId: String,
         eventId: Long
     ): Result<Boolean> {
-        return Result(
-            pipelineTriggerEventService.replayAll(
-                userId = userId,
-                projectId = projectId,
-                eventId = eventId
-            )
+        pipelineTriggerEventService.replayAll(
+            userId = userId,
+            projectId = projectId,
+            eventId = eventId
         )
+        return Result(true)
     }
 }

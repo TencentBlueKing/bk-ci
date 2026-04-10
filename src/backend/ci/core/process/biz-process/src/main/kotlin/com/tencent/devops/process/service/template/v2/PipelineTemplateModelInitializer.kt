@@ -62,6 +62,7 @@ class PipelineTemplateModelInitializer @Autowired constructor(
         }
     }
 
+    @Suppress("CyclomaticComplexMethod")
     private fun initModel(templateModel: Model) {
         val defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
         val defaultTagIds = defaultStageTagId?.let { listOf(it) }

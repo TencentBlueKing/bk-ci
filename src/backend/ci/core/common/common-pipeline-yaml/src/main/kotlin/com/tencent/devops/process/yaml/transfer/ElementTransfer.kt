@@ -561,7 +561,8 @@ class ElementTransfer @Autowired(required = false) constructor(
                     RunAtomParam::shell.name to type,
                     RunAtomParam::charsetType.name to RunAtomParam.CharsetType.parse(
                         step.with?.get(RunAtomParam::charsetType.name)?.toString()
-                    )
+                    ),
+                    RunAtomParam::manualCommand.name to step.with?.get(RunAtomParam::manualCommand.name)?.toString()
                 )
                 step.namespace?.let { data["namespace"] = it }
                 MarketBuildAtomElement(

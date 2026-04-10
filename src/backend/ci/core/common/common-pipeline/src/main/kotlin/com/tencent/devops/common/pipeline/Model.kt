@@ -29,6 +29,7 @@ package com.tencent.devops.common.pipeline
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.HIDDEN_SYMBOL
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -78,7 +79,7 @@ data class Model(
     val resources: Resources? = null,
     @get:Schema(title = "实例化模版信息", required = true)
     var template: TemplateInstanceDescriptor? = null,
-    @get:Schema(title = "流水线覆盖模版的字段", required = false)
+    @get:Schema(title = "实例化流水线自定义的参数、触发器和设置", required = false)
     var overrideTemplateField: TemplateInstanceField? = null
 ) : ITemplateModel {
     @get:Schema(title = "提交时流水线最新版本号", required = false)
@@ -235,6 +236,15 @@ data class Model(
 
     @JsonIgnore
     fun getTriggerContainer() = stages[0].containers[0] as TriggerContainer
+
+    fun encryptParamsValue() {
+        (stages[0].containers[0] as TriggerContainer).params.forEach {
+            if (it.sensitive == true) {
+                it.value = HIDDEN_SYMBOL
+                it.defaultValue = HIDDEN_SYMBOL
+            }
+        }
+    }
 
     companion object {
         const val classType = "model"

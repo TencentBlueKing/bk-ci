@@ -39,7 +39,7 @@ import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TAtomRecord
-import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
@@ -47,6 +47,7 @@ import com.tencent.devops.store.pojo.atom.UpdateAtomInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -346,7 +347,8 @@ class MarketAtomDao : AtomBaseDao() {
             tAtom.CREATOR,
             tAtom.CREATE_TIME,
             tAtom.MODIFIER,
-            tAtom.UPDATE_TIME
+            tAtom.UPDATE_TIME,
+            tAtom.CODE_SRC
         )
             .from(tAtom)
             .join(tStoreMember)
@@ -403,7 +405,7 @@ class MarketAtomDao : AtomBaseDao() {
                     marketAtomCreateRequest.name,
                     marketAtomCreateRequest.atomCode,
                     "",
-                    "",
+                    "[ \"${ServiceScopeEnum.PIPELINE.name}\" ]",
                     "",
                     "",
                     "",
