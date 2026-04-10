@@ -93,7 +93,9 @@ func enableSession(workDir, user, password string, autoLogon bool) error {
 	writeInstallType(workDir, "SESSION")
 
 	printStepf("%s", msgf("starting service %s", "启动服务 %s", serviceName))
-	runSc("start", serviceName)
+	if out, err := runSc("start", serviceName); err != nil {
+		printWarn(msgf("service start may have failed: %s (%v)", "服务启动可能失败: %s (%v)", out, err))
+	}
 	time.Sleep(3 * time.Second)
 
 	printStep("")
@@ -173,9 +175,16 @@ func validateCredentials(account, password string) error {
 }
 
 func splitUserDomain(account string) (user, domain string) {
+	if account == "" {
+		return "", "."
+	}
 	for i := 0; i < len(account); i++ {
 		if account[i] == '\\' {
-			return account[i+1:], account[:i]
+			u := account[i+1:]
+			if u == "" {
+				return account, "."
+			}
+			return u, account[:i]
 		}
 	}
 	for i := 0; i < len(account); i++ {
@@ -267,11 +276,17 @@ func enableAutoLogon(account, password string) error {
 	}
 	defer k.Close()
 
-	k.SetStringValue("AutoAdminLogon", "1")
-	k.SetStringValue("DefaultUserName", user)
-	k.SetStringValue("DefaultDomainName", domain)
-	k.DeleteValue("DefaultPassword")
-	k.DeleteValue("AutoLogonCount")
+	if err := k.SetStringValue("AutoAdminLogon", "1"); err != nil {
+		return cliErrorf("set AutoAdminLogon failed: %v", "设置 AutoAdminLogon 失败: %v", err)
+	}
+	if err := k.SetStringValue("DefaultUserName", user); err != nil {
+		return cliErrorf("set DefaultUserName failed: %v", "设置 DefaultUserName 失败: %v", err)
+	}
+	if err := k.SetStringValue("DefaultDomainName", domain); err != nil {
+		return cliErrorf("set DefaultDomainName failed: %v", "设置 DefaultDomainName 失败: %v", err)
+	}
+	_ = k.DeleteValue("DefaultPassword")
+	_ = k.DeleteValue("AutoLogonCount")
 
 	if err := storeLsaSecret("DefaultPassword", password); err != nil {
 		return cliErrorf("store auto-logon password failed: %v", "存储自动登录密码失败: %v", err)
@@ -316,7 +331,7 @@ const installTypeFile = ".install_type"
 
 func writeInstallType(workDir, mode string) {
 	p := filepath.Join(workDir, installTypeFile)
-	if err := os.WriteFile(p, []byte(mode), 0644); err != nil {
+	if err := os.WriteFile(p, []byte(mode), 0600); err != nil {
 		printWarn(msgf("failed to write %s: %v", "写入 %s 失败: %v", installTypeFile, err))
 		return
 	}

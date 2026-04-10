@@ -92,6 +92,10 @@ const (
 
 	lsaSecretKeyUser     = "BkCiSessionUser"
 	lsaSecretKeyPassword = "BkCiSessionPassword"
+
+	// noSessionID is the sentinel value returned by WTSGetActiveConsoleSessionId
+	// when no physical console session exists.
+	noSessionID = 0xFFFFFFFF
 )
 
 const (
@@ -135,7 +139,7 @@ func GetActiveSessionID() (uint32, error) {
 	}
 
 	sessionID, _, callErr := procWTSGetActiveConsoleSessionId.Call()
-	if sessionID == 0xFFFFFFFF {
+	if sessionID == noSessionID {
 		return 0, fmt.Errorf("no active user session: WTSGetActiveConsoleSessionId: %w", callErr)
 	}
 	logs.Infof("using console session %d from WTSGetActiveConsoleSessionId", sessionID)
@@ -299,8 +303,8 @@ func enableTcbPrivilege() error {
 // Requirements:
 //   - Service must run as SYSTEM (for SeTcbPrivilege)
 //   - A physical console session must exist (machine has a display or virtual display)
-func StartProcessWithLogon(user, password, appPath, cmdLine, workDir string) (*SessionProcessInfo, error) {
-	domain := "."
+func StartProcessWithLogon(account, password, appPath, cmdLine, workDir string) (*SessionProcessInfo, error) {
+	user, domain := splitUserDomain(account)
 
 	if err := enableTcbPrivilege(); err != nil {
 		logs.WithError(err).Warn("enableTcbPrivilege failed, SetTokenInformation may fail")
@@ -335,7 +339,7 @@ func StartProcessWithLogon(user, password, appPath, cmdLine, workDir string) (*S
 	defer primaryToken.Close()
 
 	consoleSession, _, _ := procWTSGetActiveConsoleSessionId.Call()
-	if consoleSession == 0xFFFFFFFF {
+	if consoleSession == noSessionID {
 		return nil, fmt.Errorf("no console session available")
 	}
 	sid := uint32(consoleSession)
@@ -344,7 +348,7 @@ func StartProcessWithLogon(user, password, appPath, cmdLine, workDir string) (*S
 		uintptr(primaryToken),
 		uintptr(tokenSessionId),
 		uintptr(unsafe.Pointer(&sid)),
-		unsafe.Sizeof(sid),
+		unsafe.Sizeof(uint32(0)),
 	)
 	if ret == 0 {
 		return nil, fmt.Errorf("SetTokenInformation(TokenSessionId=%d): %w", sid, err)
@@ -462,12 +466,38 @@ func ReadLsaSecret(keyName string) (string, error) {
 }
 
 // ReadSessionCredentials reads session user/password from LSA Secret store.
-// Returns empty strings if not configured.
+// Returns empty strings if either value is not configured or unreadable.
 func ReadSessionCredentials() (user, password string) {
 	u, err := ReadLsaSecret(lsaSecretKeyUser)
 	if err != nil {
 		return "", ""
 	}
-	p, _ := ReadLsaSecret(lsaSecretKeyPassword)
+	p, err := ReadLsaSecret(lsaSecretKeyPassword)
+	if err != nil {
+		return "", ""
+	}
 	return u, p
+}
+
+// splitUserDomain parses "DOMAIN\user" or "user@domain" into (user, domain).
+// If no separator is found, domain defaults to "." (local machine).
+func splitUserDomain(account string) (user, domain string) {
+	if account == "" {
+		return "", "."
+	}
+	for i := 0; i < len(account); i++ {
+		if account[i] == '\\' {
+			u := account[i+1:]
+			if u == "" {
+				return account, "."
+			}
+			return u, account[:i]
+		}
+	}
+	for i := 0; i < len(account); i++ {
+		if account[i] == '@' {
+			return account[:i], account[i+1:]
+		}
+	}
+	return account, "."
 }

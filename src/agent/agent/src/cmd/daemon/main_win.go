@@ -57,6 +57,7 @@ const (
 	restartBaseDelay = 3 * time.Second
 	restartMaxWait   = 30 * time.Second
 	restartPollTick  = 500 * time.Millisecond
+	maxWatchPanics   = 10
 )
 
 func main() {
@@ -165,10 +166,17 @@ func readInstallType() string {
 	return installType
 }
 
+var watchPanicCount int
+
 func watch() {
 	defer func() {
 		if r := recover(); r != nil {
-			logs.Errorf("watch goroutine panic recovered: %v, will restart watch loop in 30s", r)
+			watchPanicCount++
+			if watchPanicCount > maxWatchPanics {
+				logs.Errorf("watch goroutine exceeded max panic recoveries (%d), giving up", maxWatchPanics)
+				return
+			}
+			logs.Errorf("watch goroutine panic recovered (%d/%d): %v, will restart watch loop in 30s", watchPanicCount, maxWatchPanics, r)
 			time.Sleep(30 * time.Second)
 			go watch()
 		}
@@ -275,8 +283,9 @@ func doWaitBeforeRestart(baseDelay, maxWait, pollTick time.Duration) {
 	}
 }
 
-// launchAgentInUserSession tries to start the agent in a user desktop session.
-// Priority: 1) WTS active session  2) LogonUser with stored credentials  3) give up (return false).
+// launchAgentInUserSession tries to start the agent in a user desktop session
+// via WTS APIs. Returns false if no active user session is available, in which
+// case the caller should wait for the user to log in (e.g. via auto-logon).
 func launchAgentInUserSession(agentPath, workDir string) bool {
 	cmdLine := fmt.Sprintf(`"%s"`, agentPath)
 
