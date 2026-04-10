@@ -63,14 +63,15 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
-import java.util.concurrent.TimeUnit
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
+import java.util.concurrent.TimeUnit
 import org.apache.commons.io.FileUtils
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.util.FileSystemUtils
 
 @Suppress("ALL")
@@ -97,6 +98,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
     lateinit var bkRepoClient: BkRepoClient
 
     @Autowired
+    @Qualifier("atomPkgSizeExecutor")
     lateinit var atomPkgSizeExecutor: ThreadPoolTaskExecutor
 
     override fun archiveAtom(
