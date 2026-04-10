@@ -56,3 +56,4 @@ CHANGELOG/bundledVersionLog*.json
 
 pre-*-bkcodeai
 
+src/agent/agent/test/__pycache__/test_agentcli.cpython-314.pyc

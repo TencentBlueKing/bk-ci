@@ -3,6 +3,7 @@ package agentcli
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -138,10 +139,17 @@ func TestInitLang_FallbackToEmpty(t *testing.T) {
 	dir := t.TempDir()
 
 	initLang(dir)
-	// No env vars, no properties, detectPlatformLang returns "" on non-windows
-	// useChinese should be false
-	if useChinese {
-		t.Error("initLang with no language hints should set useChinese = false")
+	// No env vars, no properties file.
+	// On non-windows: detectPlatformLang returns "" → useChinese = false
+	// On windows (Chinese locale): detectPlatformLang returns "zh_CN" → useChinese = true
+	if runtime.GOOS == "windows" {
+		// Windows 上 detectPlatformLang 会读系统 UI 语言，中文系统返回 zh_CN
+		// 此处不对 useChinese 做断言，因为结果取决于系统 locale
+		t.Logf("Windows: useChinese = %v (depends on system locale)", useChinese)
+	} else {
+		if useChinese {
+			t.Error("initLang with no language hints should set useChinese = false")
+		}
 	}
 }
 

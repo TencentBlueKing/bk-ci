@@ -140,6 +140,8 @@ func installService(workDir string) error {
 
 	configureSCMRecovery(serviceName)
 
+	writeInstallType(workDir, "SERVICE")
+
 	printStep(msg("Step 3: starting service ...", "步骤 3: 启动服务 ..."))
 	if out, err := exec.Command("sc.exe", "start", serviceName).CombinedOutput(); err != nil {
 		printWarn(msgf("sc.exe start: %s", "sc.exe start: %s", string(out)))
@@ -254,14 +256,50 @@ func handleStart(workDir string) error {
 		return err
 	}
 
-	if serviceExists(serviceName) {
-		printStep(msgf("Starting service %s ...", "启动服务 %s ...", serviceName))
-		out, err := exec.Command("sc.exe", "start", serviceName).CombinedOutput()
-		if err != nil {
-			return cliErrorf("sc.exe start failed: %s (%v)", "sc.exe start 失败: %s (%v)", string(out), err)
+	mode := readInstallMode(workDir)
+
+	switch mode {
+	case "TASK":
+		// task 模式优先用 schtasks，降级到 service
+		if schtasksExists(serviceName) {
+			printStep(msgf("Starting scheduled task %s ...", "启动计划任务 %s ...", serviceName))
+			if err := startSchtasks(serviceName); err != nil {
+				return err
+			}
+			printStep(msgf("Scheduled task %s started", "计划任务 %s 已启动", serviceName))
+			return nil
 		}
-		printStep(msgf("Service %s started", "服务 %s 已启动", serviceName))
-		return nil
+		if serviceExists(serviceName) {
+			printStep(msgf("Scheduled task not found, starting service %s ...",
+				"计划任务未找到, 启动服务 %s ...", serviceName))
+			out, err := exec.Command("sc.exe", "start", serviceName).CombinedOutput()
+			if err != nil {
+				return cliErrorf("sc.exe start failed: %s (%v)", "sc.exe start 失败: %s (%v)", string(out), err)
+			}
+			printStep(msgf("Service %s started", "服务 %s 已启动", serviceName))
+			return nil
+		}
+
+	default: // SERVICE, SESSION
+		// service/session 模式优先用 sc.exe，降级到 schtasks
+		if serviceExists(serviceName) {
+			printStep(msgf("Starting service %s ...", "启动服务 %s ...", serviceName))
+			out, err := exec.Command("sc.exe", "start", serviceName).CombinedOutput()
+			if err != nil {
+				return cliErrorf("sc.exe start failed: %s (%v)", "sc.exe start 失败: %s (%v)", string(out), err)
+			}
+			printStep(msgf("Service %s started", "服务 %s 已启动", serviceName))
+			return nil
+		}
+		if schtasksExists(serviceName) {
+			printStep(msgf("Service not found, starting scheduled task %s ...",
+				"服务未找到, 启动计划任务 %s ...", serviceName))
+			if err := startSchtasks(serviceName); err != nil {
+				return err
+			}
+			printStep(msgf("Scheduled task %s started", "计划任务 %s 已启动", serviceName))
+			return nil
+		}
 	}
 
 	printWarn(msg("service not found, cannot start", "服务未注册, 无法启动"))
@@ -276,6 +314,10 @@ func handleStop(workDir string) error {
 
 	if serviceExists(serviceName) {
 		stopService(serviceName)
+	}
+	// 结束计划任务正在运行的实例（task 模式）
+	if schtasksExists(serviceName) {
+		_ = exec.Command("schtasks", "/end", "/tn", serviceName).Run()
 	}
 	stopProcesses(workDir)
 	printStep(msg("Agent stopped", "Agent 已停止"))
@@ -329,9 +371,23 @@ func deleteService(name string) {
 }
 
 func cleanupLegacySchtasks(serviceName string) {
-	err := exec.Command("schtasks", "/query", "/tn", serviceName).Run()
-	if err == nil {
+	if schtasksExists(serviceName) {
 		printStep(msgf("Removing legacy scheduled task: %s", "移除旧版计划任务: %s", serviceName))
 		_ = exec.Command("schtasks", "/delete", "/tn", serviceName, "/f").Run()
 	}
+}
+
+// ── schtasks helpers ────────────────────────────────────────────────────
+
+func schtasksExists(name string) bool {
+	err := exec.Command("schtasks", "/query", "/tn", name).Run()
+	return err == nil
+}
+
+func startSchtasks(serviceName string) error {
+	out, err := exec.Command("schtasks", "/run", "/tn", serviceName).CombinedOutput()
+	if err != nil {
+		return cliErrorf("schtasks run failed: %s (%v)", "schtasks run 失败: %s (%v)", strings.TrimSpace(string(out)), err)
+	}
+	return nil
 }
