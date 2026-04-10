@@ -53,6 +53,7 @@ class MakeMoneyService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(MakeMoneyService::class.java)
+        private const val BK_CLOUD_DEV_PROPERTY = "蓝盾云研发"
     }
 
     /**
@@ -81,7 +82,17 @@ class MakeMoneyService @Autowired constructor(
         @JsonProperty("bk_inst_name")
         val bkInstName: String,
         @JsonProperty("start_date")
-        val startDate: String?
+        val startDate: String?,
+        @JsonProperty("property_management_belongs")
+        val propertyManagementBelongs: String?
+    )
+
+    /**
+     * CMDB资产聚合数据，包含启用日期和物管所属
+     */
+    data class CmdbAssetDetail(
+        val commissionDate: String,
+        val propertyManagementBelongs: String
     )
 
     /*
@@ -240,6 +251,35 @@ class MakeMoneyService @Autowired constructor(
             res.ifEmpty { null }?.let { save ->
                 snapshotsDao.createWorkspaceHistory(dslContext, save, lastDay)
             }
+
+            // 对物管所属非"蓝盾云研发"的实例做减免
+            reduceNonBkDevWorkspaces(chunk, cmdbAssetMap, lastDay)
+        }
+    }
+
+    private fun reduceNonBkDevWorkspaces(
+        chunk: List<String>,
+        cmdbAssetMap: Map<String, CmdbAssetDetail>,
+        lastDay: LocalDateTime
+    ) {
+        val nonBkDevNames = chunk.filter { name ->
+            val detail = cmdbAssetMap[name]
+            detail != null &&
+                detail.propertyManagementBelongs.isNotBlank() &&
+                detail.propertyManagementBelongs != BK_CLOUD_DEV_PROPERTY
+        }
+        if (nonBkDevNames.isNotEmpty()) {
+            val targetDate = lastDay.toLocalDate()
+            snapshotsDao.reduceWorkspaceBills(
+                dslContext = dslContext,
+                workspaceNames = nonBkDevNames,
+                startDate = targetDate,
+                endDate = targetDate
+            )
+            logger.info(
+                "Reduced ${nonBkDevNames.size} workspaces " +
+                    "with non-$BK_CLOUD_DEV_PROPERTY property management"
+            )
         }
     }
 
@@ -249,7 +289,7 @@ class MakeMoneyService @Autowired constructor(
      */
     private fun batchUpdateCommissionDateFromRecords(
         chunk: List<String>,
-        cmdbAssetMap: Map<String, String>
+        cmdbAssetMap: Map<String, CmdbAssetDetail>
     ) {
         val workspaces = workspaceDao.limitFetchWorkspace(
             dslContext = dslContext,
@@ -261,27 +301,32 @@ class MakeMoneyService @Autowired constructor(
         }
 
         try {
-            // 筛选出需要更新的工作空间（COMMISSION_DATE为空且CMDB中有对应数据）
             val needUpdateList = workspaces.filter { workspace ->
-                workspace.commissionDate.isNullOrBlank() && !cmdbAssetMap[workspace.name].isNullOrBlank()
+                workspace.commissionDate.isNullOrBlank() &&
+                    !cmdbAssetMap[workspace.name]?.commissionDate.isNullOrBlank()
             }
 
             if (needUpdateList.isEmpty()) {
-                logger.info("No workspace needs to update COMMISSION_DATE in current batch")
+                logger.info(
+                    "No workspace needs to update COMMISSION_DATE in current batch"
+                )
                 return
             }
 
-            // 批量更新
             var updateCount = 0
             needUpdateList.forEach { workspace ->
-                val commissionDate = cmdbAssetMap[workspace.name]
+                val commissionDate = cmdbAssetMap[workspace.name]?.commissionDate
                 if (!commissionDate.isNullOrBlank()) {
-                    workspaceDao.updateCommissionDate(dslContext, workspace.name, commissionDate)
+                    workspaceDao.updateCommissionDate(
+                        dslContext, workspace.name, commissionDate
+                    )
                     updateCount++
                 }
             }
 
-            logger.info("Batch updated COMMISSION_DATE for $updateCount workspaces")
+            logger.info(
+                "Batch updated COMMISSION_DATE for $updateCount workspaces"
+            )
         } catch (e: Exception) {
             logger.error("Failed to batch update COMMISSION_DATE", e)
         }
@@ -383,14 +428,15 @@ class MakeMoneyService @Autowired constructor(
     }
 
     /**
-     * 从CMDB API查询资产详情信息，构建实例名到启用日期的映射
-     * @return Map<String, String> - Key为bk_inst_name（实例名），Value为格式化后的启用日期（YYYY-MM）
+     * 从CMDB API查询资产详情信息，构建实例名到资产详情的映射
+     * @return Map<String, CmdbAssetDetail> - Key为bk_inst_name（实例名），
+     *         Value包含格式化后的启用日期（YYYY-MM）和物管所属
      */
     @Suppress("NestedBlockDepth")
-    fun fetchCmdbAssetInfo(): Map<String, String> {
+    fun fetchCmdbAssetInfo(): Map<String, CmdbAssetDetail> {
         return try {
             logger.info("start fetchCmdbAssetInfo|url:${bkConfig.cmdbAssetDetailUrl}")
-            val resultMap = mutableMapOf<String, String>()
+            val resultMap = mutableMapOf<String, CmdbAssetDetail>()
             var start = 0
             val limit = 500
             var hasMore = true
@@ -400,7 +446,11 @@ class MakeMoneyService @Autowired constructor(
                     mapOf(
                         "bk_biz_id" to (bkConfig.ccBizId ?: 0),
                         "page" to mapOf("start" to start, "limit" to limit),
-                        "fields" to listOf("bk_inst_name", "start_date")
+                        "fields" to listOf(
+                            "bk_inst_name",
+                            "start_date",
+                            "property_management_belongs"
+                        )
                     )
                 )
 
@@ -433,7 +483,10 @@ class MakeMoneyService @Autowired constructor(
                         hasMore = false
                     } else {
                         currentPageData.forEach { asset ->
-                            resultMap[asset.bkInstName] = formatCommissionDate(asset.startDate)
+                            resultMap[asset.bkInstName] = CmdbAssetDetail(
+                                commissionDate = formatCommissionDate(asset.startDate),
+                                propertyManagementBelongs = asset.propertyManagementBelongs ?: ""
+                            )
                         }
 
                         // 如果返回的数据量小于limit，说明已经是最后一页

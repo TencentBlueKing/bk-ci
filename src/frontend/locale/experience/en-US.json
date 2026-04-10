@@ -198,5 +198,9 @@
     "versionCreateTime": "Version Creation Time",
     "bundleIdentifier": "BundleIdentifier",
     "bundleIdentifierPlaceholder": "Unique identifier of the application, e.g., Microsoft.Office.OneNote_8wekyb3d8bbwe",
-    "noEmptyTips": "{0} cannot be empty"
+    "noEmptyTips": "{0} cannot be empty",
+    "experience_env": "Experience Environment",
+    "allow_dev_cloud_access": "Allow DevCloud Access (Within Cloud Desktop)",
+    "allow_public_access": "Allow Public Network Access",
+    "allow_public_access_tip": "Only whitelisted bases can access. For new bases, please contact the assistant to add to whitelist"
 }

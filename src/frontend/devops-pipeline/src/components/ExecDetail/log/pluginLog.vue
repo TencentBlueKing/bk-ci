@@ -123,7 +123,7 @@
 
             downloadAllLink () {
                 const fileName = encodeURI(encodeURI(this.execDetail.pipelineName))
-                return `${API_URL_PREFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?executeCount=1&fileName=${fileName}`
+                return `${API_URL_PREFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?executeCount=${this.postData.currentExe}&fileName=${fileName}`
             },
 
             currentJob () {

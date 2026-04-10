@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.auth.DEVX_HEADER_CDS_TOKEN
 import com.tencent.devops.common.api.pojo.LocaleInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.project.pojo.UserSignatureStatusResponse
-import com.tencent.devops.remotedev.pojo.ClientTips
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
@@ -154,48 +153,6 @@ interface UserRemoteDevResource {
         workspaceName: String
     ): Result<String>
 
-    @Operation(summary = "一键认领求助问题")
-    @GET
-    @Path("/addExpSup")
-    fun addExpSup(
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "工单id", required = true)
-        @QueryParam("id")
-        id: Long,
-        @Parameter(description = "工作空间ID", required = true)
-        @QueryParam("workspaceName")
-        workspaceName: String
-    ): Result<Boolean>
-
-    @Operation(summary = "获取兔小巢用户登录态token")
-    @GET
-    @Path("/txc/token")
-    fun getTxcToken(
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "用户唯一标识", required = true)
-        @QueryParam("openId")
-        openId: String,
-        @Parameter(description = "用户昵称", required = true)
-        @QueryParam("nickName")
-        nickName: String,
-        @Parameter(description = "用户头像", required = true)
-        @QueryParam("avatar")
-        avatar: String
-    ): Result<String>
-
-    @Operation(summary = "一键查询CGS密码")
-    @GET
-    @Path("/queryCgsPwd")
-    fun queryCgsPwd(
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "cgsId", required = true)
-        @QueryParam("cgsId")
-        cgsId: String
-    ): Result<Boolean>
-
     @Operation(summary = "客户端查询是否可以升级")
     @POST
     @Path("/client/upgrade")
@@ -215,16 +172,6 @@ interface UserRemoteDevResource {
         @HeaderParam(DEVX_HEADER_CDS_TOKEN)
         cdsToken: String
     ): Result<WeSecProjectWorkspace?>
-
-    @Operation(summary = "点击进入云桌面时客户端获取加载时Tips")
-    @GET
-    @Path("/client/tips")
-    fun clientTips(
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @QueryParam("projectId")
-        projectId: String?
-    ): Result<List<ClientTips>>
 
     @Operation(summary = "获取云研发项目的云研发审批管理员")
     @GET

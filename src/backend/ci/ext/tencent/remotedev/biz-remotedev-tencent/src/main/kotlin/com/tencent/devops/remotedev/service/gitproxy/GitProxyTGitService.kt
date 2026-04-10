@@ -81,6 +81,7 @@ class GitProxyTGitService @Autowired constructor(
         projectId: String,
         data: LinktgitData
     ): Map<String, Boolean> {
+        permissionService.checkUserManager(userId, projectId)
         val codeProjectUrls = data.codeUrls
         val credType = if (data.credId == null) {
             TGitCredType.OAUTH_USER
@@ -326,8 +327,10 @@ class GitProxyTGitService @Autowired constructor(
     }
 
     fun tgitLinkList(
+        userId: String,
         projectId: String
     ): List<TGitRepoData> {
+        permissionService.checkUserManager(userId, projectId)
         val repos = projectTGitLinkDao.fetch(dslContext, projectId, null)
         if (repos.isEmpty()) {
             return emptyList()
@@ -496,6 +499,7 @@ class GitProxyTGitService @Autowired constructor(
         repoId: Long,
         onlyDelete: Boolean?
     ): Boolean {
+        permissionService.checkUserManager(userId, projectId)
         // 审计
         ActionAuditContext.current()
             .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
@@ -751,6 +755,7 @@ class GitProxyTGitService @Autowired constructor(
         svnProject: Boolean,
         credId: String?
     ): List<TGitNamespace> {
+        permissionService.checkUserManager(userId, projectId)
         val token = TokenBox(client, false).get(
             projectId, if (credId == null) {
                 TGitCredType.OAUTH_USER
@@ -811,6 +816,7 @@ class GitProxyTGitService @Autowired constructor(
         userId: String,
         info: CreateTGitProjectInfo
     ): Boolean {
+        permissionService.checkUserManager(userId, info.projectId)
         val token = TokenBox(client, false).get(
             info.projectId, if (info.credId == null) {
                 TGitCredType.OAUTH_USER
@@ -884,6 +890,7 @@ class GitProxyTGitService @Autowired constructor(
     }
 
     fun reBinding(userId: String, data: ReBindingLinkData) {
+        permissionService.checkUserManager(userId, data.projectId)
         val tokenBox = TokenBox(client, save = true, throwE = true, logE = false)
         val credType = if (data.credId == null) {
             TGitCredType.OAUTH_USER

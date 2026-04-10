@@ -45,6 +45,7 @@ import jakarta.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ExternalResource {
+
     @Operation(summary = "软件安装回调")
     @POST
     @Path("/software_install_callback")

@@ -289,6 +289,17 @@ class WorkspaceJoinDao {
 
         // owner 条件查询（EXISTS 替代 LEFT JOIN 避免行膨胀）
         search.owner?.ifEmpty { null }?.let { owners ->
+            val personalCond = TWorkspace.T_WORKSPACE.OWNER_TYPE
+                .eq(WorkspaceOwnerType.PERSONAL.name)
+                .and(
+                    if (search.onFuzzyMatch) {
+                        TWorkspace.T_WORKSPACE.CREATOR
+                            .likeRegex(owners.joinToString("|"))
+                    } else {
+                        TWorkspace.T_WORKSPACE.CREATOR.`in`(owners)
+                    }
+                )
+
             val sharedOwnerExists = DSL.exists(
                 DSL.selectOne()
                     .from(TWorkspaceShared.T_WORKSPACE_SHARED)
@@ -310,11 +321,21 @@ class WorkspaceJoinDao {
                             )
                     )
             )
-            conditions.add(sharedOwnerExists)
+            conditions.add(personalCond.or(sharedOwnerExists))
         }
 
         // viewers 条件查询（EXISTS 替代 LEFT JOIN 避免行膨胀）
         search.viewers?.ifEmpty { null }?.let { viewers ->
+            val personalCond = TWorkspace.T_WORKSPACE.OWNER_TYPE
+                .eq(WorkspaceOwnerType.PERSONAL.name)
+                .and(
+                    if (search.onFuzzyMatch) {
+                        TWorkspace.T_WORKSPACE.CREATOR
+                            .likeRegex(viewers.joinToString("|"))
+                    } else {
+                        TWorkspace.T_WORKSPACE.CREATOR.`in`(viewers)
+                    }
+                )
 
             val userMatchCond = if (search.onFuzzyMatch) {
                 TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
@@ -339,7 +360,7 @@ class WorkspaceJoinDao {
                             .and(userMatchCond)
                     )
             )
-            conditions.add(sharedViewerExists)
+            conditions.add(personalCond.or(sharedViewerExists))
         }
 
         // machineType 条件查询
@@ -689,15 +710,27 @@ class WorkspaceJoinDao {
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(WorkspaceJoinDao::class.java)
+        private val logger =
+            LoggerFactory.getLogger(WorkspaceJoinDao::class.java)
+
+        @Suppress("SpreadOperator")
         val windowsFullFields = lazy {
-            val fields = TWorkspace.T_WORKSPACE.fields()
-                .plus(TWorkspaceWindows.T_WORKSPACE_WINDOWS.fields())
-                .toMutableList()
-            fields.remove(TWorkspace.T_WORKSPACE.ID)
-            fields.remove(TWorkspace.T_WORKSPACE.WIN_CONFIG_ID)
-            fields.remove(TWorkspaceWindows.T_WORKSPACE_WINDOWS.ID)
-            fields
+            val ws = TWorkspace.T_WORKSPACE
+            val win = TWorkspaceWindows.T_WORKSPACE_WINDOWS
+            val excludeFields = setOf(
+                ws.ID, ws.WIN_CONFIG_ID,
+                ws.YAML, ws.DOCKERFILE,
+                ws.TEMPLATE_ID, ws.URL, ws.BRANCH,
+                ws.YAML_PATH, ws.IMAGE_PATH,
+                ws.WORK_PATH, ws.WORKSPACE_FOLDER,
+                ws.HOST_NAME, ws.GPU, ws.CPU,
+                ws.MEMORY, ws.DISK,
+                ws.PROJECT_NAME, ws.BUSINESS_LINE_NAME,
+                ws.COMMISSION_DATE, ws.PRECI_AGENT_ID,
+                win.ID
+            )
+            ws.fields().plus(win.fields())
+                .filter { it !in excludeFields }
         }.value
     }
 }

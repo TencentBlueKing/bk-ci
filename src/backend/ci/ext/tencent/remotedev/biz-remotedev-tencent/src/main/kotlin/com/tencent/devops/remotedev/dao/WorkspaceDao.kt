@@ -671,7 +671,8 @@ class WorkspaceDao {
                         JsonUtil.getObjectMapper().readValue(self) as List<String>
                     },
                     bakWorkspaceName = bakName,
-                    ip = ip
+                    ip = ip,
+                    coffeeAi = coffeeAi?.let { it != 0.toByte() } ?: false
                 )
             }
         }

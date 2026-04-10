@@ -17,6 +17,7 @@ import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
+import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
@@ -620,10 +621,13 @@ interface ServiceRemoteDevResource {
         appId: Long,
         @Parameter(description = "实例IP", required = true)
         @QueryParam("ip")
-        ip: String,
+        ip: String?,
         @Parameter(description = "是否是录屏灰度", required = true)
         @QueryParam("mediaGary")
-        mediaGary: Boolean?
+        mediaGary: Boolean?,
+        @Parameter(description = "环境ID", required = true)
+        @QueryParam("envUid")
+        envUid: String?
     ): Result<CheckWorkspaceRecordData>
 
     @Deprecated("有了token后这个方法可能不会再使用，观察下如果不使用可以废弃")
@@ -1016,4 +1020,28 @@ interface ServiceRemoteDevResource {
         userId: String,
         data: TGitBindRemotedevData
     ): Result<Map<String, Boolean>>
+
+    @Operation(summary = "龙虾云桌面一键加白")
+    @POST
+    @Path("/openClaw_on")
+    fun openClawOn(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<WorkspaceRegistration?>
+
+    @Operation(summary = "校验是否有权限查看直播")
+    @GET
+    @Path("/check_view_live")
+    fun checkViewLive(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
 }
