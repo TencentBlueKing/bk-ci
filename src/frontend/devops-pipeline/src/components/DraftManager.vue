@@ -480,7 +480,7 @@
                 .left-tit {
                     display: flex;
                     align-items: center;
-                    line-height: 22px;
+                    line-height: 20px;
                 }
                 .version-name {
                     max-width: 110px;
@@ -497,17 +497,22 @@
                 background: #E1ECFF;
                 .update-info {
                     color: #3A84FF;
-                    margin-right: 4px;
                 }
+            }
+            .update-info {
+                margin-right: 6px;
             }
             .options {
                 display: flex;
                 align-items: center;
-                margin-top: 2px;
+                line-height: 20px;
                 .rollback-icon {
                     line-height: 22px;
                     color: #979BA5;
                     margin-left: 12px;
+                }
+                svg {
+                    margin-top: 6px;
                 }
             }
             .update-tip {

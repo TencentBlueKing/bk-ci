@@ -1,7 +1,7 @@
 <template>
     <bk-select
         ref="versionSelector"
-        searchable
+        :searchable="!shouldLoadDraftList"
         :value="value"
         :disabled="isLoading || !editable"
         :loading="isLoading"
@@ -252,6 +252,9 @@
             isActiveBranchVersion () {
                 return this.activeVersion?.isBranchVersion ?? false
             },
+            shouldLoadDraftList () {
+                return this.needDraftList || !!this.draftVersion
+            },
             draftBaseVersionName () {
                 return this.activeVersion?.baseVersionName ?? '--'
             }
@@ -397,8 +400,6 @@
                         this.bottomLoadingOptions.isLoading = true
                     }
                     
-                    // needDraftList 为 true 时，无论是否传入 draftVersion 都会同时加载草稿和正式版本列表
-                    const shouldLoadDraftList = this.needDraftList || !!this.draftVersion
                     const idKey = this.isTemplate ? 'templateId' : 'pipelineId'
                     
                     const baseParams = {
@@ -410,7 +411,8 @@
                     
                     let versions = []
                     
-                    if (shouldLoadDraftList) {
+                    // needDraftList 为 true 时，无论是否传入 draftVersion 都会同时加载草稿和正式版本列表
+                    if (this.shouldLoadDraftList) {
                         const params = {
                             ...baseParams,
                             version: pipelineInfo?.version
