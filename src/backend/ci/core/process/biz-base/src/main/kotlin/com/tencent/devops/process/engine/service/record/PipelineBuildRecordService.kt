@@ -73,7 +73,6 @@ import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.service.PipelineArtifactQualityService
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.ContainerUtils
@@ -106,7 +105,6 @@ import javax.ws.rs.core.Response
 )
 @Service
 class PipelineBuildRecordService @Autowired constructor(
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineTriggerReviewDao: PipelineTriggerReviewDao,
@@ -401,7 +399,25 @@ class PipelineBuildRecordService @Autowired constructor(
         val startTime = buildRecordModel?.startTime?.timestampmilli()
         val endTime = buildRecordModel?.endTime?.timestampmilli()
         val queueTimeCost = startTime?.let { it - queueTime } ?: endTime?.let { it - queueTime }
+        val versionChange = run {
+            if (buildInfo.buildNum == 1 || buildInfo.versionChange == false || buildInfo.debug) {
+                return@run false // 返回 run 块的结果
+            }
 
+            if (buildInfo.versionChange == true) {
+                return@run true
+            }
+
+            val prevBuildInfo = pipelineBuildDao.getBuildByBuildNum(
+                dslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT),
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildNum = buildInfo.buildNum - 1,
+                debugVersion = null
+            )
+
+            prevBuildInfo != null && prevBuildInfo.version != buildInfo.version
+        }
         LogUtils.printCostTimeWE(watcher)
         return ModelRecord(
             id = buildInfo.buildId,
@@ -449,7 +465,8 @@ class PipelineBuildRecordService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 artifactQualityList = buildInfo.artifactQualityList
-            )
+            ),
+            versionChange = versionChange
         )
     }
 
@@ -540,12 +557,6 @@ class PipelineBuildRecordService @Autowired constructor(
         cancelUser: String,
         executeCount: Int
     ) {
-        pipelineBuildDetailService.buildCancel(
-            projectId = projectId,
-            buildId = buildId,
-            buildStatus = buildStatus,
-            cancelUser = cancelUser
-        )
         logger.info("[$buildId]|BUILD_CANCEL|cancelUser=$cancelUser|buildStatus=$buildStatus")
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -707,12 +718,6 @@ class PipelineBuildRecordService @Autowired constructor(
                 recordStages = recordStages, buildStatus = buildStatus, errorMsg = errorMsg
             )
         }
-        pipelineBuildDetailService.buildEnd(
-            projectId = projectId,
-            buildId = buildId,
-            buildStatus = buildStatus,
-            errorMsg = errorMsg
-        )
         val model = getRecordModel(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -733,11 +738,6 @@ class PipelineBuildRecordService @Autowired constructor(
         executeCount: Int,
         cancelUserId: String
     ) {
-        pipelineBuildDetailService.updateBuildCancelUser(
-            projectId = projectId,
-            buildId = buildId,
-            cancelUserId = cancelUserId
-        )
         recordModelDao.updateBuildCancelUser(
             dslContext = dslContext,
             projectId = projectId,

@@ -73,7 +73,7 @@ object PulsarMessageConverterSupport {
                 if (MessageHeaders.ID != key &&
                     MessageHeaders.TIMESTAMP != key
                 ) {
-                    messageBuilder.setHeader(key, value)
+                    messageBuilder.setHeader(key!!, value)
                 }
             }
         }

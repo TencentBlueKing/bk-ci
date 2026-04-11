@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_auth
 
-**文档版本：** 1.0.13
+**文档版本：** 1.0.17
 
 **文档描述：** devops_ci_auth 的数据库文档
 | 表名                  | 说明       |
@@ -29,6 +29,7 @@
 | T_AUTH_OAUTH2_REFRESH_TOKEN | REFRESH_TOKEN 表 |
 | T_AUTH_OAUTH2_SCOPE | 授权范围表 |
 | T_AUTH_OAUTH2_SCOPE_OPERATION | 授权操作信息表 |
+| T_AUTH_PROJECT_RESET_RECORD | 项目权限重置记录表 |
 | T_AUTH_RESOURCE | 资源表 |
 | T_AUTH_RESOURCE_AUTHORIZATION | 资源授权管理表 |
 | T_AUTH_RESOURCE_GROUP | 资源关联用户组表 |
@@ -422,6 +423,30 @@
 |  3   | OPERATION_NAME_CN |   varchar   | 64 |   0    |    N     |  N   |       | 授权操作中文名称  |
 |  4   | OPERATION_NAME_EN |   varchar   | 64 |   0    |    N     |  N   |       | 授权操作英文名称  |
 |  5   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+
+**表名：** <a>T_AUTH_PROJECT_RESET_RECORD</a>
+
+**说明：** 项目权限重置记录表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
+|  2   | TASK_ID |   varchar   | 64 |   0    |    N     |  N   |       | 任务 ID  |
+|  3   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 项目代码  |
+|  4   | RESET_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 重置类型：FULL-完整重置,RESOURCE-资源重置,PERMISSION-权限重置  |
+|  5   | MIGRATE_RESOURCE |   bit   | 1 |   0    |    N     |  N   |   0    | 是否迁移资源  |
+|  6   | FILTER_RESOURCE_TYPES |   text   | 65535 |   0    |    Y     |  N   |       | 过滤的资源类型列表(JSON 格式)  |
+|  7   | FILTER_ACTIONS |   text   | 65535 |   0    |    Y     |  N   |       | 过滤的操作列表(JSON 格式)  |
+|  8   | STATUS |   varchar   | 32 |   0    |    N     |  N   |   PROCESSING    | 状态：PROCESSING-处理中,SUCCESS-成功,FAILED-失败  |
+|  9   | ERROR_MESSAGE |   text   | 65535 |   0    |    Y     |  N   |       | 错误信息  |
+|  10   | START_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 开始时间  |
+|  11   | END_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 结束时间  |
+|  12   | TOTAL_TIME |   bigint   | 20 |   0    |    Y     |  N   |       | 总耗时(毫秒)  |
+|  13   | OPERATOR |   varchar   | 64 |   0    |    Y     |  N   |       | 操作人  |
+|  14   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  15   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
 **表名：** <a>T_AUTH_RESOURCE</a>
 

@@ -5,6 +5,7 @@
   "description": "",
   "dependencies": {
     "@blueking/bkcharts": "^2.0.10",
+    "@blueking/search-select": "0.0.1-beta.2",
     "clipboard": "^2.0.4",
     "codemirror": "5.61.0",
     "core-js": "3.10.0",

@@ -1,0 +1,1586 @@
+package com.tencent.devops.process.service.template.v2
+
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
+import com.tencent.devops.common.api.exception.CustomMessageException
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.TemplateInstanceDescriptor
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
+import com.tencent.devops.common.pipeline.enums.TemplateRefType
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
+import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedErrors
+import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedMsg
+import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedReason
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
+import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_ELEMENT_CHECK_FAILED
+import com.tencent.devops.process.constant.ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION
+import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
+import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.template.TemplateDao
+import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
+import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
+import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
+import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.pojo.event.PipelineTemplateInstanceEvent
+import com.tencent.devops.process.engine.service.PipelineInfoService
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
+import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
+import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
+import com.tencent.devops.process.pojo.pipeline.version.PipelineTemplateInstanceReq
+import com.tencent.devops.process.pojo.template.TemplateInstanceParams
+import com.tencent.devops.process.pojo.template.TemplateInstanceStatus
+import com.tencent.devops.process.pojo.template.TemplateOperationMessage
+import com.tencent.devops.process.pojo.template.TemplateOperationRet
+import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
+import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
+import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceBase
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceCompareResponse
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceItem
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceReleaseInfo
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstancesRequest
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstancesTaskDetail
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstancesTaskResult
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelatedResp
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
+import com.tencent.devops.process.pojo.template.v2.TemplateInstanceType
+import com.tencent.devops.process.service.ParamFacadeService
+import com.tencent.devops.process.service.PipelineInfoFacadeService
+import com.tencent.devops.process.service.PipelineVersionFacadeService
+import com.tencent.devops.process.service.StageTagService
+import com.tencent.devops.process.service.pipeline.PipelineModelParser
+import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
+import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
+import com.tencent.devops.process.service.pipeline.PipelineYamlVersionResolver
+import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
+import com.tencent.devops.process.service.pipeline.version.PipelineVersionManager
+import com.tencent.devops.process.yaml.PipelineYamlService
+import com.tencent.devops.repository.api.ServiceRepositoryResource
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.DuplicateKeyException
+import org.springframework.stereotype.Service
+
+@Service
+@Suppress("LongParameterList")
+class PipelineTemplateInstanceService @Autowired constructor(
+    private val pipelineTemplateInfoService: PipelineTemplateInfoService,
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val pipelineTemplateResourceService: PipelineTemplateResourceService,
+    private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
+    private val templateDao: TemplateDao,
+    private val dslContext: DSLContext,
+    private val templateInstanceItemDao: TemplateInstanceItemDao,
+    private val templateInstanceBaseDao: TemplateInstanceBaseDao,
+    private val templatePipelineDao: TemplatePipelineDao,
+    private val pipelineIdGenerator: PipelineIdGenerator,
+    private val sampleEventDispatcher: SampleEventDispatcher,
+    private val pipelineVersionManager: PipelineVersionManager,
+    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
+    private val pipelineResourceDao: PipelineResourceDao,
+    private val objectMapper: ObjectMapper,
+    private val paramService: ParamFacadeService,
+    private val pipelineVersionFacadeService: PipelineVersionFacadeService,
+    private val pipelineVersionGenerator: PipelineVersionGenerator,
+    private val pipelineYamlService: PipelineYamlService,
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineYamlVersionResolver: PipelineYamlVersionResolver,
+    private val permissionService: PipelineTemplatePermissionService,
+    private val client: Client,
+    private val transferService: PipelineTransferYamlService,
+    private val pipelineTemplateSettingService: PipelineTemplateSettingService,
+    private val pipelineInfoService: PipelineInfoService,
+    private val pipelineModelParser: PipelineModelParser,
+    private val pipelineSettingVersionService: PipelineSettingVersionService,
+    private val pipelineInfoFacadeService: PipelineInfoFacadeService,
+    private val stageTagService: StageTagService,
+) {
+    /*同步创建模板实例*/
+    fun createTemplateInstances(
+        projectId: String,
+        userId: String,
+        templateId: String,
+        version: Long,
+        request: PipelineTemplateInstancesRequest
+    ): TemplateOperationRet {
+        logger.info("template instance creation start $projectId|$userId|$templateId")
+        val permissionCheck = pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.CREATE
+        )
+        if (!permissionCheck) {
+            throw PermissionForbiddenException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = USER_NEED_PIPELINE_X_PERMISSION,
+                    params = arrayOf(AuthPermission.CREATE.getI18n(I18nUtil.getLanguage(userId))),
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
+        }
+        val instances = request.instanceReleaseInfos
+        val successPipelines = mutableListOf<String>()
+        val failurePipelines = mutableListOf<String>()
+        val successPipelineIds = mutableListOf<String>()
+        val failureMessages = mutableMapOf<String, String>()
+
+        instances.forEach { instance ->
+            try {
+                if (instance.pipelineName.isBlank()) {
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_EMPTY,
+                        params = arrayOf(PipelineTemplateInstanceReleaseInfo::pipelineName.name)
+                    )
+                }
+                val instanceCreateReq = PipelineTemplateInstanceReq(
+                    projectId = projectId,
+                    templateId = templateId,
+                    templateVersion = version,
+                    templateRefType = request.templateRefType,
+                    templateRef = request.templateRef,
+                    pipelineName = instance.pipelineName,
+                    buildNo = instance.buildNo,
+                    params = instance.param,
+                    triggerConfigs = instance.triggerConfigs,
+                    overrideTemplateField = instance.overrideTemplateField,
+                    useTemplateSetting = request.useTemplateSettings,
+                    enablePac = request.enablePac,
+                    repoHashId = request.repoHashId,
+                    filePath = instance.filePath,
+                    targetAction = request.targetAction,
+                    targetBranch = request.targetBranch
+                )
+                val deployPipeline = pipelineVersionManager.deployPipeline(
+                    userId = userId,
+                    projectId = projectId,
+                    request = instanceCreateReq
+                )
+                successPipelines.add(instance.pipelineName)
+                successPipelineIds.add(deployPipeline.pipelineId)
+            } catch (ignored: Throwable) {
+                val errorMessage = translateInstanceException(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = instance.pipelineId,
+                    exception = ignored,
+                )
+                failurePipelines.add(instance.pipelineName)
+                failureMessages[instance.pipelineName] = errorMessage.message
+            }
+        }
+        return TemplateOperationRet(
+            0,
+            TemplateOperationMessage(
+                successPipelines = successPipelines,
+                failurePipelines = failurePipelines,
+                failureMessages = failureMessages,
+                successPipelinesId = successPipelineIds
+            ),
+            ""
+        )
+    }
+
+    /*同步更新模板实例*/
+    fun updateTemplateInstances(
+        projectId: String,
+        userId: String,
+        templateId: String,
+        version: Long,
+        request: PipelineTemplateInstancesRequest
+    ): TemplateOperationRet {
+        logger.info("template instance update start $projectId|$userId|$templateId")
+        val permission = AuthPermission.EDIT
+        val canEditMap = pipelinePermissionService.getResourceByPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = permission
+        )
+        val notEditPermissions = request.instanceReleaseInfos.filter {
+            !canEditMap.contains(it.pipelineId)
+        }.map { it.pipelineId }
+        if (notEditPermissions.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                params = arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    notEditPermissions.joinToString(",")
+                )
+            )
+        }
+        val templateResource = pipelineTemplateResourceService.get(
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
+        validateInstanceParamsBeforeUpdate(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            version = version,
+            templateResource = templateResource,
+            instanceReleaseInfos = request.instanceReleaseInfos,
+            baseId = null
+        )
+        val instances = request.instanceReleaseInfos
+        val successPipelines = mutableListOf<String>()
+        val failurePipelines = mutableListOf<String>()
+        val successPipelineIds = mutableListOf<String>()
+        val failureMessages = mutableMapOf<String, String>()
+
+        instances.forEach { instance ->
+            try {
+                if (instance.pipelineName.isBlank()) {
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_EMPTY,
+                        params = arrayOf(
+                            PipelineTemplateInstanceReleaseInfo::pipelineName.name
+                        )
+                    )
+                }
+                val instanceUpdateReq = PipelineTemplateInstanceReq(
+                    projectId = projectId,
+                    templateId = templateId,
+                    templateVersion = version,
+                    templateRefType = request.templateRefType,
+                    templateRef = request.templateRef,
+                    pipelineName = instance.pipelineName,
+                    buildNo = instance.buildNo,
+                    params = instance.param,
+                    triggerConfigs = instance.triggerConfigs,
+                    overrideTemplateField = instance.overrideTemplateField,
+                    useTemplateSetting = request.useTemplateSettings,
+                    enablePac = request.enablePac,
+                    repoHashId = request.repoHashId,
+                    filePath = instance.filePath,
+                    targetAction = request.targetAction,
+                    targetBranch = request.targetBranch,
+                    resetBuildNo = instance.resetBuildNo
+                )
+                val deployPipeline = pipelineVersionManager.deployPipeline(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = instance.pipelineId,
+                    request = instanceUpdateReq
+                )
+                successPipelines.add(instance.pipelineName)
+                successPipelineIds.add(deployPipeline.pipelineId)
+            } catch (ignored: Throwable) {
+                val errorMessage = translateInstanceException(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = instance.pipelineId,
+                    exception = ignored,
+                )
+                failurePipelines.add(instance.pipelineName)
+                failureMessages[instance.pipelineName] =
+                    errorMessage.message
+            }
+        }
+        return TemplateOperationRet(
+            0,
+            TemplateOperationMessage(
+                successPipelines = successPipelines,
+                failurePipelines = failurePipelines,
+                failureMessages = failureMessages,
+                successPipelinesId = successPipelineIds
+            ),
+            ""
+        )
+    }
+
+    /*异步创建流水线模板实例*/
+    fun asyncCreateTemplateInstances(
+        projectId: String,
+        userId: String,
+        templateId: String,
+        version: Long,
+        request: PipelineTemplateInstancesRequest
+    ): String {
+        logger.info(
+            "async template instance creation start $projectId|$userId|$templateId|$version|$request"
+        )
+        val permissionCheck = pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.CREATE
+        )
+        if (!permissionCheck) {
+            throw PermissionForbiddenException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = USER_NEED_PIPELINE_X_PERMISSION,
+                    params = arrayOf(AuthPermission.CREATE.getI18n(I18nUtil.getLanguage(userId))),
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
+        }
+        request.instanceReleaseInfos.forEach { instance ->
+            if (instance.pipelineName.isBlank()) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                    params = arrayOf(PipelineTemplateInstanceReleaseInfo::pipelineName.name)
+                )
+            }
+        }
+        pipelineTemplateResourceService.get(projectId, templateId, version)
+        val instances = request.instanceReleaseInfos.map {
+            it.copy(pipelineId = pipelineIdGenerator.getNextId())
+        }
+        val baseId = UUIDUtil.generate()
+
+        val pipelineIds = instances.map { it.pipelineId }.toSet()
+        val templateInstanceItems = templateInstanceItemDao.getTemplateInstanceItemListByPipelineIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineIds = pipelineIds
+        )
+        if (!templateInstanceItems.isNullOrEmpty()) {
+            val pipelineNames = templateInstanceItems.map { it.pipelineName }
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_PIPELINE_IS_INSTANCING,
+                params = arrayOf(JsonUtil.toJson(pipelineNames))
+            )
+        }
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            templateInstanceBaseDao.createTemplateInstanceBase(
+                dslContext = context,
+                baseId = baseId,
+                templateId = templateId,
+                templateVersion = version.toString(),
+                useTemplateSettingsFlag = request.useTemplateSettings,
+                projectId = projectId,
+                totalItemNum = instances.size,
+                status = TemplateInstanceStatus.INIT.name,
+                userId = userId,
+                pac = request.enablePac,
+                targetAction = request.targetAction?.name,
+                type = TemplateInstanceType.CREATE.name,
+                repoHashId = request.repoHashId,
+                targetBranch = request.targetBranch,
+                description = request.description,
+                templateRefType = request.templateRefType,
+                templateRef = request.templateRef
+            )
+            templateInstanceItemDao.createTemplateInstanceItemsV2(
+                dslContext = context,
+                projectId = projectId,
+                baseId = baseId,
+                instances = instances,
+                status = TemplateInstanceStatus.INIT.name,
+                userId = userId
+            )
+        }
+        sampleEventDispatcher.dispatch(
+            PipelineTemplateInstanceEvent(
+                userId = userId,
+                projectId = projectId,
+                templateId = templateId,
+                baseId = baseId,
+                templateInstanceType = TemplateInstanceType.CREATE
+            )
+        )
+        return baseId
+    }
+
+    /*异步更新模板实例*/
+    fun asyncUpdateTemplateInstances(
+        projectId: String,
+        userId: String,
+        templateId: String,
+        version: Long,
+        request: PipelineTemplateInstancesRequest
+    ): String {
+        logger.info("asyncUpdateTemplateInstances [$projectId|$userId|$templateId|$version")
+        val permission = AuthPermission.EDIT
+        val canEditMap = pipelinePermissionService.getResourceByPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = permission
+        )
+        val notEditPermissions = request.instanceReleaseInfos.filter {
+            !canEditMap.contains(it.pipelineId)
+        }.map { it.pipelineId }
+        if (notEditPermissions.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                params = arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    notEditPermissions.joinToString(",")
+                )
+            )
+        }
+        val templateResource = pipelineTemplateResourceService.get(
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
+        val instances = request.instanceReleaseInfos
+        val baseId = UUIDUtil.generate()
+        validateInstanceParamsBeforeUpdate(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            version = version,
+            templateResource = templateResource,
+            instanceReleaseInfos = request.instanceReleaseInfos,
+            baseId = baseId
+        )
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            templateInstanceBaseDao.createTemplateInstanceBase(
+                dslContext = context,
+                baseId = baseId,
+                templateId = templateId,
+                templateVersion = templateResource.version.toString(),
+                useTemplateSettingsFlag = request.useTemplateSettings,
+                projectId = projectId,
+                totalItemNum = instances.size,
+                status = TemplateInstanceStatus.INIT.name,
+                userId = userId,
+                pac = request.enablePac,
+                targetAction = request.targetAction?.name,
+                type = TemplateInstanceType.UPDATE.name,
+                description = request.description,
+                repoHashId = request.repoHashId,
+                targetBranch = request.targetBranch,
+                templateRefType = request.templateRefType,
+                templateRef = request.templateRef
+            )
+            templateInstanceItemDao.createTemplateInstanceItemsV2(
+                dslContext = context,
+                projectId = projectId,
+                baseId = baseId,
+                instances = instances,
+                status = TemplateInstanceStatus.INIT.name,
+                userId = userId
+            )
+            pipelineTemplateRelatedService.updateStatus(
+                transactionContext = context,
+                projectId = projectId,
+                pipelineIds = instances.map { it.pipelineId },
+                status = TemplatePipelineStatus.UPDATING
+            )
+        }
+        sampleEventDispatcher.dispatch(
+            PipelineTemplateInstanceEvent(
+                userId = userId,
+                projectId = projectId,
+                templateId = templateId,
+                baseId = baseId,
+                templateInstanceType = TemplateInstanceType.UPDATE
+            )
+        )
+        return baseId
+    }
+
+    private fun validateInstanceParamsBeforeUpdate(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        version: Long,
+        instanceReleaseInfos: List<PipelineTemplateInstanceReleaseInfo>,
+        templateResource: PipelineTemplateResource,
+        baseId: String?
+    ) {
+        val pipelineIds = instanceReleaseInfos.mapNotNull { releaseInfo ->
+            releaseInfo.pipelineId.takeIf { it.isNotBlank() }
+        }.toSet()
+        if (pipelineIds.isEmpty()) {
+            return
+        }
+        // 实例化前流水线参数
+        val beforePipelineParamMap = listTemplateInstancesParams(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            version = version,
+            pipelineIds = pipelineIds
+        )
+        if (templateResource.model !is Model) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_TYPE_MODEL_TYPE_NOT_MATCH
+            )
+        }
+        val templateModel = templateResource.model as Model
+        val templateParams = templateModel.getTriggerContainer().params
+        val isModifyParamsResetToDefault = instanceReleaseInfos
+            .filter { it.pipelineId.isNotBlank() }
+            .all { releaseInfo ->
+                val instanceParams = releaseInfo.param
+                if (instanceParams.isNullOrEmpty()) {
+                    return@all false
+                }
+                val beforePipelineParams = beforePipelineParamMap[releaseInfo.pipelineId]?.param
+                isModifyParamValueEqualToDefault(
+                    templateParams = templateParams,
+                    instanceParams = instanceParams,
+                    beforeInstanceParams = beforePipelineParams ?: emptyList()
+                )
+            }
+        if (isModifyParamsResetToDefault) {
+            logger.warn(
+                "instance params reset to template defaults|" +
+                    "$projectId|$userId|$templateId|$version|$baseId|${instanceReleaseInfos.size}"
+            )
+        }
+    }
+
+    /**
+     * 检查实例化流水线修改的参数是否全部重置为模板默认值
+     *
+     * @param templateParams 模板参数
+     * @param instanceParams 实例化参数
+     * @param beforeInstanceParams 实例化前参数
+     */
+    private fun isModifyParamValueEqualToDefault(
+        templateParams: List<BuildFormProperty>,
+        instanceParams: List<BuildFormProperty>,
+        beforeInstanceParams: List<BuildFormProperty>
+    ): Boolean {
+        val templateParamMap = templateParams.associateBy { it.id }
+        val instanceParamMap = instanceParams.associateBy { it.id }
+        val modifyParams = beforeInstanceParams.filter { beforeInstanceParam ->
+            val instanceParam = instanceParamMap[beforeInstanceParam.id]
+            val templateParam = templateParamMap[beforeInstanceParam.id]
+            instanceParam != null && templateParam != null &&
+                beforeInstanceParam.defaultValue != instanceParam.defaultValue
+        }
+        return if (modifyParams.isEmpty()) {
+            // 值都没有修改
+            false
+        } else {
+            modifyParams.all { beforeInstanceParam ->
+                val instanceParam = instanceParamMap[beforeInstanceParam.id]
+                val templateParam = templateParamMap[beforeInstanceParam.id]
+                // 值修改了,检查是否重置为模板默认值
+                return instanceParam!!.defaultValue == templateParam!!.defaultValue
+            }
+        }
+    }
+
+    fun translateInstanceException(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        exception: Throwable
+    ): PipelineCheckFailedReason {
+        logger.warn("Failed to instance template|$userId|$projectId|$pipelineId|${exception.message}")
+        return when (exception) {
+            is DuplicateKeyException -> {
+                PipelineCheckFailedMsg("duplicate!")
+            }
+
+            is ErrorCodeException -> {
+                val message = I18nUtil.generateResponseDataObject(
+                    messageCode = exception.errorCode,
+                    params = exception.params,
+                    data = null,
+                    defaultMessage = exception.defaultMessage
+                ).message ?: exception.defaultMessage ?: "unknown!"
+                // ERROR_PIPELINE_ELEMENT_CHECK_FAILED输出的是一个json,需要格式化输出
+                if (exception.errorCode == ERROR_PIPELINE_ELEMENT_CHECK_FAILED) {
+                    JsonUtil.to(message, PipelineCheckFailedErrors::class.java)
+                } else {
+                    PipelineCheckFailedMsg(message)
+                }
+            }
+
+            else -> {
+                PipelineCheckFailedMsg(exception.message ?: "template instance fail")
+            }
+        }
+    }
+
+    @Suppress("CyclomaticComplexMethod", "LongMethod")
+    fun listTemplateInstances(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        pipelineName: String?,
+        updater: String?,
+        status: TemplatePipelineStatus?,
+        templateVersion: Long?,
+        repoHashId: String?,
+        sortType: TemplateSortTypeEnum? = null,
+        sortDesc: Boolean = true,
+        page: Int,
+        pageSize: Int
+    ): SQLPage<PipelineTemplateRelatedResp> {
+        // 1. 参数校验和权限检查
+        if (templateId.isBlank()) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf("templateId")
+            )
+        }
+        val templateInfo = pipelineTemplateInfoService.get(projectId, templateId)
+
+        // 2. 分页参数转换
+        val (offset, limit) = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+
+        // 3. 获取用户权限信息
+        val editablePipelines = pipelinePermissionService.getResourceByPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.EDIT
+        )
+
+        // 4. 处理代码库过滤
+        val repoFilteredPipelineIds = repoHashId?.let { repoId ->
+            try {
+                pipelineYamlService.getAllYamlPipeline(projectId, repoId).map { it.pipelineId }
+            } catch (e: Exception) {
+                logger.warn("Failed to get pipelines for repo [$repoId] in project [$projectId]", e)
+                emptyList()
+            }
+        } ?: emptyList()
+
+        // 5. 查询模板关联的流水线记录
+        val pipelineRecords = pipelineTemplateRelatedService.listSimple(
+            projectId = projectId,
+            templateId = templateId,
+            pipelineName = pipelineName,
+            updater = updater,
+            templateVersion = templateVersion,
+            status = status,
+            pipelineIds = repoFilteredPipelineIds,
+            instanceTypeEnum = PipelineInstanceTypeEnum.CONSTRAINT,
+            limit = limit,
+            offset = offset,
+            sortType = sortType,
+            sortDesc = sortDesc
+        )
+
+        // 6. 获取总数
+        val totalCount = pipelineTemplateRelatedService.countSimple(
+            projectId = projectId,
+            templateId = templateId,
+            pipelineName = pipelineName,
+            updater = updater,
+            templateVersion = templateVersion,
+            status = status,
+            pipelineIds = repoFilteredPipelineIds,
+            instanceTypeEnum = PipelineInstanceTypeEnum.CONSTRAINT
+        )
+
+        // 7. 如果没有数据，直接返回
+        if (pipelineRecords.isEmpty()) {
+            return SQLPage(count = 0L, records = emptyList())
+        }
+
+        // 8. 批量获取流水线相关信息
+        val pipelineIds = pipelineRecords.map { it.pipelineId }
+        val pipelineVersionNameMap = pipelineRepositoryService.getLatestVersionNames(
+            projectId = projectId,
+            pipelineIds = pipelineIds
+        )
+
+        val yamlPipelineInfoList = try {
+            pipelineYamlService.listByPipelineIds(
+                projectId = projectId,
+                pipelineIds = pipelineIds
+            )
+        } catch (e: Exception) {
+            logger.warn("Failed to get yaml pipeline info for project [$projectId]", e)
+            emptyList()
+        }
+        val yamlPipelineMap = yamlPipelineInfoList.associateBy { it.pipelineId }
+
+        val repoAliasNameMap = try {
+            val repoHashIds = yamlPipelineInfoList.map { it.repoHashId }.toSet()
+            if (repoHashIds.isNotEmpty()) {
+                client.get(ServiceRepositoryResource::class)
+                    .listRepoByIds(repoHashIds).data?.associateBy(
+                        { it.repoHashId!! },
+                        { it.aliasName }
+                    ) ?: emptyMap()
+            } else {
+                emptyMap()
+            }
+        } catch (e: Exception) {
+            logger.warn("Failed to get repo alias names for project [$projectId]", e)
+            emptyMap()
+        }
+
+        // 获取模版最新的正式版本
+        val latestReleaseResource = pipelineTemplateResourceService.getLatestReleasedResource(
+            projectId = projectId,
+            templateId = templateId
+        )
+        val latestReleaseVersion = if (templateInfo.mode == TemplateType.CONSTRAINT) {
+            latestReleaseResource?.srcTemplateVersion
+        } else {
+            latestReleaseResource?.version
+        } ?: templateInfo.releasedVersion
+
+        // 约束模式下,T_TEMPLATE_PIPELINE中的version存储的是源模版version
+        val templateVersionMap = try {
+            if (templateInfo.mode == TemplateType.CONSTRAINT) {
+                val templateVersions = pipelineTemplateResourceService.getTemplateVersions(
+                    commonCondition = PipelineTemplateResourceCommonCondition(
+                        projectId = projectId,
+                        templateId = templateId,
+                        srcTemplateVersions = pipelineRecords.map { it.version }
+                    )
+                )
+                templateVersions.associateBy { it.srcTemplateVersion?.toLong() ?: 0L }
+            } else {
+                emptyMap()
+            }
+        } catch (e: Exception) {
+            logger.warn("Failed to get template version mapping for constraint template [$projectId|$templateId]", e)
+            emptyMap()
+        }
+
+        // 10. 构建响应数据
+        val results = pipelineRecords.map { record ->
+            val yamlPipelineInfo = yamlPipelineMap[record.pipelineId]
+
+            // 计算最终状态
+            val finalStatus = when {
+                record.status == null -> TemplatePipelineStatus.UPDATED
+                record.status == TemplatePipelineStatus.UPDATED &&
+                    record.version != latestReleaseVersion -> TemplatePipelineStatus.PENDING_UPDATE
+
+                else -> record.status!!
+            }
+
+            // 获取实际版本信息
+            val targetVersion = templateVersionMap[record.version]
+            val (actualVersion, actualVersionName) = if (targetVersion != null) {
+                Pair(targetVersion.version.toLong(), targetVersion.versionName)
+            } else {
+                Pair(record.version, record.versionName)
+            }
+
+            PipelineTemplateRelatedResp(
+                templateId = record.templateId,
+                pipelineId = record.pipelineId,
+                pipelineName = record.pipelineName,
+                pipelineVersion = record.pipelineVersion,
+                pipelineVersionName = pipelineVersionNameMap[record.pipelineId] ?: "init",
+                fromTemplateVersion = actualVersion,
+                fromTemplateVersionName = actualVersionName,
+                canEdit = editablePipelines.contains(record.pipelineId),
+                status = finalStatus,
+                enabledPac = yamlPipelineInfo != null,
+                repoHashId = yamlPipelineInfo?.repoHashId,
+                repoAliasName = yamlPipelineInfo?.repoHashId?.let { repoAliasNameMap[it] },
+                pullRequestUrl = record.pullRequestUrl,
+                instanceErrorInfo = record.instanceErrorInfo,
+                updater = record.updater,
+                updateTime = record.updatedTime
+            )
+        }
+        return SQLPage(count = totalCount.toLong(), records = results)
+    }
+
+    fun listTemplateInstancesParams(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        version: Long,
+        pipelineIds: Set<String>
+    ): Map<String, TemplateInstanceParams> {
+        val templateResource = pipelineTemplateResourceService.get(
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
+        val templateModel = templateResource.model
+        if (templateModel !is Model) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_TYPE_MODEL_TYPE_NOT_MATCH
+            )
+        }
+        val pipelineId2Name = pipelineRepositoryService.listPipelineNameByIds(
+            projectId = projectId,
+            pipelineIds = pipelineIds
+        )
+        val pipelineId2Model = pipelineResourceDao.listLatestModelResource(
+            dslContext = dslContext,
+            pipelineIds = pipelineIds,
+            projectId = projectId
+        )?.associate { resource ->
+            val model: Model = objectMapper.readValue(resource.value3())
+            resource.value1() to model
+        } ?: emptyMap()
+        val pipelineCurrentBuildNos = pipelineBuildSummaryDao.getSummaries(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineIds = pipelineIds
+        ).associate { it.pipelineId to it.buildNo }
+        // 获取流水线yaml信息
+        val pipelineYamlInfoList = pipelineYamlService.listByPipelineIds(
+            projectId = projectId,
+            pipelineIds = pipelineIds.toList()
+        )
+        val yamlPipelineMap = pipelineYamlInfoList.associateBy { it.pipelineId }
+        // 增加缓存,防止相同的版本重复解析
+        val templateResourceCache = mutableMapOf<String, PipelineTemplateResource>()
+        // 解析模版的参数,主要是为了获取模版的options字段,然后填充给实例化的options
+        val templateParams = paramService.filterParams(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = null,
+            params = templateModel.getTriggerContainer().params
+        )
+
+        return try {
+            pipelineId2Model.map {
+                val pipelineId = it.key
+                val model = it.value
+                val template = model.template
+                // 新版模版实例化
+                if (template != null) {
+                    listTemplateInstancesParamsByDescriptor(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        templateDescriptor = template,
+                        pipelineModel = model,
+                        templateModel = templateModel,
+                        templateResourceCache = templateResourceCache,
+                        pipelineCurrentBuildNos = pipelineCurrentBuildNos,
+                        templateParams = templateParams,
+                        pipelineId2Name = pipelineId2Name,
+                        yamlPipelineMap = yamlPipelineMap
+                    )
+                } else {
+                    listTemplateInstancesParamsByRelated(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        pipelineModel = model,
+                        templateParams = templateParams,
+                        templateModel = templateModel,
+                        pipelineCurrentBuildNos = pipelineCurrentBuildNos,
+                        pipelineId2Name = pipelineId2Name,
+                        yamlPipelineMap = yamlPipelineMap
+                    )
+                }
+            }.toMap()
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to list pipeline params - [$projectId|$userId|$templateId]", ignored)
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.FAIL_TO_LIST_TEMPLATE_PARAMS
+            )
+        }
+    }
+
+    private fun listTemplateInstancesParamsByDescriptor(
+        projectId: String,
+        pipelineId: String,
+        templateDescriptor: TemplateInstanceDescriptor,
+        pipelineModel: Model,
+        templateModel: Model,
+        templateResourceCache: MutableMap<String, PipelineTemplateResource>,
+        pipelineCurrentBuildNos: Map<String, Int>,
+        templateParams: List<BuildFormProperty>,
+        pipelineId2Name: Map<String, String>,
+        yamlPipelineMap: Map<String, PipelineYamlInfo>
+    ): Pair<String, TemplateInstanceParams> {
+        // ID的方式,在保存的时候,存储的是完整的实例化model,所以这里可以直接使用pipelineModel,减少模版查询
+        val instanceModel = if (templateDescriptor.templateRefType == TemplateRefType.ID) {
+            pipelineModel
+        } else {
+            val templateCacheKey = "${templateDescriptor.templatePath}_${templateDescriptor.templateRef}"
+            val oldTemplateResource = templateResourceCache.getOrPut(templateCacheKey) {
+                pipelineModelParser.parseTemplateDescriptor(
+                    projectId = projectId,
+                    descriptor = templateDescriptor
+                )
+            }
+            TemplateInstanceUtil.instanceModel(
+                model = pipelineModel,
+                templateResource = oldTemplateResource
+            )
+        }
+        val instanceTriggerContainer = instanceModel.getTriggerContainer()
+        val instanceBuildNoObj = instanceTriggerContainer.buildNo?.copy(
+            currentBuildNo = pipelineCurrentBuildNos[pipelineId]
+        )
+
+        val instanceParams = TemplateInstanceUtil.mergeTemplateOptions(
+            projectId = projectId,
+            templateParams = templateParams,
+            pipelineParams = instanceTriggerContainer.params
+        )
+        return pipelineId to TemplateInstanceParams(
+            pipelineId = pipelineId,
+            pipelineName = pipelineId2Name[pipelineId] ?: "",
+            buildNo = instanceBuildNoObj,
+            param = instanceParams.onEach { p -> p.name = p.name ?: p.id },
+            repoHashId = yamlPipelineMap[pipelineId]?.repoHashId,
+            filePath = yamlPipelineMap[pipelineId]?.filePath,
+            triggerElements = pipelineModel.getTriggerContainer().elements,
+            overrideTemplateField =
+                pipelineModel.overrideTemplateField ?: TemplateInstanceField.initFromTemplate(model = templateModel)
+        )
+    }
+
+    private fun listTemplateInstancesParamsByRelated(
+        projectId: String,
+        pipelineId: String,
+        pipelineModel: Model,
+        templateModel: Model,
+        templateParams: List<BuildFormProperty>,
+        pipelineCurrentBuildNos: Map<String, Int>,
+        pipelineId2Name: Map<String, String>,
+        yamlPipelineMap: Map<String, PipelineYamlInfo>
+    ): Pair<String, TemplateInstanceParams> {
+        val overrideTemplateField = TemplateInstanceField.initFromTemplate(model = templateModel)
+        val instanceTriggerContainer = pipelineModel.getTriggerContainer()
+        val instanceParams = TemplateInstanceUtil.mergeTemplateOptions(
+            projectId = projectId,
+            templateParams = templateParams,
+            pipelineParams = instanceTriggerContainer.params
+        )
+        val instanceBuildNoObj = instanceTriggerContainer.buildNo?.copy(
+            currentBuildNo = pipelineCurrentBuildNos[pipelineId]
+        )
+        return pipelineId to TemplateInstanceParams(
+            pipelineId = pipelineId,
+            pipelineName = pipelineId2Name[pipelineId] ?: "",
+            buildNo = instanceBuildNoObj,
+            param = instanceParams.onEach { p -> p.name = p.name ?: p.id },
+            repoHashId = yamlPipelineMap[pipelineId]?.repoHashId,
+            filePath = yamlPipelineMap[pipelineId]?.filePath,
+            triggerElements = pipelineModel.getTriggerContainer().elements,
+            overrideTemplateField = overrideTemplateField
+        )
+    }
+
+    fun getTemplateParamsById(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        version: Long
+    ): TemplateInstanceParams {
+        permissionService.checkPipelineTemplatePermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW,
+            templateId = templateId
+        )
+        val templateResource = pipelineTemplateResourceService.get(
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
+        val templateModel = templateResource.model
+        if (templateModel !is Model) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_TYPE_MODEL_TYPE_NOT_MATCH
+            )
+        }
+        val triggerContainer = templateModel.getTriggerContainer()
+        val instanceParams = paramService.filterParams(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = null,
+            params = triggerContainer.params
+        )
+        // 返回给前端,哪些字段流水线可以自定义
+        val overrideTemplateField = TemplateInstanceField.initFromTemplate(
+            model = templateModel
+        )
+        return TemplateInstanceParams(
+            pipelineId = "",
+            pipelineName = "",
+            buildNo = triggerContainer.buildNo,
+            // 历史数据,流水线保存时,如果变量别名为null,会设置成id
+            param = instanceParams.onEach { it.name = it.name ?: it.id },
+            triggerElements = triggerContainer.elements,
+            overrideTemplateField = overrideTemplateField
+        )
+    }
+
+    fun getTemplateParamsByRef(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        ref: String
+    ): TemplateInstanceParams {
+        permissionService.checkPipelineTemplatePermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW,
+            templateId = templateId
+        )
+        val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
+            projectId = projectId,
+            pipelineId = templateId,
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_ENABLE_PAC
+        )
+        val pipelineYamlVersion = pipelineYamlVersionResolver.resolveTemplateRefVersion(
+            projectId = projectId,
+            repoHashId = pipelineYamlInfo.repoHashId,
+            filePath = pipelineYamlInfo.filePath,
+            ref = ref
+        )
+        return getTemplateParamsById(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            version = pipelineYamlVersion.version.toLong()
+        )
+    }
+
+    fun preFetchTemplateInstance(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        version: Long,
+        request: PipelineTemplateInstancesRequest
+    ): List<PrefetchReleaseResult> {
+        return pipelineVersionGenerator.batchPreFetchInstanceVersion(
+            projectId = projectId,
+            templateId = templateId,
+            version = version,
+            request = request
+        )
+    }
+
+    fun getTemplateInstanceTaskResult(
+        projectId: String,
+        baseId: String
+    ): PipelineTemplateInstancesTaskResult {
+        val instanceBase = templateInstanceBaseDao.getTemplateInstanceBase(
+            dslContext = dslContext,
+            projectId = projectId,
+            baseId = baseId
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_TEMPLATE_INSTANCE_NOT_EXISTS,
+            params = arrayOf(baseId)
+        )
+        val failedTemplateInstances = templateInstanceItemDao.listTemplateInstanceItemByBaseIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            baseIds = listOf(baseId),
+            statusList = listOf(TemplateInstanceStatus.FAILED.name),
+            page = 1,
+            pageSize = PageUtil.MAX_PAGE_SIZE
+        )
+        val errorMessages = failedTemplateInstances.associate {
+            it.pipelineName to (it.errorMessage ?: "")
+        }
+        return PipelineTemplateInstancesTaskResult(
+            baseId = baseId,
+            projectId = projectId,
+            templateId = instanceBase.templateId,
+            templateVersion = instanceBase.templateVersion,
+            status = instanceBase.status,
+            totalItemNum = instanceBase.totalItemNum,
+            successItemNum = instanceBase.successItemNum,
+            failItemNum = instanceBase.failItemNum,
+            errorMessages = errorMessages,
+            pullRequestUrl = instanceBase.pullRequestUrl
+        )
+    }
+
+    fun listTemplateInstanceTask(
+        projectId: String,
+        templateId: String,
+        statusList: List<String>?,
+    ): List<PipelineTemplateInstanceBase> {
+        return templateInstanceBaseDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId,
+            statusList = statusList
+        )
+    }
+
+    fun retryTemplateInstanceTask(
+        userId: String,
+        projectId: String,
+        baseId: String
+    ): String {
+        val taskDetail = getTemplateInstanceTaskDetail(
+            projectId = projectId,
+            baseId = baseId,
+            statusList = listOf(TemplateInstanceStatus.FAILED.name)
+        )
+        return with(taskDetail) {
+            if (instanceType == TemplateInstanceType.CREATE) {
+                asyncCreateTemplateInstances(
+                    userId = userId,
+                    projectId = projectId,
+                    templateId = templateId,
+                    version = version,
+                    request = request
+                )
+            } else {
+                asyncUpdateTemplateInstances(
+                    userId = userId,
+                    projectId = projectId,
+                    templateId = templateId,
+                    version = version,
+                    request = request
+                )
+            }
+        }
+    }
+
+    fun getTemplateInstanceTaskDetail(
+        projectId: String,
+        baseId: String,
+        statusList: List<String>?
+    ): PipelineTemplateInstancesTaskDetail {
+        val instanceBase = templateInstanceBaseDao.getTemplateInstanceBase(
+            dslContext = dslContext,
+            projectId = projectId,
+            baseId = baseId
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_TEMPLATE_INSTANCE_NOT_EXISTS,
+            params = arrayOf(baseId)
+        )
+        val templateInstanceItems = templateInstanceItemDao.listTemplateInstanceItemByBaseIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            baseIds = listOf(baseId),
+            statusList = statusList,
+            page = 1,
+            pageSize = PageUtil.MAX_PAGE_SIZE
+        )
+        val instanceReleaseInfos = templateInstanceItems.map {
+            PipelineTemplateInstanceReleaseInfo(
+                pipelineId = it.pipelineId,
+                pipelineName = it.pipelineName,
+                buildNo = it.buildNo,
+                param = it.params,
+                triggerConfigs = it.triggerConfigs,
+                filePath = it.filePath,
+                overrideTemplateField = it.overrideTemplateField
+            )
+        }
+        val request = with(instanceBase) {
+            PipelineTemplateInstancesRequest(
+                templateRefType = templateRefType,
+                templateRef = templateRef,
+                useTemplateSettings = useTemplateSetting,
+                enablePac = pac,
+                description = description,
+                targetAction = targetAction,
+                repoHashId = repoHashId,
+                targetBranch = targetBranch,
+                instanceReleaseInfos = instanceReleaseInfos,
+            )
+        }
+        return PipelineTemplateInstancesTaskDetail(
+            projectId = instanceBase.projectId,
+            templateId = instanceBase.templateId,
+            instanceType = instanceBase.type,
+            version = instanceBase.templateVersion,
+            request = request
+        )
+    }
+
+    /**
+     * 比较模板YAML和流水线实例YAML之间的差异
+     * 支持指定版本和是否使用模板设置
+     */
+    fun compareTemplateAndPipelineYaml(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        templateVersion: Long,
+        pipelineId: String,
+        pipelineVersion: Int,
+        useTemplateSettings: Boolean
+    ): PipelineTemplateInstanceCompareResponse {
+        // 检查模板查看权限
+        permissionService.checkPipelineTemplatePermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW,
+            templateId = templateId
+        )
+        val pipelineInfo = pipelineInfoService.getPipelineInfo(projectId, pipelineId) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+            params = arrayOf(pipelineId)
+        )
+        // 获取指定模板版本的资源
+        val templateResource = pipelineTemplateResourceService.get(
+            projectId = projectId,
+            templateId = templateId,
+            version = templateVersion
+        )
+        val templateModel = templateResource.model
+        if (templateModel !is Model) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_TYPE_MODEL_TYPE_NOT_MATCH
+            )
+        }
+        // 获取指定流水线版本的完整model和setting
+        val pipelineModelAndSetting = pipelineVersionFacadeService.getVersion(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = pipelineVersion
+        ).modelAndSetting
+
+        val overrideTemplateField = pipelineModelAndSetting.model.overrideTemplateField
+            ?: TemplateInstanceField.initFromTemplate(model = templateModel)
+        // 模版常量和只读变量不能被自定义,需要移出
+        val notOverrideParamIds = templateModel.getTriggerContainer().params
+            .filter { it.constant == true || !it.required }.map { it.id }
+            .toSet()
+        val overrideParamIds = overrideTemplateField.paramIds?.toMutableList()
+        overrideParamIds?.removeAll(notOverrideParamIds)
+        val newOverrideTemplateField = overrideTemplateField.copy(
+            paramIds = overrideParamIds
+        )
+
+        // 根据当前流水线model,生成实例化model
+        val instanceModel = getInstanceModel(
+            pipelineModel = pipelineModelAndSetting.model,
+            templateResource = templateResource,
+            pipelineInfo = pipelineInfo,
+            overrideTemplateField = newOverrideTemplateField
+        )
+        val instanceSetting = getInstanceSetting(
+            projectId = projectId,
+            pipelineInfo = pipelineInfo,
+            templateResource = templateResource,
+            useTemplateSettings = useTemplateSettings,
+            overrideTemplateField = newOverrideTemplateField
+        )
+
+        pipelineModelAndSetting.model.template = null
+        // 使用修改后的modelAndSetting转换为YAML
+        val pipelineYaml = transferService.transfer(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            actionType = TransferActionType.FULL_MODEL2YAML,
+            data = TransferBody(modelAndSetting = pipelineModelAndSetting)
+        ).yamlWithVersion?.yamlStr ?: ""
+
+        // 对比需要使用完整的yaml,不需要转换成extends关键字
+        instanceModel.template = null
+        val newModelAndSetting = PipelineModelAndSetting(
+            model = instanceModel,
+            setting = instanceSetting
+        )
+        val newPipelineYaml = transferService.transfer(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            actionType = TransferActionType.FULL_MODEL2YAML,
+            data = TransferBody(modelAndSetting = newModelAndSetting)
+        ).yamlWithVersion?.yamlStr ?: ""
+
+        return PipelineTemplateInstanceCompareResponse(
+            baseVersionYaml = pipelineYaml,
+            comparedVersionYaml = newPipelineYaml,
+            instanceName = pipelineInfo.pipelineName,
+            templateVersionName = templateResource.versionName ?: ""
+        )
+    }
+
+    private fun getInstanceModel(
+        pipelineModel: Model,
+        templateResource: PipelineTemplateResource,
+        pipelineInfo: PipelineInfo,
+        overrideTemplateField: TemplateInstanceField
+    ): Model {
+        val defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
+        val pipelineTrigger = pipelineModel.getTriggerContainer()
+        val overrideTriggerConfigs = pipelineModel.template?.triggerConfigs
+
+        return TemplateInstanceUtil.instanceModel(
+            templateResource = templateResource,
+            pipelineName = pipelineInfo.pipelineName,
+            defaultStageTagId = defaultStageTagId,
+            buildNo = pipelineTrigger.buildNo,
+            params = pipelineTrigger.params,
+            triggerConfigs = overrideTriggerConfigs,
+            overrideTemplateField = overrideTemplateField
+        )
+    }
+
+    private fun getInstanceSetting(
+        projectId: String,
+        pipelineInfo: PipelineInfo,
+        templateResource: PipelineTemplateResource,
+        useTemplateSettings: Boolean,
+        overrideTemplateField: TemplateInstanceField
+    ): PipelineSetting {
+        val pipelineId = pipelineInfo.pipelineId
+        val templateSetting = pipelineTemplateSettingService.get(
+            projectId = projectId,
+            templateId = templateResource.templateId,
+            settingVersion = templateResource.settingVersion
+        )
+        val instanceSetting = if (useTemplateSettings) {
+            templateSetting.copy(
+                pipelineId = pipelineId,
+                pipelineName = pipelineInfo.pipelineName
+            )
+        } else {
+            pipelineRepositoryService.getSetting(
+                projectId = projectId,
+                pipelineId = pipelineId
+            )?.let {
+                TemplateInstanceUtil.instanceSetting(
+                    setting = it,
+                    templateSetting = templateSetting,
+                    overrideTemplateField = overrideTemplateField
+                )
+            }?.copy(
+                pipelineName = pipelineInfo.pipelineName
+            ) ?: pipelineRepositoryService.createDefaultSetting(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pipelineName = pipelineInfo.pipelineName,
+                channelCode = ChannelCode.BS
+            )
+        }
+        return instanceSetting
+    }
+
+    /**
+     * 回滚实例任务（通过 baseId 批量回滚）
+     */
+    fun rollbackTemplateInstances(
+        userId: String,
+        projectId: String,
+        baseId: String
+    ): TemplateOperationRet {
+        logger.info("rollback template instances start|$projectId|$userId|$baseId")
+
+        val instanceBase = templateInstanceBaseDao.getTemplateInstanceBase(
+            dslContext = dslContext,
+            projectId = projectId,
+            baseId = baseId
+        ) ?: throw CustomMessageException("instance Base not found for baseId: $baseId")
+        val instanceItems = templateInstanceItemDao.listTemplateInstanceItemByBaseIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            baseIds = listOf(baseId),
+            statusList = listOf(TemplateInstanceStatus.SUCCESS.name)
+        )
+
+        if (instanceItems.isEmpty()) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                params = arrayOf("baseId", "No successful instance items found for baseId: $baseId")
+            )
+        }
+
+        val results = instanceItems.map { item ->
+            doRollbackItem(userId, projectId, item, instanceBase.templateId)
+        }
+
+        return buildRollbackResult(results, isBatch = true)
+    }
+
+    /**
+     * 回滚单个实例任务（通过 itemId）
+     */
+    fun rollbackTemplateInstanceByItemId(
+        userId: String,
+        projectId: String,
+        itemId: String
+    ): TemplateOperationRet {
+        logger.info("rollback template instance by itemId start|$projectId|$userId|$itemId")
+
+        val item = templateInstanceItemDao.getTemplateInstanceItem(
+            dslContext = dslContext,
+            projectId = projectId,
+            itemId = itemId
+        ) ?: throw CustomMessageException("instance item not found for itemId: $itemId")
+
+        if (item.status != TemplateInstanceStatus.SUCCESS) {
+            throw CustomMessageException(
+                "instance status[${item.status}], only successful instance items can be rolled back"
+            )
+        }
+
+        val instanceBase = templateInstanceBaseDao.getTemplateInstanceBase(
+            dslContext = dslContext,
+            projectId = projectId,
+            baseId = item.baseId
+        ) ?: throw CustomMessageException("instance Base not found for baseId: ${item.baseId}")
+        val result = doRollbackItem(userId, projectId, item, instanceBase.templateId)
+
+        return buildRollbackResult(listOf(result), isBatch = false)
+    }
+
+    /**
+     * 执行单个实例项的回滚
+     * @return 回滚结果
+     */
+    private fun doRollbackItem(
+        userId: String,
+        projectId: String,
+        item: PipelineTemplateInstanceItem,
+        templateId: String
+    ): ItemRollbackResult {
+        return try {
+            executeRollback(userId, projectId, item, templateId)
+            ItemRollbackResult.success(item.pipelineId, item.pipelineName)
+        } catch (e: Exception) {
+            logger.error("rollback pipeline failed|$projectId|${item.pipelineId}|${item.pipelineName}", e)
+            ItemRollbackResult.failure(item.pipelineName, e.message ?: "Unknown error")
+        }
+    }
+
+    /**
+     * 执行回滚操作
+     */
+    private fun executeRollback(
+        userId: String,
+        projectId: String,
+        item: PipelineTemplateInstanceItem,
+        templateId: String
+    ) {
+        val beforeVersion = item.beforePipelineVersion
+            ?: throw CustomMessageException("pipeline[${item.pipelineName}] has no previous version to rollback")
+        val pipelineId = item.pipelineId
+        // 回滚流水线版本
+        val versionName = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = item.pipelineId,
+            version = beforeVersion
+        )?.versionName ?: "$beforeVersion"
+        // 获取源版本的资源信息
+        val sourceResource = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = beforeVersion,
+            includeDraft = false
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
+            params = arrayOf(beforeVersion.toString())
+        )
+        // 获取源版本的设置信息
+        val sourceSetting = pipelineSettingVersionService.getPipelineSetting(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            detailInfo = null,
+            version = sourceResource.settingVersion!!
+        )
+        val channelCode = pipelineInfoFacadeService.getPipelineChannel(projectId, pipelineId) ?: ChannelCode.BS
+
+        pipelineInfoFacadeService.editPipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            model = sourceResource.model,
+            yaml = YamlWithVersion(sourceResource.yaml, sourceResource.yamlVersion),
+            savedSetting = sourceSetting,
+            channelCode = channelCode,
+            checkPermission = true,
+            checkTemplate = false,
+            description = I18nUtil.getCodeLanMessage(
+                messageCode = ProcessMessageCode.BK_ROLLBACK_FROM_TEMPLATE_INSTANCE_BASED_ON_VERSION,
+                params = arrayOf(versionName)
+            )
+        )
+
+        // 回滚模板版本关系
+        item.beforeTemplateVersion?.let { beforeTemplateVersion ->
+            val templateVersionName = templateDao.getTemplate(
+                dslContext = dslContext,
+                version = beforeTemplateVersion
+            )?.versionName ?: throw CustomMessageException(
+                "before template version name[$templateId] not found"
+            )
+
+            templatePipelineDao.updateVersion(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = item.pipelineId,
+                templateVersion = beforeTemplateVersion,
+                templateVersionName = templateVersionName,
+                userId = userId
+            )
+        }
+
+        logger.info(
+            "rollback pipeline success|$projectId|${item.pipelineId}|" +
+                "${item.pipelineName}|$beforeVersion|${item.beforeTemplateVersion}"
+        )
+    }
+
+    /**
+     * 构建回滚结果
+     */
+    private fun buildRollbackResult(results: List<ItemRollbackResult>, isBatch: Boolean): TemplateOperationRet {
+        val successResults = results.filter { it.success }
+        val failureResults = results.filter { !it.success }
+
+        val message = when {
+            failureResults.isEmpty() -> "Rollback succeeded"
+            isBatch && successResults.isNotEmpty() -> "Some pipelines failed to rollback"
+            else -> "Rollback failed"
+        }
+
+        return TemplateOperationRet(
+            status = if (failureResults.isEmpty()) 0 else 1,
+            data = TemplateOperationMessage(
+                successPipelines = successResults.map { it.pipelineName },
+                failurePipelines = failureResults.map { it.pipelineName },
+                failureMessages = failureResults.associate { it.pipelineName to (it.errorMessage ?: "") },
+                successPipelinesId = successResults.mapNotNull { it.pipelineId }
+            ),
+            message = message
+        )
+    }
+
+    /**
+     * 单个实例项回滚结果
+     */
+    private data class ItemRollbackResult(
+        val success: Boolean,
+        val pipelineId: String?,
+        val pipelineName: String,
+        val errorMessage: String? = null
+    ) {
+        companion object {
+            fun success(pipelineId: String, pipelineName: String) =
+                ItemRollbackResult(true, pipelineId, pipelineName)
+
+            fun failure(pipelineName: String, errorMessage: String) =
+                ItemRollbackResult(false, null, pipelineName, errorMessage)
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineTemplateInstanceService::class.java)
+    }
+}

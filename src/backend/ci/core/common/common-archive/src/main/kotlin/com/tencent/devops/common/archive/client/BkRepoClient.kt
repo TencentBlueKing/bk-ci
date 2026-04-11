@@ -180,6 +180,19 @@ class BkRepoClient constructor(
         return true
     }
 
+    fun updateProjectShareEnabled(userId: String, projectId: String, enabled: Boolean): Boolean {
+        logger.info("updateProjectShareEnabled, userId: $userId, projectId: $projectId, enabled: $enabled")
+        val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/project/$projectId/share/enabled" +
+            "?enabled=$enabled"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
+            .put("".toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        doRequest(request).resolveResponse<Response<Void>>()
+        return true
+    }
+
     private fun createGenericRepo(
         userId: String,
         projectId: String,
@@ -241,7 +254,8 @@ class BkRepoClient constructor(
             .headers(getCommonHeaders(userId, projectId).toHeaders())
             .get()
             .build()
-        return doRequest(request).resolveResponse<Response<Map<String, String>>>()!!.data!!
+        return doRequest(request).resolveResponse<Response<Map<String, Any>>>()!!.data!!
+            .mapValues { it.value.toString() }
     }
 
     @Deprecated(message = "api已废弃", replaceWith = ReplaceWith("listFilePage"))
@@ -535,7 +549,8 @@ class BkRepoClient constructor(
             .headers(getCommonHeaders(userId, projectId).toHeaders())
             .get()
             .build()
-        return doRequest(request).resolveResponse<Response<NodeDetail>>()!!.data
+        val nodeDetail = doRequest(request).resolveResponse<Response<NodeDetail>>()!!.data ?: return null
+        return nodeDetail.copy(md5 = ignoreFakeChecksum(nodeDetail.md5), sha256 = ignoreFakeChecksum(nodeDetail.sha256))
     }
 
     fun matchBkRepoFile(
@@ -1191,7 +1206,11 @@ class BkRepoClient constructor(
             .headers(getCommonHeaders(userId, projectId).toHeaders())
             .post(requestBody.toRequestBody(JSON_MEDIA_TYPE))
             .build()
-        return doRequest(request).resolveResponse<Response<QueryData>>()!!.data!!
+        val queryData = doRequest(request).resolveResponse<Response<QueryData>>()!!.data!!
+        val records = queryData.records.map {
+            it.copy(md5 = ignoreFakeChecksum(it.md5), sha256 = ignoreFakeChecksum(it.sha256))
+        }
+        return queryData.copy(records = records)
     }
 
     fun listArtifactQualityMetadataLabels(
@@ -1301,6 +1320,13 @@ class BkRepoClient constructor(
         } catch (e: IOException) {
             throw RemoteServiceException("request api[${request.url.toUrl()}] error: ${e.localizedMessage}")
         }
+    }
+
+    private fun ignoreFakeChecksum(checksum: String?): String {
+        if (checksum == null || checksum.toLongOrNull() == 0L) {
+            return ""
+        }
+        return checksum
     }
 
     private inline fun <reified T> okhttp3.Response.resolveResponse(allowCode: Int? = null): T? {

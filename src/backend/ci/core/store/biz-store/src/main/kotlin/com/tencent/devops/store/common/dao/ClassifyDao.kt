@@ -33,7 +33,9 @@ import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.records.TClassifyRecord
 import com.tencent.devops.store.pojo.common.classify.Classify
 import com.tencent.devops.store.pojo.common.classify.ClassifyRequest
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.jooq.Condition
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -49,6 +51,7 @@ class ClassifyDao {
                 ID,
                 CLASSIFY_CODE,
                 CLASSIFY_NAME,
+                SERVICE_SCOPE,
                 WEIGHT,
                 TYPE
             )
@@ -56,22 +59,43 @@ class ClassifyDao {
                     id,
                     classifyRequest.classifyCode,
                     classifyRequest.classifyName,
+                    classifyRequest.serviceScope?.name,
                     classifyRequest.weight,
                     type
                 ).execute()
         }
     }
 
-    fun countByName(dslContext: DSLContext, classifyName: String, type: Byte): Int {
+    fun countByName(
+        dslContext: DSLContext,
+        classifyName: String,
+        type: Byte,
+        serviceScope: ServiceScopeEnum? = null
+    ): Int {
         with(TClassify.T_CLASSIFY) {
-            return dslContext.selectCount().from(this).where(CLASSIFY_NAME.eq(classifyName).and(TYPE.eq(type)))
+            val conditions = mutableListOf<Condition>().apply {
+                add(CLASSIFY_NAME.eq(classifyName))
+                add(TYPE.eq(type))
+                serviceScope?.let { add(SERVICE_SCOPE.eq(it.name)) }
+            }
+            return dslContext.selectCount().from(this).where(conditions)
                 .fetchOne(0, Int::class.java)!!
         }
     }
 
-    fun countByCode(dslContext: DSLContext, classifyCode: String, type: Byte): Int {
+    fun countByCode(
+        dslContext: DSLContext,
+        classifyCode: String,
+        type: Byte,
+        serviceScope: ServiceScopeEnum? = null
+    ): Int {
         with(TClassify.T_CLASSIFY) {
-            return dslContext.selectCount().from(this).where(CLASSIFY_CODE.eq(classifyCode).and(TYPE.eq(type)))
+            val conditions = mutableListOf<Condition>().apply {
+                add(CLASSIFY_CODE.eq(classifyCode))
+                add(TYPE.eq(type))
+                serviceScope?.let { add(SERVICE_SCOPE.eq(it.name)) }
+            }
+            return dslContext.selectCount().from(this).where(conditions)
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -89,6 +113,7 @@ class ClassifyDao {
             dslContext.update(this)
                 .set(CLASSIFY_CODE, classifyRequest.classifyCode)
                 .set(CLASSIFY_NAME, classifyRequest.classifyName)
+                .set(SERVICE_SCOPE, classifyRequest.serviceScope?.name)
                 .set(WEIGHT, classifyRequest.weight)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(id))
@@ -104,22 +129,35 @@ class ClassifyDao {
         }
     }
 
-    fun getClassifyByCode(dslContext: DSLContext, classifyCode: String, type: StoreTypeEnum): TClassifyRecord? {
+    fun getClassifyByCode(
+        dslContext: DSLContext,
+        classifyCode: String,
+        type: StoreTypeEnum,
+        serviceScope: ServiceScopeEnum? = null
+    ): TClassifyRecord? {
         with(TClassify.T_CLASSIFY) {
+            val conditions = mutableListOf<Condition>().apply {
+                add(CLASSIFY_CODE.eq(classifyCode))
+                add(TYPE.eq(type.type.toByte()))
+                serviceScope?.let { add(SERVICE_SCOPE.eq(it.name)) }
+            }
             return dslContext.selectFrom(this)
-                .where(CLASSIFY_CODE.eq(classifyCode))
-                .and(TYPE.eq(type.type.toByte()))
+                .where(conditions)
                 .fetchOne()
         }
     }
 
-    fun getAllClassify(dslContext: DSLContext, type: Byte): Result<TClassifyRecord> {
+    fun getAllClassify(
+        dslContext: DSLContext,
+        type: Byte,
+        serviceScope: ServiceScopeEnum? = null
+    ): Result<TClassifyRecord> {
         with(TClassify.T_CLASSIFY) {
-            return dslContext
-                .selectFrom(this)
-                .where(TYPE.eq(type))
-                .orderBy(WEIGHT.desc())
-                .fetch()
+            val conditions = mutableListOf<Condition>().apply {
+                add(TYPE.eq(type))
+                serviceScope?.let { add(SERVICE_SCOPE.eq(it.name)) }
+            }
+            return dslContext.selectFrom(this).where(conditions).orderBy(WEIGHT.desc()).fetch()
         }
     }
 
@@ -136,6 +174,7 @@ class ClassifyDao {
                 classifyCode = classifyCode,
                 classifyName = classifyLanName,
                 classifyType = classifyType,
+                serviceScope = serviceScope,
                 weight = weight,
                 createTime = createTime.timestampmilli(),
                 updateTime = updateTime.timestampmilli()

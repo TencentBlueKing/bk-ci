@@ -20,7 +20,7 @@
                 <li
                     class="param-input"
                     v-for="(parameter, index) in parameters"
-                    :key="parameter.key"
+                    :key="parameter.id"
                     v-bk-tooltips="{
                         content: $t('notParamsTip'),
                         disabled: !parameter.disabled,
@@ -91,7 +91,8 @@
                 isLoading: false,
                 parameters: [],
                 subParamsKeyList: [],
-                pipelineRequiredParams: {}
+                pipelineRequiredParams: {},
+                paramIdCounter: 0
             }
         },
         computed: {
@@ -143,9 +144,19 @@
         },
 
         watch: {
+            value: {
+                handler (newVal, oldVal) {
+                    if (newVal !== oldVal) {
+                        this.$nextTick(() => {
+                            this.initData()
+                        })
+                    }
+                },
+                deep: true
+            },
             paramValues: {
                 handler (value, oldValue) {
-                    this.pipelineRequiredParams.subBranch = typeof value.subBranch === 'string' && value.subBranch.isBkVar()
+                    this.pipelineRequiredParams.subBranch = typeof value.subBranch === 'string' && this.getValidaVar(value.subBranch)
                         ? this.requiredParams[value.subBranch.extractBkVar()]
                         : value.subBranch
                     if (oldValue !== undefined && ((value?.subPip !== oldValue?.subPip) || (value?.subBranch !== oldValue?.subBranch))) {
@@ -174,19 +185,25 @@
                 let values = this.atomValue[this.name] || this.value || []
                 if (!Array.isArray(values)) values = JSON.parse(values)
 
-                this.parameters = values.map(i => {
+                this.parameters = values.map((i, index) => {
                     const type = this.typeMap.get(i.key)?.type
+                    // 如果 key 为空，说明是新增的参数，hasKey 应该为 true（可选择状态）
+                    // 如果 key 不为空但在 typeMap 中找不到，说明是无效的 key，hasKey 为 false（禁用状态）
+                    const hasKey = !i.key || !!type
+                    const id = i.id || `param_${i.key || 'empty'}_${index}`
                     return {
                         ...i,
+                        id,
                         type: type || i.key || 'text',
                         value: isObject(i.value) ? JSON.stringify(i.value) : i.value,
-                        hasKey: !!type,
-                        disabled: !type && i.key
+                        hasKey,
+                        disabled: !type && !!i.key
                     }
                 })
             },
             addParam () {
                 this.parameters.push({
+                    id: `param_new_${this.paramIdCounter++}`,
                     key: '',
                     value: '',
                     hasKey: true
@@ -219,13 +236,13 @@
                 const res = this.parameters.map((parameter) => {
                     const key = parameter.key
                     const value = isObject(parameter.value) ? JSON.stringify(parameter.value) : parameter.value
-                    return { key, value }
+                    return { key, value, id: parameter.id }
                 })
                 this.handleChange(this.name, String(JSON.stringify(res)))
             },
 
             getParametersList () {
-                if (this.param.paramType === 'list' && Array.isArray(this.param.list)) {
+                if (this.param?.paramType === 'list' && Array.isArray(this.param.list)) {
                     this.subParamsKeyList = this.param.list
                     return
                 }
@@ -263,7 +280,8 @@
             getInputType (type) {
                 const typeMap = {
                     textarea: 'textarea',
-                    long: 'number'
+                    long: 'text',
+                    input: 'text'
                 }
 
                 return typeMap[type] || 'text'

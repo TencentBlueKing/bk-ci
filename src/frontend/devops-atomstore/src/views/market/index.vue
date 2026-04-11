@@ -57,8 +57,8 @@
                                 :key="index"
                             >
                                 <bk-option
-                                    v-for="(option, key) in group.children"
-                                    :key="key"
+                                    v-for="option in group.children"
+                                    :key="option.id"
                                     :id="option.id"
                                     :name="option.name"
                                     @click.native="selectClassifyCode(option)"
@@ -395,6 +395,16 @@
             getTemplateClassifys () {
                 return Promise.all([this.requestTplCategorys(), this.requestTplLabel(), this.requestTplClassify()]).then(([categorys, lables, classify]) => {
                     const res = []
+                    res.push({
+                        name: 'templateName',
+                        key: 'templateCode',
+                        groupName: this.$t('store.按模板类型分类'),
+                        data: [{
+                            templateCode: 'PIPELINE',
+                            templateName: this.$t('store.流水线模板'),
+                            templateType: 'TEMPLATE'
+                        }]
+                    })
                     if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: this.$t('store.按应用范畴'), data: categorys })
                     if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: this.$t('store.按分类'), data: classify })
                     if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: this.$t('store.按功能'), data: lables })

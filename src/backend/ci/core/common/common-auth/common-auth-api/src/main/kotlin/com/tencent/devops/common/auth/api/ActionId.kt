@@ -20,6 +20,13 @@ object ActionId {
     const val PIPELINE_SHARE = "pipeline_share"
     const val PIPELINE_DOWNLOAD = "pipeline_download"
 
+    // 创作流
+    const val CREATIVE_STREAM_EXECUTE = "creative_stream_execute"
+
+    // 创作流节点
+    const val CREATIVE_STREAM_NODE_VIEW = "creative_stream_node_view"
+    const val CREATIVE_STREAM_NODE_EDIT = "creative_stream_node_edit"
+
     // 流水线组
     const val PIPELINE_GROUP_CREATE = "pipeline_group_create"
     const val PIPELINE_GROUP_EDIT = "pipeline_group_edit"
@@ -32,6 +39,7 @@ object ActionId {
     const val PIPELINE_TEMPLATE_CREATE = "pipeline_template_create"
     const val PIPELINE_TEMPLATE_EDIT = "pipeline_template_edit"
     const val PIPELINE_TEMPLATE_DELETE = "pipeline_template_delete"
+    const val PIPELINE_TEMPLATE_VIEW = "pipeline_template_view"
 
     // 凭据
     const val CREDENTIAL_CREATE = "credential_create"

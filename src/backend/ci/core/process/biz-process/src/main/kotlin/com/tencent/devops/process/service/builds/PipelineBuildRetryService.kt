@@ -186,7 +186,9 @@ class PipelineBuildRetryService @Autowired constructor(
                     )
                 }
             }
-            webhookBuildParameterService.getBuildParameters(buildId)?.forEach { param ->
+            webhookBuildParameterService.getBuildParameters(
+                projectId = projectId, buildId = buildId
+            )?.forEach { param ->
                 webHookStartParam[param.key] = param
             }
 
@@ -351,7 +353,7 @@ class PipelineBuildRetryService @Autowired constructor(
                             element = element,
                             taskId = taskId,
                             paramMap = paramMap,
-                            skipFailedTask = skipFailedTask,
+                            skipFailedTask = skipFailedTask
                         )
                         return
                     }

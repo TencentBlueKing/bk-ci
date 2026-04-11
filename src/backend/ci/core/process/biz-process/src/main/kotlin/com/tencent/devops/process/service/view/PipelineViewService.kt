@@ -50,7 +50,7 @@ import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
+import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
 import com.tencent.devops.process.permission.group.PipelineGroupPermissionService
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
@@ -704,7 +704,7 @@ class PipelineViewService @Autowired constructor(
                     )
                 }
             } else if (filter is PipelineViewFilterByLabel) {
-                val group = pipelineGroupDao.get(dslContext, decode(filter.groupId)) ?: continue
+                val group = pipelineGroupDao.get(dslContext, projectId, decode(filter.groupId)) ?: continue
                 val labels =
                     pipelineLabelDao.getByIds(dslContext, projectId, filter.labelIds.map { decode(it) }.toSet())
                 val labelIds = pipelineLabelPipelineDao.listLabels(dslContext, projectId, pipelineId).map { it.labelId }

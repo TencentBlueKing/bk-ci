@@ -76,11 +76,13 @@
             },
             searchUrl: String,
             replaceKey: String,
+            onSearch: Function,
             dataPath: String
         },
         data () {
             return {
-                listData: []
+                listData: [],
+                timeId: null
             }
         },
         computed: {
@@ -100,7 +102,7 @@
                 const props = {
                     value: this.value,
                     loading: this.isLoading,
-                    disabled: this.disabled || this.readOnly,
+                    disabled: this.disabled || (this.readOnly && this.readOnlyCheck),
                     searchable: this.searchable,
                     multiple: this.multiSelect,
                     clearable: this.clearable,
@@ -114,7 +116,11 @@
                     'display-key': this.displayKey,
                     'show-select-all': this.showSelectAll
                 }
-                if (this.searchUrl) props['remote-method'] = this.remoteMethod
+                if (typeof this.onSearch === 'function') {
+                    props['remote-method'] = this.onSearch
+                } else if (this.searchUrl) {
+                    props['remote-method'] = this.remoteMethod
+                }
                 return props
             }
         },
@@ -125,6 +131,9 @@
                 },
                 immediate: true
             }
+        },
+        beforeDestroy () {
+            clearTimeout(this.timeId)
         },
         methods: {
             onChange (val, oldVal) {
@@ -137,8 +146,8 @@
             },
             remoteMethod (name) {
                 return new Promise((resolve, reject) => {
-                    clearTimeout(this.remoteMethod.timeId)
-                    this.remoteMethod.timeId = setTimeout(async () => {
+                    clearTimeout(this.timeId)
+                    this.timeId = setTimeout(async () => {
                         try {
                             const regExp = new RegExp(this.replaceKey, 'g')
                             const url = this.searchUrl.replace(regExp, name)

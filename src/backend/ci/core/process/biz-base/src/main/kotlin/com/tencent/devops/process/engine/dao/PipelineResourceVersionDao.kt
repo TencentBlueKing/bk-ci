@@ -339,11 +339,20 @@ class PipelineResourceVersionDao {
         buildOnly: Boolean? = false
     ): List<PipelineVersionSimple> {
         with(T_PIPELINE_RESOURCE_VERSION) {
-            val query = dslContext.selectFrom(this)
+            val query = dslContext.select(
+                PIPELINE_ID, PROJECT_ID, CREATOR, CREATE_TIME, UPDATER, UPDATE_TIME,
+                VERSION, VERSION_NAME, YAML_VERSION, REFER_FLAG, REFER_COUNT,
+                VERSION_NUM, PIPELINE_VERSION, TRIGGER_VERSION, SETTING_VERSION,
+                STATUS, DESCRIPTION, DEBUG_BUILD_ID, BASE_VERSION, BRANCH_ACTION
+            ).from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .and(
-                    STATUS.ne(VersionStatus.DELETE.name)
-                        .or(STATUS.isNull)
+                    STATUS.isNull.or(
+                        STATUS.notIn(
+                            VersionStatus.DELETE.name,
+                            VersionStatus.HIDDEN.name
+                        )
+                    )
                 )
                 .and(
                     BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
@@ -382,7 +391,30 @@ class PipelineResourceVersionDao {
             }
             val list = query.orderBy(
                 RELEASE_TIME.desc(), VERSION.desc()
-            ).limit(limit).offset(offset).fetch(sampleMapper)
+            ).limit(limit).offset(offset).fetch().map { record ->
+                PipelineVersionSimple(
+                    pipelineId = record.get(PIPELINE_ID),
+                    creator = record.get(CREATOR) ?: "unknown",
+                    createTime = record.get(CREATE_TIME).timestampmilli(),
+                    updater = record.get(UPDATER),
+                    updateTime = record.get(UPDATE_TIME)?.timestampmilli(),
+                    version = record.get(VERSION) ?: 1,
+                    versionName = record.get(VERSION_NAME) ?: "",
+                    yamlVersion = record.get(YAML_VERSION),
+                    referFlag = record.get(REFER_FLAG),
+                    referCount = record.get(REFER_COUNT),
+                    versionNum = record.get(VERSION_NUM),
+                    pipelineVersion = record.get(PIPELINE_VERSION),
+                    triggerVersion = record.get(TRIGGER_VERSION),
+                    settingVersion = record.get(SETTING_VERSION),
+                    status = record.get(STATUS)?.let { VersionStatus.valueOf(it) } ?: VersionStatus.RELEASED,
+                    description = record.get(DESCRIPTION),
+                    debugBuildId = record.get(DEBUG_BUILD_ID),
+                    baseVersion = record.get(BASE_VERSION),
+                    baseVersionName = null,
+                    latestReleasedFlag = record.get(VERSION) == pipelineInfo.version
+                )
+            }
             list.forEach { if (it.version == pipelineInfo.version) it.latestReleasedFlag = true }
             return list
         }
@@ -540,13 +572,13 @@ class PipelineResourceVersionDao {
         projectId: String,
         pipelineId: String,
         versions: List<Int>,
-        referCount: Int,
+        referCount: Int? = null,
         referFlag: Boolean? = null
     ) {
         with(T_PIPELINE_RESOURCE_VERSION) {
             val baseStep = dslContext.update(this)
-                .set(REFER_COUNT, referCount)
                 .set(UPDATE_TIME, DSL.field(UPDATE_TIME.name, LocalDateTime::class.java))
+            referCount?.let { baseStep.set(REFER_COUNT, referCount) }
             referFlag?.let { baseStep.set(REFER_FLAG, referFlag) }
             baseStep.where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.`in`(versions)))
                 .execute()
@@ -597,14 +629,31 @@ class PipelineResourceVersionDao {
         }
     }
 
+    fun updateVersionStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        versionStatus: VersionStatus
+    ): Int {
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            return dslContext.update(this)
+                .set(STATUS, versionStatus.name)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(VERSION.eq(version))
+                .execute()
+        }
+    }
+
     class PipelineResourceVersionJooqMapper : RecordMapper<TPipelineResourceVersionRecord, PipelineResourceVersion> {
         override fun map(record: TPipelineResourceVersionRecord?): PipelineResourceVersion? {
             return record?.let {
                 val status = record.status?.let { VersionStatus.valueOf(it) } ?: VersionStatus.RELEASED
                 val versionNum = (record.versionNum ?: record.version ?: 1)
                     .takeIf { status == VersionStatus.RELEASED }
-                val versionName = record.versionName.takeIf {
-                    name -> name != "init"
+                val versionName = record.versionName.takeIf { name ->
+                    name != "init"
                 } ?: PipelineVersionUtils.getVersionName(
                     versionNum, record.version, record.triggerVersion, record.settingVersion
                 ) ?: "V$versionNum(${record.versionName})"
@@ -650,8 +699,8 @@ class PipelineResourceVersionDao {
                 val versionNum = (record.versionNum ?: record.version ?: 1)
                     .takeIf { status == VersionStatus.RELEASED }
                 // 如果名称已经为init的则尝试计算新版本名，如果获取不到新的版本名称则保持init
-                val versionName = record.versionName?.takeIf {
-                    name -> name != "init"
+                val versionName = record.versionName?.takeIf { name ->
+                    name != "init"
                 } ?: PipelineVersionUtils.getVersionName(
                     versionNum, record.version, record.triggerVersion, record.settingVersion
                 ) ?: "V$versionNum(${record.versionName ?: "init"})"

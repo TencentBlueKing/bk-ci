@@ -286,11 +286,7 @@ class RbacPermissionResourceMemberService(
         // 获取用户组中用户以及部门
         val userType = MemberType.USER.type
         val deptType = MemberType.DEPARTMENT.type
-        val pageInfoDTO = V2PageInfoDTO().apply {
-            pageSize = 1000
-            page = 1
-        }
-        val groupMembers = iamV2ManagerService.getRoleGroupMemberV2(iamGroupId, pageInfoDTO).results
+        val groupMembers = getAllRoleGroupMembersV2(iamGroupId)
         val groupUserMap = groupMembers.filter { it.type == userType }.associateBy { it.id }
         val groupDepartmentSet = groupMembers.filter {
             it.type == deptType && it.expiredAt > LocalDateTime.now().timestamp()
@@ -515,11 +511,7 @@ class RbacPermissionResourceMemberService(
         groupId: Int,
         groupName: String
     ): BkAuthGroupAndUserList {
-        val pageInfoDTO = V2PageInfoDTO().apply {
-            pageSize = 1000
-            page = 1
-        }
-        val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(groupId, pageInfoDTO).results
+        val groupMemberInfoList = getAllRoleGroupMembersV2(groupId)
 
         val nowTimestamp = System.currentTimeMillis() / 1000
         val (members, deptInfoList) = groupMemberInfoList
@@ -598,11 +590,7 @@ class RbacPermissionResourceMemberService(
         val autoRenewalMembers = mutableSetOf<String>()
         resourceGroupInfoList.forEach group@{ resourceGroup ->
             val iamGroupId = resourceGroup.relationId.toInt()
-            val pageInfoDTO = V2PageInfoDTO().apply {
-                pageSize = 1000
-                page = 1
-            }
-            val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(iamGroupId, pageInfoDTO).results
+            val groupMemberInfoList = getAllRoleGroupMembersV2(iamGroupId)
             groupMemberInfoList.forEach member@{ member ->
                 // 已过期或者小于自动续期范围内的不做续期
                 if (member.expiredAt < currentTime ||
@@ -705,8 +693,67 @@ class RbacPermissionResourceMemberService(
         }
     }
 
+    override fun getMemberGroupsInProject(
+        projectCode: String,
+        memberId: String
+    ): List<Int> {
+        logger.info("[RBAC-IAM] get member groups in project: $projectCode|$memberId")
+        // 获取用户的所属组织
+        val memberDeptInfos = deptService.getUserInfo(memberId)?.deptInfo?.let {
+            if (it.isNotEmpty()) {
+                deptService.getUserDeptInfo(memberId).toList()
+            } else {
+                emptyList()
+            }
+        } ?: emptyList()
+        // 查询项目下包含该成员及所属组织的用户组列表
+        val projectGroupIds = authResourceGroupMemberDao.listResourceGroupMember(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            memberIds = memberDeptInfos + memberId,
+            minExpiredTime = LocalDateTime.now()
+        ).map { it.iamGroupId.toString() }
+        // 通过项目组ID获取人员模板ID
+        val iamTemplateIds = authResourceGroupDao.listByRelationId(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            iamGroupIds = projectGroupIds
+        ).filter { it.iamTemplateId != null }
+            .map { it.iamTemplateId.toString() }
+        // 获取用户在项目下加入的所有用户组ID（未过期）
+        return authResourceGroupMemberDao.listMemberGroupIdsInProject(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            memberId = memberId,
+            iamTemplateIds = iamTemplateIds,
+            memberDeptInfos = memberDeptInfos
+        )
+    }
+
+    private fun getAllRoleGroupMembersV2(
+        iamGroupId: Int
+    ): List<RoleGroupMemberInfo> {
+        val allMembers = mutableListOf<RoleGroupMemberInfo>()
+        val pageSize = 1000
+        var page = 1
+        do {
+            val pageInfoDTO = V2PageInfoDTO().apply {
+                this.pageSize = pageSize
+                this.page = page
+            }
+            val pageResult = iamV2ManagerService
+                .getRoleGroupMemberV2(iamGroupId, pageInfoDTO)
+            allMembers.addAll(pageResult.results)
+            page++
+        } while (pageResult.results.size == pageSize)
+        return allMembers
+    }
+
     companion object {
-        private val logger = LoggerFactory.getLogger(RbacPermissionResourceMemberService::class.java)
+        private val logger = LoggerFactory.getLogger(
+            RbacPermissionResourceMemberService::class.java
+        )
 
         // 有效的过期时间,在30天内就是有效的
         private const val VALID_EXPIRED_AT = 180L

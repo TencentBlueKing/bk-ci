@@ -74,6 +74,18 @@ class RbacPermissionResourceService(
         async: Boolean
     ): Boolean {
         logger.info("resource create relation|$userId|$projectCode|$resourceType|$resourceCode|$resourceName")
+        val resource = authResourceService.getOrNull(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+        if (resource != null) {
+            logger.info(
+                "This resource has been registered. no need to register again" +
+                    ":$projectCode|$resourceType$resourceCode"
+            )
+            return true
+        }
         val iamResourceCode = authResourceCodeConverter.generateIamCode(
             resourceType = resourceType,
             resourceCode = resourceCode
@@ -242,6 +254,33 @@ class RbacPermissionResourceService(
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = projectCode
             )
+            // 如果发现资源已经被禁用，并且relationId为空,
+            // 说明二级管理员已在禁用时被删除,无需修改二级管理员以及用户组相关信息。
+            // 只需要对 Resource 表的名称进行修改即可
+            if (!resourceInfo.enable && resourceInfo.relationId.isBlank()) {
+                logger.info(
+                    "resource is disabled and relationId is empty, " +
+                        "skip modify subset manager" +
+                        "|$projectCode|$resourceType|$resourceCode"
+                )
+                authResourceService.update(
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    resourceName = resourceName
+                )
+                permissionAuthorizationService.modifyResourceAuthorization(
+                    listOf(
+                        ResourceAuthorizationDTO(
+                            projectCode = projectCode,
+                            resourceType = resourceType,
+                            resourceCode = resourceCode,
+                            resourceName = resourceName
+                        )
+                    )
+                )
+                return true
+            }
             permissionSubsetManagerService.modifySubsetManager(
                 subsetManagerId = resourceInfo.relationId,
                 projectCode = projectCode,
@@ -296,24 +335,32 @@ class RbacPermissionResourceService(
                 resourceCode = resourceCode
             )
             if (resourceInfo != null) {
-                val projectInfo = authResourceService.get(
-                    projectCode = projectCode,
-                    resourceType = AuthResourceType.PROJECT.value,
-                    resourceCode = projectCode
-                )
-                val deleteTime = DateTimeUtil.toDateTime(LocalDateTime.now(), "yyMMddHHmmSS")
-                val deleteResourceName = "${resourceInfo.resourceName}[$deleteTime]"
-                // 权限中心删除是异步删除,当删除后,立马创建重名资源,权限中心会报资源冲突,所以需要先修改资源名称后删除
-                permissionSubsetManagerService.modifySubsetManager(
-                    subsetManagerId = resourceInfo.relationId,
-                    projectCode = projectCode,
-                    projectName = projectInfo.resourceName,
-                    resourceType = resourceType,
-                    resourceCode = resourceCode,
-                    resourceName = deleteResourceName,
-                    iamResourceCode = resourceInfo.iamResourceCode
-                )
-                permissionSubsetManagerService.deleteSubsetManager(resourceInfo.relationId)
+                // 资源已禁用且relationId为空,说明二级管理员已在禁用时被删除,无需再调用IAM删除接口
+                if (!resourceInfo.enable && resourceInfo.relationId.isBlank()) {
+                    logger.info(
+                        "resource is disabled and relationId is empty, " +
+                            "skip delete subset manager|$projectCode|$resourceType|$resourceCode"
+                    )
+                } else {
+                    val projectInfo = authResourceService.get(
+                        projectCode = projectCode,
+                        resourceType = AuthResourceType.PROJECT.value,
+                        resourceCode = projectCode
+                    )
+                    val deleteTime = DateTimeUtil.toDateTime(LocalDateTime.now(), "yyMMddHHmmSS")
+                    val deleteResourceName = "${resourceInfo.resourceName}[$deleteTime]"
+                    // 权限中心删除是异步删除,当删除后,立马创建重名资源,权限中心会报资源冲突,所以需要先修改资源名称后删除
+                    permissionSubsetManagerService.modifySubsetManager(
+                        subsetManagerId = resourceInfo.relationId,
+                        projectCode = projectCode,
+                        projectName = projectInfo.resourceName,
+                        resourceType = resourceType,
+                        resourceCode = resourceCode,
+                        resourceName = deleteResourceName,
+                        iamResourceCode = resourceInfo.iamResourceCode
+                    )
+                    permissionSubsetManagerService.deleteSubsetManager(resourceInfo.relationId)
+                }
             }
         }
         authResourceService.delete(
@@ -396,8 +443,36 @@ class RbacPermissionResourceService(
             logger.info("resource has enable permission manager|$userId|$projectId|$resourceType|$resourceCode")
             return true
         }
+        // 如果发现resourceInfo.relationId不为空，说明二级管理员已存在，不需要再创建
+        val subsetManagerId: Int
+        val createMode: AuthGroupCreateMode
+        if (resourceInfo.relationId.isNotBlank()) {
+            subsetManagerId = resourceInfo.relationId.toInt()
+            createMode = AuthGroupCreateMode.ENABLE
+        } else {
+            // 重新创建二级管理员
+            subsetManagerId = permissionSubsetManagerService.createSubsetManager(
+                gradeManagerId = projectInfo.relationId,
+                userId = userId,
+                projectCode = projectId,
+                projectName = projectInfo.resourceName,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                resourceName = resourceInfo.resourceName,
+                iamResourceCode = resourceInfo.iamResourceCode
+            )
+            createMode = AuthGroupCreateMode.CREATE
+            // 更新资源的二级管理员关联ID
+            authResourceService.updateRelationId(
+                projectCode = projectId,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                relationId = subsetManagerId.toString()
+            )
+        }
+        // 创建默认用户组
         permissionSubsetManagerService.createSubsetManagerDefaultGroup(
-            subsetManagerId = resourceInfo.relationId.toInt(),
+            subsetManagerId = subsetManagerId,
             userId = userId,
             projectCode = projectId,
             projectName = projectInfo.resourceName,
@@ -405,7 +480,7 @@ class RbacPermissionResourceService(
             resourceCode = resourceCode,
             resourceName = resourceInfo.resourceName,
             iamResourceCode = resourceInfo.iamResourceCode,
-            createMode = AuthGroupCreateMode.ENABLE
+            createMode = createMode
         )
         return authResourceService.enable(
             userId = userId,

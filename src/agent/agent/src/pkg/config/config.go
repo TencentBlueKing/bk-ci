@@ -44,13 +44,14 @@ import (
 	languageUtil "golang.org/x/text/language"
 	"gopkg.in/ini.v1"
 
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
 )
 
 const (
@@ -77,6 +78,10 @@ const (
 	KeyLanguage            = "devops.language"
 	KeyImageDebugPortRange = "devops.imagedebug.portrange"
 	KeyEnablePipeline      = "devops.pipeline.enable"
+	KeyMcpServerPort       = "devops.mcp.server.port"
+	KeyHTTPProxy           = "HTTP_PROXY"
+	KeyHTTPSProxy          = "HTTPS_PROXY"
+	KeyNOProxy             = "NO_PROXY"
 )
 
 // AgentConfig Agent 配置
@@ -103,6 +108,10 @@ type AgentConfig struct {
 	Language                string
 	ImageDebugPortRange     string
 	EnablePipeline          bool
+	McpServerPort           int
+	HTTPProxy               string
+	HTTPSProxy              string
+	NOProxy                 string
 }
 
 // AgentEnv Agent 环境配置
@@ -116,6 +125,10 @@ type AgentEnv struct {
 	WinTask string
 	// OsVersion 系统版本信息
 	OsVersion string
+	// cpu 型号信息
+	CPUProductInfo string
+	// gpu 型号信息
+	GPUProductInfo string
 }
 
 func (e *AgentEnv) GetAgentIp() string {
@@ -148,10 +161,11 @@ func Init(isDebug bool) {
 	}
 	initCert()
 	LoadAgentEnv()
-
-	GApiEnvVars = &GEnvVarsT{
-		envs: make(map[string]string),
-		lock: sync.RWMutex{},
+	envs.Init()
+	persistedProxyEnvs := GAgentConfig.GetPersistedProxyEnvs()
+	if len(persistedProxyEnvs) > 0 {
+		envs.GApiEnvVars.SetEnvs(persistedProxyEnvs)
+		logs.Infof("loaded persisted proxy envs from .agent.properties, count=%d", len(persistedProxyEnvs))
 	}
 }
 
@@ -169,6 +183,9 @@ func LoadAgentEnv() {
 	} else {
 		GAgentEnv.OsVersion = osVersion
 	}
+	cpuInfo, gpuInfo := GetCpuAndGpuInfo()
+	GAgentEnv.CPUProductInfo = cpuInfo
+	GAgentEnv.GPUProductInfo = gpuInfo
 }
 
 // LoadAgentIp 忽略一些在Windows机器上VPN代理软件所产生的虚拟网卡（有Mac地址）的IP，一般这类IP
@@ -291,13 +308,13 @@ func LoadAgentConfig() error {
 	}
 
 	jdkDirPath := conf.Section("").Key(KeyJdkDirPath).String()
-	// 如果路径为空，是第一次，需要主动去拿一次
 	if jdkDirPath == "" {
 		workDir := systemutil.GetWorkDir()
 		if _, err := os.Stat(workDir + "/jdk"); err != nil && !os.IsExist(err) {
 			jdkDirPath = workDir + "/jre"
+		} else {
+			jdkDirPath = workDir + "/jdk"
 		}
-		jdkDirPath = workDir + "/jdk"
 	}
 	jdk17DirPath := conf.Section("").Key(KeyJdk17DirPath).String()
 	if jdk17DirPath == "" {
@@ -328,6 +345,11 @@ func LoadAgentConfig() error {
 	imageDebugPortRange := conf.Section("").Key(KeyImageDebugPortRange).MustString(DEFAULT_IMAGE_DEBUG_PORT_RANGE)
 
 	enablePipeline := conf.Section("").Key(KeyEnablePipeline).MustBool(false)
+
+	mcpServerPort := conf.Section("").Key(KeyMcpServerPort).MustInt(0)
+	httpProxy := strings.TrimSpace(conf.Section("").Key(KeyHTTPProxy).String())
+	httpsProxy := strings.TrimSpace(conf.Section("").Key(KeyHTTPSProxy).String())
+	noProxy := strings.TrimSpace(conf.Section("").Key(KeyNOProxy).String())
 
 	// -----------
 
@@ -397,6 +419,15 @@ func LoadAgentConfig() error {
 
 	GAgentConfig.EnablePipeline = enablePipeline
 	logs.Info("EnablePipeline: ", GAgentConfig.EnablePipeline)
+
+	GAgentConfig.McpServerPort = mcpServerPort
+	logs.Info("McpServerPort: ", GAgentConfig.McpServerPort)
+
+	GAgentConfig.HTTPProxy = httpProxy
+	GAgentConfig.HTTPSProxy = httpsProxy
+	GAgentConfig.NOProxy = noProxy
+	logs.Infof("Proxy config loaded, http=%t https=%t no_proxy=%t", GAgentConfig.HTTPProxy != "", GAgentConfig.HTTPSProxy != "", GAgentConfig.NOProxy != "")
+
 	// 初始化 GAgentConfig 写入一次配置, 往文件中写入一次程序中新添加的 key
 	return GAgentConfig.SaveConfig()
 }
@@ -433,13 +464,58 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(KeyLanguage + "=" + GAgentConfig.Language + "\n")
 	content.WriteString(KeyImageDebugPortRange + "=" + GAgentConfig.ImageDebugPortRange + "\n")
 	content.WriteString(KeyEnablePipeline + "=" + strconv.FormatBool(GAgentConfig.EnablePipeline) + "\n")
+	content.WriteString(KeyMcpServerPort + "=" + strconv.Itoa(GAgentConfig.McpServerPort) + "\n")
+	content.WriteString(KeyHTTPProxy + "=" + GAgentConfig.HTTPProxy + "\n")
+	content.WriteString(KeyHTTPSProxy + "=" + GAgentConfig.HTTPSProxy + "\n")
+	content.WriteString(KeyNOProxy + "=" + GAgentConfig.NOProxy + "\n")
 
-	err := exitcode.WriteFileWithCheck(filePath, []byte(content.String()), 0666)
+	err := exitcode.WriteFileWithCheck(filePath, content.Bytes(), 0666)
 	if err != nil {
 		logs.Error("write config failed:", err.Error())
 		return errors.New("write config failed")
 	}
 	return nil
+}
+
+// GetAuthHeaderMap 生成鉴权头部
+func (a *AgentConfig) GetPersistedProxyEnvs() map[string]string {
+	proxyEnvs := make(map[string]string)
+	if a.HTTPProxy != "" {
+		proxyEnvs[KeyHTTPProxy] = a.HTTPProxy
+	}
+	if a.HTTPSProxy != "" {
+		proxyEnvs[KeyHTTPSProxy] = a.HTTPSProxy
+	}
+	if a.NOProxy != "" {
+		proxyEnvs[KeyNOProxy] = a.NOProxy
+	}
+	return proxyEnvs
+}
+
+func (a *AgentConfig) SyncPersistedProxyEnvs(envMap map[string]string) bool {
+	getValue := func(keys ...string) string {
+		for _, key := range keys {
+			if v, ok := envMap[key]; ok {
+				return strings.TrimSpace(v)
+			}
+		}
+		return ""
+	}
+
+	changed := false
+	if httpProxy := getValue(KeyHTTPProxy, strings.ToLower(KeyHTTPProxy)); a.HTTPProxy != httpProxy {
+		a.HTTPProxy = httpProxy
+		changed = true
+	}
+	if httpsProxy := getValue(KeyHTTPSProxy, strings.ToLower(KeyHTTPSProxy)); a.HTTPSProxy != httpsProxy {
+		a.HTTPSProxy = httpsProxy
+		changed = true
+	}
+	if noProxy := getValue(KeyNOProxy, strings.ToLower(KeyNOProxy)); a.NOProxy != noProxy {
+		a.NOProxy = noProxy
+		changed = true
+	}
+	return changed
 }
 
 // GetAuthHeaderMap 生成鉴权头部

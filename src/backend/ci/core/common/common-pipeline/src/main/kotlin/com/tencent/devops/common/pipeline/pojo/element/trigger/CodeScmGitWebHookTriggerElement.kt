@@ -43,6 +43,8 @@ data class CodeScmGitWebHookTriggerElement(
     override var id: String? = null,
     @get:Schema(title = "状态", required = false)
     override var status: String? = null,
+    @get:Schema(title = "插件用户ID", required = false)
+    override var stepId: String? = null,
     @get:Schema(title = "数据", required = true)
     val data: CodeScmGitWebHookTriggerData
 ) : WebHookTriggerElement(name, id, status) {
@@ -157,5 +159,11 @@ data class CodeScmGitWebHookTriggerInput(
     @get:Schema(title = "是否启用回写")
     val enableCheck: Boolean? = true,
     @get:Schema(title = "事件动作")
-    val actions: List<String>? = null
+    val actions: List<String>? = null,
+    @get:Schema(title = "code review 状态", required = false)
+    val includeCrState: List<String>? = null,
+    @get:Schema(title = "code note comment", required = false)
+    val includeNoteComment: String? = null,
+    @get:Schema(title = "code note 类型", required = false)
+    val includeNoteTypes: List<String>? = null,
 )

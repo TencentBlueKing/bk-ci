@@ -73,11 +73,6 @@ table tr:hover {
 
 .biz-app {
     height: 100%;
-    a:not(.bk-button) {
-    	&:hover {
-    		color: $primaryColor;
-    	}
-    }
     .bk-form {
         .bk-label {
             font-size: 12px;
@@ -1198,4 +1193,9 @@ table tr:hover {
     animation-delay: 0.5s, 0.5s;
     animation-duration: 1s;
     animation-iteration-count: infinite;
+}
+
+.bk-table-fixed,
+.bk-table-fixed-right {
+    background-color: #fff;
 }

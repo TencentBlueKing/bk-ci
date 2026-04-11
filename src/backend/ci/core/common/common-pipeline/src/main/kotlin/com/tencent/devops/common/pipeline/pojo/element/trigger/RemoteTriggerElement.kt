@@ -39,6 +39,8 @@ data class RemoteTriggerElement(
     override var id: String? = null,
     @get:Schema(title = "状态", required = false)
     override var status: String? = null,
+    @get:Schema(title = "插件用户ID", required = false)
+    override var stepId: String? = null,
     @get:Schema(title = "是否可跳过插件", required = false)
     var canElementSkip: Boolean? = false,
     @get:Schema(title = "远程触发token", required = true)

@@ -28,6 +28,7 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.pojo.common.label.LabelRequest
 import org.jooq.Record
@@ -41,9 +42,10 @@ interface LabelService {
 
     /**
      * 获取所有标签信息
-     * @param type 0:插件 1：模板
+     * @param type 分类类型
+     * @param serviceScope 服务范围
      */
-    fun getAllLabel(type: Byte): Result<List<Label>?>
+    fun getAllLabel(type: Byte, serviceScope: ServiceScopeEnum? = null): Result<List<Label>?>
 
     /**
      * 根据id获取标签信息

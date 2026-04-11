@@ -22,6 +22,8 @@ export const allVersionKeyList = [
     'BK_CI_MINOR_VERSION',
     'BK_CI_FIX_VERSION'
 ]
+
+export const TEMP_PARAM_SET_ID = 'TEMP_REUSE'
 export const semverVersionKeySet = new Set(allVersionKeyList)
 
 export const NAME_FILTER_TYPE = 'filterByName'
@@ -315,4 +317,16 @@ export const TARGET_ACTION_ENUM = {
     COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE: 'COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE', // 提交到Dev(源分支)并创建MR
     CHECKOUT_BRANCH_AND_REQUEST_MERGE: 'CHECKOUT_BRANCH_AND_REQUEST_MERGE', // 新增分支并创建 MR 到默认分支
     COMMIT_TO_BRANCH: 'COMMIT_TO_BRANCH' // 提交到指定分支
+}
+
+export const TEMPLATE_TYPE = {
+    PIPELINE: 'PIPELINE'
+    // STAGE: 'STAGE',
+    // JOB: 'JOB',
+    // STEP: 'STEP'
+}
+
+export const STRATEGY_ENUM = {
+    AUTO: 'AUTO',
+    MANUAL: 'MANUAL'
 }
