@@ -361,9 +361,10 @@
                 const query = {
                     ...(this.isActiveDraftVersion ? { debug: '' } : {})
                 }
-                // 带上 versionName 用于 PAC 分支选择器匹配
+                // 将 versionName 保存到 sessionStorage，用于 PAC 分支选择器匹配
                 if (this.activePipelineVersion?.versionName) {
-                    query.versionName = this.activePipelineVersion.versionName
+                    const cacheKey = `pac_branch_${this.$route.params.projectId}_${this.$route.params.pipelineId}`
+                    sessionStorage.setItem(cacheKey, this.activePipelineVersion.versionName)
                 }
                 this.$router.push({
                     name: 'executePreview',

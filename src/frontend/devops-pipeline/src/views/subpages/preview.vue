@@ -330,7 +330,7 @@
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
-    import { UPDATE_PREVIEW_PIPELINE_NAME, PAC_BRANCH_CHANGE, UPDATE_PAC_ERROR_STATUS, PAC_BRANCH_LOADING, bus } from '@/utils/bus'
+    import { UPDATE_PREVIEW_PIPELINE_NAME, PAC_BRANCH_CHANGE, UPDATE_PAC_ERROR_STATUS, PAC_BRANCH_LOADING, PAC_BRANCH_INIT_DONE, bus } from '@/utils/bus'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { getParamsValuesMap, isObject, isShallowEqual } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
@@ -471,11 +471,9 @@
         watch: {
             executeVersion: {
                 handler () {
+                    // 非 PAC 模式或调试模式直接初始化
                     if (!this.pacEnabled || this.isDebugPipeline) {
                         this.$nextTick(() => this.init())
-                    } else {
-                        // PAC 模式：显示 loading 状态，等待分支选择器触发 handleBranchChange
-                        this.isLoading = true
                     }
                 },
                 immediate: true
@@ -486,10 +484,16 @@
             bus.$off('start-execute')
             bus.$on('start-execute', this.executePipeline)
             bus.$on(PAC_BRANCH_CHANGE, this.handleBranchChange)
+            bus.$on(PAC_BRANCH_INIT_DONE, this.handleBranchInitDone)
+
+            if (this.pacEnabled && !this.isDebugPipeline) {
+                this.isLoading = true
+            }
         },
         beforeDestroy () {
             bus.$off('start-execute', this.executePipeline)
             bus.$off(PAC_BRANCH_CHANGE, this.handleBranchChange)
+            bus.$off(PAC_BRANCH_INIT_DONE, this.handleBranchInitDone)
             this.togglePropertyPanel({
                 isShow: false
             })
@@ -802,6 +806,24 @@
                     await this.init(branchName, branchInfo)
                 } finally {
                     bus.$emit(PAC_BRANCH_LOADING, false)
+                }
+            },
+            /**
+             * 处理分支列表初始化完成（无分支可选或加载失败）
+             * @param {Object} payload - { hasBranch: boolean, error?: Error }
+             */
+            handleBranchInitDone (payload) {
+                // 分支列表为空或加载失败时，结束 loading 状态并显示错误
+                if (!payload.hasBranch) {
+                    this.isLoading = false
+                    this.pacError = {
+                        show: true,
+                        type: 'empty',
+                        message: payload.error
+                            ? this.$t('preview.branchListLoadFailed')
+                            : this.$t('preview.noBranchAvailable')
+                    }
+                    bus.$emit(UPDATE_PAC_ERROR_STATUS, true)
                 }
             },
             async executePipeline () {

@@ -255,7 +255,7 @@
                     const value = typeof this.paramValues[key] === 'undefined'
                         ? urlQuery[key]
                         : this.pipelineRequiredParams[key] ?? this.paramValues[key]
-                    url += `${index <= 0 ? '?' : '&'}${key}=${value}`
+                    url += `${index <= 0 ? '?' : '&'}${encodeURIComponent(key)}=${encodeURIComponent(value)}`
                 })
                 const pipelineInfoQuery = this.param.pipelineInfoQuery || {}
                 this.pipelineInfo && Object.keys(pipelineInfoQuery).forEach(key => {

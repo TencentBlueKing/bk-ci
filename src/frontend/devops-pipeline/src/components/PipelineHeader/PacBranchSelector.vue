@@ -55,6 +55,7 @@
 <script>
     import { defineComponent, ref, computed, watch, onMounted } from 'vue'
     import useInstance from '@/hook/useInstance'
+    import { PAC_BRANCH_INIT_DONE, bus } from '@/utils/bus'
 
     export default defineComponent({
         name: 'PacBranchSelector',
@@ -68,6 +69,7 @@
             const searchKey = ref('')
             const isInitializing = ref(false) // 标记是否正在初始化
             const initialVersionName = ref('')
+            const isFirstLoad = ref(true) // 标记是否首次加载
 
             // 计算属性
             const projectId = computed(() => proxy.$route.params.projectId)
@@ -79,6 +81,8 @@
                 if (!pipelineId.value) return
 
                 isLoading.value = true
+                const isInitialLoad = isFirstLoad.value
+                isFirstLoad.value = false
 
                 try {
                     const data = await proxy.$store.dispatch('common/getPACBranchList', {
@@ -96,21 +100,37 @@
                         // 优先匹配初始化时保存的 versionName
                         if (initialVersionName.value) {
                             targetBranch = branchList.value.find(b => b.name === initialVersionName.value)
-                        } else {
+                        }
+                        // 如果没有找到，则匹配 RELEASED 版本
+                        if (!targetBranch) {
                             targetBranch = branchList.value.find(b => b.versionStatus === 'RELEASED')
                         }
-                        // 设置初始化标记，避免 @change 重复触发
-                        isInitializing.value = true
-                        selectedBranch.value = targetBranch.name
-                        // 触发分支变更事件
-                        emit('branch-change', targetBranch.name, targetBranch)
-                        // 延迟重置标记，确保 @change 事件已被忽略
-                        setTimeout(() => {
-                            isInitializing.value = false
-                        }, 0)
+                        // 如果还是没有找到，则选择第一个分支
+                        if (!targetBranch) {
+                            targetBranch = branchList.value[0]
+                        }
+                        
+                        if (targetBranch) {
+                            // 设置初始化标记，避免 @change 重复触发
+                            isInitializing.value = true
+                            selectedBranch.value = targetBranch.name
+                            // 触发分支变更事件
+                            emit('branch-change', targetBranch.name, targetBranch)
+                            // 延迟重置标记，确保 @change 事件已被忽略
+                            setTimeout(() => {
+                                isInitializing.value = false
+                            }, 0)
+                        }
+                    } else if (isInitialLoad && branchList.value.length === 0) {
+                        // 首次加载且分支列表为空，通知 preview 组件初始化完成（无分支可选）
+                        bus.$emit(PAC_BRANCH_INIT_DONE, { hasBranch: false })
                     }
                 } catch (error) {
                     console.error('Failed to fetch branch list:', error)
+                    // 首次加载失败时，通知 preview 组件初始化完成（失败）
+                    if (isInitialLoad) {
+                        bus.$emit(PAC_BRANCH_INIT_DONE, { hasBranch: false, error })
+                    }
                 } finally {
                     isLoading.value = false
                 }
@@ -154,7 +174,11 @@
             })
 
             onMounted(() => {
-                initialVersionName.value = proxy.$route.query.versionName || ''
+                // 优先从 sessionStorage 读取缓存的分支名，其次从 URL 参数读取
+                const cacheKey = `pac_branch_${projectId.value}_${pipelineId.value}`
+                const cachedBranch = sessionStorage.getItem(cacheKey)
+                initialVersionName.value = cachedBranch || proxy.$route.query.versionName || ''
+                
                 if (pipelineId.value) {
                     fetchBranchList()
                 }
