@@ -30,7 +30,7 @@ package com.tencent.devops.store.common.service.impl
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.web.utils.CommonServiceUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.utils.StoreUtils
 import java.io.File
@@ -39,7 +39,7 @@ class SampleStoreLogoServiceImpl : StoreLogoServiceImpl() {
 
     override fun uploadStoreLogo(userId: String, file: File, fileRepoPath: String?): Result<String?> {
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
-        val logoUrl = CommonUtils.serviceUploadFile(
+        val logoUrl = CommonServiceUtils.uploadFileToArtifactories(
             userId = userId,
             serviceUrlPrefix = serviceUrlPrefix,
             file = file,
