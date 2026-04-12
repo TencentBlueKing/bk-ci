@@ -1519,32 +1519,31 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_PARAM_COMBINATION_DETAIL`
     PRIMARY KEY (`PROJECT_ID`, `PIPELINE_ID`, `COMBINATION_ID`, `VAR_NAME`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT ='流水线启动参数组合值详情';
 
-CREATE TABLE IF NOT EXISTS `T_PIPELINE_RESOURCE_DRAFT_VERSION` (
-    `PROJECT_ID`      varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT '项目ID',
-    `PIPELINE_ID`     varchar(34)                                           NOT NULL COMMENT '流水线ID',
-    `VERSION`         int(11)                                               NOT NULL DEFAULT '1' COMMENT '版本号',
-    `DRAFT_VERSION`   int(11)                                               NOT NULL DEFAULT '1' COMMENT '草稿版本',
-    `MODEL`           mediumtext NOT NULL  COMMENT '流水线模型',
-    `YAML`            mediumtext COMMENT 'YAML编排',
-    `YAML_VERSION`    varchar(34)                                                    DEFAULT NULL COMMENT 'YAML的版本标记',
-    `SETTING_VERSION` int(11)                                                        DEFAULT NULL COMMENT '关联的流水线设置版本号',
-    `BASE_VERSION`    int(11)                                                        DEFAULT NULL COMMENT '来源的正式版本',
-    `BASE_VERSION_NAME`       varchar(64)          DEFAULT NULL COMMENT '来源的正式版本名称',
-    `BASE_DRAFT_VERSION`    int(11)                                                        DEFAULT NULL COMMENT '来源的草稿版本',
-    `CREATOR`         varchar(64)                                                    DEFAULT NULL COMMENT '创建者',
-    `CREATE_TIME`     timestamp                                             NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `UPDATER`         varchar(64)                                                    DEFAULT NULL COMMENT '最近更新人',
-    `UPDATE_TIME`     timestamp                                             NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_RESOURCE_DRAFT_VERSION`(
+    `PROJECT_ID`         varchar(64) NOT NULL COMMENT '项目ID',
+    `PIPELINE_ID`        varchar(34) NOT NULL COMMENT '流水线ID',
+    `VERSION`            int(11)     NOT NULL DEFAULT '1' COMMENT '版本号',
+    `DRAFT_VERSION`      int(11)     NOT NULL DEFAULT '1' COMMENT '草稿版本',
+    `MODEL`              mediumtext  NOT NULL COMMENT '流水线模型',
+    `YAML`               mediumtext COMMENT 'YAML编排',
+    `YAML_VERSION`       varchar(34)          DEFAULT NULL COMMENT 'YAML的版本标记',
+    `SETTING_VERSION`    int(11)              DEFAULT NULL COMMENT '关联的流水线设置版本号',
+    `BASE_VERSION`       int(11)              DEFAULT NULL COMMENT '来源的正式版本',
+    `BASE_VERSION_NAME`  varchar(64)          DEFAULT NULL COMMENT '来源的正式版本名称',
+    `BASE_DRAFT_VERSION` int(11)              DEFAULT NULL COMMENT '来源的草稿版本',
+    `CREATOR`            varchar(64)          DEFAULT NULL COMMENT '创建者',
+    `CREATE_TIME`        timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATER`            varchar(64)          DEFAULT NULL COMMENT '最近更新人',
+    `UPDATE_TIME`        timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`PROJECT_ID`, `PIPELINE_ID`, `VERSION`, `DRAFT_VERSION`)
-) ENGINE = InnoDB
-    DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT ='流水线草稿资源版本表';
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT ='流水线草稿资源版本表';
 
-CREATE TABLE IF NOT EXISTS `T_PIPELINE_SETTING_DRAFT_VERSION` (
-    `PROJECT_ID`                         varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin           NOT NULL COMMENT '项目ID',
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_SETTING_DRAFT_VERSION`(
+    `PROJECT_ID`                         varchar(64)   NOT NULL COMMENT '项目ID',
     `PIPELINE_ID`                        varchar(34)   NOT NULL COMMENT '流水线ID',
     `VERSION`                            int(11)       NOT NULL DEFAULT '1' COMMENT '流水线版本号',
+    `DRAFT_VERSION`                      int(11)       NOT NULL DEFAULT '1' COMMENT '草稿版本',
     `SETTING_VERSION`                    int(11)       NOT NULL DEFAULT '1' COMMENT '版本号',
-    `DRAFT_VERSION`          int(11)                                               NOT NULL DEFAULT '1' COMMENT '草稿版本',
     `NAME`                               varchar(255)           DEFAULT NULL COMMENT '名称',
     `DESC`                               varchar(1024)          DEFAULT NULL COMMENT '描述',
     `LABELS`                             text                   DEFAULT NULL COMMENT '版本修改的标签',
@@ -1577,8 +1576,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_SETTING_DRAFT_VERSION` (
     `FAIL_IF_VARIABLE_INVALID`           bit(1)                 DEFAULT NULL COMMENT '是否配置流水线变量值超长时终止执行',
     `BUILD_CANCEL_POLICY`                varchar(32)            DEFAULT 'EXECUTE_PERMISSION' COMMENT '构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消',
     PRIMARY KEY (`PROJECT_ID`, `PIPELINE_ID`, `VERSION`, `DRAFT_VERSION`)
-) ENGINE = InnoDB
-    DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT ='流水线草稿基础配置版本表';
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT ='流水线草稿基础配置版本表';
 
 CREATE TABLE IF NOT EXISTS `T_PIPELINE_TEMPLATE_RESOURCE_DRAFT_VERSION` (
     `PROJECT_ID`              varchar(64) NOT NULL COMMENT '项目ID',
@@ -1607,8 +1605,8 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_TEMPLATE_SETTING_DRAFT_VERSION`(
     `PROJECT_ID`                     varchar(64)  NOT NULL COMMENT '项目ID',
     `TEMPLATE_ID`                    varchar(34)  NOT NULL COMMENT '模板ID',
     `VERSION`                        bigint(20)   NOT NULL COMMENT '模板版本号',
-    `SETTING_VERSION`                int(11)      NOT NULL COMMENT '模板配置版本号',
     `DRAFT_VERSION`                  int(11)      NOT NULL DEFAULT '1' COMMENT '草稿版本',
+    `SETTING_VERSION`                int(11)      NOT NULL COMMENT '模板配置版本号',
     `NAME`                           varchar(255) NOT NULL COMMENT '名称',
     `DESC`                           varchar(1024)         DEFAULT NULL COMMENT '描述',
     `LABELS`                         text                  DEFAULT NULL COMMENT '版本修改的标签',
