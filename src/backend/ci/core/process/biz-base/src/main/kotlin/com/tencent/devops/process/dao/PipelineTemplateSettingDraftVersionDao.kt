@@ -26,7 +26,6 @@ class PipelineTemplateSettingDraftVersionDao {
         templateId: String,
         setting: PipelineSetting,
         version: Long,
-        settingVersion: Int,
         draftVersion: Int
     ) {
         val successSubscriptionList = setting.successSubscriptionList ?: emptyList()
@@ -63,7 +62,7 @@ class PipelineTemplateSettingDraftVersionDao {
                 setting.projectId,
                 templateId,
                 version,
-                settingVersion,
+                setting.version,
                 draftVersion,
                 setting.pipelineName,
                 setting.desc,
@@ -111,7 +110,6 @@ class PipelineTemplateSettingDraftVersionDao {
         setting: PipelineSetting,
         templateId: String,
         version: Long,
-        settingVersion: Int,
         draftVersion: Int
     ) {
         val successSubscriptionList = setting.successSubscriptionList ?: emptyList()

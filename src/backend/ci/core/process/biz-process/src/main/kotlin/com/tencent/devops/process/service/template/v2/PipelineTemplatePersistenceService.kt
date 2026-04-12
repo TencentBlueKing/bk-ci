@@ -321,7 +321,6 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     templateId = pipelineTemplateResource.templateId,
                     setting = pipelineTemplateSetting,
                     version = pipelineTemplateResource.version,
-                    settingVersion = pipelineTemplateSetting.version,
                     draftVersion = pipelineTemplateResource.draftVersion!!
                 )
                 postProcessInTransactionAfterVersionCreate(
@@ -471,7 +470,6 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                     templateId = pipelineTemplateResource.templateId,
                     setting = pipelineTemplateSetting,
                     version = pipelineTemplateResource.version,
-                    settingVersion = pipelineTemplateSetting.version,
                     draftVersion = pipelineTemplateResource.draftVersion!!
                 )
                 postProcessInTransactionAfterVersionCreate(

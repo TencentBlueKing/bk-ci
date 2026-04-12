@@ -31,7 +31,7 @@ import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.process.constant.PipelineTemplateConstant
 import com.tencent.devops.process.pojo.template.v2.PTemplateResourceWithoutVersion
-import com.tencent.devops.process.pojo.template.v2.PipelineTemplateDraftRollbackReq
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRollbackReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateVersionReq
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
@@ -42,17 +42,17 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 /**
- * 流水线模板复制创建请求转换
+ * 流水线模板回滚请求转换
  */
 @Service
-class PipelineTemplateDraftRollbackReqConverter @Autowired constructor(
+class PipelineTemplateRollbackReqConverter @Autowired constructor(
     private val pipelineTemplateInfoService: PipelineTemplateInfoService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplateSettingService: PipelineTemplateSettingService
 ) : PipelineTemplateVersionReqConverter {
 
     override fun support(request: PipelineTemplateVersionReq): Boolean {
-        return request is PipelineTemplateDraftRollbackReq
+        return request is PipelineTemplateRollbackReq
     }
 
     override fun convert(
@@ -65,7 +65,7 @@ class PipelineTemplateDraftRollbackReqConverter @Autowired constructor(
         logger.info(
             "Start to convert draft rollback request|$projectId|$templateId|$templateId|$version"
         )
-        request as PipelineTemplateDraftRollbackReq
+        request as PipelineTemplateRollbackReq
         if (templateId == null) {
             throw IllegalArgumentException("templateId is null")
         }
@@ -78,7 +78,7 @@ class PipelineTemplateDraftRollbackReqConverter @Autowired constructor(
             templateId = templateId
         )
         val baseResource = if (draftVersion != null) {
-            pipelineTemplateResourceService.getTemplateDraftVersion(
+            pipelineTemplateResourceService.getByDraftVersion(
                 projectId = projectId,
                 templateId = templateId,
                 version = version,
@@ -92,7 +92,7 @@ class PipelineTemplateDraftRollbackReqConverter @Autowired constructor(
             )
         }
         val baseSetting = if (draftVersion != null) {
-            pipelineTemplateSettingService.getDraftVersion(
+            pipelineTemplateSettingService.getByDraftVersion(
                 projectId = projectId,
                 templateId = templateId,
                 version = baseResource.version,
@@ -126,6 +126,6 @@ class PipelineTemplateDraftRollbackReqConverter @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineTemplateDraftRollbackReqConverter::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineTemplateRollbackReqConverter::class.java)
     }
 }

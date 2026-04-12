@@ -423,7 +423,7 @@ class PipelineTemplateResourceService @Autowired constructor(
         )
     }
 
-    fun getTemplateDraftVersion(
+    fun getByDraftVersion(
         projectId: String,
         templateId: String,
         version: Long,

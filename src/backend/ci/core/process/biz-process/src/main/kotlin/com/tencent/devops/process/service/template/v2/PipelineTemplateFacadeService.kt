@@ -71,7 +71,7 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCopyCreateReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCustomCreateReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateDetailsResponse
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateDraftReleaseReq
-import com.tencent.devops.process.pojo.template.v2.PipelineTemplateDraftRollbackReq
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRollbackReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateDraftSaveReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoResponse
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoUpdateInfo
@@ -444,7 +444,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
             projectId = projectId,
             templateId = templateId,
             version = version,
-            request = PipelineTemplateDraftRollbackReq(
+            request = PipelineTemplateRollbackReq(
                 draftVersion = draftVersion
             )
         ).also {
@@ -819,7 +819,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
                     version = version
                 )
             } else {
-                pipelineTemplateResourceService.getTemplateDraftVersion(
+                pipelineTemplateResourceService.getByDraftVersion(
                     projectId = projectId,
                     templateId = templateId,
                     version = version,
