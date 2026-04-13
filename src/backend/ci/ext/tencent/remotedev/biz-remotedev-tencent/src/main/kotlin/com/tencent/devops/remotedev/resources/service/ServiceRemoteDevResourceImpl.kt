@@ -27,6 +27,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
+import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
@@ -145,6 +146,8 @@ class ServiceRemoteDevResourceImpl(
 ) : ServiceRemoteDevResource {
     companion object {
         private const val MAX_REFRESH_SIZE = 100
+        private const val DEFAULT_PAGE_SIZE = 100
+        private const val MAX_PAGE_SIZE = 1000
         private val logger = LoggerFactory.getLogger(
             OpProjectWorkspaceResourceImpl::class.java
         )
@@ -1034,6 +1037,27 @@ class ServiceRemoteDevResourceImpl(
             workspaceService.batchGetSimpleWorkspaces(
                 projectId = projectId,
                 workspaceNames = workspaceNames
+            )
+        )
+    }
+
+    override fun searchUserWorkspaces(
+        userId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: WorkspaceSearch
+    ): Result<Page<Workspace>> {
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = minOf(
+            pageSize ?: DEFAULT_PAGE_SIZE,
+            MAX_PAGE_SIZE
+        )
+        return Result(
+            workspaceService.getWorkspaceList(
+                userId = userId,
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                search = search
             )
         )
     }

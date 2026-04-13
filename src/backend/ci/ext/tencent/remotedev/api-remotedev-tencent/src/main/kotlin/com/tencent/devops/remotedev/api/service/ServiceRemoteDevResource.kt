@@ -18,6 +18,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
+import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
@@ -1093,4 +1094,36 @@ interface ServiceRemoteDevResource {
         )
         workspaceNames: List<String>
     ): Result<List<WeSecProjectWorkspace>>
+
+    @Operation(summary = "按用户查询云桌面列表")
+    @POST
+    @Path("/user/workspaces/search")
+    fun searchUserWorkspaces(
+        @Parameter(
+            description = "用户ID",
+            required = true,
+            example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(
+            description = "第几页",
+            required = false,
+            example = "1"
+        )
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(
+            description = "每页多少条",
+            required = false,
+            example = "100"
+        )
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @Parameter(
+            description = "搜索条件",
+            required = true
+        )
+        search: WorkspaceSearch
+    ): Result<Page<Workspace>>
 }

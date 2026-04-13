@@ -21,6 +21,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
+import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
@@ -837,6 +838,27 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class)
             .batchGetSimpleWorkspaces(
                 userId, projectId, workspaceNames
+            )
+    }
+
+    override fun searchUserWorkspaces(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: WorkspaceSearch
+    ): Result<Page<Workspace>> {
+        logger.info(
+            "searchUserWorkspaces" +
+                " |$appCode|$userId|$page|$pageSize"
+        )
+        return client.get(ServiceRemoteDevResource::class)
+            .searchUserWorkspaces(
+                userId = userId,
+                page = page,
+                pageSize = pageSize,
+                search = search
             )
     }
 }
