@@ -220,6 +220,12 @@ class DownloadAgentInstallService @Autowired constructor(
         arch: AgentArchType?
     ): Response {
         val agentRecord = getAgentRecord(agentId)
+        if (agentRecord.status == AgentStatus.IMPORT_OK.status) {
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_AGENT_ALREADY_INSTALL,
+                defaultMessage = "Agent already installed. Please obtain the install url again"
+            )
+        }
         return downloadGoAgent(
             agentId = agentId,
             record = agentRecord,
