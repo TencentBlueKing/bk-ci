@@ -1787,10 +1787,8 @@ class WorkspaceService @Autowired constructor(
         )
 
     companion object {
-        private val logger =
-            LoggerFactory.getLogger(WorkspaceService::class.java)
-        private val expiredTimeInSeconds =
-            TimeUnit.MINUTES.toSeconds(2)
+        private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
+        private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
         private const val DEFAULT_PAGE_SIZE = 20
         private const val DEFAULT_WAIT_TIME = 10
         private const val DEFAULT_LOCALE_LANGUAGE = "zh_CN"
