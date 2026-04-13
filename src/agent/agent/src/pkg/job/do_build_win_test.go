@@ -22,7 +22,7 @@ func init() {
 
 func TestStartProcessCmd_NoInheritHandles(t *testing.T) {
 	// Default: NoInheritHandles should be true
-	os.Unsetenv(constant.DevopsAgentNoInheritHandles)
+	os.Setenv(constant.DevopsAgentCloseFdInherit, "true")
 
 	cmd, err := StartProcessCmd("cmd.exe", []string{"/c", "echo", "hello"}, "", nil, "")
 	if err != nil {
@@ -41,8 +41,8 @@ func TestStartProcessCmd_NoInheritHandles(t *testing.T) {
 }
 
 func TestStartProcessCmd_NoInheritHandles_Disabled(t *testing.T) {
-	os.Setenv(constant.DevopsAgentNoInheritHandles, "false")
-	defer os.Unsetenv(constant.DevopsAgentNoInheritHandles)
+	os.Setenv(constant.DevopsAgentCloseFdInherit, "false")
+	defer os.Unsetenv(constant.DevopsAgentCloseFdInherit)
 
 	cmd, err := StartProcessCmd("cmd.exe", []string{"/c", "echo", "hello"}, "", nil, "")
 	if err != nil {
@@ -77,8 +77,9 @@ func TestStartProcessCmd_NewConsoleFlag(t *testing.T) {
 	})
 
 	t.Run("with_new_console", func(t *testing.T) {
-		os.Unsetenv(constant.DevopsAgentNoInheritHandles)
+		os.Setenv(constant.DevopsAgentCloseFdInherit, "true")
 		os.Setenv(constant.DevopsAgentEnableNewConsole, "true")
+		defer os.Unsetenv(constant.DevopsAgentCloseFdInherit)
 		defer os.Unsetenv(constant.DevopsAgentEnableNewConsole)
 
 		cmd, err := StartProcessCmd("cmd.exe", []string{"/c", "echo", "test"}, "", nil, "")

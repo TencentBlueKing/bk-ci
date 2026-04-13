@@ -72,6 +72,7 @@ func main() {
 			fmt.Println(config.GitCommit)
 			fmt.Println(config.BuildTime)
 			systemutil.ExitProcess(0)
+		}
 	}
 
 	// 初始化日志
@@ -399,11 +400,11 @@ func checkDaemonUpgradeSignal() bool {
 
 // cleanupOldDaemonBinary removes the .old daemon binary left over from
 // replaceDaemonFileByRename. Safe to call even if the file does not exist.
-func cleanupOldDaemonBinary() {
-	oldPath := filepath.Join(systemutil.GetWorkDir(), config.GetClientDaemonFile()+".old")
+func cleanupOldDaemonBinary(workDir string) {
+	oldPath := filepath.Join(workDir, "devopsDaemon.exe.old")
 	if err := os.Remove(oldPath); err != nil && !os.IsNotExist(err) {
 		logs.WithError(err).Warn("failed to remove old daemon binary")
 	} else if err == nil {
-		logs.Info("cleaned up old daemon binary: " + config.GetClientDaemonFile() + ".old")
+		logs.Info("cleaned up old daemon binary: devopsDaemon.exe.old")
 	}
 }

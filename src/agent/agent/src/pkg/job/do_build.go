@@ -60,6 +60,7 @@ func doBuild(
 	goEnv map[string]string,
 	runUser string,
 ) error {
+	goEnv["DEVOPS_AGENT_INSTALL_MODE"] = config.GAgentEnv.InstallType
 	startScriptFile, err := writeStartBuildAgentScript(buildInfo, tmpDir)
 	if err != nil {
 		errMsg := i18n.Localize("CreateStartScriptFailed", map[string]interface{}{"err": err.Error()})

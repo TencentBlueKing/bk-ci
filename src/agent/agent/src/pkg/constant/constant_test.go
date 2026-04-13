@@ -23,7 +23,6 @@ func TestEnvVarNames(t *testing.T) {
 		"DevopsAgentDockerCapAdd":     DevopsAgentDockerCapAdd,
 		"DevopsAgentTimeoutExitTime":  DevopsAgentTimeoutExitTime,
 		"DevopsAgentEnableMCP":        DevopsAgentEnableMCP,
-		"DevopsAgentNoInheritHandles": DevopsAgentNoInheritHandles,
 	}
 
 	for name, val := range envVars {
