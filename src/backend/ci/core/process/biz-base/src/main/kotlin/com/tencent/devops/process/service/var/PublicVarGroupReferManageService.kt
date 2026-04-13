@@ -263,11 +263,10 @@ class PublicVarGroupReferManageService @Autowired constructor(
     ) {
         val model = publicVarGroupReferDTO.model
         val params = model.getTriggerContainer().params
-        if (params.isEmpty()) {
-            return
+        // 检查参数ID是否存在重复（仅在params非空时校验）
+        if (params.isNotEmpty()) {
+            validateParamIds(params)
         }
-        // 检查参数ID是否存在重复
-        validateParamIds(params)
 
         // 使用版本级别的分布式锁保护整个操作流程，避免并发修改导致的引用计数错误
         val lock = createReferLock(
@@ -286,6 +285,10 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 referType = publicVarGroupReferDTO.referType,
                 referVersion = publicVarGroupReferDTO.referVersion
             )
+            // params为空且无历史引用时，无需处理，直接返回
+            if (params.isEmpty() && historicalReferInfos.isEmpty()) {
+                return
+            }
             model.handlePublicVarInfo()
             val publicVarGroups = model.publicVarGroups
             publicVarGroups?.let { validatePublicVarGroupsExist(publicVarGroupReferDTO.projectId, it) }
@@ -492,7 +495,8 @@ class PublicVarGroupReferManageService @Autowired constructor(
                     "publicVarGroupNames: $publicVarGroupNames, " +
                     "resourcePublicVarGroupReferPOS size: ${resourcePublicVarGroupReferPOS.size}"
         )
-        if (publicVarGroupNames.isEmpty() && resourcePublicVarGroupReferPOS.isEmpty()) {
+        if (publicVarGroupNames.isEmpty() && resourcePublicVarGroupReferPOS.isEmpty()
+            && historicalReferInfos.isEmpty()) {
             return
         }
         try {
