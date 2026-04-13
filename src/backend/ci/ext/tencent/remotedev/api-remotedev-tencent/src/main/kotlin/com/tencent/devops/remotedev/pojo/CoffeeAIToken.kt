@@ -22,6 +22,16 @@ data class CoffeeAIToken(
 )
 
 /**
+ * 销毁云桌面请求
+ */
+@Schema(title = "销毁云桌面请求")
+data class CoffeeAIDelete(
+    @get:Schema(title = "workspaceName", required = true)
+    @JsonProperty("workspaceName")
+    val workspaceName: String
+)
+
+/**
  * 工作空间注册请求
  */
 @Schema(title = "工作空间注册请求")
