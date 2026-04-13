@@ -66,9 +66,11 @@ func main() {
 			fmt.Println(config.GitCommit)
 			fmt.Println(config.BuildTime)
 			systemutil.ExitProcess(0)
+		}
 	}
 
 	// 初始化日志
+	workDir := systemutil.GetExecutableDir()
 	logFilePath := filepath.Join(systemutil.GetWorkDir(), "logs", "devopsDaemon.log")
 	err := logs.Init(logFilePath, agentcli.DebugFileExists(workDir), false)
 	if err != nil {
@@ -78,7 +80,6 @@ func main() {
 
 	logs.Infof("GOOS=%s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
 
-	workDir := systemutil.GetExecutableDir()
 	err = os.Chdir(workDir)
 	if err != nil {
 		logs.Info("change work dir failed, err: ", err.Error())
@@ -151,7 +152,7 @@ func doCheckAndLaunchAgent() {
 
 	logs.Warn("agent is not available, will launch it")
 
-	process, err := launch(workDir+"/"+config.AgentFileClientLinux)
+	process, err := launch(workDir + "/" + config.AgentFileClientLinux)
 	if err != nil {
 		logs.WithError(err).Error("launch agent failed")
 		return
