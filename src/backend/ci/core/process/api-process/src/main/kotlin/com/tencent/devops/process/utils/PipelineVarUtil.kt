@@ -281,7 +281,8 @@ object PipelineVarUtil {
         "ci.create_time" to BK_REPO_GIT_WEBHOOK_NOTE_CREATED_AT,
         "ci.modify_time" to BK_REPO_GIT_WEBHOOK_NOTE_UPDATED_AT,
         "ci.review_type" to BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWABLE_TYPE,
-        "ci.build-no" to BUILD_NO,
+        "ci.build-no" to BUILD_NO, // 旧语法，仅保留映射关系，但前端界面不展示此变量
+        "ci.build_no" to BUILD_NO,
         "ci.pipeline_creator" to PIPELINE_CREATE_USER,
         "ci.pipeline_modifier" to PIPELINE_UPDATE_USER,
         "ci.pipeline_version" to PIPELINE_VERSION,
