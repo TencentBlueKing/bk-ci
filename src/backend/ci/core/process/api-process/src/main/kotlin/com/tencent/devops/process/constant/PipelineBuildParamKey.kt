@@ -42,6 +42,7 @@ object PipelineBuildParamKey {
     const val CI_MILESTONE_NAME = "ci.milestone_name"
     const val CI_MILESTONE_ID = "ci.milestone_id"
     const val CI_TAPD_ISSUES = "ci.mr_tapd_issues"
+    const val CI_MR_LABELS = "ci.mr_labels"
 
     // GIT TAG参数
     const val CI_COMMIT_AUTHOR = "ci.commit_author"

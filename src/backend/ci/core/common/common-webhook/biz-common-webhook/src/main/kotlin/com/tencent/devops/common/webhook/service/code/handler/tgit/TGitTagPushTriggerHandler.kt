@@ -43,6 +43,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_FROM
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_MESSAGE
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_CREATE_FROM
@@ -56,6 +57,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
 import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
+import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
 import com.tencent.devops.common.webhook.service.code.filter.GitUrlFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
@@ -107,28 +109,30 @@ class TGitTagPushTriggerHandler constructor(
     }
 
     override fun getEventDesc(event: GitTagPushEvent): String {
-        val createFrom = when {
-            event.isDeleteTag() -> {
-                // 删除标签时展示删除前的tag提交点
-                GitUtils.getShortSha(event.before)
+        val deleteTag = event.isDeleteTag()
+        val (createFrom, linkUrl) = when {
+            deleteTag -> {
+                // 删除标签时展示删除前的tag提交点, 链接为仓库首页
+                GitUtils.getShortSha(event.before) to (event.repository.homepage ?: "")
             }
             event.create_from.isNullOrBlank() || event.checkout_sha == event.create_from -> {
-                GitUtils.getShortSha(event.checkout_sha)
+                GitUtils.getShortSha(event.checkout_sha) to
+                        "${event.repository.homepage}/-/tags/${getBranchName(event)}"
             }
 
             else -> {
-                event.create_from
+                event.create_from to "${event.repository.homepage}/-/tags/${getBranchName(event)}"
             }
         }
         return I18Variable(
-            code = if (event.isDeleteTag()) {
+            code = if (deleteTag) {
                 WebhookI18nConstants.TGIT_TAG_DELETE_EVENT_DESC
             } else {
                 WebhookI18nConstants.TGIT_TAG_PUSH_EVENT_DESC
             },
             params = listOf(
                 "$createFrom",
-                "${event.repository.homepage}/-/tags/${getBranchName(event)}",
+                linkUrl,
                 getBranchName(event),
                 getUsername(event)
             )
@@ -226,6 +230,18 @@ class TGitTagPushTriggerHandler constructor(
                     params = listOf(eventTag)
                 ).toJsonStr()
             )
+            val actionFilter = ContainsFilter(
+                pipelineId = pipelineId,
+                included = WebhookUtils.convert(includeTagAction).ifEmpty {
+                    listOf("empty-action")
+                },
+                triggerOn = getAction(event) ?: TGitPushOperationKind.CREAT.value,
+                filterName = "tagActionFilter",
+                failedReason = I18Variable(
+                    code = WebhookI18nConstants.TAG_ACTION_NOT_MATCH,
+                    params = listOf(getAction(event) ?: "")
+                ).toJsonStr()
+            )
             val userId = getUsername(event)
             val userFilter = UserFilter(
                 pipelineId = pipelineId,
@@ -253,8 +269,15 @@ class TGitTagPushTriggerHandler constructor(
                 ).toJsonStr(),
                 excludedFailedReason = ""
             )
-            return listOf(urlFilter, eventTypeFilter, branchFilter, userFilter, fromBranchFilter)
+            return listOf(
+                urlFilter, eventTypeFilter, branchFilter,
+                actionFilter, userFilter, fromBranchFilter
+            )
         }
+    }
+
+    private fun getAction(event: GitTagPushEvent): String? {
+        return event.operation_kind
     }
 
     companion object {

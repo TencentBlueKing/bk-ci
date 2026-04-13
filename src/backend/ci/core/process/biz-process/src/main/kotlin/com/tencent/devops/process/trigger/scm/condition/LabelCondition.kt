@@ -25,36 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.models.on
+package com.tencent.devops.process.trigger.scm.condition
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
+import com.tencent.devops.common.webhook.service.code.filter.ListContainsFilter
+import com.tencent.devops.common.webhook.util.WebhookUtils.convert
 
-/**
- * model
- */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class TagRule(
-    override val id: String? = null,
-    override val name: String? = null,
-    override val enable: Boolean? = true,
-    val tags: List<String>? = null,
-
-    @get:Schema(title = "tags-ignore")
-    @JsonProperty("tags-ignore")
-    val tagsIgnore: List<String>? = null,
-
-    @get:Schema(title = "from-branches")
-    @JsonProperty("from-branches")
-    val fromBranches: List<String>? = null,
-
-    val users: List<String>? = null,
-
-    @get:Schema(title = "users-ignore")
-    @JsonProperty("users-ignore")
-    val usersIgnore: List<String>? = null,
-    val action: List<String>? = null
-) : Rule(id, name, enable)
+class LabelCondition : WebhookCondition {
+    override fun match(context: WebhookConditionContext): Boolean {
+        with(context) {
+            val userFilter = ListContainsFilter(
+                pipelineId = pipelineId,
+                filterName = "mrLabel",
+                triggerOn = factParam.labels.toSet(),
+                included = convert(webhookParams.includeLabels),
+                excluded = convert(webhookParams.excludeLabels),
+                includeFailedReason = { item ->
+                    I18Variable(
+                        WebhookI18nConstants.MR_LABEL_NOT_MATCH,
+                        params = listOf(item)
+                    ).toJsonStr()
+                },
+                excludedFailedReason = { item ->
+                    I18Variable(
+                        WebhookI18nConstants.MR_LABEL_IGNORED,
+                        params = listOf(item)
+                    ).toJsonStr()
+                }
+            )
+            return userFilter.doFilter(response)
+        }
+    }
+}

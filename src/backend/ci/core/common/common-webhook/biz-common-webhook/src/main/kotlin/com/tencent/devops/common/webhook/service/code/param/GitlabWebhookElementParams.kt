@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import org.springframework.stereotype.Service
@@ -98,6 +99,13 @@ class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTrig
             else -> {
                 params.includeMrAction = WebhookUtils.joinToString(element.includeMrAction)
                 params.includePushAction = WebhookUtils.joinToString(element.includePushAction)
+                // gitlab 默认监听创建和删除动作
+                params.includeTagAction = WebhookUtils.joinToString(
+                    listOf(
+                        TGitPushOperationKind.CREAT.value,
+                        TGitPushOperationKind.DELETE.value
+                    )
+                )
             }
         }
         params.branchName = EnvUtils.parseEnv(element.branchName ?: "", variables)
@@ -114,6 +122,8 @@ class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTrig
         params.includeSourceBranchName = EnvUtils.parseEnv(element.includeSourceBranchName ?: "", variables)
         params.includeCommitMsg = EnvUtils.parseEnv(element.includeCommitMsg ?: "", variables)
         params.excludeCommitMsg = EnvUtils.parseEnv(element.excludeCommitMsg ?: "", variables)
+        params.includeLabels = EnvUtils.parseEnv(element.includeLabels ?: "", variables)
+        params.excludeLabels = EnvUtils.parseEnv(element.excludeLabels ?: "", variables)
         return params
     }
 }
