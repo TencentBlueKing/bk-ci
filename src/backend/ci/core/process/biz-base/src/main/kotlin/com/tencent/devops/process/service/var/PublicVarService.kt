@@ -34,6 +34,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.ModelPublicVarHandleContext
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR
 import com.tencent.devops.process.dao.`var`.PublicVarDao
@@ -342,76 +343,99 @@ class PublicVarService @Autowired constructor(
     ): List<BuildFormProperty> {
         val publicVarGroups = modelPublicVarHandleContext.publicVarGroups.toMutableList()
         if (publicVarGroups.isEmpty()) return modelPublicVarHandleContext.params
-        // 筛选出需要更新到最新版本的变量组
-        val groupsToUpdate = publicVarGroups.filter {
-            it.version == null
-        }
-        // 获取引用信息
-        val referId = modelPublicVarHandleContext.referId
-        val referType = modelPublicVarHandleContext.referType
 
         // 查询引用信息
         val groupReferInfos = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
             dslContext = dslContext,
             projectId = projectId,
-            referType = referType,
-            referId = referId,
+            referType = modelPublicVarHandleContext.referType,
+            referId = modelPublicVarHandleContext.referId,
             referVersion = modelPublicVarHandleContext.referVersion
         )
 
-        // 批量查询最新版本
+        // 批量查询需要更新到最新版本的变量组
+        val groupsToUpdate = publicVarGroups.filter { it.version == null }
         val latestGroupVersionMap = getLatestVersionsForGroups(
             projectId = projectId,
             groupNames = groupsToUpdate.map { it.groupName }
         )
-        // 批量获取变量
         val latestVars = getAllLatestVarsForGroups(
             projectId = projectId,
             groupToVersion = latestGroupVersionMap
         )
 
         val params = modelPublicVarHandleContext.params.toMutableList()
-        // 获取流水线中所有非变量组的变量名集合
         val pipelineVarNames = params.filter { it.varGroupName.isNullOrBlank() }.map { it.id }.toSet()
 
         // 为每个变量组处理并设置 variables
         publicVarGroups.forEach { varGroup ->
-            val groupName = varGroup.groupName
-            // 获取变量组最新版本的变量
-            val latestGroupVars = latestVars[groupName] ?: emptyList()
-            // 获取变量组保存时的版本的变量
-            val groupReferInfo = groupReferInfos.find { it.groupName == groupName }
-            val positionInfo = groupReferInfo?.positionInfo
-            positionInfo?.let {
-                val latestGroupVarNames = latestGroupVars.map { it.id }.toSet()
-                val savedGroupVarNames = positionInfo.map { it.varName }.toSet()
-                logger.info("handleModelParams " +
-                        "latestGroupVarNames: $latestGroupVarNames|savedGroupVarNames: $savedGroupVarNames")
-                // 对比版本差异
-                val diffResult = compareVarGroupVersions(savedGroupVarNames, latestGroupVarNames)
-                // 处理变量差异并获取已移除的变量
-                val removedVars = processVarGroupDiff(
-                    diffResult = diffResult,
-                    groupReferInfo = groupReferInfo,
-                    latestGroupVars = latestGroupVars,
-                    params = params,
-                    pipelineVarNames = pipelineVarNames
-                )
-                // 动态版本（始终最新）引用的变量组，diff 后 buildFormProperty 里的 varGroupVersion
-                // 可能被数据库中存储的具体版本号覆盖（如 5），需恢复为 null，否则下次保存时会
-                // 被 processDynamicVarGroups 误判为固定版本，导致 GROUP_REFER_INFO.VERSION 写错
-                if (varGroup.version == null) {
-                    params.forEach { param ->
-                        if (param.varGroupName == groupName) {
-                            param.varGroupVersion = null
-                        }
-                    }
-                }
-                // 将已移除的变量设置到 variables 中
-                varGroup.variables = removedVars
-            }
+            processVarGroupForModel(
+                varGroup = varGroup,
+                groupReferInfos = groupReferInfos,
+                latestVars = latestVars,
+                params = params,
+                pipelineVarNames = pipelineVarNames
+            )
         }
         return params
+    }
+
+    /**
+     * 处理单个变量组的 Model 参数同步
+     * 对比最新版本与保存时的版本差异，更新/删除/新增变量，并为动态版本恢复 varGroupVersion
+     */
+    private fun processVarGroupForModel(
+        varGroup: PublicVarGroupRef,
+        groupReferInfos: List<ResourcePublicVarGroupReferPO>,
+        latestVars: Map<String, List<BuildFormProperty>>,
+        params: MutableList<BuildFormProperty>,
+        pipelineVarNames: Set<String>
+    ) {
+        val groupName = varGroup.groupName
+        val latestGroupVars = latestVars[groupName] ?: emptyList()
+        val groupReferInfo = groupReferInfos.find { it.groupName == groupName } ?: return
+        val positionInfo = groupReferInfo.positionInfo ?: return
+
+        val latestGroupVarNames = latestGroupVars.map { it.id }.toSet()
+        val savedGroupVarNames = positionInfo.map { it.varName }.toSet()
+        logger.info(
+            "handleModelParams latestGroupVarNames: $latestGroupVarNames" +
+                "|savedGroupVarNames: $savedGroupVarNames"
+        )
+
+        // 对比版本差异并处理
+        val diffResult = compareVarGroupVersions(savedGroupVarNames, latestGroupVarNames)
+        val removedVars = processVarGroupDiff(
+            diffResult = diffResult,
+            groupReferInfo = groupReferInfo,
+            latestGroupVars = latestGroupVars,
+            params = params,
+            pipelineVarNames = pipelineVarNames
+        )
+
+        // 动态版本（始终最新）引用的变量组，diff 后 buildFormProperty 里的 varGroupVersion
+        // 可能被数据库中存储的具体版本号覆盖（如 5），需恢复为 null，否则下次保存时会
+        // 被 processDynamicVarGroups 误判为固定版本，导致 GROUP_REFER_INFO.VERSION 写错
+        resetDynamicVersionIfNeeded(varGroup, params, groupName)
+
+        // 将已移除的变量设置到 variables 中（用于前端回显）
+        varGroup.variables = removedVars
+    }
+
+    /**
+     * 对于动态版本的变量组，恢复 params 中对应变量的 varGroupVersion 为 null
+     */
+    private fun resetDynamicVersionIfNeeded(
+        varGroup: PublicVarGroupRef,
+        params: List<BuildFormProperty>,
+        groupName: String
+    ) {
+        if (varGroup.version != null) return
+        params.forEach { param ->
+            if (param.varGroupName == groupName) {
+                param.varGroupVersion = null
+            }
+        }
     }
 
     /**
