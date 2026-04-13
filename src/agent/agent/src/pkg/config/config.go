@@ -178,7 +178,6 @@ func LoadAgentEnv() {
 	GAgentEnv.OsName = systemutil.GetOsName()
 	GAgentEnv.AgentVersion = DetectAgentVersion()
 	GAgentEnv.InstallType = loadInstallType()
-	
 	if osVersion, err := GetOsVersion(); err != nil {
 		logs.WithError(err).Warn("get os version err")
 		GAgentEnv.OsVersion = ""

@@ -15,6 +15,11 @@ import (
 	"golang.org/x/net/http/httpproxy"
 )
 
+const (
+	diagStatusOK  = "✓"
+	diagStatusLow = "✗ LOW"
+)
+
 // printHealthChecks runs diagnostic checks and appends results to status output.
 func printHealthChecks(workDir string) {
 	fmt.Println()

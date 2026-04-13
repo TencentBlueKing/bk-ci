@@ -6,6 +6,7 @@ package download
 import (
 	"runtime"
 	"strings"
+
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 )

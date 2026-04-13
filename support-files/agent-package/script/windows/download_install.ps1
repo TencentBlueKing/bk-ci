@@ -128,21 +128,24 @@ New-Item -ItemType Directory -Force -Path "$work_dir\workspace" | Out-Null
 
 $agent_exe = "$work_dir\devopsAgent.exe"
 Write-Host "Installing agent service via CLI..."
-& $agent_exe install
+if ([string]::IsNullOrEmpty($install_type) -or $install_type -eq "SERVICE") {
+    if (![string]::IsNullOrEmpty($service_username) -and (![string]::IsNullOrEmpty($service_password))) {
+        Write-Host "both service_username and service_password are defined"
+        & $agent_exe install session --auto-logon $service_username $service_password
+    }else{
+        & $agent_exe install
+    }
+} elseif ($install_type -eq "TASK") {
+    & $agent_exe install session
+} else {
+    Write-Host "Unknown install_type: $install_type install failed" -ForegroundColor Red
+    Pause
+    return
+}
 if ($LASTEXITCODE -eq 0) {
     Write-Host "agent service installed and started" -ForegroundColor Green
 } else {
     Write-Host "agent install failed (exit $LASTEXITCODE)" -ForegroundColor Red
-}
-
-if (![string]::IsNullOrEmpty($service_username) -and (![string]::IsNullOrEmpty($service_password))) {
-    Write-Host "configuring service login credentials..."
-    sc.exe config $service_name obj= $service_username password= $service_password
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "service login credentials updated" -ForegroundColor Green
-    } else {
-        Write-Host "failed to update service login credentials" -ForegroundColor Red
-    }
 }
 
 Pause

@@ -84,17 +84,28 @@ func DoUpgradeAgent() error {
 		return nil
 	}
 
+	// Replace all files BEFORE killing any process. Linux allows overwriting
+	// binaries that are in use (inode-based), so the running process keeps the
+	// old binary in memory while the new one is written to disk. If we killed
+	// first, systemd or the daemon watch loop could restart the process with
+	// the OLD binary before we finish replacing all files.
 	if daemonChange {
 		if err := replaceAgentFile(config.GetClientDaemonFile()); err != nil {
 			logs.WithError(err).Error("replace daemon file failed")
 		}
-		tryKillAgentProcess(daemonProcess)
 	}
 
 	if agentChange {
 		if err := replaceAgentFile(config.GetClienAgentFile()); err != nil {
 			logs.WithError(err).Error("replace agent file failed")
 		}
+	}
+
+	// Now kill processes — any restart will pick up the new binaries from disk.
+	if daemonChange {
+		tryKillAgentProcess(daemonProcess)
+	}
+	if agentChange {
 		tryKillAgentProcess(agentProcess)
 	}
 

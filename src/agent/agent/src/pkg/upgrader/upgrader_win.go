@@ -128,6 +128,8 @@ func DoUpgradeAgent() error {
 			logs.WithError(err).Warn("check daemon upgrade file change failed")
 		}
 	}
+	// TASK mode: kill daemon now so we can overwrite the binary directly.
+	// SERVICE mode: defer daemon kill until after file replacement (see below).
 	daemonPid := 0
 	if daemonChange && startT == wintask.TaskStart {
 		daemonPid, err = tryKillAgentProcess(daemonProcess)
@@ -153,7 +155,7 @@ func DoUpgradeAgent() error {
 		return nil
 	}
 
-	// Wait for killed processes to exit (SERVICE mode keeps daemon alive)
+	// Wait for killed processes to exit (SERVICE mode keeps daemon alive until after replacement)
 	daemonExist := true
 	agentExist := true
 	for i := 0; i < 15; i++ {
@@ -191,6 +193,7 @@ func DoUpgradeAgent() error {
 	}
 	if daemonChange {
 		if startT == wintask.ServiceStart {
+			// Daemon is still alive; rename allows replacing a running .exe on Windows.
 			err = replaceDaemonFileByRename(config.GetClientDaemonFile())
 		} else {
 			err = replaceAgentFile(config.GetClientDaemonFile())
@@ -200,6 +203,7 @@ func DoUpgradeAgent() error {
 		}
 	}
 
+	// Post-replacement: restart the daemon with the new binary.
 	if daemonChange {
 		switch startT {
 		case wintask.TaskStart:
@@ -208,11 +212,14 @@ func DoUpgradeAgent() error {
 			}
 		case wintask.ServiceStart:
 			writeDaemonUpgradeSignal()
-			// Stop the service so SCM failure-recovery restarts it with the
-			// new daemon binary. The old daemon may be a long-running 32-bit
-			// process whose goroutine scheduler has become unreliable, making
-			// the signal-file detection mechanism insufficient on its own.
-			stopServiceForRestart(serviceName)
+			// Files are already replaced. Kill daemon so SCM failure-recovery
+			// restarts it with the new binary. This is more reliable than
+			// waiting for the old daemon to detect the signal file.
+			ensureSCMRecovery(serviceName)
+			if _, killErr := tryKillAgentProcess(daemonProcess); killErr != nil {
+				logs.WithError(killErr).Warn("kill daemon after replacement failed, " +
+					"daemon will detect upgrade signal on next agent restart")
+			}
 		}
 	}
 
@@ -386,34 +393,19 @@ func writeDaemonUpgradeSignal() {
 	}
 }
 
-// stopServiceForRestart ensures SCM failure-recovery is configured, then stops
-// the service so that SCM automatically restarts it with the new daemon binary.
-//
-// Old installations may not have failure-recovery configured, so we first run
-// "sc.exe failure" (idempotent) to guarantee the restart actions exist before
-// issuing the stop. If configuring recovery fails, we skip the stop entirely
-// and fall back to the signal-file mechanism (the user will need to manually
-// restart).
-func stopServiceForRestart(serviceName string) {
-	// Ensure failure-recovery is configured (idempotent, safe to re-apply).
+// ensureSCMRecovery makes sure the Windows Service Control Manager has
+// failure-recovery actions configured (restart on crash). Old installations
+// may lack this, so we apply it idempotently before killing the daemon.
+func ensureSCMRecovery(serviceName string) {
 	out, err := command.RunCommand("sc.exe", []string{
 		"failure", serviceName,
 		"reset=", "86400",
 		"actions=", "restart/5000/restart/10000/restart/30000",
 	}, systemutil.GetWorkDir(), nil)
 	if err != nil {
-		logs.WithError(err).Warnf("sc.exe failure config for %s failed (output: %s), "+
-			"skipping service stop; daemon will rely on signal file", serviceName, string(out))
-		return
-	}
-	logs.Infof("ensured SCM failure-recovery is configured for %s", serviceName)
-
-	out, err = command.RunCommand("sc.exe", []string{"stop", serviceName}, systemutil.GetWorkDir(), nil)
-	if err != nil {
-		logs.WithError(err).Warnf("sc.exe stop %s failed (output: %s), "+
-			"daemon will still detect upgrade signal on next agent restart", serviceName, string(out))
+		logs.WithError(err).Warnf("sc.exe failure config for %s failed (output: %s)", serviceName, string(out))
 	} else {
-		logs.Infof("sc.exe stop %s succeeded, SCM will restart with new binary", serviceName)
+		logs.Infof("ensured SCM failure-recovery is configured for %s", serviceName)
 	}
 }
 
