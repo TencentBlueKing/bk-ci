@@ -2,6 +2,7 @@ package com.tencent.devops.environment.resources
 
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.UserEnvStrategyResource
@@ -23,16 +24,21 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
 ) : UserEnvStrategyResource {
 
     override fun listStrategies(
-        userId: String, projectId: String, envId: Long
+        userId: String, projectId: String, envHashId: String
     ): Result<List<DispatchEnvStrategyVO>> {
-        val strategies = envDispatchStrategyService.getOrInitStrategies(projectId, envId, userId)
+        val strategies = envDispatchStrategyService.getOrInitStrategies(
+            projectId = projectId,
+            envId = HashUtil.decodeIdToLong(envHashId),
+            userId = userId
+        )
         return Result(strategies.map { it.toVO() })
     }
 
     override fun createStrategy(
-        userId: String, projectId: String, envId: Long,
+        userId: String, projectId: String, envHashId: String,
         request: DispatchEnvStrategyCreateReq
     ): Result<Long> {
+        val envId = HashUtil.decodeIdToLong(envHashId)
         checkEnvEditPermission(userId, projectId, envId)
         val id = envDispatchStrategyService.createCustomStrategy(
             projectId = projectId, envId = envId, userId = userId,
@@ -44,9 +50,10 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
     }
 
     override fun updateStrategy(
-        userId: String, projectId: String, envId: Long,
+        userId: String, projectId: String, envHashId: String,
         strategyId: Long, request: DispatchEnvStrategyUpdateReq
     ): Result<Boolean> {
+        val envId = HashUtil.decodeIdToLong(envHashId)
         checkEnvEditPermission(userId, projectId, envId)
         envDispatchStrategyService.updateStrategy(
             id = strategyId, userId = userId,
@@ -59,25 +66,28 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
     }
 
     override fun deleteStrategy(
-        userId: String, projectId: String, envId: Long, strategyId: Long
+        userId: String, projectId: String, envHashId: String, strategyId: Long
     ): Result<Boolean> {
+        val envId = HashUtil.decodeIdToLong(envHashId)
         checkEnvEditPermission(userId, projectId, envId)
         envDispatchStrategyService.deleteStrategy(projectId, envId, strategyId)
         return Result(true)
     }
 
     override fun batchDeleteStrategy(
-        userId: String, projectId: String, envId: Long, strategyIds: Set<Long>
+        userId: String, projectId: String, envHashId: String, strategyIds: Set<Long>
     ): Result<Boolean> {
+        val envId = HashUtil.decodeIdToLong(envHashId)
         checkEnvEditPermission(userId, projectId, envId)
         envDispatchStrategyService.batchDeleteStrategy(projectId, envId, strategyIds)
         return Result(true)
     }
 
     override fun reorderStrategies(
-        userId: String, projectId: String, envId: Long,
+        userId: String, projectId: String, envHashId: String,
         request: DispatchEnvStrategyReorderReq
     ): Result<Boolean> {
+        val envId = HashUtil.decodeIdToLong(envHashId)
         checkEnvEditPermission(userId, projectId, envId)
         envDispatchStrategyService.reorderStrategies(projectId, envId, request.orderedIds)
         return Result(true)
