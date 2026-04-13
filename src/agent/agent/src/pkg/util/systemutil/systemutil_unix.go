@@ -6,6 +6,7 @@ package systemutil
 import (
 	"os"
 	"os/user"
+	"strconv"
 )
 
 func fallbackCurrentUser() *user.User {
