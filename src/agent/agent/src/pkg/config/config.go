@@ -125,6 +125,8 @@ type AgentEnv struct {
 	CPUProductInfo string
 	// gpu 型号信息
 	GPUProductInfo string
+	// InstallType 安装模式 (读取自 .install_type 文件)
+	InstallType string
 }
 
 func (e *AgentEnv) GetAgentIp() string {
@@ -175,7 +177,8 @@ func LoadAgentEnv() {
 	GAgentEnv.HostName = systemutil.GetHostName()
 	GAgentEnv.OsName = systemutil.GetOsName()
 	GAgentEnv.AgentVersion = DetectAgentVersion()
-	GAgentEnv.WinTask = GetWinTaskType()
+	GAgentEnv.InstallType = loadInstallType()
+	
 	if osVersion, err := GetOsVersion(); err != nil {
 		logs.WithError(err).Warn("get os version err")
 		GAgentEnv.OsVersion = ""
@@ -195,6 +198,16 @@ func LoadAgentIp() {
 		splitIps = util.SplitAndTrimSpace(GAgentConfig.IgnoreLocalIps, ",")
 	}
 	GAgentEnv.SetAgentIp(systemutil.GetAgentIp(splitIps))
+}
+
+// loadInstallType 读取 .install_type 文件内容，返回大写的安装模式字符串。
+// 文件不存在或内容为空时返回空字符串。
+func loadInstallType() string {
+	data, err := os.ReadFile(filepath.Join(systemutil.GetWorkDir(), ".install_type"))
+	if err != nil {
+		return ""
+	}
+	return strings.ToUpper(strings.TrimSpace(string(data)))
 }
 
 // DetectAgentVersion 检测Agent版本

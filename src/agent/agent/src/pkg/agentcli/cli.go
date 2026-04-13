@@ -1,6 +1,8 @@
 package agentcli
 
 import (
+	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -16,6 +18,13 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 )
+
+var errAgentStillRunning = fmt.Errorf("agent still running on server (status 2105058)")
+
+type serverErrorResp struct {
+	Status  int    `json:"status"`
+	Message string `json:"message"`
+}
 
 // Run dispatches CLI subcommands. Called from agent main() before process lock.
 func Run(workDir string, args []string) {
@@ -471,9 +480,6 @@ func handleReinstall(workDir string, args []string) error {
 	keep := preserveSet()
 
 	// Step 1: download FIRST — verify before making any destructive changes
-	// Check heartbeat before download (pid file still exists at this point)
-	waitForHeartbeatExpiry(workDir)
-
 	printStep(msg("Step 1: downloading agent.zip from server ...", "步骤 1: 从服务端下载 agent.zip ..."))
 	zipPath := filepath.Join(workDir, "agent.zip")
 	if err := downloadAgentZip(workDir, gateway, agentId, zipPath); err != nil {
@@ -553,32 +559,14 @@ func handleReinstall(workDir string, args []string) error {
 	return nil
 }
 
-// waitForHeartbeatExpiry checks if the agent process was recently running.
-// The backend blocks re-install for ~50s after the last heartbeat. If the agent PID
-// file indicates a recently-alive process, we wait for the heartbeat to expire.
-func waitForHeartbeatExpiry(workDir string) {
-	pidFile := filepath.Join(workDir, "runtime", "agent.pid")
-	data, err := os.ReadFile(pidFile)
-	if err != nil {
-		return
-	}
-	pid, err := strconv.Atoi(strings.TrimSpace(string(data)))
-	if err != nil || pid <= 0 {
-		return
-	}
-
-	// Check if the agent PID file was recently active (written within the last 60s),
-	// which means the agent was sending heartbeats shortly before we stopped it.
-	info, err := os.Stat(pidFile)
-	if err != nil || time.Since(info.ModTime()) > 60*time.Second {
-		return
-	}
-
-	const waitSec = 55
+// waitAndPrintCountdown waits for the given number of seconds, printing a
+// countdown so the user knows progress. Used when the server reports that the
+// agent is still running (heartbeat not yet expired).
+func waitAndPrintCountdown(seconds int) {
 	printStep(msgf(
-		"Agent was recently running (PID %d). Waiting %ds for backend heartbeat to expire ...",
-		"Agent 近期有运行记录 (PID %d)。等待 %d 秒让后台心跳过期 ...", pid, waitSec))
-	for i := waitSec; i > 0; i-- {
+		"Server reports agent still running. Waiting %ds for heartbeat to expire ...",
+		"服务端报告 Agent 仍在运行。等待 %d 秒让心跳过期 ...", seconds))
+	for i := seconds; i > 0; i-- {
 		fmt.Printf("\r[BK-CI]   %s  ", msgf("%ds remaining ...", "剩余 %d 秒 ...", i))
 		time.Sleep(time.Second)
 	}
@@ -650,6 +638,18 @@ func downloadAgentZip(workDir, gateway, agentId, savePath string) error {
 			return nil
 		}
 
+		// Agent 仍在运行（心跳未过期），等待后重试一次
+		if errors.Is(lastErr, errAgentStillRunning) {
+			waitAndPrintCountdown(55)
+			lastErr = doDownload(httpClient, url, headers, savePath)
+			if lastErr == nil {
+				return nil
+			}
+			return fmt.Errorf(msgf(
+				"server still reports agent running after waiting: %v",
+				"等待后服务端仍报告 Agent 在运行: %v", lastErr))
+		}
+
 		errStr := lastErr.Error()
 		if isRetryableError(errStr) {
 			printWarn(msgf("  attempt %d failed: %v", "  第 %d 次尝试失败: %v", attempt, lastErr))
@@ -698,11 +698,19 @@ func doDownload(client *http.Client, url string, headers map[string]string, save
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
+	if resp.StatusCode == 400 {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
+		bodyStr := strings.TrimSpace(string(body))
+
+		var srvErr serverErrorResp
+		if json.Unmarshal(body, &srvErr) == nil && srvErr.Status == 2105058 {
+			printWarn(msgf("  server: %s", "  服务端: %s", srvErr.Message))
+			return errAgentStillRunning
+		}
+
 		return fmt.Errorf(msgf(
 			"server returned HTTP %d: %s",
-			"服务端返回 HTTP %d: %s", resp.StatusCode, strings.TrimSpace(string(body))))
+			"服务端返回 HTTP %d: %s", resp.StatusCode, bodyStr))
 	}
 
 	tmpPath := savePath + ".tmp"

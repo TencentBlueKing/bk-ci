@@ -1,5 +1,5 @@
-//go:build linux
-// +build linux
+//go:build darwin && !cgo
+// +build darwin,!cgo
 
 package agentcli
 
@@ -8,6 +8,10 @@ import (
 	"syscall"
 )
 
+// checkDiskSpace reports disk space using statvfs (CGO disabled).
+// Note: this reports only truly unallocated space and does NOT include
+// purgeable space (local Time Machine snapshots, iCloud cache, etc.).
+// For accurate macOS "System Information"-consistent values, use the CGO build.
 func checkDiskSpace(workDir string) {
 	var stat syscall.Statfs_t
 	if err := syscall.Statfs(workDir, &stat); err != nil {
