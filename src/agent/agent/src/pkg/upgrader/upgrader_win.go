@@ -98,7 +98,6 @@ func DoUpgradeAgent() error {
 		startT = wintask.ServiceStart
 	} else {
 		if task, taskOk := wintask.FindTask(serviceName); taskOk {
-			// 启用了的task才能进行升级后的启动，否则不能升级Daemon
 			if task.Enabled &&
 				(task.State == taskmaster.TASK_STATE_READY || task.State == taskmaster.TASK_STATE_RUNNING) {
 				winTask = task
@@ -115,6 +114,11 @@ func DoUpgradeAgent() error {
 	}
 
 	logs.Infof("agent process start by %s", startT)
+
+	// Backfill .install_type for old installations that predate this file.
+	// Without it, reinstall would default to SERVICE mode and lose the
+	// original TASK installation.
+	ensureInstallTypeFile(startT)
 
 	var err error
 	daemonChange := false
@@ -204,6 +208,11 @@ func DoUpgradeAgent() error {
 			}
 		case wintask.ServiceStart:
 			writeDaemonUpgradeSignal()
+			// Stop the service so SCM failure-recovery restarts it with the
+			// new daemon binary. The old daemon may be a long-running 32-bit
+			// process whose goroutine scheduler has become unreliable, making
+			// the signal-file detection mechanism insufficient on its own.
+			stopServiceForRestart(serviceName)
 		}
 	}
 
@@ -369,10 +378,61 @@ func replaceDaemonFileByRename(fileName string) error {
 }
 
 func writeDaemonUpgradeSignal() {
-	signalPath := systemutil.GetWorkDir() + "/" + DaemonUpgradeFile
+	signalPath := filepath.Join(systemutil.GetWorkDir(), DaemonUpgradeFile)
 	if err := os.WriteFile(signalPath, []byte("upgrade"), 0644); err != nil {
 		logs.WithError(err).Error("write daemon upgrade signal failed")
 	} else {
 		logs.Info("wrote daemon upgrade signal for SCM restart")
+	}
+}
+
+// stopServiceForRestart ensures SCM failure-recovery is configured, then stops
+// the service so that SCM automatically restarts it with the new daemon binary.
+//
+// Old installations may not have failure-recovery configured, so we first run
+// "sc.exe failure" (idempotent) to guarantee the restart actions exist before
+// issuing the stop. If configuring recovery fails, we skip the stop entirely
+// and fall back to the signal-file mechanism (the user will need to manually
+// restart).
+func stopServiceForRestart(serviceName string) {
+	// Ensure failure-recovery is configured (idempotent, safe to re-apply).
+	out, err := command.RunCommand("sc.exe", []string{
+		"failure", serviceName,
+		"reset=", "86400",
+		"actions=", "restart/5000/restart/10000/restart/30000",
+	}, systemutil.GetWorkDir(), nil)
+	if err != nil {
+		logs.WithError(err).Warnf("sc.exe failure config for %s failed (output: %s), "+
+			"skipping service stop; daemon will rely on signal file", serviceName, string(out))
+		return
+	}
+	logs.Infof("ensured SCM failure-recovery is configured for %s", serviceName)
+
+	out, err = command.RunCommand("sc.exe", []string{"stop", serviceName}, systemutil.GetWorkDir(), nil)
+	if err != nil {
+		logs.WithError(err).Warnf("sc.exe stop %s failed (output: %s), "+
+			"daemon will still detect upgrade signal on next agent restart", serviceName, string(out))
+	} else {
+		logs.Infof("sc.exe stop %s succeeded, SCM will restart with new binary", serviceName)
+	}
+}
+
+// ensureInstallTypeFile writes .install_type if it does not exist yet.
+// Old installations (before the CLI rework) never created this file.
+// Without it, reinstall defaults to SERVICE and silently drops a TASK
+// installation. We only backfill for TASK since SERVICE is already the
+// default and SESSION always creates the file at install time.
+func ensureInstallTypeFile(startT wintask.StartType) {
+	if startT != wintask.TaskStart {
+		return
+	}
+	installTypePath := filepath.Join(systemutil.GetWorkDir(), ".install_type")
+	if _, err := os.Stat(installTypePath); err == nil {
+		return // file already exists
+	}
+	if err := os.WriteFile(installTypePath, []byte("TASK"), 0644); err != nil {
+		logs.WithError(err).Warn("failed to backfill .install_type for TASK mode")
+	} else {
+		logs.Info("backfilled .install_type with TASK for legacy installation")
 	}
 }
