@@ -462,9 +462,9 @@ class PipelineTemplateMarketFacadeService @Autowired constructor(
                 srcMarketTemplateCode = srcTemplateId,
                 projectCode = templateInfo.projectId,
                 templateCode = templateInfo.id,
-                version = srcTemplateVersion,
-                versionName = srcTemplateVersionName,
-                number = srcTemplateNumber
+                srcMarketTemplateVersion = srcTemplateVersion,
+                srcMarketTemplateVersionName = srcTemplateVersionName,
+                srcMarketTemplateNumber = srcTemplateNumber
             )
         )
     }
