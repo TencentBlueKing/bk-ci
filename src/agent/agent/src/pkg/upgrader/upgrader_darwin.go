@@ -212,8 +212,8 @@ func StartDaemon() error {
 
 func replaceAgentFile(fileName string) error {
 	logs.Info("replace agent file: ", fileName)
-	src := systemutil.GetUpgradeDir() + "/" + fileName
-	dst := systemutil.GetWorkDir() + "/" + fileName
+	src := filepath.Join(systemutil.GetUpgradeDir(), fileName)
+	dst := filepath.Join(systemutil.GetWorkDir(), fileName)
 
 	// 查询 dst 的状态，如果没有的话使用预设权限\
 	perm := constant.CommonFileModePerm

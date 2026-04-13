@@ -96,15 +96,15 @@ build_macos_arm64_no_cgo: test clean i18nfilegen
 
 build_windows: test clean i18nfilegen
 	mkdir -p $(BINDIR)
-	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon_amd64.exe $(CMDDIR)/daemon/
-	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_amd64.exe $(CMDDIR)/agent/main.go
-	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/upgrader_amd64.exe $(CMDDIR)/upgrader/main.go
+	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon.exe $(CMDDIR)/daemon/
+	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent.exe $(CMDDIR)/agent/main.go
+	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/upgrader.exe $(CMDDIR)/upgrader/main.go
 	ls -la $(BINDIR)
 build_windows_386: test clean i18nfilegen
 	mkdir -p $(BINDIR)
-	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=386 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon.exe $(CMDDIR)/daemon/
-	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=386 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent.exe $(CMDDIR)/agent/main.go
-	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=386 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/upgrader.exe $(CMDDIR)/upgrader/main.go
+	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=386 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon_386.exe $(CMDDIR)/daemon/
+	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=386 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_386.exe $(CMDDIR)/agent/main.go
+	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=386 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/upgrader_386.exe $(CMDDIR)/upgrader/main.go
 	ls -la $(BINDIR)
 
 clean:
