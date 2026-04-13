@@ -58,7 +58,6 @@ func doBuild(
 	goEnv map[string]string,
 	runUser string,
 ) error {
-	// windows特有环境变量
 	goEnv["DEVOPS_AGENT_INSTALL_MODE"] = config.GAgentEnv.InstallType
 	var err error
 	var exitGroup process.ProcessExitGroup

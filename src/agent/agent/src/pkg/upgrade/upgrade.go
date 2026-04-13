@@ -29,7 +29,6 @@ package upgrade
 
 import (
 	"os"
-	"runtime"
 	"time"
 
 	"github.com/pkg/errors"
