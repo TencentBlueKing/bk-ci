@@ -2,6 +2,14 @@
 GO ?= go
 BINDIR := $(CURDIR)/bin
 CMDDIR := $(CURDIR)/src/cmd
+
+# 根据当前系统排除不适用的平台文件，避免 goimports-reviser 处理跨平台文件报错
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+  EXCLUDE_OS_FILES := ! -name "*_windows.go" ! -name "*_win.go" ! -name "*_darwin.go"
+else ifeq ($(UNAME_S),Darwin)
+  EXCLUDE_OS_FILES := ! -name "*_windows.go" ! -name "*_win.go" ! -name "*_linux.go"
+endif
 BuildTime := $(shell date '+%Y-%m-%d.%H:%M:%S%Z')
 GitCommit := $(shell git rev-parse HEAD)
 # 出包时通过变量写入为具体的版本号，需要符合如下写法
@@ -14,8 +22,8 @@ BUILD_OUT_TAG=out
 
 format:
 	goimports -w .
-	find ./ -name "*.go" | xargs gofmt -w
-	goimports-reviser -rm-unused -set-alias -format ./...
+	find ./ -name "*.go" $(EXCLUDE_OS_FILES) | xargs gofmt -w
+	find ./ -name "*.go" $(EXCLUDE_OS_FILES) | xargs goimports-reviser -rm-unused -set-alias -format
 
 test: test-unit
 

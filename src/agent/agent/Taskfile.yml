@@ -94,12 +94,27 @@ tasks:
       - "{{.GO_CMD}} test -tags={{.BUILD_OUT_TAG}} -run . ./..."
 
   # ── 格式化 ────────────────────────────────────────────────────────────
+  # goimports-reviser 使用 ./... 会处理所有 Go 文件，包括不属于当前平台的文件，
+  # 导致解析报错。因此按平台排除不适用的文件后再逐文件处理。
   fmt:
-    desc: "代码格式化 (goimports + gofmt)"
+    desc: "代码格式化 (goimports + gofmt + goimports-reviser)"
     cmds:
       - goimports -w .
-      - gofmt -w -l .
-      - goimports-reviser -rm-unused -set-alias -format ./...
+      # ── Linux: 排除 windows/darwin 文件 ──
+      - cmd: find ./ -name "*.go" ! -name "*_windows.go" ! -name "*_win.go" ! -name "*_darwin.go" | xargs gofmt -w -l
+        platforms: [linux]
+      - cmd: find ./ -name "*.go" ! -name "*_windows.go" ! -name "*_win.go" ! -name "*_darwin.go" | xargs goimports-reviser -rm-unused -set-alias -format
+        platforms: [linux]
+      # ── macOS: 排除 windows/linux 文件 ──
+      - cmd: find ./ -name "*.go" ! -name "*_windows.go" ! -name "*_win.go" ! -name "*_linux.go" | xargs gofmt -w -l
+        platforms: [darwin]
+      - cmd: find ./ -name "*.go" ! -name "*_windows.go" ! -name "*_win.go" ! -name "*_linux.go" | xargs goimports-reviser -rm-unused -set-alias -format
+        platforms: [darwin]
+      # ── Windows: 排除 linux/darwin/unix 文件 ──
+      - cmd: powershell -NoProfile -Command "Get-ChildItem -Recurse -Filter '*.go' | Where-Object { $_.Name -notmatch '_(linux|darwin|unix)\.go$' } | ForEach-Object { gofmt -w -l $_.FullName }"
+        platforms: [windows]
+      - cmd: powershell -NoProfile -Command "Get-ChildItem -Recurse -Filter '*.go' | Where-Object { $_.Name -notmatch '_(linux|darwin|unix)\.go$' } | ForEach-Object { goimports-reviser -rm-unused -set-alias -format $_.FullName }"
+        platforms: [windows]
 
   # ── i18n 代码生成 ─────────────────────────────────────────────────────
   i18n:
