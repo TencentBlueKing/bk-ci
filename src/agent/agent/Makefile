@@ -35,7 +35,7 @@ all: linux windows macos_no_cgo
 
 linux: build_linux build_linux_arm64 build_linux_mips64 build_linux_loong64
 
-windows: build_windows build_windows_amd64
+windows: build_windows build_windows_386
 
 macos: build_macos build_macos_arm64
 
@@ -100,7 +100,7 @@ build_windows: test clean i18nfilegen
 	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_amd64.exe $(CMDDIR)/agent/main.go
 	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/upgrader_amd64.exe $(CMDDIR)/upgrader/main.go
 	ls -la $(BINDIR)
-build_windows_x86: test clean i18nfilegen
+build_windows_386: test clean i18nfilegen
 	mkdir -p $(BINDIR)
 	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=386 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon.exe $(CMDDIR)/daemon/
 	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=386 $(GO) build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent.exe $(CMDDIR)/agent/main.go
