@@ -43,13 +43,14 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
 	ucommand "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
-	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 )
 
 func doBuild(
@@ -67,7 +68,7 @@ func doBuild(
 		return err
 	}
 
-	enableExitGroup := config.FetchEnvAndCheck(constant.DevopsAgentEnableExitGroup, "true") ||
+	enableExitGroup := envs.FetchEnvAndCheck(constant.DevopsAgentEnableExitGroup, "true") ||
 		(systemutil.IsMacos() && runtime.GOARCH == "arm64")
 	if enableExitGroup {
 		logs.Infof("%s enable exit group", buildInfo.BuildId)
@@ -244,7 +245,7 @@ func StartProcessCmd(
 		cmd.Dir = workDir
 	}
 
-	cmd.Env = os.Environ()
+	cmd.Env = envs.Envs()
 	if envMap != nil {
 		for k, v := range envMap {
 			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))

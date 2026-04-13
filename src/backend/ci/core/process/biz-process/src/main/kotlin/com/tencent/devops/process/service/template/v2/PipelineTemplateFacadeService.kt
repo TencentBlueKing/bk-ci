@@ -1086,7 +1086,9 @@ class PipelineTemplateFacadeService @Autowired constructor(
         ) ?: return null
 
         val templateId = pipelineTemplateRelated.templateId
-        val templateInfo = pipelineTemplateInfoService.get(templateId)
+        val templateInfo = pipelineTemplateInfoService.get(
+            templateId = templateId
+        )
         val templateVersion = templateResource.version
 
         return if (templateDescriptor == null || templateDescriptor.templateRefType == TemplateRefType.ID) {
@@ -1720,6 +1722,17 @@ class PipelineTemplateFacadeService @Autowired constructor(
         return null
     }
 
+    fun existsVersionName(
+        projectId: String,
+        templateId: String,
+        versionName: String
+    ): Boolean {
+        return pipelineTemplateResourceService.existsVersionName(
+            projectId = projectId,
+            templateId = templateId,
+            versionName = versionName
+        )
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineTemplateFacadeService::class.java)

@@ -2,6 +2,7 @@ package com.tencent.devops.process.dao.template
 
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.api.util.toLocalDateTimeOrDefault
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.common.pipeline.template.UpgradeStrategyEnum
@@ -233,7 +234,7 @@ class PipelineTemplateInfoDao {
     ): PipelineTemplateInfoV2? {
         return with(TPipelineTemplateInfo.T_PIPELINE_TEMPLATE_INFO) {
             dslContext.selectFrom(this)
-                .where(buildQueryCondition(commonCondition))
+                .where(buildQueryCondition(commonCondition)).limit(1)
                 .fetchOne()?.convert()
         }
     }
@@ -272,7 +273,7 @@ class PipelineTemplateInfoDao {
     ): PipelineTemplateInfoV2? {
         return with(TPipelineTemplateInfo.T_PIPELINE_TEMPLATE_INFO) {
             dslContext.selectFrom(this)
-                .where(ID.eq(templateId))
+                .where(ID.eq(templateId)).limit(1)
                 .fetchOne()?.convert()
         }
     }
@@ -325,6 +326,7 @@ class PipelineTemplateInfoDao {
             commonCondition.checkAllFieldsAreNull()
             with(commonCondition) {
                 val conditions = mutableListOf<Condition>()
+                conditions.add(CHANNEL.eq(ChannelCode.BS.name))
                 if (projectId != null) conditions.add(PROJECT_ID.eq(projectId))
                 if (templateId != null) conditions.add(ID.eq(templateId))
                 if (fuzzySearchName != null && fuzzySearchName!!.isNotBlank()) {
