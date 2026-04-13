@@ -4,6 +4,8 @@
 package download
 
 import (
+	"path/filepath"
+
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 )
@@ -34,6 +36,6 @@ func DownloadJdkFile(saveDir string) (string, error) {
 
 func DownloadDockerInitFile(saveDir string) (string, error) {
 	return api.DownloadUpgradeFile(
-		"script/windows/agent_docker_init.sh", saveDir+"/"+config.DockerInitFile,
+		"script/windows/agent_docker_init.sh", filepath.Join(saveDir, config.DockerInitFile),
 	)
 }

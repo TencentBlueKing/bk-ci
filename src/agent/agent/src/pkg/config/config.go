@@ -117,8 +117,6 @@ type AgentEnv struct {
 	HostName         string
 	AgentVersion     string
 	AgentInstallPath string
-	// WinTask 启动windows进程的组件如 服务/执行计划
-	WinTask string
 	// OsVersion 系统版本信息
 	OsVersion string
 	// cpu 型号信息

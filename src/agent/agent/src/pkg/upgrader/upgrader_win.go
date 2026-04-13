@@ -219,12 +219,33 @@ func DoUpgradeAgent() error {
 			if _, killErr := tryKillAgentProcess(daemonProcess); killErr != nil {
 				logs.WithError(killErr).Warn("kill daemon after replacement failed, " +
 					"daemon will detect upgrade signal on next agent restart")
+			} else {
+				// Kill succeeded — SCM will restart the daemon with the new
+				// binary. Remove the signal file so the new daemon does not
+				// see a stale signal in checkDaemonUpgradeSignal() and exit
+				// again, which would cause an unnecessary double-restart.
+				removeDaemonUpgradeSignal()
 			}
 		}
 	}
 
+	// Clean up .old binary left by replaceDaemonFileByRename, so the new
+	// daemon does not have to wait until its next startup to remove it.
+	cleanupOldDaemonBinary()
+
 	logs.Info("agent upgrade done, upgrade process exiting")
 	return nil
+}
+
+// cleanupOldDaemonBinary removes the .old daemon binary left over from
+// replaceDaemonFileByRename. Safe to call even if the file does not exist.
+func cleanupOldDaemonBinary() {
+	oldPath := filepath.Join(systemutil.GetWorkDir(), config.GetClientDaemonFile()+".old")
+	if err := os.Remove(oldPath); err != nil && !os.IsNotExist(err) {
+		logs.WithError(err).Warn("failed to remove old daemon binary")
+	} else if err == nil {
+		logs.Info("cleaned up old daemon binary: " + config.GetClientDaemonFile() + ".old")
+	}
 }
 
 func tryKillAgentProcess(processName string) (int, error) {
@@ -382,6 +403,15 @@ func replaceDaemonFileByRename(fileName string) error {
 
 	logs.Info("replaceDaemonFileByRename done")
 	return nil
+}
+
+func removeDaemonUpgradeSignal() {
+	signalPath := filepath.Join(systemutil.GetWorkDir(), DaemonUpgradeFile)
+	if err := os.Remove(signalPath); err != nil && !os.IsNotExist(err) {
+		logs.WithError(err).Warn("failed to remove daemon upgrade signal file after kill")
+	} else if err == nil {
+		logs.Info("removed daemon upgrade signal file (kill succeeded, no longer needed)")
+	}
 }
 
 func writeDaemonUpgradeSignal() {

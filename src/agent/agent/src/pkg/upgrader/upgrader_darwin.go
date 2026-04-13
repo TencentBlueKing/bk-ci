@@ -37,7 +37,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gofrs/flock"
 	"github.com/pkg/errors"
@@ -106,9 +105,6 @@ func DoUpgradeAgent() error {
 	if agentChange {
 		tryKillAgentProcess(agentProcess)
 	}
-
-	logs.Info("wait 2 seconds for agent to stop")
-	time.Sleep(2 * time.Second)
 
 	if daemonChange {
 		if err := restartDaemonViaLaunchd(); err != nil {
