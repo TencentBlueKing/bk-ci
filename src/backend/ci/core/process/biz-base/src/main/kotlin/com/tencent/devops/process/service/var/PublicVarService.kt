@@ -261,9 +261,15 @@ class PublicVarService @Autowired constructor(
         if (varNames.size != varNames.distinct().size) {
             throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE)
         }
-        // 检查变量名格式是否符合要求（由字母、数字、下划线组成）
-        if (!publicVars.all { VAR_NAME_REGEX.matches(it.varName) }) {
-            throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR)
+        // 检查变量名格式是否符合要求（由字母、数字、下划线组成，字母或下划线开头，最长64字符）
+        val invalidVarNames = publicVars
+            .map { it.varName }
+            .filter { !VAR_NAME_REGEX.matches(it) }
+        if (invalidVarNames.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR,
+                params = arrayOf(invalidVarNames.joinToString(", "))
+            )
         }
     }
 

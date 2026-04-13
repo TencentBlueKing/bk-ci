@@ -37,7 +37,7 @@ data class PublicVarVO(
     @get:Schema(title = "变量名称")
     val varName: String,
     @get:Schema(title = "别名")
-    val alias: String,
+    val alias: String = "",
     @get:Schema(title = "变量组件类型(常量/变量)")
     val type: PublicVarTypeEnum,
     @get:Schema(title = "变量值类型", required = true)

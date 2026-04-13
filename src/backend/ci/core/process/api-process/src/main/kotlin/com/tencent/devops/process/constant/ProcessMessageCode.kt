@@ -451,8 +451,8 @@ object ProcessMessageCode {
     const val ERROR_INSTANCE_PARAM_COUNT_EXCEPTION = "2101342" // 实例化参数数量和模版的参数数量不同,请联系助手分析
     // 历史原因导致当前约束流水线无法确定对应的模版版本,不能直接开启PAC,请到模版实例列表界面升级流水线,明确引用的模版版本后再开启PAC。
     const val ERROR_PIPELINE_LEGACY_INSTANCE_CANNOT_ENABLE_PAC = "2101343"
-
-    const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR = "2101345" // 流水线公共变量组中变量名称格式错误
+    // 公共变量组中变量名称格式错误[{0}]，变量名须由字母、数字、下划线组成，以字母或下划线开头，最长64个字符
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR = "2101345"
     // 编排配置公共变量组中存在冲突变量{0}，请调整变量组配置
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT = "2101346"
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED = "2101347" // 变量组引用更新失败
