@@ -268,7 +268,6 @@ func handleUninstall(workDir string) error {
 	removeSessionSecrets()
 	removeAutoLogon()
 	os.Remove(filepath.Join(workDir, ".install_type"))
-	os.Remove(filepath.Join(workDir, "devopsctl.vbs"))
 
 	if serviceExists(serviceName) {
 		printStep(msg("Removing Windows service ...", "移除 Windows 服务 ..."))

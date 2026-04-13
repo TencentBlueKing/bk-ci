@@ -265,27 +265,85 @@ func agentBinary() string {
 
 // ── Process helpers ──────────────────────────────────────────────────────
 
-func killByPidFile(pidFile string) {
+// killByPidFile reads a PID from pidFile and kills that process.
+// Returns the PID that was targeted (0 if none) and any error.
+func killByPidFile(pidFile string) (int, error) {
 	data, err := os.ReadFile(pidFile)
 	if err != nil {
-		return
+		printWarn(msgf("PID file %s not found, skip", "PID 文件 %s 不存在, 跳过", filepath.Base(pidFile)))
+		return 0, nil
 	}
 	pid, err := strconv.Atoi(strings.TrimSpace(string(data)))
 	if err != nil || pid <= 0 {
-		return
+		printWarn(msgf("PID file %s contains invalid value: %q, skip",
+			"PID 文件 %s 内容无效: %q, 跳过", filepath.Base(pidFile), strings.TrimSpace(string(data))))
+		return 0, nil
 	}
 	proc, err := os.FindProcess(pid)
 	if err != nil {
-		return
+		return pid, nil
 	}
-	if err := proc.Kill(); err == nil {
-		printStep(msgf("killed process PID %d", "已终止进程 PID %d", pid))
+	if err := proc.Kill(); err != nil {
+		if isProcessGone(err) {
+			printStep(msgf("process PID %d already exited", "进程 PID %d 已退出", pid))
+			return pid, nil
+		}
+		return pid, fmt.Errorf(msgf("kill PID %d failed: %v", "终止 PID %d 失败: %v", pid, err))
 	}
+	printStep(msgf("killed process PID %d", "已终止进程 PID %d", pid))
+	return pid, nil
+}
+
+// isProcessGone checks whether a Kill/Signal error indicates the process
+// no longer exists (e.g. "process already finished", "no such process").
+func isProcessGone(err error) bool {
+	if err == nil {
+		return false
+	}
+	s := strings.ToLower(err.Error())
+	return strings.Contains(s, "already finished") ||
+		strings.Contains(s, "no such process") ||
+		strings.Contains(s, "not found")
+}
+
+// waitPidExit polls whether the given pid has exited, returning true once
+// the process is gone or false if the timeout expires with it still alive.
+func waitPidExit(pid int, timeout time.Duration) bool {
+	if pid <= 0 {
+		return true
+	}
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		if !isProcessAlive(pid) {
+			return true
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+	return !isProcessAlive(pid)
 }
 
 func stopProcesses(workDir string) {
-	killByPidFile(filepath.Join(workDir, "runtime", "daemon.pid"))
-	killByPidFile(filepath.Join(workDir, "runtime", "agent.pid"))
+	agentPidFile := filepath.Join(workDir, "runtime", "agent.pid")
+	daemonPidFile := filepath.Join(workDir, "runtime", "daemon.pid")
+
+	agentPid, err := killByPidFile(agentPidFile)
+	if err != nil {
+		printWarn(err.Error())
+	}
+	daemonPid, err := killByPidFile(daemonPidFile)
+	if err != nil {
+		printWarn(err.Error())
+	}
+
+	// Wait for processes to actually exit after kill.
+	if agentPid > 0 && !waitPidExit(agentPid, 10*time.Second) {
+		printWarn(msgf("agent process (PID %d) still alive after kill",
+			"agent 进程 (PID %d) kill 后仍存活", agentPid))
+	}
+	if daemonPid > 0 && !waitPidExit(daemonPid, 5*time.Second) {
+		printWarn(msgf("daemon process (PID %d) still alive after kill",
+			"daemon 进程 (PID %d) kill 后仍存活", daemonPid))
+	}
 }
 
 // ── Work directory preparation ───────────────────────────────────────────
