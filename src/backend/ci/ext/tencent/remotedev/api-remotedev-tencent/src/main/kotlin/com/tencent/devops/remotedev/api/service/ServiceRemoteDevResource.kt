@@ -1059,4 +1059,21 @@ interface ServiceRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
+
+    @Operation(summary = "批量刷新实例状态")
+    @POST
+    @Path("/refresh_instance_status")
+    fun refreshWorkspaceStatus(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(
+            description = "实例ID列表",
+            required = true
+        )
+        instanceIds: List<String>
+    ): Result<Map<String, String>>
 }

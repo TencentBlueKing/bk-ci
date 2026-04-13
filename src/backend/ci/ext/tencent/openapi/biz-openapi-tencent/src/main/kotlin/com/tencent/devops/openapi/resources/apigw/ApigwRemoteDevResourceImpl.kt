@@ -809,4 +809,19 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class)
             .convertToPublicWorkspace(userId, workspaceName)
     }
+
+    override fun refreshWorkspaceStatus(
+        userId: String,
+        projectId: String,
+        instanceIds: List<String>
+    ): Result<Map<String, String>> {
+        logger.info(
+            "refreshInstanceStatus" +
+                " |$userId|$projectId|${instanceIds.size}"
+        )
+        return client.get(ServiceRemoteDevResource::class)
+            .refreshWorkspaceStatus(
+                userId, projectId, instanceIds
+            )
+    }
 }

@@ -1172,4 +1172,31 @@ interface ApigwRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
+
+    @Operation(
+        summary = "批量刷新实例状态",
+        tags = ["v4_app_remotedev_refresh_workspace_status"]
+    )
+    @POST
+    @Path("/refresh_workspace_status")
+    fun refreshWorkspaceStatus(
+        @Parameter(
+            description = "用户ID",
+            required = true,
+            example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(
+            description = "项目ID",
+            required = true
+        )
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(
+            description = "实例ID列表",
+            required = true
+        )
+        instanceIds: List<String>
+    ): Result<Map<String, String>>
 }

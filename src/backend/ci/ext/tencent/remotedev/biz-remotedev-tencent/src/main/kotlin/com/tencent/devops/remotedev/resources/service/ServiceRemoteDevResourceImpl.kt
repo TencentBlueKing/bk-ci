@@ -144,7 +144,10 @@ class ServiceRemoteDevResourceImpl(
     private val coffeeAIService: CoffeeAIService
 ) : ServiceRemoteDevResource {
     companion object {
-        private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
+        private const val MAX_REFRESH_SIZE = 100
+        private val logger = LoggerFactory.getLogger(
+            OpProjectWorkspaceResourceImpl::class.java
+        )
     }
 
     override fun validateUserTicket(userId: String, isOffshore: Boolean, ticket: String): Result<Boolean> {
@@ -984,5 +987,37 @@ class ServiceRemoteDevResourceImpl(
             )
         }
         return Result(true)
+    }
+
+    override fun refreshWorkspaceStatus(
+        userId: String,
+        projectId: String,
+        instanceIds: List<String>
+    ): Result<Map<String, String>> {
+        if (instanceIds.isEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+                params = arrayOf(
+                    "instanceIds cannot be empty"
+                )
+            )
+        }
+        if (instanceIds.size > MAX_REFRESH_SIZE) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+                params = arrayOf(
+                    "instanceIds size ${instanceIds.size}" +
+                        " exceeds max $MAX_REFRESH_SIZE"
+                )
+            )
+        }
+        permissionService.checkUserManager(userId, projectId)
+        return Result(
+            workspaceCommon.refreshInstanceStatus(
+                userId = userId,
+                projectId = projectId,
+                instanceIds = instanceIds
+            )
+        )
     }
 }
