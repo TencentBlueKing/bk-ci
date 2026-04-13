@@ -145,7 +145,7 @@ class WorkspaceJoinDao {
                     coffeeAi = coffeeAi
                 ),
                 checkField = checkField ?: windowsFullFields
-            ).orderBy(CREATE_TIME.desc(), ID.desc())
+            )
             return dsl.skipCheck()
                 .fetch(workspaceWithWindowsMapper)
         }
@@ -179,7 +179,7 @@ class WorkspaceJoinDao {
                     nodeHashIds = nodeHashId?.toList()
                 ),
                 checkField = checkField ?: windowsFullFields
-            ).orderBy(CREATE_TIME.desc(), ID.desc())
+            )
             return dsl.skipCheck()
                 .fetch(workspaceWithWindowsMapper)
         }
