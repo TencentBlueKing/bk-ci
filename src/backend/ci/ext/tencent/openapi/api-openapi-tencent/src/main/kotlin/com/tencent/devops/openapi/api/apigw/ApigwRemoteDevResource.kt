@@ -1150,4 +1150,26 @@ interface ApigwRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
+
+    @Operation(
+        summary = "实例转公共云桌面",
+        tags = ["v4_app_remotedev_convert_to_public_workspace"]
+    )
+    @POST
+    @Path("/convert_to_public_workspace")
+    fun convertToPublicWorkspace(
+        @Parameter(
+            description = "用户ID",
+            required = true,
+            example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(
+            description = "workspaceName",
+            required = true
+        )
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
 }

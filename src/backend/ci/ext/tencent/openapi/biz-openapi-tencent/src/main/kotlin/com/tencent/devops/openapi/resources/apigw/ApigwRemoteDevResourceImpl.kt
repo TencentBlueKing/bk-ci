@@ -795,6 +795,18 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         workspaceName: String
     ): Result<Boolean> {
         logger.info("checkViewLive |$userId|$projectId|$workspaceName")
-        return client.get(ServiceRemoteDevResource::class).checkViewLive(userId, projectId, workspaceName)
+        return client.get(ServiceRemoteDevResource::class)
+            .checkViewLive(userId, projectId, workspaceName)
+    }
+
+    override fun convertToPublicWorkspace(
+        userId: String,
+        workspaceName: String
+    ): Result<Boolean> {
+        logger.info(
+            "convertToPublicWorkspace |$userId|$workspaceName"
+        )
+        return client.get(ServiceRemoteDevResource::class)
+            .convertToPublicWorkspace(userId, workspaceName)
     }
 }

@@ -956,4 +956,33 @@ class ServiceRemoteDevResourceImpl(
     ): Result<Boolean> {
         return Result(workspaceRecordService.checkViewLive(userId, projectId, workspaceName))
     }
+
+    override fun convertToPublicWorkspace(
+        userId: String,
+        workspaceName: String
+    ): Result<Boolean> {
+        val ws = workspaceService.getWorkspaceDetail(
+            userId = userId,
+            workspaceName = workspaceName,
+            checkPermission = false
+        ) ?: return Result(false)
+        permissionService.checkUserManager(userId, ws.projectId)
+        val ip = ws.ip?.substringAfter(".")
+            ?: return Result(false)
+        workspaceCommon.devxEnvNodeInit(
+            userId = userId,
+            projectId = ws.projectId,
+            workspaceName = ws.workspaceName,
+            ip = ip,
+            size = ws.machineType ?: ""
+        )
+        if (ws.ownerType != WorkspaceOwnerType.PROJECT_PUBLIC) {
+            workspaceService.changeWorkspaceOwnerType(
+                ws.workspaceName,
+                ws.ownerType,
+                WorkspaceOwnerType.PROJECT_PUBLIC
+            )
+        }
+        return Result(true)
+    }
 }
