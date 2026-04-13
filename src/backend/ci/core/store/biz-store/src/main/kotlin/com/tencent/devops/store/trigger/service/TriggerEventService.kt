@@ -164,7 +164,9 @@ class TriggerEventService @Autowired constructor(
                         logger.info("storeCode[${component.storeCode}|${component.version}] not found")
                         return@versionForeach
                     }
-                    val atomForm = detailInfo.extData?.get(KEY_ATOM_FORM)?.toString()
+                    val atomForm = detailInfo.extData?.get(KEY_ATOM_FORM)?.let {
+                        JsonUtil.toJson(it, false)
+                    }
                     if (atomForm.isNullOrBlank()) {
                         logger.info("storeCode[${component.storeCode}|${component.version}] not found atomForm")
                         return@versionForeach
