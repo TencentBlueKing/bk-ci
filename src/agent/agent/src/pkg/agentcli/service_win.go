@@ -18,6 +18,37 @@ const (
 )
 
 func platformUnzip(src, dest string) error {
+	// Try PowerShell Expand-Archive first (requires PowerShell 5.0+).
+	psErr := expandArchiveViaPowerShell(src, dest)
+	if psErr == nil {
+		return nil
+	}
+	printWarn(msgf("Expand-Archive failed: %v, trying unzip.exe fallback ...",
+		"Expand-Archive 失败: %v, 尝试 unzip.exe 兜底 ...", psErr))
+
+	// Fallback: look for unzip.exe next to the agent binary.
+	exePath, _ := os.Executable()
+	unzipExe := filepath.Join(filepath.Dir(exePath), "unzip.exe")
+	if _, err := os.Stat(unzipExe); err != nil {
+		return fmt.Errorf(msgf(
+			"Expand-Archive failed and unzip.exe not found in %s: %v",
+			"Expand-Archive 失败且 %s 下未找到 unzip.exe: %v",
+			filepath.Dir(exePath), psErr))
+	}
+
+	cmd := exec.Command(unzipExe, "-o", src, "-d", dest)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf(msgf(
+			"unzip.exe also failed: %v (Expand-Archive error: %v)",
+			"unzip.exe 也失败了: %v (Expand-Archive 错误: %v)",
+			err, psErr))
+	}
+	return nil
+}
+
+func expandArchiveViaPowerShell(src, dest string) error {
 	cmd := exec.Command("powershell", "-NoProfile", "-Command",
 		fmt.Sprintf("Expand-Archive -Path '%s' -DestinationPath '%s' -Force", src, dest))
 	cmd.Stdout = os.Stdout
