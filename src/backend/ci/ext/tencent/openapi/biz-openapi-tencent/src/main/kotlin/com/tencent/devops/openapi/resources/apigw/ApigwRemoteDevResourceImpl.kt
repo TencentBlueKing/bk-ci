@@ -842,8 +842,6 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     }
 
     override fun searchUserWorkspaces(
-        appCode: String?,
-        apigwType: String?,
         userId: String,
         page: Int?,
         pageSize: Int?,
@@ -851,7 +849,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Page<Workspace>> {
         logger.info(
             "searchUserWorkspaces" +
-                " |$appCode|$userId|$page|$pageSize"
+                " |$userId|$page|$pageSize"
         )
         return client.get(ServiceRemoteDevResource::class)
             .searchUserWorkspaces(
