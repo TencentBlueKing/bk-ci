@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.test.BkCiAbstractTest
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
@@ -163,7 +164,8 @@ class GitWebHookMatcherTest : BkCiAbstractTest() {
                 repositoryName = null
             ),
             eventType = CodeEventType.TAG_PUSH,
-            branchName = "v1.0.1"
+            branchName = "v1.0.1",
+            includeTagAction = listOf(TGitPushOperationKind.CREAT.value).joinToString(",")
         )
         val matcher = GitWebHookMatcher(event = event)
 
@@ -212,6 +214,15 @@ class GitWebHookMatcherTest : BkCiAbstractTest() {
                 CodeGitWebHookTriggerElement.MERGE_ACTION_OPEN,
                 CodeGitWebHookTriggerElement.MERGE_ACTION_REOPEN,
                 CodeGitWebHookTriggerElement.MERGE_ACTION_PUSH_UPDATE
+            ).joinToString(","),
+            includeLabels = listOf(
+                "devops_label#1",
+                "devops_label#2",
+                "devops_label#3",
+            ).joinToString(","),
+            excludeLabels = listOf(
+                "devops_label#4",
+                "devops_label#5"
             ).joinToString(",")
         )
         val matcher = GitWebHookMatcher(event = event)

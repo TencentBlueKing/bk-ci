@@ -133,7 +133,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     excludeUsers = tag.usersIgnore,
                     eventType = CodeEventType.TAG_PUSH,
                     repositoryType = repositoryType,
-                    repositoryName = triggerOn.repoName
+                    repositoryName = triggerOn.repoName,
+                    includeTagAction = tag.action
                 ).checkTriggerElementEnable(tag.enable).apply {
                     version = "2.*"
                 }
@@ -264,7 +265,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     tagsIgnore = git.excludeTagName?.disjoin(),
                     fromBranches = git.fromBranches?.disjoin(),
                     users = git.includeUsers,
-                    usersIgnore = git.excludeUsers
+                    usersIgnore = git.excludeUsers,
+                    action = git.includeTagAction
                 )
 
                 CodeEventType.MERGE_REQUEST -> nowExist.mr = MrRule(
@@ -288,7 +290,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         url = git.thirdUrl,
                         credentials = git.thirdSecretToken
                     ) else null,
-                    skipWip = git.skipWip
+                    skipWip = git.skipWip,
+                    labels = git.includeLabels?.disjoin(),
+                    labelsIgnore = git.excludeLabels?.disjoin()
                 )
                 CodeEventType.MERGE_REQUEST_ACCEPT -> nowExist.mrMerged = MrRule(
                     id = git.id,
@@ -304,7 +308,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     usersIgnore = git.excludeUsers,
                     reportCommitCheck = git.enableCheck.nullIfDefault(true),
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
-                    skipWip = git.skipWip
+                    skipWip = git.skipWip,
+                    labels = git.includeLabels?.disjoin(),
+                    labelsIgnore = git.excludeLabels?.disjoin()
                 )
 
                 CodeEventType.REVIEW -> nowExist.review = ReviewRule(
@@ -378,7 +384,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     users = git.includeUsers,
                     usersIgnore = git.excludeUsers,
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
-                    action = git.includeMrAction
+                    action = git.includeMrAction,
+                    labels = git.includeLabels?.disjoin(),
+                    labelsIgnore = git.excludeLabels?.disjoin()
                 )
 
                 else -> {}
@@ -439,7 +447,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             excludeUsers = tag.usersIgnore,
                             eventType = CodeEventType.TAG_PUSH,
                             repositoryType = repositoryType,
-                            repositoryName = triggerOn.repoName
+                            repositoryName = triggerOn.repoName,
+                            includeTagAction = tag.action
                         )
                     )
                 ).checkTriggerElementEnable(tag.enable).apply {
@@ -592,7 +601,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     includeMrAction = mr.action,
                     eventType = CodeEventType.PULL_REQUEST,
                     repositoryType = repositoryType,
-                    repositoryName = triggerOn.repoName
+                    repositoryName = triggerOn.repoName,
+                    includeLabels = mr.labels.nonEmptyOrNull()?.join(),
+                    excludeLabels = mr.labelsIgnore.nonEmptyOrNull()?.join()
                 ).checkTriggerElementEnable(mr.enable)
             )
         }
@@ -1032,7 +1043,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
             enableThirdFilter = !mr.custom?.url.isNullOrBlank(),
             thirdUrl = mr.custom?.url,
             thirdSecretToken = mr.custom?.credentials,
-            skipWip = mr.skipWip
+            skipWip = mr.skipWip,
+            includeLabels = mr.labels.nonEmptyOrNull()?.join(),
+            excludeLabels = mr.labelsIgnore.nonEmptyOrNull()?.join()
         ).checkTriggerElementEnable(mr.enable).apply {
             version = elementVersion
         }
@@ -1078,7 +1091,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     eventType = eventType,
                     repositoryType = repositoryType,
                     repositoryName = repoName,
-                    skipWip = mr.skipWip
+                    skipWip = mr.skipWip,
+                    includeLabels = mr.labels.nonEmptyOrNull()?.join(),
+                    excludeLabels = mr.labelsIgnore.nonEmptyOrNull()?.join()
                 )
             )
         ).checkTriggerElementEnable(mr.enable).apply {
@@ -1119,7 +1134,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
             includeMrAction = includeMrAction,
             eventType = eventType,
             repositoryType = repositoryType,
-            repositoryName = repoName
+            repositoryName = repoName,
+            includeLabels = mr.labels.nonEmptyOrNull()?.join(),
+            excludeLabels = mr.labelsIgnore.nonEmptyOrNull()?.join()
         ).checkTriggerElementEnable(mr.enable).apply {
             version = "1.*"
         }

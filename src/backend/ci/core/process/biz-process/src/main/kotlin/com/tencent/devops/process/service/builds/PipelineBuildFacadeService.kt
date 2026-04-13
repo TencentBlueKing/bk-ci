@@ -1220,7 +1220,8 @@ class PipelineBuildFacadeService(
                             pipelineId = pipelineId,
                             reviewUsers = el.actualReviewUsers ?: el.reviewUsers,
                             params = el.params,
-                            desc = el.desc ?: ""
+                            desc = el.desc ?: "",
+                            suggestRequired = el.suggestRequired
                         )
                     }
                 }
@@ -1238,7 +1239,8 @@ class PipelineBuildFacadeService(
                                     pipelineId = pipelineId,
                                     reviewUsers = el.actualReviewUsers ?: el.reviewUsers ?: emptyList(),
                                     params = el.params ?: mutableListOf(),
-                                    desc = el.desc ?: ""
+                                    desc = el.desc ?: "",
+                                    suggestRequired = el.suggestRequired
                                 )
                             }
                         }
@@ -1256,7 +1258,8 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         reviewUsers: List<String>,
         params: MutableList<ManualReviewParam>,
-        desc: String
+        desc: String,
+        suggestRequired: Boolean? = false
     ): ReviewParam {
         val reviewUser = mutableListOf<String>()
         reviewUsers.forEach { user ->
@@ -1294,7 +1297,8 @@ class PipelineBuildFacadeService(
             status = null,
             desc = buildVariableService.replaceTemplate(projectId, buildId, desc),
             suggest = "",
-            params = params
+            params = params,
+            suggestRequired = suggestRequired
         )
         logger.info("reviewParam : $reviewParam")
         return reviewParam

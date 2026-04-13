@@ -159,6 +159,14 @@
                     "items" : {
                       "type" : "string"
                     }
+                  },
+                  "action" : {
+                    "type" : "array",
+                    "uniqueItems" : true,
+                    "items" : {
+                      "enum" : [ "create", "delete" ]
+                    },
+                    "additionalItems" : false
                   }
                 }
               } ]
@@ -267,6 +275,18 @@
                   },
                   "skip-wip" : {
                     "type" : "boolean"
+                  },
+                  "labels" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "labels-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
                   }
                 }
               } ]
@@ -364,6 +384,18 @@
                   },
                   "skip-wip" : {
                     "type" : "boolean"
+                  },
+                  "labels" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "labels-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
                   }
                 }
               } ]
@@ -970,6 +1002,14 @@
                   "items" : {
                     "type" : "string"
                   }
+                },
+                "action" : {
+                  "type" : "array",
+                  "uniqueItems" : true,
+                  "items" : {
+                    "enum" : [ "create", "delete" ]
+                  },
+                  "additionalItems" : false
                 }
               }
             } ]
@@ -1078,6 +1118,18 @@
                 },
                 "skip-wip" : {
                   "type" : "boolean"
+                },
+                "labels" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
                 }
               }
             } ]
@@ -1175,6 +1227,18 @@
                 },
                 "skip-wip" : {
                   "type" : "boolean"
+                },
+                "labels" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
                 }
               }
             } ]

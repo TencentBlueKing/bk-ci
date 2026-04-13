@@ -48,5 +48,7 @@ data class WebhookFactParam(
     @get:Schema(title = "触发标题")
     val title: String = "",
     @get:Schema(title = "最新提交信息")
-    val lastCommitMsg: String = ""
+    val lastCommitMsg: String = "",
+    @get:Schema(title = "标签信息")
+    val labels: List<String> = emptyList()
 )
