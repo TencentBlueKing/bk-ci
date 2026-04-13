@@ -59,7 +59,7 @@ func doBuild(
 	runUser string,
 ) error {
 	// windows特有环境变量
-	goEnv["DEVOPS_AGENT_WIN_SERVICE"] = config.GAgentEnv.WinTask
+	goEnv["DEVOPS_AGENT_INSTALL_MODE"] = config.GAgentEnv.InstallType
 	var err error
 	var exitGroup process.ProcessExitGroup
 	enableExitGroup := envs.FetchEnvAndCheck(constant.DevopsAgentEnableExitGroup, "true")
@@ -155,11 +155,13 @@ func doBuild(
 func StartProcessCmd(command string, args []string, workDir string, envMap map[string]string, runUser string) (*exec.Cmd, error) {
 	cmd := exec.Command(command)
 
-	// 始终禁止子进程继承父进程的所有句柄，防止 Agent 持有的管道句柄（如 daemon stderr pipe）
-	// 沿 Worker→cmd.exe→构建脚本链路层层传播，导致构建脚本的孙进程继承管道写端后
-	// 上层 StreamPumper/read() 永远等不到 EOF 而阻塞
+	// DEVOPS_AGENT_CLOSE_FD_INHERIT: optional fd isolation matching Windows' NoInheritHandles.
 	sysProcAttr := &syscall.SysProcAttr{
-		NoInheritHandles: true,
+		NoInheritHandles: false,
+	}
+	if envs.FetchEnvAndCheck(constant.DevopsAgentCloseFdInherit, "true") {
+		logs.Info("DEVOPS_AGENT_CLOSE_FD_INHERIT enabled: fd isolation for build process")
+		sysProcAttr.NoInheritHandles = true
 	}
 	if envs.FetchEnvAndCheck(constant.DevopsAgentEnableNewConsole, "true") {
 		sysProcAttr.CreationFlags = constant.WinCommandNewConsole

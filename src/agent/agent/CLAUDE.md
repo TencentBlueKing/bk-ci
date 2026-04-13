@@ -84,7 +84,7 @@ Version is injected via ldflags: `AGENT_VERSION=v1.0.0 make build_linux`
 
 ### File Naming for Build Tags
 
-- `*_win.go` / `*_windows.go` - Windows only
+- `*_win.go` - Windows only
 - `*_unix.go` - Linux + macOS (build tag `//go:build linux || darwin`)
 - `*_linux.go` - Linux only
 - `*_darwin.go` - macOS only

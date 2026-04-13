@@ -267,13 +267,14 @@ class DownloadAgentInstallService @Autowired constructor(
     }
 
     private fun getGoAgentScriptFiles(
-        agentRecord: TEnvironmentThirdpartyAgentRecord
+        agentRecord: TEnvironmentThirdpartyAgentRecord,
     ): Map<String, String> {
         val file = File(agentPackage, "script/${agentRecord.os.lowercase()}")
         val scripts = file.listFiles()?.toMutableList()
-        scripts?.removeIf { it.name == getDownloadFile(agentRecord.os) }
+        val map = getAgentReplaceProperties(agentRecord, false, null, null, null)
         return scripts?.associate {
-            val content = it.readText(Charsets.UTF_8)
+            var content = it.readText(Charsets.UTF_8)
+            map.forEach { (key, value) -> content = content.replace("##$key##", value) }
             it.name to content
         } ?: emptyMap()
     }

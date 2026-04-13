@@ -42,6 +42,7 @@ import (
 	"github.com/gofrs/flock"
 	"github.com/pkg/errors"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/agentcli"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
@@ -55,7 +56,6 @@ const (
 )
 
 func main() {
-	isDebug := false
 	if len(os.Args) == 2 {
 		switch os.Args[1] {
 		case "version":
@@ -66,14 +66,11 @@ func main() {
 			fmt.Println(config.GitCommit)
 			fmt.Println(config.BuildTime)
 			systemutil.ExitProcess(0)
-		case "debug":
-			isDebug = true
-		}
 	}
 
 	// 初始化日志
 	logFilePath := filepath.Join(systemutil.GetWorkDir(), "logs", "devopsDaemon.log")
-	err := logs.Init(logFilePath, isDebug, false)
+	err := logs.Init(logFilePath, agentcli.DebugFileExists(workDir), false)
 	if err != nil {
 		fmt.Printf("init daemon log error %v\n", err)
 		systemutil.ExitProcess(1)
@@ -104,16 +101,16 @@ func main() {
 	logs.Info("pid: ", os.Getpid())
 	logs.Info("workDir: ", workDir)
 
-	watch(isDebug)
+	watch()
 	systemutil.KeepProcessAlive()
 }
 
-func watch(isDebug bool) {
+func watch() {
 	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock))
 
 	// first check immediately
 	totalLock.Lock()
-	doCheckAndLaunchAgent(isDebug)
+	doCheckAndLaunchAgent()
 	totalLock.Unlock()
 
 	checkTimeTicker := time.NewTicker(agentCheckGap)
@@ -125,12 +122,12 @@ func watch(isDebug bool) {
 				continue
 			}
 
-			doCheckAndLaunchAgent(isDebug)
+			doCheckAndLaunchAgent()
 		}
 	}
 }
 
-func doCheckAndLaunchAgent(isDebug bool) {
+func doCheckAndLaunchAgent() {
 	workDir := systemutil.GetWorkDir()
 	agentLock := flock.New(fmt.Sprintf("%s/agent.lock", systemutil.GetRuntimeDir()))
 
@@ -154,7 +151,7 @@ func doCheckAndLaunchAgent(isDebug bool) {
 
 	logs.Warn("agent is not available, will launch it")
 
-	process, err := launch(workDir+"/"+config.AgentFileClientLinux, isDebug)
+	process, err := launch(workDir+"/"+config.AgentFileClientLinux)
 	if err != nil {
 		logs.WithError(err).Error("launch agent failed")
 		return
@@ -166,12 +163,7 @@ func doCheckAndLaunchAgent(isDebug bool) {
 	logs.Infof("success to launch agent, pid: %d", process.Pid)
 }
 
-func launch(agentPath string, isDebug bool) (*os.Process, error) {
-	if isDebug {
-		debugFile := filepath.Join(systemutil.GetWorkDir(), ".debug")
-		_ = os.WriteFile(debugFile, []byte("1"), 0644)
-	}
-
+func launch(agentPath string) (*os.Process, error) {
 	cmd := exec.Command(agentPath)
 	cmd.Dir = systemutil.GetWorkDir()
 

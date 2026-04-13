@@ -45,6 +45,7 @@ import (
 	"github.com/kardianos/service"
 	"golang.org/x/sys/windows"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/agentcli"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
@@ -61,7 +62,6 @@ const (
 )
 
 func main() {
-	isDebug := false
 	if len(os.Args) == 2 {
 		switch os.Args[1] {
 		case "version":
@@ -72,14 +72,11 @@ func main() {
 			fmt.Println(config.GitCommit)
 			fmt.Println(config.BuildTime)
 			systemutil.ExitProcess(0)
-		case "debug":
-			isDebug = true
-		}
 	}
 
 	// 初始化日志
 	workDir := systemutil.GetExecutableDir()
-	err := logs.Init(filepath.Join(workDir, "logs", "devopsDaemon.log"), isDebug, false)
+	err := logs.Init(filepath.Join(workDir, "logs", "devopsDaemon.log"), agentcli.DebugFileExists(workDir), false)
 	if err != nil {
 		fmt.Printf("init daemon log error %v\n", err)
 		systemutil.ExitProcess(1)
@@ -121,7 +118,7 @@ func main() {
 			logs.Info("running as Windows service in SERVICE mode")
 		}
 	} else {
-		logs.Info("running in interactive mode (TASK)")
+		logs.Info("running in interactive mode (TASK|MANUAL)")
 	}
 
 	serviceConfig := &service.Config{
@@ -203,8 +200,8 @@ func watch() {
 			}
 
 			if !waitForUpgradeFinish() {
-				logs.Info("restart after 30 seconds")
-				time.Sleep(30 * time.Second)
+				logs.Info("restart after 5 seconds")
+				time.Sleep(5 * time.Second)
 				return
 			}
 
@@ -400,16 +397,13 @@ func checkDaemonUpgradeSignal() bool {
 	return true
 }
 
-// cleanupOldDaemonBinary removes the .old daemon binary left over from a
-// previous rename-based upgrade.
-func cleanupOldDaemonBinary(workDir string) {
-	oldPath := filepath.Join(workDir, "devopsDaemon.exe.old")
-	if _, err := os.Stat(oldPath); err != nil {
-		return
-	}
-	if err := os.Remove(oldPath); err != nil {
+// cleanupOldDaemonBinary removes the .old daemon binary left over from
+// replaceDaemonFileByRename. Safe to call even if the file does not exist.
+func cleanupOldDaemonBinary() {
+	oldPath := filepath.Join(systemutil.GetWorkDir(), config.GetClientDaemonFile()+".old")
+	if err := os.Remove(oldPath); err != nil && !os.IsNotExist(err) {
 		logs.WithError(err).Warn("failed to remove old daemon binary")
-	} else {
-		logs.Info("cleaned up old daemon binary: devopsDaemon.exe.old")
+	} else if err == nil {
+		logs.Info("cleaned up old daemon binary: " + config.GetClientDaemonFile() + ".old")
 	}
 }

@@ -139,7 +139,7 @@ func AgentUpgrade(upgradeItem *api.UpgradeItem, hasBuild bool) {
 
 func SyncDockerInitFileMd5() error {
 	// macOS/Windows 的 docker init 脚本与 Linux 独立管理，不参与升级流程
-	if !config.GAgentConfig.EnableDockerBuild || runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+	if !systemutil.IsLinux() || !config.GAgentConfig.EnableDockerBuild {
 		DockerFileMd5.NeedUpgrade = false
 		return nil
 	}

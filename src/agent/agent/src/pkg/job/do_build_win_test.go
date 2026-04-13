@@ -21,6 +21,9 @@ func init() {
 }
 
 func TestStartProcessCmd_NoInheritHandles(t *testing.T) {
+	// Default: NoInheritHandles should be true
+	os.Unsetenv(constant.DevopsAgentNoInheritHandles)
+
 	cmd, err := StartProcessCmd("cmd.exe", []string{"/c", "echo", "hello"}, "", nil, "")
 	if err != nil {
 		t.Fatalf("StartProcessCmd failed: %v", err)
@@ -31,7 +34,27 @@ func TestStartProcessCmd_NoInheritHandles(t *testing.T) {
 		t.Fatal("SysProcAttr should not be nil")
 	}
 	if !cmd.SysProcAttr.NoInheritHandles {
-		t.Error("NoInheritHandles should always be true")
+		t.Error("NoInheritHandles should be true by default")
+	}
+
+	cmd.Wait()
+}
+
+func TestStartProcessCmd_NoInheritHandles_Disabled(t *testing.T) {
+	os.Setenv(constant.DevopsAgentNoInheritHandles, "false")
+	defer os.Unsetenv(constant.DevopsAgentNoInheritHandles)
+
+	cmd, err := StartProcessCmd("cmd.exe", []string{"/c", "echo", "hello"}, "", nil, "")
+	if err != nil {
+		t.Fatalf("StartProcessCmd failed: %v", err)
+	}
+	defer cmd.Process.Kill()
+
+	if cmd.SysProcAttr == nil {
+		t.Fatal("SysProcAttr should not be nil")
+	}
+	if cmd.SysProcAttr.NoInheritHandles {
+		t.Error("NoInheritHandles should be false when DEVOPS_AGENT_NO_INHERIT_HANDLES=false")
 	}
 
 	cmd.Wait()
@@ -54,6 +77,7 @@ func TestStartProcessCmd_NewConsoleFlag(t *testing.T) {
 	})
 
 	t.Run("with_new_console", func(t *testing.T) {
+		os.Unsetenv(constant.DevopsAgentNoInheritHandles)
 		os.Setenv(constant.DevopsAgentEnableNewConsole, "true")
 		defer os.Unsetenv(constant.DevopsAgentEnableNewConsole)
 
