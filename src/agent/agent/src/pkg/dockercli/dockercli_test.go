@@ -57,6 +57,90 @@ func TestFormatCommand(t *testing.T) {
 	}
 }
 
+func TestFormatCommand_MasksSecretEnv(t *testing.T) {
+	tests := []struct {
+		name       string
+		args       []string
+		wantSubstr string
+		denySubstr string
+	}{
+		{
+			name:       "secret_key_masked",
+			args:       []string{"create", "-e", "devops_agent_secret_key=abc123", "-e", "devops_project_id=p1", "img"},
+			wantSubstr: "devops_agent_secret_key=******",
+			denySubstr: "abc123",
+		},
+		{
+			name:       "password_masked",
+			args:       []string{"create", "-e", "DB_PASSWORD=hunter2", "img"},
+			wantSubstr: "DB_PASSWORD=******",
+			denySubstr: "hunter2",
+		},
+		{
+			name:       "token_masked",
+			args:       []string{"create", "--env", "API_TOKEN=tok123", "img"},
+			wantSubstr: "API_TOKEN=******",
+			denySubstr: "tok123",
+		},
+		{
+			name:       "non_secret_not_masked",
+			args:       []string{"create", "-e", "devops_project_id=p1", "img"},
+			wantSubstr: "devops_project_id=p1",
+		},
+		{
+			name:       "no_env_flag_unchanged",
+			args:       []string{"pull", "nginx:latest"},
+			wantSubstr: "pull nginx:latest",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := formatCommand("docker", tt.args)
+			if !contains(got, tt.wantSubstr) {
+				t.Errorf("formatCommand() = %q, want substring %q", got, tt.wantSubstr)
+			}
+			if tt.denySubstr != "" && contains(got, tt.denySubstr) {
+				t.Errorf("formatCommand() = %q, must NOT contain %q", got, tt.denySubstr)
+			}
+		})
+	}
+}
+
+func TestMaskEnvValue(t *testing.T) {
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{"devops_agent_secret_key=abc123", "devops_agent_secret_key=******"},
+		{"DB_PASSWORD=hunter2", "DB_PASSWORD=******"},
+		{"API_TOKEN=tok", "API_TOKEN=******"},
+		{"MY_CREDENTIAL=x", "MY_CREDENTIAL=******"},
+		{"devops_project_id=p1", "devops_project_id=p1"},
+		{"agent_build_env=DOCKER", "agent_build_env=DOCKER"},
+		{"no_equals_sign", "no_equals_sign"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			if got := maskEnvValue(tt.input); got != tt.want {
+				t.Errorf("maskEnvValue(%q) = %q, want %q", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
+func contains(s, sub string) bool {
+	return len(sub) > 0 && len(s) >= len(sub) && (s == sub || len(s) > 0 && containsStr(s, sub))
+}
+
+func containsStr(s, sub string) bool {
+	for i := 0; i <= len(s)-len(sub); i++ {
+		if s[i:i+len(sub)] == sub {
+			return true
+		}
+	}
+	return false
+}
+
 func TestImageExists_ExitCodeOnly(t *testing.T) {
 	r := NewRunner(t.TempDir(), nil)
 

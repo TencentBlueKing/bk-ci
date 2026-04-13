@@ -249,16 +249,46 @@ func (r *Runner) log(level LogLevel, format string, args ...interface{}) {
 	}
 }
 
+// sensitiveEnvKeys lists lowercase substrings that, when found in an
+// environment-variable name passed via docker "-e", indicate the value
+// should be masked in log output.
+var sensitiveEnvKeys = []string{"secret", "password", "token", "credential"}
+
 func formatCommand(binary string, args []string) string {
 	parts := []string{binary}
+	maskNext := false
 	for _, arg := range args {
-		if strings.ContainsAny(arg, " \t\n\"'") {
-			parts = append(parts, strconv.Quote(arg))
+		display := arg
+		if maskNext {
+			display = maskEnvValue(arg)
+			maskNext = false
+		} else if arg == "-e" || arg == "--env" {
+			maskNext = true
+		}
+		if strings.ContainsAny(display, " \t\n\"'") {
+			parts = append(parts, strconv.Quote(display))
 		} else {
-			parts = append(parts, arg)
+			parts = append(parts, display)
 		}
 	}
 	return strings.Join(parts, " ")
+}
+
+// maskEnvValue masks the value portion of a "KEY=VALUE" string when KEY
+// contains a sensitive substring.  If the argument is not in KEY=VALUE
+// form or the key is not sensitive, it is returned unchanged.
+func maskEnvValue(env string) string {
+	eqIdx := strings.Index(env, "=")
+	if eqIdx < 0 {
+		return env
+	}
+	key := strings.ToLower(env[:eqIdx])
+	for _, s := range sensitiveEnvKeys {
+		if strings.Contains(key, s) {
+			return env[:eqIdx+1] + "******"
+		}
+	}
+	return env
 }
 
 func registryFromImage(image string) string {
