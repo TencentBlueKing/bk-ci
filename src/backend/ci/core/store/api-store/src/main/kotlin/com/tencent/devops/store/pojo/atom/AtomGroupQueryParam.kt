@@ -36,7 +36,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class AtomGroupQueryParam(
     @get:Schema(title = "分组字段", required = true)
     val groupBy: StoreGroupByEnum,
-    val serviceScope: ServiceScopeEnum?,
+    val serviceScope: ServiceScopeEnum? = null,
     @get:Schema(title = "条件字段--类型", required = true)
-    val category: AtomCategoryEnum?
+    val category: AtomCategoryEnum? = null
 )

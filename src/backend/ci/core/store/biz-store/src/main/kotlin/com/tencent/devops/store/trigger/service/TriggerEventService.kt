@@ -4,10 +4,12 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.atom.form.AtomForm
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.atom.dao.AtomQueryParam
 import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.common.service.StoreComponentQueryService
+import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomGroupQueryParam
 import com.tencent.devops.store.pojo.atom.AtomResp
@@ -31,7 +33,8 @@ import org.springframework.stereotype.Service
 @Service
 class TriggerEventService @Autowired constructor(
     private val storeComponentQueryService: StoreComponentQueryService,
-    private val atomService: AtomService
+    private val atomService: AtomService,
+    private val redisOperation: RedisOperation
 ) {
     fun previewEvent(userId: String, storeId: String): AtomForm? {
         val detailInfo = storeComponentQueryService.getComponentDetailInfoById(
@@ -51,7 +54,6 @@ class TriggerEventService @Autowired constructor(
             userId = userId,
             atomGroupQueryParam = AtomGroupQueryParam(
                 groupBy = StoreGroupByEnum.OWNER_STORE_CODE,
-                serviceScope = ServiceScopeEnum.CREATIVE_STREAM,
                 category = AtomCategoryEnum.TRIGGER
             )
         )
@@ -98,7 +100,7 @@ class TriggerEventService @Autowired constructor(
                 queryProjectAtomFlag = false,
                 projectCode = null,
                 category = AtomCategoryEnum.TRIGGER.name,
-                serviceScope = ServiceScopeEnum.CREATIVE_STREAM,
+                serviceScope = null,
                 fitOsFlag = null,
                 jobType = null,
                 os = null,
@@ -226,6 +228,8 @@ class TriggerEventService @Autowired constructor(
                 }
             }
         }
+        // 触发器资源设置为默认插件后，需要删除公共插件标记，后续会自动重建
+        redisOperation.delete(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name))
     }
 
     companion object {
