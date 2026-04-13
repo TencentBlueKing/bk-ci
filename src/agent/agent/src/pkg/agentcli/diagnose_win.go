@@ -38,9 +38,9 @@ func checkDiskSpace(workDir string) {
 	freeGB := float64(freeBytesAvailable) / 1024 / 1024 / 1024
 	totalGB := float64(totalBytes) / 1024 / 1024 / 1024
 
-	status := "✓"
+	status := diagStatusOK
 	if freeGB < 1 {
-		status = "✗ LOW"
+		status = diagStatusLow
 	}
 	statusLine(msg("  Disk space", "  磁盘空间"),
 		fmt.Sprintf("%.1f GB free / %.1f GB (%d%% used) %s", freeGB, totalGB, usedPct, status))

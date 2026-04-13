@@ -638,9 +638,11 @@ func downloadAgentZip(workDir, gateway, agentId, savePath string) error {
 			return nil
 		}
 
-		// Agent 仍在运行（心跳未过期），等待后重试一次
+		// Agent 仍在运行（心跳未过期），先停止再等待后重试
 		if errors.Is(lastErr, errAgentStillRunning) {
-			waitAndPrintCountdown(55)
+			printStep(msg("Stopping agent before retry ...", "重试前停止 Agent ..."))
+			_ = handleStop(workDir)
+			waitAndPrintCountdown(60)
 			lastErr = doDownload(httpClient, url, headers, savePath)
 			if lastErr == nil {
 				return nil

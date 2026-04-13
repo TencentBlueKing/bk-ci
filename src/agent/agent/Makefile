@@ -6,9 +6,11 @@ CMDDIR := $(CURDIR)/src/cmd
 # 根据当前系统排除不适用的平台文件，避免 goimports-reviser 处理跨平台文件报错
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
-  EXCLUDE_OS_FILES := ! -name "*_windows.go" ! -name "*_win.go" ! -name "*_darwin.go"
+  EXCLUDE_OS_FILES := ! -name "*_win.go" ! -name "*_win_test.go" ! -name "*_darwin.go" ! -name "*_darwin_test.go"
 else ifeq ($(UNAME_S),Darwin)
-  EXCLUDE_OS_FILES := ! -name "*_windows.go" ! -name "*_win.go" ! -name "*_linux.go"
+  EXCLUDE_OS_FILES := ! -name "*_win.go" ! -name "*_win_test.go" ! -name "*_linux.go" ! -name "*_linux_test.go"
+else
+  EXCLUDE_OS_FILES := ! -name "*_unix.go" ! -name "*_unix_test.go" ! -name "*_darwin.go" ! -name "*_darwin_test.go" ! -name "*_linux.go" ! -name "*_linux_test.go"
 endif
 BuildTime := $(shell date '+%Y-%m-%d.%H:%M:%S%Z')
 GitCommit := $(shell git rev-parse HEAD)

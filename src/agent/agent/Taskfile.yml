@@ -101,19 +101,19 @@ tasks:
     cmds:
       - goimports -w .
       # ── Linux: 排除 windows/darwin 文件 ──
-      - cmd: find ./ -name "*.go" ! -name "*_windows.go" ! -name "*_win.go" ! -name "*_darwin.go" | xargs gofmt -w -l
+      - cmd: find ./ -name "*.go" ! -name "*_win.go" ! -name "*_win_test.go" ! -name "*_darwin.go" ! -name "*_darwin_test.go" | xargs gofmt -w -l
         platforms: [linux]
-      - cmd: find ./ -name "*.go" ! -name "*_windows.go" ! -name "*_win.go" ! -name "*_darwin.go" | xargs goimports-reviser -rm-unused -set-alias -format
+      - cmd: find ./ -name "*.go" ! -name "*_win.go" ! -name "*_win_test.go" ! -name "*_darwin.go" ! -name "*_darwin_test.go" | xargs goimports-reviser -rm-unused -set-alias -format
         platforms: [linux]
       # ── macOS: 排除 windows/linux 文件 ──
-      - cmd: find ./ -name "*.go" ! -name "*_windows.go" ! -name "*_win.go" ! -name "*_linux.go" | xargs gofmt -w -l
+      - cmd: find ./ -name "*.go" ! -name "*_win.go" ! -name "*_win_test.go" ! -name "*_linux.go" ! -name "*_linux_test.go" | xargs gofmt -w -l
         platforms: [darwin]
-      - cmd: find ./ -name "*.go" ! -name "*_windows.go" ! -name "*_win.go" ! -name "*_linux.go" | xargs goimports-reviser -rm-unused -set-alias -format
+      - cmd: find ./ -name "*.go" ! -name "*_win.go" ! -name "*_win_test.go" ! -name "*_linux.go" ! -name "*_linux_test.go" | xargs goimports-reviser -rm-unused -set-alias -format
         platforms: [darwin]
       # ── Windows: 排除 linux/darwin/unix 文件 ──
-      - cmd: powershell -NoProfile -Command "Get-ChildItem -Recurse -Filter '*.go' | Where-Object { $_.Name -notmatch '_(linux|darwin|unix)\.go$' } | ForEach-Object { gofmt -w -l $_.FullName }"
-        platforms: [windows]
-      - cmd: powershell -NoProfile -Command "Get-ChildItem -Recurse -Filter '*.go' | Where-Object { $_.Name -notmatch '_(linux|darwin|unix)\.go$' } | ForEach-Object { goimports-reviser -rm-unused -set-alias -format $_.FullName }"
+      # PowerShell 脚本中的 $_ 会被 task 模板引擎误解析，
+      # 因此通过 -File 执行外部脚本来避免此问题。
+      - cmd: powershell -NoProfile -File scripts/windows/fmt.ps1
         platforms: [windows]
 
   # ── i18n 代码生成 ─────────────────────────────────────────────────────
