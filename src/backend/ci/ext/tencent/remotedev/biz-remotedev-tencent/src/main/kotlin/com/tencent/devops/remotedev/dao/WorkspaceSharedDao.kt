@@ -88,9 +88,23 @@ class WorkspaceSharedDao {
         if (workspaceNames.isEmpty()) return emptyList()
         with(TWorkspaceShared.T_WORKSPACE_SHARED) {
             return workspaceNames.chunked(BATCH_QUERY_SIZE).flatMap { chunk ->
-                dslContext.selectFrom(this)
+                // 只查覆盖索引字段(WORKSPACE_NAME, SHARED_USER, ASSIGN_TYPE)
+                // 避免回表，走 Using index
+                dslContext.select(WORKSPACE_NAME, SHARED_USER, ASSIGN_TYPE)
+                    .from(this)
                     .where(WORKSPACE_NAME.`in`(chunk))
-                    .fetch(sharedMapper)
+                    .fetch { record ->
+                        WorkspaceShared(
+                            id = null,
+                            workspaceName = record[WORKSPACE_NAME],
+                            operator = "",
+                            sharedUser = record[SHARED_USER],
+                            type = WorkspaceShared.AssignType.parse(
+                                record[ASSIGN_TYPE]
+                            ),
+                            resourceId = ""
+                        )
+                    }
             }
         }
     }
@@ -171,8 +185,10 @@ class WorkspaceSharedDao {
     ): Map<String, String> {
         if (workspaceNames.isEmpty()) return emptyMap()
         with(TWorkspaceShared.T_WORKSPACE_SHARED) {
+            // 只查覆盖索引字段，避免回表
             return workspaceNames.chunked(BATCH_QUERY_SIZE).flatMap { chunk ->
-                dslContext.selectFrom(this)
+                dslContext.select(WORKSPACE_NAME, SHARED_USER)
+                    .from(this)
                     .where(WORKSPACE_NAME.`in`(chunk))
                     .and(
                         ASSIGN_TYPE.eq(
@@ -180,7 +196,7 @@ class WorkspaceSharedDao {
                         )
                     )
                     .fetch()
-            }.associateBy({ it.workspaceName }, { it.sharedUser })
+            }.associate { it[WORKSPACE_NAME] to it[SHARED_USER] }
         }
     }
 
@@ -272,7 +288,7 @@ class WorkspaceSharedDao {
     }
 
     companion object {
-        private const val BATCH_QUERY_SIZE = 100
+        private const val BATCH_QUERY_SIZE = 50
         val sharedMapper = TSharedRecordJooqMapper()
     }
 }
