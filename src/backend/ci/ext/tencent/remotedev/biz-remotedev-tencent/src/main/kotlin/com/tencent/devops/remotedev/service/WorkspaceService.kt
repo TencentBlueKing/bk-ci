@@ -1761,9 +1761,36 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
+    fun batchGetSimpleWorkspaces(
+        projectId: String,
+        workspaceNames: List<String>
+    ): List<WeSecProjectWorkspace> {
+        val records = workspaceDao.fetchByProjectAndNames(
+            dslContext, projectId, workspaceNames
+        )
+        return records.map { it.toSimpleWeSecWorkspace() }
+    }
+
+    private fun WorkspaceRecord.toSimpleWeSecWorkspace() =
+        WeSecProjectWorkspace(
+            workspaceName = workspaceName,
+            projectId = projectId,
+            creator = createUserId,
+            owner = createUserId,
+            createTime = DateTimeUtil.toDateTime(createTime),
+            regionId = "",
+            innerIp = ip,
+            status = status.name,
+            displayName = displayName,
+            ownerDepartments = null,
+            currentLoginUsers = null
+        )
+
     companion object {
-        private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
-        private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
+        private val logger =
+            LoggerFactory.getLogger(WorkspaceService::class.java)
+        private val expiredTimeInSeconds =
+            TimeUnit.MINUTES.toSeconds(2)
         private const val DEFAULT_PAGE_SIZE = 20
         private const val DEFAULT_WAIT_TIME = 10
         private const val DEFAULT_LOCALE_LANGUAGE = "zh_CN"

@@ -824,4 +824,19 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
                 userId, projectId, instanceIds
             )
     }
+
+    override fun batchGetSimpleWorkspaces(
+        userId: String,
+        projectId: String,
+        workspaceNames: List<String>
+    ): Result<List<WeSecProjectWorkspace>> {
+        logger.info(
+            "batchGetSimpleWorkspaces" +
+                " |$userId|$projectId|${workspaceNames.size}"
+        )
+        return client.get(ServiceRemoteDevResource::class)
+            .batchGetSimpleWorkspaces(
+                userId, projectId, workspaceNames
+            )
+    }
 }

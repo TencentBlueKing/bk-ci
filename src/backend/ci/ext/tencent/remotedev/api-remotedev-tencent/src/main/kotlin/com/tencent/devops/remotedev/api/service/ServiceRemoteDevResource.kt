@@ -1076,4 +1076,21 @@ interface ServiceRemoteDevResource {
         )
         instanceIds: List<String>
     ): Result<Map<String, String>>
+
+    @Operation(summary = "批量获取简易工作空间信息")
+    @POST
+    @Path("/batch_get_simple_workspaces")
+    fun batchGetSimpleWorkspaces(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(
+            description = "工作空间名称列表",
+            required = true
+        )
+        workspaceNames: List<String>
+    ): Result<List<WeSecProjectWorkspace>>
 }

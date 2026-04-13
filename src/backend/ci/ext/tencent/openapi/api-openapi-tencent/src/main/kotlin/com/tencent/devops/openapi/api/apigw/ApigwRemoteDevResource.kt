@@ -1199,4 +1199,33 @@ interface ApigwRemoteDevResource {
         )
         instanceIds: List<String>
     ): Result<Map<String, String>>
+
+    @Operation(
+        summary = "批量获取简易工作空间信息",
+        tags = [
+            "v4_app_remotedev_batch_get_simple_workspaces"
+        ]
+    )
+    @POST
+    @Path("/batch_get_simple_workspaces")
+    fun batchGetSimpleWorkspaces(
+        @Parameter(
+            description = "用户ID",
+            required = true,
+            example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(
+            description = "项目ID",
+            required = true
+        )
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(
+            description = "工作空间名称列表",
+            required = true
+        )
+        workspaceNames: List<String>
+    ): Result<List<WeSecProjectWorkspace>>
 }

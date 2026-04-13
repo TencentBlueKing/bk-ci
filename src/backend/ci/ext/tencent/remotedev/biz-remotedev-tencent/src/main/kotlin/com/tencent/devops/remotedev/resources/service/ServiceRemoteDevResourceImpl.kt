@@ -1020,4 +1020,21 @@ class ServiceRemoteDevResourceImpl(
             )
         )
     }
+
+    override fun batchGetSimpleWorkspaces(
+        userId: String,
+        projectId: String,
+        workspaceNames: List<String>
+    ): Result<List<WeSecProjectWorkspace>> {
+        if (workspaceNames.isEmpty()) {
+            return Result(emptyList())
+        }
+        permissionService.checkUserManager(userId, projectId)
+        return Result(
+            workspaceService.batchGetSimpleWorkspaces(
+                projectId = projectId,
+                workspaceNames = workspaceNames
+            )
+        )
+    }
 }
