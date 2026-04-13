@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,9 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.atom.enums
+package com.tencent.devops.auth.resources.service
 
-enum class ServiceScopeEnum(val scopeType: String) {
-    PIPELINE("pipeline"),
-    QUALITY("quality")
+import com.tencent.devops.auth.api.service.ServiceManagerResource
+import com.tencent.devops.auth.service.SuperManagerService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ServiceManagerResourceImpl @Autowired constructor(
+    val superManagerService: SuperManagerService
+) : ServiceManagerResource {
+    override fun validateManagerPermission(
+        userId: String,
+        token: String,
+        projectCode: String,
+        action: String,
+        resourceCode: String
+    ): Result<Boolean> {
+        return Result(superManagerService.projectManagerCheck(
+            userId = userId,
+            projectCode = projectCode,
+            action = action,
+            resourceType = resourceCode
+        ))
+    }
 }

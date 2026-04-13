@@ -522,10 +522,8 @@ func parseContainerMounts(buildInfo *api.ThirdPartyBuildInfo) ([]mount.Mount, er
 	// 创建并挂载data和log
 	// data目录优先选择用户自定的工作空间
 	dataDir := fmt.Sprintf("%s/%s/data/%s/%s", workDir, job_docker.LocalDockerWorkSpaceDirName, buildInfo.PipelineId, buildInfo.VmSeqId)
-	targetDir := constant.DockerDataDir
 	if buildInfo.Workspace != "" {
 		dataDir = buildInfo.Workspace
-		targetDir = buildInfo.Workspace
 	}
 	err := systemutil.MkDir(dataDir)
 	if err != nil && !os.IsExist(err) {
@@ -534,7 +532,7 @@ func parseContainerMounts(buildInfo *api.ThirdPartyBuildInfo) ([]mount.Mount, er
 	mounts = append(mounts, mount.Mount{
 		Type:     mount.TypeBind,
 		Source:   dataDir,
-		Target:   targetDir,
+		Target:   constant.DockerDataDir,
 		ReadOnly: false,
 	})
 

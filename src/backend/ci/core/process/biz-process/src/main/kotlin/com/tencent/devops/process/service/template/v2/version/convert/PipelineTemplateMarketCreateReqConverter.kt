@@ -120,6 +120,7 @@ class PipelineTemplateMarketCreateReqConverter @Autowired constructor(
                     settingVersion = marketTemplateResource.settingVersion
                 )
                 srcTemplateSetting.copy(
+                    desc = "",
                     pipelineId = newTemplateId,
                     projectId = projectId,
                     pipelineName = templateName,
@@ -133,7 +134,7 @@ class PipelineTemplateMarketCreateReqConverter @Autowired constructor(
                     templateId = newTemplateId,
                     creator = userId,
                     templateName = templateName,
-                    desc = marketTemplateDetails.description
+                    desc = ""
                 )
             }
 
@@ -146,7 +147,7 @@ class PipelineTemplateMarketCreateReqConverter @Autowired constructor(
                 id = newTemplateId,
                 projectId = projectId,
                 name = templateName,
-                desc = marketTemplateDetails.description,
+                desc = "",
                 mode = TemplateType.CONSTRAINT,
                 type = marketTemplateInfo.type,
                 enablePac = templateInfo?.enablePac ?: false,
