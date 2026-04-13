@@ -40,6 +40,7 @@ import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomUpgradeRequest
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
+import com.tencent.devops.store.pojo.atom.AtomGroupQueryParam
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.version.VersionInfo
@@ -206,6 +207,17 @@ interface AtomService {
      * 升级插件
      */
     fun upgradeAtom(userId: String, atomRequest: AtomUpgradeRequest): Result<Boolean>
+
+    /**
+     * 统计插件分组信息
+     * @param userId 用户ID
+     * @param atomGroupQueryParam 插件分组查询参数
+     * @return 分组统计结果
+     */
+    fun getAtomGroupCount(
+        userId: String,
+        atomGroupQueryParam: AtomGroupQueryParam
+    ): List<Pair<String, Int>>
 
     /**
      * 判断插件是否存在

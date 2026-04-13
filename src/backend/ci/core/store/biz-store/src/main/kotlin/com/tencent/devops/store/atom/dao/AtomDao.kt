@@ -90,9 +90,11 @@ import com.tencent.devops.store.pojo.common.KEY_PUBLISHER
 import com.tencent.devops.store.pojo.common.KEY_RECENT_EXECUTE_NUM
 import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
 import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
+import com.tencent.devops.store.pojo.atom.AtomGroupQueryParam
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.ServiceScopeConfig
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreGroupByEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.util.ServiceScopeUtil
@@ -200,7 +202,8 @@ class AtomDao : AtomBaseDao() {
                 DATA,
                 CREATOR,
                 MODIFIER,
-                OWNER_STORE_CODE
+                OWNER_STORE_CODE,
+                LOGO_URL
             )
                 .values(
                     id,
@@ -233,7 +236,8 @@ class AtomDao : AtomBaseDao() {
                     atomRequest.data,
                     userId,
                     userId,
-                    atomRequest.ownerStoreCode
+                    atomRequest.ownerStoreCode,
+                    atomRequest.logoUrl
                 )
                 .execute()
         }
@@ -1592,7 +1596,8 @@ class AtomDao : AtomBaseDao() {
                 DATA,
                 CREATOR,
                 MODIFIER,
-                OWNER_STORE_CODE
+                OWNER_STORE_CODE,
+                LOGO_URL
             )
                     .values(
                         id,
@@ -1625,7 +1630,8 @@ class AtomDao : AtomBaseDao() {
                         atomRequest.data,
                         userId,
                         userId,
-                        atomRequest.ownerStoreCode
+                        atomRequest.ownerStoreCode,
+                        atomRequest.logoUrl
                     )
                     .execute()
         }
@@ -1715,5 +1721,42 @@ class AtomDao : AtomBaseDao() {
                 )
             )
         )
+    }
+
+    /**
+     * 分组统计插件数量
+     */
+    fun getAtomGroupCount(
+        dslContext: DSLContext,
+        atomGroupQueryParam: AtomGroupQueryParam,
+        atomCodes: Set<String>
+    ): List<Pair<String, Int>> {
+        return with(TAtom.T_ATOM) {
+            val conditions = mutableListOf<Condition>(
+                ATOM_CODE.`in`(atomCodes)
+            )
+            val groupField = when (atomGroupQueryParam.groupBy) {
+                StoreGroupByEnum.OWNER_STORE_CODE -> {
+                    conditions.add(
+                        OWNER_STORE_CODE.isNotNull
+                    )
+                    OWNER_STORE_CODE
+                }
+                StoreGroupByEnum.STORE_CODE -> {
+                    ATOM_CODE
+                }
+                else -> {
+                    ATOM_TYPE.cast(String::class.java)
+                }
+            }
+            dslContext.select(groupField, DSL.count())
+                .from(this)
+                .where(conditions)
+                .groupBy(groupField)
+                .fetch()
+                .map {
+                    Pair(it.value1() as String, it.value2())
+                }
+        }
     }
 }

@@ -129,6 +129,7 @@ import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.pojo.atom.AtomUpgradeRequest
+import com.tencent.devops.store.pojo.atom.AtomGroupQueryParam
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.honor.HonorInfo
 import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
@@ -1572,6 +1573,36 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             atomRequest = atomRequest
         )
         return Result(true)
+    }
+
+    override fun getAtomGroupCount(
+        userId: String,
+        atomGroupQueryParam: AtomGroupQueryParam
+    ): List<Pair<String, Int>> {
+        // 直接使用内嵌的插件过滤条件，查询用户有权限查看的插件code集合
+        val queryResult = atomDao.getPipelineAtomsAndCount(
+            dslContext = dslContext,
+            param = AtomQueryParam(
+                serviceScope = atomGroupQueryParam.serviceScope,
+                category = atomGroupQueryParam.category?.name,
+                classifyId = null,
+                fitOsFlag = null,
+                jobType = null,
+                keyword = null,
+                os = null,
+                projectCode = null,
+                queryFitAgentBuildLessAtomFlag = null,
+                recommendFlag = null
+            ),
+            page = 1,
+            pageSize = Int.MAX_VALUE
+        )
+        val atomCodes = queryResult.atoms?.map { it[KEY_ATOM_CODE] as String }?.toSet() ?: emptySet()
+        return atomDao.getAtomGroupCount(
+            dslContext = dslContext,
+            atomGroupQueryParam = atomGroupQueryParam,
+            atomCodes = atomCodes
+        )
     }
 
     override fun exists(atomCode: String): Result<Boolean> {

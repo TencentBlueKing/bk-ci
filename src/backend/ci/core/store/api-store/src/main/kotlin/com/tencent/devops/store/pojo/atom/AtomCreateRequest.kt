@@ -65,5 +65,7 @@ data class AtomCreateRequest(
     @get:Schema(title = "预留字段（设置规则等信息的json串）", required = false)
     val data: String?,
     @get:Schema(title = "归属应用标识", required = false)
-    val ownerStoreCode: String? = null
+    val ownerStoreCode: String? = null,
+    @get:Schema(title = "LOGO", required = false)
+    val logoUrl: String? = null
 )

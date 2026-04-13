@@ -9,6 +9,7 @@ import com.tencent.devops.store.atom.dao.AtomQueryParam
 import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.common.service.StoreComponentQueryService
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
+import com.tencent.devops.store.pojo.atom.AtomGroupQueryParam
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.AtomUpgradeRequest
@@ -18,7 +19,6 @@ import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.BK_STORE_ALL_TRIGGER
 import com.tencent.devops.store.pojo.common.KEY_ATOM_FORM
-import com.tencent.devops.store.pojo.common.QueryGroupParam
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreGroupByEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
@@ -47,11 +47,12 @@ class TriggerEventService @Autowired constructor(
 
     fun listOwnerStoreCodes(userId: String): List<TriggerGroupInfo> {
         // 按照归属应用分组
-        val componentGroupCount = storeComponentQueryService.getComponentGroupCount(
+        val componentGroupCount = atomService.getAtomGroupCount(
             userId = userId,
-            queryGroupParam = QueryGroupParam(
-                storeType = StoreTypeEnum.TRIGGER_EVENT,
-                groupBy = StoreGroupByEnum.OWNER_STORE_CODE
+            atomGroupQueryParam = AtomGroupQueryParam(
+                groupBy = StoreGroupByEnum.OWNER_STORE_CODE,
+                serviceScope = ServiceScopeEnum.CREATIVE_STREAM,
+                category = AtomCategoryEnum.TRIGGER
             )
         )
         // 触发事件总数
@@ -97,7 +98,7 @@ class TriggerEventService @Autowired constructor(
                 queryProjectAtomFlag = false,
                 projectCode = null,
                 category = AtomCategoryEnum.TRIGGER.name,
-                serviceScope = null,
+                serviceScope = ServiceScopeEnum.CREATIVE_STREAM,
                 fitOsFlag = null,
                 jobType = null,
                 os = null,
@@ -193,7 +194,8 @@ class TriggerEventService @Autowired constructor(
                                 weight = null,
                                 data = null,
                                 version = component.version,
-                                ownerStoreCode = component.ownerStoreCode
+                                ownerStoreCode = component.ownerStoreCode,
+                                logoUrl = component.logoUrl
                             )
                         )
                     } else {
