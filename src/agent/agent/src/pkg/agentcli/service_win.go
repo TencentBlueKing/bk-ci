@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -97,12 +98,20 @@ func handleInstall(workDir string, args []string) error {
 }
 
 func isProcessAlive(pid int) bool {
-	proc, err := os.FindProcess(pid)
+	const processQueryLimitedInformation = 0x1000
+	const stillActive = 259
+
+	h, err := syscall.OpenProcess(processQueryLimitedInformation, false, uint32(pid))
 	if err != nil {
 		return false
 	}
-	proc.Release()
-	return true
+	defer syscall.CloseHandle(h)
+
+	var exitCode uint32
+	if err := syscall.GetExitCodeProcess(h, &exitCode); err != nil {
+		return false
+	}
+	return exitCode == stillActive
 }
 
 func readInstallMode(workDir string) string {
