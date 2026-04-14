@@ -1237,6 +1237,11 @@ interface ApigwRemoteDevResource {
     @POST
     @Path("/user/workspaces/search")
     fun searchUserWorkspaces(
+        @Parameter(
+            description = "用户ID",
+            required = true,
+            example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        )
        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(
