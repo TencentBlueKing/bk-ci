@@ -54,7 +54,8 @@ class TriggerEventService @Autowired constructor(
             userId = userId,
             atomGroupQueryParam = AtomGroupQueryParam(
                 groupBy = StoreGroupByEnum.OWNER_STORE_CODE,
-                category = AtomCategoryEnum.TRIGGER
+                category = AtomCategoryEnum.TRIGGER,
+                serviceScope = ServiceScopeEnum.CREATIVE_STREAM
             )
         )
         // 触发事件总数
