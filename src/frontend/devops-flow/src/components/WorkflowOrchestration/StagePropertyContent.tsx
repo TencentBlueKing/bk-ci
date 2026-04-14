@@ -235,7 +235,6 @@ export default defineComponent({
                           <Popover
                             content={t('flow.orchestration.stageFastKillDesc')}
                             placement="top"
-                            trigger="click"
                             boundary="window"
                           >
                             <span class={sharedStyles.infoIcon}>

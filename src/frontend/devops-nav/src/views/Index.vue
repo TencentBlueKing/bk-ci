@@ -158,11 +158,11 @@
         }
 
         get isPersonalProject (): boolean {
-            return this.curProject.channelCode === 'PREBUILD'
+            return this.curProject?.channelCode === 'PREBUILD'
         }
 
         get isCreativeFlowPage (): boolean {
-            return this.currentPage.code === 'creative-stream'
+            return this.currentPage?.code === 'creative-stream'
         }
 
         switchProject () {

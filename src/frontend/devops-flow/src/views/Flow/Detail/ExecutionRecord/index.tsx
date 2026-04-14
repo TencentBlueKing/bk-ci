@@ -234,19 +234,7 @@ export default defineComponent({
             return (
               <span class={styles.buildNoStatus}>
                 <StatusIcon status={status as any} size={14} />
-                <span
-                  class={styles.buildNo}
-                  style={{ color: statusColor }}
-                  onClick={() => {
-                    router.push({
-                      name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB,
-                      params: {
-                        flowId: flowId.value,
-                        buildNo: record.id,
-                      },
-                    })
-                  }}
-                >
+                <span class={styles.buildNo} style={{ color: statusColor }}>
                   #{record.buildNo}
                 </span>
               </span>
@@ -315,7 +303,7 @@ export default defineComponent({
             theme="primary"
             size="small"
             loading={isRetrying}
-            onClick={() => handleRetry(record)}
+            onClick={(e: MouseEvent) => handleRetry(record, e)}
           >
             {t('flow.content.rebuild')}
           </Button>
@@ -396,7 +384,22 @@ export default defineComponent({
       localStorage.setItem(LS_COLUMN_KEY, JSON.stringify(settings.checked))
     }
 
-    const handleRetry = async (row: ExecutionRecord) => {
+    const navigateToExecuteDetail = (record: ExecutionRecord) => {
+      router.push({
+        name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB,
+        params: {
+          flowId: flowId.value,
+          buildNo: record.id,
+        },
+      })
+    }
+
+    const handleRowClick = (_e: Event, row: ExecutionRecord) => {
+      navigateToExecuteDetail(row)
+    }
+
+    const handleRetry = async (row: ExecutionRecord, e?: MouseEvent) => {
+      e?.stopPropagation()
       if (retryingMap.value[row.id]) return
 
       try {
@@ -542,7 +545,10 @@ export default defineComponent({
         >
           {{
             default: () => (
-              <div class={styles.remarkCell}>
+              <div
+                class={styles.remarkCell}
+                onClick={(e: MouseEvent) => e.stopPropagation()}
+              >
                 <span class={styles.remarkText} title={row.remark || ''}>
                   {row.remark || '--'}
                 </span>
@@ -790,6 +796,7 @@ export default defineComponent({
                 pagination={pagination.value}
                 border="outer"
                 remotePagination
+                onRowClick={handleRowClick}
                 onPageValueChange={handlePageChange}
                 onPageLimitChange={handleLimitChange}
                 onSettingChange={handleSettingChange}
