@@ -83,7 +83,9 @@ data class PipelineSettingVersion(
     @get:Schema(title = "构建取消权限策略", required = false)
     var buildCancelPolicy: BuildCancelPolicy? = null,
     @get:Schema(title = "环境hashId", required = false)
-    var envHashId: String? = null
+    var envHashId: String? = null,
+    @get:Schema(title = "环境名称", required = false)
+    var envName: String? = null
 ) {
     companion object {
 
@@ -106,7 +108,9 @@ data class PipelineSettingVersion(
             maxConRunningQueueSize = setting.maxConRunningQueueSize,
             pipelineAsCodeSettings = setting.pipelineAsCodeSettings,
             failIfVariableInvalid = setting.failIfVariableInvalid,
-            buildCancelPolicy = setting.buildCancelPolicy
+            buildCancelPolicy = setting.buildCancelPolicy,
+            envHashId = setting.envHashId,
+            envName = setting.envName
         )
     }
 }
