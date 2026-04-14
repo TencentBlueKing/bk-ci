@@ -946,7 +946,9 @@ class GitService @Autowired constructor(
             return RetryUtils.retryFun("getGitCIFileTree") {
                 RetryUtils.doRetryHttp(request).use {
                     // 兼容文件不存在工蜂返回400的情况
-                    if (it.code == Response.Status.BAD_REQUEST.statusCode) {
+                    if (it.code == Response.Status.BAD_REQUEST.statusCode ||
+                        it.code == Response.Status.NOT_FOUND.statusCode
+                    ) {
                         emptyList()
                     } else {
                         if (!it.isSuccessful) {
