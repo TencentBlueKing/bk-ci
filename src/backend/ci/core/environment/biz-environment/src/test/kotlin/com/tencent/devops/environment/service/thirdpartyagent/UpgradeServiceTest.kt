@@ -263,7 +263,7 @@ class UpgradeServiceTest {
     @Test
     fun `未超过最大升级数，可以升级`() {
         every { mockAgentScope.getAgentMaxUpgradeCount() } returns 100
-        every { thirdPartyAgentDao.countByMasterVersion(any(),any()) } returns 50
+        every { thirdPartyAgentDao.countByMasterVersion(any(), any()) } returns 50
 
         every { mockAgentScope.checkCanUpgrade(agentId) } returns true
 
@@ -295,7 +295,7 @@ class UpgradeServiceTest {
     @Test
     fun `超过最大升级数，无法升级`() {
         every { mockAgentScope.getAgentMaxUpgradeCount() } returns 50
-        every { thirdPartyAgentDao.countByMasterVersion(any(),any()) } returns 100
+        every { thirdPartyAgentDao.countByMasterVersion(any(), any()) } returns 100
 
         every { mockAgentScope.checkCanUpgrade(agentId) } returns true
 
