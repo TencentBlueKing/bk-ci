@@ -39,7 +39,7 @@
             <p class="pipeline-version-name">
                 <span v-bk-overflow-tips>
                     <template v-if="isActiveDraft">
-                        <span v-if="draftVersion">{{ convertTime(activeVersion.updateTime) + ` ${activeVersion.updater} ` }}</span>
+                        <span v-if="shouldLoadDraftList">{{ convertTime(activeVersion.updateTime) + ` ${activeVersion.updater} ` }}</span>
                         {{ $t('editPage.draftVersion', [draftBaseVersionName]) }}
                     </template>
                     <template v-else>
@@ -310,7 +310,7 @@
                 const isDraft = item.status === VERSION_STATUS_ENUM.COMMITTING
                 const isBranchVersion = item.status === VERSION_STATUS_ENUM.BRANCH
                 const isRelease = item.status === VERSION_STATUS_ENUM.RELEASED
-                
+
                 return {
                     ...item,
                     displayName: isDraft ? this.$t('draft') : item.versionName,
@@ -330,30 +330,41 @@
                 this.hasNext = count > page * limit
             },
             
+            // 获取数据源方法
+            getDataSource (type) {
+                const sourceMap = {
+                    draft: this.isTemplate ? this.getTemplateDraftVersion : this.getDraftVersion,
+                    release: this.isTemplate ? this.requestTemplateVersionList : this.requestPipelineVersionList
+                }
+                return sourceMap[type]
+            },
+            
+            // 构建正式版本请求参数
+            buildReleaseParams (baseParams) {
+                return {
+                    ...baseParams,
+                    fuzzyVersionName: this.searchKeyword,
+                    includeDraft: this.includeDraft,
+                    buildOnly: this.buildOnly,
+                    archiveFlag: this.$route.query.archiveFlag
+                }
+            },
+            
             // 加载草稿版本和正式版本（第一页）
             async loadDraftAndReleaseVersions (params) {
-                const draftDataSource = this.isTemplate ? this.getTemplateDraftVersion : this.getDraftVersion
-                const releaseDataSource = this.isTemplate ? this.requestTemplateVersionList : this.requestPipelineVersionList
-                
                 const [draftRes, releaseRes] = await Promise.all([
-                    draftDataSource(params),
-                    releaseDataSource(params)
+                    this.getDataSource('draft')({ ...params, version: this.pipelineInfo?.version }),
+                    this.getDataSource('release')(this.buildReleaseParams(params))
                 ])
                 
-                // 转换草稿版本数据
                 const draftVersions = draftRes.records.map(item => this.transformDraftVersion(item))
-                
-                // 查找第一个正式发布版本
                 const firstReleasedVersion = releaseRes.records.find(
                     item => item.status === VERSION_STATUS_ENUM.RELEASED
                 )
                 
-                // 合并数据：第一个正式发布版本 + 草稿版本列表
-                let versions = draftVersions
-                if (firstReleasedVersion) {
-                    const releasedVersionData = this.transformReleaseVersion(firstReleasedVersion)
-                    versions = [releasedVersionData, ...draftVersions]
-                }
+                const versions = firstReleasedVersion
+                    ? [this.transformReleaseVersion(firstReleasedVersion), ...draftVersions]
+                    : draftVersions
                 
                 this.updatePagination(draftRes)
                 return versions
@@ -361,9 +372,7 @@
             
             // 只加载草稿版本（后续分页）
             async loadDraftVersions (params) {
-                const draftDataSource = this.isTemplate ? this.getTemplateDraftVersion : this.getDraftVersion
-                const draftRes = await draftDataSource(params)
-                
+                const draftRes = await this.getDataSource('draft')({ ...params, version: this.pipelineInfo?.version })
                 const versions = draftRes.records.map(item => this.transformDraftVersion(item))
                 
                 this.updatePagination(draftRes)
@@ -372,17 +381,7 @@
             
             // 只加载正式版本
             async loadReleaseVersions (params) {
-                const dataSource = this.isTemplate ? this.requestTemplateVersionList : this.requestPipelineVersionList
-                
-                const extendedParams = {
-                    ...params,
-                    fuzzyVersionName: this.searchKeyword,
-                    includeDraft: this.includeDraft,
-                    buildOnly: this.buildOnly,
-                    archiveFlag: this.$route.query.archiveFlag
-                }
-                
-                const res = await dataSource(extendedParams)
+                const res = await this.getDataSource('release')(this.buildReleaseParams(params))
                 const versions = res.records.map(item => this.transformReleaseVersion(item))
                 
                 this.updatePagination(res)
@@ -413,15 +412,10 @@
                     
                     // needDraftList 为 true 时，无论是否传入 draftVersion 都会同时加载草稿和正式版本列表
                     if (this.shouldLoadDraftList) {
-                        const params = {
-                            ...baseParams,
-                            version: pipelineInfo?.version
-                        }
-                        
                         // 第一页同时加载草稿和正式版本，后续分页只加载草稿版本
                         versions = nextPage === 1
-                            ? await this.loadDraftAndReleaseVersions(params)
-                            : await this.loadDraftVersions(params)
+                            ? await this.loadDraftAndReleaseVersions(baseParams)
+                            : await this.loadDraftVersions(baseParams)
                     } else {
                         // 只加载正式版本
                         versions = await this.loadReleaseVersions(baseParams)
