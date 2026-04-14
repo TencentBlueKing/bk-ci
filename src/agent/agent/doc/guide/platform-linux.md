@@ -80,7 +80,7 @@ systemctl --user stop devops_agent_{id}
 
 #### LDAP/域账号限制
 
-如果当前用户是通过 LDAP、NIS 或 SSSD 管理的网络/目录账号（而非 `/etc/passwd` 中的本地用户），**linger 的开机自启功能可能不生效**。
+如果当前用户是通过 LDAP、NIS 或 SSSD 管理的网络/目录账号（而非 `/etc/passwd` 中的本地用户），**linger 的开机自启功能不生效**。
 
 **现象**：linger 已启用（`status` 显示 `Linger: enabled ✓`），但系统重启后 Agent 未自动拉起，直到用户通过 SSH 或桌面登录后才恢复。
 

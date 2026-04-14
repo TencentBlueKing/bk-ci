@@ -113,7 +113,7 @@ tasks:
       # ── Windows: 排除 linux/darwin/unix 文件 ──
       # PowerShell 脚本中的 $_ 会被 task 模板引擎误解析，
       # 因此通过 -File 执行外部脚本来避免此问题。
-      - cmd: powershell -NoProfile -File scripts/windows/fmt.ps1
+      - cmd: powershell -NoProfile -File scripts/fmt.ps1
         platforms: [windows]
 
   # ── i18n 代码生成 ─────────────────────────────────────────────────────
