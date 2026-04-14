@@ -104,9 +104,7 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
                 }
 
                 // tag 事件默认监听创建和删除动作
-                eventType == CodeEventType.TAG_PUSH &&
-                        !WebhookUtils.isActionGitTriggerVersion(element.version) &&
-                        params.includeTagAction == null -> {
+                eventType == CodeEventType.TAG_PUSH && params.includeTagAction == null -> {
                     params.includeTagAction = WebhookUtils.joinToString(
                         listOf(
                             TGitPushOperationKind.CREAT.value,
