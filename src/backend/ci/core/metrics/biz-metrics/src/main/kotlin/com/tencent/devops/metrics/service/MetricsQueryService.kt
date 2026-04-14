@@ -122,7 +122,6 @@ class MetricsQueryService @Autowired constructor(
         }
     }
 
-
     /**
      * 查询告警Top N数据
      * @param projectId 项目ID
@@ -267,8 +266,8 @@ class MetricsQueryService @Autowired constructor(
             )
         ) {
             logger.error(
-                "替换后的promql不包含配置的表名: table=${monitorTable}, tableAgent=${monitorTableAgent}, " +
-                    "tableBkrepo=${monitorTableBkrepo}, promql=$replacedPromql"
+                "替换后的promql不包含配置的表名: table=$monitorTable, tableAgent=$monitorTableAgent, " +
+                    "tableBkrepo=$monitorTableBkrepo, promql=$replacedPromql"
             )
             throw IllegalArgumentException("promql替换失败")
         }
