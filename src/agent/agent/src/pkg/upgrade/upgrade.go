@@ -45,7 +45,7 @@ import (
 
 // DockerFileMd5 缓存，用来计算md5
 var DockerFileMd5 struct {
-	// 目前非linux机器不支持，以及一些机器不使用docker就不用计算md5
+	// 未开启docker构建的机器不用计算md5
 	NeedUpgrade bool
 	FileModTime time.Time
 	Md5         string
