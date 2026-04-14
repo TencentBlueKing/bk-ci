@@ -308,6 +308,16 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         userId: String,
         request: CvdDeleteTaskRequest
     ): Result<CvdTaskResponse> {
+        val workspace = workspaceService.getWorkspaceRecord(workspaceName = request.instanceId)
+        if (workspace == null || !workspace.ownerType.projectUse() || workspace.projectId != request.bkProjectId) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(request.instanceId)
+            )
+        }
+
+        permissionService.checkOwnerPermission(userId, workspace.workspaceName, workspace.projectId, workspace.ownerType)
+
         if (!permissionService.checkUserVisitPermission(userId, request.bkProjectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
