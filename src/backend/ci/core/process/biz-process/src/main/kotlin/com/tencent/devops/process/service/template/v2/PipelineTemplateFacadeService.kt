@@ -646,7 +646,8 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 val installedVersion = latestInstalledVersions.firstOrNull { it.templateCode == template.id }
                 val parentVersion = latestParentVersions.firstOrNull { it.templateCode == template.srcTemplateId }
                 logger.debug("{} installedVersion({})|parentVersion({})", template.id, installedVersion, parentVersion)
-                installedVersion != null && parentVersion != null && installedVersion.number < parentVersion.number
+                installedVersion != null && parentVersion != null
+                        && installedVersion.srcMarketTemplateNumber < parentVersion.number
             } else {
                 false
             }
@@ -657,7 +658,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 val marketVersion = latestMarketVersions.firstOrNull { it.templateCode == template.id }
                 logger.debug("{} releasedVersion({})|marketVersion({})", template.id, releasedVersion, marketVersion)
                 releasedVersion != null && marketVersion != null &&
-                    releasedVersion.number.toLong() > marketVersion.number
+                        releasedVersion.number.toLong() > marketVersion.number
             } else {
                 false
             }
@@ -1247,8 +1248,8 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 srcMarketTemplateName = marketTemplateDetails.templateName,
                 srcMarketTemplateLatestVersion = srcTemplateLatestReleasedVersion.version,
                 srcMarketTemplateLatestVersionName = srcTemplateLatestReleasedVersion.versionName,
-                latestInstalledVersion = recentlyInstalledVersion.version,
-                latestInstalledVersionName = recentlyInstalledVersion.versionName,
+                latestInstalledVersion = recentlyInstalledVersion.srcMarketTemplateVersion,
+                latestInstalledVersionName = recentlyInstalledVersion.srcMarketTemplateVersionName,
                 upgradeStrategy = it.upgradeStrategy!!,
                 settingSyncStrategy = it.settingSyncStrategy!!,
                 latestInstaller = recentlyInstalledVersion.creator,
@@ -1266,7 +1267,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
 
         val publishFlag = takeIf { basicInfo.storeStatus == TemplateStatusEnum.RELEASED }?.let {
             latestReleasedVersionNum != null && latestMarketPublishedVersionNum != null &&
-                latestReleasedVersionNum > latestMarketPublishedVersionNum
+                    latestReleasedVersionNum > latestMarketPublishedVersionNum
         } ?: false
 
         return PipelineTemplateInfoResponse(
@@ -1353,7 +1354,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 PipelineTemplateResourceCommonCondition(
                     projectId = latestInstalled.srcMarketTemplateProjectCode,
                     templateId = latestInstalled.srcMarketTemplateCode,
-                    gtNumber = latestInstalled.number,
+                    gtNumber = latestInstalled.srcMarketTemplateNumber,
                     status = VersionStatus.RELEASED,
                     storeStatus = TemplateStatusEnum.RELEASED
                 )
@@ -1661,7 +1662,8 @@ class PipelineTemplateFacadeService @Autowired constructor(
             )
         )
         if (templateInfo.upgradeStrategy == UpgradeStrategyEnum.MANUAL &&
-            request.upgradeStrategy == UpgradeStrategyEnum.AUTO) {
+            request.upgradeStrategy == UpgradeStrategyEnum.AUTO
+        ) {
             // 获取研发商店模板最新发布版本
             val srcTemplateResource = client.get(ServiceTemplateResource::class).getLatestMarketPublishedVersion(
                 templateCode = templateInfo.srcTemplateId!!
@@ -1717,7 +1719,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
         // 3. 找不到模板资源，记录日志并返回null
         logger.info(
             "template resource not found|$projectId|$pipelineId|$pipelineVersion|" +
-                "${pipelineTemplateRelated.version}"
+                    "${pipelineTemplateRelated.version}"
         )
         return null
     }

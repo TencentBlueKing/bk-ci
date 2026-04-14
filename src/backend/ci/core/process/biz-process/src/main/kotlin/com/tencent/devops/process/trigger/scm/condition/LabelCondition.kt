@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,38 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.api.external
+package com.tencent.devops.process.trigger.scm.condition
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.tags.Tag
-import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.HeaderParam
-import jakarta.ws.rs.POST
-import jakarta.ws.rs.Path
-import jakarta.ws.rs.Produces
-import jakarta.ws.rs.QueryParam
-import jakarta.ws.rs.core.MediaType
+import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
+import com.tencent.devops.common.webhook.service.code.filter.ListContainsFilter
+import com.tencent.devops.common.webhook.util.WebhookUtils.convert
 
-@Tag(name = "EXTERNAL_DISPATCH_KUBERNETES", description = "External-dispatch-kubernetes")
-@Path("/external/remotedev/")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ExternalDispatchResource {
-
-    @Operation(summary = "工作空间task回调新")
-    @POST
-    @Path("/task/callback/new")
-    fun workspaceTaskCallbackNew(
-        @Parameter(description = "云开发环境对接容器集群类型(DEVCLOUD、START、BCS)", required = false)
-        @QueryParam("type")
-        type: WorkspaceMountType? = WorkspaceMountType.DEVCLOUD,
-        @HeaderParam("key")
-        key: String,
-        @Parameter(description = "回调信息", required = true)
-        taskStatus: TaskStatus
-    ): Result<Boolean>
+class LabelCondition : WebhookCondition {
+    override fun match(context: WebhookConditionContext): Boolean {
+        with(context) {
+            val userFilter = ListContainsFilter(
+                pipelineId = pipelineId,
+                filterName = "mrLabel",
+                triggerOn = factParam.labels.toSet(),
+                included = convert(webhookParams.includeLabels),
+                excluded = convert(webhookParams.excludeLabels),
+                includeFailedReason = { item ->
+                    I18Variable(
+                        WebhookI18nConstants.MR_LABEL_NOT_MATCH,
+                        params = listOf(item)
+                    ).toJsonStr()
+                },
+                excludedFailedReason = { item ->
+                    I18Variable(
+                        WebhookI18nConstants.MR_LABEL_IGNORED,
+                        params = listOf(item)
+                    ).toJsonStr()
+                }
+            )
+            return userFilter.doFilter(response)
+        }
+    }
 }

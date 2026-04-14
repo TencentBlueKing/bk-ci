@@ -9,11 +9,11 @@ data class TemplateVersionInstallHistoryInfo(
     @get:Schema(title = "研发商店父模板代码")
     val srcMarketTemplateCode: String,
     @get:Schema(title = "安装的父版本号")
-    val version: Long,
+    val srcMarketTemplateVersion: Long,
     @get:Schema(title = "安装的父版本名称")
-    val versionName: String,
+    val srcMarketTemplateVersionName: String,
     @get:Schema(title = "安装的父版本排序号")
-    val number: Int,
+    val srcMarketTemplateNumber: Int,
     @get:Schema(title = "项目ID")
     val projectCode: String,
     @get:Schema(title = "模板代码（对应process数据库的ID）")
