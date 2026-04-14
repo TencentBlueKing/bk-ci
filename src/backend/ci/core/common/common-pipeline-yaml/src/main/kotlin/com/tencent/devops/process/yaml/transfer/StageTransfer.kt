@@ -30,6 +30,7 @@ package com.tencent.devops.process.yaml.transfer
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.TemplateDescriptor
@@ -245,7 +246,8 @@ class StageTransfer @Autowired(required = false) constructor(
                             finalStage = finalStage,
                             jobEnable = jobEnable,
                             resources = yamlInput.yaml.formatResources(),
-                            buildTemplateAcrossInfo = yamlInput.jobTemplateAcrossInfo?.get(job.id)
+                            buildTemplateAcrossInfo = yamlInput.jobTemplateAcrossInfo?.get(job.id),
+                            channelCode = yamlInput.channelCode
                         )
                     }
                     yamlInput.aspectWrapper.setModelJob4Model(
@@ -371,7 +373,8 @@ class StageTransfer @Autowired(required = false) constructor(
         stage: Stage,
         userId: String,
         projectId: String,
-        aspectWrapper: PipelineTransferAspectWrapper
+        aspectWrapper: PipelineTransferAspectWrapper,
+        channelCode: ChannelCode = ChannelCode.BS
     ): PreStage {
         val jobs = stage.containers.associateTo(LinkedHashMap()) { job ->
             aspectWrapper.setModelJob4Model(job, PipelineTransferAspectWrapper.AspectType.BEFORE)
@@ -383,7 +386,8 @@ class StageTransfer @Autowired(required = false) constructor(
                     userId = userId,
                     projectId = projectId,
                     job = job as VMBuildContainer,
-                    steps = steps
+                    steps = steps,
+                    channelCode = channelCode
                 )
 
                 else -> throw ModelCreateException("unknown classType:(${job.getClassType()})")

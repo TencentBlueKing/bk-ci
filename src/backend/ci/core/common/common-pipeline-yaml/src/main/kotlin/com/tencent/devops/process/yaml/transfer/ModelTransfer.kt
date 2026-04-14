@@ -40,6 +40,7 @@ import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceRecommendedVersion
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -58,6 +59,7 @@ import com.tencent.devops.process.yaml.transfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.v3.enums.SyntaxDialectType
 import com.tencent.devops.process.yaml.v3.models.Concurrency
+import com.tencent.devops.process.yaml.v3.models.CreativeRunsOn
 import com.tencent.devops.process.yaml.v3.models.ExtendsTemplate
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYamlParser
 import com.tencent.devops.process.yaml.v3.models.Notices
@@ -123,7 +125,10 @@ class ModelTransfer @Autowired constructor(
                 notices = yaml.notices?.filter { it.checkNotifyForFail() }
             ),
             failIfVariableInvalid = yaml.failIfVariableInvalid.nullIfDefault(false),
-            buildCancelPolicy = BuildCancelPolicy.codeParse(yaml.cancelPolicy)
+            buildCancelPolicy = BuildCancelPolicy.codeParse(yaml.cancelPolicy),
+            envHashId = if (yamlInput.channelCode == ChannelCode.CREATIVE_STREAM) {
+                CreativeRunsOn.parse(yaml.runsOn).toEnvHashId()
+            } else null
         )
     }
 
@@ -334,6 +339,9 @@ class ModelTransfer @Autowired constructor(
         yaml.failIfVariableInvalid = modelInput.setting.failIfVariableInvalid.nullIfDefault(false)
         yaml.cancelPolicy =
             modelInput.setting.buildCancelPolicy.nullIfDefault(BuildCancelPolicy.EXECUTE_PERMISSION)?.yamlCode()
+        if (modelInput.channelCode == ChannelCode.CREATIVE_STREAM) {
+            yaml.runsOn = modelInput.setting.envHashId ?: CreativeRunsOn.SELF
+        }
         modelInput.aspectWrapper.setYaml4Yaml(yaml, PipelineTransferAspectWrapper.AspectType.AFTER)
         return yaml
     }
@@ -348,7 +356,8 @@ class ModelTransfer @Autowired constructor(
                 stage = stage,
                 userId = modelInput.userId,
                 projectId = modelInput.setting.projectId,
-                aspectWrapper = modelInput.aspectWrapper
+                aspectWrapper = modelInput.aspectWrapper,
+                channelCode = modelInput.channelCode
             )
             modelInput.aspectWrapper.setYamlStage4Yaml(
                 yamlPreStage = ymlStage,
@@ -368,7 +377,8 @@ class ModelTransfer @Autowired constructor(
                 stage = lastStage,
                 userId = modelInput.userId,
                 projectId = modelInput.setting.projectId,
-                aspectWrapper = modelInput.aspectWrapper
+                aspectWrapper = modelInput.aspectWrapper,
+                channelCode = modelInput.channelCode
             ).jobs
         } else null
         return finally as LinkedHashMap<String, Any>?
