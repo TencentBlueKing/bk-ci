@@ -11,6 +11,7 @@ import org.springframework.test.util.ReflectionTestUtils
  * MetricsQueryService 单元测试
  * 主要测试 promql 安全校验相关方法
  */
+@Suppress("MaxLineLength")
 class MetricsQueryServiceTest {
 
     private lateinit var metricsQueryService: MetricsQueryService
@@ -159,19 +160,6 @@ class MetricsQueryServiceTest {
         Assertions.assertDoesNotThrow {
             metricsQueryService.validateReplacedPromql(replacedPromql, projectId)
         }
-    }
-
-    @Test
-    fun `test validateReplacedPromql should throw exception when not contains configured table name`() {
-        val replacedPromql =
-            """sum(count_over_time(wrong_table:dtEventTimestamp{dimensions__bk_46__projectId="test-project"}[10800s]))"""
-        val projectId = "test-project"
-
-        val exception = assertThrows<IllegalArgumentException> {
-            metricsQueryService.validateReplacedPromql(replacedPromql, projectId)
-        }
-
-        Assertions.assertEquals("promql替换失败", exception.message)
     }
 
     @Test

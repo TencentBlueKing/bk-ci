@@ -59,7 +59,10 @@ class MetricsQueryService @Autowired constructor(
             ?: throw IllegalArgumentException("promql参数不能为空")
 
         // 安全校验：检测promql必须包含{{table}}、{{table_agent}}或{{bkrepo_table}}占位符
-        if (!promql.contains("{{table}}") && !promql.contains("{{table_agent}}") && !promql.contains("{{bkrepo_table}}")) {
+        if (!promql.contains("{{table}}") &&
+            !promql.contains("{{table_agent}}") &&
+            !promql.contains("{{bkrepo_table}}")
+        ) {
             throw IllegalArgumentException("promql必须包含{{table}}、{{table_agent}}或{{bkrepo_table}}占位符")
         }
 
@@ -257,7 +260,9 @@ class MetricsQueryService @Autowired constructor(
      */
     fun validateReplacedPromql(replacedPromql: String, projectId: String) {
         // 确保替换后的promql包含配置的表名（至少包含一个）
-        if (!replacedPromql.contains(monitorTable) && !replacedPromql.contains(monitorTableAgent) && !replacedPromql.contains(
+        if (!replacedPromql.contains(monitorTable) &&
+            !replacedPromql.contains(monitorTableAgent) &&
+            !replacedPromql.contains(
                 monitorTableBkrepo
             )
         ) {
