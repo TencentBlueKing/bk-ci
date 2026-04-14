@@ -67,7 +67,6 @@ func Fatal(args ...interface{}) {
 		fmt.Fprint(os.Stderr, "[FATAL] ")
 		fmt.Fprintln(os.Stderr, args...)
 		os.Exit(1)
-		return
 	}
 	Logs.Fatal(args...)
 }
@@ -76,7 +75,6 @@ func Fatalf(format string, args ...interface{}) {
 	if !ready() {
 		fmt.Fprintf(os.Stderr, "[FATAL] "+format+"\n", args...)
 		os.Exit(1)
-		return
 	}
 	Logs.Fatalf(format, args...)
 }
