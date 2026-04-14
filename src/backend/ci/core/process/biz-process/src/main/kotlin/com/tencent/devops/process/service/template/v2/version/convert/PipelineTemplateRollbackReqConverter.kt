@@ -105,13 +105,12 @@ class PipelineTemplateRollbackReqConverter @Autowired constructor(
                 settingVersion = baseResource.settingVersion
             )
         }
-        // 回滚草稿版本,需要把草稿版本的基准版本重置成新的
         val pTemplateResourceWithoutVersion = PTemplateResourceWithoutVersion(baseResource).copy(
             status = VersionStatus.COMMITTING,
             branchAction = null,
             sortWeight = PipelineTemplateConstant.COMMITTING_STATUS_VERSION_SORT_WIGHT,
-            baseVersion = baseResource.version,
-            baseVersionName = baseResource.versionName,
+            baseVersion = baseResource.baseVersion,
+            baseVersionName = baseResource.baseVersionName,
             description = null
         )
         return PipelineTemplateVersionCreateContext(
