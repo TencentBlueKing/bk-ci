@@ -44,6 +44,12 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
+import com.tencent.devops.remotedev.pojo.cvd.CvdCreateTaskRequest
+import com.tencent.devops.remotedev.pojo.cvd.CvdDeleteTaskRequest
+import com.tencent.devops.remotedev.pojo.cvd.CvdPoolDetail
+import com.tencent.devops.remotedev.pojo.cvd.CvdTaskResponse
+import com.tencent.devops.remotedev.pojo.cvd.CvdTaskStatusResponse
+import com.tencent.devops.remotedev.pojo.cvd.CvdUserPoolInfoResponse
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
 import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
@@ -376,4 +382,82 @@ interface UserWorkspaceResource {
         userId: String,
         data: ProjectStrategyFetchInfo
     ): Result<ProjectStrategyResp>
+
+    @Operation(summary = "CVD领用云桌面")
+    @POST
+    @Path("/cvd/task/create")
+    fun createCvdTask(
+        @Parameter(
+            description = "用户ID",
+            required = true,
+            example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "领用请求", required = true)
+        request: CvdCreateTaskRequest
+    ): Result<CvdTaskResponse>
+
+    @Operation(summary = "CVD退回云桌面")
+    @POST
+    @Path("/cvd/task/delete")
+    fun deleteCvdTask(
+        @Parameter(
+            description = "用户ID",
+            required = true,
+            example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "退回请求", required = true)
+        request: CvdDeleteTaskRequest
+    ): Result<CvdTaskResponse>
+
+    @Operation(summary = "CVD查询任务状态")
+    @GET
+    @Path("/cvd/task/status")
+    fun getCvdTaskStatus(
+        @Parameter(
+            description = "用户ID",
+            required = true,
+            example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "任务ID", required = true)
+        @QueryParam("taskId")
+        taskId: String
+    ): Result<CvdTaskStatusResponse>
+
+    @Operation(summary = "CVD获取用户资源池信息")
+    @GET
+    @Path("/cvd/pool/user")
+    fun getCvdUserPoolInfo(
+        @Parameter(
+            description = "用户ID",
+            required = true,
+            example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<CvdUserPoolInfoResponse>
+
+    @Operation(summary = "CVD获取项目资源池信息")
+    @GET
+    @Path("/cvd/pool/project")
+    fun getCvdProjectPoolInfo(
+        @Parameter(
+            description = "用户ID",
+            required = true,
+            example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(
+            description = "蓝盾项目ID",
+            required = true
+        )
+        @QueryParam("bkProjectId")
+        bkProjectId: String
+    ): Result<List<CvdPoolDetail>>
 }

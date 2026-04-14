@@ -54,10 +54,17 @@ import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faRespData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyRespData
+import com.tencent.devops.remotedev.pojo.cvd.CvdCreateTaskRequest
+import com.tencent.devops.remotedev.pojo.cvd.CvdDeleteTaskRequest
+import com.tencent.devops.remotedev.pojo.cvd.CvdPoolDetail
+import com.tencent.devops.remotedev.pojo.cvd.CvdTaskResponse
+import com.tencent.devops.remotedev.pojo.cvd.CvdTaskStatusResponse
+import com.tencent.devops.remotedev.pojo.cvd.CvdUserPoolInfoResponse
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.ProjectStrategyService
 import com.tencent.devops.remotedev.service.RepositoryService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.cvd.CvdService
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
@@ -80,7 +87,8 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     private val startControl: StartControl,
     private val sleepControl: SleepControl,
     private val deleteControl: DeleteControl,
-    private val notifyControl: NotifyControl
+    private val notifyControl: NotifyControl,
+    private val cvdService: CvdService
 ) : UserWorkspaceResource {
 
     @AuditEntry(actionId = TencentActionId.CGS_START)
@@ -281,5 +289,39 @@ class UserWorkspaceResourceImpl @Autowired constructor(
             )
         }
         return Result(projectStrategyService.getStrategy(data))
+    }
+
+    override fun createCvdTask(
+        userId: String,
+        request: CvdCreateTaskRequest
+    ): Result<CvdTaskResponse> {
+        return Result(cvdService.createTask(request))
+    }
+
+    override fun deleteCvdTask(
+        userId: String,
+        request: CvdDeleteTaskRequest
+    ): Result<CvdTaskResponse> {
+        return Result(cvdService.deleteTask(request))
+    }
+
+    override fun getCvdTaskStatus(
+        userId: String,
+        taskId: String
+    ): Result<CvdTaskStatusResponse> {
+        return Result(cvdService.getTaskStatus(taskId))
+    }
+
+    override fun getCvdUserPoolInfo(
+        userId: String
+    ): Result<CvdUserPoolInfoResponse> {
+        return Result(cvdService.getUserPoolInfo(userId))
+    }
+
+    override fun getCvdProjectPoolInfo(
+        userId: String,
+        bkProjectId: String
+    ): Result<List<CvdPoolDetail>> {
+        return Result(cvdService.getProjectPoolInfo(bkProjectId))
     }
 }
