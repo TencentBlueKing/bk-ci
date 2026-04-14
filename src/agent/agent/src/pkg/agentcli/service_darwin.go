@@ -16,6 +16,7 @@ import (
 const (
 	modeLogin       = "LOGIN"
 	modeBackground  = "BACKGROUND"
+	modeDaemon      = "DAEMON"
 	installTypeFile = ".install_type"
 )
 
@@ -47,6 +48,20 @@ func handleInstall(workDir string, args []string) error {
 			"未知安装模式: %s (可选: login, background)", mode)
 	}
 
+	// root 用户强制使用 DAEMON 模式，注册到 /Library/LaunchDaemons（system 域）。
+	// LaunchAgent 的 gui/user 域在 root 下无法 bootstrap（exit 125），
+	// 必须使用 LaunchDaemon + system 域才能正常运行。
+	if isRoot() {
+		if installMode != modeDaemon {
+			printWarn(msg(
+				"Running as root: switching to DAEMON mode (/Library/LaunchDaemons, system domain).\n"+
+					"  LaunchAgent (gui/user domain) cannot be bootstrapped as root (exit 125).",
+				"检测到 root 用户: 自动切换为 DAEMON 模式 (/Library/LaunchDaemons, system 域)。\n"+
+					"  root 下 LaunchAgent (gui/user 域) 无法 bootstrap (exit 125)。"))
+		}
+		installMode = modeDaemon
+	}
+
 	if installMode == modeBackground && !hasModernLaunchctl() {
 		printWarn(msg(
 			"Background mode requires macOS 10.10+ (launchctl bootstrap). Falling back to login mode.",
@@ -72,7 +87,8 @@ func handleInstall(workDir string, args []string) error {
 	printStep(msg("Step 2: registering launchd service ...", "步骤 2: 注册 launchd 服务 ..."))
 	bootoutService(serviceName, modeLogin)
 	bootoutService(serviceName, modeBackground)
-	cleanupLegacyPlist(serviceName)
+	bootoutService(serviceName, modeDaemon)
+	cleanupLegacyPlist(serviceName, installMode)
 	if err := writePlist(workDir, serviceName, installMode); err != nil {
 		return err
 	}
@@ -94,6 +110,17 @@ func handleInstall(workDir string, args []string) error {
 				"  建议在 系统设置 > 用户与群组  中开启自动以此身份登录。"))
 	}
 
+	if installMode == modeDaemon {
+		printStep("")
+		printWarn(msg(
+			"DAEMON mode: service runs as root under /Library/LaunchDaemons (system domain).\n"+
+				"  Note: GUI Keychain, Simulator, and desktop UI access are NOT available in this mode.\n"+
+				"  For Xcode UI tests or Keychain access, use a non-root user with login/background mode instead.",
+			"DAEMON 模式: 服务以 root 身份运行在 /Library/LaunchDaemons (system 域)。\n"+
+				"  注意: 此模式无法访问 GUI Keychain、Simulator 和桌面 UI。\n"+
+				"  如需 Xcode UI 测试或 Keychain 访问，请改用非 root 用户的 login/background 模式。"))
+	}
+
 	return nil
 }
 
@@ -112,8 +139,9 @@ func cleanupBeforeInstall(workDir, targetMode string) {
 	if serviceName != "" {
 		bootoutService(serviceName, modeLogin)
 		bootoutService(serviceName, modeBackground)
-		cleanupLegacyPlist(serviceName)
-		removePlist(serviceName)
+		bootoutService(serviceName, modeDaemon)
+		cleanupLegacyPlist(serviceName, targetMode)
+		removePlist(serviceName, targetMode)
 	}
 	stopProcesses(workDir)
 }
@@ -128,11 +156,14 @@ func handleUninstall(workDir string) error {
 		return err
 	}
 
+	mode := readInstallMode(workDir)
+
 	printStep(msg("Removing launchd service ...", "移除 launchd 服务 ..."))
 	bootoutService(serviceName, modeLogin)
 	bootoutService(serviceName, modeBackground)
-	cleanupLegacyPlist(serviceName)
-	removePlist(serviceName)
+	bootoutService(serviceName, modeDaemon)
+	cleanupLegacyPlist(serviceName, mode)
+	removePlist(serviceName, mode)
 
 	printStep(msg("Stopping processes ...", "停止进程 ..."))
 	stopProcesses(workDir)
@@ -167,7 +198,7 @@ func handleStop(workDir string) error {
 }
 
 func startByMode(workDir, serviceName, mode string) error {
-	pp := plistPath(serviceName)
+	pp := plistPath(serviceName, mode)
 	if _, err := os.Stat(pp); err != nil {
 		printWarn(msg(
 			"plist not found, falling back to direct start (run install first for launchd management)",
@@ -182,7 +213,7 @@ func startByMode(workDir, serviceName, mode string) error {
 			return err
 		}
 	} else {
-		if err := launchctlLoad(serviceName); err != nil {
+		if err := launchctlLoad(serviceName, mode); err != nil {
 			return err
 		}
 	}
@@ -215,10 +246,14 @@ func readInstallMode(workDir string) string {
 		return modeLogin
 	}
 	m := strings.TrimSpace(string(data))
-	if strings.EqualFold(m, modeBackground) {
+	switch strings.ToUpper(m) {
+	case modeBackground:
 		return modeBackground
+	case modeDaemon:
+		return modeDaemon
+	default:
+		return modeLogin
 	}
-	return modeLogin
 }
 
 // ── launchctl capability detection ───────────────────────────────────────
@@ -258,9 +293,11 @@ func probeBootstrapSupport() bool {
 // launchdDomain returns the launchctl domain target for the given mode.
 // LOGIN uses "gui/UID" (requires logged-in GUI session).
 // BACKGROUND uses "user/UID" (works headless/SSH, matching GitHub Actions Runner).
-// Root is treated the same as any other user (LaunchAgent, not LaunchDaemon),
-// consistent with GitLab Runner / GitHub Actions Runner / Azure DevOps Agent.
+// DAEMON uses "system" (root-only, /Library/LaunchDaemons).
 func launchdDomain(mode string) string {
+	if mode == modeDaemon {
+		return "system"
+	}
 	uid := currentUID()
 	if mode == modeBackground {
 		return "user/" + uid
@@ -280,13 +317,33 @@ func serviceTarget(serviceName, mode string) string {
 	return launchdDomain(mode) + "/" + serviceName
 }
 
-func plistDir() string {
+// plistDir returns the directory where the plist file is stored for the given mode.
+// DAEMON mode uses the system-wide /Library/LaunchDaemons (requires root).
+// LOGIN and BACKGROUND modes use the per-user ~/Library/LaunchAgents.
+func plistDir(mode string) string {
+	if mode == modeDaemon {
+		return "/Library/LaunchDaemons"
+	}
 	home, _ := os.UserHomeDir()
 	return filepath.Join(home, "Library", "LaunchAgents")
 }
 
-func plistPath(serviceName string) string {
-	return filepath.Join(plistDir(), serviceName+".plist")
+func plistPath(serviceName, mode string) string {
+	return filepath.Join(plistDir(mode), serviceName+".plist")
+}
+
+// otherPlistPath returns the plist path in the alternative location used by
+// prior installations. This is used by cleanupLegacyPlist to remove leftover
+// plists when the install mode changes (e.g. re-installing as root after a
+// previous non-root install, or vice versa).
+func otherPlistPath(serviceName, mode string) string {
+	if mode == modeDaemon {
+		// Current install is DAEMON (/Library/LaunchDaemons); legacy location is LaunchAgents.
+		home, _ := os.UserHomeDir()
+		return filepath.Join(home, "Library", "LaunchAgents", serviceName+".plist")
+	}
+	// Current install is LaunchAgents; legacy location is /Library/LaunchDaemons.
+	return filepath.Join("/Library/LaunchDaemons", serviceName+".plist")
 }
 
 func writePlist(workDir, serviceName, mode string) error {
@@ -319,22 +376,26 @@ func writePlist(workDir, serviceName, mode string) error {
 </plist>
 `, serviceName, daemonPath, workDir, sessionTypeBlock)
 
-	dir := plistDir()
+	dir := plistDir(mode)
 	os.MkdirAll(dir, 0755)
 
-	pp := plistPath(serviceName)
+	pp := plistPath(serviceName, mode)
 	if err := os.WriteFile(pp, []byte(plist), 0644); err != nil {
 		return cliErrorf("write plist failed: %v", "写入 plist 失败: %v", err)
 	}
 
-	printStep(msgf("Created %s (LaunchAgents, mode: %s)", "已创建 %s (LaunchAgents, 模式: %s)", pp, mode))
+	plistType := "LaunchAgents"
+	if mode == modeDaemon {
+		plistType = "LaunchDaemons"
+	}
+	printStep(msgf("Created %s (%s, mode: %s)", "已创建 %s (%s, 模式: %s)", pp, plistType, mode))
 	return nil
 }
 
 // bootstrapAndStart registers the plist with launchd and force-starts it.
-// LOGIN uses gui/UID domain, BACKGROUND uses user/UID domain, Root uses system.
+// LOGIN uses gui/UID domain, BACKGROUND uses user/UID domain, DAEMON uses system domain.
 func bootstrapAndStart(serviceName, mode string) error {
-	pp := plistPath(serviceName)
+	pp := plistPath(serviceName, mode)
 	target := serviceTarget(serviceName, mode)
 	domain := launchdDomain(mode)
 
@@ -361,14 +422,14 @@ func bootoutService(serviceName, mode string) {
 		target := serviceTarget(serviceName, mode)
 		_ = exec.Command("launchctl", "bootout", target).Run()
 	} else {
-		launchctlUnload(serviceName)
+		launchctlUnload(serviceName, mode)
 	}
 }
 
 // ── launchd (legacy API: load/unload, macOS < 10.10) ─────────────────────
 
-func launchctlLoad(serviceName string) error {
-	pp := plistPath(serviceName)
+func launchctlLoad(serviceName, mode string) error {
+	pp := plistPath(serviceName, mode)
 	out, err := exec.Command("launchctl", "load", "-w", pp).CombinedOutput()
 	if err != nil {
 		return cliErrorf("launchctl load failed: %s (%v)", "launchctl load 失败: %s (%v)",
@@ -377,34 +438,32 @@ func launchctlLoad(serviceName string) error {
 	return nil
 }
 
-func launchctlUnload(serviceName string) {
-	pp := plistPath(serviceName)
+func launchctlUnload(serviceName, mode string) {
+	pp := plistPath(serviceName, mode)
 	_ = exec.Command("launchctl", "unload", pp).Run()
 }
 
-func cleanupLegacyPlist(serviceName string) {
-	other := otherPlistPath(serviceName)
+// cleanupLegacyPlist removes a leftover plist from the alternative install
+// location (e.g. a LaunchAgents plist left behind when re-installing as root,
+// or a /Library/LaunchDaemons plist from a previous root install when
+// switching to a non-root user).
+func cleanupLegacyPlist(serviceName, mode string) {
+	other := otherPlistPath(serviceName, mode)
 	if _, err := os.Stat(other); err == nil {
 		bootoutService(serviceName, modeLogin)
 		bootoutService(serviceName, modeBackground)
+		bootoutService(serviceName, modeDaemon)
 		os.Remove(other)
 		printStep(msgf("Cleaned up legacy plist %s", "已清理旧 plist %s", other))
 	}
 }
 
-func removePlist(serviceName string) {
-	pp := plistPath(serviceName)
+func removePlist(serviceName, mode string) {
+	pp := plistPath(serviceName, mode)
 	if _, err := os.Stat(pp); err == nil {
 		os.Remove(pp)
 		printStep(msgf("Removed %s", "已移除 %s", pp))
 	}
-}
-
-// otherPlistPath returns the legacy LaunchDaemons path for cleanup.
-// Older versions placed root plist into /Library/LaunchDaemons; this
-// lets cleanupLegacyPlist remove it when upgrading.
-func otherPlistPath(serviceName string) string {
-	return filepath.Join("/Library/LaunchDaemons", serviceName+".plist")
 }
 
 func isProcessAlive(pid int) bool {
