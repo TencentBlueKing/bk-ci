@@ -19,18 +19,20 @@ data class CreativeRunsOn(
             return when (raw) {
                 null -> CreativeRunsOn(poolName = SELF)
                 is String -> CreativeRunsOn(poolName = raw)
-                is Map<*, *> -> {
-                    val poolName = raw["pool-name"]?.toString()
-                    val poolId = raw["pool-id"]?.toString()
-                    CreativeRunsOn(poolName = poolName, poolId = poolId)
-                }
+                is Map<*, *> -> CreativeRunsOn(
+                    poolName = raw["pool-name"]?.toString(),
+                    poolId = raw["pool-id"]?.toString()
+                )
                 else -> CreativeRunsOn(poolName = SELF)
             }
         }
-    }
 
-    fun toEnvHashId(): String? {
-        return poolId ?: poolName
+        fun fromSetting(envHashId: String?, envName: String?): CreativeRunsOn {
+            return CreativeRunsOn(
+                poolName = envName,
+                poolId = envHashId
+            )
+        }
     }
 
     fun toYaml(): Any {

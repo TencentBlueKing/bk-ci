@@ -127,7 +127,10 @@ class ModelTransfer @Autowired constructor(
             failIfVariableInvalid = yaml.failIfVariableInvalid.nullIfDefault(false),
             buildCancelPolicy = BuildCancelPolicy.codeParse(yaml.cancelPolicy),
             envHashId = if (yamlInput.channelCode == ChannelCode.CREATIVE_STREAM) {
-                CreativeRunsOn.parse(yaml.runsOn).toEnvHashId()
+                CreativeRunsOn.parse(yaml.runsOn).poolId
+            } else null,
+            envName = if (yamlInput.channelCode == ChannelCode.CREATIVE_STREAM) {
+                CreativeRunsOn.parse(yaml.runsOn).poolName
             } else null
         )
     }
@@ -340,7 +343,10 @@ class ModelTransfer @Autowired constructor(
         yaml.cancelPolicy =
             modelInput.setting.buildCancelPolicy.nullIfDefault(BuildCancelPolicy.EXECUTE_PERMISSION)?.yamlCode()
         if (modelInput.channelCode == ChannelCode.CREATIVE_STREAM) {
-            yaml.runsOn = modelInput.setting.envHashId ?: CreativeRunsOn.SELF
+            yaml.runsOn = CreativeRunsOn.fromSetting(
+                envHashId = modelInput.setting.envHashId,
+                envName = modelInput.setting.envName
+            ).toYaml()
         }
         modelInput.aspectWrapper.setYaml4Yaml(yaml, PipelineTransferAspectWrapper.AspectType.AFTER)
         return yaml
