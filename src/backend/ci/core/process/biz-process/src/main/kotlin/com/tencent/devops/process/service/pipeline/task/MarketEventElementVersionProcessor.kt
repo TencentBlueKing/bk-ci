@@ -77,6 +77,7 @@ class MarketEventElementVersionProcessor @Autowired constructor(
     ) {
         val atomCode = element.atomCode
         val version = element.version
+        // TODO: 支持原生代码库触发
         val componentDetail = client.get(ServiceStoreComponentResource::class).getComponentDataInfoByCode(
             storeType = StoreTypeEnum.TRIGGER_EVENT,
             storeCode = atomCode,
