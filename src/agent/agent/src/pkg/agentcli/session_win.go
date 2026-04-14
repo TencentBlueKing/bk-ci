@@ -305,6 +305,22 @@ func enableAutoLogon(account, password string) error {
 	}
 
 	printStep(msg("auto-logon configured (activates on next reboot)", "自动登录已配置 (下次重启生效)"))
+	printStep("")
+	printWarn(msg(
+		"IMPORTANT: Auto-logon requires password-based sign-in.",
+		"重要: 自动登录要求使用密码登录。"))
+	printWarn(msg(
+		"  - Windows Hello PIN must be DISABLED, otherwise auto-logon will not work.",
+		"  - 必须关闭 Windows Hello PIN 登录, 否则自动登录不会生效。"))
+	printWarn(msg(
+		"    To disable: Settings > Accounts > Sign-in options > remove PIN.",
+		"    关闭方式: 设置 > 账户 > 登录选项 > 删除 PIN。"))
+	printWarn(msg(
+		"  - Ensure no Group Policy blocks auto-logon (e.g., interactive logon policies).",
+		"  - 确保没有组策略阻止自动登录 (如交互式登录策略)。"))
+	printWarn(msg(
+		"  - Disable lock screen on resume if a power-management password is set.",
+		"  - 如果设置了电源管理唤醒密码, 请关闭唤醒时的锁屏。"))
 	return nil
 }
 

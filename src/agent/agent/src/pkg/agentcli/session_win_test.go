@@ -136,25 +136,47 @@ func TestConfigureSessionSummaryLines(t *testing.T) {
 	t.Run("english_auto_logon", func(t *testing.T) {
 		useChinese = false
 		lines := configureSessionSummaryLines("builduser", true)
-		if len(lines) != 3 {
-			t.Fatalf("len(lines) = %d, want 3", len(lines))
+		if len(lines) < 3 {
+			t.Fatalf("len(lines) = %d, want >= 3", len(lines))
 		}
 		if !strings.Contains(lines[1], "auto-logs in") {
 			t.Errorf("line[1] = %q", lines[1])
+		}
+		// Verify PIN warning is included
+		found := false
+		for _, l := range lines {
+			if strings.Contains(l, "PIN") {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Error("auto-logon summary should include PIN warning")
 		}
 	})
 
 	t.Run("chinese_auto_logon", func(t *testing.T) {
 		useChinese = true
 		lines := configureSessionSummaryLines("构建用户", true)
-		if len(lines) != 3 {
-			t.Fatalf("len(lines) = %d, want 3", len(lines))
+		if len(lines) < 3 {
+			t.Fatalf("len(lines) = %d, want >= 3", len(lines))
 		}
 		if !strings.Contains(lines[0], "当前桌面会话") {
 			t.Errorf("line[0] = %q", lines[0])
 		}
 		if !strings.Contains(lines[1], "自动登录") {
 			t.Errorf("line[1] = %q", lines[1])
+		}
+		// Verify PIN warning is included in Chinese
+		found := false
+		for _, l := range lines {
+			if strings.Contains(l, "PIN") {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Error("auto-logon summary should include PIN warning in Chinese")
 		}
 	})
 }

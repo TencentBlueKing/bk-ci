@@ -64,6 +64,9 @@ func printUsageLocalized() {
     session            安装为 Windows 服务 + 配置桌面会话访问
       --auto-logon 用户名 密码
                        配置 Windows 自动登录 (注销/重启后自动恢复)
+                       注意: 必须使用密码登录, 不能使用 PIN 码;
+                       需关闭 Windows Hello PIN 登录, 否则自动登录不生效。
+                       同时需确认无组策略禁用自动登录、无锁屏密码保护等。
     task               [已废弃] 安装为计划任务
 `)
 		} else if isMac {
@@ -106,6 +109,10 @@ func printUsageLocalized() {
     session            Install as service + configure desktop session access
       --auto-logon USER PASSWORD
                        Enable auto-logon (recovers after logoff/reboot)
+                       Note: must use password login, NOT Windows Hello PIN;
+                       disable PIN sign-in, otherwise auto-logon will not work.
+                       Also ensure no Group Policy disables auto-logon and
+                       no lock-screen password protection is enforced.
     task               [deprecated] Install as scheduled task
 `)
 		} else if isMac {

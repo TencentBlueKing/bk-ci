@@ -211,6 +211,14 @@ func configureSessionSummaryLines(user string, autoLogon bool) []string {
 			msg("The agent is active in your current session NOW.", "Agent 已在当前桌面会话中生效。"),
 			msgf("On future reboots Windows auto-logs in as %s.", "后续重启后 Windows 会自动登录为 %s。", user),
 			msg("If the password changes, re-run with the new password.", "如果密码变更，请使用新密码重新执行命令。"),
+			"",
+			msg("⚠ Auto-logon requires password-based sign-in:", "⚠ 自动登录要求使用密码登录:"),
+			msg("  • Windows Hello PIN must be disabled (Settings > Accounts > Sign-in options > remove PIN).",
+				"  • 必须关闭 Windows Hello PIN 登录 (设置 > 账户 > 登录选项 > 删除 PIN)。"),
+			msg("  • No Group Policy should block auto-logon (e.g., interactive logon policies).",
+				"  • 确保没有组策略阻止自动登录 (如交互式登录策略)。"),
+			msg("  • Disable lock screen on resume if a power-management password is set.",
+				"  • 如果设置了电源管理唤醒密码, 请关闭唤醒时的锁屏。"),
 		}
 	}
 	return []string{

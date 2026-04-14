@@ -56,10 +56,6 @@ func TestSyncDockerInitFileMd5_DisabledBuild(t *testing.T) {
 }
 
 func TestSyncDockerInitFileMd5_PlatformSkip(t *testing.T) {
-	if runtime.GOOS != "windows" && runtime.GOOS != "darwin" {
-		t.Skip("this test verifies macOS/Windows skip; current OS is " + runtime.GOOS)
-	}
-
 	origConfig := config.GAgentConfig
 	defer func() { config.GAgentConfig = origConfig }()
 
@@ -76,10 +72,6 @@ func TestSyncDockerInitFileMd5_PlatformSkip(t *testing.T) {
 }
 
 func TestSyncDockerInitFileMd5_FileNotExist(t *testing.T) {
-	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
-		t.Skip("docker init upgrade skipped on " + runtime.GOOS)
-	}
-
 	origConfig := config.GAgentConfig
 	defer func() { config.GAgentConfig = origConfig }()
 
@@ -105,10 +97,6 @@ func TestSyncDockerInitFileMd5_FileNotExist(t *testing.T) {
 }
 
 func TestSyncDockerInitFileMd5_FileExists(t *testing.T) {
-	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
-		t.Skip("docker init upgrade skipped on " + runtime.GOOS)
-	}
-
 	origConfig := config.GAgentConfig
 	defer func() { config.GAgentConfig = origConfig }()
 

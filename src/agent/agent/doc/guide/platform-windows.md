@@ -70,6 +70,17 @@ Agent 以 Windows 服务方式运行，通过 `sc.exe` 注册：
 .\devopsAgent.exe install session --auto-logon builduser NewP@ssw0rd
 ```
 
+> **⚠ 注意事项（自动登录生效的前提条件）：**
+>
+> 1. **必须关闭 Windows Hello PIN 登录**：如果启用了 PIN，Windows 会优先使用 PIN 登录而忽略自动登录配置。
+>    - 关闭方式：设置 > 账户 > 登录选项 > 删除 PIN
+> 2. **必须使用密码登录**：自动登录仅支持传统密码方式，不支持 PIN、指纹、面部识别等 Windows Hello 方式。
+> 3. **检查组策略**：确保没有组策略禁用自动登录（如"交互式登录: 不需要按 CTRL+ALT+DEL"等策略）。
+>    - 运行 `gpedit.msc` > 计算机配置 > Windows 设置 > 安全设置 > 本地策略 > 安全选项
+> 4. **关闭唤醒锁屏**：如果设置了电源管理唤醒密码，需关闭唤醒时的锁屏，否则唤醒后可能停留在锁屏界面。
+> 5. **密码变更后需重新配置**：如果用户密码发生变更，需使用新密码重新执行 `install session --auto-logon` 命令。
+
+
 ### Task 模式（已废弃）
 
 通过 Windows 计划任务（`schtasks`）管理 Agent，使用 `devopsctl.vbs` 隐藏窗口。此模式已废弃，建议迁移到 `service` 或 `session` 模式。
