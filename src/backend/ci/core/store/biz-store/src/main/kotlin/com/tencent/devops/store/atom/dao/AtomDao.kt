@@ -585,6 +585,7 @@ class AtomDao : AtomBaseDao() {
         queryProjectAtomFlag: Boolean,
         fitOsFlag: Boolean?,
         queryFitAgentBuildLessAtomFlag: Boolean?,
+        installed: Boolean? = null,
         page: Int?,
         pageSize: Int?
     ): Result<out Record>? {
@@ -624,6 +625,21 @@ class AtomDao : AtomBaseDao() {
                 fitOsFlag = fitOsFlag,
                 queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
             ) // 普通插件查询条件组装
+
+        // installed=false时，普通插件排除已安装的
+        if (installed == false && !projectCode.isNullOrBlank()) {
+            normalAtomConditions.add(
+                DSL.notExists(
+                    dslContext.selectOne().from(tspr)
+                        .where(
+                            tspr.STORE_CODE.eq(ta.ATOM_CODE)
+                                .and(tspr.PROJECT_CODE.eq(projectCode))
+                                .and(tspr.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+                        )
+                )
+            )
+        }
+
         val queryNormalAtomStep = getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst)
         var queryInitTestAtomStep: SelectOnConditionStep<Record>? = null
         var initTestAtomCondition: MutableList<Condition>? = null
@@ -666,12 +682,20 @@ class AtomDao : AtomBaseDao() {
             queryNormalAtomStep.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
             queryInitTestAtomStep.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
         }
+
+        // installed=false: 排除默认插件（默认插件视为所有项目已安装）和测试插件
+        // installed=true: 保留默认插件和测试插件
+        val includeDefaultAtoms = installed != false
+        val includeTestAtoms = installed != false
+
         val queryAtomStep = queryNormalAtomStep
             .where(normalAtomConditions)
-            .union(
+        if (includeDefaultAtoms) {
+            queryAtomStep.union(
                 getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst).where(defaultAtomCondition)
             )
-        if (queryInitTestAtomStep != null && initTestAtomCondition != null) {
+        }
+        if (includeTestAtoms && queryInitTestAtomStep != null && initTestAtomCondition != null) {
             initTestAtomCondition.add(ta.LATEST_TEST_FLAG.eq(true))
             queryAtomStep.union(
                 getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst)
@@ -752,7 +776,8 @@ class AtomDao : AtomBaseDao() {
         keyword: String?,
         fitOsFlag: Boolean?,
         queryProjectAtomFlag: Boolean,
-        queryFitAgentBuildLessAtomFlag: Boolean?
+        queryFitAgentBuildLessAtomFlag: Boolean?,
+        installed: Boolean? = null
     ): Long {
         val ta = TAtom.T_ATOM
         val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
@@ -788,6 +813,21 @@ class AtomDao : AtomBaseDao() {
             fitOsFlag = fitOsFlag,
             queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
         ) // 普通插件查询条件组装
+
+        // installed=false时，普通插件排除已安装的
+        if (installed == false && !projectCode.isNullOrBlank()) {
+            normalAtomConditions.add(
+                DSL.notExists(
+                    dslContext.selectOne().from(tspr)
+                        .where(
+                            tspr.STORE_CODE.eq(ta.ATOM_CODE)
+                                .and(tspr.PROJECT_CODE.eq(projectCode))
+                                .and(tspr.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+                        )
+                )
+            )
+        }
+
         val queryNormalAtomStep = getPipelineAtomCountBaseStep(dslContext, ta, taf, tsst)
         var queryInitTestAtomStep: SelectOnConditionStep<Record1<Int>>? = null
         var initTestAtomCondition: MutableList<Condition>? = null
@@ -831,10 +871,20 @@ class AtomDao : AtomBaseDao() {
             queryNormalAtomStep.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
             queryInitTestAtomStep.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
         }
-        val defaultAtomCount = getPipelineAtomCountBaseStep(dslContext, ta, taf, tsst)
-            .where(defaultAtomCondition).fetchOne(0, Long::class.java)!!
+
+        // installed=false: 排除默认插件和测试插件
+        val includeDefaultAtoms = installed != false
+        val includeTestAtoms = installed != false
+
+        val defaultAtomCount = if (includeDefaultAtoms) {
+            getPipelineAtomCountBaseStep(dslContext, ta, taf, tsst)
+                .where(defaultAtomCondition).fetchOne(0, Long::class.java)!!
+        } else {
+            0
+        }
         val normalAtomCount = queryNormalAtomStep.where(normalAtomConditions).fetchOne(0, Long::class.java)!!
-        val initTestAtomCount = if (initTestAtomCondition != null && queryInitTestAtomStep != null) {
+        val initTestAtomCount = if (includeTestAtoms && initTestAtomCondition != null &&
+            queryInitTestAtomStep != null) {
             initTestAtomCondition.add(ta.LATEST_TEST_FLAG.eq(true))
             queryInitTestAtomStep.where(initTestAtomCondition).fetchOne(0, Long::class.java)!!
         } else {

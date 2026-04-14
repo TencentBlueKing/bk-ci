@@ -107,6 +107,9 @@ interface UserAtomResource {
         @Parameter(description = "查询支持有编译环境下的无编译环境插件标识", required = false)
         @QueryParam("queryFitAgentBuildLessAtomFlag")
         queryFitAgentBuildLessAtomFlag: Boolean? = true,
+        @Parameter(description = "是否已安装（true:已安装/false:未安装/null:全部）", required = false)
+        @QueryParam("installed")
+        installed: Boolean? = null,
         @Parameter(description = "页码", required = true)
         @QueryParam("page")
         page: Int = 1,

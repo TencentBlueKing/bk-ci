@@ -66,6 +66,7 @@ interface AtomService {
         queryProjectAtomFlag: Boolean = true,
         fitOsFlag: Boolean? = true,
         queryFitAgentBuildLessAtomFlag: Boolean? = true,
+        installed: Boolean? = null,
         page: Int = 1,
         pageSize: Int = 10
     ): Result<AtomResp<AtomRespItem>?>
@@ -86,6 +87,7 @@ interface AtomService {
         queryProjectAtomFlag: Boolean = true,
         fitOsFlag: Boolean? = true,
         queryFitAgentBuildLessAtomFlag: Boolean? = true,
+        installed: Boolean? = null,
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?>

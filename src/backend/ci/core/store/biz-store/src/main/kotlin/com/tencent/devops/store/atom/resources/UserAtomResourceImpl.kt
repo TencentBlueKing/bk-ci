@@ -75,6 +75,7 @@ class UserAtomResourceImpl @Autowired constructor(
         queryProjectAtomFlag: Boolean,
         fitOsFlag: Boolean?,
         queryFitAgentBuildLessAtomFlag: Boolean?,
+        installed: Boolean?,
         page: Int,
         pageSize: Int
     ): Result<AtomResp<AtomRespItem>?> {
@@ -91,6 +92,7 @@ class UserAtomResourceImpl @Autowired constructor(
             queryProjectAtomFlag = queryProjectAtomFlag,
             queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
             fitOsFlag = fitOsFlag,
+            installed = installed,
             page = page,
             pageSize = pageSize
         )
