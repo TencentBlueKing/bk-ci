@@ -8,7 +8,7 @@
 |------|------|
 | 网络 | 机器能够访问 BK-CI 服务端网关地址（默认 HTTP/HTTPS 端口） |
 | 磁盘 | 建议预留 5GB 以上空间（Agent 自身 + JDK + 构建工作空间） |
-| 权限 | Linux/macOS 建议使用 root 安装以获取 systemd/launchd 服务管理；非 root 也可使用 |
+| 权限 | Linux/macOS 建议使用专属构建用户安装；macOS root 用户安装时自动使用 DAEMON 模式（LaunchDaemons/system 域）；非 root 也可使用 |
 | Java | 不需要预装 — Agent 自带 JDK 17 和 JDK 8 |
 | Docker | 仅在使用 Docker 构建时需要，确保 `docker` 或 `podman` 命令可用 |
 
@@ -19,7 +19,7 @@
 | 物理机 / 虚拟机 | ✓ | ✓ | ✓ |
 | Docker 容器 | ✓ | — | — |
 | Kubernetes Pod | ✓ | — | — |
-| Root 用户 | ✓ (systemd) | ✓ (launchd) | ✓ (管理员) |
+| Root 用户 | ✓ (systemd) | ✓ (daemon 模式, /Library/LaunchDaemons) | ✓ (管理员) |
 | 非 Root 用户 | ✓ (direct/user) | ✓ (login) | ✓ |
 | 有桌面环境 | ✓ | ✓ | ✓ (Session 模式) |
 | 无桌面 (headless) | ✓ | ✓ (background) | ✓ (service 模式) |
@@ -62,7 +62,13 @@ mkdir -p /data/bkci-agent && cd /data/bkci-agent
 #### macOS
 
 ```bash
+# 以普通用户安装（推荐）：使用 login 或 background 模式
 mkdir -p ~/bkci-agent && cd ~/bkci-agent
+<安装命令>
+
+# 以 root 用户安装：自动切换为 DAEMON 模式（/Library/LaunchDaemons）
+# 注意：DAEMON 模式无法访问 Keychain / Simulator / 桌面 UI
+sudo mkdir -p /data/bkci-agent && cd /data/bkci-agent
 <安装命令>
 ```
 

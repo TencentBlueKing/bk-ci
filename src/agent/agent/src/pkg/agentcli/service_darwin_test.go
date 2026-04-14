@@ -24,6 +24,7 @@ func TestLaunchdDomain(t *testing.T) {
 	}{
 		{"login_mode", modeLogin, "gui/" + u.Uid},
 		{"background_mode", modeBackground, "user/" + u.Uid},
+		{"daemon_mode", modeDaemon, "system"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -43,6 +44,7 @@ func TestServiceTarget(t *testing.T) {
 	}{
 		{"login", "devops_agent_foo", modeLogin},
 		{"background", "devops_agent_foo", modeBackground},
+		{"daemon", "devops_agent_foo", modeDaemon},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -56,24 +58,72 @@ func TestServiceTarget(t *testing.T) {
 }
 
 func TestPlistDir(t *testing.T) {
-	dir := plistDir()
-	u, _ := user.Current()
-	if u == nil {
-		t.Skip("cannot get current user")
-	}
 	home, _ := os.UserHomeDir()
-	want := home + "/Library/LaunchAgents"
-	if dir != want {
-		t.Errorf("plistDir() = %q, want %q", dir, want)
+
+	tests := []struct {
+		name string
+		mode string
+		want string
+	}{
+		{"login_mode", modeLogin, home + "/Library/LaunchAgents"},
+		{"background_mode", modeBackground, home + "/Library/LaunchAgents"},
+		{"daemon_mode", modeDaemon, "/Library/LaunchDaemons"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := plistDir(tt.mode)
+			if got != tt.want {
+				t.Errorf("plistDir(%q) = %q, want %q", tt.mode, got, tt.want)
+			}
+		})
 	}
 }
 
 func TestPlistPath(t *testing.T) {
-	path := plistPath("devops_agent_test")
-	dir := plistDir()
-	want := dir + "/devops_agent_test.plist"
-	if path != want {
-		t.Errorf("plistPath() = %q, want %q", path, want)
+	home, _ := os.UserHomeDir()
+
+	tests := []struct {
+		name        string
+		serviceName string
+		mode        string
+		want        string
+	}{
+		{"login", "devops_agent_test", modeLogin, home + "/Library/LaunchAgents/devops_agent_test.plist"},
+		{"background", "devops_agent_test", modeBackground, home + "/Library/LaunchAgents/devops_agent_test.plist"},
+		{"daemon", "devops_agent_test", modeDaemon, "/Library/LaunchDaemons/devops_agent_test.plist"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := plistPath(tt.serviceName, tt.mode)
+			if got != tt.want {
+				t.Errorf("plistPath(%q, %q) = %q, want %q", tt.serviceName, tt.mode, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestOtherPlistPath(t *testing.T) {
+	home, _ := os.UserHomeDir()
+
+	tests := []struct {
+		name        string
+		serviceName string
+		mode        string
+		want        string
+	}{
+		// DAEMON mode: current is /Library/LaunchDaemons, legacy is ~/Library/LaunchAgents
+		{"daemon_to_agent", "devops_agent_test", modeDaemon, home + "/Library/LaunchAgents/devops_agent_test.plist"},
+		// Non-daemon modes: current is ~/Library/LaunchAgents, legacy is /Library/LaunchDaemons
+		{"login_to_daemon", "devops_agent_test", modeLogin, "/Library/LaunchDaemons/devops_agent_test.plist"},
+		{"background_to_daemon", "devops_agent_test", modeBackground, "/Library/LaunchDaemons/devops_agent_test.plist"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := otherPlistPath(tt.serviceName, tt.mode)
+			if got != tt.want {
+				t.Errorf("otherPlistPath(%q, %q) = %q, want %q", tt.serviceName, tt.mode, got, tt.want)
+			}
+		})
 	}
 }
 
@@ -92,7 +142,7 @@ func TestWritePlist_LoginMode(t *testing.T) {
 		t.Fatalf("writePlist(LOGIN) error: %v", err)
 	}
 
-	pp := plistPath(serviceName)
+	pp := plistPath(serviceName, modeLogin)
 	data, err := os.ReadFile(pp)
 	if err != nil {
 		t.Fatalf("cannot read plist: %v", err)
@@ -125,7 +175,7 @@ func TestWritePlist_BackgroundMode(t *testing.T) {
 		t.Fatalf("writePlist(BACKGROUND) error: %v", err)
 	}
 
-	pp := plistPath(serviceName)
+	pp := plistPath(serviceName, modeBackground)
 	data, err := os.ReadFile(pp)
 	if err != nil {
 		t.Fatalf("cannot read plist: %v", err)
@@ -140,6 +190,43 @@ func TestWritePlist_BackgroundMode(t *testing.T) {
 	}
 }
 
+func TestWritePlist_DaemonMode(t *testing.T) {
+	old := useChinese
+	useChinese = false
+	defer func() { useChinese = old }()
+
+	// DAEMON mode writes to /Library/LaunchDaemons which requires root.
+	// Skip this write test when not root; we still verify plist content logic.
+	if os.Getuid() != 0 {
+		t.Skip("DAEMON mode plist write requires root (skipping write, content logic covered by TestWritePlist_LoginMode)")
+	}
+
+	tmpDir := t.TempDir()
+	os.WriteFile(filepath.Join(tmpDir, "devopsDaemon"), []byte("fake"), 0755)
+	os.WriteFile(filepath.Join(tmpDir, "devopsAgent"), []byte("fake"), 0755)
+
+	serviceName := "devops_agent_unittest_daemon"
+	err := writePlist(tmpDir, serviceName, modeDaemon)
+	if err != nil {
+		t.Fatalf("writePlist(DAEMON) error: %v", err)
+	}
+	defer os.Remove(plistPath(serviceName, modeDaemon))
+
+	pp := plistPath(serviceName, modeDaemon)
+	data, err := os.ReadFile(pp)
+	if err != nil {
+		t.Fatalf("cannot read plist: %v", err)
+	}
+	content := string(data)
+
+	if !strings.Contains(content, "<string>"+serviceName+"</string>") {
+		t.Error("DAEMON plist missing Label")
+	}
+	if strings.Contains(content, "LimitLoadToSessionType") {
+		t.Error("DAEMON mode plist should NOT contain LimitLoadToSessionType")
+	}
+}
+
 func TestReadInstallMode(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -150,8 +237,11 @@ func TestReadInstallMode(t *testing.T) {
 		{"login_explicit", "LOGIN", modeLogin},
 		{"background", "BACKGROUND", modeBackground},
 		{"background_lowercase", "background", modeBackground},
+		{"daemon", "DAEMON", modeDaemon},
+		{"daemon_lowercase", "daemon", modeDaemon},
 		{"unknown_value", "SOMETHING", modeLogin},
 		{"with_whitespace", "  BACKGROUND  \n", modeBackground},
+		{"daemon_with_whitespace", "  DAEMON  \n", modeDaemon},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -187,6 +277,12 @@ func TestWriteInstallType(t *testing.T) {
 	data, _ = os.ReadFile(filepath.Join(dir, installTypeFile))
 	if string(data) != modeLogin {
 		t.Errorf("got %q, want %q", string(data), modeLogin)
+	}
+
+	writeInstallType(dir, modeDaemon)
+	data, _ = os.ReadFile(filepath.Join(dir, installTypeFile))
+	if string(data) != modeDaemon {
+		t.Errorf("got %q, want %q", string(data), modeDaemon)
 	}
 }
 

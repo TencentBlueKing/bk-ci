@@ -4,18 +4,13 @@
 
 ## 安装模式
 
-macOS 支持两种安装模式：
+macOS 支持三种安装模式：
 
-| 模式 | 命令 | 适用场景 |
-|------|------|---------|
-| `login` | `./devopsAgent install` | 默认模式，launchd gui 域，适合有桌面环境的机器 |
-| `background` | `./devopsAgent install background` | launchd 无头模式，适合 SSH/CI/无桌面环境 |
-
-两种模式都通过 launchd LaunchAgent 管理服务生命周期，区别在于 launchd domain：
-- `login` → `gui/{UID}`（需要桌面会话）
-- `background` → `user/{UID}`（无头模式，类似 GitHub Actions Runner）
-
-> **Root 用户说明**：macOS 上 Root 与普通用户的处理方式完全一致，均使用 `~/Library/LaunchAgents/`（而非 `/Library/LaunchDaemons/`）。macOS 的 LaunchDaemon（Root 级服务）无法访问用户 Keychain、桌面会话和 iOS Simulator，不适合 CI 构建场景。**非必要场景建议不使用root，macos的root受限制很多**
+| 模式 | 命令 | 适用场景 | launchd 位置 |
+|------|------|---------|-------------|
+| `login` | `./devopsAgent install` | 默认模式，适合有桌面环境的机器 | `~/Library/LaunchAgents`，`gui/{UID}` 域 |
+| `background` | `./devopsAgent install background` | 无头模式，适合 SSH/CI/无桌面环境 | `~/Library/LaunchAgents`，`user/{UID}` 域 |
+| `daemon` | root 用户自动使用 | root 用户专用模式，**非必要场景建议不使用root，macos的root受限制很多** | `/Library/LaunchDaemons`，`system` 域 |
 
 `install`/`start` 时自动快照当前 shell 的 PATH 和常用环境变量到 `.path`/`.env` 文件，daemon 启动时加载，解决 launchd 极简环境下构建进程找不到开发工具的问题。
 
@@ -60,6 +55,23 @@ launchd plist 文件位置：`~/Library/LaunchAgents/devops_agent_{id}.plist`
 # 或使用 launchctl
 launchctl bootout gui/$(id -u)/devops_agent_{id}
 ```
+
+### Daemon 模式（root 用户专用）
+
+以 root 用户运行安装脚本时，Agent 自动切换为 DAEMON 模式：
+
+```bash
+sudo ./devopsAgent install   # root 下自动使用 DAEMON 模式
+```
+
+特点：
+- plist 写入 `/Library/LaunchDaemons/`，通过 `launchctl bootstrap system` 注册
+- 不依赖任何用户登录，开机即自动启动
+- 适合需要 root 权限执行构建任务的存量场景
+
+> ⚠️ **注意**：DAEMON 模式（system 域）无法访问用户 Keychain、iOS Simulator 和桌面 UI。如果构建任务需要上述能力（如 Xcode UI 测试、证书签名），请改用非 root 用户的 `login` 或 `background` 模式。
+
+**背景说明**：root 用户无法使用 LaunchAgent（`gui/user` 域），执行 `launchctl bootstrap gui/0 ...` 会报 `exit 125: Domain does not support specified action`。DAEMON 模式是 root 下唯一可用的 launchd 注册方式。
 
 ## JDK 路径差异
 
