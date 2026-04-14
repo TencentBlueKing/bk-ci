@@ -111,7 +111,6 @@
                         offlineNodes: 'ABNORMAL'
                     }
                     const currentUrl = buildNodesUrl(proxy.$route.params.projectId,statusMap[val])
-                    console.log(currentUrl,'currentUrlcurrentUrl')
                     window.open(currentUrl, '_blank')
                     return
                 }

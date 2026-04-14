@@ -95,7 +95,7 @@ export const sourceDiskUrl =(projectId, from, to)=>{
 export const totalArtifacts ='sum(last_over_time({{bkrepo_table}}:bkrepo_repository_size_bytes{projectId=\"{{projectId}}\"}[1h]))'
 
 export const totalArtifactsUrl =(projectId, from, to)=>{
-    return `spaceUid=bkci__${projectId}&dashName=BKCI-制品趋势&viewPanel=39&from=${from}&to=${to}`
+    return `spaceUid=bkci__${projectId}&dashName=BKCI-制品趋势&viewPanel=31&from=${from}&to=${to}`
 }
 
 export const addedArtifacts =(timeStamp)=>{
@@ -197,10 +197,6 @@ export const urlMap = {
     sourceDisk: sourceDiskUrl,
     
     totalArtifacts: totalArtifactsUrl,
-
-    addedArtifacts: addedArtifactsUrl,
-
-    deletedArtifacts: deletedArtifactsUrl,
 
     avgUploadSpeed: avgUploadSpeedUrl,
 

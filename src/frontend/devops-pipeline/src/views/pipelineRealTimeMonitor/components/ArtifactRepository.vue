@@ -168,7 +168,10 @@
                 }
             }
 
+            const noJumpIds = ['addedArtifacts', 'deletedArtifacts']
+
             const handleClick = (id) => {
+                if (noJumpIds.includes(id)) return
                 emit('item-click', id)
             }
 
