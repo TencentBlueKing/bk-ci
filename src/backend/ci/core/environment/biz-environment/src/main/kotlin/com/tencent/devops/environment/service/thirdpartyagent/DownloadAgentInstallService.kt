@@ -110,8 +110,11 @@ class DownloadAgentInstallService @Autowired constructor(
          * gateWay
          */
         val fileName = getDownloadFile(agentRecord.os)
-        val scriptFile = File(agentPackage, "script/${agentRecord.os.lowercase()}/$fileName")
-
+        var scriptFile = File(agentPackage, "script/${agentRecord.os.lowercase()}/$fileName")
+        // 兼容
+        if ((agentRecord.os == OS.LINUX.name || agentRecord.os == OS.MACOS.name) && !scriptFile.exists()) {
+            scriptFile = File(agentPackage, "script/${agentRecord.os.lowercase()}/install.sh")
+        }
         if (!scriptFile.exists()) {
             logger.warn("The install script file(${scriptFile.absolutePath}) is not exist")
             throw FileNotFoundException("The install script file is not exist")
