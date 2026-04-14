@@ -962,6 +962,9 @@ class AtomDao : AtomBaseDao() {
         if (!param.keyword.isNullOrEmpty()) {
             conditions.add(tAtom.NAME.contains(param.keyword).or(tAtom.SUMMARY.contains(param.keyword)))
         }
+        if (!param.ownerStoreCode.isNullOrEmpty()) {
+            conditions.add(tAtom.OWNER_STORE_CODE.eq(param.ownerStoreCode))
+        }
         conditions.add(tAtom.DELETE_FLAG.eq(false))
         return conditions
     }
