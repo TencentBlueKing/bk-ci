@@ -295,6 +295,12 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         userId: String,
         request: CvdCreateTaskRequest
     ): Result<CvdTaskResponse> {
+        if (!permissionService.checkUserVisitPermission(userId, request.bkProjectId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("We're sorry but you don't have permission to access project $request.bkProjectId")
+            )
+        }
         return Result(cvdService.createTask(request))
     }
 
@@ -302,6 +308,12 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         userId: String,
         request: CvdDeleteTaskRequest
     ): Result<CvdTaskResponse> {
+        if (!permissionService.checkUserVisitPermission(userId, request.bkProjectId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("We're sorry but you don't have permission to access project $request.bkProjectId")
+            )
+        }
         return Result(cvdService.deleteTask(request))
     }
 
@@ -322,6 +334,12 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         userId: String,
         bkProjectId: String
     ): Result<List<CvdPoolDetail>> {
+        if (!permissionService.checkUserVisitPermission(userId, bkProjectId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("We're sorry but you don't have permission to access project $bkProjectId")
+            )
+        }
         return Result(cvdService.getProjectPoolInfo(bkProjectId))
     }
 }
