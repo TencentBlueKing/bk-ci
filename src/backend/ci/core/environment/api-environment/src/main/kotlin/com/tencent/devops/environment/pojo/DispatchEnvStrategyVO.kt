@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "标签选择器条件")
 data class LabelSelectorVO(
+    @get:Schema(title = "便签Key名称")
+    val tagKeyName: String?,
     @get:Schema(title = "标签Key ID", required = true)
     val tagKeyId: Long,
     @get:Schema(title = "操作符", required = true)

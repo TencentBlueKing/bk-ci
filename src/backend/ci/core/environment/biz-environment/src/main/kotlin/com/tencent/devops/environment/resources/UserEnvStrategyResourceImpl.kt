@@ -106,13 +106,20 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
             id = id ?: 0L, projectId = projectId, envId = envId,
             strategyType = strategyType, defaultStrategyCode = defaultStrategyCode,
             strategyName = strategyName, scope = scope, nodeRule = nodeRule,
-            labelSelector = labelSelector?.map { LabelSelectorVO(it.tagKeyId, it.op, it.values) },
+            labelSelector = labelSelector?.map {
+                LabelSelectorVO(
+                    tagKeyName = it.tagKeyName,
+                    tagKeyId = it.tagKeyId,
+                    op = it.op,
+                    values = it.values
+                )
+            },
             enabled = enabled, priority = priority,
             createdUser = createdUser, updatedUser = updatedUser
         )
 
         private fun LabelSelectorVO.toInternal() = LabelSelector(
-            tagKeyId = tagKeyId, op = op, values = values
+            tagKeyName = tagKeyName, tagKeyId = tagKeyId, op = op, values = values
         )
     }
 }
