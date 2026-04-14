@@ -30,6 +30,7 @@ package com.tencent.devops.gpt.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.gpt.service.config.AiCreativeBotConfig
 import java.io.BufferedReader
+import java.io.InputStream
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
@@ -90,80 +91,91 @@ $pipelineModelJson"""
      */
     private fun callApiAndExtractSummary(userId: String, requestBody: String): String? {
         val objectMapper = ObjectMapper()
-        val url = URL(aiCreativeBotConfig.apiUrl)
-        val connection = url.openConnection() as HttpURLConnection
-
+        val connection = createConnection(objectMapper, userId)
         try {
-            connection.requestMethod = "POST"
-            connection.doOutput = true
-            connection.setRequestProperty("Content-Type", "application/json")
-            connection.setRequestProperty(
-                "X-Bkapi-Authorization",
-                objectMapper.writeValueAsString(
-                    mapOf(
-                        "bk_app_code" to aiCreativeBotConfig.appCode,
-                        "bk_app_secret" to aiCreativeBotConfig.appSecret
-                    )
-                )
-            )
-            connection.setRequestProperty("X-BKAIDEV-USER", userId)
-            connection.connectTimeout = CONNECT_TIMEOUT_MS
-            connection.readTimeout = READ_TIMEOUT_MS
-
-            // 发送请求体
-            connection.outputStream.use { os ->
-                os.write(requestBody.toByteArray(Charsets.UTF_8))
-                os.flush()
-            }
-
+            sendRequestBody(connection, requestBody)
             val responseCode = connection.responseCode
             if (responseCode != HttpURLConnection.HTTP_OK) {
-                val errorStream = connection.errorStream?.let {
-                    BufferedReader(InputStreamReader(it)).readText()
-                }
-                logger.error(
-                    "AI Creative Bot API returned HTTP $responseCode, error: $errorStream"
-                )
+                logErrorResponse(connection, responseCode)
                 return null
             }
-
-            // 解析 SSE 响应，提取 TEXT_MESSAGE_CONTENT 的 delta
-            val summaryBuilder = StringBuilder()
-            BufferedReader(InputStreamReader(connection.inputStream, Charsets.UTF_8)).use { reader ->
-                var line: String?
-                while (reader.readLine().also { line = it } != null) {
-                    val trimmedLine = line?.trim() ?: continue
-                    if (!trimmedLine.startsWith("data:")) continue
-                    val jsonStr = trimmedLine.removePrefix("data:").trim()
-                    if (jsonStr.isEmpty()) continue
-
-                    try {
-                        val eventNode = objectMapper.readTree(jsonStr)
-                        val eventType = eventNode.get("type")?.asText()
-                        when (eventType) {
-                            "TEXT_MESSAGE_CONTENT" -> {
-                                val delta = eventNode.get("delta")?.asText()
-                                if (!delta.isNullOrEmpty()) {
-                                    summaryBuilder.append(delta)
-                                }
-                            }
-                            "RUN_ERROR" -> {
-                                val errorMsg = eventNode.get("message")?.asText()
-                                logger.error("AI Creative Bot run error: $errorMsg")
-                                return null
-                            }
-                        }
-                    } catch (ignored: Exception) {
-                        // 跳过无法解析的 SSE 行
-                        logger.debug("Skip unparseable SSE line: $jsonStr")
-                    }
-                }
-            }
-
-            val summary = summaryBuilder.toString().trim()
-            return if (summary.isNotEmpty()) summary else null
+            return parseSseStream(connection.inputStream, objectMapper)
         } finally {
             connection.disconnect()
+        }
+    }
+
+    private fun createConnection(objectMapper: ObjectMapper, userId: String): HttpURLConnection {
+        val url = URL(aiCreativeBotConfig.apiUrl)
+        val connection = url.openConnection() as HttpURLConnection
+        connection.requestMethod = "POST"
+        connection.doOutput = true
+        connection.setRequestProperty("Content-Type", "application/json")
+        connection.setRequestProperty(
+            "X-Bkapi-Authorization",
+            objectMapper.writeValueAsString(
+                mapOf(
+                    "bk_app_code" to aiCreativeBotConfig.appCode,
+                    "bk_app_secret" to aiCreativeBotConfig.appSecret
+                )
+            )
+        )
+        connection.setRequestProperty("X-BKAIDEV-USER", userId)
+        connection.connectTimeout = CONNECT_TIMEOUT_MS
+        connection.readTimeout = READ_TIMEOUT_MS
+        return connection
+    }
+
+    private fun sendRequestBody(connection: HttpURLConnection, requestBody: String) {
+        connection.outputStream.use { os ->
+            os.write(requestBody.toByteArray(Charsets.UTF_8))
+            os.flush()
+        }
+    }
+
+    private fun logErrorResponse(connection: HttpURLConnection, responseCode: Int) {
+        val errorBody = connection.errorStream?.let {
+            BufferedReader(InputStreamReader(it)).readText()
+        }
+        logger.error("AI Creative Bot API returned HTTP $responseCode, error: $errorBody")
+    }
+
+    private fun parseSseStream(inputStream: InputStream, objectMapper: ObjectMapper): String? {
+        val summaryBuilder = StringBuilder()
+        BufferedReader(InputStreamReader(inputStream, Charsets.UTF_8)).use { reader ->
+            var line: String?
+            while (reader.readLine().also { line = it } != null) {
+                val result = processSseLine(objectMapper, line!!)
+                if (result == null) return null
+                if (result.isNotEmpty()) summaryBuilder.append(result)
+            }
+        }
+        val summary = summaryBuilder.toString().trim()
+        return if (summary.isNotEmpty()) summary else null
+    }
+
+    /**
+     * @return delta 文本内容；空字符串表示跳过该行；null 表示遇到错误应终止
+     */
+    private fun processSseLine(objectMapper: ObjectMapper, line: String): String? {
+        val trimmedLine = line.trim()
+        if (!trimmedLine.startsWith("data:")) return ""
+        val jsonStr = trimmedLine.removePrefix("data:").trim()
+        if (jsonStr.isEmpty()) return ""
+
+        return try {
+            val eventNode = objectMapper.readTree(jsonStr)
+            when (eventNode.get("type")?.asText()) {
+                "TEXT_MESSAGE_CONTENT" -> eventNode.get("delta")?.asText() ?: ""
+                "RUN_ERROR" -> {
+                    logger.error("AI Creative Bot run error: ${eventNode.get("message")?.asText()}")
+                    null
+                }
+                else -> ""
+            }
+        } catch (ignored: Exception) {
+            logger.debug("Skip unparseable SSE line: $jsonStr")
+            ""
         }
     }
 
