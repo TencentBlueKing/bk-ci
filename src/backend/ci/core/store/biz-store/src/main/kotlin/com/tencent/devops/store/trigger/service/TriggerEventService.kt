@@ -101,7 +101,7 @@ class TriggerEventService @Autowired constructor(
                 queryProjectAtomFlag = false,
                 projectCode = null,
                 category = AtomCategoryEnum.TRIGGER.name,
-                serviceScope = null,
+                serviceScope = ServiceScopeEnum.CREATIVE_STREAM,
                 fitOsFlag = null,
                 jobType = null,
                 os = null,
