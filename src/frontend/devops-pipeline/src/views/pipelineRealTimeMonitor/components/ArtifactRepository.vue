@@ -16,6 +16,7 @@
                 :icon-size="item.iconSize"
                 :show-logo="item.showLogo"
                 :logo-name="item.logoName"
+                :clickable="item.clickable !== false"
                 @click="handleClick(item.id)"
             />
         </div>
@@ -53,13 +54,13 @@
             const { proxy } = useInstance()
             const loading = ref(false)
             const capacityMetrics = ref([
-                { id: 'totalArtifacts', label: 'totalArtifacts', value: null, unit: 'B', showIcon: false, showLogo: true, logoName: 'metrics-zhipin-total' },
-                { id: 'addedArtifacts', label: 'addedArtifacts', value: null, unit: 'B', showIcon: true, iconName: 'icon-plus-circle' },
-                { id: 'deletedArtifacts', label: 'deletedArtifacts', value: null, unit: 'B', showIcon: true, iconName: 'icon-minus-circle' },
-                { id: 'avgUploadSpeed', label: 'avgUploadSpeed', value: null, unit: 'B', showIcon: true, iconName: 'icon-upload', iconSize: '12px' },
-                { id: 'avgDownloadSpeed', label: 'avgDownloadSpeed', value: null, unit: 'B', showIcon: true, iconName: 'icon-download', iconSize: '12px' },
-                { id: 'uploadArtifacts', label: 'uploadArtifacts', value: null, unit: 'B', showIcon: true, iconName: 'icon-upload', iconSize: '12px' },
-                { id: 'downloadArtifacts', label: 'downloadArtifacts', value: null, unit: 'B', showIcon: true, iconName: 'icon-download', iconSize: '12px' }
+                { id: 'totalArtifacts', label: 'totalArtifacts', value: '--', unit: 'B', showIcon: false, showLogo: true, logoName: 'metrics-zhipin-total' },
+                { id: 'addedArtifacts', label: 'addedArtifacts', value: '--', unit: 'B', showIcon: true, iconName: 'icon-plus-circle', clickable: false },
+                { id: 'deletedArtifacts', label: 'deletedArtifacts', value: '--', unit: 'B', showIcon: true, iconName: 'icon-minus-circle', clickable: false },
+                { id: 'avgUploadSpeed', label: 'avgUploadSpeed', value: '--', unit: 'B', showIcon: true, iconName: 'icon-upload', iconSize: '12px' },
+                { id: 'avgDownloadSpeed', label: 'avgDownloadSpeed', value: '--', unit: 'B', showIcon: true, iconName: 'icon-download', iconSize: '12px' },
+                { id: 'uploadArtifacts', label: 'uploadArtifacts', value: '--', unit: 'B', showIcon: true, iconName: 'icon-upload', iconSize: '12px' },
+                { id: 'downloadArtifacts', label: 'downloadArtifacts', value: '--', unit: 'B', showIcon: true, iconName: 'icon-download', iconSize: '12px' }
             ])
 
 
@@ -163,6 +164,7 @@
                     })
                 } catch (error) {
                     console.error('获取制品库数据失败:', error)
+                    capacityMetrics.value = capacityMetrics.value.map(item => ({ ...item, value: '--' }))
                 } finally {
                     loading.value = false
                 }

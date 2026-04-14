@@ -43,10 +43,10 @@
             const { proxy } = useInstance()
             const loading = ref(false)
             const currentStatus = ref([
-                { id: 'runningPipelines', label: 'runningPipelines', value: null, showLogo: true, logoName: 'running-line' },
-                { id: 'waitingPipelines', label: 'queuedPipelines', value: null, showLogo: true, logoName: 'waiting-line' },
-                { id: 'waitingJob', label: 'queuedJobs', value: null, showLogo: true, logoName: 'waiting-line' },
-                { id: 'auditPipelines', label: 'auditingPipelines', value: null, showLogo: true, logoName: 'audit-line' }
+                { id: 'runningPipelines', label: 'runningPipelines', value: '--', showLogo: true, logoName: 'running-line' },
+                { id: 'waitingPipelines', label: 'queuedPipelines', value: '--', showLogo: true, logoName: 'waiting-line' },
+                { id: 'waitingJob', label: 'queuedJobs', value: '--', showLogo: true, logoName: 'waiting-line' },
+                { id: 'auditPipelines', label: 'auditingPipelines', value: '--', showLogo: true, logoName: 'audit-line' }
             ])
 
 
@@ -95,6 +95,7 @@
                     })
                 } catch (error) {
                     console.error('获取当前流水线状态数据失败:', error)
+                    currentStatus.value = currentStatus.value.map(item => ({ ...item, value: '--' }))
                 } finally {
                     loading.value = false
                 }

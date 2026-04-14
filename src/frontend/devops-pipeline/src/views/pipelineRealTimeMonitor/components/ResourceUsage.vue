@@ -41,9 +41,9 @@
             const { proxy } = useInstance()
             const loading = ref(false)
             const sourceStatus = ref([
-                { id: 'sourceCpu', label: 'cpuUsageOver80', value: null, showLogo: true, logoName: 'source-cpu-use' },
-                { id: 'sourceMemory', label: 'memoryUsageOver80', value: null, showLogo: true, logoName: 'source-memory-use' },
-                { id: 'sourceDisk', label: 'diskUsageOver80', value: null, showLogo: true, logoName: 'source-disk-use' }
+                { id: 'sourceCpu', label: 'cpuUsageOver80', value: '--', showLogo: true, logoName: 'source-cpu-use' },
+                { id: 'sourceMemory', label: 'memoryUsageOver80', value: '--', showLogo: true, logoName: 'source-memory-use' },
+                { id: 'sourceDisk', label: 'diskUsageOver80', value: '--', showLogo: true, logoName: 'source-disk-use' }
             ])
 
 
@@ -82,6 +82,7 @@
                     })
                 } catch (error) {
                     console.error('获取当前资源使用数据失败:', error)
+                    sourceStatus.value = sourceStatus.value.map(item => ({ ...item, value: '--' }))
                 } finally {
                     loading.value = false
                 }

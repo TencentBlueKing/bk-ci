@@ -1,6 +1,7 @@
 <template>
     <div
         class="capacity-card"
+        :class="{ 'capacity-card--no-click': !clickable }"
         @click="handleClick"
     >
         <div class="capacity-content">
@@ -95,6 +96,10 @@
             logoName: {
                 type: String,
                 default: 'metrics-zhipin-total'
+            },
+            clickable: {
+                type: Boolean,
+                default: true
             }
         },
         setup (props, { emit }) {
@@ -125,6 +130,15 @@
     &:hover {
         box-shadow: 0 2px 6px 0 rgba(58, 132, 255, 0.15);
         transform: translateY(-2px);
+    }
+}
+
+.capacity-card--no-click {
+    cursor: default;
+
+    &:hover {
+        box-shadow: none;
+        transform: none;
     }
 }
 .capacity-content{

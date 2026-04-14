@@ -40,10 +40,10 @@
             const { proxy } = useInstance()
             const loading = ref(false)
             const executionStatisticsList = ref([
-                { id: 'failuresNum', label: 'failureCount', value: null, unit: '次', showIconLogo: true, iconLogoName: 'icon-close-circle' },
-                { id: 'cancelNum', label: 'cancelCount', value: null, unit: '次', showIconLogo: true, iconLogoName: 'icon-close-circle' },
-                { id: 'successNum', label: 'successCount', value: null, unit: '次', showIconLogo: true, iconLogoName: 'icon-close-circle' },
-                { id: 'successRate', label: 'successRate', value: null, unit: '%' }
+                { id: 'failuresNum', label: 'failureCount', value: '--', unit: '次', showIconLogo: true, iconLogoName: 'icon-close-circle' },
+                { id: 'cancelNum', label: 'cancelCount', value: '--', unit: '次', showIconLogo: true, iconLogoName: 'icon-close-circle' },
+                { id: 'successNum', label: 'successCount', value: '--', unit: '次', showIconLogo: true, iconLogoName: 'icon-close-circle' },
+                { id: 'successRate', label: 'successRate', value: '--', unit: '%' }
             ])
 
 
@@ -104,6 +104,7 @@
                     })
                 } catch (error) {
                     console.error('获取执行统计数据失败:', error)
+                    executionStatisticsList.value = executionStatisticsList.value.map(item => ({ ...item, value: '--' }))
                 } finally {
                     loading.value = false
                 }

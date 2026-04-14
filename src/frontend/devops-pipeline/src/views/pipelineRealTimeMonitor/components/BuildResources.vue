@@ -35,27 +35,27 @@
             // 可用节点 = 空闲节点 + 满并发运行节点 + 并发低于 50% 节点 + 其他并发节点
             const nodeProgressData = ref([
                 {
-                    value: null,
+                    value: '--',
                     label: 'availableNodes',
                     type: 'can-use'
                 },
                 {
-                    value: null,
+                    value: '--',
                     label: 'offlineNodes',
                     type: 'offline'
                 },
                 {
-                    value: null,
+                    value: '--',
                     label: 'idleNodes',
                     type: 'free-load'
                 },
                 {
-                    value:null,
+                    value: '--',
                     label: 'lowConcurrencyNodes',
                     type: 'low-load'
                 },
                 {
-                    value: null,
+                    value: '--',
                     label: 'fullConcurrencyNodes',
                     type: 'full-load'
                 },
@@ -129,8 +129,8 @@
                 } catch (error) {
                     console.error('获取构建资源数据失败:', error)
                     // 重置数据为默认值
-                    updateNodeData(NODE_INDEX.AVAILABLE, 0)
-                    updateNodeData(NODE_INDEX.OFFLINE, 0)
+                    updateNodeData(NODE_INDEX.AVAILABLE, '--')
+                    updateNodeData(NODE_INDEX.OFFLINE, '--')
                 } finally {
                     loading.value = false
                 }
