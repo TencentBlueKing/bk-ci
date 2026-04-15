@@ -100,7 +100,11 @@ class UserAtomResourceImpl @Autowired constructor(
     }
 
     override fun getPipelineAtomVersions(projectCode: String, atomCode: String): Result<List<VersionInfo>> {
-        return atomService.getPipelineAtomVersions(projectCode, atomCode, TenantUtils.getTenantId())
+        return atomService.getPipelineAtomVersions(
+            projectCode = projectCode,
+            atomCode = atomCode,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+        )
     }
 
     override fun getInstalledAtoms(
