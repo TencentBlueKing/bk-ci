@@ -23,7 +23,7 @@ class ClientChannelUpgradeService @Autowired constructor(
             logger.warn(
                 "Invalid version format: $version, " +
                     "expected: {major}.{minor}.{patch}-{channel}.{build} " +
-                    "or {major}.{minor}.{patch}-release"
+                    "or {major}.{minor}.{patch}"
             )
             return
         }
