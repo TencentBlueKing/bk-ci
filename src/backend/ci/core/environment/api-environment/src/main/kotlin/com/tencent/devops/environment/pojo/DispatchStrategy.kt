@@ -7,10 +7,9 @@ import com.tencent.devops.environment.pojo.enums.StrategyScope
 import com.tencent.devops.environment.pojo.enums.StrategyType
 
 data class LabelSelector(
-    val tagKeyName: String?,
     val tagKeyId: Long,
     val op: LabelOp,
-    val values: List<String>
+    val tagValueIds: Set<Long>
 )
 
 data class DispatchStrategyConfig(
@@ -53,6 +52,6 @@ data class DispatchStrategyConfig(
 
 data class EnabledStrategiesWithTags(
     val strategies: List<DispatchStrategyConfig>,
-    /** nodeId -> (tagKeyId -> List of tagValueName) */
-    val nodeTagValues: Map<Long, Map<Long, List<String>>>
+    /** nodeId -> (tagKeyId -> NodeTag) */
+    val nodeTagValues: Map<Long, Map<Long, NodeTag>>
 )

@@ -2,6 +2,7 @@ package com.tencent.devops.dispatch.utils
 
 import com.tencent.devops.environment.pojo.DispatchStrategyConfig
 import com.tencent.devops.environment.pojo.LabelSelector
+import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.enums.LabelOp
 import com.tencent.devops.environment.pojo.enums.NodeRule
 import com.tencent.devops.environment.pojo.enums.StrategyScope
@@ -25,8 +26,8 @@ class DispatchStrategyExecutor(
         val preBuildAgentIds: Set<String>,
         val agentRunningCounts: Map<String, Int>,
         val dockerRunningCounts: Map<String, Int>,
-        /** agentId -> 该 agent 拥有的标签键值: Map<tagKeyId, List<tagValueName>> */
-        val agentTagValues: Map<String, Map<Long, List<String>>>,
+        /** agentId -> 该 agent 拥有的标签键值: Map<tagKeyId, NodeTag> */
+        val agentTagValues: Map<String, Map<Long, NodeTag>>,
         val isDockerBuilder: Boolean
     )
 
@@ -55,7 +56,7 @@ class DispatchStrategyExecutor(
                 continue
             }
 
-            val filtered = filterByLabels(candidates, strategy.labelSelector)
+            val filtered = filterByLabels(lv, candidates, strategy.labelSelector)
             if (filtered.isEmpty()) {
                 pipelineLog("$lv All ${candidates.size} agents filtered out by labels, skip")
                 continue
@@ -92,34 +93,37 @@ class DispatchStrategyExecutor(
     }
 
     private fun filterByLabels(
+        logTag: String,
         agents: List<ThirdPartyAgent>,
         labelSelector: List<LabelSelector>?
     ): List<ThirdPartyAgent> {
         if (labelSelector.isNullOrEmpty()) return agents
         return agents.filter { agent ->
             val agentTags = input.agentTagValues[agent.agentId] ?: emptyMap()
-            labelSelector.all { selector -> matchLabel(selector, agentTags) }
+            labelSelector.all { selector -> matchLabel(logTag, selector, agentTags) }
         }
     }
 
     private fun matchLabel(
+        logTag: String,
         selector: LabelSelector,
-        agentTags: Map<Long, List<String>>
+        agentTags: Map<Long, NodeTag>
     ): Boolean {
-        val agentValues = agentTags[selector.tagKeyId] ?: return false
-        val expected = selector.values
+        val agentValues = agentTags[selector.tagKeyId]?.tagValues ?: return false
+        val tagValues = agentValues.map { it.tagValueName }
+        val expected = agentValues.filter { selector.tagValueIds.contains(it.tagValueId) }.map { it.tagValueName }
         if (expected.isEmpty()) return false
-
+        pipelineLog("$logTag match label [$tagValues] ${selector.op.symbol} [$expected]")
         return when (selector.op) {
-            LabelOp.IN -> agentValues.any { it in expected }
-            LabelOp.EQUAL -> expected.any { exp -> agentValues.any { it == exp } }
-            LabelOp.GT -> expected.any { exp -> agentValues.any { compareValues(it, exp) > 0 } }
-            LabelOp.GTE -> expected.any { exp -> agentValues.any { compareValues(it, exp) >= 0 } }
-            LabelOp.LT -> expected.any { exp -> agentValues.any { compareValues(it, exp) < 0 } }
-            LabelOp.LTE -> expected.any { exp -> agentValues.any { compareValues(it, exp) <= 0 } }
-            LabelOp.START_WITH -> expected.any { exp -> agentValues.any { it.startsWith(exp) } }
-            LabelOp.END_WITH -> expected.any { exp -> agentValues.any { it.endsWith(exp) } }
-            LabelOp.CONTAINS -> expected.any { exp -> agentValues.any { it.contains(exp) } }
+            LabelOp.IN -> tagValues.any { it in expected }
+            LabelOp.EQUAL -> expected.any { exp -> tagValues.any { it == exp } }
+            LabelOp.GT -> expected.any { exp -> tagValues.any { compareValues(it, exp) > 0 } }
+            LabelOp.GTE -> expected.any { exp -> tagValues.any { compareValues(it, exp) >= 0 } }
+            LabelOp.LT -> expected.any { exp -> tagValues.any { compareValues(it, exp) < 0 } }
+            LabelOp.LTE -> expected.any { exp -> tagValues.any { compareValues(it, exp) <= 0 } }
+            LabelOp.START_WITH -> expected.any { exp -> tagValues.any { it.startsWith(exp) } }
+            LabelOp.END_WITH -> expected.any { exp -> tagValues.any { it.endsWith(exp) } }
+            LabelOp.CONTAINS -> expected.any { exp -> tagValues.any { it.contains(exp) } }
         }
     }
 

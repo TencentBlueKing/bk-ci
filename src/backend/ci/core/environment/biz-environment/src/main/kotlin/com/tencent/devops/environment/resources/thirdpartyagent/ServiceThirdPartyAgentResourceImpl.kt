@@ -44,6 +44,7 @@ import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.EnabledStrategiesWithTags
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.NodeTag
+import com.tencent.devops.environment.pojo.NodeTagValue
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
@@ -378,14 +379,9 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
                 emptyMap()
             } else {
                 val tagMap = nodeTagService.fetchNodeTags(projectId, nodeIds)
-                val result = mutableMapOf<Long, Map<Long, List<String>>>()
+                val result = mutableMapOf<Long, Map<Long, NodeTag>>()
                 tagMap.forEach { (nodeId, tags) ->
-                    val keyValues = mutableMapOf<Long, MutableList<String>>()
-                    tags.forEach { tag ->
-                        val valueNames = keyValues.getOrPut(tag.tagKeyId) { mutableListOf() }
-                        tag.tagValues.forEach { valueNames.add(it.tagValueName) }
-                    }
-                    result[nodeId] = keyValues
+                    result[nodeId] =  tags.associateBy { it.tagKeyId }
                 }
                 result
             }
