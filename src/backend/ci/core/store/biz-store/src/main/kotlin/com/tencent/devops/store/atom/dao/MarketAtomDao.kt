@@ -590,7 +590,7 @@ class MarketAtomDao : AtomBaseDao() {
                     userId,
                     userId,
                     atomRequest.isBranchTestVersion,
-                    tenantId
+                    tenantId ?: atomRecord.tenantId
                 )
                 .execute()
         }
