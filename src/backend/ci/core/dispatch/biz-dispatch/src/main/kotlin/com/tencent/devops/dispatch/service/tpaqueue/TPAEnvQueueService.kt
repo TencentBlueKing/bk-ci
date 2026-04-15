@@ -24,7 +24,7 @@ import com.tencent.devops.dispatch.utils.DispatchStrategyExecutor
 import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.dispatch.utils.TPACommonUtil.Companion.tagError
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
-import com.tencent.devops.environment.pojo.DispatchStrategyConfig
+import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import org.slf4j.LoggerFactory
@@ -384,7 +384,7 @@ class TPAEnvQueueService @Autowired constructor(
         activeAgents.forEach { agent ->
             agent.nodeId?.let { nodeIdToAgentId[HashUtil.decodeIdToLong(it)] = agent.agentId }
         }
-        val agentTagValues = mutableMapOf<String, Map<Long, List<String>>>()
+        val agentTagValues = mutableMapOf<String, Map<Long, NodeTag>>()
         strategyResult.nodeTagValues.forEach { (nodeId, kv) ->
             nodeIdToAgentId[nodeId]?.let { agentId -> agentTagValues[agentId] = kv }
         }
