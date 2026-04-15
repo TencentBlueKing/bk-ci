@@ -39,14 +39,20 @@ end
 -- 前端容器化
 local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
 -- 临时逻辑, 临时灰度rbac-gray到容器环境
-if tag == 'rbac-gray' or tag == 'dev-rbac' or tag == 'test-rbac' or tag == 'rbac-staging' then
+if tag == 'rbac-gray' or
+    tag == 'dev-rbac' or
+    tag == 'test-rbac' or
+    tag == 'rbac-staging' or
+    tag == 'rbac-std-01' then
     ngx.header["X-USE-FRONTEND-CONTAINER"] = "true"
 else
     ngx.header["X-USE-FRONTEND-CONTAINER"] = "false"
 end
 if in_container then -- 容器化环境转发到对应ns的frontend服务
     local final_host = config.frontend.host
-    if ngx.var.project_id == 'frontend-for-gray' or ngx.var.project_id == 'frontend-for-staging' then
+    if ngx.var.project_id == 'frontend-for-gray' or
+        ngx.var.project_id == 'frontend-for-staging' or
+        ngx.var.project_id == 'frontend-for-std-01' then
         final_host = 'frontend-pre-bk-ci-frontend'
     end
     ngx.header["X-FRONTEND-SERVICE"] = final_host .. '.' .. tag .. '.svc.cluster.local'
