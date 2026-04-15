@@ -194,8 +194,6 @@ else
             ngx.exit(200)
         end
     end
-
-
 end
 
 ngx.log(ngx.WARN, "auth user failed")
