@@ -8,12 +8,14 @@ import com.tencent.devops.remotedev.pojo.clientupgrade.ClientOS
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeOpType
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientUpgradeVersions
 import com.tencent.devops.remotedev.pojo.clientupgrade.UpgradeVersionsData
+import com.tencent.devops.remotedev.service.clientupgrade.ClientChannelUpgradeService
 import com.tencent.devops.remotedev.service.clientupgrade.UpgradeProps
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpClientUpgradeImpl @Autowired constructor(
-    private val upgradeProps: UpgradeProps
+    private val upgradeProps: UpgradeProps,
+    private val clientChannelUpgradeService: ClientChannelUpgradeService
 ) : OpClientUpgrade {
     override fun getVersions(): Result<ClientUpgradeVersions> {
         return Result(
@@ -115,6 +117,11 @@ class OpClientUpgradeImpl @Autowired constructor(
         data: Map<String, String>
     ): Result<Boolean> {
         upgradeProps.setProjectVersion(type, os, data, opType)
+        return Result(true)
+    }
+
+    override fun setChannelVersion(version: String): Result<Boolean> {
+        clientChannelUpgradeService.setChannelVersion(version)
         return Result(true)
     }
 }
