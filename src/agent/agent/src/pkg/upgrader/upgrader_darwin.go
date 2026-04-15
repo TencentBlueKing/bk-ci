@@ -235,6 +235,7 @@ func replaceAgentFile(fileName string) error {
 const (
 	installModeLogin      = "LOGIN"
 	installModeBackground = "BACKGROUND"
+	installModeDaemon     = "DAEMON"
 	installTypeFile       = ".install_type"
 )
 
@@ -317,11 +318,15 @@ func readDaemonInstallMode() string {
 	if err != nil {
 		return installModeLogin
 	}
-	m := strings.TrimSpace(string(data))
-	if strings.EqualFold(m, installModeBackground) {
+	m := strings.ToUpper(strings.TrimSpace(string(data)))
+	switch m {
+	case installModeBackground:
 		return installModeBackground
+	case installModeDaemon:
+		return installModeDaemon
+	default:
+		return installModeLogin
 	}
-	return installModeLogin
 }
 
 // hasDarwinModernLaunchctl probes whether launchctl supports the modern
