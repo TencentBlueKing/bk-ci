@@ -563,7 +563,12 @@ class PipelineVersionFacadeService @Autowired constructor(
             yamlSupported = yamlSupported,
             yamlInvalidMsg = msg,
             updater = resource.updater ?: resource.creator,
-            updateTime = resource.updateTime?.timestampmilli()
+            updateTime = resource.updateTime?.timestampmilli(),
+            expireReleasedVersion = if (resource.status == VersionStatus.RELEASED) {
+                resource.version != pipelineInfo.version
+            } else {
+                null
+            }
         )
     }
 
@@ -912,8 +917,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         val version = pipelineYamlFacadeService.getPipelineYamlVersion(
             projectId = projectId,
             pipelineId = pipelineId,
-            branch = branch,
-            yamlParams = mutableMapOf()
+            branch = branch
         )!!
         return getVersion(
             userId = userId,
@@ -936,8 +940,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         return pipelineYamlFacadeService.getPipelineYamlVersion(
             projectId = projectId,
             pipelineId = pipelineId,
-            branch = branch,
-            yamlParams = mutableMapOf()
+            branch = branch
         )?.let {
             pipelineRepositoryService.getPipelineResourceVersion(
                 projectId = projectId,
@@ -1020,7 +1023,8 @@ class PipelineVersionFacadeService @Autowired constructor(
                     PipelineYamlVersionInfo(
                         name = it.name,
                         versionStatus = VersionStatus.BRANCH,
-                        defaultBranch = (it.name == defaultBranch)
+                        defaultBranch = (it.name == defaultBranch),
+                        sha = it.sha
                     )
                 )
             }

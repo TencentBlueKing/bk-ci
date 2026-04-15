@@ -84,6 +84,7 @@ import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_HISTORY
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_STATUS
@@ -254,8 +255,7 @@ class PipelineBuildFacadeService(
             pipelineYamlFacadeService.getPipelineYamlVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                branch = branch,
-                yamlParams = mutableMapOf()
+                branch = branch
             )
         }
         val (pipeline, resource, debug) = pipelineRepositoryService.getBuildTriggerInfo(
@@ -432,7 +432,10 @@ class PipelineBuildFacadeService(
         version: Int? = null,
         branch: String? = null
     ): BuildId {
-        logger.info("[$pipelineId] Manual build start with buildNo[$buildNo] and vars: $values")
+        logger.info(
+            "[$pipelineId] Manual build start with buildNo[$buildNo] and vars: $values " +
+                    "and version[${version ?: branch}]"
+        )
         if (checkPermission) {
             val permission = AuthPermission.EXECUTE
             pipelinePermissionService.validPipelinePermission(
@@ -477,13 +480,34 @@ class PipelineBuildFacadeService(
                 // 服务间的API触发需要兼容老用户，为避免意外产生调试构建，直接拦截
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION)
             }
-            // 正式版本,必须使用最新版本执行
-            if (version != null &&
+            // 如果是PAC流水线,需要加上代码库hashId,给checkout:self使用，如果用户已有yaml参数, 则以用户侧为准
+            val isPacPipeline = pipelineYamlFacadeService.buildYamlManualParamMap(
+                projectId = projectId,
+                pipelineId = pipelineId
+            )?.let {
+                yamlParams.putAll(it)
+                // 指定version执行时，若是分支版本则记录分支信息
+                if (resource.status == VersionStatus.BRANCH && !resource.versionName.isNullOrBlank()) {
+                    yamlParams[BK_REPO_GIT_WEBHOOK_BRANCH] = BuildParameters(
+                        key = BK_REPO_GIT_WEBHOOK_BRANCH,
+                        value = resource.versionName!!
+                    )
+                }
+                true
+            } ?: false
+            // 非PAC流水线的正式版本必须使用最新版本执行
+            if (
+                version != null && !isPacPipeline &&
                 resource.status == VersionStatus.RELEASED &&
                 readyToBuildPipelineInfo.version != version
             ) {
+                logger.warn(
+                    "version resource [${resource.versionName}] for version [$targetVersion] of [$pipelineId] " +
+                            "pipeline is RELEASED and not the latest pipeline version"
+                )
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_NON_LATEST_RELEASE_VERSION)
             }
+            logger.info("[$pipelineId] start with version[${resource.versionName}] status is ${resource.status}")
 
             /**
              * 验证流水线参数构建启动参数
@@ -536,7 +560,6 @@ class PipelineBuildFacadeService(
                 userId = userId, projectId = projectId, pipelineId = pipelineId,
                 paramProperties = triggerContainer.params, paramValues = values
             )
-            // 如果是PAC流水线,需要加上代码库hashId,给checkout:self使用，如果用户已有yaml参数, 则以用户侧为准
             yamlParams.forEach { paramMap.putIfAbsent(it.key, it.value) }
 
             return pipelineBuildService.startPipeline(

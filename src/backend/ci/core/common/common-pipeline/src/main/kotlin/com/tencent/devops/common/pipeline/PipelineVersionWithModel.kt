@@ -55,5 +55,7 @@ data class PipelineVersionWithModel(
     @get:Schema(title = "更新操作人", required = true)
     val updater: String?,
     @get:Schema(title = "版本修改时间", required = true)
-    val updateTime: Long?
+    val updateTime: Long?,
+    @get:Schema(title = "是否为过期的正式版本", required = true)
+    val expireReleasedVersion: Boolean? = null
 )

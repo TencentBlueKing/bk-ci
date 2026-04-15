@@ -415,11 +415,16 @@ class SubPipelineCheckService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         branch: String
-    ) = client.get(ServicePipelineVersionResource::class).getVersionByBranch(
-        projectId = projectId,
-        pipelineId = pipelineId,
-        branch = branch
-    ).data
+    ) = try {
+        client.get(ServicePipelineVersionResource::class).getVersionByBranch(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            branch = branch
+        ).data
+    } catch (ignored: Exception) {
+        logger.warn("fail to get [$branch]branch version of pipeline[$pipelineId]", ignored)
+        null
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(SubPipelineCheckService::class.java)

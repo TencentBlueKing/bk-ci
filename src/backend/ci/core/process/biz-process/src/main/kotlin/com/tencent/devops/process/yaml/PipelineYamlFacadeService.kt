@@ -39,8 +39,8 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
-import com.tencent.devops.common.webhook.pojo.code.CI_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
@@ -467,27 +467,21 @@ class PipelineYamlFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         branch: String,
-        yamlParams: MutableMap<String, BuildParameters>
+        yamlParams: MutableMap<String, BuildParameters> = mutableMapOf()
     ): Int? {
         // 不是PAC流水线
         val yamlInfo = pipelineYamlService.getPipelineYamlInfo(
             projectId = projectId,
             pipelineId = pipelineId
         ) ?: return null
-        // PAC 基础参数
-        yamlParams[BK_REPO_WEBHOOK_HASH_ID] = BuildParameters(
-            key = BK_REPO_WEBHOOK_HASH_ID, value = yamlInfo.repoHashId
-        )
-        yamlParams[PIPELINE_WEBHOOK_BRANCH] = BuildParameters(
-            key = PIPELINE_WEBHOOK_BRANCH, value = yamlInfo.defaultBranch ?: ""
-        )
         return pipelineYamlVersionResolver.resolvePipelineRefVersion(
             projectId = projectId,
             repoHashId = yamlInfo.repoHashId,
             filePath = yamlInfo.filePath,
             ref = branch
         ).let {
-            yamlParams[CI_BRANCH] = BuildParameters(key = CI_BRANCH, value = branch)
+            // 记录当前分支信息
+            yamlParams[BK_REPO_GIT_WEBHOOK_BRANCH] = BuildParameters(key = BK_REPO_GIT_WEBHOOK_BRANCH, value = branch)
             it
         }
     }
