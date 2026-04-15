@@ -11,8 +11,16 @@ enum class ClientChannel(val configKey: String) {
             RegexOption.IGNORE_CASE
         )
 
+        private val RELEASE_PATTERN = Regex(
+            """^\d+\.\d+\.\d+-release$""",
+            RegexOption.IGNORE_CASE
+        )
+
         fun isValidVersion(version: String): Boolean =
             VERSION_PATTERN.matches(version)
+
+        fun isReleaseVersion(version: String): Boolean =
+            RELEASE_PATTERN.matches(version)
 
         fun parse(channel: String): ClientChannel? =
             entries.find { it.name.equals(channel, ignoreCase = true) }

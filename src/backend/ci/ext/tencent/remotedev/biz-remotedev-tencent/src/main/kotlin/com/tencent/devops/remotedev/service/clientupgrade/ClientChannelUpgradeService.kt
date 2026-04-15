@@ -28,11 +28,17 @@ class ClientChannelUpgradeService @Autowired constructor(
             return
         }
 
+        val isRelease = ClientChannel.isReleaseVersion(version)
         val channel = ClientChannel.parseFromVersion(version)
-        val affectedChannels = ClientChannel.getAffectedChannels(channel)
+        val affectedChannels = if (isRelease) {
+            ClientChannel.entries.toList()
+        } else {
+            ClientChannel.getAffectedChannels(channel)
+        }
 
         logger.info(
             "Setting channel version: version=$version, " +
+                "release=$isRelease, " +
                 "parsedChannel=${channel?.name ?: "release"}, " +
                 "affectedChannels=${affectedChannels.map { it.name }}"
         )
