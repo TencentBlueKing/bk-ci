@@ -220,7 +220,8 @@ class TriggerEventService @Autowired constructor(
                                 props = atomForm,
                                 weight = null,
                                 data = null,
-                                ownerStoreCode = component.ownerStoreCode
+                                ownerStoreCode = component.ownerStoreCode,
+                                logoUrl = component.logoUrl
                             )
                         )
                     }
