@@ -1,4 +1,4 @@
-# 配置参考
+# Agent配置参考
 
 本文档详细说明 BK-CI Agent 的所有配置项，包括核心配置文件 `.agent.properties`、辅助文件和环境变量开关。
 
