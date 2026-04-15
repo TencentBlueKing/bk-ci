@@ -49,7 +49,15 @@ data class ThirdPartyBuildDockerInfo(
         secretKey = input.secretKey,
         image = input.image,
         credential = ThirdPartyBuildDockerInfoCredential(input.credential),
-        options = input.options,
+        // 做一次从model的数据过滤，防止model的多余数据干扰
+        options = DockerOptions(
+            volumes = input.options?.volumes?.filter { it.isNotBlank() }?.ifEmpty { null },
+            mounts = input.options?.mounts?.filter { it.isNotBlank() }?.ifEmpty { null },
+            gpus = input.options?.gpus?.ifBlank { null },
+            privileged = input.options?.privileged,
+            network = input.options?.network?.filter { it.isNotBlank() }?.ifEmpty { null },
+            user = input.options?.user?.ifBlank { null }
+        ),
         imagePullPolicy = input.imagePullPolicy
     )
 }

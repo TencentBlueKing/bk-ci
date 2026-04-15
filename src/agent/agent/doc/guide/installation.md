@@ -82,7 +82,7 @@ mkdir D:\bkci-agent; cd D:\bkci-agent
 
 **注意事项**
 - windows请不要安装在桌面目录。系统会有速度限制
-- macos请不要安装在桌面目录。系统会有速度限制
+- macos请不要安装Desktop，Downloads，Documents以及Home目录。系统会有限制
 - linux请不要安装在/tmp目录。系统会清理
 
 ### 步骤 3：验证安装

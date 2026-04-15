@@ -1,4 +1,4 @@
-# 故障排查与状态检查
+# Agent故障排查与状态检查
 
 本文档介绍如何使用 BK-CI Agent 的内置诊断工具排查常见问题。
 
@@ -163,9 +163,6 @@ sudo ./devopsAgent install
 |------|------|---------|
 | Agent 进程未启动 | PID 状态为"未运行" | `./devopsAgent start` |
 | 网络不通 | DNS/TCP/TLS 检查失败 | 检查防火墙、DNS、代理设置 |
-| 网关地址错误 | HTTP GET 失败 | 检查 `.agent.properties` 中的 `landun.gateway` |
-| 密钥错误 | HTTP 返回 401/403 | 检查 `.agent.properties` 中的 `secret.key` |
-| 时钟偏差 | TLS 握手失败 | 同步系统时间（NTP） |
 
 ### 构建任务卡住不结束
 
@@ -264,20 +261,7 @@ sudo ./devopsAgent install
 1. 确认磁盘状态：
    ```bash
    ./devopsAgent status   # 查看磁盘可用空间
-   df -h                  # 查看整体磁盘使用情况
    ```
-
-2. 清理空间：
-   ```bash
-   # 清理构建工作空间（选择性删除不需要的流水线目录）
-   du -sh workspace/*
-
-   # 手动清理日志（Agent 也会自动清理）
-   find logs/ -name "*.log" -mtime +3 -delete
-   ```
-
-3. 调整日志保留时间：
-   在 `.agent.properties` 中减少 `devops.agent.logs.keep.hours`。
 
 ## 日志位置
 
@@ -286,7 +270,7 @@ sudo ./devopsAgent install
 | Agent 主日志 | `logs/devopsAgent.log` | Agent 主循环、心跳、升级 |
 | Daemon 日志 | `logs/devopsDaemon.log` | Daemon 启停记录 |
 | 构建日志 | `logs/{buildId}_{vmSeqId}_agent.log` | 单次构建的 Worker 输出 |
-| Docker 构建日志 | `logs/docker/{buildId}/` | Docker 容器构建日志 |
+| Docker 构建日志 | `docker_workspace/logs/{buildId}/{vmSeqId}` | Docker 容器构建日志 |
 
 ## 进程与服务管理命令速查
 
@@ -333,11 +317,4 @@ Get-EventLog -LogName System -Source "Service Control Manager" |
 
 # 2. 最近的日志
 tail -500 logs/devopsAgent.log > agent_log.txt
-
-# 3. 配置信息（注意隐去 secret.key）
-grep -v secret .agent.properties > agent_config.txt
-
-# 4. 系统信息
-uname -a > system_info.txt
-df -h >> system_info.txt
 ```
