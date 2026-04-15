@@ -198,5 +198,9 @@
     "versionCreateTime": "体験パック作成時間",
     "bundleIdentifier": "バンドルID",
     "bundleIdentifierPlaceholder": "アプリケーションの一意識別子、例：Microsoft.Office.OneNote_8wekyb3d8bbwe",
-    "noEmptyTips": "{0}は空にできません"
+    "noEmptyTips": "{0}は空にできません",
+    "experience_env": "体験環境",
+    "allow_dev_cloud_access": "合研環境アクセスを許可（クラウドデスクトップ内）",
+    "allow_public_access": "拠点公衆網アクセスを許可",
+    "allow_public_access_tip": "ホワイトリストに登録された拠点のみアクセス可能です。新しい拠点はアシスタントに連絡してホワイトリストに追加してください"
 }

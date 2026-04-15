@@ -29,6 +29,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
+import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
@@ -147,7 +148,12 @@ class ServiceRemoteDevResourceImpl(
     private val coffeeAIService: CoffeeAIService
 ) : ServiceRemoteDevResource {
     companion object {
-        private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
+        private const val MAX_REFRESH_SIZE = 100
+        private const val DEFAULT_PAGE_SIZE = 100
+        private const val MAX_PAGE_SIZE = 1000
+        private val logger = LoggerFactory.getLogger(
+            OpProjectWorkspaceResourceImpl::class.java
+        )
     }
 
     override fun validateUserTicket(userId: String, isOffshore: Boolean, ticket: String): Result<Boolean> {
@@ -659,14 +665,16 @@ class ServiceRemoteDevResourceImpl(
     override fun checkWorkspaceEnableAddress(
         userId: String,
         appId: Long,
-        ip: String,
-        mediaGary: Boolean?
+        ip: String?,
+        mediaGary: Boolean?,
+        envUid: String?
     ): Result<CheckWorkspaceRecordData> {
         val (enable, address) = workspaceRecordService.checkRecordAndAddress(
             userId = userId,
             appId = appId,
             ip = ip,
-            mediaGary = mediaGary
+            mediaGary = mediaGary,
+            envUid = envUid
         )
         return Result(CheckWorkspaceRecordData(enable, address))
     }
@@ -967,5 +975,112 @@ class ServiceRemoteDevResourceImpl(
 
     override fun openClawOn(userId: String): Result<WorkspaceRegistration?> {
         return Result(coffeeAIService.openClawOn(userId))
+    }
+
+    override fun checkViewLive(
+        userId: String,
+        projectId: String,
+        workspaceName: String
+    ): Result<Boolean> {
+        return Result(workspaceRecordService.checkViewLive(userId, projectId, workspaceName))
+    }
+
+    override fun convertToPublicWorkspace(
+        userId: String,
+        workspaceName: String
+    ): Result<Boolean> {
+        val ws = workspaceService.getWorkspaceDetail(
+            userId = userId,
+            workspaceName = workspaceName,
+            checkPermission = false
+        ) ?: return Result(false)
+        permissionService.checkUserManager(userId, ws.projectId)
+        val ip = ws.ip?.substringAfter(".")
+            ?: return Result(false)
+        workspaceCommon.devxEnvNodeInit(
+            userId = userId,
+            projectId = ws.projectId,
+            workspaceName = ws.workspaceName,
+            ip = ip,
+            size = ws.machineType ?: ""
+        )
+        if (ws.ownerType != WorkspaceOwnerType.PROJECT_PUBLIC) {
+            workspaceService.changeWorkspaceOwnerType(
+                ws.workspaceName,
+                ws.ownerType,
+                WorkspaceOwnerType.PROJECT_PUBLIC
+            )
+        }
+        return Result(true)
+    }
+
+    override fun refreshWorkspaceStatus(
+        userId: String,
+        projectId: String,
+        instanceIds: List<String>
+    ): Result<Map<String, String>> {
+        if (instanceIds.isEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+                params = arrayOf(
+                    "instanceIds cannot be empty"
+                )
+            )
+        }
+        if (instanceIds.size > MAX_REFRESH_SIZE) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+                params = arrayOf(
+                    "instanceIds size ${instanceIds.size}" +
+                        " exceeds max $MAX_REFRESH_SIZE"
+                )
+            )
+        }
+        permissionService.checkUserManager(userId, projectId)
+        return Result(
+            workspaceCommon.refreshInstanceStatus(
+                userId = userId,
+                projectId = projectId,
+                instanceIds = instanceIds
+            )
+        )
+    }
+
+    override fun batchGetSimpleWorkspaces(
+        userId: String,
+        projectId: String,
+        workspaceNames: List<String>
+    ): Result<List<WeSecProjectWorkspace>> {
+        if (workspaceNames.isEmpty()) {
+            return Result(emptyList())
+        }
+        permissionService.checkUserManager(userId, projectId)
+        return Result(
+            workspaceService.batchGetSimpleWorkspaces(
+                projectId = projectId,
+                workspaceNames = workspaceNames
+            )
+        )
+    }
+
+    override fun searchUserWorkspaces(
+        userId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: WorkspaceSearch
+    ): Result<Page<Workspace>> {
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = minOf(
+            pageSize ?: DEFAULT_PAGE_SIZE,
+            MAX_PAGE_SIZE
+        )
+        return Result(
+            workspaceService.getWorkspaceList(
+                userId = userId,
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                search = search
+            )
+        )
     }
 }

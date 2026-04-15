@@ -17,14 +17,18 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceRecordTicketDao
 import com.tencent.devops.remotedev.dao.WorkspaceRecordUserApprovalDao
+import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
+import com.tencent.devops.remotedev.pojo.FeatureSwitchType
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
+import com.tencent.devops.remotedev.pojo.WorkspaceShared.AssignType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordTicketType
+import com.tencent.devops.remotedev.service.client.MediaMod
 import com.tencent.devops.remotedev.service.client.NodeSearchBody
 import com.tencent.devops.remotedev.service.client.NodeSearchPage
 import com.tencent.devops.remotedev.service.client.NodeSearchRule
@@ -59,7 +63,9 @@ class WorkspaceRecordService @Autowired constructor(
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val permissionService: PermissionService,
     private val configCacheService: ConfigCacheService,
-    private val redisOperation: RedisOperation
+    private val featureSwitchService: FeatureSwitchService,
+    private val redisOperation: RedisOperation,
+    private val workspaceSharedDao: WorkspaceSharedDao
 ) {
 
     private val objectMapper = ObjectMapper()
@@ -131,21 +137,64 @@ class WorkspaceRecordService @Autowired constructor(
     fun checkRecordAndAddress(
         userId: String,
         appId: Long,
-        ip: String,
-        mediaGary: Boolean?
+        ip: String?,
+        mediaGary: Boolean?,
+        envUid: String?
     ): Pair<Boolean, String?> {
-        val projectId = startAppLinkDao.getAppName(dslContext, appId) ?: return Pair(false, null)
-        val (workspaceName, enableUser, hostIp) = workspaceWindowsDao.fetchRecordByProjectIp(dslContext, projectId, ip)
-            ?: return Pair(false, null)
-        if (enableUser.isNullOrBlank()) {
+        if (ip.isNullOrBlank() && envUid.isNullOrBlank()) {
             return Pair(false, null)
         }
+        val projectId = startAppLinkDao.getAppName(dslContext, appId) ?: return Pair(false, null)
+        val recordInfo = if (!ip.isNullOrBlank()) {
+            workspaceWindowsDao.fetchRecordByProjectIp(dslContext, projectId, ip, null)
+                ?: return Pair(false, null)
+        } else {
+            val wn = dispatchWorkspaceDao.getWorkspaceNameByEnvId(
+                envId = envUid!!,
+                dslContext = dslContext
+            ) ?: return Pair(false, null)
+            workspaceWindowsDao.fetchRecordByProjectIp(dslContext, projectId, null, wn)
+                ?: return Pair(false, null)
+        }
 
-        val region = genRegion(hostIp)
-        // 生成访问token
+        // cafeAI场景默认启动直播
+        val liveEnable = recordInfo.coffeeAIEnable || featureSwitchService.isEnabled(
+            projectId = projectId,
+            userId = userId,
+            workspaceName = recordInfo.workspaceName,
+            featureType = FeatureSwitchType.LIVE_STREAMING
+        )
+
+        if (recordInfo.enableUser.isNullOrBlank()) {
+            if (liveEnable) {
+                val region = genRegion(recordInfo.hostIp)
+                return Pair(
+                    true,
+                    remotedevBkRepoClient.repoStreamCreate(
+                        region = region,
+                        projectId = projectId,
+                        repoName = genRepoName(recordInfo.workspaceName),
+                        userId = userId,
+                        media = true,
+                        gray = mediaGary,
+                        mediaMod = MediaMod.LIVE
+                    ) + "&recordUser=$userId&mediaMod=${MediaMod.LIVE.name}"
+                )
+            } else {
+                return Pair(false, null)
+            }
+        }
+
+        val mediaMod = if (liveEnable) {
+            MediaMod.ALL
+        } else {
+            MediaMod.RECORD
+        }
+        // 如果有录屏按录屏走
+        val region = genRegion(recordInfo.hostIp)
         val token = permissionService.init1Password(
-            userId = enableUser,
-            workspaceName = workspaceName,
+            userId = recordInfo.enableUser,
+            workspaceName = recordInfo.workspaceName,
             projectId = null,
             expiredInSecond = 7 * 24 * 3600
         )
@@ -154,12 +203,46 @@ class WorkspaceRecordService @Autowired constructor(
             remotedevBkRepoClient.repoStreamCreate(
                 region = region,
                 projectId = projectId,
-                repoName = genRepoName(workspaceName),
-                userId = enableUser,
+                repoName = genRepoName(recordInfo.workspaceName),
+                userId = recordInfo.enableUser,
                 media = true,
-                gray = mediaGary
-            ) + "&skToken=$token&recordUser=$userId"
+                gray = mediaGary,
+                mediaMod = mediaMod
+            ) + "&skToken=$token&recordUser=$userId&mediaMod=${mediaMod.name}"
         )
+    }
+
+    fun checkViewLive(
+        userId: String,
+        projectId: String,
+        workspaceName: String
+    ): Boolean {
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+        if (workspace == null || workspace.projectId != projectId) {
+            logger.warn("get project workspace with invalid workspace: $userId|$projectId|$workspaceName")
+            return false
+        }
+
+        if (!permissionService.hasManagerOrViewerPermission(userId, workspace.projectId, workspace.workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("We're sorry but you don't have permission to get $workspaceName info")
+            )
+        }
+
+        val workspaceInfo = workspaceSharedDao.fetchWorkspaceSharedInfo(
+            dslContext = dslContext,
+            workspaceName = workspace.workspaceName,
+        )
+
+        if (workspace.coffeeAi == true) {
+            return workspaceInfo.any { it.type == AssignType.OWNER && it.sharedUser == userId }
+        }
+
+        return workspaceInfo.any {
+            (it.type == AssignType.OWNER && it.sharedUser == userId) ||
+                    (it.type == AssignType.VIEWER && it.sharedUser == userId)
+        }
     }
 
     // 审批流程 -> leader -> 安全

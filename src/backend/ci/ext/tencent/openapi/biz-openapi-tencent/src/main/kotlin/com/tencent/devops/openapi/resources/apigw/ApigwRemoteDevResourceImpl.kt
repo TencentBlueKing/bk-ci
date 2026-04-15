@@ -21,6 +21,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
+import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
@@ -511,15 +512,17 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun checkWorkspaceEnableAddress(
         userId: String,
         appId: Long,
-        ip: String,
-        mediaGary: Boolean?
+        ip: String?,
+        mediaGary: Boolean?,
+        envUid: String?
     ): Result<CheckWorkspaceRecordData> {
-        logger.info("checkWorkspaceEnableAddress |$userId|$appId|$ip|$mediaGary")
+        logger.info("checkWorkspaceEnableAddress |$userId|$appId|$ip|$mediaGary|$envUid")
         return client.get(ServiceRemoteDevResource::class).checkWorkspaceEnableAddress(
             userId = userId,
             appId = appId,
             ip = ip,
-            mediaGary = mediaGary
+            mediaGary = mediaGary,
+            envUid = envUid
         )
     }
 
@@ -802,5 +805,75 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun openClawOn(userId: String): Result<WorkspaceRegistration?> {
         logger.info("openClawOn |$userId")
         return client.get(ServiceRemoteDevResource::class).openClawOn(userId)
+    }
+
+    override fun checkViewLive(
+        userId: String,
+        projectId: String,
+        workspaceName: String
+    ): Result<Boolean> {
+        logger.info("checkViewLive |$userId|$projectId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class)
+            .checkViewLive(userId, projectId, workspaceName)
+    }
+
+    override fun convertToPublicWorkspace(
+        userId: String,
+        workspaceName: String
+    ): Result<Boolean> {
+        logger.info(
+            "convertToPublicWorkspace |$userId|$workspaceName"
+        )
+        return client.get(ServiceRemoteDevResource::class)
+            .convertToPublicWorkspace(userId, workspaceName)
+    }
+
+    override fun refreshWorkspaceStatus(
+        userId: String,
+        projectId: String,
+        instanceIds: List<String>
+    ): Result<Map<String, String>> {
+        logger.info(
+            "refreshInstanceStatus" +
+                " |$userId|$projectId|${instanceIds.size}"
+        )
+        return client.get(ServiceRemoteDevResource::class)
+            .refreshWorkspaceStatus(
+                userId, projectId, instanceIds
+            )
+    }
+
+    override fun batchGetSimpleWorkspaces(
+        userId: String,
+        projectId: String,
+        workspaceNames: List<String>
+    ): Result<List<WeSecProjectWorkspace>> {
+        logger.info(
+            "batchGetSimpleWorkspaces" +
+                " |$userId|$projectId|${workspaceNames.size}"
+        )
+        return client.get(ServiceRemoteDevResource::class)
+            .batchGetSimpleWorkspaces(
+                userId, projectId, workspaceNames
+            )
+    }
+
+    override fun searchUserWorkspaces(
+        userId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: WorkspaceSearch
+    ): Result<Page<Workspace>> {
+        logger.info(
+            "searchUserWorkspaces" +
+                " |$userId|$page|$pageSize"
+        )
+        return client.get(ServiceRemoteDevResource::class)
+            .searchUserWorkspaces(
+                userId = userId,
+                page = page,
+                pageSize = pageSize,
+                search = search
+            )
     }
 }
