@@ -41,7 +41,7 @@ enum class ClientChannel(val configKey: String) {
             ALPHA -> listOf(ALPHA)
             BETA -> listOf(ALPHA, BETA)
             GRAY -> entries.toList()
-            null -> entries.toList()
+            else -> emptyList()
         }
     }
 }
