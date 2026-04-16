@@ -20,6 +20,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.BK_STORE_ALL_TRIGGER
+import com.tencent.devops.store.pojo.common.BK_STORE_COMMON_TRIGGER
 import com.tencent.devops.store.pojo.common.KEY_ATOM_FORM
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreGroupByEnum
@@ -176,7 +177,8 @@ class TriggerEventService @Autowired constructor(
                         return@versionForeach
                     }
                     // 如果存在则升级，否则创建
-                    val upgradeAtom = atomService.exists(component.storeCode).data ?: false
+                    val upgradeAtom = (atomService.exists(component.storeCode).data ?: false) ||
+                            component.ownerStoreCode == BK_STORE_COMMON_TRIGGER
                     val result = if (upgradeAtom) {
                         atomService.upgradeAtom(
                             userId = userId,
