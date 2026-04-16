@@ -16,6 +16,7 @@ import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.redis.RedisKeys.CLIENT_VERSION_LIMIT
+import com.tencent.devops.remotedev.service.redis.RedisKeys.CLIENT_VERSION_LIMIT_PROJECT_PREFIX
 import com.tencent.devops.remotedev.service.redis.RedisKeys.CLIENT_VERSION_WARNING
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.CLIENT_VERSION_WARNING_NOTIFY
@@ -57,9 +58,12 @@ class ClientVersionFilter constructor(
 
     private val cache = Caffeine.newBuilder()
         .expireAfterAccess(10, TimeUnit.MINUTES)
-        .maximumSize(2)
-        .build<String/*key*/, List<Int>> { key ->
-            cacheService.get(key)?.split(".")?.map { it.toInt() } ?: emptyList()
+        .maximumSize(200)
+        .build<String, List<Int>> { key ->
+            cacheService.get(key)
+                ?.split(".")
+                ?.map { it.toInt() }
+                ?: emptyList()
         }
 
     lateinit var clientVersion: MutableMap<String, String>
@@ -108,6 +112,9 @@ class ClientVersionFilter constructor(
         }
         val user = requestContext.headers[AUTH_HEADER_USER_ID]?.get(0).toString()
         val os = requestContext.headers[HEADER_CLIENT_OS]?.get(0) ?: ""
+        val userProjectIds = kotlin.runCatching {
+            workspaceJoinDao.fetchProjectFromUser(dslContext, user)
+        }.getOrElse { emptySet() }
         kotlin.runCatching {
             recordClientVersion(
                 ip = requestContext.headers[HEADER_IP]?.get(0).toString(),
@@ -115,28 +122,34 @@ class ClientVersionFilter constructor(
                 version = version,
                 macAddress = requestContext.headers[HEADER_MAC_ADDRESS]?.get(0).toString(),
                 startVersion = requestContext.headers[BK_CI_CLIENT_START_VERSION]?.get(0) ?: "",
-                os = os
+                os = os,
+                projectIds = userProjectIds
             )
         }.onFailure { logger.warn("recordClientVersion error ${it.message}", it) }
 
-        // Android 客户端跳过版本校验逻辑
-        // Android 客户端使用特殊的版本号格式（如 andr-9386），无法通过标准的数字版本格式校验
         try {
             if (ClientOS.parse(os) == ClientOS.ANDR) {
                 logger.info(
-                    "Skip Android version verification | user=$user | path=$path | os=$os | version=$version"
+                    "Skip Android version verification" +
+                        " | user=$user | path=$path | os=$os | version=$version"
                 )
-                // Android 客户端直接返回 true，跳过版本校验
                 return true
             }
         } catch (e: Exception) {
-            logger.warn("Android client detection error, continue with normal verification | user=$user | os=$os", e)
+            logger.warn(
+                "Android client detection error, " +
+                    "continue with normal verification | user=$user | os=$os",
+                e
+            )
         }
         
         if (checkClientVersionWarning(split = split)) {
             notifyControl.notify4User(
                 userIds = mutableSetOf(user),
-                notifyType = mutableSetOf(RemoteDevNotifyType.CLIENT_PUSH, RemoteDevNotifyType.EMAIL),
+                notifyType = mutableSetOf(
+                    RemoteDevNotifyType.CLIENT_PUSH,
+                    RemoteDevNotifyType.EMAIL
+                ),
                 bodyParams = mutableMapOf(
                     "version" to version,
                     "notifyTemplateCode" to CLIENT_VERSION_WARNING_NOTIFY
@@ -144,26 +157,48 @@ class ClientVersionFilter constructor(
             )
         }
 
-        cache.get(CLIENT_VERSION_LIMIT)?.forEachIndexed { index, s ->
-            if (split.lastIndex < index) {
-                return false
-            }
-            val v = split[index].toIntOrNull()
-            when {
-                v == null -> return false
-                v < s -> return false
-                v == s -> return@forEachIndexed
-                v > s -> return true
-            }
-        }
-        return true
+        val versionLimit = getEffectiveVersionLimit(userProjectIds)
+        val clientVer = split.mapNotNull { it.toIntOrNull() }
+        return compareVersion(clientVer, versionLimit) >= 0
     }
 
-    /*
-     * 检查是否需要告警
-     * true： 告警
-     * false： 不告警
-     * */
+    /**
+     * 取全局基线与用户所属项目基线中的最高版本作为有效基线。
+     * 若用户无项目或项目无独立配置，则回退到全局基线。
+     */
+    private fun getEffectiveVersionLimit(
+        projectIds: Set<String>
+    ): List<Int> {
+        val globalLimit = cache.get(CLIENT_VERSION_LIMIT) ?: emptyList()
+        if (projectIds.isEmpty()) return globalLimit
+
+        var effectiveLimit = globalLimit
+        for (projectId in projectIds) {
+            val projectLimit = cache.get(
+                CLIENT_VERSION_LIMIT_PROJECT_PREFIX + projectId
+            ) ?: continue
+            if (projectLimit.isEmpty()) continue
+            if (compareVersion(projectLimit, effectiveLimit) > 0) {
+                effectiveLimit = projectLimit
+            }
+        }
+        return effectiveLimit
+    }
+
+    /**
+     * 按段比较两个版本号列表，长度不足的段视为 0。
+     * @return 正数 = a > b，0 = 相等，负数 = a < b
+     */
+    internal fun compareVersion(a: List<Int>, b: List<Int>): Int {
+        val maxLen = maxOf(a.size, b.size)
+        for (i in 0 until maxLen) {
+            val va = a.getOrElse(i) { 0 }
+            val vb = b.getOrElse(i) { 0 }
+            if (va != vb) return va.compareTo(vb)
+        }
+        return 0
+    }
+
     private fun checkClientVersionWarning(split: List<String>): Boolean {
         kotlin.run {
             cache.get(CLIENT_VERSION_WARNING)?.forEachIndexed { index, s ->
@@ -188,14 +223,22 @@ class ClientVersionFilter constructor(
         version: String,
         macAddress: String,
         startVersion: String,
-        os: String
+        os: String,
+        projectIds: Set<String>
     ) {
         if (!this::clientVersion.isInitialized) {
             clientVersion = clientVersionDao.fetchAll(dslContext)
-                .associateByTo(mutableMapOf(), { "${it.first}-${it.second}" }, { it.third })
+                .associateByTo(
+                    mutableMapOf(),
+                    { "${it.first}-${it.second}" },
+                    { it.third }
+                )
         }
         val recordVersion = clientVersion["$ip-$user"]
-        logger.info("recordClientVersion|$ip|$user|$version|$recordVersion|$macAddress|$startVersion|$os")
+        logger.info(
+            "recordClientVersion" +
+                "|$ip|$user|$version|$recordVersion|$macAddress|$startVersion|$os"
+        )
         if (macAddress.format().isNotBlank()) {
             clientDao.createOrUpdate(
                 dslContext = dslContext,
@@ -203,8 +246,8 @@ class ClientVersionFilter constructor(
                 currentUserId = user.format(),
                 version = version.format(),
                 startVersion = startVersion.format(),
-                currentProjectIds = workspaceJoinDao.fetchProjectFromUser(dslContext, user),
-                currentWorkspaceNames = mutableSetOf(), // 之前设计的按实例灰度，基本没用到，去掉这部分sql查询
+                currentProjectIds = projectIds,
+                currentWorkspaceNames = mutableSetOf(),
                 os = ClientOS.parse(os)
             )
         } else {
