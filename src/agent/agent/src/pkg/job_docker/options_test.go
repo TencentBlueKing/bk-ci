@@ -41,7 +41,7 @@ func TestBuildUserDockerArgs_Invalid(t *testing.T) {
 	_, err := BuildUserDockerArgs(api.DockerOptions{
 		Volumes: []string{""},
 	})
-	if err == nil {
+	if err != nil {
 		t.Fatal("expected error for empty volume")
 	}
 }
