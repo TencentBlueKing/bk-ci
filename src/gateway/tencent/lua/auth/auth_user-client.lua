@@ -189,7 +189,6 @@ if config.bkauth then
             local result = oauthUtil:introspect_token(bearer_token)
             if result then
                 ngx.header["x-devops-uid"] = result.username
-                ngx.header["x-devops-access-token"] = bearer_token
                 ngx.exit(200)
             end
         end
