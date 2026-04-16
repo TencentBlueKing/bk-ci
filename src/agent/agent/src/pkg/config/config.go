@@ -552,12 +552,12 @@ func initCert() {
 	fileInfo, err := os.Stat(AbsCertFilePath)
 	if err != nil {
 		// 证书不一定需要存在
-		logs.Warn("stat cert file error", err.Error())
+		logs.Infof("no cert file %s", err.Error())
 		return
 	}
 	if fileInfo.IsDir() {
 		// 证书不一定需要存在
-		logs.Warn("cert file is dir, skip")
+		logs.Info("cert file is dir, skip")
 		return
 	}
 	// Load client cert
