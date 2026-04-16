@@ -534,7 +534,8 @@ class PipelineVersionFacadeService @Autowired constructor(
                 resource = yamlResource,
                 editPermission = editPermission,
                 archiveFlag = archiveFlag,
-                isEncryptParamsValue = isEncryptParamsValue
+                isEncryptParamsValue = isEncryptParamsValue,
+                channelCode = pipelineInfo.channelCode
             )
             Triple(true, response, null)
         } catch (e: PipelineTransferException) {
@@ -579,7 +580,16 @@ class PipelineVersionFacadeService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
             params = arrayOf(version.toString())
         )
-        return transferService.buildPreview(userId, projectId, pipelineId, resource)
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+            projectId = projectId, pipelineId = pipelineId
+        )
+        return transferService.buildPreview(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            resource = resource,
+            channelCode = pipelineInfo?.channelCode ?: ChannelCode.BS
+        )
     }
 
     fun savePipelineDraft(

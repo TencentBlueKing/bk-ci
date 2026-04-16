@@ -98,7 +98,8 @@ class PipelineSettingDao {
                 PIPELINE_AS_CODE_SETTINGS,
                 FAIL_IF_VARIABLE_INVALID,
                 BUILD_CANCEL_POLICY,
-                ENV_HASH_ID
+                ENV_HASH_ID,
+                ENV_NAME
             ).values(
                 setting.projectId,
                 setting.pipelineName,
@@ -136,7 +137,8 @@ class PipelineSettingDao {
                 setting.pipelineAsCodeSettings?.let { JsonUtil.toJson(it, false) },
                 setting.failIfVariableInvalid,
                 setting.buildCancelPolicy.value,
-                setting.envHashId
+                setting.envHashId,
+                setting.envName
             ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
@@ -178,6 +180,9 @@ class PipelineSettingDao {
             }
             setting.envHashId?.let { self ->
                 insert.set(ENV_HASH_ID, self)
+            }
+            setting.envName?.let { self ->
+                insert.set(ENV_NAME, self)
             }
             return insert.execute()
         }
@@ -475,7 +480,8 @@ class PipelineSettingDao {
                     },
                     buildCancelPolicy = BuildCancelPolicy.parse(t.buildCancelPolicy),
                     version = t.version ?: 1,
-                    envHashId = t.envHashId
+                    envHashId = t.envHashId,
+                    envName = t.envName
                 )
             }
         }

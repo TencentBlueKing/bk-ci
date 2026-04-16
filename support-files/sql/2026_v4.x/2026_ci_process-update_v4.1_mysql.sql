@@ -58,6 +58,24 @@ BEGIN
     END IF;
 
     IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING'
+                    AND COLUMN_NAME = 'ENV_NAME') THEN
+    ALTER TABLE T_PIPELINE_SETTING
+        ADD COLUMN `ENV_NAME` varchar(256) COMMENT '环境名称';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING_VERSION'
+                    AND COLUMN_NAME = 'ENV_NAME') THEN
+        ALTER TABLE T_PIPELINE_SETTING_VERSION
+            ADD COLUMN `ENV_NAME` varchar(256) COMMENT '环境名称';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
               FROM information_schema.COLUMNS
               WHERE TABLE_SCHEMA = db
                 AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
