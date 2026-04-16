@@ -159,6 +159,7 @@ class ClientVersionFilter constructor(
 
         val versionLimit = getEffectiveVersionLimit(userProjectIds)
         val clientVer = split.mapNotNull { it.toIntOrNull() }
+        logger.debug("verify{},{}", versionLimit,clientVer)
         return compareVersion(clientVer, versionLimit) >= 0
     }
 
@@ -182,6 +183,7 @@ class ClientVersionFilter constructor(
                 effectiveLimit = projectLimit
             }
         }
+        logger.debug("getEffectiveVersionLimit {}", effectiveLimit)
         return effectiveLimit
     }
 
