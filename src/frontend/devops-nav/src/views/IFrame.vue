@@ -167,7 +167,7 @@
                 + hash
             }
         } else {
-            const reg = /^\/?([\w-]+)\/(\S*)\/?$/
+            const reg = /^\/?[\w-]+\/(\S*)\/?$/
             const initPath = path.match(reg) ? path.replace(reg, '$1') : ''
 
             const query = Object.assign(
