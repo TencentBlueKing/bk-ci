@@ -1,26 +1,26 @@
-import eventBus from "./eventBus";
-export function firstUpperCase(str: string): string {
-  try {
-    return str[0].toUpperCase() + str.slice(1);
-  } catch (e) {
-    console.warn(e);
-    return str;
-  }
+import eventBus from "./eventBus"
+export function firstUpperCase (str: string): string {
+    try {
+        return str[0].toUpperCase() + str.slice(1)
+    } catch (e) {
+        console.warn(e)
+        return str
+    }
 }
 
-export function camelCase(str: string, separator: string = "_"): string {
-  try {
-    const [firstWord, ...restWord] = str.split(separator);
-    const camelString = restWord.reduce((camelString, word) => {
-      camelString += firstUpperCase(word);
-      return camelString;
-    }, "");
+export function camelCase (str: string, separator: string = "_"): string {
+    try {
+        const [firstWord, ...restWord] = str.split(separator)
+        const camelString = restWord.reduce((camelString, word) => {
+            camelString += firstUpperCase(word)
+            return camelString
+        }, "")
 
-    return firstWord + camelString;
-  } catch (e) {
-    console.warn(e);
-    return str;
-  }
+        return firstWord + camelString
+    } catch (e) {
+        console.warn(e)
+        return str
+    }
 }
 
 /**
@@ -31,144 +31,144 @@ export function camelCase(str: string, separator: string = "_"): string {
  *
  * @return {Object} 结果
  */
-export function transformObj(obj: ObjectMap): ObjectMap {
-  if (!isObject(obj)) {
-    console.warn("transformObj need obj params", obj);
-    return obj;
-  }
-  return Object.keys(obj).reduce((user: any, key: string) => {
-    user[camelCase(key)] = obj[key];
-    return user;
-  }, {});
+export function transformObj (obj: ObjectMap): ObjectMap {
+    if (!isObject(obj)) {
+        console.warn("transformObj need obj params", obj)
+        return obj
+    }
+    return Object.keys(obj).reduce((user: any, key: string) => {
+        user[camelCase(key)] = obj[key]
+        return user
+    }, {})
 }
 
-export function getServiceLogoByPath(link: string): string {
-  return link.replace(/\/?(devops\/)?([\w-]+)\S*$/, "$2");
+export function getServiceLogoByPath (link: string): string {
+    return link.replace(/\/?(devops\/)?([\w-]+)\S*$/, "$2")
 }
 
-export function urlJoin(...args): string {
-  return args
-    .filter((arg) => arg)
-    .join("/")
-    .replace(/([^:]\/)\/+/g, "$1");
+export function urlJoin (...args): string {
+    return args
+        .filter((arg) => arg)
+        .join("/")
+        .replace(/([^:]\/)\/+/g, "$1")
 }
 
-export function queryStringify(query: ObjectMap): string {
-  return Object.keys(query)
-    .map((key: string) => (query[key] ? `${key}=${query[key]}` : key))
-    .join("&");
+export function queryStringify (query: ObjectMap): string {
+    return Object.keys(query)
+        .map((key: string) => (query[key] ? `${key}=${query[key]}` : key))
+        .join("&")
 }
 
 /**
  * 根据访问路径更新最近访问服务列表
  * @param path  当前访问路径
  */
-export function updateRecentVisitServiceList(path: string): void {
-  try {
-    const recentVisitService: string | null =
-      localStorage.getItem("recentVisitService");
-    const recentVisitServiceList = recentVisitService
-      ? JSON.parse(recentVisitService)
-      : [];
-    const serviceReg: RegExp = /^\/(console\/)?([\w-]+)\/?/;
-    const serviceMatch: object | null = path.match(serviceReg);
-    const serviceKey: string = serviceMatch ? serviceMatch[2] : "";
+export function updateRecentVisitServiceList (path: string): void {
+    try {
+        const recentVisitService: string | null
+      = localStorage.getItem("recentVisitService")
+        const recentVisitServiceList = recentVisitService
+            ? JSON.parse(recentVisitService)
+            : []
+        const serviceReg: RegExp = /^\/(console\/)?([\w-]+)\/?/
+        const serviceMatch: object | null = path.match(serviceReg)
+        const serviceKey: string = serviceMatch ? serviceMatch[2] : ""
 
-    if (serviceKey) {
-      const visitedService = recentVisitServiceList.find(
-        (service) => service.key === serviceKey,
-      );
-      const service = window.serviceObject.serviceMap[serviceKey];
+        if (serviceKey) {
+            const visitedService = recentVisitServiceList.find(
+                (service) => service.key === serviceKey,
+            )
+            const service = window.serviceObject.serviceMap[serviceKey]
 
-      if (visitedService) {
-        Object.assign(visitedService, {
-          visitTimestamp: +new Date(),
-        });
+            if (visitedService) {
+                Object.assign(visitedService, {
+                    visitTimestamp: +new Date(),
+                })
 
-        // 按照访问时间排序
-        recentVisitServiceList.sort(
-          (s1, s2) => s2.visitTimestamp - s1.visitTimestamp,
-        );
-      } else if (
-        service &&
-        service.status !== "planning" &&
-        service.status !== "developing"
-      ) {
-        recentVisitServiceList.unshift({
-          key: serviceKey,
-          visitTimestamp: +new Date(),
-        });
-      }
-      if (recentVisitServiceList.length > 4) {
-        // 最多保存4个最近访问服务列表
-        recentVisitServiceList.pop();
-      }
-      // 更新LocalStorage
-      localStorage.setItem(
-        "recentVisitService",
-        JSON.stringify(recentVisitServiceList),
-      );
+                // 按照访问时间排序
+                recentVisitServiceList.sort(
+                    (s1, s2) => s2.visitTimestamp - s1.visitTimestamp,
+                )
+            } else if (
+                service
+        && service.status !== "planning"
+        && service.status !== "developing"
+            ) {
+                recentVisitServiceList.unshift({
+                    key: serviceKey,
+                    visitTimestamp: +new Date(),
+                })
+            }
+            if (recentVisitServiceList.length > 4) {
+                // 最多保存4个最近访问服务列表
+                recentVisitServiceList.pop()
+            }
+            // 更新LocalStorage
+            localStorage.setItem(
+                "recentVisitService",
+                JSON.stringify(recentVisitServiceList),
+            )
+        }
+    } catch (e) {
+        console.warn(e)
     }
-  } catch (e) {
-    console.warn(e);
-  }
 }
 
-export function isObject(param) {
-  const type = typeof param;
-  return param !== null && type === "object" && !Array.isArray(param);
+export function isObject (param) {
+    const type = typeof param
+    return param !== null && type === "object" && !Array.isArray(param)
 }
 
-export function isShallowEqual(obj1: object, obj2: object): boolean {
-  if (!isObject(obj1) || !isObject(obj2)) {
-    return false;
-  }
-  const obj1Keys = Object.keys(obj1);
-  const obj2Keys = Object.keys(obj2);
-  if (obj1Keys.length !== obj2Keys.length) {
-    return false;
-  }
+export function isShallowEqual (obj1: object, obj2: object): boolean {
+    if (!isObject(obj1) || !isObject(obj2)) {
+        return false
+    }
+    const obj1Keys = Object.keys(obj1)
+    const obj2Keys = Object.keys(obj2)
+    if (obj1Keys.length !== obj2Keys.length) {
+        return false
+    }
 
-  return obj1Keys.every((key: string) => obj1[key] === obj2[key]);
+    return obj1Keys.every((key: string) => obj1[key] === obj2[key])
 }
 
-export function judgementLsVersion() {
-  const curLsVersion = window.localStorage.getItem("lsVersion");
-  if (!curLsVersion || curLsVersion !== DEVOPS_LS_VERSION) {
-    window.localStorage.clear();
-    localStorage.setItem("lsVersion", DEVOPS_LS_VERSION);
-  }
+export function judgementLsVersion () {
+    const curLsVersion = window.localStorage.getItem("lsVersion")
+    if (!curLsVersion || curLsVersion !== DEVOPS_LS_VERSION) {
+        window.localStorage.clear()
+        localStorage.setItem("lsVersion", DEVOPS_LS_VERSION)
+    }
 }
 
 // 动态加载js
-export function importScript(src, oHead) {
-  return new Promise((resolve) => {
-    const oScript = document.createElement("script");
-    oScript.type = "text\/javascript";
-    oScript.setAttribute("src", window.PUBLIC_URL_PREFIX + src);
-    oHead.appendChild(oScript);
+export function importScript (src, oHead) {
+    return new Promise((resolve) => {
+        const oScript = document.createElement("script")
+        oScript.type = "text\/javascript"
+        oScript.setAttribute("src", window.PUBLIC_URL_PREFIX + src)
+        oHead.appendChild(oScript)
 
-    oScript.onload = resolve;
-  });
+        oScript.onload = resolve
+    })
 }
 
 // 动态加载css
-export function importStyle(href, oHead) {
-  return new Promise((resolve) => {
-    const oStyle = document.createElement("link");
-    oStyle.setAttribute("rel", "stylesheet");
-    oStyle.setAttribute("type", "text/css");
-    oStyle.setAttribute("href", window.PUBLIC_URL_PREFIX + href);
-    oHead.appendChild(oStyle);
+export function importStyle (href, oHead) {
+    return new Promise((resolve) => {
+        const oStyle = document.createElement("link")
+        oStyle.setAttribute("rel", "stylesheet")
+        oStyle.setAttribute("type", "text/css")
+        oStyle.setAttribute("href", window.PUBLIC_URL_PREFIX + href)
+        oHead.appendChild(oStyle)
 
-    oStyle.onload = resolve;
-  });
+        oStyle.onload = resolve
+    })
 }
 
-export function getServiceAliasByPath(path: string): string {
-  const serviceAliasREG = /^\/(console\/)?([^\/]+)\/?/;
-  const execRes = serviceAliasREG.exec(path) || [];
-  return execRes[2] || path;
+export function getServiceAliasByPath (path: string): string {
+    const serviceAliasREG = /^\/(console\/)?([^\/]+)\/?/
+    const execRes = serviceAliasREG.exec(path) || []
+    return execRes[2] || path
 }
 
 // const componentMap = {
@@ -195,135 +195,135 @@ export function getServiceAliasByPath(path: string): string {
 //     }
 // }
 
-export function createDialog(options) {
-  console.log(options);
-  // const fn = createComponent('dialog')
-  // fn({
-  //     propsData: {
-  //         quickClose: false
-  //     },
-  //     data: {
+export function createDialog (options) {
+    console.log(options)
+    // const fn = createComponent('dialog')
+    // fn({
+    //     propsData: {
+    //         quickClose: false
+    //     },
+    //     data: {
 
-  //     },
-  //     methods: {
+    //     },
+    //     methods: {
 
-  //     }
-  // })
+    //     }
+    // })
 }
-export function toggleAsidePanel(options) {
-  if (!isObject(options)) {
-    console.warn("需要传入一个对象");
-    return;
-  }
-  eventBus.$emit("update-extension-aside-panel", options);
+export function toggleAsidePanel (options) {
+    if (!isObject(options)) {
+        console.warn("需要传入一个对象")
+        return
+    }
+    eventBus.$emit("update-extension-aside-panel", options)
 }
 
-export function toggleDialog(options) {
-  if (!isObject(options)) {
-    console.warn("需要传入一个对象");
-    return;
-  }
-  eventBus.$emit("update-extension-dialog", options);
+export function toggleDialog (options) {
+    if (!isObject(options)) {
+        console.warn("需要传入一个对象")
+        return
+    }
+    eventBus.$emit("update-extension-dialog", options)
 }
-export function goToPage(options) {
-  if (!isObject(options)) {
-    console.warn("需要传入一个对象");
-    return;
-  }
-  eventBus.$emit("change-extension-route", options);
+export function goToPage (options) {
+    if (!isObject(options)) {
+        console.warn("需要传入一个对象")
+        return
+    }
+    eventBus.$emit("change-extension-route", options)
 }
-export function isAbsoluteUrl(url) {
-  return /^(http(s)?:)?\/\//.test(url);
+export function isAbsoluteUrl (url) {
+    return /^(http(s)?:)?\/\//.test(url)
 }
 
 export class HttpError extends Error {
   code = 500;
-  constructor(code, message = "http request error message") {
-    super(message);
-    this.code = code;
+  constructor (code, message = "http request error message") {
+      super(message)
+      this.code = code
   }
 }
 
 // 判断是否显示公告
-export function ifShowNotice(currentNotice) {
-  const announcementHistory = localStorage.getItem("announcementHistory")
-    ? JSON.parse(localStorage.getItem("announcementHistory"))
-    : [];
-  // 判断当前公告是否生效中，并且未展示过
-  if (
-    currentNotice &&
-    currentNotice.id &&
-    currentNotice.noticeType === 0 &&
-    announcementHistory.indexOf(currentNotice.id) === -1
-  ) {
-    // 判断当前公共是否只在特定服务展示
-    const noticeService = currentNotice.noticeService || [];
+export function ifShowNotice (currentNotice) {
+    const announcementHistory = localStorage.getItem("announcementHistory")
+        ? JSON.parse(localStorage.getItem("announcementHistory"))
+        : []
+    // 判断当前公告是否生效中，并且未展示过
     if (
-      !(
-        noticeService.length > 0 &&
-        noticeService.indexOf(
-          window.currentPage && window.currentPage.link_new,
-        ) === -1
-      )
+        currentNotice
+    && currentNotice.id
+    && currentNotice.noticeType === 0
+    && announcementHistory.indexOf(currentNotice.id) === -1
     ) {
-      announcementHistory.push(currentNotice.id);
-      localStorage.setItem(
-        "announcementHistory",
-        JSON.stringify(announcementHistory),
-      );
-      return true;
+    // 判断当前公共是否只在特定服务展示
+        const noticeService = currentNotice.noticeService || []
+        if (
+            !(
+                noticeService.length > 0
+        && noticeService.indexOf(
+            window.currentPage && window.currentPage.link_new,
+        ) === -1
+            )
+        ) {
+            announcementHistory.push(currentNotice.id)
+            localStorage.setItem(
+                "announcementHistory",
+                JSON.stringify(announcementHistory),
+            )
+            return true
+        }
     }
-  }
-  return false;
+    return false
 }
 
-export function showLoginPopup() {
-  const successUrl = `${window.location.origin}/console/static/login_callback.html`;
+export function showLoginPopup () {
+    const successUrl = `${window.location.origin}/console/static/login_callback.html`
 
-  // 系统的登录页地址
-  const siteLoginUrl = window.getLoginUrl();
-  if (!siteLoginUrl) {
-    console.error("Login URL not configured!");
-    return;
-  }
+    // 系统的登录页地址
+    const siteLoginUrl = window.getLoginUrl()
+    if (!siteLoginUrl) {
+        console.error("Login URL not configured!")
+        return
+    }
 
-  // 处理登录地址为登录小窗需要的格式，主要是设置c_url参数
-  const loginURL = new URL(siteLoginUrl);
-  loginURL.searchParams.set("c_url", successUrl);
-  const pathname = loginURL.pathname.endsWith("/")
-    ? loginURL.pathname
-    : `${loginURL.pathname}/`;
-  const loginUrl = `${loginURL.origin}${pathname}plain/${loginURL.search}`;
+    // 处理登录地址为登录小窗需要的格式，主要是设置c_url参数
+    const loginURL = new URL(siteLoginUrl)
+    loginURL.searchParams.set("c_url", successUrl)
+    const pathname = loginURL.pathname.endsWith("/")
+        ? loginURL.pathname
+        : `${loginURL.pathname}/`
+    const loginUrl = `${loginURL.origin}${pathname}plain/${loginURL.search}`
 
-  // 传入最终的登录地址，弹出登录窗口，更多选项参考 Options
-  const modal = document.getElementById("devops-login-modal-overlay");
-  if (modal.style.display !== "flex") {
-    modal.style.display = "flex";
+    // 传入最终的登录地址，弹出登录窗口，更多选项参考 Options
+    const modal = document.getElementById("devops-login-modal-overlay")
+    if (modal.style.display !== "flex") {
+        modal.style.display = "flex"
 
-    // 动态创建iframe
-    const iframe = document.createElement("iframe");
-    iframe.setAttribute("id", "devops-login-iframe");
-    iframe.setAttribute("src", loginUrl);
-    iframe.style.width = "100%";
-    iframe.style.height = "100%";
-    iframe.style.border = "none";
-    document.getElementById("devops-login-modal").appendChild(iframe);
+        // 动态创建iframe
+        const iframe = document.createElement("iframe")
+        iframe.setAttribute("id", "devops-login-iframe")
+        iframe.setAttribute("src", loginUrl)
+        iframe.style.width = "100%"
+        iframe.style.height = "100%"
+        iframe.style.border = "none"
+        document.getElementById("devops-login-modal").appendChild(iframe)
 
-    const abortController = new AbortController();
-    const option = {
-      signal: abortController.signal,
-    } as AddEventListenerOptions;
-    // 监听子页面的消息
-    window.addEventListener(
-      "message",
-      (event: any) => {
-        if (event.data === "loginSuccess") {
-          modal.style.display = "none";
-          iframe.remove(); // 移除iframe
-          abortController.abort();
-        }
-      },
-      option,
-    );
-  }
+        const abortController = new AbortController()
+        const option = {
+            signal: abortController.signal,
+        } as AddEventListenerOptions
+        // 监听子页面的消息
+        window.addEventListener(
+            "message",
+            (event: any) => {
+                if (event.data === "loginSuccess") {
+                    modal.style.display = "none"
+                    iframe.remove() // 移除iframe
+                    abortController.abort()
+                }
+            },
+            option,
+        )
+    }
 }
