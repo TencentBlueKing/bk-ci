@@ -177,7 +177,7 @@ class TriggerEventService @Autowired constructor(
                     }
                     // 如果存在则升级，否则创建
                     val upgradeAtom = atomService.exists(component.storeCode).data ?: false
-                    if (upgradeAtom) {
+                    val result = if (upgradeAtom) {
                         atomService.upgradeAtom(
                             userId = userId,
                             atomRequest = AtomUpgradeRequest(
@@ -225,6 +225,7 @@ class TriggerEventService @Autowired constructor(
                             )
                         )
                     }
+                    logger.info("transfer atom[${component.storeCode}|${component.version}] result: $result")
                 } catch (ignored: Exception) {
                     logger.warn("fail to transfer atom[${component.storeCode}|${component.version}]", ignored)
                 }
