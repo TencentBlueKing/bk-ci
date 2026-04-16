@@ -93,7 +93,7 @@ data class DispatchEnvStrategyVO(
     @get:Schema(title = "Agent范围")
     val scope: StrategyScope,
     @get:Schema(title = "节点规则")
-    val nodeRule: NodeRule,
+    val nodeRule: NodeRule?,
     @get:Schema(title = "标签选择器")
     val labelSelector: List<LabelSelectorVO>?,
     @get:Schema(title = "是否启用")
