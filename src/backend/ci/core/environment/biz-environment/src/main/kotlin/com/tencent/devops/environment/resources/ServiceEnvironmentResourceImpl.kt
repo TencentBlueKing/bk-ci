@@ -45,6 +45,8 @@ import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
+import com.tencent.devops.environment.pojo.enums.EnvType
+import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.service.EnvService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -68,8 +70,24 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
     }
 
     @BkTimed(extraTags = ["operate", "getEnv"])
-    override fun list(userId: String, projectId: String): Result<List<EnvWithPermission>> {
-        return Result(envService.listEnvironment(userId, projectId))
+    override fun list(
+        userId: String,
+        projectId: String,
+        envName: String?,
+        envType: EnvType?,
+        nodeHashId: String?,
+        createMode: Boolean?
+    ): Result<List<EnvWithPermission>> {
+        return Result(
+            envService.listEnvironment(
+                userId = userId,
+                projectId = projectId,
+                envName = envName,
+                envType = envType,
+                nodeHashId = nodeHashId,
+                createMode = createMode
+            )
+        )
     }
 
     @BkTimed(extraTags = ["operate", "createEnvironment"])
@@ -179,6 +197,37 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
             createdUser = null,
             nodeStatus = null
         ))
+    }
+
+    @BkTimed(extraTags = ["operate", "getNode"])
+    override fun listNodesNew(
+        userId: String,
+        projectId: String,
+        nodeIp: String?,
+        displayName: String?,
+        createdUser: String?,
+        nodeStatus: NodeStatus?,
+        page: Int?,
+        pageSize: Int?,
+        envHashId: String
+    ): Result<Page<NodeBaseInfo>> {
+        if (envHashId.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
+        }
+        return Result(
+            envService.listAllEnvNodesNew(
+                userId = userId,
+                projectId = projectId,
+                page = page,
+                pageSize = pageSize,
+                envHashIds = listOf(envHashId),
+                envName = null,
+                nodeIp = nodeIp,
+                displayName = displayName,
+                createdUser = createdUser,
+                nodeStatus = nodeStatus
+            )
+        )
     }
 
     @BkTimed(extraTags = ["operate", "getEnv"])

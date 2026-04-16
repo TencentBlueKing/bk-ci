@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -25,16 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:misc:model-plugin"))
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-event"))
-    api(project(":core:misc:api-gpt"))
-    api(project(":core:process:api-process"))
-    api(project(":core:common:common-pipeline"))
-    implementation("dev.langchain4j:langchain4j:0.33.0")
-    implementation("dev.langchain4j:langchain4j-open-ai:0.33.0")
-}
+package com.tencent.devops.common.event.pojo.pipeline
+
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.stream.constants.StreamBinding
+
+/**
+ * AI摘要生成事件
+ * 在流水线版本发布后，由process模块发送，misc/biz-gpt模块消费
+ */
+@Event(StreamBinding.PIPELINE_AI_SUMMARY)
+data class PipelineAiSummaryEvent(
+    override val source: String,
+    override val projectId: String,
+    override val pipelineId: String,
+    override val userId: String,
+    override var actionType: ActionType = ActionType.REFRESH,
+    override var delayMills: Int = 0,
+    /** 流水线编排JSON */
+    val modelJson: String,
+    /** 流水线版本号，用于写入时校验 */
+    val pipelineResourceVersion: Int
+) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

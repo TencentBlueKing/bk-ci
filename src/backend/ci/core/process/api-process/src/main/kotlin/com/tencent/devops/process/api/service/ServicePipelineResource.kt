@@ -672,4 +672,26 @@ interface ServicePipelineResource {
         @QueryParam("enable")
         enable: Boolean
     ): Result<Boolean>
+
+    @Operation(summary = "更新流水线AI自动摘要")
+    @PUT
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/autoSummary")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
+    fun updateAutoSummary(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "AI自动摘要内容", required = true)
+        @QueryParam("autoSummary")
+        autoSummary: String,
+        @Parameter(description = "流水线版本号（用于校验）", required = true)
+        @QueryParam("version")
+        version: Int
+    ): Result<Boolean>
 }
