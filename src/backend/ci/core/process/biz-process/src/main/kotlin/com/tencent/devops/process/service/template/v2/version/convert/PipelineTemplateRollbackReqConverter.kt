@@ -121,7 +121,7 @@ class PipelineTemplateRollbackReqConverter @Autowired constructor(
             pipelineTemplateInfo = pipelineTemplateInfo,
             pTemplateResourceWithoutVersion = pTemplateResourceWithoutVersion,
             pTemplateSettingWithoutVersion = baseSetting,
-            baseDraftVersion = baseResource.draftVersion
+            baseDraftVersion = draftVersion
         )
     }
 

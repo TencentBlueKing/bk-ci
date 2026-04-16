@@ -2,6 +2,7 @@ package com.tencent.devops.process.pojo.template.v2
 
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import io.swagger.v3.oas.annotations.media.Schema
@@ -33,7 +34,7 @@ data class PipelineTemplateResourceDraftVersion(
     @get:Schema(title = "来源的草稿版本", required = false)
     val baseDraftVersion: Int?,
     @get:Schema(title = "模板参数", required = false)
-    val params: String?,
+    val params: List<BuildFormProperty>? = emptyList(),
     @get:Schema(title = "模板模型", required = false)
     val model: Model,
     @get:Schema(title = "YAML编排内容", required = false)

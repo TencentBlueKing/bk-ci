@@ -1,8 +1,10 @@
 package com.tencent.devops.process.dao
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.model.process.Tables.T_PIPELINE_TEMPLATE_RESOURCE_DRAFT_VERSION
 import com.tencent.devops.model.process.tables.records.TPipelineTemplateResourceDraftVersionRecord
 import com.tencent.devops.process.pojo.template.PipelineTemplateDraftVersionSimple
@@ -199,7 +201,7 @@ class PipelineTemplateResourceDraftVersionDao {
                     baseVersion = r.baseVersion,
                     baseVersionName = r.baseVersionName,
                     baseDraftVersion = r.baseDraftVersion,
-                    params = r.params,
+                    params = r.params?.let { JsonUtil.to(it, object : TypeReference<List<BuildFormProperty>>() {}) },
                     model = JsonUtil.to(r.model, Model::class.java),
                     yaml = r.yaml,
                     creator = r.creator,

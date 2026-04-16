@@ -69,7 +69,7 @@ import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDraftActionType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDraftStatus
 import com.tencent.devops.process.pojo.pipeline.version.PipelineDraftSaveReq
-import com.tencent.devops.process.pojo.pipeline.version.PipelineRollbackDraftReq
+import com.tencent.devops.process.pojo.pipeline.version.PipelineRollbackReq
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
@@ -817,7 +817,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             version = version,
-            request = PipelineRollbackDraftReq(draftVersion = draftVersion)
+            request = PipelineRollbackReq(draftVersion = draftVersion)
         )
         val resource = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,

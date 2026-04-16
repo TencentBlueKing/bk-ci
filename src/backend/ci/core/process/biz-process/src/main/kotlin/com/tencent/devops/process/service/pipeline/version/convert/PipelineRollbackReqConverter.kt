@@ -7,7 +7,7 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.pojo.pipeline.version.PipelineRollbackDraftReq
+import com.tencent.devops.process.pojo.pipeline.version.PipelineRollbackReq
 import com.tencent.devops.process.pojo.pipeline.version.PipelineVersionCreateReq
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
@@ -18,14 +18,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class PipelineRollbackDraftReqConverter @Autowired constructor(
+class PipelineRollbackReqConverter @Autowired constructor(
     private val pipelineInfoService: PipelineInfoService,
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val pipelineVersionCreateContextFactory: PipelineVersionCreateContextFactory,
     private val pipelineRepositoryService: PipelineRepositoryService
 ) : PipelineVersionCreateReqConverter {
     override fun support(request: PipelineVersionCreateReq): Boolean {
-        return request is PipelineRollbackDraftReq
+        return request is PipelineRollbackReq
     }
 
     override fun convert(
@@ -35,7 +35,7 @@ class PipelineRollbackDraftReqConverter @Autowired constructor(
         version: Int?,
         request: PipelineVersionCreateReq
     ): PipelineVersionCreateContext {
-        request as PipelineRollbackDraftReq
+        request as PipelineRollbackReq
         if (pipelineId == null) {
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_NULL,
@@ -121,6 +121,6 @@ class PipelineRollbackDraftReqConverter @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineRollbackDraftReqConverter::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineRollbackReqConverter::class.java)
     }
 }
