@@ -48,7 +48,6 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
-import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
 import com.tencent.devops.process.pojo.pipeline.version.PipelineTemplateInstanceReq
@@ -56,6 +55,7 @@ import com.tencent.devops.process.pojo.template.TemplateInstanceParams
 import com.tencent.devops.process.pojo.template.TemplateInstanceStatus
 import com.tencent.devops.process.pojo.template.TemplateOperationMessage
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
+import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceBase
@@ -74,7 +74,6 @@ import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineVersionFacadeService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.pipeline.PipelineModelParser
-import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.pipeline.PipelineYamlVersionResolver
@@ -122,7 +121,6 @@ class PipelineTemplateInstanceService @Autowired constructor(
     private val pipelineSettingVersionService: PipelineSettingVersionService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
     private val stageTagService: StageTagService,
-    private val pipelineSettingFacadeService: PipelineSettingFacadeService
 ) {
     /*同步创建模板实例*/
     fun createTemplateInstances(
@@ -1276,7 +1274,6 @@ class PipelineTemplateInstanceService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineInfo = pipelineInfo,
-            pipelineVersion = pipelineVersion,
             templateResource = templateResource,
             useTemplateSettings = useTemplateSettings,
             overrideTemplateField = newOverrideTemplateField
@@ -1339,7 +1336,6 @@ class PipelineTemplateInstanceService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineInfo: PipelineInfo,
-        pipelineVersion: Int,
         templateResource: PipelineTemplateResource,
         useTemplateSettings: Boolean,
         overrideTemplateField: TemplateInstanceField
@@ -1356,19 +1352,23 @@ class PipelineTemplateInstanceService @Autowired constructor(
                 pipelineName = pipelineInfo.pipelineName
             )
         } else {
-            pipelineSettingFacadeService.userGetSetting(
+            pipelineRepositoryService.getSettingWithLabels(
                 userId = userId,
                 projectId = projectId,
-                pipelineId = pipelineId,
-                version = pipelineVersion
-            ).let {
+                pipelineId = pipelineId
+            )?.let {
                 TemplateInstanceUtil.instanceSetting(
                     setting = it,
                     templateSetting = templateSetting,
                     overrideTemplateField = overrideTemplateField
                 )
-            }.copy(
+            }?.copy(
                 pipelineName = pipelineInfo.pipelineName
+            ) ?: pipelineRepositoryService.createDefaultSetting(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pipelineName = pipelineInfo.pipelineName,
+                channelCode = ChannelCode.BS
             )
         }
         return instanceSetting
