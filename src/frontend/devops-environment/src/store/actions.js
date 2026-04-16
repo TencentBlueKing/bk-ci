@@ -20,6 +20,7 @@
 import Vue from 'vue'
 
 const prefix = 'environment/api'
+const strategyPrefix = 'environment/api/user/environment/strategy' // 调度策略接口前缀
 const dispatchPrefix = 'dispatch/api'
 const processPrefix = 'process/api'
 const vue = new Vue()
@@ -470,54 +471,60 @@ const actions = {
 
     /**
      * 获取调度策略列表
+     * GET /api/user/environment/strategy/projects/{projectId}/envs/{envId}/strategies
      */
     requestSchedulingStrategyList ({ commit }, { projectId, envHashId }) {
-        return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/schedulingStrategies`).then(response => {
+        return vue.$ajax.get(`${strategyPrefix}/projects/${projectId}/envs/${envHashId}/strategies`).then(response => {
             return response
         })
     },
 
     /**
      * 创建调度策略
+     * POST /api/user/environment/strategy/projects/{projectId}/envs/{envId}/strategies
      */
     createSchedulingStrategy ({ commit }, { projectId, envHashId, params }) {
-        return vue.$ajax.post(`${prefix}/user/environment/${projectId}/${envHashId}/schedulingStrategies`, params).then(response => {
+        return vue.$ajax.post(`${strategyPrefix}/projects/${projectId}/envs/${envHashId}/strategies`, params).then(response => {
             return response
         })
     },
 
     /**
      * 更新调度策略
+     * PUT /api/user/environment/strategy/projects/{projectId}/envs/{envId}/strategies/{strategyId}
      */
     updateSchedulingStrategy ({ commit }, { projectId, envHashId, strategyId, params }) {
-        return vue.$ajax.put(`${prefix}/user/environment/${projectId}/${envHashId}/schedulingStrategies/${strategyId}`, params).then(response => {
+        return vue.$ajax.put(`${strategyPrefix}/projects/${projectId}/envs/${envHashId}/strategies/${strategyId}`, params).then(response => {
             return response
         })
     },
 
     /**
      * 删除调度策略
+     * DELETE /api/user/environment/strategy/projects/{projectId}/envs/{envId}/strategies/{strategyId}
      */
     deleteSchedulingStrategy ({ commit }, { projectId, envHashId, strategyId }) {
-        return vue.$ajax.delete(`${prefix}/user/environment/${projectId}/${envHashId}/schedulingStrategies/${strategyId}`).then(response => {
+        return vue.$ajax.delete(`${strategyPrefix}/projects/${projectId}/envs/${envHashId}/strategies/${strategyId}`).then(response => {
             return response
         })
     },
 
     /**
-     * 切换调度策略启用状态
+     * 切换调度策略启用状态（通过更新接口实现）
+     * PUT /api/user/environment/strategy/projects/{projectId}/envs/{envId}/strategies/{strategyId}
      */
-    toggleSchedulingStrategy ({ commit }, { projectId, envHashId, strategyId, enabled }) {
-        return vue.$ajax.put(`${prefix}/user/environment/${projectId}/${envHashId}/schedulingStrategies/${strategyId}/toggle?enabled=${enabled}`).then(response => {
+    toggleSchedulingStrategy ({ commit }, { projectId, envHashId, strategyId, params }) {
+        return vue.$ajax.put(`${strategyPrefix}/projects/${projectId}/envs/${envHashId}/strategies/${strategyId}`, params).then(response => {
             return response
         })
     },
 
     /**
      * 更新调度策略排序
+     * POST /api/user/environment/strategy/projects/{projectId}/envs/{envId}/strategies/reorder
      */
     updateSchedulingStrategyOrder ({ commit }, { projectId, envHashId, params }) {
-        return vue.$ajax.put(`${prefix}/user/environment/${projectId}/${envHashId}/schedulingStrategies/order`, params).then(response => {
+        return vue.$ajax.post(`${strategyPrefix}/projects/${projectId}/envs/${envHashId}/strategies/reorder`, params).then(response => {
             return response
         })
     }
