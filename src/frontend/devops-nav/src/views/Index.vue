@@ -91,10 +91,10 @@
 
 <script lang="ts">
     import Vue from 'vue'
-    import Header from '../components/Header/index.vue'
-    import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
     import { Component, Watch } from 'vue-property-decorator'
-    import { State, Getter } from 'vuex-class'
+    import { Getter, State } from 'vuex-class'
+    import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
+    import Header from '../components/Header/index.vue'
     import eventBus from '../utils/eventBus'
 
   @Component({
