@@ -157,7 +157,8 @@ interface ProjectService {
         enabled: Boolean? = null,
         unApproved: Boolean,
         sortType: ProjectSortType? = null,
-        collation: ProjectCollation? = null
+        collation: ProjectCollation? = null,
+        hidden: Boolean? = null
     ): List<ProjectVO>
 
     fun listProjectsForApply(
@@ -296,4 +297,8 @@ interface ProjectService {
     ): Boolean
 
     fun getPipelineDialect(projectId: String): String
+
+    fun isHidden(englishName: String): Boolean
+
+    fun updateHiddenStatus(englishName: String, hidden: Boolean)
 }

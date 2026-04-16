@@ -12,7 +12,6 @@ import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.audit.ActionAuditContent
@@ -664,7 +663,8 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 val installedVersion = latestInstalledVersions.firstOrNull { it.templateCode == template.id }
                 val parentVersion = latestParentVersions.firstOrNull { it.templateCode == template.srcTemplateId }
                 logger.debug("{} installedVersion({})|parentVersion({})", template.id, installedVersion, parentVersion)
-                installedVersion != null && parentVersion != null && installedVersion.number < parentVersion.number
+                installedVersion != null && parentVersion != null
+                        && installedVersion.srcMarketTemplateNumber < parentVersion.number
             } else {
                 false
             }
@@ -675,7 +675,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 val marketVersion = latestMarketVersions.firstOrNull { it.templateCode == template.id }
                 logger.debug("{} releasedVersion({})|marketVersion({})", template.id, releasedVersion, marketVersion)
                 releasedVersion != null && marketVersion != null &&
-                    releasedVersion.number.toLong() > marketVersion.number
+                        releasedVersion.number.toLong() > marketVersion.number
             } else {
                 false
             }
@@ -801,6 +801,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
         content = ActionAuditContent.PIPELINE_TEMPLATE_VIEW_CONTENT
     )
     fun getTemplateDetails(
+        userId: String,
         projectId: String,
         templateId: String,
         version: Long?,
@@ -828,24 +829,23 @@ class PipelineTemplateFacadeService @Autowired constructor(
             }
         } ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_NOT_EXISTS)
         return getTemplateDetails(
+            userId = userId,
             projectId = projectId,
             templateResource = templateResource
         )
     }
 
     private fun getTemplateDetails(
+        userId: String,
         projectId: String,
         templateResource: PipelineTemplateResource
     ): PipelineTemplateDetailsResponse {
-        val setting = pipelineTemplateSettingService.get(
+        val setting = pipelineTemplateSettingService.getWithLabels(
+            userId = userId,
             projectId = projectId,
             templateId = templateResource.templateId,
             settingVersion = templateResource.settingVersion
-        ).let { pipelineSetting ->
-            val labelIds = pipelineSetting.labels.map { HashUtil.decodeIdToLong(it) }.toSet()
-            val labelNames = pipelineLabelDao.getByIds(dslContext, projectId, labelIds).map { it.name }
-            pipelineSetting.copy(labelNames = labelNames)
-        }
+        )
         val (yamlSupported, yamlPreview, msg) = try {
             val yaml = templateResource.yaml ?: pipelineTemplateGenerator.transfer(
                 userId = templateResource.creator,
@@ -1022,6 +1022,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
             ref = ref
         )
         return getTemplateDetails(
+            userId = userId,
             projectId = projectId,
             templateId = templateId,
             version = pipelineYamlVersion.version.toLong()
@@ -1068,6 +1069,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
         ) ?: return null
 
         return getTemplateDetails(
+            userId = userId,
             projectId = projectId,
             templateResource = templateResource
         )
@@ -1114,7 +1116,9 @@ class PipelineTemplateFacadeService @Autowired constructor(
         ) ?: return null
 
         val templateId = pipelineTemplateRelated.templateId
-        val templateInfo = pipelineTemplateInfoService.get(templateId)
+        val templateInfo = pipelineTemplateInfoService.get(
+            templateId = templateId
+        )
         val templateVersion = templateResource.version
 
         return if (templateDescriptor == null || templateDescriptor.templateRefType == TemplateRefType.ID) {
@@ -1273,8 +1277,8 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 srcMarketTemplateName = marketTemplateDetails.templateName,
                 srcMarketTemplateLatestVersion = srcTemplateLatestReleasedVersion.version,
                 srcMarketTemplateLatestVersionName = srcTemplateLatestReleasedVersion.versionName,
-                latestInstalledVersion = recentlyInstalledVersion.version,
-                latestInstalledVersionName = recentlyInstalledVersion.versionName,
+                latestInstalledVersion = recentlyInstalledVersion.srcMarketTemplateVersion,
+                latestInstalledVersionName = recentlyInstalledVersion.srcMarketTemplateVersionName,
                 upgradeStrategy = it.upgradeStrategy!!,
                 settingSyncStrategy = it.settingSyncStrategy!!,
                 latestInstaller = recentlyInstalledVersion.creator,
@@ -1292,7 +1296,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
 
         val publishFlag = takeIf { basicInfo.storeStatus == TemplateStatusEnum.RELEASED }?.let {
             latestReleasedVersionNum != null && latestMarketPublishedVersionNum != null &&
-                latestReleasedVersionNum > latestMarketPublishedVersionNum
+                    latestReleasedVersionNum > latestMarketPublishedVersionNum
         } ?: false
 
         return PipelineTemplateInfoResponse(
@@ -1380,7 +1384,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 PipelineTemplateResourceCommonCondition(
                     projectId = latestInstalled.srcMarketTemplateProjectCode,
                     templateId = latestInstalled.srcMarketTemplateCode,
-                    gtNumber = latestInstalled.number,
+                    gtNumber = latestInstalled.srcMarketTemplateNumber,
                     status = VersionStatus.RELEASED,
                     storeStatus = TemplateStatusEnum.RELEASED
                 )
@@ -1688,7 +1692,8 @@ class PipelineTemplateFacadeService @Autowired constructor(
             )
         )
         if (templateInfo.upgradeStrategy == UpgradeStrategyEnum.MANUAL &&
-            request.upgradeStrategy == UpgradeStrategyEnum.AUTO) {
+            request.upgradeStrategy == UpgradeStrategyEnum.AUTO
+        ) {
             // 获取研发商店模板最新发布版本
             val srcTemplateResource = client.get(ServiceTemplateResource::class).getLatestMarketPublishedVersion(
                 templateCode = templateInfo.srcTemplateId!!
@@ -1951,7 +1956,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
         // 3. 找不到模板资源，记录日志并返回null
         logger.info(
             "template resource not found|$projectId|$pipelineId|$pipelineVersion|" +
-                "${pipelineTemplateRelated.version}"
+                    "${pipelineTemplateRelated.version}"
         )
         return null
     }

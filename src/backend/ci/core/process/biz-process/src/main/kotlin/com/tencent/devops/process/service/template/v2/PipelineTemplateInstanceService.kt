@@ -1271,6 +1271,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
             overrideTemplateField = newOverrideTemplateField
         )
         val instanceSetting = getInstanceSetting(
+            userId = userId,
             projectId = projectId,
             pipelineInfo = pipelineInfo,
             templateResource = templateResource,
@@ -1332,6 +1333,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
     }
 
     private fun getInstanceSetting(
+        userId: String,
         projectId: String,
         pipelineInfo: PipelineInfo,
         templateResource: PipelineTemplateResource,
@@ -1350,7 +1352,8 @@ class PipelineTemplateInstanceService @Autowired constructor(
                 pipelineName = pipelineInfo.pipelineName
             )
         } else {
-            pipelineRepositoryService.getSetting(
+            pipelineRepositoryService.getSettingWithLabels(
+                userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId
             )?.let {

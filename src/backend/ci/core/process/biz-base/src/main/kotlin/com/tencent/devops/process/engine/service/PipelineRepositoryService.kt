@@ -99,6 +99,7 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDraftVersionDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDraftVersionDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
@@ -123,6 +124,7 @@ import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineOperationLogService
+import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
@@ -186,6 +188,7 @@ class PipelineRepositoryService constructor(
     private val subPipelineTaskService: SubPipelineTaskService,
     private val pipelineInfoService: PipelineInfoService,
     private val pipelineTemplateInfoDao: PipelineTemplateInfoDao,
+    private val pipelineGroupService: PipelineGroupService,
     private val pipelineResourceDraftVersionDao: PipelineResourceDraftVersionDao
 ) {
 
@@ -1921,6 +1924,27 @@ class PipelineRepositoryService constructor(
         return pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
     }
 
+    /**
+     * settingVersion表中labels字段可能为空(如实例化流水线),需要单独再查询
+     */
+    fun getSettingWithLabels(userId: String, projectId: String, pipelineId: String): PipelineSetting? {
+        val labels = ArrayList<String>()
+        val labelNames = ArrayList<String>()
+        pipelineGroupService.getGroups(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId
+        ).forEach {
+            labels.addAll(it.labels)
+            labelNames.addAll(it.labelNames)
+        }
+        return pipelineSettingDao.getSetting(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )?.copy(labels = labels, labelNames = labelNames)
+    }
+
     fun getSettingByPipelineVersion(
         projectId: String,
         pipelineId: String,
@@ -2293,6 +2317,7 @@ class PipelineRepositoryService constructor(
             // 2、update settingName
             pipelineSettingDao.updateSettingName(
                 dslContext = transactionContext,
+                projectId = projectId,
                 pipelineIdList = listOf(pipelineId),
                 name = modelName
             )
