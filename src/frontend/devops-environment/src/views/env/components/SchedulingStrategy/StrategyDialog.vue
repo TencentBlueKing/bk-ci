@@ -245,8 +245,11 @@
             })
 
             // 监听弹窗显示状态
-            watch(() => props.value, (newVal) => {
+            watch(() => props.value, async (newVal) => {
                 if (newVal) {
+                    // 先获取标签列表数据，确保选项加载完成后再初始化表单
+                    await fetchTagList()
+                    
                     if (props.isEdit && props.strategyData) {
                         // 编辑模式，初始化表单数据
                         initFormData(props.strategyData)
@@ -254,8 +257,6 @@
                         // 新增模式，重置表单
                         resetForm()
                     }
-                    // 获取标签列表
-                    fetchTagList()
                 }
             })
 
@@ -273,7 +274,7 @@
             // 初始化表单数据（编辑模式）
             const initFormData = (data) => {
                 const conditions = data.conditions || []
-                const labelSelector = data.labelSelector || []
+                const labels = data.labels || []
 
                 formData.value = {
                     id: data.id,
@@ -281,11 +282,12 @@
                     affinityEnabled: conditions.some(c => c.type === 'affinity'),
                     nodeLoadEnabled: conditions.some(c => c.type === 'idleNode' || c.type === 'availableNode'),
                     nodeLoadType: conditions.find(c => c.type === 'idleNode' || c.type === 'availableNode')?.type || 'idleNode',
-                    labelsEnabled: !!(labelSelector && labelSelector.length),
-                    labels: labelSelector.map(l => ({
-                        key: l.tagKeyId,
-                        operator: l.op,
-                        value: l.tagValueIds?.length === 1 ? l.tagValueIds[0] : (l.tagValueIds || [])
+                    labelsEnabled: !!(labels && labels.length),
+                    labels: labels.map(l => ({
+                        key: l.key,
+                        keyName: l.keyName,
+                        operator: l.operator,
+                        value: l.value
                     }))
                 }
             }
