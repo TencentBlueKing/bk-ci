@@ -127,6 +127,7 @@ allprojects {
             dependency("org.apache.poi:poi-ooxml:${Versions.apachepoi}")
             dependency("com.mysql:mysql-connector-j:${Versions.MysqlDriver}")
             dependency("com.tencentcloudapi:tencentcloud-sdk-java-cfs:${Versions.tencentcloudsdkcfs}")
+            dependency("com.qcloud:cos_api:${Versions.cosApi}")
             // worker需要依赖
             dependency("org.jvnet.winp:winp:${Versions.Winp}")
             dependency("net.java.dev.jna:jna:${Versions.Jna}")
