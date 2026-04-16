@@ -1,20 +1,30 @@
 <template>
   <div>
-    <div class="permission-wrapper">
-      <ul class="aside">
-        <li
-          class="aside-item"
-          :class="resourceType == item.resourceType ? 'aside-active' : ''"
-          v-for="(item, index) in permissionList"
-          :key="index"
-          @click="handleAsideClick(item, index)"
-        >
-          <p>
-            {{ item.label }}
-          </p>
-        </li>
-      </ul>
-      <div class="content">
+    <bk-resize-layout
+      placement="left"
+      :initial-divide="220"
+      :min="220"
+      :max="360"
+      :border="false"
+      class="permission-wrapper"
+    >
+      <template #aside>
+        <ul class="aside">
+          <li
+            class="aside-item"
+            :class="resourceType == item.resourceType ? 'aside-active' : ''"
+            v-for="(item, index) in permissionList"
+            :key="index"
+            @click="handleAsideClick(item, index)"
+          >
+            <p>
+              {{ item.label }}
+            </p>
+          </li>
+        </ul>
+      </template>
+      <template #main>
+        <div class="content">
         <div class="content-btn">
           <bk-button @click="handleReset">{{ t('批量重置') }}</bk-button>
           <div class="filter-bar">
@@ -86,8 +96,9 @@
             </template>
           </bk-table>
         </bk-loading> 
-      </div>
-    </div>
+        </div>
+      </template>
+    </bk-resize-layout>
     <bk-dialog
       esc-close="reset-dialog"
       :is-show="showResetDialog"
@@ -650,13 +661,11 @@ function handleChangeName ({ list }) {
 
 <style lang="scss" scoped>
 .permission-wrapper {
-  display: flex;
   width: 100%;
   height: 100%;
+  
   .aside {
-    width: 220px;
     height: 100%;
-    flex-shrink: 0;
     padding-top: 8px;
     background: #FAFBFD;
     box-shadow: 1px 0 0 0 #DCDEE5;

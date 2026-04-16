@@ -21,6 +21,7 @@ class ActionCondition(private val filterType: ActionFilterType) : WebhookConditi
                 ActionFilterType.ISSUE -> WebhookI18nConstants.ISSUES_ACTION_NOT_MATCH
                 ActionFilterType.Note -> WebhookI18nConstants.NOTE_ACTION_NOT_MATCH
                 ActionFilterType.REVIEW -> WebhookI18nConstants.REVIEW_ACTION_NOT_MATCH
+                ActionFilterType.TAG -> WebhookI18nConstants.TAG_ACTION_NOT_MATCH
             }
             val includedAction = when (filterType) {
                 ActionFilterType.PUSH -> convert(includePushAction)
@@ -32,6 +33,8 @@ class ActionCondition(private val filterType: ActionFilterType) : WebhookConditi
                 ActionFilterType.Note -> convert(includeNoteTypes)
 
                 ActionFilterType.REVIEW -> convert(includeCrState)
+
+                ActionFilterType.TAG -> convert(includeTagAction)
             }.ifEmpty {
                 listOf(EMPTY_ACTION)
             }
@@ -56,5 +59,6 @@ enum class ActionFilterType(val filterName: String) {
     PULL_REQUEST("mrAction"),
     ISSUE("issueAction"),
     Note("noteAction"),
-    REVIEW("reviewAction")
+    REVIEW("reviewAction"),
+    TAG("tagAction")
 }

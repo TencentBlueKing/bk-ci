@@ -309,6 +309,7 @@ class PipelineTriggerEventService @Autowired constructor(
         // 事件信息
         val triggerEvent = pipelineTriggerEventDao.listRepoTriggerEventWithoutBody(
             dslContext = dslContext,
+            projectId = projectId,
             eventIds = eventIds
         )
         // 触发详情记录（总数，成功数）

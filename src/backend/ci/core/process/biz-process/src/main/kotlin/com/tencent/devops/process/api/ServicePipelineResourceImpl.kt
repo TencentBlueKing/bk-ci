@@ -67,6 +67,7 @@ import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineRemoteToken
 import com.tencent.devops.process.pojo.PipelineSortType
+import com.tencent.devops.process.pojo.pipeline.PipelineCount
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
@@ -698,6 +699,11 @@ class ServicePipelineResourceImpl @Autowired constructor(
                 userId = userId
             )
         )
+    }
+
+    override fun getCount(userId: String, projectId: String): Result<PipelineCount> {
+        checkParams(userId, projectId)
+        return Result(pipelineListFacadeService.getCount(userId, projectId))
     }
 
     override fun lockPipeline(

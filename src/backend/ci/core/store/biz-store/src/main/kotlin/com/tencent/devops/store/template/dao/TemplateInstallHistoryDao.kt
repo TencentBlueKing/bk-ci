@@ -59,16 +59,16 @@ class TemplateInstallHistoryDao {
                 record.srcMarketTemplateCode,
                 record.projectCode,
                 record.templateCode,
-                record.version,
-                record.versionName,
-                record.number,
+                record.srcMarketTemplateVersion,
+                record.srcMarketTemplateVersionName,
+                record.srcMarketTemplateNumber,
                 record.creator,
                 record.createTime.toLocalDateTimeOrDefault()
             ).onDuplicateKeyUpdate()
                 .set(CREATOR, record.creator)
-                .set(VERSION, record.version)
-                .set(VERSION_NAME, record.versionName)
-                .set(NUMBER, record.number)
+                .set(VERSION, record.srcMarketTemplateVersion)
+                .set(VERSION_NAME, record.srcMarketTemplateVersionName)
+                .set(NUMBER, record.srcMarketTemplateNumber)
                 .set(CREATE_TIME, record.createTime.toLocalDateTimeOrDefault())
                 .execute()
         }
@@ -115,9 +115,9 @@ class TemplateInstallHistoryDao {
                         srcMarketTemplateCode = it.srcMarketTemplateCode,
                         projectCode = it.projectCode,
                         templateCode = it.templateCode,
-                        version = it.version,
-                        versionName = it.versionName,
-                        number = it.number,
+                        srcMarketTemplateVersion = it.version,
+                        srcMarketTemplateVersionName = it.versionName,
+                        srcMarketTemplateNumber = it.number,
                         creator = it.creator,
                         createTime = it.createTime.timestampmilli()
                     )
@@ -150,9 +150,9 @@ class TemplateInstallHistoryDao {
                         srcMarketTemplateCode = it[SRC_MARKET_TEMPLATE_CODE],
                         projectCode = it[PROJECT_CODE],
                         templateCode = it[TEMPLATE_CODE],
-                        version = it[VERSION],
-                        versionName = it[VERSION_NAME],
-                        number = it[NUMBER],
+                        srcMarketTemplateVersion = it[VERSION],
+                        srcMarketTemplateVersionName = it[VERSION_NAME],
+                        srcMarketTemplateNumber = it[NUMBER],
                         creator = it[CREATOR],
                         createTime = it[CREATE_TIME].timestampmilli()
                     )

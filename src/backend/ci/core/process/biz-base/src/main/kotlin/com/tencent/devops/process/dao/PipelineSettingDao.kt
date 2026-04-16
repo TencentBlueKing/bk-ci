@@ -298,11 +298,22 @@ class PipelineSettingDao {
     /**
      * 更新模版引用的设置
      */
-    fun updateSettingName(dslContext: DSLContext, pipelineIdList: List<String>, name: String) {
+    fun updateSettingName(
+        dslContext: DSLContext,
+        pipelineIdList: List<String>,
+        name: String,
+        projectId: String? = null
+    ) {
+        if (pipelineIdList.isEmpty()) return
         with(TPipelineSetting.T_PIPELINE_SETTING) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PIPELINE_ID.`in`(pipelineIdList))
+            projectId?.let {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
             dslContext.update(this)
                 .set(NAME, name)
-                .where(PIPELINE_ID.`in`(pipelineIdList))
+                .where(conditions)
                 .execute()
         }
     }
