@@ -376,4 +376,20 @@ interface UserWorkspaceResource {
         userId: String,
         data: ProjectStrategyFetchInfo
     ): Result<ProjectStrategyResp>
+
+    @Operation(summary = "同意开启云录制")
+    @POST
+    @Path("/agree_record")
+    fun agreeRecord(
+        @Parameter(
+            description = "用户ID",
+            required = true,
+            example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
 }
