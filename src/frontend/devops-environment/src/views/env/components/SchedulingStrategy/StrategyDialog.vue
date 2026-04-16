@@ -2,7 +2,7 @@
     <bk-dialog
         :value="value"
         :title="dialogTitle"
-        :width="640"
+        :width="800"
         :show-footer="true"
         :mask-close="false"
         header-position="left"
@@ -15,7 +15,7 @@
                     v-model="formData.affinityEnabled"
                     class="strategy-checkbox"
                 >
-                    <span class="checkbox-label">{{ $t('environment.scheduling.affinity') }}</span>
+                    <span class="checkbox-tag">{{ $t('environment.scheduling.affinity') }}</span>
                     <span class="checkbox-desc">{{ $t('environment.scheduling.affinityDesc') }}</span>
                 </bk-checkbox>
             </div>
@@ -36,25 +36,17 @@
                     <bk-radio-group v-model="formData.nodeLoadType">
                         <div class="radio-item">
                             <bk-radio value="idleNode">
-                                <span class="radio-label">{{ $t('environment.scheduling.idleNode') }}</span>
+                                <span class="radio-tag">{{ $t('environment.scheduling.idleNode') }}</span>
                                 <span class="radio-desc">{{ $t('environment.scheduling.idleNodeDesc') }}</span>
                             </bk-radio>
                         </div>
                         <div class="radio-item">
                             <bk-radio value="availableNode">
-                                <span class="radio-label">{{ $t('environment.scheduling.availableNode') }}</span>
+                                <span class="radio-tag">{{ $t('environment.scheduling.availableNode') }}</span>
                                 <span class="radio-desc">{{ $t('environment.scheduling.availableNodeDesc') }}</span>
                             </bk-radio>
                         </div>
                     </bk-radio-group>
-
-                    <!-- 编辑模式下的节点负载提示 -->
-                    <p
-                        v-if="isEdit && formData.nodeLoadEnabled"
-                        class="edit-tips"
-                    >
-                        {{ $t('environment.scheduling.nodeLoadEditTips') }}
-                    </p>
                 </div>
             </div>
 
@@ -71,97 +63,104 @@
                     class="sub-options labels-section"
                     v-if="formData.labelsEnabled"
                 >
-                    <p class="labels-tips">{{ $t('environment.scheduling.labelTips') }}</p>
-
-                    <!-- 标签表格头部 -->
-                    <div
-                        class="labels-header"
-                        v-if="formData.labels.length"
-                    >
-                        <span class="header-item label-key-header">{{ $t('environment.scheduling.selectLabelKey') }}</span>
-                        <span class="header-item label-operator-header"></span>
-                        <span class="header-item label-value-header">{{ $t('environment.scheduling.inputLabelValue') }}</span>
-                        <span class="header-item label-actions-header"></span>
-                    </div>
-
-                    <!-- 标签列表 -->
-                    <div class="labels-list">
-                        <div
-                            v-for="(label, index) in formData.labels"
-                            :key="index"
-                            class="label-row"
-                        >
-                            <bk-select
-                                v-model="label.key"
-                                class="label-key-select"
-                                :placeholder="$t('environment.scheduling.selectLabelKey')"
-                                :clearable="false"
-                                searchable
-                                @change="handleLabelKeyChange(index)"
+                    <!-- 标签表格 -->
+                    <table class="labels-table">
+                        <thead>
+                            <tr>
+                                <th class="label-key-col">
+                                    <span class="required">*</span>
+                                    {{ $t('environment.labelKey') }}
+                                </th>
+                                <th class="label-value-col">
+                                    <span class="required">*</span>
+                                    {{ $t('environment.labelValue') }}
+                                </th>
+                                <th class="label-actions-col"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr
+                                v-for="(label, index) in formData.labels"
+                                :key="index"
                             >
-                                <bk-option
-                                    v-for="tagKey in tagKeyList"
-                                    :key="tagKey.id"
-                                    :id="tagKey.id"
-                                    :name="tagKey.name"
-                                />
-                            </bk-select>
-
-                            <bk-select
-                                v-model="label.operator"
-                                class="label-operator-select"
-                                :clearable="false"
-                            >
-                                <bk-option
-                                    id="=="
-                                    name="=="
-                                />
-                                <bk-option
-                                    id="!="
-                                    name="!="
-                                />
-                                <bk-option
-                                    id="in"
-                                    name="in"
-                                />
-                            </bk-select>
-
-                            <bk-input
-                                v-model="label.value"
-                                class="label-value-input"
-                                :placeholder="$t('environment.scheduling.inputLabelValue')"
-                            />
-
-                            <div class="label-actions">
-                                <bk-button
-                                    text
-                                    class="label-action-btn delete-btn"
-                                    :disabled="formData.labels.length <= 1"
-                                    @click="handleRemoveLabel(index)"
-                                >
-                                    <i class="bk-icon icon-delete"></i>
-                                </bk-button>
-                                <bk-button
-                                    text
-                                    class="label-action-btn add-btn"
-                                    @click="handleAddLabel"
-                                >
-                                    <i class="bk-icon icon-plus-circle"></i>
-                                </bk-button>
-                            </div>
-                        </div>
-
-                        <!-- 无标签时显示添加按钮 -->
-                        <bk-button
-                            v-if="!formData.labels.length"
-                            text
-                            theme="primary"
-                            icon="plus"
-                            @click="handleAddLabel"
-                        >
-                            {{ $t('environment.scheduling.addLabel') }}
-                        </bk-button>
-                    </div>
+                                <td class="label-key-col">
+                                    <bk-select
+                                        v-model="label.key"
+                                        class="label-key-select"
+                                        :placeholder="$t('environment.pleaseSelect')"
+                                        :clearable="false"
+                                        searchable
+                                        @change="handleLabelKeyChange(index)"
+                                    >
+                                        <bk-option
+                                            v-for="tagKey in tagKeyList"
+                                            :key="tagKey.id"
+                                            :id="tagKey.id"
+                                            :name="tagKey.name"
+                                        />
+                                    </bk-select>
+                                </td>
+                                <td class="label-value-col">
+                                    <div class="value-cell">
+                                        <bk-select
+                                            v-model="label.operator"
+                                            class="label-operator-select"
+                                            :clearable="false"
+                                            @change="handleOperatorChange(index)"
+                                        >
+                                            <bk-option
+                                                v-for="op in operatorList"
+                                                :key="op.id"
+                                                :id="op.id"
+                                                :name="op.name"
+                                            />
+                                        </bk-select>
+                                        <!-- 有预定义值列表且非输入类操作符时显示下拉选择 -->
+                                        <bk-select
+                                            v-if="shouldShowSelect(label.key, label.operator)"
+                                            v-model="label.value"
+                                            class="label-value-input"
+                                            :placeholder="$t('environment.pleaseEnter')"
+                                            :multiple="isMultiValueOperator(label.operator)"
+                                            :clearable="true"
+                                            searchable
+                                        >
+                                            <bk-option
+                                                v-for="val in getPreDefinedValues(label.key)"
+                                                :key="val.id"
+                                                :id="val.id"
+                                                :name="val.name"
+                                            />
+                                        </bk-select>
+                                        <!-- 无预定义值或输入类操作符时显示输入框 -->
+                                        <bk-input
+                                            v-else
+                                            v-model="label.value"
+                                            class="label-value-input"
+                                            :placeholder="$t('environment.pleaseEnter')"
+                                        />
+                                    </div>
+                                </td>
+                                <td class="label-actions-col">
+                                    <div class="label-actions">
+                                        <span
+                                            class="action-icon add-icon"
+                                            @click="handleAddLabel"
+                                        >
+                                            <i class="bk-icon icon-plus-circle"></i>
+                                        </span>
+                                        <span
+                                            class="action-icon delete-icon"
+                                            :class="{ disabled: formData.labels.length <= 1 }"
+                                            @click="formData.labels.length > 1 && handleRemoveLabel(index)"
+                                        >
+                                            <i class="bk-icon icon-minus-circle"></i>
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -216,6 +215,19 @@
             const tagKeyList = ref([])
             const tagValuesMap = ref({})
 
+            // 操作符列表
+            const operatorList = [
+                { id: 'EQUAL', name: '==' },
+                { id: 'GTE', name: '>=' },
+                { id: 'LTE', name: '<=' },
+                { id: 'GT', name: '>' },
+                { id: 'LT', name: '<' },
+                { id: 'START_WITH', name: 'StartWith' },
+                { id: 'END_WITH', name: 'EndWith' },
+                { id: 'CONTAINS', name: 'Contains' },
+                { id: 'IN', name: 'in' }
+            ]
+
             const defaultFormData = {
                 affinityEnabled: false,
                 nodeLoadEnabled: false,
@@ -247,17 +259,34 @@
                 }
             })
 
+            // 监听标签勾选状态，勾选时自动添加一条空数据
+            watch(() => formData.value.labelsEnabled, (newVal) => {
+                if (newVal && formData.value.labels.length === 0) {
+                    formData.value.labels.push({
+                        key: '',
+                        operator: 'EQUAL',
+                        value: ''
+                    })
+                }
+            })
+
             // 初始化表单数据（编辑模式）
             const initFormData = (data) => {
                 const conditions = data.conditions || []
+                const labelSelector = data.labelSelector || []
 
                 formData.value = {
                     id: data.id,
+                    enabled: data.enabled !== false, // 保留启用状态
                     affinityEnabled: conditions.some(c => c.type === 'affinity'),
                     nodeLoadEnabled: conditions.some(c => c.type === 'idleNode' || c.type === 'availableNode'),
                     nodeLoadType: conditions.find(c => c.type === 'idleNode' || c.type === 'availableNode')?.type || 'idleNode',
-                    labelsEnabled: !!(data.labels && data.labels.length),
-                    labels: data.labels ? data.labels.map(l => ({ ...l })) : []
+                    labelsEnabled: !!(labelSelector && labelSelector.length),
+                    labels: labelSelector.map(l => ({
+                        key: l.tagKeyId,
+                        operator: l.op,
+                        value: l.tagValueIds?.length === 1 ? l.tagValueIds[0] : (l.tagValueIds || [])
+                    }))
                 }
             }
 
@@ -273,31 +302,104 @@
             const fetchTagList = async () => {
                 try {
                     const res = await proxy.$store.dispatch('environment/requestNodeTagList', projectId.value)
+                    // 转换为标签键选项列表
                     tagKeyList.value = (res || []).map(tag => ({
-                        id: tag.tagKey,
-                        name: tag.tagKey,
-                        values: tag.tagValues || []
+                        id: tag.tagKeyId,
+                        name: tag.tagKeyName
                     }))
-                    // 构建标签值映射
-                    tagValuesMap.value = tagKeyList.value.reduce((acc, tag) => {
-                        acc[tag.id] = tag.values
-                        return acc
-                    }, {})
+                    // 构建标签值映射表
+                    const valuesMap = {}
+                    ;(res || []).forEach(tag => {
+                        if (tag.tagValues && tag.tagValues.length > 0) {
+                            valuesMap[tag.tagKeyId] = tag.tagValues.map(val => ({
+                                id: val.tagValueId,
+                                name: val.tagValueName
+                            }))
+                        }
+                    })
+                    tagValuesMap.value = valuesMap
                 } catch (err) {
                     console.error('获取标签列表失败:', err)
                 }
             }
 
-            // 标签键变化时清空值
+            // 标签键变化时清空值并保存键名
             const handleLabelKeyChange = (index) => {
-                formData.value.labels[index].value = ''
+                const label = formData.value.labels[index]
+                // 保存标签键名称
+                label.keyName = tagKeyList.value.find(t => t.id === label.key)?.name || ''
+                // 根据当前操作符类型决定清空为空字符串还是空数组
+                if (isMultiValueOperator(label.operator) && !isInputOperator(label.operator)) {
+                    label.value = []
+                } else {
+                    label.value = ''
+                }
+            }
+
+            // 操作符变化时处理值格式
+            const handleOperatorChange = (index) => {
+                const label = formData.value.labels[index]
+                
+                // 切换到输入类操作符时，清空值（因为选择框的ID值与输入框的字符串值不兼容）
+                if (isInputOperator(label.operator)) {
+                    label.value = ''
+                    return
+                }
+                
+                // 如果从非多值操作符切换到多值操作符，且有预定义值，需要将值转为数组
+                if (isMultiValueOperator(label.operator) && hasPreDefinedValues(label.key)) {
+                    if (label.value && !Array.isArray(label.value)) {
+                        label.value = [label.value]
+                    } else if (!label.value) {
+                        label.value = []
+                    }
+                } else {
+                    // 从多值操作符切换到单值操作符
+                    if (Array.isArray(label.value)) {
+                        label.value = label.value[0] || ''
+                    }
+                }
+            }
+
+            // 判断是否有预定义值列表
+            const hasPreDefinedValues = (key) => {
+                const values = tagValuesMap.value[key]
+                return values && values.length > 0
+            }
+
+            // 获取预定义值列表
+            const getPreDefinedValues = (key) => {
+                return tagValuesMap.value[key] || []
+            }
+
+            // 判断是否是支持多值的操作符
+            const isMultiValueOperator = (operator) => {
+                return operator === 'IN'
+            }
+
+            // 判断是否是需要输入框的操作符（START_WITH、END_WITH、CONTAINS）
+            const isInputOperator = (operator) => {
+                return ['START_WITH', 'END_WITH', 'CONTAINS'].includes(operator)
+            }
+
+            // 判断是否应该显示选择框（有预定义值且不是输入类型操作符）
+            const shouldShowSelect = (key, operator) => {
+                return hasPreDefinedValues(key) && !isInputOperator(operator)
+            }
+
+            // 获取值输入框的 placeholder
+            const getValuePlaceholder = (operator) => {
+                if (isMultiValueOperator(operator)) {
+                    return proxy.$t('environment.scheduling.multiValuePlaceholder')
+                }
+                return proxy.$t('environment.scheduling.inputLabelValue')
             }
 
             // 添加标签
             const handleAddLabel = () => {
                 formData.value.labels.push({
                     key: '',
-                    operator: '==',
+                    operator: 'EQUAL',
                     value: ''
                 })
             }
@@ -323,7 +425,6 @@
                     }
                 }
 
-                // 至少选择一个条件
                 if (!formData.value.affinityEnabled && !formData.value.nodeLoadEnabled && !formData.value.labelsEnabled) {
                     proxy.$bkMessage({
                         theme: 'warning',
@@ -335,21 +436,24 @@
                 try {
                     isSaving.value = true
 
+                    // 构建 labelSelector
+                    const labelSelector = formData.value.labelsEnabled
+                        ? formData.value.labels
+                            .filter(l => l.key && l.value)
+                            .map(l => ({
+                                tagKeyId: l.key,
+                                op: l.operator,
+                                tagValueIds: Array.isArray(l.value) ? l.value : [l.value]
+                            }))
+                        : []
+
                     // 构建提交数据
-                    const conditions = []
-
-                    if (formData.value.affinityEnabled) {
-                        conditions.push({ type: 'affinity' })
-                    }
-
-                    if (formData.value.nodeLoadEnabled) {
-                        conditions.push({ type: formData.value.nodeLoadType })
-                    }
-
                     const submitData = {
                         id: formData.value.id,
-                        conditions,
-                        labels: formData.value.labelsEnabled ? formData.value.labels.filter(l => l.key && l.value) : []
+                        enabled: formData.value.enabled !== false,
+                        labelSelector,
+                        scope: formData.value.affinityEnabled ? 'PRE_BUILD' : 'ALL',
+                        ...(formData.value.nodeLoadEnabled ? { nodeRule: formData.value.nodeLoadType === 'idleNode' ? 'IDLE' : 'AVAILABLE' } : {})
                     }
 
                     emit('confirm', submitData)
@@ -371,13 +475,20 @@
                 isSaving,
                 dialogTitle,
                 tagKeyList,
+                operatorList,
 
                 // function
                 handleLabelKeyChange,
+                handleOperatorChange,
                 handleAddLabel,
                 handleRemoveLabel,
                 handleConfirm,
-                handleCancel
+                handleCancel,
+                hasPreDefinedValues,
+                getPreDefinedValues,
+                isMultiValueOperator,
+                getValuePlaceholder,
+                shouldShowSelect
             }
         }
     }
@@ -389,15 +500,13 @@
     overflow-y: auto;
 
     .form-section {
-        padding: 16px 0;
-        border-bottom: 1px solid #EAEBF0;
+        padding: 8px 0;
 
         &:first-child {
             padding-top: 0;
         }
 
         &:last-child {
-            border-bottom: none;
             padding-bottom: 0;
         }
 
@@ -421,6 +530,18 @@
             font-weight: 500;
         }
 
+        .checkbox-tag {
+            display: inline-flex;
+            align-items: center;
+            height: 22px;
+            padding: 0 8px;
+            border-radius: 2px;
+            font-size: 12px;
+            color: #63656E;
+            background: #F0F1F5;
+            border: 1px solid #DCDEE5;
+        }
+
         .checkbox-desc {
             font-size: 12px;
             color: #979BA5;
@@ -429,9 +550,7 @@
 
         .sub-options {
             margin-top: 12px;
-            margin-left: 24px;
             padding-left: 16px;
-            border-left: 2px solid #EAEBF0;
 
             .bk-form-radio-group {
                 display: flex;
@@ -447,7 +566,7 @@
 
                 .bk-form-radio {
                     display: flex;
-                    align-items: flex-start;
+                    align-items: center;
 
                     ::v-deep .bk-radio-text {
                         display: flex;
@@ -460,6 +579,19 @@
             .radio-label {
                 font-size: 14px;
                 color: #313238;
+            }
+
+            .radio-tag {
+                display: inline-flex;
+                align-items: center;
+                height: 22px;
+                padding: 0 8px;
+                margin-left: 4px;
+                border-radius: 2px;
+                font-size: 12px;
+                color: #63656E;
+                background: #F0F1F5;
+                border: 1px solid #DCDEE5;
             }
 
             .radio-desc {
@@ -476,99 +608,117 @@
         }
 
         .labels-section {
-            .labels-tips {
-                font-size: 12px;
-                color: #FF9C01;
-                margin-bottom: 12px;
-                line-height: 18px;
-            }
-
-            .labels-header {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                margin-bottom: 8px;
-                padding: 0 4px;
-
-                .header-item {
-                    font-size: 12px;
-                    color: #313238;
-
-                    &.label-key-header {
-                        width: 140px;
-                    }
-
-                    &.label-operator-header {
-                        width: 80px;
-                    }
-
-                    &.label-value-header {
-                        flex: 1;
-                    }
-
-                    &.label-actions-header {
-                        width: 56px;
+            .labels-table {
+                width: 100%;
+                border-collapse: collapse;
+                border: 1px solid #DCDEE5;
+                
+                th, td {
+                    border: 1px solid #DCDEE5;
+                    padding: 8px 12px;
+                    text-align: left;
+                    vertical-align: middle;
+                }
+                
+                thead {
+                    background: #FAFBFD;
+                    
+                    th {
+                        font-size: 12px;
+                        font-weight: normal;
+                        color: #313238;
+                        
+                        .required {
+                            color: #EA3636;
+                            margin-right: 4px;
+                        }
                     }
                 }
-            }
-
-            .labels-list {
-                .label-row {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    margin-bottom: 12px;
-
-                    &:last-child {
-                        margin-bottom: 0;
+                
+                tbody {
+                    tr {
+                        background: #fff;
+                        
+                        &:hover {
+                            background: #F5F7FA;
+                        }
                     }
-
-                    .label-key-select {
-                        width: 140px;
-                        flex-shrink: 0;
+                }
+                
+                .label-key-col {
+                    width: 240px;
+                }
+                
+                .label-value-col {
+                    .value-cell {
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
                     }
-
+                    
                     .label-operator-select {
-                        width: 80px;
+                        width: 100px;
                         flex-shrink: 0;
                     }
-
+                    
                     .label-value-input {
-                        flex: 1;
+                        width: 250px;
+                        flex-shrink: 0;
                     }
-
+                }
+                
+                .label-actions-col {
+                    width: 80px;
+                    
                     .label-actions {
                         display: flex;
                         align-items: center;
-                        gap: 4px;
-                        width: 56px;
-                        flex-shrink: 0;
+                        justify-content: center;
+                        gap: 8px;
                     }
-
-                    .label-action-btn {
-                        padding: 0 4px;
-                        min-width: auto;
-
+                    
+                    .action-icon {
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        cursor: pointer;
+                        
                         .bk-icon {
-                            font-size: 18px;
-                            color: #979BA5;
+                            font-size: 20px;
                         }
-
-                        &.delete-btn:not([disabled]):hover .bk-icon {
-                            color: #EA3636;
-                        }
-
-                        &.add-btn:hover .bk-icon {
-                            color: #3A84FF;
-                        }
-
-                        &[disabled] {
-                            cursor: not-allowed;
+                        
+                        &.add-icon {
                             .bk-icon {
-                                color: #DCDEE5;
+                                font-size: 18px;
+                            }
+                            
+                            &:hover .bk-icon {
+                                color: #699DF4;
+                            }
+                        }
+                        
+                        &.delete-icon {
+                            .bk-icon {
+                                font-size: 18px;
+                            }
+                            
+                            &:hover:not(.disabled) .bk-icon {
+                                color: #EA3636;
+                            }
+                            
+                            &.disabled {
+                                cursor: not-allowed;
+                                
+                                .bk-icon {
+                                    color: #DCDEE5;
+                                }
                             }
                         }
                     }
+                }
+                
+                .label-key-select {
+                    width: 240px;
                 }
             }
         }

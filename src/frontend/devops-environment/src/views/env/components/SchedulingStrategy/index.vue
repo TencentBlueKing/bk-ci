@@ -14,6 +14,8 @@
                 theme="primary"
                 icon="plus"
                 v-perm="{
+                    hasPermission: currentEnv.canEdit,
+                    disablePermissionApi: true,
                     permissionData: {
                         projectId: projectId,
                         resourceType: ENV_RESOURCE_TYPE,
@@ -21,15 +23,31 @@
                         action: ENV_RESOURCE_ACTION.EDIT
                     }
                 }"
+                :disabled="isSortMode"
                 @click="handleAddStrategy"
             >
                 {{ $t('environment.scheduling.addStrategy') }}
             </bk-button>
+            <template v-if="isSortMode">
+                <bk-button
+                    theme="primary"
+                    outline
+                    @click="handleSaveSort"
+                >
+                    {{ $t('environment.scheduling.saveSort') }}
+                </bk-button>
+                <bk-button
+                    @click="handleCancelSort"
+                >
+                    {{ $t('environment.cancel') }}
+                </bk-button>
+            </template>
             <bk-button
+                v-else
                 :disabled="strategyList.length < 2"
-                @click="handleToggleSortMode"
+                @click="handleStartSort"
             >
-                {{ isSortMode ? $t('environment.scheduling.finishSort') : $t('environment.scheduling.adjustSort') }}
+                {{ $t('environment.scheduling.adjustSort') }}
             </bk-button>
         </div>
 
@@ -43,7 +61,6 @@
                     v-model="strategyList"
                     :disabled="!isSortMode"
                     handle=".drag-handle"
-                    @end="handleDragEnd"
                     class="strategy-draggable"
                 >
                     <div
@@ -52,83 +69,100 @@
                         class="strategy-item"
                         :class="{ 'is-draggable': isSortMode }"
                     >
-                        <!-- 拖拽手柄 -->
-                        <div
-                            v-if="isSortMode"
-                            class="drag-handle"
-                        >
-                            <i class="bk-icon icon-drag"></i>
-                        </div>
-
-                        <!-- 启用开关 -->
-                        <bk-switcher
-                            v-model="strategy.enabled"
-                            :disabled="strategy.isDefault"
-                            size="small"
-                            theme="primary"
-                            @change="(value) => handleToggleStrategy(strategy, value)"
-                        />
-
-                        <!-- 策略内容 -->
-                        <div class="strategy-content">
-                            <!-- 条件展示 -->
-                            <div class="conditions-wrapper">
-                                <span
-                                    v-for="item in getStrategyDisplayItems(strategy)"
-                                    :key="item.id"
-                                    :class="item.class"
+                        <!-- 头部区域：开关 + 策略名称 + 操作按钮 -->
+                        <div class="strategy-header">
+                            <div class="header-left">
+                                <div
+                                    v-if="isSortMode"
+                                    class="drag-handle"
                                 >
-                                    <template v-if="item.type === 'connector'">and</template>
-                                    <template v-else-if="item.type === 'condition'">
-                                        <span
-                                            class="condition-tag"
-                                            :class="item.tagClass"
-                                        >{{ item.label }}</span>
-                                        <span class="condition-desc">{{ item.desc }}</span>
-                                    </template>
-                                    <template v-else-if="item.type === 'label'">
-                                        <span class="label-key">{{ item.key }}</span>
-                                        <span class="label-operator">{{ item.operator }}</span>
-                                        <span class="label-value">{{ item.value }}</span>
-                                    </template>
-                                </span>
+                                    <i class="bk-icon icon-grag-fill"></i>
+                                </div>
+                                <bk-switcher
+                                    v-model="strategy.enabled"
+                                    size="small"
+                                    theme="primary"
+                                    @change="(value) => handleToggleStrategy(strategy, value)"
+                                />
+                            </div>
+                            <!-- 操作按钮 -->
+                            <div
+                                class="strategy-actions"
+                                v-if="!isSortMode && strategy.strategyType !== 'DEFAULT'"
+                            >
+                                <bk-button
+                                    text
+                                    theme="primary"
+                                    class="mr5"
+                                    v-perm="{
+                                        hasPermission: currentEnv.canEdit,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: ENV_RESOURCE_TYPE,
+                                            resourceCode: envHashId,
+                                            action: ENV_RESOURCE_ACTION.EDIT
+                                        }
+                                    }"
+                                    @click="handleEditStrategy(strategy)"
+                                >
+                                    <i class="bk-icon icon-edit-line"></i>
+                                </bk-button>
+                                <bk-button
+                                    text
+                                    v-perm="{
+                                        hasPermission: currentEnv.canDelete,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: ENV_RESOURCE_TYPE,
+                                            resourceCode: envHashId,
+                                            action: ENV_RESOURCE_ACTION.DELETE
+                                        }
+                                    }"
+                                    @click="handleDeleteStrategy(strategy)"
+                                >
+                                    <i class="bk-icon icon-delete"></i>
+                                </bk-button>
                             </div>
                         </div>
 
-                        <!-- 操作按钮 -->
-                        <div
-                            class="strategy-actions"
-                            v-if="!isSortMode && !strategy.isDefault"
-                        >
-                            <bk-button
-                                text
-                                theme="primary"
-                                v-perm="{
-                                    permissionData: {
-                                        projectId: projectId,
-                                        resourceType: ENV_RESOURCE_TYPE,
-                                        resourceCode: envHashId,
-                                        action: ENV_RESOURCE_ACTION.EDIT
-                                    }
-                                }"
-                                @click="handleEditStrategy(strategy)"
+                        <!-- 内容区域：策略条件 -->
+                        <div class="strategy-content">
+                            <div
+                                class="conditions-wrapper"
+                                :class="{ 'has-multiple': getStrategyDisplayItems(strategy).length > 1 }"
                             >
-                                <i class="bk-icon icon-edit-line"></i>
-                            </bk-button>
-                            <bk-button
-                                text
-                                v-perm="{
-                                    permissionData: {
-                                        projectId: projectId,
-                                        resourceType: ENV_RESOURCE_TYPE,
-                                        resourceCode: envHashId,
-                                        action: ENV_RESOURCE_ACTION.EDIT
-                                    }
-                                }"
-                                @click="handleDeleteStrategy(strategy)"
-                            >
-                                <i class="bk-icon icon-delete"></i>
-                            </bk-button>
+                                <!-- 左侧 and 标签区域（多条件时显示） -->
+                                <div
+                                    v-if="getStrategyDisplayItems(strategy).length > 1"
+                                    class="and-connector"
+                                >
+                                    <span class="connector-tag">and</span>
+                                </div>
+
+                                <!-- 右侧条件列表 -->
+                                <div class="conditions-list">
+                                    <div
+                                        v-for="item in getStrategyDisplayItems(strategy)"
+                                        :key="item.id"
+                                        class="condition-row"
+                                    >
+                                        <!-- 条件内容 -->
+                                        <template v-if="item.type === 'condition'">
+                                            <span class="condition-tag">{{ item.label }}</span>
+                                            <span class="condition-desc">{{ item.desc }}</span>
+                                        </template>
+
+                                        <!-- 标签内容 -->
+                                        <template v-else-if="item.type === 'label'">
+                                            <span class="label-key-tag">{{ item.key }}</span>
+                                            <span class="label-operator">{{ item.operator }}</span>
+                                            <span class="label-value">{{ Array.isArray(item.value) ? item.value.join(', ') : item.value }}</span>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </draggable>
@@ -177,11 +211,13 @@
             const { proxy } = useInstance()
             const {
                 envHashId,
-                projectId
+                projectId,
+                currentEnv
             } = useEnvDetail()
 
             const isLoading = ref(false)
             const strategyList = ref([])
+            const originalStrategyList = ref([]) // 排序前的原始顺序备份
             const isSortMode = ref(false)
             const showStrategyDialog = ref(false)
             const isEditMode = ref(false)
@@ -194,6 +230,54 @@
                 }
             })
 
+            const mapStrategyData = (strategy) => {
+                const conditions = []
+                
+                // 根据 scope 判断是否有亲和性（PRE_BUILD 表示最近使用，即亲和性）
+                if (strategy.scope === 'PRE_BUILD') {
+                    conditions.push({ type: 'affinity' })
+                }
+                
+                // 根据 nodeRule 判断节点规则
+                if (strategy.nodeRule === 'IDLE') {
+                    conditions.push({ type: 'idleNode' })
+                } else if (strategy.nodeRule === 'AVAILABLE') {
+                    conditions.push({ type: 'availableNode' })
+                }
+                
+                // 如果 conditions 字段已存在且有数据（自定义策略），使用原始数据
+                if (strategy.conditions && Array.isArray(strategy.conditions) && strategy.conditions.length > 0) {
+                    conditions.length = 0
+                    conditions.push(...strategy.conditions)
+                }
+
+                // labelSelector 转换为前端 labels 格式
+                // 接口返回的格式: { tagKeyId, tagKeyName, op, tagValue: [{ tagValueId, tagValue }] }
+                // 前端格式: { key, keyName, operator, value, valueName }
+                const labelSelector = strategy.labelSelector || []
+                const labels = labelSelector.map(item => {
+                    const tagValues = item.tagValue || []
+                    const valueIds = tagValues.map(v => v.tagValueId)
+                    const valueNames = tagValues.map(v => v.tagValue)
+                    
+                    return {
+                        key: item.tagKeyId,
+                        keyName: item.tagKeyName || item.tagKeyId,
+                        operator: item.op,
+                        // 如果是 IN 操作符，保持数组；否则取第一个值
+                        value: item.op === 'IN' ? valueIds : (valueIds[0] || ''),
+                        // 用于列表显示的值名称
+                        valueName: item.op === 'IN' ? valueNames : (valueNames[0] || '')
+                    }
+                })
+
+                return {
+                    ...strategy,
+                    conditions,
+                    labels
+                }
+            }
+
             // 获取策略列表
             const fetchStrategyList = async () => {
                 if (!envHashId.value) return
@@ -203,7 +287,8 @@
                         projectId: projectId.value,
                         envHashId: envHashId.value
                     })
-                    strategyList.value = res || []
+                    // 映射后端数据格式
+                    strategyList.value = (res || []).map(mapStrategyData)
                 } catch (err) {
                     console.error('获取调度策略列表失败:', err)
                     proxy.$bkMessage({
@@ -296,33 +381,42 @@
                 currentStrategy.value = null
             }
 
-            // 切换排序模式
-            const handleToggleSortMode = () => {
-                if (isSortMode.value) {
-                    // 退出排序模式时保存顺序
-                    saveStrategyOrder()
-                }
-                isSortMode.value = !isSortMode.value
+            // 开始排序模式
+            const handleStartSort = () => {
+                // 备份当前顺序
+                originalStrategyList.value = JSON.parse(JSON.stringify(strategyList.value))
+                isSortMode.value = true
             }
 
-            // 拖拽结束
-            const handleDragEnd = () => {
-                // 拖拽结束时可以选择立即保存或等用户点击完成排序
+            // 保存排序
+            const handleSaveSort = async () => {
+                await saveStrategyOrder()
+                isSortMode.value = false
+                originalStrategyList.value = []
+            }
+
+            // 取消排序
+            const handleCancelSort = () => {
+                // 恢复原来的顺序
+                strategyList.value = JSON.parse(JSON.stringify(originalStrategyList.value))
+                isSortMode.value = false
+                originalStrategyList.value = []
             }
 
             // 保存策略顺序
             const saveStrategyOrder = async () => {
                 try {
-                    const orderIds = strategyList.value.map(s => s.id)
+                    const orderedIds = strategyList.value.map(s => s.id)
                     await proxy.$store.dispatch('environment/updateSchedulingStrategyOrder', {
                         projectId: projectId.value,
                         envHashId: envHashId.value,
-                        params: { orderIds }
+                        params: { orderedIds }
                     })
                     proxy.$bkMessage({
                         theme: 'success',
                         message: proxy.$t('environment.scheduling.sortSaved')
                     })
+                    await fetchStrategyList()
                 } catch (err) {
                     console.error('保存排序失败:', err)
                     proxy.$bkMessage({
@@ -341,7 +435,7 @@
                         projectId: projectId.value,
                         envHashId: envHashId.value,
                         strategyId: strategy.id,
-                        enabled: value
+                        params: { enabled: value }
                     })
                     proxy.$bkMessage({
                         theme: 'success',
@@ -358,16 +452,6 @@
                         message: err.message
                     })
                 }
-            }
-
-            // 获取条件样式类
-            const getConditionClass = (condition) => {
-                const classMap = {
-                    affinity: 'condition-affinity',
-                    idleNode: 'condition-idle',
-                    availableNode: 'condition-available'
-                }
-                return classMap[condition.type] || ''
             }
 
             // 获取条件标签
@@ -393,55 +477,50 @@
             // 获取操作符标签
             const getOperatorLabel = (operator) => {
                 const operatorMap = {
-                    '==': '==',
-                    '!=': '!=',
-                    'in': 'in',
-                    'not_in': 'not in'
+                    'EQUAL': '==',
+                    'GTE': '>=',
+                    'LTE': '<=',
+                    'GT': '>',
+                    'LT': '<',
+                    'START_WITH': 'StartWith',
+                    'END_WITH': 'EndWith',
+                    'CONTAINS': 'Contains',
+                    'IN': 'in'
                 }
                 return operatorMap[operator] || operator
             }
 
-            // 获取策略展示项（展平条件和标签）
+            // 获取策略展示项
             const getStrategyDisplayItems = (strategy) => {
                 const items = []
                 const conditions = strategy.conditions || []
                 const labels = strategy.labels || []
+                const totalCount = conditions.length + labels.length
 
                 // 添加条件
                 conditions.forEach((condition, idx) => {
-                    if (idx > 0) {
-                        items.push({
-                            id: `${strategy.id}-c-conn-${idx}`,
-                            type: 'connector',
-                            class: 'condition-connector'
-                        })
-                    }
+                    const currentIndex = idx
                     items.push({
                         id: `${strategy.id}-c-${idx}`,
                         type: 'condition',
-                        class: 'condition-item',
-                        tagClass: getConditionClass(condition),
                         label: getConditionLabel(condition),
-                        desc: getConditionDesc(condition)
+                        desc: getConditionDesc(condition),
+                        showConnector: currentIndex > 0, // 非第一个显示 and
+                        hasNext: currentIndex < totalCount - 1 // 是否有下一个（用于连接线）
                     })
                 })
 
                 // 添加标签
                 labels.forEach((label, idx) => {
-                    if (conditions.length > 0 || idx > 0) {
-                        items.push({
-                            id: `${strategy.id}-l-conn-${idx}`,
-                            type: 'connector',
-                            class: 'condition-connector'
-                        })
-                    }
+                    const currentIndex = conditions.length + idx
                     items.push({
                         id: `${strategy.id}-l-${idx}`,
                         type: 'label',
-                        class: 'label-item',
-                        key: label.key,
+                        key: label.keyName || label.key,
                         operator: getOperatorLabel(label.operator),
-                        value: label.value
+                        value: label.valueName || label.value,
+                        showConnector: currentIndex > 0, // 非第一个显示 and
+                        hasNext: currentIndex < totalCount - 1 // 是否有下一个
                     })
                 })
 
@@ -462,6 +541,7 @@
                 currentStrategy,
                 projectId,
                 envHashId,
+                currentEnv,
                 ENV_RESOURCE_ACTION,
                 ENV_RESOURCE_TYPE,
 
@@ -472,10 +552,10 @@
                 handleDeleteStrategy,
                 handleSaveStrategy,
                 handleCancelStrategy,
-                handleToggleSortMode,
-                handleDragEnd,
+                handleStartSort,
+                handleSaveSort,
+                handleCancelSort,
                 handleToggleStrategy,
-                getConditionClass,
                 getConditionLabel,
                 getConditionDesc,
                 getOperatorLabel,
@@ -502,6 +582,8 @@
 
     .strategy-list {
         min-height: 200px;
+        max-height: calc(100vh - 400px);
+        overflow-y: auto;
     }
 
     .strategy-draggable {
@@ -512,26 +594,72 @@
 
     .strategy-item {
         display: flex;
-        align-items: flex-start;
-        padding: 12px 16px;
-        background: #fff;
+        flex-direction: column;
         border: 1px solid #DCDEE5;
         border-radius: 2px;
+        overflow: hidden;
         transition: all 0.2s ease-in-out;
 
         &:hover {
-            .strategy-actions {
+            .strategy-header .strategy-actions {
                 opacity: 1;
             }
         }
 
         &.is-draggable {
-            cursor: move;
-            border-left: 3px solid #3A84FF;
 
             &:hover {
                 border-color: #3A84FF;
                 box-shadow: 0 2px 6px rgba(58, 132, 255, 0.15);
+            }
+        }
+
+        // 头部区域：灰色背景
+        .strategy-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            background: #F5F7FA;
+            border-bottom: 1px solid #DCDEE5;
+
+            .header-left {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .strategy-name {
+                font-size: 14px;
+                font-weight: 500;
+                color: #313238;
+            }
+
+            .strategy-actions {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                opacity: 0;
+                transition: opacity 0.2s;
+
+                .bk-button {
+                    padding: 0 4px;
+                    min-width: auto;
+
+                    .bk-icon {
+                        font-size: 16px;
+                        color: #979BA5;
+                    }
+
+                    &:hover {
+                        .icon-edit-line {
+                            color: #3A84FF;
+                        }
+                        .icon-delete {
+                            color: #EA3636;
+                        }
+                    }
+                }
             }
         }
 
@@ -541,12 +669,11 @@
             justify-content: center;
             width: 16px;
             height: 22px;
-            margin-right: 12px;
             cursor: grab;
-            color: #979BA5;
+            color: #C4C6CC;
 
             &:hover {
-                color: #3A84FF;
+                color: #979BA5;
             }
 
             &:active {
@@ -554,47 +681,100 @@
             }
 
             .bk-icon {
-                font-size: 14px;
+                font-size: 16px;
             }
         }
 
-        .bk-switcher {
-            flex-shrink: 0;
-            margin-right: 16px;
-            margin-top: 1px;
-        }
-
+        // 内容区域：白色背景
         .strategy-content {
-            flex: 1;
-            min-width: 0;
+            padding: 12px 16px;
+            background: #fff;
         }
 
         .conditions-wrapper {
             display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
+            align-items: flex-start;
+
+            &.has-multiple {
+                .conditions-list {
+                    .condition-row {
+                        position: relative;
+                        padding-left: 12px;
+
+                        // 每行左侧的横向连接线
+                        &::before {
+                            content: '';
+                            position: absolute;
+                            left: 0;
+                            top: 50%;
+                            width: 8px;
+                            border-top: 1px dashed #DCDEE5;
+                        }
+                    }
+                }
+            }
         }
 
-        .condition-connector {
-            display: inline-flex;
+        .and-connector {
+            position: relative;
+            display: flex;
             align-items: center;
-            justify-content: center;
-            min-width: 32px;
-            height: 22px;
-            padding: 0 8px;
-            background: #F5F7FA;
-            border-radius: 2px;
-            font-size: 12px;
-            color: #FF9C01;
-            font-weight: 500;
+            justify-content: flex-start;
+            width: 40px;
+            flex-shrink: 0;
+            align-self: stretch;
+
+            .connector-tag {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 28px;
+                height: 28px;
+                padding: 0 4px;
+                background: #FFF;
+                border: 1px solid #FF9C01;
+                border-radius: 4px;
+                font-size: 11px;
+                color: #FF9C01;
+                font-weight: 500;
+                z-index: 1;
+            }
+
+            // 从 and 标签中间延伸出去的横线
+            &::before {
+                content: '';
+                position: absolute;
+                left: 14px;
+                top: 50%;
+                width: 24px;
+                border-top: 1px dashed #DCDEE5;
+            }
+
+            // 右侧竖线，连接所有条件
+            &::after {
+                content: '';
+                position: absolute;
+                right: 0;
+                top: 11px;
+                bottom: 11px;
+                width: 1px;
+                border-right: 1px dashed #DCDEE5;
+            }
         }
 
-        .condition-item {
+        .conditions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .condition-row {
             display: flex;
             align-items: center;
             gap: 8px;
+            min-height: 22px;
         }
+
 
         .condition-tag {
             display: inline-flex;
@@ -604,17 +784,8 @@
             border-radius: 2px;
             font-size: 12px;
             white-space: nowrap;
-
-            &.condition-affinity {
-                color: #3A84FF;
-                background: #E1ECFF;
-            }
-
-            &.condition-idle,
-            &.condition-available {
-                color: #63656E;
-                background: #F0F1F5;
-            }
+            color: #63656E;
+            background: #F0F1F5;
         }
 
         .condition-desc {
@@ -623,60 +794,26 @@
             white-space: nowrap;
         }
 
-        .label-item {
+        .label-key-tag {
             display: inline-flex;
             align-items: center;
             height: 22px;
             padding: 0 8px;
-            background: #F5F7FA;
-            border: 1px solid #DCDEE5;
+            background: #F0F1F5;
             border-radius: 2px;
-            gap: 6px;
-
-            .label-key {
-                font-size: 12px;
-                color: #313238;
-                font-weight: 500;
-            }
-
-            .label-operator {
-                font-size: 12px;
-                color: #979BA5;
-            }
-
-            .label-value {
-                font-size: 12px;
-                color: #313238;
-            }
+            font-size: 12px;
+            color: #63656E;
         }
 
-        .strategy-actions {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            margin-left: 16px;
-            flex-shrink: 0;
-            opacity: 0;
-            transition: opacity 0.2s;
+        .label-operator {
+            font-size: 12px;
+            color: #979BA5;
+            margin: 0 6px;
+        }
 
-            .bk-button {
-                padding: 0 4px;
-                min-width: auto;
-
-                .bk-icon {
-                    font-size: 16px;
-                    color: #979BA5;
-                }
-
-                &:hover {
-                    .icon-edit-line {
-                        color: #3A84FF;
-                    }
-                    .icon-delete {
-                        color: #EA3636;
-                    }
-                }
-            }
+        .label-value {
+            font-size: 12px;
+            color: #313238;
         }
     }
 }
