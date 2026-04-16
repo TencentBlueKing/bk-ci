@@ -28,7 +28,10 @@
       "true": "Yes",
       "false": "No",
       "pleaseSelect": "Please select a creation node",
-      "unAccessUser": "User {0} is not a member of the current project"
+      "unAccessUser": "User {0} is not a member of the current project",
+      "add": "Add",
+      "remove": "Remove",
+      "all": "All"
     },
     "sidebar": {
       "myFlows": "My Creation Flows",
@@ -164,6 +167,7 @@
       "more": "More",
       "permissionSettings": "Permission Settings",
       "permissionDelegation": "Permission Delegation",
+      "visibleRange": "Visible Range",
       "operationLog": "Operation Log",
       "status": "Status",
       "repository": "Repository",
@@ -710,6 +714,11 @@
       "expiredTips": "No execution permissions, expired",
       "resetFailed": "Reset authorization failed",
       "confirm": "Confirm"
+    },
+    "visibleRange": {
+      "aiCall": "AI Call",
+      "apiTrigger": "API Trigger",
+      "visibleRangeDesc": "{0} is used to control who can discover and use this creation flow. After configuration, only users or organization members within the scope can use the flow in scenarios such as {1}, {2}, etc. Users outside the scope will not be able to retrieve this flow.<br/>For example: An operations engineer creates a flow to automatically evaluate database change requests, and can limit the available scope to the corresponding business team to avoid interference from irrelevant personnel requests."
     },
     "operator": {
       "operator": "Operator",
