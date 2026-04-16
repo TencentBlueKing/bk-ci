@@ -1,6 +1,9 @@
 package com.tencent.devops.environment.dao
 
+import com.tencent.devops.model.environment.tables.TNodeTagKey
 import com.tencent.devops.model.environment.tables.TNodeTagValues
+import com.tencent.devops.model.environment.tables.records.TNodeTagKeyRecord
+import com.tencent.devops.model.environment.tables.records.TNodeTagValuesRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -32,6 +35,16 @@ class NodeTagValueDao {
                 }
             }
             dslContext.batchInsert(records).execute()
+        }
+    }
+
+    fun fetchNodeKeyValueByIds(
+        dslContext: DSLContext,
+        projectId: String,
+        valueIds: Set<Long>
+    ): List<TNodeTagValuesRecord> {
+        with(TNodeTagValues.T_NODE_TAG_VALUES) {
+            return dslContext.selectFrom(this).where(ID.`in`(valueIds)).and(PROJECT_ID.eq(projectId)).fetch()
         }
     }
 }

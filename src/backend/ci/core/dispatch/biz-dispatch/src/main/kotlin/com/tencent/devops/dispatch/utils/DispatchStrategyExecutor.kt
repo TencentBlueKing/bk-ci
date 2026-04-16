@@ -50,6 +50,7 @@ class DispatchStrategyExecutor(
             pipelineLog("$lv \"${strategy.strategyName}\" scope=${strategy.scope} rule=${strategy.nodeRule}" +
                 if (!strategy.labelSelector.isNullOrEmpty()) " labels=${strategy.labelSelector?.size}" else "")
 
+            // 检测是否命中范围
             val candidates = getCandidates(strategy.scope)
             if (candidates.isEmpty()) {
                 pipelineLog("$lv No candidates for scope=${strategy.scope}, skip")
@@ -153,7 +154,7 @@ class DispatchStrategyExecutor(
 
     private fun matchAndTry(
         agents: List<AgentWithLoad>,
-        nodeRule: NodeRule,
+        nodeRule: NodeRule?,
         tryAgent: (ThirdPartyAgent) -> Boolean,
         lv: String
     ): ThirdPartyAgent? {
@@ -163,6 +164,8 @@ class DispatchStrategyExecutor(
             val matched = when (nodeRule) {
                 NodeRule.IDLE -> isIdle(al)
                 NodeRule.AVAILABLE -> isAvailable(al)
+                // 没有规则就是默认都可以
+                else -> true
             }
 
             val a = al.agent
@@ -174,12 +177,12 @@ class DispatchStrategyExecutor(
 
             if (!matched) {
                 pipelineLog("$lv [${a.agentId}]${a.hostname}/${a.ip} " +
-                    "$loadDesc -> ${nodeRule.name} not satisfied")
+                    "$loadDesc -> ${nodeRule?.name ?: "NULL"} not satisfied")
                 continue
             }
 
             pipelineLog("$lv [${a.agentId}]${a.hostname}/${a.ip} " +
-                "$loadDesc -> ${nodeRule.name} matched, trying to dispatch")
+                "$loadDesc -> ${nodeRule?.name ?: "NULL"} matched, trying to dispatch")
 
             hasTryAgents.add(al.agent.agentId)
             if (tryAgent(al.agent)) {

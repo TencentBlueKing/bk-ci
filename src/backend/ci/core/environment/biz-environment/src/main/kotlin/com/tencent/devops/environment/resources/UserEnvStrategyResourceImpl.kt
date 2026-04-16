@@ -31,7 +31,7 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
             envId = HashUtil.decodeIdToLong(envHashId),
             userId = userId
         )
-        return Result(strategies.map { it.toVO() })
+        return Result(strategies)
     }
 
     override fun createStrategy(
@@ -44,7 +44,7 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
             projectId = projectId, envId = envId, userId = userId,
             strategyName = request.strategyName, scope = request.scope,
             nodeRule = request.nodeRule,
-            labelSelector = request.labelSelector?.map { it.toInternal() }
+            labelSelector = request.labelSelector
         )
         return Result(id)
     }
@@ -56,10 +56,11 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
         val envId = HashUtil.decodeIdToLong(envHashId)
         checkEnvEditPermission(userId, projectId, envId)
         envDispatchStrategyService.updateStrategy(
+            projectId = projectId,
             id = strategyId, userId = userId,
             strategyName = request.strategyName, scope = request.scope,
             nodeRule = request.nodeRule,
-            labelSelector = request.labelSelector?.map { it.toInternal() },
+            labelSelector = request.labelSelector,
             enabled = request.enabled
         )
         return Result(true)
@@ -99,26 +100,5 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
                 message = "User($userId) has no edit permission on env($envId) in project($projectId)"
             )
         }
-    }
-
-    companion object {
-        private fun DispatchStrategyConfig.toVO() = DispatchEnvStrategyVO(
-            id = id ?: 0L, projectId = projectId, envId = envId,
-            strategyType = strategyType, defaultStrategyCode = defaultStrategyCode,
-            strategyName = strategyName, scope = scope, nodeRule = nodeRule,
-            labelSelector = labelSelector?.map {
-                LabelSelectorVO(
-                    tagKeyId = it.tagKeyId,
-                    op = it.op,
-                    tagValueIds = it.tagValueIds
-                )
-            },
-            enabled = enabled, priority = priority,
-            createdUser = createdUser, updatedUser = updatedUser
-        )
-
-        private fun LabelSelectorVO.toInternal() = LabelSelector(
-            tagKeyId = tagKeyId, op = op, tagValueIds = tagValueIds
-        )
     }
 }

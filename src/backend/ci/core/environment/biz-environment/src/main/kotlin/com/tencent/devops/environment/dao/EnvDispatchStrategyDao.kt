@@ -28,7 +28,7 @@ class EnvDispatchStrategyDao {
             ).values(
                 config.projectId, config.envId, config.strategyType.name,
                 config.defaultStrategyCode?.name, config.strategyName,
-                config.scope.name, config.nodeRule.name,
+                config.scope.name, config.nodeRule?.name,
                 config.labelSelector?.let { JsonUtil.toJson(it) },
                 config.enabled, config.priority, config.createdUser, config.updatedUser, now, now
             ).returning(ID).fetchOne()!!.id
@@ -47,7 +47,7 @@ class EnvDispatchStrategyDao {
                 insert.values(
                     config.projectId, config.envId, config.strategyType.name,
                     config.defaultStrategyCode?.name, config.strategyName,
-                    config.scope.name, config.nodeRule.name,
+                    config.scope.name, config.nodeRule?.name,
                     config.labelSelector?.let { JsonUtil.toJson(it) },
                     config.enabled, config.priority, config.createdUser, config.updatedUser, now, now
                 )
@@ -124,13 +124,13 @@ class EnvDispatchStrategyDao {
         }
     }
 
-    fun countEnabled(dslContext: DSLContext, projectId: String, envId: Long): Long {
+    fun count(dslContext: DSLContext, projectId: String, envId: Long, enabled: Boolean?): Long {
         with(TEnvDispatchStrategy.T_ENV_DISPATCH_STRATEGY) {
-            return dslContext.selectCount().from(this)
+            val dsl = dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(ENV_ID.eq(envId))
-                .and(ENABLED.eq(true))
-                .fetchOne(0, Long::class.java)!!
+            enabled?.let { dsl.and(ENABLED.eq(enabled)) }
+            return dsl.fetchOne(0, Long::class.java)!!
         }
     }
 

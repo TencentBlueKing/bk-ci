@@ -2,38 +2,92 @@ package com.tencent.devops.environment.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.EnvDispatchStrategyDao
+import com.tencent.devops.environment.dao.NodeTagKeyDao
+import com.tencent.devops.environment.dao.NodeTagValueDao
+import com.tencent.devops.environment.pojo.DispatchEnvStrategyVO
 import com.tencent.devops.environment.pojo.DispatchStrategyConfig
 import com.tencent.devops.environment.pojo.LabelSelector
+import com.tencent.devops.environment.pojo.LabelSelectorVO
+import com.tencent.devops.environment.pojo.TagValue
 import com.tencent.devops.environment.pojo.enums.NodeRule
 import com.tencent.devops.environment.pojo.enums.StrategyScope
 import com.tencent.devops.environment.pojo.enums.StrategyType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class EnvDispatchStrategyService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation,
     private val envDispatchStrategyDao: EnvDispatchStrategyDao,
-    private val redisOperation: RedisOperation
+    private val nodeTagKeyDao: NodeTagKeyDao,
+    private val nodeTagValueDao: NodeTagValueDao
 ) {
+    @Value("\${environment.strategy.count:10}")
+    private val globalStrategyCount: Int = 10
+
+    @Value("\${environment.strategy.labelselector.count:10}")
+    private val globalStrategyLabelCount: Int = 10
+
     fun getOrInitStrategies(
         projectId: String,
         envId: Long,
         userId: String
-    ): List<DispatchStrategyConfig> {
+    ): List<DispatchEnvStrategyVO> {
         val existing = envDispatchStrategyDao.listByEnv(dslContext, projectId, envId)
         if (existing.isNotEmpty()) {
-            return existing
+            val tagKeyIds = mutableSetOf<Long>()
+            val tagValueIds = mutableSetOf<Long>()
+            existing.forEach { ex ->
+                ex.labelSelector?.forEach { labelSelector ->
+                    tagKeyIds.add(labelSelector.tagKeyId)
+                    tagValueIds.addAll(labelSelector.tagValueIds)
+                }
+            }
+            if (tagKeyIds.isEmpty() && tagValueIds.isEmpty()) {
+                return existing.map { DispatchEnvStrategyVO(it, null) }
+            }
+            val keyRecords = nodeTagKeyDao.fetchNodeKeyByIds(dslContext, projectId, tagKeyIds).associateBy { it.id }
+            val valueRecords =
+                nodeTagValueDao.fetchNodeKeyValueByIds(dslContext, projectId, tagValueIds).associateBy { it.id }
+            return existing.map {
+                DispatchEnvStrategyVO(it, it.labelSelector?.map { s ->
+                    LabelSelectorVO(
+                        tagKeyName = keyRecords[s.tagKeyId]?.keyName ?: "",
+                        tagKeyId = s.tagKeyId,
+                        op = s.op,
+                        tagValue = s.tagValueIds.map { v ->
+                            TagValue(
+                                tagValueId = v,
+                                tagValue = valueRecords[v]?.valueName ?: ""
+                            )
+                        }
+                    )
+                })
+            }
         }
-        val defaults = DispatchStrategyConfig.buildDefaults(projectId, envId, userId)
-        envDispatchStrategyDao.batchCreate(dslContext, defaults)
-        return envDispatchStrategyDao.listByEnv(dslContext, projectId, envId)
+        val lock = strategiesUpdateLock(projectId, envId)
+        // 遇见的概率及其小，第一次初始化后就没了，而且是页面，所以用户刷新下就好
+        if (!lock.tryLock()) {
+            return emptyList()
+        }
+        try {
+            val defaults = DispatchStrategyConfig.buildDefaults(projectId, envId, userId)
+            envDispatchStrategyDao.batchCreate(dslContext, defaults)
+            return envDispatchStrategyDao.listByEnv(dslContext, projectId, envId)
+                .map { DispatchEnvStrategyVO(it, null) }
+        } finally {
+            lock.unlock()
+        }
     }
 
     fun getEnabledStrategies(projectId: String, envId: Long?): List<DispatchStrategyConfig> {
@@ -54,14 +108,44 @@ class EnvDispatchStrategyService @Autowired constructor(
 
     fun createCustomStrategy(
         projectId: String, envId: Long, userId: String,
-        strategyName: String, scope: StrategyScope, nodeRule: NodeRule,
+        strategyName: String?, scope: StrategyScope, nodeRule: NodeRule?,
         labelSelector: List<LabelSelector>?
     ): Long {
+        if (nodeRule == null && labelSelector.isNullOrEmpty()) {
+            throw InvalidParamException("Strategy need last one rule")
+        }
         val lock = strategiesUpdateLock(projectId, envId)
         if (!lock.tryLock()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_STRATEGY_NOW_USING)
         }
         try {
+            // 校验数量限制
+            val strategyCount = envDispatchStrategyDao.count(dslContext, projectId, envId, null)
+            if (strategyCount > globalStrategyCount) {
+                val projectCount =
+                    redisOperation.get(genStrategyCountKey(projectId), true)?.toIntOrNull() ?: globalStrategyCount
+                if (strategyCount > projectCount) {
+                    throw PermissionForbiddenException(
+                        message = I18nUtil.getCodeLanMessage(
+                            EnvironmentMessageCode.ERROR_ENV_STRATEGY_COUNT_EXCEEDED,
+                            params = arrayOf(envId.toString(), projectCount.toString())
+                        )
+                    )
+                }
+            }
+            if ((labelSelector?.size ?: 0) > globalStrategyLabelCount) {
+                val projectCount =
+                    redisOperation.get(genStrategyLabelCountKey(projectId), true)?.toIntOrNull()
+                        ?: globalStrategyLabelCount
+                if ((labelSelector?.size ?: 0) > projectCount) {
+                    throw PermissionForbiddenException(
+                        message = I18nUtil.getCodeLanMessage(
+                            EnvironmentMessageCode.ERROR_ENV_STRATEGY_TAG_COUNT_EXCEEDED,
+                            params = arrayOf(envId.toString(), "", projectCount.toString())
+                        )
+                    )
+                }
+            }
             val existing = envDispatchStrategyDao.listByEnv(dslContext, projectId, envId)
             val maxPriority = existing.maxOfOrNull { it.priority } ?: -1
             val config = DispatchStrategyConfig(
@@ -78,6 +162,7 @@ class EnvDispatchStrategyService @Autowired constructor(
     }
 
     fun updateStrategy(
+        projectId: String,
         id: Long, userId: String,
         strategyName: String? = null, scope: StrategyScope? = null,
         nodeRule: NodeRule? = null, labelSelector: List<LabelSelector>? = null,
@@ -88,6 +173,19 @@ class EnvDispatchStrategyService @Autowired constructor(
         if (existing.strategyType == StrategyType.DEFAULT) {
             if (strategyName != null || scope != null || nodeRule != null || labelSelector != null) {
                 throw InvalidParamException("Default strategy only allows toggling enabled")
+            }
+        }
+        if ((labelSelector?.size ?: 0) > globalStrategyLabelCount) {
+            val projectCount =
+                redisOperation.get(genStrategyLabelCountKey(projectId), true)?.toIntOrNull()
+                    ?: globalStrategyLabelCount
+            if ((labelSelector?.size ?: 0) > projectCount) {
+                throw PermissionForbiddenException(
+                    message = I18nUtil.getCodeLanMessage(
+                        EnvironmentMessageCode.ERROR_ENV_STRATEGY_TAG_COUNT_EXCEEDED,
+                        params = arrayOf("", existing.strategyName ?: "", projectCount.toString())
+                    )
+                )
             }
         }
         // 不能存在全部都关闭的策略组
@@ -153,7 +251,7 @@ class EnvDispatchStrategyService @Autowired constructor(
     }
 
     private fun enforceProtection(projectId: String, envId: Long) {
-        val customEnabledCount = envDispatchStrategyDao.countEnabled(dslContext, projectId, envId)
+        val customEnabledCount = envDispatchStrategyDao.count(dslContext, projectId, envId, true)
         if (customEnabledCount <= 1L) {
             throw InvalidParamException("Cannot disable strategy when no strategy is enabled")
         }
@@ -167,6 +265,8 @@ class EnvDispatchStrategyService @Autowired constructor(
 
     companion object {
         private const val STRATEGY_UPDATE_LOCK_PREFIX = "environment:strategy:update:"
-        private val logger = LoggerFactory.getLogger(EnvDispatchStrategyService::class.java)
+
+        private fun genStrategyCountKey(projectId: String) = "environment:strategy:$projectId:count"
+        private fun genStrategyLabelCountKey(projectId: String) = "environment:strategy:$projectId:labelselector:count"
     }
 }
