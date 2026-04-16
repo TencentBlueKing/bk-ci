@@ -149,7 +149,7 @@
                     case this.hasDraftPipeline && this.isActiveBranchVersion:
                         return this.$t('template.templateCoverWarning')
                     case this.hasDraftPipeline:
-                        return this.isRollback ? this.$t('hasDraftTips', [this.draftBaseVersionName]) : this.$t('hasDraft')
+                        return this.$t('hasDraft')
                     default:
                         return this.$t(this.isActiveBranchVersion ? 'createBranchDraftTips' : 'createDraftTips', [this.versionName])
                 }
@@ -179,7 +179,18 @@
             async handleClick () {
                 // 回滚操作
                 if (this.isRollback) {
-                    await this.handleRollback()
+                    const result = await this.fetchLatestDraftStatus({
+                        projectId: this.projectId,
+                        id: this.rollbackId,
+                        actionType: 'EDIT',
+                        isTemplate: this.isTemplate,
+                        pipelineInfo: this.pipelineInfo
+                    })
+                    
+                    this.draftStatus = result.status
+                    this.draftSaveInfo = result.draftSaveInfo
+                    
+                    this.showDraftConfirmDialog()
                     return
                 }
 
@@ -187,25 +198,14 @@
                 await this.handleEdit()
             },
 
-            // 处理回滚操作
-            async handleRollback () {
-                // 约束模式流水线：需要检查是否允许回滚
-                if (this.isTemplatePipeline) {
-                    const isAllowed = await this.checkRollbackPermission()
-                    if (!isAllowed) return
-                }
-                this.showDraftConfirmDialog()
-            },
-
             // 处理编辑操作
             async handleEdit () {
-                // 版本列表页：分支版本且不是当前基准版本，直接确认
-                if (this.isVersionList && this.isActiveBranchVersion && this.version !== this.pipelineInfo?.baseVersion) {
+                // 分支版本且不是当前基准版本，直接确认
+                if (this.isActiveBranchVersion && this.version !== this.pipelineInfo?.baseVersion) {
                     this.showDraftConfirmDialog()
                     return
                 }
 
-                // 检测草稿状态
                 try {
                     const result = await this.fetchLatestDraftStatus({
                         projectId: this.projectId,

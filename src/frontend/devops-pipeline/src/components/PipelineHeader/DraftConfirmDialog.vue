@@ -24,28 +24,33 @@
                 {{ activeBranchVersionInfo }}
             </p>
             <div v-else>
-                <div v-if="isRollback">{{ $t('dropDraftTips', [versionName]) }}</div>
-                <div v-else>
-                    <p class="draft-info">
-                        <i18n
-                            path="existingDraft"
-                            class="existing-draft"
-                        >
-                            <span>{{ draftSaveInfo?.updater }}</span>
-                            <span>{{ draftSaveInfo?.updateTime }}</span>
-                        </i18n>
-                        <VersionDiffEntry
-                            style="cursor: pointer;"
-                            text
-                            :latest-version="draftSaveInfo?.draftVersion"
-                            :version="draftSaveInfo?.releaseVersion"
-                        >
-                            <Logo
-                                name="diff"
-                                size="14"
-                            />
-                        </VersionDiffEntry>
-                    </p>
+                <p class="draft-info">
+                    <i18n
+                        path="existingDraft"
+                        class="existing-draft"
+                    >
+                        <span>{{ draftSaveInfo?.updater }}</span>
+                        <span>{{ draftSaveInfo?.updateTime }}</span>
+                    </i18n>
+                    <VersionDiffEntry
+                        style="cursor: pointer;"
+                        text
+                        :latest-version="draftSaveInfo?.draftVersion"
+                        :version="draftSaveInfo?.releaseVersion"
+                    >
+                        <Logo
+                            name="diff"
+                            size="14"
+                        />
+                    </VersionDiffEntry>
+                </p>
+                <div
+                    v-if="isRollback"
+                    class="is-active-branch-version"
+                >
+                    {{ $t('rollbackTips', [versionName]) }}
+                </div>
+                <template v-else>
                     <div
                         v-if="draftStatus === DRAFT_STATUS.OUTDATED"
                         class="is-active-branch-version"
@@ -64,7 +69,7 @@
                     >
                         {{ $t('regenerateDraftOrEditExisting') }}
                     </div>
-                </div>
+                </template>
             </div>
         </div>
         <footer slot="footer">
@@ -72,7 +77,7 @@
                 theme="primary"
                 @click="rollback"
             >
-                {{ $t(isActiveBranchVersion ? 'resume' : isRollback ? 'newVersion' : 'newDraft') }}
+                {{ $t(isActiveBranchVersion ? 'resume' : isRollback ? 'rollbackConfirm' : 'newDraft') }}
             </bk-button>
             <bk-button
                 v-if="hasDraftPipeline && !isActiveBranchVersion"

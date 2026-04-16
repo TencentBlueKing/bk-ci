@@ -1895,6 +1895,8 @@
   "basedOn": "基于{0}",
   "editing": "编辑中",
   "confirmRollbackToThisHistory": "确定回滚至此历史记录？",
+  "rollbackTips": "确定回滚将基于 {0} 生成草稿，你也可以在原草稿基础上继续编辑。",
+  "rollbackConfirm": "确定回滚",
   "historyRollback": "历史记录：{0} {1}",
   "conflictingDraft": "冲突草稿",
   "savedAt": "保存于",

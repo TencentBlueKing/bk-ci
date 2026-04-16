@@ -262,7 +262,7 @@
         watch: {
             value (val) {
                 const activeVersion = this.versionList.find(item => item.version === val)
-                if (activeVersion) {
+                if (activeVersion && this.activeVersion?.version !== activeVersion.version) {
                     this.activeVersion = activeVersion
                 }
             },
@@ -429,20 +429,19 @@
                             await this.requestPipelineSummary(this.$route.params)
                             this.switchVersion(this.activeVersion.version)
                         }
-
                     } else {
                         this.versionList.push(...versions)
                     }
                     
                     // 设置初始选中版本
                     if (!this.activeVersion) {
-                        if (this.draftVersion && this.value === this.draftVersion) {
+                        if (this.value) {
+                            this.switchVersion(this.value)
+                        } else if (this.draftVersion) {
                             const version = this.versionList.find(item => item.draftVersion === this.draftVersion)
                             if (version) {
                                 this.switchVersion(version.version)
                             }
-                        } else {
-                            this.switchVersion(this.value)
                         }
                     }
                 } catch (error) {

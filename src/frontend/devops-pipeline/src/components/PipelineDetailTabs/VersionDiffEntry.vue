@@ -298,7 +298,8 @@
             async initDiff (version) {
                 this.activeVersion = this.version
                 // 如果存在 draftVersion，传递父草稿版本号，VersionSelector 会自动选中最新的子草稿
-                this.currentVersion = this.draftVersion || this.latestVersion
+                // 注意：草稿版本需要转换为 "draft-{draftVersion}" 格式，以匹配 VersionSelector 中转换后的版本格式
+                this.currentVersion = this.draftVersion ? `draft-${this.draftVersion}` : this.latestVersion
                 this.showVersionDiffDialog = true
                 this.isLoadYaml = true
                 

@@ -1892,6 +1892,8 @@
   "basedOn": "{0} に基づく",
   "editing": "編集中",
   "confirmRollbackToThisHistory": "この履歴にロールバックしてもよろしいですか？",
+  "rollbackTips": "ロールバックを確定すると、{0} に基づいて下書きが生成されます。元の下書きを基に編集を続けることもできます。",
+  "rollbackConfirm": "ロールバックを確定",
   "historyRollback": "履歴：{0} {1}",
   "conflictingDraft": "競合するドラフト",
   "savedAt": "保存済み",

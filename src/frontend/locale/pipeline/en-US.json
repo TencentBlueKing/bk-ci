@@ -1899,6 +1899,8 @@
   "basedOn": "Based on {0}",
   "editing": "Editing",
   "confirmRollbackToThisHistory": "Confirm rollback to this history record?",
+  "rollbackTips": "Confirming rollback will generate a draft based on {0}. You can also continue editing on the original draft.",
+  "rollbackConfirm": "Confirm Rollback",
   "historyRollback": "History Record: {0} {1}",
   "conflictingDraft": "Conflicting Draft",
   "savedAt": "Saved on",
