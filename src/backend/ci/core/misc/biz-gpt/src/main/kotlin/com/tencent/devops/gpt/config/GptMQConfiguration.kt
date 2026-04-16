@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -25,16 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:misc:model-plugin"))
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-event"))
-    api(project(":core:misc:api-gpt"))
-    api(project(":core:process:api-process"))
-    api(project(":core:common:common-pipeline"))
-    implementation("dev.langchain4j:langchain4j:0.33.0")
-    implementation("dev.langchain4j:langchain4j-open-ai:0.33.0")
+package com.tencent.devops.gpt.config
+
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.event.pojo.pipeline.PipelineAiSummaryEvent
+import com.tencent.devops.common.stream.ScsConsumerBuilder
+import com.tencent.devops.gpt.listener.PipelineAiSummaryListener
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Configuration
+
+/**
+ * biz-gpt模块MQ配置
+ * 注册AI摘要事件的消费者
+ */
+@Configuration
+class GptMQConfiguration {
+
+    @EventConsumer
+    fun pipelineAiSummaryConsumer(
+        @Autowired listener: PipelineAiSummaryListener
+    ) = ScsConsumerBuilder.build<PipelineAiSummaryEvent> { listener.execute(it) }
 }
