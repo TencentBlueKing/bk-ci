@@ -95,16 +95,10 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
                 yamlFileName
             }
 
-            val versionStatus = if (isDefaultBranch) {
-                VersionStatus.RELEASED
+            val (versionStatus, versionAction) = if (isDefaultBranch) {
+                Pair(VersionStatus.RELEASED, PipelineVersionAction.CREATE_RELEASE)
             } else {
-                VersionStatus.BRANCH
-            }
-
-            val versionAction = if (isDefaultBranch) {
-                PipelineVersionAction.CREATE_RELEASE
-            } else {
-                PipelineVersionAction.CREATE_BRANCH
+                Pair(VersionStatus.BRANCH, PipelineVersionAction.CREATE_BRANCH)
             }
 
             val pipelineAsCodeSettings = modelAndSetting.setting.pipelineAsCodeSettings?.copy(
