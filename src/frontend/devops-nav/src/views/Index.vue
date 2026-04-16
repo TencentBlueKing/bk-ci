@@ -170,13 +170,13 @@
         }
 
         switchToPersonalProject () {
-          const projectId = `_${this.user?.username ?? ''}`
+          const projectId = this.user && this.user.username ? `_${this.user.username}` : ''
           if (this.projectList.some(project => project.projectCode === projectId)) {
             this.$router.push({
               ...this.$route,
               params: {
                 ...this.$route.params,
-                projectId: `_${this.user.username}`
+                projectId
               }
             })
           } else {
