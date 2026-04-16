@@ -90,6 +90,7 @@ class PipelineDraftSaveReqConverter(
                 "Start to convert draft save request|$projectId|$pipelineId|$version|$storageType|$baseVersion"
             )
             // 注意: 如果是实例化的流水线,modelAndSetting中的model不含stage字段,只有模版引用信息
+            val requestChannelCode = ChannelCode.getRequestChannelCode()
             val (modelAndSetting, yamlWithVersion) = if (storageType == PipelineStorageType.YAML) {
                 if (yaml.isNullOrEmpty()) {
                     throw IllegalArgumentException("yaml can not be empty")
@@ -99,7 +100,8 @@ class PipelineDraftSaveReqConverter(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     yaml = yaml!!,
-                    aspects = AtomUtils.checkElementCanPauseBeforeRun(client, projectId)
+                    aspects = AtomUtils.checkElementCanPauseBeforeRun(client, projectId),
+                    channelCode = requestChannelCode
                 )
             } else {
                 if (modelAndSetting == null) {
@@ -122,7 +124,8 @@ class PipelineDraftSaveReqConverter(
                             version = request.baseVersion,
                             includeDraft = true
                         )?.yaml
-                    } ?: ""
+                    } ?: "",
+                    channelCode = requestChannelCode
                 )
                 Pair(newModelAndSetting, newYaml)
             }
