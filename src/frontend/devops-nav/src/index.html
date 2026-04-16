@@ -193,7 +193,7 @@
 
       function matchPathProjectId() {
         try {
-          var reg = /^\/console\/\w+\/([\w\-]+)?/;
+          var reg = /^\/console\/[\w-]+\/([\w\-]+)?/;
           var query = new URLSearchParams(location.search);
           if (
             query.has("projectCode") ||
@@ -208,7 +208,7 @@
             );
           } else if (
             location.pathname.match(
-              /^\/console\/(store|permission|manage|platform)\/(\w+)?/,
+              /^\/console\/(store|permission|manage|platform)\/([\w-]+)?/,
             )
           ) {
             // TODO store没有projectId
@@ -429,7 +429,7 @@
         for (var i = 0; i < serviceList.length; i++) {
           var children = serviceList[i].children;
           for (var j = 0; j < children.length; j++) {
-            var mod = children[j].link_new.replace(/^\/?(\w+)\S*/, "$1");
+            var mod = children[j].link_new.replace(/^\/?([\w-]+)\S*/, "$1");
             var serviceTitle = children[j].name.replace(/\(\S+?\)/, "");
             var assetMod = assetsJSON[mod];
             if (children[j].inject_type === "amd") {
@@ -477,7 +477,7 @@
       function init(projectList, allServices, userInfo) {
         var path = location.pathname.replace("/console", "");
         var headTag = document.head || document.getElementsByTagName("head")[0];
-        var pathReg = /^\/(\w+)\/?/;
+        var pathReg = /^\/([\w-]+)\/?/;
         var serviceObject = getServiceObject(
           allServices,
           window.SERVICE_ASSETS,
