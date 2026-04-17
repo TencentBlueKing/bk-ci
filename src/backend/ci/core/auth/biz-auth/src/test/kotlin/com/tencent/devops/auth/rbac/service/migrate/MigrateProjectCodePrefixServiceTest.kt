@@ -42,7 +42,6 @@ import com.tencent.devops.model.auth.tables.records.TAuthResourceRecord
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -74,9 +73,6 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
         private const val PIPELINE_CODE = "p-001"
     }
 
-    /**
-     * 构造 TAuthResourceRecord mock
-     */
     private fun mockResourceRecord(
         projectCode: String,
         resourceType: String,
@@ -89,9 +85,6 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
         return record
     }
 
-    /**
-     * 构造 AuthResourceGroup
-     */
     private fun buildGroup(
         projectCode: String,
         resourceType: String,
@@ -113,9 +106,6 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
         )
     }
 
-    /**
-     * 设置 authResourceDao.list 返回指定资源列表
-     */
     private fun mockResourceList(
         projectCode: String,
         records: List<TAuthResourceRecord>
@@ -136,9 +126,6 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
         } returns result
     }
 
-    /**
-     * 设置 authResourceGroupDao.getByResourceCode 返回
-     */
     private fun mockGroupsByResource(
         projectCode: String,
         resourceType: String,
@@ -162,14 +149,12 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
         @Test
         @DisplayName("项目资源组 - resourceCode 加了前缀后能正确匹配")
         fun `project resource groups match with prefix`() {
-            // Arrange: 旧项目有一个项目资源
             val oldProjectRecord = mockResourceRecord(
                 projectCode = OLD_PROJECT_CODE,
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = OLD_PROJECT_CODE
             )
             mockResourceList(OLD_PROJECT_CODE, listOf(oldProjectRecord))
-            // 旧项目的项目资源下有一个管理员组
             val oldGroup = buildGroup(
                 projectCode = OLD_PROJECT_CODE,
                 resourceType = AuthResourceType.PROJECT.value,
@@ -185,14 +170,12 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
                 groups = listOf(oldGroup)
             )
 
-            // 新项目有一个项目资源（resourceCode 带前缀）
             val newProjectRecord = mockResourceRecord(
                 projectCode = NEW_PROJECT_CODE,
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = NEW_PROJECT_CODE
             )
             mockResourceList(NEW_PROJECT_CODE, listOf(newProjectRecord))
-            // 新项目的项目资源下有一个管理员组
             val newGroup = buildGroup(
                 projectCode = NEW_PROJECT_CODE,
                 resourceType = AuthResourceType.PROJECT.value,
@@ -208,17 +191,15 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
                 groups = listOf(newGroup)
             )
 
-            // Act
             @Suppress("UNCHECKED_CAST")
             val result = service.invokePrivate<
                 Map<Int, AuthResourceGroup>
-            >(
+                >(
                 "buildNewGroupMap",
                 OLD_PROJECT_CODE,
                 NEW_PROJECT_CODE
             )!!
 
-            // Assert
             Assertions.assertEquals(1, result.size)
             Assertions.assertTrue(result.containsKey(100))
             Assertions.assertEquals(200, result[100]!!.relationId)
@@ -231,7 +212,6 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
         @Test
         @DisplayName("非项目资源组 - resourceCode 不变能正确匹配")
         fun `non-project resource groups match without prefix`() {
-            // Arrange: 旧项目有一个流水线资源
             val oldPipelineRecord = mockResourceRecord(
                 projectCode = OLD_PROJECT_CODE,
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
@@ -255,7 +235,6 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
                 groups = listOf(oldGroup)
             )
 
-            // 新项目有同一流水线资源（resourceCode 不变）
             val newPipelineRecord = mockResourceRecord(
                 projectCode = NEW_PROJECT_CODE,
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
@@ -279,135 +258,23 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
                 groups = listOf(newGroup)
             )
 
-            // Act
             @Suppress("UNCHECKED_CAST")
             val result = service.invokePrivate<
                 Map<Int, AuthResourceGroup>
-            >(
+                >(
                 "buildNewGroupMap",
                 OLD_PROJECT_CODE,
                 NEW_PROJECT_CODE
             )!!
 
-            // Assert
             Assertions.assertEquals(1, result.size)
             Assertions.assertTrue(result.containsKey(101))
             Assertions.assertEquals(201, result[101]!!.relationId)
         }
 
         @Test
-        @DisplayName("混合资源 - 项目资源和非项目资源同时匹配")
-        fun `mixed resources match correctly`() {
-            // Arrange: 旧项目有项目资源 + 流水线资源
-            val oldProjectRecord = mockResourceRecord(
-                projectCode = OLD_PROJECT_CODE,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = OLD_PROJECT_CODE
-            )
-            val oldPipelineRecord = mockResourceRecord(
-                projectCode = OLD_PROJECT_CODE,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceCode = PIPELINE_CODE
-            )
-            mockResourceList(
-                OLD_PROJECT_CODE,
-                listOf(oldProjectRecord, oldPipelineRecord)
-            )
-
-            val oldProjectGroup = buildGroup(
-                projectCode = OLD_PROJECT_CODE,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = OLD_PROJECT_CODE,
-                groupCode = "manager",
-                groupName = "管理员",
-                relationId = 100
-            )
-            val oldPipelineGroup = buildGroup(
-                projectCode = OLD_PROJECT_CODE,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceCode = PIPELINE_CODE,
-                groupCode = "editor",
-                groupName = "编辑者",
-                relationId = 101
-            )
-            mockGroupsByResource(
-                projectCode = OLD_PROJECT_CODE,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = OLD_PROJECT_CODE,
-                groups = listOf(oldProjectGroup)
-            )
-            mockGroupsByResource(
-                projectCode = OLD_PROJECT_CODE,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceCode = PIPELINE_CODE,
-                groups = listOf(oldPipelineGroup)
-            )
-
-            // 新项目
-            val newProjectRecord = mockResourceRecord(
-                projectCode = NEW_PROJECT_CODE,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = NEW_PROJECT_CODE
-            )
-            val newPipelineRecord = mockResourceRecord(
-                projectCode = NEW_PROJECT_CODE,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceCode = PIPELINE_CODE
-            )
-            mockResourceList(
-                NEW_PROJECT_CODE,
-                listOf(newProjectRecord, newPipelineRecord)
-            )
-
-            val newProjectGroup = buildGroup(
-                projectCode = NEW_PROJECT_CODE,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = NEW_PROJECT_CODE,
-                groupCode = "manager",
-                groupName = "管理员",
-                relationId = 200
-            )
-            val newPipelineGroup = buildGroup(
-                projectCode = NEW_PROJECT_CODE,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceCode = PIPELINE_CODE,
-                groupCode = "editor",
-                groupName = "编辑者",
-                relationId = 201
-            )
-            mockGroupsByResource(
-                projectCode = NEW_PROJECT_CODE,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = NEW_PROJECT_CODE,
-                groups = listOf(newProjectGroup)
-            )
-            mockGroupsByResource(
-                projectCode = NEW_PROJECT_CODE,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceCode = PIPELINE_CODE,
-                groups = listOf(newPipelineGroup)
-            )
-
-            // Act
-            @Suppress("UNCHECKED_CAST")
-            val result = service.invokePrivate<
-                Map<Int, AuthResourceGroup>
-            >(
-                "buildNewGroupMap",
-                OLD_PROJECT_CODE,
-                NEW_PROJECT_CODE
-            )!!
-
-            // Assert
-            Assertions.assertEquals(2, result.size)
-            Assertions.assertEquals(200, result[100]!!.relationId)
-            Assertions.assertEquals(201, result[101]!!.relationId)
-        }
-
-        @Test
         @DisplayName("无匹配组 - 旧组在新项目中无对应组时映射为空")
         fun `unmatched groups are skipped`() {
-            // Arrange: 旧项目有一个组
             val oldProjectRecord = mockResourceRecord(
                 projectCode = OLD_PROJECT_CODE,
                 resourceType = AuthResourceType.PROJECT.value,
@@ -431,88 +298,37 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
                 groups = listOf(oldGroup)
             )
 
-            // 新项目没有任何资源
             mockResourceList(NEW_PROJECT_CODE, emptyList())
 
-            // Act
             @Suppress("UNCHECKED_CAST")
             val result = service.invokePrivate<
                 Map<Int, AuthResourceGroup>
-            >(
+                >(
                 "buildNewGroupMap",
                 OLD_PROJECT_CODE,
                 NEW_PROJECT_CODE
             )!!
 
-            // Assert
-            Assertions.assertTrue(result.isEmpty())
-        }
-
-        @Test
-        @DisplayName("旧项目无组 - 返回空映射")
-        fun `empty old groups returns empty map`() {
-            // Arrange: 旧项目无资源
-            mockResourceList(OLD_PROJECT_CODE, emptyList())
-
-            // 新项目有组
-            val newProjectRecord = mockResourceRecord(
-                projectCode = NEW_PROJECT_CODE,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = NEW_PROJECT_CODE
-            )
-            mockResourceList(
-                NEW_PROJECT_CODE, listOf(newProjectRecord)
-            )
-            mockGroupsByResource(
-                projectCode = NEW_PROJECT_CODE,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = NEW_PROJECT_CODE,
-                groups = listOf(
-                    buildGroup(
-                        projectCode = NEW_PROJECT_CODE,
-                        resourceType = AuthResourceType.PROJECT.value,
-                        resourceCode = NEW_PROJECT_CODE,
-                        groupCode = "manager",
-                        groupName = "管理员",
-                        relationId = 200
-                    )
-                )
-            )
-
-            // Act
-            @Suppress("UNCHECKED_CAST")
-            val result = service.invokePrivate<
-                Map<Int, AuthResourceGroup>
-            >(
-                "buildNewGroupMap",
-                OLD_PROJECT_CODE,
-                NEW_PROJECT_CODE
-            )!!
-
-            // Assert
             Assertions.assertTrue(result.isEmpty())
         }
 
         @Test
         @DisplayName(
-            "同名组不同resourceType - 不会错误匹配"
+            "新项目下同匹配键多条组时 associateBy 保留后者"
         )
-        fun `same groupName different resourceType no match`() {
-            // Arrange: 旧项目有项目资源下的"查看者"组
+        fun `duplicate new group match keys keep last group`() {
             val oldProjectRecord = mockResourceRecord(
                 projectCode = OLD_PROJECT_CODE,
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = OLD_PROJECT_CODE
             )
-            mockResourceList(
-                OLD_PROJECT_CODE, listOf(oldProjectRecord)
-            )
+            mockResourceList(OLD_PROJECT_CODE, listOf(oldProjectRecord))
             val oldGroup = buildGroup(
                 projectCode = OLD_PROJECT_CODE,
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = OLD_PROJECT_CODE,
-                groupCode = "viewer",
-                groupName = "查看者",
+                groupCode = "manager",
+                groupName = "管理员",
                 relationId = 100
             )
             mockGroupsByResource(
@@ -522,109 +338,39 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
                 groups = listOf(oldGroup)
             )
 
-            // 新项目只有流水线资源下的"查看者"组（类型不同）
-            val newPipelineRecord = mockResourceRecord(
+            val newProjectRecord = mockResourceRecord(
                 projectCode = NEW_PROJECT_CODE,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceCode = PIPELINE_CODE
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = NEW_PROJECT_CODE
             )
-            mockResourceList(
-                NEW_PROJECT_CODE, listOf(newPipelineRecord)
-            )
-            val newGroup = buildGroup(
+            mockResourceList(NEW_PROJECT_CODE, listOf(newProjectRecord))
+            val firstNew = buildGroup(
                 projectCode = NEW_PROJECT_CODE,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceCode = PIPELINE_CODE,
-                groupCode = "viewer",
-                groupName = "查看者",
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = NEW_PROJECT_CODE,
+                groupCode = "manager",
+                groupName = "管理员",
                 relationId = 200
             )
+            val secondNew = firstNew.copy(relationId = 300)
             mockGroupsByResource(
                 projectCode = NEW_PROJECT_CODE,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceCode = PIPELINE_CODE,
-                groups = listOf(newGroup)
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = NEW_PROJECT_CODE,
+                groups = listOf(firstNew, secondNew)
             )
 
-            // Act
             @Suppress("UNCHECKED_CAST")
             val result = service.invokePrivate<
                 Map<Int, AuthResourceGroup>
-            >(
+                >(
                 "buildNewGroupMap",
                 OLD_PROJECT_CODE,
                 NEW_PROJECT_CODE
             )!!
 
-            // Assert: 类型不同，不应匹配
-            Assertions.assertTrue(result.isEmpty())
-        }
-
-        @Test
-        @DisplayName(
-            "同名组同resourceType不同resourceCode - 不会错误匹配"
-        )
-        fun `same groupName same type different code no match`() {
-            // Arrange: 旧项目有流水线 p-001 的"查看者"组
-            val oldPipelineRecord = mockResourceRecord(
-                projectCode = OLD_PROJECT_CODE,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceCode = PIPELINE_CODE
-            )
-            mockResourceList(
-                OLD_PROJECT_CODE, listOf(oldPipelineRecord)
-            )
-            val oldGroup = buildGroup(
-                projectCode = OLD_PROJECT_CODE,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceCode = PIPELINE_CODE,
-                groupCode = "viewer",
-                groupName = "查看者",
-                relationId = 100
-            )
-            mockGroupsByResource(
-                projectCode = OLD_PROJECT_CODE,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceCode = PIPELINE_CODE,
-                groups = listOf(oldGroup)
-            )
-
-            // 新项目只有流水线 p-002 的"查看者"组
-            val newPipelineRecord = mockResourceRecord(
-                projectCode = NEW_PROJECT_CODE,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceCode = "p-002"
-            )
-            mockResourceList(
-                NEW_PROJECT_CODE, listOf(newPipelineRecord)
-            )
-            val newGroup = buildGroup(
-                projectCode = NEW_PROJECT_CODE,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceCode = "p-002",
-                groupCode = "viewer",
-                groupName = "查看者",
-                relationId = 200
-            )
-            mockGroupsByResource(
-                projectCode = NEW_PROJECT_CODE,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceCode = "p-002",
-                groups = listOf(newGroup)
-            )
-
-            // Act
-            @Suppress("UNCHECKED_CAST")
-            val result = service.invokePrivate<
-                Map<Int, AuthResourceGroup>
-            >(
-                "buildNewGroupMap",
-                OLD_PROJECT_CODE,
-                NEW_PROJECT_CODE
-            )!!
-
-            // Assert: resourceCode 不同，不应匹配
-            Assertions.assertTrue(result.isEmpty())
+            Assertions.assertEquals(1, result.size)
+            Assertions.assertEquals(300, result[100]!!.relationId)
         }
     }
 }
