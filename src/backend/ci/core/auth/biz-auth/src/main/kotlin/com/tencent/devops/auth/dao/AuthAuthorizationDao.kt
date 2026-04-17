@@ -211,6 +211,52 @@ class AuthAuthorizationDao {
         return conditions
     }
 
+    /**
+     * 按资源类型分组统计用户在项目中的授权数量。
+     * @return Map<资源类型, 数量>
+     */
+    fun countGroupByResourceType(
+        dslContext: DSLContext,
+        projectCode: String,
+        handoverFrom: String
+    ): Map<String, Long> {
+        return with(TAuthResourceAuthorization.T_AUTH_RESOURCE_AUTHORIZATION) {
+            dslContext.select(RESOURCE_TYPE, org.jooq.impl.DSL.count())
+                .from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(HANDOVER_FROM.eq(handoverFrom))
+                .groupBy(RESOURCE_TYPE)
+                .fetch()
+                .associate { it.value1() to it.value2().toLong() }
+        }
+    }
+
+    fun countDistinctAuthorizersInProject(
+        dslContext: DSLContext,
+        projectCode: String
+    ): Int {
+        return with(TAuthResourceAuthorization.T_AUTH_RESOURCE_AUTHORIZATION) {
+            dslContext.select(org.jooq.impl.DSL.countDistinct(HANDOVER_FROM))
+                .from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
+    fun countByResourceTypeInProject(
+        dslContext: DSLContext,
+        projectCode: String
+    ): Map<String, Long> {
+        return with(TAuthResourceAuthorization.T_AUTH_RESOURCE_AUTHORIZATION) {
+            dslContext.select(RESOURCE_TYPE, org.jooq.impl.DSL.count())
+                .from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .groupBy(RESOURCE_TYPE)
+                .fetch()
+                .associate { it.value1() to it.value2().toLong() }
+        }
+    }
+
     fun listUserProjects(
         dslContext: DSLContext,
         userId: String
