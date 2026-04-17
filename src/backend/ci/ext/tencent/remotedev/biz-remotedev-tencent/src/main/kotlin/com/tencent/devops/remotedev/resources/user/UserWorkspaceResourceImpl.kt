@@ -287,13 +287,11 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun getLogUploadUrl(
-        userId: String,
-        workspaceName: String
+        userId: String
     ): Result<LogUploadUrl> {
         return Result(
             cosLogUploadService.generateLogUploadUrl(
-                userId = userId,
-                workspaceName = workspaceName
+                userId = userId
             )
         )
     }

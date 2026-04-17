@@ -36,24 +36,24 @@ class CosLogUploadService {
     val expireSeconds: Long = 600
 
     fun generateLogUploadUrl(
-        userId: String,
-        workspaceName: String
+        userId: String
     ): LogUploadUrl {
         val now = LocalDateTime.now()
         val dateDir = now.format(DATE_FORMATTER)
         val timePart = now.format(TIME_FORMATTER)
-        val key = "cvd-box-logs/$dateDir/$userId-$timePart-$workspaceName.zip"
+        val key = "cvd-box-logs/$dateDir/$userId-$timePart.zip"
 
         val cosClient = buildCosClient()
         try {
-            val expiration = Date(System.currentTimeMillis() + expireSeconds * 1000)
+            val expiration = Date(
+                System.currentTimeMillis() + expireSeconds * 1000
+            )
             val presignedUrl = cosClient.generatePresignedUrl(
                 bucket, key, expiration, HttpMethodName.PUT
             )
             val replacedUrl = replaceDomain(presignedUrl)
             logger.info(
-                "Generated log upload url for user=$userId, " +
-                    "workspace=$workspaceName, key=$key"
+                "Generated log upload url for user=$userId, key=$key"
             )
             return LogUploadUrl(
                 url = replacedUrl,
