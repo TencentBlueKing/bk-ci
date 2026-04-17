@@ -32,19 +32,15 @@ import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.pojo.AuthResourceGroup
-import com.tencent.devops.auth.pojo.dto.GroupAddDTO
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.model.auth.tables.TAuthResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
 
 /**
  * 迁移项目ID前缀服务
@@ -58,7 +54,6 @@ class MigrateProjectCodePrefixService @Autowired constructor(
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
     private val permissionResourceService: PermissionResourceService,
-    private val permissionResourceGroupService: PermissionResourceGroupService,
     private val permissionResourceMemberService: PermissionResourceMemberService
 ) {
 
@@ -75,10 +70,10 @@ class MigrateProjectCodePrefixService @Autowired constructor(
      * 1. 获取所有不含.的distinct项目ID（过滤测试数据）
      * 2. 对每个项目：
      *    a. 创建新项目资源（tencent.前缀）及默认组
-     *    b. 迁移项目级别的自定义组（groupCode=custom，同时调IAM+写DB）
-     *    c. 创建非项目资源及默认组
-     *    d. 迁移组成员（同时调IAM+写DB，保留原过期时间）
-     *    e. 删除旧数据
+     *    b. 创建非项目资源及默认组
+     *    c. 迁移组成员（通过 resourceType+resourceCode+groupName 匹配，
+     *       同时调IAM+写DB，保留原过期时间）
+     *    d. 删除旧数据
      */
     fun migrateProjectCodePrefix(): Boolean {
         logger.info("Start migrating project code prefix")
@@ -105,6 +100,7 @@ class MigrateProjectCodePrefixService @Autowired constructor(
         return dslContext.selectDistinct(t.PROJECT_CODE)
             .from(t)
             .where(t.PROJECT_CODE.notLike("%.%"))
+            .and(t.RESOURCE_TYPE.eq(AuthResourceType.PROJECT.value))
             .fetch(t.PROJECT_CODE)
     }
 
@@ -124,7 +120,7 @@ class MigrateProjectCodePrefixService @Autowired constructor(
         // Step 2: 创建非项目资源及默认组
         createNonProjectResources(oldProjectCode, newProjectCode)
 
-        // Step 3: 迁移组成员（含默认组和自定义组）
+        // Step 3: 迁移组成员（通过组名称匹配）
         migrateGroupMembers(oldProjectCode, newProjectCode)
 
         // Step 4: 删除旧项目数据
@@ -177,60 +173,7 @@ class MigrateProjectCodePrefixService @Autowired constructor(
     }
 
     /**
-     * Step 2: 迁移项目级别的自定义组（groupCode=custom）
-     * 通过 PermissionResourceGroupService.createGroup 在新项目下创建同名自定义组
-     * 该方法同时调用 IAM 创建组 + 写入数据库
-     */
-    private fun migrateProjectCustomGroups(
-        oldProjectCode: String,
-        newProjectCode: String
-    ) {
-        val oldProjectGroups = authResourceGroupDao.getByResourceCode(
-            dslContext = dslContext,
-            projectCode = oldProjectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = oldProjectCode
-        )
-        val customGroups = oldProjectGroups.filter {
-            it.groupCode == DefaultGroupType.CUSTOM.value
-        }
-        if (customGroups.isEmpty()) {
-            logger.info(
-                "No custom groups found for project $oldProjectCode"
-            )
-            return
-        }
-        logger.info(
-            "Found ${customGroups.size} custom groups " +
-                "in project $oldProjectCode"
-        )
-        customGroups.forEach { oldGroup ->
-            try {
-                logger.info(
-                    "Creating custom group: " +
-                        "name=${oldGroup.groupName}, " +
-                        "code=${oldGroup.groupCode}"
-                )
-                permissionResourceGroupService.createGroup(
-                    projectId = newProjectCode,
-                    groupAddDTO = GroupAddDTO(
-                        groupName = oldGroup.groupName,
-                        groupDesc = oldGroup.description ?: oldGroup.groupName
-                    )
-                )
-            } catch (e: Exception) {
-                logger.error(
-                    "Failed to create custom group: " +
-                        "${oldGroup.groupName} " +
-                        "in project $newProjectCode",
-                    e
-                )
-            }
-        }
-    }
-
-    /**
-     * Step 3: 创建非项目资源及默认组
+     * Step 2: 创建非项目资源及默认组
      */
     private fun createNonProjectResources(
         oldProjectCode: String,
@@ -282,10 +225,11 @@ class MigrateProjectCodePrefixService @Autowired constructor(
     }
 
     /**
-     * Step 4: 迁移组成员
+     * Step 3: 迁移组成员
      * 一次性获取旧项目下所有成员和新项目下所有组，
-     * 通过 iamGroupId 建立旧组->新组映射，
-     * 然后通过 addGroupMember 将成员迁移过去（同时调IAM+写DB，保留原过期时间）
+     * 通过 (resourceType, resourceCode, groupName) 建立旧组->新组映射，
+     * 然后通过 addGroupMember 将成员迁移过去
+     * （同时调IAM+写DB，保留原过期时间）
      */
     private fun migrateGroupMembers(
         oldProjectCode: String,
@@ -358,29 +302,28 @@ class MigrateProjectCodePrefixService @Autowired constructor(
     /**
      * 构建旧 iamGroupId -> 新组 的映射
      * 一次性获取旧项目和新项目下所有组，
-     * 默认组通过 (resourceType, resourceCode, groupCode) 匹配，
-     * 自定义组通过 (resourceType, resourceCode, groupName) 匹配。
+     * 通过 (resourceType, resourceCode, groupName) 三元组匹配。
+     * 注意：项目资源的 resourceCode 在新项目中被加了前缀，
+     * 匹配时需将旧组的项目资源 resourceCode 替换为新的。
      */
     private fun buildNewGroupMap(
         oldProjectCode: String,
         newProjectCode: String
     ): Map<Int, AuthResourceGroup> {
-        // 获取旧项目所有组
         val allOldGroups = listAllGroupsByProject(oldProjectCode)
-        // 获取新项目所有组
         val allNewGroups = listAllGroupsByProject(newProjectCode)
 
-        // 新项目组按匹配 key 建立索引
-        // 默认组 key: resourceType:resourceCode:groupCode
-        // 自定义组 key: resourceType:resourceCode:custom:groupName
-        val newGroupIndex = allNewGroups.associateBy { group ->
-            buildGroupMatchKey(newProjectCode, group)
+        // 新项目组按 resourceType:resourceCode:groupName 建立索引
+        val newGroupIndex = allNewGroups.associateBy {
+            buildGroupMatchKey(it)
         }
 
         val result = mutableMapOf<Int, AuthResourceGroup>()
         allOldGroups.forEach { oldGroup ->
+            // 旧组的项目资源 resourceCode 需替换为新的
             val matchKey = buildGroupMatchKey(
-                oldProjectCode, oldGroup, newProjectCode
+                group = oldGroup,
+                projectResourceCodeOverride = newProjectCode
             )
             val newGroup = newGroupIndex[matchKey]
             if (newGroup != null) {
@@ -388,6 +331,27 @@ class MigrateProjectCodePrefixService @Autowired constructor(
             }
         }
         return result
+    }
+
+    /**
+     * 构建组匹配 key: resourceType:resourceCode:groupName
+     * @param group 组信息
+     * @param projectResourceCodeOverride 如果非空，
+     *        项目类型资源的 resourceCode 替换为此值
+     */
+    private fun buildGroupMatchKey(
+        group: AuthResourceGroup,
+        projectResourceCodeOverride: String? = null
+    ): String {
+        val resourceCode =
+            if (projectResourceCodeOverride != null &&
+                group.resourceType == AuthResourceType.PROJECT.value
+            ) {
+                projectResourceCodeOverride
+            } else {
+                group.resourceCode
+            }
+        return "${group.resourceType}:$resourceCode:${group.groupName}"
     }
 
     /**
@@ -419,35 +383,7 @@ class MigrateProjectCodePrefixService @Autowired constructor(
     }
 
     /**
-     * 构建组匹配 key
-     * @param projectCode 组所属的项目ID
-     * @param group 组信息
-     * @param targetProjectCode 目标项目ID（用于替换项目资源的 resourceCode）
-     */
-    private fun buildGroupMatchKey(
-        projectCode: String,
-        group: AuthResourceGroup,
-        targetProjectCode: String? = null
-    ): String {
-        val resourceCode =
-            if (group.resourceType == AuthResourceType.PROJECT.value) {
-                targetProjectCode ?: projectCode
-            } else {
-                group.resourceCode
-            }
-        val isCustomGroup =
-            group.groupCode == DefaultGroupType.CUSTOM.value
-        return if (isCustomGroup) {
-            "${group.resourceType}:$resourceCode:" +
-                "custom:${group.groupName}"
-        } else {
-            "${group.resourceType}:$resourceCode:" +
-                group.groupCode
-        }
-    }
-
-    /**
-     * Step 5: 删除旧项目的所有数据
+     * Step 4: 删除旧项目的所有数据
      */
     private fun deleteOldProjectData(oldProjectCode: String) {
         logger.info("Deleting old project data: $oldProjectCode")
