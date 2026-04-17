@@ -105,6 +105,25 @@ class MigrateProjectCodePrefixService @Autowired constructor(
     }
 
     /**
+     * 迁移单个项目ID前缀
+     * 对外暴露，支持按项目维度调用
+     */
+    fun migrateSingleProjectCodePrefix(
+        projectCode: String
+    ): Boolean {
+        logger.info(
+            "Start migrating single project code prefix: " +
+                "$projectCode"
+        )
+        migrateProject(projectCode)
+        logger.info(
+            "Finish migrating single project code prefix: " +
+                "$projectCode"
+        )
+        return true
+    }
+
+    /**
      * 迁移单个项目
      */
     @Suppress("LongMethod")

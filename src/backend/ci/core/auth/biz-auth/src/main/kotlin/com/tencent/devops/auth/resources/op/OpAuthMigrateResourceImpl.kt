@@ -115,4 +115,13 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
     override fun migrateProjectCodePrefix(): Result<Boolean> {
         return Result(permissionMigrateService.migrateProjectCodePrefix())
     }
+
+    override fun migrateSingleProjectCodePrefix(
+        projectCode: String
+    ): Result<Boolean> {
+        return Result(
+            permissionMigrateService
+                .migrateSingleProjectCodePrefix(projectCode)
+        )
+    }
 }

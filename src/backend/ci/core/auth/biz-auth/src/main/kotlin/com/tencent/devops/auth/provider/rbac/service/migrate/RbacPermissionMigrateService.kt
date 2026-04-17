@@ -774,4 +774,11 @@ class RbacPermissionMigrateService(
     override fun migrateProjectCodePrefix(): Boolean {
         return migrateProjectCodePrefixService.migrateProjectCodePrefix()
     }
+
+    override fun migrateSingleProjectCodePrefix(
+        projectCode: String
+    ): Boolean {
+        return migrateProjectCodePrefixService
+            .migrateSingleProjectCodePrefix(projectCode)
+    }
 }

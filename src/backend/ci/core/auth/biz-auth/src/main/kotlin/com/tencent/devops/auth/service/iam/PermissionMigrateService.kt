@@ -133,4 +133,11 @@ interface PermissionMigrateService {
      * 迁移项目ID前缀-为项目ID添加tencent.前缀
      */
     fun migrateProjectCodePrefix(): Boolean
+
+    /**
+     * 迁移单个项目ID前缀-为指定项目ID添加tencent.前缀
+     */
+    fun migrateSingleProjectCodePrefix(
+        projectCode: String
+    ): Boolean
 }
