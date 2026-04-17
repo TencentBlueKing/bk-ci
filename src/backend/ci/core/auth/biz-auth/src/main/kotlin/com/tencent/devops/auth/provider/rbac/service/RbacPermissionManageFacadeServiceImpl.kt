@@ -100,7 +100,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-@Suppress("ComplexCondition")
+@Suppress("ComplexCondition", "NestedBlockDepth")
 class RbacPermissionManageFacadeServiceImpl(
     private val permissionResourceGroupService: PermissionResourceGroupService,
     private val groupPermissionService: PermissionResourceGroupPermissionService,
@@ -338,11 +338,11 @@ class RbacPermissionManageFacadeServiceImpl(
                     RemoveMemberButtonControl.TEMPLATE
 
                 operateChannel == OperateChannel.PERSONAL &&
-                    authResourceGroupMember.memberType == MemberType.DEPARTMENT.type ->
+                        authResourceGroupMember.memberType == MemberType.DEPARTMENT.type ->
                     RemoveMemberButtonControl.DEPARTMENT
 
                 resourceGroup.resourceType == AuthResourceType.PROJECT.value &&
-                    uniqueManagerGroups.contains(authResourceGroupMember.iamGroupId) ->
+                        uniqueManagerGroups.contains(authResourceGroupMember.iamGroupId) ->
                     RemoveMemberButtonControl.UNIQUE_MANAGER
 
                 uniqueManagerGroups.contains(authResourceGroupMember.iamGroupId) ->
@@ -354,7 +354,7 @@ class RbacPermissionManageFacadeServiceImpl(
             joinedType = when {
                 authResourceGroupMember.memberType == MemberType.TEMPLATE.type -> JoinedType.TEMPLATE
                 authResourceGroupMember.memberType == MemberType.DEPARTMENT.type &&
-                    operateChannel == OperateChannel.PERSONAL -> JoinedType.DEPARTMENT
+                        operateChannel == OperateChannel.PERSONAL -> JoinedType.DEPARTMENT
 
                 else -> JoinedType.DIRECT
             },
@@ -757,13 +757,13 @@ class RbacPermissionManageFacadeServiceImpl(
             }
             logger.info(
                 "invalid authorizations after operated groups|$projectCode|$iamGroupIdsOfDirectlyJoined|$memberId|" +
-                    "$invalidAuthorizationsDTO"
+                        "$invalidAuthorizationsDTO"
             )
             return invalidAuthorizationsDTO
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to check invalid authorizations " +
-                    "after operated groups |$projectCode|$iamGroupIdsOfDirectlyJoined|$memberId"
+                        "after operated groups |$projectCode|$iamGroupIdsOfDirectlyJoined|$memberId"
             )
         }
     }
@@ -1496,7 +1496,8 @@ class RbacPermissionManageFacadeServiceImpl(
         )
         if (toHandoverGroups.isEmpty() && invalidPipelines.isEmpty() &&
             invalidRepertoryIds.isEmpty() && invalidEnvNodeIds.isEmpty() &&
-            invalidCreativeStreamIds.isEmpty()) {
+            invalidCreativeStreamIds.isEmpty()
+        ) {
             return "true"
         }
         val handoverDetails = buildHandoverDetails(
@@ -1514,7 +1515,7 @@ class RbacPermissionManageFacadeServiceImpl(
             resourceCode = projectCode
         ).resourceName
         val authorizationCount = invalidPipelines.size +
-            invalidRepertoryIds.size + invalidCreativeStreamIds.size
+                invalidRepertoryIds.size + invalidCreativeStreamIds.size
         val flowNo = permissionHandoverApplicationService.createHandoverApplication(
             overview = HandoverOverviewCreateDTO(
                 projectCode = projectCode,
@@ -1545,7 +1546,8 @@ class RbacPermissionManageFacadeServiceImpl(
                     memberId = targetMember.id
                 )
             if (invalidGroups.isNotEmpty() || invalidPipelines.isNotEmpty() ||
-                invalidRepertoryIds.isNotEmpty() || invalidEnvNodeIds.isNotEmpty()) {
+                invalidRepertoryIds.isNotEmpty() || invalidEnvNodeIds.isNotEmpty()
+            ) {
                 throw ErrorCodeException(errorCode = ERROR_SINGLE_GROUP_REMOVE)
             }
         }
@@ -1574,7 +1576,7 @@ class RbacPermissionManageFacadeServiceImpl(
     ) {
         logger.info(
             "handover group member $projectCode|$groupId|" +
-                "${handoverMemberDTO.targetMember}|${handoverMemberDTO.handoverTo}"
+                    "${handoverMemberDTO.targetMember}|${handoverMemberDTO.handoverTo}"
         )
         val currentTimeSeconds = System.currentTimeMillis() / 1000
         var finalExpiredAt = expiredAt
@@ -1764,7 +1766,7 @@ class RbacPermissionManageFacadeServiceImpl(
                 // 部门/组织加入以及永久权限的组不允许再续期
                 with(conditionReq) {
                     val isUserDeparted = targetMember.type == MemberType.USER.type &&
-                        deptService.isUserDeparted(targetMember.id)
+                            deptService.isUserDeparted(targetMember.id)
                     // 离职用户不允许续期
                     if (isUserDeparted) {
                         BatchOperateGroupMemberCheckVo(
@@ -1783,7 +1785,7 @@ class RbacPermissionManageFacadeServiceImpl(
                             it.expiredAt == PERMANENT_EXPIRED_TIME / 1000
                         }.size
                         val groupsOfInOperableWhenBatchRenewal = groupCountOfPermanentExpiredTime +
-                            groupsOfTemplateOrDeptJoined.size
+                                groupsOfTemplateOrDeptJoined.size
                         BatchOperateGroupMemberCheckVo(
                             totalCount = totalCount,
                             operableCount = totalCount - groupsOfInOperableWhenBatchRenewal,

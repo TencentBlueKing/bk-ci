@@ -9,7 +9,6 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.client.Client
 import io.agentscope.core.tool.Tool
 import io.agentscope.core.tool.ToolParam
-import io.undertow.util.URLUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.function.Supplier

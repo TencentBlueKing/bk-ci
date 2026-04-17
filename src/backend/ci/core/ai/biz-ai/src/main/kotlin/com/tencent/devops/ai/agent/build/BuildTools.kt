@@ -28,7 +28,6 @@
 package com.tencent.devops.ai.agent.build
 
 import com.tencent.devops.ai.agent.BaseTools
-import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode

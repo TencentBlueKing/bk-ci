@@ -28,7 +28,6 @@
 package com.tencent.devops.ai.agent
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import io.swagger.v3.oas.annotations.media.Schema
