@@ -14,8 +14,7 @@ interface PermissionResourceMemberService {
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        group: BkAuthGroup?,
-        includeExpired: Boolean = false
+        group: BkAuthGroup?
     ): List<String>
 
     fun getResourceGroupAndMembers(

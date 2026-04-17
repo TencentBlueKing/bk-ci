@@ -179,30 +179,6 @@ interface ServiceAuthAiResource {
     ): Result<List<ResourceGroupPermissionDTO>>
 
     @GET
-    @Path("/projects/{projectId}/groups/users")
-    @Operation(summary = "获取用户组成员列表")
-    fun getGroupUsers(
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        @Parameter(description = "用户ID", required = true)
-        userId: String,
-        @PathParam("projectId")
-        @Parameter(description = "项目ID", required = true)
-        projectId: String,
-        @QueryParam("resourceType")
-        @Parameter(description = "资源类型", required = true)
-        resourceType: AuthResourceType,
-        @QueryParam("resourceCode")
-        @Parameter(description = "资源Code", required = true)
-        resourceCode: String,
-        @QueryParam("group")
-        @Parameter(description = "用户组类型")
-        group: BkAuthGroup? = null,
-        @QueryParam("includeExpired")
-        @Parameter(description = "是否包含已过期成员，默认false")
-        includeExpired: Boolean = false
-    ): Result<List<String>>
-
-    @GET
     @Path("/projects/{projectId}/groups/members")
     @Operation(
         summary = "查询用户组成员详情列表",

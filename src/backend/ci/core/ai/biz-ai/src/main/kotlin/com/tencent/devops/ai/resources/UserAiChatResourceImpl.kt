@@ -31,9 +31,7 @@ import com.tencent.devops.ai.api.user.UserAiChatResource
 import com.tencent.devops.ai.pojo.AiChatRunStatus
 import com.tencent.devops.ai.service.AiChatService
 import com.tencent.devops.ai.util.SseEventWriter
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil.deepCopy
 import com.tencent.devops.common.web.RestResource
 import io.agentscope.core.agui.model.RunAgentInput
 import io.agentscope.core.util.JsonUtils
