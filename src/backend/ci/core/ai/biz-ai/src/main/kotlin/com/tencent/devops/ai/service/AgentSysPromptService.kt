@@ -112,6 +112,27 @@ class AgentSysPromptService @Autowired constructor(
         return resolveTemplate(fullTemplate, variables)
     }
 
+    /**
+     * 运营侧：列出全部智能体系统提示词（agentName -> promptTemplate）。
+     */
+    fun listAllAgentSysPromptsForOp(): Map<String, String> {
+        return dao.listAll(dslContext).associateBy({ it.agentName }, { it.promptTemplate })
+    }
+
+    /**
+     * 运营侧：更新指定智能体的提示词模板。
+     */
+    fun updateAgentSysPromptForOp(agentName: String, promptTemplate: String): Boolean {
+        return dao.update(dslContext, agentName, promptTemplate) > 0
+    }
+
+    /**
+     * 运营侧：删除指定智能体的提示词配置。
+     */
+    fun deleteAgentSysPromptForOp(agentName: String): Boolean {
+        return dao.delete(dslContext, agentName) > 0
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(
             AgentSysPromptService::class.java

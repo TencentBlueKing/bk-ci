@@ -29,6 +29,7 @@ package com.tencent.devops.ai.dao
 
 import com.tencent.devops.model.ai.tables.TAiHotQuestion
 import com.tencent.devops.model.ai.tables.records.TAiHotQuestionRecord
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -81,6 +82,51 @@ class HotQuestionDao {
     fun delete(dslContext: DSLContext, id: String): Int {
         with(TAiHotQuestion.T_AI_HOT_QUESTION) {
             return dslContext.deleteFrom(this)
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
+
+    fun insert(
+        dslContext: DSLContext,
+        id: String,
+        question: String,
+        source: String,
+        weight: Int,
+        sortOrder: Int,
+        enabled: Boolean
+    ) {
+        val now = LocalDateTime.now()
+        with(TAiHotQuestion.T_AI_HOT_QUESTION) {
+            dslContext.insertInto(
+                this,
+                ID,
+                QUESTION,
+                SOURCE,
+                WEIGHT,
+                SORT_ORDER,
+                ENABLED,
+                CREATED_TIME,
+                UPDATED_TIME
+            ).values(
+                id,
+                question,
+                source,
+                weight,
+                sortOrder,
+                enabled,
+                now,
+                now
+            ).execute()
+        }
+    }
+
+    fun updateQuestion(dslContext: DSLContext, id: String, question: String): Int {
+        val now = LocalDateTime.now()
+        with(TAiHotQuestion.T_AI_HOT_QUESTION) {
+            return dslContext.update(this)
+                .set(QUESTION, question)
+                .set(UPDATED_TIME, now)
                 .where(ID.eq(id))
                 .execute()
         }
