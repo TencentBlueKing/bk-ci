@@ -233,8 +233,8 @@ class AiMcpServerService @Autowired constructor(
         )
         private val objectMapper = jacksonObjectMapper()
 
-        const val SCOPE_SYSTEM = "SYSTEM"  // 系统级配置
-        const val SCOPE_USER = "USER"  // 用户级配置
+        const val SCOPE_SYSTEM = "SYSTEM" // 系统级配置
+        const val SCOPE_USER = "USER" // 用户级配置
         const val TRANSPORT_SSE = "SSE"
         const val TRANSPORT_STREAMABLE_HTTP = "STREAMABLE_HTTP"
 

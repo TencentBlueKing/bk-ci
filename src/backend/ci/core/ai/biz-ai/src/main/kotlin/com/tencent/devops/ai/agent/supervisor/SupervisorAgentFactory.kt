@@ -157,7 +157,7 @@ class SupervisorAgentFactory(
                     // 实时获取最新上下文，降级用闭包捕获的旧值
                     val latestContext = capturedThreadId?.let {
                         sessionContext.getChatContext(it)
-                    } ?:ChatContextDTO()
+                    } ?: ChatContextDTO()
                     val latestUserId = capturedThreadId?.let {
                         sessionContext.getUserId(it)
                     } ?: userId

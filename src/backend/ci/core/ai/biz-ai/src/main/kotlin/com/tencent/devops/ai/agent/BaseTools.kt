@@ -236,7 +236,7 @@ abstract class BaseTools(
      * 查询操作日志轻量化：入口仅打方法名，异常时打堆栈。
      * 查询参数（分页、过滤条件等）通常不需要审计，故不记录。
      *
-     * @param tag    日志标签，如 "AuthTool"
+     * @param tag 日志标签，如 "AuthTool"
      * @param method 工具方法名，如 "listGroups"
      */
     protected inline fun safeQuery(
@@ -257,7 +257,7 @@ abstract class BaseTools(
      * 安全执行写操作。
      * 写操作需要审计：入口打 INFO 日志（方法名 + 完整参数），异常打 ERROR 日志（方法名 + 参数 + 堆栈）。
      *
-     * @param tag    日志标签，如 "AuthTool"
+     * @param tag 日志标签，如 "AuthTool"
      * @param method 工具方法名，如 "addGroupMembers"
      * @param params LLM 传入的完整参数快照（用于审计）
      */

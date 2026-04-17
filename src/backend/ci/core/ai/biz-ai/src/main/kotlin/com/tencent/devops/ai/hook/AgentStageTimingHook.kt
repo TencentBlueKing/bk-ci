@@ -818,12 +818,12 @@ class AgentStageTimingHook @Autowired constructor(
 
         val ctxPercent = if (contextWindow > 0) totalEstTokens * 100 / contextWindow else 0
 
-        val summary = "消息=${sdkEstTokens}tk, " +
-                "工具=${toolsEstTokens}tk, " +
-                "消息数=${messages.size} | " +
-                "压缩触发: ${sdkEstTokens}/${tokenThreshold}tk, " +
-                "${messages.size}/${msgThreshold}条 | " +
-                "上下文: ${totalEstTokens}/${contextWindow}tk(${ctxPercent}%)"
+        val summary = "消息=$sdkEstTokens" + "tk, " +
+            "工具=$toolsEstTokens" + "tk, " +
+            "消息数=${messages.size} | " +
+            "压缩触发: $sdkEstTokens" + "/${tokenThreshold}tk, " +
+            "${messages.size}/${msgThreshold}条 | " +
+            "上下文: $totalEstTokens" + "/${contextWindow}tk($ctxPercent%)"
 
         return PayloadDiag(
             totalBytes = totalBytes,

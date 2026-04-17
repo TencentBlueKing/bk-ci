@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit
  * AI 运行事件服务，封装事件持久化与 DB 回放逻辑。
  */
 @Service
-@Suppress("NestedBlockDepth")
+@Suppress("NestedBlockDepth", "NestedBlockDepth")
 class AiRunEventService @Autowired constructor(
     private val streamBridge: StreamBridge,
     private val aiRunEventDao: AiRunEventDao,

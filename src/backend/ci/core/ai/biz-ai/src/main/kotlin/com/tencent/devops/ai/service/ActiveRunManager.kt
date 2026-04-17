@@ -50,12 +50,12 @@ class ActiveRunManager(
     private fun lockKey(threadId: String) = "$REDIS_LOCK_PREFIX$threadId"
 
     /**
-     * @param threadId   会话 ID
-     * @param runId      本次运行 ID
-     * @param agent      Agent 实例引用
+     * @param threadId 会话 ID
+     * @param runId 本次运行 ID
+     * @param agent Agent 实例引用
      * @param replaySink replay sink，保留所有已发出事件供重连回放
      * @param eventIndexCounter 事件序号计数器，线程安全自增，保证单 run 内事件顺序
-     * @param startTime  运行开始时间戳
+     * @param startTime 运行开始时间戳
      */
     data class ActiveRun(
         val threadId: String,

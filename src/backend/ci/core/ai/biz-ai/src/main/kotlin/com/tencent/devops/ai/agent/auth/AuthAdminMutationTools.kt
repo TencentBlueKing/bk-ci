@@ -171,7 +171,7 @@ class AuthAdminMutationTools(
 
             if (dryRun) {
                 return@safeOperate "预检查模式：将把用户 ${users.joinToString(", ")} " +
-                        "添加到${groupInfo}。如需执行，请设置 dryRun=false"
+                    "添加到$groupInfo。如需执行，请设置 dryRun=false"
             }
 
             val createInfo = ProjectCreateUserInfo(

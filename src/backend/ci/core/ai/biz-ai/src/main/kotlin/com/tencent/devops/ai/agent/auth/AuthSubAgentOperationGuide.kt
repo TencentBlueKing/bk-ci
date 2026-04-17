@@ -61,7 +61,7 @@ internal fun authSubAgentOperationGuideMarkdown(): String = """
 2. **使用 relationId**: 添加/移除成员时使用 relationId
 3. **用中文回复**，清晰展示查询结果
 4. **角色约束**: 你**必须**根据用户角色（{{userRole}}）决定可执行的操作范围。普通成员**不能**查看他人权限或执行管理操作
-5. **角色待确定时**: 如果用户角色为「${ROLE_UNDETERMINED}」，说明当前上下文没有项目信息。当用户提到具体项目ID时，你**必须先**调用 checkMyRole 工具确认当前用户在该项目中的角色，然后再执行后续操作。在角色确认之前，不要假设用户是管理员或普通成员
+5. **角色待确定时**: 如果用户角色为「$ROLE_UNDETERMINED」，说明当前上下文没有项目信息。当用户提到具体项目ID时，你**必须先**调用 checkMyRole 工具确认当前用户在该项目中的角色，然后再执行后续操作。在角色确认之前，不要假设用户是管理员或普通成员
 6. **名称转ID**: 用户可能使用资源的显示名称而非Code/ID。对于项目名称，调用 resolveProjectId 获取 projectId；对于其他资源（流水线、凭证等），调用 resolveResource（需先获取 projectId）。必须先完成名称→ID转换，再执行后续操作
 
 ## 资源类型映射
