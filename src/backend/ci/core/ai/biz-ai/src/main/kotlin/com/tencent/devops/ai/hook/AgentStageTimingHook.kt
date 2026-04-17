@@ -534,7 +534,7 @@ class AgentStageTimingHook @Autowired constructor(
                 sinkInfo.sink,
                 sinkInfo.threadId,
                 sinkInfo.runId,
-                "LLM request timeout"
+                "AI 模型响应超时，请稍后再试。"
             )
         }
         aiRunEventService.broadcastStop(sessionId, SessionStatus.TIMEOUT)
