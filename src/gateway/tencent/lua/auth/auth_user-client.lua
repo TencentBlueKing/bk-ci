@@ -182,7 +182,7 @@ end
 
 -- BKAuth Token Introspection
 if config.bkauth then
-    local auth_header = ngx.var.http_authorization
+    local auth_header = ngx.var.http_x_devops_oauth_token
     if auth_header then
         local bearer_token = string.match(auth_header, "^Bearer%s+(.+)$")
         if bearer_token and string.sub(bearer_token, 1, 5) == "bkci_" then
