@@ -443,26 +443,26 @@ function _M:introspect_token(access_token)
     })
 
     if not res then
-        ngx.log(ngx.ERR, "failed to request introspect_token: ", err)
+        ngx.log(ngx.STDERR, "failed to request introspect_token: ", err)
         return nil
     end
 
     local responseBody = res.body
 
     if res.status ~= 200 then
-        ngx.log(ngx.ERR, "failed to request introspect_token, status: ", res.status, " , responseBody: ", responseBody)
+        ngx.log(ngx.STDERR, "failed to request introspect_token, status: ", res.status, " , responseBody: ", responseBody)
         return nil
     end
 
     local result = json.decode(responseBody)
     if result == nil then
-        ngx.log(ngx.ERR, "failed to parse introspect_token response: ", responseBody)
+        ngx.log(ngx.STDERR, "failed to parse introspect_token response: ", responseBody)
         return nil
     end
 
     if not result.active then
         local err_msg = result.error and result.error.message or "unknown"
-        ngx.log(ngx.WARN, "introspect_token inactive, error: ", err_msg, " , access_token: ", access_token)
+        ngx.log(ngx.STDERR, "introspect_token inactive, error: ", err_msg, " , access_token: ", access_token)
         return nil
     end
 
