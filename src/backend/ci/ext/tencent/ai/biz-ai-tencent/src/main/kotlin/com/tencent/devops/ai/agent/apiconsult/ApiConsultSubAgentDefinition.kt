@@ -150,7 +150,7 @@ class ApiConsultSubAgentDefinition : SubAgentDefinition {
             
             ### 应用态接口模板
             ```bash
-            curl -X {METHOD} 'https://devops.apigw.o.woa.com/prod{PATH}' \
+            curl -X {METHOD} 'https://demo.apigw.o.woa.com/prod{PATH}' \
               -H 'Content-Type: application/json' \
               -H 'X-DEVOPS-UID: your_username' \
               -H 'X-Bkapi-Authorization: {"bk_app_code":"your_app_code","bk_app_secret":"your_app_secret"}'
@@ -158,7 +158,7 @@ class ApiConsultSubAgentDefinition : SubAgentDefinition {
             
             ### 用户态接口模板
             ```bash
-            curl -X {METHOD} 'https://devops.apigw.o.woa.com/prod{PATH}' \
+            curl -X {METHOD} 'https://demo.apigw.o.woa.com/prod{PATH}' \
               -H 'Content-Type: application/json' \
               -H 'X-Bkapi-Authorization: {"bk_app_code":"your_app_code","bk_app_secret":"your_app_secret","bk_token":"your_bk_token"}'
             ```
