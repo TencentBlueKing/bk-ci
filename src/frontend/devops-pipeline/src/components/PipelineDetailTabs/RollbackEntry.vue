@@ -32,6 +32,7 @@
             :version-name="versionName"
             :is-active-branch-version="isActiveBranchVersion"
             :is-rollback="isRollback"
+            :is-template-pipeline="isTemplatePipeline"
             :draft-version="draftVersion"
             @confirm="rollback"
             @edit-draft="goEdit"
@@ -149,7 +150,7 @@
                     case this.hasDraftPipeline && this.isActiveBranchVersion:
                         return this.$t('template.templateCoverWarning')
                     case this.hasDraftPipeline:
-                        return this.$t('hasDraft')
+                        return this.isRollback && this.isTemplatePipeline ? this.$t('hasDraftTips', [this.draftBaseVersionName]) : this.$t('hasDraft')
                     default:
                         return this.$t(this.isActiveBranchVersion ? 'createBranchDraftTips' : 'createDraftTips', [this.versionName])
                 }
@@ -179,6 +180,10 @@
             async handleClick () {
                 // 回滚操作
                 if (this.isRollback) {
+                    if (this.isTemplatePipeline) {
+                        this.showDraftConfirmDialog()
+                        return
+                    }
                     const result = await this.fetchLatestDraftStatus({
                         projectId: this.projectId,
                         id: this.rollbackId,

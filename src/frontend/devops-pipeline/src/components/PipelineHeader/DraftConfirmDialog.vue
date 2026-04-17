@@ -24,51 +24,58 @@
                 {{ activeBranchVersionInfo }}
             </p>
             <div v-else>
-                <p class="draft-info">
-                    <i18n
-                        path="existingDraft"
-                        class="existing-draft"
-                    >
-                        <span>{{ draftSaveInfo?.updater }}</span>
-                        <span>{{ draftSaveInfo?.updateTime }}</span>
-                    </i18n>
-                    <VersionDiffEntry
-                        style="cursor: pointer;"
-                        text
-                        :latest-version="draftSaveInfo?.draftVersion"
-                        :version="draftSaveInfo?.releaseVersion"
-                    >
-                        <Logo
-                            name="diff"
-                            size="14"
-                        />
-                    </VersionDiffEntry>
-                </p>
-                <div
-                    v-if="isRollback"
-                    class="is-active-branch-version"
-                >
-                    {{ $t('rollbackTips', [versionName]) }}
+                <div v-if="isRollback && isTemplatePipeline">
+                    {{ $t('dropDraftTips', [versionName]) }}
                 </div>
                 <template v-else>
-                    <div
-                        v-if="draftStatus === DRAFT_STATUS.OUTDATED"
-                        class="is-active-branch-version"
+                    <p
+                        class="draft-info"
                     >
-                        <i18n path="draftBaselineIsEarlierThanCurrentVersionNotice">
-                            <span>{{ draftSaveInfo?.draftVersionName }}</span>
-                            <span class="earlier">{{ $t('Earlier') }}</span>
-                            <span>{{ draftSaveInfo?.releaseVersionName }}</span>
+                        <i18n
+                            path="existingDraft"
+                            class="existing-draft"
+                        >
+                            <span>{{ draftSaveInfo?.updater }}</span>
+                            <span>{{ draftSaveInfo?.updateTime }}</span>
                         </i18n>
-                        <p>{{ $t('draftNoticeTip1') }}</p>
-                        <p>{{ $t('draftNoticeTip2') }}</p>
-                    </div>
+                        <VersionDiffEntry
+                            style="cursor: pointer;"
+                            text
+                            :latest-version="draftSaveInfo?.draftVersion"
+                            :version="draftSaveInfo?.releaseVersion"
+                        >
+                            <Logo
+                                name="diff"
+                                size="14"
+                            />
+                        </VersionDiffEntry>
+                    </p>
                     <div
-                        v-if="draftStatus === DRAFT_STATUS.EXISTS"
+                        v-if="isRollback"
                         class="is-active-branch-version"
                     >
-                        {{ $t('regenerateDraftOrEditExisting') }}
+                        {{ isTemplatePipeline ? $t('dropDraftTips', [versionName]) : $t('rollbackTips', [versionName]) }}
                     </div>
+                    <template v-else>
+                        <div
+                            v-if="draftStatus === DRAFT_STATUS.OUTDATED"
+                            class="is-active-branch-version"
+                        >
+                            <i18n path="draftBaselineIsEarlierThanCurrentVersionNotice">
+                                <span>{{ draftSaveInfo?.draftVersionName }}</span>
+                                <span class="earlier">{{ $t('Earlier') }}</span>
+                                <span>{{ draftSaveInfo?.releaseVersionName }}</span>
+                            </i18n>
+                            <p>{{ $t('draftNoticeTip1') }}</p>
+                            <p>{{ $t('draftNoticeTip2') }}</p>
+                        </div>
+                        <div
+                            v-if="draftStatus === DRAFT_STATUS.EXISTS"
+                            class="is-active-branch-version"
+                        >
+                            {{ $t('regenerateDraftOrEditExisting') }}
+                        </div>
+                    </template>
                 </template>
             </div>
         </div>
@@ -77,7 +84,7 @@
                 theme="primary"
                 @click="rollback"
             >
-                {{ $t(isActiveBranchVersion ? 'resume' : isRollback ? 'rollbackConfirm' : 'newDraft') }}
+                {{ $t(isActiveBranchVersion ? 'resume' : isRollback ? isTemplatePipeline ? 'newVersion' : 'rollbackConfirm' : 'newDraft') }}
             </bk-button>
             <bk-button
                 v-if="hasDraftPipeline && !isActiveBranchVersion"
@@ -148,6 +155,11 @@
             },
             // 是否为活跃分支版本
             isActiveBranchVersion: {
+                type: Boolean,
+                default: false
+            },
+            // 是否是模板流水线
+            isTemplatePipeline: {
                 type: Boolean,
                 default: false
             },
