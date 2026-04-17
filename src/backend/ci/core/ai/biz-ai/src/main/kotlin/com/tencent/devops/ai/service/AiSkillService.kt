@@ -224,7 +224,7 @@ class AiSkillService @Autowired constructor(
             AiSkillService::class.java
         )
         private val objectMapper = jacksonObjectMapper()
-        const val SCOPE_SYSTEM = "SYSTEM"  // 系统级配置
-        const val SCOPE_USER = "USER"  // 用户级配置
+        const val SCOPE_SYSTEM = "SYSTEM" // 系统级配置
+        const val SCOPE_USER = "USER" // 用户级配置
     }
 }

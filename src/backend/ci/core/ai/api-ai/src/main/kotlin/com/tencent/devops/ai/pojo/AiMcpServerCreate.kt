@@ -33,7 +33,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class AiMcpServerCreate(
     @get:Schema(title = "显示名称", required = true, example = "iWiki DevOps")
     val serverName: String,
-    @get:Schema(title = "MCP服务器URL", required = true, example = "https://prod.mcp.it.woa.com/app_iwiki_mcp/mcp3")
+    @get:Schema(title = "MCP服务器URL", required = true)
     val serverUrl: String,
     @get:Schema(title = "传输协议：SSE / STREAMABLE_HTTP", required = false, example = "SSE")
     val transportType: String = "SSE",

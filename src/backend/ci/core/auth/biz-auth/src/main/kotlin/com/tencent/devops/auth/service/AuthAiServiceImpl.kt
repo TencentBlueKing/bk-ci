@@ -1173,7 +1173,7 @@ class AuthAiServiceImpl(
             warnings.add("拥有项目下所有操作权限，请评估权限是否过大")
         }
         if (expiredGroupCount > 0) {
-            warnings.add("${expiredGroupCount} 个用户组的权限已过期，可清理")
+            warnings.add("$expiredGroupCount 个用户组的权限已过期，可清理")
         }
         return UserPermissionAnalysisVO(
             role = if (targetIsAdmin) "MANAGER" else "MEMBER",

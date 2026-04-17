@@ -55,7 +55,6 @@ class ArtifactSubAgentDefinition @Autowired constructor(
             .build()
     }
 
-
     @Suppress("MaxLineLength")
     private val defaultPrompt: String
         get() = """
@@ -97,5 +96,4 @@ class ArtifactSubAgentDefinition @Autowired constructor(
             - 用户明确要求分享链接（消息中包含"分享""给别人下载""脚本下载""curl""wget"等）: 在已有目标文件 path 的前提下，调用 `生成制品分享下载链接`
             - 如果没有查到结果: 明确告知未找到制品，并建议用户检查 projectId、pipelineId、buildId 是否正确
         """.trimIndent()
-
 }

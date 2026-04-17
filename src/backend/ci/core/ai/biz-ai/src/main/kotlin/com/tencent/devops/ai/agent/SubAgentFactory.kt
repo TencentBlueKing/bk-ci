@@ -83,7 +83,7 @@ class SubAgentFactory @Autowired constructor(
         val skillBox = buildSkillBox(toolkit, userId, definition.toolName())
         val agentHooks = buildHooks(skillBox, includeAutoContext = true)
 
-        val sysPrompt =  sysPromptService.buildSysPrompt(
+        val sysPrompt = sysPromptService.buildSysPrompt(
             agentName = definition.toolName(),
             defaultPrompt = definition.defaultSysPrompt(),
             variables = resolvedVars

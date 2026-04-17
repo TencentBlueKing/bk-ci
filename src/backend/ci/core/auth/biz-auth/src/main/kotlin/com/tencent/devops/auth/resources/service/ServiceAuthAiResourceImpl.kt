@@ -6,6 +6,7 @@ import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.IamGroupIdsQueryConditionDTO
+import com.tencent.devops.auth.pojo.dto.ResourceGroupPermissionDTO
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
 import com.tencent.devops.auth.pojo.request.BatchRemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.request.BatchRemoveMemberFromProjectResponse
@@ -23,19 +24,18 @@ import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.AuthorizationHealthVO
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
-import com.tencent.devops.auth.pojo.dto.ResourceGroupPermissionDTO
 import com.tencent.devops.auth.pojo.vo.GroupRecommendationVO
 import com.tencent.devops.auth.pojo.vo.MemberExitCheckVO
 import com.tencent.devops.auth.pojo.vo.MemberExitsProjectCheckVo
 import com.tencent.devops.auth.pojo.vo.PermissionCloneResultVO
 import com.tencent.devops.auth.pojo.vo.PermissionCompareVO
 import com.tencent.devops.auth.pojo.vo.PermissionDiagnoseVO
+import com.tencent.devops.auth.pojo.vo.ResolvedUserByNameVO
 import com.tencent.devops.auth.pojo.vo.ResourcePermissionsMatrixVO
 import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.pojo.vo.UserPermissionAnalysisVO
 import com.tencent.devops.auth.pojo.vo.UserSearchResultVO
-import com.tencent.devops.auth.pojo.vo.ResolvedUserByNameVO
 import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
 import com.tencent.devops.auth.service.AuthAiService
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
@@ -43,10 +43,8 @@ import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BkManagerCheck
 import com.tencent.devops.common.auth.api.BkProjectMemberCheck
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectDeleteUserInfo
@@ -128,26 +126,6 @@ class ServiceAuthAiResourceImpl(
         groupId: Int
     ): Result<List<ResourceGroupPermissionDTO>> {
         return Result(authAiService.getGroupPermissionDetail(userId, projectId, groupId))
-    }
-
-    @BkManagerCheck
-    override fun getGroupUsers(
-        userId: String,
-        projectId: String,
-        resourceType: AuthResourceType,
-        resourceCode: String,
-        group: BkAuthGroup?,
-        includeExpired: Boolean
-    ): Result<List<String>> {
-        return Result(
-            permissionResourceMemberService.getResourceGroupMembers(
-                projectCode = projectId,
-                resourceType = resourceType.value,
-                resourceCode = resourceCode,
-                group = group,
-                includeExpired = includeExpired
-            )
-        )
     }
 
     @BkManagerCheck
