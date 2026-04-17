@@ -45,6 +45,20 @@ class MarketEventElementVersionProcessor @Autowired constructor(
     private val pipelineTimerTriggerTaskService: PipelineTimerTriggerTaskService
 ) : PipelineTaskVersionProcessor {
 
+    override fun postProcessBeforeSave(
+        context: PipelineVersionCreateContext,
+        pipelineResourceVersion: PipelineResourceVersion,
+        pipelineSetting: PipelineSetting,
+        element: Element,
+        variables: Map<String, String>
+    ) {
+        // 保存版本资源之前进行内容校验
+        checkTrigger(
+            element = element as MarketEventAtomElement,
+            variables = variables
+        )
+    }
+
     override fun postProcessAfterSave(
         transactionContext: DSLContext,
         context: PipelineVersionCreateContext,
@@ -53,7 +67,8 @@ class MarketEventElementVersionProcessor @Autowired constructor(
         element: Element,
         variables: Map<String, String>
     ) {
-        handleTrigger(
+        // 保存触发事件关联信息
+        saveTrigger(
             userId = context.userId,
             projectId = pipelineResourceVersion.projectId,
             pipelineId = pipelineResourceVersion.pipelineId,
@@ -65,7 +80,34 @@ class MarketEventElementVersionProcessor @Autowired constructor(
         )
     }
 
-    fun handleTrigger(
+    /**
+     * 校验触发器相关逻辑
+     */
+    fun checkTrigger(
+        element: MarketEventAtomElement,
+        variables: Map<String, String>
+    ) {
+        val atomCode = element.atomCode
+        val version = element.version
+        val componentDetail = getComponentDetail(atomCode, version) ?: run {
+            logger.warn("component[$atomCode@$version] not found, skip check")
+            return
+        }
+        when (componentDetail.ownerStoreCode) {
+            BK_STORE_COMMON_TRIGGER -> checkCommonTrigger(
+                element = element,
+                storeCode = componentDetail.storeCode,
+                variables = variables
+            )
+            // 自定义触发事件暂无需额外校验
+            else -> Unit
+        }
+    }
+
+    /**
+     * 保存触发器相关逻辑
+     */
+    fun saveTrigger(
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -82,7 +124,7 @@ class MarketEventElementVersionProcessor @Autowired constructor(
             return
         }
         when (componentDetail.ownerStoreCode) {
-            BK_STORE_COMMON_TRIGGER -> handleCommonTrigger(
+            BK_STORE_COMMON_TRIGGER -> saveCommonTrigger(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 channelCode = channelCode,
@@ -93,7 +135,7 @@ class MarketEventElementVersionProcessor @Autowired constructor(
                 transactionContext = transactionContext
             )
 
-            else -> handleCustomTrigger(
+            else -> saveCustomTrigger(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 channelCode = channelCode,
@@ -105,6 +147,28 @@ class MarketEventElementVersionProcessor @Autowired constructor(
                 transactionContext = transactionContext
             )
         }
+    }
+
+    fun handleTrigger(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        pipelineSetting: PipelineSetting,
+        channelCode: ChannelCode,
+        element: MarketEventAtomElement,
+        variables: Map<String, String>,
+        transactionContext: DSLContext
+    ) {
+        saveTrigger(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            channelCode = channelCode,
+            element = element,
+            variables = variables,
+            pipelineSetting = pipelineSetting,
+            transactionContext = transactionContext
+        )
     }
 
     private fun getComponentDetail(
@@ -122,9 +186,44 @@ class MarketEventElementVersionProcessor @Autowired constructor(
     }
 
     /**
-     * 通用事件
+     * 通用事件校验
      */
-    private fun handleCommonTrigger(
+    private fun checkCommonTrigger(
+        element: MarketEventAtomElement,
+        variables: Map<String, String>,
+        storeCode: String
+    ) {
+        when (storeCode) {
+            BK_STORE_CREATIVE_STREAM_TIMER_TRIGGER -> {
+                if (!element.elementEnabled()) {
+                    // 插件被禁用，跳过校验
+                    return
+                }
+                val inputMap = element.data[KEY_INPUT] as Map<String, Any>
+                val advanceExpression = inputMap[KEY_ADVANCE_EXPRESSION]?.let {
+                    when(it) {
+                        is String -> listOf(it)
+                        is List<*> -> it
+                        else -> listOf()
+                    }.map { EnvUtils.parseEnv(it as String, variables) }
+                } ?: listOf()
+                if (advanceExpression.isEmpty()) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB
+                    )
+                }
+            }
+
+            else -> {
+                logger.warn("skip|unknown common trigger[$storeCode]")
+            }
+        }
+    }
+
+    /**
+     * 通用事件保存
+     */
+    private fun saveCommonTrigger(
         projectId: String,
         pipelineId: String,
         channelCode: ChannelCode,
@@ -150,13 +249,12 @@ class MarketEventElementVersionProcessor @Autowired constructor(
                     return
                 }
                 val advanceExpression = inputMap[KEY_ADVANCE_EXPRESSION]?.let {
-                    JsonUtil.anyTo(it, object : TypeReference<List<String>>() {})
+                    when(it) {
+                        is String -> listOf(it)
+                        is List<*> -> it
+                        else -> listOf()
+                    }.map { EnvUtils.parseEnv(it as String, variables) }
                 } ?: listOf()
-                if (advanceExpression.isEmpty()) {
-                    throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB
-                    )
-                }
                 val expressions = pipelineTimerTriggerTaskService.convertAdvanceExpression(
                     advanceExpression = advanceExpression,
                     params = variables
@@ -191,9 +289,9 @@ class MarketEventElementVersionProcessor @Autowired constructor(
     }
 
     /**
-     * 自定义触发事件
+     * 自定义触发事件保存
      */
-    private fun handleCustomTrigger(
+    private fun saveCustomTrigger(
         userId: String,
         projectId: String,
         pipelineId: String,
