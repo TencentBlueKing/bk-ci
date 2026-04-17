@@ -49,17 +49,16 @@ class OpAiMcpServerResourceImpl @Autowired constructor(
     }
 
     override fun create(request: AiMcpServerCreate): Result<AiMcpServerInfo> {
-        return Result(aiMcpServerService.createServer("op", request))
+        return Result(aiMcpServerService.createServer("system", request))
     }
 
-    override fun update(serverId: String, request: AiMcpServerUpdate)
-        : Result<Boolean> {
+    override fun update(serverId: String, request: AiMcpServerUpdate): Result<Boolean> {
         return Result(
-            aiMcpServerService.updateServer("op", serverId, request)
+            aiMcpServerService.updateServer("system", serverId, request)
         )
     }
 
     override fun delete(serverId: String): Result<Boolean> {
-        return Result(aiMcpServerService.deleteServer("op", serverId))
+        return Result(aiMcpServerService.deleteServer("system", serverId))
     }
 }

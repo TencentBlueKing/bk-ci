@@ -28,10 +28,9 @@
 package com.tencent.devops.ai.resources
 
 import com.tencent.devops.ai.api.op.OpAiAgentSysPromptResource
-import com.tencent.devops.ai.dao.AgentSysPromptDao
+import com.tencent.devops.ai.service.AgentSysPromptService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
 /**
@@ -39,24 +38,18 @@ import org.springframework.beans.factory.annotation.Autowired
  */
 @RestResource
 class OpAiAgentSysPromptResourceImpl @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val dao: AgentSysPromptDao
+    private val agentSysPromptService: AgentSysPromptService
 ) : OpAiAgentSysPromptResource {
 
     override fun list(): Result<Map<String, String>> {
-        val prompts = dao.listAll(dslContext)
-            .associateBy({ it.agentName }, { it.promptTemplate })
-        return Result(prompts)
+        return Result(agentSysPromptService.listAllAgentSysPromptsForOp())
     }
 
-    override fun update(agentName: String, promptTemplate: String)
-        : Result<Boolean> {
-        val result = dao.update(dslContext, agentName, promptTemplate)
-        return Result(result > 0)
+    override fun update(agentName: String, promptTemplate: String): Result<Boolean> {
+        return Result(agentSysPromptService.updateAgentSysPromptForOp(agentName, promptTemplate))
     }
 
     override fun delete(agentName: String): Result<Boolean> {
-        val result = dao.delete(dslContext, agentName)
-        return Result(result > 0)
+        return Result(agentSysPromptService.deleteAgentSysPromptForOp(agentName))
     }
 }

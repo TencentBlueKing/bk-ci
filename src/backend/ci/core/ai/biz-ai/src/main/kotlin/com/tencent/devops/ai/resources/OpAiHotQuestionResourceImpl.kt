@@ -47,12 +47,11 @@ class OpAiHotQuestionResourceImpl @Autowired constructor(
     }
 
     override fun create(request: HotQuestionVO): Result<HotQuestionVO> {
-        return Result(request)
+        return Result(welcomeGuideService.createHotQuestion(request))
     }
 
-    override fun update(questionId: String, request: HotQuestionVO)
-        : Result<Boolean> {
-        return Result(true)
+    override fun update(questionId: String, request: HotQuestionVO): Result<Boolean> {
+        return Result(welcomeGuideService.updateHotQuestion(questionId, request))
     }
 
     override fun delete(questionId: String): Result<Boolean> {

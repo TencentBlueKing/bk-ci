@@ -42,6 +42,7 @@ import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.model.ai.tables.records.TAiWelcomeGuideRecord
 import java.time.ZoneOffset
+import java.util.UUID
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -146,6 +147,44 @@ class WelcomeGuideService @Autowired constructor(
     }
 
     /**
+     * 运营侧：新增热点问题。
+     * @param request [HotQuestionVO.id] 为空则自动生成；非空时若已存在同 ID 则校验失败
+     */
+    fun createHotQuestion(request: HotQuestionVO): HotQuestionVO {
+        val questionText = request.question.trim()
+        require(questionText.isNotEmpty()) { "question must not be blank" }
+        val id = request.id.trim().takeIf { it.isNotEmpty() }
+            ?: "hq-${UUID.randomUUID().toString().replace("-", "")}"
+        require(hotQuestionDao.getById(dslContext, id) == null) {
+            "Hot question id already exists: $id"
+        }
+        hotQuestionDao.insert(
+            dslContext = dslContext,
+            id = id,
+            question = questionText,
+            source = HOT_QUESTION_SOURCE_MANUAL,
+            weight = 0,
+            sortOrder = 0,
+            enabled = true
+        )
+        return HotQuestionVO(id = id, question = questionText)
+    }
+
+    /**
+     * 运营侧：按主键更新问题文案（路径 [questionId] 为准）。
+     */
+    fun updateHotQuestion(questionId: String, request: HotQuestionVO): Boolean {
+        val text = request.question.trim()
+        if (text.isEmpty()) {
+            return false
+        }
+        if (hotQuestionDao.getById(dslContext, questionId) == null) {
+            return false
+        }
+        return hotQuestionDao.updateQuestion(dslContext, questionId, text) > 0
+    }
+
+    /**
      * 运营侧：列出全部欢迎引导（含未启用），用于管理台。
      */
     fun listAllWelcomeGuidesForOp(): List<Map<String, Any>> {
@@ -227,6 +266,7 @@ class WelcomeGuideService @Autowired constructor(
         private const val DEFAULT_HOT_QUESTION_LIMIT = 5
         private const val ROLE_ADMIN = "ADMIN"
         private const val ROLE_MEMBER = "MEMBER"
+        private const val HOT_QUESTION_SOURCE_MANUAL = "MANUAL"
 
         private fun parseFormSchema(json: String?): FormSchemaVO? {
             if (json.isNullOrBlank()) {
