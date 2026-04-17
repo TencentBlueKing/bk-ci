@@ -22,9 +22,9 @@ v4_app_server_resources
 v4_app_server_resources_upload_auto
 v4_app_repository_disable_pac
 v4_app_repository_enable_pac
-
-# ============ 已废弃/剔除的接口 ============
 v4_app_pipeline_export_all
+
+# ============ 内部需要剔除的接口 ============
 v4_app_turbo_plan_add_new
 v4_app_turbo_new_record_list
 v4_app_turbo_new_plan
