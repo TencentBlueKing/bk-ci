@@ -1,0 +1,36 @@
+# APIGW 接口黑名单配置
+# 每行一个 operationId（即接口 tag），以 # 开头的行为注释，空行会被忽略
+# 在此文件中列出的接口将不会生成 API 网关资源定义和文档
+# 如果此文件不存在，生成脚本将默认没有任何黑名单过滤
+
+# ============ 请求不通的接口 ============
+v4_app_artifactory_appDownloadUrl
+app_artifactory_userDownloadUrl
+v4_app_relation_iam
+v4_app_pipeline_export
+v4_app_manual_review
+v4_app_update_project_product
+v4_app_node_status
+v4_app_repository_edit
+v4_app_oauth2_access_token
+app_env_add_node
+v4_app_set_share_env
+
+# ============ 服务有问题的接口 ============
+v4_app_server_resources_upload_manual
+v4_app_server_resources
+v4_app_server_resources_upload_auto
+v4_app_repository_disable_pac
+v4_app_repository_enable_pac
+
+# ============ 已废弃/剔除的接口 ============
+v4_app_pipeline_export_all
+v4_app_turbo_plan_add_new
+v4_app_turbo_new_record_list
+v4_app_turbo_new_plan
+v4_app_turbo_new_plan_list
+v4_user_pipeline_export_all
+v4_user_turbo_plan_add_new
+v4_user_turbo_new_record_list
+v4_user_turbo_new_plan
+v4_user_turbo_new_plan_list
