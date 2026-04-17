@@ -20,7 +20,7 @@
             :pagination="pagination"
             :default-sort="defaultSort"
             height="100%"
-            :key="`${isFlod}-${queryNodeHashId}`"
+            :key="`${isFlod}-${queryNodeHashId}-${isCreateResType}`"
             @row-click="handleRowClick"
             @page-change="handlePageChange"
             @page-limit-change="handlePageLimitChange"
