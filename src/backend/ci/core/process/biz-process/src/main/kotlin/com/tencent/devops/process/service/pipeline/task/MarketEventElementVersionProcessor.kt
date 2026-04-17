@@ -3,7 +3,6 @@ package com.tencent.devops.process.service.pipeline.task
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -39,7 +38,6 @@ import org.springframework.stereotype.Service
 
 @Service
 class MarketEventElementVersionProcessor @Autowired constructor(
-    private val dslContext: DSLContext,
     private val pipelineEventSubscriptionDao: PipelineEventSubscriptionDao,
     private val client: Client,
     private val pipelineTimerService: PipelineTimerService,
@@ -62,7 +60,8 @@ class MarketEventElementVersionProcessor @Autowired constructor(
             channelCode = context.pipelineBasicInfo.channelCode,
             element = element as MarketEventAtomElement,
             variables = variables,
-            pipelineSetting = pipelineSetting
+            pipelineSetting = pipelineSetting,
+            transactionContext = transactionContext
         )
     }
 
@@ -73,7 +72,8 @@ class MarketEventElementVersionProcessor @Autowired constructor(
         pipelineSetting: PipelineSetting,
         channelCode: ChannelCode,
         element: MarketEventAtomElement,
-        variables: Map<String, String>
+        variables: Map<String, String>,
+        transactionContext: DSLContext
     ) {
         val atomCode = element.atomCode
         val version = element.version
@@ -89,7 +89,8 @@ class MarketEventElementVersionProcessor @Autowired constructor(
                 element = element,
                 storeCode = componentDetail.storeCode,
                 variables = variables,
-                userId = userId
+                userId = userId,
+                transactionContext = transactionContext
             )
 
             else -> handleCustomTrigger(
@@ -100,7 +101,8 @@ class MarketEventElementVersionProcessor @Autowired constructor(
                 variables = variables,
                 componentDetail = componentDetail,
                 userId = userId,
-                pipelineSetting = pipelineSetting
+                pipelineSetting = pipelineSetting,
+                transactionContext = transactionContext
             )
         }
     }
@@ -129,7 +131,8 @@ class MarketEventElementVersionProcessor @Autowired constructor(
         element: MarketEventAtomElement,
         variables: Map<String, String>,
         storeCode: String,
-        userId: String
+        userId: String,
+        transactionContext: DSLContext
     ) {
         when (storeCode) {
             BK_STORE_CREATIVE_STREAM_TIMER_TRIGGER -> {
@@ -176,7 +179,8 @@ class MarketEventElementVersionProcessor @Autowired constructor(
                     repoHashId = null,
                     crontabExpressions = expressions,
                     startParam = startParam,
-                    taskId = element.id ?: ""
+                    taskId = element.id ?: "",
+                    transaction = transactionContext
                 )
             }
 
@@ -197,7 +201,8 @@ class MarketEventElementVersionProcessor @Autowired constructor(
         channelCode: ChannelCode,
         element: MarketEventAtomElement,
         variables: Map<String, String>,
-        componentDetail: StoreDetailInfo
+        componentDetail: StoreDetailInfo,
+        transactionContext: DSLContext
     ) {
         val triggerTarget = componentDetail.extData?.get(KEY_TRIGGER_TARGET)?.toString()
         val eventType = componentDetail.storeCode.substringAfter("${componentDetail.ownerStoreCode}-")
@@ -247,7 +252,7 @@ class MarketEventElementVersionProcessor @Autowired constructor(
             }
         }
         pipelineEventSubscriptionDao.save(
-            dslContext = dslContext,
+            dslContext = transactionContext,
             userId = userId,
             subscription = eventSubscription
         )
