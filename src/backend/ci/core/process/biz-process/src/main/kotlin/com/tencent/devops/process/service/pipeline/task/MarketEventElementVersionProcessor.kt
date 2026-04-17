@@ -77,12 +77,10 @@ class MarketEventElementVersionProcessor @Autowired constructor(
     ) {
         val atomCode = element.atomCode
         val version = element.version
-        // TODO: 支持原生代码库触发
-        val componentDetail = client.get(ServiceStoreComponentResource::class).getComponentDataInfoByCode(
-            storeType = StoreTypeEnum.TRIGGER_EVENT,
-            storeCode = atomCode,
-            version = version
-        ).data ?: throw InvalidParamException("component[$atomCode@$version] not found")
+        val componentDetail = getComponentDetail(atomCode, version) ?: run {
+            logger.warn("component[$atomCode@$version] not found, skip handle")
+            return
+        }
         when (componentDetail.ownerStoreCode) {
             BK_STORE_COMMON_TRIGGER -> handleCommonTrigger(
                 projectId = projectId,
@@ -105,6 +103,20 @@ class MarketEventElementVersionProcessor @Autowired constructor(
                 pipelineSetting = pipelineSetting
             )
         }
+    }
+
+    private fun getComponentDetail(
+        atomCode: String,
+        version: String
+    ) = try {
+        client.get(ServiceStoreComponentResource::class).getComponentDataInfoByCode(
+            storeType = StoreTypeEnum.TRIGGER_EVENT,
+            storeCode = atomCode,
+            version = version
+        ).data
+    } catch (ignored: Exception) {
+        logger.warn("fail to get component[$atomCode@$version] detail", ignored)
+        null
     }
 
     /**
