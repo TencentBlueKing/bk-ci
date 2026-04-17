@@ -2,6 +2,7 @@ package com.tencent.devops.openapi.resources.apigw.v4
 
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
+import com.tencent.devops.auth.pojo.dto.PermissionBatchValidateDTO
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
@@ -24,13 +25,17 @@ class ApigwAuthValidateResourceV4Impl @Autowired constructor(
         projectId: String,
         group: BkAuthGroup?
     ): Result<Boolean> {
-        logger.info("OPENAPI_AUTH_VALIDATE_V4|$userId|is project user|$projectId|$group")
-        return client.get(ServiceProjectAuthResource::class).isProjectUser(
-            token = tokenService.getSystemToken(),
-            userId = userId,
-            projectCode = projectId,
-            group = group
+        logger.info(
+            "OPENAPI_AUTH_VALIDATE_V4" +
+                "|$userId|is project user|$projectId|$group"
         )
+        return client.get(ServiceProjectAuthResource::class)
+            .isProjectUser(
+                token = tokenService.getSystemToken(),
+                userId = userId,
+                projectCode = projectId,
+                group = group
+            )
     }
 
     override fun checkUserInProjectLevelGroup(
@@ -39,12 +44,17 @@ class ApigwAuthValidateResourceV4Impl @Autowired constructor(
         userId: String,
         projectId: String
     ): Result<Boolean> {
-        logger.info("OPENAPI_AUTH_VALIDATE_V4|$userId|check_user_in_project_level_group|$projectId")
-        return client.get(ServiceProjectAuthResource::class).checkUserInProjectLevelGroup(
-            token = tokenService.getSystemToken(),
-            userId = userId,
-            projectCode = projectId
+        logger.info(
+            "OPENAPI_AUTH_VALIDATE_V4" +
+                "|$userId|check_user_in_project_level_group" +
+                "|$projectId"
         )
+        return client.get(ServiceProjectAuthResource::class)
+            .checkUserInProjectLevelGroup(
+                token = tokenService.getSystemToken(),
+                userId = userId,
+                projectCode = projectId
+            )
     }
 
     override fun validateUserResourcePermission(
@@ -56,18 +66,51 @@ class ApigwAuthValidateResourceV4Impl @Autowired constructor(
         resourceType: String,
         resourceCode: String
     ): Result<Boolean> {
-        logger.info("OPENAPI_AUTH_VALIDATE_V4|$userId|validate_user_resource_permission|$projectId")
-        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(),
-            userId = userId,
-            action = action,
-            resourceType = resourceType,
-            resourceCode = resourceCode,
-            projectCode = projectId
+        logger.info(
+            "OPENAPI_AUTH_VALIDATE_V4" +
+                "|$userId|validate_user_resource_permission" +
+                "|$projectId"
         )
+        return client.get(ServicePermissionAuthResource::class)
+            .validateUserResourcePermissionByRelation(
+                token = tokenService.getSystemToken(),
+                userId = userId,
+                action = action,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                projectCode = projectId
+            )
+    }
+
+    override fun batchValidateUserResourcePermission(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        targetUserId: String,
+        projectId: String,
+        permissionBatchValidateDTO: PermissionBatchValidateDTO
+    ): Result<Map<String, Boolean>> {
+        logger.info(
+            "OPENAPI_AUTH_VALIDATE_V4" +
+                "|$userId|batch_validate_permission" +
+                "|$projectId"
+        )
+        client.get(ServiceProjectAuthResource::class).checkProjectManagerAndMessage(
+            projectId = projectId,
+            userId = userId
+        )
+        return client.get(ServicePermissionAuthResource::class)
+            .batchValidateUserResourcePermission(
+                userId = targetUserId,
+                projectCode = projectId,
+                permissionBatchValidateDTO = permissionBatchValidateDTO
+            )
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(ApigwAuthValidateResourceV4Impl::class.java)
+        private val logger =
+            LoggerFactory.getLogger(
+                ApigwAuthValidateResourceV4Impl::class.java
+            )
     }
 }

@@ -226,12 +226,14 @@ class RbacPermissionManageFacadeServiceImpl(
             .filter { it.memberType == MemberType.USER.type }
             .map { it.iamGroupId }
         if (userGroupIds.isNotEmpty()) {
-            iamV2ManagerService.listMemberGroupsDetails(
-                MemberType.USER.type,
-                memberId,
-                userGroupIds.joinToString(",")
-            ).forEach {
-                groupMemberDetailMap["${it.id}_$memberId"] = it
+            userGroupIds.chunked(IAM_GROUP_IDS_LIMIT).forEach { chunk ->
+                iamV2ManagerService.listMemberGroupsDetails(
+                    MemberType.USER.type,
+                    memberId,
+                    chunk.joinToString(",")
+                ).forEach {
+                    groupMemberDetailMap["${it.id}_$memberId"] = it
+                }
             }
         }
         val deptGroups = resourceGroupMembers
@@ -243,12 +245,14 @@ class RbacPermissionManageFacadeServiceImpl(
                 deptGroups.groupBy({ it.memberId }, { it.iamGroupId.toString() })
                     .forEach { (deptId, iamGroupIds) ->
                         if (iamGroupIds.isEmpty()) return@forEach
-                        iamV2ManagerService.listMemberGroupsDetails(
-                            MemberType.DEPARTMENT.type,
-                            deptId,
-                            iamGroupIds.joinToString(",")
-                        ).forEach {
-                            groupMemberDetailMap["${it.id}_$deptId"] = it
+                        iamGroupIds.chunked(IAM_GROUP_IDS_LIMIT).forEach { chunk ->
+                            iamV2ManagerService.listMemberGroupsDetails(
+                                MemberType.DEPARTMENT.type,
+                                deptId,
+                                chunk.joinToString(",")
+                            ).forEach {
+                                groupMemberDetailMap["${it.id}_$deptId"] = it
+                            }
                         }
                     }
             }
@@ -256,12 +260,14 @@ class RbacPermissionManageFacadeServiceImpl(
             else -> {
                 // 管理员视角，获取组织直接加入的用户组
                 val deptGroupIds = deptGroups.map { it.iamGroupId }
-                iamV2ManagerService.listMemberGroupsDetails(
-                    MemberType.DEPARTMENT.type,
-                    memberId,
-                    deptGroupIds.joinToString(",")
-                ).forEach {
-                    groupMemberDetailMap["${it.id}_$memberId"] = it
+                deptGroupIds.chunked(IAM_GROUP_IDS_LIMIT).forEach { chunk ->
+                    iamV2ManagerService.listMemberGroupsDetails(
+                        MemberType.DEPARTMENT.type,
+                        memberId,
+                        chunk.joinToString(",")
+                    ).forEach {
+                        groupMemberDetailMap["${it.id}_$memberId"] = it
+                    }
                 }
             }
         }
@@ -270,12 +276,14 @@ class RbacPermissionManageFacadeServiceImpl(
             .groupBy({ it.memberId }, { it.iamGroupId.toString() })
             .forEach { (iamTemplateId, iamGroupIds) ->
                 if (iamGroupIds.isEmpty()) return@forEach
-                iamV2ManagerService.listMemberGroupsDetails(
-                    MemberType.TEMPLATE.type,
-                    iamTemplateId,
-                    iamGroupIds.joinToString(",")
-                ).forEach {
-                    groupMemberDetailMap["${it.id}_$iamTemplateId"] = it
+                iamGroupIds.chunked(IAM_GROUP_IDS_LIMIT).forEach { chunk ->
+                    iamV2ManagerService.listMemberGroupsDetails(
+                        MemberType.TEMPLATE.type,
+                        iamTemplateId,
+                        chunk.joinToString(",")
+                    ).forEach {
+                        groupMemberDetailMap["${it.id}_$iamTemplateId"] = it
+                    }
                 }
             }
         return groupMemberDetailMap
@@ -419,46 +427,49 @@ class RbacPermissionManageFacadeServiceImpl(
     }
 
     override fun listIamGroupIdsByConditions(condition: IamGroupIdsQueryConditionDTO): List<Int> {
-        val finalGroupIds = mutableListOf<Int>()
+        val hasGroupNameFilter = condition.isQueryByGroupName()
+        val hasPermissionFilter = condition.isQueryByGroupPermissions()
+        val hasExplicitGroupIds = condition.iamGroupIds != null
 
-        // 处理按组名查询的情况
-        if (condition.isQueryByGroupName()) {
-            val groupIdsByGroupName = permissionResourceGroupService.listIamGroupIdsByGroupName(
+        // Step 1: 确定初始候选组
+        val candidateGroupIds: List<Int> = when {
+            // 有组名过滤 -> 先按组名查
+            hasGroupNameFilter -> permissionResourceGroupService.listIamGroupIdsByGroupName(
                 projectId = condition.projectCode,
                 groupName = condition.groupName!!
             )
-            finalGroupIds.addAll(groupIdsByGroupName)
+            // 有显式组ID -> 直接使用
+            hasExplicitGroupIds -> condition.iamGroupIds!!
+            // 无任何过滤条件 -> 查该项目全部组
+            else -> authResourceGroupDao.listIamGroupIdsByConditions(
+                dslContext = dslContext,
+                projectCode = condition.projectCode
+            )
         }
 
-        // 处理按权限条件查询的情况
-        if (condition.isQueryByGroupPermissions()) {
-            val groupsByPermissions = groupPermissionService.listGroupsByPermissionConditions(
+        // Step 2: 按权限条件进一步过滤（若有）
+        val afterPermissionFilter = if (hasPermissionFilter) {
+            groupPermissionService.listGroupsByPermissionConditions(
                 projectCode = condition.projectCode,
-                filterIamGroupIds = finalGroupIds,
+                filterIamGroupIds = candidateGroupIds.ifEmpty { null },
                 relatedResourceType = condition.relatedResourceType!!,
                 relatedResourceCode = condition.relatedResourceCode,
                 action = condition.action
             )
-            finalGroupIds.clear()
-            finalGroupIds.addAll(groupsByPermissions)
+        } else {
+            candidateGroupIds
         }
 
-        // 添加额外的 IAM 组 ID（如果有）
-        condition.iamGroupIds?.let { finalGroupIds.addAll(it) }
-
-        // 如果需要唯一管理组查询，则过滤出唯一的组
-        if (condition.uniqueManagerGroupsQueryFlag == true) {
-            val groupsByUniqueManager = authResourceGroupMemberDao.listProjectUniqueManagerGroups(
+        // Step 3: 按唯一管理员组过滤（若需要）
+        return if (condition.uniqueManagerGroupsQueryFlag == true) {
+            authResourceGroupMemberDao.listProjectUniqueManagerGroups(
                 dslContext = dslContext,
                 projectCode = condition.projectCode,
-                iamGroupIds = finalGroupIds
+                iamGroupIds = afterPermissionFilter
             )
-
-            finalGroupIds.clear()
-            finalGroupIds.addAll(groupsByUniqueManager)
+        } else {
+            afterPermissionFilter
         }
-
-        return finalGroupIds
     }
 
     @Suppress("LongParameterList")
@@ -2244,17 +2255,13 @@ class RbacPermissionManageFacadeServiceImpl(
             memberNames = userDeptInfos,
             memberType = MemberType.DEPARTMENT.type
         ).map { it.name }
+        var managers = emptyList<String>()
         if (userDepartmentsInProject.isNotEmpty()) {
-            val managers = permissionResourceMemberService.getResourceGroupMembers(
+            managers = permissionResourceMemberService.getResourceGroupMembers(
                 projectCode = projectCode,
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = projectCode,
                 group = BkAuthGroup.MANAGER
-            )
-            return MemberExitsProjectCheckVo(
-                departmentJoinedCount = userDepartmentsInProject.size,
-                departments = userDepartmentsInProject.joinToString(","),
-                managers = managers
             )
         }
         val resourceType2Authorizations = authAuthorizationDao.list(
@@ -2280,6 +2287,9 @@ class RbacPermissionManageFacadeServiceImpl(
             iamGroupIds = groupIdsDirectlyJoined
         )
         return MemberExitsProjectCheckVo(
+            departmentJoinedCount = userDepartmentsInProject.size,
+            departments = userDepartmentsInProject.joinToString(","),
+            managers = managers,
             uniqueManagerCount = uniqueManagerGroups.size,
             pipelineAuthorizationCount = resourceType2Authorizations[ResourceTypeId.PIPELINE]?.size ?: 0,
             repositoryAuthorizationCount = resourceType2Authorizations[ResourceTypeId.REPERTORY]?.size ?: 0,
@@ -2660,5 +2670,8 @@ class RbacPermissionManageFacadeServiceImpl(
         private const val PERMANENT_EXPIRED_TIME = 4102444800000L
 
         private const val HANDOVER_APPLICATION_RESULT_TEMPLATE_CODE = "BK_PERMISSIONS_HANDOVER_APPLICATION_RESULT"
+
+        // IAM group_ids 参数限制，最多 100 个
+        private const val IAM_GROUP_IDS_LIMIT = 100
     }
 }

@@ -3,10 +3,16 @@ package com.tencent.devops.openapi.resources.apigw.v4
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.auth.api.service.ServiceResourceGroupResource
 import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
+import com.tencent.devops.auth.pojo.AuthResourceGroup
+import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.GroupAddDTO
+import com.tencent.devops.auth.pojo.dto.IamGroupIdsQueryConditionDTO
 import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
+import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
+import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -104,6 +110,27 @@ class ApigwAuthProjectResourceV4Impl @Autowired constructor(
         )
     }
 
+    override fun userBatchAddResourceGroupMembers(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        createInfo: ProjectCreateUserInfo
+    ): Result<Boolean> {
+        logger.info(
+            "OPENAPI_AUTH_PROJECT_RESOURCE_V4" +
+                " userBatchAddResourceGroupMembers" +
+                "|$appCode|$userId|$projectId"
+        )
+        checkProjectManager(projectId, userId)
+        return client.get(ServiceResourceMemberResource::class)
+            .batchAddResourceGroupMembers(
+                token = tokenService.getSystemToken(),
+                projectCode = projectId,
+                projectCreateUserInfo = createInfo
+            )
+    }
+
     override fun batchDeleteResourceGroupMembers(
         appCode: String?,
         apigwType: String?,
@@ -190,5 +217,187 @@ class ApigwAuthProjectResourceV4Impl @Autowired constructor(
             resourceType = resourceType,
             groupId = groupId
         )
+    }
+
+    override fun userGetResourceGroupUsers(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        resourceType: AuthResourceType,
+        resourceCode: String,
+        group: BkAuthGroup?
+    ): Result<List<String>> {
+        logger.info(
+            "OPENAPI_AUTH_PROJECT_RESOURCE_V4" +
+                " userGetResourceGroupUsers" +
+                "|$appCode|$userId|$projectId"
+        )
+        checkProjectManager(projectId, userId)
+        return client.get(ServiceResourceMemberResource::class)
+            .getResourceGroupMembers(
+                token = tokenService.getSystemToken(),
+                projectCode = projectId,
+                resourceType = resourceType.value,
+                resourceCode = resourceCode,
+                group = group
+            )
+    }
+
+    override fun userGetGroupPermissionDetail(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        groupId: Int
+    ): Result<Map<String, List<GroupPermissionDetailVo>>> {
+        logger.info(
+            "OPENAPI_AUTH_PROJECT_RESOURCE_V4" +
+                " userGetGroupPermissionDetail" +
+                "|$appCode|$userId|$projectId|$groupId"
+        )
+        checkProjectManager(projectId, userId)
+        return client.get(ServiceResourceGroupResource::class)
+            .getGroupPermissionDetail(
+                projectCode = projectId,
+                groupId = groupId
+            )
+    }
+
+    override fun userBatchDeleteResourceGroupMembers(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        deleteInfo: ProjectDeleteUserInfo
+    ): Result<Boolean> {
+        logger.info(
+            "OPENAPI_AUTH_PROJECT_RESOURCE_V4" +
+                " userBatchDeleteResourceGroupMembers" +
+                "|$appCode|$userId|$projectId"
+        )
+        checkProjectManager(projectId, userId)
+        return client.get(ServiceResourceMemberResource::class)
+            .batchDeleteResourceGroupMembers(
+                token = tokenService.getSystemToken(),
+                projectCode = projectId,
+                projectDeleteUserInfo = deleteInfo
+            )
+    }
+
+    override fun listGroups(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        condition: IamGroupIdsQueryConditionDTO
+    ): Result<List<AuthResourceGroup>> {
+        logger.info(
+            "OPENAPI_AUTH_PROJECT_RESOURCE_V4" +
+                " listGroupsByConditions|$appCode|$projectId"
+        )
+        checkProjectManager(projectId, userId)
+        return client.get(ServiceResourceGroupResource::class)
+            .listGroupsByConditions(
+                condition = condition.copy(projectCode = projectId)
+            )
+    }
+
+    override fun listProjectMembers(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        memberType: String?,
+        userName: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<SQLPage<ResourceMemberInfo>> {
+        logger.info(
+            "OPENAPI_AUTH_PROJECT_RESOURCE_V4" +
+                " listProjectMembers|$appCode|$userId|$projectId"
+        )
+        checkProjectManager(projectId, userId)
+        return client.get(ServiceResourceMemberResource::class)
+            .listProjectMembers(
+                projectCode = projectId,
+                memberType = memberType,
+                userName = userName,
+                deptName = null,
+                departedFlag = false,
+                page = page,
+                pageSize = pageSize
+            )
+    }
+
+    override fun getMemberGroupCount(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        memberId: String,
+        relatedResourceType: String?,
+        relatedResourceCode: String?
+    ): Result<List<ResourceType2CountVo>> {
+        logger.info(
+            "OPENAPI_AUTH_PROJECT_RESOURCE_V4" +
+                " getMemberGroupCount" +
+                "|$appCode|$userId|$projectId|$memberId"
+        )
+        checkProjectManager(projectId, userId)
+        return client.get(ServiceResourceMemberResource::class)
+            .getMemberGroupCount(
+                projectCode = projectId,
+                memberId = memberId,
+                relatedResourceType = relatedResourceType,
+                relatedResourceCode = relatedResourceCode
+            )
+    }
+
+    override fun getMemberGroupsDetails(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        memberId: String,
+        relatedResourceType: String?,
+        relatedResourceCode: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<SQLPage<GroupDetailsInfoVo>> {
+        logger.info(
+            "OPENAPI_AUTH_PROJECT_RESOURCE_V4" +
+                " getMemberGroupsDetails" +
+                "|$appCode|$userId|$projectId|$resourceType|$memberId"
+        )
+        checkProjectManager(projectId, userId)
+        val start = (page - 1) * pageSize
+        return client.get(ServiceResourceGroupResource::class)
+            .getMemberGroupsDetails(
+                userId = userId,
+                projectCode = projectId,
+                resourceType = resourceType,
+                memberId = memberId,
+                groupName = null,
+                minExpiredAt = null,
+                maxExpiredAt = null,
+                relatedResourceType = relatedResourceType,
+                relatedResourceCode = relatedResourceCode,
+                action = null,
+                start = start,
+                limit = pageSize
+            )
+    }
+
+    private fun checkProjectManager(
+        projectId: String,
+        userId: String
+    ) {
+        client.get(ServiceProjectAuthResource::class)
+            .checkProjectManagerAndMessage(
+                projectId = projectId,
+                userId = userId
+            )
     }
 }

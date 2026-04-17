@@ -14,7 +14,8 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        group: BkAuthGroup?
+        group: BkAuthGroup?,
+        includeExpired: Boolean
     ): List<String> {
         return emptyList()
     }

@@ -54,9 +54,11 @@ class RbacPermissionResourceMemberService(
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        group: BkAuthGroup?
+        group: BkAuthGroup?,
+        includeExpired: Boolean
     ): List<String> {
-        logger.info("[RBAC-IAM] get resource group members:$projectCode|$resourceType|$resourceCode|$group")
+        logger.info("[RBAC-IAM] get resource group members:$projectCode|$resourceType|$resourceCode|$group|includeExpired=$includeExpired")
+        val minExpiredTime = if (includeExpired) null else LocalDateTime.now()
         return when (group) {
             // 新的rbac版本中，没有ci管理员组，不可以调用此接口来获取ci管理员组的成员
             BkAuthGroup.CIADMIN, BkAuthGroup.CI_MANAGER -> emptyList()
@@ -67,7 +69,7 @@ class RbacPermissionResourceMemberService(
                     projectCode = projectCode,
                     resourceType = resourceType,
                     resourceCode = resourceCode,
-                    minExpiredTime = LocalDateTime.now(),
+                    minExpiredTime = minExpiredTime,
                     memberType = MemberType.USER.type
                 ).map { it.memberId }.distinct()
             }
@@ -78,7 +80,7 @@ class RbacPermissionResourceMemberService(
                     projectCode = projectCode,
                     resourceType = resourceType,
                     resourceCode = resourceCode,
-                    minExpiredTime = LocalDateTime.now(),
+                    minExpiredTime = minExpiredTime,
                     groupCode = group.value,
                     memberType = MemberType.USER.type
                 ).map { it.memberId }

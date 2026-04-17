@@ -224,6 +224,12 @@ include(":core:metrics:biz-metrics")
 include(":core:metrics:boot-metrics")
 include(":core:metrics:model-metrics")
 
+include(":core:ai")
+include(":core:ai:api-ai")
+include(":core:ai:biz-ai")
+include(":core:ai:model-ai")
+include(":core:ai:boot-ai")
+
 //  ==================== tencent ============================================================
 include(":ext")
 include(":ext:tencent")

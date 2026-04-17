@@ -1,0 +1,227 @@
+CREATE DATABASE IF NOT EXISTS `devops_ci_ai` DEFAULT CHARACTER SET utf8mb4;
+USE devops_ci_ai;
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for T_AI_SESSION
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_AI_SESSION` (
+  `ID` varchar(32) NOT NULL COMMENT '会话ID',
+  `USER_ID` varchar(64) NOT NULL COMMENT '归属用户',
+  `PROJECT_ID` varchar(64) DEFAULT NULL COMMENT '项目ID，空=公共会话',
+  `TITLE` varchar(255) NOT NULL DEFAULT '' COMMENT '会话标题',
+  `CREATED_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `UPDATED_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+  PRIMARY KEY (`ID`),
+  INDEX `IDX_USER_ID` (`USER_ID`),
+  INDEX `IDX_PROJECT_ID` (`PROJECT_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI会话表';
+
+-- ----------------------------
+-- Table structure for T_AI_MESSAGE
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_AI_MESSAGE` (
+  `ID` varchar(32) NOT NULL COMMENT '消息ID',
+  `SESSION_ID` varchar(32) NOT NULL COMMENT '会话ID',
+  `ROLE` varchar(16) NOT NULL COMMENT '角色(USER/ASSISTANT/SYSTEM/TOOL)',
+  `CONTENT` longtext NOT NULL COMMENT '消息内容',
+  `EXTRA_DATA` longtext DEFAULT NULL COMMENT '附加结构化数据JSON，如activity_snapshot卡片',
+  `MESSAGE_INDEX` int(11) NOT NULL DEFAULT 0 COMMENT '消息顺序索引，同一会话内递增',
+  `CREATED_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  PRIMARY KEY (`ID`),
+  INDEX `IDX_SESSION_ID` (`SESSION_ID`),
+  INDEX `IDX_SESSION_ORDER` (`SESSION_ID`, `MESSAGE_INDEX`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI消息表';
+
+-- ----------------------------
+-- Table structure for T_AI_PROMPT
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_AI_PROMPT` (
+  `ID` varchar(32) NOT NULL COMMENT '提示词ID',
+  `USER_ID` varchar(64) NOT NULL COMMENT '归属用户',
+  `TITLE` varchar(255) NOT NULL COMMENT '提示词标题',
+  `CONTENT` text NOT NULL COMMENT '提示词内容',
+  `INTERACTION_TYPE` varchar(32) NOT NULL DEFAULT 'PROMPT_COMPLETION' COMMENT '交互方式：PROMPT_COMPLETION(补全提示词)/DIRECT_TRIGGER(直接发起)',
+  `CREATED_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `UPDATED_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+  PRIMARY KEY (`ID`),
+  INDEX `IDX_USER_ID` (`USER_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI个人提示词表';
+
+-- ----------------------------
+-- Table structure for T_AI_AGENT_STATE
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_AI_AGENT_STATE` (
+  `SESSION_ID` varchar(32) NOT NULL COMMENT '会话ID',
+  `STATE_KEY` varchar(128) NOT NULL COMMENT '状态键',
+  `ITEM_INDEX` int(11) NOT NULL DEFAULT 0 COMMENT '条目索引',
+  `STATE_DATA` longtext NOT NULL COMMENT '序列化状态数据',
+  `CREATED_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `UPDATED_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+  PRIMARY KEY (`SESSION_ID`, `STATE_KEY`, `ITEM_INDEX`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI智能体状态持久化表';
+
+-- ----------------------------
+-- Table structure for T_AI_MCP_SERVER_CONFIG
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_AI_MCP_SERVER_CONFIG` (
+  `ID` varchar(64) NOT NULL COMMENT '配置ID',
+  `SCOPE` varchar(32) NOT NULL COMMENT '作用域：SYSTEM / USER',
+  `USER_ID` varchar(64) DEFAULT NULL COMMENT 'SYSTEM时为空，USER时为配置者',
+  `SERVER_NAME` varchar(128) NOT NULL COMMENT '显示名称',
+  `SERVER_URL` varchar(512) NOT NULL COMMENT 'MCP服务器URL',
+  `TRANSPORT_TYPE` varchar(32) NOT NULL DEFAULT 'SSE' COMMENT '传输协议：SSE / STREAMABLE_HTTP',
+  `HEADERS` text DEFAULT NULL COMMENT '请求头JSON，如{"Authorization":"Bearer xxx"}',
+  `BIND_AGENT` varchar(64) NOT NULL DEFAULT 'knowledge_agent' COMMENT '绑定智能体：supervisor / knowledge_agent / auth_agent 等，对应SubAgentDefinition.toolName()',
+  `ENABLED` bit(1) NOT NULL DEFAULT b'1' COMMENT '是否启用',
+  `CREATED_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `UPDATED_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+  PRIMARY KEY (`ID`),
+  INDEX `IDX_SCOPE_USER` (`SCOPE`, `USER_ID`),
+  INDEX `IDX_BIND_AGENT` (`BIND_AGENT`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI MCP服务器配置表';
+
+-- ----------------------------
+-- Table structure for T_AI_EXTERNAL_AGENT_CONFIG
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_AI_EXTERNAL_AGENT_CONFIG` (
+  `ID` varchar(64) NOT NULL COMMENT '配置ID',
+  `USER_ID` varchar(64) NOT NULL COMMENT '归属用户',
+  `AGENT_NAME` varchar(128) NOT NULL COMMENT '显示名称，同时作为Tool名',
+  `DESCRIPTION` varchar(512) NOT NULL COMMENT '能力描述，给LLM做路由判断',
+  `PLATFORM` varchar(32) NOT NULL COMMENT '平台类型：KNOT / BKAIDEV',
+  `AGENT_ID` varchar(128) NOT NULL COMMENT '在该平台上的Agent ID',
+  `API_URL` varchar(512) NOT NULL COMMENT 'API端点URL',
+  `HEADERS` text DEFAULT NULL COMMENT '认证头JSON',
+  `ENABLED` bit(1) NOT NULL DEFAULT b'1' COMMENT '是否启用',
+  `CREATED_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `UPDATED_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+  PRIMARY KEY (`ID`),
+  INDEX `IDX_USER_ID` (`USER_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI外部智能体配置表';
+
+-- ----------------------------
+-- Table structure for T_AI_SKILL
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_AI_SKILL` (
+  `ID` varchar(64) NOT NULL COMMENT '技能ID',
+  `SCOPE` varchar(16) NOT NULL DEFAULT 'USER' COMMENT '作用域：SYSTEM / USER',
+  `USER_ID` varchar(64) DEFAULT NULL COMMENT 'SYSTEM时为空，USER时为创建者',
+  `SKILL_NAME` varchar(128) NOT NULL COMMENT '技能名称',
+  `DESCRIPTION` varchar(512) NOT NULL COMMENT '技能描述，展示给LLM供其判断是否加载',
+  `SKILL_CONTENT` text NOT NULL COMMENT '技能完整指令内容（Markdown）',
+  `RESOURCES` text DEFAULT NULL COMMENT '关联资源JSON，格式{"path":"content"}',
+  `BIND_AGENT` varchar(64) NOT NULL DEFAULT 'supervisor' COMMENT '绑定智能体',
+  `ENABLED` bit(1) NOT NULL DEFAULT b'1' COMMENT '是否启用',
+  `CREATED_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `UPDATED_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+  PRIMARY KEY (`ID`),
+  INDEX `IDX_SCOPE_ENABLED` (`SCOPE`, `ENABLED`),
+  INDEX `IDX_USER_ID` (`USER_ID`),
+  INDEX `IDX_BIND_AGENT` (`BIND_AGENT`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI技能表';
+
+-- ----------------------------
+-- Table structure for T_AI_AGENT_SYS_PROMPT
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_AI_AGENT_SYS_PROMPT` (
+  `AGENT_NAME` varchar(64) NOT NULL COMMENT '智能体名称，对应toolName()或supervisor',
+  `PROMPT_TEMPLATE` text NOT NULL COMMENT '提示词模板，支持{{context_block}}、{{agent_list}}等占位符',
+  `DESCRIPTION` varchar(512) DEFAULT NULL COMMENT '人类可读描述',
+  `ENABLED` bit(1) NOT NULL DEFAULT b'1' COMMENT '是否启用，禁用时回退代码默认值',
+  `CREATED_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `UPDATED_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+  PRIMARY KEY (`AGENT_NAME`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI智能体系统提示词表';
+
+-- ----------------------------
+-- Table structure for T_AI_WELCOME_GUIDE
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_AI_WELCOME_GUIDE` (
+  `ID` varchar(64) NOT NULL COMMENT '引导项ID',
+  `PARENT_ID` varchar(64) DEFAULT NULL COMMENT '父级ID，ACTION指向所属CARD，CARD为NULL',
+  `TYPE` varchar(16) NOT NULL COMMENT '类型：CARD(能力卡片) / ACTION(快捷操作)',
+  `LABEL` varchar(255) NOT NULL COMMENT '显示文案（卡片标题 / 按钮文字）',
+  `DESCRIPTION` varchar(512) DEFAULT NULL COMMENT '卡片描述文案，仅CARD使用',
+  `PROMPT_CONTENT` text DEFAULT NULL COMMENT '点击后发送给AI的消息，仅ACTION使用',
+  `INTERACTION_TYPE` varchar(32) NOT NULL DEFAULT 'PROMPT_COMPLETION' COMMENT '交互方式：PROMPT_COMPLETION/DIRECT_TRIGGER，仅ACTION有效；FORM_SCHEMA预留',
+  `FORM_SCHEMA` text DEFAULT NULL COMMENT '表单定义JSON，预留字段；当前未启用表单预收集',
+  `ROLE_FILTER` varchar(32) DEFAULT NULL COMMENT '角色过滤：ADMIN/MEMBER，空表示不过滤，仅ACTION有效',
+  `ICON` varchar(128) DEFAULT NULL COMMENT '图标标识，仅CARD使用',
+  `SORT_ORDER` int NOT NULL DEFAULT 0 COMMENT '同级内排序，越小越靠前',
+  `ENABLED` bit(1) NOT NULL DEFAULT b'1' COMMENT '是否启用',
+  `CREATED_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `UPDATED_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+  PRIMARY KEY (`ID`),
+  INDEX `IDX_TYPE_ENABLED` (`TYPE`, `ENABLED`),
+  INDEX `IDX_PARENT` (`PARENT_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI欢迎页引导配置表';
+
+-- ----------------------------
+-- Table structure for T_AI_HOT_QUESTION
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_AI_HOT_QUESTION` (
+  `ID` varchar(64) NOT NULL COMMENT '问题ID',
+  `QUESTION` varchar(512) NOT NULL COMMENT '问题文案，同时作为发送给AI的消息',
+  `SOURCE` varchar(16) NOT NULL DEFAULT 'MANUAL' COMMENT '来源：MANUAL(人工预置) / AUTO(自动生成)',
+  `WEIGHT` int NOT NULL DEFAULT 0 COMMENT '权重，越大越优先展示',
+  `SORT_ORDER` int NOT NULL DEFAULT 0 COMMENT '同权重内排序',
+  `ENABLED` bit(1) NOT NULL DEFAULT b'1' COMMENT '是否启用',
+  `CREATED_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `UPDATED_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+  PRIMARY KEY (`ID`),
+  INDEX `IDX_ENABLED_WEIGHT` (`ENABLED`, `WEIGHT` DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI热点问题池';
+
+-- ----------------------------
+-- Table structure for T_AI_AGENT_STAGE
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_AI_AGENT_STAGE` (
+  `ID` varchar(64) NOT NULL COMMENT '阶段ID',
+  `SESSION_ID` varchar(32) NOT NULL COMMENT '会话ID',
+  `AGENT_NAME` varchar(64) NOT NULL COMMENT '智能体名称',
+  `STAGE_INDEX` int NOT NULL DEFAULT 0 COMMENT '执行顺序号，同一会话内递增',
+  `STAGE_TYPE` varchar(16) NOT NULL COMMENT '阶段类型：REASONING / TOOL_CALL',
+  `TOOL_NAME` varchar(128) DEFAULT NULL COMMENT '工具名称，TOOL_CALL时有值',
+  `TOOL_CALL_ID` varchar(64) DEFAULT NULL COMMENT '工具调用ID',
+  `STATUS` varchar(16) NOT NULL DEFAULT 'RUNNING' COMMENT '状态：RUNNING / SUCCESS / ERROR',
+  `DURATION_MS` bigint NOT NULL DEFAULT -1 COMMENT '耗时毫秒，-1表示进行中',
+  `INPUT_BRIEF` varchar(1024) DEFAULT NULL COMMENT '输入摘要',
+  `OUTPUT_BRIEF` varchar(1024) DEFAULT NULL COMMENT '输出摘要',
+  `CREATED_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `UPDATED_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+  PRIMARY KEY (`ID`),
+  INDEX `IDX_SESSION_ID` (`SESSION_ID`),
+  INDEX `IDX_SESSION_ORDER` (`SESSION_ID`, `STAGE_INDEX`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI智能体执行阶段追踪表';
+
+-- ----------------------------
+-- Table structure for T_AI_RUN_EVENT
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_AI_RUN_EVENT` (
+  `ID` bigint AUTO_INCREMENT COMMENT '自增主键',
+  `THREAD_ID` varchar(64) NOT NULL COMMENT '会话线程ID',
+  `RUN_ID` varchar(64) NOT NULL COMMENT '运行ID',
+  `EVENT_INDEX` int NOT NULL COMMENT '事件序号，同一run内递增',
+  `EVENT_DATA` text NOT NULL COMMENT 'AguiEventEncoder编码后的SSE字符串',
+  `CREATED_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  PRIMARY KEY (`ID`),
+  UNIQUE INDEX `UNI_THREAD_RUN_INDEX` (`THREAD_ID`, `RUN_ID`, `EVENT_INDEX`),
+  INDEX `IDX_CREATED_TIME` (`CREATED_TIME`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI运行事件缓冲表（回放用，用完即删）';
+
+SET FOREIGN_KEY_CHECKS = 1;
