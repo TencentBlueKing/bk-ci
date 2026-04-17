@@ -17,23 +17,20 @@ import org.springframework.stereotype.Service
 @Service
 class CosLogUploadService {
 
-    @Value("\${cos.log.secretId:}")
+    @Value("\${tcloud.cos.secretId:}")
     val secretId: String = ""
 
-    @Value("\${cos.log.secretKey:}")
+    @Value("\${tcloud.cos.secretKey:}")
     val secretKey: String = ""
 
-    @Value("\${cos.log.region:ap-guangzhou}")
+    @Value("\${tcloud.cos.region:ap-guangzhou}")
     val region: String = "ap-guangzhou"
 
-    @Value("\${cos.log.bucket:}")
+    @Value("\${tcloud.cos.bucket:}")
     val bucket: String = ""
 
-    @Value("\${cos.log.replaceDomain:anydev-box.it.tencent.com}")
+    @Value("\${tcloud.cos.replaceDomain:anydev-box.it.tencent.com}")
     val replaceDomain: String = "anydev-box.it.tencent.com"
-
-    @Value("\${cos.log.expireSeconds:600}")
-    val expireSeconds: Long = 600
 
     fun generateLogUploadUrl(
         userId: String
@@ -46,7 +43,7 @@ class CosLogUploadService {
         val cosClient = buildCosClient()
         try {
             val expiration = Date(
-                System.currentTimeMillis() + expireSeconds * 1000
+                System.currentTimeMillis() + EXPIRE_SECONDS * 1000
             )
             val presignedUrl = cosClient.generatePresignedUrl(
                 bucket, key, expiration, HttpMethodName.PUT
@@ -57,7 +54,7 @@ class CosLogUploadService {
             )
             return LogUploadUrl(
                 url = replacedUrl,
-                expireSeconds = expireSeconds
+                expireSeconds = EXPIRE_SECONDS
             )
         } finally {
             cosClient.shutdown()
@@ -79,6 +76,7 @@ class CosLogUploadService {
     companion object {
         private val logger =
             LoggerFactory.getLogger(CosLogUploadService::class.java)
+        private const val EXPIRE_SECONDS = 600L
         private val DATE_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd")
         private val TIME_FORMATTER =
