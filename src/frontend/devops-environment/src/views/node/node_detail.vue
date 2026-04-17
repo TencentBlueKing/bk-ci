@@ -422,8 +422,6 @@
         display: flex;
         align-items: center;
         margin-right: 24px;
-        position: relative;
-        top: -1px;
     }
     .agent-status-text {
         font-size: 12px;
