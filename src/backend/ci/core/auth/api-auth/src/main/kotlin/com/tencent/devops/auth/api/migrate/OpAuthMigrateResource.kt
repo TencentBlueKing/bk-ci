@@ -165,4 +165,9 @@ interface OpAuthMigrateResource {
         @Parameter(description = "项目", required = true)
         projectCodes: List<String>
     ): Result<Boolean>
+
+    @POST
+    @Path("/migrateProjectCodePrefix")
+    @Operation(summary = "迁移项目ID前缀-为项目ID添加tencent.前缀")
+    fun migrateProjectCodePrefix(): Result<Boolean>
 }

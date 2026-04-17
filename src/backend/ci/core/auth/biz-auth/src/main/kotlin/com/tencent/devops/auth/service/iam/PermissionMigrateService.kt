@@ -128,4 +128,9 @@ interface PermissionMigrateService {
      * 开启流水线列表权限控制开关
      */
     fun enablePipelineListPermissionControl(projectCodes: List<String>): Boolean
+
+    /**
+     * 迁移项目ID前缀-为项目ID添加tencent.前缀
+     */
+    fun migrateProjectCodePrefix(): Boolean
 }

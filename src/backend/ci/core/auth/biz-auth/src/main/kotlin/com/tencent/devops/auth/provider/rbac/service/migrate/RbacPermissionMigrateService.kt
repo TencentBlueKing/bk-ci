@@ -96,7 +96,8 @@ class RbacPermissionMigrateService(
     private val migrateResourceGroupService: MigrateResourceGroupService,
     private val syncDataTaskDao: AuthSyncDataTaskDao,
     private val rbacCommonService: RbacCommonService,
-    private val authResourceGroupMemberDao: AuthResourceGroupMemberDao
+    private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
+    private val migrateProjectCodePrefixService: MigrateProjectCodePrefixService
 ) : PermissionMigrateService {
 
     companion object {
@@ -768,5 +769,9 @@ class RbacPermissionMigrateService(
             client.get(ServiceProjectResource::class).updateProjectProperties(it, properties)
         }
         return true
+    }
+
+    override fun migrateProjectCodePrefix(): Boolean {
+        return migrateProjectCodePrefixService.migrateProjectCodePrefix()
     }
 }
