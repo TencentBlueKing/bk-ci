@@ -152,27 +152,6 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
-  /v4/apigw-app/auth/oauth2/endpoint/getAccessToken:
-    post:
-      operationId: "v4_app_oauth2_access_token"
-      description: "oauth2获取accessToken"
-      tags:
-      - "V4应用态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: true
-          resourcePermissionRequired: true
-          userVerifiedRequired: false
-        backend:
-          matchSubpath: false
-          method: "post"
-          name: "backend-1"
-          path: "/openapi/api/apigw-app/v4/auth/oauth2/endpoint/getAccessToken"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
   /v4/apigw-app/auth/project/{projectId}/batch_add_resource_group_members:
     post:
       operationId: "v4_app_batch_add_resource_group_members"
@@ -697,27 +676,6 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
-  /v4/apigw-app/environment/projects/{projectId}/share_envs:
-    post:
-      operationId: "v4_app_set_share_env"
-      description: "设置环境共享"
-      tags:
-      - "V4应用态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: true
-          resourcePermissionRequired: true
-          userVerifiedRequired: false
-        backend:
-          matchSubpath: false
-          method: "post"
-          name: "backend-1"
-          path: "/openapi/api/apigw-app/v4/environment/projects/{projectId}/share_envs"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
   /v4/apigw-app/environment/projects/{projectId}/third_party_env2nodes:
     get:
       operationId: "v4_app_third_party_env2nodes"
@@ -865,27 +823,6 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
-  /v4/apigw-app/permission/move/projects/{projectId}/relation_project:
-    put:
-      operationId: "v4_app_relation_iam"
-      description: "关联iam项目"
-      tags:
-      - "V4应用态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: true
-          resourcePermissionRequired: true
-          userVerifiedRequired: false
-        backend:
-          matchSubpath: false
-          method: "put"
-          name: "backend-1"
-          path: "/openapi/api/apigw-app/v4/permission/move/projects/{projectId}/relation_project"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
   /v4/apigw-app/projects/list/by/conditions/{page}/{pageSize}:
     post:
       operationId: "v4_app_list_projects_by_conditions"
@@ -945,27 +882,6 @@ paths:
           method: "put"
           name: "backend-1"
           path: "/openapi/api/apigw-app/v4/projects/project/{projectId}/update_plugin_details_display"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-app/projects/project/{projectId}/update_project_product:
-    put:
-      operationId: "v4_app_update_project_product"
-      description: "更新项目关联产品"
-      tags:
-      - "V4应用态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: true
-          resourcePermissionRequired: true
-          userVerifiedRequired: false
-        backend:
-          matchSubpath: false
-          method: "put"
-          name: "backend-1"
-          path: "/openapi/api/apigw-app/v4/projects/project/{projectId}/update_project_product"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -1112,27 +1028,6 @@ paths:
           method: "post"
           name: "backend-1"
           path: "/openapi/api/apigw-app/v4/projects/{projectId}/archived/pipelines/{pipelineId}/data/migrate"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-app/projects/{projectId}/artifactories/app_download_url:
-    get:
-      operationId: "v4_app_artifactory_appDownloadUrl"
-      description: "获取APP跳转链接"
-      tags:
-      - "V4应用态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: true
-          resourcePermissionRequired: true
-          userVerifiedRequired: false
-        backend:
-          matchSubpath: false
-          method: "get"
-          name: "backend-1"
-          path: "/openapi/api/apigw-app/v4/projects/{projectId}/artifactories/app_download_url"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -1806,27 +1701,6 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
-  /v4/apigw-app/projects/{projectId}/environment/third_part_agent_node_status:
-    get:
-      operationId: "v4_app_node_status"
-      description: "获取指定第三方构建机状态"
-      tags:
-      - "V4应用态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: true
-          resourcePermissionRequired: true
-          userVerifiedRequired: false
-        backend:
-          matchSubpath: false
-          method: "get"
-          name: "backend-1"
-          path: "/openapi/api/apigw-app/v4/projects/{projectId}/environment/third_part_agent_node_status"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
   /v4/apigw-app/projects/{projectId}/environment/third_part_agent_nodes:
     get:
       operationId: "v4_app_node_list"
@@ -1991,27 +1865,6 @@ paths:
           method: "get"
           name: "backend-1"
           path: "/openapi/api/apigw-app/v4/projects/{projectId}/logs/more_logs"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-app/projects/{projectId}/manual_review:
-    post:
-      operationId: "v4_app_manual_review"
-      description: "人工审核插件进行审核"
-      tags:
-      - "V4应用态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: true
-          resourcePermissionRequired: true
-          userVerifiedRequired: false
-        backend:
-          matchSubpath: false
-          method: "post"
-          name: "backend-1"
-          path: "/openapi/api/apigw-app/v4/projects/{projectId}/manual_review"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -3129,27 +2982,6 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
-  /v4/apigw-app/projects/{projectId}/version/export:
-    get:
-      operationId: "v4_app_pipeline_export"
-      description: "导出流水线模板"
-      tags:
-      - "V4应用态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: true
-          resourcePermissionRequired: true
-          userVerifiedRequired: false
-        backend:
-          matchSubpath: false
-          method: "get"
-          name: "backend-1"
-          path: "/openapi/api/apigw-app/v4/projects/{projectId}/version/export"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
   /v4/apigw-app/projects/{projectId}/version/get_version:
     get:
       operationId: "v4_app_pipeline_get_version"
@@ -3403,26 +3235,6 @@ paths:
         isPublic: true
         matchSubpath: false
   /v4/apigw-app/repositories/projects/{projectId}/repository:
-    put:
-      operationId: "v4_app_repository_edit"
-      description: "编辑关联代码库"
-      tags:
-      - "V4应用态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: true
-          resourcePermissionRequired: true
-          userVerifiedRequired: false
-        backend:
-          matchSubpath: false
-          method: "put"
-          name: "backend-1"
-          path: "/openapi/api/apigw-app/v4/repositories/projects/{projectId}/repository"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
     post:
       operationId: "v4_app_repository_create"
       description: "关联代码库"
@@ -3501,195 +3313,6 @@ paths:
           method: "get"
           name: "backend-1"
           path: "/openapi/api/apigw-app/v4/repositories/projects/{projectId}/repository_info_list"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-app/repositories/projects/{projectId}/{repositoryHashId}/pac/disable:
-    put:
-      operationId: "v4_app_repository_disable_pac"
-      description: "关闭PAC"
-      tags:
-      - "V4应用态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: true
-          resourcePermissionRequired: true
-          userVerifiedRequired: false
-        backend:
-          matchSubpath: false
-          method: "put"
-          name: "backend-1"
-          path: "/openapi/api/apigw-app/v4/repositories/projects/{projectId}/{repositoryHashId}/pac/disable"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-app/repositories/projects/{projectId}/{repositoryHashId}/pac/enable:
-    put:
-      operationId: "v4_app_repository_enable_pac"
-      description: "开启PAC"
-      tags:
-      - "V4应用态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: true
-          resourcePermissionRequired: true
-          userVerifiedRequired: false
-        backend:
-          matchSubpath: false
-          method: "put"
-          name: "backend-1"
-          path: "/openapi/api/apigw-app/v4/repositories/projects/{projectId}/{repositoryHashId}/pac/enable"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-app/turbo/manualUpload:
-    post:
-      operationId: "v4_app_server_resources_upload_manual"
-      description: "手动上报项目资源统计数据"
-      tags:
-      - "V4应用态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: true
-          resourcePermissionRequired: true
-          userVerifiedRequired: false
-        backend:
-          matchSubpath: false
-          method: "post"
-          name: "backend-1"
-          path: "/openapi/api/apigw-app/v4/turbo/manualUpload"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-app/turbo/projectId/{projectId}/addTurboPlan:
-    post:
-      operationId: "v4_app_turbo_plan_add_new"
-      description: "新增加速方案"
-      tags:
-      - "V4应用态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: true
-          resourcePermissionRequired: true
-          userVerifiedRequired: false
-        backend:
-          matchSubpath: false
-          method: "post"
-          name: "backend-1"
-          path: "/openapi/api/apigw-app/v4/turbo/projectId/{projectId}/addTurboPlan"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-app/turbo/projectId/{projectId}/history_list:
-    post:
-      operationId: "v4_app_turbo_new_record_list"
-      description: "新版编译加速获取加速历史列表"
-      tags:
-      - "V4应用态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: true
-          resourcePermissionRequired: true
-          userVerifiedRequired: false
-        backend:
-          matchSubpath: false
-          method: "post"
-          name: "backend-1"
-          path: "/openapi/api/apigw-app/v4/turbo/projectId/{projectId}/history_list"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-app/turbo/projectId/{projectId}/turbo_plan_detail:
-    get:
-      operationId: "v4_app_turbo_new_plan"
-      description: "新版编译加速获取方案详情"
-      tags:
-      - "V4应用态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: true
-          resourcePermissionRequired: true
-          userVerifiedRequired: false
-        backend:
-          matchSubpath: false
-          method: "get"
-          name: "backend-1"
-          path: "/openapi/api/apigw-app/v4/turbo/projectId/{projectId}/turbo_plan_detail"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-app/turbo/projectId/{projectId}/turbo_plan_list:
-    get:
-      operationId: "v4_app_turbo_new_plan_list"
-      description: "新版编译加速获取加速方案列表"
-      tags:
-      - "V4应用态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: true
-          resourcePermissionRequired: true
-          userVerifiedRequired: false
-        backend:
-          matchSubpath: false
-          method: "get"
-          name: "backend-1"
-          path: "/openapi/api/apigw-app/v4/turbo/projectId/{projectId}/turbo_plan_list"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-app/turbo/server_resources:
-    get:
-      operationId: "v4_app_server_resources"
-      description: "DevCloud专用资源统计查询接口"
-      tags:
-      - "V4应用态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: true
-          resourcePermissionRequired: true
-          userVerifiedRequired: false
-        backend:
-          matchSubpath: false
-          method: "get"
-          name: "backend-1"
-          path: "/openapi/api/apigw-app/v4/turbo/server_resources"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-app/turbo/triggerAutoUpload/{month}:
-    get:
-      operationId: "v4_app_server_resources_upload_auto"
-      description: "触发项目资源统计上报任务"
-      tags:
-      - "V4应用态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: true
-          resourcePermissionRequired: true
-          userVerifiedRequired: false
-        backend:
-          matchSubpath: false
-          method: "get"
-          name: "backend-1"
-          path: "/openapi/api/apigw-app/v4/turbo/triggerAutoUpload/{month}"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -4195,27 +3818,6 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
-  /v4/apigw-user/environment/projects/{projectId}/share_envs:
-    post:
-      operationId: "v4_user_set_share_env"
-      description: "设置环境共享"
-      tags:
-      - "V4用户态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: false
-          resourcePermissionRequired: false
-          userVerifiedRequired: true
-        backend:
-          matchSubpath: false
-          method: "post"
-          name: "backend-1"
-          path: "/openapi/api/apigw-user/v4/environment/projects/{projectId}/share_envs"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
   /v4/apigw-user/environment/projects/{projectId}/third_party_env2nodes:
     get:
       operationId: "v4_user_third_party_env2nodes"
@@ -4384,27 +3986,6 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
-  /v4/apigw-user/projects/project/{projectId}/update_project_product:
-    put:
-      operationId: "v4_user_update_project_product"
-      description: "更新项目关联产品"
-      tags:
-      - "V4用户态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: false
-          resourcePermissionRequired: false
-          userVerifiedRequired: true
-        backend:
-          matchSubpath: false
-          method: "put"
-          name: "backend-1"
-          path: "/openapi/api/apigw-user/v4/projects/project/{projectId}/update_project_product"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
   /v4/apigw-user/projects/project_create:
     post:
       operationId: "v4_user_project_create"
@@ -4547,27 +4128,6 @@ paths:
           method: "post"
           name: "backend-1"
           path: "/openapi/api/apigw-user/v4/projects/{projectId}/archived/pipelines/{pipelineId}/data/migrate"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-user/projects/{projectId}/artifactories/app_download_url:
-    get:
-      operationId: "v4_user_artifactory_appDownloadUrl"
-      description: "获取APP跳转链接"
-      tags:
-      - "V4用户态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: false
-          resourcePermissionRequired: false
-          userVerifiedRequired: true
-        backend:
-          matchSubpath: false
-          method: "get"
-          name: "backend-1"
-          path: "/openapi/api/apigw-user/v4/projects/{projectId}/artifactories/app_download_url"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -5241,27 +4801,6 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
-  /v4/apigw-user/projects/{projectId}/environment/third_part_agent_node_status:
-    get:
-      operationId: "v4_user_node_status"
-      description: "获取指定第三方构建机状态"
-      tags:
-      - "V4用户态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: false
-          resourcePermissionRequired: false
-          userVerifiedRequired: true
-        backend:
-          matchSubpath: false
-          method: "get"
-          name: "backend-1"
-          path: "/openapi/api/apigw-user/v4/projects/{projectId}/environment/third_part_agent_node_status"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
   /v4/apigw-user/projects/{projectId}/environment/third_part_agent_nodes:
     get:
       operationId: "v4_user_node_list"
@@ -5426,27 +4965,6 @@ paths:
           method: "get"
           name: "backend-1"
           path: "/openapi/api/apigw-user/v4/projects/{projectId}/logs/more_logs"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-user/projects/{projectId}/manual_review:
-    post:
-      operationId: "v4_user_manual_review"
-      description: "人工审核插件进行审核"
-      tags:
-      - "V4用户态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: false
-          resourcePermissionRequired: false
-          userVerifiedRequired: true
-        backend:
-          matchSubpath: false
-          method: "post"
-          name: "backend-1"
-          path: "/openapi/api/apigw-user/v4/projects/{projectId}/manual_review"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -6543,27 +6061,6 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
-  /v4/apigw-user/projects/{projectId}/version/export:
-    get:
-      operationId: "v4_user_pipeline_export"
-      description: "导出流水线模板"
-      tags:
-      - "V4用户态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: false
-          resourcePermissionRequired: false
-          userVerifiedRequired: true
-        backend:
-          matchSubpath: false
-          method: "get"
-          name: "backend-1"
-          path: "/openapi/api/apigw-user/v4/projects/{projectId}/version/export"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
   /v4/apigw-user/projects/{projectId}/version/get_version:
     get:
       operationId: "v4_user_pipeline_get_version"
@@ -6817,26 +6314,6 @@ paths:
         isPublic: true
         matchSubpath: false
   /v4/apigw-user/repositories/projects/{projectId}/repository:
-    put:
-      operationId: "v4_user_repository_edit"
-      description: "编辑关联代码库"
-      tags:
-      - "V4用户态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: false
-          resourcePermissionRequired: false
-          userVerifiedRequired: true
-        backend:
-          matchSubpath: false
-          method: "put"
-          name: "backend-1"
-          path: "/openapi/api/apigw-user/v4/repositories/projects/{projectId}/repository"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
     post:
       operationId: "v4_user_repository_create"
       description: "关联代码库"
@@ -6915,153 +6392,6 @@ paths:
           method: "get"
           name: "backend-1"
           path: "/openapi/api/apigw-user/v4/repositories/projects/{projectId}/repository_info_list"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-user/repositories/projects/{projectId}/{repositoryHashId}/pac/disable:
-    put:
-      operationId: "v4_user_repository_disable_pac"
-      description: "关闭PAC"
-      tags:
-      - "V4用户态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: false
-          resourcePermissionRequired: false
-          userVerifiedRequired: true
-        backend:
-          matchSubpath: false
-          method: "put"
-          name: "backend-1"
-          path: "/openapi/api/apigw-user/v4/repositories/projects/{projectId}/{repositoryHashId}/pac/disable"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-user/repositories/projects/{projectId}/{repositoryHashId}/pac/enable:
-    put:
-      operationId: "v4_user_repository_enable_pac"
-      description: "开启PAC"
-      tags:
-      - "V4用户态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: false
-          resourcePermissionRequired: false
-          userVerifiedRequired: true
-        backend:
-          matchSubpath: false
-          method: "put"
-          name: "backend-1"
-          path: "/openapi/api/apigw-user/v4/repositories/projects/{projectId}/{repositoryHashId}/pac/enable"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-user/turbo/projectId/{projectId}/addTurboPlan:
-    post:
-      operationId: "v4_user_turbo_plan_add_new"
-      description: "新增加速方案"
-      tags:
-      - "V4用户态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: false
-          resourcePermissionRequired: false
-          userVerifiedRequired: true
-        backend:
-          matchSubpath: false
-          method: "post"
-          name: "backend-1"
-          path: "/openapi/api/apigw-user/v4/turbo/projectId/{projectId}/addTurboPlan"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-user/turbo/projectId/{projectId}/history_list:
-    post:
-      operationId: "v4_user_turbo_new_record_list"
-      description: "新版编译加速获取加速历史列表"
-      tags:
-      - "V4用户态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: false
-          resourcePermissionRequired: false
-          userVerifiedRequired: true
-        backend:
-          matchSubpath: false
-          method: "post"
-          name: "backend-1"
-          path: "/openapi/api/apigw-user/v4/turbo/projectId/{projectId}/history_list"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-user/turbo/projectId/{projectId}/turbo_plan_detail:
-    get:
-      operationId: "v4_user_turbo_new_plan"
-      description: "新版编译加速获取方案详情"
-      tags:
-      - "V4用户态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: false
-          resourcePermissionRequired: false
-          userVerifiedRequired: true
-        backend:
-          matchSubpath: false
-          method: "get"
-          name: "backend-1"
-          path: "/openapi/api/apigw-user/v4/turbo/projectId/{projectId}/turbo_plan_detail"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-user/turbo/projectId/{projectId}/turbo_plan_list:
-    get:
-      operationId: "v4_user_turbo_new_plan_list"
-      description: "新版编译加速获取加速方案列表"
-      tags:
-      - "V4用户态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: false
-          resourcePermissionRequired: false
-          userVerifiedRequired: true
-        backend:
-          matchSubpath: false
-          method: "get"
-          name: "backend-1"
-          path: "/openapi/api/apigw-user/v4/turbo/projectId/{projectId}/turbo_plan_list"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-user/turbo/server_resources:
-    get:
-      operationId: "v4_user_server_resources"
-      description: "DevCloud专用资源统计查询接口"
-      tags:
-      - "V4用户态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: false
-          resourcePermissionRequired: false
-          userVerifiedRequired: true
-        backend:
-          matchSubpath: false
-          method: "get"
-          name: "backend-1"
-          path: "/openapi/api/apigw-user/v4/turbo/server_resources"
           timeout: 30
         enableWebsocket: false
         isPublic: true
