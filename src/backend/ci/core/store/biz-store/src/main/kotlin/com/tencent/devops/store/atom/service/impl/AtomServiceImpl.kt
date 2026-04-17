@@ -231,6 +231,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         queryProjectAtomFlag: Boolean,
         fitOsFlag: Boolean?,
         queryFitAgentBuildLessAtomFlag: Boolean?,
+        installed: Boolean?,
         page: Int,
         pageSize: Int
     ): Result<AtomResp<AtomRespItem>?> {
@@ -271,6 +272,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             keyword = keyword,
             fitOsFlag = fitOsFlag,
             queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
+            installed = installed,
             page = page,
             pageSize = pageSize
         )
@@ -290,6 +292,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         queryProjectAtomFlag: Boolean,
         fitOsFlag: Boolean?,
         queryFitAgentBuildLessAtomFlag: Boolean?,
+        installed: Boolean?,
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?> {
@@ -307,6 +310,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             fitOsFlag = fitOsFlag,
             queryProjectAtomFlag = queryProjectAtomFlag,
             queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
+            installed = installed,
             page = page,
             pageSize = pageSize
         )
@@ -444,7 +448,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             keyword = keyword,
             fitOsFlag = fitOsFlag,
             queryProjectAtomFlag = queryProjectAtomFlag,
-            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
+            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
+            installed = installed
         )
         val totalPage = PageUtil.calTotalPage(pageSize, totalSize)
         return Result(AtomResp(totalSize, page, pageSize, totalPage, dataList))
