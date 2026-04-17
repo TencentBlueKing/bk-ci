@@ -5,32 +5,42 @@
 
 # ============ 请求不通的接口 ============
 v4_app_artifactory_appDownloadUrl
+v4_user_artifactory_appDownloadUrl
 app_artifactory_userDownloadUrl
 v4_app_relation_iam
 v4_app_pipeline_export
+v4_user_pipeline_export
 v4_app_manual_review
+v4_user_manual_review
 v4_app_update_project_product
+v4_user_update_project_product
 v4_app_node_status
+v4_user_node_status
 v4_app_repository_edit
+v4_user_repository_edit
 v4_app_oauth2_access_token
 app_env_add_node
 v4_app_set_share_env
+v4_user_set_share_env
 
 # ============ 服务有问题的接口 ============
 v4_app_server_resources_upload_manual
 v4_app_server_resources
+v4_user_server_resources
 v4_app_server_resources_upload_auto
 v4_app_repository_disable_pac
+v4_user_repository_disable_pac
 v4_app_repository_enable_pac
-v4_app_pipeline_export_all
+v4_user_repository_enable_pac
 
-# ============ 内部需要剔除的接口 ============
-v4_app_turbo_plan_add_new
-v4_app_turbo_new_record_list
-v4_app_turbo_new_plan
-v4_app_turbo_new_plan_list
+# ============ 已废弃/剔除的接口 ============
+v4_app_pipeline_export_all
 v4_user_pipeline_export_all
+v4_app_turbo_plan_add_new
 v4_user_turbo_plan_add_new
+v4_app_turbo_new_record_list
 v4_user_turbo_new_record_list
+v4_app_turbo_new_plan
 v4_user_turbo_new_plan
+v4_app_turbo_new_plan_list
 v4_user_turbo_new_plan_list
