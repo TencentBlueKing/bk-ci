@@ -60,4 +60,29 @@ class HotQuestionDao {
                 .fetchOne(0, Long::class.java) ?: 0L
         }
     }
+
+    fun listAll(dslContext: DSLContext): Result<TAiHotQuestionRecord> {
+        with(TAiHotQuestion.T_AI_HOT_QUESTION) {
+            return dslContext.selectFrom(this)
+                .orderBy(WEIGHT.desc(), SORT_ORDER.asc())
+                .fetch()
+        }
+    }
+
+    fun getById(dslContext: DSLContext, id: String)
+        : TAiHotQuestionRecord? {
+        with(TAiHotQuestion.T_AI_HOT_QUESTION) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(id))
+                .fetchOne()
+        }
+    }
+
+    fun delete(dslContext: DSLContext, id: String): Int {
+        with(TAiHotQuestion.T_AI_HOT_QUESTION) {
+            return dslContext.deleteFrom(this)
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
 }

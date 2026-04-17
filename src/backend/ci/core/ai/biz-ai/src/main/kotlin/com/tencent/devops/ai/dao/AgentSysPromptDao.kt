@@ -28,7 +28,9 @@
 package com.tencent.devops.ai.dao
 
 import com.tencent.devops.model.ai.tables.TAiAgentSysPrompt
+import com.tencent.devops.model.ai.tables.records.TAiAgentSysPromptRecord
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 /** 智能体系统提示词 DAO，对应 T_AI_AGENT_SYS_PROMPT 表。 */
@@ -45,6 +47,36 @@ class AgentSysPromptDao {
                 .where(AGENT_NAME.eq(agentName))
                 .and(ENABLED.eq(true))
                 .fetchOne(PROMPT_TEMPLATE)
+        }
+    }
+
+    fun listAll(dslContext: DSLContext): Result<TAiAgentSysPromptRecord> {
+        with(TAiAgentSysPrompt.T_AI_AGENT_SYS_PROMPT) {
+            return dslContext.selectFrom(this).fetch()
+        }
+    }
+
+    fun update(
+        dslContext: DSLContext,
+        agentName: String,
+        promptTemplate: String
+    ): Int {
+        with(TAiAgentSysPrompt.T_AI_AGENT_SYS_PROMPT) {
+            return dslContext.update(this)
+                .set(PROMPT_TEMPLATE, promptTemplate)
+                .where(AGENT_NAME.eq(agentName))
+                .execute()
+        }
+    }
+
+    fun delete(
+        dslContext: DSLContext,
+        agentName: String
+    ): Int {
+        with(TAiAgentSysPrompt.T_AI_AGENT_SYS_PROMPT) {
+            return dslContext.deleteFrom(this)
+                .where(AGENT_NAME.eq(agentName))
+                .execute()
         }
     }
 }

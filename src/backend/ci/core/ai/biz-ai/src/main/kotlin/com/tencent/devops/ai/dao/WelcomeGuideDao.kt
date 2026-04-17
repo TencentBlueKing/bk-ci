@@ -71,4 +71,43 @@ class WelcomeGuideDao {
                 .fetch()
         }
     }
+
+    fun listAll(dslContext: DSLContext): Result<TAiWelcomeGuideRecord> {
+        with(TAiWelcomeGuide.T_AI_WELCOME_GUIDE) {
+            return dslContext.selectFrom(this)
+                .orderBy(SORT_ORDER.asc())
+                .fetch()
+        }
+    }
+
+    fun getById(dslContext: DSLContext, id: String): TAiWelcomeGuideRecord? {
+        with(TAiWelcomeGuide.T_AI_WELCOME_GUIDE) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(id))
+                .fetchOne()
+        }
+    }
+
+    fun update(
+        dslContext: DSLContext,
+        id: String,
+        enabled: Boolean?,
+        sortOrder: Int?
+    ): Int {
+        if (enabled == null && sortOrder == null) {
+            return 0
+        }
+        val row = getById(dslContext, id) ?: return 0
+        enabled?.let { row.enabled = it }
+        sortOrder?.let { row.sortOrder = it }
+        return dslContext.executeUpdate(row)
+    }
+
+    fun delete(dslContext: DSLContext, id: String): Int {
+        with(TAiWelcomeGuide.T_AI_WELCOME_GUIDE) {
+            return dslContext.deleteFrom(this)
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
 }

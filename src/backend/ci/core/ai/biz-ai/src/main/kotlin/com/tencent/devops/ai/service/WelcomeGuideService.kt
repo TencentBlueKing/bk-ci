@@ -41,6 +41,7 @@ import com.tencent.devops.ai.pojo.WelcomeGuideVO
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.model.ai.tables.records.TAiWelcomeGuideRecord
+import java.time.ZoneOffset
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -125,6 +126,66 @@ class WelcomeGuideService @Autowired constructor(
             pageSize = pageSize,
             hasMore = (offset + pageSize) < total
         )
+    }
+
+    /**
+     * 运营侧：列出全部热门问题（含未启用），按权重与排序字段排序。
+     */
+    fun listAllHotQuestions(): List<HotQuestionVO> {
+        return hotQuestionDao.listAll(dslContext).map { record ->
+            HotQuestionVO(id = record.id, question = record.question)
+        }
+    }
+
+    /**
+     * 运营侧：按主键删除热门问题。
+     * @return 是否删除成功（存在且删除到至少一行）
+     */
+    fun deleteHotQuestion(questionId: String): Boolean {
+        return hotQuestionDao.delete(dslContext, questionId) > 0
+    }
+
+    /**
+     * 运营侧：列出全部欢迎引导（含未启用），用于管理台。
+     */
+    fun listAllWelcomeGuidesForOp(): List<Map<String, Any>> {
+        return welcomeGuideDao.listAll(dslContext).map { record ->
+            mapOf(
+                "id" to record.id,
+                "type" to record.type,
+                "label" to (record.label ?: ""),
+                "description" to (record.description ?: ""),
+                "enabled" to record.enabled,
+                "sortOrder" to record.sortOrder,
+                "createdTime" to record.createdTime
+                    .toInstant(ZoneOffset.ofHours(8))
+                    .toEpochMilli()
+            )
+        }
+    }
+
+    /**
+     * 运营侧：创建欢迎引导（占位实现，后续接持久化）。
+     */
+    @Suppress("UNUSED_PARAMETER")
+    fun createWelcomeGuideForOp(data: Map<String, Any>): Boolean {
+        return true
+    }
+
+    /**
+     * 运营侧：部分更新欢迎引导（当前支持 enabled、sortOrder）。
+     */
+    fun updateWelcomeGuideForOp(guideId: String, data: Map<String, Any>): Boolean {
+        val enabled = data["enabled"] as? Boolean
+        val sortOrder = data["sortOrder"] as? Int
+        return welcomeGuideDao.update(dslContext, guideId, enabled, sortOrder) > 0
+    }
+
+    /**
+     * 运营侧：按主键删除欢迎引导。
+     */
+    fun deleteWelcomeGuideForOp(guideId: String): Boolean {
+        return welcomeGuideDao.delete(dslContext, guideId) > 0
     }
 
     /**
