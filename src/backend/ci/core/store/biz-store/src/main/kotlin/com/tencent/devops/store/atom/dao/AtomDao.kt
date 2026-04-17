@@ -1752,7 +1752,7 @@ class AtomDao : AtomBaseDao() {
                     ATOM_TYPE.cast(String::class.java)
                 }
             }
-            dslContext.select(groupField, DSL.count())
+            dslContext.select(groupField, DSL.countDistinct(ATOM_CODE))
                 .from(this)
                 .where(conditions)
                 .groupBy(groupField)

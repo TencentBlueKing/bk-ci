@@ -108,7 +108,7 @@ class TriggerEventService @Autowired constructor(
                 os = null,
                 queryFitAgentBuildLessAtomFlag = null,
                 recommendFlag = null,
-                ownerStoreCode = ownerStoreCode
+                ownerStoreCode = ownerStoreCode.takeIf { !it.isNullOrBlank() && it != BK_STORE_ALL_TRIGGER }
             ),
             page = page,
             pageSize = pageSize
