@@ -34,6 +34,9 @@ import io.agentscope.core.tool.Tool
 import io.agentscope.core.tool.ToolParam
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.Clock
+import java.time.LocalTime
+import java.time.OffsetDateTime
 import java.util.function.Supplier
 
 /**
@@ -47,6 +50,17 @@ class CommonTools(
     override val logger: Logger = LoggerFactory.getLogger(CommonTools::class.java)
 
     private fun authAiResource() = service(ServiceAuthAiResource::class)
+
+    @Tool(
+        name = "获取当前时间",
+        description = "获取服务端当前时间，返回 ISO 8601 格式字符串。" +
+            "用于处理今天、现在、是否过期、续期到期时间等时间相关问题。"
+    )
+    fun getCurrentTime(): String {
+        return safeQuery("CommonTools", "getCurrentTime") {
+            OffsetDateTime.now(Clock.systemDefaultZone()).toString()
+        }
+    }
 
     @Tool(
         name = "查询项目信息",

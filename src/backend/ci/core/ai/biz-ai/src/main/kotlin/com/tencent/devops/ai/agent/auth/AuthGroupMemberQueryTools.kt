@@ -282,6 +282,13 @@ class AuthGroupMemberQueryTools(
         @ToolParam(name = "projectId", description = "项目ID")
         projectId: String,
         @ToolParam(
+            name = "departedFlag",
+            description = "是否查询离职人员,true只查询离职人员；" +
+                    "默认false，查询所有",
+            required = false
+        )
+        departedFlag: Boolean? = false,
+        @ToolParam(
             name = "userName",
             description = "用户名搜索（可选）",
             required = false
@@ -304,6 +311,7 @@ class AuthGroupMemberQueryTools(
                 projectId = projectId,
                 memberType = null,
                 userName = userName,
+                departedFlag = departedFlag,
                 page = page ?: 1,
                 pageSize = actualPageSize
             )

@@ -1420,8 +1420,9 @@ class AuthAiServiceImpl(
         ).filter { it != targetMemberId }
 
         val candidates = mutableListOf<HandoverCandidateVO>()
+        val targetQualifiedCount = limit.coerceAtLeast(1)
 
-        managers.take(limit).forEach { managerId ->
+        for (managerId in managers) {
             val validationResult = if (hasPendingAuthorizations) {
                 validateHandoverCandidate(
                     userId = userId,
@@ -1465,6 +1466,10 @@ class AuthAiServiceImpl(
                     tags = tags
                 )
             )
+
+            if (candidates.count { it.canReceiveAll } >= targetQualifiedCount) {
+                break
+            }
         }
 
         return candidates.sortedWith(
@@ -1472,7 +1477,7 @@ class AuthAiServiceImpl(
                 { !it.canReceiveAll },
                 { it.cannotReceive.size }
             )
-        )
+        ).take(limit)
     }
 
     private fun buildRecommendationSuggestion(
