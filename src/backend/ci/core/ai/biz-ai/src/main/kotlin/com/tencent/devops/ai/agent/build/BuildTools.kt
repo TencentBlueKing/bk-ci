@@ -30,6 +30,8 @@ package com.tencent.devops.ai.agent.build
 import com.tencent.devops.ai.agent.BaseTools
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.log.pojo.LogLine
+import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.log.api.ServiceLogResource
@@ -61,7 +63,7 @@ class BuildTools(
     @Tool(
         name = "搜索流水线",
         description = "按名称搜索流水线，返回匹配的流水线列表（ID、名称、最新构建状态等）。" +
-            "keyword 为空时返回项目下所有流水线（分页）。支持分页查询。"
+                "keyword 为空时返回项目下所有流水线（分页）。支持分页查询。"
     )
     fun searchPipelines(
         @ToolParam(name = "projectId", description = "项目ID（英文标识）")
@@ -112,7 +114,7 @@ class BuildTools(
 
     @Tool(
         name = "获取流水线状态",
-        description = "获取流水线的当前运行状态，包括最近一次构建的状态、构建号等。"
+        description = "获取流水线当前状态信息，包括最近一次构建状态、构建号和阶段状态等。"
     )
     fun getPipelineStatus(
         @ToolParam(name = "projectId", description = "项目ID")
@@ -137,7 +139,7 @@ class BuildTools(
     @Tool(
         name = "获取手动启动参数",
         description = "获取流水线的手动启动参数列表，包括参数名、类型、默认值、可选值等。" +
-            "触发构建前建议先调用此工具了解可配置的参数。"
+                "触发构建前建议先调用此工具了解可配置的参数。"
     )
     fun getManualStartupInfo(
         @ToolParam(name = "projectId", description = "项目ID")
@@ -160,8 +162,8 @@ class BuildTools(
     @Tool(
         name = "触发构建",
         description = "手动触发流水线构建。这是写操作，执行前必须向用户确认。" +
-            "params 为启动参数的 JSON 字符串，格式如 {\"key1\":\"value1\",\"key2\":\"value2\"}，" +
-            "可传空字符串或不传使用默认值。"
+                "params 为启动参数的 JSON 字符串，格式如 {\"key1\":\"value1\",\"key2\":\"value2\"}，" +
+                "可传空字符串或不传使用默认值。"
     )
     fun triggerBuild(
         @ToolParam(name = "projectId", description = "项目ID")
@@ -170,7 +172,7 @@ class BuildTools(
         pipelineId: String,
         @ToolParam(
             name = "params",
-            description = "启动参数JSON字符串，如 {\"key\":\"value\"}（可选，不传使用默认值）",
+            description = "启动参数JSON字符串，如 [{\"key1\":\"value1\"},{\"key2\":\"value2\"}]（可选，不传使用默认值）",
             required = false
         )
         params: String? = null
@@ -327,8 +329,8 @@ class BuildTools(
 
     @Tool(
         name = "获取构建详情",
-        description = "获取构建的完整详情，包含流水线编排（stages/containers/elements）和各插件执行状态。" +
-            "用于定位失败的插件 element ID，以便后续查询该插件的日志。"
+        description = "获取构建的 AI 简化详情，包含阶段、Job、失败或运行中插件的关键信息。" +
+                "用于定位失败插件的 element ID，以便后续查询该插件日志。"
     )
     fun getBuildDetail(
         @ToolParam(name = "projectId", description = "项目ID")
@@ -339,7 +341,7 @@ class BuildTools(
         buildId: String
     ): String {
         return safeQuery("BuildArtifactTool", "getBuildDetail") {
-            val result = buildResource().getBuildDetail(
+            val result = buildResource().getBuildDetailSimple(
                 userId = getOperatorUserId(),
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -406,9 +408,10 @@ class BuildTools(
     @Tool(
         name = "获取构建日志",
         description = "获取构建日志。强烈建议传入 tag 参数（即 elementId，格式 e-xxxxxxxx）定位到具体插件，" +
-            "避免返回全量日志导致内容过大。" +
-            "如果日志内容不完整或包含「Please download logs to view.」标记，" +
-            "说明日志触发了熔断，应提醒用户到蓝盾页面下载完整日志。"
+                "避免返回全量日志导致内容过大。" +
+                "工具会自动继续拉取后续日志片段，但返回文本最多约 20000 字符（超出会截断）。" +
+                "如果日志内容不完整或包含「Please download logs to view.」标记，" +
+                "说明日志触发了熔断，应提醒用户到蓝盾页面下载完整日志。"
     )
     fun getBuildLogs(
         @ToolParam(name = "projectId", description = "项目ID")
@@ -425,28 +428,263 @@ class BuildTools(
         tag: String? = null,
         @ToolParam(name = "stepId", description = "对应 stepId（可选）", required = false)
         stepId: String? = null,
+        @ToolParam(
+            name = "logType",
+            description = "日志级别过滤（可选），支持 WARN/ERROR/DEBUG/LOG",
+            required = false
+        )
+        logType: String? = null,
         @ToolParam(name = "jobId", description = "对应 jobId（可选）", required = false)
         jobId: String? = null
     ): String {
         return safeQuery("BuildArtifactTool", "getBuildLogs") {
+            val actualLogType = if (logType.isNullOrBlank()) {
+                null
+            } else {
+                parseLogType(logType)
+                    ?: return@safeQuery "logType 无效，支持的值为 WARN、ERROR、DEBUG、LOG"
+            }
+            val debug = actualLogType == LogType.DEBUG
             val result = logResource().getInitLogs(
                 userId = getOperatorUserId(),
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
+                debug = debug,
+                logType = actualLogType,
                 tag = tag,
                 containerHashId = null,
                 executeCount = null,
                 jobId = jobId,
                 stepId = stepId
             )
-            val logs = result.data ?: return@safeQuery "获取日志失败"
-            toJson(logs)
+            val initLogs = result.data ?: return@safeQuery "获取日志失败"
+            val mergedLogs = initLogs.logs.toMutableList()
+            var hasMore = initLogs.hasMore == true
+            var finished = initLogs.finished
+            var queryMessage = initLogs.message
+            var fetchTimes = 0
+            var truncatedByLineCap = false
+
+            while (
+                hasMore && mergedLogs.size < MAX_MERGED_LOG_LINES &&
+                fetchTimes < MAX_LOG_FETCH_TIMES &&
+                estimatedRenderedCharCount(mergedLogs) < MAX_LOG_CONTENT_CHARS
+            ) {
+                val lastLineNo = mergedLogs.lastOrNull()?.lineNo ?: break
+                val moreResult = logResource().getAfterLogs(
+                    userId = getOperatorUserId(),
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    start = lastLineNo,
+                    debug = debug,
+                    logType = actualLogType,
+                    tag = tag,
+                    containerHashId = null,
+                    executeCount = null,
+                    jobId = jobId,
+                    stepId = stepId
+                )
+                val moreLogs = moreResult.data ?: break
+                val newLogs = moreLogs.logs.filter { it.lineNo > lastLineNo }
+                if (newLogs.isEmpty()) {
+                    hasMore = false
+                    break
+                }
+                val remainingCapacity = (MAX_MERGED_LOG_LINES - mergedLogs.size).coerceAtLeast(0)
+                val acceptedLogs = newLogs.take(remainingCapacity)
+                truncatedByLineCap = truncatedByLineCap || newLogs.size > acceptedLogs.size
+                appendLogs(mergedLogs, acceptedLogs)
+                hasMore = moreLogs.hasMore == true
+                finished = moreLogs.finished
+                if (!moreLogs.message.isNullOrBlank()) {
+                    queryMessage = moreLogs.message
+                }
+                fetchTimes++
+            }
+
+            if (mergedLogs.isEmpty()) {
+                return@safeQuery buildLogResult(
+                    buildId = buildId,
+                    tag = tag,
+                    jobId = jobId,
+                    stepId = stepId,
+                    logType = actualLogType?.name,
+                    finished = finished,
+                    hasMore = hasMore,
+                    fetchedLineCount = 0,
+                    fetchedPages = fetchTimes + 1,
+                    content = "",
+                    notices = listOf("未查询到日志内容，请检查 tag、jobId、stepId 是否正确。"),
+                    lineRange = null,
+                    queryMessage = queryMessage
+                )
+            }
+
+            val logsForRender = takeLogsForCharBudget(mergedLogs, MAX_LOG_CONTENT_CHARS)
+            val renderedContent = renderLogs(logsForRender)
+            val truncatedByChars = logsForRender.size < mergedLogs.size
+            val contentTruncated = estimatedRenderedCharCount(logsForRender) > MAX_LOG_CONTENT_CHARS
+            val hitFetchCap = fetchTimes >= MAX_LOG_FETCH_TIMES && hasMore
+            val effectiveHasMore =
+                hasMore || truncatedByChars || truncatedByLineCap || contentTruncated || hitFetchCap
+            val notices = buildList {
+                if (tag.isNullOrBlank()) {
+                    add("未指定 tag，返回的可能是较大范围日志。建议先用构建详情定位失败插件的 elementId 后重试。")
+                }
+                if (truncatedByLineCap) {
+                    add("日志行数过多，为避免内存压力，当前最多合并前 $MAX_MERGED_LOG_LINES 行再继续截断。")
+                }
+                if (contentTruncated) {
+                    add("日志文本过长，content 已按最多 ${MAX_LOG_CONTENT_CHARS} 字符截断用于分析。")
+                }
+                if (effectiveHasMore) {
+                    add("日志仍有后续内容未拉取完，如需更多上下文请继续缩小范围或到页面查看完整日志。")
+                }
+                if (containsDownloadHint(mergedLogs, queryMessage)) {
+                    add("日志已触发熔断，请到蓝盾页面下载完整日志查看。")
+                }
+            }
+
+            buildLogResult(
+                buildId = buildId,
+                tag = tag,
+                jobId = jobId,
+                stepId = stepId,
+                logType = actualLogType?.name,
+                finished = finished,
+                hasMore = effectiveHasMore,
+                fetchedLineCount = logsForRender.size,
+                fetchedPages = fetchTimes + 1,
+                content = renderedContent,
+                notices = notices,
+                lineRange = logsForRender.firstOrNull()?.let { firstLog ->
+                    "${firstLog.lineNo}-${logsForRender.last().lineNo}"
+                },
+                queryMessage = queryMessage
+            )
         }
+    }
+
+    private fun appendLogs(target: MutableList<LogLine>, logs: List<LogLine>) {
+        logs.forEach { log ->
+            if (target.size >= MAX_MERGED_LOG_LINES) {
+                return
+            }
+            if (target.none { it.lineNo == log.lineNo }) {
+                target.add(log)
+            }
+        }
+    }
+
+    private fun renderLogs(logs: List<LogLine>): String {
+        return logs.joinToString(separator = "\n") { log ->
+            "[${log.lineNo}] ${log.message}"
+        }.let(::truncateLogContent)
+    }
+
+    private fun truncateLogContent(content: String): String {
+        if (content.length <= MAX_LOG_CONTENT_CHARS) {
+            return content
+        }
+        return content.take(MAX_LOG_CONTENT_CHARS) +
+                "\n...(日志内容过长，已截断，仅保留前 ${MAX_LOG_CONTENT_CHARS} 个字符)"
+    }
+
+    private fun estimatedRenderedCharCount(logs: List<LogLine>): Int {
+        if (logs.isEmpty()) {
+            return 0
+        }
+        var total = 0
+        logs.forEachIndexed { index, log ->
+            total += LOG_LINE_PREFIX_OVERHEAD + log.lineNo.toString().length + log.message.length
+            if (index > 0) {
+                total += 1
+            }
+        }
+        return total
+    }
+
+    private fun takeLogsForCharBudget(logs: List<LogLine>, maxChars: Int): List<LogLine> {
+        if (logs.isEmpty()) {
+            return emptyList()
+        }
+        val selected = ArrayList<LogLine>(minOf(logs.size, 256))
+        var total = 0
+        logs.forEachIndexed { index, log ->
+            val lineChars = LOG_LINE_PREFIX_OVERHEAD + log.lineNo.toString().length + log.message.length
+            val addChars = if (index == 0) lineChars else lineChars + 1
+            if (total + addChars > maxChars) {
+                if (selected.isEmpty()) {
+                    selected.add(log)
+                }
+                return selected
+            }
+            selected.add(log)
+            total += addChars
+        }
+        return selected
+    }
+
+    private fun containsDownloadHint(logs: List<LogLine>, queryMessage: String?): Boolean {
+        if (queryMessage?.contains(LOG_DOWNLOAD_HINT, ignoreCase = true) == true) {
+            return true
+        }
+        return logs.any { it.message.contains(LOG_DOWNLOAD_HINT, ignoreCase = true) }
+    }
+
+    private fun parseLogType(logType: String?): LogType? {
+        if (logType.isNullOrBlank()) {
+            return null
+        }
+        return try {
+            LogType.valueOf(logType.trim().uppercase())
+        } catch (_: IllegalArgumentException) {
+            null
+        }
+    }
+
+    private fun buildLogResult(
+        buildId: String,
+        tag: String?,
+        jobId: String?,
+        stepId: String?,
+        logType: String?,
+        finished: Boolean,
+        hasMore: Boolean,
+        fetchedLineCount: Int,
+        fetchedPages: Int,
+        content: String,
+        notices: List<String>,
+        lineRange: String?,
+        queryMessage: String?
+    ): String {
+        val result = linkedMapOf<String, Any?>(
+            "buildId" to buildId,
+            "tag" to tag,
+            "jobId" to jobId,
+            "stepId" to stepId,
+            "logType" to logType,
+            "finished" to finished,
+            "hasMore" to hasMore,
+            "fetchedPages" to fetchedPages,
+            "fetchedLineCount" to fetchedLineCount,
+            "lineRange" to lineRange,
+            "notices" to notices,
+            "queryMessage" to queryMessage,
+            "content" to content
+        )
+        return JsonUtil.toJson(result)
     }
 
     companion object {
         private const val DEFAULT_PAGE_SIZE = 10
         private const val MAX_PAGE_SIZE = 50
+        private const val MAX_LOG_FETCH_TIMES = 5
+        private const val MAX_MERGED_LOG_LINES = 10_000
+        private const val MAX_LOG_CONTENT_CHARS = 20_000
+        private const val LOG_LINE_PREFIX_OVERHEAD = 3
+        private const val LOG_DOWNLOAD_HINT = "Please download logs to view."
     }
 }
