@@ -85,71 +85,13 @@ data class BuildDetailSimple(
     val activeElementCount: Int,
     @get:Schema(title = "阶段摘要列表")
     val stageSummary: List<String>,
-    @get:Schema(title = "阶段简化信息列表")
-    val stages: List<BuildDetailStageSimple>,
-    @get:Schema(title = "Job简化信息列表")
-    val containers: List<BuildDetailContainerSimple>,
     @get:Schema(title = "失败插件列表")
     val failedElements: List<BuildDetailElementSimple>,
-    @get:Schema(title = "活动中插件列表")
-    val activeElements: List<BuildDetailElementSimple>,
-    @get:Schema(title = "插件预览列表")
-    val elementPreview: List<BuildDetailElementSimple>,
     @get:Schema(title = "提示信息列表")
     val notices: List<String>
 )
 
-@Schema(title = "阶段简化信息")
-data class BuildDetailStageSimple(
-    @get:Schema(title = "阶段ID")
-    val stageId: String?,
-    @get:Schema(title = "阶段名称")
-    val stageName: String?,
-    @get:Schema(title = "阶段展示ID")
-    val stageIdForUser: String?,
-    @get:Schema(title = "阶段状态")
-    val status: String?,
-    @get:Schema(title = "是否为最终阶段")
-    val finalStage: Boolean,
-    @get:Schema(title = "Job数量")
-    val containerCount: Int,
-    @get:Schema(title = "插件数量")
-    val elementCount: Int,
-    @get:Schema(title = "失败插件数")
-    val failedElementCount: Int,
-    @get:Schema(title = "活动中插件数")
-    val activeElementCount: Int
-)
-
-@Schema(title = "Job简化信息")
-data class BuildDetailContainerSimple(
-    @get:Schema(title = "阶段ID")
-    val stageId: String?,
-    @get:Schema(title = "阶段名称")
-    val stageName: String?,
-    @get:Schema(title = "Job ID")
-    val containerId: String?,
-    @get:Schema(title = "Job名称")
-    val containerName: String,
-    @get:Schema(title = "Job状态")
-    val status: String?,
-    @get:Schema(title = "Job哈希ID")
-    val containerHashId: String?,
-    @get:Schema(title = "关联jobId")
-    val jobId: String?,
-    @get:Schema(title = "启动虚拟机状态")
-    val startVmStatus: String?,
-    @get:Schema(title = "是否为矩阵分组")
-    val matrixGroupFlag: Boolean?,
-    @get:Schema(title = "插件数量")
-    val elementCount: Int,
-    @get:Schema(title = "失败插件数")
-    val failedElementCount: Int,
-    @get:Schema(title = "活动中插件数")
-    val activeElementCount: Int
-)
-
-@Schema(title = "插件简化信息")
+@Schema(title = "失败插件信息")
 data class BuildDetailElementSimple(
     @get:Schema(title = "阶段ID")
     val stageId: String?,
@@ -163,68 +105,11 @@ data class BuildDetailElementSimple(
     val containerHashId: String?,
     @get:Schema(title = "关联jobId")
     val jobId: String?,
-    @get:Schema(title = "插件ID")
-    val elementId: String?,
-    @get:Schema(title = "插件名称")
-    val elementName: String,
-    @get:Schema(title = "步骤ID")
-    val stepId: String?,
-    @get:Schema(title = "插件状态")
-    val status: String?,
-    @get:Schema(title = "插件类型")
-    val classType: String,
-    @get:Schema(title = "原子代码")
-    val atomCode: String,
-    @get:Schema(title = "是否启用")
-    val enabled: Boolean,
-    @get:Schema(title = "错误类型")
-    val errorType: String?,
-    @get:Schema(title = "错误码")
-    val errorCode: Int?,
-    @get:Schema(title = "错误信息")
-    val errorMsg: String?
+    @get:Schema(title = "Job下的插件完整信息列表")
+    val element: Element
 )
 
 fun ModelDetail.toBuildDetailSimple(): BuildDetailSimple {
-    val stageDetails = model.stages.map { stage ->
-        val containers = stage.expandContainers()
-        val entries = containers.flatMap { container ->
-            container.elements.map { element ->
-                BuildElementEntry(stage = stage, container = container, element = element)
-            }
-        }
-        BuildDetailStageSimple(
-            stageId = stage.id,
-            stageName = stage.name,
-            stageIdForUser = stage.stageIdForUser,
-            status = stage.status,
-            finalStage = stage.finally,
-            containerCount = containers.size,
-            elementCount = entries.size,
-            failedElementCount = entries.count { it.element.status.isFailureStatus() },
-            activeElementCount = entries.count { it.element.status.isActiveStatus() }
-        )
-    }
-    val containerDetails = model.stages.flatMap { stage ->
-        stage.expandContainers().map { container ->
-            val failedCount = container.elements.count { it.status.isFailureStatus() }
-            val activeCount = container.elements.count { it.status.isActiveStatus() }
-            BuildDetailContainerSimple(
-                stageId = stage.id,
-                stageName = stage.name,
-                containerId = container.id,
-                containerName = container.name,
-                status = container.status,
-                containerHashId = container.containerHashId,
-                jobId = container.jobId,
-                startVmStatus = container.startVMStatus,
-                matrixGroupFlag = container.matrixGroupFlag,
-                elementCount = container.elements.size,
-                failedElementCount = failedCount,
-                activeElementCount = activeCount
-            )
-        }
-    }
     val allElements = model.stages.flatMap { stage ->
         stage.expandContainers().flatMap { container ->
             container.elements.map { element ->
@@ -234,17 +119,18 @@ fun ModelDetail.toBuildDetailSimple(): BuildDetailSimple {
     }
     val failedElements = allElements.filter { it.element.status.isFailureStatus() }
     val activeElements = allElements.filter { it.element.status.isActiveStatus() }
-    val notices = mutableListOf(
-        "返回为 AI 简化详情，不包含完整 model 字段；如需进一步定位请结合构建日志。"
-    )
+    val notices = mutableListOf("返回为 AI 简化详情，不包含完整 model 字段；如需进一步定位请结合构建日志。")
     if (failedElements.isEmpty() && activeElements.isEmpty()) {
         notices.add("未发现失败中或运行中的插件，可优先参考 stageSummary 判断构建进度。")
     }
-    val stageSummary = stageDetails.map { stage ->
-        val stageName = stage.stageName ?: stage.stageId ?: "unknown-stage"
+    val stageSummary = model.stages.map { stage ->
+        val containers = stage.expandContainers()
+        val elements = containers.flatMap { it.elements }
+        val stageName = stage.name ?: stage.id ?: "unknown-stage"
         "$stageName [${stage.status ?: "UNKNOWN"}] " +
-            "containers=${stage.containerCount}, elements=${stage.elementCount}, " +
-            "failed=${stage.failedElementCount}, active=${stage.activeElementCount}"
+            "containers=${containers.size}, elements=${elements.size}, " +
+            "failed=${elements.count { it.status.isFailureStatus() }}, " +
+            "active=${elements.count { it.status.isActiveStatus() }}"
     }
     return BuildDetailSimple(
         id = id,
@@ -266,17 +152,13 @@ fun ModelDetail.toBuildDetailSimple(): BuildDetailSimple {
         executeTime = executeTime,
         triggerReviewers = triggerReviewers,
         debug = debug,
-        totalStageCount = stageDetails.size,
-        totalContainerCount = containerDetails.size,
+        totalStageCount = model.stages.size,
+        totalContainerCount = model.stages.sumOf { it.expandContainers().size },
         totalElementCount = allElements.size,
         failedElementCount = failedElements.size,
         activeElementCount = activeElements.size,
         stageSummary = stageSummary,
-        stages = stageDetails,
-        containers = containerDetails,
         failedElements = failedElements.map { it.toSimple() },
-        activeElements = activeElements.map { it.toSimple() },
-        elementPreview = allElements.map { it.toSimple() },
         notices = notices
     )
 }
@@ -294,16 +176,7 @@ private data class BuildElementEntry(
             containerName = container.name,
             containerHashId = container.containerHashId,
             jobId = container.jobId,
-            elementId = element.id,
-            elementName = element.name,
-            stepId = element.stepId,
-            status = element.status,
-            classType = element.getClassType(),
-            atomCode = element.getAtomCode(),
-            enabled = element.elementEnabled(),
-            errorType = element.errorType,
-            errorCode = element.errorCode,
-            errorMsg = element.errorMsg
+            element = element
         )
     }
 }
