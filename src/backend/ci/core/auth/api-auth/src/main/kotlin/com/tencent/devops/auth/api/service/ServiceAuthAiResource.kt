@@ -237,6 +237,9 @@ interface ServiceAuthAiResource {
         @QueryParam("userName")
         @Parameter(description = "用户名搜索")
         userName: String? = null,
+        @QueryParam("departed")
+        @Parameter(description = "是否离职")
+        departedFlag: Boolean? = null,
         @QueryParam("page")
         @Parameter(description = "页码")
         page: Int = 1,

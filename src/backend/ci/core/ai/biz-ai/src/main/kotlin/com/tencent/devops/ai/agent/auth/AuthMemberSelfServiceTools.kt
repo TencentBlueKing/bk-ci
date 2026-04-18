@@ -468,7 +468,7 @@ class AuthMemberSelfServiceTools(
                 targetMemberId = operatorId,
                 handoverTo = handoverTo,
                 groupIds = groupIds,
-                recommendLimit = 5
+                recommendLimit = 3
             )
             val check = checkResult.data ?: return@safeOperate "检查失败: ${checkResult.message}"
 

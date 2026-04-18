@@ -167,6 +167,7 @@ class ServiceAuthAiResourceImpl(
         projectId: String,
         memberType: String?,
         userName: String?,
+        departedFlag: Boolean?,
         page: Int,
         pageSize: Int
     ): Result<SQLPage<ResourceMemberInfo>> {
@@ -176,7 +177,7 @@ class ServiceAuthAiResourceImpl(
                 memberType = memberType,
                 userName = userName,
                 deptName = null,
-                departedFlag = false,
+                departedFlag = departedFlag,
                 page = page,
                 pageSize = pageSize
             )
