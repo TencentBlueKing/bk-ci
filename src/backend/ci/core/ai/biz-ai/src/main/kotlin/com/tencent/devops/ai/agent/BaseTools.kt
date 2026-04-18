@@ -83,11 +83,18 @@ abstract class BaseTools(
         val targetClass = resolveElementType(obj)
         val fields = extractSchemaFields(targetClass)
         val json = if (fields.isEmpty()) {
-            JsonUtil.toJson(obj)
+            if (obj is String) obj else JsonUtil.toJson(obj)
         } else {
             JsonUtil.toJson(mapOf("_fields" to fields, "data" to obj))
         }
-        return json
+        return truncatePlainText(json, MAX_TOOL_OUTPUT_CHARS)
+    }
+
+    private fun truncatePlainText(text: String, maxChars: Int): String {
+        if (text.length <= maxChars) {
+            return text
+        }
+        return text.take(maxChars - TRUNCATION_SUFFIX.length) + TRUNCATION_SUFFIX
     }
 
     private fun resolveElementType(obj: Any): Class<*>? {
@@ -278,6 +285,8 @@ abstract class BaseTools(
 
     companion object {
         private val schemaCache = ConcurrentHashMap<Class<*>, Map<String, String>>()
-        private const val MAX_SCHEMA_DEPTH = 2
+        private const val MAX_SCHEMA_DEPTH = 3
+        private const val MAX_TOOL_OUTPUT_CHARS = 48_000
+        private const val TRUNCATION_SUFFIX = "...(已截断)"
     }
 }
