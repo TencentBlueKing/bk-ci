@@ -53,7 +53,7 @@ internal fun buildOperationGuideMarkdown(): String = """
 5. **分析错误的标准流程**: 查构建详情 → 找失败 element → 用 element ID 查日志 → 分析原因（详见操作指南）
 6. **日志查询必须定位**: 获取日志时务必传入 tag（elementId）参数，避免获取全量日志
 7. **状态与详情分离**: 「获取流水线状态」返回 process 服务的原始状态信息（不含 build detail 的完整 model）；
-   需要定位失败插件时，使用「获取构建详情」查看 AI 裁剪后的阶段/Job/插件摘要
+   需要定位失败插件时，使用「获取构建详情」查看 AI 简化详情中的 failedElements
 8. **必要时可查 iWiki**: 遇到不熟悉的错误码、插件配置问题、平台限制说明等情况时，
    可直接调用 iWiki MCP 工具辅助排查。
     
@@ -142,9 +142,11 @@ internal fun buildOperationGuideMarkdown(): String = """
 ```
 1. 如仅需判断卡在哪个阶段，可先调用「获取流水线状态」看 latestBuildStageStatus
 2. 需要定位失败插件时，调用「获取构建详情」获取 AI 简化详情
-3. 优先查看 failedElements；如果失败列表为空，再查看 activeElements、elementPreview、stageSummary
-   - 定位 status 为失败/运行中状态（如 FAILED、HEARTBEAT_TIMEOUT、RUNNING 等）的 element
-   - 记录该 element 的 elementId（格式如 e-xxxxxxxx）和名称
+3. 优先查看 failedElements
+   - failedElements 每项都带 stageId、stageName、containerId、containerName、containerHashId、jobId
+   - 同时包含完整的 element 对象，可直接查看 element.id、element.name、element.stepId、element.status、
+     以及脚本、插件配置等原始字段
+   - 记录该 element.id（格式如 e-xxxxxxxx）和名称
 4. 将失败 element 的 id 作为 tag 参数，调用「获取构建日志」
    - 示例：获取构建日志(projectId, pipelineId, buildId, tag="e-abc12345")
 5. 分析日志中的错误信息，给出错误原因和修复建议

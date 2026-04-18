@@ -329,8 +329,10 @@ class BuildTools(
 
     @Tool(
         name = "获取构建详情",
-        description = "获取构建的 AI 简化详情，包含阶段、Job、失败或运行中插件的关键信息。" +
-                "用于定位失败插件的 element ID，以便后续查询该插件日志。"
+        description = "获取构建的 AI 简化详情。返回顶层摘要信息，以及 failedElements 列表。" +
+                "failedElements 的每一项都包含 stageId、stageName、containerId、containerName、containerHashId、jobId，" +
+                "以及完整的 element 对象。" +
+                "用于定位失败插件的 element.id，并结合完整插件配置继续排查日志和失败原因。"
     )
     fun getBuildDetail(
         @ToolParam(name = "projectId", description = "项目ID")

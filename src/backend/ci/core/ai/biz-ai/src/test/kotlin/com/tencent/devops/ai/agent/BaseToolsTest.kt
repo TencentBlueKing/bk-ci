@@ -1,11 +1,11 @@
 package com.tencent.devops.ai.agent
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.enums.BuildScriptType
+import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.test.BkCiAbstractTest
-import com.tencent.devops.process.pojo.pipeline.BuildDetailContainerSimple
 import com.tencent.devops.process.pojo.pipeline.BuildDetailElementSimple
 import com.tencent.devops.process.pojo.pipeline.BuildDetailSimple
-import com.tencent.devops.process.pojo.pipeline.BuildDetailStageSimple
 import io.swagger.v3.oas.annotations.media.Schema
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -83,35 +83,6 @@ class BaseToolsTest : BkCiAbstractTest() {
                     failedElementCount = 1,
                     activeElementCount = 0,
                     stageSummary = listOf("stage-1 [FAILED]"),
-                    stages = listOf(
-                        BuildDetailStageSimple(
-                            stageId = "s-1",
-                            stageName = "stage-1",
-                            stageIdForUser = "1",
-                            status = "FAILED",
-                            finalStage = false,
-                            containerCount = 1,
-                            elementCount = 1,
-                            failedElementCount = 1,
-                            activeElementCount = 0
-                        )
-                    ),
-                    containers = listOf(
-                        BuildDetailContainerSimple(
-                            stageId = "s-1",
-                            stageName = "stage-1",
-                            containerId = "c-1",
-                            containerName = "job-1",
-                            status = "FAILED",
-                            containerHashId = "hash-1",
-                            jobId = "job-1",
-                            startVmStatus = "FAILED",
-                            matrixGroupFlag = false,
-                            elementCount = 1,
-                            failedElementCount = 1,
-                            activeElementCount = 0
-                        )
-                    ),
                     failedElements = listOf(
                         BuildDetailElementSimple(
                             stageId = "s-1",
@@ -120,20 +91,17 @@ class BaseToolsTest : BkCiAbstractTest() {
                             containerName = "job-1",
                             containerHashId = "hash-1",
                             jobId = "job-1",
-                            elementId = "e-1",
-                            elementName = "plugin-1",
-                            stepId = "step-1",
-                            status = "FAILED",
-                            classType = "linuxPaasCodeCCScript",
-                            atomCode = "CodeCCCheckAtom",
-                            enabled = true,
-                            errorType = "USER",
-                            errorCode = 1001,
-                            errorMsg = "failed"
+                            element = LinuxScriptElement(
+                                id = "e-1",
+                                name = "plugin-1",
+                                status = "FAILED",
+                                stepId = "step-1",
+                                scriptType = BuildScriptType.SHELL,
+                                script = "exit 1",
+                                continueNoneZero = false
+                            )
                         )
                     ),
-                    activeElements = emptyList(),
-                    elementPreview = emptyList(),
                     notices = listOf("notice")
                 )
             )
