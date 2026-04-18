@@ -33,7 +33,6 @@ import com.tencent.devops.ai.agent.auth.AuthMemberSelfServiceTools
 import com.tencent.devops.ai.agent.auth.AuthPermissionInsightTools
 import com.tencent.devops.ai.api.op.OpAiAuthAgentToolsResource
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil.deepCopy
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
