@@ -2,6 +2,7 @@ package com.tencent.devops.ai.agent
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.process.pojo.pipeline.BuildDetailElementSimple
@@ -98,7 +99,8 @@ class BaseToolsTest : BkCiAbstractTest() {
                                 stepId = "step-1",
                                 scriptType = BuildScriptType.SHELL,
                                 script = "exit 1",
-                                continueNoneZero = false
+                                continueNoneZero = false,
+                                additionalOptions = ElementAdditionalOptions(enable = true)
                             )
                         )
                     ),
@@ -109,6 +111,8 @@ class BaseToolsTest : BkCiAbstractTest() {
 
         assertEquals("构建ID", json["_fields"]["id"].asText())
         assertEquals("失败插件列表", json["_fields"]["failedElements"].asText())
+        assertEquals("附加参数", json["_fields"]["failedElements.element.additionalOptions"].asText())
+        assertFalse(json["_fields"].has("failedElements.element.additionalOptions.continueWhenFailed"))
         assertEquals("b-1", json["data"]["id"].asText())
     }
 

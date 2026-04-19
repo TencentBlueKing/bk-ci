@@ -136,7 +136,7 @@ abstract class BaseTools(
         depth: Int
     ) {
         if (!visited.add(clazz)) return
-        if (depth > MAX_SCHEMA_DEPTH) return
+        if (depth >= MAX_SCHEMA_DEPTH) return
         if (clazz.packageName.startsWith("java.") || clazz.packageName.startsWith("kotlin.")) return
         if (clazz.isInterface) return
 
