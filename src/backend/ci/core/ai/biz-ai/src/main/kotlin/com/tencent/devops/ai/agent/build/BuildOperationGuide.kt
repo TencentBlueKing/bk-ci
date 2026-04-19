@@ -147,6 +147,8 @@ internal fun buildOperationGuideMarkdown(): String = """
    - 同时包含完整的 element 对象，可直接查看 element.id、element.name、element.stepId、element.status、
      以及脚本、插件配置等原始字段
    - 记录该 element.id（格式如 e-xxxxxxxx）和名称
+   - 如果 failedElements 因返回内容过长被截断，退回查看 stageSummary
+   - stageSummary 中失败 stage 会追加 `failedElementIds=e-xxx,e-yyy`，可直接从中提取失败插件 ID
 4. 将失败 element 的 id 作为 tag 参数，调用「获取构建日志」
    - 示例：获取构建日志(projectId, pipelineId, buildId, tag="e-abc12345")
 5. 分析日志中的错误信息，给出错误原因和修复建议
@@ -160,6 +162,7 @@ internal fun buildOperationGuideMarkdown(): String = """
 **注意**：「获取流水线状态」只能帮助判断失败阶段，不能定位到具体插件。
 不要跳过第 2-3 步直接查日志！不传 tag 参数会返回整个构建的全量日志，
 既慢又可能被截断。**必须先定位失败插件的 element ID 再查询**。
+当 `failedElements` 不完整时，应优先利用 `stageSummary` 中的 `failedElementIds` 作为兜底定位信息。
 
 ## 日志熔断提醒
 
