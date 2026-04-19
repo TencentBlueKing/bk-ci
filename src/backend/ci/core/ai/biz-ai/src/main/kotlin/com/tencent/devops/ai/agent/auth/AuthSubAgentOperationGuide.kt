@@ -72,6 +72,13 @@ internal fun authSubAgentOperationGuideMarkdown(): String = """
 9. **部门加入的用户组按管理员流程处理**：如果用户组是通过部门/组织加入的，个人**不能**自助退出、
    移交或续期，只能由管理员处理。遇到这类情况时，要明确告知用户这是“部门加入的用户组”，
    需联系项目管理员处理，不要引导用户继续走个人自助流程
+10. **加入项目优先走申请权限**：当用户表达“加入项目 / 申请加入项目 / 开通项目权限 / 我想进项目”
+    一类诉求时，如果当前用户还不是项目成员，**必须优先使用 `applyPermissions`**
+    处理，不能直接回复“无权操作”或“不能加入项目”
+11. **非项目成员禁止误调成员查询类工具**：在“用户尚未加入项目”的场景下，**不要先调用**
+    `getAllMemberGroups`、`getMemberGroupCount`、`analyzeUserPermissions`、
+    `getResourcePermissionsMatrix`、`listProjectMembers`、`listGroupMembers`
+    等依赖项目成员身份的工具；应先走 `applyPermissions`
 
 ## 权限和授权的关系
 
@@ -149,6 +156,8 @@ internal fun authSubAgentOperationGuideMarkdown(): String = """
 
 - 开通权限优先用 `grantPermissions` 的智能模式，先推荐用户组，再确认执行
 - 普通成员申请权限用 `applyPermissions`
+- 如果用户想“加入项目”而当前还不是项目成员，**必须优先使用 `applyPermissions`**，
+  让工具自动降级为项目级用户组申请；不要先查成员权限或成员列表
 - 管理员给成员续期用 `renewPermissions`
 - 普通成员给自己续期用 `applyRenewal`
 - 对“申请权限”“申请续期”这类操作，**不能因为用户说了‘我要申请’就直接提交**；
@@ -185,6 +194,7 @@ internal fun authSubAgentOperationGuideMarkdown(): String = """
 
 - **我的权限**：调用 `analyzeUserPermissions(projectId, memberId=当前用户)`
 - **我的过期权限**：调用 `getAllMemberGroups(projectId, memberId=当前用户, expiredStatus=...)`
+- **加入项目**：如果当前还不是项目成员，直接使用 `applyPermissions`，不要先调用成员查询类工具
 - **申请权限**：使用 `applyPermissions`
 - **申请续期**：使用 `applyRenewal`
 - **退出用户组**：使用 `exitGroups`
@@ -196,8 +206,9 @@ internal fun authSubAgentOperationGuideMarkdown(): String = """
 ## 异常处理
 
 - **用户不是项目成员**：
-  - 管理员视角：可提示为该用户开通权限
-  - 普通成员视角：告知无权操作
+  - 如果用户意图是“加入项目/申请项目权限”，应立即改走 `applyPermissions`
+  - 只有当 `applyPermissions` 也失败时，才提示联系项目管理员
+  - 不要因为看到“不是项目成员”就直接下结论说“不能加入项目”
 - **用户不存在**：提示确认用户 ID 拼写，必要时建议人工排查
 - **资源未找到**：建议重新搜索关键字，或切换项目
 - **匹配到多个资源**：列出候选结果，请用户明确选择
