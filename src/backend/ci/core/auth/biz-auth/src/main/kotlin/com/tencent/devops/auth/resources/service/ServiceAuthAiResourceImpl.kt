@@ -383,7 +383,6 @@ class ServiceAuthAiResourceImpl(
         return Result(authAiService.recommendGroupsForGrant(userId, projectId, request))
     }
 
-    @BkProjectMemberCheck
     override fun applyToJoinGroup(
         userId: String,
         projectId: String,
