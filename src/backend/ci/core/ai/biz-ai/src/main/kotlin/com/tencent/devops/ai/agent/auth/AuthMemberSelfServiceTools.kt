@@ -27,6 +27,10 @@
 
 package com.tencent.devops.ai.agent.auth
 
+import com.tencent.devops.auth.api.service.ServiceAuthApplyResource
+import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
+import com.tencent.devops.auth.pojo.SearchGroupInfo
+import com.tencent.devops.auth.pojo.enum.GroupLevel
 import com.tencent.devops.auth.pojo.request.ai.AiApplyJoinGroupReq
 import com.tencent.devops.auth.pojo.request.ai.AiMemberExitsProjectReq
 import com.tencent.devops.auth.pojo.request.ai.BatchHandoverMembersReq
@@ -313,7 +317,14 @@ class AuthMemberSelfServiceTools(
         return when {
             !groupIds.isNullOrBlank() -> resolveDirectMode(groupIds, joinedGroupIds)
             resourceType != null && resourceCode != null && action != null ->
-                resolveSmartMode(operatorId, projectId, resourceType, resourceCode, action)
+                resolveSmartMode(
+                    operatorId = operatorId,
+                    projectId = projectId,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    action = action,
+                    joinedGroupIds = joinedGroupIds
+                )
             else -> ApplyContext(
                 targetGroupIds = emptyList(),
                 skippedGroupIds = emptyList(),
@@ -373,8 +384,20 @@ class AuthMemberSelfServiceTools(
         projectId: String,
         resourceType: String,
         resourceCode: String,
-        action: String
+        action: String,
+        joinedGroupIds: Set<Int>
     ): ApplyContext {
+        if (!isProjectMember(operatorId, projectId)) {
+            return resolveProjectLevelFallback(
+                operatorId = operatorId,
+                projectId = projectId,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                action = action,
+                joinedGroupIds = joinedGroupIds
+            )
+        }
+
         val recommendResult = authAiResource().recommendGroupsForGrant(
             userId = operatorId,
             projectId = projectId,
@@ -422,6 +445,74 @@ class AuthMemberSelfServiceTools(
         return ApplyContext(
             targetGroupIds = listOf(bestGroup.relationId),
             skippedGroupIds = emptyList(),
+            previewInfo = preview.trim()
+        )
+    }
+
+    private fun isProjectMember(userId: String, projectId: String): Boolean {
+        return service(ServiceProjectAuthResource::class)
+            .isProjectMember(userId = userId, projectCode = projectId)
+            .data == true
+    }
+
+    private fun resolveProjectLevelFallback(
+        operatorId: String,
+        projectId: String,
+        resourceType: String,
+        resourceCode: String,
+        action: String,
+        joinedGroupIds: Set<Int>
+    ): ApplyContext {
+        val result = service(ServiceAuthApplyResource::class).listGroupsForApply(
+            userId = operatorId,
+            projectId = projectId,
+            searchGroupInfo = SearchGroupInfo(
+                groupLevel = GroupLevel.PROJECT,
+                page = 1,
+                pageSize = 10
+            )
+        )
+        val projectLevelGroups = result.data?.results
+            ?.filter { it.resourceType == "project" }
+            ?.take(10)
+            .orEmpty()
+        if (projectLevelGroups.isEmpty()) {
+            return ApplyContext(
+                targetGroupIds = emptyList(),
+                skippedGroupIds = emptyList(),
+                previewInfo = "",
+                errorMsg = "当前不是项目成员，且未找到可申请的项目级用户组"
+            )
+        }
+
+        val alreadyJoinedGroups = projectLevelGroups.filter { it.id in joinedGroupIds }
+        val toApplyGroups = projectLevelGroups.filter { it.id !in joinedGroupIds }
+        if (toApplyGroups.isEmpty()) {
+            return ApplyContext(
+                targetGroupIds = emptyList(),
+                skippedGroupIds = alreadyJoinedGroups.map { it.id },
+                previewInfo = "你已经是这些项目级用户组的成员，无需重复申请: " +
+                    alreadyJoinedGroups.joinToString(", ") { "${it.name}(ID: ${it.id})" }
+            )
+        }
+
+        val preview = buildString {
+            appendLine("目标权限: $resourceType/$resourceCode 的 $action")
+            appendLine("当前不是项目成员，已自动降级为申请项目级用户组")
+            toApplyGroups.forEachIndexed { index, group ->
+                appendLine("${index + 1}. ${group.name} (ID: ${group.id})")
+            }
+            if (alreadyJoinedGroups.isNotEmpty()) {
+                appendLine(
+                    "已跳过（你已是成员）: " +
+                        alreadyJoinedGroups.joinToString(", ") { "${it.name}(ID: ${it.id})" }
+                )
+            }
+            appendLine("说明: 加入项目后，如仍缺少资源级权限，可再继续申请")
+        }
+        return ApplyContext(
+            targetGroupIds = toApplyGroups.map { it.id },
+            skippedGroupIds = alreadyJoinedGroups.map { it.id },
             previewInfo = preview.trim()
         )
     }
