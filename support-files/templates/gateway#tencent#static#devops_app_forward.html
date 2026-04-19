@@ -97,7 +97,7 @@
 	}, 2000);
 
 	function openApp() {
-		var terminal = getTerminal();
+		const terminal = getTerminal();
 
 		var t1 = Date.now();
 		var ifr = document.createElement("iframe");
@@ -146,14 +146,7 @@
 			return;
 		}
 
-		
-
-		var prefix = "bkdevopsapp://";
-		 if(terminal == 1) {
-		 	prefix = "bkdevopsapp://bkdevopsapp/"
-		 } else if(terminal == 2 || terminal == 3){
-		 	prefix = "bkdevopsapp://"
-		 }
+		const prefix = (terminal !== 1) ? "bkdevopsapp://" : "bkdevopsapp://bkdevopsapp/";
 		//组装版本体验和流水线构建的scheme url
 		 if(flag == "experienceDetail") {
 			ifr.src = prefix + "app/experience/expDetail/" + experienceId;
@@ -161,10 +154,11 @@
 			ifr.src = prefix + "app/project/buildDetail/"+projectId+"/"+pipelineId+"/"+buildId+"/archiveTab";
 		}else if(flag == "buildReport") {
 			ifr.src = prefix + "app/project/buildDetail/"+projectId+"/"+pipelineId+"/"+buildId+"/reportTab";
+		} else {
+			 return; // 不支持的逻辑，没有填充 src 无法往下走
+		 }
 
-		}
-		
-		if(terminal == 1 || terminal == 2 || terminal == 3){
+		if(terminal >= 1 && terminal <= 3) {
 			//在 IOS 9 中，使用 ifr 的方式还是拉不起来程序，需要使用 window.location 的方式
 //			window.location.href = ifr.src;
 
@@ -181,9 +175,9 @@
                 location.href = ifr.src;
             }
 		} else {
-            window.location.href = "http://devops.oa.com";
+            window.location.href = "https://devops.woa.com";
 		}
-		
+
 
 		//显示下载页面
 		timeout = setTimeout(function () {
@@ -194,7 +188,15 @@
 			if ((math || mathWeixin)&&(navigator.userAgent.indexOf('iPhone') > -1)) {
 				var div = document.createElement('div');
 				div.style.visibility = 'hidden';
-				div.innerHTML = "<iframe id=\"schema\" src=\"" + ifr.src + "\" scrolling=\"no\" width=\"1\" height=\"1\"></iframe>";
+				if (ifr.src.startsWith(prefix)) { // 防止伪造
+					ifr.id = 'schema';
+					ifr.style.overflow = 'hidden';
+					ifr.width = '1';
+					ifr.height = '1';
+					div.appendChild(ifr);
+				} else {
+					div.textContent = 'Bad url: ' + ifr.src
+				}
 				document.body.appendChild(div);
 			}
 			try_to_open_app(t1);
