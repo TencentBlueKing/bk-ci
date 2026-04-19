@@ -312,18 +312,18 @@ class AuthMemberSelfServiceTools(
         resourceCode: String?,
         action: String?
     ): ApplyContext {
-        val joinedGroupIds = fetchUserJoinedGroupIds(operatorId, projectId)
-
         return when {
-            !groupIds.isNullOrBlank() -> resolveDirectMode(groupIds, joinedGroupIds)
+            !groupIds.isNullOrBlank() -> resolveDirectMode(
+                groupIds = groupIds,
+                joinedGroupIds = fetchUserJoinedGroupIds(operatorId, projectId)
+            )
             resourceType != null && resourceCode != null && action != null ->
                 resolveSmartMode(
                     operatorId = operatorId,
                     projectId = projectId,
                     resourceType = resourceType,
                     resourceCode = resourceCode,
-                    action = action,
-                    joinedGroupIds = joinedGroupIds
+                    action = action
                 )
             else -> ApplyContext(
                 targetGroupIds = emptyList(),
@@ -335,6 +335,9 @@ class AuthMemberSelfServiceTools(
     }
 
     private fun fetchUserJoinedGroupIds(userId: String, projectId: String): Set<Int> {
+        if (!isProjectMember(userId, projectId)) {
+            return emptySet()
+        }
         val result = authAiResource().getAllMemberGroupsDetails(
             userId = userId,
             projectId = projectId,
@@ -384,8 +387,7 @@ class AuthMemberSelfServiceTools(
         projectId: String,
         resourceType: String,
         resourceCode: String,
-        action: String,
-        joinedGroupIds: Set<Int>
+        action: String
     ): ApplyContext {
         if (!isProjectMember(operatorId, projectId)) {
             return resolveProjectLevelFallback(
@@ -394,7 +396,7 @@ class AuthMemberSelfServiceTools(
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 action = action,
-                joinedGroupIds = joinedGroupIds
+                joinedGroupIds = emptySet()
             )
         }
 
