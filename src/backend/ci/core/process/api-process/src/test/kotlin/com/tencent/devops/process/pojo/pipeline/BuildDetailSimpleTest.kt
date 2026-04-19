@@ -96,6 +96,10 @@ class BuildDetailSimpleTest {
         assertFalse(json.has("activeElements"))
         assertFalse(json.has("elementPreview"))
         assertFalse(json.has("failedStages"))
+        assertEquals(
+            "build-stage [FAILED] containers=1, elements=2, failed=1, active=0, failedElementIds=e-1",
+            json["stageSummary"][0].asText()
+        )
         assertEquals(1, json["failedElements"].size())
         assertEquals("s-1", json["failedElements"][0]["stageId"].asText())
         assertEquals("job-1", json["failedElements"][0]["jobId"].asText())

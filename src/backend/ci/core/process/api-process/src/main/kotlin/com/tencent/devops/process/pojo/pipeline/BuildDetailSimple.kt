@@ -126,11 +126,19 @@ fun ModelDetail.toBuildDetailSimple(): BuildDetailSimple {
     val stageSummary = model.stages.map { stage ->
         val containers = stage.expandContainers()
         val elements = containers.flatMap { it.elements }
+        val failedStageElementIds = elements
+            .filter { it.status.isFailureStatus() }
+            .mapNotNull { it.id }
         val stageName = stage.name ?: stage.id ?: "unknown-stage"
         "$stageName [${stage.status ?: "UNKNOWN"}] " +
             "containers=${containers.size}, elements=${elements.size}, " +
-            "failed=${elements.count { it.status.isFailureStatus() }}, " +
-            "active=${elements.count { it.status.isActiveStatus() }}"
+            "failed=${failedStageElementIds.size}, " +
+            "active=${elements.count { it.status.isActiveStatus() }}" +
+            if (failedStageElementIds.isNotEmpty()) {
+                ", failedElementIds=${failedStageElementIds.joinToString(",")}"
+            } else {
+                ""
+            }
     }
     return BuildDetailSimple(
         id = id,
