@@ -94,13 +94,20 @@ class WelcomeGuideDao {
         enabled: Boolean?,
         sortOrder: Int?
     ): Int {
-        if (enabled == null && sortOrder == null) {
-            return 0
+        return with(TAiWelcomeGuide.T_AI_WELCOME_GUIDE) {
+            if (enabled == null && sortOrder == null) {
+                return 0
+            }
+            val update = if (enabled != null) {
+                dslContext.update(this).set(ENABLED, enabled)
+            } else {
+                dslContext.update(this).set(SORT_ORDER, sortOrder!!)
+            }
+            if (enabled != null && sortOrder != null) {
+                update.set(SORT_ORDER, sortOrder)
+            }
+            update.where(ID.eq(id)).execute()
         }
-        val row = getById(dslContext, id) ?: return 0
-        enabled?.let { row.enabled = it }
-        sortOrder?.let { row.sortOrder = it }
-        return dslContext.executeUpdate(row)
     }
 
     fun delete(dslContext: DSLContext, id: String): Int {

@@ -1,4 +1,3 @@
-CREATE DATABASE IF NOT EXISTS `devops_ci_ai` DEFAULT CHARACTER SET utf8mb4;
 USE devops_ci_ai;
 
 SET NAMES utf8mb4;

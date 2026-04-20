@@ -190,8 +190,7 @@ class BuildTools(
                 emptyMap()
             } else {
                 try {
-                    @Suppress("UNCHECKED_CAST")
-                    JsonUtil.to(params, Map::class.java) as Map<String, String>
+                    JsonUtil.to<Map<String, String>>(params)
                 } catch (e: Exception) {
                     return@safeOperate "启动参数格式错误，请使用 JSON 格式如 {\"key\":\"value\"}: ${e.message}"
                 }
