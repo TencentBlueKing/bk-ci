@@ -54,6 +54,8 @@ import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faRespData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyRespData
+import com.tencent.devops.remotedev.pojo.LogUploadUrl
+import com.tencent.devops.remotedev.service.CosLogUploadService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.ProjectStrategyService
 import com.tencent.devops.remotedev.service.RepositoryService
@@ -76,6 +78,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     private val permissionService: PermissionService,
     private val repositoryService: RepositoryService,
     private val projectStrategyService: ProjectStrategyService,
+    private val cosLogUploadService: CosLogUploadService,
     private val createControl: CreateControl,
     private val startControl: StartControl,
     private val sleepControl: SleepControl,
@@ -281,5 +284,15 @@ class UserWorkspaceResourceImpl @Autowired constructor(
             )
         }
         return Result(projectStrategyService.getStrategy(data))
+    }
+
+    override fun getLogUploadUrl(
+        userId: String
+    ): Result<LogUploadUrl> {
+        return Result(
+            cosLogUploadService.generateLogUploadUrl(
+                userId = userId
+            )
+        )
     }
 }
