@@ -128,12 +128,13 @@ class CvdService {
         val jsonBody = JsonUtil.toJson(body)
         val mediaType = "application/json; charset=utf-8".toMediaType()
         val requestBody = jsonBody.toRequestBody(mediaType)
+        logger.debug("cvdRequest|$url|$jsonBody")
         val request = Request.Builder()
             .url(url)
             .post(requestBody)
             .headers(buildAuthHeaders())
             .build()
-        logger.debug("cvdRequest|$url|$jsonBody")
+
         try {
             OkhttpUtils.doHttp(request).use { resp ->
                 val responseStr = resp.body!!.string()
