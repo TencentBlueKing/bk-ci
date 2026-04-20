@@ -133,7 +133,7 @@ class CvdService {
             .post(requestBody)
             .headers(buildAuthHeaders())
             .build()
-
+        logger.debug("cvdRequest|$url|$jsonBody")
         try {
             OkhttpUtils.doHttp(request).use { resp ->
                 val responseStr = resp.body!!.string()
