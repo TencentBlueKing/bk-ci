@@ -115,21 +115,51 @@ class AgentSysPromptService @Autowired constructor(
     /**
      * 运营侧：列出全部智能体系统提示词（agentName -> promptTemplate）。
      */
-    fun listAllAgentSysPromptsForOp(): Map<String, String> {
+    fun listAllAgentSysPrompts(): Map<String, String> {
         return dao.listAll(dslContext).associateBy({ it.agentName }, { it.promptTemplate })
+    }
+
+    /**
+     * 运营侧：新增指定智能体的系统提示词配置。
+     *
+     * @param description 可选描述；为 null 或空白时写入 null
+     * @throws IllegalArgumentException 当 [agentName] 或 [promptTemplate] 为空、或 [agentName] 已存在时
+     */
+    fun createAgentSysPrompt(
+        agentName: String,
+        promptTemplate: String,
+        description: String? = null,
+        enabled: Boolean = true
+    ) {
+        val name = agentName.trim()
+        val template = promptTemplate.trim()
+        require(name.isNotEmpty()) { "agentName must not be blank" }
+        require(template.isNotEmpty()) { "promptTemplate must not be blank" }
+        require(dao.getByAgentName(dslContext, name) == null) {
+            "Agent sys prompt already exists: $name"
+        }
+        val desc = description?.trim()?.takeIf { it.isNotEmpty() }
+        dao.insert(
+            dslContext = dslContext,
+            agentName = name,
+            promptTemplate = template,
+            description = desc,
+            enabled = enabled
+        )
+        logger.info("[SysPrompt] Created config for agent={}", name)
     }
 
     /**
      * 运营侧：更新指定智能体的提示词模板。
      */
-    fun updateAgentSysPromptForOp(agentName: String, promptTemplate: String): Boolean {
+    fun updateAgentSysPrompt(agentName: String, promptTemplate: String): Boolean {
         return dao.update(dslContext, agentName, promptTemplate) > 0
     }
 
     /**
      * 运营侧：删除指定智能体的提示词配置。
      */
-    fun deleteAgentSysPromptForOp(agentName: String): Boolean {
+    fun deleteAgentSysPrompt(agentName: String): Boolean {
         return dao.delete(dslContext, agentName) > 0
     }
 
@@ -137,9 +167,11 @@ class AgentSysPromptService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(
             AgentSysPromptService::class.java
         )
+
         /** 匹配 {{varName}} 格式的占位符 */
         private val PLACEHOLDER_PATTERN =
             Pattern.compile("\\{\\{([^}]+)}}")
+
         /** 全局通用后缀的 agentName */
         private const val GLOBAL_AGENT_NAME = "*"
     }
