@@ -32,6 +32,7 @@ import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.pojo.AuthResourceGroup
+import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.util.timestamp
@@ -54,7 +55,8 @@ class MigrateProjectCodePrefixService @Autowired constructor(
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
     private val permissionResourceService: PermissionResourceService,
-    private val permissionResourceMemberService: PermissionResourceMemberService
+    private val permissionResourceMemberService: PermissionResourceMemberService,
+    private val permissionGradeManagerService: PermissionGradeManagerService
 ) {
 
     companion object {
@@ -111,16 +113,30 @@ class MigrateProjectCodePrefixService @Autowired constructor(
     fun migrateSingleProjectCodePrefix(
         projectCode: String
     ): Boolean {
-        logger.info(
-            "Start migrating single project code prefix: " +
-                    "$projectCode"
-        )
+        logger.info("Start migrating single project code prefix: $projectCode")
         migrateProject(projectCode)
-        logger.info(
-            "Finish migrating single project code prefix: " +
-                    "$projectCode"
-        )
+        logger.info("Finish migrating single project code prefix: $projectCode")
         return true
+    }
+
+    private fun cleanupConflictGradeManagersBeforeMigration(projectCode: String) {
+        val oldProjectResource = authResourceDao.get(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode
+        )
+        if (oldProjectResource == null) {
+            logger.info(
+                "Skip conflict grade manager cleanup because project resource not found: " +
+                        projectCode
+            )
+            return
+        }
+        permissionGradeManagerService.cleanupConflictGradeManagers(
+            projectCode = projectCode,
+            projectName = oldProjectResource.resourceName
+        )
     }
 
     /**
@@ -130,19 +146,16 @@ class MigrateProjectCodePrefixService @Autowired constructor(
     private fun migrateProject(oldProjectCode: String) {
         val newProjectCode = "$PROJECT_CODE_PREFIX$oldProjectCode"
         logger.info("Migrating project: $oldProjectCode -> $newProjectCode")
-        try {
-            // Step 1: 创建新项目资源及默认组
-            createNewProjectResource(oldProjectCode, newProjectCode)
-            // Step 2: 创建非项目资源及默认组
-            createNonProjectResources(oldProjectCode, newProjectCode)
-            // Step 3: 迁移组成员（通过组名称匹配）
-            migrateGroupMembers(oldProjectCode, newProjectCode)
-            // Step 4: 删除旧项目数据
-            deleteOldProjectData(oldProjectCode)
-        } catch (e: Exception) {
-            logger.warn("migrate projectCode prefix failed: $e")
-            return
-        }
+        // Step 0: 去除已注册到权限中心的数据
+        cleanupConflictGradeManagersBeforeMigration(oldProjectCode)
+        // Step 1: 创建新项目资源及默认组
+        createNewProjectResource(oldProjectCode, newProjectCode)
+        // Step 2: 创建非项目资源及默认组
+        createNonProjectResources(oldProjectCode, newProjectCode)
+        // Step 3: 迁移组成员（通过组名称匹配）
+        migrateGroupMembers(oldProjectCode, newProjectCode)
+        // Step 4: 删除旧项目数据
+        deleteOldProjectData(oldProjectCode)
         logger.info("Successfully migrated project: $oldProjectCode -> $newProjectCode")
     }
 

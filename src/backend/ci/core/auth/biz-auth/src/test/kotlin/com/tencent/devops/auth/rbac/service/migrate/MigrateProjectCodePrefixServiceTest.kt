@@ -32,6 +32,7 @@ import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.pojo.AuthResourceGroup
+import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateProjectCodePrefixService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
@@ -40,7 +41,10 @@ import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.model.auth.tables.TAuthResource
 import com.tencent.devops.model.auth.tables.records.TAuthResourceRecord
 import io.mockk.every
+import io.mockk.justRun
 import io.mockk.mockk
+import io.mockk.verify
+import io.mockk.verifyOrder
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -57,6 +61,8 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
         mockk<PermissionResourceService>()
     private val permissionResourceMemberService =
         mockk<PermissionResourceMemberService>()
+    private val permissionGradeManagerService =
+        mockk<PermissionGradeManagerService>()
 
     private val service = MigrateProjectCodePrefixService(
         dslContext = dslContext,
@@ -64,7 +70,8 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
         authResourceGroupDao = authResourceGroupDao,
         authResourceGroupMemberDao = authResourceGroupMemberDao,
         permissionResourceService = permissionResourceService,
-        permissionResourceMemberService = permissionResourceMemberService
+        permissionResourceMemberService = permissionResourceMemberService,
+        permissionGradeManagerService = permissionGradeManagerService
     )
 
     companion object {
@@ -142,6 +149,27 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
         } returns groups
     }
 
+    private fun mockProjectResource(
+        projectCode: String,
+        resourceName: String = "测试项目",
+        createUser: String = "admin"
+    ) {
+        val record = mockk<TAuthResourceRecord>(relaxed = true)
+        every { record.projectCode } returns projectCode
+        every { record.resourceType } returns AuthResourceType.PROJECT.value
+        every { record.resourceCode } returns projectCode
+        every { record.resourceName } returns resourceName
+        every { record.createUser } returns createUser
+        every {
+            authResourceDao.get(
+                dslContext = any(),
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode
+            )
+        } returns record
+    }
+
     @Nested
     @DisplayName("buildNewGroupMap 测试")
     inner class BuildNewGroupMapTests {
@@ -192,9 +220,7 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
             )
 
             @Suppress("UNCHECKED_CAST")
-            val result = service.invokePrivate<
-                Map<Int, AuthResourceGroup>
-                >(
+            val result = service.invokePrivate<Map<Int, AuthResourceGroup>>(
                 "buildNewGroupMap",
                 OLD_PROJECT_CODE,
                 NEW_PROJECT_CODE
@@ -203,10 +229,7 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
             Assertions.assertEquals(1, result.size)
             Assertions.assertTrue(result.containsKey(100))
             Assertions.assertEquals(200, result[100]!!.relationId)
-            Assertions.assertEquals(
-                NEW_PROJECT_CODE,
-                result[100]!!.resourceCode
-            )
+            Assertions.assertEquals(NEW_PROJECT_CODE, result[100]!!.resourceCode)
         }
 
         @Test
@@ -217,9 +240,7 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
                 resourceCode = PIPELINE_CODE
             )
-            mockResourceList(
-                OLD_PROJECT_CODE, listOf(oldPipelineRecord)
-            )
+            mockResourceList(OLD_PROJECT_CODE, listOf(oldPipelineRecord))
             val oldGroup = buildGroup(
                 projectCode = OLD_PROJECT_CODE,
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
@@ -240,9 +261,7 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
                 resourceCode = PIPELINE_CODE
             )
-            mockResourceList(
-                NEW_PROJECT_CODE, listOf(newPipelineRecord)
-            )
+            mockResourceList(NEW_PROJECT_CODE, listOf(newPipelineRecord))
             val newGroup = buildGroup(
                 projectCode = NEW_PROJECT_CODE,
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
@@ -259,9 +278,7 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
             )
 
             @Suppress("UNCHECKED_CAST")
-            val result = service.invokePrivate<
-                Map<Int, AuthResourceGroup>
-                >(
+            val result = service.invokePrivate<Map<Int, AuthResourceGroup>>(
                 "buildNewGroupMap",
                 OLD_PROJECT_CODE,
                 NEW_PROJECT_CODE
@@ -280,9 +297,7 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = OLD_PROJECT_CODE
             )
-            mockResourceList(
-                OLD_PROJECT_CODE, listOf(oldProjectRecord)
-            )
+            mockResourceList(OLD_PROJECT_CODE, listOf(oldProjectRecord))
             val oldGroup = buildGroup(
                 projectCode = OLD_PROJECT_CODE,
                 resourceType = AuthResourceType.PROJECT.value,
@@ -301,9 +316,7 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
             mockResourceList(NEW_PROJECT_CODE, emptyList())
 
             @Suppress("UNCHECKED_CAST")
-            val result = service.invokePrivate<
-                Map<Int, AuthResourceGroup>
-                >(
+            val result = service.invokePrivate<Map<Int, AuthResourceGroup>>(
                 "buildNewGroupMap",
                 OLD_PROJECT_CODE,
                 NEW_PROJECT_CODE
@@ -313,9 +326,7 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
         }
 
         @Test
-        @DisplayName(
-            "新项目下同匹配键多条组时 associateBy 保留后者"
-        )
+        @DisplayName("新项目下同匹配键多条组时 associateBy 保留后者")
         fun `duplicate new group match keys keep last group`() {
             val oldProjectRecord = mockResourceRecord(
                 projectCode = OLD_PROJECT_CODE,
@@ -361,9 +372,7 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
             )
 
             @Suppress("UNCHECKED_CAST")
-            val result = service.invokePrivate<
-                Map<Int, AuthResourceGroup>
-                >(
+            val result = service.invokePrivate<Map<Int, AuthResourceGroup>>(
                 "buildNewGroupMap",
                 OLD_PROJECT_CODE,
                 NEW_PROJECT_CODE
@@ -371,6 +380,89 @@ class MigrateProjectCodePrefixServiceTest : BkCiAbstractTest() {
 
             Assertions.assertEquals(1, result.size)
             Assertions.assertEquals(300, result[100]!!.relationId)
+        }
+    }
+
+    @Nested
+    @DisplayName("migrateSingleProjectCodePrefix 测试")
+    inner class MigrateSingleProjectCodePrefixTests {
+
+        @Test
+        @DisplayName("单项目迁移前会先清理同名分级管理员再继续迁移")
+        fun `cleanup conflict grade managers before single project migration`() {
+            mockProjectResource(projectCode = OLD_PROJECT_CODE)
+            mockResourceList(OLD_PROJECT_CODE, emptyList())
+            every {
+                authResourceGroupMemberDao.listResourceGroupMember(
+                    dslContext = any(),
+                    projectCode = OLD_PROJECT_CODE
+                )
+            } returns emptyList()
+            justRun {
+                permissionGradeManagerService.cleanupConflictGradeManagers(
+                    OLD_PROJECT_CODE,
+                    "测试项目"
+                )
+            }
+            every {
+                permissionResourceService.resourceCreateRelation(
+                    userId = "admin",
+                    projectCode = NEW_PROJECT_CODE,
+                    resourceType = AuthResourceType.PROJECT.value,
+                    resourceCode = NEW_PROJECT_CODE,
+                    resourceName = "测试项目",
+                    tenantId = null,
+                    async = false
+                )
+            } returns false
+
+            val result = service.migrateSingleProjectCodePrefix(OLD_PROJECT_CODE)
+
+            Assertions.assertTrue(result)
+            verifyOrder {
+                permissionGradeManagerService.cleanupConflictGradeManagers(
+                    OLD_PROJECT_CODE,
+                    "测试项目"
+                )
+                permissionResourceService.resourceCreateRelation(
+                    userId = "admin",
+                    projectCode = NEW_PROJECT_CODE,
+                    resourceType = AuthResourceType.PROJECT.value,
+                    resourceCode = NEW_PROJECT_CODE,
+                    resourceName = "测试项目",
+                    tenantId = null,
+                    async = false
+                )
+            }
+        }
+
+        @Test
+        @DisplayName("分级管理员清理失败时中断单项目迁移")
+        fun `stop single project migration when cleanup conflict grade managers fails`() {
+            mockProjectResource(projectCode = OLD_PROJECT_CODE)
+            every {
+                permissionGradeManagerService.cleanupConflictGradeManagers(
+                    OLD_PROJECT_CODE,
+                    "测试项目"
+                )
+            } throws IllegalStateException("cleanup failed")
+
+            val exception = Assertions.assertThrows(IllegalStateException::class.java) {
+                service.migrateSingleProjectCodePrefix(OLD_PROJECT_CODE)
+            }
+
+            Assertions.assertEquals("cleanup failed", exception.message)
+            verify(exactly = 0) {
+                permissionResourceService.resourceCreateRelation(
+                    userId = any(),
+                    projectCode = any(),
+                    resourceType = any(),
+                    resourceCode = any(),
+                    resourceName = any(),
+                    tenantId = any(),
+                    async = any()
+                )
+            }
         }
     }
 }
