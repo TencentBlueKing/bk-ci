@@ -46,6 +46,7 @@ class CreateStreamTriggerSupportService constructor(
         workspaceName: String,
         userId: String
     ): List<EnvData> {
+        logger.info("fetch all node env list|$projectId|$workspaceName")
         return try {
             client.get(ServiceEnvironmentResource::class).fetchAllNodeEnvList(
                 projectId = projectId,
@@ -144,6 +145,7 @@ class CreateStreamTriggerSupportService constructor(
         projectId: String,
         envHashId: String
     ): List<String> {
+        logger.info("get env node list|$projectId|$envHashId|$userId")
         return try {
             client.get(ServiceEnvironmentResource::class).listNodesByEnvIdsNew(
                 projectId = projectId,

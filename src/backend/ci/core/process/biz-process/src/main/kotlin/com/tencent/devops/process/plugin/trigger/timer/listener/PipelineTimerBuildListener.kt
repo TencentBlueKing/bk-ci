@@ -236,11 +236,16 @@ class PipelineTimerBuildListener @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId
             )?.envHashId ?: ""
-            creativeStreamService.getEnvNodeList(
+            val envNodeList = creativeStreamService.getEnvNodeList(
                 projectId = projectId,
                 envHashId = envHashId,
                 userId = userId
-            ).forEach {
+            )
+            if (envNodeList.isEmpty()) {
+                logger.info("[$pipelineId]|env node list is empty")
+                return
+            }
+            envNodeList.forEach {
                 val creativeStreamParams = creativeStreamService.creativeStreamParams(
                     projectId = projectId,
                     agentHashId = it,

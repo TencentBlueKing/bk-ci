@@ -200,13 +200,7 @@ class MarketEventElementVersionProcessor @Autowired constructor(
                     return
                 }
                 val inputMap = element.data[KEY_INPUT] as Map<String, Any>
-                val advanceExpression = inputMap[KEY_ADVANCE_EXPRESSION]?.let {
-                    when(it) {
-                        is String -> listOf(it)
-                        is List<*> -> it
-                        else -> listOf()
-                    }.map { EnvUtils.parseEnv(it as String, variables) }
-                } ?: listOf()
+                val advanceExpression = parseAdvanceExpression(inputMap, variables)
                 if (advanceExpression.isEmpty()) {
                     throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB
@@ -248,13 +242,7 @@ class MarketEventElementVersionProcessor @Autowired constructor(
                     )
                     return
                 }
-                val advanceExpression = inputMap[KEY_ADVANCE_EXPRESSION]?.let {
-                    when(it) {
-                        is String -> listOf(it)
-                        is List<*> -> it
-                        else -> listOf()
-                    }.map { EnvUtils.parseEnv(it as String, variables) }
-                } ?: listOf()
+                val advanceExpression = parseAdvanceExpression(inputMap, variables)
                 val expressions = pipelineTimerTriggerTaskService.convertAdvanceExpression(
                     advanceExpression = advanceExpression,
                     params = variables
@@ -355,6 +343,20 @@ class MarketEventElementVersionProcessor @Autowired constructor(
             subscription = eventSubscription
         )
     }
+
+    /**
+     * 解析定时触发器的 advanceExpression，支持 String 和 List 两种格式，并替换变量
+     */
+    private fun parseAdvanceExpression(
+        inputMap: Map<String, Any>,
+        variables: Map<String, String>
+    ): List<String> = inputMap[KEY_ADVANCE_EXPRESSION]?.let {
+        when (it) {
+            is String -> listOf(it)
+            is List<*> -> it
+            else -> listOf()
+        }.map { item -> EnvUtils.parseEnv(item as String, variables) }
+    } ?: listOf()
 
     override fun support(element: Element) = element is MarketEventAtomElement
 
