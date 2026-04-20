@@ -1,6 +1,5 @@
 package com.tencent.devops.openapi.api.apigw.v4
 
-import com.tencent.devops.auth.pojo.dto.PermissionBatchValidateDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
@@ -13,7 +12,6 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
-import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
@@ -79,11 +77,7 @@ interface ApigwAuthValidateResourceV4 {
         tags = ["v4_app_validate_user_resource_permission"]
     )
     fun validateUserResourcePermission(
-        @Parameter(
-            description = "appCode",
-            required = true,
-            example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
-        )
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
         @Parameter(description = "apigw Type", required = true)
@@ -105,37 +99,4 @@ interface ApigwAuthValidateResourceV4 {
         @Parameter(description = "资源code", required = true)
         resourceCode: String
     ): Result<Boolean>
-
-    @POST
-    @Path("/permission/batch_validate")
-    @Operation(
-        summary = "批量校验用户是否有资源操作权限",
-        tags = [
-            "v4_app_batch_validate_permission",
-            "v4_user_batch_validate_permission"
-        ]
-    )
-    fun batchValidateUserResourcePermission(
-        @Parameter(
-            description = "appCode",
-            required = true,
-            example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
-        )
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @QueryParam("targetUserId")
-        @Parameter(description = "目标用户Id", required = true)
-        targetUserId: String,
-        @PathParam("projectId")
-        @Parameter(description = "项目ID", required = true)
-        projectId: String,
-        @Parameter(description = "权限批量校验实体", required = true)
-        permissionBatchValidateDTO: PermissionBatchValidateDTO
-    ): Result<Map<String, Boolean>>
 }
