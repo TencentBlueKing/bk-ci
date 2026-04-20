@@ -41,7 +41,9 @@ import (
 )
 
 func Exists(file string) bool {
-	_, err := os.Stat(file)
+	// 使用 Lstat 而非 Stat，不跟随符号链接，
+	// 避免攻击者将目标文件替换为符号链接后绕过存在性检查。
+	_, err := os.Lstat(file)
 	return !(err != nil && os.IsNotExist(err))
 }
 
@@ -50,7 +52,9 @@ func TryRemoveFile(file string) error {
 }
 
 func SetExecutable(file string) error {
-	fileInfo, err := os.Stat(file)
+	// 使用 Lstat 获取文件自身的权限位，不跟随符号链接，
+	// 防止对符号链接目标（可能是系统文件）意外添加执行权限。
+	fileInfo, err := os.Lstat(file)
 	if err != nil {
 		return err
 	}

@@ -129,7 +129,9 @@ func watch() {
 }
 
 func doCheckAndLaunchAgent() {
-	workDir := systemutil.GetWorkDir()
+	// 使用可执行文件所在目录作为可信基准，与 main() 中 Chdir 的来源一致，
+	// 避免因 CWD 被外部修改导致启动不受控的二进制文件。
+	workDir := systemutil.GetExecutableDir()
 	agentLock := flock.New(fmt.Sprintf("%s/agent.lock", systemutil.GetRuntimeDir()))
 
 	locked, err := agentLock.TryLock()
@@ -152,7 +154,7 @@ func doCheckAndLaunchAgent() {
 
 	logs.Warn("agent is not available, will launch it")
 
-	process, err := launch(workDir + "/" + config.AgentFileClientLinux)
+	process, err := launch(filepath.Join(workDir, config.AgentFileClientLinux))
 	if err != nil {
 		logs.WithError(err).Error("launch agent failed")
 		return
@@ -173,7 +175,17 @@ func launch(agentPath string) (*os.Process, error) {
 		return nil, fmt.Errorf("agent file %s not exists", agentPath)
 	}
 
-	err := fileutil.SetExecutable(agentPath)
+	// 拒绝符号链接：daemon 以高权限运行，若 agentPath 被替换为符号链接，
+	// 可导致任意二进制以 daemon 权限执行（Symlink Following 攻击）。
+	info, err := os.Lstat(agentPath)
+	if err != nil {
+		return nil, fmt.Errorf("agent file %s lstat failed: %w", agentPath, err)
+	}
+	if info.Mode()&os.ModeSymlink != 0 {
+		return nil, fmt.Errorf("agent file %s is a symlink, refusing to execute for security", agentPath)
+	}
+
+	err = fileutil.SetExecutable(agentPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "chmod agent file failed")
 	}
@@ -192,6 +204,12 @@ func launch(agentPath string) (*os.Process, error) {
 	}
 
 	go func() {
+		// 无论进程如何退出，都需要关闭管道，防止文件描述符泄漏。
+		// pipe 建立失败时（errstd != nil）stdErr 为 nil，Close 调用需跳过。
+		if errstd == nil && stdErr != nil {
+			defer stdErr.Close()
+		}
+
 		if err := cmd.Wait(); err != nil {
 			if exiterr, ok := err.(*exec.ExitError); ok {
 				if exiterr.ExitCode() == constant.DaemonExitCode {
@@ -200,10 +218,10 @@ func launch(agentPath string) (*os.Process, error) {
 				}
 			}
 			logs.WithError(err).Error("agent process error")
+			// pipe 建立失败时无法读取 stderr，直接返回
 			if errstd != nil {
 				return
 			}
-			defer stdErr.Close()
 			out, err := io.ReadAll(stdErr)
 			if err != nil {
 				logs.WithError(err).Error("read agent stderr out error")
