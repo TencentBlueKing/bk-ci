@@ -31,8 +31,8 @@ import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
 import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.CommonServiceUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import java.io.File
@@ -134,7 +134,7 @@ object TextReferenceFileAnalysisUtil {
         archiveAtomRequest.os?.let {
             serviceUrl.append("&os=${archiveAtomRequest.os}")
         }
-        OkhttpUtils.uploadFile(serviceUrl.toString(), file).use { response ->
+        CommonServiceUtils.uploadFileToService(serviceUrl.toString(), file).use { response ->
             response.body!!.string()
             if (!response.isSuccessful) {
                 return I18nUtil.generateResponseDataObject(
