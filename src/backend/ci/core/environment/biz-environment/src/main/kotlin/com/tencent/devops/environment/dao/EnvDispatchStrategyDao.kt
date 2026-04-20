@@ -149,7 +149,7 @@ class EnvDispatchStrategyRecordMapper :
                 defaultStrategyCode = it.defaultStrategyCode?.let { code -> DefaultStrategyCode.valueOf(code) },
                 strategyName = it.strategyName,
                 scope = StrategyScope.valueOf(it.scope),
-                nodeRule = NodeRule.valueOf(it.nodeRule),
+                nodeRule = it.nodeRule?.let { rule -> NodeRule.valueOf(rule) },
                 labelSelector = it.labelSelector?.let { json ->
                     JsonUtil.to(json, object : TypeReference<List<LabelSelector>>() {})
                 },
