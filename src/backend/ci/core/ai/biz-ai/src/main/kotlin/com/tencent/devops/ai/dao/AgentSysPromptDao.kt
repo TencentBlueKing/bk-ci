@@ -32,6 +32,7 @@ import com.tencent.devops.model.ai.tables.records.TAiAgentSysPromptRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 /** 智能体系统提示词 DAO，对应 T_AI_AGENT_SYS_PROMPT 表。 */
 @Repository
@@ -53,6 +54,45 @@ class AgentSysPromptDao {
     fun listAll(dslContext: DSLContext): Result<TAiAgentSysPromptRecord> {
         with(TAiAgentSysPrompt.T_AI_AGENT_SYS_PROMPT) {
             return dslContext.selectFrom(this).fetch()
+        }
+    }
+
+    fun getByAgentName(
+        dslContext: DSLContext,
+        agentName: String
+    ): TAiAgentSysPromptRecord? {
+        with(TAiAgentSysPrompt.T_AI_AGENT_SYS_PROMPT) {
+            return dslContext.selectFrom(this)
+                .where(AGENT_NAME.eq(agentName))
+                .fetchOne()
+        }
+    }
+
+    fun insert(
+        dslContext: DSLContext,
+        agentName: String,
+        promptTemplate: String,
+        description: String?,
+        enabled: Boolean
+    ) {
+        val now = LocalDateTime.now()
+        with(TAiAgentSysPrompt.T_AI_AGENT_SYS_PROMPT) {
+            dslContext.insertInto(
+                this,
+                AGENT_NAME,
+                PROMPT_TEMPLATE,
+                DESCRIPTION,
+                ENABLED,
+                CREATED_TIME,
+                UPDATED_TIME
+            ).values(
+                agentName,
+                promptTemplate,
+                description,
+                enabled,
+                now,
+                now
+            ).execute()
         }
     }
 

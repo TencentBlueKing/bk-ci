@@ -27,6 +27,9 @@
 
 package com.tencent.devops.ai.api.op
 
+import com.tencent.devops.ai.pojo.WelcomeGuideCreateRequest
+import com.tencent.devops.ai.pojo.WelcomeGuideOpItemVO
+import com.tencent.devops.ai.pojo.WelcomeGuidePatchRequest
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -50,14 +53,14 @@ interface OpAiWelcomeGuideResource {
     @Operation(summary = "获取欢迎引导信息")
     @GET
     @Path("/")
-    fun list(): Result<List<Map<String, Any>>>
+    fun list(): Result<List<WelcomeGuideOpItemVO>>
 
     @Operation(summary = "创建欢迎引导")
     @POST
     @Path("/")
     fun create(
         @Parameter(description = "欢迎引导数据", required = true)
-        data: Map<String, Any>
+        request: WelcomeGuideCreateRequest
     ): Result<Boolean>
 
     @Operation(summary = "更新欢迎引导")
@@ -68,7 +71,7 @@ interface OpAiWelcomeGuideResource {
         @PathParam("guideId")
         guideId: String,
         @Parameter(description = "欢迎引导数据", required = true)
-        data: Map<String, Any>
+        request: WelcomeGuidePatchRequest
     ): Result<Boolean>
 
     @Operation(summary = "删除欢迎引导")

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.ai.api.op
 
+import com.tencent.devops.ai.pojo.AgentSysPromptCreateRequest
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -34,6 +35,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
+import jakarta.ws.rs.POST
 import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
@@ -50,6 +52,14 @@ interface OpAiAgentSysPromptResource {
     @GET
     @Path("/")
     fun list(): Result<Map<String, String>>
+
+    @Operation(summary = "创建智能体系统提示词")
+    @POST
+    @Path("/")
+    fun create(
+        @Parameter(description = "创建请求", required = true)
+        request: AgentSysPromptCreateRequest
+    ): Result<Boolean>
 
     @Operation(summary = "设置智能体系统提示词")
     @PUT

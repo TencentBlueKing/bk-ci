@@ -37,6 +37,9 @@ import com.tencent.devops.ai.pojo.HotQuestionPageVO
 import com.tencent.devops.ai.pojo.HotQuestionVO
 import com.tencent.devops.ai.pojo.WelcomeActionVO
 import com.tencent.devops.ai.pojo.WelcomeCardVO
+import com.tencent.devops.ai.pojo.WelcomeGuideCreateRequest
+import com.tencent.devops.ai.pojo.WelcomeGuideOpItemVO
+import com.tencent.devops.ai.pojo.WelcomeGuidePatchRequest
 import com.tencent.devops.ai.pojo.WelcomeGuideVO
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.client.Client
@@ -187,43 +190,98 @@ class WelcomeGuideService @Autowired constructor(
     /**
      * 运营侧：列出全部欢迎引导（含未启用），用于管理台。
      */
-    fun listAllWelcomeGuidesForOp(): List<Map<String, Any>> {
+    fun listAllWelcomeGuides(): List<WelcomeGuideOpItemVO> {
         return welcomeGuideDao.listAll(dslContext).map { record ->
-            mapOf(
-                "id" to record.id,
-                "type" to record.type,
-                "label" to (record.label ?: ""),
-                "description" to (record.description ?: ""),
-                "enabled" to record.enabled,
-                "sortOrder" to record.sortOrder,
-                "createdTime" to record.createdTime
-                    .toInstant(ZoneOffset.ofHours(8))
-                    .toEpochMilli()
-            )
+            mapRecordToOpItem(record)
         }
     }
 
     /**
-     * 运营侧：创建欢迎引导（占位实现，后续接持久化）。
+     * 运营侧：创建欢迎引导并落库。
      */
-    @Suppress("UNUSED_PARAMETER")
-    fun createWelcomeGuideForOp(data: Map<String, Any>): Boolean {
+    fun createWelcomeGuide(request: WelcomeGuideCreateRequest): Boolean {
+        val type = request.type.trim().uppercase()
+        require(type == GUIDE_TYPE_CARD || type == GUIDE_TYPE_ACTION) {
+            "type must be CARD or ACTION"
+        }
+        val label = request.label.trim()
+        require(label.isNotEmpty()) { "label must not be blank" }
+
+        val id = request.id?.trim()?.takeIf { it.isNotEmpty() }
+            ?: "wg-${UUID.randomUUID().toString().replace("-", "")}"
+        require(welcomeGuideDao.getById(dslContext, id) == null) {
+            "Welcome guide id already exists: $id"
+        }
+
+        val parentId = request.parentId?.trim()?.takeIf { it.isNotEmpty() }
+        if (type == GUIDE_TYPE_ACTION) {
+            require(parentId != null) { "parentId is required for ACTION" }
+            val parent = welcomeGuideDao.getById(dslContext, parentId)
+                ?: throw IllegalArgumentException("Parent card not found: $parentId")
+            require(parent.type == GUIDE_TYPE_CARD) {
+                "parent must be a CARD, got type=${parent.type}"
+            }
+        } else {
+            require(parentId == null) { "parentId must be null or blank for CARD" }
+        }
+
+        val interactionType = if (type == GUIDE_TYPE_CARD) {
+            AiInteractionType.PROMPT_COMPLETION
+        } else {
+            normalizeActionInteractionType(request.interactionType)
+        }
+
+        val formSchemaJson = if (
+            type == GUIDE_TYPE_ACTION &&
+            interactionType == AiInteractionType.FORM_COLLECT &&
+            request.formSchema != null
+        ) {
+            objectMapper.writeValueAsString(request.formSchema)
+        } else {
+            null
+        }
+
+        val promptContent = if (type == GUIDE_TYPE_CARD) {
+            null
+        } else {
+            request.promptContent?.trim()?.takeIf { it.isNotEmpty() }
+        }
+
+        welcomeGuideDao.insert(
+            dslContext = dslContext,
+            id = id,
+            parentId = parentId,
+            type = type,
+            label = label,
+            description = request.description?.trim()?.takeIf { it.isNotEmpty() },
+            promptContent = promptContent,
+            interactionType = interactionType,
+            formSchemaJson = formSchemaJson,
+            roleFilter = request.roleFilter?.trim()?.takeIf { it.isNotEmpty() },
+            icon = request.icon?.trim()?.takeIf { it.isNotEmpty() },
+            sortOrder = request.sortOrder ?: 0,
+            enabled = request.enabled ?: true
+        )
+        logger.info("[WelcomeGuide] Op created guide id={}, type={}", id, type)
         return true
     }
 
     /**
      * 运营侧：部分更新欢迎引导（当前支持 enabled、sortOrder）。
      */
-    fun updateWelcomeGuideForOp(guideId: String, data: Map<String, Any>): Boolean {
-        val enabled = data["enabled"] as? Boolean
-        val sortOrder = data["sortOrder"] as? Int
-        return welcomeGuideDao.update(dslContext, guideId, enabled, sortOrder) > 0
+    fun updateWelcomeGuide(guideId: String, request: WelcomeGuidePatchRequest): Boolean {
+        return welcomeGuideDao.update(
+            dslContext,
+            guideId,
+            request.enabled,
+            request.sortOrder
+        ) > 0
     }
 
     /**
      * 运营侧：按主键删除欢迎引导。
      */
-    fun deleteWelcomeGuideForOp(guideId: String): Boolean {
+    fun deleteWelcomeGuide(guideId: String): Boolean {
         return welcomeGuideDao.delete(dslContext, guideId) > 0
     }
 
@@ -257,12 +315,28 @@ class WelcomeGuideService @Autowired constructor(
         return roleFilter == userRole
     }
 
+    private fun mapRecordToOpItem(record: TAiWelcomeGuideRecord): WelcomeGuideOpItemVO {
+        return WelcomeGuideOpItemVO(
+            id = record.id,
+            parentId = record.parentId,
+            type = record.type,
+            label = record.label ?: "",
+            description = record.description ?: "",
+            enabled = record.enabled,
+            sortOrder = record.sortOrder,
+            createdTime = record.createdTime
+                .toInstant(ZoneOffset.ofHours(8))
+                .toEpochMilli()
+        )
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(
             WelcomeGuideService::class.java
         )
         private val objectMapper = jacksonObjectMapper()
         private const val GUIDE_TYPE_CARD = "CARD"
+        private const val GUIDE_TYPE_ACTION = "ACTION"
         private const val DEFAULT_HOT_QUESTION_LIMIT = 5
         private const val ROLE_ADMIN = "ADMIN"
         private const val ROLE_MEMBER = "MEMBER"
