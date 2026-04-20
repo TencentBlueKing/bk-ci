@@ -50,6 +50,7 @@ object Versions {
     const val audit = "2.0.1"
     const val MysqlDriver = "8.0.33"
     const val tencentcloudsdkcfs = "3.1.946"
+    const val cosApi = "5.6.246.3"
     // worker
     const val Winp = "1.28"
     const val Jna = "5.14.0"

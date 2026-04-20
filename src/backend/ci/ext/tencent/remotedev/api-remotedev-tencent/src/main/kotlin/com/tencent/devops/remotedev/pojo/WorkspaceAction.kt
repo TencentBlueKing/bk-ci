@@ -59,5 +59,6 @@ enum class WorkspaceAction {
     CREATE_SUCCESS, // 交付成功
     DELETE_IN_INITIALIZING, // 交付时删除
     CREATE_DISK,
-    SYNC_VM
+    SYNC_VM,
+    AGREE_RECORD
 }
