@@ -38,7 +38,6 @@ import (
 	"time"
 
 	"github.com/capnspacehook/taskmaster"
-	"github.com/gofrs/flock"
 	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/v4/process"
 
@@ -72,16 +71,8 @@ const (
 func DoUpgradeAgent() error {
 	logs.Info("start upgrade agent")
 
-	// Acquire totalLock before config/third_components init to minimise the
-	// window between CheckProcess releasing totalLock and us re-acquiring it.
-	// Without this, the daemon's watch loop can slip in, find the agent dead,
-	// and relaunch it with the OLD binary before we replace files.
-	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock))
-	if err := totalLock.Lock(); err != nil {
-		logs.WithError(err).Error("get total lock failed, exit")
-		return errors.New("get total lock failed")
-	}
-	defer func() { totalLock.Unlock() }()
+	// totalLock 由调用方（upgrader main）在 CheckProcess 之前获取并持有到进程退出，
+	// 确保 daemon 在整个升级过程中无法启动新 agent。此处不再重复获取。
 
 	config.Init(false)
 	if err := third_components.Init(); err != nil {

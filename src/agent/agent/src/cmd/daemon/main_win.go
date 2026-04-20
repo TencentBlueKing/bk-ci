@@ -98,7 +98,7 @@ func main() {
 		}
 	}()
 
-	if ok := systemutil.CheckProcess(daemonProcess); !ok {
+	if ok := systemutil.CheckProcess(daemonProcess, false); !ok {
 		logs.Info("get process lock failed, exit")
 		return
 	}

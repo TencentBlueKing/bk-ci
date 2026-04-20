@@ -33,6 +33,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/gofrs/flock"
+
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrader"
@@ -60,7 +62,16 @@ func main() {
 
 	logs.Infof("version: %s", config.AgentVersion)
 
-	if ok := systemutil.CheckProcess(upgraderProcess); !ok {
+	// 获取/释放逻辑。这样 totalLock 从这里一直持有到进程退出，消除了
+	// CheckProcess 释放 totalLock 后 daemon 趁机拉起旧版 agent 的竞争窗口。
+	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock))
+	if err := totalLock.Lock(); err != nil {
+		logs.WithError(err).Error("get total lock failed, exit")
+		systemutil.ExitProcess(1)
+	}
+	defer func() { _ = totalLock.Unlock() }()
+
+	if ok := systemutil.CheckProcess(upgraderProcess, true); !ok {
 		logs.Warn("get process lock failed, exit")
 		return
 	}

@@ -78,7 +78,7 @@ func main() {
 		systemutil.ExitProcess(1)
 	}
 
-	if ok := systemutil.CheckProcess(agentProcess); !ok {
+	if ok := systemutil.CheckProcess(agentProcess, false); !ok {
 		logs.Warn("get process lock failed, exit")
 		return
 	}
