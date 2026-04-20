@@ -71,7 +71,7 @@ func main() {
 
 	// 初始化日志
 	workDir := systemutil.GetExecutableDir()
-	logFilePath := filepath.Join(systemutil.GetWorkDir(), "logs", "devopsDaemon.log")
+	logFilePath := filepath.Join(workDir, "logs", "devopsDaemon.log")
 	err := logs.Init(logFilePath, agentcli.DebugFileExists(workDir), false)
 	if err != nil {
 		fmt.Printf("init daemon log error %v\n", err)
@@ -168,7 +168,7 @@ func doCheckAndLaunchAgent() {
 
 func launch(agentPath string) (*os.Process, error) {
 	cmd := exec.Command(agentPath)
-	cmd.Dir = systemutil.GetWorkDir()
+	cmd.Dir = systemutil.GetExecutableDir()
 
 	logs.Infof("start devops agent: %s", cmd.String())
 	if !fileutil.Exists(agentPath) {

@@ -181,7 +181,7 @@ func watch() {
 	}()
 
 	workDir := systemutil.GetExecutableDir()
-	agentPath := systemutil.GetWorkDir() + "/devopsAgent.exe"
+	agentPath := filepath.Join(workDir, config.AgentFileClientWindows)
 	for {
 		func() {
 			logs.Info("start devops agent")
@@ -388,7 +388,7 @@ const daemonUpgradeFile = ".daemon_upgrade"
 // and true is returned so the caller can exit and let SCM restart the service
 // with the new binary.
 func checkDaemonUpgradeSignal() bool {
-	signalPath := filepath.Join(systemutil.GetWorkDir(), daemonUpgradeFile)
+	signalPath := filepath.Join(systemutil.GetExecutableDir(), daemonUpgradeFile)
 	if _, err := os.Stat(signalPath); err != nil {
 		return false
 	}
