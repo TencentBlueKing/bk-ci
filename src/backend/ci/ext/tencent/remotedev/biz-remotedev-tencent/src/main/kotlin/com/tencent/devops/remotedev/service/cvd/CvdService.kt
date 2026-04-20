@@ -88,7 +88,7 @@ class CvdService {
     ): CvdUserPoolInfoResponse {
         val body = mapOf("username" to username)
         val resp = doPost<CvdApiResponse<CvdUserPoolInfoResponse>>(
-            path = "/app/cvd/ccTask/userPooInfo",
+            path = "/app/cvd/ccTask/userPoolInfo",
             body = body,
             typeRef = object : TypeReference<CvdApiResponse<CvdUserPoolInfoResponse>>() {}
         )
