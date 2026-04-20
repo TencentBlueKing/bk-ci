@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import os
 import re
+import subprocess
 import humps
 import sys
 import yaml
@@ -14,7 +15,7 @@ default_env_path = './base/default_env.yaml'
 default_value_yaml = './base/values.yaml'
 
 # 创建目录
-os.system("mkdir -p "+template_parent)
+os.makedirs(template_parent, exist_ok=True)
 
 # 设置一些默认值
 with open(default_env_path, 'r') as default_env:
@@ -133,10 +134,22 @@ with open(template_parent+"/_gateway.tpl", "w") as gateway_config_file:
 
 
 # 生成value.yaml
-image_registry = sys.argv[1]
-image_gateway_tag = sys.argv[2]
-image_backend_tag = sys.argv[3]
-image_frontend_tag = sys.argv[4]
+if len(sys.argv) < 5:
+    print("Usage: build_chart.py <image_registry> <image_gateway_tag> <image_backend_tag> <image_frontend_tag>")
+    sys.exit(1)
+
+_IMAGE_ARG_PATTERN = re.compile(r'^[a-zA-Z0-9._\-/:]+$')
+
+def _validate_image_arg(name, value):
+    if not _IMAGE_ARG_PATTERN.match(value):
+        print(f"Invalid {name}: {value!r}, only alphanumerics . _ - / : are allowed")
+        sys.exit(1)
+    return value
+
+image_registry = _validate_image_arg("image_registry", sys.argv[1])
+image_gateway_tag = _validate_image_arg("image_gateway_tag", sys.argv[2])
+image_backend_tag = _validate_image_arg("image_backend_tag", sys.argv[3])
+image_frontend_tag = _validate_image_arg("image_frontend_tag", sys.argv[4])
 with open(output_value_yaml, 'w') as value_file:
     for line in open(default_value_yaml, 'r'):
         line = line.replace("__image_registry__", image_registry)
@@ -154,5 +167,5 @@ with open(output_value_yaml, 'w') as value_file:
         value_file.write('  '+camelize+': '+value+'\n')
 
 # 更新依赖
-os.system("chmod +x ./dependencyBuild.sh")
-os.system("/bin/bash -c ./dependencyBuild.sh")
+subprocess.run(["chmod", "+x", "./dependencyBuild.sh"], check=True)
+subprocess.run(["bash", "./dependencyBuild.sh"], check=True)
