@@ -183,7 +183,7 @@ func TestCheckDaemonUpgradeSignal(t *testing.T) {
 	})
 
 	t.Run("signal_file_present", func(t *testing.T) {
-		signalPath := fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), daemonUpgradeFile)
+		signalPath := fmt.Sprintf("%s/%s", systemutil.GetExecutableDir(), daemonUpgradeFile)
 		if err := os.WriteFile(signalPath, []byte("upgrade"), 0644); err != nil {
 			t.Fatal(err)
 		}
@@ -198,7 +198,7 @@ func TestCheckDaemonUpgradeSignal(t *testing.T) {
 	})
 
 	t.Run("second_call_returns_false", func(t *testing.T) {
-		signalPath := fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), daemonUpgradeFile)
+		signalPath := fmt.Sprintf("%s/%s", systemutil.GetExecutableDir(), daemonUpgradeFile)
 		if err := os.WriteFile(signalPath, []byte("upgrade"), 0644); err != nil {
 			t.Fatal(err)
 		}
