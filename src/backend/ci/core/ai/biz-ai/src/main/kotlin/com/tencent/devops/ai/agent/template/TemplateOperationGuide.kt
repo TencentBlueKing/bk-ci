@@ -73,7 +73,28 @@ internal fun templateOperationGuideMarkdown(): String = """
 | **versionName** | 模板版本名称（如 `v1.0`） |
 | **实例化（instantiate）** | 批量从模板创建流水线，创建的流水线与模板保持关联，可随模板版本升级 |
 | **从模板创建流水线** | 从模板创建独立流水线，创建后与模板无关联 |
-| **模板类型** | CUSTOMIZE（自定义）、CONSTRAINT（约束）、PUBLIC（公共） |
+| **模板类型** | CUSTOMIZE（自定义）、PUBLIC（公共）等，这是模板本身的分类 |
+| **实例模式** | FREEDOM（自由模式）和 CONSTRAINT（约束模式），这是实例化后流水线的行为模式 |
+
+## ⚠️ 关键概念：模板类型 vs 实例模式
+
+**模板类型**（如 CUSTOMIZE、PUBLIC）描述的是模板本身的分类属性。
+
+**实例模式**（PipelineInstanceTypeEnum）描述的是从模板实例化出的流水线的行为模式：
+- **FREEDOM（自由模式）**：实例化后的流水线可以自由修改编排内容，不受模板约束
+- **CONSTRAINT（约束模式）**：实例化后的流水线不可修改模板定义的编排内容，只能修改参数默认值
+
+> **重要**：当用户要求创建「约束模式」的流水线实例时，这是指实例化时选择 CONSTRAINT 模式。模板本身可能是 FREEDOM 模式的模板，但实例化出来的流水线可以是约束模式。不要混淆模板本身的类型和实例化后的模式。
+
+## ⚠️ 关键概念：实例化参数中的 defaultValue 与 value
+
+实例化模板时，每个实例最核心的可定制内容是**参数的默认值（defaultValue）**。
+
+参数结构（BuildFormProperty）中有两个容易混淆的字段：
+- **`defaultValue`**：参数的默认值。**实例化时必须将用户指定的新值写入此字段**。这是实例化操作中最关键的差异化配置点。
+- **`value`**：上次构建时的实际取值，是运行时产生的历史值。**实例化时不应该将用户声明的新默认值写入 value 字段**。
+
+> **重要规则**：当用户说「把参数 X 设为 Y」或「参数 X 的默认值改为 Y」时，必须将 Y 写入 `defaultValue` 字段，而不是 `value` 字段。`value` 字段在实例化时应传 null 或不传。
 
 ## 工具使用场景
 
@@ -140,12 +161,18 @@ internal fun templateOperationGuideMarkdown(): String = """
 
 ```
 1. 调用「获取模板详情」获取模板最新版本的参数列表
-2. ⚠️ 向用户展示参数（名称、类型、默认值、可选值），确认：
+2. ⚠️ 向用户展示参数（名称、类型、默认值、可选值），重点确认：
    - 要创建几个实例？各实例名称是什么？
-   - 参数是否需要修改？
-3. 用户确认后，构造 instancesJson 调用「批量实例化模板」
-4. 调用「查看模板实例列表」验证创建结果
+   - 每个实例的参数默认值（defaultValue）是否需要修改？
+   - 不同实例之间哪些参数的默认值需要差异化？
+3. 用户确认后，构造 instancesJson，将用户指定的新值写入 param 中对应参数的 defaultValue 字段
+4. 调用「批量实例化模板」
+5. 调用「查看模板实例列表」验证创建结果
 ```
+
+> **关键提醒**：实例化的核心操作就是为每个实例设置不同的参数 `defaultValue`。
+> 用户声明的参数值必须写入 `defaultValue` 字段，**绝不能写入 `value` 字段**。
+> `value` 字段是运行时历史值，实例化时应传 null。
 
 instancesJson 格式示例：
 ```json
@@ -155,12 +182,20 @@ instancesJson 格式示例：
 ]
 ```
 
+> **参数填写要点**：
+> - `param` 传 null 表示使用模板的默认参数值
+> - 如需自定义参数，必须将新值写入 `defaultValue` 字段（不是 `value` 字段）
+> - `value` 字段是上次构建的运行时取值，实例化时不应设置，传 null 即可
+> - 每个实例可以有不同的 `defaultValue`，这是实例化的核心差异化配置
+
 ### 3. 模板更新后升级所有实例
 
 ```
 1. 调用「获取模板详情」获取最新版本信息
 2. 调用「查看模板实例列表」查看当前实例列表和版本
-3. ⚠️ 向用户展示版本差异和参数变更，确认每个实例的参数如何填写
+3. ⚠️ 向用户展示版本差异和参数变更，重点确认：
+   - 新版本新增/删除/修改了哪些参数？
+   - 每个实例的参数 defaultValue 是否需要调整？
 4. 用户确认后，构造 instancesJson 调用「批量升级模板实例」
 ```
 
@@ -168,9 +203,11 @@ instancesJson 格式示例（升级时必须包含 pipelineId）：
 ```json
 [
   {"pipelineId": "p-xxx1", "pipelineName": "业务A-构建", "buildNo": null, "param": null},
-  {"pipelineId": "p-xxx2", "pipelineName": "业务B-构建", "buildNo": null, "param": null}
+  {"pipelineId": "p-xxx2", "pipelineName": "业务B-构建", "buildNo": null, "param": [{"id": "newParam", "defaultValue": "customVal"}]}
 ]
 ```
+
+> 升级时同样遵循参数规则：用户指定的参数值写入 `defaultValue`，不要写入 `value`。
 
 ### 4. 参考已有流水线创建新实例
 
@@ -178,6 +215,8 @@ instancesJson 格式示例（升级时必须包含 pipelineId）：
 1. 调用「获取流水线启动参数」查看参考流水线的参数配置
 2. 调用「获取模板详情」获取目标模板详情
 3. ⚠️ 向用户展示参考参数和模板参数对比，确认新实例配置
+   - 重点对比每个参数的 defaultValue 差异
+   - 将参考流水线中需要沿用的参数值写入新实例的 defaultValue
 4. 调用「批量实例化模板」创建实例
 ```
 
@@ -223,9 +262,19 @@ instancesJson 格式示例（升级时必须包含 pipelineId）：
 
 | 类型 | 说明 |
 |------|------|
-| CUSTOMIZE | 自定义模板 |
-| CONSTRAINT | 约束模板（实例不可修改模板内容） |
-| PUBLIC | 公共模板 |
+| CUSTOMIZE | 自定义模板（项目内创建的模板） |
+| PUBLIC | 公共模板（来自研发商店等公共来源） |
+
+## 实例模式枚举参考（PipelineInstanceTypeEnum）
+
+| 模式 | 说明 |
+|------|------|
+| FREEDOM | 自由模式：实例化后的流水线可自由修改编排 |
+| CONSTRAINT | 约束模式：实例化后的流水线不可修改模板编排，仅可修改参数默认值 |
+
+> **注意**：模板本身的类型（CUSTOMIZE/PUBLIC）和实例化后的模式（FREEDOM/CONSTRAINT）是两个独立的概念。
+> 一个 CUSTOMIZE 类型的模板，可以实例化出 CONSTRAINT 模式的流水线。
+> 当用户说「创建约束模式的实例」时，是指实例化时选择 CONSTRAINT 模式，不要求模板本身是某种特定类型。
 
 ## 实例状态枚举参考
 
