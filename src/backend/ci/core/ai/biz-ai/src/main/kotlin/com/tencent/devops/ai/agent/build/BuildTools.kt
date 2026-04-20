@@ -46,7 +46,7 @@ import java.util.function.Supplier
 /**
  * 流水线构建与制品工具集，提供流水线查询、构建操作、日志获取、制品下载等能力。
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "ComplexCondition")
 class BuildTools(
     client: Client,
     userIdSupplier: Supplier<String>
