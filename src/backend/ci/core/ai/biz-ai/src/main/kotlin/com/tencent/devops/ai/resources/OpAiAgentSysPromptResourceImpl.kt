@@ -28,6 +28,7 @@
 package com.tencent.devops.ai.resources
 
 import com.tencent.devops.ai.api.op.OpAiAgentSysPromptResource
+import com.tencent.devops.ai.pojo.AgentSysPromptCreateRequest
 import com.tencent.devops.ai.service.AgentSysPromptService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -42,14 +43,24 @@ class OpAiAgentSysPromptResourceImpl @Autowired constructor(
 ) : OpAiAgentSysPromptResource {
 
     override fun list(): Result<Map<String, String>> {
-        return Result(agentSysPromptService.listAllAgentSysPromptsForOp())
+        return Result(agentSysPromptService.listAllAgentSysPrompts())
+    }
+
+    override fun create(request: AgentSysPromptCreateRequest): Result<Boolean> {
+        agentSysPromptService.createAgentSysPrompt(
+            agentName = request.agentName,
+            promptTemplate = request.promptTemplate,
+            description = request.description,
+            enabled = request.enabled ?: true
+        )
+        return Result(true)
     }
 
     override fun update(agentName: String, promptTemplate: String): Result<Boolean> {
-        return Result(agentSysPromptService.updateAgentSysPromptForOp(agentName, promptTemplate))
+        return Result(agentSysPromptService.updateAgentSysPrompt(agentName, promptTemplate))
     }
 
     override fun delete(agentName: String): Result<Boolean> {
-        return Result(agentSysPromptService.deleteAgentSysPromptForOp(agentName))
+        return Result(agentSysPromptService.deleteAgentSysPrompt(agentName))
     }
 }

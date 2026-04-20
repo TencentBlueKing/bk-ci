@@ -32,6 +32,7 @@ import com.tencent.devops.model.ai.tables.records.TAiWelcomeGuideRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 /** 欢迎引导 DAO，对应 T_AI_WELCOME_GUIDE 表。 */
 @Repository
@@ -88,19 +89,78 @@ class WelcomeGuideDao {
         }
     }
 
+    fun insert(
+        dslContext: DSLContext,
+        id: String,
+        parentId: String?,
+        type: String,
+        label: String,
+        description: String?,
+        promptContent: String?,
+        interactionType: String,
+        formSchemaJson: String?,
+        roleFilter: String?,
+        icon: String?,
+        sortOrder: Int,
+        enabled: Boolean
+    ) {
+        val now = LocalDateTime.now()
+        with(TAiWelcomeGuide.T_AI_WELCOME_GUIDE) {
+            dslContext.insertInto(
+                this,
+                ID,
+                PARENT_ID,
+                TYPE,
+                LABEL,
+                DESCRIPTION,
+                PROMPT_CONTENT,
+                INTERACTION_TYPE,
+                FORM_SCHEMA,
+                ROLE_FILTER,
+                ICON,
+                SORT_ORDER,
+                ENABLED,
+                CREATED_TIME,
+                UPDATED_TIME
+            ).values(
+                id,
+                parentId,
+                type,
+                label,
+                description,
+                promptContent,
+                interactionType,
+                formSchemaJson,
+                roleFilter,
+                icon,
+                sortOrder,
+                enabled,
+                now,
+                now
+            ).execute()
+        }
+    }
+
     fun update(
         dslContext: DSLContext,
         id: String,
         enabled: Boolean?,
         sortOrder: Int?
     ): Int {
-        if (enabled == null && sortOrder == null) {
-            return 0
+        return with(TAiWelcomeGuide.T_AI_WELCOME_GUIDE) {
+            if (enabled == null && sortOrder == null) {
+                return 0
+            }
+            val update = if (enabled != null) {
+                dslContext.update(this).set(ENABLED, enabled)
+            } else {
+                dslContext.update(this).set(SORT_ORDER, sortOrder!!)
+            }
+            if (enabled != null && sortOrder != null) {
+                update.set(SORT_ORDER, sortOrder)
+            }
+            update.where(ID.eq(id)).execute()
         }
-        val row = getById(dslContext, id) ?: return 0
-        enabled?.let { row.enabled = it }
-        sortOrder?.let { row.sortOrder = it }
-        return dslContext.executeUpdate(row)
     }
 
     fun delete(dslContext: DSLContext, id: String): Int {

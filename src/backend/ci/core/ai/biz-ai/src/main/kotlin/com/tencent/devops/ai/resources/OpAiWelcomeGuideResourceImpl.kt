@@ -28,6 +28,9 @@
 package com.tencent.devops.ai.resources
 
 import com.tencent.devops.ai.api.op.OpAiWelcomeGuideResource
+import com.tencent.devops.ai.pojo.WelcomeGuideCreateRequest
+import com.tencent.devops.ai.pojo.WelcomeGuideOpItemVO
+import com.tencent.devops.ai.pojo.WelcomeGuidePatchRequest
 import com.tencent.devops.ai.service.WelcomeGuideService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -41,19 +44,19 @@ class OpAiWelcomeGuideResourceImpl @Autowired constructor(
     private val welcomeGuideService: WelcomeGuideService
 ) : OpAiWelcomeGuideResource {
 
-    override fun list(): Result<List<Map<String, Any>>> {
-        return Result(welcomeGuideService.listAllWelcomeGuidesForOp())
+    override fun list(): Result<List<WelcomeGuideOpItemVO>> {
+        return Result(welcomeGuideService.listAllWelcomeGuides())
     }
 
-    override fun create(data: Map<String, Any>): Result<Boolean> {
-        return Result(welcomeGuideService.createWelcomeGuideForOp(data))
+    override fun create(request: WelcomeGuideCreateRequest): Result<Boolean> {
+        return Result(welcomeGuideService.createWelcomeGuide(request))
     }
 
-    override fun update(guideId: String, data: Map<String, Any>): Result<Boolean> {
-        return Result(welcomeGuideService.updateWelcomeGuideForOp(guideId, data))
+    override fun update(guideId: String, request: WelcomeGuidePatchRequest): Result<Boolean> {
+        return Result(welcomeGuideService.updateWelcomeGuide(guideId, request))
     }
 
     override fun delete(guideId: String): Result<Boolean> {
-        return Result(welcomeGuideService.deleteWelcomeGuideForOp(guideId))
+        return Result(welcomeGuideService.deleteWelcomeGuide(guideId))
     }
 }
