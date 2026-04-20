@@ -138,7 +138,7 @@ class CvdService {
         try {
             OkhttpUtils.doHttp(request).use { resp ->
                 val responseStr = resp.body!!.string()
-                logger.debug("cvdRequest|$path|$responseStr")
+                logger.debug("cvdRequest|$path|$responseStr|$request")
                 if (!resp.isSuccessful) {
                     logger.warn(
                         "cvdRequest failed|$path|" +
