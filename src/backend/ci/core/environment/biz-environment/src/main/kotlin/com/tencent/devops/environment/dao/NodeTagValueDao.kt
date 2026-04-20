@@ -1,7 +1,11 @@
 package com.tencent.devops.environment.dao
 
+import com.tencent.devops.model.environment.tables.TNodeTagInternalKey
+import com.tencent.devops.model.environment.tables.TNodeTagInternalValues
 import com.tencent.devops.model.environment.tables.TNodeTagKey
 import com.tencent.devops.model.environment.tables.TNodeTagValues
+import com.tencent.devops.model.environment.tables.records.TNodeTagInternalKeyRecord
+import com.tencent.devops.model.environment.tables.records.TNodeTagInternalValuesRecord
 import com.tencent.devops.model.environment.tables.records.TNodeTagKeyRecord
 import com.tencent.devops.model.environment.tables.records.TNodeTagValuesRecord
 import org.jooq.DSLContext
@@ -45,6 +49,12 @@ class NodeTagValueDao {
     ): List<TNodeTagValuesRecord> {
         with(TNodeTagValues.T_NODE_TAG_VALUES) {
             return dslContext.selectFrom(this).where(ID.`in`(valueIds)).and(PROJECT_ID.eq(projectId)).fetch()
+        }
+    }
+
+    fun fetchAllInternalValues(dslContext: DSLContext): List<TNodeTagInternalValuesRecord> {
+        with(TNodeTagInternalValues.T_NODE_TAG_INTERNAL_VALUES) {
+            return dslContext.selectFrom(this).fetch()
         }
     }
 }
