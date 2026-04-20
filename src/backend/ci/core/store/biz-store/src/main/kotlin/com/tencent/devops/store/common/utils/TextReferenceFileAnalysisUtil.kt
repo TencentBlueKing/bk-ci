@@ -31,7 +31,6 @@ import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
 import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.CommonServiceUtils
 import com.tencent.devops.common.web.utils.I18nUtil
