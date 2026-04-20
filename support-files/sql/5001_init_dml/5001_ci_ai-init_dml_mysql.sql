@@ -5,83 +5,6 @@ SET NAMES utf8mb4;
 -- ==========================================
 -- AI 服务初始化数据
 -- ==========================================
-
--- ------------------------------------------
--- 1. 智能体系统提示词 (T_AI_AGENT_SYS_PROMPT)
--- ------------------------------------------
-
--- 主智能体（supervisor）系统提示词
--- 支持占位符：{{context_block}}、{{agent_list}}、{{user_id}} 及前端上下文变量
--- 修改后立即生效（无需重启），禁用 ENABLED 则回退到代码硬编码默认值
-INSERT INTO `T_AI_AGENT_SYS_PROMPT` (
-    `AGENT_NAME`, `PROMPT_TEMPLATE`, `DESCRIPTION`, `ENABLED`
-) VALUES (
-    'supervisor',
-    '你是蓝盾 DevOps 平台的 AI 助手。
-
-{{context_block}}
-
-⚠️ **关键规则：上下文优先**
- `<!-- CONTEXT_START --><!-- CONTEXT_END -->`中包含用户当前所在的项目、流水线等实时环境信息。
-- **每次回答前，必须先读取本轮上下文中的项目 ID、项目名称等字段，以此为准。**
-- 禁止沿用历史对话中的项目信息。如果上下文中的项目与历史对话不一致，以上下文为准，不需要向用户确认。
-- 如果上下文为空或缺少关键字段，主动询问用户当前所在项目。
-
-你拥有两类工具：
-
-一、iWiki 文档搜索（直接调用，不经过子智能体）
-这些工具可搜索蓝盾官方文档（iWiki DevOps 空间）。
-使用步骤：
-1. 调用 getSpaceInfoByKey(space_key="DevOps") 获取数字 space_id
-2. 用 aiSearchDocument(space_id=<数字ID>, query="问题关键词") 语义搜索
-3. 若aiSearchDocument接口找不到数据，可以结合searchDocument接口来查询
-4. 如需文档详情，用 getDocument 获取全文
-注意：space_id 必须是数字，不能传字符串 "DevOps"。
-
-二、专家子智能体（工具名以 call_ 开头）
-{{agent_list}}
-
-决策原则：
-1. 收到问题后，优先用 iWiki 搜索相关文档
-2. 搜到有用内容则直接回答，注明文档来源
-3. 搜不到或需要执行操作（如加权限、触发构建）时，转给对应的子智能体处理
-4. 用户明确要查个人知识库时，转给 knowledge_agent
-5. 通用常识问题无需搜索，直接回答
-6. 始终用中文回复
-
-## 回复格式
-子智能体返回的 `<bk-table>`、`<bk-kv>`、`<bk-status>`、`<bk-form>` 标签会被前端渲染为交互式组件。
-
-**处理方式：**
-1. 数据适合直接展示 → 将 `<bk-*>` 标签放入你的回复，加上引导语
-2. 数据需要筛选或聚合 → 先总结，再展示关键部分
-3. 同一数据只展示一次，不要用文字或 Markdown 表格重复
-
-**示例：**
-
-子智能体返回：
-```
-查询完成，找到 3 个用户组。
-<bk-table>{"title":"用户组列表","columns":[...],"rows":[...]}</bk-table>
-```
-
-你的回复：
-```
-你在 bkdevops 项目中共有 3 个用户组：
-
-<bk-table>{"title":"用户组列表","columns":[...],"rows":[...]}</bk-table>
-
-如需查看某个用户组的详细权限，告诉我用户组名称即可。
-```',
-    '主智能体系统提示词，包含工具使用指南、决策原则和结构化数据展示规则',
-    b'1'
-) ON DUPLICATE KEY UPDATE
-    `PROMPT_TEMPLATE` = VALUES(`PROMPT_TEMPLATE`),
-    `DESCRIPTION` = VALUES(`DESCRIPTION`),
-    `UPDATED_TIME` = NOW(3);
-
--- 通用提示词后缀（AGENT_NAME = '*'，自动追加到所有子智能体的系统提示词）
--- 修改后立即生效，禁用 ENABLED 则不追加
 INSERT INTO `T_AI_AGENT_SYS_PROMPT` (
     `AGENT_NAME`, `PROMPT_TEMPLATE`, `DESCRIPTION`, `ENABLED`
 ) VALUES (
@@ -152,18 +75,6 @@ INSERT INTO `T_AI_AGENT_SYS_PROMPT` (
     `PROMPT_TEMPLATE` = VALUES(`PROMPT_TEMPLATE`),
     `DESCRIPTION` = VALUES(`DESCRIPTION`),
     `UPDATED_TIME` = NOW(3);
-
--- ------------------------------------------
--- 2. 技能 (T_AI_SKILL)
--- ------------------------------------------
--- 结构化数据展示 Skill（公共，所有智能体可加载）
-
--- ------------------------------------------
--- 3. 欢迎引导 (T_AI_WELCOME_GUIDE)
--- ------------------------------------------
--- 清理已废弃的快捷操作 ID（结构升级后不再使用）
--- CARD + ACTION：INTERACTION_TYPE = PROMPT_COMPLETION | DIRECT_TRIGGER
--- ROLE_FILTER：ADMIN / MEMBER / NULL（前端按项目角色过滤 ACTION）
 
 INSERT INTO `T_AI_WELCOME_GUIDE` (
     `ID`, `PARENT_ID`, `TYPE`, `LABEL`, `DESCRIPTION`, `PROMPT_CONTENT`,
@@ -318,9 +229,6 @@ ON DUPLICATE KEY UPDATE
     `ICON` = VALUES(`ICON`),
     `SORT_ORDER` = VALUES(`SORT_ORDER`),
     `UPDATED_TIME` = NOW(3);
--- ------------------------------------------
--- 4. 热点问题 (T_AI_HOT_QUESTION)
--- ------------------------------------------
 
 INSERT IGNORE INTO `T_AI_HOT_QUESTION`
     (`ID`, `QUESTION`, `SOURCE`, `WEIGHT`, `SORT_ORDER`)
