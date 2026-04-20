@@ -113,12 +113,12 @@ class MigrateProjectCodePrefixService @Autowired constructor(
     ): Boolean {
         logger.info(
             "Start migrating single project code prefix: " +
-                "$projectCode"
+                    "$projectCode"
         )
         migrateProject(projectCode)
         logger.info(
             "Finish migrating single project code prefix: " +
-                "$projectCode"
+                    "$projectCode"
         )
         return true
     }
@@ -129,26 +129,21 @@ class MigrateProjectCodePrefixService @Autowired constructor(
     @Suppress("LongMethod")
     private fun migrateProject(oldProjectCode: String) {
         val newProjectCode = "$PROJECT_CODE_PREFIX$oldProjectCode"
-        logger.info(
-            "Migrating project: $oldProjectCode -> $newProjectCode"
-        )
-
-        // Step 1: 创建新项目资源及默认组
-        createNewProjectResource(oldProjectCode, newProjectCode)
-
-        // Step 2: 创建非项目资源及默认组
-        createNonProjectResources(oldProjectCode, newProjectCode)
-
-        // Step 3: 迁移组成员（通过组名称匹配）
-        migrateGroupMembers(oldProjectCode, newProjectCode)
-
-        // Step 4: 删除旧项目数据
-        deleteOldProjectData(oldProjectCode)
-
-        logger.info(
-            "Successfully migrated project: " +
-                "$oldProjectCode -> $newProjectCode"
-        )
+        logger.info("Migrating project: $oldProjectCode -> $newProjectCode")
+        try {
+            // Step 1: 创建新项目资源及默认组
+            createNewProjectResource(oldProjectCode, newProjectCode)
+            // Step 2: 创建非项目资源及默认组
+            createNonProjectResources(oldProjectCode, newProjectCode)
+            // Step 3: 迁移组成员（通过组名称匹配）
+            migrateGroupMembers(oldProjectCode, newProjectCode)
+            // Step 4: 删除旧项目数据
+            deleteOldProjectData(oldProjectCode)
+        } catch (e: Exception) {
+            logger.warn("migrate projectCode prefix failed: $e")
+            return
+        }
+        logger.info("Successfully migrated project: $oldProjectCode -> $newProjectCode")
     }
 
     /**
@@ -213,14 +208,14 @@ class MigrateProjectCodePrefixService @Autowired constructor(
         }
         logger.info(
             "Found ${resources.size} non-project resources " +
-                "in project $oldProjectCode"
+                    "in project $oldProjectCode"
         )
         resources.forEach { resource ->
             try {
                 logger.info(
                     "Creating resource: type=${resource.resourceType}," +
-                        " code=${resource.resourceCode}," +
-                        " name=${resource.resourceName}"
+                            " code=${resource.resourceCode}," +
+                            " name=${resource.resourceName}"
                 )
                 permissionResourceService.resourceCreateRelation(
                     userId = resource.createUser,
@@ -234,9 +229,9 @@ class MigrateProjectCodePrefixService @Autowired constructor(
             } catch (e: Exception) {
                 logger.error(
                     "Failed to create resource: " +
-                        "${resource.resourceType}/" +
-                        "${resource.resourceCode} " +
-                        "in project $newProjectCode",
+                            "${resource.resourceType}/" +
+                            "${resource.resourceCode} " +
+                            "in project $newProjectCode",
                     e
                 )
             }
@@ -276,8 +271,8 @@ class MigrateProjectCodePrefixService @Autowired constructor(
 
         logger.info(
             "Migrating members for project $oldProjectCode: " +
-                "${allOldMembers.size} members in " +
-                "${membersByIamGroupId.size} groups"
+                    "${allOldMembers.size} members in " +
+                    "${membersByIamGroupId.size} groups"
         )
 
         membersByIamGroupId.forEach { (oldIamGroupId, members) ->
@@ -285,16 +280,16 @@ class MigrateProjectCodePrefixService @Autowired constructor(
             if (newGroup == null) {
                 logger.warn(
                     "New group not found for " +
-                        "oldIamGroupId=$oldIamGroupId " +
-                        "in project $newProjectCode, " +
-                        "skip ${members.size} members"
+                            "oldIamGroupId=$oldIamGroupId " +
+                            "in project $newProjectCode, " +
+                            "skip ${members.size} members"
                 )
                 return@forEach
             }
             logger.info(
                 "Migrating ${members.size} members: " +
-                    "oldIamGroupId=$oldIamGroupId -> " +
-                    "newIamGroupId=${newGroup.relationId}"
+                        "oldIamGroupId=$oldIamGroupId -> " +
+                        "newIamGroupId=${newGroup.relationId}"
             )
             members.forEach { member ->
                 try {
@@ -308,9 +303,9 @@ class MigrateProjectCodePrefixService @Autowired constructor(
                 } catch (e: Exception) {
                     logger.error(
                         "Failed to add member " +
-                            "${member.memberId} to group " +
-                            "${newGroup.relationId} " +
-                            "in project $newProjectCode",
+                                "${member.memberId} to group " +
+                                "${newGroup.relationId} " +
+                                "in project $newProjectCode",
                         e
                     )
                 }
@@ -443,16 +438,16 @@ class MigrateProjectCodePrefixService @Autowired constructor(
             } catch (e: Exception) {
                 logger.error(
                     "Failed to delete old resource: " +
-                        "${resource.resourceType}/" +
-                        "${resource.resourceCode} " +
-                        "in project $oldProjectCode",
+                            "${resource.resourceType}/" +
+                            "${resource.resourceCode} " +
+                            "in project $oldProjectCode",
                     e
                 )
             }
         }
         logger.info(
             "Deleted old project data: $oldProjectCode, " +
-                "total ${resources.size} resources"
+                    "total ${resources.size} resources"
         )
     }
 }
