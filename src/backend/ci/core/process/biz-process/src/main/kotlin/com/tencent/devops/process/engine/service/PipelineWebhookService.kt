@@ -42,6 +42,7 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -59,6 +60,7 @@ import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import org.jooq.DSLContext
@@ -81,7 +83,8 @@ class PipelineWebhookService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val client: Client,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val pipelineYamlService: PipelineYamlService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineWebhookService::class.java)
@@ -117,7 +120,11 @@ class PipelineWebhookService @Autowired constructor(
             triggerContainer.params.associate { param ->
                 param.id to param.defaultValue.toString()
             }
-        )
+        ).toMutableMap()
+        // 补充yaml流水线代码库信息
+        pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId)?.let {
+            variables[PIPELINE_PAC_REPO_HASH_ID] = it.repoHashId
+        }
         val elements = triggerContainer.elements.filterIsInstance<WebHookTriggerElement>()
         val failedElementNames = mutableListOf<String>()
         elements.forEach { element ->
