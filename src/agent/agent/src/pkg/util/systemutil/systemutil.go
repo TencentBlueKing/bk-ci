@@ -238,7 +238,7 @@ func KeepProcessAlive() {
 }
 
 // CheckProcess check process and lock
-func CheckProcess(name string) bool {
+func CheckProcess(name string, totalLocked bool) bool {
 	processLockFile := fmt.Sprintf("%s/%s.lock", GetRuntimeDir(), name)
 	pidFile := fmt.Sprintf("%s/%s.pid", GetRuntimeDir(), name)
 
@@ -254,14 +254,16 @@ func CheckProcess(name string) bool {
 		return false
 	}
 
-	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", GetRuntimeDir(), TotalLock))
-	if err = totalLock.Lock(); err != nil {
-		logs.WithError(err).Error("get total lock failed, exit")
-		return false
+	if !totalLocked {
+		totalLock := flock.New(fmt.Sprintf("%s/%s.lock", GetRuntimeDir(), TotalLock))
+		if err = totalLock.Lock(); err != nil {
+			logs.WithError(err).Error("get total lock failed, exit")
+			return false
+		}
+		defer func() {
+			_ = totalLock.Unlock() // Unlock理论上不应失败，忽略错误
+		}()
 	}
-	defer func() {
-		_ = totalLock.Unlock() // Unlock理论上不应失败，忽略错误
-	}()
 
 	if err = fileutil.WriteString(pidFile, fmt.Sprintf("%d", os.Getpid())); err != nil {
 		logs.WithError(err).Errorf("failed to save pid file(%s)", pidFile)

@@ -19,14 +19,18 @@ func parseApiDockerOptions(o api.DockerOptions) []string {
 	var args []string
 	if len(o.Volumes) > 0 {
 		for _, v := range o.Volumes {
-			if len(strings.TrimSpace(v)) == 0 { continue }
+			if len(strings.TrimSpace(v)) == 0 {
+				continue
+			}
 			args = append(args, "--volume", strings.TrimSpace(v))
 		}
 	}
 
 	if len(o.Mounts) > 0 {
 		for _, m := range o.Mounts {
-			if len(strings.TrimSpace(m)) == 0 { continue }
+			if len(strings.TrimSpace(m)) == 0 {
+				continue
+			}
 			args = append(args, "--mount", strings.TrimSpace(m))
 		}
 	}
@@ -41,7 +45,9 @@ func parseApiDockerOptions(o api.DockerOptions) []string {
 
 	if len(o.Network) > 0 {
 		for _, n := range o.Network {
-			if len(strings.TrimSpace(n)) == 0 { continue }
+			if len(strings.TrimSpace(n)) == 0 {
+				continue
+			}
 			args = append(args, "--network", strings.TrimSpace(n))
 		}
 	}
