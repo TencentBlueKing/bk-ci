@@ -428,7 +428,7 @@ class OpAtomServiceImpl @Autowired constructor(
             // 如果接口query参数的版本号不为空，发布者以接口query参数的版本号为准
             versionInfo.version = version
         }
-        val tenantId = tenantId ?: TenantUtils.getTenantIdByEnglishName(releaseInfo.projectId)
+        val finalTenantId = tenantId ?: TenantUtils.getTenantIdByEnglishName(releaseInfo.projectId)
         if (versionInfo.releaseType == ReleaseTypeEnum.NEW && atomDao.getPipelineAtom(
                 dslContext = dslContext,
                 atomCode = atomCode,
@@ -446,7 +446,7 @@ class OpAtomServiceImpl @Autowired constructor(
                     frontendType = releaseInfo.configInfo.frontendType,
                     packageSourceType = PackageSourceTypeEnum.UPLOAD
                 ),
-                tenantId = tenantId
+                tenantId = finalTenantId
             )
             if (addMarketAtomResult.isNotOk()) {
                 return Result(data = false, message = addMarketAtomResult.message)
@@ -562,7 +562,7 @@ class OpAtomServiceImpl @Autowired constructor(
                 logoUrl = releaseInfo.logoUrl,
                 classifyCode = releaseInfo.classifyCode
             ),
-            tenantId = tenantId
+            tenantId = finalTenantId
         )
         if (updateMarketAtomResult.isNotOk()) {
             return Result(
@@ -576,7 +576,7 @@ class OpAtomServiceImpl @Autowired constructor(
         }
         val atomId = updateMarketAtomResult.data!!
         // 确认测试通过
-        return atomReleaseService.passTest(userId, atomId, tenantId)
+        return atomReleaseService.passTest(userId, atomId, finalTenantId)
     }
 
     override fun setDefault(userId: String, atomCode: String): Boolean {
