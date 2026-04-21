@@ -2,13 +2,16 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.pojo.EnvData
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_IP
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_NAME
 import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
+import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.WorkspaceBaseInfo
 import com.tencent.devops.process.utils.NODE_AGENT_ID
@@ -157,6 +160,28 @@ class CreateStreamTriggerSupportService constructor(
             logger.warn("get env node list failed", ignored)
             listOf()
         }?.map { it.agentHashId ?: "" } ?: listOf()
+    }
+
+    fun getEnvNodeList(
+        pipelineInfo: PipelineInfo,
+        pipelineSetting: PipelineSetting,
+        userId: String
+    ): List<String>? {
+        val pipelineId = pipelineInfo.pipelineId
+        val projectId = pipelineInfo.projectId
+        return if (pipelineInfo.channelCode == ChannelCode.CREATIVE_STREAM) {
+            val envHashId = pipelineSetting.envHashId?.takeIf { it.isNotBlank() } ?: run {
+                logger.warn("pipeline[$pipelineId] setting not found")
+                return null
+            }
+            getEnvNodeList(
+                projectId = projectId,
+                envHashId = envHashId,
+                userId = userId
+            )
+        } else {
+            null
+        }
     }
 
     companion object {

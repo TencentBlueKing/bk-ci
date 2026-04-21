@@ -45,7 +45,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.process.api.service.ServiceTimerBuildResource
 import com.tencent.devops.process.constant.MeasureConstant.NAME_PIPELINE_CRON_EXECUTE_DELAY
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_CREATIVE_STREAM_START_TASK_IS_EMPTY
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CREATIVE_STREAM_TIMER_TRIGGER_NODE_IS_EMPTY
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_IS_EMPTY
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_NOT_FOUND
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_NO_CHANGE
@@ -209,7 +209,7 @@ class PipelineTimerBuildListener @Autowired constructor(
                     userId = userId,
                     pipelineId = pipelineId,
                     reasonDetail = PipelineTriggerFailedErrorCode(
-                        BK_CREATIVE_STREAM_START_TASK_IS_EMPTY
+                        BK_CREATIVE_STREAM_TIMER_TRIGGER_NODE_IS_EMPTY
                     )
                 )
             } else {
