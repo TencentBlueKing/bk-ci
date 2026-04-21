@@ -3,7 +3,7 @@
 const pipelinesDetail = () => import(/* webpackChunkName: "pipelinesDetail" */'../views/tapd/content.vue')
 
 // TAPD DEV一站式
-const CreatePipeline = () => import(/* webpackChunkName: "pipelineCreate" */'../views/CreatePipeline.vue')
+const TapdCreatePipeline = () => import(/* webpackChunkName: "pipelineCreate" */'../views/tapd/create.vue')
 const TapdHeader = () => import(/* webpackChunkName: "pipelinesDetail" */'../views/tapd/header.vue')
 const tapdPipelinesSubpage = () => import(/* webpackChunkName: "tapdPipeline" */'../views/tapd/subpage.vue')
 const tapdPipelinesEntry = () => import(/* webpackChunkName: "tapdPipeline" */'../views/tapd/index.vue')
@@ -20,7 +20,7 @@ export default [
         // 创建页
         path: 'create',
         name: 'tapdCreatePipeline',
-        component: CreatePipeline
+        component: TapdCreatePipeline
     },
     {
         path: ':pipelineId',
