@@ -47,6 +47,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/codesign"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
 
@@ -183,6 +184,12 @@ func launch(agentPath string) (*os.Process, error) {
 	}
 	if info.Mode()&os.ModeSymlink != 0 {
 		return nil, fmt.Errorf("agent file %s is a symlink, refusing to execute for security", agentPath)
+	}
+
+	// 代码签名校验：拒绝被替换/未签名的 agent 二进制。
+	// 配置的信任锚（WinCertOrgName / MacosTeamId）为空时内部会跳过并返回 nil。
+	if err := codesign.Verify(agentPath); err != nil {
+		return nil, errors.Wrap(err, "agent signature verify failed")
 	}
 
 	err = fileutil.SetExecutable(agentPath)

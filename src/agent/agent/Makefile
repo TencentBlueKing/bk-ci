@@ -16,8 +16,16 @@ BuildTime := $(shell date '+%Y-%m-%d.%H:%M:%S%Z')
 GitCommit := $(shell git rev-parse HEAD)
 # 出包时通过变量写入为具体的版本号，需要符合如下写法
 AGENT_VERSION=v0.0.0-beta.0
+# 代码签名校验信任锚，出包时通过命令行传入，例如：
+#   make build_windows WIN_CERT_ORG="Tencent xxxxx"
+#   make build_macos   MACOS_TEAM_ID="ABCD123456"
+# 为空时 daemon/agent 将跳过签名校验（仅用于开发/社区构建）
+WIN_CERT_ORG ?=
+MACOS_TEAM_ID ?=
 BUILD_FLAGS := -ldflags="-w -s -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.BuildTime=$(BuildTime) \
--X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.GitCommit=$(GitCommit) -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.AgentVersion=$(AGENT_VERSION)"
+-X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.GitCommit=$(GitCommit) -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.AgentVersion=$(AGENT_VERSION) \
+-X 'github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.WinCertOrgName=$(WIN_CERT_ORG)' \
+-X 'github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.MacosTeamId=$(MACOS_TEAM_ID)'"
 
 # 编译外部出包版本时需要设置当前变量为out
 BUILD_OUT_TAG=out
