@@ -166,11 +166,11 @@ class AiChatService @Autowired constructor(
                 .doOnComplete { subAgentSink.tryEmitComplete() },
             subAgentSink.asFlux()
         ).doOnNext { tracker.track(it) }.concatWith(
+            // 补偿逻辑。
             Flux.defer {
                 if (tracker.needsCompensation()) {
                     logger.warn(
-                        "[AguiChat] Reasoning-only stream detected, " +
-                                "compensating TEXT_MESSAGE: threadId={}", threadId
+                        "[AguiChat] Reasoning-only stream detected,compensating TEXT_MESSAGE: threadId={}", threadId
                     )
                     Flux.fromIterable(tracker.buildCompensationEvents())
                 } else {
@@ -390,6 +390,5 @@ class AiChatService @Autowired constructor(
 
         /** 轮询 Agent running 标志的间隔（毫秒） */
         private const val AGENT_IDLE_POLL_INTERVAL_MS = 200L
-
     }
 }
