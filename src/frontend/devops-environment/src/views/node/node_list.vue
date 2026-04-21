@@ -1322,6 +1322,7 @@
                 this.constructImportForm.autoSwitchAccount = false
                 this.constructImportForm.installType = 'SERVICE'
                 this.constructToolConf.importText = this.$t('environment.import')
+                this.requestList()
                 await this.requestGetCounts(this.projectId)
             },
             handleSelectedChange (selection) {
