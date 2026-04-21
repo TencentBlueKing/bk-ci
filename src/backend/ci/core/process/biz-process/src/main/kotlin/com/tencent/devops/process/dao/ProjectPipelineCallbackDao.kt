@@ -220,6 +220,7 @@ class ProjectPipelineCallbackDao {
         with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
             val conditions = mutableListOf(
                 ENABLE.eq(false),
+                PROJECT_ID.eq(projectId),
                 ID.`in`(ids)
             )
             dslContext.update(this)
