@@ -40,11 +40,13 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"github.com/pkg/errors"
 
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
+	envvars "github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job_docker"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade/download"
@@ -271,9 +273,11 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		confg.Env = parseContainerEnv(dockerBuildInfo)
 
 		hostConfig = dockerConfig.HostConfig
-		hostConfig.CapAdd = append(hostConfig.CapAdd, "SYS_PTRACE")
 		hostConfig.Mounts = append(hostConfig.Mounts, mounts...)
-		hostConfig.NetworkMode = container.NetworkMode("bridge")
+
+		if len(dockerBuildInfo.Options.Network) == 0 {
+			hostConfig.NetworkMode = container.NetworkMode("bridge")
+		}
 
 		netConfig = dockerConfig.NetworkingConfig
 	} else {
@@ -285,12 +289,15 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		}
 
 		hostConfig = &container.HostConfig{
-			CapAdd:      []string{"SYS_PTRACE"},
 			Mounts:      mounts,
 			NetworkMode: container.NetworkMode("bridge"),
 		}
 
 		netConfig = nil
+	}
+
+	if v, ok := envs.FetchEnv(constant.DevopsAgentDockerCapAdd); ok && strings.TrimSpace(v) != "" {
+		hostConfig.CapAdd = append(hostConfig.CapAdd, v)
 	}
 
 	creatResp, err := cli.ContainerCreate(ctx, confg, hostConfig, netConfig, nil, containerName)
@@ -514,10 +521,8 @@ func parseContainerMounts(buildInfo *api.ThirdPartyBuildInfo) ([]mount.Mount, er
 
 	// 创建并挂载data和log
 	// data目录优先选择用户自定的工作空间
-	dataDir := ""
-	if buildInfo.Workspace == "" {
-		dataDir = fmt.Sprintf("%s/%s/data/%s/%s", workDir, job_docker.LocalDockerWorkSpaceDirName, buildInfo.PipelineId, buildInfo.VmSeqId)
-	} else {
+	dataDir := fmt.Sprintf("%s/%s/data/%s/%s", workDir, job_docker.LocalDockerWorkSpaceDirName, buildInfo.PipelineId, buildInfo.VmSeqId)
+	if buildInfo.Workspace != "" {
 		dataDir = buildInfo.Workspace
 	}
 	err := systemutil.MkDir(dataDir)
@@ -564,7 +569,7 @@ func parseContainerEnv(dockerBuildInfo *api.ThirdPartyDockerBuildInfo) []string 
 	}
 
 	// 用户指定的节点环境变量
-	userEnvs := config.GApiEnvVars.GetAll()
+	userEnvs := envvars.GApiEnvVars.GetAll()
 	for k, v := range userEnvs {
 		envs = append(envs, fmt.Sprintf("%s=%s", k, v))
 	}

@@ -1,3 +1,5 @@
+//go:build !windows
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -25,9 +27,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.atom.enums
+package envs
 
-enum class ServiceScopeEnum(val scopeType: String) {
-    PIPELINE("pipeline"),
-    QUALITY("quality")
+func InitEnvPolling() {
+
+}
+
+func FetchEnvFromPolling() map[string]string {
+	return map[string]string{}
 }

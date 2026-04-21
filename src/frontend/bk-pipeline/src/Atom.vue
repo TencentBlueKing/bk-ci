@@ -221,6 +221,15 @@
                     :disabled="isSkip"
                 />
             </span>
+
+            <!-- Insert atom after button -->
+            <i
+                v-if="reactiveData.editable && !isLastAtom"
+                class="add-plus-icon insert-after"
+                @click.stop="handleInsertAfter"
+                v-bk-tooltips="t('insertAfterAtom')"
+            >
+            </i>
         </template>
     </li>
 </template>
@@ -577,6 +586,11 @@
                     elementIndex: this.atomIndex
                 })
             },
+            handleInsertAfter () {
+                this.$emit('insert-after', {
+                    elementIndex: this.atomIndex
+                })
+            },
             async atomExecute (isContinue = false) {
                 if (this.isBusy || !this.hasExecPerm) return
 
@@ -929,6 +943,29 @@
         height: 24px;
         top: -23px;
       }
+    }
+  }
+  
+  // Insert after button
+  .add-plus-icon.insert-after {
+    @include add-plus-icon($primaryColor, $primaryColor, white, 18px, true);
+    @include add-plus-icon-hover($primaryColor, $primaryColor, white);
+    display: none;
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: pointer;
+    z-index: 10;
+    
+    &:hover {
+      transform: translateX(-50%) scale(1.1);
+    }
+  }
+  
+  &:hover {
+    .add-plus-icon.insert-after {
+      display: block;
     }
   }
 }
