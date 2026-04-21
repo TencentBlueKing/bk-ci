@@ -82,7 +82,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_FIRST_STAGE_ENV
 import com.tencent.devops.process.dao.PipelineCallbackDao
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
-import com.tencent.devops.process.dao.PipelineVisibilityDao
 import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.dao.template.PipelineTemplateInfoDao
 import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
@@ -115,8 +114,6 @@ import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineSortType
-import com.tencent.devops.process.pojo.PipelineVisibility
-import com.tencent.devops.process.pojo.PipelineVisibilityType
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
@@ -189,7 +186,7 @@ class PipelineRepositoryService constructor(
     private val subPipelineTaskService: SubPipelineTaskService,
     private val pipelineInfoService: PipelineInfoService,
     private val pipelineTemplateInfoDao: PipelineTemplateInfoDao,
-    private val pipelineVisibilityDao: PipelineVisibilityDao
+    private val pipelineVisibilityService: PipelineVisibilityService
 ) {
 
     companion object {
@@ -910,19 +907,11 @@ class PipelineRepositoryService constructor(
                 )
                 // 创作流,可见性默认添加创建者
                 if (channelCode == ChannelCode.CREATIVE_STREAM) {
-                    pipelineVisibilityDao.create(
-                        dslContext = transactionContext,
+                    pipelineVisibilityService.initVisibility(
+                        transactionContext = transactionContext,
                         userId = userId,
                         projectId = projectId,
-                        pipelineId = pipelineId,
-                        authUser = userId,
-                        visibilityList = listOf(
-                            PipelineVisibility(
-                                type = PipelineVisibilityType.USER,
-                                scopeId = userId,
-                                scopeName = userId
-                            )
-                        )
+                        pipelineId = pipelineId
                     )
                 }
             }
@@ -1769,7 +1758,7 @@ class PipelineRepositoryService constructor(
                     templatePipelineDao.delete(transactionContext, projectId, pipelineId)
                     pipelineYamlInfoDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
                     pipelineYamlVersionDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
-                    pipelineVisibilityDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
+                    pipelineVisibilityService.deleteByPipelineId(transactionContext, projectId, pipelineId)
                 } else {
                     // 删除前改名，防止名称占用
                     val deleteTime = org.joda.time.LocalDateTime.now().toString("yyMMddHHmmSS")

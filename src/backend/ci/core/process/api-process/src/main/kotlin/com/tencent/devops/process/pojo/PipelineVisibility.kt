@@ -6,8 +6,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class PipelineVisibility(
     @get:Schema(title = "可见范围类型", required = true)
     val type: PipelineVisibilityType,
-    @get:Schema(title = "部门ID或用户ID", required = true)
+    @get:Schema(title = "范围ID", required = true)
     val scopeId: String,
-    @get:Schema(title = "部门名称或用户名", required = true)
-    val scopeName: String
+    @get:Schema(title = "范围标识名", required = true)
+    val scopeName: String,
+    @get:Schema(title = "完整名称", required = true)
+    val fullName: String,
+    @get:Schema(title = "用户部门信息", required = true)
+    val userDepartments: List<String> = emptyList()
 )

@@ -58,7 +58,10 @@ interface UserPipelineVisibilityResource {
         page: Int? = 1,
         @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
-        pageSize: Int? = 20
+        pageSize: Int? = 20,
+        @Parameter(description = "用户/组织名搜索", required = false)
+        @QueryParam("keyword")
+        keyword: String? = null
     ): Result<SQLPage<PipelineVisibility>>
 
     @Operation(summary = "批量删除流水线可见范围")

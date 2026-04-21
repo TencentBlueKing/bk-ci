@@ -4,7 +4,7 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.PipelineVisibility
-import com.tencent.devops.process.service.PipelineVisibilityService
+import com.tencent.devops.process.engine.service.PipelineVisibilityService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -46,14 +46,16 @@ class OpPipelineVisibilityResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        keyword: String?
     ): Result<SQLPage<PipelineVisibility>> {
         return Result(
             pipelineVisibilityService.listVisibility(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 page = page ?: 1,
-                pageSize = pageSize ?: 20
+                pageSize = pageSize ?: 20,
+                keyword = keyword
             )
         )
     }

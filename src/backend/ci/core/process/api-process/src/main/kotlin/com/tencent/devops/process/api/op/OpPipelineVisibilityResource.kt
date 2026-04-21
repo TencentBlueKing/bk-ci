@@ -77,6 +77,9 @@ interface OpPipelineVisibilityResource {
         page: Int? = 1,
         @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
-        pageSize: Int? = 20
+        pageSize: Int? = 20,
+        @Parameter(description = "用户/组织名搜索", required = false)
+        @QueryParam("keyword")
+        keyword: String? = null
     ): Result<SQLPage<PipelineVisibility>>
 }

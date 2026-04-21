@@ -1,8 +1,12 @@
-package com.tencent.devops.process.service
+package com.tencent.devops.process.engine.service
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.auth.api.service.ServiceAuthAuthorizationResource
+import com.tencent.devops.auth.api.service.ServiceDeptResource
+import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
@@ -11,7 +15,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineVisibilityDao
 import com.tencent.devops.process.pojo.PipelineVisibility
 import com.tencent.devops.process.pojo.PipelineVisibilityType
-import com.tencent.devops.project.api.service.ServiceUserResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -24,10 +27,47 @@ class PipelineVisibilityService @Autowired constructor(
     private val client: Client
 ) {
 
-    private val userDeptCache = CacheHelper.createCache<String, Set<String>>(
+    private val userDeptIdCache = CacheHelper.createCache<String, Set<String>>(
         duration = 5,
         maxSize = 5000
     )
+
+    private val userInfoCache = CacheHelper.createCache<String, UserAndDeptInfoVo?>(
+        duration = 5,
+        maxSize = 5000
+    )
+
+    /**
+     * 创作流创建时，初始化可见性
+     */
+    fun initVisibility(
+        transactionContext: DSLContext? = null,
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ) {
+        val userInfo = userInfoCache.get(userId) {
+            client.get(ServiceDeptResource::class).getUserInfo(userId = userId, name = userId).data
+        } ?: return
+        val userDepartments =
+            userInfo.deptInfo?.filter { !it.fullName.isNullOrBlank() }?.map { it.fullName!! } ?: emptyList()
+        pipelineVisibilityDao.create(
+            dslContext = transactionContext ?: dslContext,
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            authUser = userId,
+            visibilityList = listOf(
+                PipelineVisibility(
+                    type = PipelineVisibilityType.USER,
+                    scopeId = userId,
+                    scopeName = userInfo.name,
+                    fullName = userId,
+                    userDepartments = userDepartments
+                )
+            )
+        )
+    }
 
     fun addVisibility(
         userId: String,
@@ -60,29 +100,46 @@ class PipelineVisibilityService @Autowired constructor(
         )
     }
 
+    fun deleteByPipelineId(
+        transactionContext: DSLContext? = null,
+        projectId: String,
+        pipelineId: String
+    ) {
+        pipelineVisibilityDao.deleteByPipelineId(
+            dslContext = transactionContext ?: dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+    }
+
     fun listVisibility(
         projectId: String,
         pipelineId: String,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        keyword: String? = null
     ): SQLPage<PipelineVisibility> {
         val count = pipelineVisibilityDao.count(
             dslContext = dslContext,
             projectId = projectId,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            keyword = keyword
         )
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         val records = pipelineVisibilityDao.list(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
+            keyword = keyword,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
         ).map {
             PipelineVisibility(
                 type = PipelineVisibilityType.valueOf(it.type),
                 scopeId = it.scopeId,
-                scopeName = it.scopeName
+                scopeName = it.scopeName,
+                fullName = it.fullName,
+                userDepartments = JsonUtil.to(it.userDepartments, object : TypeReference<List<String>>() {})
             )
         }
         return SQLPage(
@@ -113,7 +170,7 @@ class PipelineVisibilityService @Autowired constructor(
         pipelineId: String
     ): Boolean {
         val userDeptIds = getUserDeptIds(userId)
-        return pipelineVisibilityDao.countVisibility(
+        return pipelineVisibilityDao.countVisibilityPipeline(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -158,19 +215,9 @@ class PipelineVisibilityService @Autowired constructor(
     }
 
     private fun getUserDeptIds(userId: String): Set<String> {
-        return userDeptCache.get(userId) {
+        return userDeptIdCache.get(userId) {
             try {
-                val userInfo = client.get(ServiceUserResource::class).getDetailFromCache(userId).data
-                if (userInfo == null) {
-                    emptySet()
-                } else {
-                    setOfNotNull(
-                        userInfo.bgId,
-                        userInfo.deptId,
-                        userInfo.centerId,
-                        userInfo.groupId
-                    ).filter { it != "0" && it.isNotBlank() }.toSet()
-                }
+                client.get(ServiceDeptResource::class).getUserDeptIds(userId).data ?: emptySet()
             } catch (e: Exception) {
                 logger.warn("Failed to get dept list for user $userId", e)
                 emptySet()

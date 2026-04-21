@@ -1,9 +1,11 @@
 package com.tencent.devops.process.dao
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.process.tables.TPipelineVisibility
 import com.tencent.devops.model.process.tables.records.TPipelineVisibilityRecord
 import com.tencent.devops.process.pojo.PipelineVisibility
 import com.tencent.devops.process.pojo.PipelineVisibilityType
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
@@ -32,6 +34,8 @@ class PipelineVisibilityDao {
                     TYPE,
                     SCOPE_ID,
                     SCOPE_NAME,
+                    FULL_NAME,
+                    USER_DEPARTMENTS,
                     AUTH_USER,
                     CREATOR,
                     CREATE_TIME
@@ -41,12 +45,16 @@ class PipelineVisibilityDao {
                     it.type.name,
                     it.scopeId,
                     it.scopeName,
+                    it.fullName,
+                    JsonUtil.toJson(it.userDepartments, false),
                     authUser,
                     userId,
                     now
                 )
                     .onDuplicateKeyUpdate()
                     .set(SCOPE_NAME, it.scopeName)
+                    .set(FULL_NAME, it.fullName)
+                    .set(USER_DEPARTMENTS, JsonUtil.toJson(it.userDepartments, false))
                     .set(AUTH_USER, authUser)
                     .set(CREATOR, userId)
                     .set(CREATE_TIME, now)
@@ -59,13 +67,13 @@ class PipelineVisibilityDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
+        keyword: String? = null,
         limit: Int,
         offset: Int
     ): Result<TPipelineVisibilityRecord> {
         return with(TPipelineVisibility.T_PIPELINE_VISIBILITY) {
             dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
+                .where(buildListConditions(projectId, pipelineId, keyword))
                 .orderBy(CREATE_TIME.desc(), TYPE)
                 .limit(limit)
                 .offset(offset)
@@ -76,13 +84,13 @@ class PipelineVisibilityDao {
     fun count(
         dslContext: DSLContext,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        keyword: String? = null
     ): Int {
         return with(TPipelineVisibility.T_PIPELINE_VISIBILITY) {
             dslContext.selectCount()
                 .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
+                .where(buildListConditions(projectId, pipelineId, keyword))
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -151,7 +159,7 @@ class PipelineVisibilityDao {
         }
     }
 
-    fun countVisibility(
+    fun countVisibilityPipeline(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
@@ -205,7 +213,7 @@ class PipelineVisibilityDao {
         requestUserId: String,
         userDeptIds: Set<String>,
         pipelineIds: Set<String>? = null
-    ): List<org.jooq.Condition> {
+    ): List<Condition> {
         val deptCondition = TYPE.eq(PipelineVisibilityType.DEPT.name)
             .and(SCOPE_ID.`in`(userDeptIds))
         val userCondition = TYPE.eq(PipelineVisibilityType.USER.name)
@@ -217,6 +225,20 @@ class PipelineVisibilityDao {
         )
         if (!pipelineIds.isNullOrEmpty()) {
             conditions.add(PIPELINE_ID.`in`(pipelineIds))
+        }
+        return conditions
+    }
+
+    private fun TPipelineVisibility.buildListConditions(
+        projectId: String,
+        pipelineId: String,
+        keyword: String?
+    ): List<Condition> {
+        val conditions = mutableListOf<Condition>()
+        conditions.add(PROJECT_ID.eq(projectId))
+        conditions.add(PIPELINE_ID.eq(pipelineId))
+        if (!keyword.isNullOrBlank()) {
+            conditions.add(SCOPE_NAME.like("%$keyword%"))
         }
         return conditions
     }

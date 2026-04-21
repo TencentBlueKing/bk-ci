@@ -9,7 +9,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineVisibility
-import com.tencent.devops.process.service.PipelineVisibilityService
+import com.tencent.devops.process.engine.service.PipelineVisibilityService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -39,7 +39,8 @@ class UserPipelineVisibilityResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        keyword: String?
     ): Result<SQLPage<PipelineVisibility>> {
         checkPermission(userId, projectId, pipelineId, AuthPermission.VIEW)
         return Result(
@@ -47,7 +48,8 @@ class UserPipelineVisibilityResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 page = page ?: 1,
-                pageSize = pageSize ?: 20
+                pageSize = pageSize ?: 20,
+                keyword = keyword
             )
         )
     }

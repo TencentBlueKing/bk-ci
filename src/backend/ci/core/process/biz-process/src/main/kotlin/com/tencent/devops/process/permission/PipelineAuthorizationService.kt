@@ -10,7 +10,7 @@ import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverResu
 import com.tencent.devops.common.auth.enums.ResourceAuthorizationHandoverStatus
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.service.PipelineVisibilityService
+import com.tencent.devops.process.engine.service.PipelineVisibilityService
 import com.tencent.devops.process.service.SubPipelineCheckService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
