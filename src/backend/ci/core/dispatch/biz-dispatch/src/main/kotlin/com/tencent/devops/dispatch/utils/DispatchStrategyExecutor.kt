@@ -54,7 +54,7 @@ class DispatchStrategyExecutor(
             pipelineLog(
                 "$lv \"${strategy.strategyName ?: ""}\" scope=${strategy.scope} rule=${strategy.nodeRule}" + " labels=${
                     strategy.labelSelector?.joinToString(separator = ",") {
-                        "${input.tagKeys[it.tagKeyId] ?: ""}${it.op.symbol}${it.values}"
+                        "{${input.tagKeys[it.tagKeyId] ?: ""} ${it.op.symbol} ${it.values}}"
                     }
                 }"
             )
