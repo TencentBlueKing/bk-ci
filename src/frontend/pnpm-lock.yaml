@@ -297,7 +297,7 @@ importers:
         version: 0.8.2
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@6.11.0(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
+        version: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@6.11.0(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
       webpack:
         specifier: 5.100.2
         version: 5.100.2(webpack-cli@6.0.1)
@@ -496,7 +496,7 @@ importers:
         version: 5.3.14(webpack@5.100.2)
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@6.11.0(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
+        version: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@6.11.0(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
       vue-style-loader:
         specifier: ^3.0.3
         version: 3.1.2
@@ -644,7 +644,7 @@ importers:
         version: 5.3.14(webpack@5.100.2)
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@6.11.0(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
+        version: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@6.11.0(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
       webpack:
         specifier: 5.100.2
         version: 5.100.2(webpack-cli@6.0.1)
@@ -768,7 +768,7 @@ importers:
         version: 5.3.14(webpack@5.100.2)
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@6.11.0(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
+        version: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@6.11.0(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
       vue-style-loader:
         specifier: ^3.0.3
         version: 3.1.2
@@ -1040,7 +1040,7 @@ importers:
         version: 0.23.1
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.1(@vue/compiler-sfc@3.5.24)(css-loader@0.28.11)(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
+        version: 15.10.1(@vue/compiler-sfc@3.5.24)(css-loader@0.28.11)(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
       vue-property-decorator:
         specifier: ^6.0.0
         version: 6.1.0
@@ -1053,12 +1053,15 @@ importers:
 
   devops-flow:
     dependencies:
+      '@blueking/bk-org-selector':
+        specifier: ^0.1.6
+        version: 0.1.6(@blueking/bkui-library@0.0.0-beta.6)
       '@blueking/crontab':
         specifier: 0.0.2-beta.7
         version: 0.0.2-beta.7(@blueking/bkui-library@0.0.0-beta.6)(vue@3.5.24(typescript@5.9.3))
       '@blueking/search-select-v3':
         specifier: 0.0.1-beta.10
-        version: 0.0.1-beta.10(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.92(highlight.js@11.11.1)(vue@3.5.24(typescript@5.9.3)))(vue@3.5.24(typescript@5.9.3))
+        version: 0.0.1-beta.10(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.1.0-beta.7(highlight.js@11.11.1)(vue@3.5.24(typescript@5.9.3)))(vue@3.5.24(typescript@5.9.3))
       axios:
         specifier: 1.13.6
         version: 1.13.6(debug@4.4.3)
@@ -1069,8 +1072,8 @@ importers:
         specifier: workspace:bk-pipeline
         version: link:../bk-pipeline
       bkui-vue:
-        specifier: 2.0.2-beta.92
-        version: 2.0.2-beta.92(highlight.js@11.11.1)(vue@3.5.24(typescript@5.9.3))
+        specifier: 2.1.0-beta.7
+        version: 2.1.0-beta.7(highlight.js@11.11.1)(vue@3.5.24(typescript@5.9.3))
       monaco-editor:
         specifier: ^0.52.2
         version: 0.52.2
@@ -1557,7 +1560,7 @@ importers:
         version: 3.7.5
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@6.11.0(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
+        version: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@6.11.0(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
       webpack:
         specifier: 5.100.2
         version: 5.100.2(webpack-cli@6.0.1)
@@ -1886,7 +1889,7 @@ importers:
         version: 5.3.14(webpack@5.100.2)
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@6.11.0(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
+        version: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@6.11.0(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
       vue-style-loader:
         specifier: ^3.0.3
         version: 3.1.2
@@ -2128,7 +2131,7 @@ importers:
         version: 5.3.14(webpack@5.100.2)
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@6.11.0(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
+        version: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@6.11.0(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
       webpack:
         specifier: 5.100.2
         version: 5.100.2(webpack-cli@6.0.1)
@@ -2369,10 +2372,10 @@ importers:
         version: 1.1.2(webpack@5.100.2(webpack-cli@6.0.1))
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@2.1.1(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
+        version: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@2.1.1(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
       vue-markdown-loader:
         specifier: ~2.4.1
-        version: 2.4.1(vue-loader@15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@2.1.1(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1)))
+        version: 2.4.1(vue-loader@15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@2.1.1(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1)))
       webpack:
         specifier: 5.100.2
         version: 5.100.2(webpack-cli@6.0.1)
@@ -2469,7 +2472,7 @@ importers:
         version: 5.3.14(webpack@5.100.2)
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@6.11.0(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
+        version: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@6.11.0(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
       webpack:
         specifier: 5.100.2
         version: 5.100.2(webpack-cli@6.0.1)
@@ -2593,7 +2596,7 @@ importers:
         version: 5.3.14(webpack@5.100.2)
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@6.11.0(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
+        version: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@6.11.0(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
       webpack:
         specifier: 5.100.2
         version: 5.100.2(webpack-cli@6.0.1)
@@ -2714,7 +2717,7 @@ importers:
         version: 0.23.1
       vue-loader:
         specifier: 15.10.1
-        version: 15.10.1(@vue/compiler-sfc@3.5.24)(css-loader@0.28.11)(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
+        version: 15.10.1(@vue/compiler-sfc@3.5.24)(css-loader@0.28.11)(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
       vue-style-loader:
         specifier: ^3.0.3
         version: 3.1.2
@@ -2865,7 +2868,7 @@ importers:
         version: 5.3.14(webpack@5.100.2)
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@6.11.0(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
+        version: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@6.11.0(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
       vue-style-loader:
         specifier: ^3.0.3
         version: 3.1.2
@@ -3581,6 +3584,12 @@ packages:
   '@blueking/babel-preset-bk@2.1.0':
     resolution: {integrity: sha512-MbHWtlDmW2d7YaA+RWN0QghOPd4jUaAB9gLZJ95psd7H1G7t5XoHmEllTPusRzjjwL4Q70DxljpR8PfaZLuALg==}
 
+  '@blueking/bk-org-selector@0.1.6':
+    resolution: {integrity: sha512-4fpdV63Ux+fyQ9GkeJGNrQU9ORdNspkJJ5P+lTkmdOZZCsbJUx85DEeTigMypMsgEBfO4+sYKMy7RzhrA7GbpQ==}
+    engines: {node: '>=18.16.0'}
+    peerDependencies:
+      '@blueking/bkui-library': ^0.0.0-beta.4
+
   '@blueking/bkcharts@2.0.10':
     resolution: {integrity: sha512-05jRbKssqMDYQD+4uuvhd65TNetUGLRhNMSXkXFJakS3/tcbjc9yVTLa4QUG1mymcQ6Yx+U1Y7yp/MSOEmSeTQ==}
     engines: {node: '>=12.16.3'}
@@ -3633,6 +3642,11 @@ packages:
 
   '@blueking/login-modal@1.0.4':
     resolution: {integrity: sha512-HMSIZl4QeRAPEVcD/FV2vysnZxJiDSVeLppVw65wvQnvNwos2JwqjoCSoS46Joe/JY/H0r89RgA2WIkneOekNg==}
+
+  '@blueking/login-userinfo@0.0.13':
+    resolution: {integrity: sha512-DHVIN/IGhZCiXalhy8YSMSikg4qMEe1WirqPwJrRCFcwk7fItKjQkrrXCam4JX66MCwSXFTAZ67ci2vsmfKRpw==}
+    peerDependencies:
+      vue: ^3
 
   '@blueking/platform-config@1.0.5':
     resolution: {integrity: sha512-z88WCgnPJ1V5XzFMcftEEwDVz3Cvfn7VWv+mRlfh+LfBBDJyUrwX4uhkMYr06kP+35NPIky8ZdETFb2VWDoMyg==}
@@ -5489,7 +5503,6 @@ packages:
     engines: {node: '>=20.0.0'}
     cpu: [arm64]
     os: [linux]
-    libc: [musl]
 
   '@oxc-parser/binding-linux-riscv64-gnu@0.74.0':
     resolution: {integrity: sha512-/RZAP24TgZo4vV/01TBlzRqs0R7E6xvatww4LnmZEBBulQBU/SkypDywfriFqWuFoa61WFXPV7sLcTjJGjim/w==}
@@ -5503,7 +5516,6 @@ packages:
     engines: {node: '>=20.0.0'}
     cpu: [s390x]
     os: [linux]
-    libc: [glibc]
 
   '@oxc-parser/binding-linux-x64-gnu@0.74.0':
     resolution: {integrity: sha512-WBFgQmGtFnPNzHyLKbC1wkYGaRIBxXGofO0+hz1xrrkPgbxbJS1Ukva1EB8sPaVBBQ52Bdc2GjLSp721NWRvww==}
@@ -5517,7 +5529,6 @@ packages:
     engines: {node: '>=20.0.0'}
     cpu: [x64]
     os: [linux]
-    libc: [musl]
 
   '@oxc-parser/binding-wasm32-wasi@0.74.0':
     resolution: {integrity: sha512-yDS9bRDh5ymobiS2xBmjlrGdUuU61IZoJBaJC5fELdYT5LJNBXlbr3Yc6m2PWfRJwkH6Aq5fRvxAZ4wCbkGa8w==}
@@ -7739,8 +7750,8 @@ packages:
       highlight.js: ~11.5.0
       vue: ^3.2.0
 
-  bkui-vue@2.0.2-beta.92:
-    resolution: {integrity: sha512-s94jEY46087wheK2Q4Thx4y67ZR9o2woFEGZOMjjF2pDEqhX2DoYOrrmlYd3Hl04bxFmz91DFgpVkMq4adr3vQ==}
+  bkui-vue@2.1.0-beta.7:
+    resolution: {integrity: sha512-pfLMRQuWJlCp11wYaZy05R4VUYJ5Y9+IkXeCrsgxOzvb7X2bgQu3CpMgKLo99E7tqalzCJhAR4XtLb2ynlEjhw==}
     peerDependencies:
       highlight.js: ~11.5.0
       vue: ^3.2.0
@@ -12361,6 +12372,9 @@ packages:
 
   lodash@4.17.21:
     resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+
+  lodash@4.18.1:
+    resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
 
   log-driver@1.2.7:
     resolution: {integrity: sha512-U7KCmLdqsGHBLeWqYlFA0V0Sl6P08EE1ZrmA9cxjUE0WVqT9qnyVDPz1kzpFEP0jdJuFnasWIfSd7fsaNXkpbg==}
@@ -19065,6 +19079,12 @@ snapshots:
       - supports-color
       - vue
 
+  '@blueking/bk-org-selector@0.1.6(@blueking/bkui-library@0.0.0-beta.6)':
+    dependencies:
+      '@blueking/bkui-library': 0.0.0-beta.6
+      js-cookie: 3.0.5
+      lodash: 4.18.1
+
   '@blueking/bkcharts@2.0.10': {}
 
   '@blueking/bkcharts@3.7.0-beta.2(@octokit/core@7.0.6)(bufferutil@4.0.9)(chart.js@4.5.1)(encoding@0.1.13)(tslib@2.8.1)(utf-8-validate@5.0.10)(webpack-cli@6.0.1(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.9)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.2)(webpack@5.100.2))':
@@ -19296,14 +19316,19 @@ snapshots:
 
   '@blueking/login-modal@1.0.4': {}
 
+  '@blueking/login-userinfo@0.0.13(vue@3.5.24(typescript@5.9.3))':
+    dependencies:
+      js-cookie: 3.0.5
+      vue: 3.5.24(typescript@5.9.3)
+
   '@blueking/platform-config@1.0.5':
     dependencies:
       xss: 1.0.15
 
-  '@blueking/search-select-v3@0.0.1-beta.10(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.92(highlight.js@11.11.1)(vue@3.5.24(typescript@5.9.3)))(vue@3.5.24(typescript@5.9.3))':
+  '@blueking/search-select-v3@0.0.1-beta.10(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.1.0-beta.7(highlight.js@11.11.1)(vue@3.5.24(typescript@5.9.3)))(vue@3.5.24(typescript@5.9.3))':
     dependencies:
       '@blueking/bkui-library': 0.0.0-beta.6
-      bkui-vue: 2.0.2-beta.92(highlight.js@11.11.1)(vue@3.5.24(typescript@5.9.3))
+      bkui-vue: 2.1.0-beta.7(highlight.js@11.11.1)(vue@3.5.24(typescript@5.9.3))
       vue: 3.5.24(typescript@5.9.3)
 
   '@blueking/search-select@0.0.1-beta.2':
@@ -19379,7 +19404,7 @@ snapshots:
   '@commitlint/ensure@9.1.2':
     dependencies:
       '@commitlint/types': 9.1.2
-      lodash: 4.17.21
+      lodash: 4.18.1
 
   '@commitlint/execute-rule@9.1.2': {}
 
@@ -19426,7 +19451,7 @@ snapshots:
   '@commitlint/resolve-extends@9.1.2':
     dependencies:
       import-fresh: 3.3.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       resolve-from: 5.0.0
       resolve-global: 1.0.0
 
@@ -23349,6 +23374,73 @@ snapshots:
       - walrus
       - whiskers
 
+  '@vue/component-compiler-utils@3.3.0(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)':
+    dependencies:
+      consolidate: 0.15.1(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)
+      hash-sum: 1.0.2
+      lru-cache: 4.1.5
+      merge-source-map: 1.1.0
+      postcss: 7.0.39
+      postcss-selector-parser: 6.1.2
+      source-map: 0.6.1
+      vue-template-es2015-compiler: 1.9.1
+    optionalDependencies:
+      prettier: 2.8.8
+    transitivePeerDependencies:
+      - arc-templates
+      - atpl
+      - babel-core
+      - bracket-template
+      - coffee-script
+      - dot
+      - dust
+      - dustjs-helpers
+      - dustjs-linkedin
+      - eco
+      - ect
+      - ejs
+      - haml-coffee
+      - hamlet
+      - hamljs
+      - handlebars
+      - hogan.js
+      - htmling
+      - jade
+      - jazz
+      - jqtpl
+      - just
+      - liquid-node
+      - liquor
+      - lodash
+      - marko
+      - mote
+      - mustache
+      - nunjucks
+      - plates
+      - pug
+      - qejs
+      - ractive
+      - razor-tmpl
+      - react
+      - react-dom
+      - slm
+      - squirrelly
+      - swig
+      - swig-templates
+      - teacup
+      - templayed
+      - then-jade
+      - then-pug
+      - tinyliquid
+      - toffee
+      - twig
+      - twing
+      - underscore
+      - vash
+      - velocityjs
+      - walrus
+      - whiskers
+
   '@vue/composition-api@1.7.2(vue@2.7.16)':
     dependencies:
       vue: 2.7.16
@@ -24585,8 +24677,9 @@ snapshots:
       vue: 3.4.38(typescript@4.9.5)
       vue-types: 4.1.1(vue@3.4.38(typescript@4.9.5))
 
-  bkui-vue@2.0.2-beta.92(highlight.js@11.11.1)(vue@3.5.24(typescript@5.9.3)):
+  bkui-vue@2.1.0-beta.7(highlight.js@11.11.1)(vue@3.5.24(typescript@5.9.3)):
     dependencies:
+      '@blueking/login-userinfo': 0.0.13(vue@3.5.24(typescript@5.9.3))
       '@floating-ui/dom': 1.5.4
       '@popperjs/core': 2.11.8
       date-fns: 2.30.0
@@ -25000,7 +25093,7 @@ snapshots:
       dom-serializer: 0.1.1
       entities: 1.1.2
       htmlparser2: 3.8.3
-      lodash: 4.17.21
+      lodash: 4.18.1
     optionalDependencies:
       jsdom: 7.2.2
 
@@ -25324,7 +25417,7 @@ snapshots:
     dependencies:
       chalk: 4.1.2
       date-fns: 2.30.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       rxjs: 6.6.7
       spawn-command: 0.0.2
       supports-color: 8.1.1
@@ -25363,6 +25456,14 @@ snapshots:
       handlebars: 4.7.8
       lodash: 4.17.21
 
+  consolidate@0.15.1(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1):
+    dependencies:
+      bluebird: 3.7.2
+    optionalDependencies:
+      ejs: 3.1.10
+      handlebars: 4.7.8
+      lodash: 4.18.1
+
   constants-browserify@1.0.0: {}
 
   content-disposition@0.5.4:
@@ -25395,7 +25496,7 @@ snapshots:
       git-raw-commits: 2.0.0
       git-remote-origin-url: 2.0.0
       git-semver-tags: 2.0.3
-      lodash: 4.17.21
+      lodash: 4.18.1
       normalize-package-data: 2.5.0
       q: 1.5.1
       read-pkg: 3.0.0
@@ -25411,7 +25512,7 @@ snapshots:
       dateformat: 3.0.3
       handlebars: 4.7.8
       json-stringify-safe: 5.0.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       meow: 8.1.2
       semver: 7.7.3
       split: 1.0.1
@@ -25426,7 +25527,7 @@ snapshots:
     dependencies:
       JSONStream: 1.3.5
       is-text-path: 1.0.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       meow: 8.1.2
       split2: 3.2.2
       through2: 4.0.2
@@ -26938,7 +27039,7 @@ snapshots:
       interpret: 1.4.0
       is-core-module: 2.16.1
       is-regex: 1.2.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       resolve: 2.0.0-next.5
       semver: 5.7.2
       webpack: 5.100.2(webpack-cli@6.0.1)
@@ -26955,7 +27056,7 @@ snapshots:
       interpret: 1.4.0
       is-core-module: 2.16.1
       is-regex: 1.2.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       resolve: 2.0.0-next.5
       semver: 5.7.2
       webpack: 5.100.2(webpack-cli@6.0.1)
@@ -26972,7 +27073,7 @@ snapshots:
       interpret: 1.4.0
       is-core-module: 2.16.1
       is-regex: 1.2.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       resolve: 2.0.0-next.5
       semver: 5.7.2
       webpack: 5.100.2(webpack-cli@6.0.1)
@@ -28415,7 +28516,7 @@ snapshots:
   git-raw-commits@2.0.11:
     dependencies:
       dargs: 7.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       meow: 8.1.2
       split2: 3.2.2
       through2: 4.0.2
@@ -29165,7 +29266,7 @@ snapshots:
       cli-width: 2.2.1
       external-editor: 3.1.0
       figures: 2.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       mute-stream: 0.0.7
       run-async: 2.4.1
       rxjs: 6.6.7
@@ -29901,7 +30002,7 @@ snapshots:
       graceful-fs: 4.2.11
       http-proxy: 1.18.1
       isbinaryfile: 4.0.10
-      lodash: 4.17.21
+      lodash: 4.18.1
       log4js: 6.9.1
       mime: 2.6.0
       minimatch: 3.1.2
@@ -30038,7 +30139,7 @@ snapshots:
 
   last-call-webpack-plugin@3.0.0:
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.18.1
       webpack-sources: 1.4.3
 
   last-run@1.1.1:
@@ -30447,6 +30548,8 @@ snapshots:
       lodash.keys: 2.4.1
 
   lodash@4.17.21: {}
+
+  lodash@4.18.1: {}
 
   log-driver@1.2.7: {}
 
@@ -33405,7 +33508,7 @@ snapshots:
 
   postcss-sorting@5.0.1:
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.18.1
       postcss: 7.0.39
 
   postcss-sorting@7.0.1(postcss@8.5.6):
@@ -33562,7 +33665,7 @@ snapshots:
 
   pretty-error@2.1.2:
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.18.1
       renderkid: 2.0.7
 
   pretty-error@4.0.0:
@@ -33972,7 +34075,7 @@ snapshots:
       css-select: 4.3.0
       dom-converter: 0.2.0
       htmlparser2: 6.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       strip-ansi: 3.0.1
 
   renderkid@3.0.0:
@@ -33980,7 +34083,7 @@ snapshots:
       css-select: 4.3.0
       dom-converter: 0.2.0
       htmlparser2: 6.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       strip-ansi: 6.0.1
 
   repeat-string@1.6.1: {}
@@ -34520,7 +34623,7 @@ snapshots:
 
   simplebar-core@1.3.2:
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash-es: 4.17.21
 
   simplebar-vue@2.4.2(@vue/composition-api@1.7.2(vue@2.7.16))(vue@2.7.16):
@@ -35056,7 +35159,7 @@ snapshots:
 
   stylelint-order@4.1.0(stylelint@13.13.1):
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.18.1
       postcss: 7.0.39
       postcss-sorting: 5.0.1
       stylelint: 13.13.1
@@ -35069,7 +35172,7 @@ snapshots:
 
   stylelint-scss@3.21.0(stylelint@13.13.1):
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.18.1
       postcss-media-query-parser: 0.2.3
       postcss-resolve-nested-selector: 0.1.6
       postcss-selector-parser: 6.1.2
@@ -35106,7 +35209,7 @@ snapshots:
       import-lazy: 4.0.0
       imurmurhash: 0.1.4
       known-css-properties: 0.21.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       log-symbols: 4.1.0
       mathml-tag-names: 2.1.3
       meow: 9.0.0
@@ -36720,7 +36823,7 @@ snapshots:
       eslint-visitor-keys: 3.4.3
       espree: 9.6.1
       esquery: 1.6.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       semver: 7.7.3
     transitivePeerDependencies:
       - supports-color
@@ -36962,9 +37065,9 @@ snapshots:
       - webpack
       - whiskers
 
-  vue-loader@15.10.1(@vue/compiler-sfc@3.5.24)(css-loader@0.28.11)(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1)):
+  vue-loader@15.10.1(@vue/compiler-sfc@3.5.24)(css-loader@0.28.11)(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1)):
     dependencies:
-      '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)
+      '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)
       css-loader: 0.28.11
       hash-sum: 1.0.2
       loader-utils: 1.4.2
@@ -37163,9 +37266,9 @@ snapshots:
       - walrus
       - whiskers
 
-  vue-loader@15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@2.1.1(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1)):
+  vue-loader@15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@2.1.1(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1)):
     dependencies:
-      '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)
+      '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)
       css-loader: 2.1.1(webpack@5.100.2(webpack-cli@6.0.1))
       hash-sum: 1.0.2
       loader-utils: 1.4.2
@@ -37297,6 +37400,73 @@ snapshots:
       - walrus
       - whiskers
 
+  vue-loader@15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@6.11.0(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1)):
+    dependencies:
+      '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)
+      css-loader: 6.11.0(webpack@5.100.2(webpack-cli@6.0.1))
+      hash-sum: 1.0.2
+      loader-utils: 1.4.2
+      vue-hot-reload-api: 2.3.4
+      vue-style-loader: 4.1.3
+      webpack: 5.100.2(webpack-cli@6.0.1)
+    optionalDependencies:
+      '@vue/compiler-sfc': 3.5.24
+      vue-template-compiler: 2.7.16
+    transitivePeerDependencies:
+      - arc-templates
+      - atpl
+      - babel-core
+      - bracket-template
+      - coffee-script
+      - dot
+      - dust
+      - dustjs-helpers
+      - dustjs-linkedin
+      - eco
+      - ect
+      - ejs
+      - haml-coffee
+      - hamlet
+      - hamljs
+      - handlebars
+      - hogan.js
+      - htmling
+      - jade
+      - jazz
+      - jqtpl
+      - just
+      - liquid-node
+      - liquor
+      - lodash
+      - marko
+      - mote
+      - mustache
+      - nunjucks
+      - plates
+      - pug
+      - qejs
+      - ractive
+      - razor-tmpl
+      - react
+      - react-dom
+      - slm
+      - squirrelly
+      - swig
+      - swig-templates
+      - teacup
+      - templayed
+      - then-jade
+      - then-pug
+      - tinyliquid
+      - toffee
+      - twig
+      - twing
+      - underscore
+      - vash
+      - velocityjs
+      - walrus
+      - whiskers
+
   vue-loader@17.4.2(@vue/compiler-sfc@3.5.24)(vue@3.4.38(typescript@4.9.5))(webpack@5.100.2(webpack-cli@6.0.1)):
     dependencies:
       chalk: 4.1.2
@@ -37307,13 +37477,13 @@ snapshots:
       '@vue/compiler-sfc': 3.5.24
       vue: 3.4.38(typescript@4.9.5)
 
-  vue-markdown-loader@2.4.1(vue-loader@15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@2.1.1(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))):
+  vue-markdown-loader@2.4.1(vue-loader@15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@2.1.1(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))):
     dependencies:
       cheerio: 0.20.0
       highlight.js: 11.11.1
       loader-utils: 1.4.2
       markdown-it: 14.1.0
-      vue-loader: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@2.1.1(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
+      vue-loader: 15.10.2(@vue/compiler-sfc@3.5.24)(css-loader@2.1.1(webpack@5.100.2(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(webpack-cli@6.0.1))
 
   vue-property-decorator@6.1.0:
     dependencies:
@@ -37472,7 +37642,7 @@ snapshots:
     dependencies:
       axios: 1.13.6(debug@4.4.3)
       joi: 18.0.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       minimist: 1.2.8
       rxjs: 7.8.2
     transitivePeerDependencies:

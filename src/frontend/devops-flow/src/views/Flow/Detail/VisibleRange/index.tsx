@@ -7,6 +7,8 @@ import EmptyTableStatus from '@/components/EmptyTable'
 import type { Column } from 'bkui-vue/lib/table/props'
 import { useTableHeight } from '@/hooks/useTableHeight'
 import { useVisibleRange } from '@/hooks/useVisibleRange'
+import BkOrgSelector, { type TreeItem } from '@blueking/bk-org-selector';
+import '@blueking/bk-org-selector/vue3/vue3.css';
 import styles from './VisibleRange.module.css'
 
 export default defineComponent({
@@ -14,6 +16,10 @@ export default defineComponent({
   setup() {
     const { t } = useI18n()
     const tableContainerRef = ref<HTMLDivElement>()
+    const orgSelectorRef = ref<InstanceType<typeof BkOrgSelector>>()
+    const selectedOrgs = ref<TreeItem[]>([])
+    const avatarBaseUrl = 'https://r.hrc.woa.com/photo/150/'
+    const apiBaseUrl = 'https://bk-user-web.apigw.o.woa.com/prod'
     const { maxHeight } = useTableHeight(tableContainerRef)
     
     // 使用数据 Hook
@@ -84,22 +90,23 @@ export default defineComponent({
           },
         ] as Column[],
     )
-    
-    // 操作方法
+
     const handleAdd = () => {
-      console.log('添加用户/组织')
-      // TODO: 打开人员选择弹窗
-      // 弹窗确认后调用：
-      // await handleAddAPI([
-      //   {
-      //     type: 'DEPT', // DEPT, USER, ORG, GROUP等
-      //     scopeId: 'xxx',
-      //     scopeName: 'xxx',
-      //   }
-      // ])
-      // 然后刷新列表
+      orgSelectorRef.value?.openEdit()
     }
-    
+
+    const handleChange = (value: TreeItem[]) => {
+      console.log('选中数据变化:', value)
+    }
+
+    const handleChangeResult = (result: { name: string; type: string; data: TreeItem[] }[]) => {
+      console.log('格式化结果变化:', result)
+    }
+
+    const handleClosed = () => {
+      console.log('弹窗已关闭')
+    }
+
     const handleRemove = (id: string) => {
       console.log('移除:', id)
       // TODO: 显示确认弹窗
@@ -107,7 +114,14 @@ export default defineComponent({
       // await handleRemoveAPI([id]) // 传入ID数组
       // 然后刷新列表
     }
-    
+    /** 点击确认按钮时触发 */
+    const handleAddConfirm = (result: { name: string; type: string; data: TreeItem[] }[]) => {
+      // result 按 type 分组：org(组织) / user(用户) / virtual(虚拟账号)
+      console.log('确认选择:', result)
+      // TODO: 调用添加接口，然后刷新列表
+      init()
+    }
+
     onMounted(() => {
       init()
     })
@@ -125,9 +139,7 @@ export default defineComponent({
                 keypath="flow.visibleRange.visibleRangeDesc"
                 class={styles.noticeDesc}
             >
-                <span class={styles.noticeBold}>{t('flow.content.visibleRange')}</span>
-                <span class={styles.noticeBold}>{t('flow.visibleRange.aiCall')}</span>
-                <span class={styles.noticeBold}>{t('flow.visibleRange.apiTrigger')}</span>
+                <span class={styles.noticeBold}>{t('flow.content.trigger')}</span>
             </i18n-t>
         </div>
         
@@ -169,6 +181,7 @@ export default defineComponent({
                 empty: () => (
                   <EmptyTableStatus
                     type={searchValue.value ? 'search-empty' : 'empty'}
+                    desc={searchValue.value ? undefined : t('flow.visibleRange.personalOnly')}
                     onClear={clearFilters}
                   />
                 ),
@@ -176,6 +189,21 @@ export default defineComponent({
             </Table>
           </Loading>
         </div>
+
+        {/* 组织选择器（通过 ref 按需打开弹窗） */}
+        <BkOrgSelector
+          ref={orgSelectorRef}
+          v-model={selectedOrgs.value}
+          api-base-url={apiBaseUrl}
+          avatarBaseUrl={avatarBaseUrl}
+          has-user
+          virtual-render
+          display-mode="simple"
+          onChange={handleChange}
+          onConfirm={handleAddConfirm}
+          onChangeResult={handleChangeResult}
+          onClosed={handleClosed}
+        />
       </div>
     )
   },

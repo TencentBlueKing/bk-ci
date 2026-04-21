@@ -33,7 +33,7 @@
 }
 
 .noticeBold {
-  font-weight: 700;
+  color: var(--color-primary);
 }
 
 /* 操作栏 */
