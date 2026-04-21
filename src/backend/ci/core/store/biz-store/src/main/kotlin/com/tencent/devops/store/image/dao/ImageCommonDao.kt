@@ -197,7 +197,8 @@ class ImageCommonDao : AbstractStoreCommonDao() {
             .from(image)
             .join(imageLog)
             .on(image.ID.eq(imageLog.IMAGE_ID))
-            .where(image.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()).and(image.IMAGE_CODE.eq(storeCode)))
+            .where(image.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()).and(image.IMAGE_CODE.eq(storeCode))
+                .and(image.IMAGE_SIZE.isNotNull))
 
         return baseStep.fetchOne(0, Long::class.java) ?: 0L
     }

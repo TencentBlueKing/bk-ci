@@ -82,8 +82,8 @@ class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
         if (storePackageInfoReqs.isNotEmpty()) {
             atomDao.updateComponentVersionInfo(
                 dslContext = dslContext,
-                atomId,
-                JsonUtil.toJson(storePackageInfoReqs)
+                storeId = atomId,
+                pkgSize = JsonUtil.toJson(storePackageInfoReqs)
             )
         }
     }

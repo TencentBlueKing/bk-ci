@@ -8,9 +8,9 @@ data class StorePackageInfoReq(
     @get:Schema(title = "组件类型")
     val storeType: StoreTypeEnum,
     @get:Schema(title = "操作系统名称")
-    val osName: String? = "",
+    val osName: String? = null,
     @get:Schema(title = "架构")
-    val arch: String? = "",
+    val arch: String? = null,
     @get:Schema(title = "包大小")
     val size: Long
 )
