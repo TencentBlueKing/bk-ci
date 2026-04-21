@@ -33,7 +33,7 @@ import com.tencent.devops.ai.constant.AiInteractionType
 import com.tencent.devops.ai.dao.HotQuestionDao
 import com.tencent.devops.ai.dao.WelcomeGuideDao
 import com.tencent.devops.ai.pojo.FormSchemaVO
-import com.tencent.devops.ai.pojo.HotQuestionPageVO
+import com.tencent.devops.ai.pojo.HotQuestion
 import com.tencent.devops.ai.pojo.HotQuestionVO
 import com.tencent.devops.ai.pojo.WelcomeActionVO
 import com.tencent.devops.ai.pojo.WelcomeCardVO
@@ -94,9 +94,8 @@ class WelcomeGuideService @Autowired constructor(
             }
         }
 
-        val hotQuestions = hotQuestionDao.listEnabled(
-            dslContext, DEFAULT_HOT_QUESTION_LIMIT, 0
-        ).map { HotQuestionVO(id = it.id, question = it.question) }
+        val hotQuestions = hotQuestionDao.listEnabled(dslContext)
+            .map { HotQuestionVO(id = it.id, question = it.question) }
 
         logger.info(
             "[WelcomeGuide] userId={}, projectId={}, role={}, cards={}, hotQuestions={}",
@@ -109,27 +108,12 @@ class WelcomeGuideService @Autowired constructor(
         )
     }
 
-    fun getHotQuestions(
-        page: Int,
-        pageSize: Int
-    ): HotQuestionPageVO {
-        val total = hotQuestionDao.countEnabled(dslContext)
-        val safePage = if (page < 1) 1 else page
-        val offset = (safePage - 1) * pageSize
-        val records = hotQuestionDao.listEnabled(
-            dslContext, pageSize, offset
-        )
-        val questions = records.map {
-            HotQuestionVO(id = it.id, question = it.question)
-        }
-
-        return HotQuestionPageVO(
-            questions = questions,
-            total = total,
-            page = safePage,
-            pageSize = pageSize,
-            hasMore = (offset + pageSize) < total
-        )
+    fun getHotQuestions(): HotQuestion {
+        val questions = hotQuestionDao.listEnabled(dslContext)
+            .shuffled()
+            .take(DEFAULT_HOT_QUESTION_LIMIT)
+            .map { HotQuestionVO(id = it.id, question = it.question) }
+        return HotQuestion(questions = questions)
     }
 
     /**

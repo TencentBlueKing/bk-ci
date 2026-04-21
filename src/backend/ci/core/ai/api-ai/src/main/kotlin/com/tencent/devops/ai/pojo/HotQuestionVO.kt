@@ -37,16 +37,8 @@ data class HotQuestionVO(
     val question: String
 )
 
-@Schema(title = "AI热点问题-分页")
-data class HotQuestionPageVO(
+@Schema(title = "AI热点问题")
+data class HotQuestion(
     @get:Schema(title = "问题列表")
-    val questions: List<HotQuestionVO>,
-    @get:Schema(title = "总数")
-    val total: Long,
-    @get:Schema(title = "当前页码")
-    val page: Int,
-    @get:Schema(title = "每页条数")
-    val pageSize: Int,
-    @get:Schema(title = "是否有更多")
-    val hasMore: Boolean
+    val questions: List<HotQuestionVO>
 )

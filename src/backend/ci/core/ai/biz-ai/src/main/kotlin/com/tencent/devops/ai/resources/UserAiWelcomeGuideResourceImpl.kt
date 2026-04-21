@@ -28,7 +28,7 @@
 package com.tencent.devops.ai.resources
 
 import com.tencent.devops.ai.api.user.UserAiWelcomeGuideResource
-import com.tencent.devops.ai.pojo.HotQuestionPageVO
+import com.tencent.devops.ai.pojo.HotQuestion
 import com.tencent.devops.ai.pojo.WelcomeGuideVO
 import com.tencent.devops.ai.service.WelcomeGuideService
 import com.tencent.devops.common.api.pojo.Result
@@ -49,12 +49,8 @@ class UserAiWelcomeGuideResourceImpl @Autowired constructor(
     }
 
     override fun getHotQuestions(
-        userId: String,
-        page: Int,
-        pageSize: Int
-    ): Result<HotQuestionPageVO> {
-        return Result(
-            welcomeGuideService.getHotQuestions(page, pageSize)
-        )
+        userId: String
+    ): Result<HotQuestion> {
+        return Result(welcomeGuideService.getHotQuestions())
     }
 }

@@ -538,7 +538,7 @@ class BuildTools(
                     add("日志行数过多，为避免内存压力，当前最多合并前 $MAX_MERGED_LOG_LINES 行再继续截断。")
                 }
                 if (contentTruncated) {
-                    add("日志文本过长，content 已按最多 ${MAX_LOG_CONTENT_CHARS} 字符截断用于分析。")
+                    add("日志文本过长，content 已按最多 $MAX_LOG_CONTENT_CHARS 字符截断用于分析。")
                 }
                 if (effectiveHasMore) {
                     add("日志仍有后续内容未拉取完，如需更多上下文请继续缩小范围或到页面查看完整日志。")
@@ -590,7 +590,7 @@ class BuildTools(
             return content
         }
         return content.take(MAX_LOG_CONTENT_CHARS) +
-                "\n...(日志内容过长，已截断，仅保留前 ${MAX_LOG_CONTENT_CHARS} 个字符)"
+                "\n...(日志内容过长，已截断，仅保留前 $MAX_LOG_CONTENT_CHARS 个字符)"
     }
 
     private fun estimatedRenderedCharCount(logs: List<LogLine>): Int {

@@ -27,28 +27,26 @@
 
 package com.tencent.devops.ai.dao
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.ai.tables.TAiHotQuestion
 import com.tencent.devops.model.ai.tables.records.TAiHotQuestionRecord
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 /** 热门问题 DAO，对应 T_AI_HOT_QUESTION 表。 */
 @Repository
 class HotQuestionDao {
 
     fun listEnabled(
-        dslContext: DSLContext,
-        limit: Int,
-        offset: Int
+        dslContext: DSLContext
     ): Result<TAiHotQuestionRecord> {
         with(TAiHotQuestion.T_AI_HOT_QUESTION) {
             return dslContext.selectFrom(this)
                 .where(ENABLED.eq(true))
                 .orderBy(WEIGHT.desc(), SORT_ORDER.asc())
-                .limit(limit)
-                .offset(offset)
+                .skipCheck()
                 .fetch()
         }
     }
@@ -70,8 +68,7 @@ class HotQuestionDao {
         }
     }
 
-    fun getById(dslContext: DSLContext, id: String)
-        : TAiHotQuestionRecord? {
+    fun getById(dslContext: DSLContext, id: String): TAiHotQuestionRecord? {
         with(TAiHotQuestion.T_AI_HOT_QUESTION) {
             return dslContext.selectFrom(this)
                 .where(ID.eq(id))

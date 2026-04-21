@@ -68,13 +68,17 @@ class AiModelConfig {
             val retryable = evaluateRetryable(error)
             if (retryable) {
                 logger.warn(
-                    "[LLM-Retry] will retry: {} - {}",
-                    error.javaClass.simpleName, error.message
+                    "[LLM-Retry] will retry: {} - {} | cause: {}",
+                    error.javaClass.simpleName,
+                    error.message,
+                    describeCauseChain(error)
                 )
             } else {
                 logger.warn(
-                    "[LLM-Retry] NOT retry: {} - {}",
-                    error.javaClass.simpleName, error.message
+                    "[LLM-Retry] NOT retry: {} - {} | cause: {}",
+                    error.javaClass.simpleName,
+                    error.message,
+                    describeCauseChain(error)
                 )
             }
             retryable
@@ -154,6 +158,22 @@ class AiModelConfig {
         return RETRYABLE_MESSAGE_KEYWORDS.any { keyword ->
             message.contains(keyword, ignoreCase = true)
         }
+    }
+
+    private fun describeCauseChain(error: Throwable): String {
+        val sb = StringBuilder()
+        var current: Throwable? = error.cause
+        var depth = 0
+        while (current != null && depth < 5) {
+            if (sb.isNotEmpty()) sb.append(" -> ")
+            sb.append(current.javaClass.simpleName)
+                .append("(")
+                .append(current.message ?: "null")
+                .append(")")
+            current = current.cause
+            depth++
+        }
+        return sb.ifEmpty { "none" }.toString()
     }
 
     companion object {
