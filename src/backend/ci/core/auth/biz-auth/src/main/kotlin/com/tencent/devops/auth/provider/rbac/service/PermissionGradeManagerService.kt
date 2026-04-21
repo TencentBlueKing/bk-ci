@@ -75,11 +75,11 @@ import com.tencent.devops.project.pojo.ProjectApprovalInfo
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 
 @Suppress("LongParameterList", "TooManyFunctions")
 class PermissionGradeManagerService @Autowired constructor(
@@ -488,16 +488,15 @@ class PermissionGradeManagerService @Autowired constructor(
     }
 
     fun listGradeManagers(): List<GradeManagerInfo> {
-        val cacheKey = buildGradeManagerCacheKey()
-        return gradeManagerCache.get(cacheKey) {
+        return gradeManagerCache.get("gradeManagerList") {
             fetchGradeManagers()
         } ?: emptyList()
     }
 
     private fun fetchGradeManagers(): List<GradeManagerInfo> {
-        val responseDTO: ResponseDTO<Map<String, Any>> = bkHttpRequestService.executeHttpGet(
-            url = buildGradeManagerListUrl()
-        )
+        val url = buildGradeManagerListUrl()
+        logger.info("fetching grade managers url|$url")
+        val responseDTO: ResponseDTO<Map<String, Any>> = bkHttpRequestService.executeHttpGet(url)
         val data = responseDTO.data ?: return emptyList()
         return bkHttpRequestService.objectMapper.convertValue(
             data,
@@ -518,7 +517,7 @@ class PermissionGradeManagerService @Autowired constructor(
         if (conflictGradeManagers.isEmpty()) {
             logger.info(
                 "no conflict grade manager found before prefix migration|" +
-                    "projectCode=$projectCode|name=$targetGradeManagerName"
+                        "projectCode=$projectCode|name=$targetGradeManagerName"
             )
             return
         }
@@ -526,15 +525,15 @@ class PermissionGradeManagerService @Autowired constructor(
         val conflictGradeManagerIds = conflictGradeManagers.map { it.id.toString() }
         logger.info(
             "clean conflict grade managers before prefix migration|" +
-                "projectCode=$projectCode|name=$targetGradeManagerName|" +
-                "gradeManagerIds=$conflictGradeManagerIds"
+                    "projectCode=$projectCode|name=$targetGradeManagerName|" +
+                    "gradeManagerIds=$conflictGradeManagerIds"
         )
         val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         conflictGradeManagerIds.forEach { deleteGradeManager(it, tenantId) }
         logger.info(
             "clean conflict grade managers success before prefix migration|" +
-                "projectCode=$projectCode|name=$targetGradeManagerName|" +
-                "gradeManagerIds=$conflictGradeManagerIds"
+                    "projectCode=$projectCode|name=$targetGradeManagerName|" +
+                    "gradeManagerIds=$conflictGradeManagerIds"
         )
     }
 
@@ -547,13 +546,9 @@ class PermissionGradeManagerService @Autowired constructor(
             iamConfiguration.systemId,
             StandardCharsets.UTF_8.name()
         )
-        return "${bkApigwIamHost.trimEnd('/')}$GRADE_MANAGER_LIST_URL_SUFFIX" +
-            "?system=$systemId&page=$GRADE_MANAGER_LIST_PAGE" +
-            "&page_size=$GRADE_MANAGER_LIST_PAGE_SIZE"
-    }
-
-    private fun buildGradeManagerCacheKey(): String {
-        return "${bkApigwIamHost.trimEnd('/')}|${iamConfiguration.systemId}"
+        return "${iamConfiguration.apigwBaseUrl}$GRADE_MANAGER_LIST_URL_SUFFIX" +
+                "?system=$systemId&page=$GRADE_MANAGER_LIST_PAGE" +
+                "&page_size=$GRADE_MANAGER_LIST_PAGE_SIZE"
     }
 
     /**
