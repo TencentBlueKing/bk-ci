@@ -46,14 +46,16 @@ class OpPipelineVisibilityResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        keyword: String?
     ): Result<SQLPage<PipelineVisibility>> {
         return Result(
             pipelineVisibilityService.listVisibility(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 page = page ?: 1,
-                pageSize = pageSize ?: 20
+                pageSize = pageSize ?: 20,
+                keyword = keyword
             )
         )
     }

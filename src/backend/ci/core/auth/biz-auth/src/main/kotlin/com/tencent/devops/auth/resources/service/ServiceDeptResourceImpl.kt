@@ -54,4 +54,8 @@ class ServiceDeptResourceImpl @Autowired constructor(
     override fun checkUserDeparted(name: String): Result<Boolean> {
         return Result(deptService.isUserDeparted(name))
     }
+
+    override fun getUserDeptIds(userId: String): Result<Set<String>> {
+        return Result(deptService.getUserDeptInfo(userId))
+    }
 }

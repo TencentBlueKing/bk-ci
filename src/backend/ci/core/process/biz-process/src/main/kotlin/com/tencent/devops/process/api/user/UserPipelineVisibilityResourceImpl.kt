@@ -39,7 +39,8 @@ class UserPipelineVisibilityResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        keyword: String?
     ): Result<SQLPage<PipelineVisibility>> {
         checkPermission(userId, projectId, pipelineId, AuthPermission.VIEW)
         return Result(
@@ -47,7 +48,8 @@ class UserPipelineVisibilityResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 page = page ?: 1,
-                pageSize = pageSize ?: 20
+                pageSize = pageSize ?: 20,
+                keyword = keyword
             )
         )
     }
