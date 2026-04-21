@@ -50,6 +50,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/codesign"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
 
@@ -285,6 +286,12 @@ func doWaitBeforeRestart(baseDelay, maxWait, pollTick time.Duration) {
 // via WTS APIs. Returns false if no active user session is available, in which
 // case the caller should wait for the user to log in (e.g. via auto-logon).
 func launchAgentInUserSession(agentPath, workDir string) bool {
+	if err := codesign.Verify(agentPath); err != nil {
+		logs.WithError(err).Error("agent signature verify failed, refuse to launch")
+		time.Sleep(30 * time.Second)
+		return true // 返回 true 避免上层按"无用户会话"再循环 30s；总体上 1 分钟退避
+	}
+
 	cmdLine := fmt.Sprintf(`"%s"`, agentPath)
 
 	proc, err := StartProcessAsUser(agentPath, cmdLine, workDir)
@@ -324,6 +331,12 @@ func launchAgentInUserSession(agentPath, workDir string) bool {
 // launchAgentDirect starts the agent as a direct child process (interactive
 // mode or fallback when no user session is available).
 func launchAgentDirect(agentPath, workDir string) {
+	if err := codesign.Verify(agentPath); err != nil {
+		logs.WithError(err).Error("agent signature verify failed, refuse to launch")
+		time.Sleep(30 * time.Second)
+		return
+	}
+
 	cmd := exec.Command(agentPath)
 	cmd.Dir = workDir
 

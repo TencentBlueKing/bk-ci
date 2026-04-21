@@ -39,6 +39,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/codesign"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
@@ -57,6 +58,34 @@ func UninstallAgent() {
 	systemutil.ExitProcess(constant.DaemonExitCode)
 }
 
+// verifyUpgradeBinaries 校验升级目录下 upgrader / agent / daemon 三个可执行文件
+// 的代码签名。任一失败则整体拒绝拉起 upgrader。
+//
+// 若对应平台的信任锚（WinCertOrgName / MacosTeamId）为空，codesign.Verify
+// 内部会直接返回 nil，因此此函数在未启用签名校验时是零成本的。
+//
+// 三个路径的计算复用 config 的跨平台 helper；Linux 下 daemon/agent 文件名相同，
+// 通过 map 去重避免重复日志。
+func verifyUpgradeBinaries() error {
+	upgradeDir := systemutil.GetUpgradeDir()
+	candidates := []string{
+		upgradeDir + "/" + config.GetClientUpgraderFile(),
+		upgradeDir + "/" + config.GetClienAgentFile(),
+		upgradeDir + "/" + config.GetClientDaemonFile(),
+	}
+	seen := make(map[string]struct{}, len(candidates))
+	for _, p := range candidates {
+		if _, ok := seen[p]; ok {
+			continue
+		}
+		seen[p] = struct{}{}
+		if err := codesign.Verify(p); err != nil {
+			return errors.Wrapf(err, "verify %s", p)
+		}
+	}
+	return nil
+}
+
 // runUninstallUpgrader 卸载的区分开，方便进行退出处理
 func runUninstallUpgrader(action string) error {
 	logs.Info("agentUpgrade|start uninstall upgrader process")
@@ -69,6 +98,11 @@ func runUninstallUpgrader(action string) error {
 			logs.WithError(err).Error("agentUpgrade|chmod failed")
 			return errors.New("chmod failed: ")
 		}
+	}
+
+	if err := verifyUpgradeBinaries(); err != nil {
+		logs.WithError(err).Error("agentUpgrade|signature verify failed, refuse to run uninstall upgrader")
+		return errors.Wrap(err, "signature verify failed")
 	}
 
 	args := []string{"-action=" + action}
@@ -97,6 +131,11 @@ func runUpgrader(action string) error {
 			logs.WithError(err).Error("agentUpgrade|chmod failed")
 			return errors.New("chmod failed: ")
 		}
+	}
+
+	if err := verifyUpgradeBinaries(); err != nil {
+		logs.WithError(err).Error("agentUpgrade|signature verify failed, refuse to run upgrader")
+		return errors.Wrap(err, "signature verify failed")
 	}
 
 	if action != config.ActionUninstall {
