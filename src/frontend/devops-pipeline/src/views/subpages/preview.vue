@@ -38,6 +38,30 @@
             </bk-exception>
         </div>
         <template v-else>
+            <div
+                v-show="!isDebugPipeline && !pacEnabled"
+                class="pipeline-execute-version-select params-content-item"
+            >
+                <span>
+                    {{ $t('history.tableMap.pipelineVersion') }}
+                </span>
+                <VersionSelector
+                    :editable="pacEnabled"
+                    :class="{
+                        'exec-version-is-disabled': !pacEnabled
+                    }"
+                    :value="executeVersion"
+                    @change="handleExecuteVersionChange"
+                    :include-draft="false"
+                    :show-extension="false"
+                    refresh-list-on-expand
+                    :unique-id="pipelineId"
+                />
+                <i
+                    class="bk-icon icon-info-circle"
+                    v-bk-tooltips="execVersionSelectorDisableTips"
+                />
+            </div>
             <bk-alert
                 v-if="expireReleasedVersion"
                 type="warning"
@@ -362,6 +386,7 @@
 <script>
     import ParamSet from '@/components/ParamSet.vue'
     import Pipeline from '@/components/Pipeline'
+    import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector.vue'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry.vue'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
@@ -373,6 +398,7 @@
 
     export default {
         components: {
+            VersionSelector,
             PipelineVersionsForm,
             PipelineParamsForm,
             Pipeline,
@@ -435,6 +461,12 @@
                 'pipelineInfo',
                 'tempParamSet'
             ]),
+            execVersionSelectorDisableTips () {
+                return {
+                    theme: 'light',
+                    content: this.$t('preview.versionSelectorDisableTips')
+                }
+            },
             executeVersion () {
                 return this.$route.params.version ? parseInt(this.$route.params.version) : this.pipelineInfo?.releaseVersion
             },
@@ -568,6 +600,17 @@
                     this.activeName.add(id)
                 }
                 this.activeName = new Set(this.activeName)
+            },
+            handleExecuteVersionChange (version, versionInfo) {
+                // TODO:
+                this.selectPipelineVersion(versionInfo)
+                this.$router.push({
+                    name: this.$route.name,
+                    params: {
+                        ...this.$route.params,
+                        version
+                    }
+                })
             },
             initParams (startupInfo) {
                 if (startupInfo.canManualStartup) {
