@@ -17,10 +17,10 @@ data class AiLlmProperties(
     /**
      * HTTP 读超时（秒），即底层 socket 两次数据包之间的最大等待时间。
      * 流式场景下：首 token 到达前、以及任意两个 SSE chunk 之间都受此约束。
-     * 设为 60s，兼顾大模型"思考"耗时（deepseek-r1 等推理模型首 token 可能 20-40s）。
-     * 此值应 ≥ executionTimeoutSeconds，作为底层兜底。
+     * 此值必须 > executionTimeoutSeconds，确保 Reactor 层的 timeout 先触发
+     * （优雅取消 + 重试），而不是 socket 层先断开（粗暴 IOException）。
      */
-    val readTimeoutSeconds: Long = 60,
+    val readTimeoutSeconds: Long = 90,
     /** 请求写入超时（秒），prompt 较大时需要一定上传时间 */
     val writeTimeoutSeconds: Long = 30,
 
@@ -28,15 +28,18 @@ data class AiLlmProperties(
     /**
      * 单次模型调用超时（秒）。
      * agentscope 框架在 Flux 流上施加 timeout()，即从发起请求到首元素的等待上限。
-     * OpenAI SDK 默认 600s 过于宽松；业界推荐流式场景 30-60s。
-     * 默认 30s：大多数模型 5-30s 内开始返回首 token，30s 留足余量。
+     * 默认 60s：推理模型（deepseek-r1 等）首 token 可达 20-40s，
+     * 30s 过于紧凑导致频繁误判超时；60s 兼顾常规模型和推理模型。
      */
-    val executionTimeoutSeconds: Long = 30,
+    val executionTimeoutSeconds: Long = 60,
     /**
      * 最大尝试次数（含首次调用）。
-     * OpenAI SDK 默认 3 次（首次 + 2 次重试），业界共识也是 3 次。
+     * 设为 5 次（首次 + 4 次重试）。比 OpenAI SDK 默认的 3 次更多，
+     * 因为 Reactor timeout 取消上游订阅时会产生一个级联的 SSE stream failed
+     * 副作用错误，该错误也会消耗一次重试次数（详见日志分析），
+     * 实际有效重试次数约为 maxAttempts/2。
      */
-    val maxAttempts: Int = 3,
+    val maxAttempts: Int = 5,
     /**
      * 首次重试退避间隔（秒）。
      * OpenAI SDK 用 0.5s，业界推荐 0.5-2s。

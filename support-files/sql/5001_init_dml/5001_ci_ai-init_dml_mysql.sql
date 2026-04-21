@@ -84,7 +84,7 @@ INSERT INTO `T_AI_WELCOME_GUIDE` (
      '查找流水线、触发构建、下载构建产物，并分析构建失败原因。', NULL,
      'PROMPT_COMPLETION', NULL, NULL, 'pipeline', 1),
     ('pipeline-gen', NULL, 'CARD', '流水线生成',
-     '用自然语言描述需求，辅助生成流水线配置。', NULL,
+     '从零或用模版生成流水线编排，并支持分析编排设计与性能优化建议。', NULL,
      'PROMPT_COMPLETION', NULL, NULL, 'auto-fix', 2),
     ('auth-mgmt', NULL, 'CARD', '权限管理',
      '支持分析权限、开通与续期、回收与移交，以及成员管理与个人自助查询、申请、退出等常见场景。', NULL,
@@ -110,16 +110,25 @@ INSERT INTO `T_AI_WELCOME_GUIDE` (
     `INTERACTION_TYPE`, `FORM_SCHEMA`, `ROLE_FILTER`, `ICON`, `SORT_ORDER`
 ) VALUES
     ('pipeline-ops-query', 'pipeline-ops', 'ACTION', '查询流水线', NULL,
-     '根据如下关键字查询流水线：',
+     '请帮我查询名称包含 [流水线关键字] 的流水线，并列出它们最近一次的执行状态和耗时。',
      'PROMPT_COMPLETION', NULL, NULL, NULL, 1),
     ('pipeline-ops-run', 'pipeline-ops', 'ACTION', '执行流水线', NULL,
-     '帮我执行流水线 xxx。参数修改规则：xxx。请先拉取该流水线的构建参数并按规则填好，再让我二次确认后执行。',
+     CONCAT(
+         '请帮我执行流水线 [流水线名称/ID]，使用代码分支 [分支名称，如 master/main]，',
+         '并设置启动参数 [参数名]=[参数值]。'
+     ),
      'PROMPT_COMPLETION', NULL, NULL, NULL, 2),
     ('pipeline-ops-artifact', 'pipeline-ops', 'ACTION', '下载制品', NULL,
-     '根据如下关键字查找制品并下载：',
+     CONCAT(
+         '请帮我获取流水线 [流水线名称] 最新一次（或第 [#构建号] 次）成功构建的制品下载链接，',
+         '制品名称关键字是 [制品文件关键字，如 .apk / report.zip]。'
+     ),
      'PROMPT_COMPLETION', NULL, NULL, NULL, 3),
     ('pipeline-ops-analyze', 'pipeline-ops', 'ACTION', '分析构建错误', NULL,
-     '帮我分析流水线 xxx 构建 xxx 的失败原因',
+     CONCAT(
+         '我执行的流水线 [流水线名称/ID] 最新一次（或第 [#构建号] 次）构建失败了。',
+         '请帮我分析完整的构建日志，指出导致错误的具体原因，并给出修复建议。'
+     ),
      'PROMPT_COMPLETION', NULL, NULL, NULL, 4)
 ON DUPLICATE KEY UPDATE
     `PARENT_ID` = VALUES(`PARENT_ID`),
@@ -138,12 +147,26 @@ INSERT INTO `T_AI_WELCOME_GUIDE` (
     `ID`, `PARENT_ID`, `TYPE`, `LABEL`, `DESCRIPTION`, `PROMPT_CONTENT`,
     `INTERACTION_TYPE`, `FORM_SCHEMA`, `ROLE_FILTER`, `ICON`, `SORT_ORDER`
 ) VALUES
-    ('pipeline-gen-from-template', 'pipeline-gen', 'ACTION', '从模版生成', NULL,
-     '使用 xxx 模版生成约束模式流水线，规则如下：xxx',
+    ('pipeline-gen-from-scratch', 'pipeline-gen', 'ACTION', '从零生成', NULL,
+     CONCAT(
+         '我需要为我的 [语言/框架，如 Java/Spring Boot] 项目创建一条全新的流水线。',
+         '需包含环节：[代码拉取、Maven 编译、单元测试、Docker 镜像打包并推送]。',
+         '请帮我生成完整的蓝盾流水线编排代码，并加上中文注释。'
+     ),
      'PROMPT_COMPLETION', NULL, NULL, NULL, 1),
+    ('pipeline-gen-from-template', 'pipeline-gen', 'ACTION', '从模版生成', NULL,
+     CONCAT(
+         '请基于模版 [模版名称，如 Go 语言通用构建模版]，帮我实例化一条名称为[流水线名称]的约束模式流水线。',
+         '我的代码库地址是 [代码库地址]，并且需要在模版的基础上额外增加一个失败通知，',
+         '通知方式为企业微信群消息，群ID为[123456]。'
+     ),
+     'PROMPT_COMPLETION', NULL, NULL, NULL, 2),
     ('pipeline-gen-analyze', 'pipeline-gen', 'ACTION', '分析流水线', NULL,
-     '请分析以下流水线与流水线组：流水线=xxx；流水线组=xxx',
-     'PROMPT_COMPLETION', NULL, NULL, NULL, 2)
+     CONCAT(
+         '请帮我分析流水线 [流水线名称] 的编排设计。',
+         '它最近的执行耗时较长，请指出它的性能瓶颈，并提供开启并发、缓存优化或插件替换的建议。'
+     ),
+     'PROMPT_COMPLETION', NULL, NULL, NULL, 3)
 ON DUPLICATE KEY UPDATE
     `PARENT_ID` = VALUES(`PARENT_ID`),
     `TYPE` = VALUES(`TYPE`),
@@ -162,37 +185,67 @@ INSERT INTO `T_AI_WELCOME_GUIDE` (
     `INTERACTION_TYPE`, `FORM_SCHEMA`, `ROLE_FILTER`, `ICON`, `SORT_ORDER`
 ) VALUES
     ('auth-mgmt-analyze-pipeline', 'auth-mgmt', 'ACTION', '分析权限', NULL,
-     '分析如下流水线权限：',
+     CONCAT(
+         '用户 [用户名/ID] 反馈他无法对流水线 [流水线名称] 进行 [操作类型，如 编辑/执行] 操作。',
+         '请帮我分析该用户的当前权限，说明他缺少了什么角色的哪些具体权限点，并给出权限开通建议。'
+     ),
      'PROMPT_COMPLETION', NULL, 'ADMIN', NULL, 1),
     ('auth-mgmt-grant', 'auth-mgmt', 'ACTION', '开通权限', NULL,
-     '给用户 xxx 开通 xxx 流水线的 下载制品 操作权限',
+     CONCAT(
+         '请帮我为用户 [用户名/ID1, 用户名/ID2] 开通项目下的 ',
+         '[关键操作，如下载名称为[流水线名称]的流水线的制品] 操作权限，有效期为 [如 30] 天。'
+     ),
      'PROMPT_COMPLETION', NULL, 'ADMIN', NULL, 2),
     ('auth-mgmt-renew-admin', 'auth-mgmt', 'ACTION', '续期权限', NULL,
-     '给用户 xxx 下载 xxx 流水线制品的权限进行续期，续期 3 个月',
+     CONCAT(
+         '用户 [用户名/ID] 的 [角色/权限名称] 权限即将过期，',
+         '请帮我将该权限续期 [时长，如 3个月/半年]。'
+     ),
      'PROMPT_COMPLETION', NULL, 'ADMIN', NULL, 3),
     ('auth-mgmt-revoke', 'auth-mgmt', 'ACTION', '回收权限', NULL,
-     '将用户 xxx 下载 xxx 流水线制品的权限移除',
+     CONCAT(
+         '请帮我立即回收用户 [用户名/ID] 在项目下的 ',
+         '[具体权限/角色，如 流水线删除权限 / 所有权限]。'
+     ),
      'PROMPT_COMPLETION', NULL, 'ADMIN', NULL, 4),
     ('auth-mgmt-handover-admin', 'auth-mgmt', 'ACTION', '移交权限', NULL,
-     '将用户 xxx 管理的流水线移交给 xxx',
+     CONCAT(
+         '因为工作交接，请帮我将用户 [原用户名/ID] 在项目下负责的所有流水线资源及相关管理员权限，',
+         '完整移交给用户 [新用户名/ID]。'
+     ),
      'PROMPT_COMPLETION', NULL, 'ADMIN', NULL, 5),
     ('auth-mgmt-remove-users', 'auth-mgmt', 'ACTION', '移除用户', NULL,
-     '请将以下用户从当前项目中移除：xxx。请先输出移除影响报告，我二次确认后再执行。',
+     CONCAT(
+         '用户 [用户名/ID] 已不再参与本项目，',
+         '请帮我将他从项目的所有用户组中彻底移除，清除相关访问权限。'
+     ),
      'PROMPT_COMPLETION', NULL, 'ADMIN', NULL, 6),
     ('auth-mgmt-my-perms', 'auth-mgmt', 'ACTION', '我的权限', NULL,
-     '请分析并展示我在当前项目下的权限情况。',
+     '请帮我查询我在项目下目前拥有的所有角色，以及这些角色对应的核心操作权限。',
      'DIRECT_TRIGGER', NULL, 'MEMBER', NULL, 7),
     ('auth-mgmt-apply', 'auth-mgmt', 'ACTION', '申请权限', NULL,
-     '申请查看 xxx 流水线的权限',
+     CONCAT(
+         '我需要操作项目下的流水线 [流水线名称]，进行 [具体操作，如 编排编辑/执行] 操作。',
+         '请帮我生成并提交一份权限申请给管理员，申请理由是：[为了排查线上问题/日常开发需要]。'
+     ),
      'PROMPT_COMPLETION', NULL, 'MEMBER', NULL, 8),
     ('auth-mgmt-renew-member', 'auth-mgmt', 'ACTION', '续期权限', NULL,
-     '将我在未来 30 天内过期的权限，续期 3 个月。请先输出即将续期的权限报告，我二次确认后再提交续期。',
+     CONCAT(
+         '我在项目中的 [角色/资源名称] 权限即将过期，请帮我发起续期申请流程，',
+         '续期时长为 [如 6个月]，理由是：[后续工作仍需持续跟进该项目]。'
+     ),
      'PROMPT_COMPLETION', NULL, 'MEMBER', NULL, 9),
     ('auth-mgmt-handover-member', 'auth-mgmt', 'ACTION', '移交权限', NULL,
-     '将我管理的流水线移交给 xxx。请先输出移交影响，我二次确认后再执行。',
+     CONCAT(
+         '我需要将我名下的流水线 [流水线名称/ID] 的所有者和管理权限，',
+         '主动移交给同事 [对方用户名/ID]，请帮我发起权限移交流程。'
+     ),
      'PROMPT_COMPLETION', NULL, 'MEMBER', NULL, 10),
     ('auth-mgmt-exit-project', 'auth-mgmt', 'ACTION', '退出项目', NULL,
-     '我要退出当前项目。请先说明影响并让我二次确认后再执行。',
+     CONCAT(
+         '我已完成在项目 [项目名称/ID] 中的阶段性支持工作，',
+         '请帮我执行退出项目操作，解除我在该项目下的所有角色和权限。'
+     ),
      'DIRECT_TRIGGER', NULL, 'MEMBER', NULL, 11)
 ON DUPLICATE KEY UPDATE
     `PARENT_ID` = VALUES(`PARENT_ID`),
@@ -212,10 +265,16 @@ INSERT INTO `T_AI_WELCOME_GUIDE` (
     `INTERACTION_TYPE`, `FORM_SCHEMA`, `ROLE_FILTER`, `ICON`, `SORT_ORDER`
 ) VALUES
     ('knowledge-product-qna', 'knowledge-qa', 'ACTION', '产品答疑', NULL,
-     '如何设置流水线串行运行',
+     CONCAT(
+         '请问在蓝盾中，如何实现 [具体需求，例如：多分支的自动化合并与触发构建 / 代码质量红线拦截]？',
+         '请给我详细的配置指引或最佳实践。'
+     ),
      'PROMPT_COMPLETION', NULL, NULL, NULL, 1),
     ('knowledge-api-query', 'knowledge-qa', 'ACTION', 'API 查询', NULL,
-     '我准备进行 xxx 操作，可以使用哪些 openapi',
+     CONCAT(
+         '我需要通过蓝盾 OpenAPI 实现 [具体业务场景，例如：第三方系统触发流水线执行并传递参数]。',
+         '请提供对应的 API 接口地址、请求方法、Headers 要求、Body 参数示例以及返回的数据结构。'
+     ),
      'PROMPT_COMPLETION', NULL, NULL, NULL, 2)
 ON DUPLICATE KEY UPDATE
     `PARENT_ID` = VALUES(`PARENT_ID`),

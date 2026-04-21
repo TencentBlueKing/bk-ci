@@ -27,7 +27,7 @@
 
 package com.tencent.devops.ai.api.user
 
-import com.tencent.devops.ai.pojo.HotQuestionPageVO
+import com.tencent.devops.ai.pojo.HotQuestion
 import com.tencent.devops.ai.pojo.WelcomeGuideVO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
@@ -36,7 +36,6 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.Path
@@ -69,7 +68,7 @@ interface UserAiWelcomeGuideResource {
         projectId: String?
     ): Result<WelcomeGuideVO>
 
-    @Operation(summary = "刷新热点问题（支持翻页）")
+    @Operation(summary = "刷新热点问题（随机最多5条）")
     @GET
     @Path("/hot-questions")
     fun getHotQuestions(
@@ -79,14 +78,6 @@ interface UserAiWelcomeGuideResource {
             example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
         )
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "页码，从1开始", required = false)
-        @QueryParam("page")
-        @DefaultValue("1")
-        page: Int,
-        @Parameter(description = "每页条数", required = false)
-        @QueryParam("pageSize")
-        @DefaultValue("5")
-        pageSize: Int
-    ): Result<HotQuestionPageVO>
+        userId: String
+    ): Result<HotQuestion>
 }
