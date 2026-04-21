@@ -36,7 +36,6 @@ import com.tencent.devops.environment.pojo.NodeTagCanUpdateType
 import com.tencent.devops.environment.pojo.NodeTagUpdateReq
 import com.tencent.devops.environment.pojo.UpdateNodeTag
 import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.environment.service.NodeTagService.Companion.internalValueCache
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -100,7 +99,7 @@ class NodeTagService @Autowired constructor(
                 )
             }
         }
-        val allInternalKeys = getInternalKeyNames()
+        val allInternalKeys = getInternalKeys().values
         if (nodeTagKeyDao.fetchNodeKey(dslContext, projectId, tagKey) != null || allInternalKeys.contains(tagKey)) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_EXIST, params = arrayOf(tagKey))
         }
@@ -124,7 +123,7 @@ class NodeTagService @Autowired constructor(
     ): List<NodeTag> {
         val tags = mutableListOf<NodeTag>().apply {
             addAll(nodeTagDao.fetchTagAndNode(dslContext, projectId))
-            addAll(getInternalTagMap().values)
+            addAll((nodeTagDao.fetchInternalTag(dslContext).values))
         }
         val nodeTags = nodeTagDao.fetchNodeTag(dslContext, projectId)
         val nodeTagsCountMap = mutableMapOf<Long, MutableMap<Long, Int>>()
@@ -489,14 +488,14 @@ class NodeTagService @Autowired constructor(
     // 为节点添加内置标签
     fun editInternalTags(projectId: String, agentId: Long) {
         logger.info("editInternalTags|add project $projectId|$agentId")
-        val tags = getInternalTagMap()
+        val tags = nodeTagDao.fetchInternalTag(dslContext)
         val tpa = thirdPartyAgentDao.getAgentByProject(dslContext, agentId, projectId) ?: return
         editNodeInternalTags(tags, tpa, projectId)
     }
 
     // OP使用，刷新内置标签数据
     fun refreshInternalNodeTags(projectId: String?) {
-        val tags = getInternalTagMap()
+        val tags = nodeTagDao.fetchInternalTag(dslContext)
         val projects = if (projectId != null) {
             setOf(projectId)
         } else {
@@ -542,7 +541,7 @@ class NodeTagService @Autowired constructor(
 
         return try {
             JsonUtil.to(agentRecord.agentProps, AgentProps::class.java)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -570,13 +569,11 @@ class NodeTagService @Autowired constructor(
         private const val INTERNAL_TAG_CACHE_MAX_SIZE = 100L
         private const val INTERNAL_TAG_CACHE_EXPIRE_MINUTES = 10L
 
-        // 缓存 T_NODE_TAG_INTERNAL_KEY + T_NODE_TAG_INTERNAL_VALUES 联合查询结果
         private val internalTagKeyCache: Cache<String, Map<Long, String>> = Caffeine.newBuilder()
             .expireAfterWrite(INTERNAL_TAG_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
             .maximumSize(INTERNAL_TAG_CACHE_MAX_SIZE)
             .build()
 
-        // 缓存 T_NODE_TAG_INTERNAL_KEY 的 key 名称集合
         private val internalValueCache: Cache<String, Map<Long, String>> = Caffeine.newBuilder()
             .expireAfterWrite(INTERNAL_TAG_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
             .maximumSize(INTERNAL_TAG_CACHE_MAX_SIZE)

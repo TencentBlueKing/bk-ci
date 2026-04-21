@@ -30,7 +30,8 @@ class EnvDispatchStrategyService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val envDispatchStrategyDao: EnvDispatchStrategyDao,
     private val nodeTagKeyDao: NodeTagKeyDao,
-    private val nodeTagValueDao: NodeTagValueDao
+    private val nodeTagValueDao: NodeTagValueDao,
+    private val nodeTagService: NodeTagService
 ) {
     @Value("\${environment.strategy.count:10}")
     private val globalStrategyCount: Int = 10
@@ -56,19 +57,22 @@ class EnvDispatchStrategyService @Autowired constructor(
             if (tagKeyIds.isEmpty() && tagValueIds.isEmpty()) {
                 return existing.map { DispatchEnvStrategyVO(it, null) }
             }
-            val keyRecords = nodeTagKeyDao.fetchNodeKeyByIds(dslContext, projectId, tagKeyIds).associateBy { it.id }
-            val valueRecords =
-                nodeTagValueDao.fetchNodeKeyValueByIds(dslContext, projectId, tagValueIds).associateBy { it.id }
+            val keyRecords = nodeTagKeyDao.fetchNodeKeyByIds(dslContext, projectId, tagKeyIds)
+                .associate { it.id to it.keyName }
+                .toMutableMap().apply { putAll(nodeTagService.getInternalKeys()) }
+            val valueRecords = nodeTagValueDao.fetchNodeKeyValueByIds(dslContext, projectId, tagValueIds)
+                .associate { it.id to it.valueName }
+                .toMutableMap().apply { putAll(nodeTagService.getInternalValues()) }
             return existing.map {
                 DispatchEnvStrategyVO(it, it.labelSelector?.map { s ->
                     LabelSelectorVO(
-                        tagKeyName = keyRecords[s.tagKeyId]?.keyName ?: "",
+                        tagKeyName = keyRecords[s.tagKeyId] ?: "",
                         tagKeyId = s.tagKeyId,
                         op = s.op,
                         tagValue = s.tagValueIds.map { v ->
                             TagValue(
                                 tagValueId = v,
-                                tagValue = valueRecords[v]?.valueName ?: ""
+                                tagValue = valueRecords[v] ?: ""
                             )
                         }
                     )
