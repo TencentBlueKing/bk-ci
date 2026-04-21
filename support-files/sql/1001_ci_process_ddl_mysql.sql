@@ -1552,7 +1552,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_VISIBILITY`
     `PIPELINE_ID`   varchar(34)   NOT NULL COMMENT '流水线ID',
     `TYPE`          varchar(16)   NOT NULL COMMENT '可见范围类型: ORG/USER',
     `SCOPE_ID`      varchar(64)   NOT NULL COMMENT '范围ID',
-    `SCOPE_NAME`    varchar(1024) NOT NULL COMMENT '范围标识名',
+    `SCOPE_NAME`    varchar(512) NOT NULL COMMENT '范围标识名',
     `FULL_NAME`     text COMMENT '全名',
     `USER_DEPARTMENTS` text COMMENT '用户部门列表',
     `AUTH_USER`     varchar(64)   NOT NULL DEFAULT '' COMMENT '权限代持人',
