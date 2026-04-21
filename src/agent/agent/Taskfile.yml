@@ -32,6 +32,9 @@ vars:
   GO_CMD: '{{.GO | default "go"}}'
   AGENT_VERSION: '{{.AGENT_VERSION | default "v0.0.0-beta.0"}}'
   BUILD_OUT_TAG: '{{.BUILD_OUT_TAG | default "out"}}'
+  # 代码签名校验信任锚，出包时通过命令行传入
+  WIN_CERT_ORG: '{{.WIN_CERT_ORG | default ""}}'
+  MACOS_TEAM_ID: '{{.MACOS_TEAM_ID | default ""}}'
   I18N_DIR: "../../../../../../support-files/i18n/agent/"
   # git / 时间戳在顶层用 sh 求值（只执行一次）
   GIT_COMMIT:
@@ -44,6 +47,8 @@ vars:
     -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.AgentVersion={{.AGENT_VERSION}}
     -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.GitCommit={{.GIT_COMMIT}}
     -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.BuildTime={{.BUILD_TIME}}
+    -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.WinCertOrgName={{.WIN_CERT_ORG}}
+    -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.MacosTeamId={{.MACOS_TEAM_ID}}
 
 env:
   GO111MODULE: "on"
@@ -64,9 +69,9 @@ tasks:
     requires:
       vars: [TARGET_OS, TARGET_ARCH, CGO, DAEMON_OUT, AGENT_OUT, UPGRADER_OUT]
     cmds:
-      - '{{.GO_CMD}} build -tags={{.BUILD_OUT_TAG}} -ldflags="{{.LDFLAGS}}" -o bin/{{.DAEMON_OUT}} ./src/cmd/daemon/'
-      - '{{.GO_CMD}} build -tags={{.BUILD_OUT_TAG}} -ldflags="{{.LDFLAGS}}" -o bin/{{.AGENT_OUT}} ./src/cmd/agent/main.go'
-      - '{{.GO_CMD}} build -tags={{.BUILD_OUT_TAG}} -ldflags="{{.LDFLAGS}}" -o bin/{{.UPGRADER_OUT}} ./src/cmd/upgrader/main.go'
+      - '{{.GO_CMD}} build -tags={{.BUILD_OUT_TAG}} -trimpath -ldflags="{{.LDFLAGS}}" -o bin/{{.DAEMON_OUT}} ./src/cmd/daemon/'
+      - '{{.GO_CMD}} build -tags={{.BUILD_OUT_TAG}} -trimpath -ldflags="{{.LDFLAGS}}" -o bin/{{.AGENT_OUT}} ./src/cmd/agent/main.go'
+      - '{{.GO_CMD}} build -tags={{.BUILD_OUT_TAG}} -trimpath -ldflags="{{.LDFLAGS}}" -o bin/{{.UPGRADER_OUT}} ./src/cmd/upgrader/main.go'
     env:
       CGO_ENABLED: "{{.CGO}}"
       GOOS: "{{.TARGET_OS}}"

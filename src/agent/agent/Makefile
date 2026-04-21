@@ -22,7 +22,10 @@ AGENT_VERSION=v0.0.0-beta.0
 # 为空时 daemon/agent 将跳过签名校验（仅用于开发/社区构建）
 WIN_CERT_ORG ?=
 MACOS_TEAM_ID ?=
-BUILD_FLAGS := -ldflags="-w -s -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.BuildTime=$(BuildTime) \
+# -trimpath: 将编译时记录到二进制中的源码文件路径去掉构建机绝对路径前缀，
+# 使堆栈/错误日志显示相对于 module 的短路径（github.com/TencentBlueKing/bk-ci/agent/...），
+# 同时避免泄露构建机器目录结构。
+BUILD_FLAGS := -trimpath -ldflags="-w -s -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.BuildTime=$(BuildTime) \
 -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.GitCommit=$(GitCommit) -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.AgentVersion=$(AGENT_VERSION) \
 -X 'github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.WinCertOrgName=$(WIN_CERT_ORG)' \
 -X 'github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.MacosTeamId=$(MACOS_TEAM_ID)'"
