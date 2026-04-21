@@ -95,6 +95,7 @@ class WelcomeGuideService @Autowired constructor(
         }
 
         val hotQuestions = hotQuestionDao.listEnabled(dslContext)
+            .take(DEFAULT_HOT_QUESTION_LIMIT)
             .map { HotQuestionVO(id = it.id, question = it.question) }
 
         logger.info(
