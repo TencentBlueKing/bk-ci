@@ -467,47 +467,43 @@ open class MarketAtomTask : ITask() {
         val bkDiskLruFileCache = BkDiskLruFileCacheFactory.getDiskLruFileCache(fileCacheDir, maxFileCacheSize)
         val fileCacheKey = "${atomData.atomCode}-${atomData.version}-$atomExecuteFileName"
         val shaContent = atomData.shaContent
+        // 后端返回的 shaContent 为空说明数据异常，无法保证文件完整性，直接报错
+        if (shaContent.isNullOrBlank()) {
+            error(
+                "shaContent is null or blank for ${atomData.atomCode}:${atomData.version}, " +
+                    "cannot verify file integrity"
+            )
+        }
         bkDiskLruFileCache.get(fileCacheKey, atomExecuteFile)
+        // cacheInvalid 标志：缓存文件无效（SHA校验失败或删除失败），强制触发重新下载
+        var cacheInvalid = false
         try {
             // 插件缓存文件本地缓存探测功能
             if (atomExecuteFile.exists() && atomExecuteFile.length() > 0) {
-                if (shaContent.isNullOrBlank()) {
+                try {
+                    checkSha(atomExecuteFile, shaContent)
+                } catch (ignored: Throwable) {
+                    // 缓存文件损坏，删除并从缓存中移除，后续会重新下载
                     LoggerService.addNormalLine(
-                        "shaContent is null or blank for ${atomData.atomCode}:${atomData.version}, " +
-                            "discard cache and re-download to ensure integrity"
+                        "getAtomExecuteFile Cached atom file is corrupted! " +
+                            "atomCode=${atomData.atomCode}, version=${atomData.version}, " +
+                            "file=${atomExecuteFile.absolutePath}, error=${ignored.message}"
                     )
                     val deleted = atomExecuteFile.delete()
                     if (!deleted) {
+                        // 文件删除失败，通过 cacheInvalid 标志强制走重新下载覆盖逻辑
                         LoggerService.addNormalLine(
-                            "Failed to delete cache file without shaContent: ${atomExecuteFile.absolutePath}. " +
-                                "Will attempt to re-download and overwrite."
+                            "Failed to delete corrupted cache file: ${atomExecuteFile.absolutePath}. " +
+                                "Will force re-download and overwrite via cacheInvalid flag."
                         )
+                        cacheInvalid = true
                     }
                     bkDiskLruFileCache.remove(fileCacheKey)
-                } else {
-                    try {
-                        checkSha(atomExecuteFile, shaContent)
-                    } catch (ignored: Throwable) {
-                        // 缓存文件损坏，删除并从缓存中移除，后续会重新下载
-                        LoggerService.addNormalLine(
-                            "getAtomExecuteFile Cached atom file is corrupted! " +
-                                "atomCode=${atomData.atomCode}, version=${atomData.version}, " +
-                                "file=${atomExecuteFile.absolutePath}, error=${ignored.message}"
-                        )
-                        val deleted = atomExecuteFile.delete()
-                        if (!deleted) {
-                            LoggerService.addNormalLine(
-                                "Failed to delete corrupted cache file: ${atomExecuteFile.absolutePath}. " +
-                                    "Will attempt to re-download and overwrite."
-                            )
-                        }
-                        bkDiskLruFileCache.remove(fileCacheKey)
-                        LoggerService.addNormalLine("Corrupted cache file removed, will re-download from repo")
-                    }
+                    LoggerService.addNormalLine("Corrupted cache file removed, will re-download from repo")
                 }
             }
 
-            if (!atomExecuteFile.exists() || atomExecuteFile.length() < 1) {
+            if (!atomExecuteFile.exists() || atomExecuteFile.length() < 1 || cacheInvalid) {
                 logger.info("local file[$atomExecuteFileName] is not exist,start downloading from the repo!")
                 val cacheFlag = atomData.atomStatus !in setOf(
                     AtomStatusEnum.TESTING.name,
@@ -525,7 +521,6 @@ open class MarketAtomTask : ITask() {
                 )
 
                 val shouldCache = atomData.authFlag != true &&
-                    !shaContent.isNullOrBlank() &&
                     checkSha(atomExecuteFile, shaContent) &&
                     cacheFlag &&
                     !fileCacheDir.contains(buildId)
