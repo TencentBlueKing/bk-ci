@@ -34,6 +34,7 @@ import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
+import com.tencent.devops.common.dispatch.sdk.utils.BeanUtil
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -116,7 +117,6 @@ class DispatchBuildService @Autowired constructor(
             vmSeqId = event.vmSeqId,
             executeCount = event.executeCount ?: 1
         )
-        logger.info("buildBuilderPoolNo: $buildBuilderPoolNo")
 
         return buildBuilderPoolNo.isNotEmpty() && buildBuilderPoolNo[0].second != null
     }
@@ -147,6 +147,13 @@ class DispatchBuildService @Autowired constructor(
 
             // 记录构建历史
             recordBuildHisAndGatewayCheck(dockerRoutingType, poolNo, lastIdleBuilder, dispatchMessage)
+
+            // 记录构建资源交付中
+            BeanUtil.getDispatchMessageTracking().trackResourceDelivering(
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                executeCount = event.executeCount ?: 1
+            )
 
             // 用户第一次构建，或者用户更换了镜像，或者容器配置有变更，则重新创建容器。否则，使用已有容器，start起来即可
             if (null == lastIdleBuilder || containerChanged) {
@@ -184,6 +191,14 @@ class DispatchBuildService @Autowired constructor(
                 "buildId: ${event.buildId} vmSeqId: ${event.vmSeqId} create builder " +
                     "failed, msg:${e.message}"
             )
+
+            // 记录资源交付失败
+            BeanUtil.getDispatchMessageTracking().trackResourcePreparingFailed(
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                executeCount = event.executeCount ?: 1
+            )
+
             if (e.message.equals("timeout")) {
                 throw BuildFailureException(
                     ErrorCodeEnum.BASE_INTERFACE_TIMEOUT.errorType,
@@ -462,6 +477,13 @@ class DispatchBuildService @Autowired constructor(
                         I18nUtil.getDefaultLocaleLanguage()
                     ))
 
+                // 记录资源已就绪
+                BeanUtil.getDispatchMessageTracking().trackResourceReady(
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    executeCount = executeCount ?: 1,
+                )
+
                 dispatchKubernetesBuildDao.createOrUpdate(
                     dslContext = dslContext,
                     dispatchType = dockerRoutingType.name,
@@ -488,6 +510,13 @@ class DispatchBuildService @Autowired constructor(
                     executeCount = executeCount ?: 1
                 )
             } else {
+                // 记录资源交付失败
+                BeanUtil.getDispatchMessageTracking().trackResourceDeliveringFailed(
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    executeCount = executeCount ?: 1,
+                )
+
                 clearExceptionBuilder(dockerRoutingType, builderName, projectId, dispatchMessage)
                 // 重置资源池状态
                 dispatchKubernetesBuildDao.updateStatus(
