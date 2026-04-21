@@ -1,6 +1,7 @@
 package com.tencent.devops.dispatch.utils
 
 import com.tencent.devops.environment.pojo.DispatchStrategyConfig
+import com.tencent.devops.environment.pojo.DispatchStrategyConfig.Companion.toString
 import com.tencent.devops.environment.pojo.LabelSelector
 import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.enums.LabelOp
@@ -47,7 +48,7 @@ class DispatchStrategyExecutor(
             if (!strategy.enabled) continue
             val lv = "$tag[Lv.${index + 1}]"
 
-            pipelineLog("$lv \"${strategy.strategyName}\" scope=${strategy.scope} rule=${strategy.nodeRule}" +
+            pipelineLog("$lv \"${strategy.strategyName ?: ""}\" scope=${strategy.scope} rule=${strategy.nodeRule}" +
                 if (!strategy.labelSelector.isNullOrEmpty()) " labels=${strategy.labelSelector?.size}" else "")
 
             // 检测是否命中范围
@@ -71,7 +72,7 @@ class DispatchStrategyExecutor(
             if (matched != null) {
                 pipelineLog("$lv Matched agent [${matched.agentId}]${matched.hostname}/${matched.ip}")
                 logger.info(
-                    "DispatchStrategyExecutor|env:$envId|matched|strategy=${strategy.strategyName}" +
+                    "DispatchStrategyExecutor|env:$envId|matched|strategy=${strategy.strategyName ?: ""}" +
                         "|agent=${matched.agentId}|scope=${strategy.scope}|rule=${strategy.nodeRule}"
                 )
                 return matched
@@ -100,7 +101,10 @@ class DispatchStrategyExecutor(
     ): List<ThirdPartyAgent> {
         if (labelSelector.isNullOrEmpty()) return agents
         return agents.filter { agent ->
-            val agentTags = input.agentTagValues[agent.agentId] ?: emptyMap()
+            val agentTags = input.agentTagValues[agent.agentId] ?: run {
+                pipelineLog("$logTag match label [${agent.agentId}] no tag skip")
+                return@filter false
+            }
             labelSelector.all { selector -> matchLabel(logTag, selector, agentTags) }
         }
     }
@@ -113,8 +117,8 @@ class DispatchStrategyExecutor(
         val agentValues = agentTags[selector.tagKeyId]?.tagValues ?: return false
         val tagValues = agentValues.map { it.tagValueName }
         val expected = agentValues.filter { selector.tagValueIds.contains(it.tagValueId) }.map { it.tagValueName }
-        if (expected.isEmpty()) return false
         pipelineLog("$logTag match label [$tagValues] ${selector.op.symbol} [$expected]")
+        if (expected.isEmpty()) return false
         return when (selector.op) {
             LabelOp.IN -> tagValues.any { it in expected }
             LabelOp.EQUAL -> expected.any { exp -> tagValues.any { it == exp } }
