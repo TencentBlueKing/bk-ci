@@ -9,7 +9,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineVisibility
-import com.tencent.devops.process.engine.service.PipelineVisibilityService
+import com.tencent.devops.process.service.PipelineVisibilityService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

@@ -1,4 +1,4 @@
-package com.tencent.devops.process.engine.service
+package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.auth.api.service.ServiceAuthAuthorizationResource

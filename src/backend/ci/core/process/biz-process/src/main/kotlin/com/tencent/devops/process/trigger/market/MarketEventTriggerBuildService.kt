@@ -19,7 +19,7 @@ import com.tencent.devops.process.pojo.trigger.GenericWebhookEventBody
 import com.tencent.devops.process.pojo.trigger.GenericEventStartRequest
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
 import com.tencent.devops.process.service.CreateStreamTriggerSupportService
-import com.tencent.devops.process.engine.service.PipelineVisibilityService
+import com.tencent.devops.process.service.PipelineVisibilityService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.WebhookTriggerBuildService
 import com.tencent.devops.process.trigger.enums.MatchStatus
