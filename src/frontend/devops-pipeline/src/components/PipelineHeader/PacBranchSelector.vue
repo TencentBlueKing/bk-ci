@@ -16,33 +16,67 @@
                 @change="handleBranchChange"
                 @toggle="handleToggle"
             >
-                <bk-option
-                    v-for="branch in branchList"
-                    :key="branch.name"
-                    :id="branch.name"
-                    :name="branch.name"
+                <div
+                    slot="trigger"
+                    class="pac-version-dropmenu-trigger"
                 >
-                    <div
-                        class="branch-option-item"
-                        :title="branch.name"
-                    >
-                        <span>{{ branch.name }}</span>
-                        <bk-tag
-                            v-if="branch.versionStatus === 'RELEASED'"
-                            theme="success"
-                            class="branch-tag"
+                    <p class="pipeline-version-name">
+                        <span v-bk-overflow-tips>
+                            {{ selectedBranch }}
+                        </span>
+                        <i
+                            v-if="currentBranch.versionStatus === 'RELEASED'"
+                            class="pipeline-release-version-tag"
                         >
-                            {{ $t('preview.releasedVersion') }}
-                        </bk-tag>
-                        <bk-tag
-                            v-else-if="branch.defaultBranch"
-                            theme="info"
-                            class="branch-tag"
+                            {{ $t('latest') }}
+                        </i>
+                        <i
+                            v-else-if="currentBranch.defaultBranch"
+                            class="pipeline-default-version-tag"
                         >
                             {{ $t('preview.defaultBranch') }}
-                        </bk-tag>
-                    </div>
-                </bk-option>
+                        </i>
+                    </p>
+                    <i
+                        v-if="isLoading"
+                        class="devops-icon icon-circle-2-1 spin-icon"
+                    />
+                    <i
+                        v-else
+                        class="bk-icon icon-angle-down"
+                    />
+                </div>
+                <bk-option-group
+                    v-for="group in branchGroupList"
+                    :key="group.name"
+                    :name="group.name"
+                >
+                    <bk-option
+                        v-for="branch in group.children"
+                        :key="branch.name"
+                        :id="branch.name"
+                        :name="branch.name"
+                    >
+                        <div
+                            class="branch-option-item"
+                            :title="branch.name"
+                        >
+                            <span>{{ branch.name }}</span>
+                            <i
+                                v-if="branch.versionStatus === 'RELEASED'"
+                                class="pipeline-release-version-tag"
+                            >
+                                {{ $t('latest') }}
+                            </i>
+                            <i
+                                v-else-if="branch.defaultBranch"
+                                class="pipeline-default-version-tag"
+                            >
+                                {{ $t('preview.defaultBranch') }}
+                            </i>
+                        </div>
+                    </bk-option>
+                </bk-option-group>
             </bk-select>
         </div>
         <i
@@ -76,6 +110,21 @@
             const pipelineId = computed(() => proxy.$route.params.pipelineId)
             const pacEnabled = computed(() => proxy.$store.getters['atom/pacEnabled'])
 
+            // 当前选中的分支对象
+            const currentBranch = computed(() => {
+                return branchList.value.find(b => b.name === selectedBranch.value) || {}
+            })
+
+            // 分支分组列表
+            const branchGroupList = computed(() => {
+                const defaultBranches = branchList.value.filter(b => b.versionStatus === 'RELEASED')
+                const otherBranches = branchList.value.filter(b => b.versionStatus !== 'RELEASED')
+                return [
+                    { name: proxy.$t('preview.latestVersion'), children: defaultBranches },
+                    { name: proxy.$t('preview.repoBranch'), children: otherBranches }
+                ].filter(group => group.children.length > 0)
+            })
+
             // 获取分支列表
             const fetchBranchList = async () => {
                 if (!pipelineId.value) return
@@ -88,7 +137,9 @@
                     const data = await proxy.$store.dispatch('common/getPACBranchList', {
                         projectId: projectId.value,
                         pipelineId: pipelineId.value,
-                        search: searchKey.value
+                        search: searchKey.value,
+                        page: 1,
+                        pageSize: 20
                     })
                     
                     branchList.value = data || []
@@ -150,11 +201,13 @@
                 }, 300)
             }
 
-            // 分支变更（用户手动选择时触发）
+            // 分支变更
             const handleBranchChange = (value) => {
-                // 初始化期间，忽略 @change 事件（避免重复触发）
                 if (isInitializing.value) return
                 const branchInfo = branchList.value.find(b => b.name === value)
+                // 将分支名保存到 sessionStorage，用于 PAC 分支选择器匹配
+                const cacheKey = `pac_branch_${projectId.value}_${pipelineId.value}`
+                sessionStorage.setItem(cacheKey, value)
                 emit('branch-change', value, branchInfo)
             }
 
@@ -187,6 +240,8 @@
             return {
                 selectedBranch,
                 branchList,
+                branchGroupList,
+                currentBranch,
                 isLoading,
                 pacEnabled,
                 pipelineId,
@@ -199,6 +254,7 @@
 </script>
 
 <style lang="scss">
+@import "@/scss/mixins/ellipsis";
 .pac-branch-selector {
     display: flex;
     align-items: center;
@@ -261,13 +317,65 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
-
-    .branch-tag {
+}
+.pipeline-default-version-tag,
+.pipeline-release-version-tag {
+    display: inline-flex;
+    align-items: center;
+    background: #E4FAF0 ;
+    border: 1px solid #A5E0C6;
+    color: #14A568;
+    padding: 0 4px;
+    border-radius: 2px;
+    font-size: 10px;
+    height: 16px;
+    line-height: 16px;
+    align-self: center;
+    font-style: normal;
+    flex-shrink: 0;
+}
+.pipeline-default-version-tag {
+    color: #3a84ff;
+    background: #e8f0fc;
+    border: 1px solid #9bc1fd;
+}
+.pac-version-dropmenu-trigger {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    line-height: 30px;
+    padding: 0 8px;
+    min-width: 200px;
+    width: 100%;
+    cursor: pointer;
+    overflow: hidden;
+   
+    .pipeline-version-name {
+        display: flex;
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        > span {
+            line-height: 24px;
+            margin-right: 5px;
+            @include ellipsis();
+        }
+    }
+    .icon-circle-2-1,
+    .icon-angle-down {
         flex-shrink: 0;
-        margin-left: 8px;
+    }
+    .icon-circle-2-1 {
+        width: 20px;
         height: 20px;
-        line-height: 18px;
-        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .icon-angle-down {
+        transition: transform 0.3s;
+        font-size: 20px;
     }
 }
 </style>

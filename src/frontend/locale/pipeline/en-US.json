@@ -911,11 +911,18 @@
     "selectBranchPlaceholder": "Select branch",
     "runBranchPipeline": "Run pipeline on selected branch",
     "branchVersionNotFound": "Pipeline not found, please select another branch!",
-    "branchVersionCreateFailed": "Branch version creation failed",
+    "branchVersionCreateFailed": "The branch version does not exist. Please check if the branch version has been successfully created.",
     "errorBranch": "Branch: ",
     "errorPipelinePath": "Pipeline: ",
+    "goToCodeRepo": "Go to Repository",
+    "viewDiff": "View Diff",
+    "expired": "has expired",
+    "expireReleasedVersionTips": "The pipeline version on the selected branch {branch} {expired}, lagging behind the latest version. Please proceed with caution and evaluate whether to merge the latest version into this branch.",
+    "viewDetail": "Details",
     "releasedVersion": "Released",
-    "defaultBranch": "Default"
+    "defaultBranch": "Default",
+    "latestVersion": "Latest Version",
+    "repoBranch": "Repository Branches"
   },
   "details": {
     "pipelineVersionDiffTips": "The pipeline config version has changed",

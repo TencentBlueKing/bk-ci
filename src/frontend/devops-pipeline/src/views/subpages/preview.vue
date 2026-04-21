@@ -16,34 +16,73 @@
                         class="pac-error-title"
                         v-bk-xss-html="pacError.message"
                     />
+                    <p
+                        v-if="pacError.branch"
+                        class="pac-error-detail"
+                    >
+                        {{ $t('preview.errorBranch') }}{{ pacError.branch }}
+                    </p>
+                    <p
+                        v-if="pacError.pipelinePath"
+                        class="pac-error-detail"
+                    >
+                        {{ $t('preview.errorPipelinePath') }}{{ pacError.pipelinePath }}
+                        <a
+                            v-if="pacError.href"
+                            :href="pacError.href"
+                            target="_blank"
+                            class="pac-error-link"
+                        >{{ pacError.hrefTitle }}</a>
+                    </p>
                 </div>
             </bk-exception>
         </div>
         <template v-else>
-            <div
-                v-show="!isDebugPipeline && !pacEnabled"
-                class="pipeline-execute-version-select params-content-item"
+            <bk-alert
+                v-if="expireReleasedVersion"
+                type="warning"
+                class="expire-released-version-alert"
             >
-                <span>
-                    {{ $t('history.tableMap.pipelineVersion') }}
-                </span>
-                <VersionSelector
-                    :editable="pacEnabled"
-                    :class="{
-                        'exec-version-is-disabled': !pacEnabled
-                    }"
-                    :value="executeVersion"
-                    @change="handleExecuteVersionChange"
-                    :include-draft="false"
-                    :show-extension="false"
-                    refresh-list-on-expand
-                    :unique-id="pipelineId"
-                />
-                <i
-                    class="bk-icon icon-info-circle"
-                    v-bk-tooltips="execVersionSelectorDisableTips"
-                />
-            </div>
+                <template #title>
+                    <div class="expire-released-version-alert-content">
+                        <i18n
+                            path="preview.expireReleasedVersionTips"
+                            tag="span"
+                        >
+                            <span
+                                place="branch"
+                                class="expire-released-version-branch"
+                            >{{ selectedBranch }}</span>
+                            <span
+                                place="expired"
+                                class="expire-released-version-expired"
+                            >{{ $t('preview.expired') }}</span>
+                        </i18n>
+                        <span class="expire-released-version-actions">
+                            <version-diff-entry
+                                v-if="branchVersion && pipelineInfo?.releaseVersion"
+                                :text="false"
+                                theme=""
+                                size="small"
+                                :can-switch-version="false"
+                                :version="branchVersion"
+                                :latestversion="pipelineInfo?.releaseVersion"
+                            >
+                                <i class="devops-icon icon-swap" />
+                                {{ $t('preview.viewDiff') }}
+                            </version-diff-entry>
+                            <span
+                                v-if="codeRepoUrl"
+                                class="text-link expire-released-version-link"
+                                @click="goToCodeRepo"
+                            >
+                                <i class="devops-icon icon-jump-link" />
+                                {{ $t('preview.goToCodeRepo') }}
+                            </span>
+                        </span>
+                    </div>
+                </template>
+            </bk-alert>
             <bk-alert
                 v-if="isDebugPipeline"
                 :title="$t('debugHint')"
@@ -326,8 +365,8 @@
 <script>
     import ParamSet from '@/components/ParamSet.vue'
     import Pipeline from '@/components/Pipeline'
-    import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector.vue'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
+    import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry.vue'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
     import { UPDATE_PREVIEW_PIPELINE_NAME, PAC_BRANCH_CHANGE, UPDATE_PAC_ERROR_STATUS, PAC_BRANCH_LOADING, PAC_BRANCH_INIT_DONE, bus } from '@/utils/bus'
@@ -337,12 +376,12 @@
 
     export default {
         components: {
-            VersionSelector,
             PipelineVersionsForm,
             PipelineParamsForm,
             Pipeline,
             renderSortCategoryParams,
-            ParamSet
+            ParamSet,
+            VersionDiffEntry
         },
         data () {
             return {
@@ -376,6 +415,7 @@
                 },
                 selectedBranch: '', // PAC 分支选择
                 branchVersion: null, // PAC 分支版本号，用于启动构建时指定 version
+                expireReleasedVersion: false, // 是否过期的已发布版本
                 // PAC 分支版本错误状态
                 pacError: {
                     show: false,
@@ -398,12 +438,6 @@
                 'pipelineInfo',
                 'tempParamSet'
             ]),
-            execVersionSelectorDisableTips () {
-                return {
-                    theme: 'light',
-                    content: this.$t('preview.versionSelectorDisableTips')
-                }
-            },
             executeVersion () {
                 return this.$route.params.version ? parseInt(this.$route.params.version) : this.pipelineInfo?.releaseVersion
             },
@@ -466,6 +500,16 @@
                     ...this.constantValues,
                     ...this.otherValues
                 }
+            },
+            codeRepoUrl () {
+                const yamlInfo = this.pipelineInfo?.yamlInfo
+                if (!yamlInfo?.webUrl) return ''
+                const branch = this.selectedBranch
+                const filePath = yamlInfo.filePath
+                if (branch && filePath) {
+                    return `${yamlInfo.webUrl}/blob/${encodeURIComponent(branch)}/${filePath}`
+                }
+                return yamlInfo.webUrl
             }
         },
         watch: {
@@ -527,17 +571,6 @@
                     this.activeName.add(id)
                 }
                 this.activeName = new Set(this.activeName)
-            },
-            handleExecuteVersionChange (version, versionInfo) {
-                // TODO:
-                this.selectPipelineVersion(versionInfo)
-                this.$router.push({
-                    name: this.$route.name,
-                    params: {
-                        ...this.$route.params,
-                        version
-                    }
-                })
             },
             initParams (startupInfo) {
                 if (startupInfo.canManualStartup) {
@@ -730,6 +763,7 @@
                             pipelineRes = branchPipelineRes
                             // 保存分支版本号，用于启动构建时指定 version
                             this.branchVersion = branchPipelineRes?.version ?? null
+                            this.expireReleasedVersion = branchPipelineRes?.expireReleasedVersion ?? false
                         }
                     } else {
                         const [res, normalPipelineRes] = await Promise.all([
@@ -760,20 +794,29 @@
                 } catch (err) {
                     const errorCode = err?.code || err?.status
                     // PAC 模式下特定错误码不返回，而是展示错误页面
+                    const hrefMatch = err?.message?.match(/href="([^"]+)"/)
+                    const href = hrefMatch ? hrefMatch[1] : ''
                     if (this.pacEnabled && errorCode === 2101378) {
                         // 分支版本不存在
                         this.pacError = {
                             show: true,
-                            type: 'empty',
-                            message: err?.message || this.$t('preview.branchVersionNotFound')
+                            type: '404',
+                            message: this.$t('preview.branchVersionNotFound'),
+                            branch: branch || this.selectedBranch,
+                            pipelinePath: this.pipelineInfo?.yamlInfo?.filePath || '',
+                            href,
+                            hrefTitle: this.$t('preview.goToCodeRepo')
                         }
                         bus.$emit(UPDATE_PAC_ERROR_STATUS, true)
                     } else if (this.pacEnabled && errorCode === 2101379) {
                         // 分支版本创建失败
+                        const message = href
+                            ? `${this.$t('preview.branchVersionCreateFailed')} <a href="${href}" class="pac-error-link" target="_blank">${this.$t('preview.viewDetail')}</a>`
+                            : this.$t('preview.branchVersionCreateFailed')
                         this.pacError = {
                             show: true,
                             type: 'empty',
-                            message: err?.message || this.$t('preview.branchVersionCreateFailed')
+                            message
                         }
                         bus.$emit(UPDATE_PAC_ERROR_STATUS, true)
                     } else {
@@ -920,6 +963,12 @@
             editTrigger () {
                 const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/${this.pipelineId}/edit/?tab=trigger`
                 window.open(url, '_blank')
+            },
+
+            goToCodeRepo () {
+                if (this.codeRepoUrl) {
+                    window.open(this.codeRepoUrl, '_blank')
+                }
             },
 
             saveAsParamSet () {
@@ -1138,6 +1187,49 @@ $header-height: 36px;
     .changed-tips-alert {
         margin-bottom: 12px;
     }
+
+    .expire-released-version-alert {
+        margin-bottom: 12px;
+        .bk-alert-wraper {
+            align-items: center;
+        }
+
+        .expire-released-version-alert-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .expire-released-version-branch {
+            color: #3A84FF;
+            margin: 0 4px;
+        }
+
+        .expire-released-version-expired {
+            color: #EA3636;
+            margin: 0 2px;
+        }
+
+        .expire-released-version-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 16px;
+            flex-shrink: 0;
+            margin-left: 12px;
+
+            .devops-icon {
+                margin-right: 4px;
+            }
+        }
+
+        .expire-released-version-link {
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+        }
+    }
     .param-set-diff-tips {
         padding: 12px;
         list-style: disc;
@@ -1179,6 +1271,11 @@ $header-height: 36px;
                 &:last-child {
                     margin-bottom: 0;
                 }
+            }
+            .pac-error-link {
+                color: #3A84FF;
+                font-size: 12px;
+                margin-left: 5px;
             }
         }
     }

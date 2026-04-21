@@ -908,11 +908,18 @@
     "selectBranchPlaceholder": "选择分支",
     "runBranchPipeline": "运行选中分支上的流水线",
     "branchVersionNotFound": "流水线不存在，请重新选择分支！",
-    "branchVersionCreateFailed": "分支版本创建失败",
+    "branchVersionCreateFailed": "分支版本不存在, 请检查分支版本是否被成功创建",
     "errorBranch": "分支：",
     "errorPipelinePath": "流水线：",
+    "goToCodeRepo": "去代码库",
+    "viewDiff": "查看差异",
+    "expired": "已过期",
+    "expireReleasedVersionTips": "选中分支 {branch} 上的流水线版本{expired}，滞后于当前最新版本，请谨慎操作，评估是否需要合并最新版本到此分支。",
+    "viewDetail": "查看详情",
     "releasedVersion": "正式版本",
-    "defaultBranch": "默认分支"
+    "defaultBranch": "默认分支",
+    "latestVersion": "最新版本",
+    "repoBranch": "代码库分支"
   },
   "details": {
     "executorInfo": "{0} {1}触发于 {2}",

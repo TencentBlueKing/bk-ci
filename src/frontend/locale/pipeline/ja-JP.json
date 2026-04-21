@@ -905,11 +905,18 @@
     "selectBranchPlaceholder": "ブランチを選択",
     "runBranchPipeline": "選択したブランチでパイプラインを実行",
     "branchVersionNotFound": "パイプラインが存在しません、ブランチを再選択してください！",
-    "branchVersionCreateFailed": "ブランチバージョンの作成に失敗しました",
+    "branchVersionCreateFailed": "ブランチバージョンが存在しません。ブランチバージョンが正常に作成されているか確認してください。",
     "errorBranch": "ブランチ：",
     "errorPipelinePath": "パイプライン：",
+    "goToCodeRepo": "コードリポジトリへ",
+    "viewDiff": "差分を表示",
+    "expired": "期限切れ",
+    "expireReleasedVersionTips": "選択したブランチ {branch} のパイプラインバージョンは{expired}で、最新バージョンより遅れています。慎重に操作し、最新バージョンをこのブランチにマージする必要があるかどうかを評価してください。",
+    "viewDetail": "詳細を見る",
     "releasedVersion": "正式バージョン",
-    "defaultBranch": "デフォルトブランチ"
+    "defaultBranch": "デフォルトブランチ",
+    "latestVersion": "最新バージョン",
+    "repoBranch": "リポジトリブランチ"
   },
   "details": {
     "executorInfo": "{0} {1}が{2}にトリガー",

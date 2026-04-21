@@ -374,8 +374,8 @@ export const actions = {
      * @param {String} search 搜索关键字
      * @returns {Promise}
      */
-    getPACBranchList: (_, { projectId, pipelineId, search = '' }) => {
-        return request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/listPacVersions`, {
+    getPACBranchList: (_, { projectId, pipelineId, search = '', page, pageSize }) => {
+        return request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/listPacVersions?page=${page}&pageSize=${pageSize}`, {
             params: {
                 search
             }
