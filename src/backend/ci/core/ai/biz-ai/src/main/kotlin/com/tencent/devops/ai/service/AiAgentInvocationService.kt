@@ -34,6 +34,7 @@ import com.tencent.devops.ai.pojo.AgentInfo
 import com.tencent.devops.ai.pojo.ChatContextDTO
 import com.tencent.devops.ai.pojo.ServiceAgentRunRequest
 import com.tencent.devops.ai.pojo.ServiceAgentRunResponse
+import com.tencent.devops.ai.util.AiErrorMessageTranslator
 import com.tencent.devops.ai.util.SseEventWriter
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.ai.constant.AiMessageCode
@@ -171,7 +172,7 @@ class AiAgentInvocationService @Autowired constructor(
                     )
                     SseEventWriter.writeErrorAndFinish(
                         output, threadId, runId,
-                        error.message ?: "Stream error"
+                        AiErrorMessageTranslator.toFriendlyMessage(error)
                     )
                     latch.countDown()
                 },
