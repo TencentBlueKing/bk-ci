@@ -31,7 +31,9 @@ import com.tencent.devops.ai.context.AgentSessionContext
 import com.tencent.devops.ai.context.AiChatContext
 import com.tencent.devops.ai.pojo.ChatContextDTO
 import com.tencent.devops.ai.session.PersistentAgentResolver
+import com.tencent.devops.ai.util.AguiEventSanitizer
 import com.tencent.devops.ai.util.AiErrorMessageTranslator
+import com.tencent.devops.ai.util.ReasoningCompensationTracker
 import com.tencent.devops.ai.util.SseEventWriter
 import io.agentscope.core.agent.Agent
 import io.agentscope.core.agent.AgentBase
@@ -137,6 +139,12 @@ class AiChatService @Autowired constructor(
 
     /**
      * 创建子智能体 Sink、注册活跃运行，并将主流与子智能体流合并。
+     *
+     * 同时挂载 [ReasoningCompensationTracker]，在流结束时检测
+     * reasoning-only 场景并补发 TEXT_MESSAGE 事件。
+     *
+     * TODO: 升级 AgentScope 到 1.0.12+ 后可移除补偿逻辑
+     *
      * @return 活跃运行实例 与 合并后的事件流
      */
     private fun setupEventStream(
@@ -151,10 +159,25 @@ class AiChatService @Autowired constructor(
             AgentSessionContext.SinkInfo(subAgentSink, threadId ?: "", runId ?: "")
         )
         val activeRun = activeRunManager.register(threadId ?: "", runId ?: "", agent)
+
+        val tracker = ReasoningCompensationTracker(threadId ?: "", runId ?: "")
         val mergedEvents = Flux.merge(
-            result.events().doOnComplete { subAgentSink.tryEmitComplete() },
+            result.events()
+                .doOnComplete { subAgentSink.tryEmitComplete() },
             subAgentSink.asFlux()
-        )
+        ).doOnNext { tracker.track(it) }.concatWith(
+            Flux.defer {
+                if (tracker.needsCompensation()) {
+                    logger.warn(
+                        "[AguiChat] Reasoning-only stream detected, " +
+                                "compensating TEXT_MESSAGE: threadId={}", threadId
+                    )
+                    Flux.fromIterable(tracker.buildCompensationEvents())
+                } else {
+                    Flux.empty()
+                }
+            })
+
         return activeRun to mergedEvents
     }
 
@@ -172,18 +195,23 @@ class AiChatService @Autowired constructor(
 
         mergedEvents.subscribe(
             { event ->
-                activeRun.replaySink.tryEmitNext(event)
                 val encoded = encoder.encode(event)
+                val sanitizedEncoded = AguiEventSanitizer.sanitizeEncodedEvent(encoded)
+                if (sanitizedEncoded == null) {
+                    logger.warn("[AguiChat] Dropped raw tool-call marker event: threadId={}, runId={}", threadId, runId)
+                    return@subscribe
+                }
+                activeRun.replaySink.tryEmitNext(event)
                 // 同步持久化到 DB
                 aiRunEventService.sendPersistEvent(
                     threadId = threadId,
                     runId = runId,
                     eventIndex = activeRun.nextEventIndex(),
-                    eventData = encoded
+                    eventData = sanitizedEncoded
                 )
                 if (!disconnected) {
                     try {
-                        output.write(encoded)
+                        output.write(sanitizedEncoded)
                     } catch (e: Exception) {
                         disconnected = true
                         logger.info(
