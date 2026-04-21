@@ -2013,6 +2013,7 @@
     "archiving": "Archiving, a notification email will be sent upon completion. Please refresh the list manually.",
     "removeUnarchivablePipelines": "Remove unarchivable pipelines"
   },
+  "pipelineDataBoard": "EPlus",
   "cron": {
     "everyMinute": "Per minute",
     "everyHour": "Per hour",
