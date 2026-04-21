@@ -31,6 +31,7 @@ import com.tencent.devops.ai.context.AgentSessionContext
 import com.tencent.devops.ai.context.AiChatContext
 import com.tencent.devops.ai.pojo.ChatContextDTO
 import com.tencent.devops.ai.session.PersistentAgentResolver
+import com.tencent.devops.ai.util.AiErrorMessageTranslator
 import com.tencent.devops.ai.util.SseEventWriter
 import io.agentscope.core.agent.Agent
 import io.agentscope.core.agent.AgentBase
@@ -346,26 +347,7 @@ class AiChatService @Autowired constructor(
      * 原始 message 仅保留在后端日志中，不暴露给前端。
      */
     private fun toFriendlyErrorMessage(error: Throwable): String {
-        val msg = error.message.orEmpty()
-        val cause = error.cause
-        return when {
-            reactor.core.Exceptions.isRetryExhausted(error) -> {
-                val rootMsg = cause?.message.orEmpty()
-                when {
-                    rootMsg.contains("timeout", ignoreCase = true)
-                        -> MSG_RETRY_TIMEOUT
-                    rootMsg.contains("stream failed", ignoreCase = true)
-                        || rootMsg.contains("connection", ignoreCase = true)
-                        -> MSG_RETRY_NETWORK
-                    else -> MSG_RETRY_EXHAUSTED
-                }
-            }
-            msg.contains("timeout", ignoreCase = true) -> MSG_TIMEOUT
-            msg.contains("connection", ignoreCase = true)
-                || msg.contains("stream failed", ignoreCase = true)
-                -> MSG_NETWORK
-            else -> MSG_UNKNOWN
-        }
+        return AiErrorMessageTranslator.toFriendlyMessage(error)
     }
 
     companion object {
@@ -381,17 +363,5 @@ class AiChatService @Autowired constructor(
         /** 轮询 Agent running 标志的间隔（毫秒） */
         private const val AGENT_IDLE_POLL_INTERVAL_MS = 200L
 
-        private const val MSG_RETRY_TIMEOUT =
-            "AI 模型响应超时，已重试多次仍未成功，请稍后再试。"
-        private const val MSG_RETRY_NETWORK =
-            "与 AI 模型的网络连接异常，已重试多次仍未恢复，请稍后再试。"
-        private const val MSG_RETRY_EXHAUSTED =
-            "AI 模型服务暂时不可用，已重试多次仍未成功，请稍后再试。"
-        private const val MSG_TIMEOUT =
-            "AI 模型响应超时，请稍后再试。"
-        private const val MSG_NETWORK =
-            "与 AI 模型的网络连接异常，请稍后再试。"
-        private const val MSG_UNKNOWN =
-            "AI 服务出现异常，请稍后再试。"
     }
 }

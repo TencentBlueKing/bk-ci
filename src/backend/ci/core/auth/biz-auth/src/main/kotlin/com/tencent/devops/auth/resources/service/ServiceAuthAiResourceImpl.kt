@@ -300,7 +300,7 @@ class ServiceAuthAiResourceImpl(
         return Result(authAiService.applyRenewalGroupMember(userId, projectId, groupIds, renewalDays, reason))
     }
 
-    @BkProjectMemberCheck
+    @BkManagerCheck
     override fun batchRemoveMembers(
         userId: String,
         projectId: String,
@@ -346,7 +346,7 @@ class ServiceAuthAiResourceImpl(
         return Result(authAiService.batchOperateCheck(userId, projectId, batchOperateType, request))
     }
 
-    @BkProjectMemberCheck
+    @BkManagerCheck
     override fun removeMemberFromProject(
         userId: String,
         projectId: String,
