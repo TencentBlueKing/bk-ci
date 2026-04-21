@@ -911,7 +911,8 @@ class ThirdPartyAgentService @Autowired constructor(
         if (envId == null) {
             return EnabledStrategiesWithTags(
                 strategies = DispatchStrategyConfig.buildDefaults(projectId, 0L, "system"),
-                nodeTagValues = emptyMap()
+                nodeTagValues = emptyMap(),
+                tagKeys = emptyMap()
             )
         }
         val strategyResult = try {

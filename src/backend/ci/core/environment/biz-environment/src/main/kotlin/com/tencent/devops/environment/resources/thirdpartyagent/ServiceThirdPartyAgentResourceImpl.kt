@@ -29,7 +29,6 @@ package com.tencent.devops.environment.resources.thirdpartyagent
 
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
@@ -44,7 +43,6 @@ import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.EnabledStrategiesWithTags
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.NodeTag
-import com.tencent.devops.environment.pojo.NodeTagValue
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
@@ -370,7 +368,6 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         envId: Long
     ): Result<EnabledStrategiesWithTags> {
         val strategies = envDispatchStrategyService.getEnabledStrategies(projectId, envId)
-
         val needLabels = strategies.any { !it.labelSelector.isNullOrEmpty() }
         val nodeTagValues = if (needLabels) {
             val envNodes = envNodeDao.list(dslContext, projectId, listOf(envId))
@@ -379,9 +376,13 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
                 emptyMap()
             } else {
                 val tagMap = nodeTagService.fetchNodeTags(projectId, nodeIds)
-                val result = mutableMapOf<Long, Map<Long, NodeTag>>()
+                val result = mutableMapOf<Long, Map<Long, Set<String>>>()
                 tagMap.forEach { (nodeId, tags) ->
-                    result[nodeId] =  tags.associateBy { it.tagKeyId }
+                    result[nodeId] = tags.associate {
+                        it.tagKeyId to it.tagValues.map { v ->
+                            v.tagValueName
+                        }.toSet()
+                    }
                 }
                 result
             }
@@ -389,6 +390,6 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
             emptyMap()
         }
 
-        return Result(EnabledStrategiesWithTags(strategies, nodeTagValues))
+        return Result(EnabledStrategiesWithTags(strategies, nodeTagValues, nodeTagService.getInternalKeys()))
     }
 }

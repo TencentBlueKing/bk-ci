@@ -53,9 +53,18 @@ class DispatchStrategyExecutorTest {
         preBuild: Set<String> = emptySet(),
         running: Map<String, Int> = agents.associate { it.agentId to 0 },
         dockerRunning: Map<String, Int> = emptyMap(),
-        tags: Map<String, Map<Long, List<String>>> = emptyMap(),
+        tags: Map<String, Map<Long, Set<String>>> = emptyMap(),
+        tagKeys: Map<Long, String> = emptyMap(),
         docker: Boolean = false
-    ) = StrategyInput(agents, preBuild, running, dockerRunning, tags, docker)
+    ) = StrategyInput(
+        allAgents = agents,
+        preBuildAgentIds = preBuild,
+        agentRunningCounts = running,
+        dockerRunningCounts = dockerRunning,
+        agentTagValues = tags,
+        tagKeys = tagKeys,
+        isDockerBuilder = docker
+    )
 
     // ========== 基本策略匹配 ==========
 
@@ -147,9 +156,9 @@ class DispatchStrategyExecutorTest {
     inner class LabelOperators {
 
         private fun execWithLabel(
-            agentTags: Map<Long, List<String>>,
+            agentTags: Map<Long, Set<String>>,
             op: LabelOp,
-            values: List<String>,
+            values: Set<String>,
             tagKeyId: Long = 1L
         ): ThirdPartyAgent? {
             val a = buildAgent("1")
@@ -161,55 +170,55 @@ class DispatchStrategyExecutorTest {
         }
 
         @Test fun inMatch() {
-            assertNotNull(execWithLabel(mapOf(1L to listOf("linux", "windows")), LabelOp.IN, listOf("linux")))
+            assertNotNull(execWithLabel(mapOf(1L to setOf("linux", "windows")), LabelOp.IN, setOf("linux")))
         }
         @Test fun inNoMatch() {
-            assertNull(execWithLabel(mapOf(1L to listOf("macos")), LabelOp.IN, listOf("linux", "windows")))
+            assertNull(execWithLabel(mapOf(1L to setOf("macos")), LabelOp.IN, setOf("linux", "windows")))
         }
         @Test fun equalMatch() {
-            assertNotNull(execWithLabel(mapOf(1L to listOf("v1.0")), LabelOp.EQUAL, listOf("v1.0")))
+            assertNotNull(execWithLabel(mapOf(1L to setOf("v1.0")), LabelOp.EQUAL, setOf("v1.0")))
         }
         @Test fun equalNoMatch() {
-            assertNull(execWithLabel(mapOf(1L to listOf("v2.0")), LabelOp.EQUAL, listOf("v1.0")))
+            assertNull(execWithLabel(mapOf(1L to setOf("v2.0")), LabelOp.EQUAL, setOf("v1.0")))
         }
         @Test fun gtNumeric() {
-            assertNotNull(execWithLabel(mapOf(1L to listOf("10")), LabelOp.GT, listOf("5")))
+            assertNotNull(execWithLabel(mapOf(1L to setOf("10")), LabelOp.GT, setOf("5")))
         }
         @Test fun gtNumericFail() {
-            assertNull(execWithLabel(mapOf(1L to listOf("3")), LabelOp.GT, listOf("5")))
+            assertNull(execWithLabel(mapOf(1L to setOf("3")), LabelOp.GT, setOf("5")))
         }
         @Test fun gteEqual() {
-            assertNotNull(execWithLabel(mapOf(1L to listOf("5")), LabelOp.GTE, listOf("5")))
+            assertNotNull(execWithLabel(mapOf(1L to setOf("5")), LabelOp.GTE, setOf("5")))
         }
         @Test fun ltNumeric() {
-            assertNotNull(execWithLabel(mapOf(1L to listOf("3")), LabelOp.LT, listOf("5")))
+            assertNotNull(execWithLabel(mapOf(1L to setOf("3")), LabelOp.LT, setOf("5")))
         }
         @Test fun lteFail() {
-            assertNull(execWithLabel(mapOf(1L to listOf("6")), LabelOp.LTE, listOf("5")))
+            assertNull(execWithLabel(mapOf(1L to setOf("6")), LabelOp.LTE, setOf("5")))
         }
         @Test fun startWith() {
-            assertNotNull(execWithLabel(mapOf(1L to listOf("release-1.0")), LabelOp.START_WITH, listOf("release")))
+            assertNotNull(execWithLabel(mapOf(1L to setOf("release-1.0")), LabelOp.START_WITH, setOf("release")))
         }
         @Test fun startWithFail() {
-            assertNull(execWithLabel(mapOf(1L to listOf("dev-1.0")), LabelOp.START_WITH, listOf("release")))
+            assertNull(execWithLabel(mapOf(1L to setOf("dev-1.0")), LabelOp.START_WITH, setOf("release")))
         }
         @Test fun endWith() {
-            assertNotNull(execWithLabel(mapOf(1L to listOf("app-linux")), LabelOp.END_WITH, listOf("linux")))
+            assertNotNull(execWithLabel(mapOf(1L to setOf("app-linux")), LabelOp.END_WITH, setOf("linux")))
         }
         @Test fun endWithFail() {
-            assertNull(execWithLabel(mapOf(1L to listOf("app-linux")), LabelOp.END_WITH, listOf("windows")))
+            assertNull(execWithLabel(mapOf(1L to setOf("app-linux")), LabelOp.END_WITH, setOf("windows")))
         }
         @Test fun contains() {
-            assertNotNull(execWithLabel(mapOf(1L to listOf("my-feature-branch")), LabelOp.CONTAINS, listOf("feature")))
+            assertNotNull(execWithLabel(mapOf(1L to setOf("my-feature-branch")), LabelOp.CONTAINS, setOf("feature")))
         }
         @Test fun containsFail() {
-            assertNull(execWithLabel(mapOf(1L to listOf("my-hotfix-branch")), LabelOp.CONTAINS, listOf("feature")))
+            assertNull(execWithLabel(mapOf(1L to setOf("my-hotfix-branch")), LabelOp.CONTAINS, setOf("feature")))
         }
         @Test fun stringCompare() {
-            assertNotNull(execWithLabel(mapOf(1L to listOf("beta")), LabelOp.GT, listOf("alpha")))
+            assertNotNull(execWithLabel(mapOf(1L to setOf("beta")), LabelOp.GT, setOf("alpha")))
         }
         @Test fun missingTagKey() {
-            assertNull(execWithLabel(mapOf(2L to listOf("linux")), LabelOp.IN, listOf("linux")))
+            assertNull(execWithLabel(mapOf(2L to setOf("linux")), LabelOp.IN, setOf("linux")))
         }
 
         @Test
@@ -218,15 +227,15 @@ class DispatchStrategyExecutorTest {
             val a1 = buildAgent("1")
             val a2 = buildAgent("2")
             val tags = mapOf(
-                "1" to mapOf(1L to listOf("linux"), 2L to listOf("amd64")),
-                "2" to mapOf(1L to listOf("linux"))
+                "1" to mapOf(1L to setOf("linux"), 2L to setOf("amd64")),
+                "2" to mapOf(1L to setOf("linux"))
             )
             val r = DispatchStrategyExecutor(input(listOf(a1, a2), tags = tags))
                 .execute(listOf(buildStrategy(
                     StrategyScope.ALL, NodeRule.IDLE,
                     labelSelector = listOf(
-                        LabelSelector(tagKeyId = 1, op = LabelOp.EQUAL, values = listOf("linux")),
-                        LabelSelector(tagKeyId = 2, op = LabelOp.EQUAL, values = listOf("amd64"))
+                        LabelSelector(tagKeyId = 1, op = LabelOp.EQUAL, values = setOf("linux")),
+                        LabelSelector(tagKeyId = 2, op = LabelOp.EQUAL, values = setOf("amd64"))
                     )
                 ))) { true }
             assertEquals("1", r!!.agentId)
@@ -321,16 +330,16 @@ class DispatchStrategyExecutorTest {
     inner class Integration {
         @Test fun labelsWithPreBuild() {
             val tags = mapOf(
-                "1" to mapOf(1L to listOf("a")),
-                "2" to mapOf(1L to listOf("a", "b")),
-                "3" to mapOf(1L to listOf("b"))
+                "1" to mapOf(1L to setOf("a")),
+                "2" to mapOf(1L to setOf("a", "b")),
+                "3" to mapOf(1L to setOf("b"))
             )
             val r = DispatchStrategyExecutor(input(
                 listOf(buildAgent("1"), buildAgent("2"), buildAgent("3")),
                 preBuild = setOf("1", "2"), tags = tags
             )).execute(listOf(buildStrategy(
                 StrategyScope.PRE_BUILD, NodeRule.IDLE,
-                labelSelector = listOf(LabelSelector(tagKeyId = 1, op = LabelOp.IN, values = listOf("b")))
+                labelSelector = listOf(LabelSelector(tagKeyId = 1, op = LabelOp.IN, values = setOf("b")))
             ))) { true }
             assertEquals("2", r!!.agentId)
         }
@@ -338,10 +347,10 @@ class DispatchStrategyExecutorTest {
         @Test fun customFallbackToDefault() {
             val r = DispatchStrategyExecutor(input(
                 listOf(buildAgent("1"), buildAgent("2")),
-                tags = mapOf("1" to mapOf(1L to listOf("x")), "2" to mapOf(1L to listOf("y")))
+                tags = mapOf("1" to mapOf(1L to setOf("x")), "2" to mapOf(1L to setOf("y")))
             )).execute(listOf(
                 buildStrategy(StrategyScope.ALL, NodeRule.IDLE, priority = 0,
-                    labelSelector = listOf(LabelSelector(tagKeyId = 1, op = LabelOp.EQUAL, values = listOf("zzz")))),
+                    labelSelector = listOf(LabelSelector(tagKeyId = 1, op = LabelOp.EQUAL, values = setOf("zzz")))),
                 buildStrategy(StrategyScope.ALL, NodeRule.IDLE, priority = 1)
             )) { true }
             assertNotNull(r)
@@ -369,10 +378,10 @@ class DispatchStrategyExecutorTest {
         @Test fun logsLabelFilter() {
             val logs = mutableListOf<String>()
             DispatchStrategyExecutor(
-                input(listOf(buildAgent("1"), buildAgent("2")), tags = mapOf("1" to mapOf(1L to listOf("ok")))),
+                input(listOf(buildAgent("1"), buildAgent("2")), tags = mapOf("1" to mapOf(1L to setOf("ok")))),
                 logAction = { logs.add(it) }
             ).execute(listOf(buildStrategy(StrategyScope.ALL, NodeRule.IDLE,
-                labelSelector = listOf(LabelSelector(tagKeyId = 1, op = LabelOp.IN, values = listOf("ok")))
+                labelSelector = listOf(LabelSelector(tagKeyId = 1, op = LabelOp.IN, values = setOf("ok")))
             ))) { true }
             assertTrue(logs.any { "Label filter" in it && "2 -> 1" in it })
         }

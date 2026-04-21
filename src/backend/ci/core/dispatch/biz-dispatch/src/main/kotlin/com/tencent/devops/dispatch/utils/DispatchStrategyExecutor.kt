@@ -27,8 +27,9 @@ class DispatchStrategyExecutor(
         val preBuildAgentIds: Set<String>,
         val agentRunningCounts: Map<String, Int>,
         val dockerRunningCounts: Map<String, Int>,
-        /** agentId -> 该 agent 拥有的标签键值: Map<tagKeyId, NodeTag> */
-        val agentTagValues: Map<String, Map<Long, NodeTag>>,
+        /** agentId -> 该 agent 拥有的标签键值: Map<tagKeyId, values> */
+        val agentTagValues: Map<String, Map<Long, Set<String>>>,
+        val tagKeys: Map<Long, String>,
         val isDockerBuilder: Boolean
     )
 
@@ -41,15 +42,22 @@ class DispatchStrategyExecutor(
         val envId = strategies.firstOrNull()?.envId
         val tag = "[Strategy|env:$envId]"
 
-        pipelineLog("$tag Start matching, ${strategies.size} strategies, " +
-            "${input.allAgents.size} agents, preBuild=${input.preBuildAgentIds.size}")
+        pipelineLog(
+            "$tag Start matching, ${strategies.size} strategies, " +
+                    "${input.allAgents.size} agents, preBuild=${input.preBuildAgentIds.size}"
+        )
 
         for ((index, strategy) in strategies.withIndex()) {
             if (!strategy.enabled) continue
             val lv = "$tag[Lv.${index + 1}]"
 
-            pipelineLog("$lv \"${strategy.strategyName ?: ""}\" scope=${strategy.scope} rule=${strategy.nodeRule}" +
-                if (!strategy.labelSelector.isNullOrEmpty()) " labels=${strategy.labelSelector?.size}" else "")
+            pipelineLog(
+                "$lv \"${strategy.strategyName ?: ""}\" scope=${strategy.scope} rule=${strategy.nodeRule}" + " labels=${
+                    strategy.labelSelector?.joinToString(separator = ",") {
+                        "${input.tagKeys[it.tagKeyId] ?: ""}${it.op.symbol}${it.values}"
+                    }
+                }"
+            )
 
             // 检测是否命中范围
             val candidates = getCandidates(strategy.scope)
@@ -73,7 +81,7 @@ class DispatchStrategyExecutor(
                 pipelineLog("$lv Matched agent [${matched.agentId}]${matched.hostname}/${matched.ip}")
                 logger.info(
                     "DispatchStrategyExecutor|env:$envId|matched|strategy=${strategy.strategyName ?: ""}" +
-                        "|agent=${matched.agentId}|scope=${strategy.scope}|rule=${strategy.nodeRule}"
+                            "|agent=${matched.agentId}|scope=${strategy.scope}|rule=${strategy.nodeRule}"
                 )
                 return matched
             }
@@ -90,6 +98,7 @@ class DispatchStrategyExecutor(
                 val idSet = input.preBuildAgentIds
                 input.allAgents.filter { it.agentId in idSet }
             }
+
             StrategyScope.ALL -> input.allAgents
         }
     }
@@ -105,30 +114,37 @@ class DispatchStrategyExecutor(
                 pipelineLog("$logTag match label [${agent.agentId}] no tag skip")
                 return@filter false
             }
-            labelSelector.all { selector -> matchLabel(logTag, selector, agentTags) }
+            labelSelector.all { selector ->
+                matchLabel(
+                    logTag = "$logTag match label [${agent.agentId}]",
+                    selector = selector,
+                    agentTags = agentTags
+                )
+            }
         }
     }
 
     private fun matchLabel(
         logTag: String,
         selector: LabelSelector,
-        agentTags: Map<Long, NodeTag>
+        agentTags: Map<Long, Set<String>>
     ): Boolean {
-        val agentValues = agentTags[selector.tagKeyId]?.tagValues ?: return false
-        val tagValues = agentValues.map { it.tagValueName }
-        val expected = agentValues.filter { selector.tagValueIds.contains(it.tagValueId) }.map { it.tagValueName }
-        pipelineLog("$logTag match label [$tagValues] ${selector.op.symbol} [$expected]")
+        val agentValues = agentTags[selector.tagKeyId] ?: run {
+            pipelineLog("$logTag no tag key [${input.tagKeys[selector.tagKeyId]}] skip")
+            return false
+        }
+        val expected = selector.values
         if (expected.isEmpty()) return false
         return when (selector.op) {
-            LabelOp.IN -> tagValues.any { it in expected }
-            LabelOp.EQUAL -> expected.any { exp -> tagValues.any { it == exp } }
-            LabelOp.GT -> expected.any { exp -> tagValues.any { compareValues(it, exp) > 0 } }
-            LabelOp.GTE -> expected.any { exp -> tagValues.any { compareValues(it, exp) >= 0 } }
-            LabelOp.LT -> expected.any { exp -> tagValues.any { compareValues(it, exp) < 0 } }
-            LabelOp.LTE -> expected.any { exp -> tagValues.any { compareValues(it, exp) <= 0 } }
-            LabelOp.START_WITH -> expected.any { exp -> tagValues.any { it.startsWith(exp) } }
-            LabelOp.END_WITH -> expected.any { exp -> tagValues.any { it.endsWith(exp) } }
-            LabelOp.CONTAINS -> expected.any { exp -> tagValues.any { it.contains(exp) } }
+            LabelOp.IN -> agentValues.any { it in expected }
+            LabelOp.EQUAL -> expected.any { exp -> agentValues.any { it == exp } }
+            LabelOp.GT -> expected.any { exp -> agentValues.any { compareValues(it, exp) > 0 } }
+            LabelOp.GTE -> expected.any { exp -> agentValues.any { compareValues(it, exp) >= 0 } }
+            LabelOp.LT -> expected.any { exp -> agentValues.any { compareValues(it, exp) < 0 } }
+            LabelOp.LTE -> expected.any { exp -> agentValues.any { compareValues(it, exp) <= 0 } }
+            LabelOp.START_WITH -> expected.any { exp -> agentValues.any { it.startsWith(exp) } }
+            LabelOp.END_WITH -> expected.any { exp -> agentValues.any { it.endsWith(exp) } }
+            LabelOp.CONTAINS -> expected.any { exp -> agentValues.any { it.contains(exp) } }
         }
     }
 
@@ -180,13 +196,17 @@ class DispatchStrategyExecutor(
             }
 
             if (!matched) {
-                pipelineLog("$lv [${a.agentId}]${a.hostname}/${a.ip} " +
-                    "$loadDesc -> ${nodeRule?.name ?: "NULL"} not satisfied")
+                pipelineLog(
+                    "$lv [${a.agentId}]${a.hostname}/${a.ip} " +
+                            "$loadDesc -> ${nodeRule?.name ?: "NULL"} not satisfied"
+                )
                 continue
             }
 
-            pipelineLog("$lv [${a.agentId}]${a.hostname}/${a.ip} " +
-                "$loadDesc -> ${nodeRule?.name ?: "NULL"} matched, trying to dispatch")
+            pipelineLog(
+                "$lv [${a.agentId}]${a.hostname}/${a.ip} " +
+                        "$loadDesc -> ${nodeRule?.name ?: "NULL"} matched, trying to dispatch"
+            )
 
             hasTryAgents.add(al.agent.agentId)
             if (tryAgent(al.agent)) {

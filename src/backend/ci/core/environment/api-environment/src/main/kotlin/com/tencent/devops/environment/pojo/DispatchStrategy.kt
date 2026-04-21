@@ -6,11 +6,12 @@ import com.tencent.devops.environment.pojo.enums.NodeRule
 import com.tencent.devops.environment.pojo.enums.StrategyScope
 import com.tencent.devops.environment.pojo.enums.StrategyType
 import io.swagger.v3.oas.annotations.media.Schema
+import org.springframework.web.servlet.tags.form.LabelTag
 
 data class LabelSelector(
     val tagKeyId: Long,
     val op: LabelOp,
-    val tagValueIds: Set<Long>
+    val values: Set<String>
 )
 
 data class DispatchStrategyConfig(
@@ -53,8 +54,9 @@ data class DispatchStrategyConfig(
 
 data class EnabledStrategiesWithTags(
     val strategies: List<DispatchStrategyConfig>,
-    /** nodeId -> (tagKeyId -> NodeTag) */
-    val nodeTagValues: Map<Long, Map<Long, NodeTag>>
+    /** nodeId -> (tagKeyId -> tagValues) */
+    val nodeTagValues: Map<Long, Map<Long, Set<String>>>,
+    val tagKeys: Map<Long, String>
 )
 
 @Schema(title = "标签选择器条件")
@@ -65,15 +67,8 @@ data class LabelSelectorVO(
     val tagKeyId: Long,
     @get:Schema(title = "操作符", required = true)
     val op: LabelOp,
-    @get:Schema(title = "标签列表", required = true)
-    val tagValue: List<TagValue>
-)
-
-data class TagValue(
-    @get:Schema(title = "标签ValueID", required = true)
-    val tagValueId: Long,
-    @get:Schema(title = "标签Value值", required = true)
-    val tagValue: String
+    @get:Schema(title = "对比值列表", required = true)
+    val values: Set<String>
 )
 
 @Schema(title = "调度策略详情")

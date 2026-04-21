@@ -552,12 +552,6 @@ class NodeTagService @Autowired constructor(
         } ?: nodeTagKeyDao.fetchAllInternalKeys(dslContext).associate { it.id to it.keyName }
     }
 
-    fun getInternalValues(): Map<Long, String> {
-        return internalValueCache.get(INTERNAL_TAG_CACHE_KEY) {
-            nodeTagValueDao.fetchAllInternalValues(dslContext).associate { it.id to it.valueName }
-        } ?: nodeTagValueDao.fetchAllInternalValues(dslContext).associate { it.id to it.valueName }
-    }
-
     companion object {
         private fun genUpdateNodeTagLockKey(projectId: String, tagKeyId: Long) =
             "environment.nodetag.update:$projectId:$tagKeyId"
@@ -570,11 +564,6 @@ class NodeTagService @Autowired constructor(
         private const val INTERNAL_TAG_CACHE_EXPIRE_MINUTES = 10L
 
         private val internalTagKeyCache: Cache<String, Map<Long, String>> = Caffeine.newBuilder()
-            .expireAfterWrite(INTERNAL_TAG_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
-            .maximumSize(INTERNAL_TAG_CACHE_MAX_SIZE)
-            .build()
-
-        private val internalValueCache: Cache<String, Map<Long, String>> = Caffeine.newBuilder()
             .expireAfterWrite(INTERNAL_TAG_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
             .maximumSize(INTERNAL_TAG_CACHE_MAX_SIZE)
             .build()

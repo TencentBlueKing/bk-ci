@@ -9,17 +9,14 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.EnvDispatchStrategyDao
 import com.tencent.devops.environment.dao.NodeTagKeyDao
-import com.tencent.devops.environment.dao.NodeTagValueDao
 import com.tencent.devops.environment.pojo.DispatchEnvStrategyVO
 import com.tencent.devops.environment.pojo.DispatchStrategyConfig
 import com.tencent.devops.environment.pojo.LabelSelector
 import com.tencent.devops.environment.pojo.LabelSelectorVO
-import com.tencent.devops.environment.pojo.TagValue
 import com.tencent.devops.environment.pojo.enums.NodeRule
 import com.tencent.devops.environment.pojo.enums.StrategyScope
 import com.tencent.devops.environment.pojo.enums.StrategyType
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -30,7 +27,6 @@ class EnvDispatchStrategyService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val envDispatchStrategyDao: EnvDispatchStrategyDao,
     private val nodeTagKeyDao: NodeTagKeyDao,
-    private val nodeTagValueDao: NodeTagValueDao,
     private val nodeTagService: NodeTagService
 ) {
     @Value("\${environment.strategy.count:10}")
@@ -47,34 +43,24 @@ class EnvDispatchStrategyService @Autowired constructor(
         val existing = envDispatchStrategyDao.listByEnv(dslContext, projectId, envId)
         if (existing.isNotEmpty()) {
             val tagKeyIds = mutableSetOf<Long>()
-            val tagValueIds = mutableSetOf<Long>()
             existing.forEach { ex ->
                 ex.labelSelector?.forEach { labelSelector ->
                     tagKeyIds.add(labelSelector.tagKeyId)
-                    tagValueIds.addAll(labelSelector.tagValueIds)
                 }
             }
-            if (tagKeyIds.isEmpty() && tagValueIds.isEmpty()) {
+            if (tagKeyIds.isEmpty()) {
                 return existing.map { DispatchEnvStrategyVO(it, null) }
             }
             val keyRecords = nodeTagKeyDao.fetchNodeKeyByIds(dslContext, projectId, tagKeyIds)
                 .associate { it.id to it.keyName }
                 .toMutableMap().apply { putAll(nodeTagService.getInternalKeys()) }
-            val valueRecords = nodeTagValueDao.fetchNodeKeyValueByIds(dslContext, projectId, tagValueIds)
-                .associate { it.id to it.valueName }
-                .toMutableMap().apply { putAll(nodeTagService.getInternalValues()) }
             return existing.map {
                 DispatchEnvStrategyVO(it, it.labelSelector?.map { s ->
                     LabelSelectorVO(
                         tagKeyName = keyRecords[s.tagKeyId] ?: "",
                         tagKeyId = s.tagKeyId,
                         op = s.op,
-                        tagValue = s.tagValueIds.map { v ->
-                            TagValue(
-                                tagValueId = v,
-                                tagValue = valueRecords[v] ?: ""
-                            )
-                        }
+                        values = s.values,
                     )
                 })
             }

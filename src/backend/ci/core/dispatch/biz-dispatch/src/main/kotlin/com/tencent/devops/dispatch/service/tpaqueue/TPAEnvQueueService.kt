@@ -384,7 +384,7 @@ class TPAEnvQueueService @Autowired constructor(
         activeAgents.forEach { agent ->
             agent.nodeId?.let { nodeIdToAgentId[HashUtil.decodeIdToLong(it)] = agent.agentId }
         }
-        val agentTagValues = mutableMapOf<String, Map<Long, NodeTag>>()
+        val agentTagValues = mutableMapOf<String, Map<Long, Set<String>>>()
         strategyResult.nodeTagValues.forEach { (nodeId, kv) ->
             nodeIdToAgentId[nodeId]?.let { agentId -> agentTagValues[agentId] = kv }
         }
@@ -395,6 +395,7 @@ class TPAEnvQueueService @Autowired constructor(
                 agentRunningCounts = runningCounts,
                 dockerRunningCounts = dockerRunningCounts,
                 agentTagValues = agentTagValues,
+                tagKeys = strategyResult.tagKeys,
                 isDockerBuilder = isDocker
             ),
             logAction = { msg -> commonUtil.logDebug(data, msg) }

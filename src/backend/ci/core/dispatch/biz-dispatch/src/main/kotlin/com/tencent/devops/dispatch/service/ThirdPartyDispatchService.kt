@@ -689,7 +689,7 @@ class ThirdPartyDispatchService @Autowired constructor(
         activeAgents.forEach { agent ->
             agent.nodeId?.let { nodeIdToAgentId[HashUtil.decodeIdToLong(it)] = agent.agentId }
         }
-        val agentTagValues = mutableMapOf<String, Map<Long, NodeTag>>()
+        val agentTagValues = mutableMapOf<String, Map<Long, Set<String>>>()
         strategyResult.nodeTagValues.forEach { (nodeId, kv) ->
             nodeIdToAgentId[nodeId]?.let { agentId -> agentTagValues[agentId] = kv }
         }
@@ -700,6 +700,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                 agentRunningCounts = runningBuildsMapper,
                 dockerRunningCounts = dockerRunningBuildsMapper,
                 agentTagValues = agentTagValues,
+                tagKeys = strategyResult.tagKeys,
                 isDockerBuilder = dispatchType.dockerInfo != null
             ),
             logAction = { msg -> logDebug(dispatchMessage.event, msg) }
