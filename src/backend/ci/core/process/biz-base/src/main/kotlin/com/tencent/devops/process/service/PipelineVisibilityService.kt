@@ -49,8 +49,11 @@ class PipelineVisibilityService @Autowired constructor(
         val userInfo = userInfoCache.get(userId) {
             client.get(ServiceDeptResource::class).getUserInfo(userId = userId, name = userId).data
         } ?: return
-        val userDepartments =
-            userInfo.deptInfo?.filter { !it.fullName.isNullOrBlank() }?.map { it.fullName!! } ?: emptyList()
+        val userDepartments = userInfo.deptInfo?.lastOrNull {
+            !it.fullName.isNullOrBlank()
+        }?.let {
+            listOf(it.fullName!!)
+        } ?: emptyList()
         pipelineVisibilityDao.create(
             dslContext = transactionContext ?: dslContext,
             userId = userId,

@@ -27,6 +27,7 @@ class PipelineVisibilityDao {
         with(TPipelineVisibility.T_PIPELINE_VISIBILITY) {
             val now = LocalDateTime.now()
             visibilityList.forEach {
+                val userDepartments = it.userDepartments?.let { u -> JsonUtil.toJson(u, false) }
                 dslContext.insertInto(
                     this,
                     PROJECT_ID,
@@ -46,7 +47,7 @@ class PipelineVisibilityDao {
                     it.scopeId,
                     it.scopeName,
                     it.fullName,
-                    JsonUtil.toJson(it.userDepartments, false),
+                    userDepartments,
                     authUser,
                     userId,
                     now
@@ -54,7 +55,7 @@ class PipelineVisibilityDao {
                     .onDuplicateKeyUpdate()
                     .set(SCOPE_NAME, it.scopeName)
                     .set(FULL_NAME, it.fullName)
-                    .set(USER_DEPARTMENTS, JsonUtil.toJson(it.userDepartments, false))
+                    .set(USER_DEPARTMENTS, userDepartments)
                     .set(AUTH_USER, authUser)
                     .set(CREATOR, userId)
                     .set(CREATE_TIME, now)
@@ -169,12 +170,12 @@ class PipelineVisibilityDao {
         return with(TPipelineVisibility.T_PIPELINE_VISIBILITY) {
             val userCondition = TYPE.eq(PipelineVisibilityType.USER.name)
                 .and(SCOPE_ID.eq(userId))
-            val deptCondition = TYPE.eq(PipelineVisibilityType.DEPT.name)
+            val orgCondition = TYPE.eq(PipelineVisibilityType.ORG.name)
                 .and(SCOPE_ID.`in`(userDeptIds))
             dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-                .and(DSL.or(userCondition, deptCondition))
+                .and(DSL.or(userCondition, orgCondition))
                 .fetchOne(0, Int::class.java) ?: 0
         }
     }
@@ -214,14 +215,14 @@ class PipelineVisibilityDao {
         userDeptIds: Set<String>,
         pipelineIds: Set<String>? = null
     ): List<Condition> {
-        val deptCondition = TYPE.eq(PipelineVisibilityType.DEPT.name)
+        val orgCondition = TYPE.eq(PipelineVisibilityType.ORG.name)
             .and(SCOPE_ID.`in`(userDeptIds))
         val userCondition = TYPE.eq(PipelineVisibilityType.USER.name)
             .and(SCOPE_ID.eq(requestUserId))
         val conditions = mutableListOf(
             PROJECT_ID.eq(projectId),
             AUTH_USER.eq(authUser),
-            DSL.or(deptCondition, userCondition)
+            DSL.or(orgCondition, userCondition)
         )
         if (!pipelineIds.isNullOrEmpty()) {
             conditions.add(PIPELINE_ID.`in`(pipelineIds))

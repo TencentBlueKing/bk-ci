@@ -13,5 +13,5 @@ data class PipelineVisibility(
     @get:Schema(title = "完整名称", required = true)
     val fullName: String,
     @get:Schema(title = "用户部门信息", required = true)
-    val userDepartments: List<String> = emptyList()
+    val userDepartments: List<String>? = emptyList()
 )
