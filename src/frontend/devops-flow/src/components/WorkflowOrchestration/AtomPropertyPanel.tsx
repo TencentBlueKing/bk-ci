@@ -121,7 +121,20 @@ export default defineComponent({
                     onEnter={handleEnter}
                     onChange={handleNameChange}
                     class={sharedStyles.nameInput}
-                  />
+                  >
+                    {{
+                      suffix: () => (
+                        <span
+                          class={sharedStyles.nameInputEnterHint}
+                          v-bk-tooltips={{
+                            content: t('flow.orchestration.jobNameEnterToConfirm'),
+                          }}
+                        >
+                          <SvgIcon name="enter" size={14} />
+                        </span>
+                      ),
+                    }}
+                  </Input>
                 ) : (
                   <>
                     <p class={sharedStyles.atomNameText} title={getAtomName()}>

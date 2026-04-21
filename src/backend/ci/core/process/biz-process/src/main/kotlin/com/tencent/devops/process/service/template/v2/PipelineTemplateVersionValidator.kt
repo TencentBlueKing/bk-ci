@@ -66,6 +66,7 @@ class PipelineTemplateVersionValidator @Autowired constructor(
                 pipelineAsCodeSettings = pTemplateSettingWithoutVersion.pipelineAsCodeSettings,
                 newTemplate = newTemplate
             )
+            validateSetting()
         }
     }
 
@@ -115,6 +116,14 @@ class PipelineTemplateVersionValidator @Autowired constructor(
             )
         }
         checkTemplateAtomsForExplicitVersion(templateModel = templateModel, userId = userId)
+    }
+
+    fun PipelineTemplateVersionCreateContext.validateSetting() {
+        pTemplateSettingWithoutVersion.fixSubscriptions()
+        modelCheckPlugin.checkSettingIntegrity(
+            setting = pTemplateSettingWithoutVersion,
+            projectId = projectId
+        )
     }
 
     /**

@@ -11,6 +11,7 @@ import com.tencent.devops.process.trigger.scm.condition.BranchCondition
 import com.tencent.devops.process.trigger.scm.condition.BranchFilterType
 import com.tencent.devops.process.trigger.scm.condition.KeyWordType
 import com.tencent.devops.process.trigger.scm.condition.KeywordCondition
+import com.tencent.devops.process.trigger.scm.condition.LabelCondition
 import com.tencent.devops.process.trigger.scm.condition.PathCondition
 import com.tencent.devops.process.trigger.scm.condition.ThirdCondition
 import com.tencent.devops.process.trigger.scm.condition.UserCondition
@@ -50,7 +51,8 @@ class PullRequestHookRule @Autowired constructor(
                 sourceBranch = pullRequest.sourceRef.name,
                 changes = WebhookRuleUtils.getChangeFiles(changes ?: listOf()),
                 title = pullRequest.title,
-                lastCommitMsg = commit.message ?: ""
+                lastCommitMsg = commit.message ?: "",
+                labels = pullRequest.labels ?: listOf()
             )
         }
         val context = WebhookConditionContext(
@@ -68,6 +70,7 @@ class PullRequestHookRule @Autowired constructor(
             BranchCondition(BranchFilterType.SOURCE_BRANCH),
             PathCondition(),
             UserCondition(),
+            LabelCondition(),
             ThirdCondition(client, gitScmService, callbackCircuitBreakerRegistry)
         )
         return WebhookConditionChain(conditions).match(context)

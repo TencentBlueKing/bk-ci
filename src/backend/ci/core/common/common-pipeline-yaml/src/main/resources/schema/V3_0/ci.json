@@ -159,6 +159,14 @@
                     "items" : {
                       "type" : "string"
                     }
+                  },
+                  "action" : {
+                    "type" : "array",
+                    "uniqueItems" : true,
+                    "items" : {
+                      "enum" : [ "create", "delete" ]
+                    },
+                    "additionalItems" : false
                   }
                 }
               } ]
@@ -267,6 +275,18 @@
                   },
                   "skip-wip" : {
                     "type" : "boolean"
+                  },
+                  "labels" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "labels-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
                   }
                 }
               } ]
@@ -364,6 +384,18 @@
                   },
                   "skip-wip" : {
                     "type" : "boolean"
+                  },
+                  "labels" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "labels-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
                   }
                 }
               } ]
@@ -970,6 +1002,14 @@
                   "items" : {
                     "type" : "string"
                   }
+                },
+                "action" : {
+                  "type" : "array",
+                  "uniqueItems" : true,
+                  "items" : {
+                    "enum" : [ "create", "delete" ]
+                  },
+                  "additionalItems" : false
                 }
               }
             } ]
@@ -1078,6 +1118,18 @@
                 },
                 "skip-wip" : {
                   "type" : "boolean"
+                },
+                "labels" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
                 }
               }
             } ]
@@ -1175,6 +1227,18 @@
                 },
                 "skip-wip" : {
                   "type" : "boolean"
+                },
+                "labels" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
                 }
               }
             } ]
@@ -2569,6 +2633,25 @@
     },
     "cancel-policy" : {
       "enum" : [ "BROAD", "RESTRICTED" ]
+    },
+    "runs-on" : {
+      "oneOf" : [ {
+        "type" : "string",
+        "description" : "创作流运行环境，默认为 self 指代我的创作节点，也可按 name 指定"
+      }, {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "pool-name" : {
+            "type" : "string",
+            "description" : "按名称指定创作流运行环境"
+          },
+          "pool-id" : {
+            "type" : "string",
+            "description" : "按 ID 指定创作流运行环境"
+          }
+        }
+      } ]
     }
   },
   "definitions" : {
