@@ -546,7 +546,7 @@ class PipelineYamlFacadeService @Autowired constructor(
         null
     }
 
-    fun getPipelineYamlVersion(
+    fun getPipelineYamlInfo(
         projectId: String,
         pipelineId: String
     ) = pipelineYamlService.getPipelineYamlInfo(

@@ -562,14 +562,18 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        search: String?
+        search: String?,
+        page: Int?,
+        pageSize: Int?
     ): Result<List<PipelineYamlVersionInfo>> {
         return Result(
             pipelineVersionFacadeService.listPacVersions(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                search = search
+                search = search,
+                page = page,
+                pageSize = pageSize
             )
         )
     }

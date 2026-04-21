@@ -441,8 +441,14 @@ interface UserPipelineVersionResource {
         @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "查询分支", required = true)
+        @Parameter(description = "查询分支", required = false)
         @QueryParam("search")
-        search: String?
+        search: String?,
+        @Parameter(description = "页码", required = false)
+        @QueryParam("page")
+        page: Int? = 1,
+        @Parameter(description = "每页行数", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int? = 20
     ): Result<List<PipelineYamlVersionInfo>>
 }
