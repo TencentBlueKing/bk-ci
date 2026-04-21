@@ -62,15 +62,12 @@
                             <version-diff-entry
                                 v-if="branchVersion && pipelineInfo?.releaseVersion"
                                 :text="false"
-                                theme=""
+                                type="icon"
                                 size="small"
                                 :can-switch-version="false"
                                 :version="branchVersion"
-                                :latestversion="pipelineInfo?.releaseVersion"
-                            >
-                                <i class="devops-icon icon-swap" />
-                                {{ $t('preview.viewDiff') }}
-                            </version-diff-entry>
+                                :latest-version="pipelineInfo?.releaseVersion"
+                            />
                             <span
                                 v-if="codeRepoUrl"
                                 class="text-link expire-released-version-link"
@@ -1228,6 +1225,9 @@ $header-height: 36px;
             display: inline-flex;
             align-items: center;
             cursor: pointer;
+            .icon-jump-link {
+                margin-right: 2px;
+            }
         }
     }
     .param-set-diff-tips {
