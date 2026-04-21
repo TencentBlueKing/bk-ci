@@ -98,7 +98,6 @@ class ActiveRunManager(
     }
 
     fun get(threadId: String): ActiveRun? {
-        evictStaleEntries()
         return activeRuns[threadId]
     }
 
@@ -120,7 +119,6 @@ class ActiveRunManager(
      * 跨实例检查是否有活跃运行：先查本地，再查 Redis。
      */
     fun isActive(threadId: String): Boolean {
-        evictStaleEntries()
         if (activeRuns.containsKey(threadId)) return true
         return try {
             redisOperation.get(redisKey(threadId)) != null
@@ -148,7 +146,6 @@ class ActiveRunManager(
      * @return runId，无活跃运行时返回 null
      */
     fun getRunId(threadId: String): String? {
-        evictStaleEntries()
         activeRuns[threadId]?.let { return it.runId }
         return try {
             redisOperation.get(redisKey(threadId))
@@ -158,39 +155,10 @@ class ActiveRunManager(
         }
     }
 
-    /**
-     * 清理超过 [STALE_THRESHOLD_MS] 的残留条目。
-     * 正常路径下 onComplete/onError/finally 会清理，
-     * 但极端情况（如 subscribe 前异常且 finally 未覆盖）
-     * 可能导致条目残留，此处做兜底防护。
-     */
-    private fun evictStaleEntries() {
-        val now = System.currentTimeMillis()
-        activeRuns.entries.removeIf { entry ->
-            val stale = now - entry.value.startTime > STALE_THRESHOLD_MS
-            if (stale) {
-                entry.value.replaySink.tryEmitComplete()
-                try {
-                    redisOperation.delete(redisKey(entry.key))
-                    redisOperation.delete(lockKey(entry.key))
-                } catch (_: Exception) { /* best effort */
-                }
-                logger.warn(
-                    "[ActiveRun] Evicting stale entry: threadId={}, age={}ms",
-                    entry.key, now - entry.value.startTime
-                )
-            }
-            stale
-        }
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(
             ActiveRunManager::class.java
         )
-
-        /** 超过 30 分钟未完成的运行视为残留 */
-        private const val STALE_THRESHOLD_MS = 30 * 60 * 1000L
 
         private const val REDIS_KEY_PREFIX = "ai:active_run:"
         private const val REDIS_LOCK_PREFIX = "ai:active_run_lock:"

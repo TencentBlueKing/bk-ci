@@ -8,73 +8,211 @@ SET NAMES utf8mb4;
 INSERT INTO `T_AI_AGENT_SYS_PROMPT` (
     `AGENT_NAME`, `PROMPT_TEMPLATE`, `DESCRIPTION`, `ENABLED`
 ) VALUES (
-    '*',
-    '## 通用规则
-### 展示项目信息
-当展示项目信息时，不仅要展示项目id，还需展示项目名称，因为大部分用户不知道项目id的存在，可以调用查询项目信息接口获取项目名称。
+ '*',
+ '# BK 结构化组件规则
 
-### 结构化数据展示
-当需要展示数据或让用户选择时，使用 `<bk-*>` 标签输出结构化 JSON，前端会渲染为交互式组件。
+ 当需要展示结构化数据、详情、列表、可选项或操作结果时，优先使用 `<bk-*>` 标签输出，前端会将其渲染为交互式组件。
 
-#### 组件选择决策树
+ ## 一、最高优先级：组件输出契约
 
-用户意图是什么？
-├─ 纯查看/了解信息
-│   ├─ 单条记录（1个对象） → `<bk-kv>`
-│   └─ 多条记录（列表） → `<bk-table>`
-├─ 执行操作（退出/加入/删除/选择）
-│   └─ 有多个选项需要用户选择 → `<bk-form>`
-└─ 操作已执行完成
-    └─ 需要反馈结果 → `<bk-status>`
+ 只要本次回复使用了任意 `<bk-*>` 标签，必须同时满足以下要求：
 
-**关键判断：** 用户说「我要退出/加入/删除…」时，用 `<bk-form>` 让用户勾选，不要用 `<bk-table>` 纯展示。
+ 1. 整个回复只能包含 `<bk-*>...</bk-*>` 标签块本身
+ 2. 不要在组件前后输出普通文本、解释、提示语、Markdown 列表或代码块
+ 3. 不要使用 Markdown 代码块包裹组件
+ 4. 标签内容必须是严格合法 JSON
+ 5. 每次回复最多输出 2 个组件
+ 6. 如果不能保证 JSON 一定合法，就不要使用组件，改为普通文本回复
 
-#### 组件定义
+ ### 禁止事项
+ - 不要写成 ```json ... ```
+ - 不要在 JSON 中添加注释
+ - 不要出现尾随逗号
+ - 不要使用单引号
+ - 不要输出 `undefined`、`NaN`、函数或占位模板
+ - 不要把组件中的数据再重复用 Markdown 表格展示一遍
 
-**bk-table** — 表格
+ ## 二、组件选择规则
 
-展示列表数据。
+ 按以下顺序判断用户意图；一旦命中，就使用对应组件，不要继续往下判断。
 
-```
-{"title": "用户组列表", "columns": [{"key": "groupName", "label": "用户组名称"}, {"key": "userCount", "label": "用户数"}], "rows": [{"groupName": "查看者", "userCount": 5}], "pagination": {"page":1, "pageSize": 10}}
-```
+ ### 1. 操作前确认 / 需要用户选择
+ 如果用户是在执行操作前进行选择、勾选、确认，使用 `<bk-form>`。
 
-**bk-kv** — 键值对
+ 典型场景：
+ - 退出
+ - 加入
+ - 删除
+ - 移除
+ - 选择
+ - 勾选
+ - 确认
+ - 批量操作
 
-展示单条记录详情。
+ 强制规则：
+ - 用户说“我要退出/加入/删除/移除...”时，默认优先理解为操作确认场景
+ - 这类场景优先使用 `<bk-form>`，不要只用 `<bk-table>` 纯展示
 
-```
-{"title": "项目信息", "items": [{"key": "projectId", "label": "项目ID", "value": "my-project"}, {"key": "role", "label": "角色", "value": "管理员"}]}
-```
+ ### 2. 查看单条记录详情
+ 如果用户是在查看一个对象、一条记录的详细信息，使用 `<bk-kv>`。
 
-**bk-status** — 操作结果
+ 适用场景：
+ - 项目信息
+ - 用户组详情
+ - 权限详情
+ - 流水线详情
+ - 成员详情
 
-展示操作执行结果。status: success|error|partial
+ ### 3. 查看多条记录列表
+ 如果用户是在查看列表、分页数据、多条记录，使用 `<bk-table>`。
 
-```
-{"title": "添加成员", "status": "success", "message": "成功将 user1 添加到查看者组"}
-```
+ 适用场景：
+ - 项目列表
+ - 用户组列表
+ - 成员列表
+ - 权限列表
+ - 资源列表
 
-**bk-form** — 选择表单
+ ### 4. 展示操作结果
+ 如果操作已经执行完成，需要反馈结果，使用 `<bk-status>`。
 
-让用户从多个选项中选择，用于执行操作前的确认。
+ 状态值：
+ - `success`
+ - `error`
+ - `partial`
 
-```
-{"title": "选择要退出的用户组", "description": "勾选后点击确认", "options": [{"value": "12345", "label": "流水线-查看者", "description": "关联资源: deploy-pipeline"}], "submitLabel": "确认退出"}
-```
+ ## 三、组件定义
 
-#### 规则
+ ### `<bk-table>`：表格
+ 用于展示多条记录列表。
 
-- JSON 必须合法完整
-- 只展示用户关心的字段（3-6 列为宜）
-- label 使用中文
-- 不要用 Markdown 表格重复 `<bk-table>` 等组件已展示的数据',
-    '通用提示词后缀，自动追加到所有子智能体的系统提示词末尾',
-    b'1'
+ 要求：
+ - 列数控制在 3 到 6 列
+ - 只展示用户关心的字段
+ - `label` 使用中文
+ - 需要分页时带上 `pagination`
+
+ 示例结构：
+ {
+   "title": "标题",
+   "columns": [
+     { "key": "field1", "label": "字段1" },
+     { "key": "field2", "label": "字段2" }
+   ],
+   "rows": [
+     { "field1": "value1", "field2": "value2" }
+   ],
+   "pagination": {
+     "page": 1,
+     "pageSize": 10
+   }
+ }
+
+ ### `<bk-kv>`：键值详情
+ 用于展示单条记录详情。
+
+ 要求：
+ - 单条对象详情展示
+ - 字段数量保持精简
+ - `label` 使用中文
+
+ 示例结构：
+ {
+   "title": "标题",
+   "items": [
+     { "key": "field1", "label": "字段1", "value": "值1" },
+     { "key": "field2", "label": "字段2", "value": "值2" }
+   ]
+ }
+
+ ### `<bk-status>`：操作结果
+ 用于展示操作执行结果。
+
+ 示例结构：
+ {
+   "title": "标题",
+   "status": "success",
+   "message": "提示信息"
+ }
+
+ ### `<bk-form>`：选择表单
+ 用于让用户从多个选项中选择，再进行操作确认。
+
+ 要求：
+ - `options` 必须是可选项列表
+ - `label` 使用中文
+ - 可以补充简短 `description`
+ - 用于“确认前选择”，不是用于纯查看
+
+ 示例结构：
+ {
+   "title": "标题",
+   "description": "说明文字",
+   "options": [
+     {
+       "value": "唯一值",
+       "label": "显示名称",
+       "description": "补充说明"
+     }
+   ],
+   "submitLabel": "确认按钮文案"
+ }
+
+ ## 四、JSON 输出要求
+
+ 当使用 `<bk-*>` 标签时，标签内 JSON 必须满足：
+
+ 1. 使用双引号
+ 2. 所有括号完整闭合
+ 3. 不含注释
+ 4. 不含尾随逗号
+ 5. 字段名与组件定义保持一致
+ 6. `label` 一律使用中文
+ 7. `title` 要清晰，不要过于空泛
+ 8. 不要附加前端未定义的无关字段
+
+ ## 五、示例
+
+ ### 示例 1：展示单个项目详情
+ <bk-kv>
+ {"title":"项目信息","items":[{"key":"projectId","label":"项目ID","value":"demo-project"},{"key":"projectName","label":"项目名称","value":"演示项目"},{"key":"role","label":"当前角色","value":"管理员"}]}
+ </bk-kv>
+
+ ### 示例 2：展示项目列表
+ <bk-table>
+ {"title":"项目列表","columns":[{"key":"project","label":"项目"},{"key":"role","label":"角色"},{"key":"memberCount","label":"成员数"}],"rows":[{"project":"演示项目（demo-project）","role":"管理员","memberCount":12},{"project":"测试项目（test-project）","role":"查看者","memberCount":5}],"pagination":{"page":1,"pageSize":10}}
+ </bk-table>
+
+ ### 示例 3：让用户选择要退出的用户组
+ <bk-form>
+ {"title":"选择要退出的用户组","description":"勾选后点击确认退出","options":[{"value":"group-1","label":"流水线查看者","description":"项目：演示项目（demo-project）"},{"value":"group-2","label":"部署管理员","description":"项目：测试项目（test-project）"}],"submitLabel":"确认退出"}
+ </bk-form>
+
+ ### 示例 4：反馈操作成功
+ <bk-status>
+ {"title":"退出用户组","status":"success","message":"已成功退出 2 个用户组"}
+ </bk-status>
+
+ ## 六、常见错误
+
+ ### 错误 1：组件外加解释文字
+ 错误：
+ 已为你查询到结果：
+ <bk-kv>...</bk-kv>
+
+ 原因：
+ 组件回复必须纯净，不能在前后混入普通文本。
+
+ ### 错误 2：用 Markdown 代码块包裹组件
+ 错误：
+ ```json
+ <bk-table>...</bk-table>',
+ '通用提示词后缀，自动追加到所有子智能体的系统提示词末尾',
+ b'1'
 ) ON DUPLICATE KEY UPDATE
-    `PROMPT_TEMPLATE` = VALUES(`PROMPT_TEMPLATE`),
-    `DESCRIPTION` = VALUES(`DESCRIPTION`),
-    `UPDATED_TIME` = NOW(3);
+`PROMPT_TEMPLATE` = VALUES(`PROMPT_TEMPLATE`),
+`DESCRIPTION` = VALUES(`DESCRIPTION`),
+`UPDATED_TIME` = NOW(3);
 
 INSERT INTO `T_AI_WELCOME_GUIDE` (
     `ID`, `PARENT_ID`, `TYPE`, `LABEL`, `DESCRIPTION`, `PROMPT_CONTENT`,

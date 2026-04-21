@@ -30,6 +30,7 @@ package com.tencent.devops.ai.resources
 import com.tencent.devops.ai.api.user.UserAiChatResource
 import com.tencent.devops.ai.pojo.AiChatRunStatus
 import com.tencent.devops.ai.service.AiChatService
+import com.tencent.devops.ai.util.AiErrorMessageTranslator
 import com.tencent.devops.ai.util.SseEventWriter
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -64,7 +65,7 @@ class UserAiChatResourceImpl @Autowired constructor(
                             out,
                             input.threadId,
                             input.runId,
-                            e.message ?: "Unknown error"
+                            AiErrorMessageTranslator.toFriendlyMessage(e)
                         )
                     }
                 }

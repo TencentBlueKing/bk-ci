@@ -58,8 +58,8 @@ class BkProjectMemberCheckAspect(
             )
         }
         val isMember = permissionProjectService.isProjectMember(
-            userId = userId!!,
-            projectCode = projectId!!
+            userId = userId,
+            projectCode = projectId
         )
         if (!isMember) {
             throw PermissionForbiddenException(
