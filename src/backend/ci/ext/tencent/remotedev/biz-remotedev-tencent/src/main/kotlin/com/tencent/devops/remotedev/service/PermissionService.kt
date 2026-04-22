@@ -59,6 +59,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import java.net.URLEncoder
 import java.util.Base64
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -243,12 +244,19 @@ class PermissionService @Autowired constructor(
     }
 
     fun checkUserManager(userId: String, projectId: String) {
-        val managers = managers(projectId)
-        val checkProjectManager = client.get(ServiceProjectAuthResource::class).checkProjectManager(
-            token = checkTokenService.getSystemToken(),
-            userId = userId,
-            projectCode = projectId
-        ).data ?: false
+        val managersFuture = CompletableFuture.supplyAsync {
+            projectManagerCache.get(projectId)
+        }
+        val checkFuture = CompletableFuture.supplyAsync {
+            client.get(ServiceProjectAuthResource::class).checkProjectManager(
+                token = checkTokenService.getSystemToken(),
+                userId = userId,
+                projectCode = projectId
+            ).data ?: false
+        }
+        CompletableFuture.allOf(managersFuture, checkFuture).join()
+        val managers = managersFuture.get()
+        val checkProjectManager = checkFuture.get()
 
         if (!checkProjectManager && userId !in managers) {
             throw ErrorCodeException(

@@ -41,6 +41,8 @@ import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CompletionException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -80,8 +82,17 @@ class StartCloudInterfaceService @Autowired constructor(
         receivers: List<String>,
         gameId: String?
     ): String {
-        receivers.forEach {
-            createStartCloudUser(it, gameId)
+        if (receivers.size <= 1) {
+            receivers.forEach { createStartCloudUser(it, gameId) }
+        } else {
+            val futures = receivers.map { receiver ->
+                CompletableFuture.runAsync { createStartCloudUser(receiver, gameId) }
+            }
+            try {
+                CompletableFuture.allOf(*futures.toTypedArray()).join()
+            } catch (e: CompletionException) {
+                throw e.cause ?: e
+            }
         }
         return workspaceClient.shareWorkspace(
             userId,

@@ -64,6 +64,38 @@ class WorkspaceOpHistoryDao {
         }
     }
 
+    fun batchCreateWorkspaceHistory(
+        dslContext: DSLContext,
+        records: List<OpHistoryRecord>
+    ) {
+        if (records.isEmpty()) return
+        with(TWorkspaceOpHis.T_WORKSPACE_OP_HIS) {
+            dslContext.batch(
+                records.map { record ->
+                    dslContext.insertInto(
+                        this,
+                        WORKSPACE_NAME,
+                        OPERATOR,
+                        ACTION,
+                        ACTION_MSG
+                    ).values(
+                        record.workspaceName,
+                        record.operator,
+                        record.action.ordinal,
+                        record.actionMessage
+                    )
+                }
+            ).execute()
+        }
+    }
+
+    data class OpHistoryRecord(
+        val workspaceName: String,
+        val operator: String,
+        val action: WorkspaceAction,
+        val actionMessage: String
+    )
+
     fun countOpHistory(
         dslContext: DSLContext,
         workspaceName: String
