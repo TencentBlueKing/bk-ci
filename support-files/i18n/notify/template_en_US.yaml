@@ -115,12 +115,17 @@
   templateCode: "STORE_COMMENT_NOTIFY_TEMPLATE"
   templateName: "Store comment message Notification template"
   notifyTypeScope:
-  - "WEWORK"
+    - "WEWORK"
+    - "WEWORK_GROUP"
   priority: 0
   source: 0
   weworkTemplate:
     id: "8599414eaeec4791a430594147ded587"
     sender: "DevOps"
+    title: "[BK-CI  Store] comment notice"
+    body: "${userId} commented on ${storeName}\nRating: ${score}\nComment: ${commentContent}\n[reply | ${url}]"
+  weworkGroupTemplate:
+    id: "a3b7e9f2d4c1085b6e9f3a7c2d5b8e41"
     title: "[BK-CI  Store] comment notice"
     body: "${userId} commented on ${storeName}\nRating: ${score}\nComment: ${commentContent}\n[reply | ${url}]"
   creator: "system"
@@ -1085,11 +1090,16 @@
   templateName: "Developer store plugin listing review notification template"
   notifyTypeScope:
     - "WEWORK"
+    - "WEWORK_GROUP"
   priority: 0
   source: 0
   weworkTemplate:
     id: "5a8a2dff8cc949e9bee711d1c2e3d51a"
     sender: "DevOps"
+    title: "Developer store plugin review notification"
+    body: "${userId} submitted an application to publish a plugin. Please review promptly.\nPlugin: ${atomName}\nVersion: ${version} \nGo for review: ${url}"
+  weworkGroupTemplate:
+    id: "f47ac10b58cc4372a5670e02b2c3d479"
     title: "Developer store plugin review notification"
     body: "${userId} submitted an application to publish a plugin. Please review promptly.\nPlugin: ${atomName}\nVersion: ${version} \nGo for review: ${url}"
   creator: "system"

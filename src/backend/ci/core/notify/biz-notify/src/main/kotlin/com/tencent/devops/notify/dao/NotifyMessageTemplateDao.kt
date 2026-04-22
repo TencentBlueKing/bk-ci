@@ -32,12 +32,14 @@ import com.tencent.devops.model.notify.tables.TEmailsNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TRtxNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TVoiceNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TWechatNotifyMessageTemplate
+import com.tencent.devops.model.notify.tables.TWeworkGroupNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TWeworkNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TEmailsNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TRtxNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TVoiceNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWechatNotifyMessageTemplateRecord
+import com.tencent.devops.model.notify.tables.records.TWeworkGroupNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWeworkNotifyMessageTemplateRecord
 import com.tencent.devops.notify.pojo.NotifyTemplateMessage
 import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
@@ -164,6 +166,20 @@ class NotifyMessageTemplateDao {
         commonTemplateId: String
     ): TWeworkNotifyMessageTemplateRecord? {
         with(TWeworkNotifyMessageTemplate.T_WEWORK_NOTIFY_MESSAGE_TEMPLATE) {
+            return dslContext.selectFrom(this)
+                .where(COMMON_TEMPLATE_ID.eq(commonTemplateId))
+                .fetchOne()
+        }
+    }
+
+    /**
+     * 获取企业微信群消息模板
+     */
+    fun getWeworkGroupNotifyMessageTemplate(
+        dslContext: DSLContext,
+        commonTemplateId: String
+    ): TWeworkGroupNotifyMessageTemplateRecord? {
+        with(TWeworkGroupNotifyMessageTemplate.T_WEWORK_GROUP_NOTIFY_MESSAGE_TEMPLATE) {
             return dslContext.selectFrom(this)
                 .where(COMMON_TEMPLATE_ID.eq(commonTemplateId))
                 .fetchOne()
