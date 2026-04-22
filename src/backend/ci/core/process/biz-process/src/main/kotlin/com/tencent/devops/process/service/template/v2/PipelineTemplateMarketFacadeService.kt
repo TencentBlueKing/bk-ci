@@ -455,7 +455,20 @@ class PipelineTemplateMarketFacadeService @Autowired constructor(
             syncPermission = false
         )
 
-        // 9. 记录安装历史至研发商店
+        //9.自动安装插件
+        try {
+            client.get(ServiceTemplateResource::class).validateUserTemplateComponentVisibleDept(
+                userId = templateInfo.updater ?: templateInfo.creator,
+                templateCode = templateInfo.id,
+                projectCode = templateInfo.projectId
+            )
+        } catch (e: Exception) {
+            logger.warn(
+                "validate template Component Visible Dept failed:${templateInfo.projectId}:${templateInfo.id}", e
+            )
+        }
+
+        // 10. 记录安装历史至研发商店
         client.get(ServiceTemplateResource::class).createTemplateInstallHistory(
             TemplateVersionInstallHistoryInfo(
                 srcMarketTemplateProjectCode = srcTemplateProjectId,
