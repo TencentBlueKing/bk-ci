@@ -94,6 +94,23 @@ class AgentPropsScope @Autowired constructor(private val redisOperation: RedisOp
         }
     }
 
+    fun getAllJdkVersions(): List<JDKInfo>? {
+        val result = mutableListOf<JDKInfo>()
+        OS.entries.forEach { osEntry ->
+            AgentArchType.entries.forEach arch@{ archType ->
+                val version = getJdkVersion(osEntry.name, archType.name) ?: return@arch
+                result.add(
+                    JDKInfo(
+                        osEntry.name,
+                        archType.name,
+                        version
+                    )
+                )
+            }
+        }
+        return result
+    }
+
     private fun getJdkVersionKey(os: OS, arch: AgentArchType): String {
         return when (os) {
             OS.WINDOWS -> CURRENT_AGENT_WINDOWS_386_JDK_VERSION
@@ -143,13 +160,25 @@ class AgentPropsScope @Autowired constructor(private val redisOperation: RedisOp
         }
     }
 
-    fun getDockerInitFileMd5(): String = loadCache(getDockerInitFileMd5Key())
+    fun setDockerInitFileMd5(fileMd5: String, os: OS): Boolean {
+        redisOperation.set(getDockerInitFileMd5Key(os), fileMd5, isDistinguishCluster = true)
+        invalidateCache(getDockerInitFileMd5Key(os), isDistinguishCluster = true)
+        return true
+    }
+
+    fun getDockerInitFileMd5(os: String?) = OS.parse(os)?.let { osE ->
+        loadCache(getDockerInitFileMd5Key(osE))
+    }
 
     private fun getAgentMasterVersionKey(): String = CURRENT_AGENT_MASTER_VERSION
 
     private fun getAgentVersionKey(): String = CURRENT_AGENT_VERSION
 
-    private fun getDockerInitFileMd5Key(): String = CURRENT_AGENT_LINUX_AMD64_DOCKER_INIT_FILE_MD5
+    private fun getDockerInitFileMd5Key(os: OS): String = if (os == OS.LINUX) {
+        CURRENT_AGENT_LINUX_DOCKER_INIT_FILE_MD5
+    } else {
+        CURRENT_AGENT_NO_LINUX_DOCKER_INIT_FILE_MD5
+    }
 
     private val distinguishCache: LoadingCache<String, String> = Caffeine.newBuilder()
         .maximumSize(CACHE_SIZE)
@@ -190,8 +219,10 @@ class AgentPropsScope @Autowired constructor(private val redisOperation: RedisOp
         private const val CURRENT_AGENT_LINUX_MIPS64_JDK_VERSION =
             "environment.thirdparty.agent.linux_mips64_jdk.verison"
 
-        private const val CURRENT_AGENT_LINUX_AMD64_DOCKER_INIT_FILE_MD5 =
-            "environment.thirdparty.agent.linux_amd64.docker_init_file.md5"
+        private const val CURRENT_AGENT_LINUX_DOCKER_INIT_FILE_MD5 =
+            "environment.thirdparty.agent.linux.docker_init_file.md5"
+        private const val CURRENT_AGENT_NO_LINUX_DOCKER_INIT_FILE_MD5 =
+            "environment.thirdparty.agent.no_linux.docker_init_file.md5"
 
         private const val DEFAULT_GATEWAY_KEY = "environment:thirdparty:default_gateway"
         private const val DEFAULT_FILE_GATEWAY_KEY = "environment:thirdparty:default_file_gateway"

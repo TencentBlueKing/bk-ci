@@ -32,10 +32,9 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/httputil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 )
 
 func buildUrl(url string) string {
@@ -85,12 +84,6 @@ func UpdatePipelineStatus(response *PipelineResponse) (*httputil.DevopsResult, e
 		SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute(nil).IntoDevopsResult()
 }
 
-func DownloadAgentInstallBatchZip(saveFile string) error {
-	url := buildUrl(fmt.Sprintf("/ms/environment/api/external/thirdPartyAgent/%s/batch_zip",
-		config.GAgentConfig.BatchInstallKey))
-	return httputil.DownloadAgentInstallScript(url, config.GAgentConfig.GetAuthHeaderMap(), saveFile)
-}
-
 func FinishDockerDebug(
 	imageDebug *ImageDebug,
 	success bool,
@@ -125,7 +118,7 @@ const (
 )
 
 func AddLogLine(buildId string, message *LogMessage, vmSeqId string) (*httputil.DevopsResult, error) {
-	url := buildUrl("/ms/log/api/build/logs")
+	url := buildUrl(logEndpoint(""))
 	headers := config.GAgentConfig.GetAuthHeaderMap()
 	headers[AuthHeaderDevopsBuildId] = buildId
 	headers[AuthHeaderDevopsVmSeqId] = vmSeqId
@@ -133,11 +126,30 @@ func AddLogLine(buildId string, message *LogMessage, vmSeqId string) (*httputil.
 }
 
 func AddLogRedLine(buildId string, message *LogMessage, vmSeqId string) (*httputil.DevopsResult, error) {
-	url := buildUrl("/ms/log/api/build/logs/red")
+	url := buildUrl(logEndpoint("red"))
 	headers := config.GAgentConfig.GetAuthHeaderMap()
 	headers[AuthHeaderDevopsBuildId] = buildId
 	headers[AuthHeaderDevopsVmSeqId] = vmSeqId
 	return httputil.NewHttpClient().Post(url).Body(message, false).SetHeaders(headers).Execute(nil).IntoDevopsResult()
+}
+
+func AddLogYellowLine(buildId string, message *LogMessage, vmSeqId string) (*httputil.DevopsResult, error) {
+	url := buildUrl(logEndpoint("yellow"))
+	headers := config.GAgentConfig.GetAuthHeaderMap()
+	headers[AuthHeaderDevopsBuildId] = buildId
+	headers[AuthHeaderDevopsVmSeqId] = vmSeqId
+	return httputil.NewHttpClient().Post(url).Body(message, false).SetHeaders(headers).Execute(nil).IntoDevopsResult()
+}
+
+func logEndpoint(color string) string {
+	switch color {
+	case "red":
+		return "/ms/log/api/build/logs/red"
+	case "yellow":
+		return "/ms/log/api/build/logs/yellow"
+	default:
+		return "/ms/log/api/build/logs"
+	}
 }
 
 // 针对Ask请求做日志特殊处理，优化打印重复日志过多影响排查的问题

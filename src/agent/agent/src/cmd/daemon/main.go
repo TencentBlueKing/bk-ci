@@ -39,16 +39,16 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/gofrs/flock"
 	"github.com/pkg/errors"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/agentcli"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/codesign"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
-
-	"github.com/gofrs/flock"
 )
 
 const (
@@ -57,7 +57,6 @@ const (
 )
 
 func main() {
-	isDebug := false
 	if len(os.Args) == 2 {
 		switch os.Args[1] {
 		case "version":
@@ -68,14 +67,13 @@ func main() {
 			fmt.Println(config.GitCommit)
 			fmt.Println(config.BuildTime)
 			systemutil.ExitProcess(0)
-		case "debug":
-			isDebug = true
 		}
 	}
 
 	// 初始化日志
-	logFilePath := filepath.Join(systemutil.GetWorkDir(), "logs", "devopsDaemon.log")
-	err := logs.Init(logFilePath, isDebug, false)
+	workDir := systemutil.GetExecutableDir()
+	logFilePath := filepath.Join(workDir, "logs", "devopsDaemon.log")
+	err := logs.Init(logFilePath, agentcli.DebugFileExists(workDir), false)
 	if err != nil {
 		fmt.Printf("init daemon log error %v\n", err)
 		systemutil.ExitProcess(1)
@@ -83,7 +81,6 @@ func main() {
 
 	logs.Infof("GOOS=%s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
 
-	workDir := systemutil.GetExecutableDir()
 	err = os.Chdir(workDir)
 	if err != nil {
 		logs.Info("change work dir failed, err: ", err.Error())
@@ -97,7 +94,7 @@ func main() {
 		}
 	}()
 
-	if ok := systemutil.CheckProcess(daemonProcess); !ok {
+	if ok := systemutil.CheckProcess(daemonProcess, false); !ok {
 		logs.Warn("get process lock failed, exit")
 		return
 	}
@@ -106,16 +103,16 @@ func main() {
 	logs.Info("pid: ", os.Getpid())
 	logs.Info("workDir: ", workDir)
 
-	watch(isDebug)
+	watch()
 	systemutil.KeepProcessAlive()
 }
 
-func watch(isDebug bool) {
+func watch() {
 	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock))
 
 	// first check immediately
 	totalLock.Lock()
-	doCheckAndLaunchAgent(isDebug)
+	doCheckAndLaunchAgent()
 	totalLock.Unlock()
 
 	checkTimeTicker := time.NewTicker(agentCheckGap)
@@ -127,13 +124,15 @@ func watch(isDebug bool) {
 				continue
 			}
 
-			doCheckAndLaunchAgent(isDebug)
+			doCheckAndLaunchAgent()
 		}
 	}
 }
 
-func doCheckAndLaunchAgent(isDebug bool) {
-	workDir := systemutil.GetWorkDir()
+func doCheckAndLaunchAgent() {
+	// 使用可执行文件所在目录作为可信基准，与 main() 中 Chdir 的来源一致，
+	// 避免因 CWD 被外部修改导致启动不受控的二进制文件。
+	workDir := systemutil.GetExecutableDir()
 	agentLock := flock.New(fmt.Sprintf("%s/agent.lock", systemutil.GetRuntimeDir()))
 
 	locked, err := agentLock.TryLock()
@@ -156,7 +155,7 @@ func doCheckAndLaunchAgent(isDebug bool) {
 
 	logs.Warn("agent is not available, will launch it")
 
-	process, err := launch(workDir+"/"+config.AgentFileClientLinux, isDebug)
+	process, err := launch(filepath.Join(workDir, config.AgentFileClientLinux))
 	if err != nil {
 		logs.WithError(err).Error("launch agent failed")
 		return
@@ -168,22 +167,32 @@ func doCheckAndLaunchAgent(isDebug bool) {
 	logs.Infof("success to launch agent, pid: %d", process.Pid)
 }
 
-func launch(agentPath string, isDebug bool) (*os.Process, error) {
-	var cmd *exec.Cmd
-	if isDebug {
-		cmd = exec.Command(agentPath, "debug")
-	} else {
-		cmd = exec.Command(agentPath)
-	}
-
-	cmd.Dir = systemutil.GetWorkDir()
+func launch(agentPath string) (*os.Process, error) {
+	cmd := exec.Command(agentPath)
+	cmd.Dir = systemutil.GetExecutableDir()
 
 	logs.Infof("start devops agent: %s", cmd.String())
 	if !fileutil.Exists(agentPath) {
 		return nil, fmt.Errorf("agent file %s not exists", agentPath)
 	}
 
-	err := fileutil.SetExecutable(agentPath)
+	// 拒绝符号链接：daemon 以高权限运行，若 agentPath 被替换为符号链接，
+	// 可导致任意二进制以 daemon 权限执行（Symlink Following 攻击）。
+	info, err := os.Lstat(agentPath)
+	if err != nil {
+		return nil, fmt.Errorf("agent file %s lstat failed: %w", agentPath, err)
+	}
+	if info.Mode()&os.ModeSymlink != 0 {
+		return nil, fmt.Errorf("agent file %s is a symlink, refusing to execute for security", agentPath)
+	}
+
+	// 代码签名校验：拒绝被替换/未签名的 agent 二进制。
+	// 配置的信任锚（WinCertOrgName / MacosTeamId）为空时内部会跳过并返回 nil。
+	if err := codesign.Verify(agentPath); err != nil {
+		return nil, errors.Wrap(err, "agent signature verify failed")
+	}
+
+	err = fileutil.SetExecutable(agentPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "chmod agent file failed")
 	}
@@ -202,6 +211,12 @@ func launch(agentPath string, isDebug bool) (*os.Process, error) {
 	}
 
 	go func() {
+		// 无论进程如何退出，都需要关闭管道，防止文件描述符泄漏。
+		// pipe 建立失败时（errstd != nil）stdErr 为 nil，Close 调用需跳过。
+		if errstd == nil && stdErr != nil {
+			defer stdErr.Close()
+		}
+
 		if err := cmd.Wait(); err != nil {
 			if exiterr, ok := err.(*exec.ExitError); ok {
 				if exiterr.ExitCode() == constant.DaemonExitCode {
@@ -210,10 +225,10 @@ func launch(agentPath string, isDebug bool) (*os.Process, error) {
 				}
 			}
 			logs.WithError(err).Error("agent process error")
+			// pipe 建立失败时无法读取 stderr，直接返回
 			if errstd != nil {
 				return
 			}
-			defer stdErr.Close()
 			out, err := io.ReadAll(stdErr)
 			if err != nil {
 				logs.WithError(err).Error("read agent stderr out error")
