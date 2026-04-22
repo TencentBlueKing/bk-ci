@@ -40,6 +40,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.store.common.utils.PublicComponentCacheManager
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.ReasonRelDao
@@ -428,8 +429,8 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
             publisher = baseRecord.publisher,
             classifyId = baseRecord.classifyId
         )
-        val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(storeType.name)
-        if (redisOperation.isMember(storePublicFlagKey, storeCode)) {
+        // 使用缓存管理器检查是否是公共组件（优化性能）
+        if (PublicComponentCacheManager.isPublicComponent(redisOperation, storeType.name, storeCode)) {
             // 如果从缓存中查出该组件是公共组件则无需权限校验
             storeBaseInfo.publicFlag = true
             return Result(storeBaseInfo)

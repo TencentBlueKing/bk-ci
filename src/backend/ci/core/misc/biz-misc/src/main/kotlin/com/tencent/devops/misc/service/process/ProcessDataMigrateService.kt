@@ -38,6 +38,7 @@ import com.tencent.devops.common.db.pojo.MIGRATING_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.ApiAccessLimitCacheManager
 import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
@@ -142,6 +143,8 @@ class ProcessDataMigrateService @Autowired constructor(
 
         executor.submit {
             try {
+                // 睡眠下，等到本地缓存过期再执行迁移任务以保证迁移准确性
+                Thread.sleep(ApiAccessLimitCacheManager.PROJECT_CACHE_EXPIRE_SECONDS)
                 val config = MigrationExecutorConfig(
                     migratingShardingDslContext = migratingShardingDslContext,
                     userId = userId,
@@ -263,6 +266,7 @@ class ProcessDataMigrateService @Autowired constructor(
      */
     private fun lockProject(projectId: String) {
         redisOperation.addSetValue(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)
+        ApiAccessLimitCacheManager.invalidateProjectLimitCache()
     }
 
     /**
@@ -274,6 +278,7 @@ class ProcessDataMigrateService @Autowired constructor(
             key = BkApiUtil.getApiAccessLimitProjectsKey(),
             item = projectId
         )
+        ApiAccessLimitCacheManager.invalidateProjectLimitCache()
     }
 
     /**
