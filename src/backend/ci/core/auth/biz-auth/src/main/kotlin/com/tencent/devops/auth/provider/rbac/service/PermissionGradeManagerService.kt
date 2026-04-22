@@ -27,7 +27,6 @@
 
 package com.tencent.devops.auth.provider.rbac.service
 
-import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.CallbackApplicationDTO
 import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationCreateDTO
@@ -45,13 +44,9 @@ import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.pojo.ItsmCancelApplicationInfo
 import com.tencent.devops.auth.pojo.ItsmTicketsRevoked
-import com.tencent.devops.auth.pojo.ResponseDTO
-import com.tencent.devops.auth.provider.rbac.pojo.GradeManagerInfo
-import com.tencent.devops.auth.provider.rbac.pojo.GradeManagerListData
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupCreateEvent
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupModifyEvent
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
-import com.tencent.devops.auth.service.BkHttpRequestService
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
@@ -75,9 +70,6 @@ import com.tencent.devops.project.pojo.ProjectApprovalInfo
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
-import java.util.concurrent.TimeUnit
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 
@@ -86,7 +78,6 @@ class PermissionGradeManagerService @Autowired constructor(
     private val client: Client,
     private val iamV2ManagerService: V2ManagerService,
     private val iamConfiguration: IamConfiguration,
-    private val bkHttpRequestService: BkHttpRequestService,
     private val authMonitorSpaceDao: AuthMonitorSpaceDao,
     private val authItsmCallbackDao: AuthItsmCallbackDao,
     private val dslContext: DSLContext,
@@ -106,25 +97,13 @@ class PermissionGradeManagerService @Autowired constructor(
         private const val CANCEL_ITSM_APPLICATION_ACTION = "WITHDRAW"
         private const val REVOKE_ITSM_APPLICATION_ACTION = "REVOKED"
         private const val FINISH_ITSM_APPLICATION_ACTION = "FINISHED"
-        private const val GRADE_MANAGER_LIST_URL_SUFFIX = "/api/v1/open/management/grade_managers/"
-        private const val GRADE_MANAGER_LIST_PAGE = 1
-        private const val GRADE_MANAGER_LIST_PAGE_SIZE = 5000
-        private const val GRADE_MANAGER_CACHE_MINUTES = 10L
     }
-
-    @Value("\${bk.apigw.iam.host:https://bk-iam.apigw.o.woa.com/prod}")
-    private val bkApigwIamHost: String = ""
 
     @Value("\${itsm.callback.update.url:#{null}}")
     private val itsmUpdateCallBackUrl: String = ""
 
     @Value("\${itsm.callback.create.url:#{null}}")
     private val itsmCreateCallBackUrl: String = ""
-
-    private val gradeManagerCache = Caffeine.newBuilder()
-        .maximumSize(1)
-        .expireAfterWrite(GRADE_MANAGER_CACHE_MINUTES, TimeUnit.MINUTES)
-        .build<String, List<GradeManagerInfo>>()
 
     /**
      * 创建分级管理员
@@ -487,73 +466,8 @@ class PermissionGradeManagerService @Autowired constructor(
         )
     }
 
-    fun listGradeManagers(): List<GradeManagerInfo> {
-        val cacheKey = buildGradeManagerCacheKey()
-        return gradeManagerCache.get(cacheKey) {
-            fetchGradeManagers()
-        } ?: emptyList()
-    }
-
-    private fun fetchGradeManagers(): List<GradeManagerInfo> {
-        val responseDTO: ResponseDTO<Map<String, Any>> = bkHttpRequestService.executeHttpGet(
-            url = buildGradeManagerListUrl()
-        )
-        val data = responseDTO.data ?: return emptyList()
-        return bkHttpRequestService.objectMapper.convertValue(
-            data,
-            GradeManagerListData::class.java
-        ).results
-    }
-
-    fun listGradeManagersByName(gradeManagerName: String): List<GradeManagerInfo> {
-        return listGradeManagers().filter { it.name == gradeManagerName }
-    }
-
-    fun cleanupConflictGradeManagers(
-        projectCode: String,
-        projectName: String
-    ) {
-        val targetGradeManagerName = IamGroupUtils.buildGradeManagerName(projectName)
-        val conflictGradeManagers = listGradeManagersByName(targetGradeManagerName)
-        if (conflictGradeManagers.isEmpty()) {
-            logger.info(
-                "no conflict grade manager found before prefix migration|" +
-                    "projectCode=$projectCode|name=$targetGradeManagerName"
-            )
-            return
-        }
-
-        val conflictGradeManagerIds = conflictGradeManagers.map { it.id.toString() }
-        logger.info(
-            "clean conflict grade managers before prefix migration|" +
-                "projectCode=$projectCode|name=$targetGradeManagerName|" +
-                "gradeManagerIds=$conflictGradeManagerIds"
-        )
-        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
-        conflictGradeManagerIds.forEach { deleteGradeManager(it, tenantId) }
-        logger.info(
-            "clean conflict grade managers success before prefix migration|" +
-                "projectCode=$projectCode|name=$targetGradeManagerName|" +
-                "gradeManagerIds=$conflictGradeManagerIds"
-        )
-    }
-
     fun deleteGradeManager(gradeManagerId: String, tenantId: String?) {
         iamV2ManagerService.deleteManagerV2(gradeManagerId, tenantId)
-    }
-
-    private fun buildGradeManagerListUrl(): String {
-        val systemId = URLEncoder.encode(
-            iamConfiguration.systemId,
-            StandardCharsets.UTF_8.name()
-        )
-        return "${bkApigwIamHost.trimEnd('/')}$GRADE_MANAGER_LIST_URL_SUFFIX" +
-            "?system=$systemId&page=$GRADE_MANAGER_LIST_PAGE" +
-            "&page_size=$GRADE_MANAGER_LIST_PAGE_SIZE"
-    }
-
-    private fun buildGradeManagerCacheKey(): String {
-        return "${bkApigwIamHost.trimEnd('/')}|${iamConfiguration.systemId}"
     }
 
     /**
