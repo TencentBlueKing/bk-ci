@@ -142,7 +142,10 @@ class PipelineVisibilityService @Autowired constructor(
                 scopeId = it.scopeId,
                 scopeName = it.scopeName,
                 fullName = it.fullName,
-                userDepartments = JsonUtil.to(it.userDepartments, object : TypeReference<List<String>>() {})
+                userDepartments =
+                    it.userDepartments?.let { u ->
+                        JsonUtil.to(u, object : TypeReference<List<String>>() {})
+                    }
             )
         }
         return SQLPage(
