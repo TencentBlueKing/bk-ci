@@ -60,6 +60,7 @@ require (
 	github.com/creack/pty v1.1.24
 	github.com/gorilla/websocket v1.5.0
 	github.com/jaypipes/ghw v0.20.0
+	github.com/shirou/gopsutil/v3 v3.22.9
 	golang.org/x/sync v0.10.0
 )
 
@@ -102,7 +103,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rickb777/date v1.14.2 // indirect
 	github.com/rickb777/plural v1.2.2 // indirect
-	github.com/shirou/gopsutil/v3 v3.22.9 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/tidwall/gjson v1.18.0 // indirect
