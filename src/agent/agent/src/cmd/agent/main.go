@@ -28,7 +28,6 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -36,9 +35,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/agent"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/agentcli"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
@@ -51,41 +50,35 @@ const (
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
-	isDebug := false
-	if len(os.Args) == 2 {
-		switch os.Args[1] {
-		case "version":
-			fmt.Println(config.AgentVersion)
-			systemutil.ExitProcess(0)
-		case "fullVersion":
-			fmt.Println(config.AgentVersion)
-			fmt.Println(config.GitCommit)
-			fmt.Println(config.BuildTime)
-			systemutil.ExitProcess(0)
-		case "debug":
-			isDebug = true
+	if cliArgs, ok := resolveCLIArgs(os.Args); ok {
+		workDir := systemutil.GetExecutableDir()
+		if err := os.Chdir(workDir); err != nil {
+			logs.WithError(err).Errorf("Failed to change working directory to %s", workDir)
+			systemutil.ExitProcess(1)
 		}
+		agentcli.Run(workDir, cliArgs)
+		return
 	}
 
-	// 初始化日志
+	workDir := systemutil.GetExecutableDir()
+	isDebug := agentcli.DebugFileExists(workDir)
+
 	logFilePath := filepath.Join(systemutil.GetWorkDir(), "logs", "devopsAgent.log")
 	err := logs.Init(logFilePath, isDebug, false)
 	if err != nil {
-		fmt.Printf("init agent log error %v\n", err)
+		logs.WithError(err).Error("init agent log error")
 		systemutil.ExitProcess(1)
 	}
 
 	logs.Infof("GOOS=%s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
 
-	// 以agent安装目录为工作目录
-	workDir := systemutil.GetExecutableDir()
 	err = os.Chdir(workDir)
 	if err != nil {
 		logs.Info("change work dir failed, err: ", err.Error())
 		systemutil.ExitProcess(1)
 	}
 
-	if ok := systemutil.CheckProcess(agentProcess); !ok {
+	if ok := systemutil.CheckProcess(agentProcess, false); !ok {
 		logs.Warn("get process lock failed, exit")
 		return
 	}
@@ -98,11 +91,20 @@ func main() {
 	logs.Info("current user userName: ", systemutil.GetCurrentUser().Username)
 	logs.Info("work dir: ", systemutil.GetWorkDir())
 
+	envs.LoadEnvFiles(workDir)
+
 	go envs.InitEnvPolling()
 
 	logEnv()
 
 	agent.Run(isDebug)
+}
+
+func resolveCLIArgs(args []string) ([]string, bool) {
+	if len(args) < 2 {
+		return nil, false
+	}
+	return args[1:], true
 }
 
 func logEnv() {

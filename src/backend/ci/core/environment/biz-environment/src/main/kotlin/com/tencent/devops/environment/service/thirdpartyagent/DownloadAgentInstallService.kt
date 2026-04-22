@@ -45,22 +45,23 @@ import jakarta.ws.rs.NotFoundException
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.StreamingOutput
-import org.apache.commons.compress.archivers.ArchiveOutputStream
-import org.apache.commons.compress.archivers.ArchiveStreamFactory
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
-import org.apache.commons.compress.utils.IOUtils
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.nio.charset.Charset
+import org.apache.commons.compress.archivers.ArchiveOutputStream
+import org.apache.commons.compress.archivers.ArchiveStreamFactory
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
+import org.apache.commons.io.IOUtils
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 import java.util.Locale
+import java.util.Locale.getDefault
 
 @Service
 @Suppress("TooManyFunctions", "LongMethod")
@@ -86,7 +87,6 @@ class DownloadAgentInstallService @Autowired constructor(
 
     fun downloadInstallScript(
         agentId: String,
-        isWinDownload: Boolean,
         loginName: String?,
         loginPassword: String?,
         installType: TPAInstallType?
@@ -109,17 +109,12 @@ class DownloadAgentInstallService @Autowired constructor(
          * agentSecretKey
          * gateWay
          */
-        val fileName = if (agentRecord.os == OS.WINDOWS.name) {
-            if (isWinDownload) {
-                "download_install.ps1"
-            } else {
-                "install.bat"
-            }
-        } else {
-            "install.sh"
+        val fileName = getDownloadFile(agentRecord.os)
+        var scriptFile = File(agentPackage, "script/${agentRecord.os.lowercase()}/$fileName")
+        // 兼容
+        if ((agentRecord.os == OS.LINUX.name || agentRecord.os == OS.MACOS.name) && !scriptFile.exists()) {
+            scriptFile = File(agentPackage, "script/${agentRecord.os.lowercase()}/install.sh")
         }
-        val scriptFile = File(agentPackage, "script/${agentRecord.os.lowercase()}/$fileName")
-
         if (!scriptFile.exists()) {
             logger.warn("The install script file(${scriptFile.absolutePath}) is not exist")
             throw FileNotFoundException("The install script file is not exist")
@@ -145,14 +140,12 @@ class DownloadAgentInstallService @Autowired constructor(
         arch: AgentArchType?
     ): Response {
         logger.info("Trying to download the agent($agentId) arch($arch)")
-
         val jarFiles = getGoAgentJarFiles(record.os, arch)
         val goDaemonFile = getGoFile(record.os, "devopsDaemon", arch)
         val goAgentFile = getGoFile(record.os, "devopsAgent", arch)
-        val goInstallerFile = getGoFile(record.os, "installer", arch)
         val goUpgraderFile = getGoFile(record.os, "upgrader", arch)
         val packageFiles = getAgentPackageFiles(record.os)
-        val scriptFiles = getGoAgentScriptFiles(record, null, null, null)
+        val scriptFiles = getGoAgentScriptFiles(record)
         val propertyFile = getPropertyFile(record)
 
         logger.info("Get the script files (${scriptFiles.keys})")
@@ -180,7 +173,6 @@ class DownloadAgentInstallService @Autowired constructor(
 
             zipBinaryFile(os = record.os, goAgentFile = goAgentFile, fileName = "devopsAgent", zipOut = zipOut)
             zipBinaryFile(os = record.os, goAgentFile = goDaemonFile, fileName = "devopsDaemon", zipOut = zipOut)
-            zipBinaryFile(os = record.os, goAgentFile = goInstallerFile, fileName = "tmp/installer", zipOut = zipOut)
             zipBinaryFile(os = record.os, goAgentFile = goUpgraderFile, fileName = "tmp/upgrader", zipOut = zipOut)
 
             scriptFiles.forEach { (name, content) ->
@@ -231,6 +223,12 @@ class DownloadAgentInstallService @Autowired constructor(
         arch: AgentArchType?
     ): Response {
         val agentRecord = getAgentRecord(agentId)
+        if (agentRecord.status == AgentStatus.IMPORT_OK.status) {
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_AGENT_ALREADY_INSTALL,
+                defaultMessage = "Agent already installed. Please obtain the install url again"
+            )
+        }
         return downloadGoAgent(
             agentId = agentId,
             record = agentRecord,
@@ -239,7 +237,7 @@ class DownloadAgentInstallService @Autowired constructor(
     }
 
     private fun getAgentPackageFiles(os: String) =
-        File(agentPackage, "packages/${os.toLowerCase()}/").listFiles()
+        File(agentPackage, "packages/${os.lowercase(getDefault())}/").listFiles()
 
     private fun getGoAgentJarFiles(os: String, arch: AgentArchType?): List<File> {
         val agentJar = getAgentJarFile()
@@ -273,18 +271,21 @@ class DownloadAgentInstallService @Autowired constructor(
 
     private fun getGoAgentScriptFiles(
         agentRecord: TEnvironmentThirdpartyAgentRecord,
-        loginName: String?,
-        loginPassword: String?,
-        installType: TPAInstallType?
     ): Map<String, String> {
         val file = File(agentPackage, "script/${agentRecord.os.lowercase()}")
-        val scripts = file.listFiles()
-        val map = getAgentReplaceProperties(agentRecord, false, loginName, loginPassword, installType)
+        val scripts = file.listFiles()?.toMutableList()
+        val map = getAgentReplaceProperties(agentRecord, false, null, null, null)
         return scripts?.associate {
             var content = it.readText(Charsets.UTF_8)
             map.forEach { (key, value) -> content = content.replace("##$key##", value) }
             it.name to content
         } ?: emptyMap()
+    }
+
+    private fun getDownloadFile(os: String) = if (os == OS.WINDOWS.name) {
+        "download_install.ps1"
+    } else {
+        "download_install.sh"
     }
 
     private fun getPropertyFile(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String, String> {
@@ -405,7 +406,7 @@ class DownloadAgentInstallService @Autowired constructor(
                 }
             }
 
-            getGoAgentScriptFiles(record, null, null, null).forEach { (name, content) ->
+            getGoAgentScriptFiles(record).forEach { (name, content) ->
                 logger.info("zip the script files ($name)")
                 val entry = ZipArchiveEntry(name)
                 val bytes = content.toByteArray()
