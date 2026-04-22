@@ -31,6 +31,7 @@ import com.tencent.devops.model.ai.tables.TAiAgentState
 import com.tencent.devops.model.ai.tables.records.TAiAgentStateRecord
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -49,18 +50,24 @@ class AiAgentStateDao {
         stateData: String
     ) {
         val now = LocalDateTime.now()
-        with(TAiAgentState.T_AI_AGENT_STATE) {
-            dslContext.insertInto(
-                this,
-                SESSION_ID, STATE_KEY, ITEM_INDEX,
-                STATE_DATA, CREATED_TIME, UPDATED_TIME
-            ).values(
-                sessionId, stateKey, itemIndex,
-                stateData, now, now
-            ).onDuplicateKeyUpdate()
-                .set(STATE_DATA, stateData)
-                .set(UPDATED_TIME, now)
-                .execute()
+        dslContext.transaction { config ->
+            val ctx = DSL.using(config)
+            with(TAiAgentState.T_AI_AGENT_STATE) {
+                ctx.deleteFrom(this)
+                    .where(SESSION_ID.eq(sessionId))
+                    .and(STATE_KEY.eq(stateKey))
+                    .and(ITEM_INDEX.eq(itemIndex))
+                    .execute()
+
+                ctx.insertInto(
+                    this,
+                    SESSION_ID, STATE_KEY, ITEM_INDEX,
+                    STATE_DATA, CREATED_TIME, UPDATED_TIME
+                ).values(
+                    sessionId, stateKey, itemIndex,
+                    stateData, now, now
+                ).execute()
+            }
         }
     }
 
@@ -112,6 +119,8 @@ class AiAgentStateDao {
                 .where(SESSION_ID.eq(sessionId))
                 .and(STATE_KEY.eq(stateKey))
                 .and(ITEM_INDEX.eq(itemIndex))
+                .orderBy(CREATED_TIME.desc())
+                .limit(1)
                 .fetchOne()
         }
     }

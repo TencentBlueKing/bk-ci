@@ -9,6 +9,7 @@ import io.agentscope.core.state.SessionKey
 import io.agentscope.core.state.SimpleSessionKey
 import io.agentscope.core.state.State
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import java.util.Optional
 
@@ -55,18 +56,25 @@ class AiMysqlSession(
                 "count={}",
             sid, key, values.size
         )
-        agentStateDao.deleteBySessionAndKey(dslContext, sid, key)
-        if (values.isEmpty()) return
-
-        val jsonList = values.map {
-            objectMapper.writeValueAsString(it)
+        dslContext.transaction { config ->
+            val ctx = DSL.using(config)
+            agentStateDao.deleteBySessionAndKey(ctx, sid, key)
+            if (values.isNotEmpty()) {
+                val jsonList = values.map {
+                    objectMapper.writeValueAsString(it)
+                }
+                agentStateDao.batchInsert(
+                    ctx, sid, key, jsonList
+                )
+            }
         }
-        agentStateDao.batchInsert(dslContext, sid, key, jsonList)
-        logger.info(
-            "[MysqlSession] Saved {} state items: " +
-                "sid={}, key={}",
-            values.size, sid, key
-        )
+        if (values.isNotEmpty()) {
+            logger.info(
+                "[MysqlSession] Saved {} state items: " +
+                    "sid={}, key={}",
+                values.size, sid, key
+            )
+        }
     }
 
     override fun <T : State> get(
