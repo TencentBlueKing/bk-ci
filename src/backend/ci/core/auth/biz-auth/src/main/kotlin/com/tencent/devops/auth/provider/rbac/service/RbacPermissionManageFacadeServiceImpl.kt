@@ -1494,10 +1494,10 @@ class RbacPermissionManageFacadeServiceImpl(
             ),
             operateGroupMemberTask = ::deleteTask
         )
-        if (toHandoverGroups.isEmpty() && invalidPipelines.isEmpty() && invalidRepertoryIds.isEmpty() &&
-            invalidEnvNodeIds.isEmpty()
-        &&
-            invalidCreativeStreamIds.isEmpty()) {
+        if (toHandoverGroups.isEmpty() && invalidPipelines.isEmpty() &&
+            invalidRepertoryIds.isEmpty() && invalidEnvNodeIds.isEmpty() &&
+            invalidCreativeStreamIds.isEmpty()
+        ) {
             return "true"
         }
         val handoverDetails = buildHandoverDetails(
@@ -1515,7 +1515,7 @@ class RbacPermissionManageFacadeServiceImpl(
             resourceCode = projectCode
         ).resourceName
         val authorizationCount = invalidPipelines.size +
-            invalidRepertoryIds.size + invalidCreativeStreamIds.size
+                invalidRepertoryIds.size + invalidCreativeStreamIds.size
         val flowNo = permissionHandoverApplicationService.createHandoverApplication(
             overview = HandoverOverviewCreateDTO(
                 projectCode = projectCode,
