@@ -14,6 +14,10 @@ data class CvdUserPoolInfoResponse(
     val status: Map<String, String>? = null,
     @get:Schema(description = "用户所在资源池ID列表")
     val poolIdList: List<String>? = null,
+    @get:Schema(
+        description = "用户所在资源池的实例数量，key为poolId"
+    )
+    val cvdCount: Map<String, CvdCountItem>? = null,
     @get:Schema(description = "用户可用磁盘列表")
     val diskList: List<CvdDiskItem>? = null,
     @get:Schema(description = "用户实例列表")
