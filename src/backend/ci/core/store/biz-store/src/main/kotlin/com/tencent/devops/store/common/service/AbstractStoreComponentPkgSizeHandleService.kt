@@ -60,7 +60,7 @@ abstract class AbstractStoreComponentPkgSizeHandleService {
     }
 
     companion object {
-        private val MB_DIVISOR = BigDecimal(1024).pow(2)
+        private val MB_DIVISOR = BigDecimal("1048576") // 1024 * 1024
         private const val DIV_SCALE = 2
         private val ROUNDING_MODE = RoundingMode.HALF_UP
         private val logger = LoggerFactory.getLogger(AbstractStoreComponentPkgSizeHandleService::class.java)

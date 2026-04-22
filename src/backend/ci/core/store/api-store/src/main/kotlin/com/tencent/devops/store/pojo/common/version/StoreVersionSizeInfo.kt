@@ -5,7 +5,7 @@ import java.math.BigDecimal
 
 
 @Schema(title = "商店组件-版本大小详情")
-data class StoreVersionSizeInfo (
+data class StoreVersionSizeInfo(
     @Schema(description = "组件Code")
     val storeCode: String,
     @Schema(description = "组件类型")
@@ -15,5 +15,5 @@ data class StoreVersionSizeInfo (
     @Schema(description = "组件包大小")
     val packageSize: BigDecimal?,
     @Schema(description = "单位")
-    val unit : String,
+    val unit: String
 )

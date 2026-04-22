@@ -331,7 +331,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         atomId: String,
         storePackageInfoReqs: List<StorePackageInfoReq>
     ): Result<Boolean> {
-        val path = "/ms/store/api/service/store/components/storeId/$atomId/version/info/update"
+        val path = "/ms/store/api/service/store/components/storeIds/$atomId/version/info/update"
         val jsonBody = objectMapper.writeValueAsString(storePackageInfoReqs)
         val body = RequestBody.create(
             "application/json; charset=utf-8".toMediaTypeOrNull(),
