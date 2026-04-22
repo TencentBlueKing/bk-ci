@@ -22,12 +22,37 @@ function _M:get_tag(ns_config)
     local devops_service = ngx.var.service
     local devops_project_id = ngx.var.project_id
     local tag = nil
+    local tag_cache = ngx.shared.tag_project_store
 
     local default_tag = ns_config.tag
     if gateway_project == 'codecc' then
         default_tag = ns_config.codecc_tag
     end
 
+    -- default_tag 使用redis读取，如果redis中没有，则使用默认值
+    local default_tag_cache_key = 'default_tag_cache_' .. tostring(gateway_project)
+    local default_tag_empty_cache_value = '__default_tag_empty__'
+    local default_tag_cache_value = tag_cache:get(default_tag_cache_key)
+    if default_tag_cache_value ~= nil then
+        if default_tag_cache_value ~= '' and default_tag_cache_value ~= default_tag_empty_cache_value then
+            default_tag = default_tag_cache_value
+        end
+    else
+        local red, err = redisUtil:new()
+        if not red then
+            ngx.log(ngx.ERR, "tag failed to new redis ", err)
+            return "kubernetes-" .. default_tag
+        end
+        local red_key = "tag:default:" .. gateway_project
+        local red_value = red:get(red_key)
+        if red_value and red_value ~= ngx.null then
+            default_tag = red_value
+            tag_cache:set(default_tag_cache_key, red_value, 60)
+        elseif red_value == ngx.null then
+            tag_cache:set(default_tag_cache_key, default_tag_empty_cache_value, 60)
+        end
+        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
+    end
     if ngx.var.use_default_tag == 'true' then
         return "kubernetes-" .. default_tag
     end
@@ -45,7 +70,6 @@ function _M:get_tag(ns_config)
         tag = x_gateway_tag
     else
         -- 获取本地缓存
-        local tag_cache = ngx.shared.tag_project_store
         local tag_cache_key = 'tag_cache_' .. tostring(devops_project_id) .. '_' .. tostring(devops_service) .. '_' ..
             tostring(gateway_project)
         local tag_cache_value = tag_cache:get(tag_cache_key)
