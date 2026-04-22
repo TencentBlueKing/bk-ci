@@ -41,6 +41,7 @@ import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
+import jakarta.annotation.PreDestroy
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionException
 import java.util.concurrent.ExecutorService
@@ -66,8 +67,17 @@ class StartCloudInterfaceService @Autowired constructor(
         private val ioExecutor: ExecutorService = ThreadPoolExecutor(
             10, 10, 0L, TimeUnit.SECONDS,
             LinkedBlockingQueue(100),
+            { r -> Thread(r, "startcloud-io").apply { isDaemon = true } },
             ThreadPoolExecutor.CallerRunsPolicy()
         )
+    }
+
+    @PreDestroy
+    fun shutdownExecutor() {
+        ioExecutor.shutdown()
+        if (!ioExecutor.awaitTermination(30, TimeUnit.SECONDS)) {
+            ioExecutor.shutdownNow()
+        }
     }
 
     fun createStartCloudUser(userId: String, gameId: String?): Boolean {
