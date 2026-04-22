@@ -1,0 +1,51 @@
+:root {
+  /* Text */
+  --chat-text-primary: #313238;
+  --chat-text-secondary: #63656e;
+  --chat-text-placeholder: #979ba5;
+  --chat-text-disabled: #c4c6cc;
+
+  /* Brand / Accent */
+  --chat-primary-color: #3a84ff;
+  --chat-primary-hover-bg: #f0f5ff;
+  --chat-primary-active-bg: #edf4ff;
+  --chat-primary-border: #a3c5fd;
+
+  /* Surfaces */
+  --chat-bg-page: #f5f7fa;
+  --chat-bg-surface: #fff;
+  --chat-bg-muted: #f0f1f5;
+
+  /* Borders */
+  --chat-border-color: #eaebf0;
+  --chat-border-strong: #dcdee5;
+
+  /* Shadows */
+  --chat-shadow: rgba(0, 0, 0, 0.08);
+
+  /* Layout */
+  --chat-header-height: 48px;
+  --chat-border-radius: 8px;
+}
+
+/* GitHub-inspired dark theme */
+[data-theme="dark"] {
+  --chat-text-primary: #e6edf3;
+  --chat-text-secondary: #8b949e;
+  --chat-text-placeholder: #6e7681;
+  --chat-text-disabled: #484f58;
+
+  --chat-primary-color: #58a6ff;
+  --chat-primary-hover-bg: rgba(56, 139, 253, 0.15);
+  --chat-primary-active-bg: rgba(56, 139, 253, 0.25);
+  --chat-primary-border: #388bfd;
+
+  --chat-bg-page: #0d1117;
+  --chat-bg-surface: #161b22;
+  --chat-bg-muted: #21262d;
+
+  --chat-border-color: #30363d;
+  --chat-border-strong: #484f58;
+
+  --chat-shadow: rgba(0, 0, 0, 0.4);
+}

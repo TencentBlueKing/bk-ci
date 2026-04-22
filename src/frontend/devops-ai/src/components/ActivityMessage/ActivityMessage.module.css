@@ -1,0 +1,41 @@
+.activityCard {
+  padding: 12px 16px;
+  margin: 6px 0;
+  background: #fff;
+  border: 1px solid #dcdee5;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.cardTitle {
+  font-weight: 600;
+  font-size: 14px;
+  color: #313238;
+  margin-bottom: 8px;
+}
+
+.cardSummary {
+  color: #979ba5;
+  margin-bottom: 8px;
+}
+
+.pagination {
+  margin-top: 8px;
+}
+
+.detailTable {
+  margin-top: 8px;
+}
+
+.activityRichCell {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  word-break: break-all;
+}
+
+.activityDownloadBtn {
+  flex-shrink: 0;
+}
