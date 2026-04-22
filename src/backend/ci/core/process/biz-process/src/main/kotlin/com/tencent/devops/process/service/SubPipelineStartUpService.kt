@@ -588,17 +588,18 @@ class SubPipelineStartUpService @Autowired constructor(
         yamlParams: MutableMap<String, BuildParameters> = mutableMapOf()
     ): PipelineResourceVersion? {
         return if (!branch.isNullOrBlank()) {
-            val version = pipelineBuildFacadeService.getPipelineYamlVersion(
+            val branchVersionResource = pipelineBuildFacadeService.getPipelineYamlVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 branchName = branch,
                 yamlParams = yamlParams
-            )
-            val branchVersionResource = pipelineRepositoryService.getPipelineResourceVersion(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = version
-            )
+            )?.let {
+                pipelineRepositoryService.getPipelineResourceVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = it
+                )
+            }
             if (branchVersionResource == null) {
                 val pipelineInfo = getPipelineInfo(projectId, pipelineId)
                 throw ErrorCodeException(
