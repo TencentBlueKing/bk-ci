@@ -916,7 +916,9 @@
     "releasedVersion": "正式バージョン",
     "defaultBranch": "デフォルトブランチ",
     "latestVersion": "最新バージョン",
-    "repoBranch": "リポジトリブランチ"
+    "repoBranch": "リポジトリブランチ",
+    "branchListLoadFailed": "ブランチリストの読み込みに失敗しました",
+    "noBranchAvailable": "選択可能なブランチがありません"
   },
   "details": {
     "executorInfo": "{0} {1}が{2}にトリガー",

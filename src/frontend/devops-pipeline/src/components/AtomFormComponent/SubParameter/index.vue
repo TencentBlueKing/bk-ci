@@ -273,7 +273,8 @@
                                 innerHTML: e.message
                             }
                         }),
-                        theme: 'error'
+                        theme: 'error',
+                        ellipsisLine: 20
                     })
                 }).finally(() => (this.isLoading = false))
             },

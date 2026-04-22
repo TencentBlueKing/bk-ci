@@ -922,7 +922,9 @@
     "releasedVersion": "Released",
     "defaultBranch": "Default",
     "latestVersion": "Latest Version",
-    "repoBranch": "Repository Branches"
+    "repoBranch": "Repository Branches",
+    "branchListLoadFailed": "Failed to load branch list",
+    "noBranchAvailable": "No branch available"
   },
   "details": {
     "pipelineVersionDiffTips": "The pipeline config version has changed",

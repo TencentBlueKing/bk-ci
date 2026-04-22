@@ -919,7 +919,9 @@
     "releasedVersion": "正式版本",
     "defaultBranch": "默认分支",
     "latestVersion": "最新版本",
-    "repoBranch": "代码库分支"
+    "repoBranch": "代码库分支",
+    "branchListLoadFailed": "分支列表加载失败",
+    "noBranchAvailable": "暂无可选分支"
   },
   "details": {
     "executorInfo": "{0} {1}触发于 {2}",

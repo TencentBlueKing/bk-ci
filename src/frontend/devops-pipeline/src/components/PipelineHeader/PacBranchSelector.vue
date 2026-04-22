@@ -12,9 +12,12 @@
                 :loading="isLoading"
                 searchable
                 :clearable="false"
+                enable-scroll-load
+                :scroll-loading="bottomLoadingOptions"
                 :remote-method="handleSearch"
                 @change="handleBranchChange"
                 @toggle="handleToggle"
+                @scroll-end="loadMore"
             >
                 <div
                     slot="trigger"
@@ -104,6 +107,13 @@
             const isInitializing = ref(false) // 标记是否正在初始化
             const initialVersionName = ref('')
             const isFirstLoad = ref(true) // 标记是否首次加载
+            const hasNext = ref(true)
+            const currentPage = ref(1)
+            const pageSize = 20
+            const bottomLoadingOptions = ref({
+                size: 'small',
+                isLoading: false
+            })
 
             // 计算属性
             const projectId = computed(() => proxy.$route.params.projectId)
@@ -126,10 +136,16 @@
             })
 
             // 获取分支列表
-            const fetchBranchList = async () => {
+            const fetchBranchList = async (page = 1) => {
                 if (!pipelineId.value) return
 
-                isLoading.value = true
+                if (page > 1 && !hasNext.value) return
+
+                if (page === 1) {
+                    isLoading.value = true
+                } else {
+                    bottomLoadingOptions.value.isLoading = true
+                }
                 const isInitialLoad = isFirstLoad.value
                 isFirstLoad.value = false
 
@@ -138,11 +154,19 @@
                         projectId: projectId.value,
                         pipelineId: pipelineId.value,
                         search: searchKey.value,
-                        page: 1,
-                        pageSize: 20
+                        page,
+                        pageSize
                     })
                     
-                    branchList.value = data || []
+                    currentPage.value = page
+                    // 判断是否还有更多数据
+                    hasNext.value = Array.isArray(data) ? data.length >= pageSize : false
+
+                    if (page === 1) {
+                        branchList.value = data || []
+                    } else {
+                        branchList.value.push(...(data || []))
+                    }
 
                     // 如果没有选中分支且有分支数据，则选中对应分支
                     if (!selectedBranch.value && branchList.value.length > 0) {
@@ -184,7 +208,13 @@
                     }
                 } finally {
                     isLoading.value = false
+                    bottomLoadingOptions.value.isLoading = false
                 }
+            }
+
+            // 滚动加载更多
+            const loadMore = () => {
+                fetchBranchList(currentPage.value + 1)
             }
 
             let searchTimer = null
@@ -193,11 +223,13 @@
             const handleSearch = (keyword) => {
                 searchKey.value = keyword
                 branchList.value = []
+                hasNext.value = true
+                currentPage.value = 1
                 if (searchTimer) {
                     clearTimeout(searchTimer)
                 }
                 searchTimer = setTimeout(() => {
-                    fetchBranchList()
+                    fetchBranchList(1)
                 }, 300)
             }
 
@@ -214,7 +246,9 @@
             // 下拉框展开/收起
             const handleToggle = (isOpen) => {
                 if (isOpen && branchList.value.length === 0) {
-                    fetchBranchList()
+                    hasNext.value = true
+                    currentPage.value = 1
+                    fetchBranchList(1)
                 }
             }
 
@@ -222,7 +256,9 @@
             watch(pipelineId, (newVal) => {
                 if (newVal) {
                     selectedBranch.value = ''
-                    fetchBranchList()
+                    hasNext.value = true
+                    currentPage.value = 1
+                    fetchBranchList(1)
                 }
             })
 
@@ -233,7 +269,7 @@
                 initialVersionName.value = cachedBranch || proxy.$route.query.versionName || ''
                 
                 if (pipelineId.value) {
-                    fetchBranchList()
+                    fetchBranchList(1)
                 }
             })
 
@@ -245,9 +281,11 @@
                 isLoading,
                 pacEnabled,
                 pipelineId,
+                bottomLoadingOptions,
                 handleSearch,
                 handleBranchChange,
-                handleToggle
+                handleToggle,
+                loadMore
             }
         }
     })

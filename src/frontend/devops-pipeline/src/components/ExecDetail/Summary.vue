@@ -477,6 +477,7 @@
       height: 48px;
       .pipeline-cur-version-span {
         display: inline-block;
+        max-width: 200px;
         line-height: 48px;
         @include ellipsis();
         text-decoration: underline;
