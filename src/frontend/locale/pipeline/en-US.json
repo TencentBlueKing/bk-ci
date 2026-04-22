@@ -909,7 +909,7 @@
     "versionSelectorDisableTips": "1. When a PAC branch version exists, you can choose to execute the branch version.<br/>2. When there is no PAC branch version, the latest current version will always be executed.",
     "selectBranch": "Select Branch",
     "selectBranchPlaceholder": "Select branch",
-    "runBranchPipeline": "Run pipeline on selected branch",
+    "runBranchPipeline": "Run pipeline on selected branch. After startup, ci.branch will be the selected branch.",
     "branchVersionNotFound": "Pipeline not found, please select another branch!",
     "branchVersionCreateFailed": "The branch version does not exist. Please check if the branch version has been successfully created.",
     "errorBranch": "Branch: ",

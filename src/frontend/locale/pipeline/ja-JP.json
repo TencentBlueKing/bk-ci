@@ -903,7 +903,7 @@
     "versionSelectorDisableTips": " 1. PACブランチバージョンが存在する場合は、ブランチバージョンを選択して実行できます<br/>2. PACブランチバージョンがない場合は、常に現在の最新バージョンを実行します",
     "selectBranch": "ブランチを選択",
     "selectBranchPlaceholder": "ブランチを選択",
-    "runBranchPipeline": "選択したブランチでパイプラインを実行",
+    "runBranchPipeline": "選択したブランチでパイプラインを実行。起動後、ci.branchは選択したブランチになります",
     "branchVersionNotFound": "パイプラインが存在しません、ブランチを再選択してください！",
     "branchVersionCreateFailed": "ブランチバージョンが存在しません。ブランチバージョンが正常に作成されているか確認してください。",
     "errorBranch": "ブランチ：",

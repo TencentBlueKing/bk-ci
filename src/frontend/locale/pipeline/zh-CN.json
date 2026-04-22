@@ -906,7 +906,7 @@
     "versionSelectorDisableTips": " 1. 存在 PAC 分支版本时，可选择分支版本执行<br/>2. 没有 PAC 分支版本时，始终执行当前最新版本",
     "selectBranch": "请选择分支",
     "selectBranchPlaceholder": "选择分支",
-    "runBranchPipeline": "运行选中分支上的流水线",
+    "runBranchPipeline": "运行选中分支上的流水线，启动后 ci.branch 为选中的分支",
     "branchVersionNotFound": "流水线不存在，请重新选择分支！",
     "branchVersionCreateFailed": "分支版本不存在, 请检查分支版本是否被成功创建",
     "errorBranch": "分支：",

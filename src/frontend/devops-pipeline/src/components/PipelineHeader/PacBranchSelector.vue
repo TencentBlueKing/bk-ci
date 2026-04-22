@@ -319,7 +319,7 @@
     }
 
     .branch-selector-dropdown {
-        width: 300px;
+        width: 400px;
         
         &.bk-select {
             .bk-select-trigger {
