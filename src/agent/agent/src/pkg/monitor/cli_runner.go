@@ -29,8 +29,8 @@ import (
 // 方法内会先做一次 warmup Gather（忽略结果），再间隔 warmupGap 后做正式采集。
 //
 // 返回值是本次输出的 metric 总数，方便调用方打印摘要。
-func RunOnceStdout(ctx context.Context, out io.Writer) (int, error) {
-	return runOnceWithInputs(ctx, out, newDefaultInputs(), 300*time.Millisecond)
+func RunOnceStdout(ctx context.Context, out io.Writer, duration time.Duration) (int, error) {
+	return runOnceWithInputs(ctx, out, newDefaultInputs(), duration)
 }
 
 // runOnceWithInputs 提取出来便于测试注入短 warmup。

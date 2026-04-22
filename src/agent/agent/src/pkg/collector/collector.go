@@ -169,6 +169,7 @@ func genTelegrafConfig() (*bytes.Buffer, error) {
 		"TlsCa":          tlsCa,
 		"CPUProductInfo": config.GAgentEnv.CPUProductInfo,
 		"GPUProductInfo": config.GAgentEnv.GPUProductInfo,
+		"OutputType":     "no_file",
 	}
 	logs.Debugf("telegraf agentip %s", ip)
 

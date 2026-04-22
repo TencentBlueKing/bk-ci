@@ -52,12 +52,17 @@ const TelegrafConf = `
   hostname = ""
   omit_hostname = false
 {{ if eq .ProjectType "stream" }}
+{{ if eq .OutputType "file" }}
+[[outputs.file]]
+  files = ["stdout"]
+  data_format = "influx"
+{{ else }}
 [[outputs.influxdb]]
   urls = ["{{.Gateway}}/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
   database = "agentMetrix"
   skip_database_creation = true
   {{.TlsCa}}
-
+{{ end }}
 [[inputs.cpu]]
   percpu = true
   totalcpu = true

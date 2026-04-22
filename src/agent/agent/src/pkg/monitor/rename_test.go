@@ -1,5 +1,5 @@
-//go:build !loong64
-// +build !loong64
+//go:build !out
+// +build !out
 
 package monitor
 

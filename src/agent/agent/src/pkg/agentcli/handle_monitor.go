@@ -25,7 +25,7 @@ import (
 func handleMonitor(workDir string, args []string) error {
 	_ = workDir
 	fs := flag.NewFlagSet("monitor", flag.ContinueOnError)
-	duration := fs.Duration("d", 3*time.Second, "collector(telegraf) 采样时长，建议 ≥ 2s 保证 cpu 有 delta")
+	duration := fs.Duration("d", 61*time.Second, "collector(telegraf) 采样时长，建议 ≥ 2s 保证 cpu 有 delta")
 	only := fs.String("only", "", "仅执行其中一条: monitor 或 collector")
 	if err := fs.Parse(args); err != nil {
 		return err
@@ -56,7 +56,7 @@ func handleMonitor(workDir string, args []string) error {
 
 	if runMonitor {
 		fmt.Fprintln(os.Stdout, "========== monitor (gopsutil) ==========")
-		n, err := monitor.RunOnceStdout(ctx, os.Stdout)
+		n, err := monitor.RunOnceStdout(ctx, os.Stdout, *duration)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "[monitor] run failed: %v\n", err)
 			return err
