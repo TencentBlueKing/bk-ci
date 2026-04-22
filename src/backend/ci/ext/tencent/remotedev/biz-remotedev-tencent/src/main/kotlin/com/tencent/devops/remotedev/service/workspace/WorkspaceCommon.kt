@@ -83,11 +83,13 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executor
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Lazy
@@ -122,7 +124,8 @@ class WorkspaceCommon @Autowired constructor(
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val workspaceDailyCgsdataDao: WorkspaceDailyCgsdataDao,
     private val remoteDevCommonConfig: RemoteDevCommonConfig,
-    private val apiGwService: ApiGwService
+    private val apiGwService: ApiGwService,
+    @Qualifier("remoteDevIoExecutor") private val ioExecutor: Executor
 ) {
 
     companion object {
@@ -541,7 +544,7 @@ class WorkspaceCommon @Autowired constructor(
         }
         sharedDao.batchCreate(dslContext, workspaceName, operator, assigns, resourceId)
         if (notify) {
-            CompletableFuture.runAsync {
+            CompletableFuture.runAsync({
                 assigns.forEach {
                     try {
                         remoteDevSettingDao.fetchOneSetting(dslContext, it.userId)
@@ -586,7 +589,7 @@ class WorkspaceCommon @Autowired constructor(
                         projectId = ""
                     )
                 }
-            }
+            }, ioExecutor)
         }
     }
 

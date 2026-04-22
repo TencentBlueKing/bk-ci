@@ -43,6 +43,10 @@ import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionException
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -59,6 +63,11 @@ class StartCloudInterfaceService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(StartCloudInterfaceService::class.java)
+        private val ioExecutor: ExecutorService = ThreadPoolExecutor(
+            10, 10, 0L, TimeUnit.SECONDS,
+            LinkedBlockingQueue(100),
+            ThreadPoolExecutor.CallerRunsPolicy()
+        )
     }
 
     fun createStartCloudUser(userId: String, gameId: String?): Boolean {
@@ -86,7 +95,7 @@ class StartCloudInterfaceService @Autowired constructor(
             receivers.forEach { createStartCloudUser(it, gameId) }
         } else {
             val futures = receivers.map { receiver ->
-                CompletableFuture.runAsync { createStartCloudUser(receiver, gameId) }
+                CompletableFuture.runAsync({ createStartCloudUser(receiver, gameId) }, ioExecutor)
             }
             try {
                 CompletableFuture.allOf(*futures.toTypedArray()).join()

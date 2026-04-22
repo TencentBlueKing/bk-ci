@@ -60,10 +60,12 @@ import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import java.net.URLEncoder
 import java.util.Base64
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executor
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -75,7 +77,8 @@ class PermissionService @Autowired constructor(
     private val workspaceDao: WorkspaceDao,
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val redisCache: ConfigCacheService,
-    private val checkTokenService: ClientTokenService
+    private val checkTokenService: ClientTokenService,
+    @Qualifier("remoteDevIoExecutor") private val ioExecutor: Executor
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PermissionService::class.java)
@@ -244,16 +247,16 @@ class PermissionService @Autowired constructor(
     }
 
     fun checkUserManager(userId: String, projectId: String) {
-        val managersFuture = CompletableFuture.supplyAsync {
+        val managersFuture = CompletableFuture.supplyAsync({
             projectManagerCache.get(projectId)
-        }
-        val checkFuture = CompletableFuture.supplyAsync {
+        }, ioExecutor)
+        val checkFuture = CompletableFuture.supplyAsync({
             client.get(ServiceProjectAuthResource::class).checkProjectManager(
                 token = checkTokenService.getSystemToken(),
                 userId = userId,
                 projectCode = projectId
             ).data ?: false
-        }
+        }, ioExecutor)
         CompletableFuture.allOf(managersFuture, checkFuture).join()
         val managers = managersFuture.get()
         val checkProjectManager = checkFuture.get()
