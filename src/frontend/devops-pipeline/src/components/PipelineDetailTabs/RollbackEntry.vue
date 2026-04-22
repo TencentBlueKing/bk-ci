@@ -34,6 +34,7 @@
             :is-rollback="isRollback"
             :is-template-pipeline="isTemplatePipeline"
             :draft-version="draftVersion"
+            :click-action-type="clickActionType"
             @confirm="rollback"
             @edit-draft="goEdit"
             @cancel="close"
@@ -100,6 +101,10 @@
                 type: String,
                 default: ''
             },
+            clickActionType: {
+                type: String,
+                default: ''
+            },
             isVersionList: Boolean,
             isActiveDraft: Boolean,
             isActiveBranchVersion: Boolean
@@ -150,7 +155,7 @@
                     case this.hasDraftPipeline && this.isActiveBranchVersion:
                         return this.$t('template.templateCoverWarning')
                     case this.hasDraftPipeline:
-                        return this.isRollback && this.isTemplatePipeline ? this.$t('hasDraftTips', [this.draftBaseVersionName]) : this.$t('hasDraft')
+                        return this.$t('hasDraft')
                     default:
                         return this.$t(this.isActiveBranchVersion ? 'createBranchDraftTips' : 'createDraftTips', [this.versionName])
                 }
@@ -180,10 +185,6 @@
             async handleClick () {
                 // 回滚操作
                 if (this.isRollback) {
-                    if (this.isTemplatePipeline) {
-                        this.showDraftConfirmDialog()
-                        return
-                    }
                     const result = await this.fetchLatestDraftStatus({
                         projectId: this.projectId,
                         id: this.rollbackId,

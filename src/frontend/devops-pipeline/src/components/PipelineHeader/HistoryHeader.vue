@@ -68,6 +68,7 @@
                 :draft-creator="activePipelineVersion?.creator"
                 :draft-create-time="activePipelineVersion?.createTime"
                 :rollback-id="uniqueId"
+                :click-action-type="actionType"
             >
                 {{ operateName }}
             </RollbackEntry>
@@ -282,15 +283,21 @@
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? true
             },
+            isEditCurrentDraft (){
+                return this.pipelineInfo?.baseVersion && this.activePipelineVersion?.version === this.pipelineInfo?.baseVersion
+            },
             operateName () {
                 switch (true) {
                     case this.editAndExecutable:
                         return this.isTemplate ? this.$t('template.editTemplate') : this.$t('edit')
-                    case this.pipelineInfo?.baseVersion && this.activePipelineVersion?.version === this.pipelineInfo?.baseVersion:
+                    case this.isEditCurrentDraft:
                         return this.$t('editCurDraft')
                     default:
                         return this.$t('rollback')
                 }
+            },
+            actionType () {
+                return this.editAndExecutable || this.isEditCurrentDraft ? 'edit' : 'rollback'
             },
             tooltip () {
                 return this.executable
