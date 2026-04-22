@@ -1041,7 +1041,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                 repository = repository,
                 page = finalPage,
                 pageSize = finalPageSize,
-                search = search
+                search = search?.takeIf { it.isNotBlank() }
             )?.forEach {
                 if (it.name == defaultBranchName && defaultBranch) {
                     return@forEach
