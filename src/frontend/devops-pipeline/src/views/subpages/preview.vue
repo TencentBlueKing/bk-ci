@@ -438,6 +438,7 @@
                 },
                 selectedBranch: '', // PAC 分支选择
                 branchVersion: null, // PAC 分支版本号，用于启动构建时指定 version
+                isBranchVersion: false, // PAC 模式下是否为分支版本（非正式发布版本），用于启动构建时决定传 branch 还是 version
                 expireReleasedVersion: false, // 是否过期的已发布版本
                 // PAC 分支版本错误状态
                 pacError: {
@@ -789,6 +790,7 @@
                             pipelineRes = versionPipelineRes
                             // 保存版本号，用于启动构建时指定 version
                             this.branchVersion = branchInfo.version
+                            this.isBranchVersion = false
                         } else {
                             // 分支使用 PAC 分支编排接口
                             const [res, branchPipelineRes] = await Promise.all([
@@ -803,6 +805,7 @@
                             pipelineRes = branchPipelineRes
                             // 保存分支版本号，用于启动构建时指定 version
                             this.branchVersion = branchPipelineRes?.version ?? null
+                            this.isBranchVersion = true
                             this.expireReleasedVersion = branchPipelineRes?.expireReleasedVersion ?? false
                         }
                     } else {
@@ -814,6 +817,7 @@
                         pipelineRes = normalPipelineRes
                         // 非 PAC 分支模式下清空 branchVersion
                         this.branchVersion = null
+                        this.isBranchVersion = false
                     }
                     
                     this.pipelineModel = {
@@ -923,26 +927,27 @@
                 console.log(params, skipAtoms)
                 try {
                     this.setExecuteStatus(true)
-                    // 确定启动版本号：PAC 分支模式使用 branchVersion，调试模式使用 pipelineInfo.version，其他使用 executeVersion
-                    let execVersion
-                    if (this.isDebugPipeline) {
-                        execVersion = this.pipelineInfo?.version
-                    } else if (this.pacEnabled && this.branchVersion !== null) {
-                        // PAC 模式下选择了分支，使用分支版本号
-                        execVersion = this.branchVersion
-                    } else {
-                        execVersion = this.executeVersion
-                    }
-                    // 请求执行构建
-                    const res = await this.requestExecPipeline({
+                    // 确定启动参数：
+                    // - PAC 分支版本（非正式发布版本）：传 branch
+                    // - 调试模式：传 pipelineInfo.version
+                    // - PAC 正式版本 / 普通流水线：传 executeVersion
+                    const execPayload = {
                         projectId: this.projectId,
                         pipelineId: this.pipelineId,
-                        version: execVersion,
                         params: {
                             ...skipAtoms,
                             ...params
                         }
-                    })
+                    }
+                    if (this.pacEnabled && this.isBranchVersion && this.selectedBranch) {
+                        execPayload.branch = this.selectedBranch
+                    } else if (this.isDebugPipeline) {
+                        execPayload.version = this.pipelineInfo?.version
+                    } else {
+                        execPayload.version = this.executeVersion
+                    }
+                    // 请求执行构建
+                    const res = await this.requestExecPipeline(execPayload)
 
                     if (res && res.id) {
                         message = this.$t('newlist.sucToStartBuild')
