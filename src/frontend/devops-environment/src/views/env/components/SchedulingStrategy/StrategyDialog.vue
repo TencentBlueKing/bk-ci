@@ -9,6 +9,17 @@
         @cancel="handleCancel"
     >
         <div class="strategy-dialog-content">
+            <!-- 策略名称 -->
+            <div class="form-section strategy-name-section">
+                <span class="strategy-name-label">{{ $t('environment.scheduling.strategyName') }}</span>
+                <bk-input
+                    v-model="formData.strategyName"
+                    class="strategy-name-input"
+                    :placeholder="$t('environment.scheduling.strategyNamePlaceholder')"
+                    :maxlength="128"
+                />
+            </div>
+
             <!-- 亲和性选项 -->
             <div class="form-section">
                 <bk-checkbox
@@ -128,7 +139,7 @@
                                             <bk-option
                                                 v-for="val in getPreDefinedValues(label.key)"
                                                 :key="val.id"
-                                                :id="val.id"
+                                                :id="val.name"
                                                 :name="val.name"
                                             />
                                         </bk-select>
@@ -229,6 +240,7 @@
             ]
 
             const defaultFormData = {
+                strategyName: '',
                 affinityEnabled: false,
                 nodeLoadEnabled: false,
                 nodeLoadType: 'idleNode',
@@ -278,6 +290,7 @@
 
                 formData.value = {
                     id: data.id,
+                    strategyName: data.strategyName || '',
                     enabled: data.enabled !== false, // 保留启用状态
                     affinityEnabled: conditions.some(c => c.type === 'affinity'),
                     nodeLoadEnabled: conditions.some(c => c.type === 'idleNode' || c.type === 'availableNode'),
@@ -441,17 +454,18 @@
                     // 构建 labelSelector
                     const labelSelector = formData.value.labelsEnabled
                         ? formData.value.labels
-                            .filter(l => l.key && l.value)
+                            .filter(l => l.key && (Array.isArray(l.value) ? l.value.length : l.value !== ''))
                             .map(l => ({
                                 tagKeyId: l.key,
                                 op: l.operator,
-                                tagValueIds: Array.isArray(l.value) ? l.value : [l.value]
+                                values: Array.isArray(l.value) ? l.value : [l.value]
                             }))
                         : []
 
                     // 构建提交数据
                     const submitData = {
                         id: formData.value.id,
+                        strategyName: (formData.value.strategyName || '').trim(),
                         enabled: formData.value.enabled !== false,
                         labelSelector,
                         scope: formData.value.affinityEnabled ? 'PRE_BUILD' : 'ALL',
@@ -510,6 +524,24 @@
 
         &:last-child {
             padding-bottom: 0;
+        }
+
+        &.strategy-name-section {
+            padding-bottom: 16px;
+            display: flex;
+            color: #313238;
+            align-items: center;
+            gap: 8px;
+
+            .strategy-name-label {
+                flex-shrink: 0;
+                font-size: 14px;
+                text-align: right;
+            }
+
+            .strategy-name-input {
+                flex: 1;
+            }
         }
 
         &.labels-form-section {

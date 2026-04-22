@@ -84,6 +84,13 @@
                                     theme="primary"
                                     @change="(value) => handleToggleStrategy(strategy, value)"
                                 />
+                                <span
+                                    v-if="strategy.strategyName"
+                                    class="strategy-name"
+                                    v-bk-overflow-tips
+                                >
+                                    {{ strategy.strategyName }}
+                                </span>
                             </div>
                             <!-- 操作按钮 -->
                             <div
@@ -252,22 +259,19 @@
                 }
 
                 // labelSelector 转换为前端 labels 格式
-                // 接口返回的格式: { tagKeyId, tagKeyName, op, tagValue: [{ tagValueId, tagValue }] }
+                // 接口返回的格式: { tagKeyId, tagKeyName, op, values: string[] }
                 // 前端格式: { key, keyName, operator, value, valueName }
                 const labelSelector = strategy.labelSelector || []
                 const labels = labelSelector.map(item => {
-                    const tagValues = item.tagValue || []
-                    const valueIds = tagValues.map(v => v.tagValueId)
-                    const valueNames = tagValues.map(v => v.tagValue)
-                    
+                    const values = Array.isArray(item.values) ? item.values : []
+
                     return {
                         key: item.tagKeyId,
                         keyName: item.tagKeyName || item.tagKeyId,
                         operator: item.op,
                         // 如果是 IN 操作符，保持数组；否则取第一个值
-                        value: item.op === 'IN' ? valueIds : (valueIds[0] || ''),
-                        // 用于列表显示的值名称
-                        valueName: item.op === 'IN' ? valueNames : (valueNames[0] || '')
+                        value: item.op === 'IN' ? values : (values[0] || ''),
+                        valueName: item.op === 'IN' ? values : (values[0] || '')
                     }
                 })
 
@@ -633,6 +637,10 @@
                 font-size: 14px;
                 font-weight: 500;
                 color: #313238;
+                max-width: 400px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
             .strategy-actions {
