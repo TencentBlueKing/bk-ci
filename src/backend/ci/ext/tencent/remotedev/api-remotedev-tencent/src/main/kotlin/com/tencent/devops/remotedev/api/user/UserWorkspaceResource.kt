@@ -47,6 +47,7 @@ import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.cvd.CvdCreateTaskRequest
 import com.tencent.devops.remotedev.pojo.cvd.CvdDeleteTaskRequest
 import com.tencent.devops.remotedev.pojo.cvd.CvdPoolDetail
+import com.tencent.devops.remotedev.pojo.cvd.CvdPoolInfoResponse
 import com.tencent.devops.remotedev.pojo.cvd.CvdTaskResponse
 import com.tencent.devops.remotedev.pojo.cvd.CvdTaskStatusResponse
 import com.tencent.devops.remotedev.pojo.cvd.CvdUserPoolInfoResponse
@@ -460,4 +461,23 @@ interface UserWorkspaceResource {
         @QueryParam("bkProjectId")
         bkProjectId: String
     ): Result<List<CvdPoolDetail>>
+
+    @Operation(summary = "CVD获取资源池详情")
+    @GET
+    @Path("/cvd/pool/info")
+    fun getCvdPoolInfo(
+        @Parameter(
+            description = "用户ID",
+            required = true,
+            example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(
+            description = "资源池ID",
+            required = true
+        )
+        @QueryParam("poolId")
+        poolId: String
+    ): Result<CvdPoolInfoResponse>
 }

@@ -10,6 +10,7 @@ import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.pojo.cvd.CvdCreateTaskRequest
 import com.tencent.devops.remotedev.pojo.cvd.CvdDeleteTaskRequest
 import com.tencent.devops.remotedev.pojo.cvd.CvdPoolDetail
+import com.tencent.devops.remotedev.pojo.cvd.CvdPoolInfoResponse
 import com.tencent.devops.remotedev.pojo.cvd.CvdTaskResponse
 import com.tencent.devops.remotedev.pojo.cvd.CvdTaskStatusResponse
 import com.tencent.devops.remotedev.pojo.cvd.CvdUserPoolInfoResponse
@@ -114,6 +115,24 @@ class CvdService {
             errorCode = ErrorCodeEnum.REQ_DEVCLOUD_ERROR.errorCode,
             params = arrayOf(
                 "cvdProjectPoolInfo",
+                resp.message ?: "empty data"
+            )
+        )
+    }
+
+    fun getPoolInfo(
+        poolId: String
+    ): CvdPoolInfoResponse {
+        val body = mapOf("poolId" to poolId)
+        val resp = doPost<CvdApiResponse<CvdPoolInfoResponse>>(
+            path = "/app/cvd/ccPool/poolInfo",
+            body = body,
+            typeRef = object : TypeReference<CvdApiResponse<CvdPoolInfoResponse>>() {}
+        )
+        return resp.data ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.REQ_DEVCLOUD_ERROR.errorCode,
+            params = arrayOf(
+                "cvdPoolInfo",
                 resp.message ?: "empty data"
             )
         )

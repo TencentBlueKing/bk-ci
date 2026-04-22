@@ -57,6 +57,7 @@ import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyRespData
 import com.tencent.devops.remotedev.pojo.cvd.CvdCreateTaskRequest
 import com.tencent.devops.remotedev.pojo.cvd.CvdDeleteTaskRequest
 import com.tencent.devops.remotedev.pojo.cvd.CvdPoolDetail
+import com.tencent.devops.remotedev.pojo.cvd.CvdPoolInfoResponse
 import com.tencent.devops.remotedev.pojo.cvd.CvdTaskResponse
 import com.tencent.devops.remotedev.pojo.cvd.CvdTaskStatusResponse
 import com.tencent.devops.remotedev.pojo.cvd.CvdUserPoolInfoResponse
@@ -351,5 +352,12 @@ class UserWorkspaceResourceImpl @Autowired constructor(
             )
         }
         return Result(cvdService.getProjectPoolInfo(bkProjectId))
+    }
+
+    override fun getCvdPoolInfo(
+        userId: String,
+        poolId: String
+    ): Result<CvdPoolInfoResponse> {
+        return Result(cvdService.getPoolInfo(poolId))
     }
 }
