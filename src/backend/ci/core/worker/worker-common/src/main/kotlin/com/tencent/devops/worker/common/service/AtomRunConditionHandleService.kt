@@ -33,19 +33,16 @@ import java.io.File
 interface AtomRunConditionHandleService {
 
     /**
-     * 准备运行时环境
-     * @param osType 操作系统类型
-     * @param language 开发语言
-     * @param runtimeVersion 运行时版本
-     * @param workspace 工作空间
-     * @return 布尔值
+     * 准备运行时环境，返回虚拟环境bin路径（null表示未设置环境路径）
      */
     fun prepareRunEnv(
         osType: OSType,
         language: String,
         runtimeVersion: String,
-        workspace: File
-    ): Boolean
+        workspace: File,
+        atomTmpSpace: File? = null,
+        runtimeVariables: Map<String, String> = emptyMap()
+    ): String?
 
     /**
      * 处理target入口命令逻辑
@@ -53,7 +50,8 @@ interface AtomRunConditionHandleService {
     fun handleAtomTarget(
         target: String,
         osType: OSType,
-        postEntryParam: String?
+        postEntryParam: String?,
+        atomExecuteEnvPath: String? = null
     ): String
 
     /**
@@ -68,6 +66,7 @@ interface AtomRunConditionHandleService {
         preCmd: String,
         osName: String,
         pkgName: String,
-        runtimeVersion: String? = null
+        runtimeVersion: String? = null,
+        atomExecuteEnvPath: String? = null
     ): String
 }
