@@ -1,19 +1,30 @@
-import { computed, defineComponent, ref, onMounted } from 'vue'
+import { computed, defineComponent, ref, onMounted, watch, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Button, Table, Loading, Input, Tag } from 'bkui-vue'
+import { Button, Table, Loading, Input, Tag, InfoBox } from 'bkui-vue'
 import { Search } from 'bkui-vue/lib/icon'
 import { SvgIcon } from '@/components/SvgIcon'
 import EmptyTableStatus from '@/components/EmptyTable'
 import type { Column } from 'bkui-vue/lib/table/props'
 import { useTableHeight } from '@/hooks/useTableHeight'
 import { useVisibleRange } from '@/hooks/useVisibleRange'
-import BkOrgSelector, { type TreeItem } from '@blueking/bk-org-selector';
-import '@blueking/bk-org-selector/vue3/vue3.css';
+import type { AddVisibleRangeItem } from '@/api/visibleRange'
+import BkOrgSelector, { type TreeItem } from '@blueking/bk-ORG-selector'
+import '@blueking/bk-ORG-selector/vue3/vue3.css'
 import styles from './VisibleRange.module.css'
 
 export default defineComponent({
   name: 'VisibleRange',
-  setup() {
+  props: {
+    tableMaxHeight: {
+      type: [Number, String],
+      default: undefined,
+    },
+    source: {
+      type: String,
+      default: 'detail',
+    },
+  },
+  setup(props) {
     const { t } = useI18n()
     const tableContainerRef = ref<HTMLDivElement>()
     const orgSelectorRef = ref<InstanceType<typeof BkOrgSelector>>()
@@ -21,10 +32,12 @@ export default defineComponent({
     const avatarBaseUrl = 'https://r.hrc.woa.com/photo/150/'
     const apiBaseUrl = 'https://bk-user-web.apigw.o.woa.com/prod'
     const { maxHeight } = useTableHeight(tableContainerRef)
-    
-    // 使用数据 Hook
+
+    const effectiveMaxHeight = computed(() => {
+      return props.tableMaxHeight !== undefined ? props.tableMaxHeight : maxHeight.value
+    })
     const {
-      filteredList,
+      visibleRangeList,
       loading,
       pagination,
       searchValue,
@@ -32,145 +45,189 @@ export default defineComponent({
       handleSearch,
       handlePageChange,
       handleLimitChange,
-      clearFilters,
+      addVisibleRange,
+      handleRemove: removeVisibleRange,
     } = useVisibleRange()
-    
+
+    watch(searchValue, (val) => {
+      handleSearch(val)
+    })
+
     // 表格列配置
     const tableColumn = computed(
       () =>
         [
           {
-            field: 'userName',
-            label: '用户/组织',
+            field: 'scopeName',
+            label: t('flow.visibleRange.userOrg'),
             width: 200,
             render: ({ row }: { row: any }) => (
               <div class={styles.userCell}>
-                <span class={styles.userIcon}>
-                  {row.userType === '组织' ? '📦' : '👤'}
+                <SvgIcon
+                  name={row.type === 'DEPT' ? 'organization' : 'user-shape'}
+                  size={14}
+                />
+                <span v-bk-tooltips={{ content: row.fullName, disabled: !row.fullName }}>
+                  {row.scopeName}
                 </span>
-                <span>{row.userName}</span>
               </div>
             ),
           },
           {
-            field: 'userType',
-            label: '类型',
+            field: 'type',
+            label: t('flow.stageReviewEdit.type'),
             width: 120,
             render: ({ row }: { row: any }) => {
-              const typeMap: Record<string, 'success' | 'info' | 'warning'> = {
-                组织: 'success',
-                内部用户: 'info',
-                用户组: 'warning',
+              const typeMap: Record<string, { theme: 'info' | 'warning'; label: string }> = {
+                ORG: { theme: 'warning', label: t('flow.visibleRange.org') },
+                USER: { theme: 'info', label: t('flow.visibleRange.user') },
               }
-              return <Tag theme={typeMap[row.userType] || 'info'}>{row.userType}</Tag>
+              const mapped = typeMap[row.type] || { theme: 'info' as const, label: row.type }
+              return <Tag theme={mapped.theme}>{mapped.label}</Tag>
             },
           },
           {
             field: 'groupName',
-            label: '所属组织',
+            label: t('flow.visibleRange.organization'),
+            showOverflowTooltip: true,
+            render: ({ row }: { row: any }) => (
+              <span >{row.type === 'USER' ? (row.userDepartments?.join('/') || '--') : '--'}</span>
+            ),
           },
           {
-            field: 'updatedBy',
-            label: '更新人',
+            field: 'updater',
+            label: t('flow.versionHistory.updater'),
           },
           {
-            field: 'updatedAt',
-            label: '更新时间',
+            field: 'updateTime',
+            label: t('flow.versionHistory.updateTime'),
             width: 180,
           },
           {
             field: 'operation',
-            label: '操作',
+            label: t('flow.versionHistory.operate'),
             width: 100,
             render: ({ row }: { row: any }) => (
-              <Button text theme="primary" onClick={() => handleRemove(row.id)}>
+              <Button text theme="danger" onClick={() => handleRemove(row)}>
                 {t('flow.common.remove')}
               </Button>
             ),
           },
-        ] as Column[],
+        ].filter((col) => {
+          if (props.source === 'release') return !['updater', 'updateTime'].includes(col.field)
+          return true
+        }) as Column[],
     )
 
     const handleAdd = () => {
       orgSelectorRef.value?.openEdit()
-    }
-
-    const handleChange = (value: TreeItem[]) => {
-      console.log('选中数据变化:', value)
-    }
-
-    const handleChangeResult = (result: { name: string; type: string; data: TreeItem[] }[]) => {
-      console.log('格式化结果变化:', result)
+      selectedOrgs.value = []
     }
 
     const handleClosed = () => {
-      console.log('弹窗已关闭')
+      orgSelectorRef.value?.destroy()
     }
 
-    const handleRemove = (id: string) => {
-      console.log('移除:', id)
-      // TODO: 显示确认弹窗
-      // 确认后调用：
-      // await handleRemoveAPI([id]) // 传入ID数组
-      // 然后刷新列表
+    const handleRemove = (row: any) => {
+      InfoBox({
+        theme: 'danger',
+        title: t('flow.common.remove'),
+        content: t('flow.visibleRange.removeConfirm', [row.scopeName]),
+        confirmText: t('flow.common.confirm'),
+        cancelText: t('flow.common.cancel'),
+        onConfirm: () => removeVisibleRange([row.scopeId]),
+      })
     }
     /** 点击确认按钮时触发 */
-    const handleAddConfirm = (result: { name: string; type: string; data: TreeItem[] }[]) => {
-      // result 按 type 分组：org(组织) / user(用户) / virtual(虚拟账号)
-      console.log('确认选择:', result)
-      // TODO: 调用添加接口，然后刷新列表
-      init()
+    async function handleAddConfirm(result: { name: string; type: string; data: TreeItem[] }[]) {
+      const items: AddVisibleRangeItem[] = result.flatMap((group) => {
+        const isOrg = group.type === 'org'
+        return group.data.map((item: Record<string, any>) => ({
+          type: (isOrg ? 'ORG' : 'USER') as 'ORG' | 'USER',
+          scopeId: item.id,
+          scopeName: item.name ?? '',
+          fullName: isOrg ? item.orgPath : (item.name ?? ''),
+          userDepartments: isOrg ? null : (item.organization_paths || (item._displayPath ? [item._displayPath] : [])),
+        }))
+      })
+
+      await addVisibleRange(items)
     }
 
     onMounted(() => {
       init()
     })
-    
+
+    onBeforeUnmount(() => {
+      searchValue.value = ''
+    })
+
     return () => (
-      <div class={styles.visibleRange}>
+      <div class={styles.visibleRange} style={ props.source === 'release' ? { padding: 0 } : { padding: '20px' }}>
         {/* 提示信息 */}
-        <div class={styles.noticeContent}>
+        {props.source === 'release' ? (
+          <bk-tag theme="info" type="stroke" style={{ height: '100%' }}>
+            {{
+              default: () => (
+                <p class={styles.release}>
+                  <SvgIcon name="info-line" size={14} />
+                  <p>
+                    <i18n-t
+                      tag="span"
+                      keypath="flow.visibleRange.visibleRangeDesc"
+                      class={styles.releaseDesc}
+                    >
+                      <span class={styles.noticeBold}>{t('flow.visibleRange.trigger')}</span>
+                    </i18n-t>
+                    <p class={styles.releaseDesc}>{t('flow.visibleRange.visibleRangeDescEg')}</p>
+                  </p>
+                </p>
+              ),
+            }}
+          </bk-tag>
+        ) : (
+          <div class={styles.noticeContent}>
             <div class={styles.noticeTitle}>
-                <SvgIcon class={styles.helpDocumentFill} name="help-document-fill" size={20} />
-                {t('flow.content.visibleRange')}
+              <SvgIcon class={styles.helpDocumentFill} name="help-document-fill" size={20} />
+              {t('flow.content.visibleRange')}
             </div>
-            <i18n-t
-                tag="div"
+            <p class={styles.noticeDesc}>
+              <i18n-t
+                tag="p"
                 keypath="flow.visibleRange.visibleRangeDesc"
-                class={styles.noticeDesc}
-            >
-                <span class={styles.noticeBold}>{t('flow.content.trigger')}</span>
-            </i18n-t>
-        </div>
-        
+              >
+                <span class={styles.noticeBold}>{t('flow.visibleRange.trigger')}</span>
+              </i18n-t>
+              <p>{t('flow.visibleRange.visibleRangeDescEg')}</p>
+            </p>
+          </div>
+        )}
+
         {/* 操作栏 */}
         <div class={styles.toolbar}>
           <Button theme="primary" onClick={handleAdd}>
-            + {t('flow.common.add')}
+            <SvgIcon name="plus" class={styles.addIcon} size={14} /> {t('flow.common.add')}
           </Button>
-          <div class={styles.filters}>
-            <Input
-              v-model={searchValue.value}
-              class={styles.searchInput}
-              placeholder="搜索用户/组织名称"
-              clearable
-              onClear={() => handleSearch('')}
-              onEnter={(value: string) => handleSearch(value)}
-            >
-              {{
-                suffix: () => <Search class={styles.searchIcon} />,
-              }}
-            </Input>
-          </div>
+          <Input
+            v-model={searchValue.value}
+            class={styles.searchInput}
+            placeholder={t('flow.visibleRange.search')}
+            clearable
+            onClear={() => handleSearch('')}
+          >
+            {{
+              suffix: () => <Search class={styles.searchIcon} />,
+            }}
+          </Input>
         </div>
-        
+
         {/* 表格 */}
         <div ref={tableContainerRef} class={styles.tableContainer}>
           <Loading loading={loading.value} mode="spin" theme="primary" size="small">
             <Table
-              data={filteredList.value}
+              data={visibleRangeList.value}
               columns={tableColumn.value}
-              max-height={maxHeight.value}
+              max-height={effectiveMaxHeight.value}
               border={['row', 'outer']}
               remote-pagination
               pagination={pagination.value}
@@ -182,7 +239,7 @@ export default defineComponent({
                   <EmptyTableStatus
                     type={searchValue.value ? 'search-empty' : 'empty'}
                     desc={searchValue.value ? undefined : t('flow.visibleRange.personalOnly')}
-                    onClear={clearFilters}
+                    onClear={() => searchValue.value = ''}
                   />
                 ),
               }}
@@ -192,6 +249,7 @@ export default defineComponent({
 
         {/* 组织选择器（通过 ref 按需打开弹窗） */}
         <BkOrgSelector
+          style={{ display: 'none' }}
           ref={orgSelectorRef}
           v-model={selectedOrgs.value}
           api-base-url={apiBaseUrl}
@@ -199,9 +257,7 @@ export default defineComponent({
           has-user
           virtual-render
           display-mode="simple"
-          onChange={handleChange}
           onConfirm={handleAddConfirm}
-          onChangeResult={handleChangeResult}
           onClosed={handleClosed}
         />
       </div>

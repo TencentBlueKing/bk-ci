@@ -13,6 +13,7 @@ import { computed, defineComponent, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { FLOW_DETAIL_TABS, ROUTE_NAMES } from '../../constants/routes'
+import VisibleRange from '@/views/Flow/Detail/VisibleRange/index'
 import styles from './ReleaseSlider.module.css'
 
 const { FormItem } = Form
@@ -237,6 +238,9 @@ export const ReleaseSlider = defineComponent({
                       </div>
                     </FormItem>
                   </Form>
+
+                  {/* 可见范围 */}
+                  <VisibleRange tableMaxHeight={360} source="release" />
                 </div>
               </Loading>
             ),

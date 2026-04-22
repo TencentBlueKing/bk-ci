@@ -5,9 +5,11 @@ import { get, post, del } from '@/utils/http'
 import { PROCESS_API_URL_PREFIX } from '@/utils/apiUrlPrefix'
 
 export interface VisibleRangeRecord {
-  type: string // USER, ORG, DEPT等
+  type: 'ORG' | 'USER'
   scopeId: string
   scopeName: string
+  fullName: string
+  userDepartments: string[]
 }
 
 export interface VisibleRangeQueryParams {
@@ -15,6 +17,7 @@ export interface VisibleRangeQueryParams {
   pipelineId: string
   page?: number
   pageSize?: number
+  keyword?: string
 }
 
 export interface VisibleRangeListResponse {
@@ -23,9 +26,11 @@ export interface VisibleRangeListResponse {
 }
 
 export interface AddVisibleRangeItem {
-  type: string // DEPT, USER, ORG, GROUP 等
+  type: 'ORG' | 'USER'
   scopeId: string
   scopeName: string
+  fullName: string
+  userDepartments: string[] | null
 }
 
 export interface AddVisibleRangeParams {
@@ -48,13 +53,14 @@ export async function getVisibleRangeList(
   params: VisibleRangeQueryParams,
 ): Promise<VisibleRangeListResponse> {
   try {
-    const { projectId, pipelineId, page, pageSize } = params
+    const { projectId, pipelineId, page, pageSize, keyword } = params
     const response = await get<VisibleRangeListResponse>(
       `${PROCESS_API_URL_PREFIX}/user/pipeline/visibility/${projectId}/${pipelineId}`,
       { 
         params: { 
           page,
           pageSize,
+          keyword,
         } 
       },
     )
@@ -68,7 +74,7 @@ export async function getVisibleRangeList(
  * 添加可用范围
  * @param params 添加参数
  */
-export async function addVisibleRange(params: AddVisibleRangeParams): Promise<void> {
+export async function addVisibleRangeAPI(params: AddVisibleRangeParams): Promise<void> {
   try {
     const { projectId, pipelineId, items } = params
     await post(
@@ -84,7 +90,7 @@ export async function addVisibleRange(params: AddVisibleRangeParams): Promise<vo
  * 移除可用范围
  * @param params 移除参数
  */
-export async function removeVisibleRange(params: RemoveVisibleRangeParams): Promise<void> {
+export async function removeVisibleRangeAPI(params: RemoveVisibleRangeParams): Promise<void> {
   try {
     const { projectId, pipelineId, ids } = params
     await del(

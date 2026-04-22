@@ -1,10 +1,12 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
+import { Message } from 'bkui-vue'
+import { useI18n } from 'vue-i18n'
 import {
   getVisibleRangeList,
-  addVisibleRange,
-  removeVisibleRange,
+  addVisibleRangeAPI,
+  removeVisibleRangeAPI,
   type VisibleRangeRecord,
   type VisibleRangeQueryParams,
   type AddVisibleRangeItem,
@@ -14,6 +16,7 @@ import {
  * 可用范围状态管理
  */
 export const useVisibleRangeStore = defineStore('visibleRange', () => {
+  const { t } = useI18n()
   const route = useRoute()
   const pipelineId = computed(() => route.params.flowId as string)
   const projectId = computed(() => route.params.projectId as string)
@@ -21,7 +24,6 @@ export const useVisibleRangeStore = defineStore('visibleRange', () => {
   const visibleRangeList = ref<VisibleRangeRecord[]>([])
   const loading = ref(false)
   const searchValue = ref('')
-  const selectedType = ref('')
   const pagination = ref({
     current: 1,
     count: 0,
@@ -41,6 +43,7 @@ export const useVisibleRangeStore = defineStore('visibleRange', () => {
         pipelineId: pipelineId.value,
         page: page ?? pagination.value.current,
         pageSize: limit ?? pagination.value.limit,
+        ...(searchValue.value ? {keyword: searchValue.value} : {}),
       }
 
       const res = await getVisibleRangeList(params)
@@ -50,8 +53,11 @@ export const useVisibleRangeStore = defineStore('visibleRange', () => {
         limit: limit ?? pagination.value.limit,
         count: res.count,
       }
-    } catch (error) {
-      console.error('Failed to load visible range list:', error)
+    } catch (error: any) {
+      Message({
+        theme: 'error',
+        message: error?.message || error,
+      })
       visibleRangeList.value = []
     } finally {
       loading.value = false
@@ -89,43 +95,26 @@ export const useVisibleRangeStore = defineStore('visibleRange', () => {
   }
 
   /**
-   * 处理类型筛选
-   * @param type 类型
-   */
-  function handleTypeChange(type: string) {
-    selectedType.value = type
-    pagination.value.current = 1
-    loadVisibleRangeList()
-  }
-
-  /**
-   * 清空筛选
-   */
-  function clearFilters() {
-    searchValue.value = ''
-    selectedType.value = ''
-    pagination.value.current = 1
-    loadVisibleRangeList()
-  }
-
-  /**
    * 添加可用范围
    * @param items 添加数据列表
    */
-  async function handleAdd(items: AddVisibleRangeItem[]) {
+  async function addVisibleRange(items: AddVisibleRangeItem[]) {
     try {
-      await addVisibleRange({
+      await addVisibleRangeAPI({
         projectId: projectId.value,
         pipelineId: pipelineId.value,
         items,
       })
-      // TODO: 添加成功后的处理逻辑
-      // 例如：刷新列表、显示成功提示等
       await loadVisibleRangeList()
-      console.log('添加成功')
-    } catch (error) {
-      console.error('Failed to add visible range:', error)
-      throw error
+      Message({
+        theme: 'success',
+        message: t('flow.content.addSuccess'),
+      })
+    } catch (error: any) {
+      Message({
+        theme: 'error',
+        message: error?.message || error,
+      })
     }
   }
 
@@ -135,18 +124,21 @@ export const useVisibleRangeStore = defineStore('visibleRange', () => {
    */
   async function handleRemove(ids: string[]) {
     try {
-      await removeVisibleRange({
+      await removeVisibleRangeAPI({
         projectId: projectId.value,
         pipelineId: pipelineId.value,
         ids,
       })
-      // TODO: 移除成功后的处理逻辑
-      // 例如：刷新列表、显示成功提示等
       await loadVisibleRangeList()
-      console.log('移除成功')
-    } catch (error) {
-      console.error('Failed to remove visible range:', error)
-      throw error
+      Message({
+        theme: 'success',
+        message: t('flow.visibleRange.removeSuccess'),
+      })
+    } catch (error: any) {
+      Message({
+        theme: 'error',
+        message: error?.message || error,
+      })
     }
   }
 
@@ -155,7 +147,6 @@ export const useVisibleRangeStore = defineStore('visibleRange', () => {
     visibleRangeList,
     loading,
     searchValue,
-    selectedType,
     pagination,
 
     // 方法
@@ -163,9 +154,7 @@ export const useVisibleRangeStore = defineStore('visibleRange', () => {
     handlePageChange,
     handleLimitChange,
     handleSearch,
-    handleTypeChange,
-    clearFilters,
-    handleAdd,
+    addVisibleRange,
     handleRemove,
   }
 })

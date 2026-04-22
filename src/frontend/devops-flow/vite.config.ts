@@ -89,9 +89,17 @@ export default defineConfig(({ mode }) => {
       !isDev && renameHtmlPlugin(`frontend#${PUBLIC_PATH}#index.html`),
     ].filter(Boolean),
     resolve: {
-      alias: {
-        '@': fileURLToPath(new URL('./src', import.meta.url)),
-      },
+      alias: [
+        { find: '@', replacement: fileURLToPath(new URL('./src', import.meta.url)) },
+        // 强制依赖中嵌套引用的 bkui-vue 子路径（如 bkui-vue/lib/icon）都解析到当前项目
+        // 安装的 bkui-vue@2.1.0-beta.7，避免 Vite 预构建时挑到 pnpm 仓库里其它 workspace
+        // 的旧版 bkui-vue@2.0.1，导致 Dialog 渲染出空的 bk-dialog-header
+        {
+          find: /^bkui-vue(\/.*)?$/,
+          replacement: fileURLToPath(new URL('./node_modules/bkui-vue', import.meta.url)) + '$1',
+        },
+      ],
+      dedupe: ['bkui-vue', 'vue'],
     },
     optimizeDeps: {
       exclude: ['bkui-pipeline'],
