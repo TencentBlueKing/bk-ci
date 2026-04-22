@@ -37,14 +37,14 @@ var (
 	modwintrust = windows.NewLazySystemDLL("wintrust.dll")
 	modcrypt32  = windows.NewLazySystemDLL("crypt32.dll")
 
-	procWinVerifyTrust          = modwintrust.NewProc("WinVerifyTrust")
-	procCryptQueryObject        = modcrypt32.NewProc("CryptQueryObject")
-	procCertGetNameStringW      = modcrypt32.NewProc("CertGetNameStringW")
-	procCertFreeCertContext     = modcrypt32.NewProc("CertFreeCertificateContext")
-	procCertCloseStore          = modcrypt32.NewProc("CertCloseStore")
-	procCryptMsgClose           = modcrypt32.NewProc("CryptMsgClose")
-	procCryptMsgGetParam        = modcrypt32.NewProc("CryptMsgGetParam")
-	procCertFindCertInStore     = modcrypt32.NewProc("CertFindCertificateInStore")
+	procWinVerifyTrust      = modwintrust.NewProc("WinVerifyTrust")
+	procCryptQueryObject    = modcrypt32.NewProc("CryptQueryObject")
+	procCertGetNameStringW  = modcrypt32.NewProc("CertGetNameStringW")
+	procCertFreeCertContext = modcrypt32.NewProc("CertFreeCertificateContext")
+	procCertCloseStore      = modcrypt32.NewProc("CertCloseStore")
+	procCryptMsgClose       = modcrypt32.NewProc("CryptMsgClose")
+	procCryptMsgGetParam    = modcrypt32.NewProc("CryptMsgGetParam")
+	procCertFindCertInStore = modcrypt32.NewProc("CertFindCertificateInStore")
 )
 
 const (
