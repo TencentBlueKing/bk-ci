@@ -570,7 +570,8 @@ class PipelineBuildFacadeService(
                 channelCode = channelCode,
                 isMobile = isMobile,
                 resource = resource.let {
-                    if (version == null && !branch.isNullOrBlank()) {
+                    // pac流水线，指定分支执行时才需设置versionName
+                    if (version == null && isPacPipeline && !branch.isNullOrBlank()) {
                         it.copy(versionName = branch)
                     } else {
                         it
