@@ -1219,3 +1219,45 @@ gateway:
     maxReplicas: 3
     targetCPU: 80
     targetMemory: 80
+
+
+# AI Assistant Deployment
+ai:
+  enabled: false
+  replicas: 1
+  podLabels: {}
+  resources:
+    requests:
+      cpu: 500m
+      memory: 2000Mi
+    limits:
+      cpu: 2000m
+      memory: 4000Mi
+  jvm:
+    heapPct: "60.0"
+    initSecs: 30
+  hostAliases: []
+  containerSecurityContext:
+    enabled: false
+    runAsUser: 1001
+    runAsNonRoot: true
+  podSecurityContext:
+    enabled: false
+    fsGroup: 1001
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: []
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
+  podAnnotations: {}
+  priorityClassName: ""
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 80
+    targetMemory: 80

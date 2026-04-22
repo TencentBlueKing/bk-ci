@@ -112,6 +112,12 @@ allprojects {
             }
             dependency("com.perforce:p4java:${Versions.p4}")
             dependency("io.mockk:mockk:${Versions.mockk}")
+            dependencySet("io.agentscope:${Versions.AgentScope}") {
+                entry("agentscope")
+                entry("agentscope-agui-spring-boot-starter")
+                entry("agentscope-extensions-autocontext-memory")
+                entry("agentscope-extensions-session-mysql")
+            }
             dependencySet("io.github.resilience4j:${Versions.Resilience4j}") {
                 entry("resilience4j-circuitbreaker")
                 entry("resilience4j-core")

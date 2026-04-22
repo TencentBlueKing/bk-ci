@@ -55,4 +55,5 @@ object Versions {
     const val JenkinsVersionNumber = "1.1"
     const val devopsScm = "1.1.9"
     const val lettuce = "6.4.2.RELEASE"
+    const val AgentScope = "1.0.11"
 }
