@@ -43,7 +43,7 @@ func (d *DiskIO) Gather() ([]Metric, error) {
 	for name, c := range counters {
 		out = append(out, Metric{
 			Name: MeasurementDiskIO,
-			Tags: map[string]string{TagDevice: name},
+			Tags: map[string]string{TagName: name},
 			Fields: map[string]interface{}{
 				FieldReads:          c.ReadCount,
 				FieldWrites:         c.WriteCount,

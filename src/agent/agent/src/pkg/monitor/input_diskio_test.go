@@ -35,15 +35,15 @@ func TestDiskIO_Gather_AllDevices(t *testing.T) {
 		t.Errorf("want 2 disks, got %d", len(metrics))
 	}
 	for _, m := range metrics {
-		if m.Tags[TagDevice] == "" {
-			t.Errorf("device tag missing: %+v", m.Tags)
+		if m.Tags[TagName] == "" {
+			t.Errorf("name tag missing: %+v", m.Tags)
 		}
 		for _, f := range []string{
 			FieldReads, FieldWrites,
 			FieldReadBytes, FieldWriteBytes,
 		} {
 			if _, ok := m.Fields[f]; !ok {
-				t.Errorf("device %s missing field %s", m.Tags[TagDevice], f)
+				t.Errorf("name %s missing field %s", m.Tags[TagName], f)
 			}
 		}
 	}

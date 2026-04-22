@@ -218,7 +218,8 @@ const (
 	TagHost      = "host"
 	TagCPU       = "cpu"       // cpu measurement: cpu0 / cpu-total
 	TagInterface = "interface" // net measurement
-	TagDevice    = "device"    // disk / diskio measurement
+	TagDevice    = "device"    // disk measurement
+	TagName      = "name"      // diskio measurement（对齐 telegraf inputs.diskio 默认 tag）
 	TagFstype    = "fstype"
 	TagMode      = "mode"
 	TagPath      = "path"
