@@ -488,6 +488,8 @@
     "scheduling": {
         "alertTips": "When assigning nodes to a Job, search for available nodes in the environment according to the following scheduling strategy order. If no nodes are found after all strategies are executed, wait in queue; periodically search for available nodes again, queue timeout is based on Job settings.",
         "addStrategy": "Add Strategy",
+        "strategyName": "Strategy Name",
+        "strategyNamePlaceholder": "Please enter strategy name",
         "adjustSort": "Adjust Sort",
         "finishSort": "Finish Sort",
         "saveSort": "Save Sort",

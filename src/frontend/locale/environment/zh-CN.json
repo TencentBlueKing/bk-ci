@@ -484,6 +484,8 @@
     "scheduling": {
         "alertTips": "给 Job 分配节点时，按照如下调度策略顺序查找环境下的可用节点。当所有策略运行完毕仍然没有获取到节点时，排队等待；逐期重新查找可用节点，排队超时以 Job 设置为准。",
         "addStrategy": "新增策略",
+        "strategyName": "策略名称",
+        "strategyNamePlaceholder": "请输入策略名称",
         "adjustSort": "调整排序",
         "finishSort": "完成排序",
         "saveSort": "保存排序",

@@ -344,7 +344,6 @@
                 line-height: 26px;
                 a {
                     color: $primaryColor;
-                    margin-left: 10px;
                     text-align: right;
                 }
             }
