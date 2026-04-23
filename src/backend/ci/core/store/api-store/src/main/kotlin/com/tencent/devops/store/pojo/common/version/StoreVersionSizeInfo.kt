@@ -3,7 +3,6 @@ package com.tencent.devops.store.pojo.common.version
 import io.swagger.v3.oas.annotations.media.Schema
 import java.math.BigDecimal
 
-
 @Schema(title = "商店组件-版本大小详情")
 data class StoreVersionSizeInfo(
     @Schema(description = "组件Code")
