@@ -206,7 +206,7 @@ export default defineComponent({
         {/* 操作栏 */}
         <div class={styles.toolbar}>
           <Button theme="primary" onClick={handleAdd}>
-            <SvgIcon name="plus" class={styles.addIcon} size={14} /> {t('flow.common.add')}
+            <SvgIcon name="add-small" class={styles.addIcon} size={14} /> {t('flow.common.add')}
           </Button>
           <Input
             v-model={searchValue.value}
