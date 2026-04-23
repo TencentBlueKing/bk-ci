@@ -566,7 +566,7 @@ class DevCloudMacosService @Autowired constructor(
                 logger.error("Debug login request failed for taskId: $taskId, retryCount: $retryCount")
                 break
             }
-            if (debugLoginResponse.actionCode == 0) {
+            if (debugLoginResponse.actionCode == 200) {
                 logger.info(
                     "Debug login successful for taskId: $taskId, actionCode: ${debugLoginResponse.actionCode}"
                 )
