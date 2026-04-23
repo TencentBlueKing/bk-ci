@@ -39,7 +39,9 @@ class PipelineVisibilityDao {
                     USER_DEPARTMENTS,
                     AUTH_USER,
                     CREATOR,
-                    CREATE_TIME
+                    CREATE_TIME,
+                    UPDATER,
+                    UPDATE_TIME
                 ).values(
                     projectId,
                     pipelineId,
@@ -50,6 +52,8 @@ class PipelineVisibilityDao {
                     userDepartments,
                     authUser,
                     userId,
+                    now,
+                    userId,
                     now
                 )
                     .onDuplicateKeyUpdate()
@@ -57,8 +61,8 @@ class PipelineVisibilityDao {
                     .set(FULL_NAME, it.fullName)
                     .set(USER_DEPARTMENTS, userDepartments)
                     .set(AUTH_USER, authUser)
-                    .set(CREATOR, userId)
-                    .set(CREATE_TIME, now)
+                    .set(UPDATER, userId)
+                    .set(UPDATE_TIME, now)
                     .execute()
             }
         }

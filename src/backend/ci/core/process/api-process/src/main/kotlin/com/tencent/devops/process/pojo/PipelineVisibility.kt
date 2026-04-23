@@ -1,6 +1,7 @@
 package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
 
 @Schema(title = "流水线可见范围")
 data class PipelineVisibility(
@@ -13,5 +14,9 @@ data class PipelineVisibility(
     @get:Schema(title = "完整名称", required = true)
     val fullName: String,
     @get:Schema(title = "用户部门信息", required = true)
-    val userDepartments: List<String>? = emptyList()
+    val userDepartments: List<String>? = emptyList(),
+    @get:Schema(title = "更新人")
+    val updater: String? = null,
+    @get:Schema(title = "更新时间")
+    val updateTime: LocalDateTime? = null
 )

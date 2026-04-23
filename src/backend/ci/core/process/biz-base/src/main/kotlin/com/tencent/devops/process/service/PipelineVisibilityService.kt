@@ -145,7 +145,9 @@ class PipelineVisibilityService @Autowired constructor(
                 userDepartments =
                     it.userDepartments?.let { u ->
                         JsonUtil.to(u, object : TypeReference<List<String>>() {})
-                    }
+                    },
+                updater = it.updater,
+                updateTime = it.updateTime
             )
         }
         return SQLPage(
