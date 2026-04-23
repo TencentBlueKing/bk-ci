@@ -74,7 +74,7 @@ class CvdService {
     fun getTaskStatus(taskId: String): CvdTaskStatusResponse {
         val body = mapOf("taskId" to taskId)
         val resp = doPost<CvdApiResponse<CvdTaskStatusResponse>>(
-            path = "/app/cvd/ccTask/taskStatus",
+            path = "/app/cvd/ccTask/status",
             body = body,
             typeRef = object : TypeReference<CvdApiResponse<CvdTaskStatusResponse>>() {}
         )
