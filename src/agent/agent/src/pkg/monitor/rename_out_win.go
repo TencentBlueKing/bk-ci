@@ -88,8 +88,8 @@ var netFieldPDH = map[string]string{
 var diskioFieldPDH = map[string]string{
 	RenamedFieldRkbS: "Disk_Read_Bytes_persec",
 	RenamedFieldWkbS: "Disk_Write_Bytes_persec",
-	FieldReads:       "Disk_Readspersec",
-	FieldWrites:      "Disk_Writespersec",
+	FieldReads:       "Disk_Reads_persec",
+	FieldWrites:      "Disk_Writes_persec",
 }
 
 // ---------------------------------------------------------------------------
@@ -199,6 +199,11 @@ func normalizeWinTags(measurement string, tags map[string]string) map[string]str
 		newTags["objectname"] = objectName
 	}
 
+	// 若 input 层已经预填了 instance（例如 io 的 "0 C:"、net 的 PDH Description），
+	// 就尊重它——只做源 tag（cpu/interface/device/name）的清理，不覆盖 instance。
+	existing, hasInstance := newTags[TagInstance]
+	hasInstance = hasInstance && existing != ""
+
 	var instance string
 	switch measurement {
 	case RenamedCPUDetail:
@@ -207,21 +212,30 @@ func normalizeWinTags(measurement string, tags map[string]string) map[string]str
 			delete(newTags, TagCPU)
 		}
 	case MeasurementNet:
-		if v, ok := newTags[TagInterface]; ok {
-			instance = v
+		if _, ok := newTags[TagInterface]; ok {
+			if !hasInstance {
+				instance = newTags[TagInterface]
+			}
 			delete(newTags, TagInterface)
 		}
 	case RenamedIO:
-		if v, ok := newTags[TagDevice]; ok {
-			instance = v
+		if _, ok := newTags[TagDevice]; ok {
+			if !hasInstance {
+				instance = newTags[TagDevice]
+			}
 			delete(newTags, TagDevice)
-		} else if v, ok := newTags[TagName]; ok {
-			instance = v
+		}
+		if _, ok := newTags[TagName]; ok {
+			if !hasInstance && instance == "" {
+				instance = newTags[TagName]
+			}
 			delete(newTags, TagName)
 		}
 	}
-	if instance != "" {
-		newTags["instance"] = instance
+	if hasInstance {
+		// 保留 input 层已预填的 instance（"0 C:" / PDH Description 等）
+	} else if instance != "" {
+		newTags[TagInstance] = instance
 	}
 	return newTags
 }

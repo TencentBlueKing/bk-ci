@@ -28,25 +28,27 @@ import (
 // diskIndexCacheTTL 是物理盘号缓存的过期时间。
 const diskIndexCacheTTL = 10 * time.Minute
 
-// IOCTL_DISK_PERFORMANCE 对齐 gopsutil disk_windows.go:166。
-const _IOCTL_DISK_PERFORMANCE uint32 = 0x70020
+// IOCTL_STORAGE_GET_DEVICE_NUMBER 返回 STORAGE_DEVICE_NUMBER，其中的
+// DeviceNumber 等于 \\.\PhysicalDriveN 的 N（与 telegraf win_perf_counters
+// PhysicalDisk 的实例前缀一致）。
+//
+// 注意：早先用的 IOCTL_DISK_PERFORMANCE (0x70020) 返回的
+// DISK_PERFORMANCE.StorageDeviceNumber 是存储栈内部递增的"打开计数"，
+// 和 PhysicalDrive 号并不相等（典型表现：系统盘 C: 本该是 0，却报 2/3）。
+// 正确映射必须走 IOCTL_STORAGE_GET_DEVICE_NUMBER。
+const _IOCTL_STORAGE_GET_DEVICE_NUMBER uint32 = 0x2D1080
 
-// diskPerfStruct 对齐 gopsutil disk_windows.go:29-46 的 diskPerformance，
-// 只为拿到 StorageDeviceNumber 字段。保留 alignmentPadding 以支持 32bit。
-type diskPerfStruct struct {
-	BytesRead           int64
-	BytesWritten        int64
-	ReadTime            int64
-	WriteTime           int64
-	IdleTime            int64
-	ReadCount           uint32
-	WriteCount          uint32
-	QueueDepth          uint32
-	SplitCount          uint32
-	QueryTime           int64
-	StorageDeviceNumber uint32
-	StorageManagerName  [8]uint16
-	alignmentPadding    uint32 // 32bit Windows 对齐保留位，见 gopsutil 注释
+// storageDeviceNumber 对齐 Windows SDK STORAGE_DEVICE_NUMBER：
+//
+//	typedef struct _STORAGE_DEVICE_NUMBER {
+//	    DEVICE_TYPE DeviceType;       // DWORD
+//	    DWORD       DeviceNumber;
+//	    DWORD       PartitionNumber;
+//	} STORAGE_DEVICE_NUMBER;
+type storageDeviceNumber struct {
+	DeviceType      uint32
+	DeviceNumber    uint32
+	PartitionNumber uint32
 }
 
 // diskIndexCache 是包级盘符→盘号缓存。由 sync.Mutex 保护，进程启动时为空。
@@ -122,8 +124,9 @@ func scanAllDriveIndices() (map[string]uint32, error) {
 	return out, nil
 }
 
-// ioctlDiskPerformance 打开 \\.\<letter> 设备并调用 IOCTL_DISK_PERFORMANCE，
-// 返回 StorageDeviceNumber。
+// ioctlDiskPerformance 打开 \\.\<letter> 设备并调用
+// IOCTL_STORAGE_GET_DEVICE_NUMBER，返回 PhysicalDrive 号（与 PDH
+// PhysicalDisk 实例前缀一致）。
 func ioctlDiskPerformance(letter string) (uint32, error) {
 	szDevice := fmt.Sprintf(`\\.\%s`, letter)
 	path, err := syscall.UTF16PtrFromString(szDevice)
@@ -144,22 +147,22 @@ func ioctlDiskPerformance(letter string) (uint32, error) {
 	}
 	defer windows.CloseHandle(h)
 
-	var perf diskPerfStruct
+	var sdn storageDeviceNumber
 	var retSize uint32
 	err = windows.DeviceIoControl(
 		h,
-		_IOCTL_DISK_PERFORMANCE,
+		_IOCTL_STORAGE_GET_DEVICE_NUMBER,
 		nil,
 		0,
-		(*byte)(unsafe.Pointer(&perf)),
-		uint32(unsafe.Sizeof(perf)),
+		(*byte)(unsafe.Pointer(&sdn)),
+		uint32(unsafe.Sizeof(sdn)),
 		&retSize,
 		nil,
 	)
 	if err != nil {
-		return 0, errors.Wrap(err, "diskindex: DeviceIoControl")
+		return 0, errors.Wrap(err, "diskindex: DeviceIoControl STORAGE_GET_DEVICE_NUMBER")
 	}
-	return perf.StorageDeviceNumber, nil
+	return sdn.DeviceNumber, nil
 }
 
 // resetDiskIndexCacheForTest 供单测清空缓存，避免跨用例污染。

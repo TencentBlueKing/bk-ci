@@ -4,7 +4,6 @@
 package monitor
 
 import (
-	"errors"
 	"testing"
 	"time"
 )
@@ -104,15 +103,19 @@ func TestAdapterDescCache_ErrorPreservedIfStaleExists(t *testing.T) {
 	// 无法断言具体内容（真机 refresh 可能成功覆盖）
 }
 
-// 保险用例：确保 adapterDescriptions 对 nil cache + scan 失败路径返回 err
-// （通过设置 cache 为 nil 并 trust scan 在不存在的 ABI 环境下不会运行；
-// 这个场景在 Windows 真机上 scan 应当成功，因此用例只在 CI 环境没有网卡
-// 时才真正触发失败分支——可忽略）。
-func TestAdapterDescCache_AlwaysReturnsUsableMap(t *testing.T) {
-	resetAdapterDescCacheForTest()
-	m, err := adapterDescriptions()
-	if err == nil && m == nil {
-		t.Error("success path must return non-nil map")
+// TestPDHEscapeInstance 覆盖 PDH 路径格式 escape：
+// 驱动原始 Description 带圆括号 → PDH instance 带方括号。
+func TestPDHEscapeInstance(t *testing.T) {
+	cases := []struct{ in, want string }{
+		{"Intel(R) Ethernet Connection (17) I219-LM", "Intel[R] Ethernet Connection [17] I219-LM"},
+		{"NGNClient Adapter", "NGNClient Adapter"}, // 无圆括号不变
+		{"", ""},
+		{"Multi(Level)(Nested)", "Multi[Level][Nested]"},
 	}
-	_ = errors.New // 保持 errors import 可用（以防将来扩展）
+	for _, tc := range cases {
+		if got := pdhEscapeInstance(tc.in); got != tc.want {
+			t.Errorf("pdhEscapeInstance(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
 }
+

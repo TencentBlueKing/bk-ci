@@ -87,8 +87,15 @@ func (n *Net) Gather() ([]Metric, error) {
 		if strings.EqualFold(c2.Name, "all") {
 			continue
 		}
-		// 过滤 Loopback / vEthernet / ISATAP / Teredo 等伪接口
+		// 过滤 Loopback / vEthernet / ISATAP / Teredo / VPN 隧道 等伪接口。
+		// Windows 上 gopsutil 返回的 Name 是 FriendlyName（中文系统常为
+		// "以太网 3" / "本地连接 7"），并不匹配 VPN 驱动的 Description
+		// （如 "NGNClient Adapter"）；这里两者都过一遍，任一命中即过滤，
+		// 让 telegraf PDH 默认不采集的虚拟适配器保持对齐。
 		if shouldSkipNetInterface(c2.Name) {
+			continue
+		}
+		if desc := descMap[c2.Name]; desc != "" && shouldSkipNetInterface(desc) {
 			continue
 		}
 		fields := map[string]interface{}{

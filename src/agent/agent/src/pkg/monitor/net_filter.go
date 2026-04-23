@@ -39,9 +39,15 @@ var defaultNetIfaceSkipPrefixes = []string{
 	"utun",  // user tunnel
 	// Windows 伪接口
 	"Loopback Pseudo-Interface",
-	"vEthernet", // vEthernet (WSL (Hyper-V firewall)) 等
-	"isatap.",   // ISATAP tunnel
-	"Teredo",    // IPv6 teredo tunnel
+	"vEthernet",  // vEthernet (WSL (Hyper-V firewall)) 等
+	"isatap.",    // ISATAP tunnel
+	"Teredo",     // IPv6 teredo tunnel
+	"NGNClient",  // VPN 隧道虚拟网卡
+	"TAP-",       // OpenVPN TAP-Windows Adapter Vx
+	"WireGuard",  // WireGuard 隧道
+	"Hyper-V",    // Hyper-V Virtual Ethernet Adapter
+	"WAN Miniport", // Windows 拨号/VPN 虚接口
+	"PANGP",      // GlobalProtect VPN
 }
 
 // shouldSkipNetInterface 返回 true 表示该接口应被过滤，不产出 metric。

@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -88,9 +89,28 @@ func scanAdapterDescriptions() (map[string]string, error) {
 		if friendly == "" {
 			continue
 		}
-		out[friendly] = desc
+		out[friendly] = pdhEscapeInstance(desc)
 	}
 	return out, nil
+}
+
+// pdhEscapeInstance 把驱动原始 Description 里的圆括号替换成方括号，对齐
+// telegraf win_perf_counters 的 PDH instance 字符串（PDH 路径格式把 "("
+// 和 ")" 视为特殊字符，Windows 内部会做这一步 escape）。
+//
+// 例：
+//   Intel(R) Ethernet Connection (17) I219-LM
+//     → Intel[R] Ethernet Connection [17] I219-LM
+//
+// 与 telegraf 历史 instance 字符串 100% 一致，让后端
+// WHERE instance='Intel[R]...' 精确查询能命中 monitor 数据。
+func pdhEscapeInstance(s string) string {
+	if s == "" {
+		return s
+	}
+	s = strings.ReplaceAll(s, "(", "[")
+	s = strings.ReplaceAll(s, ")", "]")
+	return s
 }
 
 // resetAdapterDescCacheForTest 供单测清理缓存，避免跨用例污染。
