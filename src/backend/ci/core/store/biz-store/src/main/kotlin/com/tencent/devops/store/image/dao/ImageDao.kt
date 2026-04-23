@@ -1001,4 +1001,23 @@ class ImageDao {
         return baseStep.where(conditions)
             .fetch()
     }
+
+    fun getPublicImageList(
+        dslContext: DSLContext,
+        imageName: String,
+        pageNum: Int,
+        pageSize: Int
+    ): Result<TImageRecord> {
+        return dslContext.selectFrom(TImage.T_IMAGE)
+            .where(TImage.T_IMAGE.IMAGE_NAME.eq(imageName))
+            .limit(pageNum, pageSize)
+            .fetch()
+    }
+
+    fun countPublicImageList(dslContext: DSLContext, imageName: String): Int {
+        return dslContext.selectCount()
+            .from(TImage.T_IMAGE)
+            .where(TImage.T_IMAGE.IMAGE_NAME.eq(imageName))
+            .fetchOne(0, Int::class.java)!!
+    }
 }

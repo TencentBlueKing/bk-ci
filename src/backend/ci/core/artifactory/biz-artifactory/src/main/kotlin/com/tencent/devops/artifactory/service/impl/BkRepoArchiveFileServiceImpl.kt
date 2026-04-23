@@ -60,6 +60,8 @@ import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.config.BkRepoClientConfig
+import com.tencent.devops.common.archive.pojo.PackageSummary
+import com.tencent.devops.common.archive.pojo.PackageVersion
 import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.util.MimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -716,6 +718,65 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             page += 1
         } while (nodeInfos.size == DEFAULT_PAGE_SIZE)
         return fileNames
+    }
+
+    override fun listVersionPage(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        version: String?,
+        packageKey: String?,
+        pageNumber: Int,
+        pageSize: Int
+    ): Page<PackageVersion> {
+        val result = bkRepoClient.listVersionPage(
+            userId = userId,
+            projectId = projectId,
+            repoName = repoName,
+            version = version,
+            packageKey = packageKey,
+            pageNumber = pageNumber,
+            pageSize = pageSize
+        )
+        return Page(
+            count = result.totalRecords,
+            page = result.pageNumber,
+            pageSize = result.pageSize,
+            totalPages = result.totalPages.toInt(),
+            records = result.records
+        )
+    }
+
+    override fun getPackageInfo(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        packageKey: String
+    ): PackageSummary {
+        return bkRepoClient.getPackageInfo(
+            userId = userId,
+            projectId = projectId,
+            repoName = repoName,
+            packageKey = packageKey,
+        )
+    }
+
+    override fun listPackagePage(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        packageName: String?,
+        pageNumber: Int,
+        pageSize: Int
+    ): List<PackageSummary> {
+        return bkRepoClient.listPackagePage(
+            userId = userId,
+            projectId = projectId,
+            repoName = repoName,
+            packageName = packageName,
+            pageNumber = pageNumber,
+            pageSize = pageSize
+        ).records
     }
 
     companion object {
