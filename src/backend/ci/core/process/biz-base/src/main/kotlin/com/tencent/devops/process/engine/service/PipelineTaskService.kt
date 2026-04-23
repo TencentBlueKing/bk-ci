@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.KEY_VERSION
@@ -56,16 +57,20 @@ import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
+import com.tencent.devops.process.engine.service.record.StageBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.pojo.PipelineProjectRel
 import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
+import com.tencent.devops.process.pojo.task.PipelineFailTaskDetail
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKNAMES
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
+import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASK_DETAILS
 import com.tencent.devops.process.utils.JOB_RETRY_TASK_ID
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
+import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.concurrent.Executors
@@ -98,7 +103,8 @@ class PipelineTaskService @Autowired constructor(
     private val pipelineVariableService: BuildVariableService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineBuildRecordService: PipelineBuildRecordService,
-    private val pipelinePauseExtService: PipelinePauseExtService
+    private val pipelinePauseExtService: PipelinePauseExtService,
+    private val stageBuildRecordService: StageBuildRecordService
 ) {
 
     fun list(projectId: String, pipelineIds: Collection<String>): Map<String, List<PipelineModelTask>> {
@@ -543,12 +549,24 @@ class PipelineTaskService @Autowired constructor(
             containerId = taskRecord.containerId,
             executeCount = taskRecord.executeCount
         ) ?: return
+        val buildRecordStage = stageBuildRecordService.getRecord(
+            transactionContext = null,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = taskRecord.stageId,
+            executeCount = taskRecord.executeCount ?: 1
+        ) ?: return
         val containerName = buildRecordContainer.containerVar[NAME]?.toString() ?: taskRecord.containerId
+        val stageName = buildRecordStage.stageVar[NAME]?.toString() ?: taskRecord.stageId
         val failTask = pipelineVariableService.getVariable(
             projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASKS
         )
         val failTaskNames = pipelineVariableService.getVariable(
             projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASKNAMES
+        )
+        val failTaskDetails = pipelineVariableService.getVariable(
+            projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASK_DETAILS
         )
         try {
             val errorElement = findElementMsg(containerName, taskRecord)
@@ -570,9 +588,40 @@ class PipelineTaskService @Autowired constructor(
             } else {
                 "$failTaskNames,${errorElement.second}"
             }
+            val errorElementDetail = PipelineFailTaskDetail(
+                stepId = taskRecord.stepId ?: "",
+                taskId = taskRecord.taskId,
+                taskName = taskRecord.taskName,
+                jobId = taskRecord.jobId ?: "",
+                jobName = containerName,
+                stageName = stageName,
+                errorMsg = taskRecord.errorMsg ?: ""
+            )
+            val errorElementDetails = if (failTaskDetails.isNullOrBlank()) {
+                listOf(errorElementDetail)
+            } else {
+                val errorElementsDetails = JsonUtil.toOrNull(
+                    failTaskDetails,
+                    object : TypeReference<List<PipelineFailTaskDetail>>() {}
+                )?.toMutableList() ?: mutableListOf()
+                // 避免超长内容被截断，影响后续读取json：先预估加入后的长度，超长则丢弃
+                val newDetailJson = JsonUtil.toJson(errorElementsDetails + errorElementDetail, false)
+                if (newDetailJson.length > PIPELINE_VARIABLES_STRING_LENGTH_MAX) {
+                    logger.warn(
+                        "$buildId|$taskId|$BK_CI_BUILD_FAIL_TASK_DETAILS value too long, " +
+                                "discarding remaining failed information: [$errorElementDetail]"
+                    )
+                } else {
+                    errorElementsDetails.add(errorElementDetail)
+                }
+                errorElementsDetails
+            }.let {
+                JsonUtil.toJson(it, false)
+            }
             val valueMap = mutableMapOf<String, Any>()
             valueMap[BK_CI_BUILD_FAIL_TASKS] = errorElements
             valueMap[BK_CI_BUILD_FAIL_TASKNAMES] = errorElementsName
+            valueMap[BK_CI_BUILD_FAIL_TASK_DETAILS] = errorElementDetails
             pipelineVariableService.batchUpdateVariable(
                 buildId = buildId,
                 projectId = projectId,

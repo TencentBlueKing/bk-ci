@@ -59,6 +59,7 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_EVENT
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_EVENT_URL
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_FAILED_TASKNAMES
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_FAILED_TASKS
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_FAILED_TASK_DETAILS
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_HEAD_REF
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_HEAD_REPO_URL
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ISSUE_DESCRIPTION
@@ -170,6 +171,7 @@ object TriggerBuildParamUtils {
             CI_BUILD_START_TYPE,
             CI_WORKSPACE,
             CI_FAILED_TASKNAMES,
+            CI_FAILED_TASK_DETAILS,
             CI_FAILED_TASKS,
             CI_REMARK
         ).sortedBy {
