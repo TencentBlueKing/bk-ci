@@ -18,7 +18,11 @@
 _M = {}
 -- 判断当前请求属于哪个tag
 function _M:get_tag(ns_config)
-    local gateway_project = ngx.var.project or "bkci"
+    local gateway_project = ngx.var.project
+    if gateway_project == nil or gateway_project == '' then
+        gateway_project = "bkci"
+    end
+
     local devops_service = ngx.var.service
     local devops_project_id = ngx.var.project_id
     local tag = nil
