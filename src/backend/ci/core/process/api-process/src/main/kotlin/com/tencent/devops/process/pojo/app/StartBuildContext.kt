@@ -44,8 +44,8 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
-import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
+import com.tencent.devops.common.pipeline.utils.PipelineParamUtils
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ID
@@ -92,7 +92,6 @@ import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PipelineVarUtil
-import com.tencent.devops.process.utils.PipelineVarUtil.CONTEXT_PREFIX
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -493,12 +492,7 @@ data class StartBuildContext(
             val originStartContexts = HashMap<String, BuildParameters>(realStartParamKeys.size, /* loadFactor */ 1F)
             realStartParamKeys.forEach { key ->
                 pipelineParamMap[key]?.let { param ->
-                    if (CascadePropertyUtils.supportCascadeParam(param.valueType)) {
-                        originStartParams.addAll(fillCascadeParam(param, originStartContexts))
-                    } else {
-                        originStartParams.add(param)
-                        fillContextPrefix(param, originStartContexts)
-                    }
+                    originStartParams.addAll(PipelineParamUtils.getStartParamList(param, originStartContexts))
                 }
             }
             pipelineParamMap.putAll(originStartContexts)
@@ -507,49 +501,6 @@ data class StartBuildContext(
             pipelineParamMap[PIPELINE_BUILD_MSG]?.let { buildMsgParam -> originStartParams.add(buildMsgParam) }
             pipelineParamMap[PIPELINE_RETRY_COUNT]?.let { retryCountParam -> originStartParams.add(retryCountParam) }
 
-            return originStartParams
-        }
-
-        private fun fillContextPrefix(
-            param: BuildParameters,
-            originStartContexts: HashMap<String, BuildParameters>
-        ) {
-            with(param) {
-                if (key.startsWith(CONTEXT_PREFIX)) {
-                    originStartContexts[key] = param
-                } else {
-                    val ctxKey = CONTEXT_PREFIX + key
-                    originStartContexts[ctxKey] = param.copy(key = ctxKey)
-                }
-            }
-        }
-
-        /**
-         * 根据原始值，填充级联参数
-         * xxx = {"repo-name": "xxx/xxx","branch":"master"}
-         * xxx.repo-name = xxx/xxx
-         * xxx.branch = master
-         */
-        private fun fillCascadeParam(
-            param: BuildParameters,
-            originStartContexts: HashMap<String, BuildParameters>
-        ): List<BuildParameters> {
-            val originStartParams = mutableListOf<BuildParameters>()
-            val key = param.key
-            val paramValue = CascadePropertyUtils.parseDefaultValue(key, param.value, param.valueType)
-            val cascadeParam = param.copy(value = paramValue)
-            originStartParams.add(cascadeParam)
-            // 填充下级参数的[variables.]
-            fillContextPrefix(cascadeParam, originStartContexts)
-            CascadePropertyUtils.getCascadeVariableKeyMap(key, param.valueType!!)
-                .forEach { (subKey, paramKey) ->
-                    val subParam = param.copy(
-                        key = paramKey,
-                        value = paramValue[subKey] ?: ""
-                    )
-                    // 填充下级参数的[variables.]
-                    fillContextPrefix(subParam, originStartContexts)
-                }
             return originStartParams
         }
     }

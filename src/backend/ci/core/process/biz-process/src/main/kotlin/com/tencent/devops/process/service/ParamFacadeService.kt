@@ -89,6 +89,8 @@ class ParamFacadeService @Autowired constructor(
                 filterParams.add(addSubPipelineProperties(userId, projectId, pipelineId, it))
             } else if (it.type == BuildFormPropertyType.REPO_REF) {
                 filterParams.add(addRepoRefs(projectId, it))
+            } else if (it.type == BuildFormPropertyType.FORM_LIST) {
+                filterParams.add(addCustomParam(projectId, it))
             } else {
                 filterParams.add(it)
             }
@@ -346,7 +348,8 @@ class ParamFacadeService @Autowired constructor(
             displayCondition = property.displayCondition,
             asInstanceInput = property.asInstanceInput,
             sensitive = property.sensitive,
-            constant = property.constant
+            constant = property.constant,
+            fields = property.fields
         )
     }
 
@@ -431,6 +434,25 @@ class ParamFacadeService @Autowired constructor(
                 projectId = projectId,
                 prop = formProperty
             )
+            it
+        }
+    }
+
+    /**
+     * 自定义参数处理
+     */
+    private fun addCustomParam(
+        projectId: String,
+        formProperty: BuildFormProperty
+    ): BuildFormProperty {
+        return copyFormProperty(
+            property = formProperty,
+            options = listOf()
+        ).let {
+            // 目前自定义参数仅处理一层参数列表，暂不考虑递归情况
+            it.defaultValue = it.fields?.associate {
+                it.id to it.defaultValue.toString()
+            } ?: mapOf<String, String>()
             it
         }
     }
