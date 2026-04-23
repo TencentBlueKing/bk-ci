@@ -324,7 +324,7 @@ class SubPipelineCheckService @Autowired constructor(
         val errorDetails = mutableSetOf<String>()
         subPipelineElementMap.filter {
             !it.key.branch.isNullOrBlank()
-        }.forEach { (subPipeline, _) ->
+        }.forEach { (subPipeline, holderList) ->
             val subProjectId = subPipeline.projectId
             val subPipelineId = subPipeline.pipelineId
             val subPipelineBranch = subPipeline.branch!!
@@ -335,16 +335,25 @@ class SubPipelineCheckService @Autowired constructor(
                 branch = subPipelineBranch
             )
             if (branchVersionResource == null) {
-                errorDetails.add(
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH,
-                        params = arrayOf(
-                            "/console/pipeline/$subProjectId/$subPipelineId",
-                            subPipelineName,
-                            subPipelineBranch
+                holderList.sortedWith(
+                    compareBy(
+                        { it.stageIndex },
+                        { it.containerIndex },
+                        { it.elementIndex }
+                    )
+                ).forEach { holder ->
+                    errorDetails.add(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH,
+                            params = arrayOf(
+                                "${holder.stageIndex}-${holder.containerIndex}-${holder.elementIndex}",
+                                "/console/pipeline/$subProjectId/$subPipelineId",
+                                subPipelineName,
+                                subPipelineBranch
+                            )
                         )
                     )
-                )
+                }
             }
         }
         return errorDetails
