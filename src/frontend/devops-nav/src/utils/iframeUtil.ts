@@ -1,4 +1,5 @@
 import store from '@/store'
+import { AI_IFRAME_ACTIONS, AI_IFRAME_EVENTS } from './constants'
 import eventBus from './eventBus'
 import { goToPage, showLoginPopup, toggleAsidePanel, toggleDialog } from './util'
 interface UrlParam {
@@ -89,7 +90,7 @@ function iframeUtil (router: any) {
     utilMap.goToPage = goToPage
 
     utilMap.syncUrl = function ({ url, refresh = false }: UrlParam): void {
-        const pathname = `${location.pathname.replace(/^\/(\w+)\/(\w+)\/(\S+)$/, '/$1/$2')}${url}`
+        const pathname = `${location.pathname.replace(/^\/([\w-]+)\/([\w-]+)\/(\S+)$/, '/$1/$2')}${url}`
         if (pathname !== router.currentRoute.fullPath) {
             if (refresh) {
                 location.pathname = pathname
@@ -147,6 +148,30 @@ function iframeUtil (router: any) {
 
     utilMap.goHome = function (target: object): void {
         send(target, 'backHome', '')
+    }
+
+    /**
+     * AI 小鲸相关 —— 跨 iframe 上下文桥接。
+     * - 入站：来自 devops-pipeline 子 iframe 的 `UPDATE_SUB_CONTEXT`、来自
+     *   devops-ai iframe 的 `REQUEST_CONTEXT` / `CLOSE_PANEL`。
+     * - 出站：`syncAiContext(target, ctx)` 把合并后的上下文推给 AI iframe。
+     * 使用 postMessage 而不是 localStorage，以保证多浏览器标签页互不污染。
+     */
+    utilMap[AI_IFRAME_ACTIONS.UPDATE_SUB_CONTEXT] = function (params: Record<string, string>) {
+        eventBus.$emit(AI_IFRAME_EVENTS.UPDATE_SUB_CONTEXT, params || {})
+    }
+
+    utilMap[AI_IFRAME_ACTIONS.REQUEST_CONTEXT] = function () {
+        eventBus.$emit(AI_IFRAME_EVENTS.REQUEST_CONTEXT)
+    }
+
+    utilMap[AI_IFRAME_ACTIONS.CLOSE_PANEL] = function () {
+        eventBus.$emit(AI_IFRAME_EVENTS.CLOSE_PANEL)
+    }
+
+    utilMap.syncAiContext = function (target: Window | null | undefined, ctx: Record<string, string>) {
+        if (!target) return
+        send(target, AI_IFRAME_ACTIONS.SYNC_CONTEXT, ctx)
     }
 
     utilMap.leaveConfirmOrder = function (target): void {

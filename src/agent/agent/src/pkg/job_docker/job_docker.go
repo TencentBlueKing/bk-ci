@@ -1,21 +1,12 @@
 package job_docker
 
 import (
-	"context"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
-	"github.com/docker/docker/api/types/registry"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/network"
-	"github.com/docker/docker/client"
-	"github.com/pkg/errors"
-	"github.com/spf13/pflag"
 )
 
 const (
@@ -24,37 +15,27 @@ const (
 	DockerLogDir                = "/data/devops/logs"
 )
 
-type DockerHostInfo struct {
-	ContainerCreateInfo ContainerCreateInfo
-}
-
-type ImagePullInfo struct {
-	ImageName string
-	AuthType  registry.AuthConfig
-}
-
-type ContainerCreateInfo struct {
-	ContainerName    string
-	Config           *container.Config
-	HostConfig       *container.HostConfig
-	NetWorkingConfig *network.NetworkingConfig
-}
-
 func parseApiDockerOptions(o api.DockerOptions) []string {
 	var args []string
 	if len(o.Volumes) > 0 {
 		for _, v := range o.Volumes {
+			if len(strings.TrimSpace(v)) == 0 {
+				continue
+			}
 			args = append(args, "--volume", strings.TrimSpace(v))
 		}
 	}
 
 	if len(o.Mounts) > 0 {
 		for _, m := range o.Mounts {
+			if len(strings.TrimSpace(m)) == 0 {
+				continue
+			}
 			args = append(args, "--mount", strings.TrimSpace(m))
 		}
 	}
 
-	if o.Gpus != "" {
+	if len(strings.TrimSpace(o.Gpus)) != 0 {
 		args = append(args, "--gpus", strings.TrimSpace(o.Gpus))
 	}
 
@@ -64,48 +45,55 @@ func parseApiDockerOptions(o api.DockerOptions) []string {
 
 	if len(o.Network) > 0 {
 		for _, n := range o.Network {
+			if len(strings.TrimSpace(n)) == 0 {
+				continue
+			}
 			args = append(args, "--network", strings.TrimSpace(n))
 		}
 	}
 
-	if o.User != "" {
+	if len(strings.TrimSpace(o.User)) != 0 {
 		args = append(args, "--user", strings.TrimSpace(o.User))
 	}
 
 	return args
 }
 
-func ParseDockerOptions(dockerClient *client.Client, userOptions api.DockerOptions) (*ContainerConfig, error) {
-	// 将指定好的options直接换成args
+func BuildUserDockerArgs(userOptions api.DockerOptions) ([]string, error) {
 	argv := parseApiDockerOptions(userOptions)
-	if len(argv) == 0 {
-		return nil, nil
+	for i := 0; i < len(argv); i++ {
+		switch argv[i] {
+		case "--volume", "--mount", "--network", "--user", "--gpus":
+			if i+1 >= len(argv) || strings.TrimSpace(argv[i+1]) == "" {
+				return nil, fmt.Errorf("docker option %s requires a non-empty value", argv[i])
+			}
+			if argv[i] == "--volume" {
+				argv[i+1] = normalizeVolumeArg(argv[i+1])
+			}
+			i++
+		}
 	}
+	return argv, nil
+}
 
-	// 解析args为flagSet
-	flagSet := pflag.NewFlagSet(os.Args[0], pflag.ContinueOnError)
-	copts := addFlags(flagSet)
-	err := flagSet.Parse(argv)
-	if err != nil {
-		errMsg := fmt.Sprintf("解析用户docker options失败: %s", err.Error())
-		return nil, errors.New(errMsg)
+func normalizeVolumeArg(v string) string {
+	// Only normalize relative host paths. Absolute Unix/Windows paths and named volumes
+	// are returned as-is to avoid incorrectly splitting Windows drive-letter paths.
+	if v == "." || strings.HasPrefix(v, "."+string(filepath.Separator)) || strings.HasPrefix(v, "./") || strings.HasPrefix(v, ".\\") {
+		host, target, ok := strings.Cut(v, ":")
+		if !ok {
+			return v
+		}
+		if abs, err := filepath.Abs(host); err == nil {
+			host = abs
+		}
+		return host + ":" + target
 	}
+	return v
+}
 
-	// Ping daemon 获取os
-	ping, err := dockerClient.Ping(context.Background())
-	if err != nil {
-		errMsg := fmt.Sprintf("ping docker daemon 错误: %s", err.Error())
-		return nil, errors.New(errMsg)
-	}
-
-	// 解析配置为可用docker配置, 目前只有linux支持，所以只使用linux相关配置
-	containerConfig, err := parse(flagSet, copts, ping.OSType)
-	if err != nil {
-		errMsg := fmt.Sprintf("解析用户docker options 为docker配置 错误: %s", err.Error())
-		return nil, errors.New(errMsg)
-	}
-
-	return containerConfig, nil
+func HasCustomNetwork(userOptions api.DockerOptions) bool {
+	return len(userOptions.Network) > 0
 }
 
 // IfPullImage policy 为空，并且容器镜像的标签是 :latest， image-pull-policy 会自动设置为 always
@@ -134,20 +122,20 @@ func IfPullImage(localExist, isLatest bool, policy string) bool {
 	}
 }
 
-// GenerateDockerAuth 创建拉取docker凭据
-func GenerateDockerAuth(user, pass string) (string, error) {
-	if user == "" || pass == "" {
-		return "", nil
+func NeedLocalImageInspect(isLatest bool, policy string) bool {
+	switch policy {
+	case api.ImagePullPolicyAlways.String():
+		return false
+	case api.ImagePullPolicyIfNotPresent.String():
+		return true
+	default:
+		return !isLatest
 	}
+}
 
-	authConfig := registry.AuthConfig{
-		Username: user,
-		Password: pass,
+func EnsureDockerWorkspaceDirs() error {
+	if err := os.MkdirAll(LocalDockerBuildTmpDirName, os.ModePerm); err != nil {
+		return err
 	}
-	encodedJSON, err := json.Marshal(authConfig)
-	if err != nil {
-		return "", err
-	}
-
-	return base64.URLEncoding.EncodeToString(encodedJSON), nil
+	return os.MkdirAll(LocalDockerWorkSpaceDirName, os.ModePerm)
 }

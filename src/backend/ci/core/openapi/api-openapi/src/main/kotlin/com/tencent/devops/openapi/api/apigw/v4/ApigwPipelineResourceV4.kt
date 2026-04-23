@@ -45,6 +45,7 @@ import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
+import com.tencent.devops.process.pojo.pipeline.PipelineCount
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -628,6 +629,27 @@ interface ApigwPipelineResourceV4 {
         @QueryParam("pageSize")
         pageSize: Int? = null
     ): Result<PipelineViewPipelinePage<PipelineInfo>>
+
+    @Operation(
+        summary = "获取列表页列表相关的数目",
+        tags = ["v4_app_pipeline_get_count", "v4_user_pipeline_get_count"]
+    )
+    @GET
+    @Path("/pipeline_count")
+    fun getCount(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<PipelineCount>
 
     @Operation(
         summary = "启用/禁用流水线（修改流水线的并发设置）",

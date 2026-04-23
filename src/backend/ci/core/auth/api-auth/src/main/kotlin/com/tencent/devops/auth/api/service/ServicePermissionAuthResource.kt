@@ -27,6 +27,8 @@
 
 package com.tencent.devops.auth.api.service
 
+import com.tencent.devops.auth.pojo.AuthResourceInfo
+import com.tencent.devops.auth.pojo.dto.PermissionBatchValidateDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
@@ -371,4 +373,54 @@ interface ServicePermissionAuthResource {
         @Parameter(description = "资源Code")
         resourceCode: String
     ): Result<Boolean>
+
+    @POST
+    @Path("/projects/{projectCode}/batch/validate")
+    @Operation(summary = "批量校验用户是否拥有某个资源实例的操作")
+    fun batchValidateUserResourcePermission(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @Parameter(description = "用户ID", required = true)
+        userId: String,
+        @PathParam("projectCode")
+        @Parameter(description = "项目Code", required = true)
+        projectCode: String,
+        @Parameter(description = "权限批量校验实体", required = true)
+        permissionBatchValidateDTO: PermissionBatchValidateDTO
+    ): Result<Map<String, Boolean>>
+
+    @GET
+    @Path("/projects/{projectCode}/resource/byName")
+    @Operation(summary = "根据资源名称精确查询资源")
+    fun getResourceByName(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @Parameter(description = "认证token", required = true)
+        token: String,
+        @PathParam("projectCode")
+        @Parameter(description = "项目Code", required = true)
+        projectCode: String,
+        @QueryParam("resourceType")
+        @Parameter(description = "资源类型", required = true)
+        resourceType: String,
+        @QueryParam("resourceName")
+        @Parameter(description = "资源名称", required = true)
+        resourceName: String
+    ): Result<AuthResourceInfo?>
+
+    @GET
+    @Path("/projects/{projectCode}/resource/byCode")
+    @Operation(summary = "根据资源code精确查询资源")
+    fun getResourceByCode(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @Parameter(description = "认证token", required = true)
+        token: String,
+        @PathParam("projectCode")
+        @Parameter(description = "项目Code", required = true)
+        projectCode: String,
+        @QueryParam("resourceType")
+        @Parameter(description = "资源类型", required = true)
+        resourceType: String,
+        @QueryParam("resourceCode")
+        @Parameter(description = "资源code", required = true)
+        resourceCode: String
+    ): Result<AuthResourceInfo?>
 }

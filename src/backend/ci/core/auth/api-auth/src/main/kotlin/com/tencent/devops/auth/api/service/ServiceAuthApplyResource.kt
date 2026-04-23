@@ -1,7 +1,9 @@
 package com.tencent.devops.auth.api.service
 
 import com.tencent.devops.auth.pojo.ApplyJoinGroupInfo
+import com.tencent.devops.auth.pojo.SearchGroupInfo
 import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
+import com.tencent.devops.auth.pojo.vo.ManagerRoleGroupVO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.Operation
@@ -21,6 +23,20 @@ import jakarta.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceAuthApplyResource {
+    @POST
+    @Path("{projectId}/listGroups")
+    @Operation(summary = "查询可申请的用户组列表")
+    fun listGroupsForApply(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @jakarta.ws.rs.PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "搜索用户组实体", required = true)
+        searchGroupInfo: SearchGroupInfo
+    ): Result<ManagerRoleGroupVO>
+
     @POST
     @Path("applyToJoinGroup")
     @Operation(summary = "申请加入用户组")

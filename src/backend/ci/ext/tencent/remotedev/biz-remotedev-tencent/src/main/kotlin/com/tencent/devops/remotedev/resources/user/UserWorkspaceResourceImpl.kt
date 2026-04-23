@@ -54,6 +54,8 @@ import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faRespData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyRespData
+import com.tencent.devops.remotedev.pojo.LogUploadUrl
+import com.tencent.devops.remotedev.service.CosLogUploadService
 import com.tencent.devops.remotedev.pojo.cvd.CvdCreateTaskRequest
 import com.tencent.devops.remotedev.pojo.cvd.CvdDeleteTaskRequest
 import com.tencent.devops.remotedev.pojo.cvd.CvdPoolDetail
@@ -64,6 +66,7 @@ import com.tencent.devops.remotedev.pojo.cvd.CvdUserPoolInfoResponse
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.ProjectStrategyService
 import com.tencent.devops.remotedev.service.RepositoryService
+import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.cvd.CvdService
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
@@ -84,6 +87,8 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     private val permissionService: PermissionService,
     private val repositoryService: RepositoryService,
     private val projectStrategyService: ProjectStrategyService,
+    private val cosLogUploadService: CosLogUploadService,
+    private val workspaceRecordService: WorkspaceRecordService,
     private val createControl: CreateControl,
     private val startControl: StartControl,
     private val sleepControl: SleepControl,
@@ -290,6 +295,24 @@ class UserWorkspaceResourceImpl @Autowired constructor(
             )
         }
         return Result(projectStrategyService.getStrategy(data))
+    }
+
+    override fun getLogUploadUrl(
+        userId: String
+    ): Result<LogUploadUrl> {
+        return Result(
+            cosLogUploadService.generateLogUploadUrl(
+                userId = userId
+            )
+        )
+    }
+
+    override fun agreeRecord(userId: String, workspaceName: String): Result<Boolean> {
+        workspaceRecordService.agreeRecord(
+            userId = userId,
+            workspaceName = workspaceName
+        )
+        return Result(true)
     }
 
     override fun createCvdTask(

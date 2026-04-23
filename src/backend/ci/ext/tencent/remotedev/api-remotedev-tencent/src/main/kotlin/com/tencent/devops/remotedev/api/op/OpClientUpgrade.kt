@@ -95,4 +95,12 @@ interface OpClientUpgrade {
         opType: ClientUpgradeOpType,
         data: Map<String, String>
     ): Result<Boolean>
+
+    @Operation(summary = "按渠道设置升级版本，根据版本号中的渠道标识自动级联设置")
+    @POST
+    @Path("/set_channel_version")
+    fun setChannelVersion(
+        @QueryParam("version")
+        version: String
+    ): Result<Boolean>
 }

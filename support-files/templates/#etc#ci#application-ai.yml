@@ -1,0 +1,84 @@
+# AI Service Template 服务配置文件模板
+spring:
+  datasource:
+    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_ai?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
+    username: __BK_CI_MYSQL_USER__
+    password: __BK_CI_MYSQL_PASSWORD__
+
+# 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同
+server:
+  port: __BK_CI_AI_API_PORT__
+
+ai:
+  llm:
+    # ---- LLM 模型基础配置 ----
+    base-url: __BK_CI_AI_LLM_BASE_URL__
+    model-name: __BK_CI_AI_MODEL_NAME__
+    # 标准 OpenAI 兼容模式认证（如使用蓝鲸网关则留空）
+    api-key: __BK_CI_AI_LLM_API_KEY__
+    # 蓝鲸 API 网关认证（如使用标准 OpenAI 兼容模式则留空）
+    bk-app-code: __BK_CI_AI_BK_APP_CODE__
+    bk-app-secret: __BK_CI_AI_BK_APP_SECRET__
+
+    # ---- HTTP 传输层超时 ----
+    # TCP 连接超时（秒）
+    connect-timeout-seconds: 10
+    # HTTP 读超时（秒），底层 socket 两次数据包之间的最大等待时间
+    # 流式场景下：首 token 到达前、以及任意两个 SSE chunk 之间都受此约束
+    # 此值应 ≥ execution-timeout-seconds，作为底层兜底
+    read-timeout-seconds: 60
+    # 请求写入超时（秒），prompt 较大时需要一定上传时间
+    write-timeout-seconds: 30
+
+    # ---- 模型调用重试配置 ----
+    # 单次模型调用超时（秒），从发起请求到首元素的等待上限
+    execution-timeout-seconds: 30
+    # 最大尝试次数（含首次调用）
+    max-attempts: 3
+    # 首次重试退避间隔（秒）
+    initial-backoff-seconds: 1
+    # 最大重试退避间隔（秒），退避序列为 1s → 2s（上限 8s）
+    max-backoff-seconds: 8
+    # 退避倍数（指数退避）
+    backoff-multiplier: 2.0
+
+  memory:
+    # ─── 模型硬约束 ──────────────────────────────────────
+    # 128K context window - 8K 输出预留 = 120K
+    max-token: 122880
+    # ─── 压缩触发条件（满足任一即触发）───────────────────
+    # 消息数阈值
+    msg-threshold: 150
+    # token 触发：122880 × 0.75 ≈ 92K tokens
+    token-ratio: 0.75
+    # 低于 8K tokens 不值得压缩
+    min-compression-token-threshold: 8192
+    # ─── 压缩策略 ─────────────────────────────────────────
+    # 保留最近 15 条消息不压缩（窗口小，减少保护数量）
+    last-keep: 15
+    # 压缩后保留 25%（更积极压缩）
+    current-round-compression-ratio: 0.25
+    # ─── 大消息 Offload ───────────────────────────────────
+    # 单条 > 50K 字符（≈20K tokens）才 offload
+    large-payload-threshold: 50000
+    # offload 后保留 5000 字符预览
+    offload-single-preview: 5000
+    # 连续 ≥ 6 条工具消息就触发压缩
+    min-consecutive-tool-messages: 6
+
+agentscope:
+  agui:
+    path-prefix: /agui
+    cors-enabled: false
+    server-side-memory: true
+    emit-tool-call-args: true
+    enable-reasoning: true
+    emit-state-events: true
+
+management:
+  endpoint:
+    health:
+      validate-group-membership: false
+      group:
+        readinessState:
+          enabled: false

@@ -15,13 +15,16 @@ import com.tencent.devops.remotedev.config.RemoteDevBkRepoConfig
 import com.tencent.devops.remotedev.dao.ProjectStartAppLinkDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
+import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceRecordTicketDao
 import com.tencent.devops.remotedev.dao.WorkspaceRecordUserApprovalDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.remotedev.pojo.FeatureSwitchType
+import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
+import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceShared.AssignType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
@@ -36,6 +39,7 @@ import com.tencent.devops.remotedev.service.client.NodeSearchRulesItem
 import com.tencent.devops.remotedev.service.client.NodeSearchSort
 import com.tencent.devops.remotedev.service.client.RemotedevBkRepoClient
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
+import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REMOTEDEV_WORKSPACE_USER_APPROVAL_EXPIRED_DAYS
 import com.tencent.devops.remotedev.utils.RsaUtil
 import java.security.SecureRandom
@@ -65,7 +69,9 @@ class WorkspaceRecordService @Autowired constructor(
     private val configCacheService: ConfigCacheService,
     private val featureSwitchService: FeatureSwitchService,
     private val redisOperation: RedisOperation,
-    private val workspaceSharedDao: WorkspaceSharedDao
+    private val workspaceSharedDao: WorkspaceSharedDao,
+    private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
+    private val workspaceCommon: WorkspaceCommon
 ) {
 
     private val objectMapper = ObjectMapper()
@@ -602,6 +608,38 @@ class WorkspaceRecordService @Autowired constructor(
         }
 
         return updateCount > 0
+    }
+
+    fun agreeRecord(userId: String, workspaceName: String) {
+        val workspace = workspaceDao.fetchAnyWorkspace(
+            dslContext = dslContext,
+            workspaceName = workspaceName
+        ) ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+            params = arrayOf(workspaceName)
+        )
+
+        if (!workspace.ownerType.projectPublicUse() &&
+            !permissionService.checkUserPermission(userId, workspaceName)
+        ) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf(
+                    "You don't have permission to " +
+                        "access workspace $workspaceName"
+                )
+            )
+        }
+
+        workspaceOpHistoryDao.createWorkspaceHistory(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            operator = userId,
+            action = WorkspaceAction.AGREE_RECORD,
+            actionMessage = workspaceCommon.getOpHistory(
+                OpHistoryCopyWriting.AGREE_RECORD
+            )
+        )
     }
 
     companion object {

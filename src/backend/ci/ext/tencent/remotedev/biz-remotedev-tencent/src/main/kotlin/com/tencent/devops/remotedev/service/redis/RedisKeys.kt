@@ -5,6 +5,7 @@ object RedisKeys {
 
     // 基础配置
     const val CLIENT_VERSION_LIMIT = "remotedev:clientVersionLimit" // 客户端版本限制
+    const val CLIENT_VERSION_LIMIT_PROJECT_PREFIX = "remotedev:clientVersionLimit:" // 项目级客户端版本限制前缀
     const val CLIENT_VERSION_WARNING = "remotedev:clientVersionWarning" // 客户端版本warning，会发邮件
     const val PIPELINE_CONFIG_INFO = "remotedev:assignWorkspace.pipelineinfo" // L盘挂载流水线
     const val PIPELINE_CREATE_WORKSPACE_INFO = "remotedev:createWorkspace.pipelineinfo" // 创建实例流水线

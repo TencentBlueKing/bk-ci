@@ -662,6 +662,7 @@ abstract class TemplateReleaseServiceImpl : TemplateReleaseService {
                 storeType = StoreTypeEnum.TEMPLATE.type.toByte()
             ) ?: throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
             val templateResource = client.get(ServicePipelineTemplateV2Resource::class).getTemplateDetails(
+                userId = userId,
                 projectId = projectCode,
                 templateId = templateCode,
                 version = version

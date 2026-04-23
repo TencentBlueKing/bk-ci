@@ -17,7 +17,11 @@ data class IamGroupIdsQueryConditionDTO(
     @get:Schema(title = "操作")
     val action: String? = null,
     @get:Schema(title = "唯一管理员组查询标识")
-    val uniqueManagerGroupsQueryFlag: Boolean? = null
+    val uniqueManagerGroupsQueryFlag: Boolean? = null,
+    @get:Schema(title = "页码，从 1 开始；与 pageSize 同时不传则不分页，返回全部匹配组")
+    val page: Int? = null,
+    @get:Schema(title = "每页条数，最大 200；与 page 同时不传则不分页，返回全部匹配组")
+    val pageSize: Int? = null
 ) {
     fun isQueryByGroupPermissions(): Boolean {
         return relatedResourceType != null

@@ -4,3 +4,6 @@
 - [CHANGELOG-2.1.md](en/CHANGELOG-2.1.md)
 - [CHANGELOG-3.0.md](en/CHANGELOG-3.0.md)
 - [CHANGELOG-3.1.md](en/CHANGELOG-3.1.md)
+- [CHANGELOG-4.0.md](en/CHANGELOG-4.0.md)
+- [CHANGELOG-4.1.md](en/CHANGELOG-4.1.md)
+- [CHANGELOG-4.2.md](en/CHANGELOG-4.2.md)

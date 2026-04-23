@@ -3,16 +3,14 @@ package agent
 import (
 	"runtime"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
-
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 )
 
 func genHeartInfoAndUpgrade(
@@ -113,7 +111,7 @@ func checkUpgrade() bool {
 }
 
 func checkDockerDebug() bool {
-	if systemutil.IsLinux() && config.GAgentConfig.EnableDockerBuild {
+	if config.GAgentConfig.EnableDockerBuild {
 		return true
 	}
 	return false

@@ -40,10 +40,11 @@ import (
 	"net"
 	"time"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/ThinkInAIXYZ/go-mcp/server"
 	"github.com/ThinkInAIXYZ/go-mcp/transport"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 )
 
 const (

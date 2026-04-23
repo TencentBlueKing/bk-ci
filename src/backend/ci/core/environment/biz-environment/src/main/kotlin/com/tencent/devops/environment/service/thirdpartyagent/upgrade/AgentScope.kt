@@ -2,6 +2,7 @@ package com.tencent.devops.environment.service.thirdpartyagent.upgrade
 
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.benmanes.caffeine.cache.LoadingCache
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.environment.pojo.AgentUpgradeType
@@ -170,6 +171,29 @@ class AgentScope @Autowired constructor(private val redisOperation: RedisOperati
         } ?: setOf()
     }
 
+    fun setAgentMaxUpgradeCount(count: Long) {
+        redisOperation.set(
+            key = getAgentMaxUpgradeCountKey(),
+            value = count.toString(),
+            expired = false,
+            isDistinguishCluster = true
+        )
+        distinguishCache.invalidate(getAgentMaxUpgradeCountKey())
+    }
+
+    fun getAgentMaxUpgradeCount() = try {
+        distinguishCache.get(getAgentMaxUpgradeCountKey()).ifBlank { null }?.toLong()
+    } catch (ignore: Exception) {
+        null
+    }
+
+    private fun getAgentMaxUpgradeCountKey() = MAX_UPGRADE_AGENT_COUNT
+
+    private val distinguishCache: LoadingCache<String, String> = Caffeine.newBuilder()
+        .maximumSize(CACHE_SIZE)
+        .expireAfterWrite(Duration.ofMinutes(CACHE_EXPIRE_MIN))
+        .build { key -> redisOperation.get(key, isDistinguishCluster = true) ?: "" }
+
     companion object {
         private const val CACHE_EXPIRE_MIN = 1L
         private const val CACHE_SIZE = 16L
@@ -190,6 +214,8 @@ class AgentScope @Autowired constructor(private val redisOperation: RedisOperati
         private const val FORCE_UPGRADE_AGENT_JDK_SET_KEY = "environment:thirdparty:jdk:force_upgrade"
         private const val FORCE_UPGRADE_AGENT_DOCKER_INIT_FILE_SET_KEY =
             "environment:thirdparty:docker_init_file:force_upgrade"
+
+        private const val MAX_UPGRADE_AGENT_COUNT = "environment:thirdparty:goagent:max_upgrade_count"
 
         private val logger = LoggerFactory.getLogger(AgentScope::class.java)
 

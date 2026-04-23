@@ -31,22 +31,21 @@ import (
 	"os"
 	"time"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"github.com/pkg/errors"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade/download"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade/download"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 )
 
 // DockerFileMd5 缓存，用来计算md5
 var DockerFileMd5 struct {
-	// 目前非linux机器不支持，以及一些机器不使用docker就不用计算md5
+	// 未开启docker构建的机器不用计算md5
 	NeedUpgrade bool
 	FileModTime time.Time
 	Md5         string
@@ -122,6 +121,8 @@ func AgentUpgrade(upgradeItem *api.UpgradeItem, hasBuild bool) {
 	logs.Infof("agentUpgrade|download upgrade files start %+v", upItems)
 	downloadUpgradeFiles(upItems)
 	if upItems.NoChange() {
+		logs.Info("agentUpgrade|all files already up-to-date, nothing to replace")
+		success = true
 		return
 	}
 
@@ -136,7 +137,7 @@ func AgentUpgrade(upgradeItem *api.UpgradeItem, hasBuild bool) {
 }
 
 func SyncDockerInitFileMd5() error {
-	if !systemutil.IsLinux() || !config.GAgentConfig.EnableDockerBuild {
+	if !config.GAgentConfig.EnableDockerBuild {
 		DockerFileMd5.NeedUpgrade = false
 		return nil
 	}

@@ -45,7 +45,6 @@ import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
-import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
@@ -63,7 +62,6 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoServic
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
 import com.tencent.devops.process.engine.utils.PipelineUtils
-import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.yaml.PipelineYamlService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -84,7 +82,6 @@ class PipelineTemplateInstanceReqConverter(
     private val pipelineResourceFactory: PipelineResourceFactory,
     private val pipelineVersionGenerator: PipelineVersionGenerator,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val pipelineYamlService: PipelineYamlService,
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineInfoService: PipelineInfoService,
@@ -248,7 +245,6 @@ class PipelineTemplateInstanceReqConverter(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = newPipelineId,
-                pipelineInfo = pipelineInfo,
                 templateSettingVersion = templateResource.settingVersion,
                 enablePac = enablePac
             )
@@ -382,11 +378,11 @@ class PipelineTemplateInstanceReqConverter(
         userId: String,
         projectId: String,
         pipelineId: String,
-        pipelineInfo: PipelineInfo?,
         templateSettingVersion: Int,
         enablePac: Boolean
     ): PipelineSetting {
-        val templateSetting = pipelineTemplateSettingService.get(
+        val templateSetting = pipelineTemplateSettingService.getWithLabels(
+            userId = userId,
             projectId = projectId,
             templateId = templateId,
             settingVersion = templateSettingVersion
@@ -397,29 +393,24 @@ class PipelineTemplateInstanceReqConverter(
                 pipelineName = pipelineName
             )
         } else {
-            if (pipelineInfo == null) {
-                pipelineRepositoryService.createDefaultSetting(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    pipelineName = pipelineName,
-                    channelCode = ChannelCode.BS
+            pipelineRepositoryService.getSettingWithLabels(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )?.let {
+                TemplateInstanceUtil.instanceSetting(
+                    setting = it,
+                    templateSetting = templateSetting,
+                    overrideTemplateField = overrideTemplateField
                 )
-            } else {
-                pipelineSettingFacadeService.userGetSetting(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    version = pipelineInfo.version
-                ).let {
-                    TemplateInstanceUtil.instanceSetting(
-                        setting = it,
-                        templateSetting = templateSetting,
-                        overrideTemplateField = overrideTemplateField
-                    )
-                }.copy(
-                    pipelineName = pipelineName
-                )
-            }
+            }?.copy(
+                pipelineName = pipelineName
+            ) ?: pipelineRepositoryService.createDefaultSetting(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pipelineName = pipelineName,
+                channelCode = ChannelCode.BS
+            )
         }
         val pacSetting = enablePac.takeIf { it }?.let {
             val pipelineAsCodeSettings =
