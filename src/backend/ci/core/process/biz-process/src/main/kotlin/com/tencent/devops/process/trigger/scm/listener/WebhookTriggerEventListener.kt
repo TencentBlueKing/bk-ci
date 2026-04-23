@@ -126,8 +126,8 @@ class WebhookTriggerEventListener(
                 projectId = projectId,
                 eventId = eventId,
                 status = PipelineTriggerStatus.SUCCEED.name,
-                pipelineId = filePath,
-                pipelineName = filePath,
+                pipelineId = pipelineId,
+                pipelineName = pipelineName,
                 reason = PipelineTriggerReason.TRIGGER_SUCCESS.name,
                 reasonDetail = reasonDetail
             )
@@ -158,8 +158,8 @@ class WebhookTriggerEventListener(
                 projectId = projectId,
                 eventId = eventId,
                 status = PipelineTriggerStatus.FAILED.name,
-                pipelineId = filePath,
-                pipelineName = filePath,
+                pipelineId = pipelineId,
+                pipelineName = pipelineName,
                 reason = PipelineTriggerReason.TRIGGER_FAILED.name,
                 reasonDetail = reasonDetail
             )
