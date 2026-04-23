@@ -1,4 +1,7 @@
-
-test/
 bin/
+.bin/
 .docker-gopath/
+.cursor
+.claude
+.codebuddy
+**.pyc
