@@ -583,8 +583,8 @@ class DevCloudMacosService @Autowired constructor(
         }
 
         if (debugLoginResponse != null && debugLoginResponse.actionCode == 0 && !debugTaskInfo.isExistingDebug) {
+            // Running状态复用已有VM时，debugLogin成功后记录debug信息到debug表
             logger.info("Debug login successful for taskId: $taskId, saving debug history record")
-            // 记录debug信息到debug表（复用已有调试记录时不重复保存）
             debugHistoryDao.saveDebugHistory(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -596,7 +596,7 @@ class DevCloudMacosService @Autowired constructor(
                 newCreatedVm = newCreatedVm,
                 userId = userId
             )
-        } else {
+        } else if (debugLoginResponse == null || debugLoginResponse.actionCode != 0) {
             logger.error(
                 "Debug login failed for taskId: $taskId, " +
                     "actionCode: ${debugLoginResponse?.actionCode}, " +
@@ -811,6 +811,23 @@ class DevCloudMacosService @Autowired constructor(
                     source = buildHistoryRecord.source
                 ) ?: return null
 
+                // VM创建成功后立即记录debug记录，确保定时任务能清理新建的VM
+                logger.info(
+                    "VM created successfully for debug, saving debug history - taskId: $newTaskId, " +
+                        "pipelineId: $pipelineId, buildId: ${buildHistoryRecord.buildId}"
+                )
+                debugHistoryDao.saveDebugHistory(
+                    dslContext = dslContext,
+                    projectId = buildHistoryRecord.projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildHistoryRecord.buildId,
+                    vmSeqId = vmSeqId,
+                    executeCount = executeCount,
+                    taskId = newTaskId,
+                    newCreatedVm = true,
+                    userId = userId
+                )
+
                 DebugTaskInfo(
                     taskId = newTaskId,
                     newCreatedVm = true,
@@ -819,7 +836,8 @@ class DevCloudMacosService @Autowired constructor(
                     os = buildHistoryRecord.os,
                     xcode = buildHistoryRecord.xcode,
                     macOSHwSpec = buildHistoryRecord.macosHwSpec,
-                    source = buildHistoryRecord.source
+                    source = buildHistoryRecord.source,
+                    isExistingDebug = true
                 )
             }
             else -> {
