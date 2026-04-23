@@ -79,6 +79,7 @@ const TelegrafConf = `
 [[inputs.net]]
 
 {{ else }}
+{{ if eq .OutputType "file" }}
 [[outputs.file]]
   files = ["stdout"]
   data_format = "json"
@@ -94,7 +95,7 @@ const TelegrafConf = `
     X-DEVOPS-PROJECT-ID = "{{.ProjectId}}"
     X-DEVOPS-AGENT-ID = "{{.AgentId}}"
     X-DEVOPS-AGENT-SECRET-KEY = "{{.AgentSecret}}"
-{{ end}}
+{{ end }}
 [[inputs.cpu]]
   percpu = true
   totalcpu = true
