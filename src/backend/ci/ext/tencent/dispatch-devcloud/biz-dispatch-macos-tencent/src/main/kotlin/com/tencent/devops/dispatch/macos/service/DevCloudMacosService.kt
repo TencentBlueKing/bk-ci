@@ -557,9 +557,32 @@ class DevCloudMacosService @Autowired constructor(
         )
 
         val debugLoginRequest = DevCloudMacosVmDebugLoginRequest(taskId = taskId)
-        val debugLoginResponse = debugLogin(userId, debugLoginRequest)
+        // 调用debug接口，actionCode非0时重试最多3次，每次间隔1秒
+        val maxRetryCount = 3
+        var debugLoginResponse: DevCloudMacosVmDebugLoginResponse? = null
+        for (retryCount in 0..maxRetryCount) {
+            debugLoginResponse = debugLogin(userId, debugLoginRequest)
+            if (debugLoginResponse == null) {
+                logger.error("Debug login request failed for taskId: $taskId, retryCount: $retryCount")
+                break
+            }
+            if (debugLoginResponse.actionCode == 0) {
+                logger.info(
+                    "Debug login successful for taskId: $taskId, actionCode: ${debugLoginResponse.actionCode}"
+                )
+                break
+            }
+            logger.warn(
+                "Debug login returned non-zero actionCode: ${debugLoginResponse.actionCode}, " +
+                    "actionMessage: ${debugLoginResponse.actionMessage}, taskId: $taskId, " +
+                    "retryCount: $retryCount/$maxRetryCount"
+            )
+            if (retryCount < maxRetryCount) {
+                Thread.sleep(1000)
+            }
+        }
 
-        if (debugLoginResponse != null) {
+        if (debugLoginResponse != null && debugLoginResponse.actionCode == 0) {
             logger.info("Debug login successful for taskId: $taskId, saving debug history record")
             // 记录debug信息到debug表
             debugHistoryDao.saveDebugHistory(
@@ -574,7 +597,11 @@ class DevCloudMacosService @Autowired constructor(
                 userId = userId
             )
         } else {
-            logger.error("Debug login failed for taskId: $taskId")
+            logger.error(
+                "Debug login failed for taskId: $taskId, " +
+                    "actionCode: ${debugLoginResponse?.actionCode}, " +
+                    "actionMessage: ${debugLoginResponse?.actionMessage}"
+            )
         }
 
         return debugLoginResponse
@@ -755,6 +782,18 @@ class DevCloudMacosService @Autowired constructor(
                     macOSHwSpec = buildHistoryRecord.macosHwSpec,
                     source = buildHistoryRecord.source
                 ) ?: return null
+
+                // debug主动开机成功后，将构建记录状态更新为Running
+                val updated = buildHistoryDao.updateStatusToRunning(
+                    dslContext = dslContext,
+                    buildHistoryId = buildHistoryRecord.id,
+                    taskId = newTaskId
+                )
+                logger.info(
+                    "Updated build history status to Running - buildHistoryId: ${buildHistoryRecord.id}, " +
+                        "result: $updated, newTaskId: $newTaskId"
+                )
+
                 DebugTaskInfo(
                     taskId = newTaskId,
                     newCreatedVm = true,
