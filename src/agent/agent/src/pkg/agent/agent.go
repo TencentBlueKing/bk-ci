@@ -31,7 +31,6 @@ import (
 	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/collector"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/monitor"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
@@ -74,7 +73,6 @@ func Run(isDebug bool) {
 	}
 
 	// 数据采集
-	go collector.Collect()
 	safeGo("monitor", monitor.Collect)
 
 	// 定期清理
