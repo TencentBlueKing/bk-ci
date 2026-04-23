@@ -77,7 +77,7 @@ class PipelineTemplateRollbackReqConverter @Autowired constructor(
             projectId = projectId,
             templateId = templateId
         )
-        val baseResource = if (draftVersion != null) {
+        val targetResource = if (draftVersion != null) {
             pipelineTemplateResourceService.getByDraftVersion(
                 projectId = projectId,
                 templateId = templateId,
@@ -91,26 +91,38 @@ class PipelineTemplateRollbackReqConverter @Autowired constructor(
                 version = version
             )
         }
-        val baseSetting = if (draftVersion != null) {
+        val targetSetting = if (draftVersion != null) {
             pipelineTemplateSettingService.getByDraftVersion(
                 projectId = projectId,
                 templateId = templateId,
-                version = baseResource.version,
+                version = targetResource.version,
                 draftVersion = draftVersion
             )
         } else {
             pipelineTemplateSettingService.get(
                 projectId = projectId,
                 templateId = templateId,
-                settingVersion = baseResource.settingVersion
+                settingVersion = targetResource.settingVersion
             )
         }
-        val pTemplateResourceWithoutVersion = PTemplateResourceWithoutVersion(baseResource).copy(
+        // 草稿历史版本回滚,基准版本需使用原始的版本
+        val baseResource = if (draftVersion != null) {
+            targetResource.baseVersion?.let { baseVersion ->
+                pipelineTemplateResourceService.get(
+                    projectId = projectId,
+                    templateId = templateId,
+                    version = baseVersion
+                )
+            }
+        } else {
+            targetResource
+        }
+        val pTemplateResourceWithoutVersion = PTemplateResourceWithoutVersion(targetResource).copy(
             status = VersionStatus.COMMITTING,
             branchAction = null,
             sortWeight = PipelineTemplateConstant.COMMITTING_STATUS_VERSION_SORT_WIGHT,
-            baseVersion = baseResource.baseVersion,
-            baseVersionName = baseResource.baseVersionName,
+            baseVersion = baseResource?.baseVersion,
+            baseVersionName = baseResource?.baseVersionName,
             description = null
         )
         return PipelineTemplateVersionCreateContext(
@@ -120,7 +132,7 @@ class PipelineTemplateRollbackReqConverter @Autowired constructor(
             versionAction = PipelineVersionAction.SAVE_DRAFT,
             pipelineTemplateInfo = pipelineTemplateInfo,
             pTemplateResourceWithoutVersion = pTemplateResourceWithoutVersion,
-            pTemplateSettingWithoutVersion = baseSetting,
+            pTemplateSettingWithoutVersion = targetSetting,
             baseDraftVersion = draftVersion
         )
     }

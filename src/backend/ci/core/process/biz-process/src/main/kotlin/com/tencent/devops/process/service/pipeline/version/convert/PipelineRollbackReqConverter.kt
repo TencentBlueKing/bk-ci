@@ -71,8 +71,7 @@ class PipelineRollbackReqConverter @Autowired constructor(
             pipelineRepositoryService.getPipelineResourceVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = version,
-                includeDraft = true
+                version = version
             )
         } ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -108,7 +107,12 @@ class PipelineRollbackReqConverter @Autowired constructor(
             version = version,
             model = targetResource.model,
             yaml = targetResource.yaml,
-            baseVersion = targetResource.baseVersion,
+            // 草稿历史版本回滚,基准版本需使用原始的版本
+            baseVersion = if (draftVersion != null) {
+                targetResource.baseVersion
+            } else {
+                targetResource.version
+            },
             pipelineSettingWithoutVersion = targetSetting,
             versionStatus = VersionStatus.COMMITTING,
             versionAction = PipelineVersionAction.SAVE_DRAFT,
