@@ -35,8 +35,8 @@ func NewSystem() *System {
 	}
 }
 
-// Name 返回 "system"。
-func (s *System) Name() string { return MeasurementSystem }
+// Name 返回 "load"（规范名：system → load）。
+func (s *System) Name() string { return RenamedLoad }
 
 // Gather 采集 system metric。
 func (s *System) Gather() ([]Metric, error) {
@@ -68,7 +68,7 @@ func (s *System) Gather() ([]Metric, error) {
 	}
 
 	return []Metric{{
-		Name:      MeasurementSystem,
+		Name:      RenamedLoad,
 		Fields:    fields,
 		Timestamp: s.nowFn(),
 	}}, nil

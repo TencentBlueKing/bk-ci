@@ -8,6 +8,11 @@ import (
 	"testing"
 )
 
+// rename.go（非 out / 内部版）退化为直通。测试用例仅验证：
+//   1. nil / 空输入安全
+//   2. 对规范名 metric（input 层直接产出的形态）做 Rename 不改任何内容
+//   3. Rename 不修改入参 slice 的底层数据
+
 func TestRename_Empty(t *testing.T) {
 	if got := Rename(nil); got != nil {
 		t.Errorf("Rename(nil) = %v, want nil", got)
@@ -17,185 +22,151 @@ func TestRename_Empty(t *testing.T) {
 	}
 }
 
-func TestRename_CPU(t *testing.T) {
+func TestRename_PassThrough_CPUDetail(t *testing.T) {
 	in := []Metric{{
-		Name: "cpu",
+		Name: RenamedCPUDetail,
 		Fields: map[string]interface{}{
-			"usage_user":   1.0,
-			"usage_system": 2.0,
-			"usage_idle":   97.0,
-			"usage_iowait": 0.0,
+			RenamedFieldUser:   1.0,
+			RenamedFieldSystem: 2.0,
+			RenamedFieldIdle:   97.0,
+			RenamedFieldIowait: 0.0,
 		},
 	}}
 	got := Rename(in)[0]
-	if got.Name != "cpu_detail" {
-		t.Errorf("measurement should be cpu_detail, got %q", got.Name)
+	if got.Name != RenamedCPUDetail {
+		t.Errorf("measurement should remain %q, got %q", RenamedCPUDetail, got.Name)
 	}
 	wantFields := map[string]interface{}{
-		"user":   1.0,
-		"system": 2.0,
-		"idle":   97.0,
-		"iowait": 0.0,
+		RenamedFieldUser:   1.0,
+		RenamedFieldSystem: 2.0,
+		RenamedFieldIdle:   97.0,
+		RenamedFieldIowait: 0.0,
 	}
 	if !reflect.DeepEqual(got.Fields, wantFields) {
-		t.Errorf("cpu fields mismatch:\n got  %v\n want %v", got.Fields, wantFields)
+		t.Errorf("cpu_detail fields changed:\n got  %v\n want %v", got.Fields, wantFields)
 	}
 }
 
-func TestRename_DiskSpecialCase(t *testing.T) {
-	// disk measurement 下 used_percent 应该 → in_use，而不是 global 的 pct_used
+func TestRename_PassThrough_Disk(t *testing.T) {
 	in := []Metric{{
-		Name: "disk",
+		Name: MeasurementDisk,
 		Fields: map[string]interface{}{
-			"used_percent": 80.0,
-			"total":        100.0,
+			RenamedFieldInUse: 80.0,
+			FieldTotal:        100.0,
 		},
 	}}
 	got := Rename(in)[0]
-	if got.Name != "disk" {
-		t.Errorf("disk measurement should stay 'disk', got %q", got.Name)
+	if got.Name != MeasurementDisk {
+		t.Errorf("disk measurement should remain, got %q", got.Name)
 	}
-	if _, ok := got.Fields["pct_used"]; ok {
-		t.Error("disk.used_percent must not map to pct_used")
-	}
-	if v, ok := got.Fields["in_use"]; !ok || v != 80.0 {
-		t.Errorf("disk.used_percent should map to in_use=80.0, got %v", got.Fields["in_use"])
-	}
-	if v, ok := got.Fields["total"]; !ok || v != 100.0 {
-		t.Errorf("disk.total should stay unchanged, got %v", got.Fields)
+	if v, ok := got.Fields[RenamedFieldInUse]; !ok || v != 80.0 {
+		t.Errorf("in_use should stay, got %v", got.Fields)
 	}
 }
 
-func TestRename_MemUsedPercent(t *testing.T) {
-	// mem measurement 下 used_percent → pct_used（走 global）
+func TestRename_PassThrough_IO(t *testing.T) {
 	in := []Metric{{
-		Name:   "mem",
-		Fields: map[string]interface{}{"used_percent": 42.5, "total": uint64(16000)},
-	}}
-	got := Rename(in)[0]
-	if got.Name != "mem" {
-		t.Errorf("mem measurement should stay, got %q", got.Name)
-	}
-	if v, ok := got.Fields["pct_used"]; !ok || v != 42.5 {
-		t.Errorf("mem.used_percent should map to pct_used=42.5, got %v", got.Fields["pct_used"])
-	}
-	if _, ok := got.Fields["used_percent"]; ok {
-		t.Error("original used_percent should be removed")
-	}
-}
-
-func TestRename_DiskioMeasurementAndFields(t *testing.T) {
-	in := []Metric{{
-		Name: "diskio",
+		Name: RenamedIO,
 		Fields: map[string]interface{}{
-			"read_bytes":  int64(100),
-			"write_bytes": int64(200),
-			"reads":       int64(10),
+			RenamedFieldRkbS: uint64(100),
+			RenamedFieldWkbS: uint64(200),
+			FieldReads:       uint64(10),
 		},
 	}}
 	got := Rename(in)[0]
-	if got.Name != "io" {
-		t.Errorf("diskio -> io, got %q", got.Name)
+	if got.Name != RenamedIO {
+		t.Errorf("io measurement should remain, got %q", got.Name)
 	}
-	if _, ok := got.Fields["rkb_s"]; !ok {
-		t.Error("read_bytes should map to rkb_s")
-	}
-	if _, ok := got.Fields["wkb_s"]; !ok {
-		t.Error("write_bytes should map to wkb_s")
-	}
-	if _, ok := got.Fields["reads"]; !ok {
-		t.Error("reads is not in rename table and should be preserved")
+	for _, k := range []string{RenamedFieldRkbS, RenamedFieldWkbS, FieldReads} {
+		if _, ok := got.Fields[k]; !ok {
+			t.Errorf("field %q should remain", k)
+		}
 	}
 }
 
-func TestRename_SystemToLoad(t *testing.T) {
+func TestRename_PassThrough_Env(t *testing.T) {
 	in := []Metric{{
-		Name:   "system",
-		Fields: map[string]interface{}{"load1": 0.5},
-	}}
-	got := Rename(in)[0]
-	if got.Name != "load" {
-		t.Errorf("system -> load, got %q", got.Name)
-	}
-}
-
-func TestRename_KernelFields(t *testing.T) {
-	in := []Metric{{
-		Name: "kernel",
+		Name: RenamedEnv,
 		Fields: map[string]interface{}{
-			"boot_time":        uint64(1700000000),
-			"processes_forked": uint64(99),
-			"context_switches": uint64(1000), // 不在 rename 表中，保持原样
+			FieldUptime:       uint64(1700000000),
+			RenamedFieldProcs: uint64(99),
 		},
 	}}
 	got := Rename(in)[0]
-	if got.Name != "env" {
-		t.Errorf("kernel -> env, got %q", got.Name)
+	if got.Name != RenamedEnv {
+		t.Errorf("env measurement should remain, got %q", got.Name)
 	}
-	if _, ok := got.Fields["uptime"]; !ok {
-		t.Error("boot_time should map to uptime")
-	}
-	if _, ok := got.Fields["procs"]; !ok {
-		t.Error("processes_forked should map to procs")
-	}
-	if _, ok := got.Fields["context_switches"]; !ok {
-		t.Error("context_switches should be preserved")
+	for _, k := range []string{FieldUptime, RenamedFieldProcs} {
+		if _, ok := got.Fields[k]; !ok {
+			t.Errorf("field %q should remain", k)
+		}
 	}
 }
 
-func TestRename_NetstatTcpFields(t *testing.T) {
+func TestRename_PassThrough_Load(t *testing.T) {
 	in := []Metric{{
-		Name: "netstat",
+		Name:   RenamedLoad,
+		Fields: map[string]interface{}{FieldLoad1: 0.5},
+	}}
+	got := Rename(in)[0]
+	if got.Name != RenamedLoad {
+		t.Errorf("load measurement should remain, got %q", got.Name)
+	}
+}
+
+func TestRename_PassThrough_Netstat(t *testing.T) {
+	in := []Metric{{
+		Name: MeasurementNetstat,
 		Fields: map[string]interface{}{
-			"tcp_established": int64(100),
-			"tcp_time_wait":   int64(50),
-			"tcp_close_wait":  int64(10),
+			RenamedFieldCurTCPEstab:    int64(100),
+			RenamedFieldCurTCPTimeWait: int64(50),
 		},
 	}}
 	got := Rename(in)[0]
-	if _, ok := got.Fields["cur_tcp_estab"]; !ok {
-		t.Error("tcp_established should map to cur_tcp_estab")
+	if got.Name != MeasurementNetstat {
+		t.Errorf("netstat measurement should remain, got %q", got.Name)
 	}
-	if _, ok := got.Fields["cur_tcp_timewait"]; !ok {
-		t.Error("tcp_time_wait should map to cur_tcp_timewait")
-	}
-	if _, ok := got.Fields["cur_tcp_closewait"]; !ok {
-		t.Error("tcp_close_wait should map to cur_tcp_closewait")
+	for _, k := range []string{RenamedFieldCurTCPEstab, RenamedFieldCurTCPTimeWait} {
+		if _, ok := got.Fields[k]; !ok {
+			t.Errorf("field %q should remain", k)
+		}
 	}
 }
 
-func TestRename_PreservesInputSlice(t *testing.T) {
-	// Rename 不得改 input
+func TestRename_DoesNotMutateInput(t *testing.T) {
 	in := []Metric{{
-		Name:   "cpu",
-		Fields: map[string]interface{}{"usage_user": 1.0},
+		Name:   RenamedCPUDetail,
+		Fields: map[string]interface{}{RenamedFieldUser: 1.0},
 	}}
+	origName := in[0].Name
+	origFields := map[string]interface{}{}
+	for k, v := range in[0].Fields {
+		origFields[k] = v
+	}
 	Rename(in)
-	if in[0].Name != "cpu" {
+	if in[0].Name != origName {
 		t.Error("input measurement must not be mutated")
 	}
-	if _, ok := in[0].Fields["usage_user"]; !ok {
-		t.Error("input fields must not be mutated")
+	if !reflect.DeepEqual(in[0].Fields, origFields) {
+		t.Errorf("input fields mutated: %v vs %v", in[0].Fields, origFields)
 	}
 }
 
-func TestRenameWindowsFields(t *testing.T) {
+func TestRenameWindowsFields_PassThrough(t *testing.T) {
 	in := []Metric{{
-		Name: "cpu",
+		Name: RenamedCPUDetail,
 		Fields: map[string]interface{}{
-			"Percent_User_Time":       5.0,
-			"Percent_Privileged_Time": 2.0,
-			"Percent_Idle_Time":       93.0,
+			RenamedFieldUser: 5.0,
+			RenamedFieldIdle: 93.0,
 		},
 	}}
 	got := RenameWindowsFields(in)[0]
-	// measurement 不变，仍然 cpu（等下一步 Rename 处理）
-	if got.Name != "cpu" {
-		t.Errorf("measurement should remain cpu at this stage, got %q", got.Name)
+	if got.Name != RenamedCPUDetail {
+		t.Errorf("measurement should remain, got %q", got.Name)
 	}
-	for _, want := range []string{"user", "system", "idle"} {
+	for _, want := range []string{RenamedFieldUser, RenamedFieldIdle} {
 		if _, ok := got.Fields[want]; !ok {
-			t.Errorf("expected win->unified field %q missing, fields=%v", want, got.Fields)
+			t.Errorf("field %q should remain", want)
 		}
 	}
 }

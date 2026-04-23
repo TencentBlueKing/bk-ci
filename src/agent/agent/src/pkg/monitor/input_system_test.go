@@ -14,7 +14,7 @@ import (
 )
 
 func TestSystem_Name(t *testing.T) {
-	if n := NewSystem().Name(); n != MeasurementSystem {
+	if n := NewSystem().Name(); n != RenamedLoad {
 		t.Errorf("Name() = %q", n)
 	}
 }

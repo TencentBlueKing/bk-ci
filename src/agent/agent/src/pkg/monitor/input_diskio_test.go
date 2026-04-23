@@ -1,5 +1,5 @@
-//go:build !loong64
-// +build !loong64
+//go:build !loong64 && !windows
+// +build !loong64,!windows
 
 package monitor
 
@@ -12,7 +12,7 @@ import (
 )
 
 func TestDiskIO_Name(t *testing.T) {
-	if n := NewDiskIO().Name(); n != MeasurementDiskIO {
+	if n := NewDiskIO().Name(); n != RenamedIO {
 		t.Errorf("Name() = %q", n)
 	}
 }
@@ -40,7 +40,7 @@ func TestDiskIO_Gather_AllDevices(t *testing.T) {
 		}
 		for _, f := range []string{
 			FieldReads, FieldWrites,
-			FieldReadBytes, FieldWriteBytes,
+			RenamedFieldRkbS, RenamedFieldWkbS,
 		} {
 			if _, ok := m.Fields[f]; !ok {
 				t.Errorf("name %s missing field %s", m.Tags[TagName], f)

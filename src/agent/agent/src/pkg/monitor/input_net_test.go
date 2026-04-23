@@ -1,5 +1,5 @@
-//go:build !loong64
-// +build !loong64
+//go:build !loong64 && !windows
+// +build !loong64,!windows
 
 package monitor
 
@@ -55,8 +55,8 @@ func TestNet_Gather_FieldsPresent(t *testing.T) {
 	}
 	metrics, _ := n.Gather()
 	required := []string{
-		FieldBytesRecv, FieldBytesSent,
-		FieldPacketsRecv, FieldPacketsSent,
+		RenamedFieldSpeedRecv, RenamedFieldSpeedSent,
+		RenamedFieldSpeedPacketsRecv, RenamedFieldSpeedPacketsSent,
 		FieldErrIn, FieldErrOut,
 		FieldDropIn, FieldDropOut,
 	}

@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"runtime"
 	"strconv"
 	"time"
 
@@ -39,8 +40,8 @@ func NewCPU() *CPU {
 	}
 }
 
-// Name 返回 measurement 名 "cpu"。
-func (c *CPU) Name() string { return MeasurementCPU }
+// Name 返回 measurement 名 "cpu_detail"（规范名，对齐 BK-CI 后端）。
+func (c *CPU) Name() string { return RenamedCPUDetail }
 
 // Gather 采集每核 + total 的 cpu 使用率 metric。
 //
@@ -80,8 +81,8 @@ func (c *CPU) Gather() ([]Metric, error) {
 			continue
 		}
 		out = append(out, Metric{
-			Name:      MeasurementCPU,
-			Tags:      map[string]string{TagCPU: id},
+			Name:      RenamedCPUDetail,
+			Tags:      map[string]string{TagInstance: id},
 			Fields:    fields,
 			Timestamp: now,
 		})
@@ -110,18 +111,26 @@ func diffCPUToFields(prev, cur cpu.TimesStat) map[string]interface{} {
 		}
 		return 100 * d / totalDelta
 	}
-	return map[string]interface{}{
-		FieldUsageUser:      round4(pct(cur.User, prev.User)),
-		FieldUsageSystem:    round4(pct(cur.System, prev.System)),
-		FieldUsageIdle:      round4(pct(cur.Idle, prev.Idle)),
+	fields := map[string]interface{}{
+		RenamedFieldUser:    round4(pct(cur.User, prev.User)),
+		RenamedFieldSystem:  round4(pct(cur.System, prev.System)),
+		RenamedFieldIdle:    round4(pct(cur.Idle, prev.Idle)),
 		FieldUsageNice:      round4(pct(cur.Nice, prev.Nice)),
-		FieldUsageIowait:    round4(pct(cur.Iowait, prev.Iowait)),
+		RenamedFieldIowait:  round4(pct(cur.Iowait, prev.Iowait)),
 		FieldUsageIrq:       round4(pct(cur.Irq, prev.Irq)),
 		FieldUsageSoftirq:   round4(pct(cur.Softirq, prev.Softirq)),
 		FieldUsageSteal:     round4(pct(cur.Steal, prev.Steal)),
 		FieldUsageGuest:     round4(pct(cur.Guest, prev.Guest)),
 		FieldUsageGuestNice: round4(pct(cur.GuestNice, prev.GuestNice)),
 	}
+	// Windows 专属派生字段：Percent_Processor_Time = 100 - idle。
+	// 兼容 telegraf win_perf_counters 时代的看板/告警（Linux/macOS 的 telegraf
+	// inputs.cpu 原生没有该字段，保持一致不输出）。
+	if runtime.GOOS == "windows" {
+		idle := round4(pct(cur.Idle, prev.Idle))
+		fields[WinFieldPercentProcessorTime] = round4(100 - idle)
+	}
+	return fields
 }
 
 // round4 把浮点数保留 4 位小数，避免 JSON 中 0.12345678 这种冗长输出。

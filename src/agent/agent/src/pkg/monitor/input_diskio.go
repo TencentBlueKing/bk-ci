@@ -1,5 +1,5 @@
-//go:build !loong64
-// +build !loong64
+//go:build !loong64 && !windows
+// +build !loong64,!windows
 
 package monitor
 
@@ -29,8 +29,8 @@ func NewDiskIO() *DiskIO {
 	}
 }
 
-// Name 返回 measurement 名 "diskio"。
-func (d *DiskIO) Name() string { return MeasurementDiskIO }
+// Name 返回 measurement 名 "io"（规范名）。
+func (d *DiskIO) Name() string { return RenamedIO }
 
 // Gather 每个磁盘产出一条 metric。没有 IO 统计时返回空列表，不报错。
 func (d *DiskIO) Gather() ([]Metric, error) {
@@ -42,13 +42,13 @@ func (d *DiskIO) Gather() ([]Metric, error) {
 	out := make([]Metric, 0, len(counters))
 	for name, c := range counters {
 		out = append(out, Metric{
-			Name: MeasurementDiskIO,
+			Name: RenamedIO,
 			Tags: map[string]string{TagName: name},
 			Fields: map[string]interface{}{
 				FieldReads:          c.ReadCount,
 				FieldWrites:         c.WriteCount,
-				FieldReadBytes:      c.ReadBytes,
-				FieldWriteBytes:     c.WriteBytes,
+				RenamedFieldRkbS:    c.ReadBytes,
+				RenamedFieldWkbS:    c.WriteBytes,
 				FieldReadTime:       c.ReadTime,
 				FieldWriteTime:      c.WriteTime,
 				FieldIOTime:         c.IoTime,

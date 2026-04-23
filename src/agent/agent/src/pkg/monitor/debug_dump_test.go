@@ -41,7 +41,7 @@ func TestDumper_WithDebugFile_WritesJSONLine(t *testing.T) {
 	d := NewMonitorDumper(dir)
 	d.Dump([]Metric{{
 		Name:      MeasurementCPU,
-		Tags:      map[string]string{TagCPU: "cpu0"},
+		Tags:      map[string]string{TagInstance: "cpu0"},
 		Fields:    map[string]interface{}{RenamedFieldUser: 1.5},
 		Timestamp: fixedNow,
 	}})
@@ -70,7 +70,7 @@ func TestDumper_WithDebugFile_WritesJSONLine(t *testing.T) {
 	if line.Name != MeasurementCPU {
 		t.Errorf("name = %q", line.Name)
 	}
-	if line.Tags[TagCPU] != "cpu0" {
+	if line.Tags[TagInstance] != "cpu0" {
 		t.Errorf("tag cpu missing: %v", line.Tags)
 	}
 	if v, _ := line.Fields[RenamedFieldUser].(float64); v != 1.5 {

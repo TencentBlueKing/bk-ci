@@ -1,5 +1,5 @@
-//go:build !loong64
-// +build !loong64
+//go:build !loong64 && !windows
+// +build !loong64,!windows
 
 package monitor
 
@@ -51,14 +51,14 @@ func (n *Net) Gather() ([]Metric, error) {
 			Name: MeasurementNet,
 			Tags: map[string]string{TagInterface: s.Name},
 			Fields: map[string]interface{}{
-				FieldBytesSent:   s.BytesSent,
-				FieldBytesRecv:   s.BytesRecv,
-				FieldPacketsSent: s.PacketsSent,
-				FieldPacketsRecv: s.PacketsRecv,
-				FieldErrIn:       s.Errin,
-				FieldErrOut:      s.Errout,
-				FieldDropIn:      s.Dropin,
-				FieldDropOut:     s.Dropout,
+				RenamedFieldSpeedSent:        s.BytesSent,
+				RenamedFieldSpeedRecv:        s.BytesRecv,
+				RenamedFieldSpeedPacketsSent: s.PacketsSent,
+				RenamedFieldSpeedPacketsRecv: s.PacketsRecv,
+				FieldErrIn:                   s.Errin,
+				FieldErrOut:                  s.Errout,
+				FieldDropIn:                  s.Dropin,
+				FieldDropOut:                 s.Dropout,
 			},
 			Timestamp: now,
 		})

@@ -41,12 +41,12 @@ func (s *Swap) Gather() ([]Metric, error) {
 	return []Metric{{
 		Name: MeasurementSwap,
 		Fields: map[string]interface{}{
-			FieldTotal:       sm.Total,
-			FieldUsed:        sm.Used,
-			FieldFree:        sm.Free,
-			FieldUsedPercent: sm.UsedPercent,
-			FieldSwapIn:      sm.Sin,
-			FieldSwapOut:     sm.Sout,
+			FieldTotal:          sm.Total,
+			FieldUsed:           sm.Used,
+			FieldFree:           sm.Free,
+			RenamedFieldPctUsed: sm.UsedPercent,
+			FieldSwapIn:         sm.Sin,
+			FieldSwapOut:        sm.Sout,
 		},
 		Timestamp: s.nowFn(),
 	}}, nil

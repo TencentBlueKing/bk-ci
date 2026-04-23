@@ -56,19 +56,27 @@ func (m *Mem) Gather() ([]Metric, error) {
 		return nil, errors.New("mem: VirtualMemory returned nil")
 	}
 
+	// pct_used 自算 100 * used / total。不能直接用 gopsutil 的 vm.UsedPercent：
+	// 在 Windows 上 gopsutil v3 mem_windows.go 对 UsedPercent 做了整数运算，
+	// 会得到 43/48 这种整数值而非 43.64 的小数，和 telegraf win_perf_counters
+	// 的浮点精度对不上（issue: 对比 bin/test.log 观察到）。
+	var pctUsed float64
+	if vm.Total > 0 {
+		pctUsed = 100 * float64(vm.Used) / float64(vm.Total)
+	}
 	fields := map[string]interface{}{
-		FieldTotal:        vm.Total,
-		FieldAvailable:    vm.Available,
-		FieldUsed:         vm.Used,
-		FieldFree:         vm.Free,
-		FieldUsedPercent:  vm.UsedPercent,
-		FieldBuffered:     vm.Buffers,
-		FieldCached:       vm.Cached,
-		FieldActive:       vm.Active,
-		FieldInactive:     vm.Inactive,
-		FieldSlab:         vm.Slab,
-		FieldWired:        vm.Wired,
-		FieldShared:       vm.Shared,
+		FieldTotal:          vm.Total,
+		FieldAvailable:      vm.Available,
+		FieldUsed:           vm.Used,
+		FieldFree:           vm.Free,
+		RenamedFieldPctUsed: pctUsed,
+		FieldBuffered:       vm.Buffers,
+		FieldCached:         vm.Cached,
+		FieldActive:         vm.Active,
+		FieldInactive:       vm.Inactive,
+		FieldSlab:           vm.Slab,
+		FieldWired:          vm.Wired,
+		FieldShared:         vm.Shared,
 	}
 	// available_percent 不是 gopsutil 直接字段，参照 telegraf 的公式：
 	// 100 * available / total（total 为 0 时跳过）。

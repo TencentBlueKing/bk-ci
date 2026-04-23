@@ -33,7 +33,7 @@ func TestSwap_Gather_Success(t *testing.T) {
 	}
 	for _, f := range []string{
 		FieldTotal, FieldUsed, FieldFree,
-		FieldUsedPercent, FieldSwapIn, FieldSwapOut,
+		RenamedFieldPctUsed, FieldSwapIn, FieldSwapOut,
 	} {
 		if _, ok := metrics[0].Fields[f]; !ok {
 			t.Errorf("missing %q", f)

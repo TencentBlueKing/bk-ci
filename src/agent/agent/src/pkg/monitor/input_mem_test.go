@@ -59,9 +59,9 @@ func TestMem_Gather_Success(t *testing.T) {
 		t.Errorf("timestamp = %v, want %v", got.Timestamp, ts)
 	}
 
-	// 校验 telegraf 对齐的必备 field 都存在
+	// 校验 telegraf 对齐的必备 field 都存在（used_percent 已规范化为 pct_used）
 	required := []string{
-		"total", "available", "used", "free", "used_percent",
+		"total", "available", "used", "free", "pct_used",
 		"buffered", "cached", "active", "inactive", "slab",
 		"wired", "shared", "available_percent",
 	}

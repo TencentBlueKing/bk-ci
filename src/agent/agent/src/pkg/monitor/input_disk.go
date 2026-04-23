@@ -78,7 +78,7 @@ func (d *Disk) Gather() ([]Metric, error) {
 			FieldTotal:        usage.Total,
 			FieldFree:         usage.Free,
 			FieldUsed:         usage.Used,
-			FieldUsedPercent:  usage.UsedPercent,
+			RenamedFieldInUse: usage.UsedPercent,
 			FieldInodesTotal:  usage.InodesTotal,
 			FieldInodesFree:   usage.InodesFree,
 			FieldInodesUsed:   usage.InodesUsed,

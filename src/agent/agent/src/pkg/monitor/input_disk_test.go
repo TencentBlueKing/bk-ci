@@ -117,7 +117,7 @@ func TestDisk_Gather_FieldsPresent(t *testing.T) {
 	}
 	metrics, _ := d.Gather()
 	required := []string{
-		FieldTotal, FieldFree, FieldUsed, FieldUsedPercent,
+		FieldTotal, FieldFree, FieldUsed, RenamedFieldInUse,
 		FieldInodesTotal, FieldInodesFree, FieldInodesUsed,
 		FieldInodesUsedPercent,
 	}

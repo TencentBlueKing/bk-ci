@@ -87,17 +87,17 @@ const (
 	FieldInodesUsedPercent = "inodes_used_percent"
 
 	// diskio
-	FieldReadBytes       = "read_bytes"
-	FieldWriteBytes      = "write_bytes"
-	FieldReads           = "reads"
-	FieldWrites          = "writes"
-	FieldReadTime        = "read_time"
-	FieldWriteTime       = "write_time"
-	FieldIOTime          = "io_time"
-	FieldWeightedIOTime  = "weighted_io_time"
-	FieldIOPSInProgress  = "iops_in_progress"
-	FieldMergedReads     = "merged_reads"
-	FieldMergedWrites    = "merged_writes"
+	FieldReadBytes      = "read_bytes"
+	FieldWriteBytes     = "write_bytes"
+	FieldReads          = "reads"
+	FieldWrites         = "writes"
+	FieldReadTime       = "read_time"
+	FieldWriteTime      = "write_time"
+	FieldIOTime         = "io_time"
+	FieldWeightedIOTime = "weighted_io_time"
+	FieldIOPSInProgress = "iops_in_progress"
+	FieldMergedReads    = "merged_reads"
+	FieldMergedWrites   = "merged_writes"
 
 	// net
 	FieldBytesSent   = "bytes_sent"
@@ -130,7 +130,7 @@ const (
 	FieldLoad15       = "load15"
 	FieldNCPUs        = "n_cpus"
 	FieldNUsers       = "n_users"
-	FieldUptime       = "uptime"        // system 下用 uptime（也是 kernel.boot_time 改名后的目标）
+	FieldUptime       = "uptime" // system 下用 uptime（也是 kernel.boot_time 改名后的目标）
 	FieldUptimeFormat = "uptime_format"
 
 	// kernel
@@ -161,10 +161,10 @@ const (
 	RenamedFieldIowait = "iowait"
 
 	// net
-	RenamedFieldSpeedRecv         = "speed_recv"
-	RenamedFieldSpeedSent         = "speed_sent"
-	RenamedFieldSpeedPacketsRecv  = "speed_packets_recv"
-	RenamedFieldSpeedPacketsSent  = "speed_packets_sent"
+	RenamedFieldSpeedRecv        = "speed_recv"
+	RenamedFieldSpeedSent        = "speed_sent"
+	RenamedFieldSpeedPacketsRecv = "speed_packets_recv"
+	RenamedFieldSpeedPacketsSent = "speed_packets_sent"
 
 	// mem
 	RenamedFieldPctUsed = "pct_used"
@@ -202,6 +202,7 @@ const (
 	WinFieldPercentUserTime       = "Percent_User_Time"
 	WinFieldPercentPrivilegedTime = "Percent_Privileged_Time"
 	WinFieldPercentIdleTime       = "Percent_Idle_Time"
+	WinFieldPercentProcessorTime  = "Percent_Processor_Time"
 	WinFieldBytesReceivedPerSec   = "Bytes_Received_persec"
 	WinFieldBytesSentPerSec       = "Bytes_Sent_persec"
 	WinFieldPacketsReceivedPerSec = "Packets_Received_persec"
@@ -224,6 +225,7 @@ const (
 	TagMode      = "mode"
 	TagPath      = "path"
 	TagSource    = "source" // monitor / collector 区分上报来源
+	TagInstance  = "instance"
 
 	// 全局 tag（由 reporter 从 config 注入）
 	TagProjectID   = "projectId"

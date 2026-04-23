@@ -79,7 +79,10 @@ const TelegrafConf = `
 [[inputs.net]]
 
 {{ else }}
-
+[[outputs.file]]
+  files = ["stdout"]
+  data_format = "json"
+{{ else }}
 [[outputs.http]]
   url = "{{.Gateway}}/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrics"
   # timeout = "5s"
@@ -91,7 +94,7 @@ const TelegrafConf = `
     X-DEVOPS-PROJECT-ID = "{{.ProjectId}}"
     X-DEVOPS-AGENT-ID = "{{.AgentId}}"
     X-DEVOPS-AGENT-SECRET-KEY = "{{.AgentSecret}}"
-
+{{ end}}
 [[inputs.cpu]]
   percpu = true
   totalcpu = true

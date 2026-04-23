@@ -40,17 +40,17 @@ func TestNetstat_Gather_CountsByState(t *testing.T) {
 		t.Fatalf("want 1 metric, got %d", len(metrics))
 	}
 	f := metrics[0].Fields
-	if v, _ := f[FieldTCPEstablished].(int64); v != 2 {
-		t.Errorf("established = %v, want 2", f[FieldTCPEstablished])
+	if v, _ := f[RenamedFieldCurTCPEstab].(int64); v != 2 {
+		t.Errorf("established = %v, want 2", f[RenamedFieldCurTCPEstab])
 	}
-	if v, _ := f[FieldTCPTimeWait].(int64); v != 1 {
-		t.Errorf("time_wait = %v", f[FieldTCPTimeWait])
+	if v, _ := f[RenamedFieldCurTCPTimeWait].(int64); v != 1 {
+		t.Errorf("time_wait = %v", f[RenamedFieldCurTCPTimeWait])
 	}
-	if v, _ := f[FieldTCPListen].(int64); v != 1 {
-		t.Errorf("listen = %v", f[FieldTCPListen])
+	if v, _ := f[RenamedFieldCurTCPListen].(int64); v != 1 {
+		t.Errorf("listen = %v", f[RenamedFieldCurTCPListen])
 	}
-	if v, _ := f[FieldTCPCloseWait].(int64); v != 1 {
-		t.Errorf("close_wait = %v", f[FieldTCPCloseWait])
+	if v, _ := f[RenamedFieldCurTCPCloseWait].(int64); v != 1 {
+		t.Errorf("close_wait = %v", f[RenamedFieldCurTCPCloseWait])
 	}
 	if v, _ := f[FieldUDPSocket].(int64); v != 2 {
 		t.Errorf("udp = %v", f[FieldUDPSocket])
@@ -73,10 +73,10 @@ func TestNetstat_Gather_AllStateFieldsPresent(t *testing.T) {
 	}
 	metrics, _ := n.Gather()
 	required := []string{
-		FieldTCPEstablished, FieldTCPSynSent, FieldTCPSynRecv,
-		FieldTCPFinWait1, FieldTCPFinWait2, FieldTCPTimeWait,
-		FieldTCPClose, FieldTCPCloseWait, FieldTCPLastAck,
-		FieldTCPListen, FieldTCPClosing, FieldTCPNone,
+		RenamedFieldCurTCPEstab, RenamedFieldCurTCPSynSent, RenamedFieldCurTCPSynRecv,
+		RenamedFieldCurTCPFinWait1, RenamedFieldCurTCPFinWait2, RenamedFieldCurTCPTimeWait,
+		RenamedFieldCurTCPClosed, RenamedFieldCurTCPCloseWait, RenamedFieldCurTCPLastAck,
+		RenamedFieldCurTCPListen, RenamedFieldCurTCPClosing, FieldTCPNone,
 		FieldUDPSocket,
 	}
 	for _, f := range required {

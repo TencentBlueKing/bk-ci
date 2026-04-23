@@ -29,19 +29,19 @@ func NewKernel() *Kernel {
 	}
 }
 
-// Name 返回 "kernel"。
-func (k *Kernel) Name() string { return MeasurementKernel }
+// Name 返回 "env"（规范名：kernel → env）。
+func (k *Kernel) Name() string { return RenamedEnv }
 
-// Gather 至少返回 boot_time。
+// Gather 至少返回 uptime（规范名；由 kernel.boot_time 改名而来）。
 func (k *Kernel) Gather() ([]Metric, error) {
 	bt, err := k.bootTimeFn()
 	if err != nil {
 		return nil, errors.Wrap(err, "kernel: BootTime failed")
 	}
 	return []Metric{{
-		Name: MeasurementKernel,
+		Name: RenamedEnv,
 		Fields: map[string]interface{}{
-			FieldBootTime: bt,
+			FieldUptime: bt,
 		},
 		Timestamp: k.nowFn(),
 	}}, nil

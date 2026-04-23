@@ -25,7 +25,7 @@ func fakeCPUTimes(pcpu, total []cpu.TimesStat, err error) func(bool) ([]cpu.Time
 }
 
 func TestCPU_Name(t *testing.T) {
-	if n := NewCPU().Name(); n != MeasurementCPU {
+	if n := NewCPU().Name(); n != RenamedCPUDetail {
 		t.Errorf("Name() = %q", n)
 	}
 }
@@ -95,7 +95,7 @@ func TestCPU_Gather_SecondCallProducesMetrics(t *testing.T) {
 	// 找 cpu0，断言 user=50, idle=50
 	var cpu0 *Metric
 	for i := range metrics {
-		if metrics[i].Tags[TagCPU] == "cpu0" {
+		if metrics[i].Tags[TagInstance] == "cpu0" {
 			cpu0 = &metrics[i]
 			break
 		}
@@ -103,11 +103,11 @@ func TestCPU_Gather_SecondCallProducesMetrics(t *testing.T) {
 	if cpu0 == nil {
 		t.Fatal("cpu0 metric missing")
 	}
-	if v, ok := cpu0.Fields[FieldUsageUser].(float64); !ok || v != 50 {
-		t.Errorf("usage_user = %v, want 50", cpu0.Fields[FieldUsageUser])
+	if v, ok := cpu0.Fields[RenamedFieldUser].(float64); !ok || v != 50 {
+		t.Errorf("user = %v, want 50", cpu0.Fields[RenamedFieldUser])
 	}
-	if v, ok := cpu0.Fields[FieldUsageIdle].(float64); !ok || v != 50 {
-		t.Errorf("usage_idle = %v, want 50", cpu0.Fields[FieldUsageIdle])
+	if v, ok := cpu0.Fields[RenamedFieldIdle].(float64); !ok || v != 50 {
+		t.Errorf("idle = %v, want 50", cpu0.Fields[RenamedFieldIdle])
 	}
 }
 

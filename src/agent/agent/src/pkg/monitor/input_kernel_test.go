@@ -10,7 +10,7 @@ import (
 )
 
 func TestKernel_Name(t *testing.T) {
-	if n := NewKernel().Name(); n != MeasurementKernel {
+	if n := NewKernel().Name(); n != RenamedEnv {
 		t.Errorf("Name() = %q", n)
 	}
 }
@@ -24,8 +24,11 @@ func TestKernel_Gather_Success(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if v, _ := metrics[0].Fields[FieldBootTime].(uint64); v != 1700000000 {
-		t.Errorf("boot_time = %v", metrics[0].Fields[FieldBootTime])
+	if metrics[0].Name != RenamedEnv {
+		t.Errorf("measurement = %q, want env", metrics[0].Name)
+	}
+	if v, _ := metrics[0].Fields[FieldUptime].(uint64); v != 1700000000 {
+		t.Errorf("uptime = %v", metrics[0].Fields[FieldUptime])
 	}
 }
 
