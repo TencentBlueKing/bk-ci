@@ -30,7 +30,6 @@ package com.tencent.devops.auth.resources.service
 import com.tencent.devops.auth.api.service.ServiceAuthMetadataResource
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
-import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
 import com.tencent.devops.auth.service.AuthAiService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
