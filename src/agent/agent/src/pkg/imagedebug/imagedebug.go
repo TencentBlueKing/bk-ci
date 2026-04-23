@@ -3,37 +3,31 @@ package imagedebug
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/dockercli"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job_docker"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/mount"
-	"github.com/docker/docker/api/types/network"
-	"github.com/docker/docker/client"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/sync/errgroup"
 )
 
 const (
-	imageDebugIntervalInSeconds = 5
-	entryPointCmd               = "while true; do sleep 5m; done"
-	ImageDebugMaxHoldHour       = 24
-	DebugContainerHeader        = "bkcidebug-"
+	entryPointCmd         = "while true; do sleep 5m; done"
+	ImageDebugMaxHoldHour = 24
+	DebugContainerHeader  = "bkcidebug-"
 )
 
 var imageDebugLogs *logrus.Entry
@@ -166,14 +160,12 @@ func CreateDebugContainer(
 	containerReady *OnceChan[string],
 	debugDone *OnceChan[struct{}],
 ) error {
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		imageDebugLogs.Error("create docker client error ", err)
-		return errors.New(i18n.Localize("LinkDockerError", map[string]interface{}{"err": err}))
-	}
+	runner := dockercli.NewRunner(systemutil.GetWorkDir(), func(format string, args ...interface{}) {
+		imageDebugLogs.Infof(format, args...)
+	})
 
 	// 先判断本地是否存在已经运行的容器
-	containerId, ok, err := checkLoclRunningContainer(ctx, cli, debugInfo.BuildId, debugInfo.VmSeqId)
+	containerId, ok, err := checkLoclRunningContainer(ctx, runner, debugInfo.BuildId, debugInfo.VmSeqId)
 	if err != nil {
 		return errors.Wrap(err, "check local running container error")
 	}
@@ -192,20 +184,12 @@ func CreateDebugContainer(
 	imageName := strings.TrimSpace(debugInfo.Image)
 
 	// 判断本地是否已经有镜像了
-	images, err := cli.ImageList(ctx, types.ImageListOptions{})
+	localExist, err := runner.ImageExists(ctx, imageName)
 	if err != nil {
 		imageDebugLogs.Error("list docker images error ", err)
 		return errors.New(i18n.Localize("GetDockerImagesError", map[string]interface{}{"err": err}))
 	}
-	localExist := false
 	imageStr := strings.TrimPrefix(strings.TrimPrefix(imageName, "http://"), "https://")
-	for _, image := range images {
-		for _, tagName := range image.RepoTags {
-			if tagName == imageStr {
-				localExist = true
-			}
-		}
-	}
 
 	imageStrSub := strings.Split(imageStr, ":")
 	isLatest := false
@@ -219,21 +203,14 @@ func CreateDebugContainer(
 	}
 
 	if job_docker.IfPullImage(localExist, isLatest, api.ImagePullPolicyIfNotPresent.String()) {
-		auth, err := job_docker.GenerateDockerAuth(debugInfo.Credential.User, debugInfo.Credential.Password)
-		if err != nil {
-			imageDebugLogs.WithError(err).Errorf("pull new image generateDockerAuth %s error ", imageName)
-			return errors.New(i18n.Localize("PullImageError", map[string]interface{}{"name": imageName, "err": err.Error()}))
-		}
-		reader, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{
-			RegistryAuth: auth,
-		})
+		pullOut, err := runner.PullImage(ctx, imageName, debugInfo.Credential.User, debugInfo.Credential.Password)
 		if err != nil {
 			imageDebugLogs.WithError(err).Errorf("pull new image %s error", imageName)
 			return errors.New(i18n.Localize("PullImageError", map[string]interface{}{"name": imageName, "err": err.Error()}))
 		}
-		defer reader.Close()
-		buf := new(strings.Builder)
-		_, _ = io.Copy(buf, reader)
+		if strings.TrimSpace(pullOut) != "" {
+			imageDebugLogs.Info(pullOut)
+		}
 	}
 
 	// 创建docker构建机运行准备空间，拉取docker构建机初始化文件
@@ -245,60 +222,15 @@ func CreateDebugContainer(
 		return errors.New(errMsg)
 	}
 
-	// 解析docker options
-	dockerConfig, err := job_docker.ParseDockerOptions(cli, debugInfo.Options)
-	if err != nil {
-		imageDebugLogs.Error(err.Error())
-		return err
-	}
-
 	// 创建容器
 	containerName := fmt.Sprintf("%s%s-%s-%s", DebugContainerHeader, debugInfo.BuildId, debugInfo.VmSeqId, util.RandStringRunes(8))
-	mounts, err := parseContainerMounts(debugInfo)
+	createArgs, err := buildDebugCreateArgs(containerName, imageStr, debugInfo)
 	if err != nil {
-		errMsg := i18n.Localize("ReadDockerMountsError", map[string]interface{}{"err": err.Error()})
+		errMsg := i18n.Localize("CreateContainerError", map[string]interface{}{"name": containerName, "err": err.Error()})
 		imageDebugLogs.Error(err)
 		return errors.New(errMsg)
 	}
-
-	var confg *container.Config
-	var hostConfig *container.HostConfig
-	var netConfig *network.NetworkingConfig
-	if dockerConfig != nil {
-		confg = dockerConfig.Config
-		confg.Image = imageStr
-		confg.Cmd = []string{}
-		confg.Entrypoint = []string{"/bin/sh", "-c", entryPointCmd}
-		confg.Env = parseContainerEnv(debugInfo)
-
-		hostConfig = dockerConfig.HostConfig
-		hostConfig.Mounts = append(hostConfig.Mounts, mounts...)
-
-		if len(debugInfo.Options.Network) == 0 {
-			hostConfig.NetworkMode = container.NetworkMode("bridge")
-		}
-		netConfig = dockerConfig.NetworkingConfig
-	} else {
-		confg = &container.Config{
-			Image:      imageStr,
-			Cmd:        []string{},
-			Entrypoint: []string{"/bin/sh", "-c", entryPointCmd},
-			Env:        parseContainerEnv(debugInfo),
-		}
-
-		hostConfig = &container.HostConfig{
-			Mounts:      mounts,
-			NetworkMode: container.NetworkMode("bridge"),
-		}
-
-		netConfig = nil
-	}
-
-	if v, ok := envs.FetchEnv(constant.DevopsAgentDockerCapAdd); ok && strings.TrimSpace(v) != "" {
-		hostConfig.CapAdd = append(hostConfig.CapAdd, v)
-	}
-
-	creatResp, err := cli.ContainerCreate(ctx, confg, hostConfig, netConfig, nil, containerName)
+	creatID, err := runner.CreateContainer(ctx, createArgs)
 	if err != nil {
 		imageDebugLogs.WithError(err).Errorf("create container %s error", containerName)
 		return errors.New(i18n.Localize("CreateContainerError", map[string]interface{}{"name": containerName, "err": err.Error()}))
@@ -306,67 +238,47 @@ func CreateDebugContainer(
 
 	defer func() {
 		// 登录调试结束或者登录调试错误都关闭容器，为了保证停止和删除不复用context
-		containerStopTimeout := 0
-		if err := cli.ContainerStop(context.Background(), creatResp.ID, container.StopOptions{Timeout: &containerStopTimeout}); err != nil {
-			imageDebugLogs.Warnf("stop container %s error %s", creatResp.ID, err.Error())
+		if err := runner.StopContainer(context.Background(), creatID); err != nil {
+			imageDebugLogs.Warnf("stop container %s error %s", creatID, err.Error())
 		}
-		if err = cli.ContainerRemove(context.Background(), creatResp.ID, types.ContainerRemoveOptions{Force: true}); err != nil {
-			imageDebugLogs.Errorf("remove container %s error %s", creatResp.ID, err.Error())
+		if err = runner.RemoveContainer(context.Background(), creatID); err != nil {
+			imageDebugLogs.Errorf("remove container %s error %s", creatID, err.Error())
 		}
 		containerReady.SafeClose()
 	}()
 
 	// 启动容器
-	if err := cli.ContainerStart(ctx, creatResp.ID, types.ContainerStartOptions{}); err != nil {
-		imageDebugLogs.Error(fmt.Sprintf("start container %s error ", creatResp.ID), err)
+	if err := runner.StartContainer(ctx, creatID); err != nil {
+		imageDebugLogs.Error(fmt.Sprintf("start container %s error ", creatID), err)
 		return errors.New(i18n.Localize("StartContainerError", map[string]interface{}{"name": containerName, "err": err.Error()}))
 	}
 
 	// 等待容器结束，处理错误信息
-	statusCh, errCh := cli.ContainerWait(ctx, creatResp.ID, container.WaitConditionNotRunning)
-
 	// docker 容器已经准备就绪了
-	containerReady.C <- creatResp.ID
+	containerReady.C <- creatID
+
+	waitDone := make(chan struct{})
+	var waitCode int64
+	var waitErr error
+	go func() {
+		defer close(waitDone)
+		waitCode, waitErr = runner.WaitContainer(ctx, creatID)
+	}()
 
 	select {
-	case err := <-errCh:
-		if err != nil {
-			imageDebugLogs.Error(fmt.Sprintf("wait container %s over error ", creatResp.ID), err)
-			return errors.New(i18n.Localize("WaitContainerError", map[string]interface{}{"name": containerName, "err": err.Error()}))
+	case <-waitDone:
+		if waitErr != nil {
+			imageDebugLogs.Error(fmt.Sprintf("wait container %s over error ", creatID), waitErr)
+			return errors.New(i18n.Localize("WaitContainerError", map[string]interface{}{"name": containerName, "err": waitErr.Error()}))
 		}
-	case status := <-statusCh:
-		if status.Error != nil {
-			imageDebugLogs.Error(fmt.Sprintf("wait container %s over error ", creatResp.ID), status.Error)
-			return errors.New(i18n.Localize("WaitContainerError", map[string]interface{}{"name": containerName, "err": status.Error.Message}))
-		} else {
-			if status.StatusCode != 0 {
-				imageDebugLogs.Warn(fmt.Sprintf("wait container %s over status not 0, exit code %d", creatResp.ID, status.StatusCode))
-				msg := ""
-
-				// 这里可能就是docker最开始执行时报错，拿一下docker log，如果原本有docker.log 则容器日志上传为debug日志，否则上传为结束日志
-				containerLogB, err := cli.ContainerLogs(context.Background(), creatResp.ID, types.ContainerLogsOptions{
-					ShowStdout: true,
-					ShowStderr: true,
-				})
-				var containerLog = ""
-				if err == nil {
-					buf := new(strings.Builder)
-					_, err := io.Copy(buf, containerLogB)
-					if err != nil {
-						imageDebugLogs.Error("copy container error", err)
-						containerLog = ""
-					} else {
-						containerLog = buf.String()
-					}
-				} else {
-					imageDebugLogs.Error("get container error", err)
-				}
-
-				msg = containerLog
-				return errors.New(i18n.Localize("ContainerExitCodeNotZero", map[string]interface{}{"name": containerName, "code": status.StatusCode, "msg": msg}))
+		if waitCode != 0 {
+			imageDebugLogs.Warn(fmt.Sprintf("wait container %s over status not 0, exit code %d", creatID, waitCode))
+			containerLog, err := runner.ContainerLogs(context.Background(), creatID)
+			if err != nil {
+				imageDebugLogs.Error("get container error", err)
 			}
+			return errors.New(i18n.Localize("ContainerExitCodeNotZero", map[string]interface{}{"name": containerName, "code": waitCode, "msg": containerLog}))
 		}
-	// 登录调试结束或者登录调试错误都关闭容器，为了保证停止和删除不复用context
 	case <-debugDone.C:
 		return nil
 	case <-ctx.Done():
@@ -375,86 +287,79 @@ func CreateDebugContainer(
 	return nil
 }
 
-func checkLoclRunningContainer(ctx context.Context, cli *client.Client, buildId string, vmId string) (string, bool, error) {
-	conList, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+func checkLoclRunningContainer(ctx context.Context, runner *dockercli.Runner, buildId string, vmId string) (string, bool, error) {
+	conList, err := runner.ListContainers(ctx, false)
 	if err != nil {
 		return "", false, err
 	}
 
 	findName := fmt.Sprintf("dispatch-%s-%s-", buildId, vmId)
 	for _, c := range conList {
-		for _, n := range c.Names {
-			if strings.Contains(n, findName) {
-				return c.ID, true, nil
-			}
+		if strings.Contains(c.Name, findName) {
+			return c.ID, true, nil
 		}
 	}
 
 	return "", false, nil
 }
 
-// parseContainerMounts 解析生成容器挂载内容
-func parseContainerMounts(debugInfo *api.ImageDebug) ([]mount.Mount, error) {
-	var mounts []mount.Mount
+func buildDebugCreateArgs(containerName, image string, debugInfo *api.ImageDebug) ([]string, error) {
+	userArgs, err := job_docker.BuildUserDockerArgs(debugInfo.Options)
+	if err != nil {
+		return nil, err
+	}
+	mountArgs, err := parseDebugContainerMountArgs(debugInfo)
+	if err != nil {
+		return nil, err
+	}
+	args := []string{"--name", containerName}
+	args = append(args, userArgs...)
+	if !job_docker.HasCustomNetwork(debugInfo.Options) {
+		args = append(args, "--network", "bridge")
+	}
+	for _, e := range parseDebugContainerEnv(debugInfo) {
+		args = append(args, "-e", e)
+	}
+	if v, ok := envs.FetchEnv(constant.DevopsAgentDockerCapAdd); ok && strings.TrimSpace(v) != "" {
+		args = append(args, "--cap-add", strings.TrimSpace(v))
+	}
+	args = append(args, mountArgs...)
+	args = append(args, "--entrypoint", "/bin/sh", image, "-c", entryPointCmd)
+	return args, nil
+}
 
-	// 默认绑定本机的java用来执行worker，因为仅支持linux容器所以仅限linux构建机绑定
-	if systemutil.IsLinux() {
-		javaDir := config.GAgentConfig.JdkDirPath
-		mounts = append(mounts, mount.Mount{
-			Type:     mount.TypeBind,
-			Source:   javaDir,
-			Target:   "/usr/local/jre",
-			ReadOnly: true,
-		})
+func parseDebugContainerMountArgs(debugInfo *api.ImageDebug) ([]string, error) {
+	var args []string
+	if config.GAgentConfig.JdkDirPath != "" {
+		args = append(args, "--mount", fmt.Sprintf("type=bind,source=%s,target=%s,readonly", config.GAgentConfig.JdkDirPath, "/usr/local/jre"))
 	}
 
 	workDir := systemutil.GetWorkDir()
-
-	// 创建并挂载data和log
-	// data目录优先选择用户自定的工作空间
-	dataDir := ""
-	if debugInfo.Workspace == "" {
+	dataDir := debugInfo.Workspace
+	if dataDir == "" {
 		dataDir = fmt.Sprintf("%s/%s/data/%s/%s", workDir, job_docker.LocalDockerWorkSpaceDirName, debugInfo.PipelineId, debugInfo.VmSeqId)
-	} else {
-		dataDir = debugInfo.Workspace
 	}
 	err := systemutil.MkDir(dataDir)
 	if err != nil && !os.IsExist(err) {
 		return nil, errors.Wrapf(err, "create local data dir %s error", dataDir)
 	}
-	mounts = append(mounts, mount.Mount{
-		Type:     mount.TypeBind,
-		Source:   dataDir,
-		Target:   constant.DockerDataDir,
-		ReadOnly: false,
-	})
+	args = append(args, "--mount", fmt.Sprintf("type=bind,source=%s,target=%s", dataDir, constant.DockerDataDir))
 
 	logsDir := fmt.Sprintf("%s/%s/logs/%s/%s", workDir, job_docker.LocalDockerWorkSpaceDirName, debugInfo.BuildId, debugInfo.VmSeqId)
 	err = systemutil.MkDir(logsDir)
 	if err != nil && !os.IsExist(err) {
 		return nil, errors.Wrapf(err, "create local logs dir %s error", logsDir)
 	}
-	mounts = append(mounts, mount.Mount{
-		Type:     mount.TypeBind,
-		Source:   logsDir,
-		Target:   job_docker.DockerLogDir,
-		ReadOnly: false,
-	})
-
-	return mounts, nil
+	args = append(args, "--mount", fmt.Sprintf("type=bind,source=%s,target=%s", logsDir, job_docker.DockerLogDir))
+	return args, nil
 }
 
-// parseContainerEnv 解析生成容器环境变量
-func parseContainerEnv(_ *api.ImageDebug) []string {
-	var envs []string
-
-	// 默认传入环境变量用来构建
-	envs = append(envs, "devops_project_id="+config.GAgentConfig.ProjectId)
-	envs = append(envs, "devops_gateway="+config.GetGateWay())
-	// 通过环境变量区分agent docker
-	envs = append(envs, "agent_build_env=DOCKER")
-
-	return envs
+func parseDebugContainerEnv(_ *api.ImageDebug) []string {
+	return []string{
+		"devops_project_id=" + config.GAgentConfig.ProjectId,
+		"devops_gateway=" + config.GetGateWay(),
+		"agent_build_env=DOCKER",
+	}
 }
 
 func CreateExecServer(
@@ -473,7 +378,7 @@ func CreateExecServer(
 		Address:        "0.0.0.0",
 		Port:           port,
 		ServCert:       &CertConfig{},
-		DockerEndpoint: "unix:///var/run/docker.sock",
+		DockerEndpoint: dockercli.RuntimeSocketFromBinary(dockercli.RuntimeBinary()),
 		Privilege:      false,
 		Cmd:            []string{"/bin/bash"},
 		Tty:            true,

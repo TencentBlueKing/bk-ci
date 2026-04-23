@@ -33,25 +33,20 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strings"
 	"text/template"
 	"time"
 
+	"github.com/influxdata/telegraf/agent"
+	telegrafConfig "github.com/influxdata/telegraf/config"
+	"github.com/influxdata/telegraf/logger"
 	"github.com/pkg/errors"
 
 	telegrafconf "github.com/TencentBlueKing/bk-ci/agent/src/pkg/collector/telegrafConf"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
-	"github.com/influxdata/telegraf/logger"
-
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-
-	"github.com/influxdata/telegraf/agent"
-	telegrafConfig "github.com/influxdata/telegraf/config"
-
-	"strings"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
 
 const (

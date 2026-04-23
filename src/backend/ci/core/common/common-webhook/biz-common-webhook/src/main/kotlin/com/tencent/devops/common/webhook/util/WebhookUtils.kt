@@ -293,7 +293,7 @@ object WebhookUtils {
         startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = pullRequest.milestone?.title ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID] = pullRequest.milestone?.id ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE] = pullRequest.milestone?.dueOn ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] = pullRequest.labels.joinToString(",") ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] = pullRequest.labels.joinToString(",") { it.name } ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_BASE_COMMIT] = pullRequest.base.sha ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_COMMIT] = pullRequest.base.sha ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_COMMIT] = pullRequest.head.sha ?: ""

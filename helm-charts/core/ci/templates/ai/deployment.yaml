@@ -1,0 +1,127 @@
+#ai Deployment
+{{ if .Values.ai.enabled -}}
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-ai
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: ai
+spec:
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 0
+    type: RollingUpdate
+  selector:
+    matchLabels: {{- include "bkci.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: microservice
+      app.kubernetes.io/name: ai
+  {{- if not .Values.ai.autoscaling.enabled }}
+  replicas: {{ .Values.ai.replicas }}
+  {{- end }}
+  template:
+    metadata:
+      labels: {{- include "bkci.labels.standard" . | nindent 8 }}
+        {{- if .Values.ai.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.ai.podLabels "context" $) | nindent 8 }}
+        {{- end }}
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/name: ai
+    spec:
+      serviceAccountName: {{ .Values.rbac.serviceAccount }}
+      enableServiceLinks: false
+      {{- if .Values.ai.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.ai.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.ai.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.ai.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.ai.podAffinityPreset  "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.ai.podAntiAffinityPreset  "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.ai.nodeAffinityPreset.type "key" .Values.ai.nodeAffinityPreset.key "values" .Values.ai.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      {{- if .Values.ai.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.ai.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.ai.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.ai.tolerations "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.ai.priorityClassName }}
+      priorityClassName: {{ .Values.ai.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.ai.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.ai.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: ai
+          image: {{ include "bkci-backend.image" . }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          {{- if .Values.ai.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.ai.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.ai.resources }}
+          resources: {{- toYaml .Values.ai.resources | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: MS_NAME
+              value: ai
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: RELEASE_NAME
+              value: {{ .Release.Name }}
+            - name: CHART_NAME
+              value: {{ .Chart.Name }}
+            - name: MULTI_CLUSTER
+              value: {{ .Values.multiCluster.enabled | quote }}
+            - name: DEFAULT_NAMESPACE
+              value: {{ .Values.multiCluster.defaultNamespace }}
+            - name: JAVA_TOOL_OPTIONS
+              value: {{ .Values.java.options }} -XX:InitialRAMPercentage={{ .Values.ai.jvm.heapPct }} -XX:MaxRAMPercentage={{ .Values.ai.jvm.heapPct }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+          workingDir: /data/workspace/ai
+          livenessProbe:
+            httpGet:
+              path: /management/health/livenessState
+              port: http
+            initialDelaySeconds: {{ .Values.ai.jvm.initSecs }}
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 20
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /management/health/readinessState
+              port: http
+            initialDelaySeconds: {{ .Values.ai.jvm.initSecs }}
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 20
+            successThreshold: 1
+          volumeMounts:
+            - mountPath: /data/workspace/ai/jvm
+              name: log-volume
+              subPathExpr: bkci/jvm/$(POD_NAME)
+          lifecycle:
+              preStop:
+                exec:
+                  command:
+                  - /bin/bash
+                  - -c
+                  - sleep 20
+      volumes:
+      - hostPath:
+          path: /data
+        name: log-volume
+{{- end -}}

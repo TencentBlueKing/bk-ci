@@ -28,10 +28,86 @@
 package systemutil
 
 import (
+	"os"
+	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 )
+
+func TestGetExecutableDir_AlwaysAbsolute(t *testing.T) {
+	tests := []struct {
+		name    string
+		argv0   string
+		wantAbs bool
+	}{
+		{"relative_dot_slash", "./devopsAgent", true},
+		{"relative_subdir", "bin/devopsAgent", true},
+		{"absolute_path", "/usr/local/bin/devopsAgent", true},
+		{"bare_name_no_slash", "devopsAgent", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			origArg0 := os.Args[0]
+			origCache := GExecutableDir
+			defer func() {
+				os.Args[0] = origArg0
+				GExecutableDir = origCache
+			}()
+
+			GExecutableDir = ""
+			os.Args[0] = tt.argv0
+
+			got := GetExecutableDir()
+			if filepath.IsAbs(got) != tt.wantAbs {
+				t.Errorf("GetExecutableDir() with Args[0]=%q = %q, absolute=%v, want absolute=%v",
+					tt.argv0, got, filepath.IsAbs(got), tt.wantAbs)
+			}
+			if got == "" {
+				t.Errorf("GetExecutableDir() with Args[0]=%q returned empty string", tt.argv0)
+			}
+		})
+	}
+}
+
+func TestGetExecutableDir_Cached(t *testing.T) {
+	origCache := GExecutableDir
+	defer func() { GExecutableDir = origCache }()
+
+	GExecutableDir = "/test/cached/path"
+	got := GetExecutableDir()
+	if got != "/test/cached/path" {
+		t.Errorf("GetExecutableDir() = %q, want cached value %q", got, "/test/cached/path")
+	}
+}
+
+func TestGetExecutableDir_AbsoluteUnchanged(t *testing.T) {
+	origArg0 := os.Args[0]
+	origCache := GExecutableDir
+	defer func() {
+		os.Args[0] = origArg0
+		GExecutableDir = origCache
+	}()
+
+	GExecutableDir = ""
+
+	var testPath, wantDir string
+	if runtime.GOOS == "windows" {
+		testPath = `C:\opt\bk-ci\agent\devopsAgent.exe`
+		wantDir = `C:\opt\bk-ci\agent`
+	} else {
+		testPath = "/opt/bk-ci/agent/devopsAgent"
+		wantDir = "/opt/bk-ci/agent"
+	}
+
+	os.Args[0] = testPath
+	got := filepath.Clean(GetExecutableDir())
+	want := filepath.Clean(wantDir)
+	if got != want {
+		t.Errorf("GetExecutableDir() = %q, want %q", got, want)
+	}
+}
 
 func TestGetAgentIp(t *testing.T) {
 	logs.UNTestDebugInit()

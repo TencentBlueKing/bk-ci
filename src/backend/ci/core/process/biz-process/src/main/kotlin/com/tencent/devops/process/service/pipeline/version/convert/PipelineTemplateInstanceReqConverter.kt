@@ -245,6 +245,7 @@ class PipelineTemplateInstanceReqConverter(
                 overrideTemplateField = overrideTemplateField
             )
             val pipelineSettingWithoutVersion = getPipelineSetting(
+                userId = userId,
                 projectId = projectId,
                 pipelineId = newPipelineId,
                 templateSettingVersion = templateResource.settingVersion,
@@ -392,12 +393,14 @@ class PipelineTemplateInstanceReqConverter(
     }
 
     private fun PipelineTemplateInstanceReq.getPipelineSetting(
+        userId: String,
         projectId: String,
         pipelineId: String,
         templateSettingVersion: Int,
         enablePac: Boolean
     ): PipelineSetting {
-        val templateSetting = pipelineTemplateSettingService.get(
+        val templateSetting = pipelineTemplateSettingService.getWithLabels(
+            userId = userId,
             projectId = projectId,
             templateId = templateId,
             settingVersion = templateSettingVersion
@@ -408,7 +411,8 @@ class PipelineTemplateInstanceReqConverter(
                 pipelineName = pipelineName
             )
         } else {
-            pipelineRepositoryService.getSetting(
+            pipelineRepositoryService.getSettingWithLabels(
+                userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId
             )?.let {

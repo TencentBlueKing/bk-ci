@@ -147,7 +147,6 @@ class BatchInstallAgentService @Autowired constructor(
         // 生成安装脚本
         return downloadAgentInstallService.downloadInstallScript(
             agentHashId,
-            true,
             loginName,
             decodePassword,
             installType

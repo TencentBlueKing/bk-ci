@@ -737,13 +737,16 @@ object TemplateInstanceUtil {
         val defaultValueExceptions = mutableListOf<String>()
         instanceParams.forEach { instanceParam ->
             val inputParam = inputParams.find { it.id == instanceParam.id } ?: return@forEach
-            if (inputParam.required != instanceParam.required) {
+            if (
+                inputParam.required != instanceParam.required &&
+                instanceParam.id !in PipelineUtils.VERSION_PARAMS
+            ) {
                 requiredExceptions.add(instanceParam.id)
             }
             if (inputParam.constant != instanceParam.constant) {
                 constantExceptions.add(instanceParam.id)
             }
-            if (inputParam.defaultValue != instanceParam.defaultValue) {
+            if (!isSameDefaultValue(inputParam, instanceParam)) {
                 defaultValueExceptions.add(instanceParam.id)
             }
         }
@@ -774,6 +777,24 @@ object TemplateInstanceUtil {
                 params = arrayOf(defaultValueExceptions.joinToString(","), "default value")
             )
         }
+    }
+
+    private fun isSameDefaultValue(
+        inputParam: BuildFormProperty,
+        instanceParam: BuildFormProperty
+    ): Boolean {
+        if (inputParam.defaultValue == instanceParam.defaultValue) {
+            return true
+        }
+        // 历史数据里 流水线boolean 默认值可能以字符串形式存储，需要按布尔值比较。
+        if (
+            inputParam.type == BuildFormPropertyType.BOOLEAN &&
+            inputParam.defaultValue is String
+        ) {
+            val defaultValue = inputParam.defaultValue as String
+            return defaultValue.toBoolean() == instanceParam.defaultValue
+        }
+        return false
     }
 
     /**

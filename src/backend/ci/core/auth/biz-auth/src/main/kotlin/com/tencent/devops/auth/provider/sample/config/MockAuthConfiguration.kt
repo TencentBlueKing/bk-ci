@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.provider.sample.config
 
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResourceAuthorizationService
+import com.tencent.devops.auth.provider.sample.service.SampleAuthAiServiceImpl
 import com.tencent.devops.auth.provider.sample.service.SampleAuthAuthorizationScopesService
 import com.tencent.devops.auth.provider.sample.service.SampleAuthMonitorSpaceService
 import com.tencent.devops.auth.provider.sample.service.SampleAuthPermissionProjectService
@@ -19,6 +20,7 @@ import com.tencent.devops.auth.provider.sample.service.SamplePermissionResourceM
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionResourceService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionResourceValidateService
 import com.tencent.devops.auth.provider.sample.service.SampleSuperManagerServiceImpl
+import com.tencent.devops.auth.service.AuthAiService
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
 import com.tencent.devops.auth.service.AuthMonitorSpaceService
 import com.tencent.devops.auth.service.DefaultDeptServiceImpl
@@ -134,4 +136,8 @@ class MockAuthConfiguration {
     @Bean
     @ConditionalOnMissingBean(PermissionHandoverApplicationService::class)
     fun samplePermissionHandoverService() = SamplePermissionHandoverApplicationService()
+
+    @Bean
+    @ConditionalOnMissingBean(AuthAiService::class)
+    fun sampleAuthAiService() = SampleAuthAiServiceImpl()
 }

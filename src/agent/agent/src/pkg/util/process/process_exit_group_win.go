@@ -31,19 +31,12 @@
 package process
 
 import (
+	"fmt"
 	"os"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
 )
-
-// We use this struct to retreive process handle(which is unexported)
-// from os.Process using unsafe operation.
-// Source https://gist.github.com/hallazzang/76f3970bfc949831808bbebc8ca15209
-type process struct {
-	Pid    int
-	Handle uintptr
-}
 
 type ProcessExitGroup windows.Handle
 
@@ -74,7 +67,17 @@ func (g ProcessExitGroup) Dispose() error {
 }
 
 func (g ProcessExitGroup) AddProcess(p *os.Process) error {
-	return windows.AssignProcessToJobObject(
-		windows.Handle(g),
-		windows.Handle((*process)(unsafe.Pointer(p)).Handle))
+	// 通过 PID 打开进程句柄，避免依赖 os.Process 内部字段布局（unsafe.Pointer 方案
+	// 在 Go 1.20+ 因 os.Process 新增字段导致偏移错位而失效）
+	handle, err := windows.OpenProcess(
+		windows.PROCESS_SET_QUOTA|windows.PROCESS_TERMINATE,
+		false,
+		uint32(p.Pid),
+	)
+	if err != nil {
+		return fmt.Errorf("OpenProcess pid=%d: %w", p.Pid, err)
+	}
+	defer windows.CloseHandle(handle)
+
+	return windows.AssignProcessToJobObject(windows.Handle(g), handle)
 }
