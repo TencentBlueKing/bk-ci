@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/shirou/gopsutil/v3/disk"
+	"github.com/shirou/gopsutil/v4/disk"
 )
 
 // defaultDiskIgnoreFS 与 telegrafConf 中 inputs.disk.ignore_fs 完全一致。

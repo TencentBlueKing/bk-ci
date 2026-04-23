@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/shirou/gopsutil/v3/disk"
+	"github.com/shirou/gopsutil/v4/disk"
 )
 
 func TestDiskIO_Name(t *testing.T) {

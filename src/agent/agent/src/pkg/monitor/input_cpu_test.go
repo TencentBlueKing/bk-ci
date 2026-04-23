@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v4/cpu"
 )
 
 // fakeCPUTimes 按 percpu 参数返回预设数据。seq 用来模拟两次调用返回不同值。

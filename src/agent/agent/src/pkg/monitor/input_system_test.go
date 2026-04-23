@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/shirou/gopsutil/v3/host"
-	"github.com/shirou/gopsutil/v3/load"
+	"github.com/shirou/gopsutil/v4/host"
+	"github.com/shirou/gopsutil/v4/load"
 )
 
 func TestSystem_Name(t *testing.T) {

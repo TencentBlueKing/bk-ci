@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	gopsutilnet "github.com/shirou/gopsutil/v3/net"
+	gopsutilnet "github.com/shirou/gopsutil/v4/net"
 )
 
 func TestNetProto_Name(t *testing.T) {

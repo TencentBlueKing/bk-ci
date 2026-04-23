@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/shirou/gopsutil/v3/net"
+	"github.com/shirou/gopsutil/v4/net"
 )
 
 func TestNetstat_Name(t *testing.T) {

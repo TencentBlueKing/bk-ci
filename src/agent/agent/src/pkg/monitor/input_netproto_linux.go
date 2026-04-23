@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	gopsutilnet "github.com/shirou/gopsutil/v3/net"
+	gopsutilnet "github.com/shirou/gopsutil/v4/net"
 )
 
 // input_netproto_linux.go 对齐 telegraf plugins/inputs/net 在

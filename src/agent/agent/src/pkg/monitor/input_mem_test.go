@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/shirou/gopsutil/v3/mem"
+	"github.com/shirou/gopsutil/v4/mem"
 )
 
 // fakeVirtualMem 返回预设的 VirtualMemoryStat，用于 Gather 的确定性测试。

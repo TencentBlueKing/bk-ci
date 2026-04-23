@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/shirou/gopsutil/v3/disk"
+	"github.com/shirou/gopsutil/v4/disk"
 )
 
 // fakeClock 通过 nowFn/sleepFn 成对注入，保证 Gather 内两次 now 间隔正好是

@@ -30,7 +30,8 @@ require (
 	github.com/creack/pty v1.1.24
 	github.com/gorilla/websocket v1.5.0
 	github.com/jaypipes/ghw v0.20.0
-	github.com/shirou/gopsutil/v3 v3.22.9
+	github.com/kardianos/service v1.2.2
+	github.com/shirou/gopsutil/v4 v4.24.5
 	golang.org/x/sync v0.10.0
 )
 
@@ -52,9 +53,5 @@ require (
 	howett.net/plist v1.0.2-0.20250314012144-ee69052608d9 // indirect
 )
 
-require (
-	// 非稳定库，目前只在windows升级中简单使用且主要做对go-ole的封装简化，大规模使用前需要评估
-	github.com/capnspacehook/taskmaster v0.0.0-20210519235353-1629df7c85e9
-	github.com/kardianos/service v1.2.2
-	github.com/shirou/gopsutil/v4 v4.24.5
-)
+// 非稳定库，目前只在windows升级中简单使用且主要做对go-ole的封装简化，大规模使用前需要评估
+require github.com/capnspacehook/taskmaster v0.0.0-20210519235353-1629df7c85e9
