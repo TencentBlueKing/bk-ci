@@ -58,7 +58,6 @@ func TestReadProcStatAndEntropy_Happy(t *testing.T) {
 	want := map[string]int64{
 		FieldInterrupts:      12345,
 		FieldContextSwitches: 67890,
-		FieldBootTime:        1700000000,
 		RenamedFieldProcs:    111,
 		FieldDiskPagesIn:     5,
 		FieldDiskPagesOut:    6,
@@ -73,6 +72,10 @@ func TestReadProcStatAndEntropy_Happy(t *testing.T) {
 		if got != v {
 			t.Errorf("field %s = %d, want %d", k, got, v)
 		}
+	}
+	// 不应包含 boot_time——与 telegraf env 保持字段集一致
+	if _, ok := fields[FieldBootTime]; ok {
+		t.Errorf("env should not include boot_time (telegraf inputs.kernel env has no boot_time)")
 	}
 }
 
@@ -106,7 +109,7 @@ func TestReadProcStatAndEntropy_ParseEntropy(t *testing.T) {
 // TestReadProcStatAndEntropy_TolerateMissingPrefixes 覆盖 /proc/stat 中某些
 // 前缀缺失时不应整体报错——只是该字段不出现（兼容不同内核版本）。
 func TestReadProcStatAndEntropy_TolerateMissingPrefixes(t *testing.T) {
-	// 只保留 intr 和 btime
+	// 只保留 intr
 	minimal := "cpu 1 2 3\nintr 999\nbtime 2000000000\n"
 	statPath := writeTempFile(t, "stat", minimal)
 	entropyPath := writeTempFile(t, "entropy", "42")
@@ -119,8 +122,9 @@ func TestReadProcStatAndEntropy_TolerateMissingPrefixes(t *testing.T) {
 	if v, _ := fields[FieldInterrupts].(int64); v != 999 {
 		t.Errorf("interrupts = %v", fields[FieldInterrupts])
 	}
-	if v, _ := fields[FieldBootTime].(int64); v != 2000000000 {
-		t.Errorf("boot_time = %v", fields[FieldBootTime])
+	// btime 即使存在也不应解析为 boot_time 字段
+	if _, ok := fields[FieldBootTime]; ok {
+		t.Error("boot_time should never be emitted, even if btime line present")
 	}
 	// 缺失前缀不输出字段
 	for _, k := range []string{FieldContextSwitches, RenamedFieldProcs, FieldDiskPagesIn, FieldDiskPagesOut} {

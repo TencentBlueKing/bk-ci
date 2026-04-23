@@ -85,6 +85,18 @@ func TestNet_TwinSample_BasicRate(t *testing.T) {
 			t.Errorf("field %s = %v, want %v (second sample)", f, m.Fields[f], want)
 		}
 	}
+	// PDH 兼容别名：同值双写（对齐 telegraf win_perf_counters 字段名）
+	wantAlias := map[string]uint64{
+		WinFieldPacketsReceivedErrors:    11,
+		WinFieldPacketsOutboundErrors:    12,
+		WinFieldPacketsReceivedDiscarded: 13,
+		WinFieldPacketsOutboundDiscarded: 14,
+	}
+	for f, want := range wantAlias {
+		if got, _ := m.Fields[f].(uint64); got != want {
+			t.Errorf("alias field %s = %v, want %v", f, m.Fields[f], want)
+		}
+	}
 }
 
 // TestNet_TwinSample_CounterReset 与 diskio 对应：第二次累计小 → 速率字段缺席。

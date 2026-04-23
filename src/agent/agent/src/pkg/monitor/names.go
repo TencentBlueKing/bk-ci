@@ -233,8 +233,13 @@ const (
 	WinFieldBytesSentPerSec       = "Bytes_Sent_persec"
 	WinFieldPacketsReceivedPerSec = "Packets_Received_persec"
 	WinFieldPacketsSentPerSec     = "Packets_Sent_persec"
-	WinFieldDiskReadBytesPerSec   = "Disk_Read_Bytes_persec"
-	WinFieldDiskWriteBytesPerSec  = "Disk_Write_Bytes_persec"
+	// PDH 累计（非 _persec，telegraf win_perf_counters 原生输出）
+	WinFieldPacketsReceivedErrors    = "Packets_Received_Errors"
+	WinFieldPacketsOutboundErrors    = "Packets_Outbound_Errors"
+	WinFieldPacketsReceivedDiscarded = "Packets_Received_Discarded"
+	WinFieldPacketsOutboundDiscarded = "Packets_Outbound_Discarded"
+	WinFieldDiskReadBytesPerSec      = "Disk_Read_Bytes_persec"
+	WinFieldDiskWriteBytesPerSec     = "Disk_Write_Bytes_persec"
 )
 
 // ------------------------------------------------------------
@@ -252,6 +257,7 @@ const (
 	TagPath      = "path"
 	TagSource    = "source" // monitor / collector 区分上报来源
 	TagInstance  = "instance"
+	TagObjectName = "objectname" // Windows PDH ObjectName（如 Processor / PhysicalDisk / Network Interface）
 
 	// 全局 tag（由 reporter 从 config 注入）
 	TagProjectID   = "projectId"

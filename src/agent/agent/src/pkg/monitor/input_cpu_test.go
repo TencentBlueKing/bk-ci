@@ -5,6 +5,7 @@ package monitor
 
 import (
 	"errors"
+	"runtime"
 	"testing"
 	"time"
 
@@ -92,10 +93,10 @@ func TestCPU_Gather_SecondCallProducesMetrics(t *testing.T) {
 		t.Fatalf("want 2 metrics (cpu0 + cpu-total), got %d", len(metrics))
 	}
 
-	// 找 cpu0，断言 user=50, idle=50
+	// 找 cpu0 —— 用 cpu tag 定位（双写且不受 Windows 归一影响）。
 	var cpu0 *Metric
 	for i := range metrics {
-		if metrics[i].Tags[TagInstance] == "cpu0" {
+		if metrics[i].Tags[TagCPU] == "cpu0" {
 			cpu0 = &metrics[i]
 			break
 		}
@@ -108,6 +109,22 @@ func TestCPU_Gather_SecondCallProducesMetrics(t *testing.T) {
 	}
 	if v, ok := cpu0.Fields[RenamedFieldIdle].(float64); !ok || v != 50 {
 		t.Errorf("idle = %v, want 50", cpu0.Fields[RenamedFieldIdle])
+	}
+	// 双写 tag：instance 和 cpu 必须都存在。
+	//   - Linux / macOS 下 instance 保持 "cpu0"
+	//   - Windows 下 instance 被 normalizeWinMetricTags 归一为 "0"，并多出 objectname=Processor
+	if cpu0.Tags[TagCPU] != "cpu0" {
+		t.Errorf("tag cpu = %q, want cpu0 (compat alias)", cpu0.Tags[TagCPU])
+	}
+	wantInstance := "cpu0"
+	if runtime.GOOS == "windows" {
+		wantInstance = "0"
+		if cpu0.Tags[TagObjectName] != "Processor" {
+			t.Errorf("windows: tag objectname = %q, want Processor", cpu0.Tags[TagObjectName])
+		}
+	}
+	if cpu0.Tags[TagInstance] != wantInstance {
+		t.Errorf("tag instance = %q, want %q", cpu0.Tags[TagInstance], wantInstance)
 	}
 }
 

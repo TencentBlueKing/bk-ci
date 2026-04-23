@@ -77,6 +77,10 @@ func (d *DiskIO) Gather() ([]Metric, error) {
 
 	out := make([]Metric, 0, len(s2))
 	for name, c2 := range s2 {
+		// 过滤伪磁盘（Windows 默认 PhysicalDisk 不会命中，兜底一层统一）
+		if shouldSkipDiskIO(name) {
+			continue
+		}
 		fields := map[string]interface{}{
 			FieldReadTime:       c2.ReadTime,
 			FieldWriteTime:      c2.WriteTime,
@@ -105,7 +109,7 @@ func (d *DiskIO) Gather() ([]Metric, error) {
 
 		out = append(out, Metric{
 			Name:      RenamedIO,
-			Tags:      map[string]string{TagName: name},
+			Tags:      normalizeWinMetricTags(RenamedIO, map[string]string{TagName: name}),
 			Fields:    fields,
 			Timestamp: t2,
 		})

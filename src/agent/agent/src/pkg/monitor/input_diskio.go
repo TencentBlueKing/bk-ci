@@ -41,6 +41,10 @@ func (d *DiskIO) Gather() ([]Metric, error) {
 	now := d.nowFn()
 	out := make([]Metric, 0, len(counters))
 	for name, c := range counters {
+		// 过滤 loop/ram/sr/md/fd/nbd/zram/dm- 等伪磁盘
+		if shouldSkipDiskIO(name) {
+			continue
+		}
 		out = append(out, Metric{
 			Name: RenamedIO,
 			Tags: map[string]string{TagName: name},

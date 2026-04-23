@@ -47,6 +47,10 @@ func (n *Net) Gather() ([]Metric, error) {
 		if strings.EqualFold(s.Name, "all") {
 			continue
 		}
+		// 过滤虚接口（lo/docker/br-/veth/utun/... 见 net_filter.go）
+		if shouldSkipNetInterface(s.Name) {
+			continue
+		}
 		out = append(out, Metric{
 			Name: MeasurementNet,
 			Tags: map[string]string{TagInterface: s.Name},

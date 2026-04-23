@@ -27,12 +27,13 @@ var (
 	procStatPath         = "/proc/stat"
 	procEntropyAvailPath = "/proc/sys/kernel/random/entropy_avail"
 
-	// 对齐 telegraf kernel_linux.go 的 line prefix
-	kStatPrefixIntr     = []byte("intr")
-	kStatPrefixCtxt     = []byte("ctxt")
-	kStatPrefixProcs    = []byte("processes")
-	kStatPrefixPage     = []byte("page")
-	kStatPrefixBootTime = []byte("btime")
+	// 对齐 telegraf kernel_linux.go 的 line prefix。
+	// 注：不解析 "btime"——uptime 由 gopsutil host.BootTime 在上层 Kernel.Gather
+	// 产出（与 telegraf env 完全一致）。
+	kStatPrefixIntr  = []byte("intr")
+	kStatPrefixCtxt  = []byte("ctxt")
+	kStatPrefixProcs = []byte("processes")
+	kStatPrefixPage  = []byte("page")
 )
 
 // defaultLinuxExtraFn 是默认 Linux 实现；非 Linux 平台同名变量为 nil
@@ -78,10 +79,9 @@ func readProcStatAndEntropy() (map[string]interface{}, error) {
 			if v, ok := parseInt64At(tokens, i+1); ok {
 				fields[RenamedFieldProcs] = v
 			}
-		case bytes.Equal(tok, kStatPrefixBootTime):
-			if v, ok := parseInt64At(tokens, i+1); ok {
-				fields[FieldBootTime] = v
-			}
+		// 不再输出 btime：uptime 字段由 gopsutil host.BootTime 通过
+		// Kernel.Gather 上报（与 telegraf env 一致），boot_time 与 uptime 值
+		// 相同且 telegraf env 并不带 boot_time——避免冗余字段污染看板。
 		case bytes.Equal(tok, kStatPrefixPage):
 			if v, ok := parseInt64At(tokens, i+1); ok {
 				fields[FieldDiskPagesIn] = v

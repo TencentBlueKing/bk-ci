@@ -75,11 +75,23 @@ func (n *Net) Gather() ([]Metric, error) {
 		if strings.EqualFold(c2.Name, "all") {
 			continue
 		}
+		// 过滤 Loopback / vEthernet / ISATAP / Teredo 等伪接口
+		if shouldSkipNetInterface(c2.Name) {
+			continue
+		}
 		fields := map[string]interface{}{
+			// 规范名（与 Linux / macOS 对齐，内部版后端主用）
 			FieldErrIn:   c2.Errin,
 			FieldErrOut:  c2.Errout,
 			FieldDropIn:  c2.Dropin,
 			FieldDropOut: c2.Dropout,
+			// PDH 兼容别名（与 telegraf win_perf_counters 对齐，老 Windows 看
+			// 板/告警用）。双写带来字段数量略有冗余，但确保按哪个 key 过
+			// 滤都能命中——值完全相同，只是 key 名有两种。
+			WinFieldPacketsReceivedErrors:    c2.Errin,
+			WinFieldPacketsOutboundErrors:    c2.Errout,
+			WinFieldPacketsReceivedDiscarded: c2.Dropin,
+			WinFieldPacketsOutboundDiscarded: c2.Dropout,
 		}
 		if c1, ok := prev[c2.Name]; ok {
 			if rate, ok := computeRate(c2.BytesRecv, c1.BytesRecv, dt); ok {
@@ -99,7 +111,7 @@ func (n *Net) Gather() ([]Metric, error) {
 
 		out = append(out, Metric{
 			Name:      MeasurementNet,
-			Tags:      map[string]string{TagInterface: c2.Name},
+			Tags:      normalizeWinMetricTags(MeasurementNet, map[string]string{TagInterface: c2.Name}),
 			Fields:    fields,
 			Timestamp: t2,
 		})

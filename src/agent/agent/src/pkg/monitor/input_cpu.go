@@ -31,6 +31,12 @@ type CPU struct {
 	last map[string]cpu.TimesStat
 }
 
+// winTagNormalizerFn 是 Windows 构建下的 tag 归一钩子（见
+// tag_normalize_win.go 的 init）；非 Windows 为 nil。Gather 循环中调用，
+// 不存在时保留原 Tags。以包级变量而非 runtime.GOOS 判断，避免通用 input
+// 文件引用 Windows-only 函数导致 linker 失败。
+var winTagNormalizerFn func(measurement string, tags map[string]string) map[string]string
+
 // NewCPU 返回默认 CPU 采集器。
 func NewCPU() *CPU {
 	return &CPU{
@@ -80,9 +86,21 @@ func (c *CPU) Gather() ([]Metric, error) {
 		if fields == nil {
 			continue
 		}
+		tags := map[string]string{TagInstance: id, TagCPU: id}
+		if winTagNormalizerFn != nil {
+			tags = winTagNormalizerFn(RenamedCPUDetail, tags)
+		}
 		out = append(out, Metric{
-			Name:      RenamedCPUDetail,
-			Tags:      map[string]string{TagInstance: id},
+			Name: RenamedCPUDetail,
+			// 双写 tag：instance 和 cpu 都保留同一个值。
+			//   - instance：与 Windows PDH win_cpu 对齐（telegraf win_perf_counters
+			//     产出 instance=0/_Total/objectname=Processor）；monitor 三平台
+			//     统一用 instance 便于跨平台看板查询
+			//   - cpu：与 Linux/Mac 下 telegraf inputs.cpu 对齐（cpu=cpu0 / cpu-total）
+			// 后端无论按哪个 tag key 过滤都能命中，做兼容冗余。
+			// Windows 构建下还会额外注入 objectname 并把 instance 从 "cpu0"
+			// 归一到 "0"（见 tag_normalize_win.go）。
+			Tags:      tags,
 			Fields:    fields,
 			Timestamp: now,
 		})
