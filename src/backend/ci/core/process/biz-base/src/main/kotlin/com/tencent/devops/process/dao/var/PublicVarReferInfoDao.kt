@@ -435,8 +435,11 @@ class PublicVarReferInfoDao {
 
     /**
      * 批量统计多个变量的引用数量（跨所有版本，按 referId 去重）
-     * 单个流水线即使通过多个版本引用同一变量，也只计为 1 次引用
-     * 用于变量组详情页展示变量的实际被引用资源数量
+     * 单个流水线即使通过多个版本引用同一变量，也只计为 1 次引用。
+     * 注意：该 SQL 直接聚合 T_RESOURCE_PUBLIC_VAR_REFER_INFO，不区分流水线最新/历史版本，
+     * 如果 DB 中存在未清理的历史版本引用记录，可能导致计数偏高。
+     * 变量组详情页等需要精确"当前最新有效引用"计数的场景，应改用
+     * `PublicVarVersionSummaryDao.batchGetActiveReferCount`（Summary 表由保存/卸载链路维护）。
      * @param dslContext 数据库上下文
      * @param projectId 项目ID
      * @param groupName 变量组名

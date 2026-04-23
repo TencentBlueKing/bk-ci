@@ -27,11 +27,14 @@
 
 package com.tencent.devops.process.dao.`var`
 
+import com.tencent.devops.model.process.tables.TResourcePublicVarGroupReferInfo
+import com.tencent.devops.model.process.tables.TResourcePublicVarReferInfo
 import com.tencent.devops.model.process.tables.TResourcePublicVarVersionSummary
 import com.tencent.devops.model.process.tables.records.TResourcePublicVarVersionSummaryRecord
+import com.tencent.devops.process.constant.ProcessMessageCode.DYNAMIC_VERSION
 import com.tencent.devops.process.pojo.`var`.po.PublicVarVersionSummaryPO
-import java.time.LocalDateTime
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -53,7 +56,11 @@ class PublicVarVersionSummaryDao {
     }
 
     /**
-     * 保存变量版本摘要记录
+     * 保存变量版本摘要记录（仅用于保证 (project, group, var, version) 行存在）。
+     *
+     * 注意：`REFER_COUNT` 字段自方案 4 起不再由代码维护，读路径全部走
+     * [batchGetActiveReferCount] / [batchGetReferCountByVarNames] 实时 JOIN 聚合。
+     * 本方法写入 `referCount` 仅用于新建行时填充初始值（通常传 0），不保证后续准确性。
      */
     fun save(
         dslContext: DSLContext,
@@ -72,38 +79,6 @@ class PublicVarVersionSummaryDao {
                 .set(CREATE_TIME, po.createTime)
                 .set(UPDATE_TIME, po.updateTime)
                 .onDuplicateKeyUpdate()
-                .set(REFER_COUNT, po.referCount)
-                .set(MODIFIER, po.modifier)
-                .set(UPDATE_TIME, po.updateTime)
-                .execute()
-        }
-    }
-
-    /**
-     * 插入新记录或在唯一键冲突时增量累加引用计数（原子操作）
-     * 使用 INSERT ... ON DUPLICATE KEY UPDATE REFER_COUNT = REFER_COUNT + countChange
-     * 解决并发场景下 check-then-act 的 TOCTOU 竞态问题
-     * @param dslContext 数据库上下文
-     * @param po 版本概要对象（referCount 字段作为增量值）
-     */
-    fun saveOrIncrementReferCount(
-        dslContext: DSLContext,
-        po: PublicVarVersionSummaryPO
-    ) {
-        with(TResourcePublicVarVersionSummary.T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY) {
-            dslContext.insertInto(this)
-                .set(ID, po.id)
-                .set(PROJECT_ID, po.projectId)
-                .set(GROUP_NAME, po.groupName)
-                .set(VAR_NAME, po.varName)
-                .set(VERSION, po.version)
-                .set(REFER_COUNT, po.referCount)
-                .set(CREATOR, po.creator)
-                .set(MODIFIER, po.modifier)
-                .set(CREATE_TIME, po.createTime)
-                .set(UPDATE_TIME, po.updateTime)
-                .onDuplicateKeyUpdate()
-                .set(REFER_COUNT, REFER_COUNT.plus(po.referCount))
                 .set(MODIFIER, po.modifier)
                 .set(UPDATE_TIME, po.updateTime)
                 .execute()
@@ -131,116 +106,73 @@ class PublicVarVersionSummaryDao {
     }
 
     /**
-     * 获取变量所有版本的引用计数总和
+     * 批量获取变量的"当前有效引用计数"（实时聚合语义）。
+     *
+     * 语义：统计每个变量被多少不同流水线/模板**当前最新版本**（草稿优先、无草稿则为已发布最新版）
+     * 通过"动态版本 / 变量组最新版本"方式引用。
+     *
+     * 实现原理（不依赖 T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY 的 REFER_COUNT 缓存字段）：
+     * - JOIN `T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO.LATEST_FLAG = true` 过滤，只保留每个 referId
+     *   当前最新有效版本的行
+     * - 对 T_RESOURCE_PUBLIC_VAR_REFER_INFO 按 `VERSION IN (-1, latestVersion)` 筛选（动态版本 +
+     *   变量组当前最新版本；pin 在历史版本视为已脱节，不计入）
+     * - COUNT(DISTINCT REFER_ID) 避免同 referId 跨动态/固定版本重复计数
+     *
+     * 这样草稿里增删引用表达式会立刻反映到 count，正式版旧引用不会被误算。
+     *
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名称
+     * @param latestVersion 变量组当前最新版本号（LATEST_FLAG=true 的那条记录对应的 VERSION）
+     * @param varNames 变量名列表
+     * @return Map<varName, referCount>
      */
-    fun getTotalReferCount(
+    fun batchGetActiveReferCount(
         dslContext: DSLContext,
         projectId: String,
         groupName: String,
-        varName: String
-    ): Int {
-        with(TResourcePublicVarVersionSummary.T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY) {
-            return dslContext.select(REFER_COUNT.sum())
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VAR_NAME.eq(varName))
-                .fetchOne(0, Int::class.java) ?: 0
-        }
-    }
-
-    /**
-     * 更新引用计数
-     */
-    fun updateReferCount(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        varName: String,
-        version: Int,
-        referCount: Int,
-        modifier: String
-    ) {
-        with(TResourcePublicVarVersionSummary.T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY) {
-            dslContext.update(this)
-                .set(REFER_COUNT, referCount)
-                .set(MODIFIER, modifier)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VAR_NAME.eq(varName))
-                .and(VERSION.eq(version))
-                .execute()
-        }
-    }
-
-    /**
-     * 增量更新引用计数（支持增加或减少）
-     */
-    fun incrementReferCount(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        varName: String,
-        version: Int,
-        countChange: Int,
-        modifier: String
-    ): Int {
-        with(TResourcePublicVarVersionSummary.T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY) {
-            val condition = PROJECT_ID.eq(projectId)
-                .and(GROUP_NAME.eq(groupName))
-                .and(VAR_NAME.eq(varName))
-                .and(VERSION.eq(version))
-
-            // 如果是减少操作，添加条件确保结果不会为负
-            val finalCondition = if (countChange < 0) {
-                condition.and(REFER_COUNT.plus(countChange).ge(0))
-            } else {
-                condition
-            }
-
-            return dslContext.update(this)
-                .set(REFER_COUNT, REFER_COUNT.plus(countChange))
-                .set(MODIFIER, modifier)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .where(finalCondition)
-                .execute()
-        }
-    }
-
-    /**
-     * 批量获取变量的引用计数总和
-     */
-    fun batchGetTotalReferCount(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
+        latestVersion: Int,
         varNames: List<String>
     ): Map<String, Int> {
         if (varNames.isEmpty()) return emptyMap()
 
-        with(TResourcePublicVarVersionSummary.T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY) {
-            return dslContext.select(VAR_NAME, REFER_COUNT.sum())
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VAR_NAME.`in`(varNames))
-                .groupBy(VAR_NAME)
-                .fetch()
-                .associate { record ->
-                    record.value1() to (record.value2()?.toInt() ?: 0)
-                }
-        }
+        val r = TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO
+        val g = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
+
+        val countField = DSL.countDistinct(r.REFER_ID)
+        return dslContext.select(r.VAR_NAME, countField)
+            .from(r)
+            .innerJoin(g)
+            .on(g.PROJECT_ID.eq(r.PROJECT_ID))
+            .and(g.REFER_ID.eq(r.REFER_ID))
+            .and(g.REFER_TYPE.eq(r.REFER_TYPE))
+            .and(g.GROUP_NAME.eq(r.GROUP_NAME))
+            .and(g.REFER_VERSION.eq(r.REFER_VERSION))
+            .and(g.LATEST_FLAG.eq(true))
+            .where(r.PROJECT_ID.eq(projectId))
+            .and(r.GROUP_NAME.eq(groupName))
+            .and(r.VAR_NAME.`in`(varNames))
+            .and(r.VERSION.`in`(DYNAMIC_VERSION, latestVersion))
+            .groupBy(r.VAR_NAME)
+            .fetch()
+            .associate { record ->
+                record.getValue(r.VAR_NAME) to (record.get(countField) ?: 0)
+            }
     }
 
     /**
-     * 根据变量名和版本批量获取引用计数
+     * 根据变量名和指定版本批量获取引用计数（实时聚合语义）。
+     *
+     * 用于查看变量组某个具体版本下的引用情况：统计"当前最新版本在变量组 version=X 下引用该变量"的流水线数。
+     * 同样依赖 `T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO.LATEST_FLAG = true` 过滤，保证只算"流水线的
+     * 当前最新版本"（草稿优先）对该版本的 pin 引用。
+     *
      * @param dslContext 数据库上下文
      * @param projectId 项目ID
      * @param groupName 变量组名称
-     * @param version 版本号
+     * @param version 变量组版本号
      * @param varNames 变量名列表
-     * @return varName -> referCount 的映射，不存在的变量返回0
+     * @return varName -> referCount 的映射
      */
     fun batchGetReferCountByVarNames(
         dslContext: DSLContext,
@@ -251,18 +183,28 @@ class PublicVarVersionSummaryDao {
     ): Map<String, Int> {
         if (varNames.isEmpty()) return emptyMap()
 
-        with(TResourcePublicVarVersionSummary.T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY) {
-            return dslContext.select(VAR_NAME, REFER_COUNT)
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VERSION.eq(version))
-                .and(VAR_NAME.`in`(varNames))
-                .fetch()
-                .associate { record ->
-                    record.value1() to (record.value2()?.toInt() ?: 0)
-                }
-        }
+        val r = TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO
+        val g = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
+
+        val countField = DSL.countDistinct(r.REFER_ID)
+        return dslContext.select(r.VAR_NAME, countField)
+            .from(r)
+            .innerJoin(g)
+            .on(g.PROJECT_ID.eq(r.PROJECT_ID))
+            .and(g.REFER_ID.eq(r.REFER_ID))
+            .and(g.REFER_TYPE.eq(r.REFER_TYPE))
+            .and(g.GROUP_NAME.eq(r.GROUP_NAME))
+            .and(g.REFER_VERSION.eq(r.REFER_VERSION))
+            .and(g.LATEST_FLAG.eq(true))
+            .where(r.PROJECT_ID.eq(projectId))
+            .and(r.GROUP_NAME.eq(groupName))
+            .and(r.VAR_NAME.`in`(varNames))
+            .and(r.VERSION.eq(version))
+            .groupBy(r.VAR_NAME)
+            .fetch()
+            .associate { record ->
+                record.getValue(r.VAR_NAME) to (record.get(countField) ?: 0)
+            }
     }
 
     /**

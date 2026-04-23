@@ -122,7 +122,8 @@ class PipelineTemplateDraftSaveHandler @Autowired constructor(
                     referType = PublicVarGroupReferenceTypeEnum.TEMPLATE,
                     referName = pipelineTemplateInfo.name,
                     referVersion = pTemplateResourceOnlyVersion.version.toInt(),
-                    referVersionName = pTemplateResourceOnlyVersion.versionName ?: ""
+                    referVersionName = pTemplateResourceOnlyVersion.versionName ?: "",
+                    draftFlag = true
                 )
             )
         }

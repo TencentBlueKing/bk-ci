@@ -257,6 +257,8 @@ class PublicVarGroupReferManageService @Autowired constructor(
     /**
      * 处理变量组引用业务逻辑
      * 使用分布式锁保护，确保同一引用的操作串行化，避免并发修改导致的引用计数错误
+     * draftFlag=true 时更新引用计数（草稿代表用户最新意图）
+     * draftFlag=false 时仅写入引用关联记录，不操作计数（release/分支版本内容与草稿一致）
      */
     fun handleVarGroupReferBus(
         publicVarGroupReferDTO: PublicVarGroupReferDTO
@@ -277,7 +279,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
         )
         lock.lock()
         try {
-            // 查询历史引用记录（在锁保护下查询，确保数据一致性）
+            // 查询当前 referVersion 的历史引用记录（在锁保护下查询，确保数据一致性）
             val historicalReferInfos = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
                 dslContext = dslContext,
                 projectId = publicVarGroupReferDTO.projectId,
@@ -285,8 +287,18 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 referType = publicVarGroupReferDTO.referType,
                 referVersion = publicVarGroupReferDTO.referVersion
             )
-            // params为空且无历史引用时，无需处理，直接返回
+            // params为空且无历史引用时，检查是否需要处理跨版本计数
             if (params.isEmpty() && historicalReferInfos.isEmpty()) {
+                // 草稿版本：需要检查之前版本是否有引用，有则 -1
+                if (publicVarGroupReferDTO.draftFlag) {
+                    handleDraftReferCountUpdate(publicVarGroupReferDTO, emptyList(), emptyList())
+                }
+                // 本次保存没有任何变量组引用，把该 referId 下所有 LATEST_FLAG=true 的记录置为 false
+                // （覆盖场景：用户保存新版本时卸载了之前所有的变量组引用）
+                syncLatestFlagForAllGroups(
+                    publicVarGroupReferDTO = publicVarGroupReferDTO,
+                    currentGroupNames = emptySet()
+                )
                 return
             }
             model.handlePublicVarInfo()
@@ -297,14 +309,32 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 publicVarGroupReferDTO = publicVarGroupReferDTO,
                 params = params
             )
-            // 更新引用计数和批量保存（在锁保护下执行，确保原子性）
+            // 写入引用关联记录（所有版本都执行）
             updateReferenceCountsAfterSave(
                 projectId = publicVarGroupReferDTO.projectId,
                 historicalReferInfos = historicalReferInfos,
                 publicVarGroupNames = publicVarGroups?.map { it.groupName } ?: emptyList(),
-                resourcePublicVarGroupReferPOS = pipelinePublicVarGroupReferPOs
+                resourcePublicVarGroupReferPOS = pipelinePublicVarGroupReferPOs,
+                skipCountUpdate = !publicVarGroupReferDTO.draftFlag
             )
-            logger.info("updateReferenceCountsAfterSave Success")
+            // 草稿版本：对比之前最新版本的引用，更新计数
+            if (publicVarGroupReferDTO.draftFlag) {
+                handleDraftReferCountUpdate(
+                    publicVarGroupReferDTO = publicVarGroupReferDTO,
+                    currentGroupNames = publicVarGroups?.map { it.groupName } ?: emptyList(),
+                    currentReferPOs = pipelinePublicVarGroupReferPOs
+                )
+            }
+            // 同步 LATEST_FLAG：让 (referId, groupName) 的 LATEST_FLAG=true 只留在当前 referVersion 的行
+            // 涉及的 groupName = 当前引用的 ∪ 历史引用的（保证从"有引用"变为"无引用"的组也能被置 false）
+            val currentGroupNames = publicVarGroups?.map { it.groupName }?.toSet() ?: emptySet()
+            val historicalGroupNames = historicalReferInfos.map { it.groupName }.toSet()
+            syncLatestFlagForAllGroups(
+                publicVarGroupReferDTO = publicVarGroupReferDTO,
+                currentGroupNames = currentGroupNames,
+                involvedGroupNames = currentGroupNames + historicalGroupNames
+            )
+            logger.info("handleVarGroupReferBus completed, draftFlag=${publicVarGroupReferDTO.draftFlag}")
         } finally {
             lock.unlock()
         }
@@ -319,6 +349,146 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 resourceVersionName = publicVarGroupReferDTO.referVersionName
             )
         )
+    }
+
+    /**
+     * 同步 LATEST_FLAG：保证每个 (projectId, referId, referType, groupName) 下最多一条 LATEST_FLAG=true，
+     * 且该行对应 currentReferVersion（如果当前保存版本仍在引用该 groupName）。
+     * 处理逻辑：
+     * 1. 汇总需要同步的 groupName 集合（涉及 = 当前版本引用的 ∪ 历史曾引用的 ∪ DB 中当前 LATEST_FLAG=true 的）
+     * 2. 对每个 groupName：
+     *    - 先将该 (referId, groupName) 下所有 LATEST_FLAG=true 的行置为 false
+     *    - 若 currentGroupNames 包含该 groupName，则将当前 referVersion 对应行置为 true
+     * 外层已提供锁保护，此方法无需加锁。
+     */
+    private fun syncLatestFlagForAllGroups(
+        publicVarGroupReferDTO: PublicVarGroupReferDTO,
+        currentGroupNames: Set<String>,
+        involvedGroupNames: Set<String>? = null
+    ) {
+        val projectId = publicVarGroupReferDTO.projectId
+        val referId = publicVarGroupReferDTO.referId
+        val referType = publicVarGroupReferDTO.referType
+        val referVersion = publicVarGroupReferDTO.referVersion
+
+        // 汇总需要同步的 groupName：调用方传入的 + DB 中当前 LATEST_FLAG=true 的（覆盖完全卸载场景）
+        val groupNamesWithLatestFlag = publicVarGroupReferInfoDao.listLatestFlagGroupNamesByReferId(
+            dslContext = dslContext,
+            projectId = projectId,
+            referId = referId,
+            referType = referType
+        )
+        val groupsToSync = (involvedGroupNames ?: currentGroupNames) + groupNamesWithLatestFlag
+
+        if (groupsToSync.isEmpty()) return
+
+        groupsToSync.forEach { groupName ->
+            // 将该 (referId, groupName) 下所有行的 LATEST_FLAG 置为 false
+            publicVarGroupReferInfoDao.clearLatestFlag(
+                dslContext = dslContext,
+                projectId = projectId,
+                referId = referId,
+                referType = referType,
+                groupName = groupName
+            )
+            // 若当前版本仍引用该变量组，把当前 referVersion 行置为 true
+            if (groupName in currentGroupNames) {
+                val updated = publicVarGroupReferInfoDao.setLatestFlag(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    referId = referId,
+                    referType = referType,
+                    groupName = groupName,
+                    referVersion = referVersion
+                )
+                if (updated == 0) {
+                    logger.warn(
+                        "syncLatestFlag: no row updated to true, " +
+                            "referId=$referId, groupName=$groupName, referVersion=$referVersion"
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * 草稿版本的引用计数更新
+     * 对比"之前最新版本的引用"与"当前草稿的引用"，决定 referCount 的 +1/-1
+     * 核心逻辑：
+     * - 之前有引用 + 当前有引用 → 不变（版本切换在 updateReferenceCountsAfterSave 中处理）
+     * - 之前有引用 + 当前无引用 → -1
+     * - 之前无引用 + 当前有引用 → +1
+     * - 之前无引用 + 当前无引用 → 不变
+     */
+    private fun handleDraftReferCountUpdate(
+        publicVarGroupReferDTO: PublicVarGroupReferDTO,
+        currentGroupNames: List<String>,
+        currentReferPOs: List<ResourcePublicVarGroupReferPO>
+    ) {
+        val projectId = publicVarGroupReferDTO.projectId
+        val referId = publicVarGroupReferDTO.referId
+        val referType = publicVarGroupReferDTO.referType
+        val referVersion = publicVarGroupReferDTO.referVersion
+
+        // 查询之前最新版本的引用记录
+        val previousReferInfos = publicVarGroupReferInfoDao.listPreviousLatestReferInfos(
+            dslContext = dslContext,
+            projectId = projectId,
+            referId = referId,
+            referType = referType,
+            currentReferVersion = referVersion
+        )
+
+        val previousGroupNames = previousReferInfos.map { it.groupName }.toSet()
+        val currentGroupNameSet = currentGroupNames.toSet()
+
+        // 之前有引用但当前没有 → 需要 decrement
+        val removedGroups = previousGroupNames - currentGroupNameSet
+        removedGroups.forEach { groupName ->
+            val prevInfo = previousReferInfos.first { it.groupName == groupName }
+            publicVarGroupReferCountService.decrementReferCount(
+                context = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                version = prevInfo.version,
+                countChange = 1
+            )
+            logger.info(
+                "Draft decrement referCount: referId=$referId, groupName=$groupName, " +
+                    "version=${prevInfo.version} (removed in draft)"
+            )
+        }
+
+        // 之前没有引用但当前有 → 需要 increment
+        val addedGroups = currentGroupNameSet - previousGroupNames
+        addedGroups.forEach { groupName ->
+            val currentInfo = currentReferPOs.firstOrNull { it.groupName == groupName } ?: return@forEach
+            // 检查是否已经在 updateReferenceCountsAfterSave 中 increment 过
+            // 如果当前 referVersion 是新建的（historicalReferInfos 为空），且之前版本无引用
+            // updateReferenceCountsAfterSave 不会 increment（因为它只对比当前版本的历史）
+            // 所以这里需要 increment
+            val alreadyReferred = publicVarGroupReferInfoDao.existsReferForGroup(
+                dslContext = dslContext,
+                projectId = projectId,
+                referId = referId,
+                referType = referType,
+                groupName = groupName,
+                version = currentInfo.version
+            )
+            if (!alreadyReferred) {
+                publicVarGroupReferCountService.incrementReferCount(
+                    context = dslContext,
+                    projectId = projectId,
+                    groupName = groupName,
+                    version = currentInfo.version,
+                    countChange = 1
+                )
+                logger.info(
+                    "Draft increment referCount: referId=$referId, groupName=$groupName, " +
+                        "version=${currentInfo.version} (added in draft)"
+                )
+            }
+        }
     }
 
     /**
@@ -482,12 +652,14 @@ class PublicVarGroupReferManageService @Autowired constructor(
      * @param historicalReferInfos 历史引用信息列表
      * @param publicVarGroupNames 当前变量组名称列表
      * @param resourcePublicVarGroupReferPOS 新的引用信息列表，需要批量保存
+     * @param skipCountUpdate 是否跳过计数更新（非草稿版本只写关联不操作计数）
      */
     private fun updateReferenceCountsAfterSave(
         projectId: String,
         historicalReferInfos: List<ResourcePublicVarGroupReferPO>,
         publicVarGroupNames: List<String>,
-        resourcePublicVarGroupReferPOS: List<ResourcePublicVarGroupReferPO> = emptyList()
+        resourcePublicVarGroupReferPOS: List<ResourcePublicVarGroupReferPO> = emptyList(),
+        skipCountUpdate: Boolean = false
     ) {
         // 记录输入参数的关键信息
         logger.info(
@@ -566,12 +738,13 @@ class PublicVarGroupReferManageService @Autowired constructor(
             // 步骤4：过滤出有实际变化的记录
             val changeInfos = changeInfoMap.values.filter { it.hasChanges() }
 
-            // 步骤5：批量更新引用计数
-            // 注意：外层已经提供了锁保护，PublicVarGroupReferCountService 内部不再使用锁，避免双重锁
+            // 步骤5：批量更新引用记录（和计数）
+            // skipCountUpdate=true 时仅写入引用记录，不操作计数（非草稿版本）
             if (changeInfos.isNotEmpty()) {
                 publicVarGroupReferCountService.batchUpdateReferWithCount(
                     projectId = projectId,
-                    changeInfos = changeInfos
+                    changeInfos = changeInfos,
+                    skipCountUpdate = skipCountUpdate
                 )
             }
         } catch (e: Throwable) {

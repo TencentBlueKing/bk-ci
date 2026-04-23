@@ -519,18 +519,13 @@ class PublicVarGroupService @Autowired constructor(
             version = latestGroupRecord.version
         )
 
-        // 批量查询新变量的引用计数（从 T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY 表读取，汇总所有版本）
+        // 批量查询新变量的引用计数：动态版本 + 变量组当前最新版本（与变量组详情页语义一致）
         val newVarNames = publicVarGroup.publicVars.map { it.varName }
-        val newVarReferCountMap = if (newVarNames.isNotEmpty()) {
-            publicVarVersionSummaryDao.batchGetTotalReferCount(
-                dslContext = dslContext,
-                projectId = projectId,
-                groupName = groupName,
-                varNames = newVarNames
-            )
-        } else {
-            emptyMap()
-        }
+        val newVarReferCountMap = publicVarService.batchGetActiveReferCount(
+            projectId = projectId,
+            groupName = groupName,
+            varNames = newVarNames
+        )
         val newVarDOs = publicVarService.convertPublicVarVOsToDOsWithReferCount(
             publicVars = publicVarGroup.publicVars,
             referCountMap = newVarReferCountMap

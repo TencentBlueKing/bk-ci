@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST
+import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReleaseRecordDao
 import com.tencent.devops.process.dao.`var`.PublicVarVersionSummaryDao
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
@@ -55,6 +56,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelinePublicVarGroupReleaseRecordDao: PublicVarGroupReleaseRecordDao,
     private val publicVarVersionSummaryDao: PublicVarVersionSummaryDao,
+    private val publicVarGroupDao: PublicVarGroupDao,
     private val client: Client
 ) {
 
@@ -604,18 +606,37 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         varPOs: List<PublicVarPO>,
         projectId: String,
         groupName: String,
-        version: Int?
+        version: Int?,
+        queryVersion: Int? = null
     ): List<PublicVarDO> {
         if (varPOs.isEmpty()) return emptyList()
 
-        // 批量查询引用计数（从 T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY 表读取，汇总所有版本）
+        // 批量查询引用计数，引用计数语义：
+        // - queryVersion 非空：只统计 pin 在该版本的流水线数
+        // - queryVersion 为空（默认）：动态版本(VERSION=-1) + 变量组当前最新版本的 REFER_COUNT
         val varNames = varPOs.map { it.varName }
-        val referCountMap = publicVarVersionSummaryDao.batchGetTotalReferCount(
-            dslContext = dslContext,
-            projectId = projectId,
-            groupName = groupName,
-            varNames = varNames
-        )
+        val referCountMap = if (queryVersion != null) {
+            publicVarVersionSummaryDao.batchGetReferCountByVarNames(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                version = queryVersion,
+                varNames = varNames
+            )
+        } else {
+            val latestVersion = publicVarGroupDao.getLatestVersionByGroupName(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName
+            ) ?: throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf(groupName))
+            publicVarVersionSummaryDao.batchGetActiveReferCount(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                latestVersion = latestVersion,
+                varNames = varNames
+            )
+        }
 
         return varPOs.map { po ->
             val buildFormProperty = JsonUtil.to(po.buildFormProperty, BuildFormProperty::class.java)

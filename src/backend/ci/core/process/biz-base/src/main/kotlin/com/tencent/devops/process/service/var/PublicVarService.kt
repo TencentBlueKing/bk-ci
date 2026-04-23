@@ -52,12 +52,12 @@ import com.tencent.devops.process.pojo.`var`.po.PublicVarPositionPO
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReferPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarVO
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class PublicVarService @Autowired constructor(
@@ -197,32 +197,30 @@ class PublicVarService @Autowired constructor(
 
     /**
      * 将PublicVarPO列表转换为PublicVarDO列表，并批量查询引用计数
-     * 引用计数按 referId 去重（跨版本），同一流水线多版本引用同一变量只计为1
+     * 引用计数语义见 [batchGetActiveReferCount]。
+     *
      * @param varPOs 变量PO列表
      * @param projectId 项目ID
      * @param groupName 变量组名称
-     * @param version 版本号（用于设置buildFormProperty.varGroupVersion，可为null）
+     * @param queryVersion 用户查询的变量组版本号；null 表示默认查最新版本
      * @return 变量DO列表
      */
     private fun convertVarPOsToDOsWithReferCount(
         varPOs: List<PublicVarPO>,
         projectId: String,
         groupName: String,
-        version: Int?
+        queryVersion: Int?
     ): List<PublicVarDO> {
         if (varPOs.isEmpty()) {
             return emptyList()
         }
-
-        // 批量查询所有变量的引用数量（跨版本按 referId 去重，同一流水线多版本引用只算1次）
-        val varNames = varPOs.map { it.varName }
-        val referCountMap = publicVarReferInfoDao.batchCountDistinctReferIdsAcrossVersionsByVars(
-            dslContext = dslContext,
+        val referCountMap = batchGetActiveReferCount(
             projectId = projectId,
             groupName = groupName,
-            varNames = varNames
+            varNames = varPOs.map { it.varName },
+            queryVersion = queryVersion
         )
-        return convertVarPOsToPublicVarDOs(varPOs, referCountMap, version)
+        return convertVarPOsToPublicVarDOs(varPOs, referCountMap, queryVersion)
     }
 
     fun getVariables(
@@ -248,7 +246,7 @@ class PublicVarService @Autowired constructor(
             varPOs = publicVarPOs,
             projectId = projectId,
             groupName = groupName,
-            version = version
+            queryVersion = version
         )
     }
 
@@ -300,6 +298,48 @@ class PublicVarService @Autowired constructor(
     /**
      * 将 PublicVarVO 列表转换为 PublicVarDO 列表并设置引用计数（供 PublicVarGroupService.getChangePreview 等复用）
      */
+    /**
+     * 查询某个变量组下一组变量的"有效引用数"
+     *
+     * 语义：
+     * - 当指定 `queryVersion`（查看某个具体历史版本）：只取该版本下的 REFER_COUNT
+     * - 未指定 `queryVersion`（默认：当前最新版本视角）：取 `VERSION=-1`（动态版本） +
+     *   `VERSION=变量组最新版本号` 之和
+     *
+     * 返回 `Map<varName, referCount>`，未出现的 varName 补 0。
+     */
+    fun batchGetActiveReferCount(
+        projectId: String,
+        groupName: String,
+        varNames: List<String>,
+        queryVersion: Int? = null
+    ): Map<String, Int> {
+        if (varNames.isEmpty()) return emptyMap()
+        val rawMap = if (queryVersion != null) {
+            publicVarVersionSummaryDao.batchGetReferCountByVarNames(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                version = queryVersion,
+                varNames = varNames
+            )
+        } else {
+            val latestVersion = publicVarGroupDao.getLatestVersionByGroupName(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName
+            ) ?: throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf(groupName))
+            publicVarVersionSummaryDao.batchGetActiveReferCount(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                latestVersion = latestVersion,
+                varNames = varNames
+            )
+        }
+        return varNames.associateWith { rawMap[it] ?: 0 }
+    }
+
     fun convertPublicVarVOsToDOsWithReferCount(
         publicVars: List<PublicVarVO>,
         referCountMap: Map<String, Int>
@@ -348,7 +388,16 @@ class PublicVarService @Autowired constructor(
         modelPublicVarHandleContext: ModelPublicVarHandleContext
     ): List<BuildFormProperty> {
         val publicVarGroups = modelPublicVarHandleContext.publicVarGroups.toMutableList()
-        if (publicVarGroups.isEmpty()) return modelPublicVarHandleContext.params
+        logger.info(
+            "[PVS] handleModelParams start projectId=$projectId, referId=${modelPublicVarHandleContext.referId}, " +
+                "referType=${modelPublicVarHandleContext.referType}, referVersion=${modelPublicVarHandleContext.referVersion}, " +
+                "groups=${publicVarGroups.map { it.groupName to it.version }}, " +
+                "paramsSize=${modelPublicVarHandleContext.params.size}"
+        )
+        if (publicVarGroups.isEmpty()) {
+            logger.info("[PVS] handleModelParams skip: publicVarGroups empty")
+            return modelPublicVarHandleContext.params
+        }
 
         // 查询引用信息
         val groupReferInfos = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
@@ -357,6 +406,11 @@ class PublicVarService @Autowired constructor(
             referType = modelPublicVarHandleContext.referType,
             referId = modelPublicVarHandleContext.referId,
             referVersion = modelPublicVarHandleContext.referVersion
+        )
+        logger.info(
+            "[PVS] handleModelParams groupReferInfos fetched size=${groupReferInfos.size}, " +
+                "groupNames=${groupReferInfos.map { it.groupName }}, " +
+                "positionInfoSizes=${groupReferInfos.map { it.groupName to (it.positionInfo?.size ?: -1) }}"
         )
 
         // 批量查询需要更新到最新版本的变量组
@@ -368,6 +422,10 @@ class PublicVarService @Autowired constructor(
         val latestVars = getAllLatestVarsForGroups(
             projectId = projectId,
             groupToVersion = latestGroupVersionMap
+        )
+        logger.info(
+            "[PVS] handleModelParams latestGroupVersionMap=$latestGroupVersionMap, " +
+                "latestVarsSizes=${latestVars.mapValues { it.value.size }}"
         )
 
         val params = modelPublicVarHandleContext.params.toMutableList()
@@ -383,6 +441,9 @@ class PublicVarService @Autowired constructor(
                 pipelineVarNames = pipelineVarNames
             )
         }
+        logger.info(
+            "[PVS] handleModelParams end paramsSize=${params.size}, paramIds=${params.map { it.id }}"
+        )
         return params
     }
 
@@ -399,18 +460,31 @@ class PublicVarService @Autowired constructor(
     ) {
         val groupName = varGroup.groupName
         val latestGroupVars = latestVars[groupName] ?: emptyList()
-        val groupReferInfo = groupReferInfos.find { it.groupName == groupName } ?: return
-        val positionInfo = groupReferInfo.positionInfo ?: return
+        val groupReferInfo = groupReferInfos.find { it.groupName == groupName }
+        if (groupReferInfo == null) {
+            logger.info("[PVS] processVarGroupForModel skip: no groupReferInfo for groupName=$groupName")
+            return
+        }
+        val positionInfo = groupReferInfo.positionInfo
+        if (positionInfo == null) {
+            logger.info("[PVS] processVarGroupForModel skip: null positionInfo for groupName=$groupName")
+            return
+        }
 
         val latestGroupVarNames = latestGroupVars.map { it.id }.toSet()
         val savedGroupVarNames = positionInfo.map { it.varName }.toSet()
         logger.info(
-            "handleModelParams latestGroupVarNames: $latestGroupVarNames" +
-                "|savedGroupVarNames: $savedGroupVarNames"
+            "[PVS] processVarGroupForModel group=$groupName, " +
+                "savedGroupVarNames=$savedGroupVarNames, latestGroupVarNames=$latestGroupVarNames"
         )
 
         // 对比版本差异并处理
         val diffResult = compareVarGroupVersions(savedGroupVarNames, latestGroupVarNames)
+        logger.info(
+            "[PVS] processVarGroupForModel group=$groupName diff: " +
+                "varsToRemove=${diffResult.varsToRemove}, varsToUpdate=${diffResult.varsToUpdate}, " +
+                "varsToAdd=${diffResult.varsToAdd}"
+        )
         val removedVars = processVarGroupDiff(
             diffResult = diffResult,
             groupReferInfo = groupReferInfo,
@@ -426,6 +500,10 @@ class PublicVarService @Autowired constructor(
 
         // 将已移除的变量设置到 variables 中（用于前端回显）
         varGroup.variables = removedVars
+        logger.info(
+            "[PVS] processVarGroupForModel done group=$groupName, paramsIds=${params.map { it.id }}, " +
+                "removedVarsForUi=${removedVars.map { it.id }}"
+        )
     }
 
     /**
@@ -524,15 +602,28 @@ class PublicVarService @Autowired constructor(
     ) {
         val indicesToRemove = varsToRemove
             .mapNotNull { varName ->
-                val pos = positionInfoMap[varName] ?: return@mapNotNull null
+                val pos = positionInfoMap[varName]
+                if (pos == null) {
+                    logger.info("[PVS] removeObsoleteVars no positionInfo for varName=$varName")
+                    return@mapNotNull null
+                }
                 val index = findVarIndexInParams(varName, pos.index, params)
+                logger.info(
+                    "[PVS] removeObsoleteVars lookup varName=$varName, expectedIndex=${pos.index}, " +
+                        "foundIndex=$index, paramAtIndex=${params.getOrNull(index)?.id}"
+                )
                 if (index >= 0) index else null // 过滤掉未找到的变量
             }
             .sortedDescending() // 降序排序，确保先删除索引大的
 
+        logger.info(
+            "[PVS] removeObsoleteVars varsToRemove=$varsToRemove, indicesToRemove=$indicesToRemove, " +
+                "paramsBefore=${params.map { it.id }}"
+        )
         indicesToRemove.forEach { index ->
             params.removeAt(index)
         }
+        logger.info("[PVS] removeObsoleteVars done, paramsAfter=${params.map { it.id }}")
     }
 
     /**

@@ -60,5 +60,7 @@ data class ResourcePublicVarGroupReferPO(
     @get:Schema(title = "创建时间")
     val createTime: LocalDateTime,
     @get:Schema(title = "更新时间")
-    val updateTime: LocalDateTime
+    val updateTime: LocalDateTime,
+    @get:Schema(title = "是否为 referId+groupName 当前最新有效引用")
+    val latestFlag: Boolean = false
 )

@@ -32,12 +32,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * 变量引用更新结果
- * 用于封装变量引用处理的结果，包含需要新增的引用记录和需要重新计算计数的变量信息
+ *
+ * 封装变量引用处理流程中需要新增的引用记录。
+ * 注意：自方案 4 起，`T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY.REFER_COUNT` 不再由代码维护，
+ * referCount 统一通过实时 JOIN 聚合查询得出，因此不再需要"需要重算计数的变量信息"字段。
  */
 @Schema(title = "变量引用更新结果")
 data class VarReferenceUpdateResult(
     @get:Schema(title = "需要新增的引用记录列表", description = "需要新增的变量引用记录", required = true)
-    val referRecordsToAdd: List<ResourcePublicVarReferPO>,
-    @get:Schema(title = "需要重新计算计数的变量信息集合", description = "需要重新计算引用计数的变量信息", required = true)
-    val varsNeedRecalculate: Set<VarCountUpdateInfo>
+    val referRecordsToAdd: List<ResourcePublicVarReferPO>
 )

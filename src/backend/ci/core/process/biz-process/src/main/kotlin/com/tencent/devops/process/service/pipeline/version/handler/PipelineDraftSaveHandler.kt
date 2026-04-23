@@ -120,7 +120,8 @@ class PipelineDraftSaveHandler @Autowired constructor(
                 referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
                 referName = pipelineBasicInfo.pipelineName,
                 referVersion = resourceOnlyVersion.version,
-                referVersionName = resourceOnlyVersion.versionName
+                referVersionName = resourceOnlyVersion.versionName,
+                draftFlag = true
             )
         )
 

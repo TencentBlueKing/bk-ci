@@ -396,6 +396,8 @@ class PipelineRepositoryService constructor(
         val modelTasks = ArrayList<PipelineModelTask>(metaSize)
         // 初始化ID 该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
         val containerSeqId = AtomicInteger(0)
+        model.projectId = projectId
+        model.pipelineId = pipelineId
         // 跨 stage 共享的 jobId 生成器种子和已使用的 jobId 集合，确保整个 model 范围内 jobId 唯一
         val randomSeed = AtomicInteger(1)
         val jobIdSet = mutableSetOf<String>()
