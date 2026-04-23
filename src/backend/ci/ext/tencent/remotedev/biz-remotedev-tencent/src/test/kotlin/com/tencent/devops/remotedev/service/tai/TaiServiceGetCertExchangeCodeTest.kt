@@ -2,14 +2,13 @@ package com.tencent.devops.remotedev.service.tai
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.remotedev.pojo.tai.CertExchangeCodeData
 import com.tencent.devops.remotedev.pojo.tai.CertExchangeCodeReq
 import com.tencent.devops.remotedev.pojo.tai.CertExchangeCodeResp
 import io.mockk.every
-import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
-import com.tencent.devops.common.api.util.OkhttpUtils
 import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
