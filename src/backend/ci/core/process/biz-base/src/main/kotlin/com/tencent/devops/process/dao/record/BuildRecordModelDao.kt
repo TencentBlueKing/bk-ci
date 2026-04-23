@@ -107,6 +107,7 @@ class BuildRecordModelDao {
     fun updateStatus(
         dslContext: DSLContext,
         projectId: String,
+        pipelineId: String,
         buildId: String,
         buildStatus: BuildStatus,
         executeCount: Int
@@ -116,6 +117,7 @@ class BuildRecordModelDao {
                 .where(
                     PROJECT_ID.eq(projectId)
                         .and(BUILD_ID.eq(buildId))
+                        .and(PIPELINE_ID.eq(pipelineId))
                         .and(EXECUTE_COUNT.eq(executeCount))
                 ).execute()
         }
