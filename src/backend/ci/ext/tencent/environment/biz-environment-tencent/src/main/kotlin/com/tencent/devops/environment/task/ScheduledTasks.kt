@@ -66,9 +66,9 @@ class ScheduledTasks @Autowired constructor(
 
     /**
      * 后台定时更新机器的CMDB信息（状态与属性等）
-     * cron：每10分钟执行一次。
+     * cron：默认每10分钟执行一次，0 7/10 * * * ?
      */
-    @Scheduled(cron = "0 7/10 * * * ?")
+    @Scheduled(cron = "\${environment.schedule.updateCmdbNode:0 7/10 * * * ?}")
     fun scheduledUpdateCmdbNodeInfo() {
         redisLockService.taskWithRedisLock(
             SCHEDULED_CHECK_NODES_TIMEOUT_LOCK_KEY,
