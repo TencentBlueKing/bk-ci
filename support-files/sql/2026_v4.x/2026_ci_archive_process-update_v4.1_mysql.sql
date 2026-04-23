@@ -49,6 +49,24 @@ BEGIN
     END IF;
 
     IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING'
+                    AND COLUMN_NAME = 'ENV_NAME') THEN
+    ALTER TABLE T_PIPELINE_SETTING
+        ADD COLUMN `ENV_NAME` varchar(256) COMMENT '环境名称';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING_VERSION'
+                    AND COLUMN_NAME = 'ENV_NAME') THEN
+        ALTER TABLE T_PIPELINE_SETTING_VERSION
+            ADD COLUMN `ENV_NAME` varchar(256) COMMENT '环境名称';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
               FROM information_schema.COLUMNS
               WHERE TABLE_SCHEMA = db
                 AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
@@ -64,6 +82,16 @@ BEGIN
                     AND COLUMN_NAME = 'TRIGGER_EVENT_TYPE') THEN
        ALTER TABLE `T_PIPELINE_BUILD_HISTORY_DEBUG`
           ADD COLUMN `TRIGGER_EVENT_TYPE` VARCHAR(64) DEFAULT NULL comment '触发事件标识';
+    END IF;
+
+        -- AI自动摘要字段
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_INFO'
+                    AND COLUMN_NAME = 'AUTO_SUMMARY') THEN
+        ALTER TABLE `T_PIPELINE_INFO`
+            ADD COLUMN `AUTO_SUMMARY` text DEFAULT NULL COMMENT 'AI自动生成的流水线摘要' AFTER `LOCKED`;
     END IF;
 
     COMMIT;

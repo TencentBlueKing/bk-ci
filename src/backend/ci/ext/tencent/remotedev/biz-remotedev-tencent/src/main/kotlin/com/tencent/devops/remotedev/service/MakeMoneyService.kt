@@ -52,8 +52,30 @@ class MakeMoneyService @Autowired constructor(
     )
 
     companion object {
-        private val logger = LoggerFactory.getLogger(MakeMoneyService::class.java)
+        private val logger =
+            LoggerFactory.getLogger(MakeMoneyService::class.java)
         private const val BK_CLOUD_DEV_PROPERTY = "蓝盾云研发"
+    }
+
+    /**
+     * 硬件成本判定：
+     * 1. 在 CMDB 资产系统中
+     * 2. machineFlag 非空（高配机型）
+     * 3. 物管所属为"蓝盾云研发"
+     * 三者同时满足才收取硬件成本
+     */
+    fun calculateHardwareCost(
+        cmdbAssetDetail: CmdbAssetDetail?,
+        machineFlag: String
+    ): Int {
+        val isInCmdb = cmdbAssetDetail != null
+        val isHighEndMachine = machineFlag.isNotBlank()
+        val isBkCloudDev = cmdbAssetDetail
+            ?.propertyManagementBelongs ==
+            BK_CLOUD_DEV_PROPERTY
+        return if (
+            isInCmdb && isHighEndMachine && isBkCloudDev
+        ) 1 else 0
     }
 
     /**
@@ -251,35 +273,6 @@ class MakeMoneyService @Autowired constructor(
             res.ifEmpty { null }?.let { save ->
                 snapshotsDao.createWorkspaceHistory(dslContext, save, lastDay)
             }
-
-            // 对物管所属非"蓝盾云研发"的实例做减免
-            reduceNonBkDevWorkspaces(chunk, cmdbAssetMap, lastDay)
-        }
-    }
-
-    private fun reduceNonBkDevWorkspaces(
-        chunk: List<String>,
-        cmdbAssetMap: Map<String, CmdbAssetDetail>,
-        lastDay: LocalDateTime
-    ) {
-        val nonBkDevNames = chunk.filter { name ->
-            val detail = cmdbAssetMap[name]
-            detail != null &&
-                detail.propertyManagementBelongs.isNotBlank() &&
-                detail.propertyManagementBelongs != BK_CLOUD_DEV_PROPERTY
-        }
-        if (nonBkDevNames.isNotEmpty()) {
-            val targetDate = lastDay.toLocalDate()
-            snapshotsDao.reduceWorkspaceBills(
-                dslContext = dslContext,
-                workspaceNames = nonBkDevNames,
-                startDate = targetDate,
-                endDate = targetDate
-            )
-            logger.info(
-                "Reduced ${nonBkDevNames.size} workspaces " +
-                    "with non-$BK_CLOUD_DEV_PROPERTY property management"
-            )
         }
     }
 
@@ -579,7 +572,9 @@ class MakeMoneyService @Autowired constructor(
             }
         }
         val dateList = getDateList(start, end)
-        val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
+        val allConfig = windowsResourceConfigService
+            .getAllType(true, null).associateBy { it.id!! }
+        val cmdbAssetMap = fetchCmdbAssetInfo()
         val res = mutableListOf<Bill.BillDetail>()
         // 分块处理减少性能压力
         total.keys.chunked(99).forEach { chunk ->
@@ -615,16 +610,20 @@ class MakeMoneyService @Autowired constructor(
                 val usage = bitCount(checkNotNull(total[name]))
                 val dayDetail = dayDetail(checkNotNull(total[name]), dateList)
 
-                // 从已查询的记录中获取COMMISSION_DATE字段
-                val commissionDate = workspaceCommissionDateMap[name] ?: ""
-                val hardwareCost = if (commissionDate.isNotEmpty()) 1 else 0
+                val commissionDate =
+                    workspaceCommissionDateMap[name] ?: ""
+                val commissionYears =
+                    calculateCommissionYears(commissionDate)
 
-                // 计算启用年数
-                val commissionYears = calculateCommissionYears(commissionDate)
+                val winConfigId =
+                    allWindows[name]?.winConfigId?.toLong()
+                val machineFlag = winConfigId
+                    ?.let { allConfig[it]?.machineFlag } ?: ""
 
-                // 获取机型标识
-                val winConfigId = allWindows[name]?.winConfigId?.toLong()
-                val machineFlag = winConfigId?.let { allConfig[it]?.machineFlag } ?: ""
+                val hardwareCost = calculateHardwareCost(
+                    cmdbAssetDetail = cmdbAssetMap[name],
+                    machineFlag = machineFlag
+                )
 
                 res.add(
                     Bill.BillDetail(

@@ -4,7 +4,7 @@ import { SvgIcon } from '@/components/SvgIcon'
 import { getStageRunConditionList } from '@/constants/flowOptionConfig'
 import { StageRunCondition } from '@/utils/flowDefaults'
 import { validateStageControlOption } from '@/utils/validation'
-import { Checkbox, Collapse, Form, Input, Select } from 'bkui-vue'
+import { Checkbox, Collapse, Form, Input, Popover, Select } from 'bkui-vue'
 import { computed, defineComponent, type PropType, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import sharedStyles from './shared.module.css'
@@ -186,7 +186,7 @@ export default defineComponent({
       () => {
         const updated = buildUpdatedStage()
         if (updated) {
-          ;(updated as Record<string, unknown>).isError = stageCtrlErrorFields.value.length > 0
+          ; (updated as Record<string, unknown>).isError = stageCtrlErrorFields.value.length > 0
           emit('change', updated)
         }
       },
@@ -232,12 +232,15 @@ export default defineComponent({
                           <Checkbox v-model={formData.value.fastKill} disabled={!props.editable}>
                             {t('flow.orchestration.stageFastKill')}
                           </Checkbox>
-                          <span
-                            class={sharedStyles.infoIcon}
-                            title={t('flow.orchestration.stageFastKillDesc')}
+                          <Popover
+                            content={t('flow.orchestration.stageFastKillDesc')}
+                            placement="top"
+                            boundary="window"
                           >
-                            <SvgIcon name="info-circle" size={14} />
-                          </span>
+                            <span class={sharedStyles.infoIcon}>
+                              <SvgIcon name="info-circle" size={14} />
+                            </span>
+                          </Popover>
                         </FormItem>
 
                         <FormItem label={t('flow.orchestration.whenToRunStage')} required>

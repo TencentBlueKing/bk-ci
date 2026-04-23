@@ -821,6 +821,7 @@ class CreateControl @Autowired constructor(
                 machineType = null
             ).associate { it.size to it.quota }
         }
+        logger.info("assignWorkspace|cgsData|${cgsData}")
         cgsData.forEach { cgs ->
             // 判断是不是特殊机型，如果是特殊机型增加特殊机型份额
             if (data.type.projectUse() && cgs.machineType in allSpecSize.value) {

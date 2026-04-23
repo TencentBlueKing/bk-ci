@@ -30,12 +30,16 @@ package com.tencent.devops.common.webhook.pojo.code.git
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
+import io.swagger.v3.oas.annotations.Parameter
 
 @Suppress("ALL")
 data class GitMergeRequestEvent(
     val user: GitUser,
     val manual_unlock: Boolean? = false,
-    val object_attributes: GitMRAttributes
+    val object_attributes: GitMRAttributes,
+    @JsonProperty("labels")
+    @Parameter(description = "gitlab标签信息")
+    val labels: List<GitLabel>? = null
 ) : GitEvent() {
 
     // 新建
@@ -93,7 +97,14 @@ data class GitMRAttributes(
     @JsonProperty("merge_type")
     val mergeType: String? = null,
     @JsonProperty("merge_commit_sha")
-    val mergeCommitSha: String? = null
+    val mergeCommitSha: String? = null,
+    @JsonProperty("labels")
+    val labels: List<GitLabel>? = null
+)
+
+data class GitLabel(
+    val id: Int?,
+    val title: String?
 )
 
 fun GitMergeRequestEvent.isMrMergeEvent() = this.object_attributes.action == TGitMergeActionKind.MERGE.value

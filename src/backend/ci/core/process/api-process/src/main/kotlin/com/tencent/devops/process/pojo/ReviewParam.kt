@@ -51,5 +51,7 @@ data class ReviewParam(
     @get:Schema(title = "审核意见", required = false)
     var suggest: String? = "",
     @get:Schema(title = "参数列表", required = false)
-    var params: MutableList<ManualReviewParam> = mutableListOf()
+    var params: MutableList<ManualReviewParam> = mutableListOf(),
+    @get:Schema(title = "审核意见是否必填", required = false)
+    val suggestRequired: Boolean? = false
 )

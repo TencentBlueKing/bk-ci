@@ -142,7 +142,7 @@
         const hash = this.$route.hash
 
         if (showProjectList) {
-            const reg = /^\/?[\w\-]+\/(([\w\-]+)\/?)(\S*)\/?$/
+            const reg = /^\/?[\w-]+\/(([\w-]+)\/?)(\S*)\/?$/
             const matchResult = path.match(reg)
             const { projectId } = this.$route.params
             const initPath = matchResult ? matchResult[3] : ''
@@ -167,7 +167,7 @@
                 + hash
             }
         } else {
-            const reg = /^\/?[\w\-]+\/(\S*)\/?$/
+            const reg = /^\/?[\w-]+\/(\S*)\/?$/
             const initPath = path.match(reg) ? path.replace(reg, '$1') : ''
 
             const query = Object.assign(

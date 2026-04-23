@@ -1,4 +1,4 @@
-import eventBus from './eventBus'
+import eventBus from "./eventBus"
 export function firstUpperCase (str: string): string {
     try {
         return str[0].toUpperCase() + str.slice(1)
@@ -8,13 +8,13 @@ export function firstUpperCase (str: string): string {
     }
 }
 
-export function camelCase (str: string, separator: string = '_'): string {
+export function camelCase (str: string, separator: string = "_"): string {
     try {
         const [firstWord, ...restWord] = str.split(separator)
         const camelString = restWord.reduce((camelString, word) => {
             camelString += firstUpperCase(word)
             return camelString
-        }, '')
+        }, "")
 
         return firstWord + camelString
     } catch (e) {
@@ -33,7 +33,7 @@ export function camelCase (str: string, separator: string = '_'): string {
  */
 export function transformObj (obj: ObjectMap): ObjectMap {
     if (!isObject(obj)) {
-        console.warn('transformObj need obj params', obj)
+        console.warn("transformObj need obj params", obj)
         return obj
     }
     return Object.keys(obj).reduce((user: any, key: string) => {
@@ -43,15 +43,20 @@ export function transformObj (obj: ObjectMap): ObjectMap {
 }
 
 export function getServiceLogoByPath (link: string): string {
-    return link.replace(/\/?(devops\/)?([\w\-]+)\S*$/, '$2')
+    return link.replace(/\/?(devops\/)?([\w-]+)\S*$/, "$2")
 }
 
 export function urlJoin (...args): string {
-    return args.filter(arg => arg).join('/').replace(/([^:]\/)\/+/g, '$1')
+    return args
+        .filter((arg) => arg)
+        .join("/")
+        .replace(/([^:]\/)\/+/g, "$1")
 }
 
 export function queryStringify (query: ObjectMap): string {
-    return Object.keys(query).map((key: string) => query[key] ? `${key}=${query[key]}` : key).join('&')
+    return Object.keys(query)
+        .map((key: string) => (query[key] ? `${key}=${query[key]}` : key))
+        .join("&")
 }
 
 /**
@@ -60,34 +65,49 @@ export function queryStringify (query: ObjectMap): string {
  */
 export function updateRecentVisitServiceList (path: string): void {
     try {
-        const recentVisitService: string | null = localStorage.getItem('recentVisitService')
-        const recentVisitServiceList = recentVisitService ? JSON.parse(recentVisitService) : []
-        const serviceReg: RegExp = /^\/(console\/)?([\w\-]+)\/?/
+        const recentVisitService: string | null
+      = localStorage.getItem("recentVisitService")
+        const recentVisitServiceList = recentVisitService
+            ? JSON.parse(recentVisitService)
+            : []
+        const serviceReg: RegExp = /^\/(console\/)?([\w-]+)\/?/
         const serviceMatch: object | null = path.match(serviceReg)
-        const serviceKey: string = serviceMatch ? serviceMatch[2] : ''
+        const serviceKey: string = serviceMatch ? serviceMatch[2] : ""
 
         if (serviceKey) {
-            const visitedService = recentVisitServiceList.find(service => service.key === serviceKey)
+            const visitedService = recentVisitServiceList.find(
+                (service) => service.key === serviceKey,
+            )
             const service = window.serviceObject.serviceMap[serviceKey]
-            
+
             if (visitedService) {
                 Object.assign(visitedService, {
-                    visitTimestamp: +new Date()
+                    visitTimestamp: +new Date(),
                 })
-                
+
                 // 按照访问时间排序
-                recentVisitServiceList.sort((s1, s2) => s2.visitTimestamp - s1.visitTimestamp)
-            } else if (service && service.status !== 'planning' && service.status !== 'developing') {
+                recentVisitServiceList.sort(
+                    (s1, s2) => s2.visitTimestamp - s1.visitTimestamp,
+                )
+            } else if (
+                service
+        && service.status !== "planning"
+        && service.status !== "developing"
+            ) {
                 recentVisitServiceList.unshift({
                     key: serviceKey,
-                    visitTimestamp: +new Date()
+                    visitTimestamp: +new Date(),
                 })
             }
-            if (recentVisitServiceList.length > 4) { // 最多保存4个最近访问服务列表
+            if (recentVisitServiceList.length > 4) {
+                // 最多保存4个最近访问服务列表
                 recentVisitServiceList.pop()
             }
             // 更新LocalStorage
-            localStorage.setItem('recentVisitService', JSON.stringify(recentVisitServiceList))
+            localStorage.setItem(
+                "recentVisitService",
+                JSON.stringify(recentVisitServiceList),
+            )
         }
     } catch (e) {
         console.warn(e)
@@ -96,7 +116,7 @@ export function updateRecentVisitServiceList (path: string): void {
 
 export function isObject (param) {
     const type = typeof param
-    return param !== null && type === 'object' && !Array.isArray(param)
+    return param !== null && type === "object" && !Array.isArray(param)
 }
 
 export function isShallowEqual (obj1: object, obj2: object): boolean {
@@ -113,19 +133,19 @@ export function isShallowEqual (obj1: object, obj2: object): boolean {
 }
 
 export function judgementLsVersion () {
-    const curLsVersion = window.localStorage.getItem('lsVersion')
+    const curLsVersion = window.localStorage.getItem("lsVersion")
     if (!curLsVersion || curLsVersion !== DEVOPS_LS_VERSION) {
         window.localStorage.clear()
-        localStorage.setItem('lsVersion', DEVOPS_LS_VERSION)
+        localStorage.setItem("lsVersion", DEVOPS_LS_VERSION)
     }
 }
 
 // 动态加载js
 export function importScript (src, oHead) {
-    return new Promise(resolve => {
-        const oScript = document.createElement('script')
-        oScript.type = 'text\/javascript'
-        oScript.setAttribute('src', window.PUBLIC_URL_PREFIX + src)
+    return new Promise((resolve) => {
+        const oScript = document.createElement("script")
+        oScript.type = "text\/javascript"
+        oScript.setAttribute("src", window.PUBLIC_URL_PREFIX + src)
         oHead.appendChild(oScript)
 
         oScript.onload = resolve
@@ -134,11 +154,11 @@ export function importScript (src, oHead) {
 
 // 动态加载css
 export function importStyle (href, oHead) {
-    return new Promise(resolve => {
-        const oStyle = document.createElement('link')
-        oStyle.setAttribute('rel', 'stylesheet')
-        oStyle.setAttribute('type', 'text/css')
-        oStyle.setAttribute('href', window.PUBLIC_URL_PREFIX + href)
+    return new Promise((resolve) => {
+        const oStyle = document.createElement("link")
+        oStyle.setAttribute("rel", "stylesheet")
+        oStyle.setAttribute("type", "text/css")
+        oStyle.setAttribute("href", window.PUBLIC_URL_PREFIX + href)
         oHead.appendChild(oStyle)
 
         oStyle.onload = resolve
@@ -168,7 +188,7 @@ export function getServiceAliasByPath (path: string): string {
 //             instance = new ComponentCreator(options)
 //             instance.viewmodel = instance.$mount()
 //             document.body.appendChild(instance.viewmodel.$el)
-    
+
 //         } else {
 //             console.warn('error component name', name)
 //         }
@@ -192,48 +212,65 @@ export function createDialog (options) {
 }
 export function toggleAsidePanel (options) {
     if (!isObject(options)) {
-        console.warn('需要传入一个对象')
+        console.warn("需要传入一个对象")
         return
     }
-    eventBus.$emit('update-extension-aside-panel', options)
+    eventBus.$emit("update-extension-aside-panel", options)
 }
 
 export function toggleDialog (options) {
     if (!isObject(options)) {
-        console.warn('需要传入一个对象')
+        console.warn("需要传入一个对象")
         return
     }
-    eventBus.$emit('update-extension-dialog', options)
+    eventBus.$emit("update-extension-dialog", options)
 }
 export function goToPage (options) {
     if (!isObject(options)) {
-        console.warn('需要传入一个对象')
+        console.warn("需要传入一个对象")
         return
     }
-    eventBus.$emit('change-extension-route', options)
+    eventBus.$emit("change-extension-route", options)
 }
 export function isAbsoluteUrl (url) {
     return /^(http(s)?:)?\/\//.test(url)
 }
 
 export class HttpError extends Error {
-    code = 500
-    constructor (code, message = 'http request error message') {
-        super(message)
-        this.code = code
-    }
+  code = 500;
+  constructor (code, message = "http request error message") {
+      super(message)
+      this.code = code
+  }
 }
 
 // 判断是否显示公告
 export function ifShowNotice (currentNotice) {
-    const announcementHistory = localStorage.getItem('announcementHistory') ? JSON.parse(localStorage.getItem('announcementHistory')) : []
+    const announcementHistory = localStorage.getItem("announcementHistory")
+        ? JSON.parse(localStorage.getItem("announcementHistory"))
+        : []
     // 判断当前公告是否生效中，并且未展示过
-    if (currentNotice && currentNotice.id && currentNotice.noticeType === 0 && announcementHistory.indexOf(currentNotice.id) === -1) {
-        // 判断当前公共是否只在特定服务展示
+    if (
+        currentNotice
+    && currentNotice.id
+    && currentNotice.noticeType === 0
+    && announcementHistory.indexOf(currentNotice.id) === -1
+    ) {
+    // 判断当前公共是否只在特定服务展示
         const noticeService = currentNotice.noticeService || []
-        if (!(noticeService.length > 0 && noticeService.indexOf(window.currentPage && window.currentPage.link_new) === -1)) {
+        if (
+            !(
+                noticeService.length > 0
+        && noticeService.indexOf(
+            window.currentPage && window.currentPage.link_new,
+        ) === -1
+            )
+        ) {
             announcementHistory.push(currentNotice.id)
-            localStorage.setItem('announcementHistory', JSON.stringify(announcementHistory))
+            localStorage.setItem(
+                "announcementHistory",
+                JSON.stringify(announcementHistory),
+            )
             return true
         }
     }
@@ -246,41 +283,47 @@ export function showLoginPopup () {
     // 系统的登录页地址
     const siteLoginUrl = window.getLoginUrl()
     if (!siteLoginUrl) {
-        console.error('Login URL not configured!')
+        console.error("Login URL not configured!")
         return
     }
 
     // 处理登录地址为登录小窗需要的格式，主要是设置c_url参数
     const loginURL = new URL(siteLoginUrl)
-    loginURL.searchParams.set('c_url', successUrl)
-    const pathname = loginURL.pathname.endsWith('/') ? loginURL.pathname : `${loginURL.pathname}/`
+    loginURL.searchParams.set("c_url", successUrl)
+    const pathname = loginURL.pathname.endsWith("/")
+        ? loginURL.pathname
+        : `${loginURL.pathname}/`
     const loginUrl = `${loginURL.origin}${pathname}plain/${loginURL.search}`
 
     // 传入最终的登录地址，弹出登录窗口，更多选项参考 Options
-    const modal = document.getElementById('devops-login-modal-overlay')
-    if (modal.style.display !== 'flex') {
-        modal.style.display = 'flex'
-    
+    const modal = document.getElementById("devops-login-modal-overlay")
+    if (modal.style.display !== "flex") {
+        modal.style.display = "flex"
+
         // 动态创建iframe
-        const iframe = document.createElement('iframe')
-        iframe.setAttribute('id', 'devops-login-iframe')
-        iframe.setAttribute('src', loginUrl)
-        iframe.style.width = '100%'
-        iframe.style.height = '100%'
-        iframe.style.border = 'none'
-        document.getElementById('devops-login-modal').appendChild(iframe)
-    
+        const iframe = document.createElement("iframe")
+        iframe.setAttribute("id", "devops-login-iframe")
+        iframe.setAttribute("src", loginUrl)
+        iframe.style.width = "100%"
+        iframe.style.height = "100%"
+        iframe.style.border = "none"
+        document.getElementById("devops-login-modal").appendChild(iframe)
+
         const abortController = new AbortController()
         const option = {
-            signal: abortController.signal
+            signal: abortController.signal,
         } as AddEventListenerOptions
         // 监听子页面的消息
-        window.addEventListener('message', (event: any) => {
-            if (event.data === 'loginSuccess') {
-                modal.style.display = 'none'
-                iframe.remove() // 移除iframe
-                abortController.abort()
-            }
-        }, option)
+        window.addEventListener(
+            "message",
+            (event: any) => {
+                if (event.data === "loginSuccess") {
+                    modal.style.display = "none"
+                    iframe.remove() // 移除iframe
+                    abortController.abort()
+                }
+            },
+            option,
+        )
     }
 }

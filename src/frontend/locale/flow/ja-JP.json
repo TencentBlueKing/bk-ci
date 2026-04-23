@@ -560,6 +560,8 @@
       "stepIdPlaceholder": "Step IDを入力してください。空の場合は任意ですが、現在のジョブ内で一意である必要があります",
       "stepIdFormatError": "英字またはアンダースコアで始まり、英字、数字、アンダースコアのみ使用できます",
       "stepIdDuplicateError": "Step IDが現在のジョブ内で重複しています",
+      "jobNamePlaceholder": "ジョブ名を入力してください",
+      "jobNameEnterToConfirm": "Enter キーで確定",
       "fieldRequired": "このフィールドは必須です",
       "cronInvalid": "Cron 式の形式が正しくありません"
     },
@@ -852,7 +854,7 @@
       "offline": "オフライン",
       "runMessage": "実行メッセージ",
       "runMessagePlaceholder": "手動トリガー",
-      "runMessageDesc": "このビルドの説明、例：トリガー方法、ビルド目的、ビルド理由など。入力しない場合は、ビルドのトリガー方法がデフォルトになります。",
+      "runMessageDesc": "この実行の説明、例：トリガー方法、実行目的、実行理由など。入力しない場合は、実行のトリガー方法がデフォルトになります。",
       "inputParams": "入力パラメータ",
       "quickFill": "クイック入力",
       "apply": "適用",

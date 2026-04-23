@@ -47,6 +47,7 @@ import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineIdInfo
+import com.tencent.devops.process.pojo.pipeline.PipelineCount
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineRemoteToken
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
@@ -655,6 +656,18 @@ interface ServicePipelineResource {
         pipelineId: String
     ): Result<PipelineRemoteToken>
 
+    @Operation(summary = "获取列表页列表相关的数目")
+    @GET
+    @Path("/projects/{projectId}/getCount")
+    fun getCount(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<PipelineCount>
+
     @Operation(summary = "启用/禁用流水线（修改流水线的并发设置）")
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/lock")
@@ -671,5 +684,27 @@ interface ServicePipelineResource {
         @Parameter(description = "开启true/锁定false", required = true)
         @QueryParam("enable")
         enable: Boolean
+    ): Result<Boolean>
+
+    @Operation(summary = "更新流水线AI自动摘要")
+    @PUT
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/autoSummary")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
+    fun updateAutoSummary(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "AI自动摘要内容", required = true)
+        @QueryParam("autoSummary")
+        autoSummary: String,
+        @Parameter(description = "流水线版本号（用于校验）", required = true)
+        @QueryParam("version")
+        version: Int
     ): Result<Boolean>
 }

@@ -1,11 +1,14 @@
 package com.tencent.devops.process.service.template.v2
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_SETTING_NOT_EXISTS
+import com.tencent.devops.process.dao.label.PipelineLabelDao
 import com.tencent.devops.process.dao.template.PipelineTemplateSettingDao
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingUpdateInfo
+import com.tencent.devops.process.service.label.PipelineGroupService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -16,7 +19,9 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineTemplateSettingService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineTemplateSettingDao: PipelineTemplateSettingDao
+    private val pipelineTemplateSettingDao: PipelineTemplateSettingDao,
+    private val pipelineGroupService: PipelineGroupService,
+    private val pipelineLabelDao: PipelineLabelDao
 ) {
     fun get(commonCondition: PipelineTemplateSettingCommonCondition): PipelineSetting {
         return pipelineTemplateSettingDao.get(
@@ -38,6 +43,38 @@ class PipelineTemplateSettingService @Autowired constructor(
             ),
             dslContext = dslContext
         ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_SETTING_NOT_EXISTS)
+    }
+
+    fun getWithLabels(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        settingVersion: Int
+    ): PipelineSetting {
+        val templateSetting = get(
+            projectId = projectId,
+            templateId = templateId,
+            settingVersion = settingVersion
+        )
+        // 历史的settingVersion表中labels字段可能为空,需要单独再查询
+        return if (templateSetting.labels.isNotEmpty()) {
+            val labelIds = templateSetting.labels.map { HashUtil.decodeIdToLong(it) }.toSet()
+            val labelNames = pipelineLabelDao.getByIds(dslContext, projectId, labelIds).map { it.name }
+            templateSetting.copy(labelNames = labelNames)
+        } else {
+            // 获取模版labels
+            val labels = ArrayList<String>()
+            val labelNames = ArrayList<String>()
+            pipelineGroupService.getGroups(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = templateId
+            ).forEach {
+                labels.addAll(it.labels)
+                labelNames.addAll(it.labelNames)
+            }
+            templateSetting.copy(labels = labels, labelNames = labelNames)
+        }
     }
 
     fun getOrNull(

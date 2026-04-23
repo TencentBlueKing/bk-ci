@@ -50,11 +50,12 @@ object Versions {
     const val audit = "2.0.1"
     const val MysqlDriver = "8.0.33"
     const val tencentcloudsdkcfs = "3.1.946"
+    const val cosApi = "5.6.246.3"
     // worker
     const val Winp = "1.28"
     const val Jna = "5.14.0"
     const val JenkinsVersionNumber = "1.1"
-    const val devopsScm = "1.1.8"
+    const val devopsScm = "1.1.9"
     const val lettuce = "6.4.2.RELEASE"
     const val jsonPath = "2.10.0"
 }
