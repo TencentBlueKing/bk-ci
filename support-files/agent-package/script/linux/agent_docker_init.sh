@@ -27,6 +27,8 @@ chmod +x docker.jar
 
 ci_log "copy docker.jar finished, ready to start it..."
 
+/usr/local/jre/bin/java -version
+
 exec /usr/local/jre/bin/java -Dfile.encoding=UTF-8 -DLC_CTYPE=UTF-8 -Dbuild.type=DOCKER -Dsun.zip.disableMemoryMapping=true -Xmx1024m -Xms128m -jar docker.jar "$@" >>"$CI_LOG_FILE" 2>&1
 
 ci_log "end"

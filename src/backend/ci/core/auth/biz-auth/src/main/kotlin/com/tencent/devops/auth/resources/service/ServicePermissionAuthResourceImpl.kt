@@ -28,7 +28,11 @@
 package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.auth.pojo.AuthResourceInfo
+import com.tencent.devops.auth.pojo.dto.PermissionBatchValidateDTO
 import com.tencent.devops.auth.service.iam.PermissionExtService
+import com.tencent.devops.auth.service.iam.PermissionResourceService
+import com.tencent.devops.auth.service.iam.PermissionResourceValidateService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -41,7 +45,9 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServicePermissionAuthResourceImpl @Autowired constructor(
     val permissionService: PermissionService,
-    val permissionExtService: PermissionExtService
+    val permissionExtService: PermissionExtService,
+    val permissionResourceService: PermissionResourceService,
+    val permissionResourceValidateService: PermissionResourceValidateService
 ) : ServicePermissionAuthResource {
 
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
@@ -284,6 +290,53 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
         return Result(
             permissionExtService.resourceCancelRelation(
                 userId = userId,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
+        )
+    }
+
+    override fun batchValidateUserResourcePermission(
+        userId: String,
+        projectCode: String,
+        permissionBatchValidateDTO: PermissionBatchValidateDTO
+    ): Result<Map<String, Boolean>> {
+        return Result(
+            permissionResourceValidateService
+                .batchValidateUserResourcePermission(
+                    userId = userId,
+                    projectCode = projectCode,
+                    permissionBatchValidateDTO = permissionBatchValidateDTO
+                )
+        )
+    }
+
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
+    override fun getResourceByName(
+        token: String,
+        projectCode: String,
+        resourceType: String,
+        resourceName: String
+    ): Result<AuthResourceInfo?> {
+        return Result(
+            permissionResourceService.getResourceByName(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceName = resourceName
+            )
+        )
+    }
+
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
+    override fun getResourceByCode(
+        token: String,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Result<AuthResourceInfo?> {
+        return Result(
+            permissionResourceService.getResourceByCode(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode

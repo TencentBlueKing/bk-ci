@@ -70,6 +70,8 @@ class GithubWebhookElementParams : ScmWebhookElementParams<CodeGithubWebHookTrig
             params.includeNoteTypes = joinToString(includeNoteTypes)
             params.includeIssueAction = joinToString(includeIssueAction)
             params.includeMrAction = joinToString(includeMrAction)
+            params.includeLabels = EnvUtils.parseEnv(element.includeLabels ?: "", variables)
+            params.excludeLabels = EnvUtils.parseEnv(element.excludeLabels ?: "", variables)
         }
         return params
     }

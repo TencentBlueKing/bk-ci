@@ -2,6 +2,7 @@ package com.tencent.devops.auth.api.service
 
 import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.auth.pojo.dto.GroupAddDTO
+import com.tencent.devops.auth.pojo.dto.IamGroupIdsQueryConditionDTO
 import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
@@ -159,4 +160,12 @@ interface ServiceResourceGroupResource {
         @QueryParam("groupCode")
         groupCode: BkAuthGroup
     ): Result<AuthResourceGroup?>
+
+    @POST
+    @Path("/listGroupsByConditions")
+    @Operation(summary = "根据条件查询用户组列表")
+    fun listGroupsByConditions(
+        @Parameter(description = "查询条件", required = true)
+        condition: IamGroupIdsQueryConditionDTO
+    ): Result<List<AuthResourceGroup>>
 }

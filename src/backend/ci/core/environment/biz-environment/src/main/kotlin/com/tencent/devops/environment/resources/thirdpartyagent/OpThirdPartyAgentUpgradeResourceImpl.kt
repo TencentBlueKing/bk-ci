@@ -27,15 +27,19 @@
 
 package com.tencent.devops.environment.resources.thirdpartyagent
 
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.AgentUpgradeType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdpartyagent.OpThirdPartyAgentUpgradeResource
 import com.tencent.devops.environment.pojo.thirdpartyagent.JDKInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.OpAgentUpgradeInfo
 import com.tencent.devops.environment.service.thirdpartyagent.upgrade.AgentPropsScope
 import com.tencent.devops.environment.service.thirdpartyagent.upgrade.AgentScope
+import com.tencent.devops.environment.service.thirdpartyagent.upgrade.AgentScope.UpgradeKey
 import com.tencent.devops.environment.service.thirdpartyagent.upgrade.ProjectScope
 import org.springframework.beans.factory.annotation.Autowired
+import kotlin.Long
 
 @Suppress("TooManyFunctions")
 @RestResource
@@ -191,5 +195,81 @@ class OpThirdPartyAgentUpgradeResourceImpl @Autowired constructor(
 
     override fun cleanAllDenyUpgradeAgentProjects(type: AgentUpgradeType?): Result<Boolean> {
         return Result(projectScope.cleanAllUpgradeProjects(ProjectScope.UpgradeKey.DENY_PROJECT, type))
+    }
+
+    override fun setDockerInitFileMd5(fileMd5: String, os: OS): Result<Boolean> {
+        return Result(agentPropsScope.setDockerInitFileMd5(fileMd5, os))
+    }
+
+    override fun setAgentUpgradeMaxCount(count: Long): Result<Boolean> {
+        agentScope.setAgentMaxUpgradeCount(count)
+        return Result(true)
+    }
+
+    override fun getAllUpgradeScope(): Result<OpAgentUpgradeInfo> {
+        return Result(
+            OpAgentUpgradeInfo(
+                // COMMON
+                maxParallelCount = agentPropsScope.getMaxParallelUpgradeCount(),
+                // WORKER
+                workerVersion = agentPropsScope.getWorkerVersion(),
+                workerForceIds = agentScope.getAllUpgradeAgents(
+                    upgradeKey = UpgradeKey.FORCE_UPGRADE,
+                    type = AgentUpgradeType.WORKER
+                ),
+                workerLockIds = agentScope.getAllUpgradeAgents(
+                    upgradeKey = UpgradeKey.LOCK_UPGRADE,
+                    type = AgentUpgradeType.WORKER
+                ),
+                workerPriorityProjectIds = projectScope.getAllUpgradeProjects(
+                    ProjectScope.UpgradeKey.PRIORITY_PROJECT,
+                    AgentUpgradeType.WORKER
+                ),
+                workerDenyProjectIds = projectScope.getAllUpgradeProjects(
+                    ProjectScope.UpgradeKey.DENY_PROJECT,
+                    AgentUpgradeType.WORKER
+                ),
+                // AGENT
+                agentVersion = agentPropsScope.getAgentVersion(),
+                agentForceIds = agentScope.getAllUpgradeAgents(
+                    upgradeKey = UpgradeKey.FORCE_UPGRADE,
+                    type = AgentUpgradeType.GO_AGENT
+                ),
+                agentLockIds = agentScope.getAllUpgradeAgents(
+                    upgradeKey = UpgradeKey.LOCK_UPGRADE,
+                    type = AgentUpgradeType.GO_AGENT
+                ),
+                agentPriorityProjectIds = projectScope.getAllUpgradeProjects(
+                    ProjectScope.UpgradeKey.PRIORITY_PROJECT,
+                    AgentUpgradeType.GO_AGENT
+                ),
+                agentDenyProjectIds = projectScope.getAllUpgradeProjects(
+                    ProjectScope.UpgradeKey.DENY_PROJECT,
+                    AgentUpgradeType.GO_AGENT
+                ),
+                agentMaxUpgradeCount = agentScope.getAgentMaxUpgradeCount(),
+                // JDK
+                jdkVersions = agentPropsScope.getAllJdkVersions(),
+                jdkForceIds = agentScope.getAllUpgradeAgents(
+                    upgradeKey = UpgradeKey.FORCE_UPGRADE,
+                    type = AgentUpgradeType.JDK
+                ),
+                jdkLockIds = agentScope.getAllUpgradeAgents(
+                    upgradeKey = UpgradeKey.LOCK_UPGRADE,
+                    type = AgentUpgradeType.JDK
+                ),
+                // DOCKER_INIT_FILE
+                dockerInitFileLinuxMd5 = agentPropsScope.getDockerInitFileMd5(OS.LINUX.name),
+                dockerInitFileNoLinuxMd5 = agentPropsScope.getDockerInitFileMd5(OS.WINDOWS.name),
+                dockerInitFileForceIds = agentScope.getAllUpgradeAgents(
+                    upgradeKey = UpgradeKey.FORCE_UPGRADE,
+                    type = AgentUpgradeType.DOCKER_INIT_FILE
+                ),
+                dockerInitFileLockIds = agentScope.getAllUpgradeAgents(
+                    upgradeKey = UpgradeKey.LOCK_UPGRADE,
+                    type = AgentUpgradeType.DOCKER_INIT_FILE
+                )
+            )
+        )
     }
 }

@@ -566,4 +566,28 @@ class RbacPermissionResourceService(
             resourceCode = resourceCode
         )
     }
+
+    override fun getResourceByName(
+        projectCode: String,
+        resourceType: String,
+        resourceName: String
+    ): AuthResourceInfo? {
+        return authResourceService.getByResourceName(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceName = resourceName
+        )
+    }
+
+    override fun getResourceByCode(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): AuthResourceInfo? {
+        return authResourceService.getByResourceCode(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+    }
 }

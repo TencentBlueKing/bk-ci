@@ -32,28 +32,8 @@ package config
 import (
 	"fmt"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/wintask"
-	"github.com/capnspacehook/taskmaster"
 	"golang.org/x/sys/windows"
 )
-
-func GetWinTaskType() string {
-	serviceName := "devops_agent_" + GAgentConfig.AgentId
-	ok := wintask.FindService(serviceName)
-	if ok {
-		return string(wintask.ServiceStart)
-	}
-	task, taskOk := wintask.FindTask(serviceName)
-	if taskOk {
-		// 启用了的task才能进行升级后的启动，否则不能升级Daemon
-		if task.Enabled && (task.State == taskmaster.TASK_STATE_READY || task.State == taskmaster.TASK_STATE_RUNNING) {
-			return string(wintask.TaskStart)
-		} else {
-			return string(wintask.TaskStart) + "_DISABLE"
-		}
-	}
-	return string(wintask.ManualStart)
-}
 
 func GetOsVersion() (string, error) {
 	version := windows.RtlGetVersion()

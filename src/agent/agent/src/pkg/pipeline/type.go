@@ -28,6 +28,7 @@
 package pipeline
 
 var COMMAND = "COMMAND"
+
 var FILE = "FILE"
 
 const (

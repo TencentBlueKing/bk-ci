@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/sirupsen/logrus"
-	"gopkg.in/natefinch/lumberjack.v2"
+	lumberjack "gopkg.in/natefinch/lumberjack.v2"
 )
 
 const (
@@ -15,6 +15,8 @@ const (
 )
 
 var Logs *logrus.Entry
+
+var logWriter io.Closer
 
 func Init(filepath string, isDebug bool, logStd bool) error {
 	logInfo := logrus.WithFields(logrus.Fields{})
@@ -25,6 +27,7 @@ func Init(filepath string, isDebug bool, logStd bool) error {
 		MaxBackups: 7,
 		LocalTime:  true,
 	}
+	logWriter = lumLog
 
 	// 同时写入到 std
 	if logStd {
@@ -44,6 +47,26 @@ func Init(filepath string, isDebug bool, logStd bool) error {
 	Logs = logInfo
 
 	return nil
+}
+
+// Close flushes and closes the underlying log file. Safe to call before
+// os.Exit to ensure all buffered log entries are written to disk.
+func Close() {
+	if logWriter != nil {
+		logWriter.Close()
+	}
+}
+
+// SetDebugMode toggles the log level at runtime without restarting.
+func SetDebugMode(debug bool) {
+	if Logs == nil {
+		return
+	}
+	if debug {
+		Logs.Logger.SetLevel(logrus.DebugLevel)
+	} else {
+		Logs.Logger.SetLevel(logrus.InfoLevel)
+	}
 }
 
 // UNTestDebugInit DebugInit 初始化为debug模式下的log，将日志输出到标准输出流，只是为了单元测试使用
