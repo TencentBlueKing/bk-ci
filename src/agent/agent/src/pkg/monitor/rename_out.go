@@ -1,5 +1,5 @@
-//go:build out && !windows
-// +build out,!windows
+//go:build out && !windows && !loong64
+// +build out,!windows,!loong64
 
 package monitor
 

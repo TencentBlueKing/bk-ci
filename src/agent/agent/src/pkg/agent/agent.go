@@ -31,7 +31,6 @@ import (
 	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/monitor"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/cron"
@@ -40,6 +39,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/imagedebug"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/mcp"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/monitor"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/pipeline"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"

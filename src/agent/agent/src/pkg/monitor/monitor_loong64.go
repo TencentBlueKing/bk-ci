@@ -6,6 +6,7 @@ package monitor
 import (
 	"context"
 	"io"
+	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 )
@@ -22,7 +23,7 @@ func Collect() {
 
 // RunOnceStdout 在 loong64 平台直接返回 0 / nil。
 // 保留签名以便 agentcli monitor 子命令在该架构下仍可链接。
-func RunOnceStdout(ctx context.Context, out io.Writer) (int, error) {
+func RunOnceStdout(ctx context.Context, out io.Writer, duration time.Duration) (int, error) {
 	_ = ctx
 	return 0, nil
 }

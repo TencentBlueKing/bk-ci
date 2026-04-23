@@ -247,16 +247,16 @@ const (
 // ------------------------------------------------------------
 
 const (
-	TagHost      = "host"
-	TagCPU       = "cpu"       // cpu measurement: cpu0 / cpu-total
-	TagInterface = "interface" // net measurement
-	TagDevice    = "device"    // disk measurement
-	TagName      = "name"      // diskio measurement（对齐 telegraf inputs.diskio 默认 tag）
-	TagFstype    = "fstype"
-	TagMode      = "mode"
-	TagPath      = "path"
-	TagSource    = "source" // monitor / collector 区分上报来源
-	TagInstance  = "instance"
+	TagHost       = "host"
+	TagCPU        = "cpu"       // cpu measurement: cpu0 / cpu-total
+	TagInterface  = "interface" // net measurement
+	TagDevice     = "device"    // disk measurement
+	TagName       = "name"      // diskio measurement（对齐 telegraf inputs.diskio 默认 tag）
+	TagFstype     = "fstype"
+	TagMode       = "mode"
+	TagPath       = "path"
+	TagSource     = "source" // monitor / collector 区分上报来源
+	TagInstance   = "instance"
 	TagObjectName = "objectname" // Windows PDH ObjectName（如 Processor / PhysicalDisk / Network Interface）
 
 	// 全局 tag（由 reporter 从 config 注入）

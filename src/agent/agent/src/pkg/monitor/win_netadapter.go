@@ -99,8 +99,9 @@ func scanAdapterDescriptions() (map[string]string, error) {
 // 和 ")" 视为特殊字符，Windows 内部会做这一步 escape）。
 //
 // 例：
-//   Intel(R) Ethernet Connection (17) I219-LM
-//     → Intel[R] Ethernet Connection [17] I219-LM
+//
+//	Intel(R) Ethernet Connection (17) I219-LM
+//	  → Intel[R] Ethernet Connection [17] I219-LM
 //
 // 与 telegraf 历史 instance 字符串 100% 一致，让后端
 // WHERE instance='Intel[R]...' 精确查询能命中 monitor 数据。

@@ -15,12 +15,12 @@ import (
 // 这些文件系统要么是虚拟的（tmpfs / devtmpfs / devfs）要么是容器层叠
 // （overlay / aufs / squashfs），上报容量没有实际意义。
 var defaultDiskIgnoreFS = map[string]struct{}{
-	"tmpfs":     {},
-	"devtmpfs":  {},
-	"devfs":     {},
-	"overlay":   {},
-	"aufs":      {},
-	"squashfs":  {},
+	"tmpfs":    {},
+	"devtmpfs": {},
+	"devfs":    {},
+	"overlay":  {},
+	"aufs":     {},
+	"squashfs": {},
 }
 
 // Disk 对齐 telegraf plugins/inputs/disk。每个 physical mountpoint 产出

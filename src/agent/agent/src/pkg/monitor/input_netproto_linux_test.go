@@ -26,8 +26,8 @@ func TestNetProto_Gather_FlattensProtocols(t *testing.T) {
 			// gopsutil 按 /proc/net/snmp 头部原样给出 Protocol，首字母大写
 			return []gopsutilnet.ProtoCountersStat{
 				{Protocol: "Icmp", Stats: map[string]int64{
-					"InMsgs":   100,
-					"OutMsgs":  200,
+					"InMsgs":  100,
+					"OutMsgs": 200,
 				}},
 				{Protocol: "Tcp", Stats: map[string]int64{
 					"ActiveOpens":  50,
@@ -54,10 +54,10 @@ func TestNetProto_Gather_FlattensProtocols(t *testing.T) {
 	}
 	// 字段名全小写
 	wantFields := map[string]int64{
-		"icmp_inmsgs":       100,
-		"icmp_outmsgs":      200,
-		"tcp_activeopens":   50,
-		"tcp_passiveopens":  60,
+		"icmp_inmsgs":      100,
+		"icmp_outmsgs":     200,
+		"tcp_activeopens":  50,
+		"tcp_passiveopens": 60,
 	}
 	for k, want := range wantFields {
 		got, _ := m.Fields[k].(int64)

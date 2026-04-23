@@ -22,6 +22,7 @@ type stubInput struct {
 }
 
 func (s *stubInput) Name() string { return s.name }
+
 func (s *stubInput) Gather() ([]Metric, error) {
 	s.calls.Add(1)
 	if s.err != nil {

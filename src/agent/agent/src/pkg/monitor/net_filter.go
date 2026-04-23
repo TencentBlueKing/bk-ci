@@ -17,37 +17,37 @@ import "strings"
 // 与 diskio 过滤（input_diskio_filter.go）互不依赖，各自维护自己的黑名单。
 var defaultNetIfaceSkipPrefixes = []string{
 	// Linux
-	"lo",       // lo / lo0
-	"br-",      // docker bridge: br-abc123
-	"veth",     // container veth pair
-	"docker",   // docker0
-	"cali",     // calico / CNI
-	"flannel",  // flannel / weave
-	"weave",    // weave
-	"cni",      // generic cni
-	"virbr",    // libvirt
-	"tun",      // tun*（macOS utun* 也命中；需早于 en* 判断）
-	"tap",      // tap 虚接口
+	"lo",      // lo / lo0
+	"br-",     // docker bridge: br-abc123
+	"veth",    // container veth pair
+	"docker",  // docker0
+	"cali",    // calico / CNI
+	"flannel", // flannel / weave
+	"weave",   // weave
+	"cni",     // generic cni
+	"virbr",   // libvirt
+	"tun",     // tun*（macOS utun* 也命中；需早于 en* 判断）
+	"tap",     // tap 虚接口
 	// macOS 专属伪接口
-	"gif",   // generic ip tunnel
-	"stf",   // 6to4 tunnel
-	"anpi",  // Apple Mobile Net
-	"ap",    // AirPort
-	"awdl",  // Apple Wireless Direct
-	"llw",   // Link-Layer Wireless
+	"gif",    // generic ip tunnel
+	"stf",    // 6to4 tunnel
+	"anpi",   // Apple Mobile Net
+	"ap",     // AirPort
+	"awdl",   // Apple Wireless Direct
+	"llw",    // Link-Layer Wireless
 	"bridge", // bridge0
-	"utun",  // user tunnel
+	"utun",   // user tunnel
 	// Windows 伪接口
 	"Loopback Pseudo-Interface",
-	"vEthernet",  // vEthernet (WSL (Hyper-V firewall)) 等
-	"isatap.",    // ISATAP tunnel
-	"Teredo",     // IPv6 teredo tunnel
-	"NGNClient",  // VPN 隧道虚拟网卡
-	"TAP-",       // OpenVPN TAP-Windows Adapter Vx
-	"WireGuard",  // WireGuard 隧道
-	"Hyper-V",    // Hyper-V Virtual Ethernet Adapter
+	"vEthernet",    // vEthernet (WSL (Hyper-V firewall)) 等
+	"isatap.",      // ISATAP tunnel
+	"Teredo",       // IPv6 teredo tunnel
+	"NGNClient",    // VPN 隧道虚拟网卡
+	"TAP-",         // OpenVPN TAP-Windows Adapter Vx
+	"WireGuard",    // WireGuard 隧道
+	"Hyper-V",      // Hyper-V Virtual Ethernet Adapter
 	"WAN Miniport", // Windows 拨号/VPN 虚接口
-	"PANGP",      // GlobalProtect VPN
+	"PANGP",        // GlobalProtect VPN
 }
 
 // shouldSkipNetInterface 返回 true 表示该接口应被过滤，不产出 metric。

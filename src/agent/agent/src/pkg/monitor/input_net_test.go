@@ -24,9 +24,9 @@ func TestNet_Gather_FiltersAllPseudoInterface(t *testing.T) {
 			return []net.IOCountersStat{
 				{Name: "eth0", BytesRecv: 100, BytesSent: 200},
 				{Name: "all", BytesRecv: 300, BytesSent: 400},
-				{Name: "lo", BytesRecv: 1, BytesSent: 2},       // 虚接口黑名单
+				{Name: "lo", BytesRecv: 1, BytesSent: 2},        // 虚接口黑名单
 				{Name: "docker0", BytesRecv: 10, BytesSent: 20}, // 虚接口黑名单
-				{Name: "ens33", BytesRecv: 5, BytesSent: 6},    // 物理网卡保留
+				{Name: "ens33", BytesRecv: 5, BytesSent: 6},     // 物理网卡保留
 			}, nil
 		},
 		nowFn: time.Now,
