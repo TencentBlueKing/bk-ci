@@ -63,6 +63,7 @@ import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
+import com.tencent.devops.process.pojo.task.PipelineFailTaskDetail
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -1049,4 +1050,26 @@ interface ServiceBuildResource {
         @BkField(required = false)
         debug: Boolean?
     ): Result<BuildInfo?>
+
+    @Operation(summary = "获取指定构建任务的失败任务信息")
+    @GET
+    @Path("projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/failed/tasks")
+    fun getBuildFailedTasks(
+        @Parameter(description = "项目ID", required = true)
+        @BkField(required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        @BkField(required = true)
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        @BkField(required = true)
+        buildId: String,
+        @Parameter(description = "执行次数", required = false)
+        @QueryParam("executeCount")
+        @BkField(required = false)
+        executeCount: Int?
+    ): Result<List<PipelineFailTaskDetail>>
 }
