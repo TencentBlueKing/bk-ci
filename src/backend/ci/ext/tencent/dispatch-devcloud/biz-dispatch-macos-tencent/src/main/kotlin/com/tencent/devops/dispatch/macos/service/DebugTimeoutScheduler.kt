@@ -1,9 +1,8 @@
-package com.tencent.devops.dispatch.macos.config
+package com.tencent.devops.dispatch.macos.service
 
 import com.tencent.devops.dispatch.macos.dao.DebugHistoryDao
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmDebugLoginRequest
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmDelete
-import com.tencent.devops.dispatch.macos.service.DevCloudMacosService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
