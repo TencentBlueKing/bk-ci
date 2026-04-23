@@ -114,10 +114,13 @@ class ServiceSecurityFilter(
             logger.warn("Invalid request, jwt is empty!Client ip:$clientIp,uri:$uri")
             return jwtNullError
         }
-        val checkResult: Boolean = jwtManager.verifyJwt(jwt)
-        if (!checkResult) {
+        val checkResult = jwtManager.verifyJwt(jwt)
+        if (!checkResult.isValid) {
             logger.warn("Invalid request, jwt is invalid or expired!Client ip:$clientIp,uri:$uri")
             return jwtCheckFailError
+        }
+        if (checkResult.kid != jwtManager.activeKeyConfig()?.kid) {
+            logger.warn("jwt kid is not active!Client ip:$clientIp,uri:$uri,jwt kid:${checkResult.kid}")
         }
         return null
     }
