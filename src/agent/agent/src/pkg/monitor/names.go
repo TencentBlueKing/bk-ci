@@ -80,6 +80,31 @@ const (
 	FieldSwapIn           = "in"
 	FieldSwapOut          = "out"
 
+	// mem Linux 专属字段（对齐 telegraf plugins/inputs/mem 在 linux 平台的上报集合）
+	FieldLaundry        = "laundry"
+	FieldCommitLimit    = "commit_limit"
+	FieldCommittedAS    = "committed_as"
+	FieldDirty          = "dirty"
+	FieldHighFree       = "high_free"
+	FieldHighTotal      = "high_total"
+	FieldHugePagesFree  = "huge_pages_free"
+	FieldHugePageSize   = "huge_page_size"
+	FieldHugePagesTotal = "huge_pages_total"
+	FieldLowFree        = "low_free"
+	FieldLowTotal       = "low_total"
+	FieldMapped         = "mapped"
+	FieldPageTables     = "page_tables"
+	FieldSreclaimable   = "sreclaimable"
+	FieldSunreclaim     = "sunreclaim"
+	FieldSwapCached     = "swap_cached"
+	FieldSwapFree       = "swap_free"
+	FieldSwapTotal      = "swap_total"
+	FieldVmallocChunk   = "vmalloc_chunk"
+	FieldVmallocTotal   = "vmalloc_total"
+	FieldVmallocUsed    = "vmalloc_used"
+	FieldWriteBack      = "write_back"
+	FieldWriteBackTmp   = "write_back_tmp"
+
 	// disk
 	FieldInodesTotal       = "inodes_total"
 	FieldInodesUsed        = "inodes_used"
@@ -140,6 +165,7 @@ const (
 	FieldContextSwitches = "context_switches"
 	FieldDiskPagesIn     = "disk_pages_in"
 	FieldDiskPagesOut    = "disk_pages_out"
+	FieldEntropyAvail    = "entropy_avail"
 
 	// processes
 	FieldRunning      = "running"

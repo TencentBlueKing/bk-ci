@@ -42,8 +42,33 @@ func TestDisk_Gather_IgnoreFilesystems(t *testing.T) {
 	if metrics[0].Tags[TagFstype] != "ext4" {
 		t.Errorf("fstype = %q, want ext4", metrics[0].Tags[TagFstype])
 	}
+	// device 应去掉 /dev/ 前缀，对齐 telegraf inputs.disk 的裸设备名
+	if metrics[0].Tags[TagDevice] != "sda1" {
+		t.Errorf("device = %q, want %q (no /dev/ prefix)", metrics[0].Tags[TagDevice], "sda1")
+	}
 	if metrics[0].Tags[TagMode] != "rw" {
 		t.Errorf("mode = %q, want rw", metrics[0].Tags[TagMode])
+	}
+}
+
+// TestDisk_Gather_DevicePrefixStripped 专门覆盖 device 前缀归一化：
+// Linux /dev/sda1、macOS /dev/disk3s1s1 都应去掉 /dev/；
+// 非 /dev/ 开头的（Windows "C:"、nullfs mount source）原样保留。
+func TestDisk_Gather_DevicePrefixStripped(t *testing.T) {
+	cases := []struct {
+		raw  string
+		want string
+	}{
+		{"/dev/sda1", "sda1"},
+		{"/dev/disk3s1s1", "disk3s1s1"},
+		{"C:", "C:"},
+		{"sda1", "sda1"},
+		{"/Applications/xxx.app/Wrapper", "/Applications/xxx.app/Wrapper"},
+	}
+	for _, tc := range cases {
+		if got := trimDevicePrefix(tc.raw); got != tc.want {
+			t.Errorf("trimDevicePrefix(%q) = %q, want %q", tc.raw, got, tc.want)
+		}
 	}
 }
 

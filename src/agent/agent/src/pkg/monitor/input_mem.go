@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"runtime"
 	"time"
 
 	"github.com/pkg/errors"
@@ -12,25 +13,31 @@ import (
 
 // Mem 对齐 telegraf plugins/inputs/mem。
 //
-// field 集合（来自 telegraf 源码 plugins/inputs/mem/memory.go 的 gather 方法）：
+// 字段集合按平台分支（对齐 telegraf mem.go 的 switch ms.platform）：
 //
-//	total, available, used, used_percent, free,
-//	buffered, cached, active, inactive, slab, sreclaimable, sunreclaim,
-//	wired, commit_limit, committed_as, dirty, high_free, high_total,
-//	huge_pages_free, huge_page_size, huge_pages_total, low_free, low_total,
-//	mapped, page_tables, shared, swap_cached, swap_free, swap_total,
-//	vmalloc_chunk, vmalloc_total, vmalloc_used, write_back, write_back_tmp,
-//	available_percent
+//   - 所有平台：total / available / used / used_percent(pct_used) /
+//     available_percent
+//   - darwin：+ active / free / inactive / wired
+//   - freebsd：+ active / buffered / cached / free / inactive / laundry / wired
+//   - openbsd：+ active / cached / free / inactive / wired
+//   - linux：+ active / buffered / cached / commit_limit / committed_as /
+//     dirty / free / high_free / high_total / huge_pages_free / huge_page_size /
+//     huge_pages_total / inactive / low_free / low_total / mapped /
+//     page_tables / shared / slab / sreclaimable / sunreclaim / swap_cached /
+//     swap_free / swap_total / vmalloc_chunk / vmalloc_total / vmalloc_used /
+//     write_back / write_back_tmp
 //
-// 实际各平台可用字段不同，gopsutil 返回结构体里缺失的字段会是零值；
-// 我们只上报非零或本平台确定可采的字段，避免污染后端看板。
-// 为与 telegraf 默认行为对齐，未实现的平台特有字段（如 Linux 的 slab 细分）
-// 暂不上报，等线上需要时再补。
+// 注意 pct_used 不依赖 vm.UsedPercent：gopsutil v3 的 mem_windows.go 把该字段
+// 做了整数运算，会得到 43 / 48 这种整数值，和 telegraf win_perf_counters
+// 浮点精度对不上（对比 bin/test.log 观察到的回归）。这里一律自算
+// 100 * float64(used) / float64(total) 覆盖所有平台。
 type Mem struct {
 	// virtualMemFn 为 mem.VirtualMemory 的注入点，便于测试替换。
 	virtualMemFn func() (*mem.VirtualMemoryStat, error)
 	// nowFn 用于测试注入固定时间戳。
 	nowFn func() time.Time
+	// platform 控制字段分支；默认取 runtime.GOOS，测试可覆盖。
+	platform string
 }
 
 // NewMem 构造一个 Mem 采集器，使用默认的 gopsutil 实现。
@@ -38,6 +45,7 @@ func NewMem() *Mem {
 	return &Mem{
 		virtualMemFn: mem.VirtualMemory,
 		nowFn:        time.Now,
+		platform:     runtime.GOOS,
 	}
 }
 
@@ -56,10 +64,7 @@ func (m *Mem) Gather() ([]Metric, error) {
 		return nil, errors.New("mem: VirtualMemory returned nil")
 	}
 
-	// pct_used 自算 100 * used / total。不能直接用 gopsutil 的 vm.UsedPercent：
-	// 在 Windows 上 gopsutil v3 mem_windows.go 对 UsedPercent 做了整数运算，
-	// 会得到 43/48 这种整数值而非 43.64 的小数，和 telegraf win_perf_counters
-	// 的浮点精度对不上（issue: 对比 bin/test.log 观察到）。
+	// 全平台通用字段。
 	var pctUsed float64
 	if vm.Total > 0 {
 		pctUsed = 100 * float64(vm.Used) / float64(vm.Total)
@@ -68,20 +73,65 @@ func (m *Mem) Gather() ([]Metric, error) {
 		FieldTotal:          vm.Total,
 		FieldAvailable:      vm.Available,
 		FieldUsed:           vm.Used,
-		FieldFree:           vm.Free,
 		RenamedFieldPctUsed: pctUsed,
-		FieldBuffered:       vm.Buffers,
-		FieldCached:         vm.Cached,
-		FieldActive:         vm.Active,
-		FieldInactive:       vm.Inactive,
-		FieldSlab:           vm.Slab,
-		FieldWired:          vm.Wired,
-		FieldShared:         vm.Shared,
 	}
-	// available_percent 不是 gopsutil 直接字段，参照 telegraf 的公式：
-	// 100 * available / total（total 为 0 时跳过）。
+	// available_percent 参照 telegraf 公式：100 * available / total。
+	// Total 为 0 时不写字段，避免除零并保留旧行为（单测依赖此不变量）。
 	if vm.Total > 0 {
 		fields[FieldAvailablePercent] = 100 * float64(vm.Available) / float64(vm.Total)
+	}
+
+	// 平台专属字段，严格对齐 telegraf plugins/inputs/mem/memory.go 的 switch。
+	switch m.platform {
+	case "darwin":
+		fields[FieldActive] = vm.Active
+		fields[FieldFree] = vm.Free
+		fields[FieldInactive] = vm.Inactive
+		fields[FieldWired] = vm.Wired
+	case "openbsd":
+		fields[FieldActive] = vm.Active
+		fields[FieldCached] = vm.Cached
+		fields[FieldFree] = vm.Free
+		fields[FieldInactive] = vm.Inactive
+		fields[FieldWired] = vm.Wired
+	case "freebsd":
+		fields[FieldActive] = vm.Active
+		fields[FieldBuffered] = vm.Buffers
+		fields[FieldCached] = vm.Cached
+		fields[FieldFree] = vm.Free
+		fields[FieldInactive] = vm.Inactive
+		fields[FieldLaundry] = vm.Laundry
+		fields[FieldWired] = vm.Wired
+	case "linux":
+		fields[FieldActive] = vm.Active
+		fields[FieldBuffered] = vm.Buffers
+		fields[FieldCached] = vm.Cached
+		fields[FieldCommitLimit] = vm.CommitLimit
+		fields[FieldCommittedAS] = vm.CommittedAS
+		fields[FieldDirty] = vm.Dirty
+		fields[FieldFree] = vm.Free
+		fields[FieldHighFree] = vm.HighFree
+		fields[FieldHighTotal] = vm.HighTotal
+		fields[FieldHugePagesFree] = vm.HugePagesFree
+		fields[FieldHugePageSize] = vm.HugePageSize
+		fields[FieldHugePagesTotal] = vm.HugePagesTotal
+		fields[FieldInactive] = vm.Inactive
+		fields[FieldLowFree] = vm.LowFree
+		fields[FieldLowTotal] = vm.LowTotal
+		fields[FieldMapped] = vm.Mapped
+		fields[FieldPageTables] = vm.PageTables
+		fields[FieldShared] = vm.Shared
+		fields[FieldSlab] = vm.Slab
+		fields[FieldSreclaimable] = vm.Sreclaimable
+		fields[FieldSunreclaim] = vm.Sunreclaim
+		fields[FieldSwapCached] = vm.SwapCached
+		fields[FieldSwapFree] = vm.SwapFree
+		fields[FieldSwapTotal] = vm.SwapTotal
+		fields[FieldVmallocChunk] = vm.VmallocChunk
+		fields[FieldVmallocTotal] = vm.VmallocTotal
+		fields[FieldVmallocUsed] = vm.VmallocUsed
+		fields[FieldWriteBack] = vm.WriteBack
+		fields[FieldWriteBackTmp] = vm.WriteBackTmp
 	}
 
 	return []Metric{

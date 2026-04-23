@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -88,7 +89,7 @@ func (d *Disk) Gather() ([]Metric, error) {
 		}
 
 		tags := map[string]string{
-			TagDevice: p.Device,
+			TagDevice: trimDevicePrefix(p.Device),
 			TagFstype: p.Fstype,
 			TagPath:   p.Mountpoint,
 		}
@@ -106,4 +107,12 @@ func (d *Disk) Gather() ([]Metric, error) {
 		})
 	}
 	return out, nil
+}
+
+// trimDevicePrefix 将 gopsutil 返回的 "/dev/sda1" / "/dev/disk3s1s1" 形式
+// 归一化为 telegraf inputs.disk 的裸设备名（"sda1" / "disk3s1s1"）。
+// 仅去除 "/dev/" 前缀；其它形式（Windows 的 "C:\" / nullfs 挂载的
+// "/Applications/xxx.app/Wrapper" / 已经是裸名的）原样返回，避免误伤。
+func trimDevicePrefix(dev string) string {
+	return strings.TrimPrefix(dev, "/dev/")
 }
