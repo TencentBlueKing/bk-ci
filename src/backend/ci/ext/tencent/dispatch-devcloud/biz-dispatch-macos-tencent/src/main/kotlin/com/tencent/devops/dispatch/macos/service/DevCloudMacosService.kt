@@ -578,7 +578,7 @@ class DevCloudMacosService @Autowired constructor(
                     "retryCount: $retryCount/$maxRetryCount"
             )
             if (retryCount < maxRetryCount) {
-                Thread.sleep(1000)
+                Thread.sleep(3000)
             }
         }
 
