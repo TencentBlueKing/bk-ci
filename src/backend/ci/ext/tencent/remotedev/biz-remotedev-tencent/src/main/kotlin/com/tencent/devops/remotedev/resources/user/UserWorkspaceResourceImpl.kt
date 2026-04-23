@@ -50,6 +50,8 @@ import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
+import com.tencent.devops.remotedev.pojo.tai.CertExchangeCodeReq
+import com.tencent.devops.remotedev.pojo.tai.CertExchangeCodeResp
 import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faRespData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyReqData
@@ -304,5 +306,14 @@ class UserWorkspaceResourceImpl @Autowired constructor(
             workspaceName = workspaceName
         )
         return Result(true)
+    }
+
+    override fun getCertExchangeCode(userId: String): Result<CertExchangeCodeResp> {
+        return Result(
+            workspaceService.getCertExchangeCode(
+                userId = userId,
+                req = CertExchangeCodeReq(username = userId)
+            )
+        )
     }
 }

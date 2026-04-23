@@ -6,6 +6,8 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.remotedev.pojo.tai.CertExchangeCodeReq
+import com.tencent.devops.remotedev.pojo.tai.CertExchangeCodeResp
 import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faRespData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyReqData
@@ -106,6 +108,41 @@ class TaiService {
                 )
             }
             moa2faVerifyRespData
+        }
+    }
+
+    fun getCertExchangeCode(userId: String, req: CertExchangeCodeReq): CertExchangeCodeResp {
+        val url = "$taiUrl/qrcode/backend/get"
+        val body = ObjectMapper().writeValueAsString(req)
+        logger.info("User $userId getCertExchangeCode url: $url, body: $body")
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        return OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body!!.string()
+            logger.info(
+                "User $userId getCertExchangeCode response: " +
+                    "|${response.code}|$responseContent"
+            )
+            if (!response.isSuccessful) {
+                throw RemoteServiceException(
+                    errorMessage = "request api[${request.url.toUrl()}] " +
+                        "status code[${response.code}] error message[${response.message}]",
+                    errorCode = HTTP_400
+                )
+            }
+            val resp: CertExchangeCodeResp = jacksonObjectMapper().readValue(responseContent)
+            if (resp.code != 0) {
+                throw RemoteServiceException(
+                    errorMessage = "request api[${request.url.toUrl()}] " +
+                        "biz code[${resp.code}] error message[${resp.msg}]",
+                    errorCode = HTTP_400
+                )
+            }
+            resp
         }
     }
 
