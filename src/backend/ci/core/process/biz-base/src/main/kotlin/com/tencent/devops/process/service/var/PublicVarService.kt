@@ -388,12 +388,6 @@ class PublicVarService @Autowired constructor(
         modelPublicVarHandleContext: ModelPublicVarHandleContext
     ): List<BuildFormProperty> {
         val publicVarGroups = modelPublicVarHandleContext.publicVarGroups.toMutableList()
-        logger.info(
-            "[PVS] handleModelParams start projectId=$projectId, referId=${modelPublicVarHandleContext.referId}, " +
-                "referType=${modelPublicVarHandleContext.referType}, referVersion=${modelPublicVarHandleContext.referVersion}, " +
-                "groups=${publicVarGroups.map { it.groupName to it.version }}, " +
-                "paramsSize=${modelPublicVarHandleContext.params.size}"
-        )
         if (publicVarGroups.isEmpty()) {
             logger.info("[PVS] handleModelParams skip: publicVarGroups empty")
             return modelPublicVarHandleContext.params
