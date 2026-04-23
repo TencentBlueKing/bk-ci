@@ -56,4 +56,5 @@ object Versions {
     const val devopsScm = "1.1.9"
     const val lettuce = "6.4.2.RELEASE"
     const val jsonPath = "2.10.0"
+    const val AgentScope = "1.0.11"
 }

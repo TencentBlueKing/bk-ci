@@ -575,4 +575,10 @@ class ThirdPartyAgentDao {
                 .fetch()
         }
     }
+
+    fun countByMasterVersion(dslContext: DSLContext, version: String): Long {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.selectCount().from(this).where(MASTER_VERSION.eq(version)).fetchOne(0, Long::class.java)!!
+        }
+    }
 }

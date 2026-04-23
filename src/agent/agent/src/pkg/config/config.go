@@ -40,12 +40,10 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
-
 	languageUtil "golang.org/x/text/language"
-	"gopkg.in/ini.v1"
+	ini "gopkg.in/ini.v1"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
@@ -67,7 +65,6 @@ const (
 	KeyRequestTimeoutSec = "devops.agent.request.timeout.sec"
 	KeyDetectShell       = "devops.agent.detect.shell"
 	KeyIgnoreLocalIps    = "devops.agent.ignoreLocalIps"
-	KeyBatchInstall      = "devops.agent.batch.install"
 	KeyLogsKeepHours     = "devops.agent.logs.keep.hours"
 	// KeyJdkDirPath 这个key不会预先出现在配置文件中，因为workdir未知，需要第一次动态获取
 	KeyJdkDirPath = "devops.agent.jdk.dir.path"
@@ -99,7 +96,6 @@ type AgentConfig struct {
 	TimeoutSec              int64
 	DetectShell             bool
 	IgnoreLocalIps          string
-	BatchInstallKey         string
 	LogsKeepHours           int
 	JdkDirPath              string
 	Jdk17DirPath            string
@@ -121,14 +117,14 @@ type AgentEnv struct {
 	HostName         string
 	AgentVersion     string
 	AgentInstallPath string
-	// WinTask 启动windows进程的组件如 服务/执行计划
-	WinTask string
 	// OsVersion 系统版本信息
 	OsVersion string
 	// cpu 型号信息
 	CPUProductInfo string
 	// gpu 型号信息
 	GPUProductInfo string
+	// InstallType 安装模式 (读取自 .install_type 文件)
+	InstallType string
 }
 
 func (e *AgentEnv) GetAgentIp() string {
@@ -147,8 +143,11 @@ func (e *AgentEnv) SetAgentIp(ip string) {
 }
 
 var GAgentEnv *AgentEnv
+
 var GAgentConfig *AgentConfig
+
 var UseCert bool
+
 var IsDebug = false
 
 // Init 加载和初始化配置
@@ -176,7 +175,7 @@ func LoadAgentEnv() {
 	GAgentEnv.HostName = systemutil.GetHostName()
 	GAgentEnv.OsName = systemutil.GetOsName()
 	GAgentEnv.AgentVersion = DetectAgentVersion()
-	GAgentEnv.WinTask = GetWinTaskType()
+	GAgentEnv.InstallType = loadInstallType()
 	if osVersion, err := GetOsVersion(); err != nil {
 		logs.WithError(err).Warn("get os version err")
 		GAgentEnv.OsVersion = ""
@@ -196,6 +195,16 @@ func LoadAgentIp() {
 		splitIps = util.SplitAndTrimSpace(GAgentConfig.IgnoreLocalIps, ",")
 	}
 	GAgentEnv.SetAgentIp(systemutil.GetAgentIp(splitIps))
+}
+
+// loadInstallType 读取 .install_type 文件内容，返回大写的安装模式字符串。
+// 文件不存在或内容为空时返回空字符串。
+func loadInstallType() string {
+	data, err := os.ReadFile(filepath.Join(systemutil.GetWorkDir(), ".install_type"))
+	if err != nil {
+		return ""
+	}
+	return strings.ToUpper(strings.TrimSpace(string(data)))
 }
 
 // DetectAgentVersion 检测Agent版本
@@ -393,9 +402,6 @@ func LoadAgentConfig() error {
 	GAgentConfig.IgnoreLocalIps = ignoreLocalIps
 	logs.Info("IgnoreLocalIps: ", GAgentConfig.IgnoreLocalIps)
 
-	GAgentConfig.BatchInstallKey = strings.TrimSpace(conf.Section("").Key(KeyBatchInstall).String())
-	logs.Info("BatchInstallKey: ", GAgentConfig.BatchInstallKey)
-
 	GAgentConfig.LogsKeepHours = logsKeepHours
 	logs.Info("logsKeepHours: ", GAgentConfig.LogsKeepHours)
 
@@ -546,12 +552,12 @@ func initCert() {
 	fileInfo, err := os.Stat(AbsCertFilePath)
 	if err != nil {
 		// 证书不一定需要存在
-		logs.Warn("stat cert file error", err.Error())
+		logs.Infof("no cert file %s", err.Error())
 		return
 	}
 	if fileInfo.IsDir() {
 		// 证书不一定需要存在
-		logs.Warn("cert file is dir, skip")
+		logs.Info("cert file is dir, skip")
 		return
 	}
 	// Load client cert
