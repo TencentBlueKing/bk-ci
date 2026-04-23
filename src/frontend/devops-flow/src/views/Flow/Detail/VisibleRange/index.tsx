@@ -64,7 +64,7 @@ export default defineComponent({
             render: ({ row }: { row: any }) => (
               <div class={styles.userCell}>
                 <SvgIcon
-                  name={row.type === 'DEPT' ? 'organization' : 'user-shape'}
+                  name={row.type === 'ORG' ? 'organization' : 'user'}
                   size={14}
                 />
                 <span v-bk-tooltips={{ content: row.fullName, disabled: !row.fullName }}>
