@@ -85,5 +85,19 @@
     "last 2 versions",
     "not dead",
     "not ie 11"
-  ]
+  ],
+  "nx": {
+    "targets": {
+      "inputs": [
+        "{workspaceRoot}/locale/ai/*.json",
+        "{workspaceRoot}/locale/index.js",
+        "{projectRoot}"
+      ],
+      "public:master": {
+        "outputs": [
+          "{workspaceRoot}/frontend/ai"
+        ]
+      }
+    }
+  }
 }
