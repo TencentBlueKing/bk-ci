@@ -539,7 +539,13 @@ class PipelineTaskService @Autowired constructor(
         redisOperation.delete(TaskUtils.getFailRetryTaskRedisKey(buildId = buildId, taskId = taskId))
     }
 
-    fun createFailTaskVar(buildId: String, projectId: String, pipelineId: String, taskId: String) {
+    fun createFailTaskVar(
+        buildId: String,
+        projectId: String,
+        pipelineId: String,
+        taskId: String,
+        errorMsg: String?
+    ) {
         val taskRecord = getBuildTask(projectId, buildId, taskId)
             ?: return
         val buildRecordContainer = containerBuildRecordService.getRecord(
@@ -595,7 +601,7 @@ class PipelineTaskService @Autowired constructor(
                 jobId = taskRecord.jobId ?: "",
                 jobName = containerName,
                 stageName = stageName,
-                errorMsg = taskRecord.errorMsg ?: ""
+                errorMsg = errorMsg ?: taskRecord.errorMsg ?: ""
             )
             val errorElementDetails = if (failTaskDetails.isNullOrBlank()) {
                 listOf(errorElementDetail)
