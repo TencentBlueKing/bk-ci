@@ -263,3 +263,68 @@ func TestDiskIO_TwinSample_NonPositiveDt(t *testing.T) {
 		t.Error("want error on non-positive dt, got nil")
 	}
 }
+
+// TestDiskIO_TwinSample_InstanceWithDiskIndex 覆盖 plan P2-2 主路径：
+// deviceNumberFn 成功返回盘号 → instance = "<idx> <letter>"。
+func TestDiskIO_TwinSample_InstanceWithDiskIndex(t *testing.T) {
+	clk := newFakeClock()
+	d := &DiskIO{
+		ioCountersFn: func() (map[string]disk.IOCountersStat, error) {
+			return map[string]disk.IOCountersStat{
+				"C:": {Name: "C:", ReadBytes: 1, WriteBytes: 2},
+				"D:": {Name: "D:", ReadBytes: 3, WriteBytes: 4},
+			}, nil
+		},
+		nowFn:   clk.Now,
+		sleepFn: clk.Sleep,
+		deviceNumberFn: func(letter string) (uint32, error) {
+			switch letter {
+			case "C:":
+				return 0, nil
+			case "D:":
+				return 1, nil
+			}
+			return 0, errors.New("unknown")
+		},
+	}
+
+	metrics, err := d.Gather()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := map[string]string{"C:": "0 C:", "D:": "1 D:"}
+	for _, m := range metrics {
+		letter := m.Tags[TagName]
+		if got, expected := m.Tags[TagInstance], want[letter]; got != expected {
+			t.Errorf("letter=%q instance=%q want %q", letter, got, expected)
+		}
+	}
+}
+
+// TestDiskIO_TwinSample_InstanceFallbackOnError 覆盖 deviceNumberFn 失败 →
+// fallback instance=letter。不中断 metric 产出。
+func TestDiskIO_TwinSample_InstanceFallbackOnError(t *testing.T) {
+	clk := newFakeClock()
+	d := &DiskIO{
+		ioCountersFn: func() (map[string]disk.IOCountersStat, error) {
+			return map[string]disk.IOCountersStat{
+				"C:": {Name: "C:", ReadBytes: 1, WriteBytes: 2},
+			}, nil
+		},
+		nowFn:   clk.Now,
+		sleepFn: clk.Sleep,
+		deviceNumberFn: func(letter string) (uint32, error) {
+			return 0, errors.New("access denied")
+		},
+	}
+	metrics, _ := d.Gather()
+	if len(metrics) != 1 {
+		t.Fatalf("want 1 metric, got %d", len(metrics))
+	}
+	if got := metrics[0].Tags[TagInstance]; got != "C:" {
+		t.Errorf("instance on failure = %q, want fallback %q", got, "C:")
+	}
+	if got := metrics[0].Tags[TagName]; got != "C:" {
+		t.Errorf("name should still be preserved, got %q", got)
+	}
+}

@@ -278,3 +278,84 @@ func TestNet_TwinSample_NonPositiveDt(t *testing.T) {
 		t.Error("want error on non-positive dt, got nil")
 	}
 }
+
+// TestNet_TwinSample_InstanceFromDescription 覆盖 plan P2-3 主路径：
+// adapterDescFn 返回 FriendlyName→Description 映射时，metric 的 instance
+// 使用 Description（PDH 风格）；interface 保留 FriendlyName。
+func TestNet_TwinSample_InstanceFromDescription(t *testing.T) {
+	clk := newFakeClock()
+	n := &Net{
+		ioCountersFn: func(pernic bool) ([]net.IOCountersStat, error) {
+			return []net.IOCountersStat{
+				{Name: "以太网 5", BytesRecv: 1, BytesSent: 2},
+			}, nil
+		},
+		nowFn:   clk.Now,
+		sleepFn: clk.Sleep,
+		adapterDescFn: func() (map[string]string, error) {
+			return map[string]string{
+				"以太网 5": "Intel[R] Ethernet Connection [17] I219-LM",
+			}, nil
+		},
+	}
+	metrics, _ := n.Gather()
+	if len(metrics) != 1 {
+		t.Fatalf("want 1 metric, got %d", len(metrics))
+	}
+	m := metrics[0]
+	if got := m.Tags[TagInstance]; got != "Intel[R] Ethernet Connection [17] I219-LM" {
+		t.Errorf("instance = %q, want PDH Description", got)
+	}
+	// 同时保留 interface=FriendlyName 做兼容双写
+	if got := m.Tags[TagInterface]; got != "以太网 5" {
+		t.Errorf("interface = %q, want FriendlyName %q", got, "以太网 5")
+	}
+}
+
+// TestNet_TwinSample_InstanceFallbackOnMissingKey 覆盖 descMap 里找不到
+// 该 FriendlyName 时，instance 由 normalizeWinMetricTags 的 net 分支用
+// FriendlyName 兜底。
+func TestNet_TwinSample_InstanceFallbackOnMissingKey(t *testing.T) {
+	clk := newFakeClock()
+	n := &Net{
+		ioCountersFn: func(pernic bool) ([]net.IOCountersStat, error) {
+			return []net.IOCountersStat{
+				{Name: "以太网 5", BytesRecv: 1, BytesSent: 2},
+			}, nil
+		},
+		nowFn:   clk.Now,
+		sleepFn: clk.Sleep,
+		adapterDescFn: func() (map[string]string, error) {
+			return map[string]string{"Ethernet 99": "other"}, nil
+		},
+	}
+	metrics, _ := n.Gather()
+	if got := metrics[0].Tags[TagInstance]; got != "以太网 5" {
+		t.Errorf("instance missing key fallback = %q, want FriendlyName", got)
+	}
+}
+
+// TestNet_TwinSample_InstanceFallbackOnError 覆盖 adapterDescFn 返回 err 时
+// metric 仍产出；instance 退化为 FriendlyName。
+func TestNet_TwinSample_InstanceFallbackOnError(t *testing.T) {
+	clk := newFakeClock()
+	n := &Net{
+		ioCountersFn: func(pernic bool) ([]net.IOCountersStat, error) {
+			return []net.IOCountersStat{
+				{Name: "以太网 3", BytesRecv: 1, BytesSent: 2},
+			}, nil
+		},
+		nowFn:   clk.Now,
+		sleepFn: clk.Sleep,
+		adapterDescFn: func() (map[string]string, error) {
+			return nil, errors.New("GetAdaptersAddresses failed")
+		},
+	}
+	metrics, err := n.Gather()
+	if err != nil {
+		t.Fatalf("gather should not fail on adapter desc err: %v", err)
+	}
+	if got := metrics[0].Tags[TagInstance]; got != "以太网 3" {
+		t.Errorf("instance fallback on err = %q, want FriendlyName", got)
+	}
+}

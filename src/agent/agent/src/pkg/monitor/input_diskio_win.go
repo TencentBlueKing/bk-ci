@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
@@ -37,6 +38,11 @@ type DiskIO struct {
 	ioCountersFn func() (map[string]disk.IOCountersStat, error)
 	nowFn        func() time.Time
 	sleepFn      func(time.Duration) // 单测注入点，默认 time.Sleep
+	// deviceNumberFn 把盘符（"C:"）映射到物理盘号（0, 1, ...），用于
+	// 组装 telegraf PDH PhysicalDisk 风格的 instance tag "0 C:"。
+	// 默认走 queryStorageDeviceNumber（带 10min 缓存）；测试注入 fake。
+	// 返回错误时降级使用 letter-only instance。
+	deviceNumberFn func(letter string) (uint32, error)
 }
 
 // NewDiskIO 返回默认 DiskIO 采集器。
@@ -46,8 +52,9 @@ func NewDiskIO() *DiskIO {
 		ioCountersFn: func() (map[string]disk.IOCountersStat, error) {
 			return disk.IOCounters()
 		},
-		nowFn:   time.Now,
-		sleepFn: time.Sleep,
+		nowFn:          time.Now,
+		sleepFn:        time.Sleep,
+		deviceNumberFn: queryStorageDeviceNumber,
 	}
 }
 
@@ -107,9 +114,21 @@ func (d *DiskIO) Gather() ([]Metric, error) {
 		}
 		// 仅在第二次采样出现的磁盘（热插拔）：没有速率字段，仅输出第二次累计字段
 
+		// 构造 tags：instance 尽量对齐 telegraf PhysicalDisk 的
+		// "<DiskIndex> <Letter>" 格式；失败时 fallback 到 letter。
+		instance := name
+		if d.deviceNumberFn != nil {
+			if idx, err := d.deviceNumberFn(name); err == nil {
+				instance = fmt.Sprintf("%d %s", idx, name)
+			}
+		}
+		tags := map[string]string{
+			TagName:     name,
+			TagInstance: instance,
+		}
 		out = append(out, Metric{
 			Name:      RenamedIO,
-			Tags:      normalizeWinMetricTags(RenamedIO, map[string]string{TagName: name}),
+			Tags:      normalizeWinMetricTags(RenamedIO, tags),
 			Fields:    fields,
 			Timestamp: t2,
 		})

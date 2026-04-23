@@ -29,14 +29,20 @@ type Net struct {
 	ioCountersFn func(pernic bool) ([]net.IOCountersStat, error)
 	nowFn        func() time.Time
 	sleepFn      func(time.Duration) // 单测注入点
+	// adapterDescFn 返回 FriendlyName→Description 映射，用于把 gopsutil
+	// 的 FriendlyName（"以太网 5"）升级为 PDH instance（Description）。
+	// 默认走 adapterDescriptions（带 10min 缓存）；测试注入 fake。
+	// 失败或 nil 时 fallback 到 FriendlyName 作 instance。
+	adapterDescFn func() (map[string]string, error)
 }
 
 // NewNet 返回默认 Net 采集器。
 func NewNet() *Net {
 	return &Net{
-		ioCountersFn: net.IOCounters,
-		nowFn:        time.Now,
-		sleepFn:      time.Sleep,
+		ioCountersFn:  net.IOCounters,
+		nowFn:         time.Now,
+		sleepFn:       time.Sleep,
+		adapterDescFn: adapterDescriptions,
 	}
 }
 
@@ -62,6 +68,12 @@ func (n *Net) Gather() ([]Metric, error) {
 	dt := t2.Sub(t1).Seconds()
 	if dt <= 0 {
 		return nil, errors.New("net: twin-sample non-positive dt")
+	}
+
+	// 查一次 FriendlyName→Description 映射（带 10min 缓存）。失败时 descMap=nil。
+	var descMap map[string]string
+	if n.adapterDescFn != nil {
+		descMap, _ = n.adapterDescFn()
 	}
 
 	// 第一次采样建索引：按 interface name 查找
@@ -109,9 +121,17 @@ func (n *Net) Gather() ([]Metric, error) {
 		}
 		// 仅在第二次出现的接口（网卡启用）：无速率字段，仅输出第二次累计字段
 
+		// 预填 instance：优先用 PDH Description（与 telegraf win_perf_counters
+		// Network Interface instance 一致）；缺失/空字符串时 fallback 到
+		// FriendlyName，由下游 normalizeWinMetricTags 的 net 分支兜底（已
+		// 经尊重"existing instance"）。
+		tags := map[string]string{TagInterface: c2.Name}
+		if desc := descMap[c2.Name]; desc != "" {
+			tags[TagInstance] = desc
+		}
 		out = append(out, Metric{
 			Name:      MeasurementNet,
-			Tags:      normalizeWinMetricTags(MeasurementNet, map[string]string{TagInterface: c2.Name}),
+			Tags:      normalizeWinMetricTags(MeasurementNet, tags),
 			Fields:    fields,
 			Timestamp: t2,
 		})
