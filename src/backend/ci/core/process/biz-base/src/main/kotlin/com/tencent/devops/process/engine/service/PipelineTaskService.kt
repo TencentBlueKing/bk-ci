@@ -658,12 +658,30 @@ class PipelineTaskService @Autowired constructor(
                 projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASKNAMES
             ) ?: return
             val newFailTaskNames = delTaskString(strings = failTaskNames, string = failTaskNameRecord, ",")
+            val valueMap = mutableMapOf<String, Any>()
+            // 执行成功后移除失败任务详情数据
+            pipelineVariableService.getVariable(
+                projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASK_DETAILS
+            )?.let { value ->
+                JsonUtil.anyToOrNull(
+                    any = value,
+                    typeReference = object : TypeReference<MutableList<PipelineFailTaskDetail>>() {}
+                )?.apply {
+                    this.removeIf { it.taskId == taskId }
+                }?.let {
+                    valueMap[BK_CI_BUILD_FAIL_TASK_DETAILS] = JsonUtil.toJson(it, false)
+                }
+            }
             if (newFailTask != failTask || newFailTaskNames != failTaskNames) {
-                val valueMap = mutableMapOf<String, Any>()
                 valueMap[BK_CI_BUILD_FAIL_TASKS] = newFailTask
                 valueMap[BK_CI_BUILD_FAIL_TASKNAMES] = newFailTaskNames
+            }
+            if (valueMap.isNotEmpty()) {
                 pipelineVariableService.batchUpdateVariable(
-                    buildId = buildId, projectId = projectId, pipelineId = pipelineId, variables = valueMap
+                    buildId = buildId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    variables = valueMap
                 )
             }
             redisOperation.delete(failTaskRedisKey(buildId = buildId, taskId = taskId))
