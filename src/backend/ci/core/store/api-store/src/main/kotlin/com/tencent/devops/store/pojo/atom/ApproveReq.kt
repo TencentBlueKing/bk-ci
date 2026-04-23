@@ -47,5 +47,7 @@ data class ApproveReq(
     @get:Schema(title = "服务范围", required = true)
     val serviceScope: List<String>,
     @get:Schema(title = "无构建环境插件是否可以在有构建环境运行标识， TRUE：可以 FALSE：不可以", required = false)
-    val buildLessRunFlag: Boolean? = null
+    val buildLessRunFlag: Boolean? = null,
+    @get:Schema(title = "原子标签列表", required = false)
+    val labelIdList: ArrayList<String>? = null
 )

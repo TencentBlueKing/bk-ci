@@ -82,5 +82,7 @@ data class AtomUpdateRequest(
     @get:Schema(title = "项目可视范围", required = false)
     val visibilityLevel: VisibilityLevelEnum? = null,
     @get:Schema(title = "插件代码库不开源原因", required = false)
-    val privateReason: String? = null
+    val privateReason: String? = null,
+    @get:Schema(title = "原子标签列表", required = false)
+    val labelIdList: ArrayList<String>? = null
 )
