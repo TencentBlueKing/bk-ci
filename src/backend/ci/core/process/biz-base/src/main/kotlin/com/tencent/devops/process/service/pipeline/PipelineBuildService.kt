@@ -213,7 +213,6 @@ class PipelineBuildService(
             }
 
             val buildId = pipelineParamMap[PIPELINE_RETRY_BUILD_ID]?.value?.toString() ?: buildIdGenerator.getNextId()
-
             initPipelineParamMap(
                 buildId = buildId,
                 startType = startType,

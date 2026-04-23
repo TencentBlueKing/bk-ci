@@ -41,6 +41,8 @@ enum class AuthResourceType(val value: String) {
     CREATIVE_STREAM("creative_stream"), // 创作流类型
     CREATIVE_STREAM_NODE("creative_stream_node"), // 创作流节点类型
 
+    PUBLIC_VAR_GROUP("public_variable"), // 公共变量组
+
     ARTIFACTORY_CUSTOM_DIR("custom_dir"), // 版本仓库自定义目录
 
     TICKET_CREDENTIAL("credential"), // 凭证服务凭据

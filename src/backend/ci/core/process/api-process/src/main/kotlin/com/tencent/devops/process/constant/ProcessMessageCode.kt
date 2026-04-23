@@ -413,7 +413,7 @@ object ProcessMessageCode {
     const val ERROR_TEMPLATE_VERSION_BY_PATH_NOT_FOUND = "2101297" // 模版{0}在分支{1}对应的版本不存在
     const val ERROR_TEMPLATE_REF_TYPE = "2101298" // 模版引用templateId和templatePath不能同时为空
     const val ERROR_TEMPLATE_VERSION_NAME_NOT_EMPTY = "2101299" // 模版版本名称不能为空
-    const val ERROR_TEMPLATE_VERSION_NOT_FOUND = "21012300" // 模版{0}对应的版本{1}不存在
+    const val ERROR_TEMPLATE_VERSION_NOT_FOUND = "2101300" // 模版{0}对应的版本{1}不存在
     const val ERROR_TEMPLATE_NOT_ENABLE_PAC = "2101301" // 模版没有开启PAC,不能通过路径引用查询
     const val ERROR_STATUS_NOT_MATCHED = "2101302" // 状态不匹配,预期状态为{0},实际状态为{1}
     const val ERROR_PIPELINE_NOT_RELATED_TEMPLATE = "2101303" // 流水线没有关联模板
@@ -451,13 +451,44 @@ object ProcessMessageCode {
     const val ERROR_INSTANCE_PARAM_COUNT_EXCEPTION = "2101342" // 实例化参数数量和模版的参数数量不同,请联系助手分析
     // 历史原因导致当前约束流水线无法确定对应的模版版本,不能直接开启PAC,请到模版实例列表界面升级流水线,明确引用的模版版本后再开启PAC。
     const val ERROR_PIPELINE_LEGACY_INSTANCE_CANNOT_ENABLE_PAC = "2101343"
+    // 公共变量组中变量名称格式错误[{0}]，变量名须由字母、数字、下划线组成，以字母或下划线开头，最长64个字符
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR = "2101345"
+    // 编排配置公共变量组中存在冲突变量{0}，请调整变量组配置
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT = "2101346"
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED = "2101347" // 变量组引用更新失败
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST = "2101348" // 变量组 {0} 不存在
+    const val ERROR_PUBLIC_VAR_GROUP_REFERENCED = "2101349" // 公共变量组({0})已被引用，无法删除
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE = "2101350" // 流水线公共变量组中变量名称重复
+
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_PARSE_FAILED = "2101351" // 公共变量组YAML解析失败: {0}
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_VERSION_EMPTY = "2101352" // 公共变量组YAML中version字段不能为空
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_VERSION_FORMAT = "2101353" // 公共变量组YAML版本格式不正确，应为vX.X格式
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_NAME_EMPTY = "2101354" // 公共变量组YAML中name字段不能为空
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_NAME_FORMAT = "2101355" // 公共变量组名称只能包含字母、数字、下划线和中划线，长度限制为1-64个字符
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_VARIABLES_EMPTY = "2101356" // 公共变量组YAML中variables字段不能为空
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_VARIABLE_NAME_EMPTY = "2101357" // 变量名不能为空
+    // 变量名{0}格式不正确，只能以字母或下划线开头，包含字母、数字、下划线，长度限制为1-64个字符
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_VARIABLE_NAME_FORMAT = "2101358"
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_UNKNOWN_FIELD = "2101359" // 公共变量组YAML包含未知字段: {0}
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_DESERIALIZE_ERROR = "2101360" // 公共变量组YAML格式不正确，请检查字段类型
     // 触发事件缓存过期已清理。若需重放，请到代码库操作。
     const val ERROR_TRIGGER_EVENT_EXPIRED = "2101361"
     const val ERROR_TEMPLATE_MIGRATING = "2101362" // 模板迁移中，不能操作
     // 非约束流水线不能保存为约束模式
     const val ERROR_NON_CONSTRAINED_PIPELINE_CANNOT_SAVE_AS_CONSTRAINED = "2101363"
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_COUNT_UPDATE_FAILED = "2101364" // 变量组引用计数更新失败
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_QUERY_FAILED = "2101365" // 变量组引用信息查询失败
+    const val ERROR_PUBLIC_VAR_GROUP_ADD_FAILED = "2101366" // 添加公共变量组({0})失败
+    const val ERROR_PUBLIC_VAR_GROUP_DELETE_FAILED = "2101367" // 删除公共变量组({0})失败
+    const val ERROR_PUBLIC_VAR_GROUP_GET_VARIABLES_FAILED = "2101368" // 获取公共变量组({0})的变量失败
+    const val ERROR_PUBLIC_VAR_GROUP_LIST_PIPELINE_VARIABLES_FAILED = "2101369" // 获取流水线变量失败(项目:{0}, 引用ID:{1})
+    const val ERROR_PUBLIC_VAR_GROUP_LIST_PROJECT_VAR_GROUP_FAILED = "2101370" // 获取项目({0})的公共变量组信息失败
+    const val ERROR_PUBLIC_VAR_GROUP_REFER_LOCK_ACQUIRE_FAILED = "2101371" // 获取公共变量组引用锁失败，请稍后重试
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD = "2101372" // 公共变量组YAML缺少必填字段 {0}
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR = "2101373" // 公共变量组YAML格式错误
+    const val ERROR_PUBLIC_VAR_GROUP_IS_EXIST = "2101374" // 流水线公共变量组({0})已存在
     // 实例化异常：流水线其他变量[{0}]默认值被改成模版默认值,请联系助手分析
-    const val ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN = "2101364"
+    const val ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN = "2101375"
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
@@ -725,4 +756,16 @@ object ProcessMessageCode {
 
     // 回滚自模板实例化任务，基于版本[xxx]
     const val BK_ROLLBACK_FROM_TEMPLATE_INSTANCE_BASED_ON_VERSION = "bkRollbackFromTemplateInstanceBasedOnVersion"
+
+    const val DYNAMIC_VERSION = -1
+
+    // 公共变量组锁相关常量
+    const val PUBLIC_VAR_GROUP_ADD_LOCK_KEY = "PUBLIC_VAR_GROUP_ADD_LOCK"
+    const val PUBLIC_VAR_GROUP_DELETE_LOCK_KEY = "PUBLIC_VAR_GROUP_DELETE_LOCK"
+    // 引用计数锁：以项目ID和变量组名为粒度，格式为 PUBLIC_VAR_GROUP_REFER_LOCK:${projectId}:${groupName}
+    const val PUBLIC_VAR_GROUP_REFER_LOCK_KEY_PREFIX = "PUBLIC_VAR_GROUP_REFER_LOCK"
+    // 变量引用计数锁：以项目ID、变量组名和变量名为粒度，格式为 PUBLIC_VAR_REFER_LOCK:${projectId}:${groupName}:${varName}
+    const val PUBLIC_VAR_REFER_LOCK_KEY_PREFIX = "PUBLIC_VAR_REFER_LOCK"
+    const val PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS = 10L
+    const val PUBLIC_VAR_GROUP_REFER_LOCK_MAX_RETRY_TIMES = 3
 }

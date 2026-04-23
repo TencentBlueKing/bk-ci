@@ -1,0 +1,740 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 Tencent.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.process.service.`var`
+
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.ModelPublicVarHandleContext
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR
+import com.tencent.devops.process.dao.`var`.PublicVarDao
+import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
+import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
+import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
+import com.tencent.devops.process.dao.`var`.PublicVarVersionSummaryDao
+import com.tencent.devops.process.pojo.`var`.VarGroupDiffResult
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReleaseDTO
+import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
+import com.tencent.devops.process.pojo.`var`.po.PublicVarPO
+import com.tencent.devops.process.pojo.`var`.po.PublicVarPositionPO
+import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReferPO
+import com.tencent.devops.process.pojo.`var`.vo.PublicVarVO
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import java.time.LocalDateTime
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+class PublicVarService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val client: Client,
+    private val publicVarDao: PublicVarDao,
+    private val publicVarGroupDao: PublicVarGroupDao,
+    private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
+    private val publicVarReferInfoDao: PublicVarReferInfoDao,
+    private val publicVarVersionSummaryDao: PublicVarVersionSummaryDao,
+    private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService
+) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PublicVarService::class.java)
+
+        // 正则表达式常量
+        private val VAR_NAME_REGEX = Regex("^[a-zA-Z_][a-zA-Z0-9_]{0,63}$")
+    }
+
+    fun addGroupPublicVar(context: DSLContext = dslContext, publicVarDTO: PublicVarDTO): Boolean {
+        val projectId = publicVarDTO.projectId
+        val userId = publicVarDTO.userId
+        val groupName = publicVarDTO.groupName
+
+        // 批量生成ID
+        val segmentIds = client.get(ServiceAllocIdResource::class)
+            .batchGenerateSegmentId("T_RESOURCE_PUBLIC_VAR", publicVarDTO.publicVars.size).data
+        if (segmentIds.isNullOrEmpty() || segmentIds.size != publicVarDTO.publicVars.size) {
+            throw ErrorCodeException(
+                errorCode = ERROR_INVALID_PARAM_,
+                params = arrayOf("Failed to generate segment IDs")
+            )
+        }
+
+        var index = 0
+        val publicVarPOs = publicVarDTO.publicVars.map {
+            it.buildFormProperty.varGroupName = groupName
+            it.buildFormProperty.varGroupVersion = publicVarDTO.version
+
+            if (it.type == PublicVarTypeEnum.CONSTANT) {
+                it.buildFormProperty.constant = true
+            }
+
+            PublicVarPO(
+                id = segmentIds[index++] ?: 0,
+                projectId = projectId,
+                varName = it.varName,
+                alias = it.alias,
+                type = it.type,
+                valueType = it.valueType,
+                defaultValue = it.defaultValue,
+                desc = it.desc,
+                groupName = groupName,
+                version = publicVarDTO.version,
+                buildFormProperty = JsonUtil.toJson(it.buildFormProperty),
+                creator = userId,
+                modifier = userId,
+                createTime = LocalDateTime.now(),
+                updateTime = LocalDateTime.now()
+            )
+        }
+
+        // 批量保存和发布记录（在事务中执行查询和保存）
+        context.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+
+            // 获取前一个版本号（处理版本不连续和第一个版本的情况）
+            val previousVersion = publicVarGroupDao.getPreviousVersion(
+                dslContext = transactionContext,
+                projectId = projectId,
+                groupName = groupName,
+                currentVersion = publicVarDTO.version
+            )
+
+            // 如果存在前一个版本，则查询前一个版本的变量；否则返回空列表
+            val oldVarPOs = if (previousVersion != null) {
+                publicVarDao.listVarByGroupName(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    groupName = groupName,
+                    version = previousVersion
+                )
+            } else {
+                emptyList()
+            }
+
+            publicVarDao.batchSave(dslContext = transactionContext, publicVarPOs = publicVarPOs)
+
+            publicVarGroupReleaseRecordService.batchAddPublicVarGroupReleaseRecord(
+                dslContext = transactionContext,
+                publicVarGroupReleaseDTO = PublicVarGroupReleaseDTO(
+                    projectId = projectId,
+                    groupName = groupName,
+                    version = publicVarDTO.version,
+                    versionDesc = publicVarDTO.versionDesc,
+                    userId = userId,
+                    newVarPOs = publicVarPOs,
+                    oldVarPOs = oldVarPOs
+                )
+            )
+        }
+        return true
+    }
+
+    fun listGroupNamesByVarFilter(
+        projectId: String,
+        filterByVarName: String?,
+        filterByVarAlias: String?
+    ): List<String> {
+        if (filterByVarName.isNullOrBlank() && filterByVarAlias.isNullOrBlank()) return emptyList()
+
+        val groupNamesByVarName = filterByVarName?.let {
+            publicVarDao.listGroupNamesByVarName(dslContext, projectId, it)
+        } ?: emptyList()
+
+        val groupNamesByVarAlias = filterByVarAlias?.let {
+            publicVarDao.listGroupNamesByVarAlias(dslContext, projectId, it)
+        } ?: emptyList()
+
+        return (groupNamesByVarName + groupNamesByVarAlias).distinct()
+    }
+
+    fun getGroupPublicVar(
+        projectId: String,
+        groupName: String,
+        version: Int,
+        context: DSLContext = dslContext
+    ): List<PublicVarPO> {
+        return publicVarDao.listVarByGroupName(
+            dslContext = context,
+            projectId = projectId,
+            groupName = groupName,
+            version = version
+        )
+    }
+
+    /**
+     * 将PublicVarPO列表转换为PublicVarDO列表，并批量查询引用计数
+     * 引用计数语义见 [batchGetActiveReferCount]。
+     *
+     * @param varPOs 变量PO列表
+     * @param projectId 项目ID
+     * @param groupName 变量组名称
+     * @param queryVersion 用户查询的变量组版本号；null 表示默认查最新版本
+     * @return 变量DO列表
+     */
+    private fun convertVarPOsToDOsWithReferCount(
+        varPOs: List<PublicVarPO>,
+        projectId: String,
+        groupName: String,
+        queryVersion: Int?
+    ): List<PublicVarDO> {
+        if (varPOs.isEmpty()) {
+            return emptyList()
+        }
+        val referCountMap = batchGetActiveReferCount(
+            projectId = projectId,
+            groupName = groupName,
+            varNames = varPOs.map { it.varName },
+            queryVersion = queryVersion
+        )
+        return convertVarPOsToPublicVarDOs(varPOs, referCountMap, queryVersion)
+    }
+
+    fun getVariables(
+        userId: String,
+        projectId: String,
+        groupName: String,
+        version: Int?
+    ): List<PublicVarDO> {
+        val targetVersion = version ?: publicVarGroupDao.getLatestVersionByGroupName(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupName = groupName
+        ) ?: throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf(groupName))
+
+        val publicVarPOs = publicVarDao.listVarByGroupName(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupName = groupName,
+            version = targetVersion
+        )
+
+        return convertVarPOsToDOsWithReferCount(
+            varPOs = publicVarPOs,
+            projectId = projectId,
+            groupName = groupName,
+            queryVersion = version
+        )
+    }
+
+    fun checkGroupPublicVar(publicVars: List<PublicVarVO>) {
+        if (publicVars.isEmpty()) {
+            return
+        }
+        // 检查变量名是否重复
+        val varNames = publicVars.map { it.varName }
+        if (varNames.size != varNames.distinct().size) {
+            throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE)
+        }
+        // 检查变量名格式是否符合要求（由字母、数字、下划线组成，字母或下划线开头，最长64字符）
+        val invalidVarNames = publicVars
+            .map { it.varName }
+            .filter { !VAR_NAME_REGEX.matches(it) }
+        if (invalidVarNames.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR,
+                params = arrayOf(invalidVarNames.joinToString(", "))
+            )
+        }
+    }
+
+    /**
+     * 将 PublicVarPO 列表转换为 BuildFormProperty 列表（供 PublicVarGroupService 等复用）
+     */
+    fun convertVarPOsToBuildFormProperties(varPOs: List<PublicVarPO>): List<BuildFormProperty> {
+        return varPOs.map { JsonUtil.to(it.buildFormProperty, BuildFormProperty::class.java) }
+    }
+
+    /**
+     * 将 PublicVarPO 列表转换为 PublicVarVO 列表（供 PublicVarGroupService 等复用）
+     */
+    fun convertVarPOsToPublicVarVOs(varPOs: List<PublicVarPO>): List<PublicVarVO> {
+        return varPOs.map { po ->
+            PublicVarVO(
+                varName = po.varName,
+                alias = po.alias,
+                type = po.type,
+                valueType = po.valueType,
+                defaultValue = po.defaultValue,
+                desc = po.desc,
+                buildFormProperty = JsonUtil.to(po.buildFormProperty, BuildFormProperty::class.java)
+            )
+        }
+    }
+
+    /**
+     * 将 PublicVarVO 列表转换为 PublicVarDO 列表并设置引用计数（供 PublicVarGroupService.getChangePreview 等复用）
+     */
+    /**
+     * 查询某个变量组下一组变量的"有效引用数"
+     *
+     * 语义：
+     * - 当指定 `queryVersion`（查看某个具体历史版本）：只取该版本下的 REFER_COUNT
+     * - 未指定 `queryVersion`（默认：当前最新版本视角）：取 `VERSION=-1`（动态版本） +
+     *   `VERSION=变量组最新版本号` 之和
+     *
+     * 返回 `Map<varName, referCount>`，未出现的 varName 补 0。
+     */
+    fun batchGetActiveReferCount(
+        projectId: String,
+        groupName: String,
+        varNames: List<String>,
+        queryVersion: Int? = null
+    ): Map<String, Int> {
+        if (varNames.isEmpty()) return emptyMap()
+        val rawMap = if (queryVersion != null) {
+            publicVarVersionSummaryDao.batchGetReferCountByVarNames(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                version = queryVersion,
+                varNames = varNames
+            )
+        } else {
+            val latestVersion = publicVarGroupDao.getLatestVersionByGroupName(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName
+            ) ?: throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf(groupName))
+            publicVarVersionSummaryDao.batchGetActiveReferCount(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                latestVersion = latestVersion,
+                varNames = varNames
+            )
+        }
+        return varNames.associateWith { rawMap[it] ?: 0 }
+    }
+
+    fun convertPublicVarVOsToDOsWithReferCount(
+        publicVars: List<PublicVarVO>,
+        referCountMap: Map<String, Int>
+    ): List<PublicVarDO> {
+        return publicVars.map { vo ->
+            PublicVarDO(
+                varName = vo.varName,
+                alias = vo.alias,
+                desc = vo.desc,
+                type = vo.type,
+                valueType = vo.valueType,
+                defaultValue = vo.defaultValue,
+                buildFormProperty = vo.buildFormProperty,
+                referCount = referCountMap[vo.varName] ?: 0
+            )
+        }
+    }
+
+    /**
+     * 将 PublicVarPO 列表转换为 PublicVarDO 列表，并设置引用计数与变量组版本（供 PublicVarGroupReferQueryService 等复用）
+     */
+    fun convertVarPOsToPublicVarDOs(
+        varPOs: List<PublicVarPO>,
+        referCountMap: Map<String, Int>,
+        varGroupVersion: Int?
+    ): List<PublicVarDO> {
+        return varPOs.map { varPO ->
+            val buildFormProperty = JsonUtil.to(varPO.buildFormProperty, BuildFormProperty::class.java)
+            buildFormProperty.varGroupVersion = varGroupVersion
+            val actualReferCount = referCountMap[varPO.varName] ?: 0
+            PublicVarDO(
+                varName = varPO.varName,
+                alias = varPO.alias,
+                type = varPO.type,
+                valueType = varPO.valueType,
+                defaultValue = varPO.defaultValue,
+                desc = varPO.desc,
+                buildFormProperty = buildFormProperty,
+                referCount = actualReferCount
+            )
+        }
+    }
+
+    fun handleModelParams(
+        projectId: String,
+        modelPublicVarHandleContext: ModelPublicVarHandleContext
+    ): List<BuildFormProperty> {
+        val publicVarGroups = modelPublicVarHandleContext.publicVarGroups.toMutableList()
+        if (publicVarGroups.isEmpty()) {
+            logger.info("[PVS] handleModelParams skip: publicVarGroups empty")
+            return modelPublicVarHandleContext.params
+        }
+
+        // 查询引用信息
+        val groupReferInfos = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
+            dslContext = dslContext,
+            projectId = projectId,
+            referType = modelPublicVarHandleContext.referType,
+            referId = modelPublicVarHandleContext.referId,
+            referVersion = modelPublicVarHandleContext.referVersion
+        )
+        logger.info(
+            "[PVS] handleModelParams groupReferInfos fetched size=${groupReferInfos.size}, " +
+                "groupNames=${groupReferInfos.map { it.groupName }}, " +
+                "positionInfoSizes=${groupReferInfos.map { it.groupName to (it.positionInfo?.size ?: -1) }}"
+        )
+
+        // 批量查询需要更新到最新版本的变量组
+        val groupsToUpdate = publicVarGroups.filter { it.version == null }
+        val latestGroupVersionMap = getLatestVersionsForGroups(
+            projectId = projectId,
+            groupNames = groupsToUpdate.map { it.groupName }
+        )
+        val latestVars = getAllLatestVarsForGroups(
+            projectId = projectId,
+            groupToVersion = latestGroupVersionMap
+        )
+        logger.info(
+            "[PVS] handleModelParams latestGroupVersionMap=$latestGroupVersionMap, " +
+                "latestVarsSizes=${latestVars.mapValues { it.value.size }}"
+        )
+
+        val params = modelPublicVarHandleContext.params.toMutableList()
+        val pipelineVarNames = params.filter { it.varGroupName.isNullOrBlank() }.map { it.id }.toSet()
+
+        // 为每个变量组处理并设置 variables
+        publicVarGroups.forEach { varGroup ->
+            processVarGroupForModel(
+                varGroup = varGroup,
+                groupReferInfos = groupReferInfos,
+                latestVars = latestVars,
+                params = params,
+                pipelineVarNames = pipelineVarNames
+            )
+        }
+        logger.info(
+            "[PVS] handleModelParams end paramsSize=${params.size}, paramIds=${params.map { it.id }}"
+        )
+        return params
+    }
+
+    /**
+     * 处理单个变量组的 Model 参数同步
+     * 对比最新版本与保存时的版本差异，更新/删除/新增变量，并为动态版本恢复 varGroupVersion
+     */
+    private fun processVarGroupForModel(
+        varGroup: PublicVarGroupRef,
+        groupReferInfos: List<ResourcePublicVarGroupReferPO>,
+        latestVars: Map<String, List<BuildFormProperty>>,
+        params: MutableList<BuildFormProperty>,
+        pipelineVarNames: Set<String>
+    ) {
+        val groupName = varGroup.groupName
+        val latestGroupVars = latestVars[groupName] ?: emptyList()
+        val groupReferInfo = groupReferInfos.find { it.groupName == groupName }
+        if (groupReferInfo == null) {
+            logger.info("[PVS] processVarGroupForModel skip: no groupReferInfo for groupName=$groupName")
+            return
+        }
+        val positionInfo = groupReferInfo.positionInfo
+        if (positionInfo == null) {
+            logger.info("[PVS] processVarGroupForModel skip: null positionInfo for groupName=$groupName")
+            return
+        }
+
+        val latestGroupVarNames = latestGroupVars.map { it.id }.toSet()
+        val savedGroupVarNames = positionInfo.map { it.varName }.toSet()
+        logger.info(
+            "[PVS] processVarGroupForModel group=$groupName, " +
+                "savedGroupVarNames=$savedGroupVarNames, latestGroupVarNames=$latestGroupVarNames"
+        )
+
+        // 对比版本差异并处理
+        val diffResult = compareVarGroupVersions(savedGroupVarNames, latestGroupVarNames)
+        logger.info(
+            "[PVS] processVarGroupForModel group=$groupName diff: " +
+                "varsToRemove=${diffResult.varsToRemove}, varsToUpdate=${diffResult.varsToUpdate}, " +
+                "varsToAdd=${diffResult.varsToAdd}"
+        )
+        val removedVars = processVarGroupDiff(
+            diffResult = diffResult,
+            groupReferInfo = groupReferInfo,
+            latestGroupVars = latestGroupVars,
+            params = params,
+            pipelineVarNames = pipelineVarNames
+        )
+
+        // 动态版本（始终最新）引用的变量组，diff 后 buildFormProperty 里的 varGroupVersion
+        // 可能被数据库中存储的具体版本号覆盖（如 5），需恢复为 null，否则下次保存时会
+        // 被 processDynamicVarGroups 误判为固定版本，导致 GROUP_REFER_INFO.VERSION 写错
+        resetDynamicVersionIfNeeded(varGroup, params, groupName)
+
+        // 将已移除的变量设置到 variables 中（用于前端回显）
+        varGroup.variables = removedVars
+        logger.info(
+            "[PVS] processVarGroupForModel done group=$groupName, paramsIds=${params.map { it.id }}, " +
+                "removedVarsForUi=${removedVars.map { it.id }}"
+        )
+    }
+
+    /**
+     * 对于动态版本的变量组，恢复 params 中对应变量的 varGroupVersion 为 null
+     */
+    private fun resetDynamicVersionIfNeeded(
+        varGroup: PublicVarGroupRef,
+        params: List<BuildFormProperty>,
+        groupName: String
+    ) {
+        if (varGroup.version != null) return
+        params.forEach { param ->
+            if (param.varGroupName == groupName) {
+                param.varGroupVersion = null
+            }
+        }
+    }
+
+    /**
+     * 对比变量组版本差异
+     * @param oldVarNames 旧版本变量名集合
+     * @param newVarNames 新版本变量名集合
+     * @return 差异结果，包含需要删除、更新和新增的变量
+     */
+    private fun compareVarGroupVersions(
+        oldVarNames: Set<String>,
+        newVarNames: Set<String>
+    ): VarGroupDiffResult {
+        return VarGroupDiffResult(
+            varsToRemove = oldVarNames - newVarNames,
+            varsToUpdate = oldVarNames intersect newVarNames,
+            varsToAdd = newVarNames - oldVarNames
+        )
+    }
+
+    /**
+     * 处理变量组差异
+     */
+    private fun processVarGroupDiff(
+        diffResult: VarGroupDiffResult,
+        groupReferInfo: ResourcePublicVarGroupReferPO,
+        latestGroupVars: List<BuildFormProperty>,
+        params: MutableList<BuildFormProperty>,
+        pipelineVarNames: Set<String>
+    ): List<BuildFormProperty> {
+        val positionInfo = groupReferInfo.positionInfo ?: return emptyList()
+        val newVarMap = latestGroupVars.associateBy { it.id }
+        val positionInfoMap = positionInfo.associateBy { it.varName }
+
+        // 更新已存在的变量（排除与流水线变量同名的）
+        updateExistingVars(diffResult.varsToUpdate, positionInfoMap, newVarMap, params, pipelineVarNames)
+
+        // 移除不再存在的变量
+        removeObsoleteVars(diffResult.varsToRemove, positionInfoMap, params)
+
+        // 添加新增的变量到末尾（排除与流水线变量同名的）
+        addNewVars(diffResult.varsToAdd, newVarMap, params, pipelineVarNames)
+
+        // 构建已移除的变量列表
+        return buildRemovedVarsList(diffResult.varsToRemove, positionInfoMap, groupReferInfo)
+    }
+
+    /**
+     * 更新已存在的变量
+     */
+    private fun updateExistingVars(
+        varsToUpdate: Set<String>,
+        positionInfoMap: Map<String, PublicVarPositionPO>,
+        newVarMap: Map<String, BuildFormProperty>,
+        params: MutableList<BuildFormProperty>,
+        pipelineVarNames: Set<String>
+    ) {
+        varsToUpdate.forEach { varName ->
+            // 如果变量名与流水线变量同名，则跳过
+            if (varName in pipelineVarNames) {
+                return@forEach
+            }
+
+            val pos = positionInfoMap[varName] ?: return@forEach
+            val newVar = newVarMap[varName] ?: return@forEach
+
+            val targetIndex = findVarIndexInParams(varName, pos.index, params)
+            if (targetIndex >= 0) {
+                params[targetIndex] = newVar
+            }
+        }
+    }
+
+    /**
+     * 移除不再存在的变量
+     */
+    private fun removeObsoleteVars(
+        varsToRemove: Set<String>,
+        positionInfoMap: Map<String, PublicVarPositionPO>,
+        params: MutableList<BuildFormProperty>
+    ) {
+        val indicesToRemove = varsToRemove
+            .mapNotNull { varName ->
+                val pos = positionInfoMap[varName]
+                if (pos == null) {
+                    logger.info("[PVS] removeObsoleteVars no positionInfo for varName=$varName")
+                    return@mapNotNull null
+                }
+                val index = findVarIndexInParams(varName, pos.index, params)
+                logger.info(
+                    "[PVS] removeObsoleteVars lookup varName=$varName, expectedIndex=${pos.index}, " +
+                        "foundIndex=$index, paramAtIndex=${params.getOrNull(index)?.id}"
+                )
+                if (index >= 0) index else null // 过滤掉未找到的变量
+            }
+            .sortedDescending() // 降序排序，确保先删除索引大的
+
+        logger.info(
+            "[PVS] removeObsoleteVars varsToRemove=$varsToRemove, indicesToRemove=$indicesToRemove, " +
+                "paramsBefore=${params.map { it.id }}"
+        )
+        indicesToRemove.forEach { index ->
+            params.removeAt(index)
+        }
+        logger.info("[PVS] removeObsoleteVars done, paramsAfter=${params.map { it.id }}")
+    }
+
+    /**
+     * 添加新增的变量
+     */
+    private fun addNewVars(
+        varsToAdd: Set<String>,
+        newVarMap: Map<String, BuildFormProperty>,
+        params: MutableList<BuildFormProperty>,
+        pipelineVarNames: Set<String>
+    ) {
+        val currentParamVarIds = params.map { it.id }.toSet()
+        varsToAdd
+            .mapNotNull { newVarMap[it] }
+            .filter { it.id !in currentParamVarIds }
+            .filter { it.id !in pipelineVarNames } // 排除与流水线变量同名的
+            .forEach { newVar ->
+                params.add(newVar)
+            }
+    }
+
+    /**
+     * 构建已移除的变量列表
+     */
+    private fun buildRemovedVarsList(
+        varsToRemove: Set<String>,
+        positionInfoMap: Map<String, PublicVarPositionPO>,
+        groupReferInfo: ResourcePublicVarGroupReferPO
+    ): List<BuildFormProperty> {
+        return varsToRemove.mapNotNull { varName ->
+            positionInfoMap[varName]?.let { pos ->
+                BuildFormProperty(
+                    id = pos.varName,
+                    required = pos.required,
+                    type = BuildFormPropertyType.STRING,
+                    defaultValue = "",
+                    options = null,
+                    desc = "",
+                    repoHashId = null,
+                    relativePath = null,
+                    scmType = null,
+                    containerType = null,
+                    glob = null,
+                    properties = null,
+                    varGroupName = groupReferInfo.groupName,
+                    varGroupVersion = groupReferInfo.version,
+                    constant = pos.type == PublicVarTypeEnum.CONSTANT
+                ).apply {
+                    this.removeFlag = true
+                }
+            }
+        }
+    }
+
+    /**
+     * 在params中查找变量的实际索引位置
+     * 先检查预期位置是否匹配，不匹配则遍历查找
+     */
+    private fun findVarIndexInParams(
+        varName: String,
+        expectedIndex: Int,
+        params: List<BuildFormProperty>
+    ): Int {
+        // 先检查预期位置是否匹配
+        if (expectedIndex in params.indices && params[expectedIndex].id == varName) {
+            return expectedIndex
+        }
+        // 预期位置不匹配，遍历查找实际位置
+        return params.indexOfFirst { it.id == varName }
+    }
+
+    /**
+     * 批量获取多个组的最新版本
+     */
+    private fun getLatestVersionsForGroups(
+        projectId: String,
+        groupNames: List<String>
+    ): Map<String, Int> {
+        if (groupNames.isEmpty()) return emptyMap()
+        val versionMap = publicVarGroupDao.getLatestVersionsByGroupNames(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupNames = groupNames
+        )
+        val missingGroups = groupNames.filter { it !in versionMap }
+        if (missingGroups.isNotEmpty()) {
+            throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf(missingGroups.first()))
+        }
+        return versionMap
+    }
+
+    /**
+     * 批量获取变量
+     * @param projectId 项目ID
+     * @param groupToVersion 变量组名 -> 版本号
+     * @return 变量组名 -> 变量 BuildFormProperty 列表
+     */
+    private fun getAllLatestVarsForGroups(
+        projectId: String,
+        groupToVersion: Map<String, Int>
+    ): Map<String, List<BuildFormProperty>> {
+        if (groupToVersion.isEmpty()) return emptyMap()
+
+        val groupNameVersionList = groupToVersion.map { (groupName, version) -> groupName to version }
+        val allVarPOs = publicVarDao.batchListVarsByGroupNameAndVersion(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupNameVersionList = groupNameVersionList
+        )
+
+        // 按 groupName 分组，转换为 BuildFormProperty
+        val result = allVarPOs.groupBy { it.groupName }
+            .mapValues { (_, varPOs) ->
+                varPOs.map { JsonUtil.to(it.buildFormProperty, BuildFormProperty::class.java) }
+            }
+
+        // 保证所有请求的 groupName 都有对应的 key（即使变量列表为空）
+        return groupToVersion.keys.associateWith { result[it] ?: emptyList() }
+    }
+}

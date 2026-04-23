@@ -76,7 +76,7 @@ data class Variable(
     val value: Any?,
     var readonly: Boolean? = false,
     @JsonProperty("allow-modify-at-startup")
-    val allowModifyAtStartup: Boolean? = true,
+    var allowModifyAtStartup: Boolean? = true,
     @get:JsonProperty("as-instance-input")
     @get:Schema(title = "默认为实例入参,只有模版才有值,流水线没有值", required = false)
     var asInstanceInput: Boolean? = null,
@@ -185,6 +185,9 @@ data class VariableDatasource(
     @JsonProperty("item-target-url")
     val itemTargetUrl: String? = null
 )
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class VariableTemplate(val name: String, val version: String? = null)
 
 enum class VariablePropType(val value: String) {
     VUEX_INPUT("vuex-input"),
