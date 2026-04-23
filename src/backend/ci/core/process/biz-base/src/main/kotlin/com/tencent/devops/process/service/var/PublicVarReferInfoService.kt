@@ -355,8 +355,9 @@ class PublicVarReferInfoService @Autowired constructor(
             referId = queryParams.resourceId,
             referType = queryParams.referType,
             referVersion = queryParams.resourceVersion
-        ).groupBy { PublicGroupKey(it.groupName, if (it.version == DYNAMIC_VERSION ) null else it.version) }
-            .mapValues { (_, records) -> records.map { it.varName }.toSet() }
+        ).groupBy {
+            PublicGroupKey(it.groupName, if (it.version == DYNAMIC_VERSION ) null else it.version)
+        }.mapValues { (_, records) -> records.map { it.varName }.toSet() }
     }
 
     /**

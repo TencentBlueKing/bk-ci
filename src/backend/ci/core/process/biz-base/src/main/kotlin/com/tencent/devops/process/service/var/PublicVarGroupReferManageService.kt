@@ -667,8 +667,8 @@ class PublicVarGroupReferManageService @Autowired constructor(
                     "publicVarGroupNames: $publicVarGroupNames, " +
                     "resourcePublicVarGroupReferPOS size: ${resourcePublicVarGroupReferPOS.size}"
         )
-        if (publicVarGroupNames.isEmpty() && resourcePublicVarGroupReferPOS.isEmpty()
-            && historicalReferInfos.isEmpty()) {
+        if (publicVarGroupNames.isEmpty() &&
+            resourcePublicVarGroupReferPOS.isEmpty() && historicalReferInfos.isEmpty()) {
             return
         }
         try {

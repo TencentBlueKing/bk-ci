@@ -317,8 +317,8 @@ class PublicVarGroupReferCountService @Autowired constructor(
                         )
                         if (alreadyReferred) {
                             logger.info(
-                                "Skip increment referCount: referId=${changeInfo.referId} " +
-                                        "already refers to groupName=${changeInfo.groupName}, version=${addInfo.version}"
+                                "Skip increment referCount: referId=${changeInfo.referId} already " +
+                                        "refers to groupName=${changeInfo.groupName}, version=${addInfo.version}"
                             )
                         }
                         !alreadyReferred

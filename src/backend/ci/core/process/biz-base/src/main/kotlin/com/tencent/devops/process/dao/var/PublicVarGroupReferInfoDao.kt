@@ -31,7 +31,6 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.model.process.tables.TResourcePublicVarGroupReferInfo
-import com.tencent.devops.model.process.tables.TResourcePublicVarReferInfo
 import com.tencent.devops.model.process.tables.records.TResourcePublicVarGroupReferInfoRecord
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPositionPO
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReferPO
