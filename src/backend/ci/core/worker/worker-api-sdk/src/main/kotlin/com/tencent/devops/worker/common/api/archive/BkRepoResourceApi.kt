@@ -155,6 +155,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         repoName: String,
         destFullPath: String,
         token: String,
+
         buildVariables: BuildVariables,
         parseAppMetadata: Boolean = true,
         parsePipelineMetadata: Boolean = true,

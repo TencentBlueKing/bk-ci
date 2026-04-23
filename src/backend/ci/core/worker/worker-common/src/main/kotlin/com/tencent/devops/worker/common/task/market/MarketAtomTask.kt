@@ -40,6 +40,7 @@ import com.tencent.devops.common.api.constant.PATH
 import com.tencent.devops.common.api.constant.REPORT
 import com.tencent.devops.common.api.constant.REPORT_TYPE
 import com.tencent.devops.common.api.constant.SENSITIVE
+import com.tencent.devops.common.api.constant.SHOULD_ARCHIVE_TO_PARENT_PIPELINE
 import com.tencent.devops.common.api.constant.STRING
 import com.tencent.devops.common.api.constant.TYPE
 import com.tencent.devops.common.api.constant.URL
@@ -1014,12 +1015,14 @@ open class MarketAtomTask : ITask() {
         buildVariables: BuildVariables,
         atomWorkspace: File
     ): String {
+        val shouldArchiveToParentPipeline = (output[SHOULD_ARCHIVE_TO_PARENT_PIPELINE] as? Boolean ?: false).toString()
         output[LABEL] ?: throw TaskExecuteException(
             errorMsg = "$varKey.$LABEL cannot be empty",
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_INPUT_INVAILD
         )
         val params = mutableMapOf<String, String>()
+        params[SHOULD_ARCHIVE_TO_PARENT_PIPELINE] = shouldArchiveToParentPipeline
         if (buildTask.params != null) {
             params.putAll(buildTask.params!!)
         }
