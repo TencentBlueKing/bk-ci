@@ -154,11 +154,16 @@
     >
         <label
             v-if="props.label"
-            :title="props.label"
             class="bk-label atom-form-label"
             :style="widthStyle"
         >
-            <span :class="{ deleted: props.isDelete }">{{ props.label }}</span>
+            <span
+                class="label-text"
+                :class="{ deleted: props.isDelete }"
+                v-bk-overflow-tips
+            >
+                {{ props.label }}
+            </span>
             {{ props.hideColon ? '' : '：' }}
             <a
                 v-if="props.docsLink"
@@ -314,6 +319,14 @@
             pointer-events: auto;
         }
         .atom-form-label {
+            .label-text {
+                display: inline-block;
+                max-width: 500px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                vertical-align: middle;
+            }
             .deleted {
                 color: #a7a9ac !important;
                 text-decoration: line-through;
@@ -344,6 +357,7 @@
     .bk-form-inline-item {
         .bk-label {
             position: relative;
+            font-weight: 400;
         }
     }
     .bk-form-vertical {

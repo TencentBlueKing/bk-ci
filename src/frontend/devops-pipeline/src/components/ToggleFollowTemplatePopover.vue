@@ -13,7 +13,7 @@
                     'is-follow': props.isFollowTemplate,
                     'is-collapsed': props.isCollapsed,
                     'is-show-label': showLabel,
-                    'is-not-stepId': props.isNoStepId
+                    'is-not-stepId': props.isNoStepId || props.disabled
                 }
             ]"
             @click.stop="handleChangeStatus"
@@ -121,6 +121,10 @@
             type: Boolean,
             required: false,
             default: false
+        },
+        disabled: {
+            type: Boolean,
+            default: false
         }
     })
     const initLoading = ref(false)
@@ -137,7 +141,7 @@
     })
     function handleChangeStatus (event) {
         event.preventDefault()
-        if (props.isNoStepId) return
+        if (props.isNoStepId || props.disabled) return
         initLoading.value = true
         props.handleChange(!props.isFollowTemplate)
         setTimeout(() => {

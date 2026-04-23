@@ -6,7 +6,10 @@
     >
         <div
             class="variable-entry"
-            :class="{ 'is-close': !showVariable }"
+            :class="{
+                'is-close': !showVariable,
+                'is-hidden': isVarGroupSliderOpen
+            }"
             @click="toggleOpenVar"
         >
             <i class="bk-icon icon-angle-double-right"></i>
@@ -37,6 +40,7 @@
                     :can-edit-param="canEditParam"
                     :params="params"
                     :update-container-params="handleContainerChange"
+                    @var-group-slider-change="handleVarGroupSliderChange"
                 />
                 <atom-output-var
                     :stages="stages"
@@ -100,7 +104,8 @@
         },
         data () {
             return {
-                active: 'pipeline'
+                active: 'pipeline',
+                isVarGroupSliderOpen: false
             }
         },
         computed: {
@@ -126,14 +131,36 @@
                 return this.pipeline?.stages[0]?.containers[0] || {}
             },
             params () {
-                return this.container?.params || []
+                return [...this.container?.params, ...this.isRemoveParamsList] || []
             },
             buildNo () {
                 return this.container?.buildNo || {}
+            },
+            triggerCodeList () {
+                const triggerList = (this.container?.elements || []).map(item => item.atomCode)
+                return triggerList.filter(item => !['manualTrigger', 'remoteTrigger', 'timerTrigger'].includes(item))
+            },
+            publicVarGroups () {
+                return this.$store?.state?.atom?.pipeline?.publicVarGroups || []
+            },
+            isRemoveParamsList () {
+                // 已经被删除的公共变量组变量
+                return this.publicVarGroups.reduce((allVariables, group) => {
+                    const variables = group.variables?.filter(param => !param.isRemove) || []
+                    return allVariables.concat(variables)
+                }, [])
+            }
+        },
+        watch: {
+            triggerCodeList (newValue) {
+                this.requestTriggerParams(newValue)
             }
         },
         created () {
-            this.requestCommonParams()
+            Promise.all([
+                this.requestCommonParams(),
+                this.requestTriggerParams(this.triggerCodeList)
+            ])
         },
         mounted () {
             this.setShowVariable(true)
@@ -149,7 +176,8 @@
                 'setShowVariable',
                 'toggleAtomSelectorPopup',
                 'updateContainer',
-                'requestCommonParams'
+                'requestCommonParams',
+                'requestTriggerParams'
             ]),
             handleContainerChange (name, value) {
                 this.updateContainer({
@@ -168,6 +196,9 @@
             },
             selectTab (tab) {
                 this.active = tab
+            },
+            handleVarGroupSliderChange (isShow) {
+                this.isVarGroupSliderOpen = isShow
             }
         }
     }
@@ -220,6 +251,9 @@
       transform: rotate(180deg);
     }
   }
+  &.is-hidden {
+    display: none;
+  }
 }
 .variable-version-container {
   z-index: 2018;
@@ -244,6 +278,8 @@
         cursor: pointer;
         font-size: 14px;
         color: #63656e;
+        margin: 0 8px;
+        @include ellipsis();
         &.actived {
           color: #3a84ff;
           border-bottom: 2px solid #3a84ff;
