@@ -112,7 +112,7 @@ class TaiService {
     }
 
     fun getCertExchangeCode(userId: String, req: CertExchangeCodeReq): CertExchangeCodeResp {
-        val url = "$taiUrl/qrcode/backend/get"
+        val url = "$taiUrl/ebus/bwhigvszmdyw/qrcode/backend/get"
         val body = ObjectMapper().writeValueAsString(req)
         logger.info("User $userId getCertExchangeCode url: $url, body: $body")
         val request = Request.Builder()
