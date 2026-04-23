@@ -8,8 +8,8 @@ import type { Column } from 'bkui-vue/lib/table/props'
 import { useTableHeight } from '@/hooks/useTableHeight'
 import { useVisibleRange } from '@/hooks/useVisibleRange'
 import type { AddVisibleRangeItem } from '@/api/visibleRange'
-import BkOrgSelector, { type TreeItem } from '@blueking/bk-ORG-selector'
-import '@blueking/bk-ORG-selector/vue3/vue3.css'
+import BkOrgSelector, { type TreeItem } from '@blueking/bk-org-selector'
+import '@blueking/bk-org-selector/vue3/vue3.css'
 import styles from './VisibleRange.module.css'
 
 export default defineComponent({
