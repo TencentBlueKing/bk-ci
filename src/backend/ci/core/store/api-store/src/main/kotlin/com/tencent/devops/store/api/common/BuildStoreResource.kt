@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
@@ -44,6 +45,7 @@ import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
@@ -133,4 +135,15 @@ interface BuildStoreResource {
         @PathParam("storeId")
         storeId: String
     ): Result<StoreProcessInfo>
+
+    @Operation(summary = "更新组件版本大小")
+    @PUT
+    @Path("/storeIds/{storeId}/version/info/update")
+    fun updateComponentVersionSize(
+        @Parameter(description = "组件ID", required = true)
+        @PathParam("storeId")
+        storeId: String,
+        @Parameter(description = "组件版本包大小", required = true)
+        storePackageInfoReqs: List<StorePackageInfoReq>
+    ): Result<Boolean>
 }

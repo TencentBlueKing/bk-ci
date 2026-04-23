@@ -77,6 +77,7 @@ import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.pojo.PackageVersionInfo
 import com.tencent.devops.common.archive.pojo.ProjectMetadata
 import com.tencent.devops.common.archive.pojo.QueryData
+import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.pojo.RepoCreateRequest
 import com.tencent.devops.common.archive.pojo.defender.ApkDefenderRequest
 import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTasks
@@ -96,6 +97,14 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import io.opentelemetry.api.trace.Span
 import jakarta.ws.rs.NotFoundException
+import java.io.File
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
+import java.net.URLEncoder
+import java.nio.file.FileSystems
+import java.nio.file.Paths
+import java.util.UUID
 import okhttp3.Credentials
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType
@@ -109,14 +118,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Sort.Direction
 import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
-import java.io.File
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
-import java.net.URLEncoder
-import java.nio.file.FileSystems
-import java.nio.file.Paths
-import java.util.UUID
 
 @Component
 class BkRepoClient constructor(
@@ -444,10 +445,12 @@ class BkRepoClient constructor(
     fun deleteNode(userName: String, projectId: String, repoName: String, path: String, authorization: String) {
         logger.info("delete,  projectId: $projectId, repoName: $repoName, path: $path")
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/delete/$projectId/$repoName/$path"
+        val headers = getCommonHeaders(userName, projectId).apply {
+            put("Authorization", authorization)
+        }
         val request = Request.Builder()
             .url(url)
-            .header("Authorization", authorization)
-            .headers(getCommonHeaders(userName, projectId).toHeaders())
+            .headers(headers.toHeaders())
             .delete()
             .build()
         doRequest(request).resolveResponse<Response<Void>>()
@@ -1347,6 +1350,22 @@ class BkRepoClient constructor(
             }
             throw RemoteServiceException(responseData.message ?: responseData.code.toString(), this.code)
         }
+    }
+
+    fun getStoreComponentPkgSize(
+        authorization: String,
+        projectId: String,
+        repoName: String,
+        fullPath: String,
+        userId: String
+    ): QueryNodeInfo {
+        val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/detail/$projectId/$repoName/$fullPath"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(userId, projectId).toHeaders()).build()
+        return doRequest(request).resolveResponse<Response<QueryNodeInfo>>()?.data ?: throw RemoteServiceException(
+            "get store component pkg size failed"
+        )
     }
 
     companion object {

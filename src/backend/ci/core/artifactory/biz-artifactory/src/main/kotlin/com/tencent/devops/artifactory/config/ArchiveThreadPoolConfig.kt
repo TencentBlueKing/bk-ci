@@ -25,53 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.store.service
+package com.tencent.devops.artifactory.config
 
-import com.tencent.devops.artifactory.pojo.ArchiveStorePkgRequest
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import java.io.InputStream
+import java.util.concurrent.ThreadPoolExecutor
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 
-interface ArchiveStorePkgService {
+@Configuration
+class ArchiveThreadPoolConfig {
 
-    /**
-     * 归档组件包
-     */
-    fun archiveStorePkg(
-        userId: String,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition,
-        archiveStorePkgRequest: ArchiveStorePkgRequest
-    ): Boolean
-
-    /**
-     * 获取组件相关文件内容
-     */
-    fun getStoreFileContent(filePath: String, storeType: StoreTypeEnum, repoName: String? = null): String
-
-    /**
-     * 获取组件相关文件大小
-     */
-    fun getStoreFileSize(filePath: String, storeType: StoreTypeEnum, repoName: String? = null): Long?
-
-    /**
-     * 删除组件包
-     */
-    fun deleteStorePkg(userId: String, storeCode: String, storeType: StoreTypeEnum)
-
-    /**
-     * 获取组件包文件下载链接
-     */
-    @Suppress("LongParameterList")
-    fun getComponentPkgDownloadUrl(
-        userId: String,
-        projectId: String,
-        storeType: StoreTypeEnum,
-        storeCode: String,
-        version: String,
-        instanceId: String? = null,
-        osName: String? = null,
-        osArch: String? = null,
-        checkPermissionFlag: Boolean = true
-    ): String
+    @Bean(name = ["atomPkgSizeExecutor"], destroyMethod = "shutdown")
+    fun atomPkgSizeExecutor(): ThreadPoolTaskExecutor {
+        return ThreadPoolTaskExecutor().apply {
+            corePoolSize = 1
+            maxPoolSize = 1
+            queueCapacity = 10
+            setThreadNamePrefix("atom-pkg-size-")
+            setWaitForTasksToCompleteOnShutdown(true)
+            setAwaitTerminationSeconds(30)
+            setRejectedExecutionHandler(ThreadPoolExecutor.CallerRunsPolicy())
+        }
+    }
 }
