@@ -135,7 +135,7 @@ class DispatchStrategyExecutor(
         }
         val expected = selector.values
         if (expected.isEmpty()) return false
-        return when (selector.op) {
+        val result =  when (selector.op) {
             LabelOp.IN -> agentValues.any { it in expected }
             LabelOp.EQUAL -> expected.any { exp -> agentValues.any { it == exp } }
             LabelOp.GT -> expected.any { exp -> agentValues.any { compareValues(it, exp) > 0 } }
@@ -146,6 +146,10 @@ class DispatchStrategyExecutor(
             LabelOp.END_WITH -> expected.any { exp -> agentValues.any { it.endsWith(exp) } }
             LabelOp.CONTAINS -> expected.any { exp -> agentValues.any { it.contains(exp) } }
         }
+        if (result) {
+            pipelineLog("$logTag $agentValues${selector.op.symbol}$expected")
+        }
+        return result
     }
 
     /**
