@@ -18,12 +18,15 @@ func TestNet_Name(t *testing.T) {
 }
 
 func TestNet_Gather_FiltersAllPseudoInterface(t *testing.T) {
+	// 同时验证：gopsutil 伪接口 "all" 被过滤 + 虚接口黑名单（lo/docker0）被过滤
 	n := &Net{
 		ioCountersFn: func(pernic bool) ([]net.IOCountersStat, error) {
 			return []net.IOCountersStat{
 				{Name: "eth0", BytesRecv: 100, BytesSent: 200},
 				{Name: "all", BytesRecv: 300, BytesSent: 400},
-				{Name: "lo", BytesRecv: 1, BytesSent: 2},
+				{Name: "lo", BytesRecv: 1, BytesSent: 2},       // 虚接口黑名单
+				{Name: "docker0", BytesRecv: 10, BytesSent: 20}, // 虚接口黑名单
+				{Name: "ens33", BytesRecv: 5, BytesSent: 6},    // 物理网卡保留
 			}, nil
 		},
 		nowFn: time.Now,
@@ -33,12 +36,20 @@ func TestNet_Gather_FiltersAllPseudoInterface(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(metrics) != 2 {
-		t.Fatalf("want 2 (all filtered), got %d", len(metrics))
+		t.Fatalf("want 2 (eth0 + ens33), got %d", len(metrics))
 	}
+	seen := map[string]bool{}
 	for _, m := range metrics {
+		seen[m.Tags[TagInterface]] = true
 		if m.Tags[TagInterface] == "all" {
 			t.Error("'all' should be filtered")
 		}
+		if m.Tags[TagInterface] == "lo" || m.Tags[TagInterface] == "docker0" {
+			t.Errorf("virtual interface %q should be filtered", m.Tags[TagInterface])
+		}
+	}
+	if !seen["eth0"] || !seen["ens33"] {
+		t.Errorf("physical interfaces missing: %+v", seen)
 	}
 }
 
