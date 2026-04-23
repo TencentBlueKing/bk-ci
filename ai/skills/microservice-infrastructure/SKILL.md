@@ -1,6 +1,6 @@
 ---
 name: microservice-infrastructure
-description: 微服务基础设施指南，涵盖条件配置、事件驱动架构、服务间通信、国际化与日志等微服务架构的核心基础设施。当用户实现服务间调用、配置多环境、实现异步通信、处理国际化或规范日志输出时使用。
+description: 配置Kafka消费者、发布RabbitMQ事件消息、实现OpenFeign服务调用、配置Spring Cloud Gateway路由、管理Spring Boot多环境Profile、实现i18n国际化。BK-CI微服务基础设施：条件配置（@Profile/@ConditionalOnProperty）、事件驱动（RabbitMQ/Kafka发布订阅）、服务间通信（Feign客户端/Consul服务发现/熔断降级）、SLF4J日志脱敏。
 core_files:
   - "src/backend/ci/core/common/common-event/"
   - "src/backend/ci/core/common/common-client/src/main/kotlin/com/tencent/devops/common/client/Client.kt"
@@ -8,56 +8,12 @@ core_files:
 related_skills:
   - backend-microservice-development
   - common-technical-practices
-token_estimate: 6000
+token_estimate: 5000
 ---
 
 # 微服务基础设施指南
 
-## Skill 概述
-
-本 Skill 涵盖了 BK-CI 微服务架构中的 **4 大核心基础设施**，这些是构建分布式系统的基石，与 Spring Cloud/Spring Boot 框架深度集成。
-
-### 核心主题
-
-| 主题 | 说明 | 文档 |
-|------|------|------|
-| **条件配置** | Profile 配置、特性开关、环境隔离 | [1-conditional-config.md] |
-| **事件驱动** | MQ 消息队列、发布订阅、异步处理 | [2-event-driven.md] |
-| **服务间通信** | Feign 客户端、服务发现、熔断降级 | [3-service-communication.md] |
-| **国际化与日志** | i18n 多语言、日志规范、敏感信息脱敏 | [4-i18n-logging.md] |
-
----
-
-## 微服务基础设施架构
-
-### 架构视图
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    BK-CI 微服务集群                              │
-│  Process / Project / Store / Auth / Repository / Dispatch...   │
-└─────────────────────────────────────────────────────────────────┘
-                             ↓
-        ┌────────────────────┼────────────────────┐
-        │                    │                    │
-   ┌────▼────┐         ┌────▼────┐         ┌────▼────┐
-   │ Feign   │         │  MQ     │         │ Config  │
-   │ 服务调用 │         │ 事件驱动 │         │ 配置中心 │
-   └─────────┘         └─────────┘         └─────────┘
-        │                    │                    │
-        └────────────────────┼────────────────────┘
-                             ↓
-┌─────────────────────────────────────────────────────────────────┐
-│                    微服务基础设施层                              │
-├─────────────────────────────────────────────────────────────────┤
-│  • 条件配置（多环境隔离）                                        │
-│  • 事件驱动（异步解耦）                                          │
-│  • 服务间通信（负载均衡、熔断）                                   │
-│  • 国际化与日志（可观测性）                                      │
-└─────────────────────────────────────────────────────────────────┘
-```
-
----
+BK-CI 微服务架构的核心基础设施，基于 Spring Cloud、Spring Boot、OpenFeign、RabbitMQ、Consul 构建。涵盖条件配置、事件驱动、服务间通信、国际化与日志脱敏。
 
 ## 使用指南
 
@@ -65,67 +21,71 @@ token_estimate: 6000
 
 **需求**: 不同环境使用不同配置、特性开关
 
-**步骤**:
-1. 查阅 [reference/1-conditional-config.md](./reference/1-conditional-config.md)
-2. 使用 `@Profile` 注解或 `@Conditional`
-3. 配置 `application-{profile}.yml`
-4. 实现特性开关逻辑
+**工作流**:
+1. 创建环境配置文件 `application-{profile}.yml`（如 `application-dev.yml`、`application-prod.yml`）
+2. 使用 `@Profile("dev")` 注解标注环境特定的 Bean
+3. 使用 `@ConditionalOnProperty(prefix="feature", name="newPipeline", havingValue="true")` 实现特性开关
+4. 启动时指定环境：`--spring.profiles.active=dev`
+5. 验证：检查启动日志确认 active profile，调用 `/actuator/env` 确认配置值
 
-**典型问题**:
-- 如何动态切换环境配置？
-- 特性开关如何实现？
-- 配置优先级如何确定？
+参考：[reference/1-conditional-config.md](./reference/1-conditional-config.md)
 
 ---
 
-### 场景 2：实现事件驱动架构
+### 场景 2：实现事件驱动架构（RabbitMQ）
 
 **需求**: 异步处理、模块解耦、事件溯源
 
-**步骤**:
-1. 查阅 [reference/2-event-driven.md](./reference/2-event-driven.md)
-2. 定义事件类（实现 `IEvent` 接口）
-3. 发布事件到 MQ
-4. 订阅并处理事件
+**工作流**:
+1. 定义事件类，实现 `IEvent` 接口，命名遵循 `{Module}{Action}Event`（如 `PipelineStartEvent`）
+2. 通过 `EventDispatcher` 发布事件到 RabbitMQ
+3. 实现 `EventListener` 订阅并处理事件，确保处理逻辑幂等
+4. 配置死信队列处理消费失败的消息
+5. **验证**：检查 RabbitMQ 管理控制台确认队列绑定正确，发送测试事件确认消费者收到消息，检查死信队列无积压
 
-**典型问题**:
-- 如何发布事件？
-- 如何订阅消息队列？
-- 事件丢失如何处理？
+参考：[reference/2-event-driven.md](./reference/2-event-driven.md)
 
 ---
 
-### 场景 3：服务间调用
+### 场景 3：服务间调用（OpenFeign + Consul）
 
 **需求**: 跨服务通信、负载均衡、熔断降级
 
-**步骤**:
-1. 查阅 [reference/3-service-communication.md](./reference/3-service-communication.md)
-2. 定义 Feign 客户端接口
-3. 配置服务发现（Consul）
-4. 实现熔断降级逻辑
+**工作流**:
+1. 在 `api-*` 模块中定义 Feign 客户端接口（继承 `ServiceXXXResource`）
+2. 通过 `Client` 基类获取 Feign 客户端实例，Consul 自动服务发现
+3. 配置超时：连接超时 5s，读超时 30s
+4. 实现服务降级逻辑，返回默认值或缓存数据
+5. **验证**：检查 Consul 服务注册状态，调用接口确认负载均衡生效，模拟下游不可用确认熔断降级触发
 
-**典型问题**:
-- Feign 客户端如何定义？
-- 超时时间如何配置？
-- 服务降级如何实现？
+**示例 — 定义 Feign 客户端接口**:
+```kotlin
+@FeignClient(name = "project", contextId = "ServiceProjectResource")
+interface ServiceProjectResource {
+    @GetMapping("/service/projects/{projectId}")
+    fun get(@PathVariable("projectId") projectId: String): Result<ProjectVO>
+}
+
+// 调用方通过 Client 基类获取实例
+val projectInfo = client.get(ServiceProjectResource::class).get(projectId)
+```
+
+参考：[reference/3-service-communication.md](./reference/3-service-communication.md)
 
 ---
 
-### 场景 4：实现国际化与日志规范
+### 场景 4：实现国际化与 SLF4J 日志规范
 
 **需求**: 多语言支持、统一日志格式、敏感信息脱敏
 
-**步骤**:
-1. 查阅 [reference/4-i18n-logging.md](./reference/4-i18n-logging.md)
-2. 配置 i18n 消息文件（`messages_zh_CN.properties`）
-3. 规范日志输出（使用 SLF4J）
-4. 实现敏感信息脱敏
+**工作流**:
+1. 在 `support-files/i18n/` 下创建 `messages_{locale}.properties`（如 `messages_zh_CN.properties`、`messages_en_US.properties`）
+2. 用户可见文案使用 `MessageUtil.getMessageByLocale()` 获取
+3. 日志统一使用 SLF4J（禁止 `println`），级别：ERROR/WARN/INFO/DEBUG
+4. 敏感信息（密码、Token）打印时脱敏
+5. **验证**：切换 locale 确认文案正确，检查日志输出无明文密码
 
-**典型问题**:
-- 如何添加新语言？
-- 日志级别如何设置？
-- 密码等敏感信息如何脱敏？
+参考：[reference/4-i18n-logging.md](./reference/4-i18n-logging.md)
 
 ---
 
@@ -165,144 +125,33 @@ token_estimate: 6000
 
 ## 开发规范
 
-### 1. 条件配置规范
-
-- ✅ 环境相关配置使用 `@Profile` 注解
-- ✅ 特性开关使用 `@ConditionalOnProperty`
-- ✅ 敏感配置（密码、密钥）加密存储
-- ✅ 配置文件按环境分离（`application-dev.yml`）
-
-### 2. 事件驱动规范
-
-- ✅ 事件类实现 `IEvent` 接口
-- ✅ 事件命名：`{Module}{Action}Event`（如 `PipelineStartEvent`）
-- ✅ 事件发布使用 `EventDispatcher`
-- ✅ 事件监听器处理要幂等
-- ✅ 避免同步等待事件处理结果
-
-### 3. 服务间通信规范
-
-- ✅ Feign 接口定义在 `api-*` 模块
-- ✅ 设置合理的超时时间（连接超时 5s，读超时 30s）
-- ✅ 实现服务降级（返回默认值或缓存数据）
-- ✅ 避免服务间循环调用
-- ✅ 关键调用添加链路追踪
-
-### 4. 国际化与日志规范
-
-- ✅ 用户可见文案必须国际化
-- ✅ 至少支持中文和英文
-- ✅ 日志使用 SLF4J（不使用 `println`）
-- ✅ 日志级别：ERROR（错误）、WARN（警告）、INFO（关键流程）、DEBUG（调试）
-- ✅ 敏感信息（密码、Token）必须脱敏
+- 环境相关配置使用 `@Profile`，特性开关使用 `@ConditionalOnProperty`，敏感配置加密存储
+- 事件类实现 `IEvent`，命名 `{Module}{Action}Event`，通过 `EventDispatcher` 发布，监听器处理幂等
+- OpenFeign 接口定义在 `api-*` 模块，设置超时（连接 5s/读 30s），实现熔断降级，禁止循环调用
+- 用户可见文案国际化（至少中文+英文），日志用 SLF4J，敏感信息必须脱敏
 
 ---
 
-## 与其他 Skill 的关系
+## 相关 Skill
 
-```
-microservice-infrastructure (本 Skill)
-    ↓ 依赖
-backend-microservice-development     # 微服务开发基础
-common-technical-practices           # 通用技术实践
-    ↓ 被依赖
-process-module-architecture          # Process 模块使用这些基础设施
-auth-module-architecture             # Auth 模块使用这些基础设施
-...                                  # 其他业务模块
-```
-
-**前置知识**:
-- `backend-microservice-development` - 了解 Spring Boot/Spring Cloud 基础
-
-**相关 Skill**:
-- `common-technical-practices` - 通用技术实践（AOP、锁、重试）
-- `process-module-architecture` - Process 模块架构（事件驱动应用）
+- **前置**: `backend-microservice-development` — Spring Boot/Spring Cloud 基础
+- **相关**: `common-technical-practices` — 通用技术实践（AOP、锁、重试）
+- **应用**: `process-module-architecture` — Process 模块（事件驱动应用示例）
 
 ---
 
-## 详细文档导航
+## 常见问题
 
-| 文档 | 内容 | 行数 | 典型问题 |
-|------|------|------|----------|
-| [1-conditional-config.md](./reference/1-conditional-config.md) | 条件配置 | 59 | 如何配置多环境？特性开关如何实现？ |
-| [2-event-driven.md](./reference/2-event-driven.md) | 事件驱动架构 | 88 | 如何发布事件？事件丢失如何处理？ |
-| [3-service-communication.md](./reference/3-service-communication.md) | 服务间通信 | 104 | Feign 如何配置？超时如何处理？ |
-| [4-i18n-logging.md](./reference/4-i18n-logging.md) | 国际化与日志 | 67 | 如何添加新语言？敏感信息如何脱敏？ |
+**事件发布后如何保证消费？** 使用 RabbitMQ 持久化队列，消费失败自动重试，最终失败进入死信队列并告警。
 
----
+**Feign 调用超时如何处理？** 配置超时（连接 5s/读 30s），实现服务降级返回默认值，幂等操作添加重试，使用熔断器快速失败。
 
-## 常见问题 FAQ
+**服务间循环调用如何避免？** 禁止双向依赖（A 调 B，B 不能调 A），用事件驱动解耦，或引入中间服务打破循环。
 
-### Q1: 如何根据环境切换配置？
-**A**: 
-1. 创建 `application-{profile}.yml`（如 `application-dev.yml`）
-2. 启动时指定：`--spring.profiles.active=dev`
-3. 或使用 `@Profile("dev")` 注解
-
-### Q2: 事件发布后如何保证消费？
-**A**:
-1. 使用 **持久化队列**（RabbitMQ）
-2. 消费失败后 **自动重试**
-3. 最终失败进入 **死信队列**
-4. 监控死信队列并告警
-
-### Q3: Feign 调用超时如何处理？
-**A**:
-1. 配置合理的超时时间（连接 5s，读 30s）
-2. 实现 **服务降级** 返回默认值
-3. 添加 **重试机制**（幂等操作）
-4. 使用 **熔断器** 快速失败
-
-### Q4: 服务间循环调用如何避免？
-**A**:
-1. **禁止双向依赖**（A 调 B，B 不能调 A）
-2. 使用 **事件驱动** 解耦
-3. 引入 **中间服务** 打破循环
-4. 代码 Review 时检查依赖关系
-
-### Q5: 如何添加新的语言支持？
-**A**:
-1. 在 `support-files/i18n/` 下创建 `messages_{locale}.properties`
-2. 如添加日文：`messages_ja_JP.properties`
-3. 翻译所有 key 的内容
-4. 重启服务生效
-
-### Q6: 日志打印过多影响性能？
-**A**:
-1. 生产环境使用 **INFO** 级别（不用 DEBUG）
-2. 避免在循环中打印日志
-3. 使用 **异步日志**（Logback AsyncAppender）
-4. 定期清理旧日志
-
-### Q7: 敏感信息如何脱敏？
-**A**:
+**敏感信息如何脱敏？**
 ```kotlin
-// 密码脱敏
-logger.info("User login: username={}, password={}", username, "******")
-
 // Token 脱敏（显示前4后4）
 logger.info("Token: {}...{}", token.take(4), token.takeLast(4))
-
 // 手机号脱敏（显示前3后4）
 logger.info("Phone: {}****{}", phone.take(3), phone.takeLast(4))
 ```
-
----
-
-## 总结
-
-本 Skill 涵盖了 BK-CI 微服务架构的 4 大核心基础设施，这些是构建分布式系统的基石。
-
-**学习路径**:
-1. 先了解微服务基础（`backend-microservice-development`）
-2. 按需深入具体技术（配置/事件/通信/日志）
-3. 在实际开发中应用并总结经验
-
-**最佳实践**:
-- ✅ 多环境隔离使用条件配置
-- ✅ 模块解耦使用事件驱动
-- ✅ 服务间调用实现熔断降级
-- ✅ 用户文案必须国际化
-- ✅ 敏感信息必须脱敏
-
-掌握这些基础设施，让你的微服务架构更加健壮和可维护！🚀

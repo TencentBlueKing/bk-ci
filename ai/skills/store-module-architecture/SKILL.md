@@ -1,112 +1,37 @@
 ---
 name: store-module-architecture
-description: Store 研发商店模块架构指南，涵盖插件/模板/镜像管理、版本发布、审核流程、商店市场、扩展点机制。当用户开发研发商店功能、发布插件、管理模板或实现扩展点时使用。
+description: Store 研发商店模块架构指南。创建和发布插件（Atom）、上传和管理模板（Template）、配置镜像仓库（Image）、提交审核申请、查询组件状态、排查发布失败。当用户开发研发商店功能、发布插件、管理模板或实现扩展点时使用。
 ---
 
 # Store 研发商店模块架构指南
 
-> **模块定位**: Store 是 BK-CI 的研发商店模块，负责管理流水线插件（Atom）、流水线模板（Template）、容器镜像（Image）等可复用组件的发布、审核、安装、统计等全生命周期管理。
+> **模块定位**: Store 管理流水线插件（Atom）、模板（Template）、镜像（Image）的发布、审核、安装全生命周期。数据库为 `devops_ci_store`（50+ 张表）。
 
-## 一、模块整体结构
-
-### 1.1 子模块划分
+## 模块结构
 
 ```
 src/backend/ci/core/store/
-├── api-store/               # API 接口定义层
-│   └── src/main/kotlin/com/tencent/devops/store/
-│       ├── api/
-│       │   ├── atom/            # 插件相关接口（25+ 文件）
-│       │   ├── common/          # 通用接口（40+ 文件）
-│       │   ├── container/       # 容器相关接口
-│       │   ├── image/           # 镜像相关接口
-│       │   └── template/        # 模板相关接口
-│       ├── constant/            # 常量和消息码
-│       └── pojo/                # 数据对象（100+ 文件）
-│           ├── app/             # 应用相关
-│           ├── atom/            # 插件相关
-│           ├── common/          # 通用对象
-│           ├── image/           # 镜像相关
-│           └── template/        # 模板相关
-│
-├── biz-store/               # 业务逻辑层
-│   └── src/main/kotlin/com/tencent/devops/store/
-│       ├── atom/                # 插件业务
-│       │   ├── dao/             # 插件数据访问
-│       │   ├── factory/         # 工厂类
-│       │   ├── resources/       # API 实现
-│       │   └── service/         # 插件服务
-│       ├── common/              # 通用业务
-│       │   ├── dao/             # 通用数据访问（60+ 文件）
-│       │   ├── handler/         # 处理器链
-│       │   ├── resources/       # API 实现
-│       │   └── service/         # 通用服务
-│       ├── image/               # 镜像业务
-│       └── template/            # 模板业务
-│
-├── model-store/             # 数据模型层（JOOQ 生成）
-└── boot-store/              # Spring Boot 启动模块
+├── api-store/          # API 接口定义（atom/common/container/image/template）
+├── biz-store/          # 业务逻辑（service/dao/handler/resources）
+├── model-store/        # 数据模型（JOOQ 生成）
+└── boot-store/         # Spring Boot 启动模块
 ```
 
-### 1.2 Store 组件类型
+分层架构：API 层（Resource）→ 业务层（Service）→ DAO 层 → 数据层（MySQL）
 
-| 类型 | 枚举值 | 说明 | 核心表 |
-|------|--------|------|--------|
-| **插件（Atom）** | `ATOM` | 流水线可执行插件 | `T_ATOM` |
-| **模板（Template）** | `TEMPLATE` | 流水线模板 | `T_TEMPLATE` |
-| **镜像（Image）** | `IMAGE` | 容器构建镜像 | `T_IMAGE` |
+详细 API 接口、Service、DAO 类列表见 [reference/api-reference.md](reference/api-reference.md)。
 
-## 二、核心概念
+## 组件类型
 
-### 2.1 插件（Atom）模型
+| 类型 | 枚举值 | 核心表 | 用途 |
+|------|--------|--------|------|
+| 插件 | `ATOM` | `T_ATOM` | 流水线可执行插件 |
+| 模板 | `TEMPLATE` | `T_TEMPLATE` | 流水线模板 |
+| 镜像 | `IMAGE` | `T_IMAGE` | 容器构建镜像 |
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         插件模型                                         │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                          │
-│  ┌──────────────────────────────────────────────────────────────────┐   │
-│  │                      T_ATOM（插件主表）                           │   │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │   │
-│  │  │  ATOM_CODE  │  │    NAME     │  │   VERSION   │              │   │
-│  │  │ (插件标识)   │  │ (插件名称)   │  │ (版本号)     │              │   │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘              │   │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │   │
-│  │  │ ATOM_STATUS │  │ CLASS_TYPE  │  │ LATEST_FLAG │              │   │
-│  │  │ (插件状态)   │  │ (插件大类)   │  │ (最新版本)   │              │   │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘              │   │
-│  └──────────────────────────────────────────────────────────────────┘   │
-│                              │                                           │
-│         ┌────────────────────┼────────────────────┐                     │
-│         ▼                    ▼                    ▼                     │
-│  ┌───────────────┐   ┌───────────────┐   ┌───────────────┐             │
-│  │ T_ATOM_ENV_   │   │ T_ATOM_       │   │ T_ATOM_       │             │
-│  │     INFO      │   │   FEATURE     │   │ VERSION_LOG   │             │
-│  │ (执行环境信息) │   │ (特性配置)    │   │ (版本日志)     │             │
-│  └───────────────┘   └───────────────┘   └───────────────┘             │
-│                                                                          │
-└─────────────────────────────────────────────────────────────────────────┘
-```
+完整数据库表结构见 [reference/database-schemas.md](reference/database-schemas.md)。
 
-### 2.2 插件核心字段
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `ID` | String | 插件版本 ID（UUID） |
-| `ATOM_CODE` | String | 插件唯一标识（不变） |
-| `NAME` | String | 插件名称 |
-| `VERSION` | String | 版本号（如 1.0.0） |
-| `ATOM_STATUS` | Int | 插件状态 |
-| `CLASS_TYPE` | String | 插件大类（marketBuild 等） |
-| `JOB_TYPE` | String | 适用 Job 类型（AGENT/AGENT_LESS） |
-| `OS` | String | 支持的操作系统 |
-| `CLASSIFY_ID` | String | 分类 ID |
-| `LATEST_FLAG` | Boolean | 是否最新版本 |
-| `DEFAULT_FLAG` | Boolean | 是否默认插件 |
-| `PUBLISHER` | String | 发布者 |
-| `REPOSITORY_HASH_ID` | String | 代码库 HashId |
-
-### 2.3 插件状态流转
+## 插件状态流转
 
 ```kotlin
 enum class AtomStatusEnum(val status: Int) {
@@ -124,348 +49,45 @@ enum class AtomStatusEnum(val status: Int) {
 }
 ```
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     插件状态流转图                               │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  INIT ──► COMMITTING ──► BUILDING ──► TESTING ──► AUDITING     │
-│                              │                        │          │
-│                              ▼                        ▼          │
-│                         BUILD_FAIL              AUDIT_REJECT     │
-│                                                       │          │
-│                                                       ▼          │
-│                                                   RELEASED       │
-│                                                       │          │
-│                                                       ▼          │
-│                                              UNDERCARRIAGING     │
-│                                                       │          │
-│                                                       ▼          │
-│                                              UNDERCARRIAGED      │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
-```
+流转路径：`INIT → COMMITTING → BUILDING → TESTING → AUDITING → RELEASED → UNDERCARRIAGING → UNDERCARRIAGED`
+失败分支：`BUILDING → BUILD_FAIL`、`AUDITING → AUDIT_REJECT`
 
-### 2.4 插件分类
+## 插件发布流程
 
-```kotlin
-// 插件大类
-enum class AtomTypeEnum(val type: Int) {
-    SELF_DEVELOPED(0),    // 自研
-    THIRD_PARTY(1),       // 第三方
-}
+1. **提交发布请求** — `UserAtomReleaseResource.createAtom()`
+2. **参数校验** — 校验 atomCode 唯一性、版本号格式（semver）、代码库权限
+   - 验证：若校验失败返回错误码，检查 `atomCode` 是否已被占用、版本号是否符合 `x.y.z` 格式
+3. **创建插件记录** — `atomDao.create()`，状态设为 `INIT`
+4. **触发构建流水线** — 调用 Process 模块构建插件包
+   - 验证：检查 `ATOM_STATUS` 是否变为 `BUILDING(2)`
+   - 若构建失败（`BUILD_FAIL(3)`）：检查构建日志，确认 `T_ATOM_BUILD_INFO` 中 `SCRIPT` 和 `SAMPLE_PROJECT_PATH` 配置正确
+5. **构建完成回调** — 状态更新为 `TESTING`，插件包上传到制品库
+6. **提交审核** — 状态设为 `AUDITING`
+   - 若审核驳回（`AUDIT_REJECT(6)`）：查看 `T_STORE_APPROVE` 表获取驳回原因，修正后重新提交
+7. **审核通过** — 状态设为 `RELEASED(7)`，更新 `LATEST_FLAG = true`
+   - 验证：`SELECT * FROM T_ATOM WHERE ATOM_CODE = 'xxx' AND LATEST_FLAG = true` 应返回且仅返回一条记录
 
-// Job 类型
-enum class JobTypeEnum(val type: String) {
-    AGENT("AGENT"),           // 有构建环境
-    AGENT_LESS("AGENT_LESS"), // 无构建环境
-}
-```
+## 插件安装流程
 
-## 三、核心数据库表
+1. **安装请求** — `UserMarketAtomResource.installAtom()`
+2. **权限校验** — 检查用户项目权限
+   - 失败时：确认用户在 `T_STORE_MEMBER` 表中有对应项目角色
+3. **可见性检查** — 检查 `T_ATOM_FEATURE.VISIBILITY_LEVEL`，确认项目在可见范围内
+4. **创建关联** — `storeProjectRelDao.create()`，在 `T_STORE_PROJECT_REL` 表中创建关联
+5. **更新统计** — `T_STORE_STATISTICS` 表安装量 +1
 
-### 3.1 插件相关表
+## 插件开发：最小可运行示例
 
-| 表名 | 说明 | 核心字段 |
-|------|------|----------|
-| `T_ATOM` | 插件主表 | `ATOM_CODE`, `NAME`, `VERSION`, `ATOM_STATUS`, `LATEST_FLAG` |
-| `T_ATOM_ENV_INFO` | 插件执行环境 | `ATOM_ID`, `PKG_PATH`, `LANGUAGE`, `TARGET` |
-| `T_ATOM_FEATURE` | 插件特性 | `ATOM_CODE`, `VISIBILITY_LEVEL`, `YAML_FLAG`, `QUALITY_FLAG` |
-| `T_ATOM_BUILD_INFO` | 插件构建信息 | `LANGUAGE`, `SCRIPT`, `SAMPLE_PROJECT_PATH` |
-| `T_ATOM_VERSION_LOG` | 版本日志 | `ATOM_ID`, `RELEASE_TYPE`, `CONTENT` |
-| `T_ATOM_LABEL_REL` | 插件标签关联 | `ATOM_ID`, `LABEL_ID` |
-| `T_ATOM_OFFLINE` | 插件下架记录 | `ATOM_CODE`, `EXPIRE_TIME`, `STATUS` |
-
-### 3.2 模板相关表
-
-| 表名 | 说明 | 核心字段 |
-|------|------|----------|
-| `T_TEMPLATE` | 模板主表 | `TEMPLATE_CODE`, `TEMPLATE_NAME`, `VERSION`, `TEMPLATE_STATUS` |
-| `T_TEMPLATE_CATEGORY_REL` | 模板分类关联 | `TEMPLATE_ID`, `CATEGORY_ID` |
-| `T_TEMPLATE_LABEL_REL` | 模板标签关联 | `TEMPLATE_ID`, `LABEL_ID` |
-
-### 3.3 镜像相关表
-
-| 表名 | 说明 | 核心字段 |
-|------|------|----------|
-| `T_IMAGE` | 镜像主表 | `IMAGE_CODE`, `IMAGE_NAME`, `VERSION`, `IMAGE_STATUS` |
-| `T_IMAGE_CATEGORY_REL` | 镜像分类关联 | `IMAGE_ID`, `CATEGORY_ID` |
-| `T_IMAGE_LABEL_REL` | 镜像标签关联 | `IMAGE_ID`, `LABEL_ID` |
-
-### 3.4 通用表
-
-| 表名 | 说明 |
-|------|------|
-| `T_CLASSIFY` | 分类表 |
-| `T_CATEGORY` | 范畴表 |
-| `T_LABEL` | 标签表 |
-| `T_STORE_MEMBER` | 组件成员表 |
-| `T_STORE_PROJECT_REL` | 组件项目关联表 |
-| `T_STORE_COMMENT` | 评论表 |
-| `T_STORE_COMMENT_REPLY` | 评论回复表 |
-| `T_STORE_COMMENT_PRAISE` | 评论点赞表 |
-| `T_STORE_STATISTICS` | 统计表 |
-| `T_STORE_APPROVE` | 审批表 |
-| `T_STORE_SENSITIVE_API` | 敏感 API 表 |
-| `T_STORE_SENSITIVE_CONF` | 敏感配置表 |
-
-### 3.5 容器编译环境表
-
-| 表名 | 说明 |
-|------|------|
-| `T_APPS` | 编译环境信息表 |
-| `T_APP_ENV` | 编译环境变量表 |
-| `T_APP_VERSION` | 编译环境版本表 |
-| `T_CONTAINER` | 容器信息表 |
-| `T_BUILD_RESOURCE` | 构建资源表 |
-
-## 四、分层架构
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                              请求入口                                    │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         API 层 (api-store)                               │
-│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐    │
-│  │UserMarket    │ │ServiceAtom   │ │UserTemplate  │ │UserImage     │    │
-│  │AtomResource  │ │Resource      │ │Resource      │ │Resource      │    │
-│  │(用户插件管理) │ │(服务间调用)   │ │(模板管理)     │ │(镜像管理)    │    │
-│  └──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘    │
-│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐                     │
-│  │UserAtom      │ │OpAtom        │ │UserStore     │                     │
-│  │ReleaseRes    │ │Resource      │ │MemberRes     │                     │
-│  │(插件发布)     │ │(运维管理)     │ │(成员管理)     │                     │
-│  └──────────────┘ └──────────────┘ └──────────────┘                     │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                       业务层 (biz-store)                                 │
-│  ┌──────────────────────────────────────────────────────────────────┐   │
-│  │                      插件服务 (atom/service/)                     │   │
-│  │  MarketAtomService       - 插件市场服务                           │   │
-│  │  AtomReleaseService      - 插件发布服务                           │   │
-│  │  AtomService             - 插件基础服务                           │   │
-│  │  MarketAtomEnvService    - 插件环境服务                           │   │
-│  │  MarketAtomArchiveService - 插件归档服务                          │   │
-│  └──────────────────────────────────────────────────────────────────┘   │
-│                                    │                                     │
-│  ┌──────────────────────────────────────────────────────────────────┐   │
-│  │                      通用服务 (common/service/)                   │   │
-│  │  StoreCommentService     - 评论服务                               │   │
-│  │  StoreMemberService      - 成员管理服务                           │   │
-│  │  StoreProjectService     - 项目关联服务                           │   │
-│  │  StoreStatisticService   - 统计服务                               │   │
-│  │  StoreApproveService     - 审批服务                               │   │
-│  └──────────────────────────────────────────────────────────────────┘   │
-│                                    │                                     │
-│  ┌──────────────────────────────────────────────────────────────────┐   │
-│  │                      处理器链 (common/handler/)                   │   │
-│  │  StoreCreateHandlerChain   - 创建处理器链                         │   │
-│  │  StoreUpdateHandlerChain   - 更新处理器链                         │   │
-│  │  StoreDeleteHandlerChain   - 删除处理器链                         │   │
-│  └──────────────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         DAO 层 (biz-store/dao)                           │
-│  AtomDao (59KB) | MarketAtomDao (31KB) | StoreProjectRelDao (25KB)       │
-│  StoreBaseQueryDao (20KB) | MarketAtomEnvInfoDao | ...                  │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      数据层 (model-store + MySQL)                        │
-│  数据库：devops_ci_store（共 50+ 张表）                                  │
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
-## 五、核心类速查
-
-### 5.1 API 接口层
-
-| 类名 | 路径前缀 | 职责 |
-|------|----------|------|
-| `UserMarketAtomResource` | `/user/market/atom` | 用户插件市场操作 |
-| `UserAtomReleaseResource` | `/user/market/atom/release` | 插件发布 |
-| `ServiceAtomResource` | `/service/atoms` | 服务间插件查询 |
-| `ServiceMarketAtomResource` | `/service/market/atom` | 服务间市场插件 |
-| `OpAtomResource` | `/op/market/atom` | 运维插件管理 |
-| `UserTemplateResource` | `/user/market/template` | 模板管理 |
-| `UserMarketImageResource` | `/user/market/image` | 镜像管理 |
-| `UserStoreMemberResource` | `/user/store/member` | 成员管理 |
-
-### 5.2 Service 层
-
-| 类名 | 职责 |
-|------|------|
-| `MarketAtomService` | 插件市场核心服务 |
-| `AtomReleaseService` | 插件发布流程 |
-| `AtomService` | 插件基础操作 |
-| `MarketAtomEnvService` | 插件执行环境 |
-| `MarketAtomArchiveService` | 插件归档 |
-| `AtomCooperationService` | 插件协作 |
-| `AtomNotifyService` | 插件通知 |
-
-### 5.3 DAO 层
-
-| 类名 | 文件大小 | 职责 |
-|------|----------|------|
-| `AtomDao` | 59KB | 插件主表访问（最大） |
-| `MarketAtomDao` | 31KB | 市场插件访问 |
-| `StoreProjectRelDao` | 25KB | 项目关联访问 |
-| `StoreBaseQueryDao` | 20KB | 基础查询 |
-| `MarketAtomEnvInfoDao` | 13KB | 插件环境访问 |
-
-## 六、核心流程
-
-### 6.1 插件发布流程
-
-```
-开发者提交发布请求
-    │
-    ▼
-UserAtomReleaseResource.createAtom()
-    │
-    ▼
-AtomReleaseService.handleAtomRelease()
-    │
-    ├─► 参数校验
-    │   ├─► 校验插件代码唯一性
-    │   ├─► 校验版本号格式
-    │   └─► 校验代码库权限
-    │
-    ├─► 创建插件记录
-    │   ├─► atomDao.create()
-    │   └─► 状态设为 INIT
-    │
-    ├─► 触发构建流水线
-    │   └─► 调用 Process 模块构建插件包
-    │
-    ├─► 构建完成回调
-    │   ├─► 更新状态为 TESTING
-    │   └─► 上传插件包到制品库
-    │
-    ├─► 提交审核
-    │   └─► 状态设为 AUDITING
-    │
-    └─► 审核通过
-        ├─► 状态设为 RELEASED
-        └─► 更新 LATEST_FLAG
-```
-
-### 6.2 插件安装流程
-
-```
-用户安装插件到项目
-    │
-    ▼
-UserMarketAtomResource.installAtom()
-    │
-    ▼
-MarketAtomService.installAtom()
-    │
-    ├─► 权限校验
-    │   └─► 检查用户是否有项目权限
-    │
-    ├─► 检查插件可见性
-    │   └─► 检查项目是否在可见范围内
-    │
-    ├─► 创建关联记录
-    │   └─► storeProjectRelDao.create()
-    │
-    └─► 更新统计数据
-        └─► 增加安装量
-```
-
-### 6.3 处理器链模式
-
-Store 模块使用责任链模式处理组件的创建、更新、删除：
-
-```kotlin
-// 创建处理器链
-class StoreCreateHandlerChain {
-    private val handlers = listOf(
-        StoreCreateParamCheckHandler,    // 参数校验
-        StoreCreatePreBusHandler,        // 前置业务处理
-        StoreCreateDataPersistHandler,   // 数据持久化
-        StoreCreatePostBusHandler        // 后置业务处理
-    )
-    
-    fun handle(context: StoreContext) {
-        handlers.forEach { it.handle(context) }
-    }
-}
-```
-
-## 七、与其他模块的关系
-
-### 7.1 依赖关系
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Store 模块依赖关系                            │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│                  ┌───────────────┐                               │
-│                  │     store     │                               │
-│                  └───────┬───────┘                               │
-│                          │                                       │
-│       ┌──────────────────┼──────────────────┐                   │
-│       ▼                  ▼                  ▼                   │
-│  ┌───────────┐    ┌───────────┐    ┌───────────┐               │
-│  │  project  │    │repository │    │artifactory│               │
-│  │ (项目信息) │    │ (代码库)   │    │ (制品库)   │               │
-│  └───────────┘    └───────────┘    └───────────┘               │
-│                                                                  │
-│  被依赖：                                                        │
-│  - process（流水线使用插件）                                      │
-│  - worker（构建机执行插件）                                       │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### 7.2 服务间调用示例
-
-```kotlin
-// Process 模块获取插件信息
-// 注意：projectCode 是 T_PROJECT.english_name
-client.get(ServiceAtomResource::class).getAtomByCode(
-    atomCode = atomCode,
-    username = userId
-)
-
-// 获取插件执行环境
-client.get(ServiceMarketAtomEnvResource::class).getAtomEnv(
-    projectCode = projectId,  // english_name
-    atomCode = atomCode,
-    atomVersion = version
-)
-
-// 获取项目可用的插件列表
-client.get(ServiceMarketAtomResource::class).getProjectElements(
-    projectCode = projectId
-)
-```
-
-## 八、插件开发规范
-
-### 8.1 插件目录结构
+### 目录结构
 
 ```
 my-atom/
-├── task.json           # 插件配置文件
-├── README.md           # 插件说明
-├── src/                # 源代码
-│   └── main.py         # 入口文件
-├── requirements.txt    # Python 依赖
-└── logo.png            # 插件图标
+├── task.json           # 插件配置（必需）
+├── src/main.py         # 入口文件
+└── requirements.txt    # Python 依赖
 ```
 
-### 8.2 task.json 配置
+### 完整 task.json 示例
 
 ```json
 {
@@ -476,76 +98,67 @@ my-atom/
     "target": "main.py"
   },
   "input": {
-    "param1": {
-      "label": "参数1",
+    "inputParam": {
+      "label": "输入参数",
       "type": "vuex-input",
-      "required": true
+      "required": true,
+      "desc": "示例输入参数"
     }
   },
   "output": {
-    "output1": {
+    "outputParam": {
       "type": "string",
-      "description": "输出参数"
+      "description": "示例输出参数"
     }
   }
 }
 ```
 
-### 8.3 插件开发语言支持
+### 入口文件示例 (src/main.py)
 
-| 语言 | 说明 |
-|------|------|
-| Python | 推荐，有完善的 SDK |
-| NodeJS | 支持 |
-| Java | 支持 |
-| Golang | 支持 |
+```python
+import json
+import os
 
-## 九、开发规范
+# 读取插件输入参数
+def get_input(key):
+    """从 BK-CI 环境变量读取输入参数"""
+    return os.getenv(f"bk_ci_atom_input_{key}", "")
 
-### 9.1 新增组件类型
+# 设置输出参数
+def set_output(data):
+    """写入输出文件供 BK-CI 读取"""
+    with open("output.json", "w") as f:
+        json.dump({"status": "success", "data": data}, f)
 
-1. 在 `StoreTypeEnum` 添加新类型
-2. 创建对应的主表和关联表
-3. 创建 DAO、Service、Resource 层代码
-4. 在处理器链中注册新类型的处理器
+if __name__ == "__main__":
+    input_param = get_input("inputParam")
+    print(f"[INFO] Received input: {input_param}")
 
-### 9.2 插件查询示例
-
-```kotlin
-// 根据插件代码查询最新版本
-val atom = atomDao.getLatestAtomByCode(
-    dslContext = dslContext,
-    atomCode = atomCode
-)
-
-// 查询项目可用的插件
-val atoms = atomDao.getProjectAtoms(
-    dslContext = dslContext,
-    projectCode = projectId,  // english_name
-    classifyCode = classifyCode
-)
-
-// 查询插件执行环境
-val envInfo = marketAtomEnvInfoDao.getMarketAtomEnvInfo(
-    dslContext = dslContext,
-    atomId = atomId
-)
+    # 业务逻辑
+    result = {"outputParam": f"processed: {input_param}"}
+    set_output(result)
+    print("[INFO] Atom execution completed successfully")
 ```
 
-## 十、常见问题
+支持语言：Python（推荐，有完善 SDK）、NodeJS、Java、Golang
 
-**Q: atomCode 和 atomId 的区别？**
-A: `atomCode` 是插件唯一标识（不变），`atomId` 是具体版本的 ID（每个版本不同）。
+## 模块依赖关系
 
-**Q: 如何判断插件是否可用？**
-A: 检查 `ATOM_STATUS = 7`（RELEASED）且 `LATEST_FLAG = true`。
+Store 依赖：`project`（项目信息）、`repository`（代码库）、`artifactory`（制品库）
+被依赖：`process`（流水线使用插件）、`worker`（构建机执行插件）
 
-**Q: 插件如何关联到项目？**
-A: 通过 `T_STORE_PROJECT_REL` 表关联，`STORE_CODE` 存储 `atomCode`。
+## 常见问题排查
 
-**Q: 如何获取插件的执行环境？**
-A: 查询 `T_ATOM_ENV_INFO` 表，根据 `ATOM_ID` 获取 `PKG_PATH`、`TARGET` 等信息。
+| 问题 | 排查方法 |
+|------|----------|
+| `atomCode` vs `atomId`？ | `atomCode` 是插件唯一标识（不变），`atomId` 是版本 ID（每版本不同） |
+| 插件是否可用？ | `SELECT * FROM T_ATOM WHERE ATOM_CODE='xxx' AND ATOM_STATUS=7 AND LATEST_FLAG=true` |
+| 插件关联到项目？ | 查 `T_STORE_PROJECT_REL` 表，`STORE_CODE` = `atomCode` |
+| 获取执行环境？ | 查 `T_ATOM_ENV_INFO` 表，根据 `ATOM_ID` 获取 `PKG_PATH`、`TARGET` |
+| 构建失败？ | 检查 `T_ATOM_BUILD_INFO` 中 `SCRIPT` 路径；查看构建流水线日志 |
+| 审核驳回？ | 查 `T_STORE_APPROVE` 表的 `APPROVE_MSG` 字段获取驳回原因 |
 
 ---
 
-**版本**: 1.0.0 | **更新日期**: 2025-12-11
+**版本**: 1.1.0 | **更新日期**: 2026-03-13
