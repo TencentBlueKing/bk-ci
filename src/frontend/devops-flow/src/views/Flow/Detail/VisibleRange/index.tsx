@@ -60,7 +60,6 @@ export default defineComponent({
           {
             field: 'scopeName',
             label: t('flow.visibleRange.userOrg'),
-            width: 200,
             render: ({ row }: { row: any }) => (
               <div class={styles.userCell}>
                 <SvgIcon
@@ -76,7 +75,7 @@ export default defineComponent({
           {
             field: 'type',
             label: t('flow.stageReviewEdit.type'),
-            width: 120,
+            minWidth: 120,
             render: ({ row }: { row: any }) => {
               const typeMap: Record<string, { theme: 'info' | 'warning'; label: string }> = {
                 ORG: { theme: 'warning', label: t('flow.visibleRange.org') },
@@ -97,11 +96,12 @@ export default defineComponent({
           {
             field: 'updater',
             label: t('flow.versionHistory.updater'),
+            width: 255,
           },
           {
             field: 'updateTime',
             label: t('flow.versionHistory.updateTime'),
-            width: 180,
+            width: 255,
           },
           {
             field: 'operation',

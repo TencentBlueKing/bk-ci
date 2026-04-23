@@ -82,10 +82,5 @@
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.userIcon {
-  flex-shrink: 0;
-  margin-right: 8px;
   color: #979BA5;
 }
