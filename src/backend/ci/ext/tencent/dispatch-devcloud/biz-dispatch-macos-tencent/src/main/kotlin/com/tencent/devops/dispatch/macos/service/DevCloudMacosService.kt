@@ -582,9 +582,9 @@ class DevCloudMacosService @Autowired constructor(
             }
         }
 
-        if (debugLoginResponse != null && debugLoginResponse.actionCode == 0) {
+        if (debugLoginResponse != null && debugLoginResponse.actionCode == 0 && !debugTaskInfo.isExistingDebug) {
             logger.info("Debug login successful for taskId: $taskId, saving debug history record")
-            // 记录debug信息到debug表
+            // 记录debug信息到debug表（复用已有调试记录时不重复保存）
             debugHistoryDao.saveDebugHistory(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -700,12 +700,14 @@ class DevCloudMacosService @Autowired constructor(
         val os: String?,
         val xcode: String?,
         val macOSHwSpec: String?,
-        val source: String?
+        val source: String?,
+        val isExistingDebug: Boolean = false
     )
 
     /**
-     * 从buildHistory表中查询taskId
-     * 根据记录的status判断：
+     * 获取调试任务信息
+     * 优先查询debug表中是否有正在运行的调试任务（DEBUGGING状态），如果有则直接复用调试信息
+     * 如果debug表中没有，则从buildHistory表中查询，根据记录的status判断：
      * - Running：直接返回已有的taskId，标记为非新建VM
      * - Done：重新发起createVm，等待开机成功并获取新的taskId，标记为新建VM
      * @param pipelineId 流水线ID
@@ -722,6 +724,32 @@ class DevCloudMacosService @Autowired constructor(
         executeCount: Int,
         userId: String
     ): DebugTaskInfo? {
+        // 优先查询debug表中是否有正在运行的调试任务，有则直接复用
+        val existingDebugRecord = if (buildId != null) {
+            debugHistoryDao.getDebuggingRecord(dslContext, buildId, vmSeqId, executeCount)
+        } else {
+            debugHistoryDao.getLatestDebuggingRecord(dslContext, pipelineId, vmSeqId)
+        }
+
+        if (existingDebugRecord != null) {
+            logger.info(
+                "Found existing debugging record, reuse debug info - id: ${existingDebugRecord.id}, " +
+                    "taskId: ${existingDebugRecord.taskId}, pipelineId: $pipelineId, vmSeqId: $vmSeqId, " +
+                    "buildId: ${existingDebugRecord.buildId}, newCreatedVm: ${existingDebugRecord.newCreatedVm}"
+            )
+            return DebugTaskInfo(
+                taskId = existingDebugRecord.taskId,
+                newCreatedVm = existingDebugRecord.newCreatedVm,
+                buildId = existingDebugRecord.buildId,
+                projectId = existingDebugRecord.projectId,
+                os = null,
+                xcode = null,
+                macOSHwSpec = null,
+                source = null,
+                isExistingDebug = true
+            )
+        }
+
         val buildHistoryRecord = if (buildId != null) {
             buildHistoryDao.getBuildHistory(dslContext, buildId, vmSeqId, executeCount)?.firstOrNull()
         } else {
@@ -782,17 +810,6 @@ class DevCloudMacosService @Autowired constructor(
                     macOSHwSpec = buildHistoryRecord.macosHwSpec,
                     source = buildHistoryRecord.source
                 ) ?: return null
-
-                // debug主动开机成功后，将构建记录状态更新为Running
-                val updated = buildHistoryDao.updateStatusToRunning(
-                    dslContext = dslContext,
-                    buildHistoryId = buildHistoryRecord.id,
-                    taskId = newTaskId
-                )
-                logger.info(
-                    "Updated build history status to Running - buildHistoryId: ${buildHistoryRecord.id}, " +
-                        "result: $updated, newTaskId: $newTaskId"
-                )
 
                 DebugTaskInfo(
                     taskId = newTaskId,

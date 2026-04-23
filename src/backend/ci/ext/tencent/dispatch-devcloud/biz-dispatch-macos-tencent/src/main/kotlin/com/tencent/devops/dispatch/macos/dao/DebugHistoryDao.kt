@@ -120,4 +120,24 @@ class DebugHistoryDao {
                 .execute() > 0
         }
     }
+
+    /**
+     * 查询超过指定小时数仍处于DEBUGGING状态的记录
+     * @param dslContext DSL上下文
+     * @param timeoutHours 超时小时数
+     * @return 超时的调试记录列表
+     */
+    fun listTimeoutDebuggingRecords(
+        dslContext: DSLContext,
+        timeoutHours: Long
+    ): List<TDebugHistoryRecord> {
+        with(TDebugHistory.T_DEBUG_HISTORY) {
+            return dslContext.selectFrom(this)
+                .where(STATUS.eq(STATUS_DEBUGGING))
+                .and(CREATE_TIME.lessThan(LocalDateTime.now().minusHours(timeoutHours)))
+                .and(CREATE_TIME.greaterThan(LocalDateTime.now().minusDays(7)))
+                .orderBy(CREATE_TIME.desc())
+                .fetch()
+        }
+    }
 }

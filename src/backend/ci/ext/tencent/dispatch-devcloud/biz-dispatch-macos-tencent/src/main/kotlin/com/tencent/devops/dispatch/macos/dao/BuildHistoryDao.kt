@@ -68,24 +68,6 @@ class BuildHistoryDao {
         }
     }
 
-    /**
-     * 仅更新构建记录状态为Running，不设置END_TIME
-     * 用于debug主动开机后将Done状态恢复为Running
-     */
-    fun updateStatusToRunning(
-        dslContext: DSLContext,
-        buildHistoryId: Long,
-        taskId: String
-    ): Boolean {
-        with(TBuildHistory.T_BUILD_HISTORY) {
-            return dslContext.update(this)
-                .set(STATUS, MacJobStatus.Running.name)
-                .set(TASK_ID, taskId)
-                .where(ID.eq(buildHistoryId))
-                .execute() > 0
-        }
-    }
-
     fun findRunningBuilds(dslContext: DSLContext, vmIp: String): Result<TBuildHistoryRecord> {
         with(TBuildHistory.T_BUILD_HISTORY) {
             return dslContext.selectFrom(this)
