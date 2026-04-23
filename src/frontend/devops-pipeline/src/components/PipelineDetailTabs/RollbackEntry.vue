@@ -260,6 +260,16 @@
                 this.isShowConfirmDialog = false
             },
             async rollback () {
+                let rollbackVersion = ''
+
+                if (this.isRollback) {
+                    rollbackVersion = this.version
+                    if (this.clickActionType) {
+                        rollbackVersion = this.clickActionType === 'rollback' ? this.version : this.draftSaveInfo.releaseVersion
+                    }
+                } else {
+                    rollbackVersion = this.draftSaveInfo.releaseVersion || this.version
+                }
                 try {
                     this.loading = true
 
@@ -268,13 +278,13 @@
                     if (this.isTemplate) {
                         res = await this.rollbackTemplateVersion({
                             ...this.$route.params,
-                            version: this.version
+                            version: rollbackVersion
                         })
                         await this.requestTemplateSummary(this.$route.params)
                     } else {
                         res = await this.rollbackPipelineVersion({
                             ...this.$route.params,
-                            version: this.version
+                            version: rollbackVersion
                         })
                         await this.requestPipelineSummary(this.$route.params)
                     }

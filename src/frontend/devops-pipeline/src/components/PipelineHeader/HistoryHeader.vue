@@ -384,13 +384,13 @@
                     if (this.isTemplate) {
                         res = await this.rollbackTemplateVersion({
                             ...this.$route.params,
-                            version: this.currentVersion
+                            version: this.draftSaveInfo.releaseVersion
                         })
                         await this.requestTemplateSummary(this.$route.params)
                     } else {
                         res = await this.rollbackPipelineVersion({
                             ...this.$route.params,
-                            version: this.currentVersion
+                            version: this.draftSaveInfo.releaseVersion
                         })
                         await this.requestPipelineSummary(this.$route.params)
                     }
