@@ -394,6 +394,10 @@ class AuthDeptServiceImpl(
         }
     }
 
+    override fun getLeader(userId: String): BkUserInfo? {
+        return getUserInfoFromExternal(userId)?.leader?.firstOrNull()
+    }
+
     private fun fetchMemberInfos(
         memberIds: List<String>,
         memberType: ManagerScopesEnum
@@ -446,6 +450,7 @@ class AuthDeptServiceImpl(
                     )
                 } ?: emptyList()
             },
+            leader = this.leader,
             extras = this.extras
         )
     }
@@ -535,7 +540,7 @@ class AuthDeptServiceImpl(
                 // 请求错误
                 logger.warn(
                     "call user center fail: url = $url | searchEntity = $searchEntity" +
-                        " | response = ($it)"
+                            " | response = ($it)"
                 )
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
@@ -550,7 +555,7 @@ class AuthDeptServiceImpl(
                 // 请求错误
                 logger.warn(
                     "call user center fail: url = $url | searchEntity = $searchEntity" +
-                        " | response = ($it)"
+                            " | response = ($it)"
                 )
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(

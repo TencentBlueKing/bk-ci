@@ -291,7 +291,7 @@ class RbacPermissionMigrateService(
             migrateResourceService.resetOtherProjectLevelGroupPermissions(
                 projectCode = projectCode,
                 projectName = projectInfo.resourceName,
-                registerMonitorPermission = false,
+                registerMonitorPermission = true,
                 filterResourceTypes = filterResourceTypes,
                 filterActions = filterActions
             )

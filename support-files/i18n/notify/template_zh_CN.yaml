@@ -1094,3 +1094,43 @@
     body: "${userId}提交了上架插件申请，请尽快审批。\n插件：${atomName} \n版本： ${version} \n去审核：${url}"
   creator: "system"
   modifior: "system"
+- index: 52
+  id: "1519a9a0b92b44fe8e8e813f2b52e013"
+  templateCode: "PIPELINE_EXPIRATION_NOTIFICATION"
+  templateName: "蓝盾流水线失效提醒"
+  notifyTypeScope:
+    - "EMAIL"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "902b30b05d184f478ea8eaaea53533f2"
+    title: "蓝盾流水线已失效提醒"
+    body: "<div style=\"font-size: 14.6667px; font-family: -apple-system, BlinkMacSystemFont, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;;\" data-mail-from=\"wemail-pc\"><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>蓝盾流水线已失效提醒</title><style>* {box-sizing: border-box;}.content-wrapper .num {color: #4e90ff;}td, th {padding: 10px;font-size: 12px;}</style><table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin: 0px 0pt; background: rgb(255, 255, 255); border-collapse: collapse; box-sizing: border-box; width: 1000px; height: 967.609px;\"><tbody><tr><td align=\"center\" valign=\"top\" style=\"padding: 16px; box-sizing: border-box; width: 1000px; height: 967.609px;\"><table><tbody><tr><td valign=\"top\" align=\"center\"><table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\" class=\"layout layout-table root-table\" width=\"100%\" style=\"margin-left: 0pt; margin-right: 0pt;\"><tbody><tr style=\"height: 150px; background: #252935;\"><td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img src=\"http://gw.open.oa.com/email/logo.png\" width=\"52\" style=\"display: block\"></td><td style=\"padding-left: 6px;\"><img src=\"http://gw.open.oa.com/email/title.png\" width=\"176\" style=\"display: block; width: 176px; height: 24px; max-width: initial;\" height=\"24\"></td></tr></tbody></table></td></tr><tr><td valign=\"top\" style=\"padding: 0 24px;\" bgcolor=\"#f9f8f6\" align=\"center\"><table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 16px; margin: 0px 0pt;\" id=\"tbSted0\"><tbody><tr><td style=\"background: #fff; border-radius: 10px;box-shadow: 0 2px 10px 0 #19192926;position: relative; top: -30px;\"><div style=\"padding: 20px 36px;background-color: #fff; border-radius: 10px;\"><p style=\"padding-bottom: 20px; line-height: 2; border-bottom: 1px solid #e6e6e6;font-size: 24px; \">蓝盾流水线已失效提醒</p><div class=\"content-wrapper\" style=\"color: #313238;font-size: 16px;line-height: 2;\"><p style=\"margin: 0;padding: 0;\">尊敬的蓝盾项目管理员，你好:</p><p style=\"margin: 0;padding: 0;\">你管理的项目「${projectName}」下，有<span style=\"color: rgb(255, 0, 0);\">${pipelineCount}</span> 条流水线持续构建失败，请修复流水线或禁用/删除无效流水线，避免浪费。</p><p style=\"margin: 0;padding: 0;\">若超过<b>半年</b>未处理，系统将<b>自动禁用</b>流水线。若有特殊场景仍需运行，请联系 02000加白。</p></div>无效流水线列表(${pipelineCount})<div></div><table style=\"border-collapse: collapse; width: 100%;\" bgcolor=\"#fff\"><thead><tr><th style=\"font-weight: 500;background: #FAFBFD;text-align: left;border-bottom: 1px solid #ddd;\">流水线</th><th style=\"font-weight: 500;background: #FAFBFD;text-align: left;border-bottom: 1px solid #ddd;\">操作</th></tr>${table}</thead><tbody></tbody></table><div style=\"margin-top: 20px;\"><p style=\"font-size: 14px; color: #666;\">Q&amp;A:</p><p style=\"font-size: 14px; color: #666;\">1. 什么是无效流水线?</p><p style=\"font-size: 14px; color: #666;\">无效流水线定义: 90天内构建成功率为0，且构建次数大于12次的流水线</p><p style=\"font-size: 14px; color: #666;\">2. 如何禁用/删除无效流水线?</p><p style=\"font-size: 14px; color: #666;\">点击「去处理」，进入流水线查看页面，确认无效后，在查看页面右上角更多操作下，进行禁用或删除操作</p><p style=\"font-size: 14px; color: #666;\">3. 点击去处理，为何会提示流水线不存在?</p><p style=\"font-size: 14px; color: #666;\">项目管理员有多人时，可能其他管理员收到提醒后已删除流水线，确认已删除不会再继续运行即可</p><p style=\"font-size: 14px; color: #666;\">4. 除了邮件提醒，还有什么途径可以观察我的流水线?</p><p style=\"font-size: 14px; color: #666;\">蓝盾*EPIuS联手打造的全新观测利器-<b>EPlus数据看板</b>已上线，可观测流水线稳定性、耗时、健康度。<a href=\"${eplusUrl}\" style=\"color: #3A84FF;\">立即查看</a></p></div><div style=\"text-align: left; margin-top: 20px; font-size: 14px; color: #666;\">蓝盾团队敬上</div></div></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></div>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  creator: "system"
+  modifior: "system"
+- index: 53
+  id: "a3b4c5d6e7f84196b2bb32addc6dd510"
+  templateCode: "KPI_CODE_CHANGE_NOTIFY_TEMPLATE"
+  templateName: "蓝盾项目KPI归属变更通知模板"
+  notifyTypeScope:
+    - "EMAIL"
+    - "WEWORK"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "d6e7f8a9b0c14496b2bb32addc6dd513"
+    title: "蓝盾项目归属变更提醒"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"1000\" style=\"margin: 0 auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\"><tbody><tr><td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\"><table><tbody><tr><td valign=\"top\" align=\"center\"><table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\" class=\"layout layout-table root-table\" width=\"100%\" style=\"mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"><tbody><tr style=\"height: 150px; background: #252935;\"><td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img src=\"http://gw.open.oa.com/email/logo.png\" width=\"52\" style=\"display: block\"></td><td style=\"padding-left: 6px;\"><img src=\"http://gw.open.oa.com/email/title.png\" width=\"176\" style=\"display: block\"></td></tr></tbody></table></td></tr><tr><td valign=\"top\" style=\"padding: 0 24px;\" bgcolor=\"#f9f8f6\" align=\"center\"><table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 16px; margin: 0 auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"><tr><td style=\"background: #fff; border-radius: 10px; box-shadow: 0 2px 10px 0 #19192926; position: relative; top: -30px;\"><div style=\"padding: 20px 36px; background-color: #fff; border-radius: 10px;\"><p style=\"padding-bottom: 20px; line-height: 2; border-bottom: 1px solid #e6e6e6; font-size: 24px;\">蓝盾项目归属变更提醒</p><div class=\"content-wrapper\" style=\"color: #313238; font-size: 15px; line-height: 2;\"><p style=\"margin: 0; padding: 0;\">你好：</p><p style=\"margin: 0; padding: 0;\">${userId} 于 ${operateTime} 新建了蓝盾项目 [${englishName}][${projectName}]，归属信息选择了运营产品 ${productDisplay}，后续产生的费用将提报至对应的 KPI 业务 ${kpiDisplay} 。</p><p style=\"margin: 0; padding: 0;\">请确认蓝盾项目归属是否正确，若不正确，请联系项目创建人沟通调整。</p><br/><p style=\"font-size: 14px; color: #666;\">Q&amp;A：</p><p style=\"font-size: 14px; color: #666;\">1. Q：我为什么收到此邮件？</p><p style=\"font-size: 14px; color: #666;\">A：你为 KPI 业务对应的 ICOS 账单对账人，后续此项目使用蓝盾产生的费用将由你确认，需提前评估项目归属是否正确。</p><p style=\"font-size: 14px; color: #666;\">或者你为操作人的 Leader，请协助操作人评估蓝盾项目归属是否正确。</p></div></div></td></tr></table></td></tr></tbody></table></td></tr></tbody></table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "a9b0c1d2e3f44796b2bb32addc6dd516"
+    sender: "DevOps"
+    title: "蓝盾项目归属变更提醒"
+    body: "【蓝盾项目归属变更提醒】\n操作人：${userId}\n操作时间：${operateTime}\n项目名称：[${englishName}]${projectName}\n运营产品：${productDisplay}\nKPI 业务：${kpiDisplay}\n\n请确认蓝盾项目归属是否正确，若不正确，请联系项目创建人沟通调整。"
+  creator: "system"
+  modifior: "system"

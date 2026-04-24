@@ -29,6 +29,7 @@ package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.entity.SearchUserAndDeptEntity
+import com.tencent.devops.auth.pojo.BkUserInfo
 import com.tencent.devops.auth.pojo.vo.BkDeptDetailsVo
 import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
@@ -63,6 +64,8 @@ interface DeptService {
     fun getUserInfo(userId: String): UserAndDeptInfoVo?
 
     fun getUserInfoFromExternal(userId: String): UserAndDeptInfoVo?
+
+    fun getLeader(userId: String): BkUserInfo?
 
     // 获取成员信息
     fun getMemberInfo(

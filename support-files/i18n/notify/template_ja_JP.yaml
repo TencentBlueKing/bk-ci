@@ -1094,3 +1094,26 @@
     body: "${userId}が上架プラグイン申請を提出しました。できるだけ早く審査してください。\nプラグイン：${atomName} \nバージョン： ${version}"
   creator: "system"
   modifior: "system"
+- index: 53
+  id: "a3b4c5d6e7f84196b2bb32addc6dd510"
+  templateCode: "KPI_CODE_CHANGE_NOTIFY_TEMPLATE"
+  templateName: "BK-CI プロジェクト KPI 帰属変更通知テンプレート"
+  notifyTypeScope:
+    - "EMAIL"
+    - "WEWORK"
+  priority: 0
+  source: 0
+  emailTemplate:
+    id: "f8a9b0c1d2e34696b2bb32addc6dd515"
+    title: "BK-CI プロジェクト帰属変更リマインダー"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"1000\" style=\"margin: 0 auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\"><tbody><tr><td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\"><table><tbody><tr><td valign=\"top\" align=\"center\"><table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\" class=\"layout layout-table root-table\" width=\"100%\" style=\"mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"><tbody><tr style=\"height: 150px; background: #252935;\"><td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img src=\"http://gw.open.oa.com/email/logo.png\" width=\"52\" style=\"display: block\"></td><td style=\"padding-left: 6px;\"><img src=\"http://gw.open.oa.com/email/title.png\" width=\"176\" style=\"display: block\"></td></tr></tbody></table></td></tr><tr><td valign=\"top\" style=\"padding: 0 24px;\" bgcolor=\"#f9f8f6\" align=\"center\"><table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 16px; margin: 0 auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\"><tr><td style=\"background: #fff; border-radius: 10px; box-shadow: 0 2px 10px 0 #19192926; position: relative; top: -30px;\"><div style=\"padding: 20px 36px; background-color: #fff; border-radius: 10px;\"><p style=\"padding-bottom: 20px; line-height: 2; border-bottom: 1px solid #e6e6e6; font-size: 24px;\">BK-CI プロジェクト帰属変更リマインダー</p><div class=\"content-wrapper\" style=\"color: #313238; font-size: 15px; line-height: 2;\"><p style=\"margin: 0; padding: 0;\">こんにちは：</p><p style=\"margin: 0; padding: 0;\">${userId} は ${operateTime} に BK-CI プロジェクト [${englishName}][${projectName}] を作成しました。運営プロダクト ${productDisplay} を選択し、発生した費用は KPI ビジネス ${kpiDisplay} に報告されます。</p><p style=\"margin: 0; padding: 0;\">プロジェクトの帰属が正しいかどうかを確認してください。正しくない場合は、プロジェクト作成者に連絡して調整してください。</p><br/><p style=\"font-size: 14px; color: #666;\">Q&amp;A：</p><p style=\"font-size: 14px; color: #666;\">1. Q：なぜこのメールを受け取ったのですか？</p><p style=\"font-size: 14px; color: #666;\">A：あなたはこの KPI ビジネスの ICOS 請求照合担当者です。このプロジェクトが BK-CI を使用して発生した費用はあなたが確認する必要があるため、プロジェクトの帰属が正しいかどうかを事前に評価してください。</p><p style=\"font-size: 14px; color: #666;\">または、あなたは操作者の Leader です。操作者が BK-CI プロジェクトの帰属を評価するのをサポートしてください。</p></div></div></td></tr></table></td></tr></tbody></table></td></tr></tbody></table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "c1d2e3f4a5b64996b2bb32addc6dd518"
+    sender: "DevOps"
+    title: "BK-CI プロジェクト帰属変更リマインダー"
+    body: "【BK-CI プロジェクト帰属変更リマインダー】\n操作者：${userId}\n操作時間：${operateTime}\nプロジェクト：[${englishName}]${projectName}\n運営プロダクト：${productDisplay}\nKPI ビジネス：${kpiDisplay}\n\nプロジェクトの帰属が正しいかどうかを確認してください。正しくない場合は、プロジェクト作成者に連絡して調整してください。"
+  creator: "system"
+  modifior: "system"

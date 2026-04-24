@@ -47,7 +47,9 @@ object ProjectUtils {
         showUserManageIcon: Boolean? = null,
         viewPermission: Boolean? = null,
         pipelineTemplateInstallPerm: Boolean? = null,
-        projectOrganizationInfo: ProjectOrganizationInfo? = null
+        projectOrganizationInfo: ProjectOrganizationInfo? = null,
+        kpiCode: String? = null,
+        kpiName: String? = null
     ): ProjectVO {
         val isUseFixedOrganization = projectOrganizationInfo != null
         return with(tProjectRecord) {
@@ -123,7 +125,9 @@ object ProjectUtils {
                 channelCode = channel,
                 productId = productId,
                 canView = viewPermission,
-                pipelineTemplateInstallPerm = pipelineTemplateInstallPerm
+                pipelineTemplateInstallPerm = pipelineTemplateInstallPerm,
+                kpiCode = kpiCode,
+                kpiName = kpiName
             )
         }
     }
@@ -132,7 +136,9 @@ object ProjectUtils {
         tProjectRecord: TProjectRecord,
         projectApprovalInfo: ProjectApprovalInfo?,
         projectOrganizationInfo: ProjectOrganizationInfo? = null,
-        beforeProductName: String? = null
+        beforeProductName: String? = null,
+        beforeKpiCode: String? = null,
+        beforeKpiName: String? = null
     ): ProjectDiffVO {
         val isUseFixedOrganization = projectOrganizationInfo != null
         val subjectScopes = tProjectRecord.subjectScopes?.let {
@@ -203,7 +209,11 @@ object ProjectUtils {
                 pipelineNameFormat = projectProperties?.pipelineNameFormat,
                 afterPipelineNameFormat = projectApprovalProperties?.pipelineNameFormat,
                 loggingLineLimit = projectProperties?.loggingLineLimit,
-                afterLoggingLineLimit = projectApprovalProperties?.loggingLineLimit
+                afterLoggingLineLimit = projectApprovalProperties?.loggingLineLimit,
+                kpiCode = beforeKpiCode,
+                afterKpiCode = projectApprovalInfo?.kpiCode,
+                kpiName = beforeKpiName,
+                afterKpiName = projectApprovalInfo?.kpiName
             )
         }
     }
