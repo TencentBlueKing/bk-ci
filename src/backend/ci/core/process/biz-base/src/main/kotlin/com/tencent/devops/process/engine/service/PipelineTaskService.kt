@@ -662,12 +662,14 @@ class PipelineTaskService @Autowired constructor(
             // 执行成功后移除失败任务详情数据
             pipelineVariableService.getVariable(
                 projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASK_DETAILS
-            )?.let { value ->
-                JsonUtil.anyToOrNull(
-                    any = value,
+            )?.takeIf {
+                it.isNotBlank()
+            }?.let { value ->
+                JsonUtil.toOrNull(
+                    json = value,
                     typeReference = object : TypeReference<MutableList<PipelineFailTaskDetail>>() {}
-                )?.apply {
-                    this.removeIf { it.taskId == taskId }
+                )?.filter {
+                    it.taskId != taskId
                 }?.let {
                     valueMap[BK_CI_BUILD_FAIL_TASK_DETAILS] = JsonUtil.toJson(it, false)
                 }
