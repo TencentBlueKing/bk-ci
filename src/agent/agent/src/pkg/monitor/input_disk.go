@@ -21,6 +21,7 @@ var defaultDiskIgnoreFS = map[string]struct{}{
 	"overlay":  {},
 	"aufs":     {},
 	"squashfs": {},
+	"nullfs":   {}, // macOS App Translocation / firmlinks 挂载到 /private/var/folders/...
 }
 
 // Disk 对齐 telegraf plugins/inputs/disk。每个 physical mountpoint 产出
@@ -75,11 +76,30 @@ func (d *Disk) Gather() ([]Metric, error) {
 		if usage.Total == 0 {
 			continue
 		}
+
+		// macOS APFS: gopsutil Statfs 不含 purgeable space（Time Machine 快照、
+		// iCloud 缓存等），导致 free 偏低、used_percent 虚高。用 Foundation API
+		// 获取与"系统信息"一致的可用空间来覆盖。非 darwin 或 CGO 禁用时为 no-op。
+		free := usage.Free
+		used := usage.Used
+		usedPercent := usage.UsedPercent
+		if avail, ok := darwinAvailableCapacity(p.Mountpoint); ok && avail > 0 {
+			free = avail
+			if usage.Total > avail {
+				used = usage.Total - avail
+			} else {
+				used = 0
+			}
+			if usage.Total > 0 {
+				usedPercent = 100 * float64(used) / float64(usage.Total)
+			}
+		}
+
 		fields := map[string]interface{}{
 			FieldTotal:        usage.Total,
-			FieldFree:         usage.Free,
-			FieldUsed:         usage.Used,
-			RenamedFieldInUse: usage.UsedPercent,
+			FieldFree:         free,
+			FieldUsed:         used,
+			RenamedFieldInUse: usedPercent,
 			FieldInodesTotal:  usage.InodesTotal,
 			FieldInodesFree:   usage.InodesFree,
 			FieldInodesUsed:   usage.InodesUsed,

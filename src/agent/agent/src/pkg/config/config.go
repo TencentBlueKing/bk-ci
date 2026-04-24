@@ -62,7 +62,6 @@ const (
 	KeyEnvType           = "landun.env"
 	KeySlaveUser         = "devops.slave.user"
 	KeyCollectorOn       = "devops.agent.collectorOn"
-	KeyMonitorOn         = "devops.agent.monitorOn"
 	KeyRequestTimeoutSec = "devops.agent.request.timeout.sec"
 	KeyDetectShell       = "devops.agent.detect.shell"
 	KeyIgnoreLocalIps    = "devops.agent.ignoreLocalIps"
@@ -94,7 +93,6 @@ type AgentConfig struct {
 	EnvType                 string
 	SlaveUser               string
 	CollectorOn             bool
-	MonitorOn               bool
 	TimeoutSec              int64
 	DetectShell             bool
 	IgnoreLocalIps          string
@@ -302,11 +300,6 @@ func LoadAgentConfig() error {
 	if err != nil {
 		collectorOn = true
 	}
-	monitorOn, err := conf.Section("").Key(KeyMonitorOn).Bool()
-	if err != nil {
-		// 未配置时默认开启，与 collector 并行跑用于验证
-		monitorOn = true
-	}
 	timeout, err := conf.Section("").Key(KeyRequestTimeoutSec).Int64()
 	if err != nil {
 		timeout = 5
@@ -399,8 +392,6 @@ func LoadAgentConfig() error {
 
 	GAgentConfig.CollectorOn = collectorOn
 	logs.Info("CollectorOn: ", GAgentConfig.CollectorOn)
-	GAgentConfig.MonitorOn = monitorOn
-	logs.Info("MonitorOn: ", GAgentConfig.MonitorOn)
 
 	GAgentConfig.TimeoutSec = timeout
 	logs.Info("TimeoutSec: ", GAgentConfig.TimeoutSec)
