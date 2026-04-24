@@ -697,7 +697,7 @@ class ProjectNotifyService constructor(
         } else {
             ""
         }
-        val kpiDisplay = "[$kpiCode]${kpiName.orEmpty()}"
+        val kpiDisplay = "[${kpiName.orEmpty()}]"
         val bodyParams = mapOf(
             "userId" to userId,
             "operateTime" to operateTime,
