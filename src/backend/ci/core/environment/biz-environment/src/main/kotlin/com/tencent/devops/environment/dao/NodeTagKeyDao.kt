@@ -49,4 +49,10 @@ class NodeTagKeyDao {
             return dslContext.selectFrom(this).fetch()
         }
     }
+
+    fun fetchNodeKeyCount(dslContext: DSLContext, projectId: String): Long {
+        with(TNodeTagKey.T_NODE_TAG_KEY) {
+            return dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId)).fetchOne(0, Long::class.java)!!
+        }
+    }
 }

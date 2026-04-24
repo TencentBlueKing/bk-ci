@@ -39,6 +39,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
+import com.tencent.devops.environment.pojo.EnabledStrategiesWithTags
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.enums.NodeType
@@ -58,6 +59,7 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.UpdateAgentInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineSeqId
+import com.tencent.devops.environment.service.EnvDispatchStrategyService
 import com.tencent.devops.environment.service.NodeService
 import com.tencent.devops.environment.service.NodeTagService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
@@ -77,7 +79,8 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     private val slaveGatewayService: SlaveGatewayService,
     private val nodeService: NodeService,
     private val nodeTagService: NodeTagService,
-    private val agentService: ThirdPartAgentService
+    private val agentService: ThirdPartAgentService,
+    private val envDispatchStrategyService: EnvDispatchStrategyService
 ) : ServiceThirdPartyAgentResource {
     override fun getAgentById(projectId: String, agentId: String): AgentResult<ThirdPartyAgent?> {
         return thirdPartyAgentService.getAgent(projectId, agentId)
@@ -85,7 +88,7 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
 
     @Deprecated("getAgentById")
     override fun getAgentByIdGlobal(projectId: String, agentId: String): AgentResult<ThirdPartyAgent?> {
-        return thirdPartyAgentService.getAgentGlobal(projectId, agentId)
+        return thirdPartyAgentService.getAgent(projectId, agentId)
     }
 
     override fun getAgentByDisplayName(projectId: String, displayName: String): AgentResult<ThirdPartyAgent?> {
@@ -307,7 +310,7 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     override fun getAgentsByEnvNameWithId(
         projectId: String,
         envName: String
-    ): Result<Pair<Long?, List<EnvNodeAgent>>> {
+    ): Result<Pair<Long, List<EnvNodeAgent>>> {
         return Result(thirdPartyAgentService.getAgentByEnvName(projectId, envName))
     }
 
@@ -355,5 +358,29 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(
             nodeTagService.fetchTagAndNodeCount(projectId)
         )
+    }
+
+    override fun getEnabledStrategiesWithTags(
+        projectId: String,
+        envId: Long,
+        nodeIds: Set<Long>
+    ): Result<EnabledStrategiesWithTags> {
+        val strategies = envDispatchStrategyService.getEnabledStrategies(projectId, envId)
+        val nodeTagValues = if (nodeIds.isNotEmpty() && strategies.any { !it.labelSelector.isNullOrEmpty() }) {
+            val tagMap = nodeTagService.fetchNodeTags(projectId, nodeIds)
+            val result = mutableMapOf<Long, Map<Long, Set<String>>>()
+            tagMap.forEach { (nodeId, tags) ->
+                result[nodeId] = tags.associate {
+                    it.tagKeyId to it.tagValues.map { v ->
+                        v.tagValueName
+                    }.toSet()
+                }
+            }
+            result
+        } else {
+            emptyMap()
+        }
+
+        return Result(EnabledStrategiesWithTags(strategies, nodeTagValues, nodeTagService.getInternalKeys()))
     }
 }
