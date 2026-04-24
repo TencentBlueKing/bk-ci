@@ -367,6 +367,20 @@ export const actions = {
     getPACRepoCiDirList: (_, { projectId, repoHashId }) => {
         return request.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repoHashId}/ciSubDir`)
     },
+    /**
+     * 获取PAC分支列表
+     * @param {String} projectId 项目ID
+     * @param {String} pipelineId 流水线ID
+     * @param {String} search 搜索关键字
+     * @returns {Promise}
+     */
+    getPACBranchList: (_, { projectId, pipelineId, search = '', page, pageSize }) => {
+        return request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/listPacVersions?page=${page}&pageSize=${pageSize}`, {
+            params: {
+                search
+            }
+        }).then(response => response.data)
+    },
     validatePermission: async (_, { projectId, ...params }) => {
         return request.post(`${AUTH_URL_PREFIX}/user/auth/permission/batch/validate`, params, {
             headers: {
