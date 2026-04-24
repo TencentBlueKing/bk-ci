@@ -68,6 +68,7 @@
                 :draft-creator="activePipelineVersion?.creator"
                 :draft-create-time="activePipelineVersion?.createTime"
                 :rollback-id="uniqueId"
+                :click-action-type="actionType"
             >
                 {{ operateName }}
             </RollbackEntry>
@@ -85,7 +86,7 @@
                         action: resourceEditAction
                     }
                 }"
-                @click="goEdit"
+                @click="handleEdit"
             >
                 {{ isTemplate ? $t('template.editTemplate') : $t('edit') }}
             </bk-button>
@@ -131,6 +132,18 @@
                 </template>
             </template>
         </aside>
+        <DraftConfirmDialog
+            v-model="isShowConfirmDialog"
+            :has-draft-pipeline="hasDraftPipeline"
+            :draft-status="draftStatus"
+            :draft-save-info="draftSaveInfo"
+            :draft-hint-title="$t('hasDraft')"
+            :version-name="activePipelineVersion?.versionName"
+            :draft-version="pipelineInfo?.version"
+            @confirm="confirmEdit"
+            @edit-draft="goEditDraft"
+            @cancel="closeDialog"
+        />
         <VersionHistorySideSlider
             :show-version-sideslider="showVersionSideslider"
             @close="closeVersionSideSlider"
@@ -151,10 +164,12 @@
         RESOURCE_TYPE,
         TEMPLATE_RESOURCE_ACTION,
     } from '@/utils/permission'
-    import { pipelineTabIdMap } from '@/utils/pipelineConst'
+    import { pipelineTabIdMap, DRAFT_STATUS } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import MoreActions from './MoreActions.vue'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
+    import DraftConfirmDialog from './DraftConfirmDialog.vue'
+    import useDraftStatus from '@/hook/useDraftStatus'
 
     export default {
         components: {
@@ -166,16 +181,27 @@
             VersionHistorySideSlider,
             VersionDiffEntry,
             RollbackEntry,
+            DraftConfirmDialog,
             InstanceReleaseBtn
         },
         props: {
             isSwitchPipeline: Boolean
+        },
+        setup () {
+            const { fetchLatestDraftStatus } = useDraftStatus()
+            return {
+                fetchLatestDraftStatus
+            }
         },
         data () {
             return {
                 RESOURCE_TYPE,
                 RESOURCE_ACTION,
                 showVersionSideslider: false,
+                isShowConfirmDialog: false,
+                draftStatus: DRAFT_STATUS.NORMAL,
+                draftSaveInfo: null,
+                loading: false,
                 isPipelineIdChanged: false
             }
         },
@@ -195,6 +221,7 @@
                 draftBaseVersionName: 'atom/getDraftBaseVersionName',
                 pipelineHistoryViewable: 'atom/pipelineHistoryViewable',
                 onlyBranchPipeline: 'atom/onlyBranchPipeline',
+                hasDraftPipeline: 'atom/hasDraftPipeline',
                 isTemplate: 'atom/isTemplate'
             }),
             
@@ -256,15 +283,21 @@
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? true
             },
+            isEditCurrentDraft (){
+                return this.pipelineInfo?.baseVersion && this.activePipelineVersion?.version === this.pipelineInfo?.baseVersion
+            },
             operateName () {
                 switch (true) {
                     case this.editAndExecutable:
                         return this.isTemplate ? this.$t('template.editTemplate') : this.$t('edit')
-                    case this.pipelineInfo?.baseVersion && this.activePipelineVersion?.version === this.pipelineInfo?.baseVersion:
+                    case this.isEditCurrentDraft:
                         return this.$t('editCurDraft')
                     default:
                         return this.$t('rollback')
                 }
+            },
+            actionType () {
+                return this.editAndExecutable || this.isEditCurrentDraft ? 'edit' : 'rollback'
             },
             tooltip () {
                 return this.executable
@@ -308,13 +341,93 @@
                 'selectPipelineVersion',
                 'requestPipeline',
                 'setSwitchingPipelineVersion',
-                'setShowVariable'
+                'setShowVariable',
+                'requestPipelineSummary',
+                'requestTemplateSummary'
             ]),
-            goEdit () {
+            ...mapActions({
+                rollbackPipelineVersion: 'pipelines/rollbackPipelineVersion',
+                rollbackTemplateVersion: 'templates/rollbackTemplateVersion'
+            }),
+            async handleEdit () {
+                try {
+                    const result = await this.fetchLatestDraftStatus({
+                        projectId: this.projectId,
+                        id: this.uniqueId,
+                        actionType: 'EDIT',
+                        isTemplate: this.isTemplate,
+                        pipelineInfo: this.pipelineInfo
+                    })
+                    
+                    this.draftStatus = result.status
+                    this.draftSaveInfo = result.draftSaveInfo
+                    
+                    // 无草稿冲突，直接编辑
+                    if (this.draftStatus === DRAFT_STATUS.NORMAL) {
+                        this.goEdit()
+                        return
+                    }
+                    // 有草稿冲突，弹窗确认
+                    this.isShowConfirmDialog = true
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
+                }
+            },
+            async confirmEdit () {
+                try {
+                    this.loading = true
+                    let res
+                    
+                    if (this.isTemplate) {
+                        res = await this.rollbackTemplateVersion({
+                            ...this.$route.params,
+                            version: this.draftSaveInfo.releaseVersion
+                        })
+                        await this.requestTemplateSummary(this.$route.params)
+                    } else {
+                        res = await this.rollbackPipelineVersion({
+                            ...this.$route.params,
+                            version: this.draftSaveInfo.releaseVersion
+                        })
+                        await this.requestPipelineSummary(this.$route.params)
+                    }
+                    
+                    if (res.version) {
+                        this.goEdit(res.version)
+                    }
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
+                } finally {
+                    this.loading = false
+                }
+            },
+            goEditDraft (version) {
+                this.$router.push({
+                    name: this.editRouteName,
+                    params: {
+                        ...this.$route.params,
+                        version
+                    },
+                    query: {
+                        tab: pipelineTabIdMap[this.$route.params.type] ?? 'pipeline'
+                    }
+                })
+            },
+            closeDialog () {
+                this.isShowConfirmDialog = false
+            },
+            goEdit (version) {
                 this.$router.push({
                     name: this.editRouteName,
                     query: {
-                        tab: pipelineTabIdMap[this.$route.params.type] ?? 'pipeline'
+                        tab: pipelineTabIdMap[this.$route.params.type] ?? 'pipeline',
+                        version
                     }
                 })
             },

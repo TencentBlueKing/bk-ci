@@ -330,3 +330,11 @@ export const STRATEGY_ENUM = {
     AUTO: 'AUTO',
     MANUAL: 'MANUAL'
 }
+
+export const DRAFT_STATUS = {
+    NORMAL: 'NORMAL',
+    EXISTS: 'EXISTS',
+    CONFLICT: 'CONFLICT',
+    OUTDATED: 'OUTDATED',
+    PUBLISHED: 'PUBLISHED'
+}

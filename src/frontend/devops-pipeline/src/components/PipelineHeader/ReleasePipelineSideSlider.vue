@@ -70,6 +70,18 @@
                         v-bkloading="{ isLoading: isLoading || releasing }"
                         class="release-pipeline-pac-form"
                     >
+                        <bk-alert
+                            v-if="draftStatus && draftStatus.status === DRAFT_STATUS.OUTDATED"
+                            type="warning"
+                        >
+                            <template slot="title">
+                                <i18n path="template.draftPublished">
+                                    <span>{{ draftStatus?.draft?.baseVersionName }}</span>
+                                    <span class="red-tip">{{ $t('Earlier') }}</span>
+                                    <span>{{ draftStatus?.release?.versionName }}</span>
+                                </i18n>
+                            </template>
+                        </bk-alert>
                         <!-- 构建号重置提醒 -->
                         <bk-alert
                             v-if="isTemplateInstanceMode && !!resetBuildNoInstanceCount"
@@ -509,7 +521,7 @@
         SHOW_TASK_DETAIL
     } from '@/store/modules/templates/constants'
     import { RESOURCE_TYPE } from '@/utils/permission'
-    import { TARGET_ACTION_ENUM, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
+    import { TARGET_ACTION_ENUM, VERSION_STATUS_ENUM, DRAFT_STATUS } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
     export default {
         components: {
@@ -546,6 +558,10 @@
             handleChangeFilePath: {
                 type: Function,
                 default: () => {}
+            },
+            draftStatus: {
+                type: Object,
+                default: null
             }
         },
         data () {
@@ -854,6 +870,9 @@
                 },
                 immediate: true
             }
+        },
+        created () {
+            this.DRAFT_STATUS = DRAFT_STATUS
         },
         mounted () {
             this.preZIndex = window.__bk_zIndex_manager.zIndex
@@ -1339,6 +1358,9 @@
                                 )
                             ])
                         })
+                        // 发布成功，触发事件通知父组件刷新草稿列表
+                        this.$emit('release-success')
+                        
                         this.hideReleaseSlider()
                     } catch (e) {
                         if (e.state === 'error') {
@@ -1591,6 +1613,10 @@
 
 .release-pipeline-pac-form {
     overflow: auto;
+
+    .red-tip {
+        color: #ff7e73;
+    }
 
     .release-pac-pipeline-form-header {
         display: flex;

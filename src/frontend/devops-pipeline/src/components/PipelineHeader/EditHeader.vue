@@ -18,6 +18,20 @@
             :save="saveDraft"
         />
         <aside class="pipeline-edit-right-aside">
+            <DraftManager
+                ref="draftManager"
+                v-model="isConflictDraft"
+                :laster-draft-info="lasterDraftInfo"
+                :release-version="releaseVersion"
+                :project-id="projectId"
+                :unique-id="pipelineId"
+                :is-template="false"
+                :current-editing-data="currentEditingData"
+                @rollback="handleRollback"
+                @new-draft="handleNewDraft"
+                @continue-save-draft="continueSaveDraft"
+                @go-pipeline-model="goPipelineModel"
+            />
             <bk-button
                 :disabled="saveStatus"
                 :loading="saveStatus"
@@ -43,7 +57,13 @@
                     }
                 }"
             >
-                {{ $t("saveDraft") }}
+                <span
+                    v-bk-tooltips="{
+                        content: $t('noChange'),
+                        arrow: true,
+                        disabled: !(saveStatus || !isEditing)
+                    }"
+                >{{ $t("saveDraft") }}</span>
             </bk-button>
             <bk-button
                 :disabled="!canDebug"
@@ -72,7 +92,9 @@
             <release-button
                 :can-release="canRelease && !isEditing"
                 :project-id="projectId"
+                :current-editing-data="currentEditingData"
                 :id="pipelineId"
+                @release-success="handleSuccess"
             />
         </aside>
     </div>
@@ -85,21 +107,29 @@
         RESOURCE_ACTION,
         RESOURCE_TYPE
     } from '@/utils/permission'
-    import { UI_MODE } from '@/utils/pipelineConst'
-    import { showPipelineCheckMsg } from '@/utils/util'
+    import { UI_MODE, DRAFT_STATUS } from '@/utils/pipelineConst'
+    import { showPipelineCheckMsg, convertTime } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     import ReleaseButton from './ReleaseButton'
+    import DraftManager from '@/components/DraftManager'
 
     export default {
         components: {
             PipelineBreadCrumb,
             ReleaseButton,
             ModeSwitch,
+            DraftManager,
             PipelineEditMoreAction
         },
         props: {
             isSwitchPipeline: Boolean
+        },
+        data () {
+            return {
+                lasterDraftInfo: null,
+                isConflictDraft: false,
+            }
         },
         computed: {
             ...mapState([
@@ -135,6 +165,9 @@
             canDebug () {
                 return (this.pipelineInfo?.canDebug ?? false) && !this.saveStatus && !this.isCurPipelineLocked
             },
+            releaseVersion () {
+                return this.pipelineInfo?.releaseVersion ?? ''
+            },
             RESOURCE_ACTION () {
                 return RESOURCE_ACTION
             },
@@ -164,6 +197,12 @@
             },
             isPipelineNameReady () {
                 return this.pipelineSetting?.pipelineId === this.$route.params.pipelineId
+            },
+            currentEditingData () {
+                if (!this.pipeline || !this.pipeline.stages) {
+                    return null
+                }
+                return this.buildModelAndSetting()
             }
         },
         watch: {
@@ -178,6 +217,8 @@
         },
         methods: {
             ...mapActions({
+                getDraftStatus: 'common/getDraftStatus',
+                rollbackPipelineVersion: 'pipelines/rollbackPipelineVersion',
                 updatePipelineMode: 'updatePipelineMode'
             }),
             ...mapActions('atom', [
@@ -185,8 +226,91 @@
                 'saveDraftPipeline',
                 'setSaveStatus',
                 'requestPipelineSummary',
+                'requestPipeline',
+                'savePipelineSnapshot',
                 'updateContainer'
             ]),
+            // 构建 modelAndSetting 对象
+            buildModelAndSetting () {
+                const pipeline = Object.assign({}, this.pipeline, {
+                    stages: [
+                        this.pipeline.stages[0],
+                        ...this.pipelineWithoutTrigger.stages
+                    ]
+                })
+                
+                return {
+                    model: {
+                        ...pipeline,
+                        name: this.pipelineSetting.pipelineName,
+                        desc: this.pipelineSetting.desc
+                    },
+                    setting: Object.assign(this.pipelineSetting, {
+                        failSubscription: undefined,
+                        successSubscription: undefined
+                    })
+                }
+            },
+            async handleRollback (item) {
+                this.$bkInfo({
+                    maskClose: false,
+                    confirmLoading: true,
+                    title: this.$t('confirmRollbackToThisHistory'),
+                    subTitle: this.$t('historyRollback', [item.updater, convertTime(item.updateTime)]),
+                    confirmFn: async () => {
+                        try {
+                            const res = await this.rollbackPipelineVersion({
+                                projectId: this.projectId,
+                                pipelineId: this.pipelineId,
+                                version: item.version,
+                                draftVersion: item.draftVersion
+                            })
+                            
+                            if (res?.version) {
+                                // 重新获取流水线摘要信息
+                                await this.requestPipelineSummary(this.$route.params)
+                                // 刷新草稿列表
+                                await this.handleSuccess()
+                                // 获取回滚后的流水线完整数据并更新到 store
+                                await this.requestPipeline({
+                                    source: 'EDIT',
+                                    projectId: this.projectId,
+                                    pipelineId: this.pipelineId,
+                                    version: res.version
+                                })
+                                
+                                // 跳转到编辑页面
+                                this.$router.replace({
+                                    name: 'pipelinesEdit',
+                                    params: {
+                                        ...this.$route.params,
+                                        version: res.version
+                                    },
+                                })
+                                return true
+                            }
+                        } catch (error) {
+                            this.$bkMessage({
+                                theme: 'error',
+                                message: error.message ?? error
+                            })
+                            return false
+                        }
+                    }
+                })
+            },
+            goPipelineModel () {
+                this.isConflictDraft = false
+                this.$router.push({
+                    name: 'pipelinesHistory',
+                    params: {
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.releaseVersion,
+                        type: 'pipeline'
+                    },
+                    query: this.$route.query
+                })
+            },
             async exec (debug) {
                 if (debug && this.isEditing) {
                     const result = await this.saveDraft()
@@ -220,74 +344,124 @@
                     }
                 })
             },
+            // 执行草稿保存的核心逻辑
+            async executeSaveDraft () {
+                this.setSaveStatus(true)
+                const pipeline = Object.assign({}, this.pipeline, {
+                    stages: [
+                        this.pipeline.stages[0],
+                        ...this.pipelineWithoutTrigger.stages
+                    ]
+                })
+                const { projectId, pipelineId, pipelineSetting, checkPipelineInvalid, pipelineYaml } = this
+                const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
+                if (inValid) {
+                    throw new Error(message)
+                }
+                const modelAndSetting = this.buildModelAndSetting()
+                // 清除流水线参数渲染过程中添加的key
+                this.formatParams(pipeline)
+
+                // 请求执行构建
+                const { version } = await this.saveDraftPipeline({
+                    projectId,
+                    pipelineId,
+                    baseVersion: this.pipelineInfo?.baseVersion,
+                    baseDraftVersion: this.pipelineInfo?.draftVersion,
+                    storageType: this.pipelineMode,
+                    modelAndSetting,
+                    yaml: pipelineYaml
+                })
+                await this.savePipelineSnapshot()
+
+                await this.requestPipelineSummary(this.$route.params)
+                this.$router.replace({
+                    params: {
+                        ...this.$route.params,
+                        version
+                    }
+                })
+                // 刷新草稿列表
+                await this.handleSuccess()
+                this.$bkMessage({
+                    theme: 'success',
+                    message: this.$t('editPage.saveDraftSuccess', [pipelineSetting.pipelineName]),
+                    limit: 1
+                })
+                return true
+            },
+
+            async continueSaveDraft () {
+                try {
+                    return await this.executeSaveDraft()
+                } catch (e) {
+                    this.handleSaveDraftError(e)
+                    return false
+                } finally {
+                    this.isConflictDraft = false
+                    this.setSaveStatus(false)
+                }
+            },
+
+            async handleNewDraft () {
+                this.isConflictDraft = false
+                // 重新获取流水线摘要信息
+                await this.requestPipelineSummary(this.$route.params)
+                // 刷新草稿列表
+                await this.handleSuccess()
+                await this.requestPipeline({
+                    source: 'EDIT',
+                    projectId: this.projectId,
+                    pipelineId: this.pipelineId,
+                    version: this.pipelineInfo?.version
+                })
+            },
+
+            async handleSuccess () {
+                // 发布成功后刷新草稿列表
+                if (this.$refs.draftManager) {
+                    await this.$refs.draftManager.refresh()
+                }
+            },
 
             async saveDraft () {
                 try {
-                    this.setSaveStatus(true)
-                    const pipeline = Object.assign({}, this.pipeline, {
-                        stages: [
-                            this.pipeline.stages[0],
-                            ...this.pipelineWithoutTrigger.stages
-                        ]
+                    const draftStatus = await this.getDraftStatus({
+                        projectId: this.projectId,
+                        pipelineId: this.pipelineId,
+                        ...(this.pipelineInfo?.draftVersion ? {
+                            version: this.pipelineInfo?.version,
+                            baseDraftVersion: this.pipelineInfo?.draftVersion,
+                        } : {}),
+                        actionType: 'SAVE'
                     })
-                    const { projectId, pipelineId, pipelineSetting, checkPipelineInvalid, pipelineYaml } = this
-                    const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
-                    if (inValid) {
-                        throw new Error(message)
+                    this.lasterDraftInfo = draftStatus
+                    if (this.lasterDraftInfo.status === DRAFT_STATUS.NORMAL) {
+                        return await this.executeSaveDraft()
+                    } else if (this.lasterDraftInfo.status === DRAFT_STATUS.CONFLICT || this.lasterDraftInfo.status === DRAFT_STATUS.PUBLISHED) {
+                        this.isConflictDraft = true
+                        return false
                     }
-                    // 清除流水线参数渲染过程中添加的key
-                    this.formatParams(pipeline)
-
-                    // 请求执行构建
-                    const { version } = await this.saveDraftPipeline({
-                        projectId,
-                        pipelineId,
-                        baseVersion: this.pipelineInfo?.baseVersion,
-                        storageType: this.pipelineMode,
-                        modelAndSetting: {
-                            model: {
-                                ...pipeline,
-                                name: pipelineSetting.pipelineName,
-                                desc: pipelineSetting.desc
-                            },
-                            setting: Object.assign(pipelineSetting, {
-                                failSubscription: undefined,
-                                successSubscription: undefined
-                            })
-                        },
-                        yaml: pipelineYaml
-                    })
-                    this.setPipelineEditing(false)
-
-                    await this.requestPipelineSummary(this.$route.params)
-                    this.$router.replace({
-                        params: {
-                            ...this.$route.params,
-                            version
-                        }
-                    })
-                    this.$bkMessage({
-                        theme: 'success',
-                        message: this.$t('editPage.saveDraftSuccess', [pipelineSetting.pipelineName]),
-                        limit: 1
-                    })
-
-                    return true
                 } catch (e) {
-                    const { projectId, pipelineId } = this.$route.params
-
-                    if (e.code === 2101244) {
-                        showPipelineCheckMsg(this.$bkMessage, e.message, this.$createElement)
-                    } else {
-                        this.handleError(e, {
-                            projectId,
-                            resourceCode: pipelineId,
-                            action: RESOURCE_ACTION.EDIT
-                        })
-                    }
+                    this.handleSaveDraftError(e)
                     return false
                 } finally {
                     this.setSaveStatus(false)
+                }
+            },
+
+            // 处理保存草稿时的错误
+            handleSaveDraftError (e) {
+                const { projectId, pipelineId } = this.$route.params
+
+                if (e.code === 2101244) {
+                    showPipelineCheckMsg(this.$bkMessage, e.message, this.$createElement)
+                } else {
+                    this.handleError(e, {
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    })
                 }
             },
             goBack () {
@@ -351,5 +525,4 @@
         }
     }
 }
-
 </style>

@@ -287,6 +287,7 @@
             this.togglePropertyPanel({
                 isShow: false
             })
+            this.clearPipelineSnapshot() // 清除流水线快照，防止内存泄漏
             this.errors.clear()
         },
         beforeRouteUpdate (to, from, next) {
@@ -307,7 +308,8 @@
                 'setSaveStatus',
                 'setEditFrom',
                 'updatePipelineSetting',
-                'setAtomEditing'
+                'setAtomEditing',
+                'clearPipelineSnapshot'
             ]),
             ...mapActions('common', [
                 'requestQualityAtom',

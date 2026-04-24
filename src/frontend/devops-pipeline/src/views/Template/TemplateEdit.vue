@@ -24,6 +24,20 @@
                     :save="saveTemplateDraft"
                 />
                 <aside class="template-edit-right-aside">
+                    <DraftManager
+                        ref="draftManager"
+                        v-model="isConflictDraft"
+                        :laster-draft-info="lasterDraftInfo"
+                        :release-version="releaseVersion"
+                        :project-id="projectId"
+                        :unique-id="templateId"
+                        is-template
+                        :current-editing-data="currentEditingData"
+                        @rollback="handleRollback"
+                        @new-draft="handleNewDraft"
+                        @continue-save-draft="continueSaveDraft"
+                        @go-pipeline-model="goPipelineModel"
+                    />
                     <bk-button
                         theme="primary"
                         @click="saveTemplateDraft"
@@ -40,7 +54,9 @@
                     <ReleaseButton
                         :can-release="canRelease && !isEditing"
                         :project-id="projectId"
+                        :current-editing-data="currentEditingData"
                         :id="templateId"
+                        @release-success="handleSuccess"
                     />
                 </aside>
             </header>
@@ -62,10 +78,13 @@
     } from '@/utils/permission'
     import {
         convertMStoStringByRule,
+        convertTime,
         showPipelineCheckMsg
     } from '@/utils/util'
+    import { DRAFT_STATUS } from '@/utils/pipelineConst'
     import Edit from '@/views/subpages/edit'
     import { mapActions, mapGetters, mapState } from 'vuex'
+    import DraftManager from '@/components/DraftManager'
 
     export default {
         components: {
@@ -73,12 +92,15 @@
             ReleaseButton,
             ModeSwitch,
             Edit,
+            DraftManager,
             PipelineEditMoreAction
         },
         data () {
             return {
                 isLoading: true,
-                confirmMsg: this.$t('editPage.confirmMsg')
+                confirmMsg: this.$t('editPage.confirmMsg'),
+                lasterDraftInfo: null,
+                isConflictDraft: false,
             }
         },
         computed: {
@@ -112,6 +134,9 @@
             templateId () {
                 return this.$route.params.templateId
             },
+            releaseVersion () {
+                return this.pipelineInfo?.releaseVersion ?? ''
+            },
             currentVersionId () {
                 return this.$route.params?.version ?? this.pipelineInfo?.version
             },
@@ -126,6 +151,16 @@
                     return this.$t('editPage.draftVersion', [this.getDraftBaseVersionName])
                 }
                 return this.versionName
+            },
+            currentEditingData () {
+                if (!this.pipeline || !this.pipeline.stages) {
+                    return null
+                }
+                const model = this.buildModel()
+                return {
+                    model,
+                    setting: this.pipelineSetting
+                }
             },
             templateName () {
                 return this?.pipelineInfo?.name ?? this.pipeline?.name
@@ -156,6 +191,7 @@
             this.setPipeline(null)
             this.setPipelineEditing(false)
             this.setAtomEditing(false)
+            this.clearPipelineSnapshot() // 清除流水线快照，防止内存泄漏
             this.removeLeaveListenr()
             this.errors.clear()
         },
@@ -168,8 +204,15 @@
                 'setAtomEditing',
                 'requestTemplateSummary',
                 'requestPipeline',
+                'fetchTemplateByVersion',
+                'savePipelineSnapshot',
+                'clearPipelineSnapshot',
                 'updateContainer'
             ]),
+            ...mapActions({
+                rollbackTemplateVersion: 'templates/rollbackTemplateVersion',
+                getTemplateDraftStatus: 'common/getTemplateDraftStatus'
+            }),
             requestTemplateByVersion (version = this.currentVersionId) {
                 try {
                     this.requestPipeline({
@@ -184,14 +227,97 @@
                     })
                 }
             },
-            async saveTemplateDraft () {
-                const pipeline = Object.assign({}, this.pipeline, {
+            // 构建 model 对象
+            buildModel () {
+                return Object.assign({}, this.pipeline, {
                     name: this.pipelineSetting.pipelineName,
                     stages: [
                         this.pipeline.stages[0],
                         ...this.pipelineWithoutTrigger.stages
                     ]
                 })
+            },
+            async handleRollback (item) {
+                this.$bkInfo({
+                    maskClose: false,
+                    confirmLoading: true,
+                    title: this.$t('confirmRollbackToThisHistory'),
+                    subTitle: this.$t('historyRollback', [item.updater, convertTime(item.updateTime)]),
+                    confirmFn: async () => {
+                        try {
+                            const res = await this.rollbackTemplateVersion({
+                                projectId: this.projectId,
+                                templateId: this.templateId,
+                                version: item.version,
+                                draftVersion: item.draftVersion
+                            })
+                            
+                            if (res?.version) {
+                                // 重新获取模板摘要信息
+                                await this.requestTemplateSummary(this.$route.params)
+                                // 刷新草稿列表
+                                await this.handleSuccess()
+                                // 获取回滚后的模板完整数据并更新到 store
+                                await this.requestPipeline({
+                                    projectId: this.projectId,
+                                    templateId: this.templateId,
+                                    source: 'EDIT',
+                                    version: res.version
+                                })
+                                
+                                // 跳转到编辑页面
+                                this.$router.replace({
+                                    name: 'templateEdit',
+                                    params: {
+                                        ...this.$route.params,
+                                        version: res.version
+                                    },
+                                })
+                                return true
+                            }
+                        } catch (error) {
+                            this.$bkMessage({
+                                theme: 'error',
+                                message: error.message ?? error
+                            })
+                            return false
+                        }
+                    }
+                })
+            },
+
+            async handleSuccess () {
+                // 发布成功后刷新草稿列表
+                if (this.$refs.draftManager) {
+                    await this.$refs.draftManager.refresh()
+                }
+            },
+            goPipelineModel () {
+                this.isConflictDraft = false
+                this.$router.push({
+                    name: 'TemplateOverview',
+                    params: {
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.releaseVersion,
+                        type: 'pipeline'
+                    },
+                    query: this.$route.query
+                })
+            },
+            // 处理保存草稿时的错误
+            handleSaveDraftError (e) {
+                if (e.code === 2101244) {
+                    showPipelineCheckMsg(this.$bkMessage, e.message, this.$createElement)
+                } else {
+                    this.$showTips({
+                        message: e.message || e,
+                        theme: 'error'
+                    })
+                }
+            },
+            // 执行草稿保存的核心逻辑
+            async executeSaveDraft () {
+                const pipeline = this.buildModel()
                 const { inValid, message } = this.checkPipelineInvalid(pipeline.stages, this.pipelineSetting)
              
                 if (inValid) {
@@ -221,6 +347,7 @@
                                 templateSetting: this.pipelineSetting
                             }),
                         baseVersion: this.pipelineInfo?.baseVersion,
+                        baseDraftVersion: this.pipelineInfo?.draftVersion,
                         type: this.pipelineInfo?.type
                     })
                     if (data) {
@@ -228,7 +355,7 @@
                             message: `${this.pipeline.name}${' '}${this.$t('updateSuc')}`,
                             theme: 'success'
                         })
-                        this.setPipelineEditing(false)
+                        await this.savePipelineSnapshot()
 
                         await this.requestTemplateSummary(this.$route.params)
 
@@ -239,7 +366,8 @@
                                 version: data.version
                             }
                         })
-
+                        // 刷新草稿列表
+                        await this.handleSuccess()
                         result = true
                     } else {
                         this.$showTips({
@@ -248,20 +376,58 @@
                         })
                     }
                 } catch (err) {
-                    if (err.code === 2101244) {
-                        showPipelineCheckMsg(this.$bkMessage, err.message, this.$createElement)
-                    } else {
-                        this.$showTips({
-                            message: err.message || err,
-                            theme: 'error'
-                        })
-                    }
+                    this.handleSaveDraftError(err)
 
                     result = false
                 } finally {
                     this.saveStatus = false
                 }
                 return result
+            },
+
+            async continueSaveDraft () {
+                try {
+                    return await this.executeSaveDraft()
+                } catch (e) {
+                    this.handleSaveDraftError(e)
+                    return false
+                } finally {
+                    this.saveStatus = false
+                    this.isConflictDraft = false
+                }
+            },
+
+            async handleNewDraft () {
+                this.isConflictDraft = false
+                // 重新获取流水线摘要信息
+                await this.requestTemplateSummary(this.$route.params)
+                // 刷新草稿列表
+                await this.handleSuccess()
+                await this.requestPipeline({
+                    source: 'EDIT',
+                    projectId: this.projectId,
+                    templateId: this.templateId,
+                    version: this.pipelineInfo?.version
+                })
+            },
+
+            async saveTemplateDraft () {
+                const draftStatus = await this.getTemplateDraftStatus({
+                    projectId: this.projectId,
+                    templateId: this.templateId,
+                    ...(this.pipelineInfo?.draftVersion ? {
+                        version: this.pipelineInfo?.version,
+                        baseDraftVersion: this.pipelineInfo?.draftVersion,
+                    } : {}),
+                    actionType: 'SAVE'
+                })
+                this.lasterDraftInfo = draftStatus
+                if (this.lasterDraftInfo.status === DRAFT_STATUS.NORMAL) {
+                    return await this.executeSaveDraft()
+                } else if (this.lasterDraftInfo.status === DRAFT_STATUS.CONFLICT || this.lasterDraftInfo.status === DRAFT_STATUS.PUBLISHED) {
+                    this.isConflictDraft = true
+                    return false
+                }
             },
 
             requestQualityAtom () {

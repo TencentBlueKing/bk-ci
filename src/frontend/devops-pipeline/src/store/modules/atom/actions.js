@@ -89,8 +89,11 @@ import {
     UPDATE_STAGE,
     UPDATE_STORESTATUS,
     UPDATE_TEMPLATE_CONSTRAINT,
+    SAVE_PIPELINE_SNAPSHOT,
+    CLEAR_PIPELINE_SNAPSHOT,
     UPDATE_WHOLE_ATOM_INPUT
 } from './constants'
+import { buildPipelineSnapshot } from '@/utils/pipelineSnapshotUtil'
 
 function rootCommit (commit, ACTION_CONST, payload) {
     commit(ACTION_CONST, payload, { root: true })
@@ -140,6 +143,10 @@ export function dealPipelineRes ({ getters, dispatch, commit, state }, {
         }
         commit(SET_PIPELINE_YAML_HIGHLIGHT_MAP, highlightMap)
     }
+
+    setTimeout(() => {
+        dispatch('savePipelineSnapshot')
+    }, 500) // 延迟500ms确保所有组件初始化和副作用完成
 }
 
 export default {
@@ -268,12 +275,15 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version, archiveFlag, source = 'VIEW' }) {
+    fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version, archiveFlag, source = 'VIEW', draftVersion  }) {
         const query = {
             source
         }
         if (archiveFlag !== undefined && archiveFlag !== null) {
             query.archiveFlag = encodeURIComponent(archiveFlag)
+        }
+        if (draftVersion !== undefined && draftVersion !== null) {
+            query.draftVersion = encodeURIComponent(draftVersion)
         }
         const url = `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`
         return request.get(url, {
@@ -282,8 +292,14 @@ export default {
             return res.data
         })
     },
-    fetchTemplateByVersion ({ commit }, { projectId, templateId, version }) {
-        return request.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/${version}/details/`).then(res => {
+    fetchTemplateByVersion ({ commit }, { projectId, templateId, version, draftVersion }) {
+        const query = {}
+        if (draftVersion !== undefined && draftVersion !== null) {
+            query.draftVersion = encodeURIComponent(draftVersion)
+        }
+        return request.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/${version}/details/`, {
+            params: query
+        }).then(res => {
             return res.data
         })
     },
@@ -466,6 +482,16 @@ export default {
     setPipelineSetting: actionCreator(PIPELINE_SETTING_MUTATION),
     setEditFrom: actionCreator(SET_EDIT_FROM),
     setPipelineEditing: actionCreator(SET_PIPELINE_EDITING),
+    // 保存流水线快照
+    savePipelineSnapshot ({ commit, state, rootState }) {
+        const currentMode = rootState.pipelineMode
+        const snapshot = buildPipelineSnapshot(state, currentMode)
+        commit(SAVE_PIPELINE_SNAPSHOT, { snapshot })
+    },
+    // 清除流水线快照
+    clearPipelineSnapshot ({ commit }) {
+        commit(CLEAR_PIPELINE_SNAPSHOT)
+    },
     fetchContainers: async ({ commit }, { projectCode }) => {
         try {
             const { data: containers } = await request.get(`${STORE_API_URL_PREFIX}/user/pipeline/container/${projectCode}`)

@@ -109,6 +109,7 @@
                             </bk-button>
                             <rollback-entry
                                 v-if="props.row.canRollback && !archiveFlag"
+                                is-version-list
                                 :has-permission="canEdit"
                                 :version="props.row.version"
                                 :rollback-id="isTemplate ? $route.params.templateId : $route.params.pipelineId"

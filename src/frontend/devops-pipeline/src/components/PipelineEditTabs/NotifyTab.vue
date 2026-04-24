@@ -282,8 +282,9 @@
                 return res
             },
             handleDelete (type, index) {
-                this[type].splice(index, 1)
-                this.updateSubscription(type, this[type])
+                const newList = [...this[type]]
+                newList.splice(index, 1)
+                this.updateSubscription(type, newList)
             },
             handleEdit (type, index) {
                 this.showSlider = true
@@ -300,12 +301,13 @@
             },
             handleSaveNotify () {
                 this.$refs?.notifySettingTab?.$refs?.notifyForm?.validate().then(() => {
+                    const newList = [...this[this.editType]]
                     if (this.editIndex > -1) {
-                        this[this.editType][this.editIndex] = this.sliderEditItem
+                        newList[this.editIndex] = this.sliderEditItem
                     } else {
-                        this[this.editType].push(this.sliderEditItem)
+                        newList.push(this.sliderEditItem)
                     }
-                    this.updateSubscription(this.editType, this[this.editType])
+                    this.updateSubscription(this.editType, newList)
                     this.hideSlider()
                 })
             },
