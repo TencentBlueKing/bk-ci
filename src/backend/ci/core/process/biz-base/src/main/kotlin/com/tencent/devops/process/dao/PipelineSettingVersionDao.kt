@@ -79,7 +79,8 @@ class PipelineSettingVersionDao {
                 MAX_CON_RUNNING_QUEUE_SIZE,
                 FAIL_IF_VARIABLE_INVALID,
                 BUILD_CANCEL_POLICY,
-                ENV_HASH_ID
+                ENV_HASH_ID,
+                ENV_NAME
             ).values(
                 id,
                 setting.projectId,
@@ -105,7 +106,8 @@ class PipelineSettingVersionDao {
                 setting.maxConRunningQueueSize ?: -1,
                 setting.failIfVariableInvalid,
                 setting.buildCancelPolicy.value,
-                setting.envHashId
+                setting.envHashId,
+                setting.envName
             ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
@@ -127,6 +129,9 @@ class PipelineSettingVersionDao {
 
             setting.envHashId?.let { envHashId ->
                 insert.set(ENV_HASH_ID, envHashId)
+            }
+            setting.envName?.let { envName ->
+                insert.set(ENV_NAME, envName)
             }
             return insert.execute()
         }
@@ -158,6 +163,9 @@ class PipelineSettingVersionDao {
                 .set(FAIL_IF_VARIABLE_INVALID, setting.failIfVariableInvalid)
             setting.envHashId?.let { envHashId ->
                 updateStep.set(ENV_HASH_ID, envHashId)
+            }
+            setting.envName?.let { envName ->
+                updateStep.set(ENV_NAME, envName)
             }
             updateStep.where(PROJECT_ID.eq(setting.projectId))
                 .and(PIPELINE_ID.eq(setting.pipelineId))
@@ -285,7 +293,8 @@ class PipelineSettingVersionDao {
                     },
                     failIfVariableInvalid = t.failIfVariableInvalid,
                     buildCancelPolicy = BuildCancelPolicy.parse(t.buildCancelPolicy),
-                    envHashId = t.envHashId
+                    envHashId = t.envHashId,
+                    envName = t.envName
                 )
             }
         }

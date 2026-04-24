@@ -40,6 +40,7 @@ import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
+import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
@@ -66,6 +67,36 @@ import jakarta.ws.rs.core.MediaType
 @Suppress("ALL")
 @BkApigwApi(version = "v4")
 interface ApigwEnvironmentResourceV4 {
+
+    @Operation(summary = "获取环境列表", tags = ["v4_app_env_list", "v4_user_env_list"])
+    @GET
+    @Path("/envs/list")
+    fun listEnvs(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "环境名称", required = false)
+        @QueryParam("envName")
+        envName: String?,
+        @Parameter(description = "环境类型", required = false)
+        @QueryParam("envType")
+        envType: EnvType?,
+        @Parameter(description = "节点", required = false)
+        @QueryParam("nodeHashId")
+        nodeHashId: String?,
+        @Parameter(description = "是否是创作流模式", required = false)
+        @QueryParam("createMode")
+        createMode: Boolean?
+    ): Result<List<EnvWithPermission>>
 
     @Operation(
         summary = "获取用户有权限使用的CMDB服务器列表",
@@ -194,6 +225,48 @@ interface ApigwEnvironmentResourceV4 {
         @Parameter(description = "节点 HashId", required = true)
         nodeHashIds: List<String>
     ): Result<Boolean>
+
+    @Operation(
+        summary = "获取环境的节点列表",
+        tags = ["v4_app_env_list_nodes_new", "v4_user_env_list_nodes_new"]
+    )
+    @GET
+    @Path("/envs/{envHashId}/nodes_list")
+    fun listNodesNew(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "IP", required = false)
+        @QueryParam("nodeIp")
+        nodeIp: String?,
+        @Parameter(description = "别名", required = false)
+        @QueryParam("displayName")
+        displayName: String?,
+        @Parameter(description = "创建人", required = false)
+        @QueryParam("createdUser")
+        createdUser: String?,
+        @Parameter(description = "Agent 状态", required = false)
+        @QueryParam("nodeStatus")
+        nodeStatus: NodeStatus?,
+        @Parameter(description = "第几页", required = false)
+        @QueryParam("page")
+        page: Int? = 1,
+        @Parameter(description = "每页多少条", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int? = 20,
+        @Parameter(description = "环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String
+    ): Result<Page<NodeBaseInfo>>
 
     @Operation(
         summary = "获取用户有权限使用的CMDB环境列表",

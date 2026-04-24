@@ -219,7 +219,7 @@ class BkMonitorMetricsService @Autowired constructor(
     }
 
     private fun queryHostInfoImpl(projectId: String, agentHashId: String): AgentHostInfo {
-        val nCpuPromql = "$dataTableName:load:n_cpus{agentId=\"$agentHashId\"}"
+        val nCpuPromql = "count($dataTableName:cpu_detail:idle{agentId=\"$agentHashId\"})-1"
         val nCpu = searchMetrics(
             projectId = projectId,
             promql = nCpuPromql,

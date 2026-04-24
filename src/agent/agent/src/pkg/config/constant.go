@@ -32,8 +32,11 @@ import (
 )
 
 const ActionUpgrade = "upgrade"
+
 const ActionInstall = "install"
+
 const ActionUninstall = "uninstall"
+
 const CertFilePath = ".cert"
 
 const (
@@ -147,6 +150,15 @@ func GetClientDaemonFile() string {
 		return DaemonFileClientWindows
 	} else {
 		return DaemonFileClientLinux
+	}
+}
+
+// GetAgentBinary 根据平台生成对应agent可执行文件名
+func GetAgentBinary() string {
+	if systemutil.IsWindows() {
+		return AgentFileClientWindows
+	} else {
+		return AgentFileClientLinux
 	}
 }
 

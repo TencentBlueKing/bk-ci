@@ -37,6 +37,7 @@
                         {{ currentNode?.displayName || '--' }}
                     </span>
                     <i
+                        v-if="!isCreateResType"
                         class="bk-icon icon-edit-line name-edit-icon"
                         @click="handleStartEditName"
                     />
@@ -53,7 +54,20 @@
                 </span>
             </section>
 
-            <section>
+            <section class="node-info-right">
+                <span class="agent-status-wrapper">
+                    <StatusIcon
+                        v-if="isAgentNormal"
+                        status="success"
+                    />
+                    <StatusIcon
+                        v-else
+                        status="error"
+                    />
+                    <span class="agent-status-text">
+                        {{ isAgentNormal ? $t('environment.agentNormal') : $t('environment.agentAbnormal') }}
+                    </span>
+                </span>
                 <a
                     v-if="!isCreateResType"
                     class="reinstall-agent-btn"
@@ -101,6 +115,7 @@
     import Settings from './components/Settings.vue'
     import TaskList from './components/TaskList.vue'
     import AgentOfflineRecords from './components/AgentOfflineRecords.vue'
+    import StatusIcon from '@/components/status-icon.vue'
     import { SERVICE_RESOURCE_TYPE } from '@/store/constants'
     
     export default {
@@ -109,7 +124,8 @@
             Overview,
             Settings,
             TaskList,
-            AgentOfflineRecords
+            AgentOfflineRecords,
+            StatusIcon
         },
         props: {
             installAgent: {
@@ -173,6 +189,12 @@
                     return 'status-abnormal'
                 }
                 return ''
+            })
+            
+            // 判断 Agent 是否正常
+            const isAgentNormal = computed(() => {
+                const successStatus = ['NORMAL', 'BUILD_IMAGE_SUCCESS']
+                return successStatus.includes(currentNode.value?.nodeStatus)
             })
             
             const panels = computed(() => [
@@ -355,6 +377,7 @@
                 nodeTypeDisplayName,
                 nodeStatusDisplayName,
                 nodeStatusClass,
+                isAgentNormal,
                 handleReinstallAgent,
                 handleRefresh,
                 // 编辑名称相关
@@ -390,6 +413,24 @@
     .node-info-left {
         display: flex;
         align-items: center;
+    }
+    .node-info-right {
+        display: flex;
+        align-items: center;
+    }
+    .agent-status-wrapper {
+        display: flex;
+        align-items: center;
+        margin-right: 24px;
+    }
+    .agent-status-text {
+        font-size: 12px;
+        &.normal {
+            color: #2DCB56;
+        }
+        &.abnormal {
+            color: #EA3636;
+        }
     }
     .node-name {
         font-weight: 700;

@@ -42,7 +42,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/collector"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/cron"
-	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/imagedebug"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
@@ -50,6 +50,8 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/pipeline"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 )
 
 func Run(isDebug bool) {
@@ -93,7 +95,6 @@ func Run(isDebug bool) {
 
 	for {
 		doAsk()
-		// 请求完更新下IP
 		config.LoadAgentIp()
 		time.Sleep(5 * time.Second)
 	}

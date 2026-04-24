@@ -140,6 +140,7 @@ import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
+import com.tencent.devops.process.pojo.pipeline.BuildDetailSimple
 import com.tencent.devops.process.pojo.pipeline.BuildRecordInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
@@ -147,6 +148,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
+import com.tencent.devops.process.pojo.pipeline.toBuildDetailSimple
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.CreateStreamTriggerSupportService
 import com.tencent.devops.process.service.ParamFacadeService
@@ -1278,7 +1280,8 @@ class PipelineBuildFacadeService(
                             pipelineId = pipelineId,
                             reviewUsers = el.actualReviewUsers ?: el.reviewUsers,
                             params = el.params,
-                            desc = el.desc ?: ""
+                            desc = el.desc ?: "",
+                            suggestRequired = el.suggestRequired
                         )
                     }
                 }
@@ -1296,7 +1299,8 @@ class PipelineBuildFacadeService(
                                     pipelineId = pipelineId,
                                     reviewUsers = el.actualReviewUsers ?: el.reviewUsers ?: emptyList(),
                                     params = el.params ?: mutableListOf(),
-                                    desc = el.desc ?: ""
+                                    desc = el.desc ?: "",
+                                    suggestRequired = el.suggestRequired
                                 )
                             }
                         }
@@ -1314,7 +1318,8 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         reviewUsers: List<String>,
         params: MutableList<ManualReviewParam>,
-        desc: String
+        desc: String,
+        suggestRequired: Boolean? = false
     ): ReviewParam {
         val reviewUser = mutableListOf<String>()
         reviewUsers.forEach { user ->
@@ -1352,7 +1357,8 @@ class PipelineBuildFacadeService(
             status = null,
             desc = buildVariableService.replaceTemplate(projectId, buildId, desc),
             suggest = "",
-            params = params
+            params = params,
+            suggestRequired = suggestRequired
         )
         logger.info("reviewParam : $reviewParam")
         return reviewParam
@@ -1443,6 +1449,24 @@ class PipelineBuildFacadeService(
             pipelineId = pipelineId,
             buildId = buildId
         )
+    }
+
+    fun getBuildDetailSimple(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode,
+        checkPermission: Boolean = true
+    ): BuildDetailSimple {
+        return getBuildDetail(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            channelCode = channelCode,
+            checkPermission = checkPermission
+        ).toBuildDetailSimple()
     }
 
     fun getBuildDetail(

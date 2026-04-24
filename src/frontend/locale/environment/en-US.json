@@ -664,6 +664,8 @@
     "offlineDuration": "Offline duration",
     "nodeUsage": "Node Usage",
     "buildAgent": "Build Agent",
+    "agentNormal": "Agent Normal",
+    "agentAbnormal": "Agent Abnormal",
     "filterNodeBy": "Filter by {0}, etc.",
     "creativeResource": "Creative Flow Resources",
     "pipelineResource": "Pipeline Resource",

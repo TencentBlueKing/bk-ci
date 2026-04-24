@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
@@ -733,7 +734,8 @@ class PipelineVersionGenerator constructor(
         pipelineId: String?,
         yaml: String,
         yamlFileName: String? = null,
-        aspects: LinkedList<IPipelineTransferAspect>? = null
+        aspects: LinkedList<IPipelineTransferAspect>? = null,
+        channelCode: ChannelCode = ChannelCode.BS
     ): Pair<PipelineModelAndSetting, YamlWithVersion?> {
         return try {
             val result = transferService.transfer(
@@ -742,7 +744,8 @@ class PipelineVersionGenerator constructor(
                 pipelineId = pipelineId,
                 actionType = TransferActionType.FULL_YAML2MODEL,
                 data = TransferBody(oldYaml = yaml, yamlFileName = yamlFileName),
-                aspects = aspects ?: LinkedList()
+                aspects = aspects ?: LinkedList(),
+                channelCode = channelCode
             )
             if (result.modelAndSetting == null) {
                 logger.warn("TRANSFER_YAML|$projectId|$userId|yml=\n$yaml")
@@ -766,7 +769,8 @@ class PipelineVersionGenerator constructor(
         pipelineId: String?,
         modelAndSetting: PipelineModelAndSetting,
         oldYaml: String?,
-        aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
+        aspects: LinkedList<IPipelineTransferAspect> = LinkedList(),
+        channelCode: ChannelCode = ChannelCode.BS
     ): YamlWithVersion? {
         // MODEL形式的保存需要兼容旧数据
         Preconditions.checkNotNull(
@@ -785,7 +789,8 @@ class PipelineVersionGenerator constructor(
                     modelAndSetting = modelAndSetting,
                     oldYaml = oldYaml ?: "",
                 ),
-                aspects = aspects
+                aspects = aspects,
+                channelCode = channelCode
             )
             result.yamlWithVersion
         } catch (ignore: Throwable) {

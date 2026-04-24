@@ -4,9 +4,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 )
 
 // 用来处理一些Agent使用的第三方组件信息

@@ -170,7 +170,7 @@ class StartCloudInterfaceService @Autowired constructor(
                 )
             )
         }
-        logger.debug("syncStartCloudResourceList|resourceList|{}", resList)
+        logger.info("syncStartCloudResourceList|resourceList size|{}", resList.size)
         return resList
     }
 

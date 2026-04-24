@@ -20,7 +20,7 @@
             :pagination="pagination"
             :default-sort="defaultSort"
             height="100%"
-            :key="`${isFlod}-${queryNodeHashId}`"
+            :key="`${isFlod}-${queryNodeHashId}-${isCreateResType}`"
             @row-click="handleRowClick"
             @page-change="handlePageChange"
             @page-limit-change="handlePageLimitChange"
@@ -280,7 +280,7 @@
                                 </span>
                                 <!-- 状态值 -->
                                 <span class="node-status">
-                                    {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}
+                                    {{ $t(`environment.nodeStatusMap.${props.row.nodeStatus}`) }}
                                     <span v-if="props.row.agentVersion">
                                         ({{ props.row.agentVersion }})
                                     </span>

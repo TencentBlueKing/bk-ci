@@ -32,14 +32,18 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 func Exists(file string) bool {
-	_, err := os.Stat(file)
+	// 使用 Lstat 而非 Stat，不跟随符号链接，
+	// 避免攻击者将目标文件替换为符号链接后绕过存在性检查。
+	_, err := os.Lstat(file)
 	return !(err != nil && os.IsNotExist(err))
 }
 
@@ -48,7 +52,9 @@ func TryRemoveFile(file string) error {
 }
 
 func SetExecutable(file string) error {
-	fileInfo, err := os.Stat(file)
+	// 使用 Lstat 获取文件自身的权限位，不跟随符号链接，
+	// 防止对符号链接目标（可能是系统文件）意外添加执行权限。
+	fileInfo, err := os.Lstat(file)
 	if err != nil {
 		return err
 	}
@@ -159,8 +165,25 @@ func Unzip(archive, target string) error {
 		return err
 	}
 
+	// 获取目标目录的绝对路径，用于 Zip Slip 防护
+	absTarget, err := filepath.Abs(target)
+	if err != nil {
+		return err
+	}
+	absTarget = filepath.Clean(absTarget) + string(os.PathSeparator)
+
 	for _, file := range reader.File {
 		path := filepath.Join(target, file.Name)
+
+		// Zip Slip 防护：确保解压路径不会逃逸到目标目录之外
+		absPath, err := filepath.Abs(path)
+		if err != nil {
+			return err
+		}
+		if !strings.HasPrefix(absPath, absTarget) {
+			return fmt.Errorf("illegal file path in archive: %s", file.Name)
+		}
+
 		if file.FileInfo().IsDir() {
 			os.MkdirAll(path, os.ModePerm)
 			continue

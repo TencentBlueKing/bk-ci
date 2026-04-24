@@ -1,7 +1,6 @@
 .panelBody {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl);
 }
 
 /* 标题区域名称编辑 */
@@ -71,7 +70,7 @@
 }
 
 .section {
-  padding: var(--spacing-lg);
+  padding: 0 var(--spacing-lg);
   background-color: var(--bg-white);
 }
 
@@ -207,4 +206,8 @@
   color: var(--color-danger);
   margin-top: 4px;
   line-height: 1.4;
+}
+
+:global(.bk-sideslider-footer) {
+  margin-top: 0;
 }

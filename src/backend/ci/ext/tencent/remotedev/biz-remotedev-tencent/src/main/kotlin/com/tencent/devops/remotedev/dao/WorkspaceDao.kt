@@ -742,8 +742,34 @@ class WorkspaceDao {
         }
     }
 
+    fun fetchByProjectAndNames(
+        dslContext: DSLContext,
+        projectId: String,
+        workspaceNames: List<String>
+    ): List<WorkspaceRecord> {
+        if (workspaceNames.isEmpty()) return emptyList()
+        with(TWorkspace.T_WORKSPACE) {
+            return workspaceNames
+                .chunked(BATCH_QUERY_SIZE)
+                .flatMap { chunk ->
+                    dslContext.selectFrom(this)
+                        .where(PROJECT_ID.eq(projectId))
+                        .and(NAME.`in`(chunk))
+                        .and(
+                            STATUS.notIn(
+                                WorkspaceStatus.DELETED.ordinal,
+                                WorkspaceStatus.UNUSED.ordinal
+                            )
+                        )
+                        .fetch(workspaceMapper)
+                }
+        }
+    }
+
     companion object {
+        private const val BATCH_QUERY_SIZE = 50
         val workspaceMapper = TWorkspaceRecordJooqMapper()
-        val workspaceWithWindowsMapper = TWorkspaceRecordWithWindowsJooqMapper()
+        val workspaceWithWindowsMapper =
+            TWorkspaceRecordWithWindowsJooqMapper()
     }
 }

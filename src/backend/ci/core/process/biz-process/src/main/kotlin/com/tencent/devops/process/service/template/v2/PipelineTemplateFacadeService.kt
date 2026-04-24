@@ -11,7 +11,6 @@ import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.audit.ActionAuditContent
@@ -784,6 +783,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
         content = ActionAuditContent.PIPELINE_TEMPLATE_VIEW_CONTENT
     )
     fun getTemplateDetails(
+        userId: String,
         projectId: String,
         templateId: String,
         version: Long?
@@ -801,24 +801,23 @@ class PipelineTemplateFacadeService @Autowired constructor(
             )
         } ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_NOT_EXISTS)
         return getTemplateDetails(
+            userId = userId,
             projectId = projectId,
             templateResource = templateResource
         )
     }
 
     private fun getTemplateDetails(
+        userId: String,
         projectId: String,
         templateResource: PipelineTemplateResource
     ): PipelineTemplateDetailsResponse {
-        val setting = pipelineTemplateSettingService.get(
+        val setting = pipelineTemplateSettingService.getWithLabels(
+            userId = userId,
             projectId = projectId,
             templateId = templateResource.templateId,
             settingVersion = templateResource.settingVersion
-        ).let { pipelineSetting ->
-            val labelIds = pipelineSetting.labels.map { HashUtil.decodeIdToLong(it) }.toSet()
-            val labelNames = pipelineLabelDao.getByIds(dslContext, projectId, labelIds).map { it.name }
-            pipelineSetting.copy(labelNames = labelNames)
-        }
+        )
         val (yamlSupported, yamlPreview, msg) = try {
             val yaml = templateResource.yaml ?: pipelineTemplateGenerator.transfer(
                 userId = templateResource.creator,
@@ -995,6 +994,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
             ref = ref
         )
         return getTemplateDetails(
+            userId = userId,
             projectId = projectId,
             templateId = templateId,
             version = pipelineYamlVersion.version.toLong()
@@ -1041,6 +1041,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
         ) ?: return null
 
         return getTemplateDetails(
+            userId = userId,
             projectId = projectId,
             templateResource = templateResource
         )

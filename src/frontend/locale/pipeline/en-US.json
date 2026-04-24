@@ -1108,6 +1108,7 @@
     "systemTime": "System time",
     "checkDesc": "Approval description",
     "checkSuggestTips": " Please enter suggestions for approval",
+    "checkSuggest": "Approval Suggestions",
     "checkResult": "Approval Results",
     "agree": "Approve, and continue pipeline execution",
     "abort": "Reject, and set current task status failed",
@@ -2012,6 +2013,7 @@
     "archiving": "Archiving, a notification email will be sent upon completion. Please refresh the list manually.",
     "removeUnarchivablePipelines": "Remove unarchivable pipelines"
   },
+  "pipelineDataBoard": "EPlus",
   "cron": {
     "everyMinute": "Per minute",
     "everyHour": "Per hour",

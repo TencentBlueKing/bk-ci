@@ -3,7 +3,7 @@ import FlowSelector from '@/components/FlowHeader/FlowSelector'
 import { SvgIcon } from '@/components/SvgIcon'
 import { ROUTE_NAMES } from '@/constants/routes'
 import { useExecuteDetail, type ExecuteInfo } from '@/hooks/useExecuteDetail'
-import { Button, Dropdown, InfoBox, Message, Popover } from 'bkui-vue'
+import { Button, InfoBox, Message, Popover } from 'bkui-vue'
 import { computed, defineComponent, h, ref, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -24,8 +24,7 @@ export default defineComponent({
     const projectId = computed(() => route.params.projectId as string)
     const flowId = computed(() => route.params.flowId as string)
     const btnLoading = ref(false)
-    const isDropdownShow = ref(false)
-    const { flowInfo, isRunning, isDebugExec, stopExecute, silentRefreshExecuteDetail, requestRePlayFlow, requestRetryFlow } =
+    const { flowInfo, isRunning, isDebugExec, stopExecute, silentRefreshExecuteDetail, requestRePlayFlow } =
       useExecuteDetail()
     const isCurPipelineLocked = computed(() => flowInfo.value?.locked)
 
@@ -60,10 +59,8 @@ export default defineComponent({
       }
     }
 
-    const retry = async (type = 'reBuild', buildId: string, forceTrigger = false) => {
-      const retryFn = type === 'reBuild' ? requestRetryFlow : requestRePlayFlow
-      // 请求执行构建
-      const res = await retryFn({
+    const retry = async (buildId: string, forceTrigger = false) => {
+      const res = await requestRePlayFlow({
         projectId: projectId.value,
         pipelineId: flowId.value,
         buildId,
@@ -80,10 +77,6 @@ export default defineComponent({
         const query: Record<string, any> = {
           ...route.query,
           executeCount: undefined,
-        }
-
-        if (type === 'reBuild' && 'executeCount' in res) {
-          query.executeCount = String(res.executeCount)
         }
 
         router.push({
@@ -105,7 +98,7 @@ export default defineComponent({
           onConfirm: async () => {
             try {
               btnLoading.value = true
-              await retry('rePlay', buildId, true)
+              await retry(buildId, true)
               return true
             } catch (err) {
               btnLoading.value = false
@@ -117,15 +110,9 @@ export default defineComponent({
       }
     }
 
-    // 重新构建
-    const handleClick = (type = 'reBuild') => {
-      isDropdownShow.value = false
-      const title =
-        type === 'reBuild'
-          ? t('flow.execute.reBuildConfirmTips')
-          : t('flow.execute.rePlayConfirmTips')
+    const handleReplayClick = () => {
       InfoBox({
-        title,
+        title: t('flow.execute.rePlayConfirmTips'),
         width: 500,
         contentAlign: 'left',
         cancelText: t('flow.common.cancel'),
@@ -139,14 +126,12 @@ export default defineComponent({
               lineHeight: '20px',
             },
           },
-          type === 'reBuild'
-            ? [h('p', t('flow.execute.reBuildInfo1')), h('p', t('flow.execute.reBuildInfo2'))]
-            : [h('p', t('flow.execute.rePlayInfo1')), h('p', t('flow.execute.rePlayInfo2'))],
+          [h('p', t('flow.execute.rePlayInfo1')), h('p', t('flow.execute.rePlayInfo2'))],
         ),
         onConfirm: async () => {
           try {
             btnLoading.value = true
-            await retry(type, props.executeInfo?.id)
+            await retry(props.executeInfo?.id)
             return true
           } catch (err) {
             console.log('error:', err)
@@ -203,70 +188,40 @@ export default defineComponent({
             actions: () => (
               <>
                 {!isDebugExec.value ? (
-                  <Dropdown
-                    isShow={isDropdownShow.value}
-                    onShowChange={(val: boolean) => { isDropdownShow.value = val }}
-                    trigger="click"
-                    disabled={btnLoading.value || isCurPipelineLocked.value}
-                  >
-                    {{
-                      default: () => (
-                        <div class={styles.rebuildDropdownTrigger}>
-                          {btnLoading.value && (
-                            <SvgIcon name="circle-2-1" class={['spinIcon', styles.spin]} />
-                          )}
-                          <span>{t('flow.execute.reBuild')}</span>
-                          <SvgIcon name="angle-down" />
-                        </div>
-                      ),
-                      content: () => (
-                        <ul class={styles.rebuildDropdownContent}>
-                          <li
-                            class={[
-                              styles.dropdownItem,
-                              btnLoading.value || isCurPipelineLocked.value ? styles.disabled : '',
-                            ]}
-                            onClick={() => handleClick('reBuild')}
-                          >
-                            {t('flow.execute.reBuild')}
-                            <Popover zIndex={999999} width={300} placement="right">
-                              {{
-                                default: () => <SvgIcon name="info-line" class={styles.infoIcon} />,
-                                content: () => (
-                                  <>
-                                    <p>{t('flow.execute.reBuildTips1')}</p>
-                                    <p>{t('flow.execute.reBuildTips2')}</p>
-                                    <p>{t('flow.execute.reBuildTips3')}</p>
-                                  </>
-                                ),
-                              }}
-                            </Popover>
-                          </li>
-                          <li
-                            class={[
-                              styles.dropdownItem,
-                              btnLoading.value || isCurPipelineLocked.value ? styles.disabled : '',
-                            ]}
-                            onClick={() => handleClick('rePlay')}
-                          >
-                            {t('flow.execute.rePlay')}
-                            <Popover zIndex={999999} width={300} placement="right">
-                              {{
-                                default: () => <SvgIcon name="info-line" class={styles.infoIcon} />,
-                                content: () => (
-                                  <>
-                                    <p>{t('flow.execute.rePlayTips1')}</p>
-                                    <p>{t('flow.execute.rePlayTips2')}</p>
-                                    <p>{t('flow.execute.rePlayTips3')}</p>
-                                  </>
-                                ),
-                              }}
-                            </Popover>
-                          </li>
-                        </ul>
-                      ),
+                  <div
+                    class={[
+                      styles.replayTrigger,
+                      btnLoading.value || isCurPipelineLocked.value ? styles.replayTriggerDisabled : '',
+                    ]}
+                    onClick={() => {
+                      if (btnLoading.value || isCurPipelineLocked.value) return
+                      handleReplayClick()
                     }}
-                  </Dropdown>
+                  >
+                    {btnLoading.value && (
+                      <SvgIcon name="circle-2-1" class={['spinIcon', styles.spin]} />
+                    )}
+                    <span>{t('flow.execute.rePlay')}</span>
+                    <Popover zIndex={999999} width={300} placement="right">
+                      {{
+                        default: () => (
+                          <span
+                            class={styles.replayInfoWrap}
+                            onClick={(e: MouseEvent) => e.stopPropagation()}
+                          >
+                            <SvgIcon name="info-line" class={styles.infoIcon} />
+                          </span>
+                        ),
+                        content: () => (
+                          <>
+                            <p>{t('flow.execute.rePlayTips1')}</p>
+                            <p>{t('flow.execute.rePlayTips2')}</p>
+                            <p>{t('flow.execute.rePlayTips3')}</p>
+                          </>
+                        ),
+                      }}
+                    </Popover>
+                  </div>
                 ) : null}
                 {isRunning.value ? (
                   <Button onClick={handleCancel} outline theme="warning" loading={btnLoading.value}>
