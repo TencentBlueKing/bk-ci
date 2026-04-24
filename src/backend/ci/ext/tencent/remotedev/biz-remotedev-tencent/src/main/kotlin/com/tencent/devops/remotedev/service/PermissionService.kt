@@ -57,17 +57,16 @@ import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
-import java.net.URLEncoder
-import java.util.Base64
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Executor
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.net.URLEncoder
+import java.util.Base64
+import java.util.concurrent.Executor
+import java.util.concurrent.TimeUnit
 
 @Service
 class PermissionService @Autowired constructor(
@@ -247,19 +246,12 @@ class PermissionService @Autowired constructor(
     }
 
     fun checkUserManager(userId: String, projectId: String) {
-        val managersFuture = CompletableFuture.supplyAsync({
-            projectManagerCache.get(projectId)
-        }, ioExecutor)
-        val checkFuture = CompletableFuture.supplyAsync({
-            client.get(ServiceProjectAuthResource::class).checkProjectManager(
-                token = checkTokenService.getSystemToken(),
-                userId = userId,
-                projectCode = projectId
-            ).data ?: false
-        }, ioExecutor)
-        CompletableFuture.allOf(managersFuture, checkFuture).join()
-        val managers = managersFuture.get()
-        val checkProjectManager = checkFuture.get()
+        val managers = projectManagerCache.get(projectId)
+        val checkProjectManager = client.get(ServiceProjectAuthResource::class).checkProjectManager(
+            token = checkTokenService.getSystemToken(),
+            userId = userId,
+            projectCode = projectId
+        ).data ?: false
 
         if (!checkProjectManager && userId !in managers) {
             throw ErrorCodeException(
