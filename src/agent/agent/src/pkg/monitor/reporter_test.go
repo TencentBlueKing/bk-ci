@@ -47,24 +47,24 @@ func TestReporter_EncodeJSON_BasicShape(t *testing.T) {
 		t.Fatalf("encodeJSON: %v", err)
 	}
 
-	var got []metricJSON
+	var got metricsEnvelope
 	if err := json.Unmarshal(data, &got); err != nil {
 		t.Fatalf("unmarshal: %v", err)
 	}
-	if len(got) != 1 {
-		t.Fatalf("want 1 entry, got %d", len(got))
+	if len(got.Metrics) != 1 {
+		t.Fatalf("want 1 entry, got %d", len(got.Metrics))
 	}
-	if got[0].Name != MeasurementMem {
-		t.Errorf("name = %q", got[0].Name)
+	if got.Metrics[0].Name != MeasurementMem {
+		t.Errorf("name = %q", got.Metrics[0].Name)
 	}
-	if got[0].Timestamp != fixedNow.Unix() {
-		t.Errorf("timestamp = %d, want %d", got[0].Timestamp, fixedNow.Unix())
+	if got.Metrics[0].Timestamp != fixedNow.Unix() {
+		t.Errorf("timestamp = %d, want %d", got.Metrics[0].Timestamp, fixedNow.Unix())
 	}
-	if got[0].Tags[TagHost] != "h1" {
+	if got.Metrics[0].Tags[TagHost] != "h1" {
 		t.Errorf("tag host missing")
 	}
-	if v, _ := got[0].Fields[RenamedFieldPctUsed].(float64); v != 42.5 {
-		t.Errorf("pct_used = %v", got[0].Fields[RenamedFieldPctUsed])
+	if v, _ := got.Metrics[0].Fields[RenamedFieldPctUsed].(float64); v != 42.5 {
+		t.Errorf("pct_used = %v", got.Metrics[0].Fields[RenamedFieldPctUsed])
 	}
 }
 
@@ -77,10 +77,10 @@ func TestReporter_EncodeJSON_ZeroTimestampFallsBackToNow(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var got []metricJSON
+	var got metricsEnvelope
 	_ = json.Unmarshal(data, &got)
-	if got[0].Timestamp != fixedNow.Unix() {
-		t.Errorf("zero ts should fall back to nowFn, got %d", got[0].Timestamp)
+	if got.Metrics[0].Timestamp != fixedNow.Unix() {
+		t.Errorf("zero ts should fall back to nowFn, got %d", got.Metrics[0].Timestamp)
 	}
 }
 
@@ -91,10 +91,10 @@ func TestReporter_EncodeJSON_EmptyFieldsSkipped(t *testing.T) {
 		{Name: "b", Fields: map[string]interface{}{}},
 		{Name: "c", Fields: map[string]interface{}{"x": 1.0}},
 	})
-	var got []metricJSON
+	var got metricsEnvelope
 	_ = json.Unmarshal(data, &got)
-	if len(got) != 1 || got[0].Name != "c" {
-		t.Errorf("should skip empty-field metrics, got %v", got)
+	if len(got.Metrics) != 1 || got.Metrics[0].Name != "c" {
+		t.Errorf("should skip empty-field metrics, got %v", got.Metrics)
 	}
 }
 
@@ -192,10 +192,13 @@ func TestReporter_Report_PostCIProjectJSON(t *testing.T) {
 			t.Errorf("missing header %q, have %v", k, capturedHeaders)
 		}
 	}
-	// body 合法 JSON 数组
-	var entries []metricJSON
-	if err := json.Unmarshal(capturedBody, &entries); err != nil {
-		t.Errorf("body not JSON array: %v, body=%s", err, string(capturedBody))
+	// body 合法 JSON 对象 {"metrics":[...]}（对齐后端 TelegrafMulData）
+	var env metricsEnvelope
+	if err := json.Unmarshal(capturedBody, &env); err != nil {
+		t.Errorf("body not JSON envelope: %v, body=%s", err, string(capturedBody))
+	}
+	if len(env.Metrics) != 1 || env.Metrics[0].Name != MeasurementCPU {
+		t.Errorf("envelope.metrics unexpected: %+v", env.Metrics)
 	}
 }
 
