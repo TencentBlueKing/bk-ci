@@ -145,7 +145,8 @@ class PipelineYamlService(
         commitTime: LocalDateTime,
         ref: String,
         version: Int,
-        resourceType: YamlResourceType
+        resourceType: YamlResourceType,
+        oldFilePath: String? = null
     ) {
         val id = client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_YAML_VERSION_BIZ_ID).data ?: 0
         dslContext.transaction { configuration ->
@@ -160,7 +161,8 @@ class PipelineYamlService(
                 pipelineId = pipelineId,
                 status = status,
                 userId = userId,
-                resourceType = resourceType
+                resourceType = resourceType,
+                oldFilePath = oldFilePath
             )
             pipelineYamlVersionDao.save(
                 dslContext = transactionContext,
@@ -361,16 +363,34 @@ class PipelineYamlService(
         }
     }
 
+    /**
+     * 获取 YAML 绑定记录。
+     *
+     * @param includeOldFilePath 是否包含旧路径（重命名前的 OLD_FILE_PATH）。
+     *  - false（默认）：仅按 FILE_PATH 精确匹配
+     *  - true：先按 FILE_PATH 查找，未命中再按 OLD_FILE_PATH 回退一次（不递归）。
+     *    用于重命名后，其他分支仍使用旧文件路径推送时，能够命中重命名后的记录并关联到原流水线。
+     */
     fun getPipelineYamlInfo(
         projectId: String,
         repoHashId: String,
-        filePath: String
+        filePath: String,
+        includeOldFilePath: Boolean = false
     ): PipelineYamlInfo? {
-        return pipelineYamlInfoDao.get(
+        val pipelineYamlInfo = pipelineYamlInfoDao.get(
             dslContext = dslContext,
             projectId = projectId,
             repoHashId = repoHashId,
             filePath = filePath
+        )
+        if (pipelineYamlInfo != null || !includeOldFilePath) {
+            return pipelineYamlInfo
+        }
+        return pipelineYamlInfoDao.getByOldFilePath(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            oldFilePath = filePath
         )
     }
 
@@ -614,6 +634,110 @@ class PipelineYamlService(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath
+            )
+        }
+    }
+
+
+    @Suppress("LongParameterList")
+    fun rename(
+        projectId: String,
+        repoHashId: String,
+        filePath: String,
+        oldFilePath: String,
+        directory: String,
+        defaultBranch: String?,
+        pipelineId: String,
+        status: String,
+        userId: String,
+        resourceType: YamlResourceType,
+        ref: String,
+        blobId: String? = null,
+        commitId: String? = null,
+        commitTime: LocalDateTime? = null,
+        version: Int? = null,
+        needCreateNewInfo: Boolean,
+        needDeleteOldInfo: Boolean,
+        needCreateVersion: Boolean
+    ) {
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            if (needCreateNewInfo) {
+                pipelineYamlInfoDao.save(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    filePath = filePath,
+                    directory = directory,
+                    defaultBranch = defaultBranch,
+                    pipelineId = pipelineId,
+                    status = status,
+                    userId = userId,
+                    resourceType = resourceType,
+                    oldFilePath = oldFilePath
+                )
+            }
+            if (needDeleteOldInfo) {
+                pipelineYamlInfoDao.delete(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    filePath = oldFilePath
+                )
+            }
+            if (needCreateVersion) {
+                val id =
+                    client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_YAML_VERSION_BIZ_ID).data ?: 0
+                pipelineYamlVersionDao.save(
+                    dslContext = transactionContext,
+                    id = id,
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    filePath = filePath,
+                    ref = ref,
+                    commitId = commitId!!,
+                    commitTime = commitTime!!,
+                    blobId = blobId!!,
+                    pipelineId = pipelineId,
+                    version = version!!,
+                    userId = userId,
+                    resourceType = resourceType
+                )
+                pipelineYamlBranchFileDao.save(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    branch = ref,
+                    filePath = filePath,
+                    commitId = commitId,
+                    blobId = blobId,
+                    commitTime = commitTime
+                )
+            }
+            if (ref == defaultBranch) {
+                pipelineYamlBranchFileDao.softDelete(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    branch = ref,
+                    filePath = oldFilePath
+                )
+            } else {
+                pipelineYamlBranchFileDao.deleteFile(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    branch = ref,
+                    filePath = oldFilePath
+                )
+            }
+            pipelineYamlVersionDao.updateBranchAction(
+                dslContext = transactionContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = oldFilePath,
+                ref = ref,
+                branchAction = BranchVersionAction.INACTIVE.name
             )
         }
     }

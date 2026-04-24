@@ -52,7 +52,8 @@ class PipelineYamlInfoDao {
         status: String,
         defaultBranch: String?,
         userId: String,
-        resourceType: YamlResourceType
+        resourceType: YamlResourceType,
+        oldFilePath: String? = null
     ) {
         val now = LocalDateTime.now()
         with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
@@ -70,7 +71,8 @@ class PipelineYamlInfoDao {
                 CREATE_TIME,
                 UPDATE_TIME,
                 RESOURCE_ID,
-                RESOURCE_TYPE
+                RESOURCE_TYPE,
+                OLD_FILE_PATH
             ).values(
                 projectId,
                 repoHashId,
@@ -84,7 +86,8 @@ class PipelineYamlInfoDao {
                 now,
                 now,
                 pipelineId,
-                resourceType.name
+                resourceType.name,
+                oldFilePath
             ).onDuplicateKeyIgnore()
                 .execute()
         }
@@ -139,6 +142,28 @@ class PipelineYamlInfoDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(FILE_PATH.eq(filePath))
+                .fetchOne()
+            return record?.let { convert(it) }
+        }
+    }
+
+    /**
+     * 通过 OLD_FILE_PATH 反向查找记录（用于重命名后，源文件路径兜底解析）。
+     * 同一代码库下理论上只有一条 OLD_FILE_PATH = oldFilePath 的记录，若存在多条取最新更新者。
+     */
+    fun getByOldFilePath(
+        dslContext: DSLContext,
+        projectId: String,
+        repoHashId: String,
+        oldFilePath: String
+    ): PipelineYamlInfo? {
+        with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
+            val record = dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPO_HASH_ID.eq(repoHashId))
+                .and(OLD_FILE_PATH.eq(oldFilePath))
+                .orderBy(UPDATE_TIME.desc())
+                .limit(1)
                 .fetchOne()
             return record?.let { convert(it) }
         }
@@ -281,7 +306,8 @@ class PipelineYamlInfoDao {
                 status = status,
                 creator = creator,
                 defaultBranch = defaultBranch,
-                resourceType = YamlResourceType.valueOf(resourceType)
+                resourceType = YamlResourceType.valueOf(resourceType),
+                oldFilePath = oldFilePath
             )
         }
     }

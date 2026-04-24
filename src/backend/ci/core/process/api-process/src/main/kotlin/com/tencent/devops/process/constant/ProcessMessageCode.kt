@@ -689,6 +689,9 @@ object ProcessMessageCode {
     // [<a href={0}>{1}</a>]更新成功,版本:{2}
     const val BK_YAML_PIPELINE_UPDATE_SUCCESS = "bkYamlPipelineUpdateSuccess"
 
+    // [<a href={0}>{1}</a>|{2}]重命名成功,{3} → {4}
+    const val BK_YAML_PIPELINE_RENAME_SUCCESS = "bkYamlPipelineRenameSuccess"
+
     // [<a href={0}>{1}</a>]删除版本成功,版本:{2}
     const val BK_YAML_PIPELINE_DELETE_VERSION_SUCCESS = "bkYamlPipelineDeleteVersionSuccess"
 
@@ -700,6 +703,9 @@ object ProcessMessageCode {
 
     // [<a href={0}>{1}</a>]更新失败
     const val BK_YAML_PIPELINE_UPDATE_FAILED = "bkYamlPipelineUpdateFailed"
+
+    // [<a href={0}>{1}</a>]重命名失败,{2} → {3}
+    const val BK_YAML_PIPELINE_RENAME_FAILED = "bkYamlPipelineRenameFailed"
 
     // [<a href={0}>{1}</a>]更新失败
     const val BK_YAML_PIPELINE_DEPENDENCY_UPGRADE_FAILED = "bkYamlPipelineDependencyUpgradeFailed"
