@@ -240,7 +240,10 @@ export const ReleaseSlider = defineComponent({
                   </Form>
 
                   {/* 可见范围 */}
-                  <VisibleRange tableMaxHeight={360} source="release" />
+                  <div>
+                    <h4 class={styles.visibleRangeText}>{t('flow.content.visibleRange')}</h4>
+                    <VisibleRange tableMaxHeight={360} source="release" />
+                  </div>
                 </div>
               </Loading>
             ),
