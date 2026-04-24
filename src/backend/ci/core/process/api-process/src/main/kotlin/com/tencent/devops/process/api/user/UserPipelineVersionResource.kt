@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
+import com.tencent.devops.process.pojo.PipelineYamlVersionInfo
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
@@ -402,4 +403,52 @@ interface UserPipelineVersionResource {
         @Parameter(description = "流水线构建推荐版本号更新", required = true)
         buildNo: BuildNoUpdateReq
     ): Result<Boolean>
+
+    @Operation(summary = "根据分支名获取流水线指定版本的两种编排[PAC 流水线]")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/branches/{branch}")
+    fun getVersionByBranch(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "流水线编排版本", required = true)
+        @PathParam("branch")
+        branch: String,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false,
+        @Parameter(description = "请求来源", required = false)
+        @QueryParam("source")
+        source: PipelineGetVersionSource? = PipelineGetVersionSource.VIEW
+    ): Result<PipelineVersionWithModel>
+
+    @Operation(summary = "获取PAC分支版本信息")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/listPacVersions")
+    fun listPacVersions(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "查询分支", required = false)
+        @QueryParam("search")
+        search: String?,
+        @Parameter(description = "页码", required = false)
+        @QueryParam("page")
+        page: Int? = 1,
+        @Parameter(description = "每页行数", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int? = 20
+    ): Result<List<PipelineYamlVersionInfo>>
 }

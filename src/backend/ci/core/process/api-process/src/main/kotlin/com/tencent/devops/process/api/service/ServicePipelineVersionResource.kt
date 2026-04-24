@@ -43,6 +43,7 @@ import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import io.swagger.v3.oas.annotations.Operation
@@ -360,4 +361,19 @@ interface ServicePipelineVersionResource {
         @QueryParam("page")
         page: Int?
     ): Response
+
+    @Operation(summary = "根据分支名获取流水线指定版本的两种编排[PAC 流水线]")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/branches/{branch}")
+    fun getVersionByBranch(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "流水线编排版本", required = true)
+        @PathParam("branch")
+        branch: String
+    ): Result<PipelineResourceVersion?>
 }

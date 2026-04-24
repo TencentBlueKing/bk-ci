@@ -158,7 +158,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int?,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        branch: String?
     ): Result<BuildManualStartupInfo> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -169,7 +170,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 version = version,
                 channelCode = channelCode,
-                checkPermission = ChannelCode.isNeedAuth(channelCode)
+                checkPermission = ChannelCode.isNeedAuth(channelCode),
+                branch = branch
             )
         )
     }
@@ -882,7 +884,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         channelCode: ChannelCode,
         buildNo: Int?,
         startType: StartType,
-        version: Int?
+        version: Int?,
+        branch: String?
     ): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -900,7 +903,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 buildNo = buildNo,
                 version = version,
                 checkPermission = ChannelCode.isNeedAuth(channelCode),
-                frequencyLimit = true
+                frequencyLimit = true,
+                branch = branch
             )
         )
     }

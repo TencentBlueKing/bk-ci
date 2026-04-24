@@ -39,6 +39,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
@@ -51,6 +52,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileSyncReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
+import com.tencent.devops.process.service.pipeline.PipelineYamlVersionResolver
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.scm.WebhookGrayService
 import com.tencent.devops.process.webhook.WebhookEventFactory
@@ -65,6 +67,7 @@ import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
 import org.jooq.DSLContext
@@ -92,7 +95,8 @@ class PipelineYamlFacadeService @Autowired constructor(
     private val pipelineYamlViewService: PipelineYamlViewService,
     private val pipelineYamlFileManager: PipelineYamlFileManager,
     private val webhookGrayService: WebhookGrayService,
-    private val pipelineYamlCommonService: PipelineYamlCommonService
+    private val pipelineYamlCommonService: PipelineYamlCommonService,
+    private val pipelineYamlVersionResolver: PipelineYamlVersionResolver
 ) {
 
     companion object {
@@ -327,14 +331,7 @@ class PipelineYamlFacadeService @Autowired constructor(
     fun pushYamlFile(yamlFileReleaseReq: PipelineYamlFileReleaseReq): PipelineYamlFileReleaseResult {
         with(yamlFileReleaseReq) {
             logger.info("push yaml file|$userId|$projectId|$pipelineId|$repoHashId|$version|$versionName")
-            val repository = client.get(ServiceRepositoryResource::class).get(
-                projectId = projectId,
-                repositoryId = repoHashId,
-                repositoryType = RepositoryType.ID
-            ).data ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.GIT_NOT_FOUND,
-                params = arrayOf(repoHashId)
-            )
+            val repository = getRepository(projectId, repoHashId)
             // TODO 代码源灰度验证,后续需删除
             if (webhookGrayService.isPacGrayRepo(repository.getScmType(), repository.getExternalId())) {
                 return releaseYamlFile(yamlFileReleaseReq = yamlFileReleaseReq)
@@ -409,38 +406,9 @@ class PipelineYamlFacadeService @Autowired constructor(
                 versionName = versionName,
                 targetBranch = targetBranch
             )
-            val repository = client.get(ServiceRepositoryResource::class).get(
-                projectId = projectId,
-                repositoryId = repoHashId,
-                repositoryType = RepositoryType.ID
-            ).data ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.GIT_NOT_FOUND,
-                params = arrayOf(repoHashId)
-            )
+            val repository = getRepository(projectId, repoHashId)
             val authRepository = AuthRepository(repository)
-            val serverRepository = try {
-                client.get(ServiceScmRepositoryApiResource::class).getServerRepository(
-                    projectId = projectId,
-                    authRepository = authRepository
-                ).data
-            } catch (ignored: RemoteServiceException) {
-                throw when (ignored.errorCode) {
-                    // 目标仓库被删除
-                    HTTP_404 -> ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
-                        params = arrayOf(repository.projectName)
-                    )
-
-                    HTTP_401, HTTP_403 -> ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_USER_NO_PUSH_PERMISSION,
-                        params = arrayOf(repository.userName, repository.projectName)
-                    )
-
-                    else -> ignored
-                }
-            } catch (ignored: Exception) {
-                throw ignored
-            }
+            val serverRepository = getServiceRepository(projectId, repository)
             if (serverRepository !is GitScmServerRepository) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC
@@ -490,4 +458,99 @@ class PipelineYamlFacadeService @Autowired constructor(
             )
         )
     }
+
+    /**
+     * 获取pac流水线指定分支的版本信息
+     * 通过解析分支下文件md5值获取对应的版本信息
+     */
+    fun getPipelineYamlVersion(
+        projectId: String,
+        pipelineId: String,
+        branch: String,
+        yamlParams: MutableMap<String, BuildParameters> = mutableMapOf()
+    ): Int? {
+        // 不是PAC流水线
+        val yamlInfo = pipelineYamlService.getPipelineYamlInfo(
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: return null
+        return pipelineYamlVersionResolver.resolvePipelineRefVersion(
+            projectId = projectId,
+            repoHashId = yamlInfo.repoHashId,
+            filePath = yamlInfo.filePath,
+            ref = branch
+        ).let {
+            // 记录当前分支信息
+            yamlParams[BK_REPO_GIT_WEBHOOK_BRANCH] = BuildParameters(key = BK_REPO_GIT_WEBHOOK_BRANCH, value = branch)
+            it
+        }
+    }
+
+    /**
+     * 获取代码库关联信息
+     */
+    fun getRepository(projectId: String, repoHashId: String): Repository {
+        return client.get(ServiceRepositoryResource::class).get(
+            projectId = projectId,
+            repositoryType = RepositoryType.ID,
+            repositoryId = repoHashId
+        ).data ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.GIT_NOT_FOUND,
+            params = arrayOf(repoHashId)
+        )
+    }
+
+    fun getServiceRepository(
+        projectId: String,
+        repository: Repository
+    ) = try {
+        client.get(ServiceScmRepositoryApiResource::class).getServerRepository(
+            projectId = projectId,
+            authRepository = AuthRepository(repository)
+        ).data
+    } catch (ignored: RemoteServiceException) {
+        throw when (ignored.errorCode) {
+            // 目标仓库被删除
+            HTTP_404 -> ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
+                params = arrayOf(repository.projectName)
+            )
+
+            HTTP_401, HTTP_403 -> ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_USER_NO_PUSH_PERMISSION,
+                params = arrayOf(repository.userName, repository.projectName)
+            )
+
+            else -> ignored
+        }
+    } catch (ignored: Exception) {
+        throw ignored
+    }
+
+    fun getServiceBranch(
+        projectId: String,
+        repository: Repository,
+        page: Int,
+        pageSize: Int,
+        search: String?
+    ) = try {
+        client.get(ServiceScmRepositoryApiResource::class).listBranches(
+            projectId = projectId,
+            authRepository = AuthRepository(repository),
+            page = page,
+            pageSize = pageSize,
+            search = search
+        ).data
+    } catch (ignored: Exception) {
+        logger.warn("failed to get service branch", ignored)
+        null
+    }
+
+    fun getPipelineYamlInfo(
+        projectId: String,
+        pipelineId: String
+    ) = pipelineYamlService.getPipelineYamlInfo(
+        projectId = projectId,
+        pipelineId = pipelineId
+    )
 }

@@ -536,7 +536,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
                 commitMessage = pipelineResourceWithoutVersion.description
                     ?: "update template ${pipelineBasicInfo.pipelineName}",
                 targetAction = targetAction!!,
-                targetBranch = branchName,
+                targetBranch = targetBranch,
                 source = source,
                 templateName = templateInstanceBasicInfo?.templateName
             )

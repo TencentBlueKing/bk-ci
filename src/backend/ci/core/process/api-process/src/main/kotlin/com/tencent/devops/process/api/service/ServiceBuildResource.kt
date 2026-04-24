@@ -197,7 +197,10 @@ interface ServiceBuildResource {
         version: Int? = null,
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        @Parameter(description = "分支版本, 仅PAC流水线有效", required = false)
+        @QueryParam("branch")
+        branch: String? = null
     ): Result<BuildManualStartupInfo>
 
     @Operation(summary = "搜索流水线参数")
@@ -957,7 +960,10 @@ interface ServiceBuildResource {
         startType: StartType,
         @Parameter(description = "指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        version: Int? = null
+        version: Int? = null,
+        @Parameter(description = "分支版本, 仅PAC流水线有效, 此参数和version同时存在时, 优先使用version参数", required = false)
+        @QueryParam("branch")
+        branch: String? = null
     ): Result<BuildId>
 
     @Operation(summary = "取消并发起新构建")
