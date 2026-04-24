@@ -30,16 +30,31 @@ package com.tencent.devops.environment.task
 import com.tencent.devops.environment.service.RedisLockService
 import com.tencent.devops.environment.service.sync.UpdateCmdbNodeService
 import com.tencent.devops.environment.service.sync.UpdateGseAgentInfoService
+import jakarta.annotation.PostConstruct
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Primary
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 
 /**
- * 后台自动调度执行的任务汇总
+ * 后台自动调度执行的任务汇总，默认开启
+ *
+ * 通过配置 environment.schedule.enabled=false 可禁用所有定时任务。
+ * 背景：多个集群（可能共享同一个 MySQL 和 Redis 实例，但各集群配置了不同的
+ * spring.redis.name，导致 Redis 分布式锁的 key 带有不同前缀，
+ * 无法跨集群互斥。而这些定时任务都在操作同一个 MySQL 的 T_NODE / T_PROJECT_JOB 表，并且会调用 CMDB、CC、
+ * GSE 等外部 API，多集群并行执行会导致重复写表和重复调用外部 API。因此需要通过配置开关确保只在一个集群中启用。
  */
 @Service("ScheduledTasks")
 @Primary
+@ConditionalOnProperty(
+    prefix = "environment.schedule",
+    name = ["enabled"],
+    havingValue = "true",
+    matchIfMissing = true
+)
 class ScheduledTasks @Autowired constructor(
     private val updateGseAgentInfoService: UpdateGseAgentInfoService,
     private val redisLockService: RedisLockService,
@@ -47,9 +62,15 @@ class ScheduledTasks @Autowired constructor(
     private val updateCmdbNodeService: UpdateCmdbNodeService
 ) {
     companion object {
+        private val logger = LoggerFactory.getLogger(ScheduledTasks::class.java)
         private const val SCHEDULED_CHECK_NODES_TIMEOUT_LOCK_KEY = "scheduled_check_nodes_timeout_lock"
         private const val SCHEDULED_UPDATE_GSE_AGENT_TIMEOUT_LOCK_KEY = "scheduled_update_gse_agent_timeout_lock"
         private const val CLEAR_EXPIRED_JOB_TASK_TIMEOUT_LOCK_KEY = "clear_expired_job_task_timeout_lock"
+    }
+
+    @PostConstruct
+    fun init() {
+        logger.info("[environment ScheduledTasks]Register success.")
     }
 
     /**
@@ -67,6 +88,7 @@ class ScheduledTasks @Autowired constructor(
     /**
      * 后台定时更新机器的CMDB信息（状态与属性等）
      * cron：默认每10分钟执行一次，0 7/10 * * * ?
+     * 因为需要调用外部API，所以各环境定时时间错开防止接口429
      */
     @Scheduled(cron = "\${environment.schedule.updateCmdbNode:0 7/10 * * * ?}")
     fun scheduledUpdateCmdbNodeInfo() {
