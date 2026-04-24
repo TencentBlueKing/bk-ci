@@ -159,7 +159,7 @@ class PipelineWebhookDao {
                 projectName = projectName,
                 taskId = taskId,
                 repositoryHashId = repositoryHashId,
-                repoResourceType = repoResourceType?.let{
+                repoResourceType = repoResourceType?.let {
                     RepoResourceType.valueOf(it)
                 }
             )

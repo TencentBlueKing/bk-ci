@@ -27,7 +27,7 @@
 
 package com.tencent.devops.repository.pojo.enums
 
-enum class RepoResourceType{
+enum class RepoResourceType {
     // 单个仓库
     REPOSITORY,
     // 仓库组（包含多个仓库）

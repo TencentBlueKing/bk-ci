@@ -418,7 +418,6 @@ class CodeGitScmImpl constructor(
         )
     }
 
-
     override fun getProjectGroupInfo(groupName: String, includeSubgroups: Boolean?): GitProjectGroupInfo? {
         return gitApi.getProjectGroupInfo(
             host = apiUrl,

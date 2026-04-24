@@ -367,7 +367,6 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     comment = git.includeNoteComment?.disjoin()
                 )
 
-
                 CodeEventType.GROUP -> nowExist.group = GroupRule(
                     id = git.id,
                     name = git.name.nullIfDefault(defaultName),

@@ -38,23 +38,23 @@ data class GitGroup(
 data class GitProjectAttributes(
     @JsonProperty("project_id")
     val projectId: Int, // 项目ID
-    
+
     @JsonProperty("visibility_level")
     val visibilityLevel: Int, // 可见性级别（10 通常表示私有）
-    
+
     @JsonProperty("project_type")
     val projectType: String, // 项目类型（如 "GIT"）
-    
+
     @JsonProperty("created_at")
     val createdAt: OffsetDateTime, // 创建时间（带时区）
-    
+
     @JsonProperty("updated_at")
     val updatedAt: OffsetDateTime, // 更新时间（带时区）
-    
+
     val name: String, // 项目名称
-    
+
     val path: String, // 项目路径
-    
+
     @JsonProperty("path_with_namespace")
     val pathWithNamespace: String, // 项目带命名空间的完整路径
 
