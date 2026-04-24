@@ -607,9 +607,6 @@ class ProjectNotifyService constructor(
         productId: Int?,
         productName: String?
     ) {
-        // todo
-        // val isSendEmail = redisOperation.get(IS_SEND_EMAIL_FLAG)?.toBoolean() ?: true
-        // if (!isSendEmail) return
         val traceId = MDC.get(TraceTag.BIZID)
         projectNotifyThreadPool.submit {
             MDC.put(TraceTag.BIZID, traceId)
@@ -644,10 +641,10 @@ class ProjectNotifyService constructor(
         logger.info("doSendEmailForKpiCodeChange start|project=$englishName|operator=$userId|kpiCode=$kpiCode")
 
         val receivers = mutableSetOf<String>()
-
         val kpiProducts = projectOperationalProductService.getKpiProducts()
-
         val kpiProduct = kpiProducts.firstOrNull { it.kpiCode == kpiCode }
+
+        // kpi负责人
         if (kpiProduct != null) {
             logger.info(
                 "doSendEmailForKpiCodeChange|found kpi product|kpiCode=$kpiCode|principal=${kpiProduct.principal}"
@@ -656,7 +653,7 @@ class ProjectNotifyService constructor(
                 .split(";")
                 .map { it.trim() }
                 .filter { it.isNotBlank() }
-            // receivers.addAll(principals)
+            receivers.addAll(principals)
             logger.info(
                 "doSendEmailForKpiCodeChange|add principals to receivers " +
                         "|kpiCode=$kpiCode|kpiName=$kpiName|principals=$principals"
@@ -667,26 +664,24 @@ class ProjectNotifyService constructor(
                         "kpiCode=$kpiCode"
             )
         }
-
+        // 上级
         val leader = getOperatorLeader(userId)
         if (leader != null) {
-            // receivers.add(leader)
-            logger.info(
-                "doSendEmailForKpiCodeChange|add operator leader|operator=$userId|leader=$leader"
-            )
+            receivers.add(leader)
+            logger.info("doSendEmailForKpiCodeChange|add operator leader|operator=$userId|leader=$leader")
         } else {
             logger.warn(
                 "doSendEmailForKpiCodeChange|operator leader not found|operator=$userId"
             )
         }
 
-        /*if (receivers.isEmpty()) {
+        if (receivers.isEmpty()) {
             logger.warn(
                 "doSendEmailForKpiCodeChange|no receivers, skip sending|" +
-                    "project=$englishName|kpiCode=$kpiCode"
+                        "project=$englishName|kpiCode=$kpiCode"
             )
             return
-        }*/
+        }
 
         val cc = mutableSetOf(userId)
         val fixedCc = kpiChangeFixedCc
@@ -712,22 +707,25 @@ class ProjectNotifyService constructor(
             "kpiDisplay" to kpiDisplay
         )
         logger.debug("doSendEmailForKpiCodeChange|bodyParams|{}", bodyParams)
-
-        val request = SendNotifyMessageTemplateRequest(
-            templateCode = KPI_CODE_CHANGE_NOTIFY_TEMPLATE,
-            bodyParams = bodyParams,
-            notifyType = mutableSetOf(NotifyType.EMAIL.name, NotifyType.RTX.name),
-            // todo 到时候得改成receivers
-            receivers = cc,
-            cc = cc
-        )
-
         logger.info(
             "doSendEmailForKpiCodeChange|sending notification|" +
                     "project=$englishName|kpiCode=$kpiCode|" +
                     "receivers=$receivers|cc=$cc|" +
                     "template=$KPI_CODE_CHANGE_NOTIFY_TEMPLATE"
         )
+
+
+        val isSendEmail = redisOperation.get(IS_SEND_EMAIL_FLAG)?.toBoolean() ?: true
+        if (!isSendEmail) return
+
+        val request = SendNotifyMessageTemplateRequest(
+            templateCode = KPI_CODE_CHANGE_NOTIFY_TEMPLATE,
+            bodyParams = bodyParams,
+            notifyType = mutableSetOf(NotifyType.EMAIL.name, NotifyType.RTX.name),
+            receivers = receivers,
+            cc = cc
+        )
+
         kotlin.runCatching {
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
         }.onSuccess {
