@@ -111,7 +111,8 @@ class PipelineBuildTaskService @Autowired constructor(
                         buildId = buildId,
                         projectId = projectId,
                         pipelineId = pipelineId,
-                        taskId = taskId
+                        taskId = taskId,
+                        errorMsg = buildTask.errorMsg
                     )
                 }
             } else {

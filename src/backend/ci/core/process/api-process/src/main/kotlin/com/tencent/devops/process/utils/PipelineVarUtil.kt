@@ -295,6 +295,7 @@ object PipelineVarUtil {
         "ci.create_type" to BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE,
         "ci.failed_tasks" to BK_CI_BUILD_FAIL_TASKS,
         "ci.failed_tasknames" to BK_CI_BUILD_FAIL_TASKNAMES,
+        "ci.failed_task_details" to BK_CI_BUILD_FAIL_TASK_DETAILS,
         "ci.authorizer" to BK_CI_AUTHORIZER
     )
 

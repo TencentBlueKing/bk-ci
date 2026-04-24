@@ -92,6 +92,7 @@ object PipelineBuildParamKey {
     const val CI_PIPELINE_NAME = "ci.pipeline_name"
     const val CI_WORKSPACE = "ci.workspace"
     const val CI_FAILED_TASKNAMES = "ci.failed_tasknames"
+    const val CI_FAILED_TASK_DETAILS = "ci.failed_task_details"
     const val CI_FAILED_TASKS = "ci.failed_tasks"
     const val CI_REMARK = "ci.remark"
 

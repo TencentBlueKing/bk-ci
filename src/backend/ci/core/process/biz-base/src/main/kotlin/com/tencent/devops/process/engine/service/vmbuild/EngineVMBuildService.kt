@@ -1078,7 +1078,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     else -> { // 记录错误插件信息
                         pipelineTaskService.createFailTaskVar(
                             buildId = buildId, projectId = buildInfo.projectId,
-                            pipelineId = buildInfo.pipelineId, taskId = result.taskId
+                            pipelineId = buildInfo.pipelineId, taskId = result.taskId,
+                            errorMsg = result.message
                         )
                         if (result.errorCode == ErrorCode.USER_TASK_OUTTIME_LIMIT) BuildStatus.EXEC_TIMEOUT
                         else BuildStatus.FAILED
