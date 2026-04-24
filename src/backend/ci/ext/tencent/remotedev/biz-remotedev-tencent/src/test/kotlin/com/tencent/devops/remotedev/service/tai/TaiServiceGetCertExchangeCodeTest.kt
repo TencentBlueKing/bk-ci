@@ -7,7 +7,7 @@ import com.tencent.devops.remotedev.pojo.tai.CertExchangeCodeData
 import com.tencent.devops.remotedev.pojo.tai.CertExchangeCodeReq
 import com.tencent.devops.remotedev.pojo.tai.CertExchangeCodeResp
 import io.mockk.every
-import io.mockk.mockkStatic
+import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import okhttp3.Protocol
 import okhttp3.Request
@@ -32,7 +32,7 @@ class TaiServiceGetCertExchangeCodeTest {
         setField(taiService, "taiPassid", "test-paasid")
         setField(taiService, "taiToken", "test-token")
 
-        mockkStatic(OkhttpUtils::class)
+        mockkObject(OkhttpUtils)
     }
 
     @AfterEach
