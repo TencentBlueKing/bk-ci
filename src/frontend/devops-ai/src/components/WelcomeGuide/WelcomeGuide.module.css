@@ -1,0 +1,163 @@
+.formDialogBody {
+  padding: 8px 4px 0;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.root {
+  flex: 1;
+  padding: 32px 32px 0;
+  margin-bottom: 32px;
+  background: var(--chat-bg-surface);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+
+  :global(.bk-collapse-content) {
+    padding: 12px;
+  }
+}
+
+.banner {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.bannerImg {
+  width: 240px;
+  height: auto;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--chat-text-primary);
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--chat-text-placeholder);
+  text-align: center;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+.content {
+  width: 100%;
+  min-height: 120px;
+}
+
+.capabilities {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.panelDesc {
+  font-size: 14px;
+  color: var(--chat-text-secondary);
+  line-height: 1.6;
+  margin-bottom: 12px;
+  padding-left: 2px;
+}
+
+.panelActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.actionBtn {
+  border-radius: 18px !important;
+  white-space: nowrap;
+}
+
+.actionBtnIcon {
+  margin-left: 4px;
+  opacity: 0.6;
+}
+
+/* Suggestions section */
+
+.askSection {
+  width: 100%;
+  margin-top: 4px;
+  margin-bottom: 20px;
+}
+
+.askLabel {
+  font-size: 14px;
+  color: var(--chat-text-placeholder);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.refreshBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--chat-text-placeholder);
+  transition: color 0.2s;
+}
+
+.refreshBtn:hover {
+  color: var(--chat-primary-color);
+}
+
+.isSpinning {
+  pointer-events: none;
+  cursor: default;
+  opacity: 0.6;
+}
+
+.isSpinning svg {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.suggestionCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: var(--chat-bg-page);
+  border-radius: var(--chat-border-radius);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  color: var(--chat-text-primary);
+  border: 1px solid transparent;
+}
+
+.suggestionCard:hover {
+  background: var(--chat-primary-active-bg);
+  border-color: var(--chat-primary-border);
+  color: var(--chat-primary-color);
+}
+
+.suggestionCard svg {
+  flex-shrink: 0;
+  color: var(--chat-text-disabled);
+  transition: color 0.2s;
+}
+
+.suggestionCard:hover svg {
+  color: var(--chat-primary-color);
+}

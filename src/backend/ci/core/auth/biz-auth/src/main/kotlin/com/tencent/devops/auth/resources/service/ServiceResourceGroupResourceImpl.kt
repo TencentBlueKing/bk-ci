@@ -1,8 +1,10 @@
 package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServiceResourceGroupResource
+import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.auth.pojo.dto.GroupAddDTO
+import com.tencent.devops.auth.pojo.dto.IamGroupIdsQueryConditionDTO
 import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
@@ -13,12 +15,15 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.web.RestResource
+import org.jooq.DSLContext
 
 @RestResource
 class ServiceResourceGroupResourceImpl(
+    val dslContext: DSLContext,
     val permissionResourceGroupService: PermissionResourceGroupService,
     val resourceGroupPermissionService: PermissionResourceGroupPermissionService,
-    val permissionManageFacadeService: PermissionManageFacadeService
+    val permissionManageFacadeService: PermissionManageFacadeService,
+    val authResourceGroupDao: AuthResourceGroupDao
 ) : ServiceResourceGroupResource {
     override fun getGroupPermissionDetail(
         projectCode: String,
@@ -133,6 +138,42 @@ class ServiceResourceGroupResourceImpl(
                 resourceCode = resourceCode,
                 groupCode = groupCode
             )
+        )
+    }
+
+    override fun listGroupsByConditions(
+        condition: IamGroupIdsQueryConditionDTO
+    ): Result<List<AuthResourceGroup>> {
+        // 先获取组ID列表
+        val iamGroupIds = permissionManageFacadeService.listIamGroupIdsByConditions(condition)
+        if (iamGroupIds.isEmpty()) {
+            return Result(emptyList())
+        }
+        // 根据组ID列表查询详情
+        val records = authResourceGroupDao.listByRelationId(
+            dslContext = dslContext,
+            projectCode = condition.projectCode,
+            iamGroupIds = iamGroupIds.map { it.toString() }
+        )
+        return Result(
+            records.map {
+                AuthResourceGroup(
+                    id = it.id,
+                    projectCode = it.projectCode,
+                    resourceType = it.resourceType,
+                    resourceCode = it.resourceCode,
+                    resourceName = it.resourceName,
+                    iamResourceCode = it.iamResourceCode,
+                    groupCode = it.groupCode,
+                    groupName = it.groupName,
+                    defaultGroup = it.defaultGroup,
+                    relationId = it.relationId.toInt(),
+                    createTime = it.createTime,
+                    updateTime = it.updateTime,
+                    description = it.description,
+                    iamTemplateId = it.iamTemplateId
+                )
+            }
         )
     }
 }

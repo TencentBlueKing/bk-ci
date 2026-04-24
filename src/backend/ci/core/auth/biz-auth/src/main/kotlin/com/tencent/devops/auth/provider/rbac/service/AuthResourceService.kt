@@ -386,4 +386,56 @@ class AuthResourceService @Autowired constructor(
             creator = creator
         ).map { authResourceDao.convert(it) }
     }
+
+    /**
+     * 根据资源名称精确查询资源
+     * @return 资源信息，如果未找到返回 null，如果存在多个同名资源抛出异常
+     */
+    fun getByResourceName(
+        projectCode: String,
+        resourceType: String,
+        resourceName: String
+    ): AuthResourceInfo? {
+        val records = authResourceDao.getByResourceName(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceName = resourceName
+        )
+        return when {
+            records.isEmpty() -> null
+            records.size == 1 -> authResourceDao.convert(records.first())
+            else -> throw ErrorCodeException(
+                errorCode = AuthMessageCode.ERROR_DUPLICATE_RESOURCE_NAME,
+                params = arrayOf(resourceName),
+                defaultMessage = "Multiple resources found with name: $resourceName"
+            )
+        }
+    }
+
+    /**
+     * 根据资源code精确查询资源
+     * @return 资源信息，如果未找到返回 null，如果存在多个资源抛出异常
+     */
+    fun getByResourceCode(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): AuthResourceInfo? {
+        val records = authResourceDao.getByResourceCode(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+        return when {
+            records.isEmpty() -> null
+            records.size == 1 -> authResourceDao.convert(records.first())
+            else -> throw ErrorCodeException(
+                errorCode = AuthMessageCode.ERROR_DUPLICATE_RESOURCE_NAME,
+                params = arrayOf(resourceCode),
+                defaultMessage = "Multiple resources found with code: $resourceCode"
+            )
+        }
+    }
 }
