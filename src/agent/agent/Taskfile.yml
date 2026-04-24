@@ -82,6 +82,7 @@ tasks:
     internal: true
     run: once
     cmds:
+      - task: clean
       - cmd: '{{if eq OS "windows"}}cmd /c "if not exist bin mkdir bin"{{else}}mkdir -p bin{{end}}'
         silent: true
 
@@ -90,7 +91,6 @@ tasks:
     desc: "清理 bin 目录"
     cmds:
       - cmd: '{{if eq OS "windows"}}cmd /c "if exist bin rd /s /q bin"{{else}}rm -rf bin{{end}}'
-      - task: _prepare
 
   # ── 测试 ──────────────────────────────────────────────────────────────
   test:
