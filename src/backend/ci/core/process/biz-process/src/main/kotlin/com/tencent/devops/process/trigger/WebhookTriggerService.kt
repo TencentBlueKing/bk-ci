@@ -30,6 +30,7 @@ package com.tencent.devops.process.trigger
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
@@ -38,6 +39,7 @@ import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
+import com.tencent.devops.repository.pojo.enums.RepoResourceType
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -78,7 +80,12 @@ class WebhookTriggerService(
             name = matcher.getRepoName(),
             repositoryType = scmType,
             yamlPipelineIds = yamlPipelineIds,
-            compatibilityRepoNames = matcher.getCompatibilityRepoName()
+            compatibilityRepoNames = matcher.getCompatibilityRepoName(),
+            repoResourceType = if (triggerEvent.eventType == CodeEventType.GROUP.name) {
+                RepoResourceType.REPOSITORY_GROUP
+            } else {
+                RepoResourceType.REPOSITORY
+            }
         )
         pipelineBuildWebhookService.dispatchTriggerPipelines(
             matcher = matcher,
@@ -131,7 +138,12 @@ class WebhookTriggerService(
                 pipelineWebhookService.listTriggerPipeline(
                     projectId = projectId,
                     repositoryHashId = triggerEvent.eventSource!!,
-                    eventType = triggerEvent.eventType
+                    eventType = triggerEvent.eventType,
+                    repoResourceType = if (triggerEvent.eventType == CodeEventType.GROUP.name) {
+                        RepoResourceType.REPOSITORY_GROUP
+                    } else {
+                        RepoResourceType.REPOSITORY
+                    }
                 )
             }
         }

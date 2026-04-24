@@ -46,6 +46,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketCheckImageEl
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGroupWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -95,7 +96,11 @@ import org.json.JSONObject
     JsonSubTypes.Type(value = CodeP4WebHookTriggerElement::class, name = CodeP4WebHookTriggerElement.classType),
     JsonSubTypes.Type(value = CodeScmGitWebHookTriggerElement::class, name = CodeScmGitWebHookTriggerElement.classType),
     JsonSubTypes.Type(value = CodeScmSvnWebHookTriggerElement::class, name = CodeScmSvnWebHookTriggerElement.classType),
-    JsonSubTypes.Type(value = StepTemplateElement::class, name = StepTemplateElement.classType)
+    JsonSubTypes.Type(value = StepTemplateElement::class, name = StepTemplateElement.classType),
+    JsonSubTypes.Type(
+        value = CodeGitGroupWebHookTriggerElement::class,
+        name = CodeGitGroupWebHookTriggerElement.classType
+    ),
 )
 @Suppress("ALL")
 @Schema(title = "Element 基类")

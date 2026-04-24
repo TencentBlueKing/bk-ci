@@ -46,6 +46,7 @@ import com.tencent.devops.repository.pojo.RepositoryPage
 import com.tencent.devops.repository.pojo.commit.CommitResponse
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
+import com.tencent.devops.repository.pojo.enums.RepoResourceType
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -165,7 +166,10 @@ interface UserRepositoryResource {
         page: Int?,
         @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @Parameter(description = "仓库资源类型", required = false)
+        @QueryParam("resourceType")
+        resourceType: RepoResourceType?
     ): Result<RepositoryPage<RepositoryInfoWithPermission>>
 
     @Operation(summary = "代码库列表根据别名模糊查询")
@@ -195,7 +199,10 @@ interface UserRepositoryResource {
         sortBy: String? = null,
         @Parameter(description = "排序方式，升序降序", required = false)
         @QueryParam("sortType")
-        sortType: String? = null
+        sortType: String? = null,
+        @Parameter(description = "排序方式，升序降序", required = false)
+        @QueryParam("resourceType")
+        resourceType: RepoResourceType? = RepoResourceType.REPOSITORY_GROUP
     ): Result<RepositoryPage<RepositoryInfoWithPermission>>
 
     @Operation(summary = "代码库列表")
@@ -228,7 +235,10 @@ interface UserRepositoryResource {
         enablePac: Boolean? = null,
         @Parameter(description = "代码库类型标识", required = false)
         @QueryParam("scmCode")
-        scmCode: String? = null
+        scmCode: String? = null,
+        @Parameter(description = "资源类型", required = false)
+        @QueryParam("resourceType")
+        resourceType: RepoResourceType? = RepoResourceType.REPOSITORY
     ): Result<Page<RepositoryInfo>>
 
     @Operation(summary = "删除代码库")

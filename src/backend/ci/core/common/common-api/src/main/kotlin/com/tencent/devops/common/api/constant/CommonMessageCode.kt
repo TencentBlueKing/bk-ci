@@ -240,6 +240,7 @@ object CommonMessageCode {
     const val GET_COMMIT_REVIEW_INFO = "bkGetCommitReviewInfo" // 获取Commit Review详情
     const val GET_SESSION_INFO = "bkGetSessionInfo" // 获取会话详情
     const val GET_TAG_INFO = "bkGetSessionInfo" // 获取Tag详情
+    const val GET_GROUP_INFO = "bkGetGroupInfo" // 获取Group详情
 
     const val OPERATION_BRANCH = "bkOperationBranch" // 拉分支
     const val OPERATION_TAG = "bkOperationTag" // 拉标签

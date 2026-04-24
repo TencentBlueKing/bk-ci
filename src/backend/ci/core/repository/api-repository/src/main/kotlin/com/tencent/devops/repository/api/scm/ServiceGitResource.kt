@@ -595,7 +595,10 @@ interface ServiceGitResource {
         minAccessLevel: GitAccessLevelEnum?,
         @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
-        tokenType: TokenTypeEnum
+        tokenType: TokenTypeEnum,
+        @Parameter(description = "搜索关键字")
+        @QueryParam("search")
+        search: String? = null
     ): Result<List<GitCodeGroup>>
 
     @Operation(summary = "获取GitCode项目成员信息")
