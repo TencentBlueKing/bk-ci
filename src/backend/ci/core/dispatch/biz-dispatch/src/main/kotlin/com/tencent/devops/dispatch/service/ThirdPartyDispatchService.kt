@@ -63,7 +63,6 @@ import com.tencent.devops.dispatch.utils.DispatchStrategyExecutor
 import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentEnvLock
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
-import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.process.api.service.ServiceVarResource
@@ -681,14 +680,15 @@ class ThirdPartyDispatchService @Autowired constructor(
             )
         }
 
-        val strategyResult = thirdPartyAgentBuildService.getEnvStrategiesWithTags(
-            projectId = dispatchMessage.event.projectId,
-            envId = envId
-        )
         val nodeIdToAgentId = mutableMapOf<Long, String>()
         activeAgents.forEach { agent ->
             agent.nodeId?.let { nodeIdToAgentId[HashUtil.decodeIdToLong(it)] = agent.agentId }
         }
+        val strategyResult = thirdPartyAgentBuildService.getEnvStrategiesWithTags(
+            projectId = dispatchMessage.event.projectId,
+            envId = envId,
+            nodeIds = nodeIdToAgentId.keys
+        )
         val agentTagValues = mutableMapOf<String, Map<Long, Set<String>>>()
         strategyResult.nodeTagValues.forEach { (nodeId, kv) ->
             nodeIdToAgentId[nodeId]?.let { agentId -> agentTagValues[agentId] = kv }

@@ -38,7 +38,6 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
-import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.EnabledStrategiesWithTags
 import com.tencent.devops.environment.pojo.EnvVar
@@ -81,9 +80,7 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     private val nodeService: NodeService,
     private val nodeTagService: NodeTagService,
     private val agentService: ThirdPartAgentService,
-    private val envDispatchStrategyService: EnvDispatchStrategyService,
-    private val envNodeDao: EnvNodeDao,
-    private val dslContext: org.jooq.DSLContext
+    private val envDispatchStrategyService: EnvDispatchStrategyService
 ) : ServiceThirdPartyAgentResource {
     override fun getAgentById(projectId: String, agentId: String): AgentResult<ThirdPartyAgent?> {
         return thirdPartyAgentService.getAgent(projectId, agentId)
@@ -91,7 +88,7 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
 
     @Deprecated("getAgentById")
     override fun getAgentByIdGlobal(projectId: String, agentId: String): AgentResult<ThirdPartyAgent?> {
-        return thirdPartyAgentService.getAgentGlobal(projectId, agentId)
+        return thirdPartyAgentService.getAgent(projectId, agentId)
     }
 
     override fun getAgentByDisplayName(projectId: String, displayName: String): AgentResult<ThirdPartyAgent?> {
@@ -365,27 +362,21 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
 
     override fun getEnabledStrategiesWithTags(
         projectId: String,
-        envId: Long
+        envId: Long,
+        nodeIds: Set<Long>
     ): Result<EnabledStrategiesWithTags> {
         val strategies = envDispatchStrategyService.getEnabledStrategies(projectId, envId)
-        val needLabels = strategies.any { !it.labelSelector.isNullOrEmpty() }
-        val nodeTagValues = if (needLabels) {
-            val envNodes = envNodeDao.list(dslContext, projectId, listOf(envId))
-            val nodeIds = envNodes.map { it.nodeId }.toSet()
-            if (nodeIds.isEmpty()) {
-                emptyMap()
-            } else {
-                val tagMap = nodeTagService.fetchNodeTags(projectId, nodeIds)
-                val result = mutableMapOf<Long, Map<Long, Set<String>>>()
-                tagMap.forEach { (nodeId, tags) ->
-                    result[nodeId] = tags.associate {
-                        it.tagKeyId to it.tagValues.map { v ->
-                            v.tagValueName
-                        }.toSet()
-                    }
+        val nodeTagValues = if (nodeIds.isNotEmpty() && strategies.any { !it.labelSelector.isNullOrEmpty() }) {
+            val tagMap = nodeTagService.fetchNodeTags(projectId, nodeIds)
+            val result = mutableMapOf<Long, Map<Long, Set<String>>>()
+            tagMap.forEach { (nodeId, tags) ->
+                result[nodeId] = tags.associate {
+                    it.tagKeyId to it.tagValues.map { v ->
+                        v.tagValueName
+                    }.toSet()
                 }
-                result
             }
+            result
         } else {
             emptyMap()
         }

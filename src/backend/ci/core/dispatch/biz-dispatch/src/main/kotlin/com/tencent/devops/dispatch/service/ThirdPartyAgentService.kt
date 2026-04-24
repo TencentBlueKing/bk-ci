@@ -907,7 +907,7 @@ class ThirdPartyAgentService @Autowired constructor(
         }
     }
 
-    fun getEnvStrategiesWithTags(projectId: String, envId: Long?): EnabledStrategiesWithTags {
+    fun getEnvStrategiesWithTags(projectId: String, envId: Long?, nodeIds: Set<Long>): EnabledStrategiesWithTags {
         if (envId == null) {
             return EnabledStrategiesWithTags(
                 strategies = DispatchStrategyConfig.buildDefaults(projectId, 0L, "system"),
@@ -916,7 +916,7 @@ class ThirdPartyAgentService @Autowired constructor(
             )
         }
         val strategyResult = try {
-            client.get(ServiceThirdPartyAgentResource::class).getEnabledStrategiesWithTags(projectId, envId)
+            client.get(ServiceThirdPartyAgentResource::class).getEnabledStrategiesWithTags(projectId, envId, nodeIds)
         } catch (e: Exception) {
             throw DispatchRetryMQException(
                 errorCodeEnum = ErrorCodeEnum.GET_ENV_STRATEGY_ERROR,

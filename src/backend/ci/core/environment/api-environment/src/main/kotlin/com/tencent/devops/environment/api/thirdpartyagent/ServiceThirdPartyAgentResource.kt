@@ -505,14 +505,15 @@ interface ServiceThirdPartyAgentResource {
     ): Result<List<NodeTag>>
 
     @Operation(summary = "获取环境已启用的调度策略及标签数据（合并接口）")
-    @GET
-    @Path("/projects/{projectId}/envs/{envId}/enabledStrategiesWithTags")
+    @POST
+    @Path("/enabledStrategiesWithTags")
     fun getEnabledStrategiesWithTags(
         @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
+        @QueryParam("projectId")
         projectId: String,
         @Parameter(description = "环境ID", required = true)
-        @PathParam("envId")
-        envId: Long
+        @QueryParam("envId")
+        envId: Long,
+        nodeIds: Set<Long>
     ): Result<EnabledStrategiesWithTags>
 }
