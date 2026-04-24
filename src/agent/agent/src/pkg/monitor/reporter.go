@@ -39,6 +39,16 @@ type metricJSON struct {
 	Fields    map[string]interface{} `json:"fields"`
 }
 
+// metricsEnvelope 对应后端 TelegrafMulData（environment 模块）:
+//
+//	data class TelegrafMulData(val metrics: List<TelegrafStandData>?)
+//
+// 后端只认 {"metrics":[...]} 这种对象包装；直接发 JSON 数组会触发
+// Jackson MismatchedInputException("from Array value")。
+type metricsEnvelope struct {
+	Metrics []metricJSON `json:"metrics"`
+}
+
 // Reporter 负责上报指标到 BK-CI 后端。
 //
 // 可注入 doPost 以便测试替换 HTTP 请求逻辑；生产路径使用 defaultDoPost。
@@ -110,10 +120,11 @@ func (r *Reporter) Report(ctx context.Context, metrics []Metric) error {
 	return nil
 }
 
-// encodeJSON 把 metrics 序列化成 telegraf JSON 格式（[]metricJSON）。
+// encodeJSON 把 metrics 序列化成后端 TelegrafMulData 期望的对象结构
+// {"metrics":[{name,timestamp,tags,fields}, ...]}。
 // timestamp 走 Unix 秒，与 telegraf `json_timestamp_units = "1s"` 默认行为一致。
 func (r *Reporter) encodeJSON(metrics []Metric) ([]byte, error) {
-	out := make([]metricJSON, 0, len(metrics))
+	items := make([]metricJSON, 0, len(metrics))
 	for _, m := range metrics {
 		if len(m.Fields) == 0 {
 			continue
@@ -122,14 +133,14 @@ func (r *Reporter) encodeJSON(metrics []Metric) ([]byte, error) {
 		if ts.IsZero() {
 			ts = r.nowFn()
 		}
-		out = append(out, metricJSON{
+		items = append(items, metricJSON{
 			Name:      m.Name,
 			Timestamp: ts.Unix(),
 			Tags:      m.Tags,
 			Fields:    m.Fields,
 		})
 	}
-	return json.Marshal(out)
+	return json.Marshal(metricsEnvelope{Metrics: items})
 }
 
 // encodeLineProtocol 输出 InfluxDB line protocol 文本：
