@@ -27,7 +27,6 @@ func handleMonitor(workDir string, args []string) error {
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
-	fmt.Fprintln(os.Stdout, "========== monitor (gopsutil) ==========")
 	n, err := monitor.RunOnceStdout(context.Background(), os.Stdout, *duration)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[monitor] run failed: %v\n", err)
