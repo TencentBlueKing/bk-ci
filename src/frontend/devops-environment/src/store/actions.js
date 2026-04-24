@@ -157,14 +157,6 @@ const actions = {
         })
     },
     /**
-     * 环境的节点列表
-     */
-    requestEnvNodeList ({ commit }, { projectId, envHashId, params }) {
-        return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/listNodesNew`, { params }).then(response => {
-            return response
-        })
-    },
-    /**
      * 单个环境信息
      */
     requestEnvDetail ({ commit }, { projectId, envHashId }) {
