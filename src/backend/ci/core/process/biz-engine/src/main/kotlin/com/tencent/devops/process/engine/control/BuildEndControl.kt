@@ -298,14 +298,19 @@ class BuildEndControl @Autowired constructor(
         )
 
         // 异步驱动misc服务检查并清理当前流水线的过期/超量构建记录
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildHistoryDataClearEvent(
-                source = "build_finish_$buildId",
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = userId
+        try {
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildHistoryDataClearEvent(
+                    source = BuildEndControl::class.java.simpleName,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId
+                )
             )
-        )
+        } catch (ignored: Throwable) {
+            // 这里 catch 住所有异常，避免清理事件派发失败影响构建结束主流程
+            LOG.warn("ENGINE|$buildId|dispatch PipelineBuildHistoryDataClearEvent failed", ignored)
+        }
 
         // 发送metrics统计数据消息
         metricsService.postMetricsData(buildInfo, model)

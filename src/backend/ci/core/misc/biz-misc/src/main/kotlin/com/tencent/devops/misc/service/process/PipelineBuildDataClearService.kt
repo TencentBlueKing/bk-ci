@@ -59,15 +59,32 @@ class PipelineBuildDataClearService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildDataClearService::class.java)
         private const val DEFAULT_PAGE_SIZE = 100
+        // 连续空页阈值：出现这么多轮空查询后直接结束分页扫表，防止 while 循环空转
+        private const val MAX_EMPTY_PAGE_THRESHOLD = 5
     }
 
     @Value("\${process.clearBaseBuildData:false}")
     private val clearBaseBuildData: Boolean = false
 
     /**
-     * 清理正常流水线的超量和过期构建数据
+     * 清理正常流水线的超量和过期构建数据（定时任务使用）
      */
     fun cleanNormalPipelineData(
+        pipelineId: String,
+        projectId: String,
+        projectDataClearConfig: ProjectDataClearConfig
+    ) {
+        cleanOverflowPipelineData(pipelineId, projectId, projectDataClearConfig)
+        cleanExpiredPipelineData(pipelineId, projectId, projectDataClearConfig)
+    }
+
+    /**
+     * 仅清理超过 maxKeepNum 的构建数据（事件驱动路径使用）
+     *
+     * 构建结束事件触发时，通常只有"数量"可能突破上限，
+     * 没必要再做一次全量的"过期时间"扫描，节省 DB 压力。
+     */
+    fun cleanOverflowPipelineData(
         pipelineId: String,
         projectId: String,
         projectDataClearConfig: ProjectDataClearConfig
@@ -75,17 +92,28 @@ class PipelineBuildDataClearService @Autowired constructor(
         val maxPipelineBuildNum = processMiscService.getMaxPipelineBuildNum(projectId, pipelineId)
         val maxKeepNum = projectDataClearConfig.maxKeepNum
         val maxBuildNum = maxPipelineBuildNum - maxKeepNum
-        if (maxBuildNum > 0) {
-            logger.info(
-                "cleanNormalPipelineData|$projectId|$pipelineId|exceed maxKeepNum, cleaning $maxBuildNum builds"
-            )
-            cleanBuildHistoryData(
-                pipelineId = pipelineId,
-                projectId = projectId,
-                isCompletelyDelete = true,
-                maxBuildNum = maxBuildNum.toInt()
-            )
+        if (maxBuildNum <= 0) {
+            return
         }
+        logger.info(
+            "cleanOverflowPipelineData|$projectId|$pipelineId|exceed maxKeepNum, cleaning $maxBuildNum builds"
+        )
+        cleanBuildHistoryData(
+            pipelineId = pipelineId,
+            projectId = projectId,
+            isCompletelyDelete = true,
+            maxBuildNum = maxBuildNum.toInt()
+        )
+    }
+
+    /**
+     * 清理过期（超过 maxStartTime）的构建数据
+     */
+    fun cleanExpiredPipelineData(
+        pipelineId: String,
+        projectId: String,
+        projectDataClearConfig: ProjectDataClearConfig
+    ) {
         cleanBuildHistoryData(
             pipelineId = pipelineId,
             projectId = projectId,
@@ -131,6 +159,8 @@ class PipelineBuildDataClearService @Autowired constructor(
         )
         logger.info("cleanBuildHistoryData|$projectId|$pipelineId|maxPipelineBuildNum=$maxPipelineBuildNum")
         var totalHandleNum = processMiscService.getMinPipelineBuildNum(projectId, pipelineId, archiveFlag).toInt()
+        // 连续命中空页的次数，超过阈值则认为剩余区间已无可清理数据，提前结束避免无效分页扫表
+        var emptyPageCount = 0
         while (totalHandleNum <= maxPipelineBuildNum) {
             val cleanBuilds = mutableListOf<String>()
             val pipelineHistoryBuildIdList = processMiscService.getHistoryBuildIdList(
@@ -143,7 +173,20 @@ class PipelineBuildDataClearService @Autowired constructor(
                 maxStartTime = maxStartTime,
                 archiveFlag = archiveFlag
             )
-            pipelineHistoryBuildIdList?.forEach { buildId ->
+            if (pipelineHistoryBuildIdList.isNullOrEmpty()) {
+                emptyPageCount++
+                if (emptyPageCount >= MAX_EMPTY_PAGE_THRESHOLD) {
+                    logger.info(
+                        "cleanBuildHistoryData|$projectId|$pipelineId|" +
+                            "reached $MAX_EMPTY_PAGE_THRESHOLD consecutive empty pages, break"
+                    )
+                    break
+                }
+                totalHandleNum += DEFAULT_PAGE_SIZE
+                continue
+            }
+            emptyPageCount = 0
+            pipelineHistoryBuildIdList.forEach { buildId ->
                 if (clearBaseBuildData && archiveFlag != true) {
                     processDataClearService.clearBaseBuildData(projectId, buildId)
                 }
