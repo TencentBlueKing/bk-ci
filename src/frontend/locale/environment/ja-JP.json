@@ -477,6 +477,8 @@
     "offlineDuration": "オフライン時間",
     "nodeUsage": "ノード用途",
     "buildAgent": "ビルドAgent",
+    "agentNormal": "Agent 正常",
+    "agentAbnormal": "Agent 異常",
     "filterNodeBy": "{0}などでフィルタリングします",
     "enableTitle": "スタート/ストップ",
     "schedulingStrategy": "スケジュール戦略",

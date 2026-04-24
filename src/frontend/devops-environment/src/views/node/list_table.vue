@@ -352,7 +352,7 @@
                     width="180"
                 >
                     <template slot-scope="props">
-                        <template v-if="props.row.canUse">
+                        <template v-if="props.row.canEdit">
                             <div class="table-node-item node-item-handler">
                                 <span
                                     class="install-agent mr10"
@@ -380,7 +380,7 @@
                                             projectId: projectId,
                                             resourceType: NODE_RESOURCE_TYPE,
                                             resourceCode: props.row.nodeHashId,
-                                            action: NODE_RESOURCE_ACTION.DELETE
+                                            action: NODE_RESOURCE_ACTION.EDIT
                                         }
                                     }"
                                     class="node-handle delete-node-text"

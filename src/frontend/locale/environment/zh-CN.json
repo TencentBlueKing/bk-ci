@@ -327,6 +327,8 @@
     "byNodeLabel": "按节点标签",
     "confirmDeleteTag": "确认删除标签【{0}】？",
     "buildAgentMonitoring": "构建机监控",
+    "agentNormal": "Agent 正常",
+    "agentAbnormal": "Agent 異常",
     "enabled": "已开启",
     "removeNodesBeforeDeletingLabel": "请先移除标签下所有节点再删除标签",
     "labelInUseRemoveNodesBeforeEditOrDelete": "已被环境使用的标签无法修改/删除，如需操作请先移除标签下所有节点",
