@@ -27,6 +27,16 @@
     // 创建页对主站的固定业务标识：只需告诉主站"这是创建页"即可，无需 params/query
     const CREATE_PAGE_PAYLOAD = Object.freeze({ routeName: 'createPipeline' })
 
+    // 通用路由名 -> tapd 专属路由名 的映射
+    // 防止在 iframe 中创建成功后跳到通用路由（会导致整页跳转，跑出 tapd 定制路由）
+    const ROUTE_NAME_MAP = Object.freeze({
+        pipelinesEdit: 'tapdPipelinesEdit',
+        pipelinesDetail: 'tapdPipelinesStdDetail',
+        pipelinesHistory: 'tapdPipelinesHistory',
+        pipelinesPreview: 'tapdExecutePreview',
+        executePreview: 'tapdExecutePreview'
+    })
+
     export default {
         name: 'tapdCreatePipelineEntry',
         components: {
@@ -72,6 +82,22 @@
                 // 只告知主站这里是创建页，无须携带 params/query
                 bridge.post(TAPD_EVENTS.ROUTE_CHANGE, CREATE_PAGE_PAYLOAD)
             }
+        },
+        /**
+         * 离开创建页时，把通用路由名映射成 tapd 专属路由名，避免跑出 iframe 定制路由
+         */
+        beforeRouteLeave (to, from, next) {
+            const mappedName = ROUTE_NAME_MAP[to.name]
+            if (mappedName && mappedName !== to.name) {
+                next(false)
+                this.$router.replace({
+                    name: mappedName,
+                    params: { ...to.params },
+                    query: { ...(to.query || {}) }
+                }).catch(() => { /* 忽略重复导航异常 */ })
+                return
+            }
+            return next()
         }
     }
 </script>
