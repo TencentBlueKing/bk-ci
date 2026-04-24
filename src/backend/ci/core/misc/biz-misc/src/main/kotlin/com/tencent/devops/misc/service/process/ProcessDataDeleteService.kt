@@ -248,7 +248,9 @@ class ProcessDataDeleteService @Autowired constructor(
                 processDataDeleteDao::deletePipelineOperationLog,
                 processDataDeleteDao::deletePipelineWebhookVersion,
                 processDataDeleteDao::deletePipelineCallback,
-                processDataDeleteDao::deletePipelineSubRef
+                processDataDeleteDao::deletePipelineSubRef,
+                processDataDeleteDao::deletePipelineBuildParamCombinationDetail,
+                processDataDeleteDao::deletePipelineBuildParamCombination
             ).forEach { function ->
                 function(dslContext, projectId, pipelineId)
             }
@@ -282,46 +284,17 @@ class ProcessDataDeleteService @Autowired constructor(
         pipelineId: String
     ) {
         if (buildIds.isNullOrEmpty()) return
-
-        if (archivePipelineFlag != true) {
-            // 构建明细数据删除
-            listOf(
-                processDataDeleteDao::deletePipelineBuildDetail,
-                processDataDeleteDao::deletePipelineBuildVar,
-                processDataDeleteDao::deletePipelinePauseValue,
-                processDataDeleteDao::deletePipelineWebhookBuildParameter,
-                processDataDeleteDao::deletePipelineWebhookQueue,
-                processDataDeleteDao::deletePipelineBuildTask
-            ).forEach { function ->
-                function(dslContext, projectId, buildIds)
-            }
-
-            processDataDeleteDao.deletePipelineBuildTemplateAcrossInfo(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildIds = buildIds
-            )
-        }
-
-        // 公共报告数据删除
-        processDataDeleteDao.deleteReport(
+        processDataDeleteDao.deleteBuildRelatedData(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
-            buildIds = buildIds
+            buildIds = buildIds,
+            archiveFlag = archivePipelineFlag
         )
-
-        // 记录类数据删除
-        listOf(
-            processDataDeleteDao::deletePipelineTriggerReview,
-            processDataDeleteDao::deletePipelineBuildRecordContainer,
-            processDataDeleteDao::deletePipelineBuildRecordModel,
-            processDataDeleteDao::deletePipelineBuildRecordStage
-        ).forEach { function ->
-            function(dslContext, projectId, buildIds)
+        if (archivePipelineFlag != true) {
+            processDataDeleteDao.deletePipelineBuildVar(dslContext, projectId, buildIds)
+            processDataDeleteDao.deletePipelineBuildTask(dslContext, projectId, buildIds)
         }
-        processDataDeleteDao.deletePipelineBuildRecordTask(dslContext, projectId, buildIds)
     }
 
     /**

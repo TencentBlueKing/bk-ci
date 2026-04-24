@@ -31,9 +31,11 @@ import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineArchiveEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBatchArchiveEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildHistoryDataClearEvent
 import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.misc.listener.PipelineArchiveListener
 import com.tencent.devops.misc.listener.PipelineBatchArchiveListener
+import com.tencent.devops.misc.listener.PipelineBuildHistoryDataClearListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
@@ -53,4 +55,9 @@ class MiscMQConfiguration {
     fun pipelineMQBatchArchiveConsumer(
         @Autowired pipelineBatchArchiveListener: PipelineBatchArchiveListener
     ) = ScsConsumerBuilder.build<PipelineBatchArchiveEvent> { pipelineBatchArchiveListener.execute(it) }
+
+    @EventConsumer
+    fun pipelineBuildHistoryDataClearConsumer(
+        @Autowired listener: PipelineBuildHistoryDataClearListener
+    ) = ScsConsumerBuilder.build<PipelineBuildHistoryDataClearEvent> { listener.execute(it) }
 }

@@ -28,11 +28,14 @@
 package com.tencent.devops.misc.dao.process
 
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.model.process.tables.TAuditResource
 import com.tencent.devops.model.process.tables.TPipelineBuildContainer
+import com.tencent.devops.model.process.tables.TPipelineBuildParamCombination
+import com.tencent.devops.model.process.tables.TPipelineBuildParamCombinationDetail
 import com.tencent.devops.model.process.tables.TPipelineBuildDetail
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.TPipelineBuildHistoryDebug
@@ -93,6 +96,40 @@ import org.springframework.stereotype.Repository
 @Suppress("TooManyFunctions", "LargeClass")
 @Repository
 class ProcessDataDeleteDao {
+
+    /**
+     * 删除构建关联的公共记录数据（不含 BuildHistory，因其在清理场景需要版本锁与引用计数的特殊处理）
+     * @param dslContext jooq上下文（可为事务上下文）
+     * @param projectId 项目ID
+     * @param pipelineId 流水线ID
+     * @param buildIds 构建ID列表
+     * @param archiveFlag 归档标识，归档场景下跳过非归档库表的删除
+     */
+    @Suppress("LongParameterList")
+    fun deleteBuildRelatedData(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildIds: List<String>,
+        archiveFlag: Boolean? = null
+    ) {
+        if (buildIds.isEmpty()) return
+        if (archiveFlag != true) {
+            deletePipelineBuildDetail(dslContext, projectId, buildIds)
+            deletePipelinePauseValue(dslContext, projectId, buildIds)
+            deletePipelineWebhookBuildParameter(dslContext, projectId, buildIds)
+            deletePipelineWebhookQueue(dslContext, projectId, buildIds)
+            JooqUtils.retryWhenDeadLock {
+                deletePipelineBuildTemplateAcrossInfo(dslContext, projectId, pipelineId, buildIds)
+            }
+        }
+        deleteReport(dslContext, projectId, pipelineId, buildIds)
+        deletePipelineTriggerReview(dslContext, projectId, buildIds)
+        deletePipelineBuildRecordContainer(dslContext, projectId, buildIds)
+        deletePipelineBuildRecordModel(dslContext, projectId, buildIds)
+        deletePipelineBuildRecordStage(dslContext, projectId, buildIds)
+        deletePipelineBuildRecordTask(dslContext, projectId, buildIds)
+    }
 
     fun deleteAuditResource(
         dslContext: DSLContext,
@@ -611,6 +648,22 @@ class ProcessDataDeleteDao {
 
     fun deletePipelineSubRef(dslContext: DSLContext, projectId: String, pipelineId: String) {
         with(TPipelineSubRef.T_PIPELINE_SUB_REF) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .execute()
+        }
+    }
+
+    fun deletePipelineBuildParamCombination(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        with(TPipelineBuildParamCombination.T_PIPELINE_BUILD_PARAM_COMBINATION) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .execute()
+        }
+    }
+
+    fun deletePipelineBuildParamCombinationDetail(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        with(TPipelineBuildParamCombinationDetail.T_PIPELINE_BUILD_PARAM_COMBINATION_DETAIL) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
                 .execute()

@@ -40,6 +40,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildHistoryDataClearEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.AgentReuseMutex
@@ -295,6 +296,21 @@ class BuildEndControl @Autowired constructor(
                 refreshTypes = RefreshType.HISTORY.binary
             )
         )
+
+        // 异步驱动misc服务检查并清理当前流水线的过期/超量构建记录
+        try {
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildHistoryDataClearEvent(
+                    source = BuildEndControl::class.java.simpleName,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId
+                )
+            )
+        } catch (ignored: Throwable) {
+            // 这里 catch 住所有异常，避免清理事件派发失败影响构建结束主流程
+            LOG.warn("ENGINE|$buildId|dispatch PipelineBuildHistoryDataClearEvent failed", ignored)
+        }
 
         // 发送metrics统计数据消息
         metricsService.postMetricsData(buildInfo, model)

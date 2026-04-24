@@ -53,6 +53,18 @@ import java.time.LocalDateTime
 @Repository
 class ProcessDao {
 
+    companion object {
+        /**
+         * 可被清理的构建状态（T_PIPELINE_BUILD_HISTORY.STATUS 列存储 BuildStatus 枚举 ordinal）
+         *
+         * 注意：该集合依赖 [BuildStatus] 枚举声明顺序，若新增/插入枚举值，存量数据的 ordinal 含义会偏移，
+         * 必须在 [BuildStatus] 末尾追加，且严禁重排已有枚举；变更前请同步评估 DB 存量数据的兼容性。
+         */
+        private val DELETABLE_BUILD_STATUS = BuildStatus.values()
+            .filter { it.isFinish() || it == BuildStatus.STAGE_SUCCESS || it == BuildStatus.UNEXEC }
+            .map { it.ordinal }
+    }
+
     fun addBuildHisDataClear(
         dslContext: DSLContext,
         projectId: String,
@@ -147,7 +159,7 @@ class ProcessDao {
             return dslContext.select(DSL.min(ID))
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .fetchOne(0, Long::class.java)!!
+                .fetchOne(0, Long::class.java) ?: 0L
         }
     }
 
@@ -160,7 +172,7 @@ class ProcessDao {
             return dslContext.select(DSL.max(BUILD_NUM))
                 .from(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .fetchOne(0, Long::class.java)!!
+                .fetchOne(0, Long::class.java) ?: 0L
         }
     }
 
@@ -210,6 +222,7 @@ class ProcessDao {
         val conditions = mutableListOf<Condition>()
         conditions.add(PROJECT_ID.eq(projectId))
         conditions.add(PIPELINE_ID.eq(pipelineId))
+        conditions.add(STATUS.`in`(DELETABLE_BUILD_STATUS))
         if (maxBuildNum != null) {
             conditions.add(BUILD_NUM.le(maxBuildNum))
         }
