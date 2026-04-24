@@ -273,6 +273,18 @@ spring:
       - index: 70
         name: T_PIPELINE_BUILD_PARAM_COMBINATION_DETAIL
         databaseShardingStrategy: SHARDING
+      - index: 71
+        name: T_PIPELINE_RESOURCE_DRAFT_VERSION
+        databaseShardingStrategy: SHARDING
+      - index: 72
+        name: T_PIPELINE_SETTING_DRAFT_VERSION
+        databaseShardingStrategy: SHARDING
+      - index: 73
+        name: T_PIPELINE_TEMPLATE_RESOURCE_DRAFT_VERSION
+        databaseShardingStrategy: SHARDING
+      - index: 74
+        name: T_PIPELINE_TEMPLATE_SETTING_DRAFT_VERSION
+        databaseShardingStrategy: SHARDING
 
 endpoints:
   metrics:

@@ -458,6 +458,8 @@ object ProcessMessageCode {
     const val ERROR_NON_CONSTRAINED_PIPELINE_CANNOT_SAVE_AS_CONSTRAINED = "2101363"
     // 实例化异常：流水线其他变量[{0}]默认值被改成模版默认值,请联系助手分析
     const val ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN = "2101364"
+    const val ERROR_TEMPLATE_RESOURCE_DRAFT_VERSION_NOT_EXISTS = "2101365" // 模板草稿版本编排[{0}]记录不存在
+    const val ERROR_TEMPLATE_SETTING_DRAFT_VERSION_NOT_EXISTS = "2101366" // 模板草稿版本设置[{0}]不存在
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

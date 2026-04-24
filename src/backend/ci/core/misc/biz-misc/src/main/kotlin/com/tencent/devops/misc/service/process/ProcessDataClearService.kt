@@ -78,6 +78,8 @@ class ProcessDataClearService @Autowired constructor(
             processDataDeleteDao.deletePipelineViewGroup(dslContext, projectId, pipelineId)
             processDataDeleteDao.deletePipelineSetting(context, projectId, pipelineIds)
             processDataDeleteDao.deletePipelineSettingVersion(context, projectId, pipelineIds)
+            processDataDeleteDao.deletePipelineResourceDraftVersion(context, projectId, pipelineIds)
+            processDataDeleteDao.deletePipelineSettingDraftVersion(context, projectId, pipelineIds)
             if (archiveFlag != true) {
                 processDataDeleteDao.deletePipelineModelTask(context, projectId, pipelineIds)
                 processDataDeleteDao.deletePipelineBuildContainer(dslContext, projectId, pipelineId)
@@ -254,5 +256,45 @@ class ProcessDataClearService @Autowired constructor(
             buildIds = arrayListOf(buildId),
             skipTaskDeleteFlag = true
         )
+    }
+
+    fun deletePipelineDraftData(
+        projectId: String,
+        pipelineId: String,
+        versions: List<Int>
+    ) {
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            processDataDeleteDao.deletePipelineResourceDraftVersion(
+                dslContext = context, projectId = projectId,
+                pipelineId = pipelineId, versions = versions
+            )
+            processDataDeleteDao.deletePipelineSettingDraftVersion(
+                dslContext = context, projectId = projectId,
+                pipelineId = pipelineId, versions = versions
+            )
+            processDataDeleteDao.deletePipelineBuildHistoryDebug(
+                dslContext = context, projectId = projectId,
+                pipelineId = pipelineId, versions = versions
+            )
+        }
+    }
+
+    fun deleteTemplateDraftData(
+        projectId: String,
+        templateId: String,
+        versions: List<Long>
+    ) {
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            processDataDeleteDao.deleteTemplateResourceDraftVersion(
+                dslContext = context, projectId = projectId,
+                templateId = templateId, versions = versions
+            )
+            processDataDeleteDao.deleteTemplateSettingDraftVersion(
+                dslContext = context, projectId = projectId,
+                templateId = templateId, versions = versions
+            )
+        }
     }
 }

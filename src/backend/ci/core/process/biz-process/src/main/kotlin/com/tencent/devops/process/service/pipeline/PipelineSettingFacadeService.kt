@@ -351,4 +351,18 @@ class PipelineSettingFacadeService @Autowired constructor(
             maxConRunningQueueSize = maxConRunningQueueSize
         )
     }
+
+    fun getPipelineSettingByDraftVersion(
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        draftVersion: Int
+    ): PipelineSetting {
+        return pipelineSettingVersionService.getPipelineSettingByDraftVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            draftVersion = draftVersion
+        )
+    }
 }

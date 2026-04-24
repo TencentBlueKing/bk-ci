@@ -37,6 +37,7 @@ import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.pojo.pipeline.version.PipelineVersionCreateReq
 import com.tencent.devops.process.pojo.pipeline.version.PipelineYamlWebhookReq
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
+import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContextParam
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -94,16 +95,10 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
                 yamlFileName
             }
 
-            val versionStatus = if (isDefaultBranch) {
-                VersionStatus.RELEASED
+            val (versionStatus, versionAction) = if (isDefaultBranch) {
+                Pair(VersionStatus.RELEASED, PipelineVersionAction.CREATE_RELEASE)
             } else {
-                VersionStatus.BRANCH
-            }
-
-            val versionAction = if (isDefaultBranch) {
-                PipelineVersionAction.CREATE_RELEASE
-            } else {
-                PipelineVersionAction.CREATE_BRANCH
+                Pair(VersionStatus.BRANCH, PipelineVersionAction.CREATE_BRANCH)
             }
 
             val pipelineAsCodeSettings = modelAndSetting.setting.pipelineAsCodeSettings?.copy(
@@ -116,7 +111,7 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
                 pipelineAsCodeSettings = pipelineAsCodeSettings
             )
 
-            return pipelineVersionCreateContextFactory.create(
+            val contextParam = PipelineVersionCreateContextParam(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = newPipelineId,
@@ -132,6 +127,9 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
                 versionAction = versionAction,
                 repoHashId = yamlFileInfo!!.repoHashId,
                 branchName = branchName
+            )
+            return pipelineVersionCreateContextFactory.create(
+                contextParam = contextParam
             ).copy(
                 enablePac = true,
                 yamlFileInfo = yamlFileInfo,

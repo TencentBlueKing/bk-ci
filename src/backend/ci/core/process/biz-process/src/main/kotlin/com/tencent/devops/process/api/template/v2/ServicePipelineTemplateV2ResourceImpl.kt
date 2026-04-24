@@ -95,14 +95,16 @@ class ServicePipelineTemplateV2ResourceImpl(
         userId: String,
         projectId: String,
         templateId: String,
-        version: Long?
+        version: Long?,
+        draftVersion: Int?
     ): Result<PipelineTemplateDetailsResponse> {
         return Result(
             pipelineTemplateFacadeService.getTemplateDetails(
                 userId = userId,
                 projectId = projectId,
                 templateId = templateId,
-                version = version
+                version = version,
+                draftVersion = draftVersion
             )
         )
     }

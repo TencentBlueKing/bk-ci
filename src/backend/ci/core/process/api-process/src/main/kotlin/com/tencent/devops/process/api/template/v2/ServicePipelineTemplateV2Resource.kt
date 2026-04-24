@@ -113,7 +113,10 @@ interface ServicePipelineTemplateV2Resource {
         templateId: String,
         @Parameter(description = "版本", required = false)
         @QueryParam("version")
-        version: Long?
+        version: Long?,
+        @Parameter(description = "回滚的草稿版本号", required = false)
+        @QueryParam("draftVersion")
+        draftVersion: Int? = null
     ): Result<PipelineTemplateDetailsResponse>
 
     @Operation(summary = "判断模板镜像是否发布")

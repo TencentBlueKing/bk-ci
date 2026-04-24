@@ -11,8 +11,11 @@ import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.PipelineTemplateVersionSimple
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineDraftActionType
 import com.tencent.devops.process.pojo.template.HighlightType
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
+import com.tencent.devops.process.pojo.template.PipelineTemplateDraftStatusResult
+import com.tencent.devops.process.pojo.template.PipelineTemplateDraftVersionSimple
 import com.tencent.devops.process.pojo.template.PipelineTemplateListResponse
 import com.tencent.devops.process.pojo.template.PipelineTemplateListSimpleResponse
 import com.tencent.devops.process.pojo.template.TemplatePreviewDetail
@@ -185,7 +188,10 @@ interface UserPipelineTemplateV2Resource {
         templateId: String,
         @Parameter(description = "版本", required = false)
         @PathParam("version")
-        version: Long
+        version: Long,
+        @Parameter(description = "草稿版本号", required = false)
+        @QueryParam("draftVersion")
+        draftVersion: Int? = null
     ): Result<PipelineTemplateDetailsResponse>
 
     @Operation(summary = "查看模板最新详情")
@@ -443,7 +449,10 @@ interface UserPipelineTemplateV2Resource {
         templateId: String,
         @Parameter(description = "回回滚目标版本", required = true)
         @QueryParam("version")
-        version: Long
+        version: Long,
+        @Parameter(description = "回滚的草稿版本号", required = false)
+        @QueryParam("draftVersion")
+        draftVersion: Int? = null
     ): Result<DeployTemplateResult>
 
     @Operation(summary = "删除模版版本")
@@ -600,4 +609,52 @@ interface UserPipelineTemplateV2Resource {
         @QueryParam("versionName")
         versionName: String
     ): Result<Boolean>
+
+    @Operation(summary = "获取模版草稿状态")
+    @GET
+    @Path("{templateId}/draftStatus")
+    fun getPipelineDraftStatus(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "模版ID", required = true)
+        @PathParam("templateId")
+        templateId: String,
+        @Parameter(description = "操作类型", required = true)
+        @QueryParam("actionType")
+        actionType: PipelineDraftActionType,
+        @Parameter(description = "模版版本", required = false)
+        @QueryParam("version")
+        version: Long?,
+        @Parameter(description = "来源的草稿版本", required = false)
+        @QueryParam("baseDraftVersion")
+        baseDraftVersion: Int?
+    ): Result<PipelineTemplateDraftStatusResult>
+
+    @Operation(summary = "获取流水线草稿版本列表")
+    @GET
+    @Path("{templateId}/draftVersions")
+    fun listDraftVersions(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "模版ID", required = true)
+        @PathParam("templateId")
+        templateId: String,
+        @Parameter(description = "流水线版本", required = false)
+        @QueryParam("version")
+        version: Long,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页多少条", required = false, example = "5")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<PipelineTemplateDraftVersionSimple>>
 }
