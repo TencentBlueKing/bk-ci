@@ -379,11 +379,15 @@ class TPAEnvQueueService @Autowired constructor(
             )
         }
 
-        val strategyResult = thirdPartyAgentService.getEnvStrategiesWithTags(data.projectId, context.envId)
         val nodeIdToAgentId = mutableMapOf<Long, String>()
         activeAgents.forEach { agent ->
             agent.nodeId?.let { nodeIdToAgentId[HashUtil.decodeIdToLong(it)] = agent.agentId }
         }
+        val strategyResult = thirdPartyAgentService.getEnvStrategiesWithTags(
+            projectId = data.projectId,
+            envId = context.envId,
+            nodeIds = nodeIdToAgentId.keys
+        )
         val agentTagValues = mutableMapOf<String, Map<Long, Set<String>>>()
         strategyResult.nodeTagValues.forEach { (nodeId, kv) ->
             nodeIdToAgentId[nodeId]?.let { agentId -> agentTagValues[agentId] = kv }
