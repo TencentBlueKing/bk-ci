@@ -33,6 +33,7 @@ import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.IamGroupIdsQueryConditionDTO
+import com.tencent.devops.auth.pojo.dto.ResourceGroupPermissionDTO
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
 import com.tencent.devops.auth.pojo.request.ai.AiApplyJoinGroupReq
 import com.tencent.devops.auth.pojo.request.ai.AiRemoveMemberFromProjectReq
@@ -41,11 +42,11 @@ import com.tencent.devops.auth.pojo.request.ai.BatchOperateCheckReq
 import com.tencent.devops.auth.pojo.request.ai.BatchRemoveMembersReq
 import com.tencent.devops.auth.pojo.request.ai.BatchRenewalMembersReq
 import com.tencent.devops.auth.pojo.request.ai.GroupRecommendReq
+import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.AuthorizationHealthVO
 import com.tencent.devops.auth.pojo.vo.AuthorizationStatsVO
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
-import com.tencent.devops.auth.pojo.dto.ResourceGroupPermissionDTO
 import com.tencent.devops.auth.pojo.vo.GroupRecommendationVO
 import com.tencent.devops.auth.pojo.vo.MemberExitCheckVO
 import com.tencent.devops.auth.pojo.vo.PermissionCloneResultVO
@@ -55,6 +56,7 @@ import com.tencent.devops.auth.pojo.vo.PermissionDiagnoseVO
 import com.tencent.devops.auth.pojo.vo.ResolvedUserByNameVO
 import com.tencent.devops.auth.pojo.vo.ResourcePermissionsMatrixVO
 import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
+import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.pojo.vo.UserPermissionAnalysisVO
 import com.tencent.devops.auth.pojo.vo.UserSearchResultVO
 import com.tencent.devops.auth.service.AuthAiService
@@ -65,6 +67,13 @@ import com.tencent.devops.common.api.model.SQLPage
  */
 @Suppress("TooManyFunctions")
 class SampleAuthAiServiceImpl : AuthAiService {
+    override fun listResourceTypes(): List<ResourceTypeInfoVo> {
+        return emptyList()
+    }
+
+    override fun listActions(resourceType: String): List<ActionInfoVo> {
+        return emptyList()
+    }
 
     override fun diagnosePermission(
         userId: String,

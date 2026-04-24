@@ -57,6 +57,7 @@ import com.tencent.devops.auth.pojo.request.ai.BatchOperateCheckReq
 import com.tencent.devops.auth.pojo.request.ai.BatchRemoveMembersReq
 import com.tencent.devops.auth.pojo.request.ai.BatchRenewalMembersReq
 import com.tencent.devops.auth.pojo.request.ai.GroupRecommendReq
+import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.ApplicableGroupVO
 import com.tencent.devops.auth.pojo.vo.AuthorizationHealthVO
 import com.tencent.devops.auth.pojo.vo.AuthorizationRiskVO
@@ -76,12 +77,13 @@ import com.tencent.devops.auth.pojo.vo.PermissionCloneResultVO
 import com.tencent.devops.auth.pojo.vo.PermissionCompareSummaryVO
 import com.tencent.devops.auth.pojo.vo.PermissionCompareVO
 import com.tencent.devops.auth.pojo.vo.PermissionDiagnoseVO
-import com.tencent.devops.auth.pojo.vo.ResolvedUserByNameVO
 import com.tencent.devops.auth.pojo.vo.PermissionTagVO
+import com.tencent.devops.auth.pojo.vo.ResolvedUserByNameVO
 import com.tencent.devops.auth.pojo.vo.ResourceGroupMatrixVO
 import com.tencent.devops.auth.pojo.vo.ResourcePermissionsMatrixVO
 import com.tencent.devops.auth.pojo.vo.ResourceSummaryVO
 import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
+import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.pojo.vo.UserInfoVO
 import com.tencent.devops.auth.pojo.vo.UserPermissionAnalysisVO
 import com.tencent.devops.auth.pojo.vo.UserSearchResultVO
@@ -121,6 +123,13 @@ class AuthAiServiceImpl(
     private val authResourceGroupPermissionDao: AuthResourceGroupPermissionDao,
     private val userInfoDao: UserInfoDao
 ) : AuthAiService {
+    override fun listResourceTypes(): List<ResourceTypeInfoVo> {
+        return rbacCommonService.listResourceTypes()
+    }
+
+    override fun listActions(resourceType: String): List<ActionInfoVo> {
+        return rbacCommonService.listResourceType2Action(resourceType)
+    }
 
     override fun diagnosePermission(
         userId: String,
