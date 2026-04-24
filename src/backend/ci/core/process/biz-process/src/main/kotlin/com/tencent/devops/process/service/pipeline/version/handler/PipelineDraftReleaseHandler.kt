@@ -127,7 +127,7 @@ class PipelineDraftReleaseHandler @Autowired constructor(
             enablePac = enablePac,
             repoHashId = yamlFileInfo?.repoHashId,
             targetAction = targetAction,
-            targetBranch = branchName
+            targetBranch = targetBranch
         )
         val releaseResource = pipelineResourceDao.getReleaseVersionResource(
             dslContext = dslContext, projectId = projectId, pipelineId = pipelineId
