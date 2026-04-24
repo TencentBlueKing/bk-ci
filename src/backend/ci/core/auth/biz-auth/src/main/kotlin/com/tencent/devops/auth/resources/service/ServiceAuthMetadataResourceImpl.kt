@@ -39,7 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceAuthMetadataResourceImpl @Autowired constructor(
-    private val authAiService : AuthAiService
+    private val authAiService: AuthAiService
 ) : ServiceAuthMetadataResource {
 
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
