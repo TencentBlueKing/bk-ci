@@ -3,6 +3,7 @@ package com.tencent.devops.process.trigger.market
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TRIGGER_CONDITION_NOT_MATCH
@@ -11,8 +12,14 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_IP
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_NAME
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.pojo.trigger.GenericWebhookEventBody
+import com.tencent.devops.process.pojo.trigger.GenericEventStartRequest
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
+import com.tencent.devops.process.service.CreateStreamTriggerSupportService
+import com.tencent.devops.process.service.PipelineVisibilityService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.WebhookTriggerBuildService
 import com.tencent.devops.process.trigger.enums.MatchStatus
@@ -36,7 +43,9 @@ class MarketEventTriggerBuildService @Autowired constructor(
     private val webhookTriggerManager: WebhookTriggerManager,
     private val marketEventTriggerMatcher: MarketEventTriggerMatcher,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
-    private val webhookTriggerBuildService: WebhookTriggerBuildService
+    private val webhookTriggerBuildService: WebhookTriggerBuildService,
+    private val creativeStreamService: CreateStreamTriggerSupportService,
+    private val pipelineVisibilityService: PipelineVisibilityService
 ) {
 
     fun cdsWebhookTrigger(event: CdsWebhookTriggerEvent) {
@@ -127,7 +136,7 @@ class MarketEventTriggerBuildService @Autowired constructor(
                                 context = context,
                                 pipelineInfo = pipelineInfo,
                                 resource = resource,
-                                startParams = atomResponse.outputVars.plus(extStartParam ?: mapOf())
+                                startParams = atomResponse.outputVars
                             )
                             return
                         }
@@ -149,6 +158,163 @@ class MarketEventTriggerBuildService @Autowired constructor(
                 webhookTriggerManager.fireError(context, ignored)
             }
         }
+    }
+
+    @Suppress("NestedBlockDepth")
+    fun genericEventTrigger(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        eventCode: String,
+        request: GenericEventStartRequest
+    ): BuildId {
+        logger.info(
+            "receive market event trigger request|$projectId|$pipelineId|$eventCode"
+        )
+
+        if (!pipelineVisibilityService.hasVisibility(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_USER_NOT_VISIBLE,
+                params = arrayOf(userId, pipelineId)
+            )
+        }
+
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+            projectId, pipelineId
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+            params = arrayOf(pipelineId)
+        )
+        if (pipelineInfo.locked == true) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK,
+                params = arrayOf(pipelineId)
+            )
+        }
+        val resource = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId, pipelineId, null
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
+        )
+        val model = resource.model
+        val triggerContainer = model.getTriggerContainer()
+        // 传入的启动参数,替换成流水线默认值
+        val variables = pipelineRepositoryService.getTriggerParams(
+            triggerContainer = triggerContainer,
+            inputParams = request.startParams
+        )
+        // 额外获取创作流的启动参数
+        val extStartParam = resolveCreativeStreamParams(
+            pipelineInfo = pipelineInfo,
+            userId = userId
+        )
+        val failedMatchElements = mutableListOf<PipelineTriggerFailedMatchElement>()
+        triggerContainer.elements
+            .filterIsInstance<MarketEventAtomElement>()
+            .filter { it.elementEnabled() && it.atomCode == eventCode }
+            .also { elements ->
+                if (elements.isEmpty()) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_TRIGGER_CONDITION_NOT_MATCH,
+                        params = arrayOf(eventCode)
+                    )
+                }
+            }
+            .forEach elements@{ element ->
+                val atomResponse = marketEventTriggerMatcher.matches(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    triggerEventBody = GenericWebhookEventBody(
+                        body = request.eventBody
+                    ),
+                    variables = variables,
+                    element = element,
+                    extStartParam = extStartParam
+                )
+                when (atomResponse.matchStatus) {
+                    MatchStatus.CONDITION_NOT_MATCH -> {
+                        failedMatchElements.add(
+                            PipelineTriggerFailedMatchElement(
+                                elementId = element.id,
+                                elementName = element.name,
+                                elementAtomCode = element.getAtomCode(),
+                                reasonMsg = atomResponse.failedReason ?: I18Variable(
+                                    code = TRIGGER_CONDITION_NOT_MATCH
+                                ).toJsonStr()
+                            )
+                        )
+                    }
+
+                    MatchStatus.SUCCESS -> {
+                        return webhookTriggerBuildService.startPipeline(
+                            pipelineInfo = pipelineInfo,
+                            resource = resource,
+                            startParams = atomResponse.outputVars,
+                            startType = StartType.TRIGGER_EVENT
+                        )
+                    }
+
+                    else -> return@elements
+                }
+            }
+        throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_TRIGGER_CONDITION_NOT_MATCH,
+            params = arrayOf(
+                failedMatchElements.joinToString("; ") {
+                    "${it.elementName}: ${it.reasonMsg}"
+                }
+            )
+        )
+    }
+
+    /**
+     * 创作流流水线随机获取环境节点参数
+     */
+    private fun resolveCreativeStreamParams(
+        userId: String,
+        pipelineInfo: PipelineInfo,
+    ): Map<String, String> {
+        if (pipelineInfo.channelCode != ChannelCode.CREATIVE_STREAM) {
+            return emptyMap()
+        }
+        val setting = pipelineRepositoryService.getSetting(
+            projectId = pipelineInfo.projectId,
+            pipelineId = pipelineInfo.pipelineId
+        )
+        val envHashId = setting?.envHashId
+        if (envHashId.isNullOrBlank()) {
+            logger.warn(
+                "creative stream pipeline has no envHashId|${pipelineInfo.projectId}|${pipelineInfo.pipelineId}"
+            )
+            return emptyMap()
+        }
+        val pipelineAuthorizer = pipelineRepositoryService.getPipelineOauthUser(
+            projectId = pipelineInfo.projectId,
+            pipelineId = pipelineInfo.pipelineId
+        ) ?: pipelineInfo.lastModifyUser
+        val nodeList = creativeStreamService.getEnvNodeList(
+            userId = pipelineAuthorizer,
+            projectId = pipelineInfo.projectId,
+            envHashId = envHashId
+        ).filter { it.isNotBlank() }
+        if (nodeList.isEmpty()) {
+            logger.warn(
+                "creative stream env node list is empty|${pipelineInfo.projectId}|$envHashId"
+            )
+            return emptyMap()
+        }
+        val agentHashId = nodeList.random()
+        return creativeStreamService.creativeStreamParams(
+            projectId = pipelineInfo.projectId,
+            agentHashId = agentHashId,
+            userId = userId
+        )
     }
 
     /**

@@ -122,6 +122,7 @@ import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineOperationLogService
+import com.tencent.devops.process.service.PipelineVisibilityService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
@@ -187,7 +188,8 @@ class PipelineRepositoryService constructor(
     private val subPipelineTaskService: SubPipelineTaskService,
     private val pipelineInfoService: PipelineInfoService,
     private val pipelineTemplateInfoDao: PipelineTemplateInfoDao,
-    private val pipelineGroupService: PipelineGroupService
+    private val pipelineGroupService: PipelineGroupService,
+    private val pipelineVisibilityService: PipelineVisibilityService
 ) {
 
     companion object {
@@ -906,6 +908,15 @@ class PipelineRepositoryService constructor(
                     channel = channelCode.name,
                     modelTasks = modelTasks.toList()
                 )
+                // 创作流,可见性默认添加创建者
+                if (channelCode == ChannelCode.CREATIVE_STREAM) {
+                    pipelineVisibilityService.initVisibility(
+                        transactionContext = transactionContext,
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId
+                    )
+                }
             }
         } finally {
             lock.unlock()
@@ -1750,6 +1761,7 @@ class PipelineRepositoryService constructor(
                     templatePipelineDao.delete(transactionContext, projectId, pipelineId)
                     pipelineYamlInfoDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
                     pipelineYamlVersionDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
+                    pipelineVisibilityService.deleteByPipelineId(transactionContext, projectId, pipelineId)
                 } else {
                     // 删除前改名，防止名称占用
                     val deleteTime = org.joda.time.LocalDateTime.now().toString("yyMMddHHmmSS")
@@ -2525,11 +2537,14 @@ class PipelineRepositoryService constructor(
     /**
      * 根据model获取触发参数，兼容级联参数
      */
-    fun getTriggerParams(triggerContainer: TriggerContainer): Map<String, String> {
+    fun getTriggerParams(
+        triggerContainer: TriggerContainer,
+        inputParams: Map<String, String>? = null
+    ): Map<String, String> {
         val startParams = mutableMapOf<String, String>()
         triggerContainer.params.forEach { param ->
             val paramKey = param.id
-            val paramDefaultValue = param.defaultValue
+            val paramDefaultValue = inputParams?.get(param.id) ?: param.defaultValue
             val paramType = param.type
             if (CascadePropertyUtils.supportCascadeParam(paramType)) {
                 CascadePropertyUtils.parseDefaultValue(

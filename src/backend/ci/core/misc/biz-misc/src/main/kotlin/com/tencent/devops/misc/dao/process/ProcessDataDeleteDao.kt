@@ -69,6 +69,7 @@ import com.tencent.devops.model.process.tables.TPipelineTriggerEvent
 import com.tencent.devops.model.process.tables.TPipelineTriggerReview
 import com.tencent.devops.model.process.tables.TPipelineView
 import com.tencent.devops.model.process.tables.TPipelineViewGroup
+import com.tencent.devops.model.process.tables.TPipelineVisibility
 import com.tencent.devops.model.process.tables.TPipelineViewTop
 import com.tencent.devops.model.process.tables.TPipelineViewUserLastView
 import com.tencent.devops.model.process.tables.TPipelineViewUserSettings
@@ -611,6 +612,14 @@ class ProcessDataDeleteDao {
 
     fun deletePipelineSubRef(dslContext: DSLContext, projectId: String, pipelineId: String) {
         with(TPipelineSubRef.T_PIPELINE_SUB_REF) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .execute()
+        }
+    }
+
+    fun deletePipelineVisibility(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        with(TPipelineVisibility.T_PIPELINE_VISIBILITY) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
                 .execute()
