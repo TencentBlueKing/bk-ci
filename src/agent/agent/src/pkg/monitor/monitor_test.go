@@ -31,24 +31,6 @@ func (s *stubInput) Gather() ([]Metric, error) {
 	return append([]Metric(nil), s.metrics...), nil
 }
 
-// Collect 在 MonitorOn=false 时应直接返回，不订阅 EBus。
-func TestCollect_DisabledByConfig(t *testing.T) {
-	orig := config.GAgentConfig
-	t.Cleanup(func() { config.GAgentConfig = orig })
-	config.GAgentConfig = &config.AgentConfig{MonitorOn: false}
-
-	done := make(chan struct{})
-	go func() {
-		Collect()
-		close(done)
-	}()
-	select {
-	case <-done:
-	case <-time.After(500 * time.Millisecond):
-		t.Fatal("Collect should return immediately when MonitorOn=false")
-	}
-}
-
 // doOneGather 应把所有 input 的 metric 汇总后经过 rename 送到 reporter。
 func TestDoOneGather_AggregatesAndReports(t *testing.T) {
 	stub1 := &stubInput{
@@ -83,7 +65,6 @@ func TestDoOneGather_AggregatesAndReports(t *testing.T) {
 		SecretKey: "s",
 		BuildType: "THIRD_PARTY",
 		Gateway:   "http://example.com",
-		MonitorOn: true,
 	}
 	// 用 report 捕获
 	reporter.doPost = func(ctx context.Context, url string, headers map[string]string, body []byte) (int, []byte, error) {
@@ -116,7 +97,7 @@ func TestDoOneGather_InputErrorIsolated(t *testing.T) {
 	t.Cleanup(func() { config.GAgentConfig = orig })
 	config.GAgentConfig = &config.AgentConfig{
 		ProjectId: "bkci", AgentId: "a", SecretKey: "s",
-		Gateway: "http://example.com", MonitorOn: true,
+		Gateway: "http://example.com",
 	}
 
 	var posted int32
@@ -146,7 +127,7 @@ func TestDoOneGather_EmptySkipsReport(t *testing.T) {
 	t.Cleanup(func() { config.GAgentConfig = orig })
 	config.GAgentConfig = &config.AgentConfig{
 		ProjectId: "bkci", AgentId: "a", SecretKey: "s",
-		Gateway: "http://example.com", MonitorOn: true,
+		Gateway: "http://example.com",
 	}
 	var posted int32
 	reporter := &Reporter{

@@ -51,16 +51,10 @@ var inflightInputs atomic.Int32
 
 // Collect 是 monitor 主循环入口，应由 Agent 启动流程用 safeGo 包装调起。
 //
-// 配置 MonitorOn=false 时立即返回。
-//
 // 异常自愈：每一轮 runGatherLoop 的 panic 都被捕获；并在 restartBackoff
 // 后重新进入主循环，不让采集因为一次偶发崩溃而永久哑火。IP 变更会触发
 // ctx 取消来让 runGatherLoop 退出、主循环重新起新的一轮。
 func Collect() {
-	if !config.GAgentConfig.MonitorOn {
-		logs.Info("monitor|disabled by MonitorOn=false")
-		return
-	}
 	logs.Info("monitor|start")
 
 	ipChan := config.EBus.Subscribe(config.IpEvent, eBusID, 1)
