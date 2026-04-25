@@ -549,8 +549,7 @@ class WorkspaceCommon @Autowired constructor(
                     try {
                         remoteDevSettingDao.fetchOneSetting(dslContext, it.userId)
                         whiteListService.shareWorkspace(operator, it.userId)
-
-                    if (it.type == WorkspaceShared.AssignType.OWNER) {
+                        if (it.type == WorkspaceShared.AssignType.OWNER) {
                             notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
                                 userIds = mutableSetOf(it.userId),
                                 workspaceName = workspaceName,
@@ -564,25 +563,24 @@ class WorkspaceCommon @Autowired constructor(
                                     "userId" to it.userId
                                 )
                             )
-
-                        makeDiskMount(
-                            ip = cgsId.substringAfter("."),
-                            user = operator
+                            makeDiskMount(
+                                ip = cgsId.substringAfter("."),
+                                user = operator
+                            )
+                        }
+                        notifyControl.dispatchWebsocketPushEvent(
+                            userId = it.userId,
+                            workspaceName = workspaceName,
+                            workspaceHost = null,
+                            errorMsg = null,
+                            type = WebSocketActionType.WORKSPACE_ASSIGN,
+                            status = true,
+                            action = WorkspaceAction.ASSIGN,
+                            systemType = null,
+                            workspaceMountType = mountType,
+                            ownerType = null,
+                            projectId = ""
                         )
-                    }
-                    notifyControl.dispatchWebsocketPushEvent(
-                        userId = it.userId,
-                        workspaceName = workspaceName,
-                        workspaceHost = null,
-                        errorMsg = null,
-                        type = WebSocketActionType.WORKSPACE_ASSIGN,
-                        status = true,
-                        action = WorkspaceAction.ASSIGN,
-                        systemType = null,
-                        workspaceMountType = mountType,
-                        ownerType = null,
-                        projectId = ""
-                    )
                     } catch (e: Exception) {
                         logger.warn("shareWorkspace post-process error for ${it.userId}", e)
                     }
