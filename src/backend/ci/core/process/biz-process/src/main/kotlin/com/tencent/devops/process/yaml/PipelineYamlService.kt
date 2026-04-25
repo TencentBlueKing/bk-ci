@@ -638,8 +638,6 @@ class PipelineYamlService(
         }
     }
 
-
-    @Suppress("LongParameterList")
     fun rename(
         projectId: String,
         repoHashId: String,
@@ -656,9 +654,7 @@ class PipelineYamlService(
         commitId: String? = null,
         commitTime: LocalDateTime? = null,
         version: Int? = null,
-        needCreateNewInfo: Boolean,
-        needDeleteOldInfo: Boolean,
-        needCreateVersion: Boolean
+        needCreateNewInfo: Boolean
     ) {
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -677,41 +673,53 @@ class PipelineYamlService(
                     oldFilePath = oldFilePath
                 )
             }
+            val id = client.get(ServiceAllocIdResource::class).generateSegmentId(
+                PIPELINE_YAML_VERSION_BIZ_ID
+            ).data ?: 0
+            pipelineYamlVersionDao.save(
+                dslContext = transactionContext,
+                id = id,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath,
+                ref = ref,
+                commitId = commitId!!,
+                commitTime = commitTime!!,
+                blobId = blobId!!,
+                pipelineId = pipelineId,
+                version = version!!,
+                userId = userId,
+                resourceType = resourceType
+            )
+            pipelineYamlBranchFileDao.save(
+                dslContext = transactionContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                branch = ref,
+                filePath = filePath,
+                commitId = commitId,
+                blobId = blobId,
+                commitTime = commitTime
+            )
+        }
+    }
+
+    fun deleteOldFile(
+        projectId: String,
+        repoHashId: String,
+        ref: String,
+        defaultBranch: String?,
+        oldFilePath: String,
+        needDeleteOldInfo: Boolean
+    ) {
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
             if (needDeleteOldInfo) {
                 pipelineYamlInfoDao.delete(
                     dslContext = transactionContext,
                     projectId = projectId,
                     repoHashId = repoHashId,
                     filePath = oldFilePath
-                )
-            }
-            if (needCreateVersion) {
-                val id =
-                    client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_YAML_VERSION_BIZ_ID).data ?: 0
-                pipelineYamlVersionDao.save(
-                    dslContext = transactionContext,
-                    id = id,
-                    projectId = projectId,
-                    repoHashId = repoHashId,
-                    filePath = filePath,
-                    ref = ref,
-                    commitId = commitId!!,
-                    commitTime = commitTime!!,
-                    blobId = blobId!!,
-                    pipelineId = pipelineId,
-                    version = version!!,
-                    userId = userId,
-                    resourceType = resourceType
-                )
-                pipelineYamlBranchFileDao.save(
-                    dslContext = transactionContext,
-                    projectId = projectId,
-                    repoHashId = repoHashId,
-                    branch = ref,
-                    filePath = filePath,
-                    commitId = commitId,
-                    blobId = blobId,
-                    commitTime = commitTime
                 )
             }
             if (ref == defaultBranch) {
@@ -731,14 +739,6 @@ class PipelineYamlService(
                     filePath = oldFilePath
                 )
             }
-            pipelineYamlVersionDao.updateBranchAction(
-                dslContext = transactionContext,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                filePath = oldFilePath,
-                ref = ref,
-                branchAction = BranchVersionAction.INACTIVE.name
-            )
         }
     }
 
