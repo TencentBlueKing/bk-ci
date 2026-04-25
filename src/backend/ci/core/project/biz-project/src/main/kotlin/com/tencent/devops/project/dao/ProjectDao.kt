@@ -148,6 +148,17 @@ class ProjectDao {
         }
     }
 
+    fun countByCondition(
+        dslContext: DSLContext,
+        projectConditionDTO: ProjectConditionDTO
+    ): Int {
+        return with(TProject.T_PROJECT) {
+            dslContext.selectCount().from(this)
+                .where(buildProjectCondition(projectConditionDTO))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
     fun buildProjectCondition(
         projectConditionDTO: ProjectConditionDTO
     ): MutableList<Condition> {
