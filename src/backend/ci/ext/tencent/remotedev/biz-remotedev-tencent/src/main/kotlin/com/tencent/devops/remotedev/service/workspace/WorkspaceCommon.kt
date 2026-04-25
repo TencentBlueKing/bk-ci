@@ -549,11 +549,8 @@ class WorkspaceCommon @Autowired constructor(
                     try {
                         remoteDevSettingDao.fetchOneSetting(dslContext, it.userId)
                         whiteListService.shareWorkspace(operator, it.userId)
-                    } catch (e: Exception) {
-                        logger.warn("shareWorkspace post-process error for ${it.userId}", e)
-                    }
+
                     if (it.type == WorkspaceShared.AssignType.OWNER) {
-                        try {
                             notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
                                 userIds = mutableSetOf(it.userId),
                                 workspaceName = workspaceName,
@@ -567,9 +564,7 @@ class WorkspaceCommon @Autowired constructor(
                                     "userId" to it.userId
                                 )
                             )
-                        } catch (e: Exception) {
-                            logger.warn("notify4UserAndCC error for ${it.userId}", e)
-                        }
+
                         makeDiskMount(
                             ip = cgsId.substringAfter("."),
                             user = operator
@@ -588,6 +583,9 @@ class WorkspaceCommon @Autowired constructor(
                         ownerType = null,
                         projectId = ""
                     )
+                    } catch (e: Exception) {
+                        logger.warn("shareWorkspace post-process error for ${it.userId}", e)
+                    }
                 }
             }, ioExecutor)
         }
