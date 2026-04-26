@@ -135,4 +135,16 @@ class SamplePermissionResourceService constructor(
         createTime = LocalDateTime.now(),
         updateTime = LocalDateTime.now()
     )
+
+    override fun getResourceByName(
+        projectCode: String,
+        resourceType: String,
+        resourceName: String
+    ): AuthResourceInfo? = null
+
+    override fun getResourceByCode(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): AuthResourceInfo? = null
 }

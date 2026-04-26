@@ -1103,6 +1103,7 @@
     "systemTime": "システム時間",
     "checkDesc": "審査説明",
     "checkSuggestTips": "審査意見を入力してください",
+    "checkSuggest": "審査意見",
     "checkResult": "審査結果",
     "agree": "同意、パイプラインの実行を続行",
     "abort": "却下、このステップを失敗と判定",

@@ -1,0 +1,257 @@
+# =============================================================================
+# Taskfile.yml — BK-CI Agent 全平台构建
+#
+# 安装 Task:
+#   go install github.com/go-task/task/v3/cmd/task@latest
+#   或参考 https://taskfile.dev/installation/
+#
+# 用法:
+#   task build                    # 构建当前平台
+#   task build:windows            # 构建 Windows amd64
+#   task build:linux              # 构建 Linux amd64
+#   task build:linux:arm64        # 构建 Linux arm64
+#   task build:macos              # 构建 macOS amd64 (no CGO)
+#   task build:all                # 全平台构建
+#   task test                     # 运行单元测试
+#   task clean                    # 清理 bin 目录
+#   task fmt                      # 代码格式化
+#   task i18n                     # i18n 代码生成
+#   task --list                   # 查看所有可用任务
+#
+# 注入变量 (PowerShell):
+#   $env:AGENT_VERSION="v1.0.0"; $env:GO="go1.19"; task build:linux
+#
+# 注入变量 (Bash):
+#   AGENT_VERSION=v1.0.0 GO=go1.19 task build:linux
+# =============================================================================
+
+version: "3"
+
+vars:
+  # 环境变量 GO 指定 go 命令 (如 go1.19)，未设置时用 "go"
+  GO_CMD: '{{.GO | default "go"}}'
+  AGENT_VERSION: '{{.AGENT_VERSION | default "v0.0.0-beta.0"}}'
+  BUILD_OUT_TAG: '{{.BUILD_OUT_TAG | default "out"}}'
+  # 代码签名校验信任锚，出包时通过命令行传入
+  WIN_CERT_ORG: '{{.WIN_CERT_ORG | default ""}}'
+  MACOS_TEAM_ID: '{{.MACOS_TEAM_ID | default ""}}'
+  I18N_DIR: "../../../../../../support-files/i18n/agent/"
+  # git / 时间戳在顶层用 sh 求值（只执行一次）
+  GIT_COMMIT:
+    sh: git rev-parse HEAD 2>/dev/null || echo unknown
+  BUILD_TIME:
+    sh: '{{if eq OS "windows"}}powershell -NoProfile -Command "Get-Date -Format ''yyyy-MM-dd.HH:mm:ssK''"{{else}}date "+%Y-%m-%d.%H:%M:%S%Z"{{end}}'
+  # ldflags 完整字符串（纯模板拼接，不依赖 sh）
+  LDFLAGS: >-
+    -w -s
+    -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.AgentVersion={{.AGENT_VERSION}}
+    -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.GitCommit={{.GIT_COMMIT}}
+    -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.BuildTime={{.BUILD_TIME}}
+    -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.WinCertOrgName={{.WIN_CERT_ORG}}
+    -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.MacosTeamId={{.MACOS_TEAM_ID}}
+
+env:
+  GO111MODULE: "on"
+  # Go 1.19 的 go.mod 在高版本 Go 下会报 "updates to go.mod needed"，
+  # -mod=mod 允许自动调整，避免强制 go mod tidy
+  GOFLAGS: "-mod=mod"
+
+tasks:
+  # ── 默认任务 ──────────────────────────────────────────────────────────
+  default:
+    desc: "构建当前平台"
+    cmds:
+      - task: build
+
+  # ── 内部: 构建三个二进制的模板 ─────────────────────────────────────────
+  _build:
+    internal: true
+    requires:
+      vars: [TARGET_OS, TARGET_ARCH, CGO, DAEMON_OUT, AGENT_OUT, UPGRADER_OUT]
+    cmds:
+      - '{{.GO_CMD}} build -tags={{.BUILD_OUT_TAG}} -trimpath -ldflags="{{.LDFLAGS}}" -o bin/{{.DAEMON_OUT}} ./src/cmd/daemon/'
+      - '{{.GO_CMD}} build -tags={{.BUILD_OUT_TAG}} -trimpath -ldflags="{{.LDFLAGS}}" -o bin/{{.AGENT_OUT}} ./src/cmd/agent/main.go'
+      - '{{.GO_CMD}} build -tags={{.BUILD_OUT_TAG}} -trimpath -ldflags="{{.LDFLAGS}}" -o bin/{{.UPGRADER_OUT}} ./src/cmd/upgrader/main.go'
+    env:
+      CGO_ENABLED: "{{.CGO}}"
+      GOOS: "{{.TARGET_OS}}"
+      GOARCH: "{{.TARGET_ARCH}}"
+
+  # ── 准备 bin 目录 ─────────────────────────────────────────────────────
+  _prepare:
+    internal: true
+    run: once
+    cmds:
+      - cmd: '{{if eq OS "windows"}}cmd /c "if not exist bin mkdir bin"{{else}}mkdir -p bin{{end}}'
+        silent: true
+
+  # ── 清理 ──────────────────────────────────────────────────────────────
+  clean:
+    desc: "清理 bin 目录"
+    cmds:
+      - cmd: '{{if eq OS "windows"}}cmd /c "if exist bin rd /s /q bin"{{else}}rm -rf bin{{end}}'
+      - task: _prepare
+
+  # ── 测试 ──────────────────────────────────────────────────────────────
+  test:
+    desc: "运行单元测试"
+    cmds:
+      - "{{.GO_CMD}} test -tags={{.BUILD_OUT_TAG}} -run . ./..."
+
+  # ── 格式化 ────────────────────────────────────────────────────────────
+  # goimports-reviser 使用 ./... 会处理所有 Go 文件，包括不属于当前平台的文件，
+  # 导致解析报错。因此按平台排除不适用的文件后再逐文件处理。
+  fmt:
+    desc: "代码格式化 (goimports + gofmt + goimports-reviser)"
+    cmds:
+      - goimports -w .
+      # ── Linux: 排除 windows/darwin 文件 ──
+      - cmd: find ./ -name "*.go" ! -name "*_win.go" ! -name "*_win_test.go" ! -name "*_darwin.go" ! -name "*_darwin_test.go" | xargs gofmt -w -l
+        platforms: [linux]
+      - cmd: find ./ -name "*.go" ! -name "*_win.go" ! -name "*_win_test.go" ! -name "*_darwin.go" ! -name "*_darwin_test.go" | xargs goimports-reviser -rm-unused -set-alias -format
+        platforms: [linux]
+      # ── macOS: 排除 windows/linux 文件 ──
+      - cmd: find ./ -name "*.go" ! -name "*_win.go" ! -name "*_win_test.go" ! -name "*_linux.go" ! -name "*_linux_test.go" | xargs gofmt -w -l
+        platforms: [darwin]
+      - cmd: find ./ -name "*.go" ! -name "*_win.go" ! -name "*_win_test.go" ! -name "*_linux.go" ! -name "*_linux_test.go" | xargs goimports-reviser -rm-unused -set-alias -format
+        platforms: [darwin]
+      # ── Windows: 排除 linux/darwin/unix 文件 ──
+      # PowerShell 脚本中的 $_ 会被 task 模板引擎误解析，
+      # 因此通过 -File 执行外部脚本来避免此问题。
+      - cmd: powershell -NoProfile -File scripts/fmt.ps1
+        platforms: [windows]
+
+  # ── i18n 代码生成 ─────────────────────────────────────────────────────
+  i18n:
+    desc: "i18n 代码生成"
+    env:
+      I18N_DIR: "{{.I18N_DIR}}"
+    cmds:
+      - "{{.GO_CMD}} generate -x src/pkg/i18n/i18n.go"
+
+  # ── 构建当前平台 ──────────────────────────────────────────────────────
+  build:
+    desc: "构建当前平台的二进制"
+    deps: [_prepare, test, i18n]
+    vars:
+      _EXE: '{{if eq OS "windows"}}.exe{{end}}'
+    cmds:
+      - task: _build
+        vars:
+          TARGET_OS: "{{OS}}"
+          TARGET_ARCH: "{{ARCH}}"
+          CGO: "0"
+          DAEMON_OUT: "devopsDaemon{{._EXE}}"
+          AGENT_OUT: "devopsAgent{{._EXE}}"
+          UPGRADER_OUT: "upgrader{{._EXE}}"
+
+  # ── Linux ─────────────────────────────────────────────────────────────
+  build:linux:
+    desc: "构建 Linux amd64"
+    deps: [_prepare, test, i18n]
+    cmds:
+      - task: _build
+        vars: { TARGET_OS: linux, TARGET_ARCH: amd64, CGO: "0",
+                DAEMON_OUT: devopsDaemon_linux, AGENT_OUT: devopsAgent_linux, UPGRADER_OUT: upgrader_linux }
+
+  build:linux:arm64:
+    desc: "构建 Linux arm64"
+    deps: [_prepare, test, i18n]
+    cmds:
+      - task: _build
+        vars: { TARGET_OS: linux, TARGET_ARCH: arm64, CGO: "0",
+                DAEMON_OUT: devopsDaemon_linux_arm64, AGENT_OUT: devopsAgent_linux_arm64, UPGRADER_OUT: upgrader_linux_arm64 }
+
+  build:linux:mips64:
+    desc: "构建 Linux mips64"
+    deps: [_prepare, test, i18n]
+    cmds:
+      - task: _build
+        vars: { TARGET_OS: linux, TARGET_ARCH: mips64, CGO: "0",
+                DAEMON_OUT: devopsDaemon_linux_mips64, AGENT_OUT: devopsAgent_linux_mips64, UPGRADER_OUT: upgrader_linux_mips64 }
+
+  build:linux:loong64:
+    desc: "构建 Linux loong64"
+    deps: [_prepare, test, i18n]
+    cmds:
+      - task: _build
+        vars: { TARGET_OS: linux, TARGET_ARCH: loong64, CGO: "0",
+                DAEMON_OUT: devopsDaemon_linux_loong64, AGENT_OUT: devopsAgent_linux_loong64, UPGRADER_OUT: upgrader_linux_loong64 }
+
+  build:linux:all:
+    desc: "构建全部 Linux 架构"
+    cmds:
+      - task: build:linux
+      - task: build:linux:arm64
+      - task: build:linux:mips64
+      - task: build:linux:loong64
+
+  # ── Windows ───────────────────────────────────────────────────────────
+  build:windows:
+    desc: "构建 Windows amd64"
+    deps: [_prepare, test, i18n]
+    cmds:
+      - task: _build
+        vars: { TARGET_OS: windows, TARGET_ARCH: amd64, CGO: "0",
+                DAEMON_OUT: devopsDaemon.exe, AGENT_OUT: devopsAgent.exe, UPGRADER_OUT: upgrader.exe }
+
+  build:windows:386:
+    desc: "构建 Windows 386"
+    deps: [_prepare, test, i18n]
+    cmds:
+      - task: _build
+        vars: { TARGET_OS: windows, TARGET_ARCH: "386", CGO: "0",
+                DAEMON_OUT: devopsDaemon_386.exe, AGENT_OUT: devopsAgent_386.exe, UPGRADER_OUT: upgrader_386.exe }
+
+  build:windows:all:
+    desc: "构建全部 Windows 架构"
+    cmds:
+      - task: build:windows
+      - task: build:windows:386
+
+  # ── macOS (no CGO, 方便交叉编译) ──────────────────────────────────────
+  build:macos:
+    desc: "构建 macOS amd64 (no CGO)"
+    deps: [_prepare, test, i18n]
+    cmds:
+      - task: _build
+        vars: { TARGET_OS: darwin, TARGET_ARCH: amd64, CGO: "0",
+                DAEMON_OUT: devopsDaemon_macos, AGENT_OUT: devopsAgent_macos, UPGRADER_OUT: upgrader_macos }
+
+  build:macos:arm64:
+    desc: "构建 macOS arm64 (no CGO)"
+    deps: [_prepare, test, i18n]
+    cmds:
+      - task: _build
+        vars: { TARGET_OS: darwin, TARGET_ARCH: arm64, CGO: "0",
+                DAEMON_OUT: devopsDaemon_macos_arm64, AGENT_OUT: devopsAgent_macos_arm64, UPGRADER_OUT: upgrader_macos_arm64 }
+
+  build:macos:cgo:
+    desc: "构建 macOS amd64 (CGO, 支持 cpu/diskio 指标采集)"
+    deps: [_prepare, test, i18n]
+    cmds:
+      - task: _build
+        vars: { TARGET_OS: darwin, TARGET_ARCH: amd64, CGO: "1",
+                DAEMON_OUT: devopsDaemon_macos, AGENT_OUT: devopsAgent_macos, UPGRADER_OUT: upgrader_macos }
+
+  build:macos:arm64:cgo:
+    desc: "构建 macOS arm64 (CGO, 支持 cpu/diskio 指标采集)"
+    deps: [_prepare, test, i18n]
+    cmds:
+      - task: _build
+        vars: { TARGET_OS: darwin, TARGET_ARCH: arm64, CGO: "1",
+                DAEMON_OUT: devopsDaemon_macos_arm64, AGENT_OUT: devopsAgent_macos_arm64, UPGRADER_OUT: upgrader_macos_arm64 }
+
+  build:macos:all:
+    desc: "构建全部 macOS 架构 (no CGO)"
+    cmds:
+      - task: build:macos
+      - task: build:macos:arm64
+
+  # ── 全平台 ────────────────────────────────────────────────────────────
+  build:all:
+    desc: "构建全部平台 (Linux + Windows + macOS no-CGO)"
+    cmds:
+      - task: build:linux:all
+      - task: build:windows:all
+      - task: build:macos:all
