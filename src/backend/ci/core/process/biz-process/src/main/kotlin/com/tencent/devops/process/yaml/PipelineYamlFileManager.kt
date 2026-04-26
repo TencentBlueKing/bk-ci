@@ -579,6 +579,8 @@ class PipelineYamlFileManager @Autowired constructor(
 
             updatePipelineIfAbsent(pipelineId = pipelineId)?.let {
                 context.versionName = it.versionName
+                // 如果yaml更新了流水线名称,日志也需要更新
+                context.pipelineName = it.pipelineName
             } ?: run {
                 context.actionType = YamlPipelineActionType.NO_CHANGE
             }
@@ -1187,12 +1189,19 @@ class PipelineYamlFileManager @Autowired constructor(
         context.pipelineName = pipelineName
         context.pipelineId = pipelineId
 
+        // 校验是否需要删除info记录,需要在deleteOldBranchVersion之前判断
+        val needDeleteOldInfo = shouldDeleteOldYamlInfo(oldFilePath = oldFilePath)
         deleteOldBranchVersion(pipelineId = pipelineId)
         updateYamlPipelineWhenRename(
             pipelineId = pipelineId,
             newYamlInfo = newYamlInfo
-        )
-        deleteOldYamlPipeline()
+        )?.let {
+            context.versionName = it.versionName
+            context.pipelineName = it.pipelineName
+        } ?: run {
+            context.actionType = YamlPipelineActionType.NO_CHANGE
+        }
+        deleteOldYamlPipeline(needDeleteOldInfo = needDeleteOldInfo)
         handleMergedPullRequest(pipelineId = pipelineId)
     }
 
@@ -1224,7 +1233,7 @@ class PipelineYamlFileManager @Autowired constructor(
     private fun PipelineYamlFileEvent.updateYamlPipelineWhenRename(
         pipelineId: String,
         newYamlInfo: PipelineYamlInfo?
-    ) {
+    ): DeployPipelineResult? {
         val commitId = commit!!.commitId
         // 新文件是否需要创建新版本
         val needCreateVersion = newYamlInfo == null || shouldCreateVersion(
@@ -1241,7 +1250,7 @@ class PipelineYamlFileManager @Autowired constructor(
                 "[PAC_PIPELINE]|rename yaml pipeline not need create version|" +
                     "$eventId|$projectId|$repoHashId|$filePath"
             )
-            return
+            return null
         }
         val content = pipelineYamlFileService.getFileContent(
             projectId = projectId,
@@ -1283,20 +1292,24 @@ class PipelineYamlFileManager @Autowired constructor(
             version = deployPipelineResult.version,
             needCreateNewInfo = newYamlInfo == null
         )
+        return deployPipelineResult
     }
 
-    private fun PipelineYamlFileEvent.deleteOldYamlPipeline() {
-        val needDeleteOldInfo = shouldDeleteOldYamlInfo(oldFilePath = oldFilePath!!)
+    private fun PipelineYamlFileEvent.deleteOldYamlPipeline(needDeleteOldInfo: Boolean) {
+        logger.info(
+            "[PAC_PIPELINE]|delete old yaml pipeline|" +
+                "$eventId|$projectId|$repoHashId|$filePath|$needDeleteOldInfo"
+        )
         pipelineYamlService.deleteOldFile(
             projectId = projectId,
             repoHashId = repoHashId,
             ref = ref,
             defaultBranch = defaultBranch,
-            oldFilePath = oldFilePath,
+            oldFilePath = oldFilePath!!,
             needDeleteOldInfo = needDeleteOldInfo
         )
         // 删除流水线,如果关联的流水线组下流水线已经为空,应该删除
-        if (!isTemplate) {
+        if (!isTemplate && ref == defaultBranch) {
             val directory = GitActionCommon.getCiDirectory(oldFilePath)
             pipelineYamlViewService.deleteEmptyYamlView(
                 userId = userId,
