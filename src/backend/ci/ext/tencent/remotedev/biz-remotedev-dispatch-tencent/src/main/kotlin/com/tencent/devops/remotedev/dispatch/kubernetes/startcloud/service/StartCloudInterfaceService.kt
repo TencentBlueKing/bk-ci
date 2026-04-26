@@ -33,6 +33,7 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.Environm
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentShare
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentUnShare
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentUserCreate
+import com.tencent.devops.remotedev.pojo.remotedev.ResourceEstimateByVmResponse
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ResourceEstimateByVmRequest
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
@@ -40,7 +41,6 @@ import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
-import com.tencent.devops.remotedev.pojo.remotedev.ResourceEstimateByVmResponse
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
