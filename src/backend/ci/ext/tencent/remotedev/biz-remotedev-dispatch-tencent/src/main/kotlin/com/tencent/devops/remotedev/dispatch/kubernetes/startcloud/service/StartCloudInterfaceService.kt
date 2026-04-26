@@ -80,7 +80,9 @@ class StartCloudInterfaceService @Autowired constructor(
         receivers: List<String>,
         gameId: String?
     ): String {
-        receivers.forEach { createStartCloudUser(it, gameId) }
+        receivers.forEach {
+            createStartCloudUser(it, gameId)
+        }
         return workspaceClient.shareWorkspace(
             userId,
             EnvironmentShare(
