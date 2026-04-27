@@ -101,9 +101,6 @@ class EnvDispatchStrategyService @Autowired constructor(
         strategyName: String?, scope: StrategyScope, nodeRule: NodeRule?,
         labelSelector: List<LabelSelector>?
     ): Long {
-        if (nodeRule == null && labelSelector.isNullOrEmpty()) {
-            throw InvalidParamException("Strategy need last one rule")
-        }
         val lock = strategiesUpdateLock(projectId, envId)
         if (!lock.tryLock()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_STRATEGY_NOW_USING)
