@@ -37,7 +37,7 @@
                         >
                             <icon
                                 class="title-icon"
-                                :name="`store-${storeType.type}`"
+                                :name="storeType.type === 'creative' ? 'logo-creative' : `store-${storeType.type}`"
                                 size="18"
                             />
                             <span>{{ storeType.des }}</span>
