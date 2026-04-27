@@ -60,7 +60,7 @@
         margin: 0 0 16px 0;
         position: relative;
         flex: 1;
-        overflow-y: auto;
+        min-height: 0;
     }
     .g-store-route {
         min-height: 100%;

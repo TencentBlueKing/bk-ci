@@ -1,0 +1,186 @@
+.activityCard {
+  padding: 12px 16px;
+  margin: 6px 0;
+  background: #fff;
+  border: 1px solid #dcdee5;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.cardTitle {
+  font-weight: 600;
+  font-size: 14px;
+  color: #313238;
+  margin-bottom: 8px;
+}
+
+/* SelectionFormBlock */
+
+.formDescription {
+  color: #979ba5;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.optionList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.optionItem {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+  border: 1px solid #dcdee5;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.optionItem:hover {
+  border-color: #3a84ff;
+  background: #f0f5ff;
+}
+
+.optionItemSelected {
+  border-color: #3a84ff;
+  background: #f0f5ff;
+}
+
+.optionItemDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.optionItemDisabled:hover {
+  border-color: #dcdee5;
+  background: transparent;
+}
+
+.optionHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.optionCheckbox {
+  flex-shrink: 0;
+}
+
+.optionLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: #313238;
+}
+
+.optionTag {
+  flex-shrink: 0;
+}
+
+.optionDescription {
+  margin-top: 4px;
+  margin-left: 24px;
+  font-size: 12px;
+  color: #979ba5;
+}
+
+.formFooter {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Loading skeleton for pending bk-* blocks */
+
+.blockLoading {
+  padding: 16px;
+  margin: 6px 0;
+  border: 1px solid #dcdee5;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeletonLine {
+  height: 14px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #f0f1f5 25%, #e8e9ed 50%, #f0f1f5 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.skeletonLine:nth-child(1) {
+  width: 40%;
+}
+
+.skeletonLine:nth-child(2) {
+  width: 80%;
+}
+
+.skeletonLine:nth-child(3) {
+  width: 60%;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Dark mode */
+
+:global([data-theme="dark"]) .activityCard {
+  background: var(--chat-bg-muted, #1a1a1a);
+  border-color: var(--chat-border-color, #333);
+}
+
+:global([data-theme="dark"]) .cardTitle {
+  color: var(--chat-text-primary, #c4c6cc);
+}
+
+:global([data-theme="dark"]) .formDescription {
+  color: var(--chat-text-secondary, #979ba5);
+}
+
+:global([data-theme="dark"]) .optionItem {
+  border-color: var(--chat-border-color, #333);
+}
+
+:global([data-theme="dark"]) .optionItem:hover {
+  border-color: #3a84ff;
+  background: rgba(58, 132, 255, 0.1);
+}
+
+:global([data-theme="dark"]) .optionItemSelected {
+  border-color: #3a84ff;
+  background: rgba(58, 132, 255, 0.1);
+}
+
+:global([data-theme="dark"]) .optionLabel {
+  color: var(--chat-text-primary, #c4c6cc);
+}
+
+:global([data-theme="dark"]) .optionDescription {
+  color: var(--chat-text-secondary, #979ba5);
+}
+
+:global([data-theme="dark"]) .blockLoading {
+  background: var(--chat-bg-muted, #1a1a1a);
+  border-color: var(--chat-border-color, #333);
+}
+
+:global([data-theme="dark"]) .skeletonLine {
+  background: linear-gradient(90deg, #2a2a2a 25%, #333 50%, #2a2a2a 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}

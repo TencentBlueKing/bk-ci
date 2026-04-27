@@ -27,9 +27,11 @@
 
 package com.tencent.devops.environment.api.thirdpartyagent
 
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.AgentUpgradeType
 import com.tencent.devops.environment.pojo.thirdpartyagent.JDKInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.OpAgentUpgradeInfo
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -242,4 +244,27 @@ interface OpThirdPartyAgentUpgradeResource {
         @QueryParam("type")
         type: AgentUpgradeType?
     ): Result<Boolean>
+
+    @Operation(summary = "设置DockerInitFile MD5")
+    @PUT
+    @Path("/agents/set_docker_init_file_md5")
+    fun setDockerInitFileMd5(
+        @QueryParam("fileMd5")
+        fileMd5: String,
+        @QueryParam("os")
+        os: OS
+    ): Result<Boolean>
+
+    @Operation(summary = "设置Agent当前版本最大升级个数")
+    @PUT
+    @Path("/agents/set_agent_upgrade_max_count")
+    fun setAgentUpgradeMaxCount(
+        @QueryParam("count")
+        count: Long
+    ): Result<Boolean>
+
+    @Operation(summary = "获取所有升级设置")
+    @GET
+    @Path("/agents/get_all_upgrade_scope")
+    fun getAllUpgradeScope(): Result<OpAgentUpgradeInfo>
 }

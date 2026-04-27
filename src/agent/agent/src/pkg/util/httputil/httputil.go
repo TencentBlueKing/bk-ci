@@ -41,13 +41,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
+	"golang.org/x/net/http/httpproxy"
+
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
-	"github.com/pkg/errors"
-	"golang.org/x/net/http/httpproxy"
 )
 
 type HttpClient struct {
