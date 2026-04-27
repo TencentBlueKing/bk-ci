@@ -1129,7 +1129,7 @@
                         const tipsI18nKey = this.releaseParams.enablePac
                             ? 'pacPipelineReleaseTips'
                             : 'releaseTips'
-                        const tipsArrayLength = this.releaseParams.enablePac ? 2 : 0
+                        const tipsArrayLength = this.releaseParams.enablePac ? (this.isTemplate ? 1 : 2) : 0
                         const isPacMR
                             = this.releaseParams.enablePac
                                 && [
@@ -1168,9 +1168,12 @@
                                 }, this.$t(isPacMR ? 'pacMRRelaseTips' :  storeFlag ? 'template.versionReleaseSuc' :'releaseSuc', [versionName])),
                                 h('h3', {
                                     class: 'release-info-text',
-                                }, this.$t(isPacMR?  'pacMRRelaseSuc' : storeFlag ? isManual  ? 'template.manualUpdate' : 'template.autoUpdate'  : 'relaseSucTips', [
-                                    versionName
-                                ])),
+                                    domProps: {
+                                        innerHTML: this.$t(isPacMR?  'pacMRRelaseSuc' : storeFlag ? isManual  ? 'template.manualUpdate' : 'template.autoUpdate'  : 'relaseSucTips', [
+                                            versionName
+                                        ])
+                                    }
+                                }),
                                 updateBuildNo && !tipsArrayLength
                                     ? h('div', { class: 'warning-box' }, [
                                         h(Logo, { size: 14, name: 'warning-circle-fill' }),
@@ -1783,6 +1786,7 @@
 
     .pipeline-release-suc-tips {
         background: #f5f6fa;
+        min-width: 500px;
         display: flex;
         font-size: 14px;
         flex-direction: column;
