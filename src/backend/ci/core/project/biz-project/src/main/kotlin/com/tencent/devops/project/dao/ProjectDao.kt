@@ -417,7 +417,8 @@ class ProjectDao {
                 SUBJECT_SCOPES,
                 AUTH_SECRECY,
                 PRODUCT_ID,
-                HIDDEN
+                HIDDEN,
+                PROJECT_SCOPE
             ).values(
                 projectCreateInfo.projectName,
                 projectId,
@@ -449,7 +450,8 @@ class ProjectDao {
                 subjectScopesStr,
                 projectCreateInfo.authSecrecy ?: ProjectAuthSecrecyStatus.PUBLIC.value,
                 projectCreateInfo.productId,
-                projectCreateInfo.hidden
+                projectCreateInfo.hidden,
+                projectCreateInfo.projectScope
             ).execute()
         }
     }

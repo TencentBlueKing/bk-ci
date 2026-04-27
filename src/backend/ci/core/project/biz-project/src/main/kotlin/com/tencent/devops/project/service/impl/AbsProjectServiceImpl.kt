@@ -105,6 +105,7 @@ import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectOperation
+import com.tencent.devops.project.pojo.enums.ProjectScopeType
 import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.mq.ProjectEnableStatusBroadCastEvent
@@ -225,42 +226,48 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         projectChannel: ProjectChannelCode
     ): String {
         logger.info("create project| $userId | $createExtInfo | $projectCreateInfo")
+        val createInfo = projectCreateInfo.copy(
+            projectScope = projectScopeFromEnglishName(projectCreateInfo.englishName).value
+        )
+        createInfo.properties?.let { it.enableShareArtifact = false }
+
         validateWhenCreateProject(
             userId = userId,
             projectChannel = projectChannel,
             needValidate = createExtInfo.needValidate!!,
-            projectCreateInfo = projectCreateInfo
+            projectCreateInfo = createInfo
         )
-        projectCreateInfo.properties?.let {
-            it.enableShareArtifact = false
+        val subjectScopes = createInfo.subjectScopes!!.ifEmpty {
+            listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = getAllMembersName()))
         }
         val userDeptDetail = getDeptInfo(userId)
         var projectId = defaultProjectId
-        val subjectScopes = projectCreateInfo.subjectScopes.takeUnless { it.isNullOrEmpty() }?.onEach {
-            if (it.id == ALL_MEMBERS) it.name = getAllMembersName()
-        } ?: listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = getAllMembersName()))
-        val needApproval = projectPermissionService.needApproval(createExtInfo.needApproval)
+
+        val needApproval = projectPermissionService.needApproval(
+            needApproval = createExtInfo.needApproval,
+            projectScope = createInfo.projectScope
+        )
         val approvalStatus = if (needApproval) {
             ProjectApproveStatus.CREATE_PENDING.status
         } else {
             ProjectApproveStatus.APPROVED.status
         }
-        val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
-        ActionAuditContext.current().setInstance(projectCreateInfo)
+        val projectInfo = organizationMarkUp(createInfo, userDeptDetail)
+        ActionAuditContext.current().setInstance(createInfo)
         try {
             if (createExtInfo.needAuth!!) {
                 val authProjectCreateInfo = AuthProjectCreateInfo(
                     userId = userId,
                     userDeptDetail = userDeptDetail,
                     subjectScopes = subjectScopes,
-                    projectCreateInfo = projectCreateInfo,
+                    projectCreateInfo = createInfo,
                     approvalStatus = approvalStatus
                 )
                 // 注册项目到权限中心
                 projectId = projectPermissionService.createResources(
                     resourceRegisterInfo = ResourceRegisterInfo(
-                        resourceCode = projectCreateInfo.englishName,
-                        resourceName = projectCreateInfo.projectName
+                        resourceCode = createInfo.englishName,
+                        resourceName = createInfo.projectName
                     ),
                     authProjectCreateInfo = authProjectCreateInfo
                 )
@@ -268,7 +275,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } catch (e: PermissionForbiddenException) {
             throw e
         } catch (e: Exception) {
-            logger.warn("Failed to create project in permission center： $projectCreateInfo | ${e.message}")
+            logger.warn("Failed to create project in permission center： $createInfo | ${e.message}")
             throw OperationException(
                 message = "${e.message}"
             )
@@ -280,7 +287,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 val subjectScopesStr = objectMapper.writeValueAsString(subjectScopes)
-                val logoAddress = projectCreateInfo.logoAddress
+                val logoAddress = createInfo.logoAddress
                 projectDao.create(
                     dslContext = context,
                     userId = userId,
@@ -313,16 +320,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
                 }
             }
-            updateProjectRouterTag(projectCreateInfo.englishName)
+            updateProjectRouterTag(createInfo.englishName)
         } catch (e: DuplicateKeyException) {
-            logger.warn("Duplicate project $projectCreateInfo", e)
+            logger.warn("Duplicate project $createInfo", e)
             if (createExtInfo.needAuth) {
                 deleteAuth(projectId)
             }
             throw OperationException(I18nUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
         } catch (ignored: Throwable) {
             logger.warn(
-                "Fail to create the project ($projectCreateInfo)",
+                "Fail to create the project ($createInfo)",
                 ignored
             )
             if (createExtInfo.needAuth) {
@@ -331,6 +338,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             throw ignored
         }
         return projectId
+    }
+
+    /** `english_name` 以 `_` 开头为个人项目，否则团队。 */
+    private fun projectScopeFromEnglishName(englishName: String): ProjectScopeType {
+        val trimmed = englishName.trim()
+        return if (trimmed.isNotEmpty() && trimmed[0] == '_') {
+            ProjectScopeType.PERSONAL
+        } else {
+            ProjectScopeType.TEAM
+        }
     }
 
     private fun validateWhenCreateProject(
@@ -344,6 +361,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 validate(ProjectValidateType.project_name, projectName)
                 validate(ProjectValidateType.english_name, englishName)
             }
+            if (projectCreateInfo.projectScope == ProjectScopeType.PERSONAL.value)
+                return
             validateProjectOrganization(
                 projectChannel = projectChannel,
                 bgId = bgId,
@@ -491,8 +510,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return with(projectApprovalInfo) {
             // 项目创建成功和编辑审批成功,只有第一次进入页面需要展示tips,后面都不需要展示
             val needUpdateTipsStatus = approvalStatus == ProjectApproveStatus.APPROVED.status &&
-                updator == userId &&
-                tipsStatus != ProjectTipsStatus.NOT_SHOW.status
+                    updator == userId &&
+                    tipsStatus != ProjectTipsStatus.NOT_SHOW.status
             // 只有第一次进来需要展示,后面再进来不需要再展示
             if (needUpdateTipsStatus) {
                 logger.info("update project tips status|$userId|$projectId")
@@ -551,10 +570,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     ): Boolean {
         val startEpoch = System.currentTimeMillis()
         var success = false
+        val projectInfo = projectDao.getByEnglishName(
+            dslContext = dslContext,
+            englishName = englishName
+        ) ?: throw NotFoundException("project - $englishName is not exist!")
         validateWhenUpdateProject(
             englishName = englishName,
             userId = userId,
-            projectUpdateInfo = projectUpdateInfo
+            projectUpdateInfo = projectUpdateInfo,
+            projectInfo = projectInfo
         )
         val subjectScopes = projectUpdateInfo.subjectScopes!!.ifEmpty {
             listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = getAllMembersName()))
@@ -562,14 +586,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val subjectScopesStr = objectMapper.writeValueAsString(subjectScopes)
         logger.info(
             "update project : $userId | $englishName | $projectUpdateInfo | " +
-                "$needApproval | $subjectScopes"
+                    "$needApproval | $subjectScopes"
         )
         try {
             try {
-                val projectInfo = projectDao.getByEnglishName(
-                    dslContext = dslContext,
-                    englishName = englishName
-                ) ?: throw NotFoundException("project - $englishName is not exist!")
                 // 审计
                 ActionAuditContext.current()
                     .setOriginInstance(ProjectUtils.packagingBean(projectInfo))
@@ -613,7 +633,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                             projectInfo.subjectScopes, object : TypeReference<List<SubjectScopeInfo>>() {}
                         ),
                         afterSubjectScopes = subjectScopes
-                    )) {
+                    )
+                ) {
                     modifyProjectAuthResource(resourceUpdateInfo)
                 }
                 if (finalNeedApproval) {
@@ -715,7 +736,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private fun validateWhenUpdateProject(
         englishName: String,
         userId: String,
-        projectUpdateInfo: ProjectUpdateInfo
+        projectUpdateInfo: ProjectUpdateInfo,
+        projectInfo: TProjectRecord
     ) {
         with(projectUpdateInfo) {
             validate(
@@ -723,6 +745,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 name = projectUpdateInfo.projectName,
                 projectId = projectUpdateInfo.englishName
             )
+            if (projectInfo.projectScope == ProjectScopeType.PERSONAL.value)
+                return
             validateProjectRelateProduct(
                 ProjectProductValidateDTO(
                     englishName = englishName,
@@ -775,7 +799,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             afterSubjectScopes = afterSubjectScopes
         )
         return originalProjectName != modifiedProjectName || finalNeedApproval ||
-            isSubjectScopesChange
+                isSubjectScopesChange
     }
 
     private fun getUpdateApprovalStatus(
@@ -784,7 +808,14 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         afterSubjectScopes: List<SubjectScopeInfo>,
         projectUpdateInfo: ProjectUpdateInfo
     ): Pair<Boolean, Int> {
-        val authNeedApproval = projectPermissionService.needApproval(needApproval)
+        // 个人项目无需审批
+        if (projectInfo.projectScope == ProjectScopeType.PERSONAL.value) {
+            return Pair(false, ProjectApproveStatus.APPROVED.status)
+        }
+        val authNeedApproval = projectPermissionService.needApproval(
+            needApproval = needApproval,
+            projectScope = projectInfo.projectScope
+        )
         val approveStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
         // 判断是否需要审批
         return if (approveStatus.isSuccess()) {
@@ -798,9 +829,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             val realtimeKpiInfo = getRealtimeKpiInfo(projectInfo.englishName)
             val realtimeKpiCode = realtimeKpiInfo?.first
             val finalNeedApproval = authNeedApproval &&
-                (isSubjectScopesChange || projectInfo.authSecrecy != projectUpdateInfo.authSecrecy ||
-                    projectInfo.productId != projectUpdateInfo.productId ||
-                    realtimeKpiCode != projectUpdateInfo.kpiCode)
+                    (isSubjectScopesChange || projectInfo.authSecrecy != projectUpdateInfo.authSecrecy ||
+                            projectInfo.productId != projectUpdateInfo.productId ||
+                            realtimeKpiCode != projectUpdateInfo.kpiCode)
             val approvalStatus = if (finalNeedApproval) {
                 ProjectApproveStatus.UPDATE_PENDING.status
             } else {
@@ -1361,7 +1392,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL)
                 )
             }
-            if (enabled) {
+            if (enabled && projectInfo.projectScope != ProjectScopeType.PERSONAL.value) {
                 validateProjectRelateProduct(
                     ProjectProductValidateDTO(
                         englishName = englishName,
@@ -1515,7 +1546,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 errorCode = ProjectMessageCode.CANCEL_CREATION_PROJECT_FAIL,
                 params = arrayOf(projectId),
                 defaultMessage = "The project can be canceled only it under approval or " +
-                    "rejected during creation！| EnglishName=${projectInfo.englishName}"
+                        "rejected during creation！| EnglishName=${projectInfo.englishName}"
             )
         }
         try {
@@ -1547,7 +1578,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 errorCode = ProjectMessageCode.CANCEL_CREATION_PROJECT_FAIL,
                 params = arrayOf(projectId),
                 defaultMessage = "The project can be canceled only it under approval or " +
-                    "rejected during creation！| EnglishName=${projectInfo.englishName}"
+                        "rejected during creation！| EnglishName=${projectInfo.englishName}"
             )
         }
         try {

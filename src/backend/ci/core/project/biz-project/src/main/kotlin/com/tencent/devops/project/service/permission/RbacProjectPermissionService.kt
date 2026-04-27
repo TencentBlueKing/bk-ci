@@ -41,6 +41,7 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
+import com.tencent.devops.project.pojo.enums.ProjectScopeType
 import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
 import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectExtService
@@ -174,7 +175,7 @@ class RbacProjectPermissionService(
         } catch (ignore: Exception) {
             logger.warn(
                 "update auth resource failed, " +
-                    "rollback project($englishName) approval|$beforeUpdateProjectApprovalInfo"
+                        "rollback project($englishName) approval|$beforeUpdateProjectApprovalInfo"
             )
             projectApprovalService.rollBack(projectApprovalInfo = beforeUpdateProjectApprovalInfo!!)
             throw ignore
@@ -225,7 +226,9 @@ class RbacProjectPermissionService(
         )
     }
 
-    override fun needApproval(needApproval: Boolean?) = needApproval == true && authProjectApproval
+    override fun needApproval(needApproval: Boolean?, projectScope: Int): Boolean {
+        return needApproval == true && authProjectApproval && projectScope != ProjectScopeType.PERSONAL.value
+    }
 
     override fun isShowUserManageIcon(): Boolean = true
 
