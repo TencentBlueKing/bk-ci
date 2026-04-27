@@ -230,16 +230,16 @@
     
             async requestDetail () {
                 const methods = {
-                    atom: this.requestAtom,
-                    template: this.requestTemplateDetail,
-                    image: this.requestImageDetailByCode,
-                    service: this.requestServiceDetailByCode
+                    atom: () => this.requestAtom({atomCode: this.code, serviceScope: 'PIPELINE'}),
+                    template: () => this.requestTemplateDetail(this.code),
+                    image: () => this.requestImageDetailByCode(this.code),
+                    service: () => this.requestServiceDetailByCode(this.code)
                 }
                 if (!Object.keys(methods).includes(this.type) || typeof methods[this.type] !== 'function') {
                     this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
                     return
                 }
-                return methods[this.type](this.code)
+                return methods[this.type]()
             },
 
             async fetchRelativeProject () {

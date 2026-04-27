@@ -23,47 +23,50 @@
                 :label="$t('store.范畴')"
                 :required="true"
                 error-display-type="normal"
+                class="category-content"
             >
                 <bk-checkbox-group
                     v-model="categoryValue"
                     ext-cls="category-checkbox-group"
                 >
-                    <template v-if="categoryValue.includes('PIPELINE')">
-                        <bk-checkbox
-                            :value="'PIPELINE'"
-                            :disabled="true"
-                            style="height: 32px; line-height: 32px;"
-                        >
-                            {{ $t('store.CI流水线') }}
-                        </bk-checkbox>
-                        <category-config
-                            ref="pipelineCategoryConfig"
-                            scope-type="pipeline"
-                            :category-data="pipelineCategory"
-                            :disabled="true"
-                            :errors="{
-                                sortError: formErrors.pipelineSortError
-                            }"
-                        ></category-config>
-                    </template>
-                    <template v-if="categoryValue.includes('CREATIVE_STREAM')">
-                        <bk-checkbox
-                            :value="'CREATIVE_STREAM'"
-                            :disabled="true"
-                            style="height: 32px; line-height: 32px;"
-                        >
-                            {{ $t('store.CP创作流') }}
-                        </bk-checkbox>
-                        <category-config
-                            ref="creativeCategoryConfig"
-                            scope-type="creative"
-                            :category-data="creativeCategory"
-                            :disabled="true"
-                            :errors="{
-                                sortError: formErrors.creativeSortError
-                            }"
-                        ></category-config>
-                    </template>
+                    <bk-checkbox
+                        :value="'PIPELINE'"
+                        style="height: 32px; line-height: 32px;"
+                    >
+                        {{ $t('store.CI流水线') }}
+                    </bk-checkbox>
+                    <category-config
+                        v-if="categoryValue.includes('PIPELINE')"
+                        ref="pipelineCategoryConfig"
+                        scope-type="pipeline"
+                        :category-data="pipelineCategory"
+                        :errors="{
+                            sortError: formErrors.pipelineSortError,
+                            jobError: formErrors.pipelineJobError,
+                            envError: formErrors.pipelineEnvError
+                        }"
+                        @classify-change="changeClassify"
+                        @job-type-change="changePipelineJobType"
+                        @os-change="changeOs"
+                    ></category-config>
+                    <bk-checkbox
+                        :value="'CREATIVE_STREAM'"
+                        style="height: 32px; line-height: 32px;"
+                    >
+                        {{ $t('store.CP创作流') }}
+                    </bk-checkbox>
+                    <category-config
+                        v-if="categoryValue.includes('CREATIVE_STREAM')"
+                        ref="creativeCategoryConfig"
+                        scope-type="creative"
+                        :category-data="creativeCategory"
+                        :errors="{
+                            sortError: formErrors.creativeSortError,
+                            jobError: formErrors.creativeJobError
+                        }"
+                        @classify-change="changeClassify"
+                        @job-type-change="changeCreativeJobType"
+                    ></category-config>
                 </bk-checkbox-group>
             </bk-form-item>
             <template v-if="userInfo.isProjectAdmin && VERSION_TYPE !== 'ee'">
@@ -203,7 +206,10 @@
                 categoryValue: this.getSelectedScopes(),
                 formErrors: {
                     pipelineSortError: false,
-                    creativeSortError: false
+                    pipelineJobError: false,
+                    pipelineEnvError: false,
+                    creativeSortError: false,
+                    creativeJobError: false
                 },
                 isLoading: true,
                 isSaving: false,
@@ -303,8 +309,96 @@
                 }
             },
 
+            changeClassify () {
+                this.formErrors.pipelineSortError = false
+                this.formErrors.creativeSortError = false
+            },
+
+            changePipelineJobType () {
+                this.formErrors.pipelineJobError = false
+                this.formErrors.pipelineEnvError = false
+            },
+
+            changeCreativeJobType () {
+                this.formErrors.creativeJobError = false
+            },
+
+            changeOs (val) {
+                console.log(val,'--')
+                
+                this.formErrors.pipelineEnvError = false
+            },
+
+            validateCategory () {
+                // 重置所有错误状态
+                this.formErrors = {
+                    pipelineSortError: false,
+                    pipelineJobError: false,
+                    pipelineEnvError: false,
+                    creativeSortError: false,
+                    creativeJobError: false
+                }
+                
+                let hasError = false
+                
+                // 校验是否选择了至少一个范畴
+                if (!this.categoryValue || this.categoryValue.length === 0) {
+                    this.$bkMessage({ message: this.$t('store.请至少选择一个范畴'), theme: 'error' })
+                    return false
+                }
+                
+                // 校验每个选中的范畴
+                if (this.categoryValue.includes('PIPELINE')) {
+                    // 校验分类
+                    if (!this.pipelineCategory.classifyCode) {
+                        this.formErrors.pipelineSortError = true
+                        hasError = true
+                    }
+                    
+                    // 校验适用Job类型
+                    if (!this.pipelineCategory.jobTypes || this.pipelineCategory.jobTypes.length === 0) {
+                        this.formErrors.pipelineJobError = true
+                        hasError = true
+                    }
+                    
+                    // 如果选择了 AGENT 类型，校验操作系统
+                    if (this.pipelineCategory.jobTypes && this.pipelineCategory.jobTypes[0] === 'AGENT') {
+                        if (!this.pipelineCategory.os || this.pipelineCategory.os.length === 0) {
+                            this.formErrors.pipelineEnvError = true
+                            hasError = true
+                        }
+                    }
+                }
+                
+                if (this.categoryValue.includes('CREATIVE_STREAM')) {
+                    // 校验分类
+                    if (!this.creativeCategory.classifyCode) {
+                        this.formErrors.creativeSortError = true
+                        hasError = true
+                    }
+                    
+                    // 校验适用Job类型
+                    if (!this.creativeCategory.jobTypes || this.creativeCategory.jobTypes.length === 0) {
+                        this.formErrors.creativeJobError = true
+                        hasError = true
+                    }
+                }
+                
+                if (hasError) {
+                    this.$bkMessage({ message: this.$t('store.请完善范畴配置信息'), theme: 'error' })
+                    return false
+                }
+                
+                return true
+            },
+            
             save () {
                 this.$refs.atomEdit.validate().then(() => {
+                    // 校验范畴配置
+                    if (!this.validateCategory()) {
+                        return
+                    }
+                    
                     this.isSaving = true
                     const { name, summary, description, logoUrl, iconData, publisher, privateReason } = this.formData
                     
@@ -322,6 +416,7 @@
                         .filter(scope => scopeConfigMap[scope])
                         .map(scope => {
                             const { data } = scopeConfigMap[scope]
+                            console.log("🚀 ~ data:", data)
                             const config = {
                                 serviceScope: scope,
                                 classifyCode: data.classifyCode,
@@ -358,13 +453,20 @@
                     this.$store.dispatch('store/modifyAtomDetail', putData).then(() => {
                         const serviceScopeDetails = serviceScopeConfigs.map(config => {
                             const refName = config.serviceScope === 'PIPELINE' ? 'pipelineCategoryConfig' : 'creativeCategoryConfig'
-                            const fullLabelList = this.$refs[refName]?.labelList || []
+                            const categoryRef = this.$refs[refName]
+                            const fullLabelList = categoryRef?.labelList || []
+                            const sortList = categoryRef?.sortList || []
+                            
                             // 从 labelIdList（ID 数组）还原为 labelList（对象数组），保持与接口返回格式一致，以便正确回显
                             const labelList = (config.labelIdList || [])
                                 .map(id => fullLabelList.find(label => label.id === id))
                                 .filter(Boolean)
                             
-                            return { ...config, labelList }
+                            // 从 sortList 中查找 classifyName，保持与接口返回格式一致，以便正确回显
+                            const classifyItem = sortList.find(item => item.classifyCode === config.classifyCode)
+                            const classifyName = classifyItem?.classifyName || ''
+                            
+                            return { ...config, labelList, classifyName }
                         })
                         this.formData.serviceScopeDetails = serviceScopeDetails
                         this.$store.dispatch('store/clearDetail')
@@ -427,3 +529,26 @@
         }
     }
 </script>
+<style scoped lang="scss">
+    .category-content {
+        ::v-deep .bk-form-control {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .atom-item-content {
+            ::v-deep .bk-form-control {
+                display: flex;
+                flex-direction: row;
+            }
+        }
+        ::v-deep .bk-form-control.atom-os {
+            display: flex;
+            flex-direction: row;
+        }
+
+        ::v-deep .bk-select {
+            background-color: #fff;
+        }
+    }
+</style>
