@@ -5,7 +5,7 @@ import ModeSwitch from '@/components/ModeSwitch'
 import AtomPropertyPanel from '@/components/WorkflowOrchestration/AtomPropertyPanel'
 import JobPropertyPanel from '@/components/WorkflowOrchestration/JobPropertyPanel'
 import StagePropertyPanel from '@/components/WorkflowOrchestration/StagePropertyPanel'
-import { useFlowModel } from '@/hooks/useFlowModel'
+import { useFlowConfigCode } from '@/hooks/useFlowConfigCode'
 import { useModeStore } from '@/stores/flowMode'
 import { useUIStore } from '@/stores/ui'
 import layoutStyles from '@/styles/layout.module.css'
@@ -36,8 +36,19 @@ export default defineComponent({
     const uiStore = useUIStore()
     const { isVariablePanelOpen } = storeToRefs(uiStore)
 
-    // 使用 useFlowModel hook 管理数据
-    const { flowModelWithoutTriggerStage, yamlContent, loading, isFlowEmpty } = useFlowModel()
+    // 统一通过 useFlowConfigCode 获取数据 + 后端 yamlPreview.pipeline 高亮
+    const {
+      flowModelWithoutTriggerStage,
+      yamlContent,
+      loading,
+      isFlowEmpty,
+      sectionHighlight,
+    } = useFlowConfigCode({
+      projectId: route.params.projectId as string,
+      flowId: route.params.flowId as string,
+      version: route.params.version as string,
+      section: 'flow-model',
+    })
 
     // ========== 侧边栏状态 ==========
     const isStagePanelVisible = ref(false)
@@ -102,19 +113,16 @@ export default defineComponent({
     }
 
     return () => (
-      <div class={[styles.flowModel, isVariablePanelOpen.value && styles.withVariablePanel]}>
-        {/* <ModeSwitch
+      <div
+        class={[
+          styles.flowModel,
+          isVariablePanelOpen.value && !modeStore.isCodeMode && styles.withVariablePanel,
+        ]}
+      >
+        <ModeSwitch
           projectId={route.params.projectId as string}
           pipelineId={route.params.flowId as string}
-          modelAndSetting={
-            flowModel.value && flowSetting.value
-              ? {
-                  model: flowModel.value,
-                  setting: flowSetting.value,
-                }
-              : undefined
-          }
-        /> */}
+        />
 
         <div class={layoutStyles.flexDetailContent}>
           {loading.value ? (
@@ -130,6 +138,7 @@ export default defineComponent({
                     readOnly={true}
                     height="100%"
                     codeLensTitle={t('flow.content.editStep')}
+                    highlightRanges={sectionHighlight.value}
                   />
                 </div>
               ) : (
@@ -176,8 +185,8 @@ export default defineComponent({
           editable={false}
         />
 
-        {/* 变量面板 - 只读 */}
-        {props.visibleVariablePanel && (
+        {/* 变量面板 - 只读，代码模式下隐藏 */}
+        {props.visibleVariablePanel && !modeStore.isCodeMode && (
           <VariablePanel
             v-model={isVariablePanelOpen.value}
             flowId={flowId}
