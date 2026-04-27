@@ -189,34 +189,19 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun computerStatus(userId: String, projectId: String): Result<ComputerStatusResp> {
-        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
-            )
-        }
+        permissionService.checkUserManager(userId, projectId)
         return Result(startWorkspaceService.computerStatus(projectId))
     }
 
     override fun userLoginTime(userId: String, projectId: String, timeScope: TimeScope?): Result<UserLoginTimeResp> {
-        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
-            )
-        }
+        permissionService.checkUserManager(userId, projectId)
         return Result(
             bkBaseService.fetchOnlineUserMin(timeScope, projectId) ?: UserLoginTimeResp(0, emptyList())
         )
     }
 
     override fun exportWorkspaceList(userId: String, projectId: String, page: Int?, pageSize: Int?): Response {
-        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
-            )
-        }
+        permissionService.checkUserManager(userId, projectId)
         return xlsxExportService.exportProjectWorkspaceListWeb(userId, projectId, page, pageSize)
     }
 
@@ -241,12 +226,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<WindowsSpecResInfo>> {
-        if (!permissionService.checkUserVisitPermission(userId, projectId)) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
-            )
-        }
+        permissionService.checkUserManager(userId, projectId)
         return Result(windowsResourceConfigService.fetchSpec(projectId, machineType, page, pageSize))
     }
 

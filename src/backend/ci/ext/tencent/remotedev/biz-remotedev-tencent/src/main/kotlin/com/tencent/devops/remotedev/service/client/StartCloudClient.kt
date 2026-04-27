@@ -95,7 +95,6 @@ class StartCloudClient @Autowired constructor(
     fun messageRegister(
         req: StartMessageRegisterReq
     ) {
-        messageRegister(config.apiUrl, req)
         messageRegister(config.apiUrlSZ, req)
     }
 

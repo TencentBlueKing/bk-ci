@@ -88,6 +88,8 @@ data class ProjectVO(
     val offlined: Boolean?,
     @get:Schema(title = "是否保密")
     val secrecy: Boolean?,
+    @get:Schema(title = "是否隐藏")
+    val hidden: Boolean? = null,
     @get:Schema(title = "是否启用图表激活")
     val helmChartEnabled: Boolean?,
     @get:Schema(title = "kind")

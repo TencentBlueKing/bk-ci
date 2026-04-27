@@ -640,6 +640,28 @@ onMounted(async () => {
               </template>
               <template v-if="panel.name === 'artifactory'">
                 <bk-form label-position="right" :label-width="200">
+                  <bk-form-item
+                    v-if="projectData.properties"
+                    :label="t('允许共享制品')"
+                    :label-width="120"
+                    property="enableShareArtifact"
+                    :description="t('开启后，允许「共享」制品，可生成不鉴权的制品分享链接。获得链接的用户登录平台后，可通过链接下载对应制品。')"
+                  >
+                    <div>
+                      <bk-switcher
+                        v-model="projectData.properties.enableShareArtifact"
+                        size="small"
+                        disabled
+                        theme="primary"
+                      />
+                      <div class="diff-content" v-if="projectData.afterEnableShareArtifact">
+                        <p class="update-title">
+                          {{ t('本次更新：') }}
+                        </p>
+                        <span>{{ t(projectData.afterEnableShareArtifact) }}</span>
+                      </div>
+                    </div>
+                  </bk-form-item>
                   <ArtifactoryContent 
                     :data="projectData"
                     type="show"

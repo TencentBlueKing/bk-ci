@@ -81,6 +81,7 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_CREATE_WORK
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_OWNER_CHANGE_NOTIFY
 import java.time.Duration
 import java.time.LocalDateTime
+import java.util.concurrent.ConcurrentHashMap
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -934,5 +935,26 @@ class WorkspaceCommon @Autowired constructor(
             workspaceWindowsDao.updateNodeHashId(dslContext, null, workspaceName)
         }
         return true
+    }
+
+    fun refreshInstanceStatus(
+        userId: String,
+        projectId: String,
+        instanceIds: List<String>
+    ): Map<String, String> {
+        val workspaces = workspaceDao.fetchByProjectAndNames(
+            dslContext, projectId, instanceIds
+        )
+        val result = ConcurrentHashMap<String, String>()
+        workspaces.parallelStream().forEach { ws ->
+            val status = fixUnexpectedStatus(
+                userId = userId,
+                workspaceName = ws.workspaceName,
+                status = ws.status,
+                mountType = ws.workspaceMountType
+            )
+            result[ws.workspaceName] = status.name
+        }
+        return result
     }
 }

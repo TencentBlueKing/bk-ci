@@ -28,11 +28,13 @@
 package com.tencent.devops.remotedev.resources.user
 
 import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserWorkspaceResource
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
@@ -52,9 +54,12 @@ import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faRespData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyRespData
+import com.tencent.devops.remotedev.pojo.LogUploadUrl
+import com.tencent.devops.remotedev.service.CosLogUploadService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.ProjectStrategyService
 import com.tencent.devops.remotedev.service.RepositoryService
+import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.CreateControl
@@ -74,6 +79,8 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     private val permissionService: PermissionService,
     private val repositoryService: RepositoryService,
     private val projectStrategyService: ProjectStrategyService,
+    private val cosLogUploadService: CosLogUploadService,
+    private val workspaceRecordService: WorkspaceRecordService,
     private val createControl: CreateControl,
     private val startControl: StartControl,
     private val sleepControl: SleepControl,
@@ -243,6 +250,14 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun checkMoa2fa(userId: String, workspaceName: String): Result<Boolean> {
+        if (!permissionService.checkUserPermission(userId, workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf(
+                    "You don't have permission to access workspace $workspaceName"
+                )
+            )
+        }
         return Result(workspaceService.checkMoa2fa(userId, workspaceName))
     }
 
@@ -264,6 +279,30 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun getProjectStrategy(userId: String, data: ProjectStrategyFetchInfo): Result<ProjectStrategyResp> {
+        if (!permissionService.checkUserVisitPermission(userId, data.projectId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("We're sorry but you don't have permission to access project $data.projectId")
+            )
+        }
         return Result(projectStrategyService.getStrategy(data))
+    }
+
+    override fun getLogUploadUrl(
+        userId: String
+    ): Result<LogUploadUrl> {
+        return Result(
+            cosLogUploadService.generateLogUploadUrl(
+                userId = userId
+            )
+        )
+    }
+
+    override fun agreeRecord(userId: String, workspaceName: String): Result<Boolean> {
+        workspaceRecordService.agreeRecord(
+            userId = userId,
+            workspaceName = workspaceName
+        )
+        return Result(true)
     }
 }
