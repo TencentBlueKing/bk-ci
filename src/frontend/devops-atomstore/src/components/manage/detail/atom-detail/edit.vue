@@ -416,7 +416,6 @@
                         .filter(scope => scopeConfigMap[scope])
                         .map(scope => {
                             const { data } = scopeConfigMap[scope]
-                            console.log("🚀 ~ data:", data)
                             const config = {
                                 serviceScope: scope,
                                 classifyCode: data.classifyCode,
