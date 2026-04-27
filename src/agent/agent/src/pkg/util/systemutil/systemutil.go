@@ -33,17 +33,16 @@ import (
 	"net/url"
 	"os"
 	"os/user"
+	"path/filepath"
 	"runtime"
 	"strings"
 
+	"github.com/gofrs/flock"
 	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
-
-	"github.com/gofrs/flock"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 )
 
 var GExecutableDir string
@@ -79,13 +78,16 @@ func IsMacos() bool {
 	return runtime.GOOS == osMacos
 }
 
-// GetCurrentUser get current process user, log & exit when error was found
+// GetCurrentUser returns the current process user. If user.Current() fails
+// (e.g. in Docker containers without /etc/passwd, or with CGO disabled),
+// it falls back to OS primitives instead of crashing the process.
 func GetCurrentUser() *user.User {
 	currentUser, err := user.Current()
-	if currentUser == nil {
-		logs.Fatalf("GetCurrentUser cache return nil: error[%v]", err) //
+	if err == nil && currentUser != nil {
+		return currentUser
 	}
-	return currentUser
+	logs.Warnf("user.Current() failed: %v, using fallback", err)
+	return fallbackCurrentUser()
 }
 
 // GetWorkDir get agent work dir
@@ -113,12 +115,23 @@ func GetRuntimeDir() string {
 	return GetWorkDir()
 }
 
-// GetExecutableDir get excutable jar dir
+// GetExecutableDir returns the absolute directory containing the current executable.
 func GetExecutableDir() string {
 	if len(GExecutableDir) == 0 {
 		executable := strings.Replace(os.Args[0], "\\", "/", -1)
 		index := strings.LastIndex(executable, "/")
-		GExecutableDir = executable[0:index]
+		var dir string
+		if index >= 0 {
+			dir = executable[0:index]
+		} else {
+			dir = "."
+		}
+		if !filepath.IsAbs(dir) {
+			if abs, err := filepath.Abs(dir); err == nil {
+				dir = abs
+			}
+		}
+		GExecutableDir = dir
 	}
 	return GExecutableDir
 }
@@ -211,8 +224,9 @@ func GetAgentIp(ignoreIps []string) string {
 	return defaultIp
 }
 
-// ExitProcess Exit by code
+// ExitProcess flushes logs and exits with the given code.
 func ExitProcess(exitCode int) {
+	logs.Close()
 	os.Exit(exitCode)
 }
 
@@ -224,7 +238,7 @@ func KeepProcessAlive() {
 }
 
 // CheckProcess check process and lock
-func CheckProcess(name string) bool {
+func CheckProcess(name string, totalLocked bool) bool {
 	processLockFile := fmt.Sprintf("%s/%s.lock", GetRuntimeDir(), name)
 	pidFile := fmt.Sprintf("%s/%s.pid", GetRuntimeDir(), name)
 
@@ -240,14 +254,16 @@ func CheckProcess(name string) bool {
 		return false
 	}
 
-	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", GetRuntimeDir(), TotalLock))
-	if err = totalLock.Lock(); err != nil {
-		logs.WithError(err).Error("get total lock failed, exit")
-		return false
+	if !totalLocked {
+		totalLock := flock.New(fmt.Sprintf("%s/%s.lock", GetRuntimeDir(), TotalLock))
+		if err = totalLock.Lock(); err != nil {
+			logs.WithError(err).Error("get total lock failed, exit")
+			return false
+		}
+		defer func() {
+			_ = totalLock.Unlock() // Unlock理论上不应失败，忽略错误
+		}()
 	}
-	defer func() {
-		_ = totalLock.Unlock()
-	}()
 
 	if err = fileutil.WriteString(pidFile, fmt.Sprintf("%d", os.Getpid())); err != nil {
 		logs.WithError(err).Errorf("failed to save pid file(%s)", pidFile)

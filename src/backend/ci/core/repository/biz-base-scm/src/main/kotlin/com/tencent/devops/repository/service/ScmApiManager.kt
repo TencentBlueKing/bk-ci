@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.service
 
+import com.tencent.devops.scm.api.exception.ScmApiException
 import com.tencent.devops.scm.api.pojo.BranchListOptions
 import com.tencent.devops.scm.api.pojo.Change
 import com.tencent.devops.scm.api.pojo.CheckRun
@@ -264,7 +265,16 @@ class ScmApiManager constructor(
         ref: String,
         recursive: Boolean
     ): List<Tree> {
-        return scmProviderManager.files(providerProperties).listTree(providerRepository, path, ref, recursive)
+        return try {
+            scmProviderManager.files(providerProperties).listTree(providerRepository, path, ref, recursive)
+        } catch (exception: ScmApiException) {
+            val httpStatus = exception.statusCode
+            if (httpStatus == BAD_REQUEST || httpStatus == NOT_FOUND) {
+                emptyList()
+            } else {
+                throw exception
+            }
+        }
     }
 
     fun getFileContent(
@@ -517,5 +527,7 @@ class ScmApiManager constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(ScmApiManager::class.java)
+        private const val BAD_REQUEST = 400
+        private const val NOT_FOUND = 404
     }
 }

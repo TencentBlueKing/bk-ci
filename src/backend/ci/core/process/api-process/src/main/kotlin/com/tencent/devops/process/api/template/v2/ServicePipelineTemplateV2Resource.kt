@@ -102,6 +102,9 @@ interface ServicePipelineTemplateV2Resource {
     @GET
     @Path("/{projectId}/{templateId}/details/")
     fun getTemplateDetails(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
