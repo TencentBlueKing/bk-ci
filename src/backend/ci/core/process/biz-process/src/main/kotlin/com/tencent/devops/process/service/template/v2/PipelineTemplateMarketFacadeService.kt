@@ -455,7 +455,7 @@ class PipelineTemplateMarketFacadeService @Autowired constructor(
             syncPermission = false
         )
 
-        //9.自动安装插件
+        // 9.自动安装插件
         try {
             client.get(ServiceTemplateResource::class).validateUserTemplateComponentVisibleDept(
                 userId = templateInfo.updater ?: templateInfo.creator,
