@@ -11,7 +11,7 @@
         <div class="strategy-dialog-content">
             <!-- 策略名称 -->
             <div class="form-section strategy-name-section">
-                <span class="strategy-name-label">{{ $t('environment.scheduling.strategyName') }}</span>
+                <div class="strategy-name-label">{{ $t('environment.scheduling.strategyName') }}</div>
                 <bk-input
                     v-model="formData.strategyName"
                     class="strategy-name-input"
@@ -527,20 +527,18 @@
         }
 
         &.strategy-name-section {
-            padding-bottom: 16px;
-            display: flex;
-            color: #313238;
-            align-items: center;
-            gap: 8px;
-
-            .strategy-name-label {
-                flex-shrink: 0;
-                font-size: 14px;
-                text-align: right;
+            padding-bottom: 12px;
+            &::after {
+                content: '';
+                display: block;
+                width: 100%;
+                height: 1px;
+                background-color: #DCDEE5;
+                margin-top: 24px;
             }
-
-            .strategy-name-input {
-                flex: 1;
+            .strategy-name-label {
+                font-size: 14px;
+                margin-bottom: 8px;
             }
         }
 
@@ -560,7 +558,6 @@
 
         .checkbox-label {
             font-size: 14px;
-            color: #313238;
             font-weight: 500;
         }
 
@@ -610,11 +607,6 @@
                 }
             }
 
-            .radio-label {
-                font-size: 14px;
-                color: #313238;
-            }
-
             .radio-tag {
                 display: inline-flex;
                 align-items: center;
@@ -660,7 +652,6 @@
                     th {
                         font-size: 12px;
                         font-weight: normal;
-                        color: #313238;
                         
                         .required {
                             color: #EA3636;
