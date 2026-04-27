@@ -154,9 +154,6 @@ func WriteString(file, str string) error {
 	return nil
 }
 
-// maxZipEntrySize 限制单个条目最大解压大小（zip bomb 兜底）。
-const maxZipEntrySize = int64(8) << 30 // 8 GiB
-
 func Unzip(archive, target string) error {
 	reader, err := zip.OpenReader(archive)
 	if err != nil {
@@ -173,8 +170,7 @@ func Unzip(archive, target string) error {
 	if err != nil {
 		return err
 	}
-	absTarget = filepath.Clean(absTarget)
-	absTargetWithSep := absTarget + string(os.PathSeparator)
+	absTarget = filepath.Clean(absTarget) + string(os.PathSeparator)
 
 	for _, file := range reader.File {
 		path := filepath.Join(target, file.Name)
@@ -184,24 +180,17 @@ func Unzip(archive, target string) error {
 		if err != nil {
 			return err
 		}
-		absPath = filepath.Clean(absPath)
-		if absPath != absTarget && !strings.HasPrefix(absPath, absTargetWithSep) {
+		if !strings.HasPrefix(absPath, absTarget) {
 			return fmt.Errorf("illegal file path in archive: %s", file.Name)
 		}
 
-		mode := file.Mode()
-		// 跳过符号链接/设备/管道/套接字，避免跟随链接写越界或写入特殊文件
-		if mode&os.ModeSymlink != 0 || mode&os.ModeDevice != 0 ||
-			mode&os.ModeNamedPipe != 0 || mode&os.ModeSocket != 0 {
-			continue
-		}
-
 		if file.FileInfo().IsDir() {
-			os.MkdirAll(absPath, os.ModePerm)
+			os.MkdirAll(path, os.ModePerm)
 			continue
 		}
 
-		if err2 := unzipFile(file, absPath); err2 != nil {
+		err2 := unzipFile(file, path)
+		if err2 != nil {
 			return err2
 		}
 	}
@@ -210,11 +199,6 @@ func Unzip(archive, target string) error {
 }
 
 func unzipFile(file *zip.File, path string) error {
-	// 确保父目录存在
-	if err := os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
-		return err
-	}
-
 	fileReader, err := file.Open()
 	if err != nil {
 		return err
@@ -228,10 +212,8 @@ func unzipFile(file *zip.File, path string) error {
 
 	defer func() { _ = targetFile.Close() }()
 
-	// 限制单条目最大解压大小，防止 zip bomb
-	if _, err := io.CopyN(targetFile, fileReader, maxZipEntrySize); err != nil && err != io.EOF {
+	if _, err := io.Copy(targetFile, fileReader); err != nil {
 		return err
 	}
 	return nil
 }
-

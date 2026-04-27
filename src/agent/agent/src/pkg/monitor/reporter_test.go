@@ -346,6 +346,87 @@ func TestFormatFieldValue(t *testing.T) {
 	}
 }
 
+func TestReporter_Report_PostCIProjectJSON_GlobalTagsInjected(t *testing.T) {
+	setupTestGAgentConfig(t, "bkci-demo", "http://bkci.example.com")
+
+	var capturedBody []byte
+	r := &Reporter{
+		nowFn: func() time.Time { return fixedNow },
+		doPost: func(ctx context.Context, url string, headers map[string]string, body []byte) (int, []byte, error) {
+			capturedBody = body
+			return 200, nil, nil
+		},
+	}
+	// 模拟 doOneGather 流程：rename -> injectGlobalTags -> report
+	metrics := []Metric{{
+		Name:      MeasurementMem,
+		Tags:      map[string]string{TagHost: "h1"},
+		Fields:    map[string]interface{}{RenamedFieldPctUsed: 42.5},
+		Timestamp: fixedNow,
+	}}
+	injectGlobalTags(metrics)
+
+	err := r.Report(context.Background(), metrics)
+	if err != nil {
+		t.Fatalf("Report: %v", err)
+	}
+
+	var env metricsEnvelope
+	if err := json.Unmarshal(capturedBody, &env); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if len(env.Metrics) != 1 {
+		t.Fatalf("want 1 metric, got %d", len(env.Metrics))
+	}
+	m := env.Metrics[0]
+
+	// global tags from setupTestGAgentConfig should be injected
+	if m.Tags[TagProjectID] != "bkci-demo" {
+		t.Errorf("projectId tag = %q, want %q", m.Tags[TagProjectID], "bkci-demo")
+	}
+	if m.Tags[TagAgentID] != "agt-001" {
+		t.Errorf("agentId tag = %q, want %q", m.Tags[TagAgentID], "agt-001")
+	}
+	if m.Tags[TagAgentSecret] != "secret-xyz" {
+		t.Errorf("agentSecret tag = %q, want %q", m.Tags[TagAgentSecret], "secret-xyz")
+	}
+	// original tag should still be present
+	if m.Tags[TagHost] != "h1" {
+		t.Errorf("original host tag lost, got %q", m.Tags[TagHost])
+	}
+}
+
+func TestReporter_InjectGlobalTags_NilConfig(t *testing.T) {
+	orig := config.GAgentConfig
+	config.GAgentConfig = nil
+	defer func() { config.GAgentConfig = orig }()
+
+	metrics := []Metric{{
+		Name:   "test",
+		Tags:   map[string]string{"k": "v"},
+		Fields: map[string]interface{}{"f": 1.0},
+	}}
+	// should not panic
+	injectGlobalTags(metrics)
+	if _, exists := metrics[0].Tags[TagProjectID]; exists {
+		t.Error("should not inject tags when GAgentConfig is nil")
+	}
+}
+
+func TestReporter_InjectGlobalTags_NilMetricTags(t *testing.T) {
+	setupTestGAgentConfig(t, "proj-x", "http://gw")
+
+	metrics := []Metric{{
+		Name:   "test",
+		Tags:   nil, // mem 等 input 没有自带 tag
+		Fields: map[string]interface{}{"f": 1.0},
+	}}
+	injectGlobalTags(metrics)
+	if metrics[0].Tags[TagProjectID] != "proj-x" {
+		t.Errorf("projectId not injected into nil tags, got %v", metrics[0].Tags)
+	}
+}
+
 // itoa 因为 reporter_test 里 import strconv 会与 reporter.go 重复，这里
 // 给出一个简单的 helper，避免测试文件重复 import 时触发 goimports 警告。
 func itoa(v int64) string {

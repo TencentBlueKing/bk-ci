@@ -249,6 +249,58 @@ func defaultDoPost(ctx context.Context, url string, headers map[string]string, b
 	return resp.StatusCode, respBuf.Bytes(), nil
 }
 
+// --- global tag 注入 ---
+
+// injectGlobalTags 在每条 metric 的 tags 中注入 projectId / agentId /
+// agentSecret / hostName / hostIp，对齐 telegraf [global_tags] 配置。
+// 后端靠这些 tag 关联 metric 到具体的 agent 和项目。
+//
+// 只有当 tag 键在 metric 中不存在时才注入，避免覆盖 input 层可能设置的同名 tag。
+func injectGlobalTags(metrics []Metric) {
+	globalTags := buildGlobalTags()
+	if len(globalTags) == 0 {
+		return
+	}
+	for i := range metrics {
+		if metrics[i].Tags == nil {
+			metrics[i].Tags = make(map[string]string, len(globalTags))
+		}
+		for k, v := range globalTags {
+			if _, exists := metrics[i].Tags[k]; !exists {
+				metrics[i].Tags[k] = v
+			}
+		}
+	}
+}
+
+// buildGlobalTags 从 config 中读取当前 agent 信息，构造 global tag map。
+// 空值的 tag 不注入，避免产生无意义的空字符串 tag。
+func buildGlobalTags() map[string]string {
+	if config.GAgentConfig == nil {
+		return nil
+	}
+	tags := make(map[string]string, 5)
+	if v := config.GAgentConfig.ProjectId; v != "" {
+		tags[TagProjectID] = v
+	}
+	if v := config.GAgentConfig.AgentId; v != "" {
+		tags[TagAgentID] = v
+	}
+	// secret key 应该不需要，先去掉
+	// if v := config.GAgentConfig.SecretKey; v != "" {
+	// 	tags[TagAgentSecret] = v
+	// }
+	if config.GAgentEnv != nil {
+		if v := config.GAgentEnv.HostName; v != "" {
+			tags[TagHostName] = v
+		}
+		if v := config.GAgentEnv.GetAgentIp(); v != "" {
+			tags[TagHostIP] = v
+		}
+	}
+	return tags
+}
+
 // --- line protocol 转义辅助函数 ---
 
 // escapeMeasurement 按 InfluxDB 线协议规则转义 measurement 名：

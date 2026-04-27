@@ -57,6 +57,7 @@ func runOnceWithInputs(ctx context.Context, out io.Writer, ins []Input, warmupGa
 	}
 
 	renamed := Rename(all)
+	injectGlobalTags(renamed)
 
 	// 3. 按 measurement 排序输出，与 telegraf 输出一致
 	sort.SliceStable(renamed, func(i, j int) bool {
