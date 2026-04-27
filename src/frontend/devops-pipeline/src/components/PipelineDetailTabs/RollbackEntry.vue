@@ -268,7 +268,7 @@
                         rollbackVersion = this.clickActionType === 'rollback' ? this.version : this.draftSaveInfo.releaseVersion
                     }
                 } else {
-                    rollbackVersion = this.draftSaveInfo.releaseVersion || this.version
+                    rollbackVersion = this.draftSaveInfo?.releaseVersion || this.version
                 }
                 try {
                     this.loading = true
