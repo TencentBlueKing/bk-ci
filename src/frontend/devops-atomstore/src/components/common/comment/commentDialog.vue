@@ -57,6 +57,7 @@
             modifyCommentGenerator () {
                 return {
                     atom: this.requestAtomModifyComment,
+                    creative: this.requestAtomModifyComment,
                     template: this.requestTemplateModifyComment,
                     ide: this.requestIDEModifyComment,
                     image: this.requestImageModifyComment,
@@ -66,6 +67,7 @@
             addCommentGenerator () {
                 return {
                     atom: this.requestAddAtomComment,
+                    creative: this.requestAddAtomComment,
                     template: this.requestAddTemplateComment,
                     ide: this.requestAddIDEComment,
                     image: this.requestAddImageComment,
@@ -75,6 +77,7 @@
             getCommentGenerator () {
                 return {
                     atom: this.requestAtomUserComment,
+                    creative: this.requestAtomUserComment,
                     template: this.requestTemplateUserComment,
                     ide: this.requestIDEUserComment,
                     image: this.requestImageUserComment,

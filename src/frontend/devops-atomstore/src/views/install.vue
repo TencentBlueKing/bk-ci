@@ -169,6 +169,9 @@
                     case 'atom':
                         name = this.$t('store.流水线插件')
                         break
+                    case 'creative':
+                        name = this.$t('store.创作流插件')
+                        break
                     case 'template':
                         name = this.$t('store.流水线模板')
                         break
@@ -230,7 +233,8 @@
     
             async requestDetail () {
                 const methods = {
-                    atom: () => this.requestAtom({atomCode: this.code, serviceScope: 'PIPELINE'}),
+                    atom: () => this.requestAtom({ atomCode: this.code, serviceScope: 'PIPELINE' }),
+                    creative: () => this.requestAtom({ atomCode: this.code, serviceScope: 'CREATIVE_STREAM' }),
                     template: () => this.requestTemplateDetail(this.code),
                     image: () => this.requestImageDetailByCode(this.code),
                     service: () => this.requestServiceDetailByCode(this.code)
@@ -245,6 +249,7 @@
             async fetchRelativeProject () {
                 const methods = {
                     atom: this.requestRelativeProject,
+                    creative: this.requestRelativeProject,
                     template: this.requestRelativeTplProject,
                     image: this.requestRelativeImageProject
                 }
@@ -313,6 +318,7 @@
 
                     const methods = {
                         atom: this.installAtom,
+                        creative: this.installAtom,
                         template: this.installTemplate,
                         image: this.installImage,
                         service: this.installService
@@ -324,9 +330,10 @@
 
                     this.isLoading = true
                 
+                    const installType = this.type === 'creative' ? 'atom' : this.type
                     await methods[this.type]({
-                        [`${this.type}Code`]: this.code,
-                        [this.type === 'atom' ? 'projectCode' : 'projectCodeList']: this.project
+                        [`${installType}Code`]: this.code,
+                        [installType === 'atom' ? 'projectCode' : 'projectCodeList']: this.project
                     })
                     this.isINstallSuccess = true
                     this.$bkMessage({ message: this.$t('store.安装成功'), theme: 'success' })
