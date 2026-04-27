@@ -63,6 +63,11 @@ var (
 // 调用失败（权限、盘不存在）返回 err，不写入缓存；调用方应降级 fallback
 // 到 letter-only instance。
 func queryStorageDeviceNumber(letter string) (uint32, error) {
+	letter = normalizeWindowsDriveLetter(letter)
+	if len(letter) < 2 || letter[1] != ':' {
+		return 0, errors.Errorf("diskindex: invalid drive letter %q", letter)
+	}
+
 	diskIndexCacheMu.Lock()
 	defer diskIndexCacheMu.Unlock()
 

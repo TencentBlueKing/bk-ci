@@ -72,6 +72,25 @@ func TestDisk_Gather_DevicePrefixStripped(t *testing.T) {
 	}
 }
 
+func TestNormalizeDiskPathTag(t *testing.T) {
+	tests := []struct {
+		name string
+		path string
+		want string
+	}{
+		{name: "unix path", path: "/", want: "/"},
+		{name: "already normal path", path: "/data", want: "/data"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := normalizeDiskPathTag(tt.path); got != tt.want {
+				t.Fatalf("normalizeDiskPathTag(%q)=%q, want %q", tt.path, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestDisk_Gather_SkipsUsageError(t *testing.T) {
 	// /a 的 Usage 失败 → 跳过；/b 成功 → 保留
 	d := &Disk{
