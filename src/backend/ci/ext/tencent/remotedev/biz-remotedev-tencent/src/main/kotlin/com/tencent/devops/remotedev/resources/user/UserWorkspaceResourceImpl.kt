@@ -50,17 +50,27 @@ import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
+import com.tencent.devops.remotedev.pojo.tai.CertExchangeCodeReq
+import com.tencent.devops.remotedev.pojo.tai.CertExchangeCodeResp
 import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faRespData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyRespData
 import com.tencent.devops.remotedev.pojo.LogUploadUrl
 import com.tencent.devops.remotedev.service.CosLogUploadService
+import com.tencent.devops.remotedev.pojo.cvd.CvdCreateTaskRequest
+import com.tencent.devops.remotedev.pojo.cvd.CvdDeleteTaskRequest
+import com.tencent.devops.remotedev.pojo.cvd.CvdPoolDetail
+import com.tencent.devops.remotedev.pojo.cvd.CvdPoolInfoResponse
+import com.tencent.devops.remotedev.pojo.cvd.CvdTaskResponse
+import com.tencent.devops.remotedev.pojo.cvd.CvdTaskStatusResponse
+import com.tencent.devops.remotedev.pojo.cvd.CvdUserPoolInfoResponse
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.ProjectStrategyService
 import com.tencent.devops.remotedev.service.RepositoryService
 import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.cvd.CvdService
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
@@ -85,7 +95,8 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     private val startControl: StartControl,
     private val sleepControl: SleepControl,
     private val deleteControl: DeleteControl,
-    private val notifyControl: NotifyControl
+    private val notifyControl: NotifyControl,
+    private val cvdService: CvdService
 ) : UserWorkspaceResource {
 
     @AuditEntry(actionId = TencentActionId.CGS_START)
@@ -304,5 +315,83 @@ class UserWorkspaceResourceImpl @Autowired constructor(
             workspaceName = workspaceName
         )
         return Result(true)
+    }
+
+    override fun getCertExchangeCode(userId: String): Result<CertExchangeCodeResp> {
+        return Result(
+            workspaceService.getCertExchangeCode(
+                userId = userId,
+                req = CertExchangeCodeReq(username = userId)
+            )
+        )
+    }
+
+    override fun createCvdTask(
+        userId: String,
+        request: CvdCreateTaskRequest
+    ): Result<CvdTaskResponse> {
+        if (!permissionService.checkUserVisitPermission(userId, request.bkProjectId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("We're sorry but you don't have permission to access project $request.bkProjectId")
+            )
+        }
+        return Result(cvdService.createTask(request))
+    }
+
+    override fun deleteCvdTask(
+        userId: String,
+        request: CvdDeleteTaskRequest
+    ): Result<CvdTaskResponse> {
+        val workspace = workspaceService.getWorkspaceRecord(workspaceName = request.instanceId)
+        if (workspace == null || !workspace.ownerType.projectUse() || workspace.projectId != request.bkProjectId) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(request.instanceId)
+            )
+        }
+
+        permissionService.checkOwnerPermission(userId, workspace.workspaceName, workspace.projectId, workspace.ownerType)
+
+        if (!permissionService.checkUserVisitPermission(userId, request.bkProjectId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("We're sorry but you don't have permission to access project $request.bkProjectId")
+            )
+        }
+        return Result(cvdService.deleteTask(request))
+    }
+
+    override fun getCvdTaskStatus(
+        userId: String,
+        taskId: String
+    ): Result<CvdTaskStatusResponse> {
+        return Result(cvdService.getTaskStatus(taskId))
+    }
+
+    override fun getCvdUserPoolInfo(
+        userId: String
+    ): Result<CvdUserPoolInfoResponse> {
+        return Result(cvdService.getUserPoolInfo(userId))
+    }
+
+    override fun getCvdProjectPoolInfo(
+        userId: String,
+        bkProjectId: String
+    ): Result<List<CvdPoolDetail>> {
+        if (!permissionService.checkUserVisitPermission(userId, bkProjectId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("We're sorry but you don't have permission to access project $bkProjectId")
+            )
+        }
+        return Result(cvdService.getProjectPoolInfo(bkProjectId))
+    }
+
+    override fun getCvdPoolInfo(
+        userId: String,
+        poolId: String
+    ): Result<CvdPoolInfoResponse> {
+        return Result(cvdService.getPoolInfo(poolId))
     }
 }
