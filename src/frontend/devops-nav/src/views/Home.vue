@@ -359,18 +359,17 @@
                             icon: 'windows',
                             name: 'Windows',
                             type: 'download',
-                            downloadUrl: 'https://bkrepo.woa.com/generic/bk-repo/public/bkdrive/BKDrive-x64.exe',
-                            fileName: 'BKDrive-x64.exe',
+                            downloadUrl: 'https://bkrepo.woa.com/generic/bk-repo/public/bkartifacts/BKArtifacts-x64.exe',
+                            fileName: 'BKArtifacts-x64.exe',
                             hasCornerBadge: true,
                             cornerBadgeType: 'download',
-                            isLarge: true
                         },
                         {
                             icon: 'apple',
                             name: 'macOS',
                             type: 'download',
-                            downloadUrl: 'https://bkrepo.woa.com/generic/bk-repo/public/bkdrive/BKDrive-arm64.pkg',
-                            fileName: 'BKDrive-arm64.pkg',
+                            downloadUrl: 'https://bkrepo.woa.com/generic/bk-repo/public/bkartifacts/BKArtifacts-arm64.pkg',
+                            fileName: 'BKArtifacts-arm64.pkg',
                             hasCornerBadge: true,
                             cornerBadgeType: 'download'
                         }
