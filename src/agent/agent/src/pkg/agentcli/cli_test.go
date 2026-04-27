@@ -1,6 +1,7 @@
 package agentcli
 
 import (
+	"archive/zip"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -264,6 +265,79 @@ func TestUnzipIfNeeded_DestExists(t *testing.T) {
 	// dest still exists (no error, no removal)
 	if _, err := os.Stat(destDir); os.IsNotExist(err) {
 		t.Error("dest should still exist when force=false")
+	}
+}
+
+func TestUnzipIfNeeded_ExtractsNestedFiles(t *testing.T) {
+	old := useChinese
+	useChinese = false
+	defer func() { useChinese = old }()
+
+	dir := t.TempDir()
+	zipPath := filepath.Join(dir, "nested.zip")
+	destDir := filepath.Join(dir, "dest")
+	createZipForTest(t, zipPath, map[string]string{
+		"tmp/upgrader.exe": "binary",
+	})
+
+	unzipIfNeeded(zipPath, destDir, false)
+
+	if _, err := os.Stat(filepath.Join(destDir, "tmp", "upgrader.exe")); err != nil {
+		t.Fatalf("expected nested file to be extracted: %v", err)
+	}
+}
+
+func TestUnzipCandidateDirs(t *testing.T) {
+	dest := `D:\agents\dev-cli-test`
+	dirs := unzipCandidateDirs(dest)
+	if len(dirs) == 0 {
+		t.Fatal("expected at least one unzip candidate dir")
+	}
+	if dirs[0] != dest {
+		t.Fatalf("first candidate = %q, want %q", dirs[0], dest)
+	}
+
+	if exePath, err := os.Executable(); err == nil {
+		exeDir := filepath.Dir(exePath)
+		found := false
+		for _, dir := range dirs {
+			if strings.EqualFold(dir, exeDir) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("expected executable dir %q in candidates, got %v", exeDir, dirs)
+		}
+	}
+	if len(dirs) > 1 && strings.EqualFold(dirs[0], dirs[1]) {
+		t.Fatalf("candidate dirs should not duplicate: %v", dirs)
+	}
+}
+
+func createZipForTest(t *testing.T, zipPath string, files map[string]string) {
+	t.Helper()
+
+	f, err := os.Create(zipPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+
+	w := zip.NewWriter(f)
+	for name, content := range files {
+		entry, err := w.Create(name)
+		if err != nil {
+			_ = w.Close()
+			t.Fatal(err)
+		}
+		if _, err := entry.Write([]byte(content)); err != nil {
+			_ = w.Close()
+			t.Fatal(err)
+		}
+	}
+	if err := w.Close(); err != nil {
+		t.Fatal(err)
 	}
 }
 

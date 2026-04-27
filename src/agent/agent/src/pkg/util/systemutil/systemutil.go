@@ -312,7 +312,7 @@ func listAgentIPCandidates(routeIp string, ignoreIps []string) ([]agentIPCandida
 			}
 
 			if shouldIgnoreIP(ipNet.IP.String(), ignoreIps) {
-				logs.Infof("skipIp=%s", ipNet.IP)
+				logs.Debugf("skipIp=%s", ipNet.IP)
 				continue
 			}
 
