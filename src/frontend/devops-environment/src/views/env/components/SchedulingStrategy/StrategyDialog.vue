@@ -638,112 +638,149 @@
                 width: 100%;
                 border-collapse: collapse;
                 border: 1px solid #DCDEE5;
-                
+
                 th, td {
                     border: 1px solid #DCDEE5;
                     padding: 8px 12px;
                     text-align: left;
                     vertical-align: middle;
                 }
-                
+
                 thead {
                     background: #FAFBFD;
-                    
+                    border-bottom: 1px solid #DCDEE5;
+
                     th {
                         font-size: 12px;
                         font-weight: normal;
-                        
+                        border-bottom: 1px solid #DCDEE5;
+
                         .required {
                             color: #EA3636;
                             margin-right: 4px;
                         }
                     }
                 }
-                
+
                 tbody {
                     tr {
                         background: #fff;
-                        
-                        &:hover {
-                            background: #F5F7FA;
+
+                        & + tr {
+                            border-top: 1px solid #DCDEE5;
+
+                            td {
+                                border-top: 1px solid #DCDEE5;
+                            }
                         }
                     }
                 }
-                
+
+                /* 去除单元格内选择框、输入框的边框，保持无边框样式 */
+                ::v-deep .bk-select {
+                    border-color: transparent !important;
+                    background: transparent;
+                    box-shadow: none !important;
+
+                    &:hover,
+                    &.is-focus {
+                        border-color: transparent !important;
+                        background: transparent;
+                        box-shadow: none !important;
+                    }
+                }
+
+                ::v-deep .bk-form-control {
+                    .bk-form-input {
+                        border-color: transparent !important;
+                        background: transparent;
+                        box-shadow: none !important;
+
+                        &:hover,
+                        &:focus {
+                            border-color: transparent !important;
+                            background: transparent;
+                            box-shadow: none !important;
+                        }
+                    }
+                }
+
                 .label-key-col {
                     width: 240px;
                 }
-                
+
                 .label-value-col {
                     .value-cell {
                         display: flex;
                         align-items: center;
-                        gap: 8px;
+                        gap: 4px;
                     }
-                    
+
                     .label-operator-select {
                         width: 100px;
                         flex-shrink: 0;
+                        position: relative;
+
+                        &::after {
+                            content: '';
+                            position: absolute;
+                            top: 50%;
+                            right: -2px;
+                            width: 1px;
+                            height: 16px;
+                            background-color: #DCDEE5;
+                            transform: translateY(-50%);
+                        }
                     }
-                    
+
                     .label-value-input {
-                        width: 250px;
-                        flex-shrink: 0;
+                        flex: 1;
+                        min-width: 0;
                     }
                 }
-                
+
                 .label-actions-col {
                     width: 80px;
-                    
+
                     .label-actions {
                         display: flex;
                         align-items: center;
                         justify-content: center;
                         gap: 8px;
                     }
-                    
+
                     .action-icon {
                         display: inline-flex;
                         align-items: center;
                         justify-content: center;
                         cursor: pointer;
-                        
+                        color: #979BA5;
+
                         .bk-icon {
-                            font-size: 20px;
+                            font-size: 18px;
                         }
-                        
+
                         &.add-icon {
-                            .bk-icon {
-                                font-size: 18px;
-                            }
-                            
-                            &:hover .bk-icon {
-                                color: #699DF4;
+                            &:hover {
+                                color: #3A84FF;
                             }
                         }
-                        
+
                         &.delete-icon {
-                            .bk-icon {
-                                font-size: 18px;
-                            }
-                            
-                            &:hover:not(.disabled) .bk-icon {
+                            &:hover:not(.disabled) {
                                 color: #EA3636;
                             }
-                            
+
                             &.disabled {
                                 cursor: not-allowed;
-                                
-                                .bk-icon {
-                                    color: #DCDEE5;
-                                }
+                                color: #DCDEE5;
                             }
                         }
                     }
                 }
-                
+
                 .label-key-select {
-                    width: 240px;
+                    width: 100%;
                 }
             }
         }
