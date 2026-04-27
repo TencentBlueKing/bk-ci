@@ -152,7 +152,7 @@ func TestReadRecentErrors(t *testing.T) {
 	err1 := fmtTs(now.Add(-20*time.Minute)) + "|error|first recent error"
 	warn := fmtTs(now.Add(-15*time.Minute)) + "|warning|just a warning"
 	fatal := fmtTs(now.Add(-10*time.Minute)) + "|fatal|boom"
-	err2 := fmtTs(now.Add(-5 * time.Minute)) + "|error|second recent error"
+	err2 := fmtTs(now.Add(-5*time.Minute)) + "|error|second recent error"
 
 	content := strings.Join([]string{oldErr, info, err1, warn, fatal, err2}, "\n") + "\n"
 	path := filepath.Join(t.TempDir(), "devopsAgent.log")
