@@ -44,7 +44,10 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.enums.ProjectScopeType
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -57,7 +60,8 @@ class RbacPermissionResourceService(
     private val traceEventDispatcher: TraceEventDispatcher,
     private val iamV2ManagerService: V2ManagerService,
     private val permissionAuthorizationService: PermissionAuthorizationService,
-    private val permissionResourceValidateService: PermissionResourceValidateService
+    private val permissionResourceValidateService: PermissionResourceValidateService,
+    private val client: Client
 ) : PermissionResourceService {
 
     companion object {
@@ -82,7 +86,7 @@ class RbacPermissionResourceService(
         if (resource != null) {
             logger.info(
                 "This resource has been registered. no need to register again" +
-                    ":$projectCode|$resourceType$resourceCode"
+                        ":$projectCode|$resourceType$resourceCode"
             )
             return true
         }
@@ -101,7 +105,12 @@ class RbacPermissionResourceService(
                 resourceName = resourceName
             )
         } else {
-            // 获取分级管理员信息
+            if (isPersonalProject(projectCode)) {
+                logger.info(
+                    "Personal projects do not require registering resources with the Permission Center.$projectCode"
+                )
+                return true
+            }
             val projectInfo = authResourceService.get(
                 projectCode = projectCode,
                 resourceType = AuthResourceType.PROJECT.value,
@@ -238,6 +247,10 @@ class RbacPermissionResourceService(
         enabled: Boolean?
     ): Boolean {
         logger.info("resource modify relation|$projectCode|$resourceType|$resourceCode|$resourceName")
+        if (isPersonalProject(projectCode)) {
+            logger.info("Personal projects do not require update resources with the Permission Center.$projectCode")
+            return true
+        }
         val resourceInfo = authResourceService.get(
             projectCode = projectCode,
             resourceType = resourceType,
@@ -262,8 +275,8 @@ class RbacPermissionResourceService(
             if (!resourceInfo.enable && resourceInfo.relationId.isBlank()) {
                 logger.info(
                     "resource is disabled and relationId is empty, " +
-                        "skip modify subset manager" +
-                        "|$projectCode|$resourceType|$resourceCode"
+                            "skip modify subset manager" +
+                            "|$projectCode|$resourceType|$resourceCode"
                 )
                 authResourceService.update(
                     projectCode = projectCode,
@@ -329,6 +342,10 @@ class RbacPermissionResourceService(
         resourceCode: String
     ): Boolean {
         logger.info("resource delete relation|$projectCode|$resourceType|$resourceCode")
+        if (isPersonalProject(projectCode)) {
+            logger.info("Personal projects do not require delete resources with the Permission Center.$projectCode")
+            return true
+        }
         // 项目不能删除,不需要删除分级管理员
         if (resourceType != AuthResourceType.PROJECT.value) {
             val resourceInfo = authResourceService.getOrNull(
@@ -341,7 +358,7 @@ class RbacPermissionResourceService(
                 if (!resourceInfo.enable && resourceInfo.relationId.isBlank()) {
                     logger.info(
                         "resource is disabled and relationId is empty, " +
-                            "skip delete subset manager|$projectCode|$resourceType|$resourceCode"
+                                "skip delete subset manager|$projectCode|$resourceType|$resourceCode"
                     )
                 } else {
                     val projectInfo = authResourceService.get(
@@ -377,6 +394,11 @@ class RbacPermissionResourceService(
         )
         return true
     }
+
+    private fun isPersonalProject(projectCode: String) =
+        client.get(ServiceProjectResource::class).get(
+            englishName = projectCode
+        ).data!!.projectScope == ProjectScopeType.PERSONAL.value
 
     override fun resourceCancelRelation(
         userId: String,

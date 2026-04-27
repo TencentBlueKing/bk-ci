@@ -180,7 +180,8 @@ class RbacAuthConfiguration {
         traceEventDispatcher: TraceEventDispatcher,
         iamV2ManagerService: V2ManagerService,
         permissionAuthorizationService: PermissionAuthorizationService,
-        permissionResourceValidateService: PermissionResourceValidateService
+        permissionResourceValidateService: PermissionResourceValidateService,
+        client: Client
     ) = RbacPermissionResourceService(
         authResourceService = authResourceService,
         permissionGradeManagerService = permissionGradeManagerService,
@@ -189,7 +190,8 @@ class RbacAuthConfiguration {
         traceEventDispatcher = traceEventDispatcher,
         iamV2ManagerService = iamV2ManagerService,
         permissionAuthorizationService = permissionAuthorizationService,
-        permissionResourceValidateService = permissionResourceValidateService
+        permissionResourceValidateService = permissionResourceValidateService,
+        client = client
     )
 
     @Bean
