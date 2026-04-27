@@ -30,16 +30,16 @@ func platformUnzip(src, dest string) error {
 			"原生解压失败: %v, 尝试 unzip.exe 兜底 ...", err))
 	}
 
-	// 兜底：查找 agent 二进制同目录下的 unzip.exe。
+	// 兜底：优先找当前运行 devopsAgent.exe 同目录下的 unzip.exe；若该目录中的
+	// unzip.exe 已在 reinstall 清理阶段被删掉，再退回到当前可执行文件旁边查找。
 	// 注意：src/dest 作为 exec.Command 的独立参数传入，不参与命令行解析，
 	// 与 PowerShell -Command 字符串拼接不同，这里不存在注入风险。
-	exePath, _ := os.Executable()
-	unzipExe := filepath.Join(filepath.Dir(exePath), "unzip.exe")
+	unzipExe := findUnzipExe(dest)
 	if _, err := os.Stat(unzipExe); err != nil {
 		return fmt.Errorf(msgf(
-			"native unzip failed and unzip.exe not found in %s",
-			"原生解压失败且 %s 下未找到 unzip.exe",
-			filepath.Dir(exePath)))
+			"native unzip failed and unzip.exe not found near %s or current executable",
+			"原生解压失败且 %s 或当前可执行文件目录下未找到 unzip.exe",
+			dest))
 	}
 
 	cmd := exec.Command(unzipExe, "-o", src, "-d", dest)
@@ -51,6 +51,45 @@ func platformUnzip(src, dest string) error {
 			"unzip.exe 也失败了: %v", err))
 	}
 	return nil
+}
+
+func findUnzipExe(dest string) string {
+	for _, dir := range unzipCandidateDirs(dest) {
+		if dir == "" {
+			continue
+		}
+		candidate := filepath.Join(dir, "unzip.exe")
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate
+		}
+	}
+
+	// 保持返回一个稳定候选路径，便于上层错误信息可读。
+	if len(unzipCandidateDirs(dest)) > 0 {
+		return filepath.Join(unzipCandidateDirs(dest)[0], "unzip.exe")
+	}
+	return "unzip.exe"
+}
+
+func unzipCandidateDirs(dest string) []string {
+	dirs := make([]string, 0, 2)
+	if dest != "" {
+		dirs = append(dirs, dest)
+	}
+	if exePath, err := os.Executable(); err == nil {
+		exeDir := filepath.Dir(exePath)
+		duplicate := false
+		for _, dir := range dirs {
+			if strings.EqualFold(dir, exeDir) {
+				duplicate = true
+				break
+			}
+		}
+		if !duplicate {
+			dirs = append(dirs, exeDir)
+		}
+	}
+	return dirs
 }
 
 func handleInstall(workDir string, args []string) error {
