@@ -31,6 +31,26 @@ func TestDiskIndexCache_HitWithinTTL(t *testing.T) {
 	}
 }
 
+func TestDiskIndexCache_HitWithinTTL_WithNormalizedPath(t *testing.T) {
+	resetDiskIndexCacheForTest()
+	diskIndexCacheMu.Lock()
+	diskIndexCache = map[string]uint32{"C:": 0}
+	diskIndexCachedAt = time.Now()
+	diskIndexCacheMu.Unlock()
+
+	idx, err := queryStorageDeviceNumber("\\c:\\")
+	if err != nil || idx != 0 {
+		t.Errorf("want (0,nil), got (%d,%v)", idx, err)
+	}
+}
+
+func TestDiskIndexCache_InvalidDriveLetter(t *testing.T) {
+	resetDiskIndexCacheForTest()
+	if _, err := queryStorageDeviceNumber("/"); err == nil {
+		t.Fatal("want error for invalid drive letter")
+	}
+}
+
 func TestDiskIndexCache_ExpiredTriggersRefresh(t *testing.T) {
 	resetDiskIndexCacheForTest()
 	// 植入"10 分钟前"的缓存 → 应被视为过期，触发 refresh（refresh 会失败

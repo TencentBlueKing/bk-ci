@@ -111,7 +111,7 @@ func (d *Disk) Gather() ([]Metric, error) {
 		tags := map[string]string{
 			TagDevice: trimDevicePrefix(p.Device),
 			TagFstype: p.Fstype,
-			TagPath:   p.Mountpoint,
+			TagPath:   normalizeDiskPathTag(p.Mountpoint),
 		}
 		if p.Opts != nil {
 			// telegraf 把 opts 的第一个元素作为 mode（ro/rw），这里保持同样的风格
