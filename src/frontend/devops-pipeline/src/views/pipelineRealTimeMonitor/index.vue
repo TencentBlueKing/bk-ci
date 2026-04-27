@@ -90,9 +90,12 @@
             /**
              * 处理时间变化
              */
-            const  handleValueChange = (v, info) =>{
+            const handleValueChange = (v, info) => {
                 modelValue.value = v
-                const timeArr = [info[0].formatText,info[1].formatText]
+                const first = info?.[0]?.formatText
+                const second = info?.[1]?.formatText
+                if (!first || !second) return
+                const timeArr = [first, second]
                 const timestamps = convertTimeToTimestamp(timeArr)
                 // 使用新的时间范围获取数据
                 timeRange.value = timestamps

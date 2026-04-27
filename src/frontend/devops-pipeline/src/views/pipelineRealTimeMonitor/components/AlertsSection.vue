@@ -237,11 +237,6 @@
                     // 一次性更新整个对象，触发响应式更新
                     personDistributionData.value = tempData
                     
-                    console.log('personDistributionData更新完成:', {
-                        selected: selectedWarnItem.value?.name || '全部',
-                        labels: labelsValue,
-                        data: personDistributionData.value
-                    })
                 } catch (error) {
                     console.error('获取按负责人分布的告警数据失败:', error)
                     // 出错时设置空数据

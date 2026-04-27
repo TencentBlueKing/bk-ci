@@ -61,11 +61,11 @@
                     const [originalStartTime, endTime] = props.timeRange
                     let startTime = originalStartTime
                     // 检查时间差是否大于两天（2天 = 2 * 24 * 60 * 60 秒）
-                    const twoDaysInMs = 2 * 24 * 60 * 60
+                    const twoDaysIns = 2 * 24 * 60 * 60
                     const timeDiff = endTime - startTime
-                    if (timeDiff > twoDaysInMs) {
+                    if (timeDiff > twoDaysIns) {
                         // 如果时间差大于两天，将startTime调整为endTime往前两天
-                        startTime = endTime - twoDaysInMs
+                        startTime = endTime - twoDaysIns
                     }
                     const promqlConfigs = [
                         { id: 'runningPipelines', promql: runningPipelines },

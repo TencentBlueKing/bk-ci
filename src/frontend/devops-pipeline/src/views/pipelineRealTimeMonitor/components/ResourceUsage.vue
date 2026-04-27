@@ -63,10 +63,15 @@
                         { id: 'sourceDisk', promql: sourceDisk }
                     ]
 
+                    const configIndexMap = promqlConfigs.reduce((acc, config, index) => {
+                        acc[config.id] = index
+                        return acc
+                    }, {})
+
                     const results = await Promise.all(
                         promqlConfigs.map(config =>
                             proxy.$store.dispatch('pipelines/getMetrics', {
-                                promql: config.promql, // 这些是静态promql
+                                promql: config.promql,
                                 start_time: startTime,
                                 end_time: endTime
                             })
@@ -74,8 +79,8 @@
                     )
 
                     sourceStatus.value = sourceStatus.value.map(item => {
-                        const configIndex = promqlConfigs.findIndex(config => config.id === item.id)
-                        if (configIndex !== -1) {
+                        const configIndex = configIndexMap[item.id]
+                        if (configIndex !== undefined) {
                             return { ...item, value: extractValue(results[configIndex]) }
                         }
                         return item
