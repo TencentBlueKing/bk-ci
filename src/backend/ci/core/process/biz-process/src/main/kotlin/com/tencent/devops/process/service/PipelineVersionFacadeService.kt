@@ -962,17 +962,9 @@ class PipelineVersionFacadeService @Autowired constructor(
             )
             // 这里判断是不是已发布,不能直接判断版本是不是RELEASE,因为发布可能分支版本
             if (record != null && record.status != VersionStatus.COMMITTING) {
-                val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+                val releaseResource = pipelineRepositoryService.getReleaseVersionResource(
                     projectId = projectId,
                     pipelineId = pipelineId
-                ) ?: throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
-                )
-                val releaseResource = pipelineRepositoryService.getPipelineResourceVersion(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    version = pipelineInfo.version
                 )
                 return PipelineDraftStatusResult(
                     status = PipelineDraftStatus.PUBLISHED,
@@ -1015,7 +1007,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         pipelineId: String,
         draftResource: PipelineResourceVersion
     ): PipelineDraftStatusResult {
-        val releaseResource = pipelineRepositoryService.getReleaseVersionRecord(
+        val releaseResource = pipelineRepositoryService.getReleaseVersionResource(
             projectId = projectId,
             pipelineId = pipelineId
         )
@@ -1082,7 +1074,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         pipelineId: String,
         draftResource: PipelineResourceVersion,
     ): PipelineDraftStatusResult {
-        val releaseResource = pipelineRepositoryService.getReleaseVersionRecord(
+        val releaseResource = pipelineRepositoryService.getReleaseVersionResource(
             projectId = projectId,
             pipelineId = pipelineId
         )

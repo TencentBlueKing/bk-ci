@@ -146,7 +146,7 @@ class PipelineYamlResourceService @Autowired constructor(
     }
 
     override fun existsReleaseVersion(projectId: String, pipelineId: String): Boolean {
-        return pipelineRepositoryService.getReleaseVersionRecord(
+        return pipelineRepositoryService.getReleaseVersionResource(
             projectId = projectId, pipelineId = pipelineId
         ) != null
     }
