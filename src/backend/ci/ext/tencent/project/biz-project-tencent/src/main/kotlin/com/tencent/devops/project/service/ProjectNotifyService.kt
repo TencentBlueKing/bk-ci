@@ -721,7 +721,7 @@ class ProjectNotifyService constructor(
         val request = SendNotifyMessageTemplateRequest(
             templateCode = KPI_CODE_CHANGE_NOTIFY_TEMPLATE,
             bodyParams = bodyParams,
-            notifyType = mutableSetOf(NotifyType.EMAIL.name, NotifyType.RTX.name),
+            notifyType = mutableSetOf(NotifyType.EMAIL.name, NotifyType.WEWORK.name),
             receivers = receivers,
             cc = cc
         )
