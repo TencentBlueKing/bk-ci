@@ -598,7 +598,7 @@ class RbacPermissionService(
         val startEpoch = System.currentTimeMillis()
         val result = try {
             if (checkProjectManager(userId = userId, projectCode = projectCode)) {
-                actions.associate {
+                return actions.associate {
                     val authPermission = it.substringAfterLast("_")
                     AuthPermission.get(authPermission) to resources.map { resource -> resource.resourceCode }
                 }
