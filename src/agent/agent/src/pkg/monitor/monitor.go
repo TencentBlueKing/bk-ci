@@ -214,8 +214,11 @@ collect:
 		return
 	}
 
-	// rename 后先写 debug dump（便于排查时看到最终上报值），再上报
+	// rename 后注入 global tags，再写 debug dump + 上报。
+	// global tags 在 rename 之后立即注入，保证 dump / cli / report
+	// 看到的 metric 完全一致，便于排查。
 	renamed := Rename(all)
+	injectGlobalTags(renamed)
 	dumper.Dump(renamed)
 
 	if err := reporter.Report(ctx, renamed); err != nil {
