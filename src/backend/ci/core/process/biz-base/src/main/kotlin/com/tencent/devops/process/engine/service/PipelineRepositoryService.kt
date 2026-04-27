@@ -2541,18 +2541,11 @@ class PipelineRepositoryService constructor(
         )
     }
 
-    fun getReleaseVersionResource(projectId: String, pipelineId: String): PipelineResourceVersion? {
-        val pipelineInfo = getPipelineInfo(
+    fun getReleaseVersionRecord(projectId: String, pipelineId: String): PipelineResourceVersion? {
+        return pipelineResourceVersionDao.getReleaseVersionRecord(
+            dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId
-        ) ?: throw ErrorCodeException(
-            statusCode = Response.Status.NOT_FOUND.statusCode,
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
-        )
-        return getPipelineResourceVersion(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = pipelineInfo.version
         )
     }
 

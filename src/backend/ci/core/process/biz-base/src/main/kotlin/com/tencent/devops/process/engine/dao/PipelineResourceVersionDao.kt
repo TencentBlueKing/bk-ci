@@ -245,7 +245,7 @@ class PipelineResourceVersionDao {
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .and(STATUS.eq(VersionStatus.RELEASED.name).or(STATUS.isNull))
-                .orderBy(VERSION.desc()).limit(1)
+                .orderBy(RELEASE_TIME.desc(), VERSION.desc()).limit(1)
                 .fetchAny(mapper)
         }
     }
