@@ -68,10 +68,14 @@ object PipelineUtils {
         }
     }
 
-    fun checkPipelineParams(params: List<BuildFormProperty>): MutableMap<String, BuildFormProperty> {
+    fun checkPipelineParams(
+        params: List<BuildFormProperty>,
+        supportChineseVarName: Boolean? = false
+    ): MutableMap<String, BuildFormProperty> {
         val map = mutableMapOf<String, BuildFormProperty>()
         params.forEach { param ->
-            if (!Pattern.matches(ENGLISH_NAME_PATTERN, param.id)) {
+            // 不支持中文变量名时,需校验参数名必须符合英文格式
+            if (supportChineseVarName == false && !Pattern.matches(ENGLISH_NAME_PATTERN, param.id)) {
                 logger.warn("Pipeline's start params[${param.id}] is illegal")
                 throw OperationException(
                     message = I18nUtil.getCodeLanMessage(
@@ -90,6 +94,11 @@ object PipelineUtils {
                 // 常量一定不作为入参，且只读不可覆盖
                 param.required = false
                 param.readOnly = true
+                param.asInstanceInput = false
+            }
+            // 其他变量,不能作为入参
+            if (!param.required) {
+                param.asInstanceInput = false
             }
             map[param.id] = param
         }

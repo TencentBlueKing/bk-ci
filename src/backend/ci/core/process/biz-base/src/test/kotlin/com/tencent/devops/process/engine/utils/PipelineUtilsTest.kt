@@ -75,6 +75,79 @@ class PipelineUtilsTest {
     }
 
     @Test
+    fun checkPipelineParamsChineseNameWhenSupport() {
+        val params = mutableListOf<BuildFormProperty>()
+        params.add(make(id = "中文变量"))
+        params.add(make(id = "abc-123"))
+        val result = PipelineUtils.checkPipelineParams(params, supportChineseVarName = true)
+        Assertions.assertEquals(2, result.size)
+        Assertions.assertNotNull(result["中文变量"])
+        Assertions.assertNotNull(result["abc-123"])
+    }
+
+    @Test
+    fun checkPipelineParamsChineseNameWhenSupportIsNull() {
+        val params = mutableListOf<BuildFormProperty>()
+        params.add(make(id = "中文变量"))
+        val result = PipelineUtils.checkPipelineParams(params, supportChineseVarName = null)
+        Assertions.assertNotNull(result["中文变量"])
+    }
+
+    @Test
+    fun checkPipelineParamsChineseNameWhenNotSupport() {
+        val params = mutableListOf<BuildFormProperty>()
+        params.add(make(id = "中文变量"))
+        Assertions.assertThrows(OperationException::class.java) {
+            PipelineUtils.checkPipelineParams(params, supportChineseVarName = false)
+        }
+    }
+
+    @Test
+    fun checkPipelineParamsConstantNormalizeFlags() {
+        val params = mutableListOf<BuildFormProperty>()
+        params.add(make(id = "myConst", constant = true, required = true, defaultValue = "value"))
+        val result = PipelineUtils.checkPipelineParams(params)
+        val ret = result["myConst"]!!
+        Assertions.assertFalse(ret.required)
+        Assertions.assertEquals(true, ret.readOnly)
+        Assertions.assertEquals(false, ret.asInstanceInput)
+    }
+
+    @Test
+    fun checkPipelineParamsConstantBlankValue() {
+        val params = mutableListOf<BuildFormProperty>()
+        params.add(make(id = "myConst", constant = true, defaultValue = ""))
+        Assertions.assertThrows(OperationException::class.java) { PipelineUtils.checkPipelineParams(params) }
+    }
+
+    @Test
+    fun checkPipelineParamsConstantWhitespaceValue() {
+        val params = mutableListOf<BuildFormProperty>()
+        params.add(make(id = "myConst", constant = true, defaultValue = "   "))
+        Assertions.assertThrows(OperationException::class.java) { PipelineUtils.checkPipelineParams(params) }
+    }
+
+    @Test
+    fun checkPipelineParamsNonRequiredAsInstanceInput() {
+        val params = mutableListOf<BuildFormProperty>()
+        params.add(make(id = "myVar", required = false))
+        val result = PipelineUtils.checkPipelineParams(params)
+        Assertions.assertEquals(false, result["myVar"]!!.asInstanceInput)
+    }
+
+    @Test
+    fun checkPipelineParamsReturnMapKeyedById() {
+        val params = mutableListOf(
+            make(id = "param1"),
+            make(id = "param2")
+        )
+        val result = PipelineUtils.checkPipelineParams(params)
+        Assertions.assertEquals(2, result.size)
+        Assertions.assertEquals("param1", result["param1"]!!.id)
+        Assertions.assertEquals("param2", result["param2"]!!.id)
+    }
+
+    @Test
     fun checkPipelineDescLength() {
         var desc: String? = null
         PipelineUtils.checkPipelineDescLength(desc, 100)
@@ -89,12 +162,18 @@ class PipelineUtilsTest {
         Assertions.assertThrows(ErrorCodeException::class.java) { PipelineUtils.checkPipelineDescLength(desc, 100) }
     }
 
-    private fun make(id: String): BuildFormProperty {
+    private fun make(
+        id: String,
+        required: Boolean = true,
+        constant: Boolean? = false,
+        defaultValue: Any = "123"
+    ): BuildFormProperty {
         return BuildFormProperty(
             id = id,
-            required = true,
+            required = required,
+            constant = constant,
             type = BuildFormPropertyType.STRING,
-            defaultValue = "123",
+            defaultValue = defaultValue,
             options = null,
             desc = "hello",
             repoHashId = null,
