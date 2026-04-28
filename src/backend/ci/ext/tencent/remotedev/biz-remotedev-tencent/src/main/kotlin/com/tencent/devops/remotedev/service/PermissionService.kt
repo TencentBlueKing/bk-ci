@@ -243,7 +243,7 @@ class PermissionService @Autowired constructor(
     }
 
     fun checkUserManager(userId: String, projectId: String) {
-        val managers = managers(projectId)
+        val managers = projectManagerCache.get(projectId)
         val checkProjectManager = client.get(ServiceProjectAuthResource::class).checkProjectManager(
             token = checkTokenService.getSystemToken(),
             userId = userId,

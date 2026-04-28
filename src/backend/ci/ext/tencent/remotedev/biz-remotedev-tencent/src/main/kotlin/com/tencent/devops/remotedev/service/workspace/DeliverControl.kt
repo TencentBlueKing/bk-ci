@@ -37,6 +37,7 @@ import com.tencent.devops.common.audit.TencentActionAuditContent.PROJECT_CODE_TE
 import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
@@ -46,11 +47,13 @@ import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.async.AsyncUpdateHostMonitor
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
 
 @Service
@@ -62,7 +65,8 @@ class DeliverControl @Autowired constructor(
     private val permissionService: PermissionService,
     private val workspaceCommon: WorkspaceCommon,
     private val gitProxyTGitService: GitProxyTGitService,
-    private val workspaceOpHistoryDao: WorkspaceOpHistoryDao
+    private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
+    private val streamBridge: StreamBridge
 ) {
 
     companion object {
@@ -114,14 +118,17 @@ class DeliverControl @Autowired constructor(
                     mountType = WorkspaceMountType.START,
                     ownerType = workspace.ownerType
                 )
-                workspaceCommon.updateHostMonitor(
-                    workspaceName = workspaceName,
-                    props = workspaceCommon.genWorkspaceCCInfo(
-                        workspace.projectId,
-                        workspace.displayName.ifBlank { workspaceName },
-                        assign2Owner.userId
-                    ),
-                    type = workspace.workspaceSystemType
+                AsyncExecute.dispatch(
+                    streamBridge = streamBridge,
+                    data = AsyncUpdateHostMonitor(
+                        workspaceName = workspaceName,
+                        props = workspaceCommon.genWorkspaceCCInfo(
+                            workspace.projectId,
+                            workspace.displayName.ifBlank { workspaceName },
+                            assign2Owner.userId
+                        ),
+                        type = workspace.workspaceSystemType
+                    )
                 )
                 if (workspace.status.checkDistributing()) {
                     workspaceDao.updateWorkspaceStatus(
@@ -166,14 +173,17 @@ class DeliverControl @Autowired constructor(
                         mountType = WorkspaceMountType.START,
                         ownerType = workspace.ownerType
                     )
-                    workspaceCommon.updateHostMonitor(
-                        workspaceName = workspaceName,
-                        props = workspaceCommon.genWorkspaceCCInfo(
-                            workspace.projectId,
-                            workspace.displayName.ifBlank { workspaceName },
-                            assign2Owner.userId
-                        ),
-                        type = workspace.workspaceSystemType
+                    AsyncExecute.dispatch(
+                        streamBridge = streamBridge,
+                        data = AsyncUpdateHostMonitor(
+                            workspaceName = workspaceName,
+                            props = workspaceCommon.genWorkspaceCCInfo(
+                                workspace.projectId,
+                                workspace.displayName.ifBlank { workspaceName },
+                                assign2Owner.userId
+                            ),
+                            type = workspace.workspaceSystemType
+                        )
                     )
                 }
                 // 记录修改拥有者操作
@@ -204,19 +214,18 @@ class DeliverControl @Autowired constructor(
                 mountType = WorkspaceMountType.START,
                 ownerType = workspace.ownerType
             )
-            // 记录添加查看者操作
-            add.forEach { viewer ->
-                workspaceOpHistoryDao.createWorkspaceHistory(
-                    dslContext = dslContext,
-                    workspaceName = workspaceName,
-                    operator = userId,
-                    action = WorkspaceAction.ASSIGN,
-                    actionMessage = String.format(
-                        workspaceCommon.getOpHistory(OpHistoryCopyWriting.ASSIGN_VIEWER),
-                        viewer.userId
+            val viewerTemplate = workspaceCommon.getOpHistory(OpHistoryCopyWriting.ASSIGN_VIEWER)
+            workspaceOpHistoryDao.batchCreateWorkspaceHistory(
+                dslContext = dslContext,
+                records = add.map { viewer ->
+                    WorkspaceOpHistoryDao.OpHistoryRecord(
+                        workspaceName = workspaceName,
+                        operator = userId,
+                        action = WorkspaceAction.ASSIGN,
+                        actionMessage = String.format(viewerTemplate, viewer.userId)
                     )
-                )
-            }
+                }
+            )
         }
 
         val am = assigns.filter { it.type == WorkspaceShared.AssignType.VIEWER }.map { m -> m.userId }
