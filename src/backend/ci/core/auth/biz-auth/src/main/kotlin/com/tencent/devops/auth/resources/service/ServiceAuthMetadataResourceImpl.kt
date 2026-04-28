@@ -30,7 +30,7 @@ package com.tencent.devops.auth.resources.service
 import com.tencent.devops.auth.api.service.ServiceAuthMetadataResource
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
-import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
+import com.tencent.devops.auth.service.AuthAiService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.BkApiPermission
@@ -39,18 +39,18 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceAuthMetadataResourceImpl @Autowired constructor(
-    private val rbacCommonService: RbacCommonService
+    private val authAiService: AuthAiService
 ) : ServiceAuthMetadataResource {
 
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun listResourceTypes(token: String): Result<List<ResourceTypeInfoVo>> {
         return Result(
-            rbacCommonService.listResourceTypes()
+            authAiService.listResourceTypes()
         )
     }
 
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun listActions(token: String, resourceType: String): Result<List<ActionInfoVo>> {
-        return Result(rbacCommonService.listResourceType2Action(resourceType))
+        return Result(authAiService.listActions(resourceType))
     }
 }
