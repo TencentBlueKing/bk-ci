@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,16 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.api.service
+package com.tencent.devops.project.api.service.user
 
-import com.tencent.devops.auth.pojo.BkUserInfo
-import com.tencent.devops.auth.pojo.vo.DeptInfoVo
-import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.project.pojo.CrosProductVO
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
@@ -43,59 +42,42 @@ import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
-@Tag(name = "SERVICE_DEPT", description = "权限校验--组织相关")
-@Path("/service/dept")
+@Tag(name = "USER_KPI_PRODUCT", description = "KPI产品信息")
+@Path("/user/kpiProducts")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceDeptResource {
-    @GET
-    @Path("/parents")
-    @Operation(summary = "获取组织父级")
-    fun getParentDept(
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(description = "用户ID", required = true)
-        userId: String
-    ): Result<Int>
+interface UserKpiProductResource {
 
     @GET
-    @Path("/get/byName")
-    @Operation(summary = "根据组织名称获取组织id")
-    fun getDeptByName(
+    @Path("/list")
+    @Operation(summary = "获取KPI产品列表")
+    fun getKpiProducts(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(description = "用户ID", required = true)
         userId: String,
-        @QueryParam("deptName")
-        @Parameter(description = "组织名称", required = true)
-        deptName: String
-    ): Result<DeptInfoVo?>
+        @Parameter(description = "KPI产品名称（模糊搜索）", required = false)
+        @QueryParam("kpiName")
+        kpiName: String? = null
+    ): Result<List<CrosProductVO>>
 
     @GET
-    @Path("/getUserInfo")
-    @Operation(summary = "获取单个用户信息")
-    fun getUserInfo(
+    @Path("/checkNeedMonetization")
+    @Operation(summary = "判断是否需要进行货币化")
+    fun checkNeedMonetization(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(description = "用户ID", required = true)
         userId: String,
-        @QueryParam("name")
-        @Parameter(description = "用户名称", required = true)
-        name: String
-    ): Result<UserAndDeptInfoVo?>
-
-    @GET
-    @Path("/checkUserDeparted")
-    @Operation(summary = "检查用户是否离职")
-    fun checkUserDeparted(
-        @QueryParam("name")
-        @Parameter(description = "用户名称", required = true)
-        name: String
+        @Parameter(description = "事业群ID", required = false)
+        @QueryParam("bgId")
+        bgId: String?,
+        @Parameter(description = "业务线ID", required = false)
+        @QueryParam("businessLineId")
+        businessLineId: String?,
+        @Parameter(description = "部门ID", required = false)
+        @QueryParam("deptId")
+        deptId: String?,
+        @Parameter(description = "中心ID", required = false)
+        @QueryParam("centerId")
+        centerId: String?
     ): Result<Boolean>
-
-    @GET
-    @Path("/getLeader")
-    @Operation(summary = "获取用户的直属 Leader")
-    fun getLeader(
-        @QueryParam("userId")
-        @Parameter(description = "用户名称", required = true)
-        userId: String
-    ): Result<BkUserInfo?>
 }

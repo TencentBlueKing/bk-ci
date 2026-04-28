@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,38 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources.service
+package com.tencent.devops.project.resources
 
-import com.tencent.devops.auth.api.service.ServiceDeptResource
-import com.tencent.devops.auth.pojo.BkUserInfo
-import com.tencent.devops.auth.pojo.vo.DeptInfoVo
-import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
-import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.service.user.UserKpiProductResource
+import com.tencent.devops.project.pojo.CrosProductVO
+import com.tencent.devops.project.service.ProjectOperationalProductService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceDeptResourceImpl @Autowired constructor(
-    val deptService: DeptService
-) : ServiceDeptResource {
-    override fun getParentDept(userId: String): Result<Int> {
-        return Result("", deptService.getUserParentDept(userId))
+class UserKpiProductResourceImpl @Autowired constructor(
+    private val projectOperationalProductService: ProjectOperationalProductService
+) : UserKpiProductResource {
+
+    override fun getKpiProducts(userId: String, kpiName: String?): Result<List<CrosProductVO>> {
+        return Result(projectOperationalProductService.getKpiProducts(kpiName))
     }
 
-    override fun getDeptByName(userId: String, deptName: String): Result<DeptInfoVo?> {
-        return Result(deptService.getDeptByName(deptName, userId))
-    }
-
-    override fun getUserInfo(userId: String, name: String): Result<UserAndDeptInfoVo?> {
-        return Result(deptService.getUserInfo(name))
-    }
-
-    override fun checkUserDeparted(name: String): Result<Boolean> {
-        return Result(deptService.isUserDeparted(name))
-    }
-
-    override fun getLeader(userId: String): Result<BkUserInfo?> {
-        return Result(deptService.getLeader(userId))
+    override fun checkNeedMonetization(
+        userId: String,
+        bgId: String?,
+        businessLineId: String?,
+        deptId: String?,
+        centerId: String?
+    ): Result<Boolean> {
+        return Result(
+            projectOperationalProductService.checkNeedMonetization(
+                bgId = bgId,
+                businessLineId = businessLineId,
+                deptId = deptId,
+                centerId = centerId
+            )
+        )
     }
 }
