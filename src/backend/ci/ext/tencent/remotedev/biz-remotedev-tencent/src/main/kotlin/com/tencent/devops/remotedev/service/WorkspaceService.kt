@@ -582,7 +582,7 @@ class WorkspaceService @Autowired constructor(
         val records = parseWorkspaceList(
             userId = userId,
             result = result,
-            enableExportSup = true,
+            enableExportSup = false,
             expertSupId = data.expertSupId
         )
 
