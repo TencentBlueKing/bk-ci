@@ -94,10 +94,13 @@ object PipelineUtils {
                 // 常量一定不作为入参，且只读不可覆盖
                 param.required = false
                 param.readOnly = true
-                param.asInstanceInput = false
+                // 只有模版asInstanceInput才有值,流水线应该都为null
+                if (param.asInstanceInput != null) {
+                    param.asInstanceInput = false
+                }
             }
             // 其他变量,不能作为入参
-            if (!param.required) {
+            if (!param.required && param.asInstanceInput != null) {
                 param.asInstanceInput = false
             }
             map[param.id] = param
