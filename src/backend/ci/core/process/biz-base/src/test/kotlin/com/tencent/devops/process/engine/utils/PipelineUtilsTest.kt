@@ -110,7 +110,7 @@ class PipelineUtilsTest {
         val ret = result["myConst"]!!
         Assertions.assertFalse(ret.required)
         Assertions.assertEquals(true, ret.readOnly)
-        Assertions.assertEquals(false, ret.asInstanceInput)
+        Assertions.assertEquals(null, ret.asInstanceInput)
     }
 
     @Test
@@ -132,7 +132,7 @@ class PipelineUtilsTest {
         val params = mutableListOf<BuildFormProperty>()
         params.add(make(id = "myVar", required = false))
         val result = PipelineUtils.checkPipelineParams(params)
-        Assertions.assertEquals(false, result["myVar"]!!.asInstanceInput)
+        Assertions.assertEquals(null, result["myVar"]!!.asInstanceInput)
     }
 
     @Test
