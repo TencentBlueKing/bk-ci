@@ -5,6 +5,7 @@ package monitor
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -65,7 +66,17 @@ func (d *DiskIO) Name() string { return RenamedIO }
 func (d *DiskIO) Gather() ([]Metric, error) {
 	s1, err := d.ioCountersFn()
 	if err != nil {
-		return nil, errors.Wrap(err, "diskio: IOCounters first sample failed")
+		// 部分卷（如 WinFSP 挂载盘、Recovery 分区）可能无法识别文件系统，
+		// 此时 gopsutil 可能同时返回已采集到的部分数据和错误。
+		// 如果已有数据且错误是非致命的，降级为 warning 继续处理。
+		if len(s1) > 0 && isDiskIONonFatalErr(err) {
+			// 有部分数据，继续
+		} else if len(s1) == 0 && isDiskIONonFatalErr(err) {
+			// 无数据但错误是非致命的，返回空而非报错
+			return nil, nil
+		} else {
+			return nil, errors.Wrap(err, "diskio: IOCounters first sample failed")
+		}
 	}
 	t1 := d.nowFn()
 
@@ -73,7 +84,13 @@ func (d *DiskIO) Gather() ([]Metric, error) {
 
 	s2, err := d.ioCountersFn()
 	if err != nil {
-		return nil, errors.Wrap(err, "diskio: IOCounters second sample failed")
+		if len(s2) > 0 && isDiskIONonFatalErr(err) {
+			// 有部分数据，继续
+		} else if len(s2) == 0 && isDiskIONonFatalErr(err) {
+			return nil, nil
+		} else {
+			return nil, errors.Wrap(err, "diskio: IOCounters second sample failed")
+		}
 	}
 	t2 := d.nowFn()
 
@@ -134,4 +151,28 @@ func (d *DiskIO) Gather() ([]Metric, error) {
 		})
 	}
 	return out, nil
+}
+
+// isDiskIONonFatalErr 判断 disk.IOCounters 的错误是否为非致命错误。
+// Windows 上某些卷（WinFSP 挂载盘、Recovery 分区、未格式化分区、空光驱等）
+// 无法被标准 Win32 API 识别，gopsutil 会返回此类错误但仍可能采集到其他正常磁盘的数据。
+func isDiskIONonFatalErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	nonFatalPatterns := []string{
+		"recognized file system",    // "The volume does not contain a recognized file system"
+		"not ready",                 // "The device is not ready" (空光驱)
+		"access is denied",          // 无权限访问的卷
+		"incorrect function",        // 某些虚拟磁盘返回的通用错误
+		"sem_timeout",               // 设备超时
+		"the parameter is incorrect", // 参数错误（某些虚拟设备）
+	}
+	for _, p := range nonFatalPatterns {
+		if strings.Contains(msg, p) {
+			return true
+		}
+	}
+	return false
 }
