@@ -46,6 +46,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.project.pojo.enums.ProjectScopeType
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.util.ProjectUtils
 import org.jooq.Condition
@@ -60,7 +61,7 @@ import org.jooq.impl.DSL.lower
 import org.springframework.stereotype.Repository
 import java.net.URLDecoder
 import java.time.LocalDateTime
-import java.util.Locale
+import java.util.*
 
 @Suppress("ALL")
 @Repository
@@ -734,7 +735,8 @@ class ProjectDao {
 
     private fun TProject.generateQueryProjectForApplyCondition(): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        conditions.add(CHANNEL.eq(ProjectChannelCode.BS.name).or(CHANNEL.eq(ProjectChannelCode.PREBUILD.name)))
+        conditions.add(CHANNEL.eq(ProjectChannelCode.BS.name))
+        conditions.add(PROJECT_SCOPE.eq(ProjectScopeType.TEAM.value))
         conditions.add(IS_OFFLINED.eq(false))
         conditions.add(ENABLED.eq(true))
         conditions.add(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))

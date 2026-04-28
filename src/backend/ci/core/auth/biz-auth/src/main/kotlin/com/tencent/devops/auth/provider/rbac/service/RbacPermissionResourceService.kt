@@ -44,10 +44,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
-import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.project.pojo.enums.ProjectScopeType
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -61,7 +58,7 @@ class RbacPermissionResourceService(
     private val iamV2ManagerService: V2ManagerService,
     private val permissionAuthorizationService: PermissionAuthorizationService,
     private val permissionResourceValidateService: PermissionResourceValidateService,
-    private val client: Client
+    private val personalProjectService: PersonalProjectService
 ) : PermissionResourceService {
 
     companion object {
@@ -105,7 +102,7 @@ class RbacPermissionResourceService(
                 resourceName = resourceName
             )
         } else {
-            if (isPersonalProject(projectCode)) {
+            if (personalProjectService.isPersonalProject(projectCode)) {
                 logger.info(
                     "Personal projects do not require registering resources with the Permission Center.$projectCode"
                 )
@@ -247,7 +244,7 @@ class RbacPermissionResourceService(
         enabled: Boolean?
     ): Boolean {
         logger.info("resource modify relation|$projectCode|$resourceType|$resourceCode|$resourceName")
-        if (isPersonalProject(projectCode)) {
+        if (personalProjectService.isPersonalProject(projectCode)) {
             logger.info("Personal projects do not require update resources with the Permission Center.$projectCode")
             return true
         }
@@ -342,7 +339,7 @@ class RbacPermissionResourceService(
         resourceCode: String
     ): Boolean {
         logger.info("resource delete relation|$projectCode|$resourceType|$resourceCode")
-        if (isPersonalProject(projectCode)) {
+        if (personalProjectService.isPersonalProject(projectCode)) {
             logger.info("Personal projects do not require delete resources with the Permission Center.$projectCode")
             return true
         }
@@ -394,11 +391,6 @@ class RbacPermissionResourceService(
         )
         return true
     }
-
-    private fun isPersonalProject(projectCode: String) =
-        client.get(ServiceProjectResource::class).get(
-            englishName = projectCode
-        ).data!!.projectScope == ProjectScopeType.PERSONAL.value
 
     override fun resourceCancelRelation(
         userId: String,
