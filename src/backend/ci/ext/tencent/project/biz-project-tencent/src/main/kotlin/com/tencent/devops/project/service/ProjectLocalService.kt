@@ -48,6 +48,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
@@ -67,16 +68,15 @@ import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.stream.api.service.ServiceGitForAppResource
-import jakarta.annotation.PreDestroy
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 @Service
 @SuppressWarnings("LongParameterList", "TooManyFunctions", "LongMethod", "MagicNumber", "TooGenericExceptionCaught")
@@ -106,24 +106,15 @@ class ProjectLocalService @Autowired constructor(
 
     private val outerImageUrl = commonConfig.devopsOuterHostGateWay + "/images"
 
-    private val batchPreProjectExecutor: ExecutorService =
-        Executors.newFixedThreadPool(BATCH_PRE_PROJECT_POOL_CORE_THREADS) { runnable ->
-            Thread(runnable, "batch-pre-project").apply {
-                setDaemon(false)
-            }
+    private val batchPreProjectWorkerExecutor: ExecutorService =
+        Executors.newFixedThreadPool(PRE_PROJECT_WORKER_THREADS) { r ->
+            Thread(r, "pre-project-worker")
         }
 
-    @PreDestroy
-    fun shutdownBatchPreProjectExecutor() {
-        try {
-            batchPreProjectExecutor.shutdown()
-            batchPreProjectExecutor.awaitTermination(BATCH_EXECUTOR_SHUTDOWN_SEC, TimeUnit.SECONDS)
-        } catch (e: InterruptedException) {
-            batchPreProjectExecutor.shutdownNow()
-            Thread.currentThread().interrupt()
-            logger.warn("shutdownBatchPreProjectExecutor interrupted", e)
+    private val bulkPreProjectExecutor: ExecutorService =
+        Executors.newFixedThreadPool(PRE_PROJECT_WORKER_THREADS) { r ->
+            Thread(r, "pre-project-by-users")
         }
-    }
 
     fun listForApp(
         userId: String,
@@ -324,52 +315,60 @@ class ProjectLocalService @Autowired constructor(
         return ProjectUtils.packagingBean(userProjectRecord!!)
     }
 
-    fun batchGetOrCreatePreProjectsForStoredUsers(): Int {
-        var page = 1
-        var successCount = 0
-        var continueFlag = true
-        while (continueFlag) {
-            val pageLimit = PageUtil.convertPageSizeToSQLLimit(page, BATCH_PRE_PROJECT_PAGE_SIZE)
-            val users = userDao.listNormalUsers(dslContext, pageLimit.limit, pageLimit.offset)
-            if (users.isEmpty()) {
-                break
+    fun batchGetOrCreatePreProjectsForStoredUsers(): Boolean {
+        Executors.newSingleThreadExecutor().execute {
+            val traceId = MDC.get(TraceTag.BIZID)
+            var page = 1
+            var successCount = 0
+            var continueFlag = true
+            while (continueFlag) {
+                val pageLimit = PageUtil.convertPageSizeToSQLLimit(page, BATCH_PRE_PROJECT_PAGE_SIZE)
+                val users = userDao.listNormalUsers(dslContext, pageLimit.limit, pageLimit.offset)
+                if (users.isEmpty()) {
+                    break
+                }
+                val futures = users.map { record ->
+                    CompletableFuture.supplyAsync({
+                        MDC.put(TraceTag.BIZID, traceId)
+                        try {
+                            logger.info("create personal project for ${record.userId}")
+                            getOrCreatePreProject(
+                                userId = record.userId,
+                                description = "personal project for ${record.userId}"
+                            )
+                            1
+                        } catch (e: Exception) {
+                            logger.warn("create personal project for ${record.userId} fail!", e)
+                            0
+                        }
+                    }, batchPreProjectWorkerExecutor)
+                }
+                CompletableFuture.allOf(*futures.toTypedArray()).join()
+                successCount += futures.sumOf { it.join() }
+                if (users.size < pageLimit.limit) {
+                    continueFlag = false
+                } else {
+                    page++
+                }
             }
-            val futures = users.map { record ->
-                CompletableFuture.supplyAsync({
-                    try {
-                        getOrCreatePreProject(
-                            userId = record.userId,
-                            description = "personal project for ${record.userId}"
-                        )
-                        1
-                    } catch (e: Exception) {
-                        logger.warn("batchGetOrCreatePreProjectsForStoredUsers fail userId=${record.userId}", e)
-                        0
-                    }
-                }, batchPreProjectExecutor)
-            }
-            CompletableFuture.allOf(*futures.toTypedArray()).join()
-            successCount += futures.sumOf { future -> future.join() }
-            if (users.size < pageLimit.limit) {
-                continueFlag = false
-            } else {
-                page++
-            }
+            logger.info("batchGetOrCreatePreProjectsForStoredUsers finished, successCount=$successCount")
         }
-        return successCount
+        return true
     }
 
-    fun batchGetOrCreatePreProjectsForUserIds(userIds: List<String>): Int {
-        var successCount = 0
-        userIds.forEach { uid ->
-            try {
-                getOrCreatePreProject(uid, "personal project for $uid")
-                successCount++
-            } catch (e: Exception) {
-                logger.warn("batchGetOrCreatePreProjectsForUserIds fail userId=$uid", e)
+    fun batchGetOrCreatePreProjectsForUserIds(userIds: List<String>): Boolean {
+        val traceId = MDC.get(TraceTag.BIZID)
+        bulkPreProjectExecutor.execute {
+            MDC.put(TraceTag.BIZID, traceId)
+            userIds.forEach { uid ->
+                try {
+                    getOrCreatePreProject(uid, "personal project for $uid")
+                } catch (e: Exception) {
+                    logger.warn("batchGetOrCreatePreProjectsForUserIds fail userId=$uid", e)
+                }
             }
         }
-        return successCount
+        return true
     }
 
     fun getOrCreateRdsProject(userId: String, projectId: String, projectName: String): ProjectVO {
@@ -731,7 +730,6 @@ class ProjectLocalService @Autowired constructor(
         private const val PROJECT_LIST = "project_list"
         private const val PROJECT_CREATE = "project_create"
         private const val BATCH_PRE_PROJECT_PAGE_SIZE = 100
-        private const val BATCH_PRE_PROJECT_POOL_CORE_THREADS = 5
-        private const val BATCH_EXECUTOR_SHUTDOWN_SEC = 60L
+        private const val PRE_PROJECT_WORKER_THREADS = 5
     }
 }

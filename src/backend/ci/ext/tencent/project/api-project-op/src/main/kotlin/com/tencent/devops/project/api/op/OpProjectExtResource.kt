@@ -27,14 +27,12 @@
 
 package com.tencent.devops.project.api.op
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.project.pojo.OpPreProjectMigrateRequest
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
@@ -49,7 +47,7 @@ interface OpProjectExtResource {
     @POST
     @Path("/migrate/all")
     @Operation(summary = "迁移所有个人项目")
-    fun migratePreProjectsForAllStoredNormalUsers(): Result<Int>
+    fun migratePreProjectsForAllStoredNormalUsers(): Result<Boolean>
 
     @POST
     @Path("/migrate")
@@ -57,5 +55,5 @@ interface OpProjectExtResource {
     fun migratePreProjectsByUserIds(
         @Parameter(description = "待补全预置项目的用户ID列表", required = true)
         request: OpPreProjectMigrateRequest
-    ): Result<Int>
+    ): Result<Boolean>
 }

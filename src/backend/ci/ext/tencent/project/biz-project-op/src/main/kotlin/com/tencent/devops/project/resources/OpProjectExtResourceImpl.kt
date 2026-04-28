@@ -12,11 +12,11 @@ class OpProjectExtResourceImpl(
     private val projectLocalService: ProjectLocalService
 ) : OpProjectExtResource {
 
-    override fun migratePreProjectsForAllStoredNormalUsers(): Result<Int> {
+    override fun migratePreProjectsForAllStoredNormalUsers(): Result<Boolean> {
         return Result(projectLocalService.batchGetOrCreatePreProjectsForStoredUsers())
     }
 
-    override fun migratePreProjectsByUserIds(request: OpPreProjectMigrateRequest): Result<Int> {
+    override fun migratePreProjectsByUserIds(request: OpPreProjectMigrateRequest): Result<Boolean> {
         return Result(projectLocalService.batchGetOrCreatePreProjectsForUserIds(request.userIds))
     }
 }
