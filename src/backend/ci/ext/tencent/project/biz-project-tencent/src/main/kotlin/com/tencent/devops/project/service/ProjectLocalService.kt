@@ -67,11 +67,16 @@ import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.stream.api.service.ServiceGitForAppResource
+import jakarta.annotation.PreDestroy
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 @Service
 @SuppressWarnings("LongParameterList", "TooManyFunctions", "LongMethod", "MagicNumber", "TooGenericExceptionCaught")
@@ -100,6 +105,25 @@ class ProjectLocalService @Autowired constructor(
     private var rbacTag: String = ""
 
     private val outerImageUrl = commonConfig.devopsOuterHostGateWay + "/images"
+
+    private val batchPreProjectExecutor: ExecutorService =
+        Executors.newFixedThreadPool(BATCH_PRE_PROJECT_POOL_CORE_THREADS) { runnable ->
+            Thread(runnable, "batch-pre-project").apply {
+                setDaemon(false)
+            }
+        }
+
+    @PreDestroy
+    fun shutdownBatchPreProjectExecutor() {
+        try {
+            batchPreProjectExecutor.shutdown()
+            batchPreProjectExecutor.awaitTermination(BATCH_EXECUTOR_SHUTDOWN_SEC, TimeUnit.SECONDS)
+        } catch (e: InterruptedException) {
+            batchPreProjectExecutor.shutdownNow()
+            Thread.currentThread().interrupt()
+            logger.warn("shutdownBatchPreProjectExecutor interrupted", e)
+        }
+    }
 
     fun listForApp(
         userId: String,
@@ -252,7 +276,7 @@ class ProjectLocalService @Autowired constructor(
         return getOrCreatePreProject(userId)
     }
 
-    fun getOrCreatePreProject(userId: String): ProjectVO {
+    fun getOrCreatePreProject(userId: String, description: String? = null): ProjectVO {
         val projectCode = "_$userId"
         var userProjectRecord = projectDao.getByEnglishName(dslContext, projectCode)
         if (userProjectRecord != null) {
@@ -268,7 +292,7 @@ class ProjectLocalService @Autowired constructor(
             projectName = projectName,
             englishName = projectCode,
             projectType = ProjectTypeEnum.SUPPORT_PRODUCT.index,
-            description = "prebuild project for $userId",
+            description = description ?: "prebuild project for $userId",
             bgId = 0L,
             bgName = "",
             deptId = 0L,
@@ -310,14 +334,22 @@ class ProjectLocalService @Autowired constructor(
             if (users.isEmpty()) {
                 break
             }
-            users.forEach { record ->
-                try {
-                    getOrCreatePreProject(record.userId)
-                    successCount++
-                } catch (e: Exception) {
-                    logger.warn("batchGetOrCreatePreProjectsForStoredUsers fail userId=${record.userId}", e)
-                }
+            val futures = users.map { record ->
+                CompletableFuture.supplyAsync({
+                    try {
+                        getOrCreatePreProject(
+                            userId = record.userId,
+                            description = "personal project for ${record.userId}"
+                        )
+                        1
+                    } catch (e: Exception) {
+                        logger.warn("batchGetOrCreatePreProjectsForStoredUsers fail userId=${record.userId}", e)
+                        0
+                    }
+                }, batchPreProjectExecutor)
             }
+            CompletableFuture.allOf(*futures.toTypedArray()).join()
+            successCount += futures.sumOf { future -> future.join() }
             if (users.size < pageLimit.limit) {
                 continueFlag = false
             } else {
@@ -331,7 +363,7 @@ class ProjectLocalService @Autowired constructor(
         var successCount = 0
         userIds.forEach { uid ->
             try {
-                getOrCreatePreProject(uid)
+                getOrCreatePreProject(uid, "personal project for $uid")
                 successCount++
             } catch (e: Exception) {
                 logger.warn("batchGetOrCreatePreProjectsForUserIds fail userId=$uid", e)
@@ -698,6 +730,8 @@ class ProjectLocalService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ProjectLocalService::class.java)
         private const val PROJECT_LIST = "project_list"
         private const val PROJECT_CREATE = "project_create"
-        private const val BATCH_PRE_PROJECT_PAGE_SIZE = 500
+        private const val BATCH_PRE_PROJECT_PAGE_SIZE = 100
+        private const val BATCH_PRE_PROJECT_POOL_CORE_THREADS = 5
+        private const val BATCH_EXECUTOR_SHUTDOWN_SEC = 60L
     }
 }
