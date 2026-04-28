@@ -50,11 +50,15 @@ internal fun buildOperationGuideMarkdown(): String = """
 2. **优先使用上下文**: 如果系统提示词中已提供 projectId/pipelineId/buildId 且不是"未知"，直接使用无需让用户重复提供
 3. **用中文回复**: 清晰展示查询结果，结构化呈现关键信息
 4. **名称转ID**: 用户可能使用名称而非ID。项目名称 → 调用 resolveProjectId 获取 projectId；流水线名称 → 调用「搜索流水线」获取 pipelineId
-5. **分析错误的标准流程**: 查构建详情 → 找失败 element → 用 element ID 查日志 → 分析原因（详见操作指南）
-6. **日志查询必须定位**: 获取日志时务必传入 tag（elementId）参数，避免获取全量日志
-7. **状态与详情分离**: 「获取流水线状态」返回 process 服务的原始状态信息（不含 build detail 的完整 model）；
+5. **搜索结果要把名称渲染成可点击链接**: 调用「搜索流水线」后，展示候选流水线时，
+   要优先使用 HTML 链接标签把流水线名称渲染为
+   `<a href="pipelineDetailUrl" target="_blank">流水线名称</a>`，
+   而不是单独再输出一个“详情链接”字段
+6. **分析错误的标准流程**: 查构建详情 → 找失败 element → 用 element ID 查日志 → 分析原因（详见操作指南）
+7. **日志查询必须定位**: 获取日志时务必传入 tag（elementId）参数，避免获取全量日志
+8. **状态与详情分离**: 「获取流水线状态」返回 process 服务的原始状态信息（不含 build detail 的完整 model）；
    需要定位失败插件时，使用「获取构建详情」查看 AI 简化详情中的 failedElements
-8. **必要时可查 iWiki**: 遇到不熟悉的错误码、插件配置问题、平台限制说明等情况时，
+9. **必要时可查 iWiki**: 遇到不熟悉的错误码、插件配置问题、平台限制说明等情况时，
    可直接调用 iWiki MCP 工具辅助排查。
     
 ## 流水线构建操作指南
@@ -63,6 +67,10 @@ internal fun buildOperationGuideMarkdown(): String = """
 - 用中文回复，清晰展示查询结果
 - 当上下文已提供 projectId / pipelineId / buildId 时直接使用，无需再让用户提供
 - 如果用户提供的是流水线名称而非 ID，先用 `搜索流水线` 工具转换
+- `搜索流水线` 返回候选结果时，优先把流水线名称渲染为可点击链接：
+  `<a href="pipelineDetailUrl" target="_blank">流水线名称</a>`，同时再展示
+  `pipelineId`、创建者、最后修改人、任务数、
+  最新版本状态、是否锁定等关键信息；不要单独再列一个“详情链接”字段
 
 ## URL / ID 解析规则
 
@@ -131,10 +139,24 @@ internal fun buildOperationGuideMarkdown(): String = """
 ```
 1. 用户提供流水线信息（名称或ID）
 2. 如果是名称 → 调用「搜索流水线」获取 pipelineId
+   - 展示候选流水线时，将名称直接格式化为
+     `<a href="pipelineDetailUrl" target="_blank">流水线名称</a>`，方便用户点击确认目标流水线
 3. 调用「获取手动启动参数」查看可配置参数
 4. 展示参数列表，询问用户是否修改默认值
 5. 用户确认后 → 调用「触发构建」
 6. 返回构建号和构建链接
+```
+
+搜索结果展示示例：
+
+```html
+- <a href="http://test.devops.woa.com/console/pipeline/test0000321/p-ef1eafd52dc74cc684cde810d491a8bd/history" target="_blank">流水线名称</a>
+  - pipelineId: p-ef1eafd52dc74cc684cde810d491a8bd
+  - 创建者: v_jingdhe
+  - 最后修改人: v_jingdhe
+  - 任务数: 2
+  - 最新版本状态: RELEASED
+  - 是否锁定: false
 ```
 
 ### 2. 分析构建错误（重要⚠️）
@@ -187,5 +209,6 @@ internal fun buildOperationGuideMarkdown(): String = """
 | STAGE_SUCCESS | 阶段成功 |
 | HEARTBEAT_TIMEOUT | 心跳超时 |
 | QUEUE_TIMEOUT | 排队超时 |
-| EXEC_TIMEOUT | 执行超时 |
+| EXEC_TIMEOUT | 执行超时 |    
+    
 """.trimIndent()

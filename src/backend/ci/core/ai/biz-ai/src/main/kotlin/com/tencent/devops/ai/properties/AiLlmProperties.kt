@@ -53,5 +53,59 @@ data class AiLlmProperties(
      */
     val maxBackoffSeconds: Long = 8,
     /** 退避倍数，默认 2.0（指数退避），与 OpenAI SDK 一致 */
-    val backoffMultiplier: Double = 2.0
-)
+    val backoffMultiplier: Double = 2.0,
+    /** 平台侧模型列表；为空时兼容旧的单模型配置 */
+    val models: List<AiLlmModelProperties> = emptyList()
+) {
+    fun enabledPlatformModels(): List<AiLlmModelProperties> {
+        if (models.isNotEmpty()) {
+            return models
+                .asSequence()
+                .filter { it.enabled }
+                .sortedBy { it.priority }
+                .toList()
+        }
+        if (baseUrl.isBlank()) {
+            return emptyList()
+        }
+        return listOf(
+            AiLlmModelProperties(
+                id = "default",
+                baseUrl = baseUrl,
+                modelName = modelName,
+                apiKey = apiKey,
+                bkAppCode = bkAppCode,
+                bkAppSecret = bkAppSecret,
+                connectTimeoutSeconds = connectTimeoutSeconds,
+                readTimeoutSeconds = readTimeoutSeconds,
+                writeTimeoutSeconds = writeTimeoutSeconds,
+                executionTimeoutSeconds = executionTimeoutSeconds,
+                maxAttempts = maxAttempts,
+                initialBackoffSeconds = initialBackoffSeconds,
+                maxBackoffSeconds = maxBackoffSeconds,
+                backoffMultiplier = backoffMultiplier
+            )
+        )
+    }
+}
+
+data class AiLlmModelProperties(
+    val id: String,
+    val baseUrl: String,
+    val modelName: String,
+    val apiKey: String = "",
+    val bkAppCode: String = "",
+    val bkAppSecret: String = "",
+    val connectTimeoutSeconds: Long = 10,
+    val readTimeoutSeconds: Long = 90,
+    val writeTimeoutSeconds: Long = 30,
+    val executionTimeoutSeconds: Long = 60,
+    val maxAttempts: Int = 5,
+    val initialBackoffSeconds: Long = 1,
+    val maxBackoffSeconds: Long = 8,
+    val backoffMultiplier: Double = 2.0,
+    val priority: Int = 100,
+    val enabled: Boolean = true
+) {
+    fun useBkGateway(): Boolean = bkAppCode.isNotBlank()
+}

@@ -35,13 +35,14 @@ import com.tencent.devops.ai.context.AiChatContext
 import com.tencent.devops.ai.context.ContextMarker
 import com.tencent.devops.ai.pojo.ChatContextDTO
 import com.tencent.devops.ai.service.AgentSysPromptService
+import com.tencent.devops.ai.service.AiModelResolver
 import com.tencent.devops.common.client.Client
 import io.agentscope.core.ReActAgent
 import io.agentscope.core.agent.EventType
 import io.agentscope.core.agent.StreamOptions
 import io.agentscope.core.memory.autocontext.AutoContextConfig
 import io.agentscope.core.memory.autocontext.AutoContextMemory
-import io.agentscope.core.model.OpenAIChatModel
+import io.agentscope.core.model.Model
 import io.agentscope.core.tool.Toolkit
 import io.agentscope.core.tool.subagent.SubAgentConfig
 import org.slf4j.LoggerFactory
@@ -53,7 +54,7 @@ import org.slf4j.LoggerFactory
  * 挂载 Skill 与 Hook、解析系统提示词模板。
  */
 class SupervisorAgentFactory(
-    private val model: OpenAIChatModel,
+    private val modelResolver: AiModelResolver,
     private val autoContextConfig: AutoContextConfig,
     private val sessionContext: AgentSessionContext,
     private val sysPromptService: AgentSysPromptService,
@@ -71,6 +72,8 @@ class SupervisorAgentFactory(
      */
     fun create(): ReActAgent {
         val userId = resolveUserId()
+        val resolvedModel = modelResolver.resolve(userId)
+        val model = resolvedModel.model
         val chatContext = AiChatContext.getContext()
         val boundAgents = subAgents.filter { it.bindToSupervisor() }
         val variables = buildVariables(userId, chatContext, boundAgents)
@@ -81,14 +84,19 @@ class SupervisorAgentFactory(
         )
         logger.info(
             "[Supervisor] Creating agent: thread={}, " +
-                    "userId={}, context={}, " +
-                    "boundAgents={}/{}",
-            Thread.currentThread().name, userId, chatContext,
-            boundAgents.size, subAgents.size
+                    "userId={}, context={}, boundAgents={}/{}, modelSource={}, modelId={}",
+            Thread.currentThread().name,
+            userId,
+            chatContext,
+            boundAgents.size,
+            subAgents.size,
+            resolvedModel.source,
+            resolvedModel.identifier
         )
         val toolkit = buildToolkit(
             userId = userId,
-            boundAgents = boundAgents
+            boundAgents = boundAgents,
+            model = model
         )
         val skillBox = subAgentFactory.buildSkillBox(
             userId = userId,
@@ -130,7 +138,8 @@ class SupervisorAgentFactory(
      */
     private fun buildToolkit(
         userId: String,
-        boundAgents: List<SubAgentDefinition>
+        boundAgents: List<SubAgentDefinition>,
+        model: Model
     ): Toolkit {
         val toolkit = subAgentFactory.loadMcpClients(
             userId, SUPERVISOR_BIND_KEY
@@ -248,38 +257,45 @@ class SupervisorAgentFactory(
         private const val MAX_ITERS = 10
 
         @Suppress("MaxLineLength")
-        private val DEFAULT_SUPERVISOR_PROMPT = """
-        |你是蓝盾 DevOps 平台的 AI 助手。
-        |
-        |{{context_block}}
-        |
-        |⚠️ **关键规则1: 蓝盾智能助手仅回答持续集成领域和蓝盾产品相关的问题 **
-        |⚠️ **关键规则2：上下文优先**
-        |- `<!-- CONTEXT_START --><!-- CONTEXT_END -->`中包含用户当前所在的项目、流水线等实时环境信息。
-        |- **每次回答前，必须先读取本轮上下文中的项目 ID、项目名称等字段，以此为准。**
-        |- 禁止沿用历史对话中的项目信息。如果上下文中的项目与历史对话不一致，以上下文为准，不需要向用户确认。
-        |- 如果上下文为空或缺少关键字段，主动询问用户当前所在项目。
-        |
-        |你拥有两类工具：
-        |
-        |一、iWiki 文档搜索（直接调用，不经过子智能体）
-        |这些工具可搜索蓝盾官方文档（iWiki DevOps 空间）。
-        |使用步骤：
-        |1. 调用 getSpaceInfoByKey(space_key="DevOps") 获取数字 space_id
-        |2. 用 aiSearchDocument(space_id=<数字ID>, query="问题关键词") 语义搜索
-        |3. 若aiSearchDocument接口找不到数据，可以结合searchDocument接口来查询
-        |4. 如需文档详情，用 getDocument 获取全文
-        |注意：space_id 必须是数字，不能传字符串 "DevOps"。
-        |
-        |二、专家子智能体（工具名以 call_ 开头）
-        |{{agent_list}}
-        |
-        |决策原则：
-        |1. 收到问题后，优先用 iWiki 搜索相关文档
-        |2. 搜到有用内容则直接回答，注明文档来源
-        |3. 搜不到或需要执行操作（如加权限、触发构建）时，转给对应的子智能体处理
-        |4. 通用常识问题无需搜索，直接回答
-        |5. 始终用中文回复
-        """.trimMargin()
+        private val DEFAULT_SUPERVISOR_PROMPT =
+            """
+你是蓝盾 DevOps 平台的 AI 助手。
+
+{{context_block}}
+
+⚠️ **关键规则1: 蓝盾智能助手仅回答持续集成领域和蓝盾产品相关的问题 **
+⚠️ **关键规则2：上下文优先**
+- `<!-- CONTEXT_START --><!-- CONTEXT_END -->`中包含用户当前所在的项目、流水线等实时环境信息。
+- **每次回答前，必须先读取本轮上下文中的项目 ID、项目名称等字段，以此为准。**
+- 禁止沿用历史对话中的项目信息。如果上下文中的项目与历史对话不一致，以上下文为准，不需要向用户确认。
+- 如果上下文为空或缺少关键字段，主动询问用户当前所在项目。
+⚠️ **关键规则3：保留子智能体返回的可跳转链接**
+- 如果子智能体已经返回资源名称和对应 URL（如 `pipelineDetailUrl`），主智能体在最终回复中**必须保留可点击链接**。
+- 优先将资源名称渲染为 HTML 链接标签：
+  `<a href="pipelineDetailUrl" target="_blank">资源名称</a>`。
+- **不要**把已经可点击的名称改写成“名称 + 详情链接”两个独立字段，也不要只保留纯文本名称而丢掉 URL。
+
+你拥有两类工具：
+
+一、iWiki 文档搜索（直接调用，不经过子智能体）
+这些工具可搜索蓝盾官方文档（iWiki DevOps 空间）。
+使用步骤：
+1. 调用 getSpaceInfoByKey(space_key="DevOps") 获取数字 space_id
+2. 用 aiSearchDocument(space_id=<数字ID>, query="问题关键词") 语义搜索
+3. 若aiSearchDocument接口找不到数据，可以结合searchDocument接口来查询
+4. 如需文档详情，用 getDocument 获取全文
+注意：space_id 必须是数字，不能传字符串 "DevOps"。
+
+二、专家子智能体（工具名以 call_ 开头）
+{{agent_list}}
+
+决策原则：
+1. 收到问题后，优先用 iWiki 搜索相关文档
+2. 搜到有用内容则直接回答，注明文档来源
+3. 搜不到或需要执行操作（如加权限、触发构建）时，转给对应的子智能体处理
+4. 通用常识问题无需搜索，直接回答
+5. 如果子智能体已经给出结构化结果，优先在其基础上整理，避免重写后丢失链接、ID、状态等关键字段
+6. 始终用中文回复
+""".trimMargin()
     }
 }

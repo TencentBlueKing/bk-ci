@@ -27,8 +27,8 @@
 
 package com.tencent.devops.ai.hook
 
-import com.tencent.devops.ai.dao.AiAgentStageDao
 import com.tencent.devops.ai.pojo.AiAgentStageMetadata.StageType
+import com.tencent.devops.ai.service.AiAgentStageService
 import com.tencent.devops.ai.service.AiRunEventService
 import com.tencent.devops.ai.util.SseEventWriter
 import com.tencent.devops.ai.context.AgentSessionContext
@@ -53,7 +53,6 @@ import io.agentscope.core.memory.autocontext.AutoContextMemory
 import io.agentscope.core.memory.autocontext.CompressionEvent
 import io.agentscope.core.message.MsgRole
 import io.agentscope.core.message.ToolUseBlock
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -68,8 +67,7 @@ import java.util.concurrent.ConcurrentHashMap
  */
 @Component
 class AgentStageTimingHook @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val aiAgentStageDao: AiAgentStageDao,
+    private val aiAgentStageService: AiAgentStageService,
     private val sessionContext: AgentSessionContext,
     private val autoContextConfig: AutoContextConfig,
     private val aiRunEventService: AiRunEventService
@@ -142,15 +140,10 @@ class AgentStageTimingHook @Autowired constructor(
             )
         }
         val reasoningMono = Mono.fromRunnable<Void> {
-            val nextIndex = aiAgentStageDao.getMaxIndex(
-                dslContext, sessionId
-            ) + 1
-            aiAgentStageDao.create(
-                dslContext = dslContext,
+            aiAgentStageService.createStage(
                 id = stageId,
                 sessionId = sessionId,
                 agentName = event.agent.name,
-                stageIndex = nextIndex,
                 stageType = StageType.REASONING.value,
                 toolName = event.agent.name,
                 toolCallId = event.agent.agentId,
@@ -199,8 +192,7 @@ class AgentStageTimingHook @Autowired constructor(
             )
         }
         return Mono.fromRunnable<Void> {
-            aiAgentStageDao.finish(
-                dslContext = dslContext,
+            aiAgentStageService.finishStage(
                 id = ref.id,
                 durationMs = duration,
                 outputBrief = outputBrief
@@ -232,15 +224,10 @@ class AgentStageTimingHook @Autowired constructor(
         }
         logger.info("[Timing] AgentCall START | agent={}", event.agent.name)
         return Mono.fromRunnable<Void> {
-            val nextIndex = aiAgentStageDao.getMaxIndex(
-                dslContext, sessionId
-            ) + 1
-            aiAgentStageDao.create(
-                dslContext = dslContext,
+            aiAgentStageService.createStage(
                 id = stageId,
                 sessionId = sessionId,
                 agentName = event.agent.name,
-                stageIndex = nextIndex,
                 stageType = StageType.AGENT_CALL.value,
                 toolName = event.agent.name,
                 toolCallId = event.agent.agentId,
@@ -268,8 +255,7 @@ class AgentStageTimingHook @Autowired constructor(
             event.agent.name, duration
         )
         return Mono.fromRunnable<Void> {
-            aiAgentStageDao.finish(
-                dslContext = dslContext,
+            aiAgentStageService.finishStage(
                 id = ref.id,
                 durationMs = duration,
                 outputBrief = outputBrief
@@ -298,15 +284,10 @@ class AgentStageTimingHook @Autowired constructor(
             event.agent.name, inputBrief
         )
         return Mono.fromRunnable<Void> {
-            val nextIndex = aiAgentStageDao.getMaxIndex(
-                dslContext, sessionId
-            ) + 1
-            aiAgentStageDao.create(
-                dslContext = dslContext,
+            aiAgentStageService.createStage(
                 id = stageId,
                 sessionId = sessionId,
                 agentName = event.agent.name,
-                stageIndex = nextIndex,
                 stageType = StageType.CONTEXT_SUMMARY.value,
                 toolName = event.modelName,
                 toolCallId = event.agent.agentId,
@@ -351,8 +332,7 @@ class AgentStageTimingHook @Autowired constructor(
             )
         }
         return Mono.fromRunnable<Void> {
-            aiAgentStageDao.finish(
-                dslContext = dslContext,
+            aiAgentStageService.finishStage(
                 id = ref.id,
                 durationMs = duration,
                 outputBrief = outputBrief
@@ -417,36 +397,29 @@ class AgentStageTimingHook @Autowired constructor(
         return Mono.fromRunnable<Void> {
             newEvents.forEach { e ->
                 val stageId = UUIDUtil.generate()
-                val nextIndex = aiAgentStageDao.getMaxIndex(dslContext, sessionId) + 1
                 val brief = "type=${e.eventType}" +
                         ",in=${e.compressInputToken}" +
                         ",out=${e.compressOutputToken}" +
                         ",msgs=${e.compressedMessageCount}"
-                aiAgentStageDao.create(
-                    dslContext = dslContext,
-                    id = stageId,
-                    sessionId = sessionId,
-                    agentName = agent.name,
-                    stageIndex = nextIndex,
-                    stageType = StageType.CONTEXT_SUMMARY.value,
-                    toolName = e.eventType,
-                    toolCallId = agent.agentId,
-                    inputBrief = brief
-                )
                 val durationMs = if (e.compressInputToken > 0) {
                     (e.timestamp - (events.getOrNull(offset)?.timestamp ?: e.timestamp))
                 } else 0L
+                aiAgentStageService.recordCompletedStage(
+                    id = stageId,
+                    sessionId = sessionId,
+                    agentName = agent.name,
+                    stageType = StageType.CONTEXT_SUMMARY.value,
+                    toolName = e.eventType,
+                    toolCallId = agent.agentId,
+                    inputBrief = brief,
+                    durationMs = durationMs,
+                    outputBrief = brief
+                )
                 logger.info(
                     "[Timing] ContextCompression | agent={} | type={} | " +
                             "tokenBefore={} | tokenAfter={} | reduction={} | duration={}ms",
                     agent.name, e.eventType,
                     e.tokenBefore, e.tokenAfter, e.tokenReduction, durationMs
-                )
-                aiAgentStageDao.finish(
-                    dslContext = dslContext,
-                    id = stageId,
-                    durationMs = durationMs,
-                    outputBrief = brief
                 )
             }
         }.subscribeOn(Schedulers.boundedElastic())
@@ -488,16 +461,11 @@ class AgentStageTimingHook @Autowired constructor(
             SessionStatus.ERROR.value
         }
         return Mono.fromRunnable<Void> {
-            val nextIndex = aiAgentStageDao.getMaxIndex(
-                dslContext, sessionId
-            ) + 1
             val id = UUIDUtil.generate()
-            aiAgentStageDao.create(
-                dslContext = dslContext,
+            aiAgentStageService.createStage(
                 id = id,
                 sessionId = sessionId,
                 agentName = event.agent.name,
-                stageIndex = nextIndex,
                 stageType = StageType.ERROR.value,
                 toolName = event.agent.name,
                 toolCallId = event.agent.agentId,
@@ -506,8 +474,7 @@ class AgentStageTimingHook @Autowired constructor(
             val stackHead = err.stackTrace
                 .take(ERROR_STACK_LINES)
                 .joinToString(" | ") { "${it.className}.${it.methodName}:${it.lineNumber}" }
-            aiAgentStageDao.finish(
-                dslContext = dslContext,
+            aiAgentStageService.finishStage(
                 id = id,
                 durationMs = 0L,
                 sessionStatus = status,
@@ -582,15 +549,10 @@ class AgentStageTimingHook @Autowired constructor(
             event.agent.name, toolName, inputPreview
         )
         return Mono.fromRunnable<Void> {
-            val nextIndex = aiAgentStageDao.getMaxIndex(
-                dslContext, sessionId
-            ) + 1
-            aiAgentStageDao.create(
-                dslContext = dslContext,
+            aiAgentStageService.createStage(
                 id = stageId,
                 sessionId = sessionId,
                 agentName = event.agent.name,
-                stageIndex = nextIndex,
                 stageType = StageType.TOOL_CALL.value,
                 toolName = toolName,
                 toolCallId = toolId,
@@ -655,8 +617,7 @@ class AgentStageTimingHook @Autowired constructor(
 
         val finishOutputBrief = if (failed) extractErrorText(resultText) else outputBrief
         return Mono.fromRunnable<Void> {
-            aiAgentStageDao.finish(
-                dslContext = dslContext,
+            aiAgentStageService.finishStage(
                 id = ref.id,
                 durationMs = duration,
                 sessionStatus = finishStatus,
