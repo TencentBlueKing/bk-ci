@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,38 +25,56 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources.service
+package com.tencent.devops.project.config
 
-import com.tencent.devops.auth.api.service.ServiceDeptResource
-import com.tencent.devops.auth.pojo.BkUserInfo
-import com.tencent.devops.auth.pojo.vo.DeptInfoVo
-import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
-import com.tencent.devops.auth.service.DeptService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.stereotype.Component
 
-@RestResource
-class ServiceDeptResourceImpl @Autowired constructor(
-    val deptService: DeptService
-) : ServiceDeptResource {
-    override fun getParentDept(userId: String): Result<Int> {
-        return Result("", deptService.getUserParentDept(userId))
-    }
+/**
+ * bkCosts 货币化相关配置
+ *
+ * 配置示例:
+ * ```yaml
+ * bk:
+ *   costs:
+ *     bgId:
+ *       - 956
+ *     businessLineId:
+ *       - 57238
+ *     deptId:
+ *       - 55767
+ *       - 56519
+ *     centerId:
+ *       - 12345
+ *     excludeDeptId:
+ *       - 56494
+ * ```
+ */
+@Component
+@ConfigurationProperties(prefix = "bk.costs")
+class BkCostsProperties {
+    /**
+     * 需要货币化的事业群ID列表
+     */
+    var bgId: List<String> = emptyList()
 
-    override fun getDeptByName(userId: String, deptName: String): Result<DeptInfoVo?> {
-        return Result(deptService.getDeptByName(deptName, userId))
-    }
+    /**
+     * 需要货币化的业务线ID列表
+     */
+    var businessLineId: List<String> = emptyList()
 
-    override fun getUserInfo(userId: String, name: String): Result<UserAndDeptInfoVo?> {
-        return Result(deptService.getUserInfo(name))
-    }
+    /**
+     * 需要货币化的部门ID列表
+     */
+    var deptId: List<String> = emptyList()
 
-    override fun checkUserDeparted(name: String): Result<Boolean> {
-        return Result(deptService.isUserDeparted(name))
-    }
+    /**
+     * 需要货币化的中心ID列表
+     */
+    var centerId: List<String> = emptyList()
 
-    override fun getLeader(userId: String): Result<BkUserInfo?> {
-        return Result(deptService.getLeader(userId))
-    }
+    /**
+     * 排除的部门ID列表（在此列表中的不进行货币化）
+     */
+    var excludeDeptId: List<String> = emptyList()
 }
