@@ -35,13 +35,13 @@ interface ApigwAuthMetadataResourceV4 {
         tags = ["v4_app_list_auth_resource_types", "v4_user_list_auth_resource_types"]
     )
     fun listResourceTypes(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "应用Code(OpenAPI调用方标识)", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(description = "网关类型,取值为apigw-user、apigw-app或apigw", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(description = "操作人用户ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<ResourceTypeInfoVo>>
@@ -53,16 +53,16 @@ interface ApigwAuthMetadataResourceV4 {
         tags = ["v4_app_list_auth_actions", "v4_user_list_auth_actions"]
     )
     fun listActions(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "应用Code(OpenAPI调用方标识)", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(description = "网关类型,取值为apigw-user、apigw-app或apigw", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(description = "操作人用户ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "资源类型", required = true)
+        @Parameter(description = "资源类型(与权限模型中的资源类型标识一致)", required = true)
         @QueryParam("resourceType")
         resourceType: String
     ): Result<List<ActionInfoVo>>
@@ -74,22 +74,22 @@ interface ApigwAuthMetadataResourceV4 {
         tags = ["v4_app_search_auth_resource", "v4_user_search_auth_resource"]
     )
     fun searchResource(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "应用Code(OpenAPI调用方标识)", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(description = "网关类型,取值为apigw-user、apigw-app或apigw", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(description = "操作人用户ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "资源类型", required = true)
+        @Parameter(description = "资源类型(与权限模型中的资源类型标识一致)", required = true)
         @QueryParam("resourceType")
         resourceType: String,
-        @Parameter(description = "资源名称或 Code", required = true)
+        @Parameter(description = "搜索关键词(匹配资源名称或资源Code)", required = true)
         @QueryParam("keyword")
         keyword: String
     ): Result<List<AuthResourceInfo>>
@@ -101,22 +101,22 @@ interface ApigwAuthMetadataResourceV4 {
         tags = ["v4_app_get_auth_resource_by_name", "v4_user_get_auth_resource_by_name"]
     )
     fun getResourceByName(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "应用Code(OpenAPI调用方标识)", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(description = "网关类型,取值为apigw-user、apigw-app或apigw", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(description = "操作人用户ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "资源类型", required = true)
+        @Parameter(description = "资源类型(与权限模型中的资源类型标识一致)", required = true)
         @QueryParam("resourceType")
         resourceType: String,
-        @Parameter(description = "资源名称", required = true)
+        @Parameter(description = "资源名称(精确或业务侧约定的名称)", required = true)
         @QueryParam("resourceName")
         resourceName: String
     ): Result<AuthResourceInfo?>
@@ -128,22 +128,22 @@ interface ApigwAuthMetadataResourceV4 {
         tags = ["v4_app_get_auth_resource_by_code", "v4_user_get_auth_resource_by_code"]
     )
     fun getResourceByCode(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "应用Code(OpenAPI调用方标识)", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(description = "网关类型,取值为apigw-user、apigw-app或apigw", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(description = "操作人用户ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "资源类型", required = true)
+        @Parameter(description = "资源类型(与权限模型中的资源类型标识一致)", required = true)
         @QueryParam("resourceType")
         resourceType: String,
-        @Parameter(description = "资源 Code", required = true)
+        @Parameter(description = "资源Code(业务侧唯一标识)", required = true)
         @QueryParam("resourceCode")
         resourceCode: String
     ): Result<AuthResourceInfo?>
