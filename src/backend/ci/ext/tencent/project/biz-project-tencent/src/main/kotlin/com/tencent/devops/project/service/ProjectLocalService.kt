@@ -52,6 +52,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -88,7 +89,8 @@ class ProjectLocalService @Autowired constructor(
     private val projectExtPermissionService: ProjectExtPermissionService,
     private val bkTag: BkTag,
     private val commonConfig: CommonConfig,
-    private val bkRepoConfig: BkRepoConfig
+    private val bkRepoConfig: BkRepoConfig,
+    private val userDao: UserDao
 ) {
 
     @Value("\${tag.stream:#{null}}")
@@ -296,6 +298,46 @@ class ProjectLocalService @Autowired constructor(
         }
         userProjectRecord = projectDao.getByEnglishName(dslContext, projectCode)
         return ProjectUtils.packagingBean(userProjectRecord!!)
+    }
+
+    fun batchGetOrCreatePreProjectsForStoredUsers(): Int {
+        var page = 1
+        var successCount = 0
+        var continueFlag = true
+        while (continueFlag) {
+            val pageLimit = PageUtil.convertPageSizeToSQLLimit(page, BATCH_PRE_PROJECT_PAGE_SIZE)
+            val users = userDao.listNormalUsers(dslContext, pageLimit.limit, pageLimit.offset)
+            if (users.isEmpty()) {
+                break
+            }
+            users.forEach { record ->
+                try {
+                    getOrCreatePreProject(record.userId)
+                    successCount++
+                } catch (e: Exception) {
+                    logger.warn("batchGetOrCreatePreProjectsForStoredUsers fail userId=${record.userId}", e)
+                }
+            }
+            if (users.size < pageLimit.limit) {
+                continueFlag = false
+            } else {
+                page++
+            }
+        }
+        return successCount
+    }
+
+    fun batchGetOrCreatePreProjectsForUserIds(userIds: List<String>): Int {
+        var successCount = 0
+        userIds.forEach { uid ->
+            try {
+                getOrCreatePreProject(uid)
+                successCount++
+            } catch (e: Exception) {
+                logger.warn("batchGetOrCreatePreProjectsForUserIds fail userId=$uid", e)
+            }
+        }
+        return successCount
     }
 
     fun getOrCreateRdsProject(userId: String, projectId: String, projectName: String): ProjectVO {
@@ -656,5 +698,6 @@ class ProjectLocalService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ProjectLocalService::class.java)
         private const val PROJECT_LIST = "project_list"
         private const val PROJECT_CREATE = "project_create"
+        private const val BATCH_PRE_PROJECT_PAGE_SIZE = 500
     }
 }
