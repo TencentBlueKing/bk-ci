@@ -1136,6 +1136,17 @@
                                     TARGET_ACTION_ENUM.CHECKOUT_BRANCH_AND_REQUEST_MERGE,
                                     TARGET_ACTION_ENUM.COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE
                                 ].includes(this.releaseParams.targetAction)
+
+                        const getReleaseTitleKey = () => {
+                            if (isPacMR) return 'pacMRRelaseTips'
+                            if (storeFlag) return 'template.versionReleaseSuc'
+                            return 'releaseSuc'
+                        }
+                        const getReleaseContentKey = () => {
+                            if (isPacMR) return 'pacMRRelaseSuc'
+                            if (storeFlag) return isManual ? 'template.manualUpdate' : 'template.autoUpdate'
+                            return 'relaseSucTips'
+                        }
                         const h = this.$createElement
                         const instance = this.$bkInfo({
                             width: 600,
@@ -1165,11 +1176,11 @@
                                     attrs: {
                                         class: 'release-info-title'
                                     }
-                                }, this.$t(isPacMR ? 'pacMRRelaseTips' :  storeFlag ? 'template.versionReleaseSuc' :'releaseSuc', [versionName])),
+                                }, this.$t(getReleaseTitleKey(), [versionName])),
                                 h('h3', {
                                     class: 'release-info-text',
                                     domProps: {
-                                        innerHTML: this.$t(isPacMR?  'pacMRRelaseSuc' : storeFlag ? isManual  ? 'template.manualUpdate' : 'template.autoUpdate'  : 'relaseSucTips', [
+                                        innerHTML: this.$t(getReleaseContentKey(), [
                                             versionName
                                         ])
                                     }
