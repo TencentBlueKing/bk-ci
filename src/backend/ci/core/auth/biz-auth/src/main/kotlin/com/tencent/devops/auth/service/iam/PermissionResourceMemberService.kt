@@ -73,9 +73,8 @@ interface PermissionResourceMemberService {
     fun renewalGroupMember(
         userId: String,
         projectCode: String,
-        resourceType: String,
-        groupId: Int,
-        memberRenewalDTO: GroupMemberRenewalDTO
+        groupIds: List<Int>,
+        expiredAt: Long
     ): Boolean
 
     fun renewalIamGroupMembers(
