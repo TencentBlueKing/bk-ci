@@ -939,7 +939,8 @@ class PipelineVersionFacadeService @Autowired constructor(
         pipelineId: String,
         actionType: PipelineDraftActionType,
         version: Int?,
-        baseDraftVersion: Int?
+        baseDraftVersion: Int?,
+        baseVersion: Int?
     ): PipelineDraftStatusResult {
         if (actionType == PipelineDraftActionType.RELEASE && version == null) {
             throw ErrorCodeException(
@@ -980,7 +981,11 @@ class PipelineVersionFacadeService @Autowired constructor(
                 )
             }
             record
-        } ?: return PipelineDraftStatusResult(status = PipelineDraftStatus.NORMAL)
+        } ?: return getPipelineDraftStatusWhenDraftEmpty(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            baseVersion = baseVersion
+        )
 
         return when (actionType) {
             PipelineDraftActionType.EDIT -> {
@@ -1006,6 +1011,40 @@ class PipelineVersionFacadeService @Autowired constructor(
                     draftResource = draftResource
                 )
             }
+        }
+    }
+
+    private fun getPipelineDraftStatusWhenDraftEmpty(
+        projectId: String,
+        pipelineId: String,
+        baseVersion: Int?
+    ): PipelineDraftStatusResult {
+        if (baseVersion == null) {
+            return PipelineDraftStatusResult(status = PipelineDraftStatus.NORMAL)
+        }
+        val baseResource = pipelineRepositoryService.getPipelineVersionRecord(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = baseVersion
+        ) ?: return PipelineDraftStatusResult(status = PipelineDraftStatus.NORMAL)
+        if (baseResource.status == VersionStatus.BRANCH) {
+            return PipelineDraftStatusResult(
+                status = PipelineDraftStatus.BRANCH,
+                release = PipelineVersionSimple(baseResource)
+            )
+        }
+        val releaseResource = pipelineRepositoryService.getReleaseVersionRecord(
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: return PipelineDraftStatusResult(status = PipelineDraftStatus.NORMAL)
+        return if (releaseResource.version == baseVersion) {
+            PipelineDraftStatusResult(status = PipelineDraftStatus.NORMAL)
+        } else {
+            PipelineDraftStatusResult(
+                status = PipelineDraftStatus.BASE_OUTDATED,
+                draft = PipelineVersionSimple(baseResource),
+                release = PipelineVersionSimple(releaseResource)
+            )
         }
     }
 

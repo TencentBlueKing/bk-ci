@@ -542,7 +542,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         pipelineId: String,
         actionType: PipelineDraftActionType,
         version: Int?,
-        baseDraftVersion: Int?
+        baseDraftVersion: Int?,
+        baseVersion: Int?
     ): Result<PipelineDraftStatusResult> {
         checkParam(userId, projectId)
         pipelinePermissionService.checkPipelinePermission(
@@ -558,7 +559,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 actionType = actionType,
                 version = version,
-                baseDraftVersion = baseDraftVersion
+                baseDraftVersion = baseDraftVersion,
+                baseVersion = baseVersion
             )
         )
     }

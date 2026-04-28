@@ -17,5 +17,11 @@ enum class PipelineDraftStatus {
     OUTDATED,
 
     @Schema(title = "已发布")
-    PUBLISHED
+    PUBLISHED,
+
+    @Schema(title = "分支版本")
+    BRANCH,
+
+    @Schema(title = "基线版本落后")
+    BASE_OUTDATED
 }

@@ -433,7 +433,10 @@ interface UserPipelineVersionResource {
         version: Int?,
         @Parameter(description = "来源的草稿版本,当actionType为SAVE时,需要传入", required = false)
         @QueryParam("baseDraftVersion")
-        baseDraftVersion: Int?
+        baseDraftVersion: Int?,
+        @Parameter(description = "前端当前编辑基线版本", required = false)
+        @QueryParam("baseVersion")
+        baseVersion: Int?
     ): Result<PipelineDraftStatusResult>
 
     @Operation(summary = "获取流水线草稿版本列表")
