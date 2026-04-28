@@ -182,7 +182,8 @@ class ServiceRemoteDevResourceImpl(
         envId: String?,
         businessLineName: String?,
         ownerName: String?,
-        workspaceName: String?
+        workspaceName: String?,
+        hasDepartmentsInfo: Boolean?
     ): Result<List<WeSecProjectWorkspace>> {
         return Result(
             workspaceService.getWorkspaceList4WeSec(
@@ -191,7 +192,7 @@ class ServiceRemoteDevResourceImpl(
                 envId = envId,
                 businessLineName = businessLineName,
                 ownerName = ownerName,
-                hasDepartmentsInfo = null,
+                hasDepartmentsInfo = hasDepartmentsInfo,
                 hasCurrentUser = true,
                 workspaceName = workspaceName
             )

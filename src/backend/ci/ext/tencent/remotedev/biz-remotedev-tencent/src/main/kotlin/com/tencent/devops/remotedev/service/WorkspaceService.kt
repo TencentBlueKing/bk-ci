@@ -854,6 +854,8 @@ class WorkspaceService @Autowired constructor(
                     val info = client.get(ServiceTxUserResource::class).get(owner).data
                     listOf(
                         DepartmentsInfo(
+                            bgId = info?.bgId,
+                            bgName = info?.bgName,
                             deptId = info?.deptId,
                             deptName = info?.deptName
                         )
