@@ -129,9 +129,14 @@ enum class ErrorCodeEnum(
         2103023,
         "获取构建资源超时"
     ),
-    GET_ENV_STRATEGY_ERROR(
+    NO_NODE_PERMISSION(
         ErrorType.USER,
         2103024,
+        "没有节点操作权限"
+    ),
+    GET_ENV_STRATEGY_ERROR(
+        ErrorType.USER,
+        2103025,
         "获取环境调度策略失败"
     );
 
