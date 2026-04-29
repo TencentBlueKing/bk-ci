@@ -35,6 +35,7 @@ import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserWorkspaceResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.pojo.LogUploadUrl
 import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
@@ -47,6 +48,13 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
+import com.tencent.devops.remotedev.pojo.cvd.CvdCreateTaskRequest
+import com.tencent.devops.remotedev.pojo.cvd.CvdDeleteTaskRequest
+import com.tencent.devops.remotedev.pojo.cvd.CvdPoolDetail
+import com.tencent.devops.remotedev.pojo.cvd.CvdPoolInfoResponse
+import com.tencent.devops.remotedev.pojo.cvd.CvdTaskResponse
+import com.tencent.devops.remotedev.pojo.cvd.CvdTaskStatusResponse
+import com.tencent.devops.remotedev.pojo.cvd.CvdUserPoolInfoResponse
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
@@ -56,15 +64,7 @@ import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faRespData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyRespData
-import com.tencent.devops.remotedev.pojo.LogUploadUrl
 import com.tencent.devops.remotedev.service.CosLogUploadService
-import com.tencent.devops.remotedev.pojo.cvd.CvdCreateTaskRequest
-import com.tencent.devops.remotedev.pojo.cvd.CvdDeleteTaskRequest
-import com.tencent.devops.remotedev.pojo.cvd.CvdPoolDetail
-import com.tencent.devops.remotedev.pojo.cvd.CvdPoolInfoResponse
-import com.tencent.devops.remotedev.pojo.cvd.CvdTaskResponse
-import com.tencent.devops.remotedev.pojo.cvd.CvdTaskStatusResponse
-import com.tencent.devops.remotedev.pojo.cvd.CvdUserPoolInfoResponse
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.ProjectStrategyService
 import com.tencent.devops.remotedev.service.RepositoryService
@@ -81,7 +81,6 @@ import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import kotlin.math.log
 
 @RestResource
 @Suppress("ALL")
