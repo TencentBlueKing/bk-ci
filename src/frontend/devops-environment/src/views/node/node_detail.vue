@@ -172,13 +172,13 @@
             })
             
             const nodeStatusDisplayName = computed(() => {
-                return proxy.$t('environment.nodeStatusMap')[currentNode.value?.nodeStatus] || currentNode.value?.nodeStatus || '--'
+                return proxy.$t('environment.nodeStatusMap')[currentNode.value?.status] || currentNode.value?.status || '--'
             })
             
             const nodeStatusClass = computed(() => {
                 const successStatus = ['NORMAL', 'BUILD_IMAGE_SUCCESS']
                 const failStatus = ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN', 'RUNNING']
-                const status = currentNode.value?.nodeStatus
+                const status = currentNode.value?.status
                 
                 if (successStatus.includes(status)) {
                     return 'status-normal'
@@ -191,7 +191,7 @@
             // 判断 Agent 是否正常
             const isAgentNormal = computed(() => {
                 const successStatus = ['NORMAL', 'BUILD_IMAGE_SUCCESS']
-                return successStatus.includes(currentNode.value?.nodeStatus)
+                return successStatus.includes(currentNode.value?.status)
             })
             
             const panels = computed(() => [
