@@ -405,4 +405,3 @@ func TestWriteFileWithCheck2(t *testing.T) {
 		}
 	})
 }
-
