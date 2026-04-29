@@ -79,6 +79,7 @@ import com.tencent.devops.remotedev.service.workspace.SleepControl
 import com.tencent.devops.remotedev.service.workspace.StartControl
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -98,6 +99,10 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     private val notifyControl: NotifyControl,
     private val cvdService: CvdService
 ) : UserWorkspaceResource {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(UserWorkspaceResourceImpl::class.java)
+    }
 
     @AuditEntry(actionId = TencentActionId.CGS_START)
     override fun startWorkspace(
@@ -344,6 +349,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         request: CvdDeleteTaskRequest
     ): Result<CvdTaskResponse> {
         val workspace = workspaceService.getWorkspaceRecord(workspaceName = request.instanceId)
+        logger.info("deleteCvdTask: $workspace|$request")
         if (workspace == null || !workspace.ownerType.projectUse() || workspace.projectId != request.bkProjectId) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
