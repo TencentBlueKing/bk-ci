@@ -11,9 +11,6 @@ import com.tencent.devops.environment.pojo.DispatchEnvStrategyCreateReq
 import com.tencent.devops.environment.pojo.DispatchEnvStrategyReorderReq
 import com.tencent.devops.environment.pojo.DispatchEnvStrategyUpdateReq
 import com.tencent.devops.environment.pojo.DispatchEnvStrategyVO
-import com.tencent.devops.environment.pojo.DispatchStrategyConfig
-import com.tencent.devops.environment.pojo.LabelSelector
-import com.tencent.devops.environment.pojo.LabelSelectorVO
 import com.tencent.devops.environment.service.EnvDispatchStrategyService
 import org.springframework.beans.factory.annotation.Autowired
 

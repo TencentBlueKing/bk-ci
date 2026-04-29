@@ -365,22 +365,8 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         envId: Long,
         nodeIds: Set<Long>
     ): Result<EnabledStrategiesWithTags> {
-        val strategies = envDispatchStrategyService.getEnabledStrategies(projectId, envId)
-        val nodeTagValues = if (nodeIds.isNotEmpty() && strategies.any { !it.labelSelector.isNullOrEmpty() }) {
-            val tagMap = nodeTagService.fetchNodeTags(projectId, nodeIds)
-            val result = mutableMapOf<Long, Map<Long, Set<String>>>()
-            tagMap.forEach { (nodeId, tags) ->
-                result[nodeId] = tags.associate {
-                    it.tagKeyId to it.tagValues.map { v ->
-                        v.tagValueName
-                    }.toSet()
-                }
-            }
-            result
-        } else {
-            emptyMap()
-        }
-
-        return Result(EnabledStrategiesWithTags(strategies, nodeTagValues, nodeTagService.getInternalKeys()))
+        return Result(
+            envDispatchStrategyService.getEnabledStrategiesWithTags(projectId, envId, nodeIds)
+        )
     }
 }

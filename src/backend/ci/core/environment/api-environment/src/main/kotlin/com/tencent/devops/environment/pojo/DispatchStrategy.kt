@@ -6,7 +6,6 @@ import com.tencent.devops.environment.pojo.enums.NodeRule
 import com.tencent.devops.environment.pojo.enums.StrategyScope
 import com.tencent.devops.environment.pojo.enums.StrategyType
 import io.swagger.v3.oas.annotations.media.Schema
-import org.springframework.web.servlet.tags.form.LabelTag
 
 data class LabelSelector(
     val tagKeyId: Long,

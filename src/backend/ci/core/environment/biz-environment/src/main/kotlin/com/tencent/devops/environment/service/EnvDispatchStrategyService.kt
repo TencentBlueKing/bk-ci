@@ -11,6 +11,7 @@ import com.tencent.devops.environment.dao.EnvDispatchStrategyDao
 import com.tencent.devops.environment.dao.NodeTagKeyDao
 import com.tencent.devops.environment.pojo.DispatchEnvStrategyVO
 import com.tencent.devops.environment.pojo.DispatchStrategyConfig
+import com.tencent.devops.environment.pojo.EnabledStrategiesWithTags
 import com.tencent.devops.environment.pojo.LabelSelector
 import com.tencent.devops.environment.pojo.LabelSelectorVO
 import com.tencent.devops.environment.pojo.enums.NodeRule
@@ -21,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
+@Suppress("TooManyFunctions", "ComplexCondition")
 @Service
 class EnvDispatchStrategyService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -235,6 +237,35 @@ class EnvDispatchStrategyService @Autowired constructor(
         } finally {
             lock.unlock()
         }
+    }
+
+    fun getEnabledStrategiesWithTags(
+        projectId: String,
+        envId: Long,
+        nodeIds: Set<Long>
+    ): EnabledStrategiesWithTags {
+        val strategies = getEnabledStrategies(projectId, envId)
+        val tagKeys = mutableMapOf<Long, String>()
+        val nodeTagValues = if (nodeIds.isNotEmpty() && strategies.any { !it.labelSelector.isNullOrEmpty() }) {
+            val tagMap = nodeTagService.fetchNodeTags(projectId, nodeIds)
+            val result = mutableMapOf<Long, Map<Long, Set<String>>>()
+            tagMap.forEach { (nodeId, tags) ->
+                result[nodeId] = tags.associate {
+                    it.tagKeyId to it.tagValues.map { v ->
+                        v.tagValueName
+                    }.toSet()
+                }
+                tagKeys.putAll(tags.associate { it.tagKeyId to it.tagKeyName })
+            }
+            result
+        } else {
+            emptyMap()
+        }
+        return EnabledStrategiesWithTags(
+            strategies = strategies,
+            nodeTagValues = nodeTagValues,
+            tagKeys = tagKeys
+        )
     }
 
     private fun enforceProtection(projectId: String, envId: Long) {

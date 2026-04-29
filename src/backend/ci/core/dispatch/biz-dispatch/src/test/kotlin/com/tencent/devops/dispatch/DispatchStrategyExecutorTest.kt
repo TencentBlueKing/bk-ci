@@ -18,6 +18,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
+@Suppress("ALL")
 @DisplayName("DispatchStrategyExecutor 单元测试")
 class DispatchStrategyExecutorTest {
 

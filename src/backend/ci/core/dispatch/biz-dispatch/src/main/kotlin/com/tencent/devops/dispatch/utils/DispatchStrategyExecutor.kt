@@ -1,9 +1,7 @@
 package com.tencent.devops.dispatch.utils
 
 import com.tencent.devops.environment.pojo.DispatchStrategyConfig
-import com.tencent.devops.environment.pojo.DispatchStrategyConfig.Companion.toString
 import com.tencent.devops.environment.pojo.LabelSelector
-import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.enums.LabelOp
 import com.tencent.devops.environment.pojo.enums.NodeRule
 import com.tencent.devops.environment.pojo.enums.StrategyScope
