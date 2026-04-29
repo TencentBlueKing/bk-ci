@@ -27,9 +27,15 @@ class DispatchStrategyExecutorTest {
         parallelTaskCount: Int? = 4,
         dockerParallelTaskCount: Int? = 4
     ) = ThirdPartyAgent(
-        agentId = id, projectId = "proj", nodeId = "node_$id",
-        status = AgentStatus.IMPORT_OK, hostname = "host_$id", os = "LINUX",
-        ip = "10.0.0.$id", secretKey = "key", createUser = "test",
+        agentId = id,
+        projectId = "proj",
+        nodeId = "node_$id",
+        status = AgentStatus.IMPORT_OK,
+        hostname = "host_$id",
+        os = "LINUX",
+        ip = "10.0.0.$id",
+        secretKey = "key",
+        createUser = "test",
         createTime = System.currentTimeMillis(),
         parallelTaskCount = parallelTaskCount,
         dockerParallelTaskCount = dockerParallelTaskCount,
@@ -37,16 +43,26 @@ class DispatchStrategyExecutorTest {
     )
 
     private fun buildStrategy(
-        scope: StrategyScope, nodeRule: NodeRule,
-        enabled: Boolean = true, priority: Int = 0,
+        scope: StrategyScope,
+        nodeRule: NodeRule,
+        enabled: Boolean = true,
+        priority: Int = 0,
         labelSelector: List<LabelSelector>? = null,
         name: String = "${scope}_$nodeRule"
     ) = DispatchStrategyConfig(
-        id = null, projectId = "proj", envId = 1L,
-        strategyType = StrategyType.CUSTOM, defaultStrategyCode = null,
-        strategyName = name, scope = scope, nodeRule = nodeRule,
-        labelSelector = labelSelector, enabled = enabled, priority = priority,
-        createdUser = "test", updatedUser = "test"
+        id = null,
+        projectId = "proj",
+        envId = 1L,
+        strategyType = StrategyType.CUSTOM,
+        defaultStrategyCode = null,
+        strategyName = name,
+        scope = scope,
+        nodeRule = nodeRule,
+        labelSelector = labelSelector,
+        enabled = enabled,
+        priority = priority,
+        createdUser = "test",
+        updatedUser = "test"
     )
 
     private fun input(
