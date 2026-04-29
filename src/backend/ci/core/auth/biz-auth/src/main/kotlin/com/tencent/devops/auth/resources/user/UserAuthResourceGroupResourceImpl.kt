@@ -157,9 +157,8 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
             permissionResourceMemberService.renewalGroupMember(
                 userId = userId,
                 projectCode = projectId,
-                resourceType = resourceType,
-                groupId = groupId,
-                memberRenewalDTO = memberRenewalDTO
+                groupIds = listOf(groupId),
+                expiredAt = memberRenewalDTO.expiredAt
             )
         )
     }
