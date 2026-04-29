@@ -57,9 +57,14 @@ class EnvDispatchStrategyDao {
     }
 
     fun update(
-        dslContext: DSLContext, id: Long,
-        strategyName: String?, scope: StrategyScope?, nodeRule: NodeRule?,
-        labelSelector: List<LabelSelector>?, enabled: Boolean?, updatedUser: String
+        dslContext: DSLContext,
+        id: Long,
+        strategyName: String?,
+        scope: StrategyScope?,
+        nodeRule: NodeRule?,
+        labelSelector: List<LabelSelector>?,
+        enabled: Boolean?,
+        updatedUser: String
     ) {
         with(TEnvDispatchStrategy.T_ENV_DISPATCH_STRATEGY) {
             val step = dslContext.update(this)

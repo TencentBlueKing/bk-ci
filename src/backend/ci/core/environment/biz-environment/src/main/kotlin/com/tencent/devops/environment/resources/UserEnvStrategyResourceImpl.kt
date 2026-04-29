@@ -21,7 +21,9 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
 ) : UserEnvStrategyResource {
 
     override fun listStrategies(
-        userId: String, projectId: String, envHashId: String
+        userId: String,
+        projectId: String,
+        envHashId: String
     ): Result<List<DispatchEnvStrategyVO>> {
         val strategies = envDispatchStrategyService.getOrInitStrategies(
             projectId = projectId,
@@ -32,7 +34,9 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
     }
 
     override fun createStrategy(
-        userId: String, projectId: String, envHashId: String,
+        userId: String,
+        projectId: String,
+        envHashId: String,
         request: DispatchEnvStrategyCreateReq
     ): Result<Long> {
         val envId = HashUtil.decodeIdToLong(envHashId)
@@ -47,8 +51,11 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
     }
 
     override fun updateStrategy(
-        userId: String, projectId: String, envHashId: String,
-        strategyId: Long, request: DispatchEnvStrategyUpdateReq
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        strategyId: Long,
+        request: DispatchEnvStrategyUpdateReq
     ): Result<Boolean> {
         val envId = HashUtil.decodeIdToLong(envHashId)
         checkEnvEditPermission(userId, projectId, envId)
@@ -64,7 +71,10 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
     }
 
     override fun deleteStrategy(
-        userId: String, projectId: String, envHashId: String, strategyId: Long
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        strategyId: Long
     ): Result<Boolean> {
         val envId = HashUtil.decodeIdToLong(envHashId)
         checkEnvEditPermission(userId, projectId, envId)
@@ -73,7 +83,10 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
     }
 
     override fun batchDeleteStrategy(
-        userId: String, projectId: String, envHashId: String, strategyIds: Set<Long>
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        strategyIds: Set<Long>
     ): Result<Boolean> {
         val envId = HashUtil.decodeIdToLong(envHashId)
         checkEnvEditPermission(userId, projectId, envId)
@@ -82,7 +95,9 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
     }
 
     override fun reorderStrategies(
-        userId: String, projectId: String, envHashId: String,
+        userId: String,
+        projectId: String,
+        envHashId: String,
         request: DispatchEnvStrategyReorderReq
     ): Result<Boolean> {
         val envId = HashUtil.decodeIdToLong(envHashId)

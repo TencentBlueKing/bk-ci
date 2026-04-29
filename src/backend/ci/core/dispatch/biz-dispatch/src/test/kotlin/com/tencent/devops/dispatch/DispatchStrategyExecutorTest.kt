@@ -72,17 +72,22 @@ class DispatchStrategyExecutorTest {
     @Nested
     @DisplayName("基本策略匹配")
     inner class BasicMatching {
-        @Test fun emptyAgents() {
+        @Test
+        fun emptyAgents() {
             val r = DispatchStrategyExecutor(input(emptyList()))
                 .execute(DispatchStrategyConfig.buildDefaults("proj", 1L, "u")) { true }
             assertNull(r)
         }
-        @Test fun emptyStrategies() {
+
+        @Test
+        fun emptyStrategies() {
             val r = DispatchStrategyExecutor(input(listOf(buildAgent("1"))))
                 .execute(emptyList()) { true }
             assertNull(r)
         }
-        @Test fun allDisabled() {
+
+        @Test
+        fun allDisabled() {
             val r = DispatchStrategyExecutor(input(listOf(buildAgent("1"))))
                 .execute(listOf(buildStrategy(StrategyScope.ALL, NodeRule.IDLE, enabled = false))) { true }
             assertNull(r)
@@ -94,21 +99,28 @@ class DispatchStrategyExecutorTest {
     @Nested
     @DisplayName("IDLE 规则")
     inner class IdleRule {
-        @Test fun matchIdle() {
+        @Test
+        fun matchIdle() {
             val r = DispatchStrategyExecutor(input(listOf(buildAgent("1"))))
                 .execute(listOf(buildStrategy(StrategyScope.ALL, NodeRule.IDLE))) { true }
             assertEquals("1", r!!.agentId)
         }
-        @Test fun skipBusy() {
+
+        @Test
+        fun skipBusy() {
             val r = DispatchStrategyExecutor(input(listOf(buildAgent("1")), running = mapOf("1" to 3)))
                 .execute(listOf(buildStrategy(StrategyScope.ALL, NodeRule.IDLE))) { true }
             assertNull(r)
         }
-        @Test fun dockerIdle() {
-            val r = DispatchStrategyExecutor(input(
-                listOf(buildAgent("1")), running = mapOf("1" to 5),
-                dockerRunning = mapOf("1" to 0), docker = true
-            )).execute(listOf(buildStrategy(StrategyScope.ALL, NodeRule.IDLE))) { true }
+
+        @Test
+        fun dockerIdle() {
+            val r = DispatchStrategyExecutor(
+                input(
+                    listOf(buildAgent("1")), running = mapOf("1" to 5),
+                    dockerRunning = mapOf("1" to 0), docker = true
+                )
+            ).execute(listOf(buildStrategy(StrategyScope.ALL, NodeRule.IDLE))) { true }
             assertNotNull(r)
         }
     }
@@ -116,18 +128,38 @@ class DispatchStrategyExecutorTest {
     @Nested
     @DisplayName("AVAILABLE 规则")
     inner class AvailableRule {
-        @Test fun matchAvailable() {
-            val r = DispatchStrategyExecutor(input(listOf(buildAgent("1", parallelTaskCount = 4)), running = mapOf("1" to 2)))
+        @Test
+        fun matchAvailable() {
+            val r = DispatchStrategyExecutor(
+                input(
+                    listOf(buildAgent("1", parallelTaskCount = 4)),
+                    running = mapOf("1" to 2)
+                )
+            )
                 .execute(listOf(buildStrategy(StrategyScope.ALL, NodeRule.AVAILABLE))) { true }
             assertNotNull(r)
         }
-        @Test fun skipFull() {
-            val r = DispatchStrategyExecutor(input(listOf(buildAgent("1", parallelTaskCount = 2)), running = mapOf("1" to 2)))
+
+        @Test
+        fun skipFull() {
+            val r = DispatchStrategyExecutor(
+                input(
+                    listOf(buildAgent("1", parallelTaskCount = 2)),
+                    running = mapOf("1" to 2)
+                )
+            )
                 .execute(listOf(buildStrategy(StrategyScope.ALL, NodeRule.AVAILABLE))) { true }
             assertNull(r)
         }
-        @Test fun unlimitedParallel() {
-            val r = DispatchStrategyExecutor(input(listOf(buildAgent("1", parallelTaskCount = 0)), running = mapOf("1" to 999)))
+
+        @Test
+        fun unlimitedParallel() {
+            val r = DispatchStrategyExecutor(
+                input(
+                    listOf(buildAgent("1", parallelTaskCount = 0)),
+                    running = mapOf("1" to 999)
+                )
+            )
                 .execute(listOf(buildStrategy(StrategyScope.ALL, NodeRule.AVAILABLE))) { true }
             assertNotNull(r)
         }
@@ -138,12 +170,15 @@ class DispatchStrategyExecutorTest {
     @Nested
     @DisplayName("Scope 过滤")
     inner class ScopeFiltering {
-        @Test fun preBuildScope() {
+        @Test
+        fun preBuildScope() {
             val r = DispatchStrategyExecutor(input(listOf(buildAgent("1"), buildAgent("2")), preBuild = setOf("1")))
                 .execute(listOf(buildStrategy(StrategyScope.PRE_BUILD, NodeRule.IDLE))) { true }
             assertEquals("1", r!!.agentId)
         }
-        @Test fun preBuildEmpty() {
+
+        @Test
+        fun preBuildEmpty() {
             val r = DispatchStrategyExecutor(input(listOf(buildAgent("1"))))
                 .execute(listOf(buildStrategy(StrategyScope.PRE_BUILD, NodeRule.IDLE))) { true }
             assertNull(r)
@@ -164,61 +199,98 @@ class DispatchStrategyExecutorTest {
         ): ThirdPartyAgent? {
             val a = buildAgent("1")
             return DispatchStrategyExecutor(input(listOf(a), tags = mapOf("1" to agentTags)))
-                .execute(listOf(buildStrategy(
-                    StrategyScope.ALL, NodeRule.IDLE,
-                    labelSelector = listOf(LabelSelector(tagKeyId = tagKeyId, op = op, values = values))
-                ))) { true }
+                .execute(
+                    listOf(
+                        buildStrategy(
+                            StrategyScope.ALL, NodeRule.IDLE,
+                            labelSelector = listOf(LabelSelector(tagKeyId = tagKeyId, op = op, values = values))
+                        )
+                    )
+                ) { true }
         }
 
-        @Test fun inMatch() {
+        @Test
+        fun inMatch() {
             assertNotNull(execWithLabel(mapOf(1L to setOf("linux", "windows")), LabelOp.IN, setOf("linux")))
         }
-        @Test fun inNoMatch() {
+
+        @Test
+        fun inNoMatch() {
             assertNull(execWithLabel(mapOf(1L to setOf("macos")), LabelOp.IN, setOf("linux", "windows")))
         }
-        @Test fun equalMatch() {
+
+        @Test
+        fun equalMatch() {
             assertNotNull(execWithLabel(mapOf(1L to setOf("v1.0")), LabelOp.EQUAL, setOf("v1.0")))
         }
-        @Test fun equalNoMatch() {
+
+        @Test
+        fun equalNoMatch() {
             assertNull(execWithLabel(mapOf(1L to setOf("v2.0")), LabelOp.EQUAL, setOf("v1.0")))
         }
-        @Test fun gtNumeric() {
+
+        @Test
+        fun gtNumeric() {
             assertNotNull(execWithLabel(mapOf(1L to setOf("10")), LabelOp.GT, setOf("5")))
         }
-        @Test fun gtNumericFail() {
+
+        @Test
+        fun gtNumericFail() {
             assertNull(execWithLabel(mapOf(1L to setOf("3")), LabelOp.GT, setOf("5")))
         }
-        @Test fun gteEqual() {
+
+        @Test
+        fun gteEqual() {
             assertNotNull(execWithLabel(mapOf(1L to setOf("5")), LabelOp.GTE, setOf("5")))
         }
-        @Test fun ltNumeric() {
+
+        @Test
+        fun ltNumeric() {
             assertNotNull(execWithLabel(mapOf(1L to setOf("3")), LabelOp.LT, setOf("5")))
         }
-        @Test fun lteFail() {
+
+        @Test
+        fun lteFail() {
             assertNull(execWithLabel(mapOf(1L to setOf("6")), LabelOp.LTE, setOf("5")))
         }
-        @Test fun startWith() {
+
+        @Test
+        fun startWith() {
             assertNotNull(execWithLabel(mapOf(1L to setOf("release-1.0")), LabelOp.START_WITH, setOf("release")))
         }
-        @Test fun startWithFail() {
+
+        @Test
+        fun startWithFail() {
             assertNull(execWithLabel(mapOf(1L to setOf("dev-1.0")), LabelOp.START_WITH, setOf("release")))
         }
-        @Test fun endWith() {
+
+        @Test
+        fun endWith() {
             assertNotNull(execWithLabel(mapOf(1L to setOf("app-linux")), LabelOp.END_WITH, setOf("linux")))
         }
-        @Test fun endWithFail() {
+
+        @Test
+        fun endWithFail() {
             assertNull(execWithLabel(mapOf(1L to setOf("app-linux")), LabelOp.END_WITH, setOf("windows")))
         }
-        @Test fun contains() {
+
+        @Test
+        fun contains() {
             assertNotNull(execWithLabel(mapOf(1L to setOf("my-feature-branch")), LabelOp.CONTAINS, setOf("feature")))
         }
-        @Test fun containsFail() {
+
+        @Test
+        fun containsFail() {
             assertNull(execWithLabel(mapOf(1L to setOf("my-hotfix-branch")), LabelOp.CONTAINS, setOf("feature")))
         }
-        @Test fun stringCompare() {
+
+        @Test
+        fun stringCompare() {
             assertNotNull(execWithLabel(mapOf(1L to setOf("beta")), LabelOp.GT, setOf("alpha")))
         }
-        @Test fun missingTagKey() {
+
+        @Test
+        fun missingTagKey() {
             assertNull(execWithLabel(mapOf(2L to setOf("linux")), LabelOp.IN, setOf("linux")))
         }
 
@@ -232,13 +304,17 @@ class DispatchStrategyExecutorTest {
                 "2" to mapOf(1L to setOf("linux"))
             )
             val r = DispatchStrategyExecutor(input(listOf(a1, a2), tags = tags))
-                .execute(listOf(buildStrategy(
-                    StrategyScope.ALL, NodeRule.IDLE,
-                    labelSelector = listOf(
-                        LabelSelector(tagKeyId = 1, op = LabelOp.EQUAL, values = setOf("linux")),
-                        LabelSelector(tagKeyId = 2, op = LabelOp.EQUAL, values = setOf("amd64"))
+                .execute(
+                    listOf(
+                        buildStrategy(
+                            StrategyScope.ALL, NodeRule.IDLE,
+                            labelSelector = listOf(
+                                LabelSelector(tagKeyId = 1, op = LabelOp.EQUAL, values = setOf("linux")),
+                                LabelSelector(tagKeyId = 2, op = LabelOp.EQUAL, values = setOf("amd64"))
+                            )
+                        )
                     )
-                ))) { true }
+                ) { true }
             assertEquals("1", r!!.agentId)
         }
 
@@ -256,19 +332,26 @@ class DispatchStrategyExecutorTest {
     @Nested
     @DisplayName("负载排序")
     inner class LoadSorting {
-        @Test fun sortByRunning() {
-            val r = DispatchStrategyExecutor(input(
-                listOf(buildAgent("1"), buildAgent("2"), buildAgent("3")),
-                running = mapOf("1" to 5, "2" to 1, "3" to 3)
-            )).execute(listOf(buildStrategy(StrategyScope.ALL, NodeRule.AVAILABLE))) { true }
+        @Test
+        fun sortByRunning() {
+            val r = DispatchStrategyExecutor(
+                input(
+                    listOf(buildAgent("1"), buildAgent("2"), buildAgent("3")),
+                    running = mapOf("1" to 5, "2" to 1, "3" to 3)
+                )
+            ).execute(listOf(buildStrategy(StrategyScope.ALL, NodeRule.AVAILABLE))) { true }
             assertEquals("2", r!!.agentId)
         }
-        @Test fun sortByDockerRunning() {
-            val r = DispatchStrategyExecutor(input(
-                listOf(buildAgent("1"), buildAgent("2")),
-                running = mapOf("1" to 1, "2" to 10),
-                dockerRunning = mapOf("1" to 3, "2" to 0), docker = true
-            )).execute(listOf(buildStrategy(StrategyScope.ALL, NodeRule.IDLE))) { true }
+
+        @Test
+        fun sortByDockerRunning() {
+            val r = DispatchStrategyExecutor(
+                input(
+                    listOf(buildAgent("1"), buildAgent("2")),
+                    running = mapOf("1" to 1, "2" to 10),
+                    dockerRunning = mapOf("1" to 3, "2" to 0), docker = true
+                )
+            ).execute(listOf(buildStrategy(StrategyScope.ALL, NodeRule.IDLE))) { true }
             assertEquals("2", r!!.agentId)
         }
     }
@@ -278,32 +361,47 @@ class DispatchStrategyExecutorTest {
     @Nested
     @DisplayName("策略优先级与降级")
     inner class PriorityAndFallback {
-        @Test fun defaultFourStrategies() {
-            val r = DispatchStrategyExecutor(input(
-                listOf(buildAgent("1"), buildAgent("2")),
-                preBuild = setOf("1"), running = mapOf("1" to 2, "2" to 0)
-            )).execute(DispatchStrategyConfig.buildDefaults("proj", 1L, "user")) { true }
+        @Test
+        fun defaultFourStrategies() {
+            val r = DispatchStrategyExecutor(
+                input(
+                    listOf(buildAgent("1"), buildAgent("2")),
+                    preBuild = setOf("1"), running = mapOf("1" to 2, "2" to 0)
+                )
+            ).execute(DispatchStrategyConfig.buildDefaults("proj", 1L, "user")) { true }
             assertEquals("1", r!!.agentId)
         }
-        @Test fun fallback() {
-            val r = DispatchStrategyExecutor(input(
-                listOf(buildAgent("1", parallelTaskCount = 1), buildAgent("2")),
-                preBuild = setOf("1"), running = mapOf("1" to 1, "2" to 0)
-            )).execute(DispatchStrategyConfig.buildDefaults("proj", 1L, "user")) { true }
+
+        @Test
+        fun fallback() {
+            val r = DispatchStrategyExecutor(
+                input(
+                    listOf(buildAgent("1", parallelTaskCount = 1), buildAgent("2")),
+                    preBuild = setOf("1"), running = mapOf("1" to 1, "2" to 0)
+                )
+            ).execute(DispatchStrategyConfig.buildDefaults("proj", 1L, "user")) { true }
             assertEquals("2", r!!.agentId)
         }
-        @Test fun dockerFullFallback() {
-            val r = DispatchStrategyExecutor(input(
-                listOf(buildAgent("1", dockerParallelTaskCount = 2), buildAgent("2", dockerParallelTaskCount = 2)),
-                preBuild = setOf("1"),
-                dockerRunning = mapOf("1" to 2, "2" to 1), docker = true
-            )).execute(DispatchStrategyConfig.buildDefaults("proj", 1L, "user")) { true }
+
+        @Test
+        fun dockerFullFallback() {
+            val r = DispatchStrategyExecutor(
+                input(
+                    listOf(buildAgent("1", dockerParallelTaskCount = 2), buildAgent("2", dockerParallelTaskCount = 2)),
+                    preBuild = setOf("1"),
+                    dockerRunning = mapOf("1" to 2, "2" to 1), docker = true
+                )
+            ).execute(DispatchStrategyConfig.buildDefaults("proj", 1L, "user")) { true }
             assertEquals("2", r!!.agentId)
         }
-        @Test fun totalMismatch() {
-            val r = DispatchStrategyExecutor(input(
-                listOf(buildAgent("1", parallelTaskCount = 1)), running = mapOf("1" to 1)
-            )).execute(DispatchStrategyConfig.buildDefaults("proj", 1L, "user")) { true }
+
+        @Test
+        fun totalMismatch() {
+            val r = DispatchStrategyExecutor(
+                input(
+                    listOf(buildAgent("1", parallelTaskCount = 1)), running = mapOf("1" to 1)
+                )
+            ).execute(DispatchStrategyConfig.buildDefaults("proj", 1L, "user")) { true }
             assertNull(r)
         }
     }
@@ -313,13 +411,16 @@ class DispatchStrategyExecutorTest {
     @Nested
     @DisplayName("hasTryAgents 去重")
     inner class Dedup {
-        @Test fun failedNotRetried() {
+        @Test
+        fun failedNotRetried() {
             val tried = mutableListOf<String>()
             DispatchStrategyExecutor(input(listOf(buildAgent("1")), preBuild = setOf("1")))
-                .execute(listOf(
-                    buildStrategy(StrategyScope.PRE_BUILD, NodeRule.IDLE, priority = 0),
-                    buildStrategy(StrategyScope.ALL, NodeRule.IDLE, priority = 1)
-                )) { tried.add(it.agentId); false }
+                .execute(
+                    listOf(
+                        buildStrategy(StrategyScope.PRE_BUILD, NodeRule.IDLE, priority = 0),
+                        buildStrategy(StrategyScope.ALL, NodeRule.IDLE, priority = 1)
+                    )
+                ) { tried.add(it.agentId); false }
             assertEquals(1, tried.size)
         }
     }
@@ -329,31 +430,45 @@ class DispatchStrategyExecutorTest {
     @Nested
     @DisplayName("综合场景")
     inner class Integration {
-        @Test fun labelsWithPreBuild() {
+        @Test
+        fun labelsWithPreBuild() {
             val tags = mapOf(
                 "1" to mapOf(1L to setOf("a")),
                 "2" to mapOf(1L to setOf("a", "b")),
                 "3" to mapOf(1L to setOf("b"))
             )
-            val r = DispatchStrategyExecutor(input(
-                listOf(buildAgent("1"), buildAgent("2"), buildAgent("3")),
-                preBuild = setOf("1", "2"), tags = tags
-            )).execute(listOf(buildStrategy(
-                StrategyScope.PRE_BUILD, NodeRule.IDLE,
-                labelSelector = listOf(LabelSelector(tagKeyId = 1, op = LabelOp.IN, values = setOf("b")))
-            ))) { true }
+            val r = DispatchStrategyExecutor(
+                input(
+                    listOf(buildAgent("1"), buildAgent("2"), buildAgent("3")),
+                    preBuild = setOf("1", "2"), tags = tags
+                )
+            ).execute(
+                listOf(
+                    buildStrategy(
+                        StrategyScope.PRE_BUILD, NodeRule.IDLE,
+                        labelSelector = listOf(LabelSelector(tagKeyId = 1, op = LabelOp.IN, values = setOf("b")))
+                    )
+                )
+            ) { true }
             assertEquals("2", r!!.agentId)
         }
 
-        @Test fun customFallbackToDefault() {
-            val r = DispatchStrategyExecutor(input(
-                listOf(buildAgent("1"), buildAgent("2")),
-                tags = mapOf("1" to mapOf(1L to setOf("x")), "2" to mapOf(1L to setOf("y")))
-            )).execute(listOf(
-                buildStrategy(StrategyScope.ALL, NodeRule.IDLE, priority = 0,
-                    labelSelector = listOf(LabelSelector(tagKeyId = 1, op = LabelOp.EQUAL, values = setOf("zzz")))),
-                buildStrategy(StrategyScope.ALL, NodeRule.IDLE, priority = 1)
-            )) { true }
+        @Test
+        fun customFallbackToDefault() {
+            val r = DispatchStrategyExecutor(
+                input(
+                    listOf(buildAgent("1"), buildAgent("2")),
+                    tags = mapOf("1" to mapOf(1L to setOf("x")), "2" to mapOf(1L to setOf("y")))
+                )
+            ).execute(
+                listOf(
+                    buildStrategy(
+                        StrategyScope.ALL, NodeRule.IDLE, priority = 0,
+                        labelSelector = listOf(LabelSelector(tagKeyId = 1, op = LabelOp.EQUAL, values = setOf("zzz")))
+                    ),
+                    buildStrategy(StrategyScope.ALL, NodeRule.IDLE, priority = 1)
+                )
+            ) { true }
             assertNotNull(r)
         }
     }
@@ -363,30 +478,44 @@ class DispatchStrategyExecutorTest {
     @Nested
     @DisplayName("流水线日志")
     inner class Logging {
-        @Test fun logsOnMatch() {
+        @Test
+        fun logsOnMatch() {
             val logs = mutableListOf<String>()
             DispatchStrategyExecutor(input(listOf(buildAgent("1"))), logAction = { logs.add(it) })
                 .execute(listOf(buildStrategy(StrategyScope.ALL, NodeRule.IDLE))) { true }
             assertTrue(logs.any { "Start matching" in it && "env:1" in it })
             assertTrue(logs.any { "Matched agent" in it })
         }
-        @Test fun logsOnExhausted() {
+
+        @Test
+        fun logsOnExhausted() {
             val logs = mutableListOf<String>()
-            DispatchStrategyExecutor(input(listOf(buildAgent("1")), running = mapOf("1" to 3)), logAction = { logs.add(it) })
+            DispatchStrategyExecutor(
+                input(listOf(buildAgent("1")), running = mapOf("1" to 3)),
+                logAction = { logs.add(it) })
                 .execute(listOf(buildStrategy(StrategyScope.ALL, NodeRule.IDLE))) { true }
             assertTrue(logs.any { "All strategies exhausted" in it })
         }
-        @Test fun logsLabelFilter() {
+
+        @Test
+        fun logsLabelFilter() {
             val logs = mutableListOf<String>()
             DispatchStrategyExecutor(
                 input(listOf(buildAgent("1"), buildAgent("2")), tags = mapOf("1" to mapOf(1L to setOf("ok")))),
                 logAction = { logs.add(it) }
-            ).execute(listOf(buildStrategy(StrategyScope.ALL, NodeRule.IDLE,
-                labelSelector = listOf(LabelSelector(tagKeyId = 1, op = LabelOp.IN, values = setOf("ok")))
-            ))) { true }
+            ).execute(
+                listOf(
+                    buildStrategy(
+                        StrategyScope.ALL, NodeRule.IDLE,
+                        labelSelector = listOf(LabelSelector(tagKeyId = 1, op = LabelOp.IN, values = setOf("ok")))
+                    )
+                )
+            ) { true }
             assertTrue(logs.any { "Label filter" in it && "2 -> 1" in it })
         }
-        @Test fun noLogActionSafe() {
+
+        @Test
+        fun noLogActionSafe() {
             val r = DispatchStrategyExecutor(input(listOf(buildAgent("1"))))
                 .execute(listOf(buildStrategy(StrategyScope.ALL, NodeRule.IDLE))) { true }
             assertNotNull(r)

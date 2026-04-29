@@ -133,7 +133,7 @@ class DispatchStrategyExecutor(
         }
         val expected = selector.values
         if (expected.isEmpty()) return false
-        val result =  when (selector.op) {
+        val result = when (selector.op) {
             LabelOp.IN -> agentValues.any { it in expected }
             LabelOp.EQUAL -> expected.any { exp -> agentValues.any { it == exp } }
             LabelOp.GT -> expected.any { exp -> agentValues.any { compareValues(it, exp) > 0 } }

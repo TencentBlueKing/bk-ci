@@ -98,8 +98,8 @@ data class DispatchEnvStrategyVO(
     val createdUser: String,
     @get:Schema(title = "修改者")
     val updatedUser: String
-){
-    constructor(c: DispatchStrategyConfig, label:List<LabelSelectorVO>? ) : this(
+) {
+    constructor(c: DispatchStrategyConfig, label: List<LabelSelectorVO>?) : this(
         id = c.id!!, projectId = c.projectId, envId = c.envId,
         strategyType = c.strategyType, defaultStrategyCode = c.defaultStrategyCode,
         strategyName = c.strategyName, scope = c.scope, nodeRule = c.nodeRule,
