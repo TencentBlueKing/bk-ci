@@ -31,6 +31,8 @@ const projectData = ref({
   subjectScopes: [],
   secrecy: false,
   authSecrecy: 0,
+  kpiCode: '',
+  kpiName: '',
   properties: {
     pipelineDialect: 'CLASSIC',
     loggingLineLimit: null
