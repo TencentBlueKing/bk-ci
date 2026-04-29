@@ -933,6 +933,15 @@ class PipelineVersionFacadeService @Autowired constructor(
         )
     }
 
+    /**
+     * 获取流水线草稿状态，用于前端进入编辑、保存、发布前判断当前版本是否可继续操作。
+     *
+     * - [version] 为空时检查当前流水线是否已有草稿；无草稿时结合 [baseVersion] 判断前端基线是否仍可编辑。
+     * - [version] 不为空时按指定版本判断，若该版本已经发布，则返回当前最新发布版本给前端重新建草稿。
+     * - [baseDraftVersion] 用于保存时检测草稿并发修改冲突。
+     * - [baseVersion] 表示前端当前编辑的基线版本，用于区分分支版本和正式基线落后。
+     *
+     */
     fun getPipelineDraftStatus(
         userId: String,
         projectId: String,
@@ -949,10 +958,19 @@ class PipelineVersionFacadeService @Autowired constructor(
             )
         }
         val draftResource = if (version == null) {
-            pipelineRepositoryService.getDraftVersionResource(
+            val record = pipelineRepositoryService.getDraftVersionResource(
                 projectId = projectId,
                 pipelineId = pipelineId
             )
+            // 如果前端没有传version,则判断是否有草稿,没有草稿说明是新创建草稿版本,需要判断基线版本是否是最新版本
+            if (record == null) {
+                return getPipelineDraftStatusWhenDraftEmpty(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    baseVersion = baseVersion
+                )
+            }
+            record
         } else {
             // 如果传了version,则判断该版本是否已经发布
             val record = pipelineRepositoryService.getPipelineVersionRecord(
@@ -981,11 +999,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                 )
             }
             record
-        } ?: return getPipelineDraftStatusWhenDraftEmpty(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            baseVersion = baseVersion
-        )
+        } ?: return PipelineDraftStatusResult(status = PipelineDraftStatus.NORMAL)
 
         return when (actionType) {
             PipelineDraftActionType.EDIT -> {
@@ -1103,7 +1117,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         draftResource: PipelineResourceVersion,
     ): PipelineDraftStatusResult {
         // 保存时检查是否有其他人也修改了流水线，若存在则提示冲突
-        return if (baseDraftVersion != null && draftResource.draftVersion != baseDraftVersion) {
+        return if (draftResource.draftVersion != baseDraftVersion) {
             PipelineDraftStatusResult(
                 status = PipelineDraftStatus.CONFLICT,
                 draft = PipelineVersionSimple(draftResource)

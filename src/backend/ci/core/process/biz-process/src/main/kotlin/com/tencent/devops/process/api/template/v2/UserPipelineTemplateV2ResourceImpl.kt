@@ -719,13 +719,14 @@ class UserPipelineTemplateV2ResourceImpl(
         )
     }
 
-    override fun getPipelineDraftStatus(
+    override fun getPipelineTemplateDraftStatus(
         userId: String,
         projectId: String,
         templateId: String,
         actionType: PipelineDraftActionType,
         version: Long?,
-        baseDraftVersion: Int?
+        baseDraftVersion: Int?,
+        baseVersion: Long?
     ): Result<PipelineTemplateDraftStatusResult> {
         permissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
@@ -734,13 +735,14 @@ class UserPipelineTemplateV2ResourceImpl(
             templateId = templateId
         )
         return Result(
-            templateFacadeService.getPipelineDraftStatus(
+            templateFacadeService.getPipelineTemplateDraftStatus(
                 userId = userId,
                 projectId = projectId,
                 templateId = templateId,
                 actionType = actionType,
                 version = version,
-                baseDraftVersion = baseDraftVersion
+                baseDraftVersion = baseDraftVersion,
+                baseVersion = baseVersion
             )
         )
     }

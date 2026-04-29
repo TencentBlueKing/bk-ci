@@ -613,7 +613,7 @@ interface UserPipelineTemplateV2Resource {
     @Operation(summary = "获取模版草稿状态")
     @GET
     @Path("{templateId}/draftStatus")
-    fun getPipelineDraftStatus(
+    fun getPipelineTemplateDraftStatus(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -631,7 +631,10 @@ interface UserPipelineTemplateV2Resource {
         version: Long?,
         @Parameter(description = "来源的草稿版本", required = false)
         @QueryParam("baseDraftVersion")
-        baseDraftVersion: Int?
+        baseDraftVersion: Int?,
+        @Parameter(description = "前端当前编辑基线版本", required = false)
+        @QueryParam("baseVersion")
+        baseVersion: Long?
     ): Result<PipelineTemplateDraftStatusResult>
 
     @Operation(summary = "获取流水线草稿版本列表")
