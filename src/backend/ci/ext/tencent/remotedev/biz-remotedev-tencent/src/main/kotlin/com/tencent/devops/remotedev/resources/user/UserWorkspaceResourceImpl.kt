@@ -81,6 +81,7 @@ import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import kotlin.math.log
 
 @RestResource
 @Suppress("ALL")
@@ -335,6 +336,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         userId: String,
         request: CvdCreateTaskRequest
     ): Result<CvdTaskResponse> {
+        logger.info("createCvdTask: $request")
         if (!permissionService.checkUserVisitPermission(userId, request.bkProjectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
@@ -372,6 +374,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         userId: String,
         taskId: String
     ): Result<CvdTaskStatusResponse> {
+        logger.info("getCvdTaskStatus: $taskId")
         return Result(cvdService.getTaskStatus(taskId))
     }
 
@@ -385,6 +388,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         userId: String,
         bkProjectId: String
     ): Result<List<CvdPoolDetail>> {
+        logger.info("getCvdProjectPoolInfo: $bkProjectId")
         if (!permissionService.checkUserVisitPermission(userId, bkProjectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
@@ -398,6 +402,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         userId: String,
         poolId: String
     ): Result<CvdPoolInfoResponse> {
+        logger.info("getCvdPoolInfo: $poolId")
         return Result(cvdService.getPoolInfo(poolId))
     }
 }
