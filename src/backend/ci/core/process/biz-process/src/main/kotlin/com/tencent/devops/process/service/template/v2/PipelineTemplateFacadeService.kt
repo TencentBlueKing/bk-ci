@@ -1880,7 +1880,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
         draftResource: PipelineTemplateResource,
     ): PipelineTemplateDraftStatusResult {
         // 保存时检查是否有其他人也修改了模板，若存在则提示冲突
-        return if (baseDraftVersion != null && draftResource.draftVersion != baseDraftVersion) {
+        return if (draftResource.draftVersion != baseDraftVersion) {
             PipelineTemplateDraftStatusResult(
                 status = PipelineDraftStatus.CONFLICT,
                 draft = PipelineTemplateVersionSimple(draftResource)
