@@ -515,6 +515,7 @@ class RbacPermissionResourceMemberService(
         groupId: Int,
         groupName: String
     ): BkAuthGroupAndUserList {
+        // 获取组成员信息
         val groupMemberInfoList = getAllRoleGroupMembersV2(groupId)
         // 获取组信息
         val gradeManagerId = authResourceService.get(
@@ -524,7 +525,12 @@ class RbacPermissionResourceMemberService(
         ).relationId
         val searchGroupDTO = SearchGroupDTO.builder().id(groupId).build()
         val groupDetails = iamV2ManagerService.getGradeManagerRoleGroupV2(
-            gradeManagerId, searchGroupDTO, pageInfoDTO
+            gradeManagerId,
+            searchGroupDTO,
+            V2PageInfoDTO().apply {
+                this.pageSize = 10
+                this.page = 1
+            }
         ).results.firstOrNull()
         val nowTimestamp = System.currentTimeMillis() / 1000
         val (members, deptInfoList) = groupMemberInfoList
