@@ -109,8 +109,17 @@ class RbacPermissionApplyService @Autowired constructor(
             projectCode = projectId,
             permission = AuthPermission.VISIT
         )
-
-        val iamResourceCode = searchGroupInfo.iamResourceCode
+        val iamResourceCode = when {
+            searchGroupInfo.iamResourceCode != null -> searchGroupInfo.iamResourceCode
+            searchGroupInfo.resourceCode != null && searchGroupInfo.resourceType != null -> {
+                authResourceService.get(
+                    projectCode = projectId,
+                    resourceType = searchGroupInfo.resourceType!!,
+                    resourceCode = searchGroupInfo.resourceCode!!
+                ).iamResourceCode
+            }
+            else -> null
+        }
         val resourceType = searchGroupInfo.resourceType
         // 如果没有访问权限，不允许访问资源级别的组，只允许访问项目级别的组
         if (!visitProjectPermission && searchGroupInfo.groupLevel == GroupLevel.OTHER) {

@@ -417,11 +417,11 @@ class AuthResourceGroupMemberDao {
     fun listProjectMembers(
         dslContext: DSLContext,
         projectCode: String,
-        memberType: String?,
-        userName: String?,
-        deptName: String?,
-        offset: Int?,
-        limit: Int?
+        memberType: String? = null,
+        userName: String? = null,
+        deptName: String? = null,
+        offset: Int? = null,
+        limit: Int? = null
     ): List<ResourceMemberInfo> {
         val tUserInfo = TUserInfo.T_USER_INFO
 
