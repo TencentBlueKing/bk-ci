@@ -316,7 +316,9 @@
             // 获取标签列表
             const fetchTagList = async () => {
                 try {
-                    const res = await proxy.$store.dispatch('environment/requestNodeTagList', projectId.value)
+                    const res = await proxy.$store.dispatch('environment/requestNodeTagList', {
+                        projectId: projectId.value
+                    })
                     // 转换为标签键选项列表
                     tagKeyList.value = (res || []).map(tag => ({
                         id: tag.tagKeyId,
