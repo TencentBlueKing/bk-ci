@@ -227,10 +227,10 @@ class DispatchStrategyExecutor(
     private fun isAvailable(al: AgentWithLoad): Boolean {
         return if (input.isDockerBuilder) {
             val limit = al.agent.dockerParallelTaskCount ?: 0
-            limit == 0 || limit > al.dockerRunningCnt
+            al.dockerRunningCnt != 0 && (limit == 0 || limit > al.dockerRunningCnt)
         } else {
             val limit = al.agent.parallelTaskCount ?: 0
-            limit == 0 || limit > al.runningCnt
+            al.runningCnt != 0 && (limit == 0 || limit > al.runningCnt)
         }
     }
 
