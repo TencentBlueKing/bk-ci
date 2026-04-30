@@ -289,54 +289,33 @@ class WorkspaceJoinDao {
 
         // owner 条件查询
         search.owner?.ifEmpty { null }?.let { owners ->
-            if (search.onFuzzyMatch) {
-                conditions.add(
-                    buildFuzzyUserCondition(
-                        users = owners,
-                        assignTypes = listOf(
-                            WorkspaceShared.AssignType.OWNER.name
-                        )
-                    )
+            val visibleNames = queryVisibleWorkspaceNames(
+                dslContext = dslContext,
+                users = owners,
+                fuzzy = search.onFuzzyMatch,
+                assignTypes = listOf(
+                    WorkspaceShared.AssignType.OWNER.name
                 )
-            } else {
-                val visibleNames = queryVisibleWorkspaceNames(
-                    dslContext = dslContext,
-                    users = owners,
-                    assignTypes = listOf(
-                        WorkspaceShared.AssignType.OWNER.name
-                    )
-                )
-                conditions.add(
-                    TWorkspace.T_WORKSPACE.NAME.`in`(visibleNames)
-                )
-            }
+            )
+            conditions.add(
+                TWorkspace.T_WORKSPACE.NAME.`in`(visibleNames)
+            )
         }
 
         // viewers 条件查询
         search.viewers?.ifEmpty { null }?.let { viewers ->
-            if (search.onFuzzyMatch) {
-                conditions.add(
-                    buildFuzzyUserCondition(
-                        users = viewers,
-                        assignTypes = listOf(
-                            WorkspaceShared.AssignType.VIEWER.name,
-                            WorkspaceShared.AssignType.OWNER.name
-                        )
-                    )
+            val visibleNames = queryVisibleWorkspaceNames(
+                dslContext = dslContext,
+                users = viewers,
+                fuzzy = search.onFuzzyMatch,
+                assignTypes = listOf(
+                    WorkspaceShared.AssignType.VIEWER.name,
+                    WorkspaceShared.AssignType.OWNER.name
                 )
-            } else {
-                val visibleNames = queryVisibleWorkspaceNames(
-                    dslContext = dslContext,
-                    users = viewers,
-                    assignTypes = listOf(
-                        WorkspaceShared.AssignType.VIEWER.name,
-                        WorkspaceShared.AssignType.OWNER.name
-                    )
-                )
-                conditions.add(
-                    TWorkspace.T_WORKSPACE.NAME.`in`(visibleNames)
-                )
-            }
+            )
+            conditions.add(
+                TWorkspace.T_WORKSPACE.NAME.`in`(visibleNames)
+            )
         }
 
         // machineType 条件查询
@@ -686,35 +665,29 @@ class WorkspaceJoinDao {
     }
 
     /**
-     * 精确匹配时预查询用户可见的 workspace names，
-     * 用 NAME IN (...) 替代 OR + EXISTS 关联子查询，避免逐行探测
+     * 预查询用户可见的 workspace names，
+     * 用 NAME IN (...) 替代 OR + EXISTS 关联子查询，避免逐行探测。
+     * fuzzy=true 时使用 REGEXP 匹配，fuzzy=false 时使用精确 IN 匹配。
      */
     private fun queryVisibleWorkspaceNames(
         dslContext: DSLContext,
         users: List<String>,
+        fuzzy: Boolean,
         assignTypes: List<String>
     ): Set<String> {
-        val personalNames = dslContext
-            .select(TWorkspace.T_WORKSPACE.NAME)
-            .from(TWorkspace.T_WORKSPACE)
-            .where(
-                TWorkspace.T_WORKSPACE.OWNER_TYPE
-                    .eq(WorkspaceOwnerType.PERSONAL.name)
-            )
-            .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(users))
-            .skipCheck()
-            .fetch(TWorkspace.T_WORKSPACE.NAME)
-            .toSet()
-
+        val sharedUserCond = if (fuzzy) {
+            TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
+                .likeRegex(users.joinToString("|"))
+        } else {
+            TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
+                .`in`(users)
+        }
         val sharedNames = dslContext
             .select(
                 TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME
             )
             .from(TWorkspaceShared.T_WORKSPACE_SHARED)
-            .where(
-                TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
-                    .`in`(users)
-            )
+            .where(sharedUserCond)
             .and(
                 TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE
                     .`in`(assignTypes)
@@ -725,43 +698,7 @@ class WorkspaceJoinDao {
             )
             .toSet()
 
-        return personalNames + sharedNames
-    }
-
-    /**
-     * 模糊匹配时保留 OR + EXISTS 逻辑（无法预查询）
-     */
-    private fun buildFuzzyUserCondition(
-        users: List<String>,
-        assignTypes: List<String>
-    ): Condition {
-        val personalCond = TWorkspace.T_WORKSPACE.OWNER_TYPE
-            .eq(WorkspaceOwnerType.PERSONAL.name)
-            .and(
-                TWorkspace.T_WORKSPACE.CREATOR
-                    .likeRegex(users.joinToString("|"))
-            )
-
-        val sharedExists = DSL.exists(
-            DSL.selectOne()
-                .from(TWorkspaceShared.T_WORKSPACE_SHARED)
-                .where(
-                    TWorkspaceShared.T_WORKSPACE_SHARED
-                        .WORKSPACE_NAME
-                        .eq(TWorkspace.T_WORKSPACE.NAME)
-                        .and(
-                            TWorkspaceShared.T_WORKSPACE_SHARED
-                                .ASSIGN_TYPE.`in`(assignTypes)
-                        )
-                        .and(
-                            TWorkspaceShared.T_WORKSPACE_SHARED
-                                .SHARED_USER
-                                .likeRegex(users.joinToString("|"))
-                        )
-                )
-        )
-
-        return personalCond.or(sharedExists)
+        return sharedNames
     }
 
     companion object {
