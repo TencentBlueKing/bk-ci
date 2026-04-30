@@ -1717,7 +1717,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
         actionType: PipelineDraftActionType,
         version: Long?,
         baseDraftVersion: Int?,
-        baseVersion: Long?
+        releaseVersion: Long?
     ): PipelineTemplateDraftStatusResult {
         if (actionType == PipelineDraftActionType.RELEASE && version == null) {
             throw ErrorCodeException(
@@ -1735,7 +1735,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 return getPipelineTemplateDraftStatusWhenDraftEmpty(
                     projectId = projectId,
                     templateId = templateId,
-                    baseVersion = baseVersion
+                    releaseVersion = releaseVersion
                 )
             }
             record
@@ -1795,33 +1795,35 @@ class PipelineTemplateFacadeService @Autowired constructor(
     private fun getPipelineTemplateDraftStatusWhenDraftEmpty(
         projectId: String,
         templateId: String,
-        baseVersion: Long?
+        releaseVersion: Long?
     ): PipelineTemplateDraftStatusResult {
-        if (baseVersion == null) {
+        if (releaseVersion == null) {
             return PipelineTemplateDraftStatusResult(status = PipelineDraftStatus.NORMAL)
         }
-        val baseResource = pipelineTemplateResourceService.getTemplateResourceVersion(
+        // 前端展示的正式版本
+        val webReleaseResource = pipelineTemplateResourceService.getTemplateResourceVersion(
             projectId = projectId,
             templateId = templateId,
-            version = baseVersion
+            version = releaseVersion
         ) ?: return PipelineTemplateDraftStatusResult(status = PipelineDraftStatus.NORMAL)
-        if (baseResource.status == VersionStatus.BRANCH) {
+        if (webReleaseResource.status == VersionStatus.BRANCH) {
             return PipelineTemplateDraftStatusResult(
                 status = PipelineDraftStatus.BRANCH,
-                release = PipelineTemplateVersionSimple(baseResource)
+                release = PipelineTemplateVersionSimple(webReleaseResource)
             )
         }
-        val releaseResource = pipelineTemplateResourceService.getLatestReleasedResource(
+        // 当前最新的正式版本
+        val latestReleaseResource = pipelineTemplateResourceService.getLatestReleasedResource(
             projectId = projectId,
             templateId = templateId
         ) ?: return PipelineTemplateDraftStatusResult(status = PipelineDraftStatus.NORMAL)
-        return if (releaseResource.version == baseVersion) {
+        return if (latestReleaseResource.version == releaseVersion) {
             PipelineTemplateDraftStatusResult(status = PipelineDraftStatus.NORMAL)
         } else {
             PipelineTemplateDraftStatusResult(
                 status = PipelineDraftStatus.BASE_OUTDATED,
-                draft = PipelineTemplateVersionSimple(baseResource),
-                release = PipelineTemplateVersionSimple(releaseResource)
+                draft = PipelineTemplateVersionSimple(webReleaseResource),
+                release = PipelineTemplateVersionSimple(latestReleaseResource)
             )
         }
     }

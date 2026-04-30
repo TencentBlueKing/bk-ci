@@ -633,8 +633,8 @@ interface UserPipelineTemplateV2Resource {
         @QueryParam("baseDraftVersion")
         baseDraftVersion: Int?,
         @Parameter(description = "前端当前编辑基线版本", required = false)
-        @QueryParam("baseVersion")
-        baseVersion: Long?
+        @QueryParam("releaseVersion")
+        releaseVersion: Long?
     ): Result<PipelineTemplateDraftStatusResult>
 
     @Operation(summary = "获取流水线草稿版本列表")

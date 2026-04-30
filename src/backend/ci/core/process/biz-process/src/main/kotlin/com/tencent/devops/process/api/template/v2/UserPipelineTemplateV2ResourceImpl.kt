@@ -726,7 +726,7 @@ class UserPipelineTemplateV2ResourceImpl(
         actionType: PipelineDraftActionType,
         version: Long?,
         baseDraftVersion: Int?,
-        baseVersion: Long?
+        releaseVersion: Long?
     ): Result<PipelineTemplateDraftStatusResult> {
         permissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
@@ -742,7 +742,7 @@ class UserPipelineTemplateV2ResourceImpl(
                 actionType = actionType,
                 version = version,
                 baseDraftVersion = baseDraftVersion,
-                baseVersion = baseVersion
+                releaseVersion = releaseVersion
             )
         )
     }
