@@ -993,15 +993,11 @@ class AuthAiServiceImpl(
         }
         val nowSec = System.currentTimeMillis() / 1000
         val expiredAt = nowSec + TimeUnit.DAYS.toSeconds(renewalDays.toLong())
-        return permissionApplyService.applyToJoinGroup(
+        return permissionResourceMemberService.renewalGroupMember(
             userId = userId,
-            applyJoinGroupInfo = ApplyJoinGroupInfo(
-                projectCode = projectId,
-                groupIds = groupIdList,
-                expiredAt = expiredAt.toString(),
-                applicant = userId,
-                reason = reason
-            )
+            projectCode = projectId,
+            groupIds = groupIdList,
+            expiredAt = expiredAt
         )
     }
 
