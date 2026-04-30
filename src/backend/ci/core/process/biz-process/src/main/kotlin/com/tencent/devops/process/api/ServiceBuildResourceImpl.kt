@@ -73,7 +73,6 @@ import com.tencent.devops.process.pojo.task.PipelineFailTaskDetail
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildMaintainFacadeService
 import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
-import com.tencent.devops.process.service.record.PipelineRecordModelService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
