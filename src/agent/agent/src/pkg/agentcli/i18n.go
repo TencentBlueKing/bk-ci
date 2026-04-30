@@ -97,6 +97,9 @@ func printUsageLocalized() {
 其他:
   version              打印版本号
     -f                 打印完整版本信息 (版本号 / Git Commit / 构建时间)
+  monitor              打印一次 collector(telegraf) 与 monitor 的采集结果到 stdout
+    -d 时长            collector 采样时长 (默认 3s)
+    -only monitor|collector  仅执行其中一条链路
   -h, --help           显示此帮助
   (无参数)             正常运行 Agent
 `)
