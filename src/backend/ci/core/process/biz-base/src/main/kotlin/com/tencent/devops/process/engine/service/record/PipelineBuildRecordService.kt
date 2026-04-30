@@ -829,13 +829,14 @@ class PipelineBuildRecordService @Autowired constructor(
         }
         return errorInfoList.map {
             PipelineFailTaskDetail(
-                stepId = it.taskId,
+                stepId = it.stageId ?: "",
                 taskId = it.taskId,
                 taskName = it.taskName,
                 jobId = it.containerId ?: "",
                 jobName = containerNameMap[it.containerId],
                 stageName = stageNameMap[it.stageId],
-                errorMsg = it.errorMsg
+                errorMsg = it.errorMsg,
+                matrixFlag = it.matrixFlag ?: false
             )
         }
     }
