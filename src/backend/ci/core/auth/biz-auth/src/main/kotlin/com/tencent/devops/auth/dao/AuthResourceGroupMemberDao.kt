@@ -365,6 +365,33 @@ class AuthResourceGroupMemberDao {
         }
     }
 
+    fun countResourceGroupMember(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String? = null,
+        resourceCode: String? = null,
+        memberId: String? = null,
+        memberType: String? = null,
+        iamGroupId: Int? = null,
+        maxExpiredTime: LocalDateTime? = null,
+        minExpiredTime: LocalDateTime? = null,
+        groupCode: String? = null
+    ): Long {
+        return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
+            val select = dslContext.selectCount().from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+            resourceType?.let { select.and(RESOURCE_TYPE.eq(resourceType)) }
+            memberId?.let { select.and(MEMBER_ID.eq(memberId)) }
+            memberType?.let { select.and(MEMBER_TYPE.eq(memberType)) }
+            iamGroupId?.let { select.and(IAM_GROUP_ID.eq(iamGroupId)) }
+            maxExpiredTime?.let { select.and(EXPIRED_TIME.le(maxExpiredTime)) }
+            minExpiredTime?.let { select.and(EXPIRED_TIME.ge(minExpiredTime)) }
+            resourceCode?.let { select.and(RESOURCE_CODE.eq(resourceCode)) }
+            groupCode?.let { select.and(GROUP_CODE.eq(groupCode)) }
+            select.fetchOne(0, Long::class.java) ?: 0L
+        }
+    }
+
     fun listProjectGroups(
         dslContext: DSLContext,
         projectCode: String,
