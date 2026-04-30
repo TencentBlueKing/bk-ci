@@ -200,10 +200,10 @@ class PipelineVersionFacadeService @Autowired constructor(
             }
         }
         // 草稿版本和版本名,如果有草稿版本,则使用草稿版本,否则使用最新版本
-        val (version, versionName) = if (draftResource == null) {
-            Pair(releaseVersion, releaseVersionName)
+        val (version, versionName, versionStatus) = if (draftResource == null) {
+            Triple(releaseVersion, releaseVersionName, releaseResource.status)
         } else {
-            Pair(draftResource.version, null)
+            Triple(draftResource.version, null, draftResource.status)
         }
         val permissions = pipelineListFacadeService.getPipelinePermissions(userId, projectId, pipelineId)
         val yamlExist = archiveFlag.takeUnless { it == true }?.run {
@@ -236,6 +236,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             permissions = permissions,
             version = version,
             versionName = versionName,
+            versionStatus = versionStatus,
             releaseVersion = releaseVersion,
             releaseVersionName = releaseVersionName,
             baseVersion = baseVersion,
