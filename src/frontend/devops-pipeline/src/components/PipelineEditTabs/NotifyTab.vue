@@ -162,28 +162,6 @@
     import { deepCopy } from '@/utils/util'
     import { mapGetters, mapActions } from 'vuex'
 
-    const defaultSuc = {
-        types: [],
-        groups: [],
-        users: '${{ci.actor}}',
-        wechatGroupFlag: false,
-        wechatGroup: '',
-        wechatGroupMarkdownFlag: false,
-        detailFlag: false,
-        content: window.pipelineVue?.$i18n?.t('settings.defaultSuc')
-    }
-
-    const defaultFail = {
-        types: [],
-        groups: [],
-        users: '${{ci.actor}}',
-        wechatGroupFlag: false,
-        wechatGroup: '',
-        wechatGroupMarkdownFlag: false,
-        detailFlag: false,
-        content: window.pipelineVue?.$i18n?.t('settings.defaultFail')
-    }
-
     export default {
         name: 'notify-tab',
         components: {
@@ -252,6 +230,30 @@
             ...mapGetters('atom', [
                 'isTemplate'
             ]),
+            defaultSuc () {
+                return {
+                    types: [],
+                    groups: [],
+                    users: '${{ci.actor}}',
+                    wechatGroupFlag: false,
+                    wechatGroup: '',
+                    wechatGroupMarkdownFlag: false,
+                    detailFlag: false,
+                    content: this.$t('settings.defaultSuc')
+                }
+            },
+            defaultFail () {
+                return {
+                    types: [],
+                    groups: [],
+                    users: '${{ci.actor}}',
+                    wechatGroupFlag: false,
+                    wechatGroup: '',
+                    wechatGroupMarkdownFlag: false,
+                    detailFlag: false,
+                    content: this.$t('settings.defaultFail')
+                }
+            },
             slideTitle () {
                 const actionType = this.editIndex > -1 ? this.$t('newui.editNotice') : this.$t('newui.addNotice')
                 const targetType = this.editType === 'failSubscriptionList' ? this.$t('settings.whenFail') : this.$t('settings.whenSuc')
@@ -292,7 +294,7 @@
                 if (index > -1 && this[type][index]) {
                     this.sliderEditItem = deepCopy(this[type][index])
                 } else {
-                    this.sliderEditItem = deepCopy(type === 'failSubscriptionList' ? defaultFail : defaultSuc)
+                    this.sliderEditItem = deepCopy(type === 'failSubscriptionList' ? this.defaultFail : this.defaultSuc)
                     if (this.isTemplate) {
                         this.sliderEditItem.detailFlag = true
                     }

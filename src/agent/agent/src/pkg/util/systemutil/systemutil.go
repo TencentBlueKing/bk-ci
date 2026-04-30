@@ -35,19 +35,57 @@ import (
 	"os/user"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/gofrs/flock"
 	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 )
 
 var GExecutableDir string
 
 var DevopsGateway string
+
+type agentIPCandidate struct {
+	ip          string
+	ifaceName   string
+	description string
+	isVirtual   bool
+	score       int
+}
+
+type agentInterfaceDetail struct {
+	friendlyName string
+	description  string
+	ifType       uint32
+	isVirtual    bool
+}
+
+type agentInterfaceLookup struct {
+	byIndex map[int]agentInterfaceDetail
+	byName  map[string]agentInterfaceDetail
+}
+
+type agentIPCacheEntry struct {
+	key       string
+	ip        string
+	expiresAt time.Time
+}
+
+type agentIPResolver func(ignoreIps []string) string
+
+var (
+	agentIPCacheMu      sync.Mutex
+	agentIPCache        agentIPCacheEntry
+	agentIPCacheTTL                     = 60 * time.Second
+	agentIPNow                          = time.Now
+	resolveAgentIPValue agentIPResolver = resolveAgentIP
+)
 
 const (
 	osWindows = "windows"
@@ -172,25 +210,89 @@ func GetHostName() string {
 
 // GetAgentIp 返回本机IP，但允许忽略指定的IP ignoreIps, 如果所有IP都命中ignoreIps，则最终会返回127.0.0.1或者真正通信的IP
 func GetAgentIp(ignoreIps []string) string {
-	defaultIp := "127.0.0.1"
-	ip, err := getLocalIp()
+	now := agentIPNow()
+	cacheKey := buildAgentIPCacheKey(ignoreIps)
+
+	agentIPCacheMu.Lock()
+	if agentIPCache.key == cacheKey && now.Before(agentIPCache.expiresAt) && agentIPCache.ip != "" {
+		cachedIP := agentIPCache.ip
+		agentIPCacheMu.Unlock()
+		return cachedIP
+	}
+	agentIPCacheMu.Unlock()
+
+	ip := resolveAgentIPValue(ignoreIps)
+
+	agentIPCacheMu.Lock()
+	agentIPCache = agentIPCacheEntry{
+		key:       cacheKey,
+		ip:        ip,
+		expiresAt: now.Add(agentIPCacheTTL),
+	}
+	agentIPCacheMu.Unlock()
+
+	return ip
+}
+
+func resolveAgentIP(ignoreIps []string) string {
+	fallbackIp := "127.0.0.1"
+	routeIp, err := getLocalIp()
 	if err == nil {
-		defaultIp = ip
+		if !shouldIgnoreIP(routeIp, ignoreIps) {
+			fallbackIp = routeIp
+		}
 	} else {
 		logs.Warn("failed to get ip by udp", err)
 	}
 
+	candidates, err := listAgentIPCandidates(routeIp, ignoreIps)
+	if err != nil || len(candidates) == 0 {
+		return fallbackIp
+	}
+
+	selected := candidates[0]
+	logs.Infof("select agent ip=%s routeIp=%s iface=%s desc=%s virtual=%t score=%d",
+		selected.ip, routeIp, selected.ifaceName, selected.description, selected.isVirtual, selected.score)
+	return selected.ip
+}
+
+func buildAgentIPCacheKey(ignoreIps []string) string {
+	if len(ignoreIps) == 0 {
+		return ""
+	}
+	cloned := append([]string(nil), ignoreIps...)
+	sort.Strings(cloned)
+	return strings.Join(cloned, ",")
+}
+
+func resetAgentIPCache() {
+	agentIPCacheMu.Lock()
+	defer agentIPCacheMu.Unlock()
+	agentIPCache = agentIPCacheEntry{}
+}
+
+func listAgentIPCandidates(routeIp string, ignoreIps []string) ([]agentIPCandidate, error) {
+	ifaceLookup, err := loadAgentInterfaceLookup()
+	if err != nil {
+		logs.Warnf("failed to load interface metadata: %s", err.Error())
+	}
+
 	ncs, err := net.Interfaces()
 	if err != nil {
-		return defaultIp
+		return nil, err
 	}
+
+	candidates := make([]agentIPCandidate, 0)
 	for _, nc := range ncs {
 		// 忽略没有启用的接口
 		if nc.Flags&net.FlagUp == 0 {
 			continue
 		}
+		if nc.Flags&net.FlagLoopback != 0 {
+			continue
+		}
 		// #3626 二次确认，需要排除虚拟网卡情况
-		if nc.HardwareAddr == nil {
+		if len(nc.HardwareAddr) == 0 {
 			continue
 		}
 		addresses, err := nc.Addrs()
@@ -209,19 +311,123 @@ func GetAgentIp(ignoreIps []string) string {
 				continue
 			}
 
-			if util.Contains(ignoreIps, ipNet.IP.String()) {
-				logs.Infof("skipIp=%s", ipNet.IP)
+			if shouldIgnoreIP(ipNet.IP.String(), ignoreIps) {
+				logs.Debugf("skipIp=%s", ipNet.IP)
 				continue
 			}
-			if ip == ipNet.IP.String() {
-				return ip // 匹配到该通信IP是真正的网卡IP
-			} else if defaultIp == ip { // 仅限于第一次找到合法ip，做赋值
-				defaultIp = ipNet.IP.String()
-			}
+
+			detail := ifaceLookup.get(nc)
+			candidates = append(candidates, buildAgentIPCandidate(nc, ipNet.IP, routeIp, detail))
 		}
 	}
 
-	return defaultIp
+	sort.SliceStable(candidates, func(i, j int) bool {
+		if candidates[i].score != candidates[j].score {
+			return candidates[i].score > candidates[j].score
+		}
+		if candidates[i].ifaceName != candidates[j].ifaceName {
+			return candidates[i].ifaceName < candidates[j].ifaceName
+		}
+		return candidates[i].ip < candidates[j].ip
+	})
+
+	return candidates, nil
+}
+
+func (l agentInterfaceLookup) get(nc net.Interface) agentInterfaceDetail {
+	if detail, ok := l.byIndex[nc.Index]; ok {
+		return detail
+	}
+	if detail, ok := l.byName[strings.ToLower(nc.Name)]; ok {
+		return detail
+	}
+
+	return agentInterfaceDetail{
+		friendlyName: nc.Name,
+		description:  nc.Name,
+		isVirtual:    isLikelyVirtualInterface(nc.Name),
+	}
+}
+
+func buildAgentIPCandidate(nc net.Interface, ip net.IP, routeIp string, detail agentInterfaceDetail) agentIPCandidate {
+	score := 0
+	if !detail.isVirtual {
+		score += 200
+	} else {
+		score -= 200
+	}
+	if nc.Flags&net.FlagBroadcast != 0 {
+		score += 20
+	}
+	if nc.Flags&net.FlagPointToPoint == 0 {
+		score += 10
+	}
+	if len(nc.HardwareAddr) > 0 {
+		score += 10
+	}
+	if detail.ifType == 6 || detail.ifType == 71 {
+		score += 40
+	}
+	if ip.String() == routeIp {
+		score += 100
+	}
+
+	return agentIPCandidate{
+		ip:          ip.String(),
+		ifaceName:   detail.friendlyName,
+		description: detail.description,
+		isVirtual:   detail.isVirtual,
+		score:       score,
+	}
+}
+
+func shouldIgnoreIP(ip string, ignoreIps []string) bool {
+	target := net.ParseIP(ip)
+	if target == nil {
+		return false
+	}
+
+	for _, ignoreIp := range ignoreIps {
+		if ignoreIp == ip {
+			return true
+		}
+		if !strings.Contains(ignoreIp, "/") {
+			continue
+		}
+		_, ipNet, err := net.ParseCIDR(ignoreIp)
+		if err == nil && ipNet.Contains(target) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func isLikelyVirtualInterface(name string) bool {
+	lowerName := strings.ToLower(name)
+	keywords := []string{
+		"vethernet",
+		"default switch",
+		"wsl",
+		"docker",
+		"container",
+		"virtualbox",
+		"host-only",
+		"vmware network adapter",
+		"loopback",
+		"npcap",
+		"ngnclient",
+		"vpn",
+		"wireguard",
+		"tap-",
+		"hyper-v",
+	}
+	for _, keyword := range keywords {
+		if strings.Contains(lowerName, keyword) {
+			return true
+		}
+	}
+	return false
 }
 
 // ExitProcess flushes logs and exits with the given code.

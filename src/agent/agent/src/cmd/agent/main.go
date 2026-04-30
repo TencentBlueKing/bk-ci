@@ -95,7 +95,9 @@ func main() {
 
 	go envs.InitEnvPolling()
 
-	logEnv()
+	if isDebug {
+		logEnv()
+	}
 
 	agent.Run(isDebug)
 }
