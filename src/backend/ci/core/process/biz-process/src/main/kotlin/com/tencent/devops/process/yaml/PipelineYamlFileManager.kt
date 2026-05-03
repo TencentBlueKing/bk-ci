@@ -272,7 +272,7 @@ class PipelineYamlFileManager @Autowired constructor(
     fun renameYamlFile(event: PipelineYamlFileEvent) {
         with(event) {
             logger.info(
-                "[PAC_PIPELINE]|rename pipeline yaml|$eventId|$projectId|$repoHashId|$filePath|$ref"
+                "[PAC_PIPELINE]|rename pipeline yaml|$eventId|$projectId|$repoHashId|$filePath|$oldFilePath|$ref"
             )
             checkParam()
             if (oldFilePath.isNullOrBlank()) {
@@ -1164,7 +1164,8 @@ class PipelineYamlFileManager @Autowired constructor(
         )
         if (oldYamlInfo == null && newYamlInfo == null) {
             logger.info(
-                "[PAC_PIPELINE]|rename yaml pipeline not found|$eventId|$projectId|$repoHashId|$filePath"
+                "[PAC_PIPELINE]|rename yaml pipeline not found|" +
+                    "$eventId|$projectId|$repoHashId|$filePath|$oldFilePath|$ref"
             )
             createOrUpdateYamlFile(this)
             return
@@ -1248,7 +1249,7 @@ class PipelineYamlFileManager @Autowired constructor(
         if (!needCreateVersion) {
             logger.info(
                 "[PAC_PIPELINE]|rename yaml pipeline not need create version|" +
-                    "$eventId|$projectId|$repoHashId|$filePath"
+                    "$eventId|$projectId|$repoHashId|$filePath|$oldFilePath|$ref|$commitId|$blobId"
             )
             return null
         }
@@ -1291,6 +1292,14 @@ class PipelineYamlFileManager @Autowired constructor(
             ref = ref,
             version = deployPipelineResult.version,
             needCreateNewInfo = newYamlInfo == null
+        )
+        // 重命名后,可能修改文件路径,需要更新流水线组
+        pipelineViewGroupService.updateGroupAfterPipelineUpdate(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineName = deployPipelineResult.pipelineName,
+            creator = userId,
+            userId = userId
         )
         return deployPipelineResult
     }
@@ -1335,16 +1344,17 @@ class PipelineYamlFileManager @Autowired constructor(
         if (ref == defaultBranch) {
             return true
         }
-        val defaultBranchFileExisted = pipelineYamlFileService.getBranchFilePath(
+        val defaultBranchFile = pipelineYamlFileService.getBranchFilePath(
             projectId = projectId,
             repoHashId = repoHashId,
             branch = defaultBranch,
-            filePath = filePath
-        )?.deleted ?: true
-        if (defaultBranchFileExisted) {
+            filePath = oldFilePath
+        )
+        // 默认分支是否存在旧文件,存在则不删除info信息
+        if (defaultBranchFile != null && !defaultBranchFile.deleted) {
             logger.info(
                 "[PAC_PIPELINE]|default branch file exists, keep old yaml info|" +
-                        "$eventId|$projectId|$repoHashId|$oldFilePath|$ref"
+                    "$eventId|$projectId|$repoHashId|$oldFilePath|$ref"
             )
             return false
         }
