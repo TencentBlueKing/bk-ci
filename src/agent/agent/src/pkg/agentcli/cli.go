@@ -58,6 +58,8 @@ func Run(workDir string, args []string) {
 		err = handleReinstall(workDir, args[1:])
 	case "status":
 		err = handleStatus(workDir)
+	case "monitor":
+		err = handleMonitor(workDir, args[1:])
 	default:
 		printErr(msgf("unknown command: %s", "未知命令: %s", args[0]))
 		printUsageLocalized()
@@ -74,7 +76,7 @@ func Run(workDir string, args []string) {
 func IsSubcommand(arg string) bool {
 	switch arg {
 	case "install", "uninstall", "start", "stop", "repair", "reinstall", "status",
-		"version", "debug",
+		"version", "debug", "monitor",
 		"-h", "--help", "help":
 		return true
 	}

@@ -3,54 +3,11 @@
 
 package agentcli
 
-/*
-#cgo LDFLAGS: -framework CoreFoundation
-#include <CoreFoundation/CoreFoundation.h>
-
-// getAvailableCapacityForImportantUsage returns the available capacity in bytes
-// consistent with what macOS "System Information" reports (includes purgeable space).
-// Falls back to -1 on error.
-long long getAvailableCapacityForImportantUsage(const char *path) {
-    CFStringRef pathStr = CFStringCreateWithCString(NULL, path, kCFStringEncodingUTF8);
-    if (!pathStr) return -1;
-
-    CFURLRef url = CFURLCreateWithFileSystemPath(NULL, pathStr, kCFURLPOSIXPathStyle, true);
-    CFRelease(pathStr);
-    if (!url) return -1;
-
-    CFErrorRef err = NULL;
-    CFNumberRef val = NULL;
-
-    // kCFURLVolumeAvailableCapacityForImportantUsageKey
-    // Equivalent to NSURLVolumeAvailableCapacityForImportantUsageKey
-    CFStringRef key = CFSTR("NSURLVolumeAvailableCapacityForImportantUsageKey");
-    CFArrayRef keys = CFArrayCreate(NULL, (const void **)&key, 1, &kCFTypeArrayCallBacks);
-    if (!keys) { CFRelease(url); return -1; }
-
-    CFDictionaryRef props = CFURLCopyResourcePropertiesForKeys(url, keys, &err);
-    CFRelease(keys);
-    CFRelease(url);
-
-    if (!props) {
-        if (err) CFRelease(err);
-        return -1;
-    }
-
-    val = CFDictionaryGetValue(props, key);
-    long long result = -1;
-    if (val) {
-        CFNumberGetValue(val, kCFNumberLongLongType, &result);
-    }
-    CFRelease(props);
-    return result;
-}
-*/
-import "C"
-
 import (
 	"fmt"
 	"syscall"
-	"unsafe"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/diskutil"
 )
 
 func checkDiskSpace(workDir string) {
@@ -67,13 +24,9 @@ func checkDiskSpace(workDir string) {
 
 	// Use macOS Foundation API to get available capacity including purgeable space,
 	// which matches what macOS "System Information" (About This Mac) reports.
-	cpath := C.CString(workDir)
-	defer C.free(unsafe.Pointer(cpath))
-	importantFree := int64(C.getAvailableCapacityForImportantUsage(cpath))
-
 	var free uint64
-	if importantFree > 0 {
-		free = uint64(importantFree)
+	if avail, ok := diskutil.AvailableCapacity(workDir); ok && avail > 0 {
+		free = avail
 	} else {
 		// Fallback to statvfs value
 		free = stat.Bavail * uint64(stat.Bsize)
