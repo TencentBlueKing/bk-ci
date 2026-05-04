@@ -1307,7 +1307,7 @@ class PipelineYamlFileManager @Autowired constructor(
     private fun PipelineYamlFileEvent.deleteOldYamlPipeline(needDeleteOldInfo: Boolean) {
         logger.info(
             "[PAC_PIPELINE]|delete old yaml pipeline|" +
-                "$eventId|$projectId|$repoHashId|$filePath|$needDeleteOldInfo"
+                "$eventId|$projectId|$repoHashId|$filePath|$oldFilePath|$needDeleteOldInfo"
         )
         pipelineYamlService.deleteOldFile(
             projectId = projectId,
@@ -1318,7 +1318,7 @@ class PipelineYamlFileManager @Autowired constructor(
             needDeleteOldInfo = needDeleteOldInfo
         )
         // 删除流水线,如果关联的流水线组下流水线已经为空,应该删除
-        if (!isTemplate && ref == defaultBranch) {
+        if (!isTemplate && needDeleteOldInfo) {
             val directory = GitActionCommon.getCiDirectory(oldFilePath)
             pipelineYamlViewService.deleteEmptyYamlView(
                 userId = userId,
