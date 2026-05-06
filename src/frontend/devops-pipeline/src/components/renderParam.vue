@@ -1,5 +1,5 @@
 <template>
-    <section class="render-param">
+    <section :class="['render-param', { 'is-form-list-param': isFormListParam(param.type) }]">
         <!-- desc在form-field中不需要显示，由于v-bind="param",导致desc显示问题，所以这里需要重写传入desc为空 -->
         <form-field
             v-bind="param"
@@ -15,11 +15,12 @@
         >
             <section class="component-row">
                 <component
+                    ref="paramComponent"
                     :is="param.component"
                     flex
                     click-unfold
                     show-select-all
-                    v-bind="Object.assign({}, param, { id: undefined, name: param.fieldName })"
+                    v-bind="Object.assign({}, param, { id: undefined, name: param.fieldName }, isFormListParam(param.type) ? { columns: 2 } : {})"
                     :handle-change="handleParamUpdate"
                     :placeholder="param.placeholder"
                     :disabled="disabled || param.isDelete"
@@ -61,13 +62,15 @@
     import CascadeRequestSelector from '@/components/atomFormField/CascadeRequestSelector'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import FileParamInput from '@/components/atomFormField/FileParamInput'
+    import FormListParamInput from '@/components/atomFormField/FormListParamInput'
     import RequestSelector from '@/components/atomFormField/RequestSelector'
     import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import metadataList from '@/components/common/metadata-list'
-    import { COMMON_PARAM_PREFIX, isObject } from '@/utils/util'
+    import { isFormListParam } from '@/store/modules/atom/paramsConfig'
+    import { isObject } from '@/utils/util'
     export default {
         components: {
             Selector,
@@ -78,6 +81,7 @@
             FormField,
             metadataList,
             FileParamInput,
+            FormListParamInput,
             CascadeRequestSelector
         },
         props: {
@@ -120,9 +124,21 @@
             }
         },
         methods: {
+            isFormListParam,
             isObject,
-            handleRemoveParamItem (id)  {
+            handleRemoveParamItem (id) {
                 this.$emit('remove-param', id)
+            },
+            // FORM_LIST 参数把校验委托给内层 FormListParamInput.validate()，
+            // 用以逐行检查每个必填子字段
+            validate () {
+                if (isFormListParam(this.param?.type)) {
+                    const comp = this.$refs.paramComponent
+                    if (comp && typeof comp.validate === 'function') {
+                        return comp.validate()
+                    }
+                }
+                return true
             }
         }
     }
@@ -181,6 +197,10 @@
     }
     .is-change-param {
         background: #FDF4E8 !important;
+    }
+
+    .is-form-list-param {
+        width: 100%;
     }
 
     

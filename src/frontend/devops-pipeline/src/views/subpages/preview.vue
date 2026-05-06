@@ -684,8 +684,9 @@
                 if (!paramsValid) return
                 const params = this.getExecuteParams(this.pipelineId) ?? {}
                 Object.keys(params).forEach(key => {
-                    if (key !== 'buildNo' && isObject(params[key])) {
-                        params[key] = JSON.stringify(params[key])
+                    const val = params[key]
+                    if (key !== 'buildNo' && (isObject(val) || Array.isArray(val))) {
+                        params[key] = JSON.stringify(val)
                     }
                 })
                 const skipAtoms = this.getSkipedAtoms()

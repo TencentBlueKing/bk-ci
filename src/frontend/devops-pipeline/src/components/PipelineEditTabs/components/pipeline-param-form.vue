@@ -57,6 +57,7 @@
             </form-field>
 
             <param-value-option
+                ref="paramValueOptionRef"
                 :param="param"
                 :disabled="disabled"
                 :value-required="paramType === 'constant'"
@@ -371,6 +372,13 @@
                     return acc
                 }, {})
                 this.handleUpdateParam(key, displayCondition)
+            },
+            validateFormList () {
+                const paramValueOption = this.$refs.paramValueOptionRef
+                if (paramValueOption && typeof paramValueOption.validateFormList === 'function') {
+                    return paramValueOption.validateFormList()
+                }
+                return true
             }
         }
     }

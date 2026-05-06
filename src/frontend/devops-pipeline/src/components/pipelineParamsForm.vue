@@ -14,6 +14,7 @@
                             v-for="param in paramsListMap[key]"
                             v-if="param.show"
                             :key="param.id"
+                            :class="{ 'is-form-list-param': isFormListParam(param.type) }"
                         >
                             <render-param
                                 
@@ -40,6 +41,7 @@
                     v-for="param in paramList"
                     v-if="param.show"
                     :key="param.id"
+                    :class="{ 'is-form-list-param': isFormListParam(param.type) }"
                 >
                     <render-param
                         
@@ -79,6 +81,7 @@
         isCodelibParam,
         isEnumParam,
         isFileParam,
+        isFormListParam,
         isGitParam,
         isMultipleParam,
         isRemoteType,
@@ -254,6 +257,25 @@
                         }
                     }
 
+                    if (isFormListParam(param.type)) {
+                        // FORM_LIST：value 必须是对象数组，再透传字段定义
+                        const paramValue = this.paramValues[param.id]
+                        let formListValue = []
+                        if (Array.isArray(paramValue)) {
+                            formListValue = paramValue
+                        } else if (typeof paramValue === 'string' && paramValue) {
+                            try {
+                                const parsed = JSON.parse(paramValue)
+                                formListValue = Array.isArray(parsed) ? parsed : []
+                            } catch (e) {
+                                formListValue = []
+                            }
+                        }
+                        Object.assign(restParam, {
+                            value: formListValue,
+                            fields: param.fields || []
+                        })
+                    }
                     if (isFileParam(param.type)) {
                         // 预览时，重新上传文件，会把文件类型的value变成对象而非字符串，这时要更新随机串回显到页面上
                         const paramValue = this.paramValues[param.id]
@@ -294,6 +316,7 @@
         },
         methods: {
             isArtifactoryParam,
+            isFormListParam,
             isObject,
             getBranchOption,
             isEqual (a, b) {
@@ -388,17 +411,44 @@
             },
             async validateAll () {
                 const refsList = this.sortCategory ? (this.$refs.categoryRenderParam ?? []) : (this.$refs.renderParam ?? [])
+                let isValid = true
+                // 同时跑 vee-validate（required / pattern 等）和组件自身的 validate（如 FORM_LIST 逐行校验）
                 for (let i = 0; i < refsList.length; i++) {
                     const ref = refsList[i]
-                    const res = await ref.$validator?.validateAll?.()
-                    console.log(res, 'validate res')
-                    if (!res) {
-                        return false
+                    const veeRes = await ref.$validator?.validateAll?.()
+                    if (veeRes === false) isValid = false
+                    if (typeof ref.validate === 'function') {
+                        const customRes = await ref.validate()
+                        if (customRes === false) isValid = false
                     }
-                    
                 }
-                return true
+                return isValid
             }
         }
     }
 </script>
+
+<style lang="scss">
+    .is-form-list-param {
+        width: 100%;
+        grid-column: 1 / -1;
+
+        .form-field.bk-form-item {
+            display: flex;
+            flex-direction: column;
+
+            .bk-label.atom-form-label {
+                text-align: left !important;
+                width: auto !important;
+                display: block !important;
+                margin-bottom: 4px;
+                padding-right: 0 !important;
+            }
+
+            .bk-form-content {
+                width: 100% !important;
+                margin-left: 0 !important;
+            }
+        }
+    }
+</style>
