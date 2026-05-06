@@ -45,6 +45,16 @@
             <bk-button
                 v-else
                 :disabled="strategyList.length < 2"
+                v-perm="{
+                    hasPermission: currentEnv.canEdit,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: ENV_RESOURCE_TYPE,
+                        resourceCode: envHashId,
+                        action: ENV_RESOURCE_ACTION.EDIT
+                    }
+                }"
                 @click="handleStartSort"
             >
                 {{ $t('environment.scheduling.adjustSort') }}
@@ -82,6 +92,11 @@
                                     v-model="strategy.enabled"
                                     size="small"
                                     theme="primary"
+                                    :disabled="isStrategyDisabled(strategy)"
+                                    v-bk-tooltips="{
+                                        content: $t('environment.scheduling.atLeastOneEnabled'),
+                                        disabled: !isStrategyDisabled(strategy)
+                                    }"
                                     @change="(value) => handleToggleStrategy(strategy, value)"
                                 />
                                 <span
@@ -117,6 +132,11 @@
                                 </bk-button>
                                 <bk-button
                                     text
+                                    :disabled="isStrategyDisabled(strategy)"
+                                    v-bk-tooltips="{
+                                        content: $t('environment.scheduling.atLeastOneEnabled'),
+                                        disabled: !isStrategyDisabled(strategy)
+                                    }"
                                     v-perm="{
                                         hasPermission: currentEnv.canDelete,
                                         disablePermissionApi: true,
@@ -229,6 +249,13 @@
             const showStrategyDialog = ref(false)
             const isEditMode = ref(false)
             const currentStrategy = ref(null)
+
+            // 判断策略是否应该被禁用（当只剩一个启用策略时，该策略不可禁用）
+            const isStrategyDisabled = (strategy) => {
+                if (!strategy.enabled) return false
+                const enabledCount = strategyList.value.filter(s => s.enabled).length
+                return enabledCount === 1
+            }
 
             // 监听 envHashId 变化，重新获取数据
             watch(() => envHashId.value, () => {
@@ -543,6 +570,7 @@
                 showStrategyDialog,
                 isEditMode,
                 currentStrategy,
+                isStrategyDisabled,
                 projectId,
                 envHashId,
                 currentEnv,

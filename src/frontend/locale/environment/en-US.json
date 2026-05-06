@@ -518,6 +518,7 @@
         "addLabel": "Add Label",
         "labelRequired": "Label key and value cannot be empty",
         "atLeastOneCondition": "At least one condition must be selected",
-        "fetchFailed": "Failed to fetch scheduling strategy list"
+        "fetchFailed": "Failed to fetch scheduling strategy list",
+        "atLeastOneEnabled": "At least one scheduling strategy must be enabled"
     }
 }

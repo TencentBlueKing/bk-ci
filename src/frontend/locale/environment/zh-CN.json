@@ -513,6 +513,7 @@
         "addLabel": "添加标签",
         "labelRequired": "标签键和值不能为空",
         "atLeastOneCondition": "至少选择一个条件",
-        "fetchFailed": "获取调度策略列表失败"
+        "fetchFailed": "获取调度策略列表失败",
+        "atLeastOneEnabled": "调度策略至少启用一个策略"
     }
 }

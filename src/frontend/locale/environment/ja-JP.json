@@ -513,6 +513,7 @@
         "addLabel": "ラベルを追加",
         "labelRequired": "ラベルキーと値は空にできません",
         "atLeastOneCondition": "少なくとも1つの条件を選択する必要があります",
-        "fetchFailed": "スケジュール戦略リストの取得に失敗しました"
+        "fetchFailed": "スケジュール戦略リストの取得に失敗しました",
+        "atLeastOneEnabled": "スケジュール戦略は少なくとも1つ有効にする必要があります"
     }
 }
