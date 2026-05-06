@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.common.Timeout
@@ -193,16 +194,20 @@ object TaskUtils {
         buildId: String,
         taskId: String,
         additionalOptions: ElementAdditionalOptions?,
-        executeCount: Int? = null
-    ): Boolean {
-        return if (additionalOptions?.retryWhenFailed == true) {
+        executeCount: Int? = null,
+        taskAtom: String?
+    ) = when {
+        additionalOptions?.retryWhenFailed != true -> true
+        // 人工审核插件若设置超时时间，则需刷新开始时间，否则[超时自动重试]会直接超时失败
+        taskAtom == ManualReviewUserTaskElement.classType -> true
+        else -> {
+            // 获取Redis重试次数
             val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
             val retryCount = redisOperation.get(
                 getFailRetryTaskRedisKey(buildId = buildId, taskId = taskId)
             )?.toInt() ?: 0
+            // 核心判断：重试次数 < 1 或 执行次数存在且大于1
             retryCount < 1 || (executeCount != null && executeCount > 1)
-        } else {
-            true
         }
     }
 
