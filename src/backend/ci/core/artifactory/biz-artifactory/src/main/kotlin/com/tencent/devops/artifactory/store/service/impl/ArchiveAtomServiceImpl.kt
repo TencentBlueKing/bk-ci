@@ -44,6 +44,7 @@ import com.tencent.devops.common.api.constant.STATIC
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.ShaUtils
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
@@ -51,9 +52,9 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomArchiveResource
-import com.tencent.devops.store.api.common.ServiceStoreComponentResource
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
+import com.tencent.devops.store.pojo.common.ATOM_PKG_SIZE_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_UPLOAD_ID_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.KEY_PACKAGE_PATH
 import com.tencent.devops.store.pojo.common.StorePackageInfoReq
@@ -63,7 +64,6 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import java.util.concurrent.TimeUnit
 import org.apache.commons.io.FileUtils
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -71,7 +71,6 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.util.FileSystemUtils
 
 @Suppress("ALL")
@@ -96,10 +95,6 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
 
     @Autowired
     lateinit var bkRepoClient: BkRepoClient
-
-    @Autowired
-    @Qualifier("atomPkgSizeExecutor")
-    lateinit var atomPkgSizeExecutor: ThreadPoolTaskExecutor
 
     override fun archiveAtom(
         userId: String,
@@ -192,8 +187,6 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             // 普通发布类型会重新生成一条插件版本记录
             UUIDUtil.generate()
         }
-        // 在 finalAtomId 确定后再提交异步任务，避免竞态条件
-        asyncHandleAtomPkgSize(storePackageInfos, finalAtomId)
         if (!archiveAtomRequest.reUploadFlag) {
             val updateAtomInfoResult = client.get(ServiceMarketAtomArchiveResource::class)
                 .updateAtomPkgInfo(
@@ -213,6 +206,14 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             redisOperation.set(
                 key = "$ATOM_UPLOAD_ID_KEY_PREFIX:$atomCode:$version",
                 value = finalAtomId,
+                expiredInSecond = TimeUnit.DAYS.toSeconds(1)
+            )
+        }
+        // 存储包大小信息到 Redis，供后续创建版本记录时使用
+        if (storePackageInfos.isNotEmpty()) {
+            redisOperation.set(
+                key = "$ATOM_PKG_SIZE_KEY_PREFIX:$atomCode:$version",
+                value = JsonUtil.toJson(storePackageInfos),
                 expiredInSecond = TimeUnit.DAYS.toSeconds(1)
             )
         }
@@ -383,26 +384,5 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             file.delete()
         }
         return true
-    }
-
-    private fun asyncHandleAtomPkgSize(
-        storePackageInfoReqs: List<StorePackageInfoReq>,
-        storeId: String
-    ) {
-        if (storePackageInfoReqs.isEmpty()) {
-            logger.info("asyncHandleAtomPkgSize|storePackageInfoReqs is empty, skip")
-            return
-        }
-        atomPkgSizeExecutor.submit {
-            try {
-                val updateAtomInfoResult = client.get(ServiceStoreComponentResource::class).updateComponentVersionSize(
-                    storeId = storeId,
-                    storePackageInfoReqs = storePackageInfoReqs
-                )
-                logger.info("asyncHandleAtomPkgSize is $updateAtomInfoResult")
-            } catch (ignored: Throwable) {
-                logger.warn("asyncHandleAtomPkgSize execute error", ignored)
-            }
-        }
     }
 }

@@ -105,6 +105,7 @@ import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.UpdateAtomInfo
 import com.tencent.devops.store.pojo.atom.UpdateAtomPackageInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.common.ATOM_PKG_SIZE_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_UPLOAD_ID_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ERROR_JSON_NAME
@@ -502,13 +503,22 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             props = props,
             marketAtomUpdateRequest = marketAtomUpdateRequest
         )
+        val packageSize = redisOperation.get(
+            "$ATOM_PKG_SIZE_KEY_PREFIX:${marketAtomUpdateRequest.atomCode}:${marketAtomUpdateRequest.version}"
+        )
         marketAtomVersionLogDao.addMarketAtomVersion(
             dslContext = context,
             userId = userId,
             atomId = atomId,
             releaseType = releaseType,
-            versionContent = marketAtomUpdateRequest.versionContent
+            versionContent = marketAtomUpdateRequest.versionContent,
+            packageSize = packageSize
         )
+        if (!packageSize.isNullOrBlank()) {
+            redisOperation.delete(
+                "$ATOM_PKG_SIZE_KEY_PREFIX:${marketAtomUpdateRequest.atomCode}:${marketAtomUpdateRequest.version}"
+            )
+        }
         val atomPackageSourceType = getAtomPackageSourceType(repositoryHashId)
         if (atomPackageSourceType != PackageSourceTypeEnum.UPLOAD) {
             marketAtomEnvInfoDao.deleteAtomEnvInfoById(context, atomId)
@@ -909,13 +919,22 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         if (atomPackageSourceType != PackageSourceTypeEnum.UPLOAD) {
             marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomEnvRequests)
         }
+        val packageSize = redisOperation.get(
+            "$ATOM_PKG_SIZE_KEY_PREFIX:${marketAtomUpdateRequest.atomCode}:${marketAtomUpdateRequest.version}"
+        )
         marketAtomVersionLogDao.addMarketAtomVersion(
             dslContext = context,
             userId = userId,
             atomId = atomId,
             releaseType = marketAtomUpdateRequest.releaseType.releaseType.toByte(),
-            versionContent = marketAtomUpdateRequest.versionContent
+            versionContent = marketAtomUpdateRequest.versionContent,
+            packageSize = packageSize
         )
+        if (!packageSize.isNullOrBlank()) {
+            redisOperation.delete(
+                "$ATOM_PKG_SIZE_KEY_PREFIX:${marketAtomUpdateRequest.atomCode}:${marketAtomUpdateRequest.version}"
+            )
+        }
         // 通过websocket推送状态变更消息
         storeWebsocketService.sendWebsocketMessage(userId, atomId)
     }

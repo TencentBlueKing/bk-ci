@@ -68,6 +68,7 @@ const val ATOM_INPUT = "input" // 插件输入
 const val ATOM_OUTPUT = "output" // 插件输出
 const val ATOM_NAMESPACE = "namespace" // 插件命名空间
 const val ATOM_UPLOAD_ID_KEY_PREFIX = "ATOM_UPLOAD_ID" // 插件包上传ID值Key前缀
+const val ATOM_PKG_SIZE_KEY_PREFIX = "ATOM_PKG_SIZE" // 插件包大小信息Key前缀
 const val STORE_PUBLIC_FLAG_KEY_PREFIX = "STORE_PUBLIC_FLAG_KEY" // 公共组件Key前缀
 const val STORE_NORMAL_PROJECT_RUN_INFO_KEY_PREFIX = "STORE_NORMAL_PROJECT_RUN_INFO_KEY" // 组件对应普通项目的运行时信息Key前缀
 const val STORE_LATEST_TEST_FLAG_KEY_PREFIX = "STORE_LATEST_TEST_FLAG"
