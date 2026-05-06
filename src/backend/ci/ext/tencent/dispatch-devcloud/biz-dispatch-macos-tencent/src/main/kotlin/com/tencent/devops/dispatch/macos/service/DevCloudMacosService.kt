@@ -557,7 +557,7 @@ class DevCloudMacosService @Autowired constructor(
         )
 
         val debugLoginRequest = DevCloudMacosVmDebugLoginRequest(taskId = taskId)
-        // 调用debug接口，actionCode非0时重试最多3次，每次间隔5秒
+        // 调用debug接口，actionCode非200时重试最多3次，每次间隔5秒
         val maxRetryCount = 6
         var debugLoginResponse: DevCloudMacosVmDebugLoginResponse? = null
         for (retryCount in 0..maxRetryCount) {
@@ -573,7 +573,7 @@ class DevCloudMacosService @Autowired constructor(
                 break
             }
             logger.warn(
-                "Debug login returned non-zero actionCode: ${debugLoginResponse.actionCode}, " +
+                "Debug login returned non-success actionCode: ${debugLoginResponse.actionCode}, " +
                     "actionMessage: ${debugLoginResponse.actionMessage}, taskId: $taskId, " +
                     "retryCount: $retryCount/$maxRetryCount"
             )
@@ -582,7 +582,11 @@ class DevCloudMacosService @Autowired constructor(
             }
         }
 
-        if (debugLoginResponse != null && debugLoginResponse.actionCode == 0 && !debugTaskInfo.isExistingDebug) {
+        if (
+            debugLoginResponse != null &&
+            debugLoginResponse.actionCode == 200 &&
+            !debugTaskInfo.isExistingDebug
+        ) {
             // Running状态复用已有VM时，debugLogin成功后记录debug信息到debug表
             logger.info("Debug login successful for taskId: $taskId, saving debug history record")
             debugHistoryDao.saveDebugHistory(
@@ -596,7 +600,7 @@ class DevCloudMacosService @Autowired constructor(
                 newCreatedVm = newCreatedVm,
                 userId = userId
             )
-        } else if (debugLoginResponse == null || debugLoginResponse.actionCode != 0) {
+        } else if (debugLoginResponse == null || debugLoginResponse.actionCode != 200) {
             logger.error(
                 "Debug login failed for taskId: $taskId, " +
                     "actionCode: ${debugLoginResponse?.actionCode}, " +

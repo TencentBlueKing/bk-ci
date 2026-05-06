@@ -15,7 +15,7 @@ class DebugHistoryDao {
     }
 
     /**
-     * 保存调试记录
+     * 保存或更新调试记录
      * @param dslContext DSL上下文
      * @param projectId 项目ID
      * @param pipelineId 流水线ID
@@ -38,8 +38,9 @@ class DebugHistoryDao {
         newCreatedVm: Boolean,
         userId: String
     ): Long {
+        val now = LocalDateTime.now()
         with(TDebugHistory.T_DEBUG_HISTORY) {
-            return dslContext.insertInto(this)
+            dslContext.insertInto(this)
                 .set(PROJECT_ID, projectId)
                 .set(PIPELINE_ID, pipelineId)
                 .set(BUILD_ID, buildId)
@@ -48,10 +49,24 @@ class DebugHistoryDao {
                 .set(TASK_ID, taskId)
                 .set(NEW_CREATED_VM, newCreatedVm)
                 .set(USER_ID, userId)
-                .set(CREATE_TIME, LocalDateTime.now())
+                .set(CREATE_TIME, now)
                 .set(STATUS, STATUS_DEBUGGING)
-                .returning(ID)
-                .fetchOne()!!.id
+                .onDuplicateKeyUpdate()
+                .set(PROJECT_ID, projectId)
+                .set(PIPELINE_ID, pipelineId)
+                .set(TASK_ID, taskId)
+                .set(NEW_CREATED_VM, newCreatedVm)
+                .set(USER_ID, userId)
+                .set(STATUS, STATUS_DEBUGGING)
+                .set(UPDATE_TIME, now)
+                .execute()
+
+            return dslContext.select(ID)
+                .from(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .and(EXECUTE_COUNT.eq(executeCount))
+                .fetchOne(ID)!!
         }
     }
 
