@@ -386,7 +386,13 @@ interface ApigwBuildResourceV4 {
         buildNoStart: Int?,
         @Parameter(description = "构件号结束", required = false)
         @QueryParam("buildNoEnd")
-        buildNoEnd: Int?
+        buildNoEnd: Int?,
+        @Parameter(
+            description = "利用updateTime进行排序，true为降序，false为升序，null时以Build number 降序",
+            required = false, example = "null"
+        )
+        @QueryParam("updateTimeDesc")
+        updateTimeDesc: Boolean? = null
     ): Result<Page<LightBuildHistory>>
 
     @Operation(summary = "获取流水线手动启动参数", tags = ["v4_app_build_startInfo", "v4_user_build_startInfo"])

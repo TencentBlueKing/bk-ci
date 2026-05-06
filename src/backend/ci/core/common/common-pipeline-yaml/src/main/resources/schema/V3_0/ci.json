@@ -159,6 +159,14 @@
                     "items" : {
                       "type" : "string"
                     }
+                  },
+                  "action" : {
+                    "type" : "array",
+                    "uniqueItems" : true,
+                    "items" : {
+                      "enum" : [ "create", "delete" ]
+                    },
+                    "additionalItems" : false
                   }
                 }
               } ]
@@ -267,6 +275,18 @@
                   },
                   "skip-wip" : {
                     "type" : "boolean"
+                  },
+                  "labels" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "labels-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
                   }
                 }
               } ]
@@ -364,6 +384,18 @@
                   },
                   "skip-wip" : {
                     "type" : "boolean"
+                  },
+                  "labels" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "labels-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
                   }
                 }
               } ]
@@ -970,6 +1002,14 @@
                   "items" : {
                     "type" : "string"
                   }
+                },
+                "action" : {
+                  "type" : "array",
+                  "uniqueItems" : true,
+                  "items" : {
+                    "enum" : [ "create", "delete" ]
+                  },
+                  "additionalItems" : false
                 }
               }
             } ]
@@ -1078,6 +1118,18 @@
                 },
                 "skip-wip" : {
                   "type" : "boolean"
+                },
+                "labels" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
                 }
               }
             } ]
@@ -1175,6 +1227,18 @@
                 },
                 "skip-wip" : {
                   "type" : "boolean"
+                },
+                "labels" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
                 }
               }
             } ]
@@ -1688,13 +1752,7 @@
               "allow-modify-at-startup" : {
                 "type" : "boolean"
               },
-              "as-instance-input" : {
-                "type" : "boolean"
-              },
               "value-not-empty" : {
-                "type" : "boolean"
-              },
-              "sensitive" : {
                 "type" : "boolean"
               },
               "props" : {
@@ -1807,6 +1865,12 @@
               },
               "if" : {
                 "type" : "object"
+              },
+              "as-instance-input" : {
+                "type" : "boolean"
+              },
+              "sensitive" : {
+                "type" : "boolean"
               }
             }
           } ]
@@ -1865,9 +1929,6 @@
               "type" : "boolean"
             },
             "value-not-empty" : {
-              "type" : "boolean"
-            },
-            "sensitive" : {
               "type" : "boolean"
             },
             "props" : {
@@ -1980,6 +2041,12 @@
             },
             "if" : {
               "type" : "object"
+            },
+            "as-instance-input" : {
+              "type" : "boolean"
+            },
+            "sensitive" : {
+              "type" : "boolean"
             }
           }
         }
@@ -2165,6 +2232,9 @@
                   "fix" : {
                     "type" : "integer"
                   },
+                  "as-instance-input" : {
+                    "type" : "boolean"
+                  },
                   "build-no" : {
                     "type" : "object",
                     "additionalProperties" : false,
@@ -2346,6 +2416,15 @@
                           },
                           "privileged" : {
                             "type" : "boolean"
+                          },
+                          "network" : {
+                            "type" : "array",
+                            "items" : {
+                              "type" : "string"
+                            }
+                          },
+                          "user" : {
+                            "type" : "string"
                           }
                         }
                       },
@@ -2528,6 +2607,9 @@
         "fix" : {
           "type" : "integer"
         },
+        "as-instance-input" : {
+          "type" : "boolean"
+        },
         "build-no" : {
           "type" : "object",
           "additionalProperties" : false,
@@ -2550,7 +2632,7 @@
       "enum" : [ "INHERIT", "CLASSIC", "CONSTRAINT" ]
     },
     "cancel-policy" : {
-      "type" : "string"
+      "enum" : [ "BROAD", "RESTRICTED" ]
     }
   },
   "definitions" : {
@@ -2796,6 +2878,15 @@
                           },
                           "privileged" : {
                             "type" : "boolean"
+                          },
+                          "network" : {
+                            "type" : "array",
+                            "items" : {
+                              "type" : "string"
+                            }
+                          },
+                          "user" : {
+                            "type" : "string"
                           }
                         }
                       },

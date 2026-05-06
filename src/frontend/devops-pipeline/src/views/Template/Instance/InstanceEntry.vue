@@ -6,7 +6,7 @@
         <template>
             <header class="instance-entry-header">
                 <TemplateBreadCrumb
-                    :template-name="pipeline?.name"
+                    :template-name="templateName"
                     :is-loading="!pipeline"
                 />
                 <aside
@@ -67,6 +67,7 @@
             </main>
         </template>
         <ReleasePipelineSideSlider
+            ref="releaseSideSlider"
             v-model="showRelease"
             is-template-instance-mode
             :version="currentVersionId"
@@ -105,6 +106,7 @@
 
     const { proxy } = UseInstance()
     const instanceConfigRef = ref(null)
+    const releaseSideSlider = ref(null)
     const isLoading = ref(false)
     const showRelease = ref(false)
     const showBatchEdit = ref(false)
@@ -124,6 +126,7 @@
     const templateRefTypeById = computed(() => templateRefType.value === 'ID')
     const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
     const fetchPipelinesError = computed(() => proxy.$store?.state?.templates?.fetchPipelinesError)
+    const templateName =  computed(() => pipelineInfo.value?.name ?? pipeline.value?.name)
 
     const releaseBtnText = computed(() => {
         const type = proxy.$route.params?.type
@@ -219,6 +222,7 @@
                 theme: 'error',
                 message: proxy.$t(`unknown type, ${type}`)
             })
+            releaseSideSlider.value?.resetReleasing?.()
             return
         }
         const { valid, message } = checkInstanceListInValid()
@@ -227,6 +231,7 @@
                 theme: 'error',
                 message
             })
+            releaseSideSlider.value?.resetReleasing?.()
             throw new Error(message)
         }
         try {
@@ -263,10 +268,17 @@
                     ...value
                 }
             })
-            proxy.$store.commit(`templates/${SET_RELEASE_BASE_ID}`, res.data)
-            proxy.$store.commit(`templates/${SET_RELEASE_ING}`, true)
+            releaseSideSlider.value?.resetReleasing?.()
+            proxy.$nextTick(() => {
+                proxy.$store.commit(`templates/${SET_RELEASE_BASE_ID}`, res.data)
+                proxy.$store.commit(`templates/${SET_RELEASE_ING}`, true)
+            })
         } catch (e) {
-            console.error(e)
+            proxy.$showTips({
+                theme: 'error',
+                message: e.message || e
+            })
+            releaseSideSlider.value?.resetReleasing?.()
         }
     }
     function handleBatchEdit () {

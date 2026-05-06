@@ -151,6 +151,8 @@ class ProjectApprovalService @Autowired constructor(
                 params = arrayOf(projectId),
                 defaultMessage = "project $projectId is not exist"
             )
+        // 从审批表读取 kpiCode/kpiName
+        val projectApprovalInfo = projectApprovalDao.getByEnglishName(dslContext = dslContext, englishName = projectId)
         val projectCreateInfo = with(projectInfo) {
             ProjectCreateInfo(
                 projectName = projectName,
@@ -164,7 +166,11 @@ class ProjectApprovalService @Autowired constructor(
                 centerId = centerId?.toLong() ?: 0L,
                 centerName = centerName ?: "",
                 kind = kind ?: 0,
-                logoAddress = logoAddr
+                logoAddress = logoAddr,
+                productId = productId,
+                productName = projectApprovalInfo?.productName,
+                kpiCode = projectApprovalInfo?.kpiCode,
+                kpiName = projectApprovalInfo?.kpiName
             )
         }
         dslContext.transaction { configuration ->
@@ -197,7 +203,6 @@ class ProjectApprovalService @Autowired constructor(
             projectExtService.createExtProjectInfo(
                 userId = applicant,
                 authProjectId = authProjectId,
-                accessToken = null,
                 projectCreateInfo = projectCreateInfo,
                 createExtInfo = ProjectCreateExtInfo(needValidate = true, needAuth = true),
                 logoAddress = projectInfo.logoAddr
@@ -282,6 +287,9 @@ class ProjectApprovalService @Autowired constructor(
                 kind = projectInfo.kind,
                 projectType = projectType ?: 0,
                 productId = projectApprovalInfo.productId,
+                productName = projectApprovalInfo.productName,
+                kpiCode = projectApprovalInfo.kpiCode,
+                kpiName = projectApprovalInfo.kpiName,
                 properties = updateProjectProperties
             )
         }
@@ -325,6 +333,13 @@ class ProjectApprovalService @Autowired constructor(
                 )
             }
         }
+        // 同步共享制品开关变更到 BkRepo
+        projectExtService.syncShareArtifactIfChanged(
+            userId = applicant,
+            projectId = projectId,
+            oldProperties = projectProperties,
+            newProperties = updateProjectProperties
+        )
     }
 
     fun updateRejectOrRevoke(

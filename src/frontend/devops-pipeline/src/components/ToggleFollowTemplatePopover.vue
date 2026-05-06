@@ -2,7 +2,7 @@
     <bk-popover
         placement="top"
         max-width="400"
-        theme="light toggle-required"
+        :theme="popoverTheme"
         transfer
         class="toggle-required-param-popover"
     >
@@ -12,7 +12,8 @@
                 {
                     'is-follow': props.isFollowTemplate,
                     'is-collapsed': props.isCollapsed,
-                    'is-show-label': showLabel
+                    'is-show-label': showLabel,
+                    'is-not-stepId': props.isNoStepId
                 }
             ]"
             @click.stop="handleChangeStatus"
@@ -35,42 +36,47 @@
             </span>
         </span>
         <template slot="content">
-            <div
-                class="follow-popover-content"
-                v-bkloading="{
-                    isLoading: props.isLoading || initLoading,
-                    theme: 'primary',
-                    size: 'small'
-                }"
-            >
-                <div>
-                    <span class="current-status">{{ $t('template.currentStatus') }}</span>
-                    <div class="option-item current">
-                        {{ props.isFollowTemplate ? $t('template.follow') : $t('template.unfollow') }}
+            <template v-if="props.isNoStepId">
+                {{ $t('template.noStepIdTips') }}
+            </template>
+            <template v-else>
+                <div
+                    class="follow-popover-content"
+                    v-bkloading="{
+                        isLoading: props.isLoading || initLoading,
+                        theme: 'primary',
+                        size: 'small'
+                    }"
+                >
+                    <div>
+                        <span class="current-status">{{ $t('template.currentStatus') }}</span>
+                        <div class="option-item current">
+                            {{ props.isFollowTemplate ? $t('template.follow') : $t('template.unfollow') }}
+                            <div class="sub-title">
+                                {{
+                                    props.isFollowTemplate
+                                        ? $t('template.followTemplateTips', [classifyLabel || displayTypeText])
+                                        : $t('template.unfollowTemplateTips', [classifyLabel || displayTypeText])
+                              
+                                }}
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        class="option-item"
+                        @click.stop="handleChangeStatus"
+                    >
+                        {{ !props.isFollowTemplate ? $t('template.setFollow') : $t('template.setUnfollow') }}
                         <div class="sub-title">
                             {{
-                                props.isFollowTemplate
+                                !props.isFollowTemplate
                                     ? $t('template.followTemplateTips', [classifyLabel || displayTypeText])
                                     : $t('template.unfollowTemplateTips', [classifyLabel || displayTypeText])
-                          
                             }}
                         </div>
                     </div>
                 </div>
-                <div
-                    class="option-item"
-                    @click.stop="handleChangeStatus"
-                >
-                    {{ !props.isFollowTemplate ? $t('template.setFollow') : $t('template.setUnfollow') }}
-                    <div class="sub-title">
-                        {{
-                            !props.isFollowTemplate
-                                ? $t('template.followTemplateTips', [classifyLabel || displayTypeText])
-                                : $t('template.unfollowTemplateTips', [classifyLabel || displayTypeText])
-                        }}
-                    </div>
-                </div>
-            </div>
+            </template>
         </template>
     </bk-popover>
 </template>
@@ -110,9 +116,17 @@
         showLabel: {
             type: Boolean,
             default: false
+        },
+        isNoStepId: {
+            type: Boolean,
+            required: false,
+            default: false
         }
     })
     const initLoading = ref(false)
+    const popoverTheme = computed(() => {
+        return props.isNoStepId ? '' : 'light toggle-required'
+    })
     const displayTypeText = computed(() => {
         const typeMap = {
             'defaultValue': proxy.$t('paramDefaultValue'),
@@ -123,6 +137,7 @@
     })
     function handleChangeStatus (event) {
         event.preventDefault()
+        if (props.isNoStepId) return
         initLoading.value = true
         props.handleChange(!props.isFollowTemplate)
         setTimeout(() => {
@@ -156,6 +171,9 @@
             min-width: 24px;
             min-height: 24px;
             padding-left: 5px;
+        }
+        &.is-not-stepId {
+            cursor: not-allowed;
         }
         &:hover {
             background: #DCDEE5;

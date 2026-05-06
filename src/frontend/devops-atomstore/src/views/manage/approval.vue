@@ -270,6 +270,7 @@
 <style lang="scss" scoped>
     .manage-approve {
         background: #fff;
+        height: 100%;
     }
     .version-content {
         padding: 24px;

@@ -19,9 +19,11 @@ data class TemplateInstanceField(
         const val BK_CI_BUILD_NO = "BK_CI_BUILD_NO"
 
         /**
-         * model应该传模版的,不要传流水线的
+         * 模版中默认可以被流水线自定义的参数/触发器
+         *
+         * 模版中只有入参参数才能被流水线自定义,常量和其他变量都不能被流水线自定义
          */
-        fun initFromTrigger(
+        fun initFromTemplate(
             model: Model
         ): TemplateInstanceField {
             val triggerContainer = model.getTriggerContainer()
@@ -33,7 +35,7 @@ data class TemplateInstanceField(
             }
             return TemplateInstanceField(
                 paramIds = paramIds,
-                settingGroups = PipelineSettingGroupType.values().map { it }
+                settingGroups = PipelineSettingGroupType.entries.map { it }
             )
         }
     }

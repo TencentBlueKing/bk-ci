@@ -39,6 +39,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tags
 import io.micrometer.core.instrument.config.MeterFilter
 import org.slf4j.LoggerFactory
+import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -85,20 +86,24 @@ class ServiceAutoConfiguration {
     @Bean
     fun undertowThreadMetrics() = UndertowThreadMetrics()
 
+    /**
+     * 通过 MeterRegistryCustomizer 注册 MeterFilter，在 MeterRegistry 初始化阶段（早于任何 Meter 注册）
+     * 过滤掉 RabbitMQ 的 delivery_tag，防止 preFilterIdToMeterMap 因高基数 tag 无限膨胀导致内存泄漏。
+     */
     @Bean
-    fun ignoreRabbitMqDeliveryTagForListenerOnly(): MeterFilter {
-        return object : MeterFilter {
-            override fun map(id: Meter.Id): Meter.Id {
-                if (id.name.startsWith("spring.rabbit.listener")) {
-                    logger.debug("ignore rabbitmq delivery tag , name: {} , tags: {}", id.name, id.tags)
-                    // 过滤掉指定的 tag，使用 withTags 替代已废弃的 withoutTag
-                    val filteredTags = id.tags.filter {
-                        it.key != "messaging.rabbitmq.message.delivery_tag"
+    fun rabbitMqDeliveryTagMeterRegistryCustomizer(): MeterRegistryCustomizer<MeterRegistry> {
+        return MeterRegistryCustomizer { registry ->
+            registry.config().meterFilter(object : MeterFilter {
+                override fun map(id: Meter.Id): Meter.Id {
+                    if (id.name.startsWith("spring.rabbit.listener")) {
+                        val filteredTags = id.tags.filter {
+                            it.key != "messaging.rabbitmq.message.delivery_tag"
+                        }
+                        return Meter.Id(id.name, Tags.of(filteredTags), id.baseUnit, id.description, id.type)
                     }
-                    return Meter.Id(id.name, Tags.of(filteredTags), id.baseUnit, id.description, id.type)
+                    return id
                 }
-                return id
-            }
+            })
         }
     }
 

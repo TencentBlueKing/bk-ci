@@ -15,7 +15,6 @@ import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.dao.AuthResourceSyncDao
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
-import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.vo.ResourceMemberCountVO
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissionsSyncEvent
@@ -286,11 +285,7 @@ class RbacPermissionResourceMemberService(
         // 获取用户组中用户以及部门
         val userType = MemberType.USER.type
         val deptType = MemberType.DEPARTMENT.type
-        val pageInfoDTO = V2PageInfoDTO().apply {
-            pageSize = 1000
-            page = 1
-        }
-        val groupMembers = iamV2ManagerService.getRoleGroupMemberV2(iamGroupId, pageInfoDTO).results
+        val groupMembers = getAllRoleGroupMembersV2(iamGroupId)
         val groupUserMap = groupMembers.filter { it.type == userType }.associateBy { it.id }
         val groupDepartmentSet = groupMembers.filter {
             it.type == deptType && it.expiredAt > LocalDateTime.now().timestamp()
@@ -410,7 +405,7 @@ class RbacPermissionResourceMemberService(
         if (groupUserMap.containsKey(member) && groupUserMap[member]!!.expiredAt > expectExpiredAt) {
             logger.warn(
                 "The user's validity period in the group exceeds 180 days and does not need to be added!" +
-                    "$projectCode|$iamGroupId|$member"
+                        "$projectCode|$iamGroupId|$member"
             )
             return false
         }
@@ -421,7 +416,7 @@ class RbacPermissionResourceMemberService(
             if (isUserBelongGroupByDepartments) {
                 logger.warn(
                     "The department of this user has already been added to the group. No need to join!" +
-                        "$projectCode|$groupDepartmentSet|$iamGroupId|$member"
+                            "$projectCode|$groupDepartmentSet|$iamGroupId|$member"
                 )
                 return false
             }
@@ -515,11 +510,7 @@ class RbacPermissionResourceMemberService(
         groupId: Int,
         groupName: String
     ): BkAuthGroupAndUserList {
-        val pageInfoDTO = V2PageInfoDTO().apply {
-            pageSize = 1000
-            page = 1
-        }
-        val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(groupId, pageInfoDTO).results
+        val groupMemberInfoList = getAllRoleGroupMembersV2(groupId)
 
         val nowTimestamp = System.currentTimeMillis() / 1000
         val (members, deptInfoList) = groupMemberInfoList
@@ -598,11 +589,7 @@ class RbacPermissionResourceMemberService(
         val autoRenewalMembers = mutableSetOf<String>()
         resourceGroupInfoList.forEach group@{ resourceGroup ->
             val iamGroupId = resourceGroup.relationId.toInt()
-            val pageInfoDTO = V2PageInfoDTO().apply {
-                pageSize = 1000
-                page = 1
-            }
-            val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(iamGroupId, pageInfoDTO).results
+            val groupMemberInfoList = getAllRoleGroupMembersV2(iamGroupId)
             groupMemberInfoList.forEach member@{ member ->
                 // 已过期或者小于自动续期范围内的不做续期
                 if (member.expiredAt < currentTime ||
@@ -614,7 +601,7 @@ class RbacPermissionResourceMemberService(
                 }
                 // 自动续期时间由半年+随机天数,防止同一时间同时过期
                 val expiredTime = currentTime + AUTO_RENEWAL_EXPIRED_AT +
-                    TimeUnit.DAYS.toSeconds(RandomUtils.nextLong(0, 180))
+                        TimeUnit.DAYS.toSeconds(RandomUtils.nextLong(0, 180))
                 autoRenewalMembers.add(member.id)
                 try {
                     addGroupMember(
@@ -641,14 +628,13 @@ class RbacPermissionResourceMemberService(
     override fun renewalGroupMember(
         userId: String,
         projectCode: String,
-        resourceType: String,
-        groupId: Int,
-        memberRenewalDTO: GroupMemberRenewalDTO
+        groupIds: List<Int>,
+        expiredAt: Long
     ): Boolean {
-        logger.info("renewal group member|$userId|$projectCode|$resourceType|$groupId|${memberRenewalDTO.expiredAt}")
+        logger.info("renewal group member|$userId|$projectCode|$groupIds|$expiredAt")
         val managerMemberGroupDTO = GroupMemberRenewApplicationDTO.builder()
-            .groupIds(listOf(groupId))
-            .expiredAt(memberRenewalDTO.expiredAt)
+            .groupIds(groupIds)
+            .expiredAt(expiredAt)
             .reason("renewal user group")
             .applicant(userId).build()
         iamV2ManagerService.renewalRoleGroupMemberApplication(managerMemberGroupDTO)
@@ -701,7 +687,7 @@ class RbacPermissionResourceMemberService(
         )
         return this.filterNot {
             it.type == MemberType.USER.type &&
-                departedMembers.contains(it.id)
+                    departedMembers.contains(it.id)
         }
     }
 
@@ -743,8 +729,29 @@ class RbacPermissionResourceMemberService(
         )
     }
 
+    private fun getAllRoleGroupMembersV2(
+        iamGroupId: Int
+    ): List<RoleGroupMemberInfo> {
+        val allMembers = mutableListOf<RoleGroupMemberInfo>()
+        val pageSize = 1000
+        var page = 1
+        do {
+            val pageInfoDTO = V2PageInfoDTO().apply {
+                this.pageSize = pageSize
+                this.page = page
+            }
+            val pageResult = iamV2ManagerService
+                .getRoleGroupMemberV2(iamGroupId, pageInfoDTO)
+            allMembers.addAll(pageResult.results)
+            page++
+        } while (pageResult.results.size == pageSize)
+        return allMembers
+    }
+
     companion object {
-        private val logger = LoggerFactory.getLogger(RbacPermissionResourceMemberService::class.java)
+        private val logger = LoggerFactory.getLogger(
+            RbacPermissionResourceMemberService::class.java
+        )
 
         // 有效的过期时间,在30天内就是有效的
         private const val VALID_EXPIRED_AT = 180L

@@ -2,11 +2,14 @@ package com.tencent.devops.process.dao.template
 
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.api.util.toLocalDateTimeOrDefault
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.common.pipeline.template.UpgradeStrategyEnum
 import com.tencent.devops.model.process.tables.TPipelineTemplateInfo
 import com.tencent.devops.model.process.tables.records.TPipelineTemplateInfoRecord
+import com.tencent.devops.process.pojo.PTemplateOrderByType
+import com.tencent.devops.process.pojo.PTemplateSortType
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoUpdateInfo
@@ -14,6 +17,7 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoV2
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.SortField
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -154,16 +158,35 @@ class PipelineTemplateInfoDao {
         return with(TPipelineTemplateInfo.T_PIPELINE_TEMPLATE_INFO) {
             dslContext.selectFrom(this)
                 .where(buildQueryCondition(commonCondition))
-                .orderBy(UPDATE_TIME.desc())
+                .orderBy(buildOrderBy(commonCondition))
                 .let {
                     if (commonCondition.page != null && commonCondition.pageSize != null) {
-                        it.offset((commonCondition.page!! - 1) * commonCondition.pageSize!!)
-                            .limit(commonCondition.pageSize)
+                        it.offset(
+                            (commonCondition.page!! - 1) * commonCondition.pageSize!!
+                        ).limit(commonCondition.pageSize)
                     } else {
                         it
                     }
                 }
                 .fetch().map { it.convert() }
+        }
+    }
+
+    private fun buildOrderBy(
+        commonCondition: PipelineTemplateCommonCondition
+    ): SortField<*> {
+        return with(TPipelineTemplateInfo.T_PIPELINE_TEMPLATE_INFO) {
+            val field = when (commonCondition.orderBy) {
+                PTemplateOrderByType.NAME -> NAME
+                PTemplateOrderByType.CREATOR -> CREATOR
+                PTemplateOrderByType.CREATE_TIME -> CREATED_TIME
+                null -> UPDATE_TIME
+            }
+            if (commonCondition.sort == PTemplateSortType.ASC) {
+                field.asc()
+            } else {
+                field.desc()
+            }
         }
     }
 
@@ -211,7 +234,7 @@ class PipelineTemplateInfoDao {
     ): PipelineTemplateInfoV2? {
         return with(TPipelineTemplateInfo.T_PIPELINE_TEMPLATE_INFO) {
             dslContext.selectFrom(this)
-                .where(buildQueryCondition(commonCondition))
+                .where(buildQueryCondition(commonCondition)).limit(1)
                 .fetchOne()?.convert()
         }
     }
@@ -250,7 +273,7 @@ class PipelineTemplateInfoDao {
     ): PipelineTemplateInfoV2? {
         return with(TPipelineTemplateInfo.T_PIPELINE_TEMPLATE_INFO) {
             dslContext.selectFrom(this)
-                .where(ID.eq(templateId))
+                .where(ID.eq(templateId)).limit(1)
                 .fetchOne()?.convert()
         }
     }
@@ -303,6 +326,7 @@ class PipelineTemplateInfoDao {
             commonCondition.checkAllFieldsAreNull()
             with(commonCondition) {
                 val conditions = mutableListOf<Condition>()
+                conditions.add(CHANNEL.eq(ChannelCode.BS.name))
                 if (projectId != null) conditions.add(PROJECT_ID.eq(projectId))
                 if (templateId != null) conditions.add(ID.eq(templateId))
                 if (fuzzySearchName != null && fuzzySearchName!!.isNotBlank()) {

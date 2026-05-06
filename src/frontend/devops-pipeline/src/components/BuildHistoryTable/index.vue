@@ -1047,6 +1047,7 @@
             async handleRemarkChange (row) {
                 if (this.isChangeRemark) return
                 const preRemark = row.remark
+                const sourceItem = this.buildHistories[row.index]
                 try {
                     const {
                         $route: { params },
@@ -1054,7 +1055,7 @@
                     } = this
                     if (tempRemark !== row.remark) {
                         this.isChangeRemark = true
-                        this.$set(row, 'remark', tempRemark)
+                        this.$set(sourceItem, 'remark', tempRemark)
                         await this.updateBuildRemark({
                             ...params,
                             buildId: row.id,
@@ -1071,7 +1072,7 @@
                         theme: 'error',
                         message: this.$t('updateFail')
                     })
-                    this.$set(row, 'remark', preRemark)
+                    this.$set(sourceItem, 'remark', preRemark)
                 } finally {
                     this.resetRemark()
                 }

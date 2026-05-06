@@ -30,7 +30,10 @@ package com.tencent.devops.process.api.template.v2
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.template.TemplateMigrateByPercentageRequest
+import com.tencent.devops.process.pojo.template.TemplateMigrateByPercentageResult
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
+import com.tencent.devops.process.pojo.template.v2.FixBadParamsItem
 import com.tencent.devops.process.service.template.v2.PipelineTemplateMigrateService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInstanceService
 
@@ -42,6 +45,12 @@ class OpPipelineTemplateResourceImpl(
     override fun migrateTemplatesByCondition(projectConditionDTO: ProjectConditionDTO): Result<Boolean> {
         pipelineTemplateMigrateService.migrateTemplatesByCondition(projectConditionDTO)
         return Result(true)
+    }
+
+    override fun migrateTemplatesByPercentage(
+        request: TemplateMigrateByPercentageRequest
+    ): Result<TemplateMigrateByPercentageResult> {
+        return Result(pipelineTemplateMigrateService.migrateTemplatesByPercentage(request))
     }
 
     override fun migrateProjectTemplates(projectId: String): Result<Boolean> {
@@ -83,6 +92,20 @@ class OpPipelineTemplateResourceImpl(
                 userId = userId,
                 projectId = projectId,
                 itemId = itemId
+            )
+        )
+    }
+
+    override fun fixBadParams(
+        projectId: String,
+        templateId: String?,
+        dryRun: Boolean
+    ): Result<List<FixBadParamsItem>> {
+        return Result(
+            pipelineTemplateMigrateService.fixBadParams(
+                projectId = projectId,
+                templateId = templateId,
+                dryRun = dryRun
             )
         )
     }

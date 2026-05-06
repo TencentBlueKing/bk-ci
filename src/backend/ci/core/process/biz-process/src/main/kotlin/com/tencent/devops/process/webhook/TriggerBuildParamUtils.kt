@@ -74,6 +74,7 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MODIFY_TIME
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_DESC
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_IID
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_LABELS
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_PROPOSER
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_REVIEWERS
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_MR_TITLE
@@ -327,7 +328,8 @@ object TriggerBuildParamUtils {
             CI_MR_URL,
             CI_MR_REVIEWERS,
             CI_MILESTONE_NAME,
-            CI_MILESTONE_ID
+            CI_MILESTONE_ID,
+            CI_MR_LABELS
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.MERGE_REQUEST.name to params.plus(CI_TAPD_ISSUES))
