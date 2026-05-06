@@ -434,8 +434,6 @@
         grid-column: 1 / -1;
 
         .form-field.bk-form-item {
-            display: flex;
-            flex-direction: column;
 
             .bk-label.atom-form-label {
                 text-align: left !important;
