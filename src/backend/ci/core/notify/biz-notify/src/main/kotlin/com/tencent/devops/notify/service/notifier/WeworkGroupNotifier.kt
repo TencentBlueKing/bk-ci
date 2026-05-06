@@ -71,7 +71,7 @@ class WeworkGroupNotifier @Autowired constructor(
                 rtxTplRecord?.bodyMd ?: rtxTplRecord?.body
                     ?: weworkGroupTplRecord?.body ?: ""
             } else {
-                rtxTplRecord?.body ?: weworkGroupTplRecord!!.body
+                rtxTplRecord?.body ?: weworkGroupTplRecord?.body ?: ""
             }
         )
 
