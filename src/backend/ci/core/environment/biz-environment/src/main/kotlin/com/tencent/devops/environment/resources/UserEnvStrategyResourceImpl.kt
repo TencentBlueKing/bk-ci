@@ -5,7 +5,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.UserEnvStrategyResource
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.DispatchEnvStrategyCreateReq
 import com.tencent.devops.environment.pojo.DispatchEnvStrategyReorderReq
@@ -109,7 +111,7 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
     private fun checkEnvEditPermission(userId: String, projectId: String, envId: Long) {
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
-                message = "User($userId) has no edit permission on env($envId) in project($projectId)"
+                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION)
             )
         }
     }
