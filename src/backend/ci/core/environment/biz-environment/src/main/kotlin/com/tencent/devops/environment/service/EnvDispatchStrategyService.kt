@@ -99,8 +99,12 @@ class EnvDispatchStrategyService @Autowired constructor(
     }
 
     fun createCustomStrategy(
-        projectId: String, envId: Long, userId: String,
-        strategyName: String?, scope: StrategyScope, nodeRule: NodeRule?,
+        projectId: String,
+        envId: Long,
+        userId: String,
+        strategyName: String?,
+        scope: StrategyScope,
+        nodeRule: NodeRule?,
         labelSelector: List<LabelSelector>?
     ): Long {
         val lock = strategiesUpdateLock(projectId, envId)
@@ -108,6 +112,16 @@ class EnvDispatchStrategyService @Autowired constructor(
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_STRATEGY_NOW_USING)
         }
         try {
+            // 校验重名
+            if (!strategyName.isNullOrBlank() && envDispatchStrategyDao.checkDupName(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    envId = envId,
+                    name = strategyName
+                )
+            ) {
+                throw InvalidParamException("strategy name $strategyName repeat")
+            }
             // 校验数量限制
             val strategyCount = envDispatchStrategyDao.count(dslContext, projectId, envId, null)
             if (strategyCount > globalStrategyCount) {
@@ -138,11 +152,19 @@ class EnvDispatchStrategyService @Autowired constructor(
             val existing = envDispatchStrategyDao.listByEnv(dslContext, projectId, envId)
             val maxPriority = existing.maxOfOrNull { it.priority } ?: -1
             val config = DispatchStrategyConfig(
-                id = null, projectId = projectId, envId = envId,
-                strategyType = StrategyType.CUSTOM, defaultStrategyCode = null,
-                strategyName = strategyName, scope = scope, nodeRule = nodeRule,
-                labelSelector = labelSelector, enabled = true, priority = maxPriority + 1,
-                createdUser = userId, updatedUser = userId
+                id = null,
+                projectId = projectId,
+                envId = envId,
+                strategyType = StrategyType.CUSTOM,
+                defaultStrategyCode = null,
+                strategyName = strategyName,
+                scope = scope,
+                nodeRule = nodeRule,
+                labelSelector = labelSelector,
+                enabled = true,
+                priority = maxPriority + 1,
+                createdUser = userId,
+                updatedUser = userId
             )
             return envDispatchStrategyDao.create(dslContext, config)
         } finally {
@@ -152,9 +174,12 @@ class EnvDispatchStrategyService @Autowired constructor(
 
     fun updateStrategy(
         projectId: String,
-        id: Long, userId: String,
-        strategyName: String? = null, scope: StrategyScope? = null,
-        nodeRule: NodeRule? = null, labelSelector: List<LabelSelector>? = null,
+        id: Long,
+        userId: String,
+        strategyName: String? = null,
+        scope: StrategyScope? = null,
+        nodeRule: NodeRule? = null,
+        labelSelector: List<LabelSelector>? = null,
         enabled: Boolean? = null
     ) {
         val existing = envDispatchStrategyDao.getById(dslContext, id)
@@ -163,6 +188,16 @@ class EnvDispatchStrategyService @Autowired constructor(
             if (strategyName != null || scope != null || nodeRule != null || labelSelector != null) {
                 throw InvalidParamException("Default strategy only allows toggling enabled")
             }
+        }
+        // 校验重名
+        if (!strategyName.isNullOrBlank() && envDispatchStrategyDao.checkDupName(
+                dslContext = dslContext,
+                projectId = projectId,
+                envId = existing.envId,
+                name = strategyName
+            )
+        ) {
+            throw InvalidParamException("strategy name $strategyName repeat")
         }
         if ((labelSelector?.size ?: 0) > globalStrategyLabelCount) {
             val projectCount =
@@ -178,7 +213,7 @@ class EnvDispatchStrategyService @Autowired constructor(
             }
         }
         // 不能存在全部都关闭的策略组
-        if (enabled == false) {
+        if (existing.enabled && enabled == false) {
             enforceProtection(existing.projectId, existing.envId)
         }
         envDispatchStrategyDao.update(

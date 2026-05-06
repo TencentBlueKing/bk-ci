@@ -139,6 +139,16 @@ class EnvDispatchStrategyDao {
         }
     }
 
+    fun checkDupName(dslContext: DSLContext, projectId: String, envId: Long, name: String): Boolean {
+        with(TEnvDispatchStrategy.T_ENV_DISPATCH_STRATEGY) {
+            val dsl = dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(ENV_ID.eq(envId))
+                .and(STRATEGY_NAME.eq(name))
+            return dsl.fetchOne(0, Long::class.java)!! > 0
+        }
+    }
+
     companion object {
         private val strategyMapper = EnvDispatchStrategyRecordMapper()
     }
