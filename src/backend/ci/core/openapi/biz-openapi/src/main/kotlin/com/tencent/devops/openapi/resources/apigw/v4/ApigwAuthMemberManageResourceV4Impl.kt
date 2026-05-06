@@ -1,9 +1,11 @@
 package com.tencent.devops.openapi.resources.apigw.v4
 
 import com.tencent.devops.auth.api.service.ServiceAuthAiResource
+import com.tencent.devops.auth.api.service.ServiceAuthApplyResource
 import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
+import com.tencent.devops.auth.pojo.SearchGroupInfo
 import com.tencent.devops.auth.pojo.dto.IamGroupIdsQueryConditionDTO
 import com.tencent.devops.auth.pojo.dto.ResourceGroupPermissionDTO
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
@@ -16,8 +18,10 @@ import com.tencent.devops.auth.pojo.request.ai.BatchHandoverMembersReq
 import com.tencent.devops.auth.pojo.request.ai.BatchOperateCheckReq
 import com.tencent.devops.auth.pojo.request.ai.BatchRemoveMembersReq
 import com.tencent.devops.auth.pojo.request.ai.BatchRenewalMembersReq
+import com.tencent.devops.auth.pojo.enum.GroupLevel
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
+import com.tencent.devops.auth.pojo.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.vo.MemberExitsProjectCheckVo
 import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.auth.pojo.vo.UserSearchResultVO
@@ -412,6 +416,42 @@ class ApigwAuthMemberManageResourceV4Impl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             request = request
+        )
+    }
+
+    override fun listGroupsForApply(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        groupLevel: String?,
+        actionId: String?,
+        resourceType: String?,
+        resourceCode: String?,
+        iamResourceCode: String?,
+        name: String?,
+        description: String?,
+        groupId: Int?,
+        page: Int,
+        pageSize: Int
+    ): Result<ManagerRoleGroupVO> {
+        logger.info("OPENAPI_AUTH_MEMBER_MANAGE_V4|$appCode|$userId|listGroupsForApply|$projectId")
+        val searchGroupInfo = SearchGroupInfo(
+            groupLevel = groupLevel?.let { GroupLevel.valueOf(it) },
+            actionId = actionId,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            iamResourceCode = iamResourceCode,
+            name = name,
+            description = description,
+            groupId = groupId,
+            page = page,
+            pageSize = pageSize
+        )
+        return client.get(ServiceAuthApplyResource::class).listGroupsForApply(
+            userId = userId,
+            projectId = projectId,
+            searchGroupInfo = searchGroupInfo
         )
     }
 

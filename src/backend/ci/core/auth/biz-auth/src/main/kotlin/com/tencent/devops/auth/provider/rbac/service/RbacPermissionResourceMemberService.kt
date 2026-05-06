@@ -123,12 +123,14 @@ class RbacPermissionResourceMemberService(
                             id = deptInfo.memberId
                             name = deptInfo.memberName
                         }
-                    }
+                    },
+                    applyDisable = groupInfo.applyDisable
                 )
             }
         } else {
             resourceGroups.map {
                 getMembersUnderGroupByIam(
+                    projectCode = projectCode,
                     groupId = it.relationId.toInt(),
                     groupName = it.groupName
                 )
@@ -354,7 +356,8 @@ class RbacPermissionResourceMemberService(
                         memberId = it.id,
                         memberName = memberDetails.displayName,
                         memberType = it.type,
-                        expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(expiredTime)
+                        expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(expiredTime),
+                        joinedAt = LocalDateTime.now()
                     )
                 )
             }
@@ -507,11 +510,27 @@ class RbacPermissionResourceMemberService(
     }
 
     private fun getMembersUnderGroupByIam(
+        projectCode: String,
         groupId: Int,
         groupName: String
     ): BkAuthGroupAndUserList {
+        // 获取组成员信息
         val groupMemberInfoList = getAllRoleGroupMembersV2(groupId)
-
+        // 获取组信息
+        val gradeManagerId = authResourceService.get(
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode
+        ).relationId
+        val searchGroupDTO = SearchGroupDTO.builder().id(groupId).build()
+        val groupDetails = iamV2ManagerService.getGradeManagerRoleGroupV2(
+            gradeManagerId,
+            searchGroupDTO,
+            V2PageInfoDTO().apply {
+                this.pageSize = 10
+                this.page = 1
+            }
+        ).results.firstOrNull()
         val nowTimestamp = System.currentTimeMillis() / 1000
         val (members, deptInfoList) = groupMemberInfoList
             .filter { it.expiredAt > nowTimestamp }
@@ -527,7 +546,8 @@ class RbacPermissionResourceMemberService(
                     id = memberInfo.id
                     name = memberInfo.name
                 }
-            }
+            },
+            applyDisable = groupDetails?.applyDisable
         )
     }
 
