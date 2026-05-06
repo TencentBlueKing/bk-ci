@@ -59,7 +59,7 @@ class PipelineBuildDataClearService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildDataClearService::class.java)
         private const val DEFAULT_PAGE_SIZE = 100
-        // 连续空页阈值：出现这么多轮空查询后直接结束分页扫表，防止 while 循环空转
+        // 连续空页阈值：出现这么多轮空查询后直接结束分页扫表，防止 while 循环空转。
         private const val MAX_EMPTY_PAGE_THRESHOLD = 5
     }
 
@@ -130,17 +130,23 @@ class PipelineBuildDataClearService @Autowired constructor(
         projectId: String,
         archiveFlag: Boolean? = null
     ) {
+        // 流水线整体已被删除/归档，需要把所有状态(含 RUNNING/UNKNOWN 等)的构建记录都清掉，
+        // 否则在 clearPipelineData 删掉流水线本体后会留下孤儿构建记录
         cleanBuildHistoryData(
             pipelineId = pipelineId,
             projectId = projectId,
             isCompletelyDelete = true,
-            archiveFlag = archiveFlag
+            archiveFlag = archiveFlag,
+            clearAllStatus = true
         )
         processDataClearService.clearPipelineData(projectId, pipelineId, archiveFlag)
     }
 
     /**
      * 按条件分页清理指定流水线的构建历史数据
+     *
+     * @param clearAllStatus 是否忽略状态过滤(默认 false 仅清理终态构建)；
+     *                       已删除/已归档流水线整体清理时应设为 true，避免遗留非终态孤儿数据
      */
     fun cleanBuildHistoryData(
         pipelineId: String,
@@ -148,17 +154,24 @@ class PipelineBuildDataClearService @Autowired constructor(
         isCompletelyDelete: Boolean,
         maxBuildNum: Int? = null,
         maxStartTime: LocalDateTime? = null,
-        archiveFlag: Boolean? = null
+        archiveFlag: Boolean? = null,
+        clearAllStatus: Boolean = false
     ) {
         val maxPipelineBuildNum = processMiscService.getMaxPipelineBuildNum(
             projectId = projectId,
             pipelineId = pipelineId,
             maxBuildNum = maxBuildNum,
             maxStartTime = maxStartTime,
-            archiveFlag = archiveFlag
+            archiveFlag = archiveFlag,
+            clearAllStatus = clearAllStatus
         )
         logger.info("cleanBuildHistoryData|$projectId|$pipelineId|maxPipelineBuildNum=$maxPipelineBuildNum")
-        var totalHandleNum = processMiscService.getMinPipelineBuildNum(projectId, pipelineId, archiveFlag).toInt()
+        var totalHandleNum = processMiscService.getMinPipelineBuildNum(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            archiveFlag = archiveFlag,
+            clearAllStatus = clearAllStatus
+        ).toInt()
         // 连续命中空页的次数，超过阈值则认为剩余区间已无可清理数据，提前结束避免无效分页扫表
         var emptyPageCount = 0
         while (totalHandleNum <= maxPipelineBuildNum) {
@@ -171,7 +184,8 @@ class PipelineBuildDataClearService @Autowired constructor(
                 isCompletelyDelete = isCompletelyDelete,
                 maxBuildNum = maxBuildNum,
                 maxStartTime = maxStartTime,
-                archiveFlag = archiveFlag
+                archiveFlag = archiveFlag,
+                clearAllStatus = clearAllStatus
             )
             if (pipelineHistoryBuildIdList.isNullOrEmpty()) {
                 emptyPageCount++
