@@ -99,7 +99,7 @@ interface UserInfoResource {
         @Parameter(description = "授信设备Token", required = false)
         @HeaderParam(X_DEVOPS_TRUST_DEVICE_TOKEN)
         token: String
-    ): Result<Boolean>
+    ): Result<VerifyResult>
 
     @Operation(summary = "获取授信设备列表")
     @GET

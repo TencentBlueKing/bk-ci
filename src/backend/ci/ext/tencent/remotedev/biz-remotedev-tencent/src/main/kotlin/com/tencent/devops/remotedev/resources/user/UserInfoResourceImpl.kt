@@ -8,6 +8,7 @@ import com.tencent.devops.remotedev.api.user.UserInfoResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.pojo.TrustDeviceInfo
 import com.tencent.devops.remotedev.pojo.TrustDeviceTokenGetData
+import com.tencent.devops.remotedev.pojo.VerifyResult
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognition
@@ -105,7 +106,7 @@ class UserInfoResourceImpl @Autowired constructor(
         return Result(trustDeviceService.getOrCreateToken(userId, data.deviceId, data.detail))
     }
 
-    override fun verifyTrustDeviceToken(userId: String, deviceId: String, token: String): Result<Boolean> {
+    override fun verifyTrustDeviceToken(userId: String, deviceId: String, token: String): Result<VerifyResult> {
         return Result(trustDeviceService.checkTrustDevice(userId, deviceId, token))
     }
 
