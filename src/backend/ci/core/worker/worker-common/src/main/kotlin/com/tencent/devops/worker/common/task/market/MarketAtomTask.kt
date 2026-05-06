@@ -490,7 +490,9 @@ open class MarketAtomTask : ITask() {
                             "file=${atomExecuteFile.absolutePath}, error=${ignored.message}"
                     )
                     val deleted = atomExecuteFile.delete()
-                    if (!deleted) {
+                    if (deleted) {
+                        LoggerService.addNormalLine("Corrupted cache file removed, will re-download from repo")
+                    } else {
                         // 文件删除失败，通过 cacheInvalid 标志强制走重新下载覆盖逻辑
                         LoggerService.addNormalLine(
                             "Failed to delete corrupted cache file: ${atomExecuteFile.absolutePath}. " +
@@ -499,7 +501,6 @@ open class MarketAtomTask : ITask() {
                         cacheInvalid = true
                     }
                     bkDiskLruFileCache.remove(fileCacheKey)
-                    LoggerService.addNormalLine("Corrupted cache file removed, will re-download from repo")
                 }
             }
 
