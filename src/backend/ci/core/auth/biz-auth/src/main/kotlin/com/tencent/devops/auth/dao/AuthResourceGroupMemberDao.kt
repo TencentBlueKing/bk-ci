@@ -79,7 +79,8 @@ class AuthResourceGroupMemberDao {
                 MEMBER_TYPE,
                 EXPIRED_TIME,
                 CREATE_TIME,
-                UPDATE_TIME
+                UPDATE_TIME,
+                JOINED_AT
             ).values(
                 projectCode,
                 resourceType,
@@ -90,6 +91,7 @@ class AuthResourceGroupMemberDao {
                 memberName,
                 memberType,
                 expiredTime,
+                now,
                 now,
                 now
             ).onDuplicateKeyUpdate()
@@ -135,7 +137,8 @@ class AuthResourceGroupMemberDao {
                     MEMBER_TYPE,
                     EXPIRED_TIME,
                     CREATE_TIME,
-                    UPDATE_TIME
+                    UPDATE_TIME,
+                    JOINED_AT
                 ).values(
                     it.projectCode,
                     it.resourceType,
@@ -147,10 +150,12 @@ class AuthResourceGroupMemberDao {
                     it.memberType,
                     it.expiredTime,
                     now,
-                    now
+                    now,
+                    it.joinedAt
                 ).onDuplicateKeyUpdate()
                     .set(MEMBER_NAME, it.memberName)
                     .set(EXPIRED_TIME, it.expiredTime)
+                    .set(JOINED_AT, it.joinedAt)
                     .execute()
             }
         }
@@ -162,6 +167,7 @@ class AuthResourceGroupMemberDao {
                 dslContext.update(this)
                     .set(MEMBER_NAME, it.memberName)
                     .set(EXPIRED_TIME, it.expiredTime)
+                    .set(JOINED_AT, it.joinedAt)
                     .set(UPDATE_TIME, LocalDateTime.now())
                     .where(PROJECT_CODE.eq(it.projectCode))
                     .and(IAM_GROUP_ID.eq(it.iamGroupId))
@@ -411,11 +417,11 @@ class AuthResourceGroupMemberDao {
     fun listProjectMembers(
         dslContext: DSLContext,
         projectCode: String,
-        memberType: String?,
-        userName: String?,
-        deptName: String?,
-        offset: Int?,
-        limit: Int?
+        memberType: String? = null,
+        userName: String? = null,
+        deptName: String? = null,
+        offset: Int? = null,
+        limit: Int? = null
     ): List<ResourceMemberInfo> {
         val tUserInfo = TUserInfo.T_USER_INFO
 
@@ -900,7 +906,8 @@ class AuthResourceGroupMemberDao {
                 memberId = memberId,
                 memberName = memberName,
                 memberType = memberType,
-                expiredTime = expiredTime
+                expiredTime = expiredTime,
+                joinedAt = joinedAt
             )
         }
     }
