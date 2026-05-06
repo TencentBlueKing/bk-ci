@@ -25,6 +25,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
 import org.jooq.Record1
+import org.jooq.Select
 import org.jooq.SelectConditionStep
 import org.jooq.SelectJoinStep
 import org.jooq.SelectSelectStep
@@ -289,32 +290,32 @@ class WorkspaceJoinDao {
 
         // owner 条件查询
         search.owner?.ifEmpty { null }?.let { owners ->
-            val visibleNames = queryVisibleWorkspaceNames(
-                dslContext = dslContext,
-                users = owners,
-                fuzzy = search.onFuzzyMatch,
-                assignTypes = listOf(
-                    WorkspaceShared.AssignType.OWNER.name
-                )
-            )
             conditions.add(
-                TWorkspace.T_WORKSPACE.NAME.`in`(visibleNames)
+                TWorkspace.T_WORKSPACE.NAME.`in`(
+                    visibleWorkspaceNamesQuery(
+                        users = owners,
+                        fuzzy = search.onFuzzyMatch,
+                        assignTypes = listOf(
+                            WorkspaceShared.AssignType.OWNER.name
+                        )
+                    )
+                )
             )
         }
 
         // viewers 条件查询
         search.viewers?.ifEmpty { null }?.let { viewers ->
-            val visibleNames = queryVisibleWorkspaceNames(
-                dslContext = dslContext,
-                users = viewers,
-                fuzzy = search.onFuzzyMatch,
-                assignTypes = listOf(
-                    WorkspaceShared.AssignType.VIEWER.name,
-                    WorkspaceShared.AssignType.OWNER.name
-                )
-            )
             conditions.add(
-                TWorkspace.T_WORKSPACE.NAME.`in`(visibleNames)
+                TWorkspace.T_WORKSPACE.NAME.`in`(
+                    visibleWorkspaceNamesQuery(
+                        users = viewers,
+                        fuzzy = search.onFuzzyMatch,
+                        assignTypes = listOf(
+                            WorkspaceShared.AssignType.VIEWER.name,
+                            WorkspaceShared.AssignType.OWNER.name
+                        )
+                    )
+                )
             )
         }
 
@@ -665,16 +666,16 @@ class WorkspaceJoinDao {
     }
 
     /**
-     * 预查询用户可见的 workspace names，
-     * 用 NAME IN (...) 替代 OR + EXISTS 关联子查询，避免逐行探测。
-     * fuzzy=true 时使用 REGEXP 匹配，fuzzy=false 时使用精确 IN 匹配。
+     * 构建用户可见 workspace names 的非关联子查询，
+     * 用 NAME IN (SELECT ...) 替代 OR + EXISTS。
+     * MySQL 会将非关联 IN 子查询物化为临时表做 hash lookup，只执行一次。
+     * 数据不经过 JVM 堆，无内存压力和 SQL 长度问题。
      */
-    private fun queryVisibleWorkspaceNames(
-        dslContext: DSLContext,
+    private fun visibleWorkspaceNamesQuery(
         users: List<String>,
         fuzzy: Boolean,
         assignTypes: List<String>
-    ): Set<String> {
+    ): Select<Record1<String>> {
         val sharedUserCond = if (fuzzy) {
             TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
                 .likeRegex(users.joinToString("|"))
@@ -682,7 +683,7 @@ class WorkspaceJoinDao {
             TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
                 .`in`(users)
         }
-        val sharedNames = dslContext
+        return DSL
             .select(
                 TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME
             )
@@ -692,13 +693,6 @@ class WorkspaceJoinDao {
                 TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE
                     .`in`(assignTypes)
             )
-            .skipCheck()
-            .fetch(
-                TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME
-            )
-            .toSet()
-
-        return sharedNames
     }
 
     companion object {
