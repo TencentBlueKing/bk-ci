@@ -1,14 +1,17 @@
 package agentcli
 
 import (
+	"bytes"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -59,6 +62,8 @@ func printHealthChecks(workDir string) {
 
 	fmt.Println()
 	printCertStatus(certPath)
+
+	printRecentErrorLogs(workDir)
 }
 
 func checkEndpoint(label, host, path string, tlsConfig *tls.Config, proxyFunc func(*http.Request) (*url.URL, error), workDir string) {
@@ -239,4 +244,203 @@ func tlsVersionName(v uint16) string {
 	default:
 		return fmt.Sprintf("0x%04x", v)
 	}
+}
+
+// ── recent error logs ────────────────────────────────────────────────────
+
+// logLinePrefix 匹配 MyFormatter 生成的行首时间戳 + level。
+// 例: "2026-04-24 10:00:00.123|error|..."。
+var logLinePrefix = regexp.MustCompile(
+	`^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3})\|([a-zA-Z]+)\|`)
+
+// recentErrorLogWindow 定义 status 命令回看错误日志的时间窗口。
+const recentErrorLogWindow = 2 * time.Hour
+
+// maxErrorsPerFile 是每个日志文件最多输出的错误条数。
+const maxErrorsPerFile = 5
+
+// errorLogFiles 是 status 会扫描的日志文件名列表。顺序即输出顺序。
+var errorLogFiles = []string{
+	"devopsAgent.log",
+	"devopsDaemon.log",
+	"devopsUpgrader.log",
+}
+
+// printRecentErrorLogs 输出近 recentErrorLogWindow 内每个日志文件的错误条目
+// （最多 maxErrorsPerFile 条），帮助用户通过 status 一次性定位问题。
+func printRecentErrorLogs(workDir string) {
+	fmt.Println()
+	printStep(msgf("Recent errors (last %s, up to %d per file)",
+		"近 %s 错误日志 (每文件最多 %d 条)",
+		recentErrorLogWindow, maxErrorsPerFile))
+	printStep("--------------------------------------------")
+
+	logsDir := filepath.Join(workDir, "logs")
+	cutoff := time.Now().Add(-recentErrorLogWindow)
+
+	anyFound := false
+	for _, name := range errorLogFiles {
+		path := filepath.Join(logsDir, name)
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			statusLine("  "+name, msg("not found", "未找到"))
+			continue
+		} else if err != nil {
+			statusLine("  "+name, msgf("stat failed: %v", "读取失败: %v", err))
+			continue
+		}
+
+		errs, readErr := readRecentErrors(path, cutoff, maxErrorsPerFile)
+		if readErr != nil {
+			statusLine("  "+name, msgf("read failed: %v", "读取失败: %v", readErr))
+			continue
+		}
+		if len(errs) == 0 {
+			statusLine("  "+name, msg("no recent errors ✓", "无近期错误 ✓"))
+			continue
+		}
+		anyFound = true
+		statusLine("  "+name, msgf("%d error(s) ✗", "%d 条错误 ✗", len(errs)))
+		for _, line := range errs {
+			fmt.Printf("      %s\n", truncateLogLine(line, 500))
+		}
+	}
+
+	if !anyFound {
+		return
+	}
+	if currentStatusSummary != nil {
+		currentStatusSummary.hasIssue = true
+	}
+}
+
+// readRecentErrors 从 path 读取最近 cutoff 之后的 error/fatal/panic 行，
+// 至多返回 max 条（按出现顺序：先于文件中更早出现的在前）。
+//
+// 实现策略：从文件尾部反向读，边读边匹配 MyFormatter 生成的
+// "YYYY-MM-DD HH:MM:SS.mmm|level|" 前缀，命中 error/fatal/panic 且时间
+// 晚于 cutoff 的行入队，凑够 max 条就停。最终按时间升序返回。
+//
+// 单行上限 1 MiB，超长行会被截断以防 OOM（日志里常见带堆栈的长 error）。
+func readRecentErrors(path string, cutoff time.Time, max int) ([]string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	info, err := f.Stat()
+	if err != nil {
+		return nil, err
+	}
+	size := info.Size()
+	if size == 0 {
+		return nil, nil
+	}
+
+	// 反向按块扫描，保留跨块行的 "未完成前缀" 在下一块拼回。
+	const chunk = int64(64 * 1024)
+	const maxLineBytes = 1 << 20 // 单行 1 MiB 上限
+
+	var (
+		collected []string // 反向命中顺序（最新的在前）
+		tail      []byte   // 当前未处理的末尾片段，在下一次前插
+		offset    = size
+		done      bool
+	)
+
+	for offset > 0 && !done {
+		readSize := chunk
+		if offset < readSize {
+			readSize = offset
+		}
+		offset -= readSize
+		buf := make([]byte, readSize)
+		if _, err := f.ReadAt(buf, offset); err != nil && err != io.EOF {
+			return nil, err
+		}
+		if len(tail) > 0 {
+			buf = append(buf, tail...)
+		}
+
+		// 找到块内所有换行位置，从后向前切行。
+		lineEnd := len(buf)
+		for i := len(buf) - 1; i >= 0; i-- {
+			if buf[i] != '\n' {
+				continue
+			}
+			line := buf[i+1 : lineEnd]
+			lineEnd = i
+			if len(line) == 0 {
+				continue
+			}
+			if hit, t := matchErrorLine(line); hit {
+				if t.Before(cutoff) {
+					// 再往前只会更旧，整体停扫。
+					done = true
+					break
+				}
+				if len(line) > maxLineBytes {
+					line = line[:maxLineBytes]
+				}
+				collected = append(collected, string(bytes.TrimRight(line, "\r")))
+				if len(collected) >= max {
+					done = true
+					break
+				}
+			}
+		}
+		// 块首未闭合的部分（不含已处理的换行）留到下一轮拼回。
+		if lineEnd > 0 && offset > 0 {
+			tail = make([]byte, lineEnd)
+			copy(tail, buf[:lineEnd])
+		} else if offset == 0 && lineEnd > 0 && !done {
+			// 到文件开头，残留片段当作一整行处理。
+			line := buf[:lineEnd]
+			if hit, t := matchErrorLine(line); hit && !t.Before(cutoff) {
+				if len(line) > maxLineBytes {
+					line = line[:maxLineBytes]
+				}
+				collected = append(collected, string(bytes.TrimRight(line, "\r")))
+			}
+			tail = nil
+		} else {
+			tail = nil
+		}
+	}
+
+	// collected 是逆序（新→旧），反转成时间升序（旧→新）输出更自然。
+	for i, j := 0, len(collected)-1; i < j; i, j = i+1, j-1 {
+		collected[i], collected[j] = collected[j], collected[i]
+	}
+	return collected, nil
+}
+
+// matchErrorLine 判断一行日志是否匹配 error/fatal/panic 级别，
+// 并解析出时间戳（本地时区，与 logrus MyFormatter 一致）。
+func matchErrorLine(line []byte) (bool, time.Time) {
+	m := logLinePrefix.FindSubmatch(line)
+	if m == nil {
+		return false, time.Time{}
+	}
+	level := strings.ToLower(string(m[2]))
+	switch level {
+	case "error", "fatal", "panic":
+		// 匹配
+	default:
+		return false, time.Time{}
+	}
+	t, err := time.ParseInLocation("2006-01-02 15:04:05.000", string(m[1]), time.Local)
+	if err != nil {
+		return false, time.Time{}
+	}
+	return true, t
+}
+
+// truncateLogLine 限制单行输出长度，避免终端被堆栈刷屏。
+// 带堆栈的 error 行常见 2–5 KiB，截到 500 足够展示关键信息。
+func truncateLogLine(s string, max int) string {
+	if len(s) <= max {
+		return s
+	}
+	return s[:max] + "..."
 }
