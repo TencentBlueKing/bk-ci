@@ -653,40 +653,45 @@ class DevCloudMacosService @Autowired constructor(
         )
 
         // 发起关闭调试登录请求
-        val debugCloseRequest = DevCloudMacosVmDebugLoginRequest(taskId = taskId)
-        val closeResult = debugClose(userId, debugCloseRequest)
+        try {
+            val debugCloseRequest = DevCloudMacosVmDebugLoginRequest(taskId = taskId)
+            val closeResult = debugClose(userId, debugCloseRequest)
 
-        if (closeResult == null) {
-            logger.error("Debug close failed for taskId: $taskId")
+            if (closeResult == null) {
+                logger.error("Debug close failed for taskId: $taskId")
+                return false
+            }
+
+            logger.info("Debug close successful for taskId: $taskId")
+
+            // 更新debug记录状态为已停止
+            debugHistoryDao.updateStatusToStopped(dslContext, debugRecord.id)
+
+            return true
+        } catch (e: Exception) {
+            logger.error("Exception occurred when stopDebug - taskId: $taskId", e)
             return false
-        }
-
-        logger.info("Debug close successful for taskId: $taskId")
-
-        // 更新debug记录状态为已停止
-        debugHistoryDao.updateStatusToStopped(dslContext, debugRecord.id)
-
-        // 如果是新创建的VM，需要发起关机
-        if (newCreatedVm) {
-            logger.info("VM was newly created for debug, deleting VM - taskId: $taskId")
-            val deleteResult = deleteVM(
-                creator = userId,
-                devCloudMacosVmDelete = DevCloudMacosVmDelete(
-                    project = debugRecord.projectId,
-                    pipelineId = debugRecord.pipelineId,
-                    buildId = debugRecord.buildId,
-                    vmSeqId = debugRecord.vmSeqId,
-                    id = taskId
+        } finally {
+            // 如果是新创建的VM，需要发起关机
+            if (newCreatedVm) {
+                logger.info("VM was newly created for debug, deleting VM - taskId: $taskId")
+                val deleteResult = deleteVM(
+                    creator = userId,
+                    devCloudMacosVmDelete = DevCloudMacosVmDelete(
+                        project = debugRecord.projectId,
+                        pipelineId = debugRecord.pipelineId,
+                        buildId = debugRecord.buildId,
+                        vmSeqId = debugRecord.vmSeqId,
+                        id = taskId
+                    )
                 )
-            )
-            if (deleteResult) {
-                logger.info("Successfully deleted debug VM for taskId: $taskId")
-            } else {
-                logger.error("Failed to delete debug VM for taskId: $taskId")
+                if (deleteResult) {
+                    logger.info("Successfully deleted debug VM for taskId: $taskId")
+                } else {
+                    logger.error("Failed to delete debug VM for taskId: $taskId")
+                }
             }
         }
-
-        return true
     }
 
     /**
