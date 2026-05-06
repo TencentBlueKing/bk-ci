@@ -243,14 +243,15 @@ class PermissionService @Autowired constructor(
     }
 
     fun checkUserManager(userId: String, projectId: String) {
-        val managers = managers(projectId)
+        val managers = projectManagerCache.get(projectId)
+        if (userId in managers) return
+
         val checkProjectManager = client.get(ServiceProjectAuthResource::class).checkProjectManager(
             token = checkTokenService.getSystemToken(),
             userId = userId,
             projectCode = projectId
         ).data ?: false
-
-        if (!checkProjectManager && userId !in managers) {
+        if (!checkProjectManager) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("We're sorry but you don't have permission to access project $projectId")

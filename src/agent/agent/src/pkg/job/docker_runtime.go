@@ -40,31 +40,14 @@ func newBuildDockerRunner(buildInfo *api.ThirdPartyBuildInfo) *dockercli.Runner 
 	})
 }
 
-func newPlainDockerRunner(workDir string) *dockercli.Runner {
-	return dockercli.NewRunnerWithEvent(workDir, func(entry dockercli.LogEntry) {
-		switch entry.Level {
-		case dockercli.LogLevelDebug:
-			logs.Debug(entry.Message)
-		case dockercli.LogLevelWarn:
-			logs.Warn(entry.Message)
-		case dockercli.LogLevelError:
-			logs.Error(entry.Message)
-		default:
-			logs.Info(entry.Message)
-		}
-	})
-}
-
 func mapDockerRunnerLogLevel(level dockercli.LogLevel) api.LogType {
 	switch level {
-	case dockercli.LogLevelDebug:
-		return api.LogtypeDebug
 	case dockercli.LogLevelWarn:
 		return api.LogtypeWarn
 	case dockercli.LogLevelError:
 		return api.LogtypeError
 	default:
-		return api.LogtypeLog
+		return api.LogtypeDebug
 	}
 }
 
