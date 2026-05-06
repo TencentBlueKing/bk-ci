@@ -7,8 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/pkg/errors"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 )
 
 const (
@@ -67,18 +68,7 @@ func checkPortRangeFormat(rg string) (int, int, bool) {
 }
 
 func (p *PortAllocator) AllocateNodePort() (int, error) {
-	// Allocate a random port within the configured range
-	port, err := p.randomUnusedNodePort()
-	if err != nil {
-		return 0, err
-	}
-
-	// Check if the port is already in use
-	if isNodePortInUse(port) {
-		return 0, fmt.Errorf("node port %d is in use after random", port)
-	}
-
-	return port, nil
+	return p.randomUnusedNodePort()
 }
 
 func (p *PortAllocator) randomUnusedNodePort() (int, error) {

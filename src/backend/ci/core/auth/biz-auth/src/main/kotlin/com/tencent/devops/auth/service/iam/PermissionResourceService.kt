@@ -56,7 +56,8 @@ interface PermissionResourceService {
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        enabled: Boolean? = true
     ): Boolean
 
     /**
@@ -123,4 +124,32 @@ interface PermissionResourceService {
         resourceType: String,
         resourceCode: String
     ): AuthResourceInfo
+
+    /**
+     * 根据资源名称精确查询资源
+     * @return 资源信息，如果未找到返回 null，如果存在多个同名资源抛出异常
+     */
+    fun getResourceByName(
+        projectCode: String,
+        resourceType: String,
+        resourceName: String
+    ): AuthResourceInfo?
+
+    /**
+     * 根据资源code精确查询资源
+     * @return 资源信息，如果未找到返回 null，如果存在多个同名资源抛出异常
+     */
+    fun getResourceByCode(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): AuthResourceInfo?
+
+    /**
+     * 修改项目启用/禁用状态
+     */
+    fun modifyProjectEnabled(
+        projectCode: String,
+        enabled: Boolean
+    ): Boolean
 }

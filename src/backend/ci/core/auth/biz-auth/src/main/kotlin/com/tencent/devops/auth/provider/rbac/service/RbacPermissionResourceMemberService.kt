@@ -15,7 +15,6 @@ import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.dao.AuthResourceSyncDao
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
-import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.vo.ResourceMemberCountVO
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissionsSyncEvent
@@ -406,7 +405,7 @@ class RbacPermissionResourceMemberService(
         if (groupUserMap.containsKey(member) && groupUserMap[member]!!.expiredAt > expectExpiredAt) {
             logger.warn(
                 "The user's validity period in the group exceeds 180 days and does not need to be added!" +
-                    "$projectCode|$iamGroupId|$member"
+                        "$projectCode|$iamGroupId|$member"
             )
             return false
         }
@@ -417,7 +416,7 @@ class RbacPermissionResourceMemberService(
             if (isUserBelongGroupByDepartments) {
                 logger.warn(
                     "The department of this user has already been added to the group. No need to join!" +
-                        "$projectCode|$groupDepartmentSet|$iamGroupId|$member"
+                            "$projectCode|$groupDepartmentSet|$iamGroupId|$member"
                 )
                 return false
             }
@@ -602,7 +601,7 @@ class RbacPermissionResourceMemberService(
                 }
                 // 自动续期时间由半年+随机天数,防止同一时间同时过期
                 val expiredTime = currentTime + AUTO_RENEWAL_EXPIRED_AT +
-                    TimeUnit.DAYS.toSeconds(RandomUtils.nextLong(0, 180))
+                        TimeUnit.DAYS.toSeconds(RandomUtils.nextLong(0, 180))
                 autoRenewalMembers.add(member.id)
                 try {
                     addGroupMember(
@@ -629,14 +628,13 @@ class RbacPermissionResourceMemberService(
     override fun renewalGroupMember(
         userId: String,
         projectCode: String,
-        resourceType: String,
-        groupId: Int,
-        memberRenewalDTO: GroupMemberRenewalDTO
+        groupIds: List<Int>,
+        expiredAt: Long
     ): Boolean {
-        logger.info("renewal group member|$userId|$projectCode|$resourceType|$groupId|${memberRenewalDTO.expiredAt}")
+        logger.info("renewal group member|$userId|$projectCode|$groupIds|$expiredAt")
         val managerMemberGroupDTO = GroupMemberRenewApplicationDTO.builder()
-            .groupIds(listOf(groupId))
-            .expiredAt(memberRenewalDTO.expiredAt)
+            .groupIds(groupIds)
+            .expiredAt(expiredAt)
             .reason("renewal user group")
             .applicant(userId).build()
         iamV2ManagerService.renewalRoleGroupMemberApplication(managerMemberGroupDTO)
@@ -689,7 +687,7 @@ class RbacPermissionResourceMemberService(
         )
         return this.filterNot {
             it.type == MemberType.USER.type &&
-                departedMembers.contains(it.id)
+                    departedMembers.contains(it.id)
         }
     }
 

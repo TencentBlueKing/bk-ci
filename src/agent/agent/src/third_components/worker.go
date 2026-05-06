@@ -7,11 +7,12 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/sirupsen/logrus"
 )
 
 var Worker *WorkerType
