@@ -19,8 +19,10 @@ import org.jooq.DSLContext
 import org.jooq.Record
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-abstract class StoreComponentVersionLogService {
+@Service
+class StoreComponentVersionLogService {
 
     @Autowired
     lateinit var storeCommonService: StoreCommonService
