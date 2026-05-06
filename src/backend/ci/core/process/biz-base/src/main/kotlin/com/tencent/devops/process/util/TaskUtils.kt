@@ -199,7 +199,7 @@ object TaskUtils {
     ) = when {
         additionalOptions?.retryWhenFailed != true -> true
         // 人工审核插件若设置超时时间，则需刷新开始时间，否则[超时自动重试]会直接超时失败
-        taskAtom == ManualReviewUserTaskElement.classType -> true
+        taskAtom == ManualReviewUserTaskElement.TASK_ATOM -> true
         else -> {
             // 获取Redis重试次数
             val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
