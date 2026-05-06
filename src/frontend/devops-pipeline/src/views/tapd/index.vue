@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="tapd-pipeline-root">
         <pipeline-index></pipeline-index>
     </div>
 </template>
@@ -143,3 +143,19 @@
         }
     }
 </script>
+
+<style lang="scss" scoped>
+    /**
+     * 修复：编辑页切换到 Code 方式（YAML）时 Monaco 编辑器显示异常。
+     * 原因：Monaco 依赖父链容器拥有明确高度，而 tapd/index.vue 原来的根 <div>
+     *      没有任何样式，导致下游 .bkdevops-history-subpage 的 min-height: 100%
+     *      找不到有高度的参照物，整个高度链条塌陷，Code 模式的编辑器表现为空白。
+     */
+    .tapd-pipeline-root {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        min-height: 100%;
+    }
+</style>
