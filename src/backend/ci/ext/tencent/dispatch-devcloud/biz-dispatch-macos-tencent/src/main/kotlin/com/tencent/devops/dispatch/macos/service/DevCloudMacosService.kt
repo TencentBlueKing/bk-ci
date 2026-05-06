@@ -557,8 +557,8 @@ class DevCloudMacosService @Autowired constructor(
         )
 
         val debugLoginRequest = DevCloudMacosVmDebugLoginRequest(taskId = taskId)
-        // 调用debug接口，actionCode非0时重试最多3次，每次间隔1秒
-        val maxRetryCount = 3
+        // 调用debug接口，actionCode非0时重试最多3次，每次间隔5秒
+        val maxRetryCount = 6
         var debugLoginResponse: DevCloudMacosVmDebugLoginResponse? = null
         for (retryCount in 0..maxRetryCount) {
             debugLoginResponse = debugLogin(userId, debugLoginRequest)
@@ -578,7 +578,7 @@ class DevCloudMacosService @Autowired constructor(
                     "retryCount: $retryCount/$maxRetryCount"
             )
             if (retryCount < maxRetryCount) {
-                Thread.sleep(3000)
+                Thread.sleep(5000)
             }
         }
 
