@@ -89,6 +89,7 @@ import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResourceGrou
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResourceService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResultService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateV0PolicyService
+import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateProjectCodePrefixService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateV3PolicyService
 import com.tencent.devops.auth.provider.rbac.service.migrate.RbacPermissionMigrateService
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
@@ -613,7 +614,8 @@ class RbacAuthConfiguration {
         migrateResourceGroupService: MigrateResourceGroupService,
         syncDataTaskDao: AuthSyncDataTaskDao,
         rbacCommonService: RbacCommonService,
-        authResourceGroupMemberDao: AuthResourceGroupMemberDao
+        authResourceGroupMemberDao: AuthResourceGroupMemberDao,
+        migrateProjectCodePrefixService: MigrateProjectCodePrefixService
     ) = RbacPermissionMigrateService(
         client = client,
         migrateResourceService = migrateResourceService,
@@ -633,7 +635,8 @@ class RbacAuthConfiguration {
         migrateResourceGroupService = migrateResourceGroupService,
         syncDataTaskDao = syncDataTaskDao,
         rbacCommonService = rbacCommonService,
-        authResourceGroupMemberDao = authResourceGroupMemberDao
+        authResourceGroupMemberDao = authResourceGroupMemberDao,
+        migrateProjectCodePrefixService = migrateProjectCodePrefixService
     )
 
     @Bean

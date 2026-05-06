@@ -77,8 +77,12 @@ class RbacPermissionResourceService(
         async: Boolean
     ): Boolean {
         val finalProjectCode = TenantUtils.parseEnglishName(tenantId, projectCode)
-        val finalResourceCode =
-            if (resourceType == ResourceTypeId.PROJECT && TenantUtils.isMultiTenantMode()) finalProjectCode else resourceCode
+        val finalResourceCode = if (resourceType == ResourceTypeId.PROJECT && TenantUtils.isMultiTenantMode()) {
+            finalProjectCode
+        } else {
+            resourceCode
+        }
+
         logger.info("resource create relation|$userId|$finalProjectCode|$resourceType|$resourceCode|$resourceName")
         val iamResourceCode = authResourceCodeConverter.generateIamCode(
             resourceType = resourceType,
