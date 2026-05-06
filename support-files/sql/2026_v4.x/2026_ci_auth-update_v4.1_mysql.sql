@@ -17,7 +17,7 @@ BEGIN
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_AUTH_RESOURCE_GROUP'
                     AND COLUMN_NAME = 'APPLY_DISABLE') THEN
-    ALTER TABLE T_AUTH_RESOURCE_GROUP ADD `APPLY_DISABLE` bit(1) DEFAULT NULL COMMENT '是否禁止申请，当true为禁止';
+    ALTER TABLE T_AUTH_RESOURCE_GROUP ADD `APPLY_DISABLE` bit(1) DEFAULT b'0' COMMENT '是否禁止申请，当true为禁止';
     END IF;
 
      IF NOT EXISTS(SELECT 1
