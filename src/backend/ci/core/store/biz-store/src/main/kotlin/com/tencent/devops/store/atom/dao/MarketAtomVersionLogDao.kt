@@ -110,5 +110,4 @@ class MarketAtomVersionLogDao {
                 .execute()
         }
     }
-
 }
