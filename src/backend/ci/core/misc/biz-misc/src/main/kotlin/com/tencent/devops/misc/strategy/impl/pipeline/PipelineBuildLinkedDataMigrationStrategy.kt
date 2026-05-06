@@ -54,6 +54,13 @@ class PipelineBuildLinkedDataMigrationStrategy(
             override fun migrate(migratingDslContext: DSLContext, records: List<TPipelineBuildVarRecord>) =
                 processDataMigrateDao.migratePipelineBuildVarData(migratingDslContext, records)
         },
+        // 迁移 T_PIPELINE_BUILD_VAR_OVERFLOW 相关表数据，与 T_PIPELINE_BUILD_VAR 一一对应
+        object : RecordHandler<Map<String, Any?>> {
+            override fun fetch(dslContext: DSLContext, projectId: String, buildIds: List<String>) =
+                processDataMigrateDao.getPipelineBuildVarOverflowRows(dslContext, projectId, buildIds)
+            override fun migrate(migratingDslContext: DSLContext, records: List<Map<String, Any?>>) =
+                processDataMigrateDao.migratePipelineBuildVarOverflowData(migratingDslContext, records)
+        },
         // 迁移T_PIPELINE_PAUSE_VALUE相关表数据
         object : RecordHandler<TPipelinePauseValueRecord> {
             override fun fetch(dslContext: DSLContext, projectId: String, buildIds: List<String>) =

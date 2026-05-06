@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.dao
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_VAR
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import org.jooq.DSLContext
 import org.jooq.util.mysql.MySQLDSL
 import org.slf4j.LoggerFactory
@@ -49,7 +50,10 @@ class PipelineBuildVarDao @Autowired constructor() {
         value: Any,
         readOnly: Boolean?
     ) {
-
+        val rawValue = value.toString()
+        // 注意：调用方（BuildVariableService）应当先把溢出值写入溢出表，
+        // 然后再调用本方法将"摘要值"写入主表，确保读写一致。
+        val mainValue = BuildVarOverflowUtils.toMainTableValue(rawValue)
         with(T_PIPELINE_BUILD_VAR) {
             dslContext.insertInto(
                 this,
@@ -60,10 +64,10 @@ class PipelineBuildVarDao @Autowired constructor() {
                 VALUE,
                 READ_ONLY
             )
-                .values(projectId, pipelineId, buildId, name, value.toString(), readOnly)
+                .values(projectId, pipelineId, buildId, name, mainValue, readOnly)
                 .onDuplicateKeyUpdate()
                 .set(PIPELINE_ID, pipelineId)
-                .set(VALUE, value.toString())
+                .set(VALUE, mainValue)
                 .execute()
         }
     }
@@ -77,12 +81,13 @@ class PipelineBuildVarDao @Autowired constructor() {
         valueType: String? = null,
         rewriteReadOnly: Boolean? = null
     ): Int {
+        val mainValue = BuildVarOverflowUtils.toMainTableValue(value.toString())
         with(T_PIPELINE_BUILD_VAR) {
             val baseStep = dslContext.update(this)
             if (valueType != null) {
                 baseStep.set(VAR_TYPE, valueType)
             }
-            val whereStep = baseStep.set(VALUE, value.toString())
+            val whereStep = baseStep.set(VALUE, mainValue)
                 .where(BUILD_ID.eq(buildId).and(KEY.eq(name)))
             if (rewriteReadOnly != true) {
                 whereStep.and(READ_ONLY.isNull.or(READ_ONLY.eq(false)))
@@ -182,8 +187,23 @@ class PipelineBuildVarDao @Autowired constructor() {
         buildId: String,
         variables: List<BuildParameters>
     ) {
+        if (variables.isEmpty()) return
         with(T_PIPELINE_BUILD_VAR) {
             val maxLength = VALUE.dataType.length()
+            // 入库前过滤掉无法处理的硬上限超限项，避免异常或单值撑爆 mediumtext。
+            val effective = variables.filter { v ->
+                val len = v.value.toString().length
+                if (len > BuildVarOverflowUtils.HARD_MAX_LENGTH) {
+                    LOG.warn(
+                        "$buildId|ABANDON_DATA|len[${v.key}]=$len(hardMax=" +
+                            "${BuildVarOverflowUtils.HARD_MAX_LENGTH})"
+                    )
+                    false
+                } else {
+                    true
+                }
+            }
+            if (effective.isEmpty()) return
             dslContext.insertInto(
                 this,
                 BUILD_ID,
@@ -195,16 +215,18 @@ class PipelineBuildVarDao @Autowired constructor() {
                 READ_ONLY,
                 SENSITIVE
             ).also {
-                variables.forEach { v ->
+                effective.forEach { v ->
                     val valueString = v.value.toString()
-                    if (valueString.length > maxLength) {
+                    val mainValue = BuildVarOverflowUtils.toMainTableValue(valueString)
+                    if (mainValue.length > maxLength) {
+                        // 极端兜底：摘要本身仍超长（理论上不会发生，BuildVarOverflowUtils 已截断）。
                         LOG.warn("$buildId|ABANDON_DATA|len[${v.key}]=${valueString.length}(max=$maxLength)")
                         return@forEach
                     }
                     it.values(
                         buildId,
                         v.key,
-                        valueString,
+                        mainValue,
                         projectId,
                         pipelineId,
                         v.valueType?.name ?: "STRING",
@@ -233,11 +255,11 @@ class PipelineBuildVarDao @Autowired constructor() {
                 if (valueType != null) {
                     baseStep.set(VAR_TYPE, valueType.name)
                 }
-                // 仅当 sensitive 不为 null 时更新
                 if (v.sensitive != null) {
                     baseStep.set(SENSITIVE, v.sensitive)
                 }
-                baseStep.set(VALUE, v.value.toString()).where(
+                val mainValue = BuildVarOverflowUtils.toMainTableValue(v.value.toString())
+                baseStep.set(VALUE, mainValue).where(
                     BUILD_ID.eq(buildId).and(KEY.eq(v.key)).and(
                         READ_ONLY.notEqual(true).and(PROJECT_ID.eq(projectId))
                     )

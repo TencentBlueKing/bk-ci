@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
+import com.tencent.devops.process.engine.dao.PipelineBuildVarOverflowDao
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
@@ -49,6 +50,7 @@ class BuildVariableServiceTest {
 
     private val dslContext: DSLContext = mockk()
     private val pipelineBuildVarDao: PipelineBuildVarDao = mockk()
+    private val pipelineBuildVarOverflowDao: PipelineBuildVarOverflowDao = mockk(relaxed = true)
     private val redisOperation: RedisOperation = RedisOperation(
         masterRedisTemplate = mockk(),
         slaveRedisTemplate = mockk(),
@@ -60,6 +62,7 @@ class BuildVariableServiceTest {
     private val buildVariableService = BuildVariableService(
         commonDslContext = dslContext,
         pipelineBuildVarDao = pipelineBuildVarDao,
+        pipelineBuildVarOverflowDao = pipelineBuildVarOverflowDao,
         redisOperation = redisOperation,
         pipelineAsCodeService = pipelineAsCodeService
     )

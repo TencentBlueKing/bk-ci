@@ -35,6 +35,7 @@ import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.expression.ExpressionParser
 import com.tencent.devops.common.expression.context.ContextValueNode
 import com.tencent.devops.common.expression.context.DictionaryContextData
+import com.tencent.devops.common.expression.context.LazyStringContextData
 import com.tencent.devops.common.expression.context.PipelineContextData
 import com.tencent.devops.common.expression.context.RuntimeDictionaryContextData
 import com.tencent.devops.common.expression.context.RuntimeNamedValue
@@ -64,7 +65,12 @@ object ExprReplacementUtil {
         with(options) {
             return try {
                 val (executeContext, nameValues) = contextPair
-                    ?: getCustomExecutionContextByMap(contextMap)
+                    ?: getCustomExecutionContextByMap(
+                        variables = contextMap,
+                        extendNamedValueMap = null,
+                        overflowKeys = overflowKeys,
+                        overflowLoader = overflowLoader
+                    )
                     ?: return value
                 parseExpression(
                     value = value,
@@ -86,6 +92,27 @@ object ExprReplacementUtil {
     fun getCustomExecutionContextByMap(
         variables: Map<String, String>,
         extendNamedValueMap: List<RuntimeNamedValue>? = null
+    ): Pair<ExecutionContext, List<NamedValueInfo>>? = getCustomExecutionContextByMap(
+        variables = variables,
+        extendNamedValueMap = extendNamedValueMap,
+        overflowKeys = emptySet(),
+        overflowLoader = null
+    )
+
+    /**
+     * 构造表达式上下文，并允许把"溢出键"挂上懒加载节点。
+     *
+     * - [variables] 中包含的"溢出键"对应的 value 仅是摘要（含 [com.tencent.devops.common.expression.context.LazyStringContextData] 替换前的占位字符串），
+     *   表达式真正访问该 key 时才通过 [overflowLoader] 拉取完整值；
+     * - 当前实现仅支持"单层"溢出键替换：若键名不含 `.`，可被替换为
+     *   [LazyStringContextData]；含 `.` 的复合键暂不替换（保留摘要值），
+     *   原因是这种用法在流水线变量场景下极少出现，避免引入更复杂的路径替换逻辑。
+     */
+    fun getCustomExecutionContextByMap(
+        variables: Map<String, String>,
+        extendNamedValueMap: List<RuntimeNamedValue>? = null,
+        overflowKeys: Set<String> = emptySet(),
+        overflowLoader: ((String) -> String?)? = null
     ): Pair<ExecutionContext, List<NamedValueInfo>>? {
         try {
             val context = ExecutionContext(DictionaryContextData())
@@ -98,10 +125,29 @@ object ExprReplacementUtil {
                 )
             }
             ExpressionParser.fillContextByMap(variables, context, nameValue)
+            // 把溢出键的叶子节点替换为懒加载节点
+            if (overflowKeys.isNotEmpty() && overflowLoader != null) {
+                replaceOverflowLeaves(context.expressionValues, overflowKeys, overflowLoader)
+            }
             return Pair(context, nameValue)
         } catch (ignore: Throwable) {
             logger.warn("EnvReplacementParser context invalid: $variables", ignore)
             return null
+        }
+    }
+
+    private fun replaceOverflowLeaves(
+        root: DictionaryContextData,
+        overflowKeys: Set<String>,
+        loader: (String) -> String?
+    ) {
+        overflowKeys.forEach { key ->
+            // 仅处理单层 key（不含 `.`），多层嵌套的极少数情况由摘要值覆盖
+            if (key.contains('.')) return@forEach
+            // 仅当上下文已经持有此 key 时才替换；否则保持原状以兼容现有变量过滤逻辑
+            if (root.containsKey(key)) {
+                root[key] = LazyStringContextData(supplier = { loader.invoke(key) })
+            }
         }
     }
 

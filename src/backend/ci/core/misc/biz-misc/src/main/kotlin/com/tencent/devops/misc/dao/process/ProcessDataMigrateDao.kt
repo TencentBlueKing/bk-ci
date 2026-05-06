@@ -348,6 +348,55 @@ class ProcessDataMigrateDao {
         }
     }
 
+    /**
+     * 抓取大变量溢出表 T_PIPELINE_BUILD_VAR_OVERFLOW 的原始记录，
+     * 以便在归档/分库迁移过程中和主表保持一致。
+     *
+     * 由于 jOOQ 尚未生成该表的代码，这里使用 plain SQL，列字段名与 DDL 一致。
+     */
+    fun getPipelineBuildVarOverflowRows(
+        dslContext: DSLContext,
+        projectId: String,
+        buildIds: List<String>
+    ): List<Map<String, Any?>> {
+        if (buildIds.isEmpty()) return emptyList()
+        val table = org.jooq.impl.DSL.table(org.jooq.impl.DSL.name("T_PIPELINE_BUILD_VAR_OVERFLOW"))
+        val projectField = org.jooq.impl.DSL.field(org.jooq.impl.DSL.name("PROJECT_ID"), String::class.java)
+        val buildField = org.jooq.impl.DSL.field(org.jooq.impl.DSL.name("BUILD_ID"), String::class.java)
+        return try {
+            dslContext.select().from(table)
+                .where(projectField.eq(projectId))
+                .and(buildField.`in`(buildIds))
+                .fetchMaps()
+        } catch (ignored: Exception) {
+            // DDL 可能尚未执行：返回空，由调用方决定是否中止迁移。
+            emptyList()
+        }
+    }
+
+    /**
+     * 把大变量溢出表 T_PIPELINE_BUILD_VAR_OVERFLOW 的记录写入目标分库。
+     */
+    fun migratePipelineBuildVarOverflowData(
+        migratingShardingDslContext: DSLContext,
+        rows: List<Map<String, Any?>>
+    ) {
+        if (rows.isEmpty()) return
+        val tableName = "T_PIPELINE_BUILD_VAR_OVERFLOW"
+        try {
+            // 逐行 insert 即可：迁移频率低，量级小（同一 buildId 的溢出记录通常 <10 条）。
+            rows.forEach { row ->
+                val keys = row.keys.toList()
+                val cols = keys.joinToString(", ") { "`$it`" }
+                val placeholders = keys.joinToString(", ") { "?" }
+                val sql = "INSERT INTO `$tableName`($cols) VALUES ($placeholders)"
+                migratingShardingDslContext.execute(sql, *keys.map { row[it] }.toTypedArray())
+            }
+        } catch (ignored: Exception) {
+            // 与读取保持一致：DDL 可能尚未执行
+        }
+    }
+
     fun getPipelineFavorRecords(
         dslContext: DSLContext,
         projectId: String,

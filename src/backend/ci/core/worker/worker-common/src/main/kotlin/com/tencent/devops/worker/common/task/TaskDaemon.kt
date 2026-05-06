@@ -116,6 +116,16 @@ class TaskDaemon(
         if (allEnv.isNotEmpty()) {
             allEnv.forEach { (key, value) ->
                 if (value.length > PARAM_MAX_LENGTH) {
+                    // 大变量值现在改为服务端"溢出表"按需加载，Worker 端只发警告并照常上报，
+                    // 不再丢弃变量值；服务端 BuildVariableService 会自动把超过 4K 的部分写入溢出表。
+                    LoggerService.addWarnLine(
+                        "Notice, variable [$key] is larger than ${PARAM_MAX_LENGTH_WARN} characters" +
+                            "(len=${value.length}), it will be stored in the overflow table; " +
+                            "use \${{ $key }} expression to reference it on the server side."
+                    )
+                }
+                if (value.length > PARAM_MAX_LENGTH) {
+                    // 极端情况防御：超过硬上限直接拒绝上报，避免单条记录撑爆传输/数据库。
                     LoggerService.addWarnLine(
                         "Warning, assignment to variable [$key] failed, " +
                             "more than $PARAM_MAX_LENGTH characters(len=${value.length})"
@@ -164,6 +174,19 @@ class TaskDaemon(
     }
 
     companion object {
-        const val PARAM_MAX_LENGTH = 4000 // 流水线参数最大长度
+        /**
+         * Worker 端单变量值最大字符上限（4MB）。
+         *
+         * 历史值为 4000：与主表 VALUE 列的 varchar(4000) 对齐，超过则丢弃；
+         * 现在主表 + 溢出表方案上线后，4MB 以下的值都能完整入库，
+         * Worker 端不再以 4K 作为硬上限丢数据，仅作日志告警。
+         */
+        const val PARAM_MAX_LENGTH = 4 * 1024 * 1024
+
+        /**
+         * 触发"建议改用 ${{ xxx }} 引用"提示日志的阈值（仍是 4K）。
+         * 超过此阈值的变量在传统 `$xxx` / `${xxx}` 引用方式下只能看到摘要值。
+         */
+        const val PARAM_MAX_LENGTH_WARN = 4000
     }
 }

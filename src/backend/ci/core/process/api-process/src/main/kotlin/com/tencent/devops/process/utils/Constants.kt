@@ -228,9 +228,24 @@ const val PIPELINE_STAGE_CONTAINERS_COUNT_MAX = 256
 const val PIPELINE_CONDITION_EXPRESSION_LENGTH_MAX = 512
 
 /**
- * 入库VAR表，流水线变量最大长度
+ * 入库VAR表，流水线变量主表 VALUE 列最大长度（超过则进入溢出表，按需加载）。
+ * 仅 ${{ xxx }} 表达式语法可获取超过该长度的真实值。
  */
 const val PIPELINE_VARIABLES_STRING_LENGTH_MAX = 4000
+
+/**
+ * 流水线变量值的硬上限（4MB）。
+ * 超过该上限将拒绝写入，避免单条记录撑爆 mediumtext / 内存。
+ */
+const val PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX = 4 * 1024 * 1024
+
+/**
+ * 大变量主表占位符前缀。
+ * 主表 VALUE 列写入摘要值时附带该前缀 + 原始长度，
+ * 配合 OVERFLOW 表实现"按需加载完整值"。
+ * 形如：__BK_OVF__:<length>:<truncated value>
+ */
+const val PIPELINE_VARIABLES_OVERFLOW_PREFIX = "__BK_OVF__:"
 
 const val PIPELINE_TIME_START = "BK_CI_BUILD_START_TIME" // "pipeline.time.start"
 

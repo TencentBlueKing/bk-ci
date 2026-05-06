@@ -188,10 +188,38 @@ class ProcessDataDeleteDao {
     }
 
     fun deletePipelineBuildVar(dslContext: DSLContext, projectId: String, buildIds: List<String>) {
+        if (buildIds.isEmpty()) return
         with(TPipelineBuildVar.T_PIPELINE_BUILD_VAR) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
                 .execute()
+        }
+        // 同步清理大变量溢出表，避免主表删完后溢出表残留孤儿数据。
+        deletePipelineBuildVarOverflow(dslContext, projectId, buildIds)
+    }
+
+    /**
+     * 删除大变量溢出表中本批 buildId 的全部记录。
+     *
+     * 该表为新增表 T_PIPELINE_BUILD_VAR_OVERFLOW，jOOQ 尚未生成对应代码，
+     * 这里使用 plain SQL 表/字段引用，避免对未生成代码的强依赖。
+     */
+    fun deletePipelineBuildVarOverflow(
+        dslContext: DSLContext,
+        projectId: String,
+        buildIds: List<String>
+    ) {
+        if (buildIds.isEmpty()) return
+        val table = org.jooq.impl.DSL.table(org.jooq.impl.DSL.name("T_PIPELINE_BUILD_VAR_OVERFLOW"))
+        val projectField = org.jooq.impl.DSL.field(org.jooq.impl.DSL.name("PROJECT_ID"), String::class.java)
+        val buildField = org.jooq.impl.DSL.field(org.jooq.impl.DSL.name("BUILD_ID"), String::class.java)
+        try {
+            dslContext.deleteFrom(table)
+                .where(projectField.eq(projectId))
+                .and(buildField.`in`(buildIds))
+                .execute()
+        } catch (ignored: Exception) {
+            // DDL 可能尚未执行（灰度期间）；不阻塞主表清理。
         }
     }
 

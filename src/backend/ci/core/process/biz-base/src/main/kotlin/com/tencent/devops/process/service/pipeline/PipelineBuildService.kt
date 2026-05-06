@@ -86,7 +86,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_UPDATE_USER
-import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
+import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
@@ -172,9 +172,10 @@ class PipelineBuildService(
                 pipelineVersion = signPipelineVersion
             )
         }
-        if (setting?.failIfVariableInvalid == true) {
-            failIfVariableInvalid(pipelineParamMap)
-        }
+        // failIfVariableInvalid 已废弃：大变量按需加载方案上线后，
+        // 4K 上限不再是硬约束，现网超长变量也能正常入库（>4K 走溢出表）。
+        // 仍校验"硬上限 4M"以避免极端情况下单条记录撑爆 mediumtext。
+        rejectIfVariableHardOversize(pipelineParamMap)
         val bucketSize = setting!!.maxConRunningQueueSize
         val lockKey = "PipelineRateLimit:${pipeline.pipelineId}"
         try {
@@ -394,9 +395,12 @@ class PipelineBuildService(
             readOnly = true
         )
         pipelineParamMap[PIPELINE_DIALECT] = BuildParameters(PIPELINE_DIALECT, pipelineDialectType, readOnly = true)
+        // 兼容历史构建：仍然保留 PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG 这个内置变量，
+        // 但其值固定为 false —— Worker 端读到该 flag 后会跳过 4K 报错路径，
+        // 流水线因变量超长而失败的旧行为彻底消失。
         if (failIfVariableInvalid == true) {
             pipelineParamMap[PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG] = BuildParameters(
-                PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG, true, readOnly = true
+                PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG, false, readOnly = true
             )
         }
         // 自定义触发源材料信息
@@ -439,9 +443,24 @@ class PipelineBuildService(
 //        return originStartParams
     }
 
+    @Deprecated(
+        message = "Replaced by overflow-aware variable storage. Use rejectIfVariableHardOversize instead.",
+        replaceWith = ReplaceWith("rejectIfVariableHardOversize(pipelineParamMap)")
+    )
     fun failIfVariableInvalid(pipelineParamMap: MutableMap<String, BuildParameters>) {
+        // 兼容旧调用方：始终走硬上限校验，不再使用 4K 阈值。
+        rejectIfVariableHardOversize(pipelineParamMap)
+    }
+
+    /**
+     * 仅做"硬上限 4M"防御性校验。
+     * 超过 [com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX]
+     * 时终止构建，避免单条变量值撑爆溢出表的 mediumtext 列。
+     */
+    fun rejectIfVariableHardOversize(pipelineParamMap: MutableMap<String, BuildParameters>) {
         pipelineParamMap.forEach { (key, value) ->
-            if (value.value.toString().length > PIPELINE_VARIABLES_STRING_LENGTH_MAX) {
+            val len = value.value.toString().length
+            if (len > PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_FAIL_IF_VARIABLE_INVALID,
                     params = arrayOf(key)
