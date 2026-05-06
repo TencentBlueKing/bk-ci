@@ -62,6 +62,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoServic
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
 import com.tencent.devops.process.engine.utils.PipelineUtils
+import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.yaml.PipelineYamlService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -85,7 +86,8 @@ class PipelineTemplateInstanceReqConverter(
     private val pipelineYamlService: PipelineYamlService,
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineInfoService: PipelineInfoService,
-    private val templatePipelineDao: TemplatePipelineDao
+    private val templatePipelineDao: TemplatePipelineDao,
+    private val pipelineTemplateRelatedService: PipelineTemplateRelatedService
 ) : PipelineVersionCreateReqConverter {
     override fun support(request: PipelineVersionCreateReq) = request is PipelineTemplateInstanceReq
 
@@ -147,6 +149,19 @@ class PipelineTemplateInstanceReqConverter(
             logger.info(
                 "Start to convert template instance request|$projectId|$pipelineId|$templateId|$templateVersion"
             )
+            // 如果修改流水线,不能把非约束的流水线改成约束的流水线
+            pipelineId?.let {
+                val pipelineTemplateRelated = pipelineTemplateRelatedService.get(
+                    projectId = projectId, pipelineId = pipelineId
+                )
+                if (pipelineTemplateRelated == null ||
+                    pipelineTemplateRelated.instanceType != PipelineInstanceTypeEnum.CONSTRAINT
+                ) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_NON_CONSTRAINED_PIPELINE_CANNOT_SAVE_AS_CONSTRAINED
+                    )
+                }
+            }
 
             // 生成流水线ID
             val newPipelineId = pipelineId ?: pipelineIdGenerator.getNextId()
