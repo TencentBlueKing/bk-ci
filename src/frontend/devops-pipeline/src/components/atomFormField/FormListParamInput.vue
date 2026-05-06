@@ -1,6 +1,12 @@
 <template>
     <section class="form-list-param-input">
         <div
+            v-if="!localValue.length"
+            class="form-list-empty-placeholder"
+        >
+            {{ $t('noData') }}
+        </div>
+        <div
             class="form-list-item"
             v-for="(item, rowIndex) in localValue"
             :key="rowIndex"
@@ -218,6 +224,7 @@
                 return false
             }
 
+
             const getFieldOptions = (field) => {
                 if (!field.options || !Array.isArray(field.options)) return []
                 return field.options.map(opt => ({
@@ -394,9 +401,24 @@
 <style lang="scss" scoped>
     .form-list-param-input {
         width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        .form-list-empty-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 60px;
+            font-size: 12px;
+            color: #979BA5;
+            background: #FAFBFD;
+            border: 1px dashed #DCDEE5;
+            border-radius: 2px;
+        }
 
         .form-list-item {
-            margin-bottom: 8px;
+            
             border: 1px solid #DCDEE5;
             border-radius: 2px;
             overflow: hidden;

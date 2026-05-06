@@ -49,6 +49,28 @@ export function isShallowEqual (obj1, obj2) {
     return obj1Keys.every(key => obj1[key] === obj2[key])
 }
 
+/**
+ * 比较两个流水线参数值是否相等
+ * - 原始类型：直接 ===
+ * - 普通对象（如 REPO_REF.defaultValue）：浅比较
+ * - 数组（如 FORM_LIST.defaultValue）：JSON 序列化后比较，避免引用比较 / String() 把对象变成 [object Object] 导致的误判
+ * - 其余情况：!==
+ */
+export function isParamValueEqual (a, b) {
+    if (a === b) return true
+    if (Array.isArray(a) && Array.isArray(b)) {
+        try {
+            return JSON.stringify(a) === JSON.stringify(b)
+        } catch (e) {
+            return false
+        }
+    }
+    if (isObject(a) && isObject(b)) {
+        return isShallowEqual(a, b)
+    }
+    return false
+}
+
 export function isInArray (ele, array) {
     for (const item of array) {
         if (item === ele) {
