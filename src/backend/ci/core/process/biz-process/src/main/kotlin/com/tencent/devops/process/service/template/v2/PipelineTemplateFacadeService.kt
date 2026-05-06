@@ -1213,10 +1213,10 @@ class PipelineTemplateFacadeService @Autowired constructor(
             }
         }
         // 草稿版本和版本名,如果有草稿版本,则使用草稿版本,否则使用最新版本
-        val (version, versionName) = if (draftResource == null) {
-            Pair(releaseVersion, releaseVersionName)
+        val (version, versionName, versionStatus) = if (draftResource == null) {
+            Triple(releaseVersion, releaseVersionName, releaseResource.status)
         } else {
-            Pair(draftResource.version, null)
+            Triple(draftResource.version, null, draftResource.status)
         }
         val permission2TemplatesMap = pipelineTemplatePermissionService.getResourcesByPermission(
             userId = userId,
@@ -1330,6 +1330,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
             canRelease = draftResource?.model != null,
             version = version,
             versionName = versionName,
+            versionStatus = versionStatus,
             baseVersion = baseResource?.version,
             baseVersionName = baseResource?.versionName,
             baseVersionStatus = baseResource?.status,

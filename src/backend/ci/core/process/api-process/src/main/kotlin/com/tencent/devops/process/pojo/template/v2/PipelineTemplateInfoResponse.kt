@@ -64,6 +64,8 @@ data class PipelineTemplateInfoResponse(
     val version: Long?,
     @get:Schema(title = "用于前端交互的版本名称")
     val versionName: String?,
+    @get:Schema(title = "版本状态")
+    val versionStatus: VersionStatus?,
     @get:Schema(title = "草稿的基准版本（存在草稿才有值）", required = false)
     val baseVersion: Long?,
     @get:Schema(title = "草稿的基准版本的状态（存在草稿才有值）", required = false)
