@@ -234,15 +234,13 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
     }
 
     override fun getStoreFileSize(filePath: String, storeType: StoreTypeEnum, repoName: String?): Long? {
-        val (projectId, authorization, repo) = getRepoStoreConfig(storeType)
         return try {
             bkRepoClient.getStoreComponentPkgSize(
-                authorization = authorization,
-                projectId = projectId,
-                repoName = repoName ?: repo,
-                fullPath = filePath,
-                userId = BKREPO_DEFAULT_USER
-            ).size
+                userId = BKREPO_DEFAULT_USER,
+                projectId = getBkRepoProjectId(storeType),
+                repoName = repoName ?: getBkRepoName(storeType),
+                fullPath = filePath
+            )
         } catch (ignored: RemoteServiceException) {
             logger.warn(
                 "Remote service error getting store file size -filePath: $filePath, storeType: $storeType",
@@ -254,8 +252,6 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
             null
         }
     }
-
-    abstract fun getRepoStoreConfig(storeType: StoreTypeEnum): Triple<String, String, String>
 
     companion object {
         private val logger = LoggerFactory.getLogger(ArchiveStorePkgToBkRepoServiceImpl::class.java)

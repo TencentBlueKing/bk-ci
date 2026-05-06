@@ -1339,19 +1339,18 @@ class BkRepoClient constructor(
     }
 
     fun getStoreComponentPkgSize(
-        authorization: String,
+        userId: String,
         projectId: String,
         repoName: String,
-        fullPath: String,
-        userId: String
-    ): QueryNodeInfo {
+        fullPath: String
+    ): Long? {
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/detail/$projectId/$repoName/$fullPath"
         val request = Request.Builder()
             .url(url)
-            .headers(getCommonHeaders(userId, projectId).toHeaders()).build()
-        return doRequest(request).resolveResponse<Response<QueryNodeInfo>>()?.data ?: throw RemoteServiceException(
-            "get store component pkg size failed"
-        )
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
+            .get()
+            .build()
+        return doRequest(request).resolveResponse<Response<QueryNodeInfo>>()?.data?.size
     }
 
     companion object {
