@@ -492,6 +492,7 @@
         "addStrategy": "Add Strategy",
         "strategyName": "Strategy Name",
         "strategyNamePlaceholder": "Please enter strategy name",
+        "nameDuplicated": "Strategy name already exists",
         "adjustSort": "Adjust Sort",
         "finishSort": "Finish Sort",
         "saveSort": "Save Sort",

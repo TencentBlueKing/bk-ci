@@ -487,6 +487,7 @@
         "addStrategy": "戦略を追加",
         "strategyName": "戦略名",
         "strategyNamePlaceholder": "戦略名を入力してください",
+        "nameDuplicated": "戦略名は既に存在します",
         "adjustSort": "並べ替え調整",
         "finishSort": "並べ替え完了",
         "saveSort": "並べ替えを保存",

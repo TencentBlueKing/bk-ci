@@ -211,6 +211,7 @@
             :value="showStrategyDialog"
             :is-edit="isEditMode"
             :strategy-data="currentStrategy"
+            :strategy-list="strategyList"
             @confirm="handleSaveStrategy"
             @cancel="handleCancelStrategy"
         />

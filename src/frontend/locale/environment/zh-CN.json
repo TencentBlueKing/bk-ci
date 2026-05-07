@@ -488,6 +488,7 @@
         "addStrategy": "新增策略",
         "strategyName": "策略名称",
         "strategyNamePlaceholder": "请输入策略名称",
+        "nameDuplicated": "策略名称已存在",
         "adjustSort": "调整排序",
         "finishSort": "完成排序",
         "saveSort": "保存排序",

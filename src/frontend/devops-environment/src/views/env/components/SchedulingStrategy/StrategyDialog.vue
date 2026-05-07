@@ -15,9 +15,16 @@
                 <bk-input
                     v-model="formData.strategyName"
                     class="strategy-name-input"
+                    :class="{ 'is-error': nameError }"
                     :placeholder="$t('environment.scheduling.strategyNamePlaceholder')"
                     :maxlength="128"
                 />
+                <div
+                    v-if="nameError"
+                    class="name-error-tips"
+                >
+                    {{ nameError }}
+                </div>
             </div>
 
             <!-- 亲和性选项 -->
@@ -180,6 +187,7 @@
             <bk-button
                 theme="primary"
                 :loading="isSaving"
+                :disabled="isSaving || !!nameError"
                 @click="handleConfirm"
             >
                 {{ $t('environment.save') }}
@@ -214,6 +222,10 @@
             strategyData: {
                 type: Object,
                 default: null
+            },
+            strategyList: {
+                type: Array,
+                default: () => []
             }
         },
         emits: ['confirm', 'cancel'],
@@ -226,6 +238,7 @@
             const isSaving = ref(false)
             const tagKeyList = ref([])
             const tagValuesMap = ref({})
+            const nameError = ref('')
 
             // 操作符列表
             const operatorList = [
@@ -239,6 +252,28 @@
                 { id: 'CONTAINS', name: 'Contains' },
                 { id: 'IN', name: 'in' }
             ]
+
+            // 校验策略名称是否重复
+            const validateName = () => {
+                const inputName = (formData.value.strategyName || '').trim()
+                if (!inputName) {
+                    nameError.value = ''
+                    return
+                }
+                // 检查是否与已有策略同名（编辑时排除当前策略）
+                const duplicate = props.strategyList.some(item => {
+                    // 编辑时排除当前策略
+                    if (props.isEdit && props.strategyData && item.id === props.strategyData.id) {
+                        return false
+                    }
+                    return (item.strategyName || '').trim() === inputName
+                })
+                if (duplicate) {
+                    nameError.value = proxy.$t('environment.scheduling.nameDuplicated')
+                } else {
+                    nameError.value = ''
+                }
+            }
 
             const defaultFormData = {
                 strategyName: '',
@@ -270,7 +305,12 @@
                         // 新增模式，重置表单
                         resetForm()
                     }
+                    validateName()
                 }
+            })
+
+            watch(() => formData.value.strategyName, () => {
+                validateName()
             })
 
             // 监听标签勾选状态，勾选时自动添加一条空数据
@@ -495,6 +535,7 @@
                 dialogTitle,
                 tagKeyList,
                 operatorList,
+                nameError,
 
                 // function
                 handleLabelKeyChange,
@@ -507,7 +548,8 @@
                 getPreDefinedValues,
                 isMultiValueOperator,
                 getValuePlaceholder,
-                shouldShowSelect
+                shouldShowSelect,
+                validateName
             }
         }
     }
@@ -542,6 +584,19 @@
             .strategy-name-label {
                 font-size: 14px;
                 margin-bottom: 8px;
+            }
+            .strategy-name-input {
+                &.is-error {
+                    ::v-deep .bk-form-input {
+                        border-color: #EA3636 !important;
+                    }
+                }
+            }
+            .name-error-tips {
+                margin-top: 4px;
+                font-size: 12px;
+                color: #EA3636;
+                line-height: 1;
             }
         }
 
