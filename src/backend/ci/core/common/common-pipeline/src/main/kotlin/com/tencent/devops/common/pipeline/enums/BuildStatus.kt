@@ -35,7 +35,7 @@ import com.tencent.devops.common.api.util.MessageUtil
  * [statusName] 状态中文名
  * [visible] 是否对用户可见
  *
- * 注意：该集合依赖 [BuildStatus] 枚举声明顺序，若新增/插入枚举值，存量数据的 ordinal 含义会偏移，
+ * 注意：依赖 [BuildStatus] 枚举声明顺序的集合，若新增/插入枚举值，存量数据的 ordinal 含义会偏移，
  * 必须在 [BuildStatus] 末尾追加，且严禁重排已有枚举；变更前请同步评估 DB 存量数据的兼容性。
  */
 @Suppress("TooManyFunctions")
