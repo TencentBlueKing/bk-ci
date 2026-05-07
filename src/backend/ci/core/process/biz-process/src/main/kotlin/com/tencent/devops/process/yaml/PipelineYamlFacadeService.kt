@@ -40,7 +40,6 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileSyncReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
@@ -77,8 +76,7 @@ class PipelineYamlFacadeService @Autowired constructor(
     private val pipelineYamlService: PipelineYamlService,
     @Lazy
     private val pipelineYamlRepositoryService: PipelineYamlRepositoryService,
-    private val pipelineYamlViewService: PipelineYamlViewService,
-    private val pipelineYamlFileManager: PipelineYamlFileManager
+    private val pipelineYamlViewService: PipelineYamlViewService
 ) {
 
     companion object {
@@ -157,18 +155,6 @@ class PipelineYamlFacadeService @Autowired constructor(
             )
             throw exception
         }
-    }
-
-    fun syncYamlFile(
-        userId: String,
-        projectId: String,
-        yamlFileSyncReq: PipelineYamlFileSyncReq
-    ) {
-        pipelineYamlFileManager.syncYamlFile(
-            userId = userId,
-            projectId = projectId,
-            yamlFileSyncReq = yamlFileSyncReq
-        )
     }
 
     fun trigger(
