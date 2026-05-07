@@ -29,7 +29,7 @@
   <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js" />
   <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router_3.6.5.min.js" />
   <script>
-    var API_URL_PREFIX = '/ms' // api接口前缀
+    var API_URL_PREFIX = '<%= PUBLIC_PATH_PREFIX %>/ms' // api接口前缀(含子路径前缀)
     var PUBLIC_URL_PREFIX = '<%= PUBLIC_PATH_PREFIX %>' // 静态资源前缀
     var PERM_URL_PREFIX = '__BK_PAAS_PUBLIC_URL__/o/bk_iam_app' // EE PERM URL PREFIX
     var DOCS_URL_PREFIX = '__BK_CI_DOCS_URL__' // 文档中心域名
@@ -145,10 +145,21 @@
       }
     }
 
+    // 子路径部署支持：返回剥离 PUBLIC_URL_PREFIX 之后的"逻辑路径"，
+    // 让所有基于 /console/... 的正则匹配在挂在子路径下时仍然成立。
+    function getLogicalPath() {
+      var pathname = location.pathname
+      var prefix = window.PUBLIC_URL_PREFIX || ''
+      return prefix && pathname.indexOf(prefix) === 0
+        ? (pathname.slice(prefix.length) || '/')
+        : pathname
+    }
+
     function matchPathProjectId() {
       try {
+        var logicalPath = getLogicalPath()
         var reg = /^\/console\/\w+\/([\w\-]+)?/
-        if (location.pathname.match(/^\/console\/perm\/(\w+)?/)) {
+        if (logicalPath.match(/^\/console\/perm\/(\w+)?/)) {
           var query = location.search.slice(1)
           var queryArr = query.split('&')
           for (var i = 0; i < queryArr.length; i++) {
@@ -164,11 +175,11 @@
           /^\/console\/permission\/(\w+)?/,
           /^\/console\/manage\/apply/,
           /^\/console\/platform\/(\w+)?/,
-        ].some((reg) => location.pathname.match(reg))) {
+        ].some((reg) => logicalPath.match(reg))) {
           // TODO store、permission、apply project 没有projectId
           return ''
         } else {
-          var res = location.pathname.match(reg)
+          var res = logicalPath.match(reg)
           return res ? res[1] : ''
         }
       } catch (e) {
@@ -393,7 +404,8 @@
     }
 
     function init(projectList, allServices, userInfo) {
-      var path = location.pathname.replace('/console', '')
+      // 先剥离子路径前缀再去掉 /console，得到子模块的相对路径（如 /pipeline/xxx）。
+      var path = getLogicalPath().replace(/^\/console/, '')
       var headTag = document.head || document.getElementsByTagName('head')[0]
       var pathReg = /^\/(\w+)\/?/
       var serviceObject = getServiceObject(allServices, window.SERVICE_ASSETS)
