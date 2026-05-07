@@ -58,6 +58,7 @@ function _M:isSafe()
             "/bkrepo/bkci%-desktop", -- 蓝盾桌面端
             "/artifactory/api/external/artifactories/.+/.+/.+/hapJson5.json5", -- HAP Json5
             "/ms/process/api/external/pipelines/ba608114e8854757b36994c42bed7477/build", -- BK-Base的外网触发
+            "/ms/process/api/external/pipelines/bd2020c8f4fc4f9caa8c5151227164c1/build", -- 外部触发流水线(注意看流水线的说明): https://devops.woa.com/console/pipeline/bkdevops/p-39f24681f30c41748a7be2313552e426
         }
         local is_secure = false
         for _, item in ipairs(security_paths) do
