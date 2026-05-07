@@ -158,7 +158,7 @@ class ProcessDataClearService @Autowired constructor(
                 archiveFlag = archiveFlag
             )
             if (archiveFlag == true) {
-                processDataDeleteDao.deletePipelineBuildHistory(context, projectId, buildIds)
+                processDataDeleteDao.deletePipelineBuildHistory(context, projectId, buildId)
                 return@transaction
             }
             val version = processDao.getPipelineVersionByBuildId(
