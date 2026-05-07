@@ -66,6 +66,7 @@ import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
 import com.tencent.devops.repository.pojo.credential.AuthRepository
+import com.tencent.devops.repository.pojo.credential.UserOauthTokenAuthCred
 import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -446,10 +447,16 @@ class PipelineYamlFacadeService @Autowired constructor(
                     errorCode = ProcessMessageCode.ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC
                 )
             }
+            // 发布应该使用流水线更新人的身份,不能使用pac开启人的身份
+            val pushAuthRepository = authRepository.copy(
+                auth = UserOauthTokenAuthCred(
+                    userId = userId
+                )
+            )
             val perm = client.get(ServiceScmRepositoryApiResource::class).findPerm(
                 projectId = projectId,
                 username = userId,
-                authRepository = authRepository
+                authRepository = pushAuthRepository
             ).data!!
             if (!perm.push) {
                 throw ErrorCodeException(
