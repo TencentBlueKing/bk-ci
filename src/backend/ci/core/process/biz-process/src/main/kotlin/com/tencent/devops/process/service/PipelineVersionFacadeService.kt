@@ -1057,7 +1057,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             PipelineDraftStatusResult(status = PipelineDraftStatus.NORMAL)
         } else {
             PipelineDraftStatusResult(
-                status = PipelineDraftStatus.BASE_OUTDATED,
+                status = PipelineDraftStatus.RELEASE_OUTDATED,
                 draft = PipelineVersionSimple(webReleaseResource),
                 release = PipelineVersionSimple(latestReleaseResource)
             )

@@ -1822,7 +1822,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
             PipelineTemplateDraftStatusResult(status = PipelineDraftStatus.NORMAL)
         } else {
             PipelineTemplateDraftStatusResult(
-                status = PipelineDraftStatus.BASE_OUTDATED,
+                status = PipelineDraftStatus.RELEASE_OUTDATED,
                 draft = PipelineTemplateVersionSimple(webReleaseResource),
                 release = PipelineTemplateVersionSimple(latestReleaseResource)
             )
