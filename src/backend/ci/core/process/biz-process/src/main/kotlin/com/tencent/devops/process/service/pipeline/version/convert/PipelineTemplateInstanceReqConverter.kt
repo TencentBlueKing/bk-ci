@@ -149,10 +149,16 @@ class PipelineTemplateInstanceReqConverter(
             logger.info(
                 "Start to convert template instance request|$projectId|$pipelineId|$templateId|$templateVersion"
             )
+
+            // 生成流水线ID
+            val newPipelineId = pipelineId ?: pipelineIdGenerator.getNextId()
+            // 异步创建实例化,在请求时会创建线ID,所以不能根据pipelineId为空判断是否是创建流水线
+            val pipelineInfo = pipelineInfoService.getPipelineInfo(projectId = projectId, pipelineId = newPipelineId)
+
             // 如果修改流水线,不能把非约束的流水线改成约束的流水线
-            pipelineId?.let {
+            if (pipelineInfo != null) {
                 val pipelineTemplateRelated = pipelineTemplateRelatedService.get(
-                    projectId = projectId, pipelineId = pipelineId
+                    projectId = projectId, pipelineId = newPipelineId
                 )
                 if (pipelineTemplateRelated == null ||
                     pipelineTemplateRelated.instanceType != PipelineInstanceTypeEnum.CONSTRAINT
@@ -162,11 +168,6 @@ class PipelineTemplateInstanceReqConverter(
                     )
                 }
             }
-
-            // 生成流水线ID
-            val newPipelineId = pipelineId ?: pipelineIdGenerator.getNextId()
-            // 异步创建实例化,在请求时会创建线ID,所以不能根据pipelineId为空判断是否是创建流水线
-            val pipelineInfo = pipelineInfoService.getPipelineInfo(projectId = projectId, pipelineId = newPipelineId)
 
             // 生成流水线基本信息
             val pipelineBasicInfo = pipelineResourceFactory.createPipelineBasicInfo(
