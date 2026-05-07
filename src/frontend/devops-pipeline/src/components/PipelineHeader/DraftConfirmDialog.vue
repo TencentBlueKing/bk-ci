@@ -13,8 +13,9 @@
             <i class="devops-icon icon-exclamation"></i>
             {{ draftHintTitle }}
         </header>
+        <!-- 草稿状态 -->
         <div
-            v-if="hasDraftPipeline"
+            v-if="hasDraft"
             class="draft-hint-content"
         >
             <p
@@ -76,15 +77,51 @@
                 </template>
             </div>
         </div>
+        <!-- 已发布状态 -->
+        <div v-else-if="(clickActionType === 'edit' || !isRollback) && draftStatus === DRAFT_STATUS.PUBLISHED">
+            <p
+                class="draft-info"
+            >
+                <i18n
+                    path="existingDraft"
+                    class="existing-draft"
+                >
+                    <span>{{ draftSaveInfo?.releaseUpdater }}</span>
+                    <span>{{ draftSaveInfo?.releaseUpdateTime }}</span>
+                </i18n>
+            </p>
+            <div class="is-active-branch-version">
+                {{ $t('alreadyPublishedTip') }}
+            </div>
+        </div>
+        <!-- 基线版本落后状态 -->
+        <div v-else-if="(clickActionType === 'edit' || !isRollback) && draftStatus === DRAFT_STATUS.BASE_OUTDATED">
+            <p
+                class="draft-info"
+            >
+                <i18n
+                    path="updatedPipelineVersionDesc"
+                    class="existing-draft"
+                >
+                    <span>{{ draftSaveInfo?.releaseUpdater }}</span>
+                    <span>{{ draftSaveInfo?.releaseUpdateTime }}</span>
+                </i18n>
+            </p>
+            <div
+                class="is-active-branch-version"
+            >
+                {{ $t('pipelineUpdatedNotice', [versionName, draftSaveInfo?.releaseVersionName]) }}
+            </div>
+        </div>
         <footer slot="footer">
             <bk-button
                 theme="primary"
                 @click="rollback"
             >
-                {{ $t(isActiveBranchVersion ? 'resume' : showRollbackTips ? 'rollbackConfirm' : 'newDraft') }}
+                {{ showBtnText }}
             </bk-button>
             <bk-button
-                v-if="hasDraftPipeline && !isActiveBranchVersion"
+                v-if="hasDraft && !isActiveBranchVersion"
                 @click="goEdit(draftVersion)"
             >
                 {{ $t('editDraft') }}
@@ -113,8 +150,8 @@
                 type: Boolean,
                 default: false
             },
-            // 是否有草稿流水线
-            hasDraftPipeline: {
+            // 是否有草稿
+            hasDraft: {
                 type: Boolean,
                 default: false
             },
@@ -132,7 +169,9 @@
                     draftVersionName: '',
                     draftVersion: null,
                     releaseVersionName: '',
-                    releaseVersion: null
+                    releaseVersion: null,
+                    releaseUpdater: '',
+                    releaseUpdateTime: ''
                 })
             },
             // 弹窗标题
@@ -170,6 +209,11 @@
                 type: Number,
                 default: null
             },
+            // 当前版本号
+            version: {
+                type: Number,
+                default: null
+            },
             // 区分实力流水线点击的按钮类型：edit(编辑)/rollback(回滚)
             clickActionType: {
                 type: String,
@@ -187,8 +231,19 @@
                 if (this.isTemplatePipeline && this.clickActionType) {
                     return this.clickActionType === 'rollback' && this.isRollback
                 }
+                if (this.isRollback && this.clickActionType === 'edit') {
+                    return false
+                }
                 // 普通流水线：直接根据 isRollback 判断
                 return this.isRollback
+            },
+            showBtnText () {
+                if (this.isActiveBranchVersion) {
+                    return this.$t('resume')
+                } else if (this.showRollbackTips) {
+                    return this.$t('rollbackConfirm')
+                }
+                return this.$t('newDraft')
             }
         },
         methods: {

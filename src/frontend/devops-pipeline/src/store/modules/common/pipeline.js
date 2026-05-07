@@ -38,6 +38,7 @@ import {
     REPOSITORY_MUTATION,
     SET_PAC_SUPPORT_SCM_TYPE_LIST,
     SET_PROJECT_PERM,
+    SET_HAS_DRAFT,
     STORE_TEMPLATE_MUTATION,
     TEMPLATE_CATEGORY_MUTATION,
     TEMPLATE_MUTATION
@@ -45,6 +46,16 @@ import {
 
 function rootCommit (commit, ACTION_CONST, payload) {
     commit(ACTION_CONST, payload, { root: true })
+}
+
+/**
+ * 更新草稿状态
+ * @param {Function} commit - Vuex commit 函数
+ * @param {Object} data - 响应数据
+ */
+function updateHasDraftStatus (commit, data) {
+    const hasDraft = data?.status && !['NORMAL', 'BRANCH', 'PUBLISHED', 'BASE_OUTDATED'].includes(data.status)
+    commit('SET_HAS_DRAFT', hasDraft)
 }
 
 export const state = {
@@ -59,6 +70,7 @@ export const state = {
     templateRuleList: [],
     qualityAtom: [],
     pacSupportScmTypeList: [],
+    hasDraft: false, // 编辑/回滚/保存草稿/发布 时点击，调用draftStatus接口获得当前流水线/模板的草稿状态
     hasProjectPermission: false
 }
 
@@ -137,6 +149,11 @@ export const mutations = {
     [SET_PROJECT_PERM]: (state, hasProjectPermission) => {
         Object.assign(state, {
             hasProjectPermission
+        })
+    },
+    [SET_HAS_DRAFT]: (state, hasDraft) => {
+        Object.assign(state, {
+            hasDraft
         })
     }
 }
@@ -348,28 +365,36 @@ export const actions = {
             console.log(e)
         }
     },
-    getDraftStatus: async ({ commit }, { projectId, pipelineId, actionType, version, baseDraftVersion }) => {
+    getDraftStatus: async ({ commit }, { projectId, pipelineId, actionType, version, baseDraftVersion, releaseVersion }) => {
         const params = new URLSearchParams({ actionType })
-        if (version) params.append('version', version)
-        if (baseDraftVersion) params.append('baseDraftVersion', baseDraftVersion)
+        version && params.append('version', version)
+        releaseVersion && params.append('releaseVersion', releaseVersion)
+        baseDraftVersion && params.append('baseDraftVersion', baseDraftVersion)
         
         const url = `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/draftStatus?${params}`
-        const response = await request.get(url)
-        return response.data
+        const { data } = await request.get(url)
+        
+        updateHasDraftStatus(commit, data)
+        
+        return data
     },
     getDraftVersion: async ({ commit }, { projectId, pipelineId, version, page, pageSize }) => {
         return request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/draftVersions?version=${version}&page=${page}&pageSize=${pageSize}`).then(response => {
             return response.data
         })
     },
-    getTemplateDraftStatus: async ({ commit }, { projectId, templateId, actionType, version, baseDraftVersion }) => {
+    getTemplateDraftStatus: async ({ commit }, { projectId, templateId, actionType, version, baseDraftVersion, releaseVersion }) => {
         const params = new URLSearchParams({ actionType })
-        if (version) params.append('version', version)
-        if (baseDraftVersion) params.append('baseDraftVersion', baseDraftVersion)
+        version && params.append('version', version)
+        releaseVersion && params.append('releaseVersion', releaseVersion)
+        baseDraftVersion && params.append('baseDraftVersion', baseDraftVersion)
         
         const url = `${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/draftStatus?${params}`
-        const response = await request.get(url)
-        return response.data
+        const { data } = await request.get(url)
+        
+        updateHasDraftStatus(commit, data)
+        
+        return data
     },
     getTemplateDraftVersion: async ({ commit }, { projectId, templateId, version, page, pageSize }) => {
         return request.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/draftVersions?version=${version}&page=${page}&pageSize=${pageSize}`).then(response => {

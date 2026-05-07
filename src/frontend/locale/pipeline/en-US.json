@@ -2118,5 +2118,8 @@
   "selectTips": "Please select",
   "rollbackToVersion": "Rollback to version {0}",
   "constraintPipelineEditTips": "This pipeline is in constraint mode, where you can modify input parameter default values, notifications, and other settings. For orchestration upgrades, please go to the template instantiation interface.",
-  "toggleConstraintFailedTips": "Due to historical reasons, the current constraint pipeline cannot determine the corresponding template version and cannot switch to following the template. Upgrading the instance will restore normal operation."
+  "toggleConstraintFailedTips": "Due to historical reasons, the current constraint pipeline cannot determine the corresponding template version and cannot switch to following the template. Upgrading the instance will restore normal operation.",
+  "pipelineUpdated": "Pipeline updated",
+  "updatedPipelineVersionDesc": "Latest version: {0} released on {1}",
+  "pipelineUpdatedNotice": "You are currently viewing {0}, a newer version {1} of this pipeline is available"
 }

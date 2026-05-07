@@ -43,13 +43,13 @@
                         :class="[
                             'diff-button',
                             {
-                                'develop-txt-disabled': !hasDraftPipeline
+                                'develop-txt-disabled': !hasDraft
                             }
                         ]"
                         text
                         :can-switch-version="false"
                         :show-button="false"
-                        :disabled="!hasDraftPipeline"
+                        :disabled="!hasDraft"
                         :version="lasterDraftInfo?.version"
                         :current-editing-data="currentEditingData"
                         :diff-mode="DRAFT_STATUS.PUBLISHED"
@@ -88,7 +88,7 @@
     import Logo from '@/components/Logo'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry.vue'
     import { convertTime } from "@/utils/util"
-    import { DRAFT_STATUS } from '@/utils/pipelineConst'
+    import { DRAFT_STATUS, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     
     export default {
         components: {
@@ -147,8 +147,9 @@
             releaseVersion () {
                 return this.pipelineInfo?.releaseVersion ?? ''
             },
-            hasDraftPipeline () {
-                return (this.pipelineInfo?.version !== this.pipelineInfo?.releaseVersion) ?? false
+            hasDraft () {
+                const status = this.draftStatus?.status
+                return status && !['NORMAL', 'BRANCH', 'PUBLISHED', 'BASE_OUTDATED'].includes(status)
             },
             permObj () {
                 return {
@@ -188,13 +189,15 @@
                 try {
                     // 检查草稿状态
                     const request = this.isTemplate ? this.getTemplateDraftStatus : this.getDraftStatus
+                    const { releaseVersion, version, draftVersion, versionStatus } = this.pipelineInfo ?? {}
                     const params = {
                         projectId: this.projectId,
                         actionType: 'RELEASE',
-                        ...(this.pipelineInfo?.draftVersion ? {
-                            version: this.pipelineInfo?.version,
-                            baseDraftVersion: this.pipelineInfo?.draftVersion,
-                        } : {}),
+                        ...(releaseVersion && { releaseVersion }),
+                        ...(versionStatus === VERSION_STATUS_ENUM.COMMITTING && {
+                            version,
+                            baseDraftVersion: draftVersion
+                        }),
                         ...(this.isTemplate ? { templateId: this.id } : { pipelineId: this.id })
                     }
                     const draftStatus = await request(params)

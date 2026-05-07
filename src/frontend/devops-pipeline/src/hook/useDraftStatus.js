@@ -1,5 +1,6 @@
 import dayjs from 'dayjs'
 import UseInstance from './useInstance'
+import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
 
 /**
  * 草稿状态管理 Hook
@@ -21,9 +22,15 @@ export default function useDraftStatus () {
     async function fetchLatestDraftStatus ({ projectId, id, actionType, isTemplate, pipelineInfo }) {
         const action = isTemplate ? 'common/getTemplateDraftStatus' : 'common/getDraftStatus'
         const dynamicKey = isTemplate ? 'templateId' : 'pipelineId'
+        const { releaseVersion, version, draftVersion, versionStatus } = pipelineInfo ?? {}
         const params = {
             projectId,
             actionType,
+            ...(releaseVersion && { releaseVersion }),
+            ...(versionStatus === VERSION_STATUS_ENUM.COMMITTING && {
+                version,
+                baseDraftVersion: draftVersion
+            }),
             [dynamicKey]: id
         }
 
@@ -37,7 +44,9 @@ export default function useDraftStatus () {
                 draftVersionName: res.draft?.baseVersionName,
                 draftVersion: res.draft?.version,
                 releaseVersionName: res.release?.versionName || pipelineInfo?.releaseVersionName,
-                releaseVersion: res.release?.version || pipelineInfo?.releaseVersion
+                releaseVersion: res.release?.version || pipelineInfo?.releaseVersion,
+                releaseUpdater: res.release?.updater,
+                releaseUpdateTime: dayjs(res.release?.updateTime).format('YYYY-MM-DD HH:mm:ss'),
             }
         }
     }

@@ -24,12 +24,13 @@
         </bk-button>
         <DraftConfirmDialog
             v-model="isShowConfirmDialog"
-            :has-draft-pipeline="hasDraftPipeline"
+            :has-draft="hasDraft"
             :draft-status="draftStatus"
             :draft-save-info="draftSaveInfo"
             :draft-hint-title="draftHintTitle"
             :active-branch-version-info="activeBranchVersionInfo"
             :version-name="versionName"
+            :version="version"
             :is-active-branch-version="isActiveBranchVersion"
             :is-rollback="isRollback"
             :is-template-pipeline="isTemplatePipeline"
@@ -128,6 +129,7 @@
             ...mapState('atom', [
                 'pipelineInfo'
             ]),
+            ...mapState('common', ['hasDraft']),
             ...mapGetters({
                 hasDraftPipeline: 'atom/hasDraftPipeline',
                 isTemplate: 'atom/isTemplate'
@@ -143,6 +145,9 @@
             isRollback () {
                 const { baseVersion, releaseVersion } = (this.pipelineInfo ?? {})
                 const isReleaseVersion = this.version === releaseVersion
+                // 这里判断不能使用 store 中的 hasDraft：hasDraft 仅在调用草稿状态接口时更新，
+                // 若用户在版本列表页删除了草稿，hasDraft 不会即时刷新，
+                // 会导致按钮错误地显示为"回滚"，直到再次点击触发接口调用后才会修正
                 return !(this.isActiveDraft || baseVersion === this.version || this.isActiveBranchVersion || (isReleaseVersion && !this.hasDraftPipeline))
             },
             operateName () {
@@ -152,12 +157,28 @@
             },
             draftHintTitle () {
                 switch (true) {
-                    case this.hasDraftPipeline && this.isActiveBranchVersion:
+                    case this.hasDraft && this.isActiveBranchVersion:
                         return this.$t('template.templateCoverWarning')
-                    case this.hasDraftPipeline:
+                    case this.hasDraft:
                         return this.$t('hasDraft')
                     default:
-                        return this.$t(this.isActiveBranchVersion ? 'createBranchDraftTips' : 'createDraftTips', [this.versionName])
+                        // 1. 分支版本
+                        if (this.isActiveBranchVersion) {
+                            return this.$t('createBranchDraftTips', [this.versionName])
+                        }
+
+                        // 2. 第二个条件：编辑操作
+                        if (this.clickActionType === 'edit') {
+                            // 已发布状态
+                            if (this.draftStatus === DRAFT_STATUS.PUBLISHED) {
+                                return this.$t('alreadyPublished')
+                            }
+                            // 基线版本落后状态
+                            return this.$t('pipelineUpdated')
+                        }
+
+                        // 3. 默认情况： 基于历史版本新建
+                        return this.$t('createDraftTips', [this.versionName])
                 }
             },
             activeBranchVersionInfo () {
@@ -223,12 +244,12 @@
                     
                     this.draftStatus = result.status
                     this.draftSaveInfo = result.draftSaveInfo
-                    // 无草稿冲突，直接编辑
+                    // 状态为NORMAL时，直接编辑
                     if (this.draftStatus === DRAFT_STATUS.NORMAL) {
                         this.goEdit(this.draftVersion ?? this.version)
                         return
                     }
-                    // 有草稿冲突，弹窗确认
+                    // 有草稿冲突/分支版本/基线落后，弹窗确认
                     this.showDraftConfirmDialog()
                 } catch (error) {
                     this.$bkMessage({
@@ -313,7 +334,8 @@
                     ...(rollback || this.isRollback
                         ? {
                             type: 'rollback',
-                            versionName: this.versionName,
+                            // this.rollback && this.clickActionType === 'edit' 是指点击实例流水线的编辑按钮，需要回滚到草稿版本
+                            versionName: this.rollback && this.clickActionType === 'edit' ?  this.draftSaveInfo?.releaseVersionName : this.versionName,
                         } : {}
                     ),
                     ...(!this.isTemplate

@@ -208,6 +208,11 @@
                 type: Boolean,
                 default: false
             },
+            // 是否自动更新 pipelineInfo（避免在差异对比弹窗中更新全局状态）
+            autoUpdatePipelineInfo: {
+                type: Boolean,
+                default: true
+            },
             uniqueId: {
                 type: [String, Number],
                 required: true
@@ -424,10 +429,13 @@
                     // 更新版本列表
                     if (page === 1) {
                         this.versionList = versions
-                        const releaseVersion = versions.find(item => item.status === VERSION_STATUS_ENUM.RELEASED)
-                        if (releaseVersion?.version > pipelineInfo.releaseVersion) {
-                            await this.requestPipelineSummary(this.$route.params)
-                            this.switchVersion(this.activeVersion.version)
+                        // 只有 autoUpdatePipelineInfo 为 true 时才更新全局 pipelineInfo
+                        if (this.autoUpdatePipelineInfo) {
+                            const releaseVersion = versions.find(item => item.status === VERSION_STATUS_ENUM.RELEASED)
+                            if (releaseVersion?.version > pipelineInfo.releaseVersion) {
+                                await this.requestPipelineSummary(this.$route.params)
+                                this.switchVersion(this.activeVersion?.version)
+                            }
                         }
                     } else {
                         this.versionList.push(...versions)

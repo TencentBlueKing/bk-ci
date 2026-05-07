@@ -34,6 +34,7 @@ export default {
     isCurPipelineLocked: state => {
         return state.pipelineInfo?.locked ?? false
     },
+    // 这个仅在编辑页中判断是否可以进行草稿差异对比以及版本列表操作栏编辑和回滚按钮展示的判断
     hasDraftPipeline: state => {
         return state.pipelineInfo?.version !== state.pipelineInfo?.releaseVersion
     },

@@ -107,7 +107,7 @@
         RESOURCE_ACTION,
         RESOURCE_TYPE
     } from '@/utils/permission'
-    import { UI_MODE, DRAFT_STATUS } from '@/utils/pipelineConst'
+    import { UI_MODE, DRAFT_STATUS, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { showPipelineCheckMsg, convertTime } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
@@ -215,6 +215,9 @@
                 immediate: true
             }
         },
+        async mounted () {
+            await this.getDetail()
+        },
         methods: {
             ...mapActions({
                 getDraftStatus: 'common/getDraftStatus',
@@ -230,6 +233,17 @@
                 'savePipelineSnapshot',
                 'updateContainer'
             ]),
+            // 保证编辑页一直是最新的detail
+            async getDetail () {
+                try {
+                    await this.requestPipelineSummary(this.$route.params)
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message ?? error
+                    })
+                }
+            },
             // 构建 modelAndSetting 对象
             buildModelAndSetting () {
                 const pipeline = Object.assign({}, this.pipeline, {
@@ -426,13 +440,15 @@
 
             async saveDraft () {
                 try {
+                    const { releaseVersion, version, draftVersion, versionStatus } = this.pipelineInfo ?? {}
                     const draftStatus = await this.getDraftStatus({
                         projectId: this.projectId,
                         pipelineId: this.pipelineId,
-                        ...(this.pipelineInfo?.draftVersion ? {
-                            version: this.pipelineInfo?.version,
-                            baseDraftVersion: this.pipelineInfo?.draftVersion,
-                        } : {}),
+                        ...(releaseVersion && { releaseVersion }),
+                        ...(versionStatus === VERSION_STATUS_ENUM.COMMITTING && {
+                            version,
+                            baseDraftVersion: draftVersion
+                        }),
                         actionType: 'SAVE'
                     })
                     this.lasterDraftInfo = draftStatus

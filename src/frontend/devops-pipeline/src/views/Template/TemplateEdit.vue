@@ -183,7 +183,8 @@
         created () {
             this.requestTemplateByVersion()
         },
-        mounted () {
+        async mounted () {
+            await this.getDetail()
             this.requestQualityAtom()
             this.requestMatchTemplateRules()
         },
@@ -213,6 +214,16 @@
                 rollbackTemplateVersion: 'templates/rollbackTemplateVersion',
                 getTemplateDraftStatus: 'common/getTemplateDraftStatus'
             }),
+            async getDetail () {
+                try {
+                    await this.requestTemplateSummary(this.$route.params)
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message ?? error
+                    })
+                }
+            },
             requestTemplateByVersion (version = this.currentVersionId) {
                 try {
                     this.requestPipeline({

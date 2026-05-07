@@ -134,10 +134,11 @@
         </aside>
         <DraftConfirmDialog
             v-model="isShowConfirmDialog"
-            :has-draft-pipeline="hasDraftPipeline"
+            :has-draft="hasDraft"
             :draft-status="draftStatus"
             :draft-save-info="draftSaveInfo"
             :draft-hint-title="$t('hasDraft')"
+            :version="currentVersion"
             :version-name="activePipelineVersion?.versionName"
             :draft-version="pipelineInfo?.version"
             @confirm="confirmEdit"
@@ -212,6 +213,7 @@
                 'activePipelineVersion',
                 'switchingVersion'
             ]),
+            ...mapState('common', ['hasDraft']),
             ...mapGetters({
                 isCurPipelineLocked: 'atom/isCurPipelineLocked',
                 isReleasePipeline: 'atom/isReleasePipeline',
@@ -221,7 +223,6 @@
                 draftBaseVersionName: 'atom/getDraftBaseVersionName',
                 pipelineHistoryViewable: 'atom/pipelineHistoryViewable',
                 onlyBranchPipeline: 'atom/onlyBranchPipeline',
-                hasDraftPipeline: 'atom/hasDraftPipeline',
                 isTemplate: 'atom/isTemplate'
             }),
             
@@ -361,13 +362,12 @@
                     
                     this.draftStatus = result.status
                     this.draftSaveInfo = result.draftSaveInfo
-                    
-                    // 无草稿冲突，直接编辑
+                    // 状态为NORMAL时，直接编辑
                     if (this.draftStatus === DRAFT_STATUS.NORMAL) {
                         this.goEdit()
                         return
                     }
-                    // 有草稿冲突，弹窗确认
+                    // 有草稿冲突/分支版本/基线落后，弹窗确认
                     this.isShowConfirmDialog = true
                 } catch (error) {
                     this.$bkMessage({
