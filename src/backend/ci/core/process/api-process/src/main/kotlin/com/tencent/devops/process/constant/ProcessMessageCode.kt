@@ -462,7 +462,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND = "2101378"
     // 分支版本[{0}]不存在, 请检查分支版本是否被成功创建
     const val ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH = "2101379"
-    const val ERROR_PIPELINE_IS_NOT_PAC = "2101388" // [{0}]不是PAC流水线
+    const val ERROR_PIPELINE_IS_NOT_PAC = "2101389" // [{0}]不是PAC流水线
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
