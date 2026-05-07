@@ -85,8 +85,8 @@ class PipelineWebhookService @Autowired constructor(
     private val client: Client,
     private val pipelinePermissionService: PipelinePermissionService,
     private val redisOperation: RedisOperation,
-    private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineYamlService: PipelineYamlService
+    private val pipelineYamlService: PipelineYamlService,
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineWebhookService::class.java)
