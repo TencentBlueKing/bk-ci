@@ -290,7 +290,7 @@ class PipelineYamlReleaseService(
                 commitMessage = pTemplateResourceWithoutVersion.description
                     ?: "update template ${pipelineTemplateInfo.name}",
                 targetAction = targetAction!!,
-                targetBranch = branchName,
+                targetBranch = targetBranch,
                 source = PipelineYamlFileReleaseReqSource.TEMPLATE
             )
         }

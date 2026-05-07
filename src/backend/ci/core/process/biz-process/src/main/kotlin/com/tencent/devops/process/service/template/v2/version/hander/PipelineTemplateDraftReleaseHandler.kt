@@ -127,7 +127,7 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
             enablePac = enablePac,
             repoHashId = yamlFileInfo?.repoHashId,
             targetAction = targetAction,
-            targetBranch = branchName
+            targetBranch = targetBranch
         )
         pipelineYamlReleaseService.validateReleaseYamlFile(
             context = this,
