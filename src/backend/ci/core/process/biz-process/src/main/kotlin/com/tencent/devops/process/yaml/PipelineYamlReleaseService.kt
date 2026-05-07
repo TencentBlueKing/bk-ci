@@ -24,12 +24,14 @@ import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.repository.pojo.credential.UserOauthTokenAuthCred
 import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 
 @Service
 class PipelineYamlReleaseService(
     private val client: Client,
     private val pipelineYamlService: PipelineYamlService,
+    @Lazy
     private val pipelineYamlFileManager: PipelineYamlFileManager
 ) {
 
