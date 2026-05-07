@@ -263,7 +263,7 @@ class PipelineYamlReleaseService(
                 commitMessage = pipelineResourceWithoutVersion.description
                     ?: "update pipeline ${pipelineBasicInfo.pipelineName}",
                 targetAction = targetAction!!,
-                targetBranch = branchName,
+                targetBranch = targetBranch,
                 source = source,
                 templateName = templateInstanceBasicInfo?.templateName
             )
