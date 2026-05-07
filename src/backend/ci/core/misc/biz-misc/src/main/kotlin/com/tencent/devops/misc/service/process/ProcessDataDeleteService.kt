@@ -141,40 +141,32 @@ class ProcessDataDeleteService @Autowired constructor(
         broadcastTableDeleteFlag: Boolean? = false,
         archivePipelineFlag: Boolean? = null
     ) {
-        pipelineIds?.forEach { pipelineId ->
-            // 处理构建历史（普通+调试）
+        if (pipelineIds.isNullOrEmpty()) {
+            logger.info("project[$projectId] deleteProjectPipelineRelData success with empty pipelineIds")
+            return
+        }
+        // Step1: 按 buildId 维度分页清理每条流水线的构建关联数据
+        pipelineIds.forEach { pipelineId ->
             listOf(false, true).forEach { isDebug ->
                 processPipelineHistories(
                     dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     isDebug = isDebug,
-                    archivePipelineFlag = archivePipelineFlag,
-                    broadcastTableDeleteFlag = broadcastTableDeleteFlag
+                    archivePipelineFlag = archivePipelineFlag
                 )
             }
         }
-
-        if (!pipelineIds.isNullOrEmpty()) {
-            // 核心数据删除操作
-            if (archivePipelineFlag != true) {
-                processDataDeleteDao.deletePipelineModelTask(dslContext, projectId, pipelineIds)
-            }
-            listOf(
-                processDataDeleteDao::deletePipelineResource,
-                processDataDeleteDao::deletePipelineResourceVersion,
-                processDataDeleteDao::deletePipelineLabelPipeline,
-                processDataDeleteDao::deleteTemplatePipeline,
-                processDataDeleteDao::deletePipelineBuildSummary,
-                processDataDeleteDao::deletePipelineBuildHistoryDebug,
-                processDataDeleteDao::deletePipelineSetting,
-                processDataDeleteDao::deletePipelineSettingVersion,
-                processDataDeleteDao::deletePipelineBuildHistory,
-                processDataDeleteDao::deletePipelineInfo
-            ).forEach { function ->
-                function(dslContext, projectId, pipelineIds)
-            }
-        }
+        // Step2: 按 pipelineId 维度统一清理流水线关联表（聚合在 DAO 层，新增表时只动 DAO）
+        processDataDeleteDao.deletePipelineRelatedData(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineIds = pipelineIds,
+            archiveFlag = archivePipelineFlag,
+            broadcastTableDeleteFlag = broadcastTableDeleteFlag == true
+        )
+        // Step3: 兜底删除可能由 processPipelineHistories 分页遗漏的构建历史记录
+        processDataDeleteDao.deletePipelineBuildHistory(dslContext, projectId, pipelineIds)
         logger.info("project[$projectId]|pipeline[$pipelineIds] deleteProjectPipelineRelData success!")
     }
 
@@ -183,8 +175,7 @@ class ProcessDataDeleteService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         isDebug: Boolean,
-        archivePipelineFlag: Boolean?,
-        broadcastTableDeleteFlag: Boolean?
+        archivePipelineFlag: Boolean?
     ) {
         val tPipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
         var offset = 0
@@ -217,63 +208,6 @@ class ProcessDataDeleteService @Autowired constructor(
             )
             offset += DEFAULT_PAGE_SIZE
         } while (records?.size == DEFAULT_PAGE_SIZE)
-        // 按PipelineID删除数据
-        deletePipelineBuildDataByPipelineId(
-            archivePipelineFlag = archivePipelineFlag,
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            broadcastTableDeleteFlag = broadcastTableDeleteFlag
-        )
-    }
-
-    private fun deletePipelineBuildDataByPipelineId(
-        archivePipelineFlag: Boolean?,
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        broadcastTableDeleteFlag: Boolean?
-    ) {
-        if (archivePipelineFlag != true) {
-            // 基础数据删除操作
-            listOf(
-                processDataDeleteDao::deletePipelineBuildContainer,
-                processDataDeleteDao::deletePipelineBuildStage,
-                processDataDeleteDao::deletePipelineRecentUse,
-                processDataDeleteDao::deletePipelineTriggerDetail,
-                processDataDeleteDao::deletePipelineAuditResource,
-                processDataDeleteDao::deletePipelineTimerBranch,
-                processDataDeleteDao::deletePipelineYamlInfo,
-                processDataDeleteDao::deletePipelineYamlVersion,
-                processDataDeleteDao::deletePipelineOperationLog,
-                processDataDeleteDao::deletePipelineWebhookVersion,
-                processDataDeleteDao::deletePipelineCallback,
-                processDataDeleteDao::deletePipelineSubRef,
-                processDataDeleteDao::deletePipelineBuildParamCombinationDetail,
-                processDataDeleteDao::deletePipelineBuildParamCombination
-            ).forEach { function ->
-                function(dslContext, projectId, pipelineId)
-            }
-
-            if (broadcastTableDeleteFlag == true) {
-                // 广播表数据清理
-                listOf(
-                    processDataDeleteDao::deletePipelineRemoteAuth,
-                    processDataDeleteDao::deletePipelineWebhook,
-                    processDataDeleteDao::deletePipelineTimer
-                ).forEach { function ->
-                    function(dslContext, projectId, pipelineId)
-                }
-            }
-        }
-
-        // 公共数据删除
-        listOf(
-            processDataDeleteDao::deletePipelineFavor,
-            processDataDeleteDao::deletePipelineViewGroup
-        ).forEach { function ->
-            function(dslContext, projectId, pipelineId)
-        }
     }
 
     private fun deletePipelineBuildDataByBuilds(

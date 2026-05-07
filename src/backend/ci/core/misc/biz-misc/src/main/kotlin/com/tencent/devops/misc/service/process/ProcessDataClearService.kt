@@ -66,36 +66,17 @@ class ProcessDataClearService @Autowired constructor(
         val finalDslContext = generateFinalDslContext(archiveFlag)
         val pipelineIds = arrayListOf(pipelineId)
         finalDslContext.transaction { t ->
+            // 所有 DAO 删除操作统一走事务上下文 context，保证流水线本体清理的原子性；
+            // 流水线维度的关联表清单内聚在 DAO 聚合方法里，新增表只需在 DAO 处补一行
             val context = DSL.using(t)
-            processDataDeleteDao.deletePipelineLabelPipeline(context, projectId, pipelineIds)
-            processDataDeleteDao.deletePipelineResource(context, projectId, pipelineIds)
-            processDataDeleteDao.deletePipelineResourceVersion(context, projectId, pipelineIds)
-            processDataDeleteDao.deleteTemplatePipeline(context, projectId, pipelineIds)
-            processDataDeleteDao.deletePipelineBuildSummary(context, projectId, pipelineIds)
-            processDataDeleteDao.deletePipelineBuildHistoryDebug(context, projectId, pipelineIds)
-            processDataDeleteDao.deletePipelineFavor(dslContext, projectId, pipelineId)
-            processDataDeleteDao.deletePipelineViewGroup(dslContext, projectId, pipelineId)
-            processDataDeleteDao.deletePipelineSetting(context, projectId, pipelineIds)
-            processDataDeleteDao.deletePipelineSettingVersion(context, projectId, pipelineIds)
+            processDataDeleteDao.deletePipelineRelatedData(
+                dslContext = context,
+                projectId = projectId,
+                pipelineIds = pipelineIds,
+                archiveFlag = archiveFlag,
+                broadcastTableDeleteFlag = true
+            )
             if (archiveFlag != true) {
-                processDataDeleteDao.deletePipelineModelTask(context, projectId, pipelineIds)
-                processDataDeleteDao.deletePipelineBuildContainer(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineBuildStage(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineRecentUse(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineTriggerDetail(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineAuditResource(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineTimerBranch(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineYamlInfo(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineYamlVersion(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineOperationLog(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineWebhookVersion(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineCallback(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineSubRef(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineRemoteAuth(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineWebhook(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineTimer(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineBuildParamCombinationDetail(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineBuildParamCombination(dslContext, projectId, pipelineId)
                 // 添加删除记录，插入要实现幂等
                 processDao.addPipelineDataClear(
                     dslContext = context,
@@ -103,7 +84,6 @@ class ProcessDataClearService @Autowired constructor(
                     pipelineId = pipelineId
                 )
             }
-            processDataDeleteDao.deletePipelineInfo(context, projectId, pipelineIds)
         }
         processRelatedPlatformDataClearService.cleanBuildData(projectId, pipelineId)
     }

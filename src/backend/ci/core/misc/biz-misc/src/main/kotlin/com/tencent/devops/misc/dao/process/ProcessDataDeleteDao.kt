@@ -131,6 +131,74 @@ class ProcessDataDeleteDao {
         deletePipelineBuildRecordTask(dslContext, projectId, buildIds)
     }
 
+    /**
+     * 删除流水线维度的关联数据。
+     *
+     * 调用方约定：
+     *   1) 不包含 T_PIPELINE_BUILD_HISTORY：清理路径在每条 build 维度独立处理（含版本锁与引用计数），
+     *      迁移路径在分页扫表后再单独做 PIPELINE_ID 维度的兜底删除。
+     *   2) 不包含按 buildId 维度的表（参见 deleteBuildRelatedData / deletePipelineBuildVar / deletePipelineBuildTask）。
+     *   3) 所有删除操作都使用入参 dslContext 执行，调用方负责事务边界与分片路由。
+     *
+     * 新增"流水线维度"的关联表时只需在本方法里追加一行即可，避免清理路径与迁移删除路径两边维护。
+     *
+     * @param dslContext jooq上下文（可为事务上下文）
+     * @param projectId 项目ID
+     * @param pipelineIds 流水线ID列表
+     * @param archiveFlag 归档标识，归档场景下跳过非归档库专属的数据
+     * @param broadcastTableDeleteFlag 是否清理广播表（remote_auth/webhook/timer）
+     */
+    @Suppress("LongParameterList", "LongMethod")
+    fun deletePipelineRelatedData(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineIds: List<String>,
+        archiveFlag: Boolean? = null,
+        broadcastTableDeleteFlag: Boolean = false
+    ) {
+        if (pipelineIds.isEmpty()) return
+        // pipelineIds 维度的批量删除
+        deletePipelineLabelPipeline(dslContext, projectId, pipelineIds)
+        deletePipelineResource(dslContext, projectId, pipelineIds)
+        deletePipelineResourceVersion(dslContext, projectId, pipelineIds)
+        deleteTemplatePipeline(dslContext, projectId, pipelineIds)
+        deletePipelineBuildSummary(dslContext, projectId, pipelineIds)
+        deletePipelineBuildHistoryDebug(dslContext, projectId, pipelineIds)
+        deletePipelineSetting(dslContext, projectId, pipelineIds)
+        deletePipelineSettingVersion(dslContext, projectId, pipelineIds)
+        if (archiveFlag != true) {
+            deletePipelineModelTask(dslContext, projectId, pipelineIds)
+        }
+        // 单 pipelineId 维度的删除
+        pipelineIds.forEach { pipelineId ->
+            // 用户偏好/视图分组：归档与否都需要清理，与流水线本体走同一个 DSLContext 保证原子性
+            deletePipelineFavor(dslContext, projectId, pipelineId)
+            deletePipelineViewGroup(dslContext, projectId, pipelineId)
+            if (archiveFlag != true) {
+                deletePipelineBuildContainer(dslContext, projectId, pipelineId)
+                deletePipelineBuildStage(dslContext, projectId, pipelineId)
+                deletePipelineRecentUse(dslContext, projectId, pipelineId)
+                deletePipelineTriggerDetail(dslContext, projectId, pipelineId)
+                deletePipelineAuditResource(dslContext, projectId, pipelineId)
+                deletePipelineTimerBranch(dslContext, projectId, pipelineId)
+                deletePipelineYamlInfo(dslContext, projectId, pipelineId)
+                deletePipelineYamlVersion(dslContext, projectId, pipelineId)
+                deletePipelineOperationLog(dslContext, projectId, pipelineId)
+                deletePipelineWebhookVersion(dslContext, projectId, pipelineId)
+                deletePipelineCallback(dslContext, projectId, pipelineId)
+                deletePipelineSubRef(dslContext, projectId, pipelineId)
+                deletePipelineBuildParamCombinationDetail(dslContext, projectId, pipelineId)
+                deletePipelineBuildParamCombination(dslContext, projectId, pipelineId)
+                if (broadcastTableDeleteFlag) {
+                    deletePipelineRemoteAuth(dslContext, projectId, pipelineId)
+                    deletePipelineWebhook(dslContext, projectId, pipelineId)
+                    deletePipelineTimer(dslContext, projectId, pipelineId)
+                }
+            }
+        }
+        deletePipelineInfo(dslContext, projectId, pipelineIds)
+    }
+
     fun deleteAuditResource(
         dslContext: DSLContext,
         projectId: String,
