@@ -225,7 +225,7 @@
                         </bk-option>
                         <a
                             v-if="form.projectCode"
-                            :href="`/console/ticket/${form.projectCode}/createCredential/USERNAME_PASSWORD/true`"
+                            :href="getTicketCreateUrl(form.projectCode, 'USERNAME_PASSWORD')"
                             slot="extension"
                             target="_blank"
                         > {{ $t('store.新增凭证') }} </a>
@@ -493,6 +493,10 @@
                 'getImageVersionInfo',
                 'fetchAgentTypes'
             ]),
+
+            getTicketCreateUrl (projectCode, credentialType) {
+                return `${window.getRoutePrefix()}/ticket/${projectCode}/createCredential/${credentialType}/true`
+            },
 
             // 根据 releaseType 设置对应的版本号
             setVersionByReleaseType (releaseType) {

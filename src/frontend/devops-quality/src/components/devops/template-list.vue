@@ -98,7 +98,7 @@
                             <a
                                 class="instance-count"
                                 target="_blank"
-                                :href="`/console/pipeline/${projectId}/template/${props.row.templateId}/instance`"
+                                :href="goToTemplateInstanceHref(props.row)"
                             >{{ props.row.associatePipelines.length }}
                             </a>
                         </template>
@@ -175,6 +175,9 @@
             }
         },
         methods: {
+            goToTemplateInstanceHref (row) {
+                return `${window.getRoutePrefix()}/pipeline/${this.projectId}/template/${row.templateId}/instance`
+            },
             handleFormat (codes) {
                 let tips = ''
                 codes.forEach(item => {

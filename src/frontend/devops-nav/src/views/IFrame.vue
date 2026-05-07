@@ -28,7 +28,7 @@
     import Vue from 'vue'
     import { Component, Watch } from 'vue-property-decorator'
     import eventBus from '../utils/eventBus'
-    import { urlJoin, queryStringify, getServiceAliasByPath } from '../utils/util'
+    import { urlJoin, queryStringify, getServiceAliasByPath } from '@/utils/util'
     import { State, Getter } from 'vuex-class'
     import cookie from 'js-cookie'
 
@@ -110,17 +110,18 @@
             const { showProjectList } = this.headerConfig
             const { projectIdType } = this.$route.meta
             const query = queryStringify(this.$route.query)
-            const path = this.$route.path.replace('/console', '')
+            const path = this.$route.path.replace(window.getRoutePrefix(), '')
             const hash = this.$route.hash
-            
             if (showProjectList) {
                 const reg = /^\/?\w+\/(([\w-]+)\/?)(\S*)\/?$/
                 const matchResult = path.match(reg)
                 const { projectId } = this.$route.params
                 const initPath = matchResult ? matchResult[3] : ''
+                
 
                 if (projectIdType === 'path') {
                     this.src = urlJoin(this.currentPage.iframe_url, projectId, initPath) + `${query ? '?' + query : ''}` + hash
+                    
                 } else {
                     const query = Object.assign(this.$route.query, {
                         projectId

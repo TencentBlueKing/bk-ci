@@ -28,7 +28,7 @@ const props = defineProps({
 });
 
 function goPermission() {
-  window.open(`${location.origin}/console/manage/${projectId.value}/permission?userId=${props.userId}`)
+  window.open(`${location.origin}/${window.getRoutePrefix()}/manage/${projectId.value}/permission?userId=${props.userId}`)
 }
 </script>
 

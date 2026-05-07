@@ -517,7 +517,7 @@ function refreshHandOverfail () {
 }
 function goAuthorization(item) {
   const { resourceType, memberIds} = item
-  window.open(`${location.origin}/console/manage/${projectId.value}/permission?resourceType=${resourceType}&userId=${memberIds}`, '_blank')
+  window.open(`${location.origin}/${window.getRoutePrefix()}/manage/${projectId.value}/permission?resourceType=${resourceType}&userId=${memberIds}`, '_blank')
 }
 /**
  * 获取人员列表数据

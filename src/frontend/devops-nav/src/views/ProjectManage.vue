@@ -471,12 +471,12 @@
 
             handleNewProject () {
                 const { origin } = window.location
-                window.location.href = `${origin}/console/manage/apply`
+                window.location.href = `${origin}${window.getRoutePrefix()}/manage/apply`
             },
 
             handleApplyProject () {
                 const { origin } = window.location
-                window.location.href = `${origin}/console/permission/apply`
+                window.location.href = `${origin}${window.getRoutePrefix()}/permission/apply`
             },
 
             handleGoUserGroup (row) {
@@ -484,13 +484,13 @@
                 const projectTag = this.getProjectTag(routerTag)
                 switch (projectTag) {
                     case 'v0':
-                        window.location.href = `/console/perm/my-project?project_code=${projectCode}`
+                        window.location.href = `${window.getRoutePrefix()}/perm/my-project?project_code=${projectCode}`
                         break
                     case 'v3':
-                        window.location.href = `/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`
+                        window.location.href = `${window.getRoutePrefix()}/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`
                         break
                     case 'rbac':
-                        window.location.href = `/console/manage/${projectCode}/group?x-devops-project-id=${projectCode}`
+                        window.location.href = `${window.getRoutePrefix()}/manage/${projectCode}/group?x-devops-project-id=${projectCode}`
                         break
                 }
             },
@@ -501,10 +501,10 @@
                 switch (projectTag) {
                     case 'v0':
                     case 'v3':
-                        window.location.href = `/console/store/serviceManage/${projectCode}`
+                        window.location.href = `${window.getRoutePrefix()}/store/serviceManage/${projectCode}`
                         break
                     case 'rbac':
-                        window.location.href = `/console/manage/${projectCode}/expand`
+                        window.location.href = `${window.getRoutePrefix()}/manage/${projectCode}/expand`
                         break
                 }
             },
@@ -654,7 +654,7 @@
                                                            style: { color: '#3A84FF', cursor: 'pointer' },
                                                            on: {
                                                                click: () => {
-                                                                   window.open(`${window.location.origin}/console/permission/my-handover?flowNo=${res}&type=handoverFromMe`, '_blank')
+                                                                   window.open(`${window.location.origin}/${window.getRoutePrefix()}/permission/my-handover?flowNo=${res}&type=handoverFromMe`, '_blank')
                                                                }
                                                            }
                                                        }, this.$t('我的交接')),
@@ -665,7 +665,7 @@
                                          ]),
                             confirmFn: () => {
                                 this.projectList = this.projectList.filter(item => item.englishName !== this.projectId)
-                                window.open(`${window.location.origin}/console/permission/my-handover?flowNo=${res}&type=handoverFromMe`, '_blank')
+                                window.open(`${window.location.origin}/${window.getRoutePrefix()}/permission/my-handover?flowNo=${res}&type=handoverFromMe`, '_blank')
                             },
                             cancelFn: () => {
                                 this.projectList = this.projectList.filter(item => item.englishName !== this.projectId)
@@ -741,9 +741,9 @@
 
             goToPermission (key) {
                 if (key === 'uniqueManager') {
-                    window.open(`${window.location.origin}/console/permission/my-permission?projectCode=${this.projectId}&uniqueManagerGroupsQueryFlag=true`, '_blank')
+                    window.open(`${window.location.origin}/${window.getRoutePrefix()}/permission/my-permission?projectCode=${this.projectId}&uniqueManagerGroupsQueryFlag=true`, '_blank')
                 } else {
-                    window.open(`${window.location.origin}/console/permission/auth/${key}?projectCode=${this.projectId}`, '_blank')
+                    window.open(`${window.location.origin}/${window.getRoutePrefix()}/permission/auth/${key}?projectCode=${this.projectId}`, '_blank')
                 }
             },
 
@@ -785,15 +785,16 @@
             goToProjectManage (row) {
                 const { englishName: projectCode, relationId, routerTag } = row
                 const projectTag = this.getProjectTag(routerTag)
+                const prefix = window.getRoutePrefix()
                 switch (projectTag) {
                     case 'v0':
-                        window.location.href = `/console/perm/my-project?project_code=${projectCode}`
+                        window.location.href = `${prefix}/perm/my-project?project_code=${projectCode}`
                         break
                     case 'v3':
-                        window.location.href = `/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`
+                        window.location.href = `${prefix}/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`
                         break
                     case 'rbac':
-                        window.location.href = `/console/manage/${projectCode}/show?x-devops-project-id=${projectCode}`
+                        window.location.href = `${prefix}/manage/${projectCode}/show?x-devops-project-id=${projectCode}`
                         break
                 }
             },
@@ -824,7 +825,7 @@
                             },
                             {
                                 actionName: this.$t('enableDisableProject'),
-                                groupInfoList: [{ url }],
+                                groupInfoList: [{ url: addRoutePrefix(url) }],
                                 resourceName: projectName,
                                 resourceTypeName: this.$t('project')
                             }

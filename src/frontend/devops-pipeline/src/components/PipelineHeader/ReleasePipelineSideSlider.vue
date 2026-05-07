@@ -1384,7 +1384,7 @@
                 this.showPacCodelibSetting = !this.showPacCodelibSetting
             },
             goCodelib () {
-                window.open(`/console/codelib/${this.$route.params.projectId}`, '_blank')
+                window.open(`${window.PUBLIC_URL_PREFIX}/console/codelib/${this.$route.params.projectId}`, '_blank')
             },
             async requestOauth () {
                 if (this.oauthing) return

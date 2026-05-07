@@ -759,7 +759,7 @@
             },
             handleToPipelineDetail (param) {
                 if (!param.projectId) return
-                window.open(`${window.location.origin}/console/pipeline/${param.projectId}/${param.pipelineId}/detail/${param.buildId}/executeDetail`, '_blank')
+                window.open(`${window.location.origin}/${window.getRoutePrefix()}/pipeline/${param.projectId}/${param.pipelineId}/detail/${param.buildId}/executeDetail`, '_blank')
             },
             /**
              * 删除节点

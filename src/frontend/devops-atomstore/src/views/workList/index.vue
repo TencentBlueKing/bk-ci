@@ -53,7 +53,7 @@
                             },
                             {
                                 name: this.$t('store.debugTask'),
-                                link: `/console/pipeline/${currentProjectCode}/atomDebug`
+                                link: `${window.getRoutePrefix()}/pipeline/${currentProjectCode}/atomDebug`
                             }
                         ]
                     },

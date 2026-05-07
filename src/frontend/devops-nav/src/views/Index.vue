@@ -46,7 +46,7 @@
                         <a
                             target="_blank"
                             class="empty-btns-item"
-                            href="/console/pm"
+                            :href="pmHref"
                         ><bk-button theme="success">{{ $t("projectManage") }}</bk-button></a>
                     </empty-tips>
 
@@ -84,6 +84,7 @@
     import { Component, Watch } from 'vue-property-decorator'
     import { State, Getter } from 'vuex-class'
     import eventBus from '../utils/eventBus'
+    import { addRoutePrefix } from '@/utils/util'
 
     @Component({
         components: {
@@ -104,6 +105,10 @@
             return {
                 isLoading: this.projectList === null
             }
+        }
+
+        get pmHref (): string {
+            return addRoutePrefix('/console/pm')
         }
 
         get hasProject (): boolean {

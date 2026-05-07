@@ -221,7 +221,7 @@ const handleEdit = () => {
 };
 
 const handleToApprovalDetails = (applyId: any) => {
-  window.open(`/console/permission/my-apply/${applyId}`, '_blank')
+  window.open(`${window.getRoutePrefix()}/permission/my-apply/${applyId}`, '_blank')
 };
 
 /**
@@ -295,7 +295,7 @@ const handleCancelCreation = () => {
         theme: 'success',
         message: t('取消创建成功'),
       });
-      window.parent.location.href = `${location.origin}/console/pm`
+      window.parent.location.href = `${location.origin}/${window.getRoutePrefix()}/pm`
     }
   };
   InfoBox({

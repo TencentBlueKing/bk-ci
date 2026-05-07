@@ -110,7 +110,7 @@
                         <a
                             class="add-indicator"
                             target="_blank"
-                            :href="`/console/quality/${projectId}/metadataList`"
+                            :href="metadataListHref"
                         >{{ $t('quality.缺少需要的指标？') }}</a>
                     </p>
                     <hr>
@@ -404,14 +404,14 @@
                                                 class="add-btn"
                                                 v-if="props.row.type === 'pipeline' && (props.row.lackPointElement.length || checkAtomAsync(props.row.existElement) || checkAtomCount(props.row.existElement)) && !props.row.isRefresh"
                                                 target="_blank"
-                                                :href="`/console/pipeline/${projectId}/${props.row.pipelineId}/edit`"
+                                                :href="goToPipelineHref(props.row)"
                                                 @click="updatePipelineStatus(props.row.pipelineId)"
                                             >{{ $t('quality.去修改') }}</a>
                                             <a
                                                 class="add-btn"
                                                 v-else-if="props.row.type === 'template' && (props.row.lackPointElement.length || checkAtomAsync(props.row.existElement) || checkAtomCount(props.row.existElement)) && !props.row.isRefresh"
                                                 target="_blank"
-                                                :href="`/console/pipeline/${projectId}/template/${props.row.templateId}/edit`"
+                                                :href="goToTemplateHref(props.row)"
                                                 @click="updateTemplateStatus(props.row.templateId)"
                                             >{{ $t('quality.去修改') }}</a>
                                             <span
@@ -825,6 +825,15 @@
             ...mapGetters('quality', [
                 'getUserGroup'
             ]),
+            metadataListHref () {
+                return `${window.getRoutePrefix()}/quality/${this.projectId}/metadataList`
+            },
+            goToPipelineHref (row) {
+                return `${window.getRoutePrefix()}/pipeline/${this.projectId}/${row.pipelineId}/edit`
+            },
+            goToTemplateHref (row) {
+                return `${window.getRoutePrefix()}/pipeline/${this.projectId}/template/${row.templateId}/edit`
+            },
             projectId () {
                 return this.$route.params.projectId
             },
