@@ -590,7 +590,7 @@ export default {
         copyAsTemplateInstance (pipeline) {
             const pipelineName = (pipeline.pipelineName + '_copy').substring(0, 128)
             const { templateId, pipelineId, projectId, version } = pipeline
-            window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/createInstance/${version}/${pipelineName}?pipelineId=${pipelineId}`
+            window.top.location.href = `${location.origin}${window.getRoutePrefix()}/pipeline/${projectId}/template/${templateId}/createInstance/${version}/${pipelineName}?pipelineId=${pipelineId}`
         }
     }
 }

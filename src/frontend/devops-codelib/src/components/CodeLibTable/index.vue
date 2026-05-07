@@ -124,7 +124,7 @@
                     </span>
                     <a
                         v-if="!['OAUTH'].includes(props.row.authType)"
-                        :href="`/console/ticket/${projectId}/editCredential/${props.row.authIdentity}`"
+                        :href="getTicketEditUrl(projectId, props.row.authIdentity)"
                         target="_blank"
                     >
                         <bk-user-display-name :user-id="props.row.authIdentity" />
@@ -687,6 +687,9 @@
             handelHeaderDragend (newWidth, oldWidth, column) {
                 this.tableWidthMap[column.property] = newWidth
                 localStorage.setItem(CACHE_CODELIB_TABLE_WIDTH_MAP, JSON.stringify(this.tableWidthMap))
+            },
+            getTicketEditUrl (projectId, credentialId) {
+                return `${window.getRoutePrefix()}/ticket/${projectId}/editCredential/${credentialId}`
             }
         }
     }

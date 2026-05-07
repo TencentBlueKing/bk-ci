@@ -355,7 +355,7 @@
                 templateStatusMap: templateStatusList,
                 isSearch: false,
                 searchName: '',
-                itemUrl: '/console/pm',
+                itemUrl: window.getRoutePrefix() + '/pm',
                 itemText: this.$t('store.新建项目'),
                 offlineTips: this.$t('store.下架后：'),
                 renderList: [],

@@ -103,7 +103,7 @@
                                         class="item-times item-pipelinename"
                                         :title="props.row.pipelineName"
                                         target="_blank"
-                                        :href="`/console/pipeline/${projectId}/${props.row.pipelineId}/detail/${props.row.buildId}`"
+                                        :href="goToPipelineDetailHref(props.row)"
                                     >{{ props.row.pipelineName }}</a>
                                 </template>
                             </bk-table-column>
@@ -272,6 +272,9 @@
             await this.init()
         },
         methods: {
+            goToPipelineDetailHref (row) {
+                return `${window.getRoutePrefix()}/pipeline/${this.projectId}/${row.pipelineId}/detail/${row.buildId}`
+            },
             async init () {
                 const {
                     loading

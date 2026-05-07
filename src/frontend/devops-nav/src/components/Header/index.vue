@@ -3,7 +3,7 @@
         <div class="header-left-bar">
             <router-link
                 class="header-logo"
-                to="/console/"
+                :to="homeUrl"
             >
                 <template v-if="platformInfo.appLogo">
                     <img
@@ -212,7 +212,7 @@
 
 <script lang="ts">
     import eventBus from '@/utils/eventBus'
-    import { urlJoin } from '@/utils/util'
+    import { addRoutePrefix, urlJoin } from '@/utils/util'
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
     import { Action, Getter, State } from 'vuex-class'
@@ -250,6 +250,7 @@
         @Action toggleProjectDialog
         @Action togglePopupShow
 
+        
         isDropdownMenuVisible: boolean = false
         isShowTooltip: boolean = true
         showSystemLog: boolean = false
@@ -270,6 +271,10 @@
                 id: 'ja-JP'
             }
         ]
+
+        get homeUrl (): string {
+            return addRoutePrefix('/console/')
+        }
  
         get headerLogoName (): string {
             const logoArr = ['devops-logo']
@@ -371,13 +376,13 @@
 
         goToUserManage (payload): void {
             if (payload.managePermission) {
-                this.to(`/console/manage/${payload.projectCode}/group`)
+                this.to(addRoutePrefix(`/console/manage/${payload.projectCode}/group`))
             }
         }
 
         goHomeById (projectId: string, reload: boolean = false): void {
             const hasProjectId = this.currentPage.show_project_list
-            let path = urlJoin('/console', this.currentPage.link_new)
+            let path = addRoutePrefix(urlJoin('/console', this.currentPage.link_new))
             if (hasProjectId) {
                 if (this.currentPage.project_id_type === 'path') {
                     path = urlJoin(path, projectId)
@@ -429,11 +434,11 @@
         }
 
         goToPm (): void {
-            this.to('/console/pm')
+            this.to(addRoutePrefix('/console/pm'))
         }
 
         popProjectDialog (project: object): void {
-            this.to('/console/manage/apply')
+            this.to(addRoutePrefix('/console/manage/apply'))
             if (this.$refs.projectDropdown && typeof this.$refs.projectDropdown.close === 'function') {
                 this.$refs.projectDropdown.close()
             }
@@ -441,7 +446,7 @@
 
         handleApplyProject () {
             // this.$refs.applyProjectDialog.isShow = true
-            this.to('/console/permission/apply')
+            this.to(addRoutePrefix('/console/permission/apply'))
         }
 
         closeTooltip (): void {

@@ -35,7 +35,7 @@ const pageSize = ref(20);
 const relSourceList = ref<any>([]);
 const isLoading = ref(false);
 const hasLoadEnd = ref(false);
-const codelibPageUrl = `${window.location.origin}/console/codelib`
+const codelibPageUrl = `${window.location.origin}/${window.getRoutePrefix()}/codelib`
 
 watch(() => showDeleteDialog.value, (val) => {
   if (!val) {
@@ -170,7 +170,7 @@ const handleCancelRefresh = () => {
 const handleConfirmRefresh = () => {
   try {
     isLoading.value = true;
-    const url = encodeURIComponent(window.location.href.replace('com/permission', `com/console/permission`));
+    const url = encodeURIComponent(window.location.href.replace('com/permission', `com/${window.getRoutePrefix()}/permission`));
     http.refreshOauth(scmCode.value, props.oauth?.username, url).then(res => {
       if (res.url) {
         window.top.open(res.url, '_self')

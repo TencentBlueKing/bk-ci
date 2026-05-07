@@ -43,6 +43,7 @@
     import { Component, Prop } from 'vue-property-decorator'
     import { Action } from 'vuex-class'
     import { clickoutside } from '../../directives/index'
+    import { addRoutePrefix } from '@/utils/util'
 
     @Component({
         directives: {
@@ -77,14 +78,14 @@
         }
 
         updatePage (name) {
-            window.open(`${window.location.origin}/console/${name}`, '_self')
+            window.open(`${window.location.origin}${window.getRoutePrefix()}/${name}`, '_self')
         }
 
         get menu (): object[] {
             try {
                 return [
                     {
-                        to: '/console/pm',
+                        to: addRoutePrefix('/console/pm'),
                         label: this.$t('projectManage')
                     },
                     {

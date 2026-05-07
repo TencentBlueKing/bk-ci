@@ -73,7 +73,7 @@
                                     >
                                         <a
                                             target="_blank"
-                                            :href="`/console/pipeline/${versionDetail.projectCode}`"
+                                            :href="getPipelineTestUrl(versionDetail.projectCode)"
                                         > {{ $t('store.测试') }} </a>
                                     </span>
                                 </div>
@@ -362,6 +362,9 @@
             webSocketMessage.unInstallWsMessage()
         },
         methods: {
+            getPipelineTestUrl (projectCode) {
+                return `${window.getRoutePrefix()}/pipeline/${projectCode}`
+            },
             toAtomList () {
                 this.$router.push({
                     name: 'atomWork'

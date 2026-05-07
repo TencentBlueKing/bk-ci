@@ -51,7 +51,7 @@
                         </span>
                         <a
                             v-if="(repoInfo.svnType) && !['OAUTH'].includes(repoInfo.svnType)"
-                            :href="`/console/ticket/${repoInfo.projectId}/editCredential/${repoInfo.credentialId}`"
+                            :href="getTicketEditUrl(repoInfo.projectId, repoInfo.credentialId)"
                             target="_blank"
                         >
                             {{ repoInfo.credentialId }}
@@ -68,7 +68,7 @@
                         </span>
                         <a
                             v-if="(repoInfo.authType) && !['OAUTH'].includes(repoInfo.authType)"
-                            :href="`/console/ticket/${repoInfo.projectId}/editCredential/${repoInfo.credentialId}`"
+                            :href="getTicketEditUrl(repoInfo.projectId, repoInfo.credentialId)"
                             target="_blank"
                         >
                             {{ repoInfo.credentialId }}
@@ -415,7 +415,7 @@
                     >
                         <template slot-scope="{ row }">
                             <a
-                                :href="`/console/pipeline/${projectId}/${row.pipelineId}/history/history`"
+                                :href="getPipelineHistoryUrl(projectId, row.pipelineId)"
                                 target="_blank"
                             >{{ row.pipelineName }}</a>
                         </template>
