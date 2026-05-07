@@ -134,6 +134,6 @@ class DesktopExperienceResourceImpl @Autowired constructor(
         // 桌面端默认平台为WIN
         private const val DEFAULT_PLATFORM = 4
         private const val DEFAULT_APP_VERSION = "2.0.0"
-        private const val DEFAULT_DOWNLOAD_URL_EXPERIENCED = 3600
+        private const val DEFAULT_DOWNLOAD_URL_EXPERIENCED = 6 * 3600
     }
 }
