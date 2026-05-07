@@ -66,7 +66,7 @@ module.exports = (env, argv) => {
                 PUBLIC_PATH_PREFIX: isProd ? '__BK_CI_PUBLIC_PATH__' : '',
                 BK_PAAS_PRIVATE_URL: isProd ? '__BK_PAAS_PRIVATE_URL__' : ''
             },
-            VENDOR_LIBS: `${isProd ? '__BK_CI_PUBLIC_PATH__' : ''}/pipeline/main.dll.js?v=${Math.random()}`
+            VENDOR_LIBS: `/pipeline/main.dll.js?v=${Math.random()}`
         }),
         new webpack.DllReferencePlugin({
             context: __dirname,
