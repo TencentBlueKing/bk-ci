@@ -139,12 +139,21 @@ class EnvDispatchStrategyDao {
         }
     }
 
-    fun checkDupName(dslContext: DSLContext, projectId: String, envId: Long, name: String): Boolean {
+    fun checkDupName(
+        dslContext: DSLContext,
+        projectId: String,
+        envId: Long,
+        name: String,
+        ignoreIds: Set<Long>?
+    ): Boolean {
         with(TEnvDispatchStrategy.T_ENV_DISPATCH_STRATEGY) {
             val dsl = dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(ENV_ID.eq(envId))
                 .and(STRATEGY_NAME.eq(name))
+            ignoreIds?.let {
+                dsl.andNot(ID.`in`(ignoreIds))
+            }
             return dsl.fetchOne(0, Long::class.java)!! > 0
         }
     }

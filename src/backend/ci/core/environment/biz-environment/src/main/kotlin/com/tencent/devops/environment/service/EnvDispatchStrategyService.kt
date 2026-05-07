@@ -117,7 +117,8 @@ class EnvDispatchStrategyService @Autowired constructor(
                     dslContext = dslContext,
                     projectId = projectId,
                     envId = envId,
-                    name = strategyName
+                    name = strategyName,
+                    ignoreIds = null
                 )
             ) {
                 throw InvalidParamException("strategy name $strategyName repeat")
@@ -194,7 +195,8 @@ class EnvDispatchStrategyService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 envId = existing.envId,
-                name = strategyName
+                name = strategyName,
+                ignoreIds = setOf(id)
             )
         ) {
             throw InvalidParamException("strategy name $strategyName repeat")
