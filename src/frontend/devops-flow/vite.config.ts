@@ -82,6 +82,7 @@ export default defineConfig(({ mode }) => {
             IAM_URL_PREFIX: '__BK_CI_IAM_URL_PREFIX__',
             PUBLIC_PATH_PREFIX: '__BK_CI_PUBLIC_PATH__',
             ICON_COOL_PREFIX: '',
+            USER_API_BASE_URL: '__BK_CI_USER_API_BASE_URL__',
             // Add more variables here as needed
           },
         },

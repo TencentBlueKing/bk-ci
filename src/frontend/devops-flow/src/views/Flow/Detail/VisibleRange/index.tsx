@@ -30,7 +30,7 @@ export default defineComponent({
     const orgSelectorRef = ref<InstanceType<typeof BkOrgSelector>>()
     const selectedOrgs = ref<TreeItem[]>([])
     const avatarBaseUrl = 'https://r.hrc.woa.com/photo/150/'
-    const apiBaseUrl = 'https://bk-user-web.apigw.o.woa.com/prod'
+    const apiBaseUrl = (window as unknown as { BK_USER_API_BASE_URL?: string }).BK_USER_API_BASE_URL
     const { maxHeight } = useTableHeight(tableContainerRef)
 
     const effectiveMaxHeight = computed(() => {
