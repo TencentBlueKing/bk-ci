@@ -56,9 +56,6 @@ class ProcessDao {
     companion object {
         /**
          * 可被清理的构建状态（T_PIPELINE_BUILD_HISTORY.STATUS 列存储 BuildStatus 枚举 ordinal）
-         *
-         * 注意：该集合依赖 [BuildStatus] 枚举声明顺序，若新增/插入枚举值，存量数据的 ordinal 含义会偏移，
-         * 必须在 [BuildStatus] 末尾追加，且严禁重排已有枚举；变更前请同步评估 DB 存量数据的兼容性。
          */
         private val DELETABLE_BUILD_STATUS = BuildStatus.entries
             .filter { it.isFinish() || it == BuildStatus.STAGE_SUCCESS || it == BuildStatus.UNEXEC }
