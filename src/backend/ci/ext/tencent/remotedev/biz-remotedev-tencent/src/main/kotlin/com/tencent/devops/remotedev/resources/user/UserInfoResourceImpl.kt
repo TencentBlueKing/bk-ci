@@ -66,14 +66,14 @@ class UserInfoResourceImpl @Autowired constructor(
         if (deviceId != null && token != null) {
             // 如果是云桌面拥有者 + token有效，才豁免ioa认证。
             if (workspaceService.checkExistWorkspaceSharedInfo(
-                workspaceName = data.workspaceName,
-                sharedUser = userId,
-                assignType = WorkspaceShared.AssignType.OWNER
-            ) && trustDeviceService.checkTrustDevice(
+                    workspaceName = data.workspaceName,
+                    sharedUser = userId,
+                    assignType = WorkspaceShared.AssignType.OWNER
+                ) && trustDeviceService.checkTrustDevice(
                     userId = userId,
                     deviceId = deviceId,
                     token = token
-            )
+                ).result
             ) {
                 return Result(res.copy(moa = UserInfoMoaCheckConfig(false)))
             }
@@ -106,7 +106,11 @@ class UserInfoResourceImpl @Autowired constructor(
         return Result(trustDeviceService.getOrCreateToken(userId, data.deviceId, data.detail))
     }
 
-    override fun verifyTrustDeviceToken(userId: String, deviceId: String, token: String): Result<VerifyResult> {
+    override fun verifyTrustDeviceToken(userId: String, deviceId: String, token: String): Result<Boolean> {
+        return Result(trustDeviceService.checkTrustDevice(userId, deviceId, token).result)
+    }
+
+    override fun verifyTrustDeviceTokenNew(userId: String, deviceId: String, token: String): Result<VerifyResult> {
         return Result(trustDeviceService.checkTrustDevice(userId, deviceId, token))
     }
 
