@@ -4,7 +4,7 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线pac版本信息")
-data class PipelineYamlVersionInfo(
+data class PipelineYamlBuildVersion(
     @get:Schema(title = "版本名称", required = false)
     val name: String,
     @get:Schema(title = "版本号", required = false)

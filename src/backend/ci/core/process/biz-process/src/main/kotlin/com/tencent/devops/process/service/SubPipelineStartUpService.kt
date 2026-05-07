@@ -169,7 +169,9 @@ class SubPipelineStartUpService @Autowired constructor(
             startParams[it.key] = parseVariable(it.value, runVariables)
         }
         // 子流水线启动时补充pac相关参数
-        startParams.putAll(yamlParams.map { (key, value) -> key to value.value.toString() })
+        yamlParams.map { (key, value) -> key to value.value.toString() }.forEach {
+            startParams.putIfAbsent(it.first, it.second)
+        }
 
         val existPipelines = HashSet<String>()
         existPipelines.add(parentPipelineId)
@@ -367,13 +369,7 @@ class SubPipelineStartUpService @Autowired constructor(
                 pipelineParamMap = params,
                 channelCode = channelCode,
                 isMobile = isMobile,
-                resource = resource.let {
-                    if (!branch.isNullOrBlank()) {
-                        it.copy(versionName = branch)
-                    } else {
-                        it
-                    }
-                },
+                resource = resource,
                 frequencyLimit = false,
                 signPipelineVersion = resource.version
             )

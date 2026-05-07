@@ -92,7 +92,7 @@ interface UserBuildResource {
         version: Int?,
         @Parameter(description = "指定分支版本（仅PAC流水线有效，若已指定version，则优先使用version）", required = false)
         @QueryParam("branch")
-        branch: String?
+        branch: String? = null
     ): Result<BuildManualStartupInfo>
 
     @Operation(summary = "获取流水线构建参数")
@@ -144,7 +144,7 @@ interface UserBuildResource {
         version: Int? = null,
         @Parameter(description = "指定分支版本（仅PAC流水线有效，若已指定version，则优先使用version）", required = false)
         @QueryParam("branch")
-        branch: String?
+        branch: String? = null
     ): Result<BuildId>
 
     @Operation(summary = "重试流水线-重试或者跳过失败插件")

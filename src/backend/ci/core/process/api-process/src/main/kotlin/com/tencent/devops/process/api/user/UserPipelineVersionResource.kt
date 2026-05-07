@@ -41,7 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
-import com.tencent.devops.process.pojo.PipelineYamlVersionInfo
+import com.tencent.devops.process.pojo.PipelineYamlBuildVersion
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
@@ -450,5 +450,5 @@ interface UserPipelineVersionResource {
         @Parameter(description = "每页行数", required = false)
         @QueryParam("pageSize")
         pageSize: Int? = 20
-    ): Result<List<PipelineYamlVersionInfo>>
+    ): Result<List<PipelineYamlBuildVersion>>
 }

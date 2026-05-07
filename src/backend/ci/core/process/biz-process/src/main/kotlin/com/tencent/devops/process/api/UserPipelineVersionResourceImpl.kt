@@ -50,7 +50,7 @@ import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
-import com.tencent.devops.process.pojo.PipelineYamlVersionInfo
+import com.tencent.devops.process.pojo.PipelineYamlBuildVersion
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
@@ -565,7 +565,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         search: String?,
         page: Int?,
         pageSize: Int?
-    ): Result<List<PipelineYamlVersionInfo>> {
+    ): Result<List<PipelineYamlBuildVersion>> {
         return Result(
             pipelineVersionFacadeService.listPacVersions(
                 userId = userId,

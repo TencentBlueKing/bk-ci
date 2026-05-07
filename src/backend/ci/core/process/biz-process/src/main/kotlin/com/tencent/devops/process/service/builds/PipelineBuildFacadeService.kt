@@ -458,15 +458,12 @@ class PipelineBuildFacadeService(
 
         val startEpoch = System.currentTimeMillis()
         try {
-            // PAC流水线相关参数
-            val yamlParams = mutableMapOf<String, BuildParameters>()
             // 优先使用version参数，如果version为空，则使用branchName
             val targetVersion = version ?: branch?.takeIf { it.isNotBlank() }?.let {
                 pipelineYamlFacadeService.getPipelineYamlVersion(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    branch = it,
-                    yamlParams = yamlParams
+                    branch = it
                 )
             }
 
@@ -480,24 +477,37 @@ class PipelineBuildFacadeService(
                 // 服务间的API触发需要兼容老用户，为避免意外产生调试构建，直接拦截
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION)
             }
+            // PAC流水线相关参数
+            val yamlParams = mutableMapOf<String, BuildParameters>()
             // 如果是PAC流水线,需要加上代码库hashId,给checkout:self使用，如果用户已有yaml参数, 则以用户侧为准
-            val isPacPipeline = pipelineYamlFacadeService.buildYamlManualParamMap(
+            pipelineYamlFacadeService.buildYamlManualParamMap(
                 projectId = projectId,
                 pipelineId = pipelineId
             )?.let {
                 yamlParams.putAll(it)
-                // 指定version执行时，若是分支版本则记录分支信息
-                if (resource.status == VersionStatus.BRANCH && !resource.versionName.isNullOrBlank()) {
+                when {
+                    version == null && !branch.isNullOrBlank() -> {
+                        branch
+                    }
+
+                    // 指定version执行时，若是分支版本则记录分支信息，发布瞬间兼容旧前端
+                    version != null && resource.status == VersionStatus.BRANCH -> {
+                        resource.versionName ?: ""
+                    }
+
+                    else -> {
+                        null
+                    }
+                }?.let { branchName ->
                     yamlParams[BK_REPO_GIT_WEBHOOK_BRANCH] = BuildParameters(
                         key = BK_REPO_GIT_WEBHOOK_BRANCH,
-                        value = resource.versionName!!
+                        value = branchName
                     )
                 }
-                true
-            } ?: false
+            }
             // 非PAC流水线的正式版本必须使用最新版本执行
-            if (
-                version != null && !isPacPipeline &&
+            // 正式版本,必须使用最新版本执行
+            if (version != null &&
                 resource.status == VersionStatus.RELEASED &&
                 readyToBuildPipelineInfo.version != version
             ) {
@@ -569,14 +579,7 @@ class PipelineBuildFacadeService(
                 pipelineParamMap = paramMap,
                 channelCode = channelCode,
                 isMobile = isMobile,
-                resource = resource.let {
-                    // pac流水线，指定分支执行时才需设置versionName
-                    if (version == null && isPacPipeline && !branch.isNullOrBlank()) {
-                        it.copy(versionName = branch)
-                    } else {
-                        it
-                    }
-                },
+                resource = resource,
                 frequencyLimit = frequencyLimit,
                 buildNo = buildNo,
                 startValues = values,
