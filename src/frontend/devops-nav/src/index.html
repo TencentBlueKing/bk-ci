@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <!--
   ~ Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
   ~
@@ -19,209 +19,242 @@
   -->
 
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link
+      rel="icon"
+      href="<%= PUBLIC_PATH_PREFIX %>/console/static/favicon.ico"
+      type="image/x-icon"
+    />
+    <link
+      rel="shortcut icon"
+      href="<%= PUBLIC_PATH_PREFIX %>/console/static/favicon.ico"
+      type="image/x-icon"
+    />
+    <link
+      rel="preload"
+      as="script"
+      href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue_2.7.16.min.js"
+    />
+    <link
+      rel="preload"
+      as="script"
+      href="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js"
+    />
+    <link
+      rel="preload"
+      as="script"
+      href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router.min.js"
+    />
+    <script>
+      var API_URL_PREFIX = "<%= PUBLIC_PATH_PREFIX %>/ms"; // api接口前缀
+      var PUBLIC_URL_PREFIX = "<%= PUBLIC_PATH_PREFIX %>"; // 静态资源前缀
+      var PERM_URL_PREFIX = "__BK_PAAS_PUBLIC_URL__/o/bk_iam_app"; // EE PERM URL PREFIX
+      var DOCS_URL_PREFIX = "__BK_CI_DOCS_URL__"; // 文档中心域名
+      var LOGIN_SERVICE_URL = "__BK_CI_PAAS_LOGIN_URL__"; // 蓝鲸PaaS登录入口
+      var INIT_LOCALE = "__BK_CI_INIT_LOCALE__"; // 国际化配置占位符
+      var DEVOPS_LS_VERSION =
+        "<%- htmlWebpackPlugin.options.DEVOPS_LS_VERSION%>";
+      var X_DEVOPS_PROJECT_ID = "X-DEVOPS-PROJECT-ID";
+      var BK_CI_VERSION = "__BK_CI_VERSION__";
+      var LOCALE_DOMAIN = "__BK_DOMAIN__";
+      var BK_PAAS_PRIVATE_URL = "__BK_PAAS_PRIVATE_URL__";
+      var ENTERPRISE_VERSION = false;
+      var BK_CI_AUTH_PROVIDER = "__BK_CI_AUTH_PROVIDER__";
+      var BK_SHARED_RES_URL = "__BK_SHARED_RES_URL__";
+      var BK_IAM_URL_PREFIX = "__BK_CI_IAM_URL_PREFIX__";
+      var BK_APIGW_USER_WEB_URL = "<%= BK_APIGW_USER_WEB_URL %>";
+      var BK_CI_NO_COOKIE_PROJECT_PREFIX = "__BK_CI_NO_COOKIE_PROJECT_PREFIX__";
+    </script>
+    <script>
+      // 动态加载js
+      function importScript(src, oHead, fOnload) {
+        var oScript = document.createElement("script");
+        oScript.type = "text\/javascript";
 
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-  <link rel="icon" href="<%= PUBLIC_PATH_PREFIX %>/console/static/favicon.ico" type="image/x-icon" />
-  <link rel="shortcut icon" href="<%= PUBLIC_PATH_PREFIX %>/console/static/favicon.ico" type="image/x-icon" />
-  <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue_2.7.16.min.js" />
-  <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js" />
-  <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router_3.6.5.min.js" />
-  <script>
-    var API_URL_PREFIX = '<%= PUBLIC_PATH_PREFIX %>/ms' // api接口前缀(含子路径前缀)
-    var PUBLIC_URL_PREFIX = '<%= PUBLIC_PATH_PREFIX %>' // 静态资源前缀
-    var PERM_URL_PREFIX = '__BK_PAAS_PUBLIC_URL__/o/bk_iam_app' // EE PERM URL PREFIX
-    var DOCS_URL_PREFIX = '__BK_CI_DOCS_URL__' // 文档中心域名
-    var LOGIN_SERVICE_URL = '__BK_CI_PAAS_LOGIN_URL__' // 蓝鲸PaaS登录入口
-    var INIT_LOCALE = '__BK_CI_INIT_LOCALE__' // 国际化配置占位符
-    var DEVOPS_LS_VERSION =
-      '<%- htmlWebpackPlugin.options.DEVOPS_LS_VERSION%>'
-    var X_DEVOPS_PROJECT_ID = 'X-DEVOPS-PROJECT-ID'
-    var BK_CI_VERSION = '__BK_CI_VERSION__'
-    var LOCALE_DOMAIN = '__BK_DOMAIN__'
-    var BK_PAAS_PRIVATE_URL = '__BK_PAAS_PRIVATE_URL__'
-    var ENTERPRISE_VERSION = false
-    var BK_CI_AUTH_PROVIDER = '__BK_CI_AUTH_PROVIDER__'
-    var BK_SHARED_RES_URL = '__BK_SHARED_RES_URL__' 
-    var BK_IAM_URL_PREFIX = '__BK_CI_IAM_URL_PREFIX__'
-    var BK_CI_NO_COOKIE_PROJECT_PREFIX = '__BK_CI_NO_COOKIE_PROJECT_PREFIX__'
-  </script>
-  <script>
-    // 动态加载js
-    function importScript(src, oHead, fOnload) {
-      var oScript = document.createElement('script')
-      oScript.type = 'text\/javascript'
-
-      if (fOnload) {
-        oScript.onload = fOnload
-      }
-
-      oScript.setAttribute('src', src)
-      oScript.setAttribute('defer', '')
-      oHead.appendChild(oScript)
-    }
-
-    // 动态加载css
-    function importStyle(href, oHead) {
-      var oStyle = document.createElement('link')
-      oStyle.setAttribute('rel', 'stylesheet')
-      oStyle.setAttribute('type', 'text/css')
-      oStyle.setAttribute('href', href)
-      oHead.appendChild(oStyle)
-    }
-
-    function loadJsAssets(isVendors) {
-      for (var i = 0; i < window.jsAssets.length; i++) {
-        var js = window.jsAssets[i]
-        if (isVendors === true ? js.indexOf('vendors') > -1 : js.indexOf('vendors') === -1) {
-          importScript(js, document.body)
+        if (fOnload) {
+          oScript.onload = fOnload;
         }
-      }
-    }
 
-    function isValidPid(projectList, pid) {
-      for (var i = 0; i < projectList.length; i++) {
-        var proj = projectList[i]
-        if (proj.projectCode === pid) {
-          return true
-        }
+        oScript.setAttribute("src", src);
+        oScript.setAttribute("defer", "");
+        oHead.appendChild(oScript);
       }
-      return false
-    }
 
-    function getCookie(cname) {
-      try {
-        var name = cname + '='
-        var decodedCookie = decodeURIComponent(document.cookie)
-        var ca = decodedCookie.split(';')
-        for (var i = 0; i < ca.length; i++) {
-          var c = ca[i]
-          while (c.charAt(0) == ' ') {
-            c = c.substring(1)
-          }
-          if (c.indexOf(name) == 0) {
-            return c.substring(name.length, c.length)
+      // 动态加载css
+      function importStyle(href, oHead) {
+        var oStyle = document.createElement("link");
+        oStyle.setAttribute("rel", "stylesheet");
+        oStyle.setAttribute("type", "text/css");
+        oStyle.setAttribute("href", href);
+        oHead.appendChild(oStyle);
+      }
+
+      function loadJsAssets(isVendors) {
+        for (var i = 0; i < window.jsAssets.length; i++) {
+          var js = window.jsAssets[i];
+          if (
+            isVendors === true
+              ? js.indexOf("vendors") > -1
+              : js.indexOf("vendors") === -1
+          ) {
+            importScript(js, document.body);
           }
         }
-        return ''
-      } catch (e) {
-        console.error('get cookie error', e.message)
-        return ''
       }
-    }
 
-    function setCookie(cname, cvalue, domain) {
-      document.cookie =
-        cname + '=' + cvalue + '; ' + 'domain=' + domain + '; path=/'
-    }
-
-    function deleteCookie(cname, domain) {
-      var date = new Date()
-      date.setTime(date.getTime() - 10000)
-      document.cookie =
-        cname +
-        '=0;' +
-        'domain=' +
-        domain +
-        '; expires=' +
-        date.toGMTString() +
-        '; path=/'
-    }
-
-    function setProjectIdCookie (projectId) {
-      try {
-        if (BK_CI_NO_COOKIE_PROJECT_PREFIX.split(';').some(str => projectId.startsWith(str))) return
-        var domainMatch = location.hostname.match(/([^.]+\.)?([^\.]+\..+)/)
-        var topDomain =
-          domainMatch.length > 2 ? domainMatch[2] : location.hostname
-        if (projectId) {
-          deleteCookie(X_DEVOPS_PROJECT_ID, topDomain)
-          setCookie(X_DEVOPS_PROJECT_ID, projectId, location.hostname)
-          window.GLOBAL_PID = projectId
+      function isValidPid(projectList, pid) {
+        for (var i = 0; i < projectList.length; i++) {
+          var proj = projectList[i];
+          if (proj.projectCode === pid) {
+            return true;
+          }
         }
-      } catch (e) {
-        console.warn('you have no project')
+        return false;
       }
-    }
 
-    // 子路径部署支持：返回剥离 PUBLIC_URL_PREFIX 之后的"逻辑路径"，
-    // 让所有基于 /console/... 的正则匹配在挂在子路径下时仍然成立。
-    function getLogicalPath() {
-      var pathname = location.pathname
-      var prefix = window.PUBLIC_URL_PREFIX || ''
-      return prefix && pathname.indexOf(prefix) === 0
-        ? (pathname.slice(prefix.length) || '/')
-        : pathname
-    }
-
-    function matchPathProjectId() {
-      try {
-        var logicalPath = getLogicalPath()
-        var reg = /^\/console\/\w+\/([\w\-]+)?/
-        if (logicalPath.match(/^\/console\/perm\/(\w+)?/)) {
-          var query = location.search.slice(1)
-          var queryArr = query.split('&')
-          for (var i = 0; i < queryArr.length; i++) {
-            var item = queryArr[i].split('=')
-            var key = decodeURIComponent(item[0])
-            if (key === 'projectCode') {
-              return decodeURIComponent(item[1])
+      function getCookie(cname) {
+        try {
+          var name = cname + "=";
+          var decodedCookie = decodeURIComponent(document.cookie);
+          var ca = decodedCookie.split(";");
+          for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == " ") {
+              c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+              return c.substring(name.length, c.length);
             }
           }
-          return ''
-        } else if ([
-          /^\/console\/store\/(\w+)?/,
-          /^\/console\/permission\/(\w+)?/,
-          /^\/console\/manage\/apply/,
-          /^\/console\/platform\/(\w+)?/,
-        ].some((reg) => logicalPath.match(reg))) {
-          // TODO store、permission、apply project 没有projectId
-          return ''
-        } else {
-          var res = logicalPath.match(reg)
-          return res ? res[1] : ''
+          return "";
+        } catch (e) {
+          console.error("get cookie error", e.message);
+          return "";
         }
-      } catch (e) {
-        console.warn(e)
-        return ''
       }
-    }
 
-    var pathPid = matchPathProjectId() || getCookie(X_DEVOPS_PROJECT_ID)
-    window.setProjectIdCookie(pathPid)
-  </script>
+      function setCookie(cname, cvalue, domain) {
+        document.cookie =
+          cname + "=" + cvalue + "; " + "domain=" + domain + "; path=/";
+      }
 
-  <!-- devops:preload -->
-  <% for (key in htmlWebpackPlugin.files.js) { %>
-    <link href="<%= htmlWebpackPlugin.files.js[key] %>" as="script" rel="preload" />
+      function deleteCookie(cname, domain) {
+        var date = new Date();
+        date.setTime(date.getTime() - 10000);
+        document.cookie =
+          cname +
+          "=0;" +
+          "domain=" +
+          domain +
+          "; expires=" +
+          date.toGMTString() +
+          "; path=/";
+      }
+
+      function setProjectIdCookie(projectId) {
+        try {
+          if (
+            BK_CI_NO_COOKIE_PROJECT_PREFIX.split(";").some(
+              (str) => !!str && projectId.startsWith(str),
+            )
+          )
+            return;
+          var domainMatch = location.hostname.match(/([^.]+\.)?([^\.]+\..+)/);
+          var topDomain =
+            domainMatch.length > 2 ? domainMatch[2] : location.hostname;
+          if (projectId) {
+            deleteCookie(X_DEVOPS_PROJECT_ID, topDomain);
+            setCookie(X_DEVOPS_PROJECT_ID, projectId, location.hostname);
+            window.GLOBAL_PID = projectId;
+          }
+        } catch (e) {
+          console.warn("you have no project");
+        }
+      }
+
+      function matchPathProjectId() {
+        try {
+          var reg = new RegExp(`^${window.getRoutePrefix()}/\\w+/([\w.-]+)?`);
+
+          if (
+            location.pathname.match(
+              new RegExp(`^${window.getRoutePrefix()}/perm/([\w.-]+)?`),
+            )
+          ) {
+            var query = location.search.slice(1);
+            var queryArr = query.split("&");
+            for (var i = 0; i < queryArr.length; i++) {
+              var item = queryArr[i].split("=");
+              var key = decodeURIComponent(item[0]);
+              if (key === "projectCode") {
+                return decodeURIComponent(item[1]);
+              }
+            }
+            return "";
+          } else if (
+            [
+              /store\/(\w+)?/,
+              /permission\/(\w+)?/,
+              /manage\/apply/,
+              /platform\/(\w+)?/,
+            ].some((r) =>
+              location.pathname.match(
+                new RegExp(`^${window.getRoutePrefix()}/${r}`),
+              ),
+            )
+          ) {
+            // TODO store、permission、apply project 没有projectId
+            return "";
+          } else {
+            var res = location.pathname.match(reg);
+            return res ? res[1] : "";
+          }
+        } catch (e) {
+          console.warn(e);
+          return "";
+        }
+      }
+
+      var pathPid = matchPathProjectId() || getCookie(X_DEVOPS_PROJECT_ID);
+      window.setProjectIdCookie(pathPid);
+    </script>
+
+    <!-- devops:preload -->
+    <% for (key in htmlWebpackPlugin.files.js) { %>
+    <link
+      href="<%= htmlWebpackPlugin.files.js[key] %>"
+      as="script"
+      rel="preload"
+    />
     <% } %>
-      <!-- end devops:preload -->
+    <!-- end devops:preload -->
 
-      <!-- devops:css -->
-      <% for (key in htmlWebpackPlugin.files.css) { %>
-        <link href="<%= htmlWebpackPlugin.files.css[key] %>" rel="stylesheet" />
-        <% } %>
+    <!-- devops:css -->
+    <% for (key in htmlWebpackPlugin.files.css) { %>
+    <link href="<%= htmlWebpackPlugin.files.css[key] %>" rel="stylesheet" />
+    <% } %>
 
+    <!-- end devops:css -->
+    <title></title>
+  </head>
 
-          <!-- end devops:css -->
-          <title></title>
-</head>
-
-<body>
-  <!-- gulp inject: svg sprite js -->
-  <!-- inject:js -->
-  <!-- endinject -->
-  <div id="devops-root">
-    <div class="bk-loading" style="position: absolute">
-      <div class="bk-loading-wrapper">
-        <div class="bk-loading1">
-          <div class="point point1"></div>
-          <div class="point point2"></div>
-          <div class="point point3"></div>
-          <div class="point point4"></div>
+  <body>
+    <!-- gulp inject: svg sprite js -->
+    <!-- inject:js -->
+    <!-- endinject -->
+    <div id="devops-root">
+      <div class="bk-loading" style="position: absolute">
+        <div class="bk-loading-wrapper">
+          <div class="bk-loading1">
+            <div class="point point1"></div>
+            <div class="point point2"></div>
+            <div class="point point3"></div>
+            <div class="point point4"></div>
+          </div>
+          <div class="bk-loading-title"></div>
         </div>
-        <div class="bk-loading-title"></div>
       </div>
     </div>
   </div>
@@ -229,351 +262,366 @@
   <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js"></script>
   <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router_3.6.5.min.js"></script>
 
-  <!-- devops:assets -->
-  <!-- end devops:assets -->
+    <!-- devops:assets -->
+    <!-- end devops:assets -->
 
-  <script>
-    loadJsAssets(true)
-  </script>
-  <script>
-    window.getLoginUrl = function () {
-      const loginUrl = LOGIN_SERVICE_URL.startsWith('//') ? `${location.protocol}${LOGIN_SERVICE_URL}` : LOGIN_SERVICE_URL
-      var cUrl =
-        location.origin +
-        location.pathname +
-        encodeURIComponent(location.search)
-      if (/=%s/.test(LOGIN_SERVICE_URL)) {
-        return LOGIN_SERVICE_URL.replace(/%s/, cUrl)
-      } else {
-        const url = new URL(loginUrl)
-        if (/=$/.test(url.search)) {
-          return loginUrl + cUrl
+    <script>
+      loadJsAssets(true);
+    </script>
+    <script>
+      window.getLoginUrl = function () {
+        const loginUrl = LOGIN_SERVICE_URL.startsWith("//")
+          ? `${location.protocol}${LOGIN_SERVICE_URL}`
+          : LOGIN_SERVICE_URL;
+        var cUrl =
+          location.origin +
+          location.pathname +
+          encodeURIComponent(location.search);
+        if (/=%s/.test(LOGIN_SERVICE_URL)) {
+          return LOGIN_SERVICE_URL.replace(/%s/, cUrl);
         } else {
-          url.searchParams.append('c_url', cUrl)
-          return url.href
+          const url = new URL(loginUrl);
+          if (/=$/.test(url.search)) {
+            return loginUrl + cUrl;
+          } else {
+            url.searchParams.append("c_url", cUrl);
+            return url.href;
+          }
         }
-      }
-      return loginUrl
-    }
+        return loginUrl;
+      };
 
-    function asyncGet(url, pid, includeCredentials) {
-      return new Promise(function (resolve, reject) {
-        var xhr = new XMLHttpRequest()
-        xhr.onreadystatechange = function () {
-          try {
-            if (this.readyState == 4 && this.status == 200) {
-              var res = JSON.parse(xhr.responseText)
-              if (res.status === 401) {
-                // 未登录，这里处理跳转逻辑
-                window.location.href = window.getLoginUrl()
+      function asyncGet(url, pid, includeCredentials) {
+        return new Promise(function (resolve, reject) {
+          var xhr = new XMLHttpRequest();
+          xhr.onreadystatechange = function () {
+            try {
+              if (this.readyState == 4 && this.status == 200) {
+                var res = JSON.parse(xhr.responseText);
+                if (res.status === 401) {
+                  // 未登录，这里处理跳转逻辑
+                  window.location.href = window.getLoginUrl();
+                }
+                resolve(res && res.data ? res.data : res);
+              } else if (this.status == 401) {
+                // 无登录，这里处理跳转逻辑
+                window.location.href = window.getLoginUrl();
+              } else if (this.status == 417) {
+                // 无登录，这里处理跳转逻辑
+                var res = JSON.parse(xhr.responseText);
+                window.location.href = res.redirectUrl;
+              } else if (this.readyState == 4 && this.status >= 400) {
+                var res = JSON.parse(xhr.responseText);
+                reject({
+                  status: this.status,
+                  message: res.message || xhr.responseText,
+                });
               }
-              resolve(res && res.data ? res.data : res)
-            } else if (this.status == 401) {
-              // 无登录，这里处理跳转逻辑
-              window.location.href = window.getLoginUrl()
-            } else if (this.status == 417) {
-              // 无登录，这里处理跳转逻辑
-              var res = JSON.parse(xhr.responseText)
-              window.location.href = res.redirectUrl
-            } else if (this.readyState == 4 && this.status >= 400) {
-              var res = JSON.parse(xhr.responseText)
+            } catch (error) {
               reject({
                 status: this.status,
-                message: res.message || xhr.responseText
-              })
+                message: error.message || error,
+              });
             }
-          } catch (error) {
-            reject({
-              status: this.status,
-              message: error.message || error
-            })
+          };
+
+          xhr.withCredentials =
+            typeof includeCredentials === "boolean" ? includeCredentials : true;
+          xhr.open("GET", url);
+          pid && xhr.setRequestHeader(X_DEVOPS_PROJECT_ID, pid);
+          xhr.send();
+        });
+      }
+
+      function fetchAllServices() {
+        return asyncGet(
+          API_URL_PREFIX + "/project/api/user/services/",
+          pathPid,
+        );
+      }
+
+      function getLocaleBackend() {
+        return asyncGet(API_URL_PREFIX + "/project/api/user/locales/get");
+      }
+
+      function fetchAllProjects() {
+        return asyncGet(
+          API_URL_PREFIX + "/project/api/user/projects/?enabled=true",
+        );
+      }
+
+      function fetchProjectById(projectId) {
+        return projectId
+          ? asyncGet(
+              API_URL_PREFIX +
+                "/project/api/user/projects/" +
+                projectId +
+                "/containEmpty",
+            )
+          : Promise.resolve();
+      }
+
+      function requestUser() {
+        return asyncGet(API_URL_PREFIX + "/project/api/user/users");
+      }
+
+      function joinUrl(urlArr) {
+        const link = urlArr[urlArr.length - 1];
+        if (/^(http(s)?:)?\/\//.test(link)) {
+          return link;
+        }
+        if (Array.isArray(urlArr)) {
+          return urlArr.join("/").replace(/([^:]\/)\/+/g, "$1");
+        }
+        return "";
+      }
+
+      function getServiceObject(serviceList, assetsJSON) {
+        var serviceMap = {};
+        var iframeRoutes = [];
+        for (var i = 0; i < serviceList.length; i++) {
+          var children = serviceList[i].children;
+          for (var j = 0; j < children.length; j++) {
+            var mod = children[j].link_new.replace(/^\/?(\w+)\S*/, "$1");
+            var serviceTitle = children[j].name.replace(/\(\S+?\)/, "");
+            var assetMod = assetsJSON[mod];
+            if (children[j].inject_type === "amd") {
+              var jsUrl = assetMod
+                ? joinUrl(["", mod, assetMod.js])
+                : children[j].js_url;
+              var cssUrl = assetMod
+                ? joinUrl(["", mod, assetMod.css])
+                : children[j].css_url;
+              children[j].js_url = jsUrl;
+              children[j].css_url = cssUrl;
+            }
+            serviceMap[mod] = children[j];
+            if (children[j].inject_type === "iframe") {
+              iframeRoutes.push({
+                path:
+                  mod + (children[j].show_project_list ? "/:projectId?" : ""),
+                name: mod,
+                meta: {
+                  showProjectList: children[j].show_project_list,
+                  showNav: children[j].show_nav,
+                  projectIdType: children[j].project_id_type,
+                  header:
+                    typeof mod === "string" ? mod.toLowerCase() : serviceTitle,
+                  title: serviceTitle,
+                  logo: mod,
+                  webSocket: (children[j].webSocket || "").split(","),
+                },
+              });
+            }
           }
         }
-
-        xhr.withCredentials = typeof includeCredentials === 'boolean' ? includeCredentials : true
-        xhr.open('GET', url)
-        pid && xhr.setRequestHeader(X_DEVOPS_PROJECT_ID, pid)
-        xhr.send()
-      })
-    }
-
-    function fetchAllServices() {
-      return asyncGet(API_URL_PREFIX + '/project/api/user/services/', pathPid)
-    }
-
-    function getLocaleBackend() {
-      return asyncGet(API_URL_PREFIX + '/project/api/user/locales/get')
-    }
-
-    function fetchAllProjects() {
-      return asyncGet(
-        API_URL_PREFIX + '/project/api/user/projects/?enabled=true'
-      )
-    }
-
-    function fetchProjectById(projectId) {
-      return projectId
-        ? asyncGet(
-          API_URL_PREFIX +
-          '/project/api/user/projects/' +
-          projectId +
-          '/containEmpty'
-        )
-        : Promise.resolve()
-    }
-
-    function requestUser() {
-      return asyncGet(API_URL_PREFIX + '/project/api/user/users')
-    }
-
-    function joinUrl(urlArr) {
-      const link = urlArr[urlArr.length - 1]
-      if (/^(http(s)?:)?\/\//.test(link)) {
-        return link
+        return {
+          serviceMap: serviceMap,
+          iframeRoutes: iframeRoutes,
+        };
       }
-      if (Array.isArray(urlArr)) {
-        return urlArr.join('/').replace(/([^:]\/)\/+/g, '$1')
-      }
-      return ''
-    }
 
-    function getServiceObject(serviceList, assetsJSON) {
-      var serviceMap = {}
-      var iframeRoutes = []
-      for (var i = 0; i < serviceList.length; i++) {
-        var children = serviceList[i].children
-        for (var j = 0; j < children.length; j++) {
-          var mod = children[j].link_new.replace(/^\/?(\w+)\S*/, '$1')
-          var serviceTitle = children[j].name.replace(/\(\S+?\)/, '')
-          var assetMod = assetsJSON[mod]
-          if (children[j].inject_type === 'amd') {
-            var jsUrl = assetMod
-              ? joinUrl(['', mod, assetMod.js])
-              : children[j].js_url
-            var cssUrl = assetMod
-              ? joinUrl(['', mod, assetMod.css])
-              : children[j].css_url
-            children[j].js_url = jsUrl
-            children[j].css_url = cssUrl
+      function getDefaultPid(projectList) {
+        if (Array.isArray(projectList) && projectList.length > 0) {
+          var firstProj = projectList[0];
+          var firstPid =
+            firstProj && firstProj.projectCode
+              ? firstProj.projectCode
+              : undefined;
+          for (var i = 0; i < projectList.length; i++) {
+            var proj = projectList[i];
+            if (proj && !proj.gray) {
+              return proj.projectCode;
+            }
           }
-          serviceMap[mod] = children[j]
-          if (children[j].inject_type === 'iframe') {
-            iframeRoutes.push({
-              path:
-                mod + (children[j].show_project_list ? '/:projectId?' : ''),
-              name: mod,
-              meta: {
-                showProjectList: children[j].show_project_list,
-                showNav: children[j].show_nav,
-                projectIdType: children[j].project_id_type,
-                header:
-                  typeof mod === 'string' ? mod.toLowerCase() : serviceTitle,
-                title: serviceTitle,
-                logo: mod,
-                webSocket: (children[j].webSocket || '').split(','),
-              },
-            })
+          if (firstPid) {
+            // 如果cookie为空，而项目列表中找不到非灰度的项目时，将cookie值设置为首个项目id, 同时自动刷新页面
+            window.setProjectIdCookie(firstPid);
+            location.reload();
           }
         }
       }
-      return {
-        serviceMap: serviceMap,
-        iframeRoutes: iframeRoutes,
-      }
-    }
 
-    function getDefaultPid(projectList) {
-      if (Array.isArray(projectList) && projectList.length > 0) {
-        var firstProj = projectList[0]
-        var firstPid =
-          firstProj && firstProj.projectCode
-            ? firstProj.projectCode
-            : undefined
-        for (var i = 0; i < projectList.length; i++) {
-          var proj = projectList[i]
-          if (proj && !proj.gray) {
-            return proj.projectCode
-          }
+      function init(projectList, allServices, userInfo) {
+        var path = location.pathname.replace(window.getRoutePrefix(), "");
+        var headTag = document.head || document.getElementsByTagName("head")[0];
+        var pathReg = /^\/(\w+)\/?/;
+        var serviceObject = getServiceObject(
+          allServices,
+          window.SERVICE_ASSETS,
+        );
+        var serviceMap = serviceObject.serviceMap;
+        var serviceMatchResult = path.match(pathReg);
+        var subServiceId = serviceMatchResult ? serviceMatchResult[1] : null;
+        var page = serviceMap[subServiceId] || null;
+        var isPidOk = isValidPid(projectList, pathPid);
+        if (!isPidOk && !pathPid) {
+          var defaultPid = getDefaultPid(projectList);
+          window.setProjectIdCookie(defaultPid);
         }
-        if (firstPid) {
-          // 如果cookie为空，而项目列表中找不到非灰度的项目时，将cookie值设置为首个项目id, 同时自动刷新页面
-          window.setProjectIdCookie(firstPid)
-          location.reload()
+
+        window.allServices = allServices;
+        window.serviceObject = serviceObject;
+        window.currentPage = page;
+        window.projectList = projectList;
+
+        userInfo.isAuthenticated = true;
+        window.userInfo = userInfo;
+
+        if (page && page.inject_type === "amd") {
+          var inject_type = page.inject_type;
+          var js_url = page.js_url;
+          var css_url = page.css_url;
+          var title = page.title;
+
+          importScript(
+            window.PUBLIC_URL_PREFIX + js_url,
+            document.body,
+            loadJsAssets,
+          );
+          importStyle(window.PUBLIC_URL_PREFIX + css_url, headTag);
+        } else {
+          loadJsAssets();
         }
       }
-    }
 
-    function init(projectList, allServices, userInfo) {
-      // 先剥离子路径前缀再去掉 /console，得到子模块的相对路径（如 /pipeline/xxx）。
-      var path = getLogicalPath().replace(/^\/console/, '')
-      var headTag = document.head || document.getElementsByTagName('head')[0]
-      var pathReg = /^\/(\w+)\/?/
-      var serviceObject = getServiceObject(allServices, window.SERVICE_ASSETS)
-      var serviceMap = serviceObject.serviceMap
-      var serviceMatchResult = path.match(pathReg)
-      var subServiceId = serviceMatchResult ? serviceMatchResult[1] : null
-      var page = serviceMap[subServiceId] || null
-      var isPidOk = isValidPid(projectList, pathPid)
-      if (!isPidOk && !pathPid) {
-        var defaultPid = getDefaultPid(projectList)
-        window.setProjectIdCookie(defaultPid)
-      }
-
-      window.allServices = allServices
-      window.serviceObject = serviceObject
-      window.currentPage = page
-      window.projectList = projectList
-
-      userInfo.isAuthenticated = true
-      window.userInfo = userInfo
-
-      if (page && page.inject_type === 'amd') {
-        var inject_type = page.inject_type
-        var js_url = page.js_url
-        var css_url = page.css_url
-        var title = page.title
-
-        importScript(window.PUBLIC_URL_PREFIX + js_url, document.body, loadJsAssets)
-        importStyle(window.PUBLIC_URL_PREFIX + css_url, headTag)
-      } else {
-        loadJsAssets()
-      }
-    }
-
-    var CACHE_PREFIX = '_cache_'
-    window.setLsCacheItem = function (key, value) {
-      try {
-        if (key && typeof key === 'string') {
-          var cacheKey = CACHE_PREFIX + key
-          localStorage.setItem(cacheKey, JSON.stringify(value))
-        }
-      } catch (error) {
-        console.warn(error)
-      }
-    }
-
-    window.getLsCacheItem = function (key) {
-      if (key && typeof key === 'string') {
-        var cacheKey = CACHE_PREFIX + key
-        var cacheJson = localStorage.getItem(cacheKey)
+      var CACHE_PREFIX = "_cache_";
+      window.setLsCacheItem = function (key, value) {
         try {
-          return JSON.parse(cacheJson)
-        } catch (e) {
-          return null
+          if (key && typeof key === "string") {
+            var cacheKey = CACHE_PREFIX + key;
+            localStorage.setItem(cacheKey, JSON.stringify(value));
+          }
+        } catch (error) {
+          console.warn(error);
         }
-      }
-    }
+      };
 
-    function fetchData() {
-      return Promise.all([
-        fetchAllProjects(),
-        fetchAllServices(),
-        requestUser(),
-        getLocaleBackend(),
-        fetchProjectById(pathPid),
-      ]).then((response) => {
-        var project = response.pop()
-        var cahceArray = ['projectList', 'allServices', 'userInfo']
-        var actionArray = ['setProjectList', 'setServices', 'setUserInfo']
-        var projectList = response[0]
-        window.INIT_LOCALE = response.pop().language
-
-        if (project && project.projectCode) {
-          for (var j = 0; j < projectList.length; j++) {
-            if (projectList[j].projectCode === project.projectCode) {
-              break
-            } else if (j === projectList.length - 1) {
-              projectList[projectList.length] = project
-              break
-            }
+      window.getLsCacheItem = function (key) {
+        if (key && typeof key === "string") {
+          var cacheKey = CACHE_PREFIX + key;
+          var cacheJson = localStorage.getItem(cacheKey);
+          try {
+            return JSON.parse(cacheJson);
+          } catch (e) {
+            return null;
           }
         }
-        console.log(response, project, projectList.length)
+      };
 
-        for (var i = 0; i < cahceArray.length; i++) {
-          if (
-            window.vuexStore &&
-            typeof window.vuexStore.dispatch === 'function'
-          ) {
-            window.vuexStore.dispatch(actionArray[i], response[i])
-          }
-          window.setLsCacheItem(cahceArray[i], response[i])
-        }
-        return response
-      })
-    }
+      function fetchData() {
+        return Promise.all([
+          fetchAllProjects(),
+          fetchAllServices(),
+          requestUser(),
+          getLocaleBackend(),
+          fetchProjectById(pathPid),
+        ]).then((response) => {
+          var project = response.pop();
+          var cahceArray = ["projectList", "allServices", "userInfo"];
+          var actionArray = ["setProjectList", "setServices", "setUserInfo"];
+          var projectList = response[0];
+          window.INIT_LOCALE = response.pop().language;
 
-    function getData() {
-      return new Promise((resolve, reject) => {
-        var projectList = window.getLsCacheItem('projectList')
-        var allServices = window.getLsCacheItem('allServices')
-        var userInfo = window.getLsCacheItem('userInfo')
-
-        fetchData()
-          .then((response) => {
-            resolve(response)
-          })
-          .catch((e) => {
-            console.error(e)
-            if (projectList && allServices && userInfo) {
-              resolve([projectList, allServices, userInfo])
-              return
+          if (project && project.projectCode) {
+            for (var j = 0; j < projectList.length; j++) {
+              if (projectList[j].projectCode === project.projectCode) {
+                break;
+              } else if (j === projectList.length - 1) {
+                projectList[projectList.length] = project;
+                break;
+              }
             }
+          }
+          console.log(response, project, projectList.length);
 
-            reject(e)
-          })
-      })
-    }
-
-    getData()
-      .then((response) => {
-        init(...response)
-      })
-      .catch(function (e) {
-        console.log(e)
-        printError(e.status, e.message)
-      })
-
-    function printError(status, message) {
-      const locale = getCookie('blueking_language')
-      const msg = message ||
-        (locale === 'en'
-          ? 'Oops! Looks like something went wrong'
-          : '后端服务异常，请稍后重试')
-      document.writeln(
-        '<div style="height: 100%; width: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column;">' +
-        '<img src="<%= PUBLIC_PATH_PREFIX %>/console/static/' +
-        (status || 503) +
-        '.png" />' +
-        '<p style="font-size: 20px; color: #979797; margin: 32px 0;">' +
-        msg +
-        '</p>' +
-        '</div>'
-      )
-    }
-
-    function handleVisibilityChange() {
-      if (!document.hidden && window.GLOBAL_PID) {
-        window.setProjectIdCookie(window.GLOBAL_PID)
+          for (var i = 0; i < cahceArray.length; i++) {
+            if (
+              window.vuexStore &&
+              typeof window.vuexStore.dispatch === "function"
+            ) {
+              window.vuexStore.dispatch(actionArray[i], response[i]);
+            }
+            window.setLsCacheItem(cahceArray[i], response[i]);
+          }
+          return response;
+        });
       }
-    }
 
-    ; (function () {
-      document.addEventListener(
-        'visibilitychange',
-        handleVisibilityChange,
-        false
-      )
-    })()
+      function getData() {
+        return new Promise((resolve, reject) => {
+          var projectList = window.getLsCacheItem("projectList");
+          var allServices = window.getLsCacheItem("allServices");
+          var userInfo = window.getLsCacheItem("userInfo");
 
-    window.onbeforeunload = function () {
-      document.removeEventListener(
-        'visibilitychange',
-        handleVisibilityChange,
-        false
-      )
-    }
-  </script>
-</body>
+          fetchData()
+            .then((response) => {
+              resolve(response);
+            })
+            .catch((e) => {
+              console.error(e);
+              if (projectList && allServices && userInfo) {
+                resolve([projectList, allServices, userInfo]);
+                return;
+              }
 
+              reject(e);
+            });
+        });
+      }
+
+      getData()
+        .then((response) => {
+          init(...response);
+        })
+        .catch(function (e) {
+          console.log(e);
+          printError(e.status, e.message);
+        });
+
+      function printError(status, message) {
+        const locale = getCookie("blueking_language");
+        const msg =
+          message ||
+          (locale === "en"
+            ? "Oops! Looks like something went wrong"
+            : "后端服务异常，请稍后重试");
+        document.writeln(
+          '<div style="height: 100%; width: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column;">' +
+            '<img src="<%= PUBLIC_PATH_PREFIX %>/console/static/' +
+            (status || 503) +
+            '.png" />' +
+            '<p style="font-size: 20px; color: #979797; margin: 32px 0;">' +
+            msg +
+            "</p>" +
+            "</div>",
+        );
+      }
+
+      function handleVisibilityChange() {
+        if (!document.hidden && window.GLOBAL_PID) {
+          window.setProjectIdCookie(window.GLOBAL_PID);
+        }
+      }
+
+      (function () {
+        document.addEventListener(
+          "visibilitychange",
+          handleVisibilityChange,
+          false,
+        );
+      })();
+
+      window.onbeforeunload = function () {
+        document.removeEventListener(
+          "visibilitychange",
+          handleVisibilityChange,
+          false,
+        );
+      };
+      window.getRoutePrefix = function () {
+        return window.PUBLIC_URL_PREFIX + "/console";
+      };
+    </script>
+  </body>
 </html>

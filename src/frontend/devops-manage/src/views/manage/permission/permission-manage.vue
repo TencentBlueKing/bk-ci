@@ -318,9 +318,9 @@ const columns = ref([
           onClick () {
             if (resourceType.value === 'env_node') return
             if (resourceType.value === 'repertory') {
-              window.open(`${location.origin}/console/codelib/${row.projectCode}?searchName=${row.resourceName}&id=${row.resourceCode}`, '_blank')
+              window.open(`${location.origin}/${window.getRoutePrefix()}/codelib/${row.projectCode}?searchName=${row.resourceName}&id=${row.resourceCode}`, '_blank')
             } else {
-              window.open(`${location.origin}/console/pipeline/${row.projectCode}/${row.resourceCode}/history/delegation`, '_blank')
+              window.open(`${location.origin}/${window.getRoutePrefix()}/pipeline/${row.projectCode}/${row.resourceCode}/history/delegation`, '_blank')
             }
           }
         },

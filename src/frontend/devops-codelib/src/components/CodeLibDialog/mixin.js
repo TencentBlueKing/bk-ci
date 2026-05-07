@@ -369,7 +369,7 @@ export default {
             const { projectId, credentialList } = this
             const { credentialId } = credentialList[index]
             window.open(
-                `/console/ticket/${projectId}/editCredential/${credentialId}`,
+                `${window.getRoutePrefix()}/ticket/${projectId}/editCredential/${credentialId}`,
                 '_blank'
             )
         },
@@ -388,7 +388,7 @@ export default {
             const { projectId, codelibConfig } = this
             const credentialType = this.isScmGit || this.isScmSvn ? this.codelib.credentialType : codelibConfig.addType
             window.open(
-                `/console/ticket/${projectId}/createCredential/${credentialType}/true`,
+                `${window.getRoutePrefix()}/ticket/${projectId}/createCredential/${credentialType}/true`,
                 '_blank'
             )
         },

@@ -248,7 +248,7 @@
                             >
                             </bk-option>
                             <a
-                                href="/console/pm"
+                                :href="pmHref"
                                 slot="extension"
                                 target="_blank"
                             > {{ $t('store.新增项目') }} </a>
@@ -275,7 +275,7 @@
                             </bk-option>
                             <a
                                 v-if="relateImageData.form.projectCode"
-                                :href="`/console/ticket/${relateImageData.form.projectCode}/createCredential/USERNAME_PASSWORD/true`"
+                                :href="getTicketCreateUrl(relateImageData.form.projectCode, 'USERNAME_PASSWORD')"
                                 slot="extension"
                                 target="_blank"
                             > {{ $t('store.新增凭证') }} </a>
@@ -376,6 +376,7 @@
         },
         data () {
             return {
+                pmHref: window.getRoutePrefix() + '/pm',
                 imageStatusList,
                 searchName: '',
                 isLoading: false,
@@ -637,6 +638,10 @@
                 }).catch(() => {
                     this.projectList = []
                 })
+            },
+
+            getTicketCreateUrl (projectCode, credentialType) {
+                return `${window.getRoutePrefix()}/ticket/${projectCode}/createCredential/${credentialType}/true`
             },
 
             requestList () {

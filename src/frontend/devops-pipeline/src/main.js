@@ -64,7 +64,7 @@ Vue.use(enClass)
 Vue.use(enStyle)
 Vue.use(PortalVue)
 Vue.use(mavonEditor)
-Vue.use(PermissionDirective(handlePipelineNoPermission))
+Vue.use(PermissionDirective(handlePipelineNoPermission, '//devops.bk-tenant-dev.woa.com'))
 Vue.use(BkPermission, {
     i18n
 })

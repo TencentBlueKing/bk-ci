@@ -32,7 +32,7 @@ module.exports = (env, argv) => {
         entry: {
             pipeline: './src/entry.js'
         },
-        publicPath: '/pipeline/',
+        publicPath: '/bkci/pipeline/',
         dist: '/pipeline',
         port: 8006
     })
@@ -40,7 +40,7 @@ module.exports = (env, argv) => {
     config.plugins = [
         ...config.plugins,
         new MonacoWebpackPlugin({
-            publicPath: '/pipeline',
+            publicPath: '/bkci/pipeline',
             languages: ['yaml'],
             filename: '[name].[contenthash].worker.js',
             customLanguages: [
@@ -66,7 +66,7 @@ module.exports = (env, argv) => {
                 PUBLIC_PATH_PREFIX: isProd ? '__BK_CI_PUBLIC_PATH__' : '',
                 BK_PAAS_PRIVATE_URL: isProd ? '__BK_PAAS_PRIVATE_URL__' : ''
             },
-            VENDOR_LIBS: `/pipeline/main.dll.js?v=${Math.random()}`
+            VENDOR_LIBS: `${isProd ? '__BK_CI_PUBLIC_PATH__' : ''}/pipeline/main.dll.js?v=${Math.random()}`
         }),
         new webpack.DllReferencePlugin({
             context: __dirname,
@@ -79,8 +79,16 @@ module.exports = (env, argv) => {
     ]
     config.devServer.historyApiFallback = {
         rewrites: [
-            { from: /^\/pipeline/, to: '/pipeline/index.html' }
+            { from: /^\/bkci\/pipeline/, to: '/bkci/pipeline/index.html' }
         ]
     }
+
+    config.devServer.proxy = [
+        {
+            context: ['/ms'],
+            target: 'https://devops.bk-tenant-dev.woa.com',
+            changeOrigin: true,
+        }
+    ]
     return config
 }

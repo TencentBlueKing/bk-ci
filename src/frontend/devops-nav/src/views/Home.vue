@@ -182,7 +182,7 @@
 </template>
 
 <script lang="ts">
-    import { isAbsoluteUrl, urlJoin } from '@/utils/util'
+    import { addRoutePrefix, isAbsoluteUrl, urlJoin } from '@/utils/util'
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
     import { Action, Getter, State } from 'vuex-class'
@@ -246,7 +246,7 @@
         }
 
         addConsole (link: string): string {
-            return urlJoin('/console/', link)
+            return addRoutePrefix(urlJoin('/console/', link))
         }
 
         serviceName (name = ''): string {

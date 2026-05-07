@@ -28,17 +28,29 @@ module.exports = {
       .clear()
       .set('@', path.join(__dirname, 'src'))
 
-    config.resolve
-      .modules
-      .clear()
-      .add('node_modules')
-      .add(path.join(__dirname, 'node_modules'))
-
     config.resolveLoader
       .modules
       .clear()
       .add('node_modules')
       .add(path.join(__dirname, 'node_modules'))
+
+      
+    config.merge({
+      resolve: {
+        alias: {
+          vue$: path.join(__dirname, 'node_modules/vue/index.js'),
+        },
+      },
+      devServer: {
+          server: { 
+            type: 'https',
+            options: {
+              key: '../local.bk-tenant-dev.woa.com+3-key.pem',
+              cert: '../local.bk-tenant-dev.woa.com+3.pem',
+            }
+          }
+      }
+    })
 
     return config
   }

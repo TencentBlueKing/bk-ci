@@ -180,7 +180,7 @@
                             <a
                                 target="_blank"
                                 style="color:#3c96ff;"
-                                :href="`/console/pipeline/${props.row.projectCode}/template/${props.row.templateCode}/instanceList`"
+                                :href="getTemplateInstanceListUrl(props.row.projectCode, props.row.templateCode)"
                             > {{ $t('store.源模板') }} </a>
                         </span>
                         <span
@@ -276,7 +276,7 @@
             return {
                 templateStatusMap: templateStatusList,
                 isSearch: false,
-                itemUrl: '/console/pm',
+                itemUrl: window.getRoutePrefix() + '/pm',
                 itemText: this.$t('store.新建项目'),
                 offlineTips: this.$t('store.下架后：'),
                 renderList: [],
@@ -472,6 +472,9 @@
                 'deleteTemplate',
                 'requestTemplateList'
             ]),
+            getTemplateInstanceListUrl (projectCode, templateCode) {
+                return `${window.getRoutePrefix()}/pipeline/${projectCode}/template/${templateCode}/instanceList`
+            },
             async requestList () {
                 this.isLoading = true
                 const page = this.pagination.current

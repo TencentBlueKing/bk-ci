@@ -207,7 +207,7 @@ const handleToProjectManage = (project) => {
   const { routerTag, englishName } = project;
   switch (routerTag) {
     case 'v0':
-        window.open(`/console/perm/apply-join-project?project_code=${englishName}`)
+        window.open(`${window.getRoutePrefix()}/perm/apply-join-project?project_code=${englishName}`)
         break
     case 'v3':
         window.open(`${window.BK_IAM_URL_PREFIX}/apply-join-user-group`)

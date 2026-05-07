@@ -48,7 +48,7 @@
                         style="cursor: pointer;"
                     >
                         <a
-                            href="/console/pm"
+                            :href="pmHref"
                             target="_blank"
                         ><i class="devops-icon icon-plus-circle" /> {{ $t('store.新建项目') }} </a>
                     </div>
@@ -156,7 +156,8 @@
                 project: [],
                 projectList: [],
                 installedProject: [],
-                isLoading: false
+                isLoading: false,
+                pmHref: window.getRoutePrefix() + '/pm'
             }
         },
 
@@ -291,7 +292,7 @@
             },
 
             toPipeline () {
-                window.open('/console/pipeline', '_self')
+                window.open(`${window.getRoutePrefix()}/pipeline`, '_self')
             },
 
             selectProject (data) {

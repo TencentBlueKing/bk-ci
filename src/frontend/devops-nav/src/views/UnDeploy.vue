@@ -64,7 +64,7 @@
         beforeRouteEnter (to, from, next) {
             const currentService = window.serviceObject.serviceMap[to.params.id]
             if (currentService.status !== 'developing') {
-                location.href = `/console/${to.params.id}`
+                location.href = `${window.getRoutePrefix()}/${to.params.id}`
                 return
             }
             next(true)
