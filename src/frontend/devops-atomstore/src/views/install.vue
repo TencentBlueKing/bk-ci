@@ -208,6 +208,7 @@
                 'requestRelativeProject',
                 'requestRelativeTplProject',
                 'requestRelativeImageProject',
+                'requestRelativeServiceProject',
                 'requestServiceDetailByCode',
                 'requestProjectList',
                 'installAtom',
@@ -246,7 +247,8 @@
                 const methods = {
                     atom: this.requestRelativeProject,
                     template: this.requestRelativeTplProject,
-                    image: this.requestRelativeImageProject
+                    image: this.requestRelativeImageProject,
+                    service: this.requestRelativeServiceProject
                 }
 
                 const res = await methods[this.type](this.code)
