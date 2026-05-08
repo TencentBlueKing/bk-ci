@@ -36,7 +36,7 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_TOO_LONG
 import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
@@ -74,8 +74,8 @@ class PublicVarService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(PublicVarService::class.java)
 
-        // 正则表达式常量
-        private val VAR_NAME_REGEX = Regex("^[a-zA-Z_][a-zA-Z0-9_]{0,63}$")
+        // 变量名最大长度，对齐数据库表列 VAR_NAME varchar(64)
+        private const val MAX_VAR_NAME_LENGTH = 64
     }
 
     fun addGroupPublicVar(context: DSLContext = dslContext, publicVarDTO: PublicVarDTO): Boolean {
@@ -259,14 +259,12 @@ class PublicVarService @Autowired constructor(
         if (varNames.size != varNames.distinct().size) {
             throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE)
         }
-        // 检查变量名格式是否符合要求（由字母、数字、下划线组成，字母或下划线开头，最长64字符）
-        val invalidVarNames = publicVars
-            .map { it.varName }
-            .filter { !VAR_NAME_REGEX.matches(it) }
-        if (invalidVarNames.isNotEmpty()) {
+        // 检查变量名长度是否超出 DB 列 varchar(64) 限制
+        val tooLongVarNames = varNames.filter { it.length > MAX_VAR_NAME_LENGTH }
+        if (tooLongVarNames.isNotEmpty()) {
             throw ErrorCodeException(
-                errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR,
-                params = arrayOf(invalidVarNames.joinToString(", "))
+                errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_TOO_LONG,
+                params = arrayOf(tooLongVarNames.joinToString(", "))
             )
         }
     }
