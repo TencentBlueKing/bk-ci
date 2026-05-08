@@ -870,6 +870,9 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             val defaultAtomCodeList = defaultAtomCodeRecords.map { it.value1() }
             if (defaultAtomCodeList.isNotEmpty()) {
                 redisOperation.sadd(storePublicFlagKey, *defaultAtomCodeList.toTypedArray())
+                // 此时其它线程可能在 Redis 初始化前已通过 PublicComponentCacheManager 把空 Set 写入本地缓存，
+                // 主动失效一次避免本地缓存被空集污染达 CACHE_EXPIRE_SECONDS。
+                PublicComponentCacheManager.invalidateCache(StoreTypeEnum.ATOM.name)
             }
         }
         // 使用缓存管理器检查是否是公共插件（优化性能）

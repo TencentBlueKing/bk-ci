@@ -155,8 +155,8 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             throw ignored
         }
         try {
-            // 睡眠下，等到本地缓存过期再执行迁移任务以保证迁移准确性
-            Thread.sleep(ApiAccessLimitCacheManager.STATUS_CACHE_EXPIRE_SECONDS)
+            // 等待集群其他实例的流水线限制本地缓存自然过期，确保迁移期间访问限制对所有节点生效
+            ApiAccessLimitCacheManager.awaitPipelineStatusCacheExpiration()
             // 迁移流水线数据
             PipelineMigrationTask(migratePipelineDataParam).run()
             // 执行迁移完成后的逻辑

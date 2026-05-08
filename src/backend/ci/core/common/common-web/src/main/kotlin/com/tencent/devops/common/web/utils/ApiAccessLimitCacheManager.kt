@@ -356,4 +356,26 @@ object ApiAccessLimitCacheManager {
         migratingPipelineStatusCache.invalidate(cacheKey)
         logger.info("Invalidated migrating pipeline cache: $cacheKey")
     }
+
+    /**
+     * 阻塞等待项目限制列表本地缓存自然过期。
+     *
+     * 由于 invalidateProjectLimitCache() 只对当前进程的 Caffeine 生效，
+     * 集群其他实例的本地缓存仍可能保留旧的"未锁定"快照，最长 [PROJECT_CACHE_EXPIRE_SECONDS] 秒。
+     * 迁移/删除等需要"全集群都已感知到锁定"的逻辑，应在锁定后调用此方法等本地缓存自然过期再继续。
+     */
+    fun awaitProjectLimitCacheExpiration() {
+        TimeUnit.SECONDS.sleep(PROJECT_CACHE_EXPIRE_SECONDS)
+    }
+
+    /**
+     * 阻塞等待流水线限制状态本地缓存自然过期。
+     *
+     * 由于 invalidatePipelineLimitCache() 只对当前进程的 Caffeine 生效，
+     * 集群其他实例的本地缓存仍可能保留旧的"未锁定"状态，最长 [STATUS_CACHE_EXPIRE_SECONDS] 秒。
+     * 迁移/删除等需要"全集群都已感知到锁定"的逻辑，应在锁定后调用此方法等本地缓存自然过期再继续。
+     */
+    fun awaitPipelineStatusCacheExpiration() {
+        TimeUnit.SECONDS.sleep(STATUS_CACHE_EXPIRE_SECONDS)
+    }
 }

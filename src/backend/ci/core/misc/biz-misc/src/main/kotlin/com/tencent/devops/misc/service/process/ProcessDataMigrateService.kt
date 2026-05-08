@@ -143,8 +143,8 @@ class ProcessDataMigrateService @Autowired constructor(
 
         executor.submit {
             try {
-                // 睡眠下，等到本地缓存过期再执行迁移任务以保证迁移准确性
-                Thread.sleep(ApiAccessLimitCacheManager.PROJECT_CACHE_EXPIRE_SECONDS)
+                // 等待集群其他实例的项目限制本地缓存自然过期，确保迁移期间访问限制对所有节点生效
+                ApiAccessLimitCacheManager.awaitProjectLimitCacheExpiration()
                 val config = MigrationExecutorConfig(
                     migratingShardingDslContext = migratingShardingDslContext,
                     userId = userId,
