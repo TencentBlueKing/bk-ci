@@ -335,7 +335,7 @@ export const DRAFT_STATUS = {
     NORMAL: 'NORMAL',   // 无草稿
     EXISTS: 'EXISTS',   // 草稿已存在
     CONFLICT: 'CONFLICT',   // 草稿冲突
-    OUTDATED: 'OUTDATED',   // 草稿版本落后
+    RELEASE_OUTDATED: 'RELEASE_OUTDATED',   // 草稿版本落后
     PUBLISHED: 'PUBLISHED',   // 已发布
     BRANCH: 'BRANCH',   // 分支版本-无草稿
     BASE_OUTDATED: 'BASE_OUTDATED', // 基线版本落后-无草稿

@@ -71,7 +71,7 @@
                         class="release-pipeline-pac-form"
                     >
                         <bk-alert
-                            v-if="draftStatus && draftStatus.status === DRAFT_STATUS.OUTDATED"
+                            v-if="draftStatus && draftStatus.status === DRAFT_STATUS.RELEASE_OUTDATED"
                             type="warning"
                         >
                             <template slot="title">

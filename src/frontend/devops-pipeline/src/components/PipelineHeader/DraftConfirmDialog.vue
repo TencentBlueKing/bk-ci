@@ -57,7 +57,7 @@
                 <!-- 编辑提示 -->
                 <template v-else>
                     <div
-                        v-if="draftStatus === DRAFT_STATUS.OUTDATED"
+                        v-if="draftStatus === DRAFT_STATUS.RELEASE_OUTDATED"
                         class="is-active-branch-version"
                     >
                         <i18n path="draftBaselineIsEarlierThanCurrentVersionNotice">
