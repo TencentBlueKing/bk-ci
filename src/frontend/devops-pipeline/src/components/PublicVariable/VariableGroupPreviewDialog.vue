@@ -380,6 +380,7 @@
                     display: inline-block;
                     overflow: hidden;
                     text-overflow: ellipsis;
+                    white-space: nowrap;
                 }
                 .tab-tooltips-icon {
                     font-size: 14px;

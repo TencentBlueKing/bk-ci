@@ -64,10 +64,7 @@
     import { ref, computed } from 'vue'
     import UseInstance from '@/hook/useInstance'
     import {
-        ADD_VARIABLE,
-        EDIT_VARIABLE,
-        OPERATE_TYPE,
-        VARIABLE
+        OPERATE_TYPE
     } from '@/store/modules/publicVar/constants'
     const { proxy } = UseInstance()
     defineProps({
@@ -124,7 +121,8 @@
         } catch (e) {
             proxy.$bkMessage({
                 theme: 'error',
-                message: e.message || e
+                message: e.message || e,
+                ellipsisLine: 0
             })
         } finally {
             releasing.value = false
