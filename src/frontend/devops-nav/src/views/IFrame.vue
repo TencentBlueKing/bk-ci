@@ -28,7 +28,7 @@
     import Vue from 'vue'
     import { Component, Watch } from 'vue-property-decorator'
     import eventBus from '../utils/eventBus'
-    import { addRoutePrefix, urlJoin, queryStringify, getServiceAliasByPath } from '@/utils/util'
+    import { urlJoin, queryStringify, getServiceAliasByPath } from '@/utils/util'
     import { State, Getter } from 'vuex-class'
     import cookie from 'js-cookie'
 
@@ -112,7 +112,6 @@
             const query = queryStringify(this.$route.query)
             const path = this.$route.path.replace(window.getRoutePrefix(), '')
             const hash = this.$route.hash
-            let href = ''
             if (showProjectList) {
                 const reg = /^\/?\w+\/(([\w-]+)\/?)(\S*)\/?$/
                 const matchResult = path.match(reg)
@@ -121,13 +120,13 @@
                 
 
                 if (projectIdType === 'path') {
-                    href = urlJoin(this.currentPage.iframe_url, projectId, initPath) + `${query ? '?' + query : ''}` + hash
+                    this.src = urlJoin(this.currentPage.iframe_url, projectId, initPath) + `${query ? '?' + query : ''}` + hash
                     
                 } else {
                     const query = Object.assign(this.$route.query, {
                         projectId
                     })
-                    href = urlJoin(this.currentPage.iframe_url, initPath) + '?' + queryStringify(query) + hash
+                    this.src = urlJoin(this.currentPage.iframe_url, initPath) + '?' + queryStringify(query) + hash
                 }
             } else {
                 const reg = /^\/?\w+\/(\S*)\/?$/
@@ -136,9 +135,8 @@
                     this.currentPage.link === '/permission/' ? {} : { project_code: cookie.get(X_DEVOPS_PROJECT_ID) },
                     this.$route.query
                 )
-                href = urlJoin(this.currentPage.iframe_url, initPath) + '?' + queryStringify(query) + hash
+                this.src = urlJoin(this.currentPage.iframe_url, initPath) + '?' + queryStringify(query) + hash
             }
-            this.src = addRoutePrefix(href)
         }
 
         onLoad () {
