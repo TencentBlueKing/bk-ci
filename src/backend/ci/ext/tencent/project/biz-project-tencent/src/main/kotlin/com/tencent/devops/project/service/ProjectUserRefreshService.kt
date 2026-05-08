@@ -148,7 +148,7 @@ class ProjectUserRefreshService @Autowired constructor(
             dslContext = dslContext,
             userDeptDetail = tofDeptInfo
         )
-        projectLocalService.batchGetOrCreatePreProjectsForUserIds(
+        projectLocalService.batchGetOrCreatePersonalProjectsForUserIds(
             userIds = listOf(userId)
         )
         return tofDeptInfo

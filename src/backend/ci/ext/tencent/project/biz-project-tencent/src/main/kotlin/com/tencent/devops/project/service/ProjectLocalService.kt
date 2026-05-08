@@ -63,6 +63,7 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.UserRole
 import com.tencent.devops.project.pojo.app.AppProjectVO
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.project.pojo.enums.ProjectScopeType
 import com.tencent.devops.project.pojo.enums.ProjectSourceEnum
 import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
@@ -264,7 +265,7 @@ class ProjectLocalService @Autowired constructor(
     }
 
     fun getOrCreateRemoteDevProject(userId: String): ProjectVO {
-        return getOrCreatePreProject(userId)
+        return getOrCreatePersonalProject(userId)
     }
 
     fun getOrCreatePreProject(userId: String, description: String? = null): ProjectVO {
@@ -315,7 +316,137 @@ class ProjectLocalService @Autowired constructor(
         return ProjectUtils.packagingBean(userProjectRecord!!)
     }
 
-    fun batchGetOrCreatePreProjectsForStoredUsers(): Boolean {
+    fun getOrCreatePersonalProject(userId: String, description: String? = null): ProjectVO {
+        val personalProject = projectDao.getFirstPersonalProjectByCreator(dslContext, userId)
+        if (personalProject != null) {
+            return ProjectUtils.packagingBean(personalProject)
+        }
+
+        val legacyProjectCode = "_$userId"
+        val legacyProject = projectDao.getByEnglishName(dslContext, legacyProjectCode)
+        val legacyMembers = if (legacyProject != null) {
+            getLegacyProjectMembers(legacyProjectCode)
+        } else {
+            emptySet()
+        }
+        if (legacyProject != null && legacyMembers == null) {
+            logger.warn("skip personal project routing because member lookup failed|$legacyProjectCode")
+            return ProjectUtils.packagingBean(legacyProject)
+        }
+        val decision = PersonalProjectRoutingDecider.decide(
+            userId = userId,
+            legacyProjectCode = legacyProject?.englishName,
+            legacyProjectMembers = legacyMembers ?: emptySet()
+        )
+        when (decision.action) {
+            PersonalProjectRoutingAction.REUSE_LEGACY_PROJECT -> {
+                if (
+                    decision.shouldPromoteLegacyProject &&
+                    legacyProject != null &&
+                    legacyProject.projectScope != ProjectScopeType.PERSONAL.value
+                ) {
+                    projectDao.updateProjectScopeByCode(
+                        dslContext = dslContext,
+                        projectCode = legacyProjectCode,
+                        projectScope = ProjectScopeType.PERSONAL.value
+                    )
+                }
+                return ProjectUtils.packagingBean(
+                    tProjectRecord = projectDao.getByEnglishName(dslContext, legacyProjectCode)!!
+                )
+            }
+
+            PersonalProjectRoutingAction.CREATE_NEW_PERSONAL_PROJECT -> {
+                if (
+                    decision.shouldDemoteLegacyProject &&
+                    legacyProject != null &&
+                    legacyMembers?.isNotEmpty() == true &&
+                    legacyProject.projectScope != ProjectScopeType.TEAM.value
+                ) {
+                    projectDao.updateProjectScopeByCode(
+                        dslContext = dslContext,
+                        projectCode = legacyProjectCode,
+                        projectScope = ProjectScopeType.TEAM.value
+                    )
+                }
+                return createPersonalProject(
+                    userId = userId,
+                    projectCode = resolvePersonalProjectCode(userId),
+                    description = description ?: "personal project for $userId"
+                )
+            }
+        }
+    }
+
+    private fun getLegacyProjectMembers(projectCode: String): Set<String>? {
+        return runCatching {
+            authProjectApi.getProjectUsers(pipelineAuthServiceCode, projectCode).toSet()
+        }.onFailure {
+            logger.warn("failed to load legacy project members|$projectCode", it)
+        }.getOrNull()
+    }
+
+    private fun resolvePersonalProjectCode(userId: String): String {
+        val defaultCode = "_$userId"
+        if (projectDao.getByEnglishName(dslContext, defaultCode) == null) {
+            return defaultCode
+        }
+        val fallbackCode = "${defaultCode}_personal"
+        if (projectDao.getByEnglishName(dslContext, fallbackCode) == null) {
+            return fallbackCode
+        }
+        return "${fallbackCode}_${System.currentTimeMillis()}"
+    }
+
+    private fun createPersonalProject(
+        userId: String,
+        projectCode: String,
+        description: String
+    ): ProjectVO {
+        var projectName = projectCode
+        val tmpProjectRecord = projectDao.getByCnName(dslContext, projectName)
+        if (tmpProjectRecord != null) {
+            projectName = "${projectCode}_personal"
+        }
+        val projectCreateInfo = ProjectCreateInfo(
+            projectName = projectName,
+            englishName = projectCode,
+            projectType = ProjectTypeEnum.SUPPORT_PRODUCT.index,
+            description = description,
+            bgId = 0L,
+            bgName = "",
+            deptId = 0L,
+            deptName = "",
+            centerId = 0L,
+            centerName = "",
+            secrecy = false,
+            projectScope = ProjectScopeType.PERSONAL.value,
+            kind = 0
+        )
+
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            projectService.create(
+                userId = userId,
+                projectCreateInfo = projectCreateInfo,
+                createExtInfo = ProjectCreateExtInfo(needValidate = false, needAuth = true),
+                defaultProjectId = null,
+                projectChannel = ProjectChannelCode.PREBUILD
+            )
+            success = true
+        } catch (e: Exception) {
+            logger.warn("Fail to create the project ($projectCreateInfo)", e)
+            throw e
+        } finally {
+            jmxApi.execute(PROJECT_CREATE, System.currentTimeMillis() - startEpoch, success)
+        }
+        return ProjectUtils.packagingBean(
+            tProjectRecord = projectDao.getByEnglishName(dslContext, projectCode)!!
+        )
+    }
+
+    fun batchGetOrCreatePersonalProjectsForStoredUsers(): Boolean {
         Executors.newSingleThreadExecutor().execute {
             val traceId = MDC.get(TraceTag.BIZID)
             var page = 1
@@ -332,7 +463,7 @@ class ProjectLocalService @Autowired constructor(
                         MDC.put(TraceTag.BIZID, traceId)
                         try {
                             logger.info("create personal project for ${record.userId}")
-                            getOrCreatePreProject(
+                            getOrCreatePersonalProject(
                                 userId = record.userId,
                                 description = "personal project for ${record.userId}"
                             )
@@ -356,15 +487,15 @@ class ProjectLocalService @Autowired constructor(
         return true
     }
 
-    fun batchGetOrCreatePreProjectsForUserIds(userIds: List<String>): Boolean {
+    fun batchGetOrCreatePersonalProjectsForUserIds(userIds: List<String>): Boolean {
         val traceId = MDC.get(TraceTag.BIZID)
         bulkPreProjectExecutor.execute {
             MDC.put(TraceTag.BIZID, traceId)
             userIds.forEach { uid ->
                 try {
-                    getOrCreatePreProject(uid, "personal project for $uid")
+                    getOrCreatePersonalProject(uid, "personal project for $uid")
                 } catch (e: Exception) {
-                    logger.warn("batchGetOrCreatePreProjectsForUserIds fail userId=$uid", e)
+                    logger.warn("batchGetOrCreatePersonalProjectsForUserIds fail userId=$uid", e)
                 }
             }
         }
