@@ -791,6 +791,8 @@
                             // 保存版本号，用于启动构建时指定 version
                             this.branchVersion = branchInfo.version
                             this.isBranchVersion = false
+                            // 正式版本不是最新版本时，提示过期
+                            this.expireReleasedVersion = branchInfo.version !== this.pipelineInfo?.releaseVersion
                         } else {
                             // 分支使用 PAC 分支编排接口
                             const [res, branchPipelineRes] = await Promise.all([
@@ -806,7 +808,7 @@
                             // 保存分支版本号，用于启动构建时指定 version
                             this.branchVersion = branchPipelineRes?.version ?? null
                             this.isBranchVersion = true
-                            this.expireReleasedVersion = branchPipelineRes?.expireReleasedVersion ?? false
+                            this.expireReleasedVersion = false
                         }
                     } else {
                         const [res, normalPipelineRes] = await Promise.all([
