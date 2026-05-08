@@ -529,14 +529,15 @@ class ProjectTagService @Autowired constructor(
     // ======================== 集群项目百分比统计 ========================
 
     fun getClusterPercentage(
-        channel: String,
-        tag: String
+        channelCode: String,
+        tag: String,
+        enabled: Boolean?
     ): ProjectClusterPercentageResult {
-        require(channel.isNotBlank()) { "channel must not be blank" }
+        require(channelCode.isNotBlank()) { "channel must not be blank" }
         require(tag.isNotBlank()) { "tag must not be blank" }
         checkRouteTag(tag)
-        val condition = ProjectConditionDTO(channelCode = channel, dbRouteTag = tag)
-        val totalCondition = ProjectConditionDTO(channelCode = channel)
+        val condition = ProjectConditionDTO(channelCode = channelCode, dbRouteTag = tag, enabled = enabled)
+        val totalCondition = ProjectConditionDTO(channelCode = channelCode, enabled = enabled)
         val totalCount = projectDao.countByCondition(dslContext, totalCondition)
         val tagCount = projectDao.countByCondition(dslContext, condition)
         val percentage = if (totalCount > 0) {

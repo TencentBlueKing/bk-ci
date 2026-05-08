@@ -34,5 +34,5 @@ object ConsulConstants {
 
     const val PROJECT_TAG_CODECC_REDIS_KEY = "project:setting:tag:codecc:v2"
 
-    const val DEFAULT_TAG_REDIS_KEY = "project:setting:default:tag"
+    const val DEFAULT_TAG_REDIS_KEY = "tag:default:bkci"
 }

@@ -74,9 +74,10 @@ class OpProjectTagResourceImpl @Autowired constructor(
     }
 
     override fun getClusterPercentage(
-        channel: String,
-        tag: String
+        channelCode: String,
+        tag: String,
+        enabled: Boolean?
     ): Result<ProjectClusterPercentageResult> {
-        return Result(projectTagService.getClusterPercentage(channel, tag))
+        return Result(projectTagService.getClusterPercentage(channelCode, tag, enabled))
     }
 }

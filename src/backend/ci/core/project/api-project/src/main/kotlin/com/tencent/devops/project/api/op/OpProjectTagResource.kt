@@ -124,10 +124,13 @@ interface OpProjectTagResource {
     @Path("/clusterPercentage")
     fun getClusterPercentage(
         @Parameter(description = "项目渠道", required = true)
-        @QueryParam("channel")
-        channel: String,
+        @QueryParam("channelCode")
+        channelCode: String,
         @Parameter(description = "数据库项目路由 tag", required = true)
         @QueryParam("tag")
-        tag: String
+        tag: String,
+        @Parameter(description = "是否启用", required = true)
+        @QueryParam("enabled")
+        enabled: Boolean? = null
     ): Result<ProjectClusterPercentageResult>
 }
