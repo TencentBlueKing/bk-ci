@@ -19,11 +19,11 @@ const router = createRouter({
   history: createWebHistory('permission'),
   routes: [
     {
-      path: '/',
+      path: window.PUBLIC_URL_PREFIX,
       component: HomeEntry,
       children: [
         {
-          path: '/',
+          path: '',
           component: PermissionEntry,
           redirect: () => ({ name: 'my-permission' }),
           children: [
@@ -60,7 +60,7 @@ const router = createRouter({
           ],
         },
         {
-          path: '/auth',
+          path: 'auth',
           component: AuthEntry,
           children: [
             {
@@ -88,7 +88,7 @@ const router = createRouter({
       ],
     },
     {
-      path: '/group/detail',
+      path: window.PUBLIC_URL_PREFIX + '/group/detail',
       name: 'group/detail',
       component: GroupDetail,
     }
@@ -98,7 +98,7 @@ const router = createRouter({
 // afterEach
 router.afterEach((to) => {
   // 同步导航数据
-  window.$syncUrl?.(to.fullPath.replace(/^\/permission\//, '/'));
+  window.$syncUrl?.(to.fullPath.replace(`${window.PUBLIC_URL_PREFIX}/permission`, '/'));
 });
 
 // 导出默认数据

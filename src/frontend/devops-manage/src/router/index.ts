@@ -19,11 +19,11 @@ const router = createRouter({
   history: createWebHistory('manage'),
   routes: [
     {
-      path: '/userManage',
+      path: `${window.PUBLIC_URL_PREFIX}/userManage`,
       component: UserGroup,
     },
     {
-      path: '/',
+      path: '',
       component: HomeEntry,
       children: [
         {
@@ -78,7 +78,7 @@ const router = createRouter({
 router.afterEach((to) => {
   // 同步导航数据
   if (!location.search.includes('disableSyncUrl=true')) {
-    window.$syncUrl?.(to.fullPath.replace(window.getRoutePrefix(), '/'));
+    window.$syncUrl?.(to.fullPath.replace(`${window.PUBLIC_URL_PREFIX}/manage`, '/'));
   }
   const keepCacheRoutes = ['edit', 'show'];
   if (!keepCacheRoutes.includes(to.name)) {
