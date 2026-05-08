@@ -32,7 +32,7 @@ module.exports = (env, argv) => {
         entry: {
             pipeline: './src/entry.js'
         },
-        publicPath: '/bkci/pipeline/',
+        publicPath: '/pipeline/',
         dist: '/pipeline',
         port: 8006
     })
@@ -40,7 +40,7 @@ module.exports = (env, argv) => {
     config.plugins = [
         ...config.plugins,
         new MonacoWebpackPlugin({
-            publicPath: '/bkci/pipeline',
+            publicPath: '/pipeline',
             languages: ['yaml'],
             filename: '[name].[contenthash].worker.js',
             customLanguages: [
