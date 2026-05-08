@@ -30,7 +30,6 @@ package com.tencent.devops.process.service.`var`
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.util.toLocalDateTime
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
@@ -97,6 +96,7 @@ class PublicVarGroupReferQueryService @Autowired constructor(
         val totalCount = queryResult.totalCount
         val varGroupReferInfo = queryResult.referInfos
         val varRefCountMap = queryResult.varRefCountMap
+        val varRefCreateTimeMap = queryResult.varRefCreateTimeMap
 
         logger.info(
             "listVarReferInfo queryReq: $queryReq, totalCount: $totalCount, referInfosSize: ${varGroupReferInfo.size}"
@@ -117,12 +117,14 @@ class PublicVarGroupReferQueryService @Autowired constructor(
         val pipelineReferList = processPipelineReferences(
             queryReq = queryReq,
             referInfoByType = referInfoByType,
-            varRefCountMap = varRefCountMap
+            varRefCountMap = varRefCountMap,
+            varRefCreateTimeMap = varRefCreateTimeMap
         )
         val templateReferList = processTemplateReferences(
             queryReq = queryReq,
             referInfoByType = referInfoByType,
-            varRefCountMap = varRefCountMap
+            varRefCountMap = varRefCountMap,
+            varRefCreateTimeMap = varRefCreateTimeMap
         )
 
         records.addAll(pipelineReferList)
@@ -181,7 +183,8 @@ class PublicVarGroupReferQueryService @Autowired constructor(
     private fun processPipelineReferences(
         queryReq: PublicVarGroupInfoQueryReqDTO,
         referInfoByType: Map<PublicVarGroupReferenceTypeEnum, List<ResourcePublicVarGroupReferPO>>,
-        varRefCountMap: Map<String, Int>
+        varRefCountMap: Map<String, Int>,
+        varRefCreateTimeMap: Map<String, LocalDateTime>
     ): List<PublicGroupVarRefDO> {
         val pipelineReferInfos = referInfoByType[PublicVarGroupReferenceTypeEnum.PIPELINE]
             ?.takeIf { it.isNotEmpty() } ?: return emptyList()
@@ -203,7 +206,8 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                         actualRefCount = actualRefCount,
                         creator = referInfo.creator,
                         modifier = referInfo.modifier,
-                        updateTime = referInfo.updateTime,
+                        // updateTime 取该资源下变量引用最早产生的时间，没有则回退到引用关系的创建时间
+                        updateTime = varRefCreateTimeMap[referInfo.referId] ?: referInfo.createTime,
                         urlVersion = referInfo.referVersion.toLong(),
                         executeCount = pipelineExecCounts[referInfo.referId] ?: 0
                     )
@@ -221,7 +225,8 @@ class PublicVarGroupReferQueryService @Autowired constructor(
     private fun processTemplateReferences(
         queryReq: PublicVarGroupInfoQueryReqDTO,
         referInfoByType: Map<PublicVarGroupReferenceTypeEnum, List<ResourcePublicVarGroupReferPO>>,
-        varRefCountMap: Map<String, Int>
+        varRefCountMap: Map<String, Int>,
+        varRefCreateTimeMap: Map<String, LocalDateTime>
     ): List<PublicGroupVarRefDO> {
         val templateReferInfos = referInfoByType[PublicVarGroupReferenceTypeEnum.TEMPLATE]
             ?.takeIf { it.isNotEmpty() } ?: return emptyList()
@@ -265,7 +270,8 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                         actualRefCount = actualRefCount,
                         creator = template.creator,
                         modifier = template.updater ?: template.creator,
-                        updateTime = template.updateTime?.toLocalDateTime() ?: LocalDateTime.now(),
+                        // updateTime 取该资源下变量引用最早产生的时间，没有则回退到引用关系的创建时间
+                        updateTime = varRefCreateTimeMap[referInfo.referId] ?: referInfo.createTime,
                         urlVersion = template.version,
                         instanceCount = instanceCountMap[templateKey] ?: 0
                     )
@@ -353,11 +359,19 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                 groupName = groupName,
                 referIdVersions = referIdVersions
             )
+            // Step4: 查询每个 referId 变量引用最早产生的时间
+            val varRefCreateTimeMap = publicVarReferInfoDao.getEarliestCreateTimeByGroupAndActiveVersions(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                referIdVersions = referIdVersions
+            )
 
             return VarGroupReferInfoQueryResult(
                 totalCount = totalCount,
                 referInfos = varGroupReferInfo,
-                varRefCountMap = varRefCountMap
+                varRefCountMap = varRefCountMap,
+                varRefCreateTimeMap = varRefCreateTimeMap
             )
         } catch (e: Throwable) {
             logger.warn("Failed to query var group refer info for group: $groupName in project: $projectId", e)
@@ -441,11 +455,20 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                 groupName = groupName,
                 referIdVersions = referIdVersions
             )
+            // Step5: 查询每个 referId 变量引用最早产生的时间（按具体变量名过滤）
+            val varRefCreateTimeMap = publicVarReferInfoDao.getEarliestCreateTimeByGroupAndActiveVersions(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                referIdVersions = referIdVersions,
+                varName = varName
+            )
 
             return VarGroupReferInfoQueryResult(
                 totalCount = totalCount,
                 referInfos = varGroupReferInfo,
-                varRefCountMap = varRefCountMap
+                varRefCountMap = varRefCountMap,
+                varRefCreateTimeMap = varRefCreateTimeMap
             )
         } catch (e: Throwable) {
             logger.warn(

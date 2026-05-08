@@ -72,7 +72,7 @@ interface UserPublicVarGroupReferenceResource {
         @Parameter(description = "变量组名称", required = true)
         @PathParam("groupName")
         groupName: String,
-        @Parameter(description = "变量名称", required = false)
+        @Parameter(description = "变量名称,填写则按变量维度查询，否则按变量组维度查询", required = false)
         @QueryParam("varName")
         varName: String? = null,
         @Parameter(description = "引用类型", required = false)

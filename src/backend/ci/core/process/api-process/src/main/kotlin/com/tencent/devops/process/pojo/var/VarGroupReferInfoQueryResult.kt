@@ -29,6 +29,7 @@ package com.tencent.devops.process.pojo.`var`
 
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReferPO
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
 
 @Schema(title = "变量组引用信息查询结果")
 data class VarGroupReferInfoQueryResult(
@@ -37,5 +38,7 @@ data class VarGroupReferInfoQueryResult(
     @get:Schema(title = "引用信息列表")
     val referInfos: List<ResourcePublicVarGroupReferPO>,
     @get:Schema(title = "每个资源的变量引用数量")
-    val varRefCountMap: Map<String, Int> = emptyMap()
+    val varRefCountMap: Map<String, Int> = emptyMap(),
+    @get:Schema(title = "每个资源的变量引用最早产生时间（referId -> createTime）")
+    val varRefCreateTimeMap: Map<String, LocalDateTime> = emptyMap()
 )

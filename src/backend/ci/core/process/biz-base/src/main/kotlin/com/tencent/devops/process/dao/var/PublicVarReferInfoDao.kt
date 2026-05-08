@@ -30,6 +30,7 @@ package com.tencent.devops.process.dao.`var`
 import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.model.process.tables.TResourcePublicVarReferInfo
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarReferPO
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -576,6 +577,51 @@ class PublicVarReferInfoDao {
                 .where(conditions)
                 .fetch()
                 .map { it.value1() }
+        }
+    }
+
+    /**
+     * 查询每个 referId 在其指定版本集合中变量引用记录的最早创建时间
+     * （即"变量引用产生的时间"）
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param referIdVersions referId -> 该 referId 关心的 referVersion 列表
+     * @param varName 可选，指定变量名时仅统计该变量的引用产生时间
+     * @return referId -> 最早的 createTime
+     */
+    fun getEarliestCreateTimeByGroupAndActiveVersions(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        referIdVersions: Map<String, List<Int>>,
+        varName: String? = null
+    ): Map<String, LocalDateTime> {
+        if (referIdVersions.isEmpty()) {
+            return emptyMap()
+        }
+
+        with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
+            val versionConditions = referIdVersions.map { (referId, versions) ->
+                REFER_ID.eq(referId).and(REFER_VERSION.`in`(versions))
+            }.reduce { acc, condition -> acc.or(condition) }
+
+            val query = dslContext.select(REFER_ID, DSL.min(CREATE_TIME))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(versionConditions)
+            if (!varName.isNullOrBlank()) {
+                query.and(VAR_NAME.eq(varName))
+            }
+            return query.groupBy(REFER_ID)
+                .fetch()
+                .mapNotNull { record ->
+                    val referId = record.getValue(REFER_ID) ?: return@mapNotNull null
+                    val earliest = record.getValue(1, LocalDateTime::class.java) ?: return@mapNotNull null
+                    referId to earliest
+                }
+                .toMap()
         }
     }
 }
