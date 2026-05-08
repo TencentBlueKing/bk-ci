@@ -158,6 +158,7 @@ class ProcessDataDeleteService @Autowired constructor(
             }
         }
         // Step2: 按 pipelineId 维度统一清理流水线关联表（聚合在 DAO 层，新增表时只动 DAO）
+        // 该聚合方法保证：所有引用 PIPELINE_ID 的关联表（含 BuildHistory 兜底）都在 deletePipelineInfo 之前删完。
         processDataDeleteDao.deletePipelineRelatedData(
             dslContext = dslContext,
             projectId = projectId,
@@ -165,8 +166,6 @@ class ProcessDataDeleteService @Autowired constructor(
             archiveFlag = archivePipelineFlag,
             broadcastTableDeleteFlag = broadcastTableDeleteFlag == true
         )
-        // Step3: 兜底删除可能由 processPipelineHistories 分页遗漏的构建历史记录
-        processDataDeleteDao.deletePipelineBuildHistory(dslContext, projectId, pipelineIds)
         logger.info("project[$projectId]|pipeline[$pipelineIds] deleteProjectPipelineRelData success!")
     }
 

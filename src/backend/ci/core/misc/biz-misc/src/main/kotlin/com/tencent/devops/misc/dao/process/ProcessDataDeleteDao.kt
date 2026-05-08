@@ -135,10 +135,11 @@ class ProcessDataDeleteDao {
      * 删除流水线维度的关联数据。
      *
      * 调用方约定：
-     *   1) 不包含 T_PIPELINE_BUILD_HISTORY：清理路径在每条 build 维度独立处理（含版本锁与引用计数），
-     *      迁移路径在分页扫表后再单独做 PIPELINE_ID 维度的兜底删除。
-     *   2) 不包含按 buildId 维度的表（参见 deleteBuildRelatedData / deletePipelineBuildVar / deletePipelineBuildTask）。
-     *   3) 所有删除操作都使用入参 dslContext 执行，调用方负责事务边界与分片路由。
+     *   1) 不包含按 buildId 维度的表（参见 deleteBuildRelatedData / deletePipelineBuildVar / deletePipelineBuildTask）。
+     *   2) 所有删除操作都使用入参 dslContext 执行，调用方负责事务边界与分片路由。
+     *
+     * 顺序保证：deletePipelineInfo 始终最后执行，所有引用 PIPELINE_ID 的关联表（含 T_PIPELINE_BUILD_HISTORY 兜底）
+     * 都在 deletePipelineInfo 之前删完。无事务场景下任何一步失败时 pipeline_info 仍然可见，下一轮重试可以重新发起清理。
      *
      * 新增"流水线维度"的关联表时只需在本方法里追加一行即可，避免清理路径与迁移删除路径两边维护。
      *
@@ -196,6 +197,9 @@ class ProcessDataDeleteDao {
                 }
             }
         }
+        // BuildHistory 兜底删除：必须在 deletePipelineInfo 之前执行，保证无事务场景下
+        // 即便此处失败，pipeline_info 仍然可见，下一轮 cron / 重试可以重新发起清理；
+        deletePipelineBuildHistory(dslContext, projectId, pipelineIds)
         deletePipelineInfo(dslContext, projectId, pipelineIds)
     }
 
