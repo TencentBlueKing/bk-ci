@@ -21,16 +21,6 @@ BEGIN
                 COMMENT '项目组织形态：0-团队项目，1-个人项目';
     END IF;
 
-    /* 首字母为 _ 视为个人项目，其余为团队（对存量及重复执行本脚本均生效） */
-    IF EXISTS(SELECT 1
-              FROM information_schema.COLUMNS
-              WHERE TABLE_SCHEMA = db
-                AND TABLE_NAME = 'T_PROJECT'
-                AND COLUMN_NAME = 'project_scope') THEN
-        UPDATE T_PROJECT
-        SET project_scope = IF(SUBSTRING(TRIM(IFNULL(english_name, '')), 1, 1) = '_', 1, 0);
-    END IF;
-
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

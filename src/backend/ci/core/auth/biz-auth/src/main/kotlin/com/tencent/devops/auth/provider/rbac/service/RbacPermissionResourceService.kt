@@ -81,6 +81,14 @@ class RbacPermissionResourceService(
             resourceCode = resourceCode
         )
         if (resource != null) {
+            if (resourceType != AuthResourceType.PROJECT.value && personalProjectService.isPersonalProject(projectCode)) {
+                logHistoricalPersonalProjectAsset(
+                    action = "create",
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode
+                )
+            }
             logger.info(
                 "This resource has been registered. no need to register again" +
                         ":$projectCode|$resourceType$resourceCode"
@@ -103,6 +111,12 @@ class RbacPermissionResourceService(
             )
         } else {
             if (personalProjectService.isPersonalProject(projectCode)) {
+                logHistoricalPersonalProjectAsset(
+                    action = "create",
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode
+                )
                 logger.info(
                     "Personal projects do not require registering resources with the Permission Center.$projectCode"
                 )
@@ -245,6 +259,12 @@ class RbacPermissionResourceService(
     ): Boolean {
         logger.info("resource modify relation|$projectCode|$resourceType|$resourceCode|$resourceName")
         if (personalProjectService.isPersonalProject(projectCode)) {
+            logHistoricalPersonalProjectAsset(
+                action = "modify",
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
             logger.info("Personal projects do not require update resources with the Permission Center.$projectCode")
             return true
         }
@@ -340,6 +360,12 @@ class RbacPermissionResourceService(
     ): Boolean {
         logger.info("resource delete relation|$projectCode|$resourceType|$resourceCode")
         if (personalProjectService.isPersonalProject(projectCode)) {
+            logHistoricalPersonalProjectAsset(
+                action = "delete",
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
             logger.info("Personal projects do not require delete resources with the Permission Center.$projectCode")
             return true
         }
@@ -390,6 +416,25 @@ class RbacPermissionResourceService(
             resourceCode = resourceCode
         )
         return true
+    }
+
+    private fun logHistoricalPersonalProjectAsset(
+        action: String,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ) {
+        val resource = authResourceService.getOrNull(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+        if (resource != null) {
+            logger.warn(
+                "Historical permission-center asset remains for personal project, skip $action|" +
+                    "$projectCode|$resourceType|$resourceCode"
+            )
+        }
     }
 
     override fun resourceCancelRelation(
