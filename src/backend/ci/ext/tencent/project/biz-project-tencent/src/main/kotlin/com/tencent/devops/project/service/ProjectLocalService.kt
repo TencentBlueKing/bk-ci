@@ -265,7 +265,7 @@ class ProjectLocalService @Autowired constructor(
     }
 
     fun getOrCreateRemoteDevProject(userId: String): ProjectVO {
-        return getOrCreatePersonalProject(userId)
+        return getOrCreatePreProject(userId)
     }
 
     fun getOrCreatePreProject(userId: String, description: String? = null): ProjectVO {
