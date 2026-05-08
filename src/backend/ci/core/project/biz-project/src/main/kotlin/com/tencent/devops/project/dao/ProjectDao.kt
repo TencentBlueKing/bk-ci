@@ -208,6 +208,9 @@ class ProjectDao {
                         )
                     }
                 }
+                if (!dbRouteTag.isNullOrBlank()) {
+                    conditions.add(ROUTER_TAG.eq(dbRouteTag))
+                }
                 if (queryRemoteDevFlag == true) {
                     conditions.add(JooqUtils.jsonExtractAny<Boolean>(PROPERTIES, "\$.remotedev").isTrue)
                 }

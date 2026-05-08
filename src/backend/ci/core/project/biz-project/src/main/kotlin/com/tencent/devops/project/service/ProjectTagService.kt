@@ -41,12 +41,17 @@ import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.dao.ProjectTagHistoryDao
 import com.tencent.devops.project.dao.ProjectTagDao
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.project.pojo.ProjectClusterPercentageResult
 import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
-import com.tencent.devops.project.pojo.ProjectPercentageRoutingRequest
-import com.tencent.devops.project.pojo.ProjectPercentageRoutingResult
+import com.tencent.devops.project.pojo.ProjectReleaseBatchCreateRequest
+import com.tencent.devops.project.pojo.ProjectReleaseBatchCreateDTO
+import com.tencent.devops.project.pojo.ProjectReleaseBatchCreateResult
+import com.tencent.devops.project.pojo.ProjectReleaseBatchExecuteRequest
+import com.tencent.devops.project.pojo.ProjectReleaseBatchExecuteResult
+import com.tencent.devops.project.pojo.enums.ProjectReleaseBatchStatus
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.enums.SystemEnums
 import org.jooq.DSLContext
@@ -63,6 +68,7 @@ import java.util.zip.CRC32
 class ProjectTagService @Autowired constructor(
     val dslContext: DSLContext,
     val projectTagDao: ProjectTagDao,
+    val projectTagHistoryDao: ProjectTagHistoryDao,
     val redisOperation: RedisOperation,
     val projectDao: ProjectDao,
     val objectMapper: ObjectMapper,
@@ -438,114 +444,99 @@ class ProjectTagService @Autowired constructor(
 
     fun getBlacklist(): Set<String> = redisOperation.getSetMembers(BLACKLIST_KEY) ?: emptySet()
 
-    // ======================== 百分比放量路由 ========================
+    // ======================== 发布批次路由 ========================
 
-    fun percentageRouting(request: ProjectPercentageRoutingRequest): ProjectPercentageRoutingResult {
-        require(request.targetPercent in 1..100) { "targetPercent must be between 1 and 100" }
-        require(request.targetTag.isNotBlank()) { "targetTag must not be blank" }
+    fun createReleaseBatch(request: ProjectReleaseBatchCreateRequest): List<ProjectReleaseBatchCreateResult> {
+        require(request.version.isNotBlank()) { "version must not be blank" }
+        require(request.channel.isNotBlank()) { "channel must not be blank" }
         require(request.sourceTag.isNotBlank()) { "sourceTag must not be blank" }
+        require(request.targetTag.isNotBlank()) { "targetTag must not be blank" }
+        checkRouteTag(request.sourceTag)
         checkRouteTag(request.targetTag)
 
-        val watcher = Watcher("percentageRouting ${request.targetPercent}% -> ${request.targetTag}")
-        logger.info(
-            "percentageRouting start|targetPercent=${request.targetPercent}|" +
-                "sourceTag=${request.sourceTag}|targetTag=${request.targetTag}|" +
-                "seed=${request.seed}|dryRun=${request.dryRun}"
-        )
-
+        val batchPercentages = normalizeBatchPercentages(request.batchPercentages)
         val blacklist = getBlacklist()
-        logger.info(
-            "percentageRouting lists loaded|blacklistSize=${blacklist.size}"
-        )
-
-        val threshold = request.targetPercent
-
-        var totalProjectCount = 0
-        var alreadyDoneCount = 0
-        val candidates = mutableListOf<String>()
-
+        val records = mutableListOf<ProjectReleaseBatchCreateDTO>()
         var offset = 0
         var pageSize: Int
         do {
-            val page = projectDao.listProjectsByCondition(dslContext, request.condition, PAGE_SIZE, offset)
-            pageSize = page.size
-            totalProjectCount += pageSize
-
-            for (record in page) {
-                val projectCode = record.englishName ?: continue
-                if (projectCode in blacklist) continue
-                val alreadyAtTarget = record.routerTag == request.targetTag
-                if (hashBucket(projectCode, request.seed) < threshold) {
-                    if (alreadyAtTarget) {
-                        alreadyDoneCount++
-                    } else {
-                        candidates.add(projectCode)
-                    }
+            val projectRecords = projectDao.listProjectsByCondition(
+                dslContext = dslContext,
+                projectConditionDTO = ProjectConditionDTO(channelCode = request.channel),
+                limit = PAGE_SIZE,
+                offset = offset
+            )
+            pageSize = projectRecords.size
+            projectRecords.forEach { record ->
+                val projectId = record.englishName ?: return@forEach
+                if (projectId in blacklist || record.routerTag != request.sourceTag) {
+                    return@forEach
+                }
+                val batchPercent = batchPercentages.firstOrNull { hashBucket(projectId, request.version) < it }
+                if (batchPercent != null) {
+                    records.add(
+                        ProjectReleaseBatchCreateDTO(
+                            version = request.version,
+                            channel = request.channel,
+                            projectId = projectId,
+                            batchPercent = batchPercent,
+                            sourceTag = request.sourceTag,
+                            targetTag = request.targetTag,
+                            status = ProjectReleaseBatchStatus.INIT
+                        )
+                    )
                 }
             }
             offset += pageSize
         } while (pageSize == PAGE_SIZE)
 
-        val failedProjects = mutableListOf<String>()
-        val switchedCount: Int
-
-        if (request.dryRun) {
-            switchedCount = candidates.size
-        } else {
-            var actualSwitched = 0
-            candidates.chunked(BATCH_SIZE).forEach { batch ->
-                try {
-                    projectTagDao.updateProjectTags(
-                        dslContext = dslContext,
-                        englishNames = batch,
-                        routerTag = request.targetTag
-                    )
-                    refreshRouterByProject(
-                        routerTag = request.targetTag,
-                        redisOperation = redisOperation,
-                        projectIds = batch
-                    )
-                    actualSwitched += batch.size
-                } catch (e: Exception) {
-                    logger.error("percentageRouting batch update failed|batch=${batch.size}", e)
-                    failedProjects.addAll(batch)
-                }
-            }
-            switchedCount = actualSwitched
+        records.chunked(BATCH_SIZE).forEach {
+            projectTagHistoryDao.batchCreate(dslContext, it)
         }
-
-        LogUtils.printCostTimeWE(watcher)
-        return ProjectPercentageRoutingResult(
-            dryRun = request.dryRun,
-            targetPercent = request.targetPercent,
-            totalProjectCount = totalProjectCount,
-            targetCount = candidates.size + alreadyDoneCount,
-            alreadyDoneCount = alreadyDoneCount,
-            switchedCount = switchedCount,
-            failedCount = failedProjects.size,
-            failedProjects = failedProjects
+        logger.info(
+            "createReleaseBatch|version=${request.version}|channel=${request.channel}|" +
+                "sourceTag=${request.sourceTag}|targetTag=${request.targetTag}|count=${records.size}"
         )
+        return records.groupBy { it.batchPercent }
+            .map { (batchPercent, batchRecords) ->
+                ProjectReleaseBatchCreateResult(
+                    batchPercent = batchPercent,
+                    count = batchRecords.size
+                )
+            }.sortedBy { it.batchPercent }
+    }
+
+    fun executeReleaseBatch(request: ProjectReleaseBatchExecuteRequest): ProjectReleaseBatchExecuteResult {
+        return executeReleaseBatch(request, rollback = false)
+    }
+
+    fun rollbackReleaseBatch(request: ProjectReleaseBatchExecuteRequest): ProjectReleaseBatchExecuteResult {
+        return executeReleaseBatch(request, rollback = true)
     }
 
     /**
-     * 确定性哈希分桶：CRC32("$seed:$englishName") % 100
+     * 确定性哈希分桶：CRC32("$version:$englishName") % 100
      * 结果范围 [0, 99]，与项目总数无关。
-     * 相同 seed + englishName 永远映射到相同桶；不同 seed 产生不同分桶，
+     * 相同 version + englishName 永远映射到相同桶；不同 version 产生不同分桶，
      * 使每次发布可以让相同百分比路由到不同的项目集合。
      */
-    fun hashBucket(englishName: String, seed: Int = 0): Int {
+    fun hashBucket(englishName: String, version: String): Int {
         val crc = CRC32()
-        crc.update("$seed:$englishName".toByteArray(Charsets.UTF_8))
+        crc.update("$version:$englishName".toByteArray(Charsets.UTF_8))
         return (crc.value % HASH_BUCKET_SIZE).toInt()
     }
 
     // ======================== 集群项目百分比统计 ========================
 
     fun getClusterPercentage(
-        condition: ProjectConditionDTO
+        channel: String,
+        tag: String
     ): ProjectClusterPercentageResult {
-        require(condition.routerTag != null) { "routerTag must not be null" }
-        val totalCondition = condition.copy(routerTag = null)
+        require(channel.isNotBlank()) { "channel must not be blank" }
+        require(tag.isNotBlank()) { "tag must not be blank" }
+        checkRouteTag(tag)
+        val condition = ProjectConditionDTO(channelCode = channel, dbRouteTag = tag)
+        val totalCondition = ProjectConditionDTO(channelCode = channel)
         val totalCount = projectDao.countByCondition(dslContext, totalCondition)
         val tagCount = projectDao.countByCondition(dslContext, condition)
         val percentage = if (totalCount > 0) {
@@ -557,6 +548,129 @@ class ProjectTagService @Autowired constructor(
             totalProjectCount = totalCount,
             tagCount = tagCount,
             percentage = percentage
+        )
+    }
+
+    private fun normalizeBatchPercentages(batchPercentages: List<Int>): List<Int> {
+        require(batchPercentages.isNotEmpty()) { "batchPercentages must not be empty" }
+        require(batchPercentages.distinct().size == batchPercentages.size) {
+            "batchPercentages must not contain duplicate values"
+        }
+        return batchPercentages.sorted().also { sorted ->
+            require(sorted.all { it in 1..100 }) { "batchPercentages must be between 1 and 100" }
+        }
+    }
+
+    private fun executeReleaseBatch(
+        request: ProjectReleaseBatchExecuteRequest,
+        rollback: Boolean
+    ): ProjectReleaseBatchExecuteResult {
+        require(request.version.isNotBlank()) { "version must not be blank" }
+        require(request.channel.isNotBlank()) { "channel must not be blank" }
+        require(request.batchPercent in 1..100) { "batchPercent must be between 1 and 100" }
+        require(request.sourceTag.isNotBlank()) { "sourceTag must not be blank" }
+        require(request.targetTag.isNotBlank()) { "targetTag must not be blank" }
+        checkRouteTag(request.sourceTag)
+        checkRouteTag(request.targetTag)
+
+        val historyRecords = projectTagHistoryDao.listHistoryRecords(
+            dslContext = dslContext,
+            version = request.version,
+            channel = request.channel,
+            batchPercent = request.batchPercent
+        )
+        if (historyRecords.isEmpty()) {
+            return ProjectReleaseBatchExecuteResult(
+                version = request.version,
+                channel = request.channel,
+                batchPercent = request.batchPercent,
+                totalProjectCount = 0,
+                switchedCount = 0,
+                alreadyDoneCount = 0,
+                skippedCount = 0
+            )
+        }
+
+        val finalStatus = if (rollback) {
+            ProjectReleaseBatchStatus.ROLLBACK
+        } else {
+            ProjectReleaseBatchStatus.PUBLISHED
+        }
+        if (!rollback && !request.dryRun) {
+            projectTagHistoryDao.updateStatus(
+                dslContext = dslContext,
+                version = request.version,
+                channel = request.channel,
+                batchPercent = request.batchPercent,
+                status = ProjectReleaseBatchStatus.PUBLISHING
+            )
+        }
+
+        var switchedCount = 0
+        var alreadyDoneCount = 0
+        historyRecords.chunked(BATCH_SIZE).forEach { batchRecords ->
+            val projectRouterTags = projectDao.list(
+                dslContext = dslContext,
+                englishNameList = batchRecords.map { it.projectId }.toSet()
+            ).mapNotNull { project ->
+                project.englishName?.let { it to project.routerTag }
+            }.toMap()
+
+            // 先确认历史记录属于本次请求的 source/target，再按项目当前 routerTag 判断是否需要切换
+            // 本次请求的切换目标固定：执行切到 targetTag，回滚切回 sourceTag
+            val toSwitch = mutableListOf<String>()
+            batchRecords.forEach { record ->
+                val fromTag = if (rollback) record.targetTag else record.sourceTag
+                val toTag = if (rollback) record.sourceTag else record.targetTag
+                if (fromTag != request.sourceTag || toTag != request.targetTag) {
+                    return@forEach
+                }
+                when (projectRouterTags[record.projectId]) {
+                    fromTag -> toSwitch.add(record.projectId)
+                    toTag -> alreadyDoneCount++
+                }
+            }
+            if (toSwitch.isNotEmpty()) {
+                if (!request.dryRun) {
+                    projectTagDao.updateProjectTags(
+                        dslContext = dslContext,
+                        englishNames = toSwitch,
+                        routerTag = request.targetTag
+                    )
+                    refreshRouterByProject(
+                        routerTag = request.targetTag,
+                        projectIds = toSwitch,
+                        redisOperation = redisOperation
+                    )
+                }
+                switchedCount += toSwitch.size
+            }
+        }
+
+        if (!request.dryRun) {
+            projectTagHistoryDao.updateStatus(
+                dslContext = dslContext,
+                version = request.version,
+                channel = request.channel,
+                batchPercent = request.batchPercent,
+                status = finalStatus
+            )
+        }
+        val skippedCount = historyRecords.size - switchedCount - alreadyDoneCount
+        logger.info(
+            "executeReleaseBatch|version=${request.version}|channel=${request.channel}|" +
+                "batchPercent=${request.batchPercent}|" +
+                "rollback=$rollback|dryRun=${request.dryRun}|switched=$switchedCount|" +
+                "alreadyDone=$alreadyDoneCount|skipped=$skippedCount"
+        )
+        return ProjectReleaseBatchExecuteResult(
+            version = request.version,
+            channel = request.channel,
+            batchPercent = request.batchPercent,
+            totalProjectCount = historyRecords.size,
+            switchedCount = switchedCount,
+            alreadyDoneCount = alreadyDoneCount,
+            skippedCount = skippedCount
         )
     }
 

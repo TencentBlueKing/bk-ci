@@ -2,14 +2,15 @@ package com.tencent.devops.project.api.op
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
-import com.tencent.devops.project.pojo.ProjectPercentageRoutingRequest
-import com.tencent.devops.project.pojo.ProjectPercentageRoutingResult
 import com.tencent.devops.project.pojo.ProjectRoutingListRequest
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
+import com.tencent.devops.project.pojo.ProjectReleaseBatchCreateRequest
+import com.tencent.devops.project.pojo.ProjectReleaseBatchCreateResult
+import com.tencent.devops.project.pojo.ProjectReleaseBatchExecuteRequest
+import com.tencent.devops.project.pojo.ProjectReleaseBatchExecuteResult
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.project.pojo.ProjectClusterPercentageResult
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
@@ -59,13 +60,29 @@ interface OpProjectTagResource {
         extSystemTagDTO: ProjectExtSystemTagDTO
     ): Result<Boolean>
 
-    @Operation(summary = "按百分比比例灰度放量（支持 dry-run 预览和 execute 执行）")
+    @Operation(summary = "创建项目路由发布批次")
     @POST
-    @Path("/percentageRouting")
-    fun setTagByPercentage(
-        @Parameter(description = "比例放量请求入参", required = true)
-        request: ProjectPercentageRoutingRequest
-    ): Result<ProjectPercentageRoutingResult>
+    @Path("/releaseVersions")
+    fun createReleaseBatch(
+        @Parameter(description = "项目路由发布批次创建请求", required = true)
+        request: ProjectReleaseBatchCreateRequest
+    ): Result<List<ProjectReleaseBatchCreateResult>>
+
+    @Operation(summary = "执行指定项目路由发布批次")
+    @POST
+    @Path("/releaseVersions/execute")
+    fun executeReleaseBatch(
+        @Parameter(description = "项目路由发布批次执行请求", required = true)
+        request: ProjectReleaseBatchExecuteRequest
+    ): Result<ProjectReleaseBatchExecuteResult>
+
+    @Operation(summary = "回滚指定项目路由发布批次")
+    @POST
+    @Path("/releaseVersions/rollback")
+    fun rollbackReleaseBatch(
+        @Parameter(description = "项目路由发布批次回滚请求", required = true)
+        request: ProjectReleaseBatchExecuteRequest
+    ): Result<ProjectReleaseBatchExecuteResult>
 
     @Operation(summary = "向全局路由黑名单添加项目（强制排除，不参与任何放量）")
     @POST
@@ -102,11 +119,15 @@ interface OpProjectTagResource {
     @Path("/defaultTag")
     fun getDefaultTag(): Result<String>
 
-    @Operation(summary = "查询指定 tag 下的项目数量与百分比（condition 中 routerTag 必填）")
-    @POST
+    @Operation(summary = "查询指定 tag 下的项目数量与百分比")
+    @GET
     @Path("/clusterPercentage")
     fun getClusterPercentage(
-        @Parameter(description = "项目查询条件（routerTag 必填）", required = true)
-        condition: ProjectConditionDTO
+        @Parameter(description = "项目渠道", required = true)
+        @QueryParam("channel")
+        channel: String,
+        @Parameter(description = "数据库项目路由 tag", required = true)
+        @QueryParam("tag")
+        tag: String
     ): Result<ProjectClusterPercentageResult>
 }
