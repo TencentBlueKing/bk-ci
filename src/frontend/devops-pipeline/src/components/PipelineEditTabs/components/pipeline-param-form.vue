@@ -357,15 +357,7 @@
                 this.updateParam(key, value)
             },
             getUniqueArgs (field) {
-                // 新增变量可与公共变量组下变量重名
-                return this.globalParams
-                    .filter((item) => item[field] !== this.initParamItem[field])
-                    .map((p) =>
-                        typeof p[field] === 'string'
-                            ? encodeURIComponent(p[field])
-                            : p[field]
-                    )
-                    .join(',')
+                return this.globalParams.map(p => p?.buildFormProperty?.[field] || p?.[field])?.filter(item => item !== this.initParamItem[field]).join(',')
             },
             isParamChanged () {
                 return JSON.stringify(this.initParamItem) !== JSON.stringify(this.param)

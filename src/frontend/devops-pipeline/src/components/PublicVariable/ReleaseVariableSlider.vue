@@ -122,7 +122,7 @@
             proxy.$bkMessage({
                 theme: 'error',
                 message: e.message || e,
-                ellipsisLine: 0
+                ellipsisLine: 20
             })
         } finally {
             releasing.value = false
