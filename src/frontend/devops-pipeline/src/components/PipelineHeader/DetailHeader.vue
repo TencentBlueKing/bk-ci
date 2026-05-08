@@ -227,10 +227,11 @@
             :has-draft="hasDraft"
             :draft-status="draftStatus"
             :draft-save-info="draftSaveInfo"
-            :draft-hint-title="$t('hasDraft')"
+            :draft-hint-title="draftHintTitle"
             :version="execDetai?.curVersion"
             :version-name="pipelineInfo?.versionName"
             :draft-version="pipelineInfo?.version"
+            :click-action-type="'edit'"
             @confirm="confirmEdit"
             @edit-draft="goEditDraft"
             @cancel="closeDialog"
@@ -249,7 +250,7 @@
         RESOURCE_ACTION,
         RESOURCE_TYPE
     } from '@/utils/permission'
-    import { TEMP_PARAM_SET_ID, DRAFT_STATUS } from '@/utils/pipelineConst'
+    import { TEMP_PARAM_SET_ID, DRAFT_STATUS, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
     import ReleaseButton from './ReleaseButton'
@@ -285,7 +286,7 @@
             }
         },
         computed: {
-            ...mapState('atom', ['execDetail', 'pipelineInfo', 'saveStatus']),
+            ...mapState('atom', ['execDetail', 'pipelineInfo', 'saveStatus', 'execInfo']),
             ...mapState('common', ['hasDraft']),
             ...mapGetters({
                 isCurPipelineLocked: 'atom/isCurPipelineLocked'
@@ -323,6 +324,28 @@
             },
             isDebugExec () {
                 return this.execDetail?.debug ?? false
+            },
+            isActiveBranchVersion (){
+                return this.execInfo?.status === VERSION_STATUS_ENUM.BRANCH
+            },
+            draftHintTitle () {
+                switch (true) {
+                    case this.hasDraft && this.isActiveBranchVersion:
+                        return this.$t('template.templateCoverWarning')
+                    case this.hasDraft:
+                        return this.$t('hasDraft')
+                    default:
+                        // 已发布状态
+                        if (this.draftStatus === DRAFT_STATUS.PUBLISHED) {
+                            return this.$t('alreadyPublished')
+                        }
+                        // 分支版本
+                        if (this.isActiveBranchVersion && this.draftStatus === DRAFT_STATUS.BRANCH) {
+                            return this.$t('createBranchDraftTips', [this.pipelineInfo?.versionName])
+                        }
+                        // 基线版本落后状态
+                        return this.$t('pipelineUpdated')
+                }
             },
             archiveFlag () {
                 return this.$route.query.archiveFlag

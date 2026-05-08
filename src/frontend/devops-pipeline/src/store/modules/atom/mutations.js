@@ -66,6 +66,7 @@ import {
     SET_PIPELINE_EDITING,
     SET_PIPELINE_EXEC_DETAIL,
     SET_PIPELINE_INFO,
+    SET_EXEC_INFO,
     SET_PIPELINE_WITHOUT_TRIGGER,
     SET_PIPELINE_YAML,
     SET_PIPELINE_YAML_HIGHLIGHT_MAP,
@@ -551,6 +552,10 @@ export default {
     },
     [SAVE_PIPELINE_SNAPSHOT]: (state, { snapshot }) => {
         Vue.set(state, 'originalPipelineSnapshot', snapshot)
+        return state
+    },
+    [SET_EXEC_INFO]: (state, infoData) => {
+        Vue.set(state, 'execInfo', infoData)
         return state
     },
     [CLEAR_PIPELINE_SNAPSHOT]: (state) => {

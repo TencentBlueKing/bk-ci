@@ -280,17 +280,7 @@
             close () {
                 this.isShowConfirmDialog = false
             },
-            async rollback () {
-                let rollbackVersion = ''
-
-                if (this.isRollback) {
-                    rollbackVersion = this.version
-                    if (this.clickActionType) {
-                        rollbackVersion = this.clickActionType === 'rollback' ? this.version : this.draftSaveInfo.releaseVersion
-                    }
-                } else {
-                    rollbackVersion = this.draftSaveInfo?.releaseVersion || this.version
-                }
+            async rollback (rollbackVersion, actionType = '') {
                 try {
                     this.loading = true
 
@@ -311,7 +301,7 @@
                     }
 
                     if (res.version) {
-                        this.goEdit(res.version, true)
+                        this.goEdit(res.version, true, actionType)
                     }
                 } catch (error) {
                     this.handleError(error, {
@@ -324,18 +314,17 @@
                     this.loading = false
                 }
             },
-            goEdit (version, rollback = false) {
+            goEdit (version, rollback = false, actionType = '') {
                 const routerName = this.isTemplate ? 'templateEdit' : 'pipelinesEdit'
                 const params = {
                     ...this.$route.params,
                     version,
                 }
                 const query = {
-                    ...(rollback || this.isRollback
+                    ...(rollback
                         ? {
                             type: 'rollback',
-                            // this.rollback && this.clickActionType === 'edit' 是指点击实例流水线的编辑按钮，需要回滚到草稿版本
-                            versionName: this.rollback && this.clickActionType === 'edit' ?  this.draftSaveInfo?.releaseVersionName : this.versionName,
+                            versionName: actionType === 'newDraft' ? this.draftSaveInfo?.releaseVersionName : this.versionName,
                         } : {}
                     ),
                     ...(!this.isTemplate

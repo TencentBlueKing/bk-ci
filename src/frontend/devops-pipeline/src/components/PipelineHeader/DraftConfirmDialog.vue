@@ -116,7 +116,7 @@
         <footer slot="footer">
             <bk-button
                 theme="primary"
-                @click="rollback"
+                @click="handleConfirm"
             >
                 {{ showBtnText }}
             </bk-button>
@@ -247,9 +247,17 @@
             }
         },
         methods: {
-            rollback () {
-                this.$emit('confirm')
+            // 根据按钮类型处理确认操作
+            handleConfirm () {
+                // 新建草稿：回滚到当前最新版本
+                if (!this.isActiveBranchVersion && !this.showRollbackTips) {
+                    this.$emit('confirm', this.draftSaveInfo?.releaseVersion, 'newDraft')
+                    return
+                }
+                // 确定回滚 或 继续：触发回滚操作，传递当前版本号
+                this.$emit('confirm', this.version)
             },
+            // 编辑原草稿
             goEdit (version) {
                 this.$emit('edit-draft', version)
             },

@@ -137,7 +137,7 @@
             :has-draft="hasDraft"
             :draft-status="draftStatus"
             :draft-save-info="draftSaveInfo"
-            :draft-hint-title="$t('hasDraft')"
+            :draft-hint-title="draftHintTitle"
             :version="currentVersion"
             :version-name="activePipelineVersion?.versionName"
             :draft-version="pipelineInfo?.version"
@@ -286,6 +286,25 @@
             },
             isEditCurrentDraft (){
                 return this.pipelineInfo?.baseVersion && this.activePipelineVersion?.version === this.pipelineInfo?.baseVersion
+            },
+            draftHintTitle () {
+                switch (true) {
+                    case this.hasDraft && this.isActiveBranchVersion:
+                        return this.$t('template.templateCoverWarning')
+                    case this.hasDraft:
+                        return this.$t('hasDraft')
+                    default:
+                        // 1. 分支版本
+                        if (this.isActiveBranchVersion && this.draftStatus === DRAFT_STATUS.BRANCH) {
+                            return this.$t('createBranchDraftTips', [this.pipelineInfo?.versionName])
+                        }
+                        // 已发布状态
+                        if (this.draftStatus === DRAFT_STATUS.PUBLISHED) {
+                            return this.$t('alreadyPublished')
+                        }
+                        // 基线版本落后状态
+                        return this.$t('pipelineUpdated')
+                }
             },
             operateName () {
                 switch (true) {

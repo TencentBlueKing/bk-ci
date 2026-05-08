@@ -91,6 +91,7 @@ import {
     UPDATE_TEMPLATE_CONSTRAINT,
     SAVE_PIPELINE_SNAPSHOT,
     CLEAR_PIPELINE_SNAPSHOT,
+    SET_EXEC_INFO,
     UPDATE_WHOLE_ATOM_INPUT
 } from './constants'
 import { buildPipelineSnapshot } from '@/utils/pipelineSnapshotUtil'
@@ -1114,6 +1115,9 @@ export default {
             url += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
         }
         return request.get(url)
+    },
+    setExecInfo ({ commit }, infoData) {
+        commit(SET_EXEC_INFO, infoData)
     },
     setAtomEditing ({ commit }, isEditing) {
         return commit(SET_ATOM_EDITING, isEditing)
