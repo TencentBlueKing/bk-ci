@@ -19,7 +19,7 @@ const router = createRouter({
   history: createWebHistory('permission'),
   routes: [
     {
-      path: window.PUBLIC_URL_PREFIX,
+      path: '/',
       component: HomeEntry,
       children: [
         {
@@ -98,7 +98,7 @@ const router = createRouter({
 // afterEach
 router.afterEach((to) => {
   // 同步导航数据
-  window.$syncUrl?.(to.fullPath);
+  window.$syncUrl?.(to.fullPath.replace(/^\/permission\//, '/'));
 });
 
 // 导出默认数据
