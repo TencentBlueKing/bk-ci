@@ -300,6 +300,27 @@ class ProjectDao {
         }
     }
 
+    fun getFirstPersonalProjectByCreator(dslContext: DSLContext, creator: String): TProjectRecord? {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectFrom(this)
+                .where(CREATOR.eq(creator))
+                .and(PROJECT_SCOPE.eq(ProjectScopeType.PERSONAL.value))
+                .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
+                .orderBy(CREATED_AT.desc())
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
+    fun updateProjectScopeByCode(dslContext: DSLContext, projectCode: String, projectScope: Int): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(PROJECT_SCOPE, projectScope)
+                .where(ENGLISH_NAME.eq(projectCode))
+                .execute()
+        }
+    }
+
     fun create(dslContext: DSLContext, paasProject: PaasProject): Int {
         with(TProject.T_PROJECT) {
             return dslContext.insertInto(

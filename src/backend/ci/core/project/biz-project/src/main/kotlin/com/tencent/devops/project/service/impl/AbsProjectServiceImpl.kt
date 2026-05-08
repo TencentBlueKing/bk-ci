@@ -226,9 +226,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         projectChannel: ProjectChannelCode
     ): String {
         logger.info("create project| $userId | $createExtInfo | $projectCreateInfo")
-        val createInfo = projectCreateInfo.copy(
-            projectScope = projectScopeFromEnglishName(projectCreateInfo.englishName).value
-        )
+        val createInfo = projectCreateInfo.copy()
         createInfo.properties?.let { it.enableShareArtifact = false }
 
         validateWhenCreateProject(
@@ -338,16 +336,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             throw ignored
         }
         return projectId
-    }
-
-    /** `english_name` 以 `_` 开头为个人项目，否则团队。 */
-    private fun projectScopeFromEnglishName(englishName: String): ProjectScopeType {
-        val trimmed = englishName.trim()
-        return if (trimmed.isNotEmpty() && trimmed[0] == '_') {
-            ProjectScopeType.PERSONAL
-        } else {
-            ProjectScopeType.TEAM
-        }
     }
 
     private fun validateWhenCreateProject(
@@ -955,7 +943,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         ProjectUtils.packagingBean(
                             tProjectRecord = it,
                             managePermission = projectsWithManagePermission?.contains(it.englishName),
-                            showUserManageIcon = isShowUserManageIcon(it.routerTag),
+                            showUserManageIcon = shouldShowUserManageIcon(
+                                projectScope = it.projectScope,
+                                routerTag = it.routerTag
+                            ),
                             viewPermission = projectsWithViewPermission?.contains(it.englishName),
                             pipelineTemplateInstallPerm = pipelineTemplateInstallPerm
                         )
@@ -972,7 +963,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         ProjectUtils.packagingBean(
                             tProjectRecord = it,
                             managePermission = true,
-                            showUserManageIcon = true
+                            showUserManageIcon = shouldShowUserManageIcon(
+                                projectScope = it.projectScope,
+                                routerTag = it.routerTag
+                            )
                         )
                     )
                 }
@@ -999,6 +993,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             // 未开启模板权限的默认有安装模板权限
             true
         }
+    }
+
+    private fun shouldShowUserManageIcon(projectScope: Int?, routerTag: String?): Boolean {
+        if (projectScope == ProjectScopeType.PERSONAL.value) {
+            return false
+        }
+        return isShowUserManageIcon(routerTag)
     }
 
     override fun listProjectsForApply(
