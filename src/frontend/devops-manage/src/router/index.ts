@@ -78,7 +78,7 @@ const router = createRouter({
 router.afterEach((to) => {
   // 同步导航数据
   if (!location.search.includes('disableSyncUrl=true')) {
-    window.$syncUrl?.(to.fullPath);
+    window.$syncUrl?.(to.fullPath.replace(window.getRoutePrefix(), '/'));
   }
   const keepCacheRoutes = ['edit', 'show'];
   if (!keepCacheRoutes.includes(to.name)) {
