@@ -38,21 +38,34 @@ class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
     }
 
     override fun batchUpdateComponentsVersionSize() {
-        val count = atomDao.countComponent(dslContext, AtomStatusEnum.RELEASED.status.toByte())
-        var offset = 0L
-        val batchSize = 100L
+        val redisLock = RedisLock(
+            redisOperation = redisOperation,
+            lockKey = "store:batch:pkg-size:${StoreTypeEnum.ATOM.name}",
+            expiredTimeInSeconds = 1800
+        )
+        if (!redisLock.tryLock()) {
+            logger.warn("batchUpdateComponentsVersionSize is already running, skip")
+            return
+        }
+        try {
+            val count = atomDao.countComponent(dslContext, AtomStatusEnum.RELEASED.status.toByte())
+            var offset = 0L
+            val batchSize = 100L
 
-        while (offset < count) {
-            val storeIds = atomDao.selectComponentIds(
-                dslContext = dslContext,
-                offset = offset,
-                batchSize = batchSize
-            )
-            if (storeIds.isNullOrEmpty()) {
-                break
+            while (offset < count) {
+                val storeIds = atomDao.selectComponentIds(
+                    dslContext = dslContext,
+                    offset = offset,
+                    batchSize = batchSize
+                )
+                if (storeIds.isNullOrEmpty()) {
+                    break
+                }
+                offset += batchSize
+                processAtomEnvInfos(storeIds)
             }
-            offset += batchSize
-            processAtomEnvInfos(storeIds)
+        } finally {
+            redisLock.unlock()
         }
     }
 
@@ -92,10 +105,17 @@ class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
      * 构建存储包信息
      */
     private fun buildStorePackageInfo(record: org.jooq.Record): StorePackageInfoReq? {
-        val pkgPath = record.get("PKG_PATH")?.toString() ?: return null
+        val pkgPath = record.get("PKG_PATH")?.toString()
+        if (pkgPath.isNullOrBlank()) {
+            logger.warn("buildStorePackageInfo|pkgPath is null, skip record: $record")
+            return null
+        }
         val nodeSize = client.get(ServiceArchiveComponentPkgResource::class)
             .getFileSize(StoreTypeEnum.ATOM, pkgPath).data
-            ?: return null
+        if (nodeSize == null) {
+            logger.warn("buildStorePackageInfo|getFileSize returns null, pkgPath: $pkgPath")
+            return null
+        }
 
         return StorePackageInfoReq(
             storeType = StoreTypeEnum.ATOM,
@@ -127,9 +147,11 @@ class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
             } else {
                 val atomPackageInfoList = JsonUtil.to(size, object : TypeReference<List<StorePackageInfoReq>>() {})
                 // 使用 Map 进行去重，以 osName_arch 为键，新数据覆盖旧数据
-                val packageMap = atomPackageInfoList.associateBy { "${it.osName}_${it.arch}" }.toMutableMap()
+                val packageMap = atomPackageInfoList
+                    .associateBy { "${it.osName.orEmpty()}_${it.arch.orEmpty()}" }
+                    .toMutableMap()
                 storePackageInfoReqs.forEach { newPackage ->
-                    packageMap["${newPackage.osName}_${newPackage.arch}"] = newPackage
+                    packageMap["${newPackage.osName.orEmpty()}_${newPackage.arch.orEmpty()}"] = newPackage
                 }
                 atomDao.updateComponentVersionInfo(
                     dslContext = dslContext,

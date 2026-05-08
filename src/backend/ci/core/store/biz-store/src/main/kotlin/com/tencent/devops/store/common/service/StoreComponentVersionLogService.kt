@@ -178,7 +178,7 @@ class StoreComponentVersionLogService {
 
     private fun formatSizeInMB(sizeInBytes: BigDecimal): String =
         String.format(
-            "%.2f M",
+            "%.2f MB",
             sizeInBytes.divide(ONE_MB, 2, RoundingMode.HALF_UP).toDouble()
         )
 }

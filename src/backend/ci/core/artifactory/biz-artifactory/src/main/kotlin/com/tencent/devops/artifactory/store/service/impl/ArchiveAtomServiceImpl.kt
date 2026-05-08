@@ -44,7 +44,6 @@ import com.tencent.devops.common.api.constant.STATIC
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.ShaUtils
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
@@ -54,13 +53,10 @@ import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomArchiveResource
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
-import com.tencent.devops.store.pojo.common.ATOM_PKG_SIZE_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_UPLOAD_ID_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.KEY_PACKAGE_PATH
-import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
@@ -125,7 +121,6 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         val atomEnvRequests: List<AtomEnvRequest>
         val taskDataMap: Map<String, Any>
         val packageFileInfos: MutableList<PackageFileInfo>
-        val storePackageInfos = mutableListOf<StorePackageInfoReq>()
         try { // 校验taskJson配置是否正确
             val verifyAtomTaskJsonResult =
                 client.get(ServiceMarketAtomArchiveResource::class).verifyAtomTaskJson(
@@ -161,13 +156,6 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
                     packageFileSize = packageFile.length(),
                     sha256Content = packageFile.inputStream().use { ShaUtils.sha256InputStream(it) }
                 )
-                val storePackageInfo = StorePackageInfoReq(
-                    storeType = StoreTypeEnum.ATOM,
-                    osName = atomEnvRequest.osName,
-                    arch = atomEnvRequest.osArch,
-                    size = packageFileInfo.packageFileSize
-                )
-                storePackageInfos.add(storePackageInfo)
                 atomEnvRequest.shaContent = packageFileInfo.sha256Content
                 atomEnvRequest.pkgName = packageFileInfo.packageFileName
                 packageFileInfos.add(packageFileInfo)
@@ -206,14 +194,6 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             redisOperation.set(
                 key = "$ATOM_UPLOAD_ID_KEY_PREFIX:$atomCode:$version",
                 value = finalAtomId,
-                expiredInSecond = TimeUnit.DAYS.toSeconds(1)
-            )
-        }
-        // 存储包大小信息到 Redis，供后续创建版本记录时使用
-        if (storePackageInfos.isNotEmpty()) {
-            redisOperation.set(
-                key = "$ATOM_PKG_SIZE_KEY_PREFIX:$atomCode:$version",
-                value = JsonUtil.toJson(storePackageInfos),
                 expiredInSecond = TimeUnit.DAYS.toSeconds(1)
             )
         }

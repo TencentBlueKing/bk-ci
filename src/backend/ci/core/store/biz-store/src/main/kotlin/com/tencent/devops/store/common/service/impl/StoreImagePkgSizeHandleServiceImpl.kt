@@ -35,9 +35,9 @@ class StoreImagePkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSe
         storePackageInfoReqs: List<StorePackageInfoReq>,
         storeType: StoreTypeEnum
     ): Boolean {
-        // IMAGE 类型暂不支持更新包大小，预留扩展
+        // IMAGE 类型暂不支持更新包大小，明确返回 false 让上层显式分流
         logger.info("updateComponentVersionSize is not supported for IMAGE type, skip. storeId: $storeId")
-        return true
+        return false
     }
 
     override fun getComponentVersionSize(

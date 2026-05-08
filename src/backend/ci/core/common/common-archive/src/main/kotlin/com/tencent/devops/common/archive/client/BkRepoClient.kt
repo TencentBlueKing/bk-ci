@@ -1344,7 +1344,10 @@ class BkRepoClient constructor(
         repoName: String,
         fullPath: String
     ): Long? {
-        val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/detail/$projectId/$repoName/$fullPath"
+        // 对路径每一段做 URL encode，保留 / 分隔符，避免中文/空格/#/? 等字符引起的问题
+        val encodedPath = fullPath.split("/")
+            .joinToString("/") { if (it.isEmpty()) it else URLEncoder.encode(it, "UTF-8") }
+        val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/detail/$projectId/$repoName/$encodedPath"
         val request = Request.Builder()
             .url(url)
             .headers(getCommonHeaders(userId, projectId).toHeaders())

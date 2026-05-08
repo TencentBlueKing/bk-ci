@@ -43,14 +43,13 @@ abstract class AbstractStoreComponentPkgSizeHandleService {
                 }
             }
 
+            // 未指定 OS/Arch 时返回所有平台包总大小，代表该版本的总存储开销
             val totalBytes = atomPackageInfos.fold(BigDecimal.ZERO) { acc, info ->
                 acc + BigDecimal(info.size)
             }
-            val totalMB = formatSizeInMB(totalBytes)
-            val packageCount = BigDecimal(atomPackageInfos.size)
-            totalMB.divide(packageCount, DIV_SCALE, ROUNDING_MODE)
+            formatSizeInMB(totalBytes)
         } catch (e: Exception) {
-            logger.warn("parseComponentPackageSize error: $e")
+            logger.warn("parseComponentPackageSize error", e)
             null
         }
     }
