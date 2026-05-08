@@ -19,7 +19,7 @@ const router = createRouter({
   history: createWebHistory('permission'),
   routes: [
     {
-      path: '/',
+      path: window.PUBLIC_URL_PREFIX,
       component: HomeEntry,
       children: [
         {
