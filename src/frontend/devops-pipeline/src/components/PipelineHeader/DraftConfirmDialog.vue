@@ -91,7 +91,7 @@
                 </i18n>
             </p>
             <div class="is-active-branch-version">
-                {{ $t('alreadyPublishedTip') }}
+                <span v-html="$t('alreadyPublishedTip')"></span>
             </div>
         </div>
         <!-- 基线版本落后状态 -->
