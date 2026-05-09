@@ -55,9 +55,7 @@ import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import io.fabric8.kubernetes.client.readiness.Readiness
 import java.io.File
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
+
 import org.slf4j.LoggerFactory
 
 @TaskClassType(classTypes = [ExtServiceBuildDeployElement.classType])
@@ -66,16 +64,6 @@ class ExtServiceBuildDeployTask : ITask() {
     private val archiveApi = ApiFactory.create(ArchiveSDKApi::class)
 
     private val logger = LoggerFactory.getLogger(ExtServiceBuildDeployTask::class.java)
-
-    private val servicePkgSizeExecutor = ThreadPoolExecutor(
-        1,
-        1,
-        0L,
-        TimeUnit.MILLISECONDS,
-        LinkedBlockingQueue(1)
-    ).apply {
-        rejectedExecutionHandler = ThreadPoolExecutor.CallerRunsPolicy()
-    }
 
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         logger.info("ExtServiceBuildDeployTask buildTask: $buildTask,buildVariables: $buildVariables")
@@ -263,7 +251,7 @@ class ExtServiceBuildDeployTask : ITask() {
         storePackageInfoReqs: List<StorePackageInfoReq>,
         extServiceId: String?
     ) {
-        servicePkgSizeExecutor.submit {
+        Thread {
             if (extServiceId == null) {
                 logger.warn("extServiceId is null!")
             } else {
@@ -276,7 +264,7 @@ class ExtServiceBuildDeployTask : ITask() {
                     logger.warn("asyncHandleExtServicePkgSize execute error", ignored)
                 }
             }
-        }
+        }.start()
     }
 
     companion object {

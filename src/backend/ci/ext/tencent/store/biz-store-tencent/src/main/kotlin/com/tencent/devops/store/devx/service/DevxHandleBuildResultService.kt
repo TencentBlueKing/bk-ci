@@ -52,9 +52,6 @@ import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvDataPO
 import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvExtDataPO
 import com.tencent.devops.store.pojo.common.publication.StoreBuildResultRequest
 import com.tencent.devops.store.pojo.common.publication.UpdateStoreBaseDataPO
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -75,18 +72,6 @@ class DevxHandleBuildResultService @Autowired constructor(
 ) : AbstractStoreHandleBuildResultService() {
 
     private val logger = LoggerFactory.getLogger(DevxHandleBuildResultService::class.java)
-
-    companion object {
-        private val devxPkgSizeExecutor = ThreadPoolExecutor(
-            1,
-            1,
-            0L,
-            TimeUnit.MILLISECONDS,
-            LinkedBlockingQueue(1)
-        ).apply {
-            rejectedExecutionHandler = ThreadPoolExecutor.CallerRunsPolicy()
-        }
-    }
 
     override fun handleStoreBuildResult(
         pipelineId: String,
@@ -263,7 +248,7 @@ class DevxHandleBuildResultService @Autowired constructor(
         pipelineId: String,
         buildId: String
     ) {
-        devxPkgSizeExecutor.submit {
+        Thread {
             try {
                 val sizeMap = if (fileSizeInfoKeys.isNotEmpty()) {
                     client.get(ServiceVarResource::class).getBuildVars(
@@ -302,6 +287,6 @@ class DevxHandleBuildResultService @Autowired constructor(
             } catch (ignored: Throwable) {
                 logger.warn("asyncHandleDevxPkgSize error:${ignored.message}", ignored)
             }
-        }
+        }.start()
     }
 }
