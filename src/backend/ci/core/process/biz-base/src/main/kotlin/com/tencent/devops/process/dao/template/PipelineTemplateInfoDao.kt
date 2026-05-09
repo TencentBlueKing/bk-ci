@@ -234,7 +234,7 @@ class PipelineTemplateInfoDao {
     ): PipelineTemplateInfoV2? {
         return with(TPipelineTemplateInfo.T_PIPELINE_TEMPLATE_INFO) {
             dslContext.selectFrom(this)
-                .where(buildQueryCondition(commonCondition))
+                .where(buildQueryCondition(commonCondition)).limit(1)
                 .fetchOne()?.convert()
         }
     }
@@ -273,7 +273,7 @@ class PipelineTemplateInfoDao {
     ): PipelineTemplateInfoV2? {
         return with(TPipelineTemplateInfo.T_PIPELINE_TEMPLATE_INFO) {
             dslContext.selectFrom(this)
-                .where(ID.eq(templateId))
+                .where(ID.eq(templateId)).limit(1)
                 .fetchOne()?.convert()
         }
     }

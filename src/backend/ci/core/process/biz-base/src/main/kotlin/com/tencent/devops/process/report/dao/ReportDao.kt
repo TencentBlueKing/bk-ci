@@ -43,12 +43,14 @@ import java.time.LocalDateTime
 class ReportDao {
     fun getAtomInfo(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         taskId: String
     ): Record2<String, String>? {
         with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
             return dslContext.select(ATOM_CODE, TASK_NAME).from(this)
-                .where(BUILD_ID.eq(buildId))
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.eq(buildId))
                 .and(TASK_ID.eq(taskId))
                 .fetchOne()
         }

@@ -1654,11 +1654,7 @@ class PipelineRuntimeService @Autowired constructor(
                     taskBuildRecordService.updateTaskRecord(
                         projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                         taskId = taskId, executeCount = executeCount ?: 1, buildStatus = null,
-                        taskVar = mapOf(
-                            ManualReviewUserTaskElement::desc.name to (params.desc ?: ""),
-                            ManualReviewUserTaskElement::suggest.name to (params.suggest ?: ""),
-                            ManualReviewUserTaskElement::params.name to params.params
-                        ),
+                        taskVar = mapOf(),
                         operation = "manualDealReview#$taskId",
                         timestamps = mapOf(
                             BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to

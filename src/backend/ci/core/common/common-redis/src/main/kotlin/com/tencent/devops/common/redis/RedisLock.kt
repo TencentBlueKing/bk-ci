@@ -105,47 +105,21 @@ open class RedisLock(
     }
 
     private fun tryLockRemote(): Boolean {
-        // 先加老库锁
-        if (redisOperation.setNxEx(
-                key = decorateKey(lockKey),
-                value = lockValue,
-                expiredInSecond = expiredTimeInSeconds,
-                isRedisLock = false
-            )
-        ) {
-            // 再加新库锁
-            if (redisOperation.setNxEx(
-                    key = decorateKey(lockKey),
-                    value = lockValue,
-                    expiredInSecond = expiredTimeInSeconds,
-                    isRedisLock = true
-                )
-            ) {
-                return true
-            } else {
-                logger.warn("the new lock has changed , key: $lockKey , value: $lockValue")
-                unlock()
-                return false
-            }
-        } else {
-            return false
-        }
+        return redisOperation.setNxEx(
+            key = decorateKey(lockKey),
+            value = lockValue,
+            expiredInSecond = expiredTimeInSeconds,
+            isRedisLock = true
+        )
     }
 
     private fun unLockRemote(): Boolean {
-        val oldUnlock = (redisOperation.execute(
-            script = DefaultRedisScript(unLockLua, Long::class.java),
-            keys = listOf(decorateKey(lockKey)),
-            args = arrayOf(lockValue),
-            isRedisLock = false
-        ) ?: 1) > 0
-        redisOperation.execute(
+        return (redisOperation.execute(
             script = DefaultRedisScript(unLockLua, Long::class.java),
             keys = listOf(decorateKey(lockKey)),
             args = arrayOf(lockValue),
             isRedisLock = true
-        )
-        return oldUnlock
+        ) ?: 1) > 0
     }
 
     open fun decorateKey(key: String): String {
