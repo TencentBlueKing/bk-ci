@@ -576,7 +576,7 @@ async function handleHandoverConfirm() {
           ]
         ),
         onConfirm() {
-          window.open(`${window.location.origin}/console/permission/my-handover?flowNo=${flowNo}&type=handoverFromMe`, '_blank')
+          window.open(`${window.location.origin}/${window.getRoutePrefix()}/permission/my-handover?flowNo=${flowNo}&type=handoverFromMe`, '_blank')
         }
       });
     }
@@ -788,7 +788,7 @@ function showHandoverSuccessInfoBox(flowNo) {
       ]
     ),
     onConfirm() {
-      window.open(`${window.location.origin}/console/permission/my-handover?flowNo=${flowNo}&type=handoverFromMe`, '_blank')
+      window.open(`${window.location.origin}/${window.getRoutePrefix()}/permission/my-handover?flowNo=${flowNo}&type=handoverFromMe`, '_blank')
     }
   });
 }
@@ -814,7 +814,7 @@ function showRemoveSuccessInfoBox(flowNo) {
       ]
     ),
     onConfirm() {
-      window.open(`${window.location.origin}/console/permission/my-handover?flowNo=${flowNo}&type=handoverFromMe`, '_blank')
+      window.open(`${window.location.origin}/${window.getRoutePrefix()}/permission/my-handover?flowNo=${flowNo}&type=handoverFromMe`, '_blank')
     }
   });
 }

@@ -41,7 +41,7 @@
                                 class="item-pipelinename"
                                 :title="props.row.pipelineName"
                                 target="_blank"
-                                :href="`/console/pipeline/${projectId}/${props.row.pipelineId}/detail/${props.row.latestBuildId}`"
+                                :href="pipelineHref"
                             >{{ props.row.pipelineName }}
                             </a>
                         </template>
@@ -90,6 +90,9 @@
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            pipelineHref () {
+                return `${window.getRoutePrefix()}/pipeline/${this.projectId}/${this.pipelineId}/detail/${this.latestBuildId}`
             }
         },
         methods: {

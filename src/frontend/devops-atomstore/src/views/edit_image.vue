@@ -225,7 +225,7 @@
                         </bk-option>
                         <a
                             v-if="form.projectCode"
-                            :href="`/console/ticket/${form.projectCode}/createCredential/USERNAME_PASSWORD/true`"
+                            :href="getTicketCreateUrl(form.projectCode, 'USERNAME_PASSWORD')"
                             slot="extension"
                             target="_blank"
                         > {{ $t('store.新增凭证') }} </a>
@@ -496,7 +496,9 @@
                 'requestReleaseImage',
                 'fetchAgentTypes'
             ]),
-
+            getTicketCreateUrl (projectCode, credentialType) {
+                return `${window.getRoutePrefix()}/ticket/${projectCode}/createCredential/${credentialType}/true`
+            },
             changeShowAgentType (option) {
                 const settings = option.settings || {}
                 this.needAgentType = settings.needAgentType === 'NEED_AGENT_TYPE_TRUE'

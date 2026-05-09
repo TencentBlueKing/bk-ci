@@ -307,7 +307,7 @@
                                                         :title="`${props.row.pipelineName}(#${props.row.buildNo})`"
                                                         target="_blank"
                                                         class="source-item"
-                                                        :href="`/console/pipeline/${projectId}/${props.row.pipelineId}/detail/${props.row.buildId}`"
+                                                        :href="goToPipelineDetailHref(props.row)"
                                                     >{{ props.row.pipelineName }}
                                                         <span>(#{{ props.row.buildNo }})</span>
                                                     </a>
@@ -527,6 +527,9 @@
             await this.init()
         },
         methods: {
+            goToPipelineDetailHref (row) {
+                return `${window.getRoutePrefix()}/pipeline/${this.projectId}/${row.pipelineId}/detail/${row.buildId}`
+            },
             async init () {
                 const {
                     loading,

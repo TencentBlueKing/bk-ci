@@ -40,6 +40,7 @@ interface Window {
     PUBLIC_URL_PREFIX: string
     BK_APIGW_USER_WEB_URL: string
     getLoginUrl: Function
+    getRoutePrefix: Function
     attachEvent(event: string, listener: EventListener): boolean
     detachEvent(event: string, listener: EventListener): void
 }

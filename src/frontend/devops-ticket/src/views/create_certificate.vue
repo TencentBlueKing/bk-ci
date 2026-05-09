@@ -206,7 +206,7 @@
             },
 
             applyCreUrl () {
-                return `/console/ticket/${this.projectId}/createCredential/PASSWORD/true`
+                return `${window.getRoutePrefix()}/ticket/${this.projectId}/createCredential/PASSWORD/true`
             }
         },
 

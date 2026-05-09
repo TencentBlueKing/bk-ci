@@ -20,7 +20,7 @@
                         class="item-pipelinename"
                         :title="props.row.pipelineName"
                         target="_blank"
-                        :href="`/console/pipeline/${props.row.projectId}/${props.row.pipelineId}/detail/${props.row.buildId}`"
+                        :href="getPipelineDetailUrl(props.row)"
                     >{{ props.row.pipelineName }}
                     </a>
                 </template>
@@ -182,6 +182,9 @@
              */
             localConvertTime (timestamp) {
                 return convertTime(timestamp * 1000)
+            },
+            getPipelineDetailUrl (row) {
+                return `${window.getRoutePrefix()}/pipeline/${row.projectId}/${row.pipelineId}/detail/${row.buildId}`
             }
         }
     }
