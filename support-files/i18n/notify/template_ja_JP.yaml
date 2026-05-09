@@ -1089,5 +1089,6 @@
     id: "f47ac10b58cc4372a5670e02b2c3d479"
     title: "開発ストアプラグイン審査リマインダー"
     body: "${userId}が上架プラグイン申請を提交しました。審査をお願いします。\nプラグイン：${atomName} \nバージョン： ${version}"
+    sender: "DevOps"
   creator: "system"
   modifior: "system"

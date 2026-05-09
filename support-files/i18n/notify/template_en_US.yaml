@@ -1106,5 +1106,6 @@
     id: "f47ac10b58cc4372a5670e02b2c3d479"
     title: "Developer store plugin review notification"
     body: "${userId} submitted an application to publish a plugin. Please review promptly.\nPlugin: ${atomName}\nVersion: ${version} \nGo for review: ${url}"
+    sender: "DevOps"
   creator: "system"
   modifior: "system"

@@ -1089,6 +1089,7 @@
     id: "f47ac10b58cc4372a5670e02b2c3d479"
     title: "研发商店插件审核提醒"
     body: "${userId}提交了上架插件申请，请尽快审批。\n插件：${atomName} \n版本： ${version} \n去审核：${url}"
+    sender: "DevOps"
   creator: "system"
   modifior: "system"
 - index: 52
