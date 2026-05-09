@@ -149,7 +149,7 @@
             },
             hasDraft () {
                 const status = this.draftStatus?.status
-                return status && !['NORMAL', 'BRANCH', 'PUBLISHED', 'BASE_OUTDATED'].includes(status)
+                return status && !['NORMAL', 'BRANCH', 'PUBLISHED', 'RELEASE_OUTDATED'].includes(status)
             },
             permObj () {
                 return {

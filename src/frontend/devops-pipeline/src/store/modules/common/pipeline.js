@@ -54,7 +54,7 @@ function rootCommit (commit, ACTION_CONST, payload) {
  * @param {Object} data - 响应数据
  */
 function updateHasDraftStatus (commit, data) {
-    const hasDraft = data?.status && !['NORMAL', 'BRANCH', 'PUBLISHED', 'BASE_OUTDATED'].includes(data.status)
+    const hasDraft = data?.status && !['NORMAL', 'BRANCH', 'PUBLISHED', 'RELEASE_OUTDATED'].includes(data.status)
     commit('SET_HAS_DRAFT', hasDraft)
 }
 
