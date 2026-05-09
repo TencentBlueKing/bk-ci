@@ -54,21 +54,10 @@ import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.TaskUtil
 import java.io.File
 import java.nio.file.Paths
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
 
 @Suppress("UNUSED", "ComplexMethod")
 @TaskClassType(classTypes = [AtomBuildArchiveElement.classType])
 class AtomBuildArchiveTask : ITask() {
-
-    private val atomPkgSizeExecutor = ThreadPoolExecutor(
-        1,
-        1,
-        0L,
-        TimeUnit.MILLISECONDS,
-        LinkedBlockingQueue(1)
-    )
 
     private val atomApi = ApiFactory.create(AtomArchiveSDKApi::class)
 
@@ -262,7 +251,7 @@ class AtomBuildArchiveTask : ITask() {
         storePackageInfoReqs: List<StorePackageInfoReq>,
         atomId: String?
     ) {
-        atomPkgSizeExecutor.submit {
+        Thread {
             if (atomId == null) {
                 LoggerService.addNormalLine("atomId is null!")
             } else {
@@ -275,6 +264,6 @@ class AtomBuildArchiveTask : ITask() {
                     LoggerService.addNormalLine("asyncHandleAtomPkgSize execute error: ${ignored.message}")
                 }
             }
-        }
+        }.start()
     }
 }
