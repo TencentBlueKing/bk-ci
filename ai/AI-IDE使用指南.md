@@ -2,6 +2,13 @@
 
 本项目提供了 AI 编码助手的配置文件，支持主流 AI IDE 工具。
 
+## 治理原则
+
+`ai/` 是 BK-CI AI Harness 的权威源，`rules/` 和 `skills/` 的设计原则见 `HARNESS.md`。
+
+`.cursor/`、`.codebuddy/`、`.claude/` 等目录是编辑器适配层。同步配置时应以 `ai/` 为准，避免同名
+rule 或 skill 在不同编辑器目录中长期分叉。
+
 ## 支持的 AI IDE
 
 | IDE | 官网 | 配置目录 |
