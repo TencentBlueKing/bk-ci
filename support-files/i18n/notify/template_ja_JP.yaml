@@ -128,6 +128,7 @@
     id: "a3b7e9f2d4c1085b6e9f3a7c2d5b8e41"
     title: "【BlueKing CI研発ストア】コメント通知"
     body: "${userId} が ${storeName} にコメントしました\n評価: ${score}\nコメント: ${commentContent}\n[返信に行く | ${url}]"
+    sender: "DevOps"
   creator: "system"
   modifior: "system"
 - index: 6
