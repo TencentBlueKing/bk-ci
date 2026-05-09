@@ -60,8 +60,7 @@ const collapsePanels = computed(() => [
     title: '基础信息',
     component: BaseInfoContent,
   },
-
-  ...(!isPersonalProject.value) ? [{
+  ...!isPersonalProject.value ? [{
     name: 'permission',
     title: '权限',
     component: PermissionContent,
