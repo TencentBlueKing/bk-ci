@@ -165,6 +165,7 @@
                     <bk-table-column :label="$t('projectOperation')">
                         <template slot-scope="{ row }">
                             <bk-button
+                                v-if="row.projectScope === 0"
                                 class="mr5"
                                 text
                                 v-perm="{

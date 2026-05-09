@@ -12,17 +12,26 @@ const { t } = useI18n();
 const props = defineProps({
   projectCode: String,
 });
+const routeName = computed(()=>route.name);
+const { projectCode } = route.params;
+const projectList = window.parent?.vuexStore?.state?.projectList;
+const projectName = projectList?.find(project => project.projectCode === projectCode)?.projectName || projectCode;
+const isPersonalProject = computed(() => projectList?.find(project => project.projectCode === projectCode)?.projectName === 1);
+const activeTab = ref(t('项目设置'));
 
-
-const manageTabs = ref([
+const manageTabs = computed(() => [
   {
     title: t('项目设置'),
     name: 'show',
   },
-  {
-    title: t('用户管理'),
-    name: 'group',
-  },
+  ...(
+    !isPersonalProject.value ? [
+      {
+        title: t('用户管理'),
+        name: 'group',
+      }
+      ] : []
+  ),
   {
     title: t('授权管理'),
     name: 'permission',
@@ -36,12 +45,6 @@ const manageTabs = ref([
   //   name: 'expand',
   // },
 ]);
-
-const routeName = computed(()=>route.name);
-const { projectCode } = route.params;
-const projectList = window.parent?.vuexStore?.state?.projectList;
-const projectName = projectList?.find(project => project.projectCode === projectCode)?.projectName || projectCode;
-const activeTab = ref(t('项目设置'));
 const handleChangeTab = (manageTab: any) => {
   activeTab.value = manageTab.title;
   router.push({
