@@ -78,6 +78,7 @@ import {
     SET_STAGE_TAG_LIST,
     SET_STORE_LOADING,
     SET_STORE_SEARCH,
+    SET_TEMP_PARAM_SET,
     SET_TEMPLATE,
     SET_TRIGGER_PARAMS,
     SWITCHING_PIPELINE_VERSION,
@@ -534,6 +535,11 @@ export default {
     [SET_PARAM_SET_LIST]: (state, paramSets) => {
         return Object.assign(state, {
             paramSets
+        })
+    },
+    [SET_TEMP_PARAM_SET]: (state, tempParamSet) => {
+        return Object.assign(state, {
+            tempParamSet
         })
     },
     [UPDATE_TEMPLATE_CONSTRAINT]: (state, { classify, constraintList }) => {

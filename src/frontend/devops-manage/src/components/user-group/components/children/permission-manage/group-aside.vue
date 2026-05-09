@@ -1,186 +1,202 @@
 <template>
-  <article :class="['group-aside', {'group-aside-height': showSelectProject}]">
-    <template v-if="showSelectProject">
-      <div class="select-project">
-        <p class="title">{{ t('选择项目') }}</p>
-        <bk-select
-          v-model="curProjectCode"
-          filterable
-          :clearable="false"
-          :input-search="false"
-          :scroll-loading="scrollLoading"
-          :remote-method="handleSearchProject"
-          @change="handleSelectProject"
-          :popoverOptions="popoverOptions"
-        >
-          <div
-            v-for="project in filterProjectList"
-            :key="project.projectCode"
-          >
-            <bk-option
-              :value="project.englishName"
-              :disabled="!project.managePermission"
-              :label="project.projectName"
+  <bk-resize-layout
+    placement="left"
+    :initial-divide="240"
+    :min="240"
+    :max="360"
+    :border="false"
+    class="group-aside-container"
+  >
+    <template #aside>
+      <article :class="['group-aside', {'group-aside-height': showSelectProject}]">
+        <template v-if="showSelectProject">
+          <div class="select-project">
+            <p class="title">{{ t('选择项目') }}</p>
+            <bk-select
+              v-model="curProjectCode"
+              filterable
+              :clearable="false"
+              :input-search="false"
+              :scroll-loading="scrollLoading"
+              :remote-method="handleSearchProject"
+              @change="handleSelectProject"
+              :popoverOptions="popoverOptions"
             >
               <div
-                v-bk-tooltips="{
-                  disabled: project.managePermission,
-                  content: t('非项目管理员，无操作权限'),
-                }"
-                class="option-item"
+                v-for="project in filterProjectList"
+                :key="project.projectCode"
               >
-                {{ project.projectName }}
-              </div>
-            </bk-option>
-          </div>
-        </bk-select>
-      </div>
-      <div class="line-split" v-if="!isNotProject" />
-    </template>
-    <bk-loading v-if="dataLoaded" :loading="fetchGroupLoading" class='saide-content'>
-      <scroll-load-list
-        class="group-list"
-        ref="loadList"
-        :list="groupList"
-        :has-load-end="hasLoadEnd"
-        :project-Code="curProjectCode"
-        :page="page"
-        :get-data-method="handleGetData"
-        :is-not-project="isNotProject"
-      >
-        <template v-slot:default="{ data: group, index }">
-          <bk-input
-            ref="renameInput"
-            v-show="group.groupId === renameGroupId && isRename"
-            v-model="displayGroupName"
-            class="rename-input"
-            @enter="handleRename"
-            @blur="handleRename"
-          >
-          </bk-input>
-          <div
-            :class="{ 'group-item': true, 'group-active': activeTab === group.groupId }"
-            @click="handleChooseGroup(group)"
-          >
-            <span class="group-name" :title="group.name">{{ group.name }}</span>
-            <div class="num-box" v-for="item in groupCountField" :key="item">
-              <i
-                :class="['group-icon', 'manage-icon', {
-                  'manage-icon-user-shape': item === 'userCount',
-                  'manage-icon-user-template': item === 'templateCount',
-                  'manage-icon-organization': item === 'departmentCount',
-                  'active': activeTab === group.groupId
-                }]"
-              />
-              <div class="group-num">{{ group[item] }}</div>
-            </div>
-            <bk-popover
-              v-if="resourceType === 'project' && !group.defaultGroup"
-              class="group-more-option"
-              placement="bottom"
-              theme="light dot-menu"
-              :arrow="false"
-              trigger="click"
-              :offset="15"
-              :distance="0">
-              <i @click.stop class="more-icon manage-icon manage-icon-more-fill"></i>
-              <template #content>
-                <div class="menu-content">
-                  <bk-button
-                    v-if="!group.defaultGroup"
-                    class="btn"
-                    text
-                    @click="handleShowRename(group)"
+                <bk-option
+                  :value="project.englishName"
+                  :disabled="!project.managePermission"
+                  :label="project.projectName"
+                >
+                  <div
+                    v-bk-tooltips="{
+                      disabled: project.managePermission,
+                      content: t('非项目管理员，无操作权限'),
+                    }"
+                    class="option-item"
                   >
-                    {{ t('重命名') }}
-                  </bk-button>
-                  <bk-button
-                    class="btn"
-                    :disabled="group.defaultGroup"
-                    text
-                    @click="handleShowDeleteGroup(group)">
-                    {{ t('删除') }}
-                  </bk-button>
-                </div>
-              </template>
-            </bk-popover>
+                    {{ project.projectName }}
+                  </div>
+                </bk-option>
+              </div>
+            </bk-select>
           </div>
+          <div class="line-split" v-if="!isNotProject" />
         </template>
-      </scroll-load-list>
-      <div class="line-split" />
-      <div
-        v-if="showCreateGroup && projectCode"
-        :class="{ 'group-item': true, 'group-active': activeTab === '' }"
-        @click="handleCreateGroup">
-        <span class="add-group-btn" :title="t('新建用户组')">
-          <i class="manage-icon manage-icon-add-fill add-icon"></i>
-          {{ t('新建用户组') }}
-        </span>
-      </div>
-      <div
-        v-if="resourceType !== 'project'"
-        class="close-btn"
-      >
-        <bk-button @click="handleCloseManage" :loading="isClosing">{{ t('关闭权限管理') }}</bk-button>
-      </div>
-    </bk-loading>
-    <bk-dialog
-      dialogType="show"
-      header-align="center"
-      theme="danger"
-      class="delete-group-dialog"
-      :quick-close="false"
-      :is-show="deleteObj.isShow"
-      :is-loading="deleteObj.isLoading"
-      @closed="handleHiddenDeleteGroup"
-    >
-      <template #header>
-        <div class="manage-icon manage-icon-warning-circle-fill title-icon"></div>
-        <p class="delete-title">{{ t('确认删除【】用户组？', [deleteObj.group.name]) }}</p>
-      </template>
-      <div class="delete-tips">
-        <p>{{ t('删除用户组【】将执行如下操作：', [deleteObj.group.name]) }}</p>
-        <p>
-          <i class="manage-icon manage-icon-warning-circle-fill warning-icon"></i>
-          {{ t('将用户和组织从组中移除') }}
-        </p>
-        <p>
-          <i class="manage-icon manage-icon-warning-circle-fill warning-icon"></i>
-          {{ t('删除组内用户继承该组的权限') }}
-        </p>
-        <p>
-          <i class="manage-icon manage-icon-warning-circle-fill warning-icon"></i>
-          {{ t('删除组信息和组权限') }}
-        </p>
-      </div>
-      <div class="confirm-delete">
-        <i18n-t keypath="此操作提交后将不能恢复，为避免误删除，请再次确认你的操作：" style="color: #737987;font-size: 14px;" tag="div">
-          <span style="color: red;">{{t('不能恢复')}}</span>
-        </i18n-t>
-        <bk-input
-          v-model="keyWords"
-          :placeholder="t('请输入待删除的用户组名')"
-          class="confirm-input"
-        ></bk-input>
-      </div>
-      <div class="option-btns">
-        <bk-button
-          class="btn"
+        <bk-loading v-if="dataLoaded" :loading="fetchGroupLoading" class='saide-content'>
+          <scroll-load-list
+            class="group-list"
+            ref="loadList"
+            :list="groupList"
+            :has-load-end="hasLoadEnd"
+            :project-Code="curProjectCode"
+            :page="page"
+            :get-data-method="handleGetData"
+            :is-not-project="isNotProject"
+          >
+            <template v-slot:default="{ data: group }">
+              <bk-input
+                ref="renameInput"
+                v-show="group.groupId === renameGroupId && isRename"
+                v-model="displayGroupName"
+                class="rename-input"
+                @enter="handleRename"
+                @blur="handleRename"
+              >
+              </bk-input>
+              <div
+                :class="{ 'group-item': true, 'group-active': activeTab === group.groupId }"
+                @click="handleChooseGroup(group)"
+              >
+                <span class="group-name" :title="group.name">{{ group.name }}</span>
+                <div class="num-box" v-for="item in groupCountField" :key="item">
+                  <i
+                    :class="['group-icon', 'manage-icon', {
+                      'manage-icon-user-shape': item === 'userCount',
+                      'manage-icon-user-template': item === 'templateCount',
+                      'manage-icon-organization': item === 'departmentCount',
+                      'zero-count': group[item] === 0,
+                      'active': activeTab === group.groupId
+                    }]"
+                  />
+                  <div class="group-num" :class="{ 'zero-count': group[item] === 0 }">{{ group[item] }}</div>
+                </div>
+                <div class="group-more-option">
+                  <bk-popover
+                    v-if="resourceType === 'project' && !group.defaultGroup"
+                    placement="bottom"
+                    theme="light dot-menu"
+                    :arrow="false"
+                    trigger="click"
+                    :offset="15"
+                    :distance="0">
+                    <i @click.stop class="more-icon manage-icon manage-icon-more-fill"></i>
+                    <template #content>
+                      <div class="menu-content">
+                        <bk-button
+                          v-if="!group.defaultGroup"
+                          class="btn"
+                          text
+                          @click="handleShowRename(group)"
+                        >
+                          {{ t('重命名') }}
+                        </bk-button>
+                        <bk-button
+                          class="btn"
+                          :disabled="group.defaultGroup"
+                          text
+                          @click="handleShowDeleteGroup(group)">
+                          {{ t('删除') }}
+                        </bk-button>
+                      </div>
+                    </template>
+                  </bk-popover>
+                </div>
+              </div>
+            </template>
+          </scroll-load-list>
+          <div class="line-split" />
+          <div
+            v-if="showCreateGroup && projectCode"
+            :class="{ 'group-item': true, 'group-active': activeTab === '' }"
+            @click="handleCreateGroup">
+            <span class="add-group-btn" :title="t('新建用户组')">
+              <i class="manage-icon manage-icon-add-fill add-icon"></i>
+              {{ t('新建用户组') }}
+            </span>
+          </div>
+          <div
+            v-if="resourceType !== 'project'"
+            class="close-btn"
+          >
+            <bk-button @click="handleCloseManage" :loading="isClosing">{{ t('关闭权限管理') }}</bk-button>
+          </div>
+        </bk-loading>
+        <bk-dialog
+          dialogType="show"
+          header-align="center"
           theme="danger"
-          :disabled="disableDeleteBtn"
-          @click="handleDeleteGroup"
+          class="delete-group-dialog"
+          :quick-close="false"
+          :is-show="deleteObj.isShow"
+          :is-loading="deleteObj.isLoading"
+          @closed="handleHiddenDeleteGroup"
         >
-          {{ t('删除') }}
-        </bk-button>
-        <bk-button
-          class="btn"
-          @click="handleHiddenDeleteGroup"
-        >
-          {{ t('取消') }}
-        </bk-button>
-      </div>
-    </bk-dialog>
-  </article>
+          <template #header>
+            <div class="manage-icon manage-icon-warning-circle-fill title-icon"></div>
+            <p class="delete-title">{{ t('确认删除【】用户组？', [deleteObj.group.name]) }}</p>
+          </template>
+          <div class="delete-tips">
+            <p>{{ t('删除用户组【】将执行如下操作：', [deleteObj.group.name]) }}</p>
+            <p>
+              <i class="manage-icon manage-icon-warning-circle-fill warning-icon"></i>
+              {{ t('将用户和组织从组中移除') }}
+            </p>
+            <p>
+              <i class="manage-icon manage-icon-warning-circle-fill warning-icon"></i>
+              {{ t('删除组内用户继承该组的权限') }}
+            </p>
+            <p>
+              <i class="manage-icon manage-icon-warning-circle-fill warning-icon"></i>
+              {{ t('删除组信息和组权限') }}
+            </p>
+          </div>
+          <div class="confirm-delete">
+            <i18n-t keypath="此操作提交后将不能恢复，为避免误删除，请再次确认你的操作：" style="color: #737987;font-size: 14px;" tag="div">
+              <span style="color: red;">{{t('不能恢复')}}</span>
+            </i18n-t>
+            <bk-input
+              v-model="keyWords"
+              :placeholder="t('请输入待删除的用户组名')"
+              class="confirm-input"
+            ></bk-input>
+          </div>
+          <div class="option-btns">
+            <bk-button
+              class="btn"
+              theme="danger"
+              :disabled="disableDeleteBtn"
+              @click="handleDeleteGroup"
+            >
+              {{ t('删除') }}
+            </bk-button>
+            <bk-button
+              class="btn"
+              @click="handleHiddenDeleteGroup"
+            >
+              {{ t('取消') }}
+            </bk-button>
+          </div>
+        </bk-dialog>
+      </article>
+    </template>
+    <template #main>
+      <slot></slot>
+    </template>
+  </bk-resize-layout>
 </template>
 
 <script>
@@ -556,12 +572,12 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.group-aside-container {
+  height: 100%;
+}
 .group-aside {
-  min-width: 240px;
-  width: 240px;
   height: 100%;
   background-color: #fff;
-  border-right: 1px solid #dde0e6;
   padding-top: 10px;
 }
 .group-aside-height {
@@ -618,7 +634,9 @@ export default {
   cursor: pointer;
   &:hover {
     background-color: #eaebf0;
-   
+    .group-icon.zero-count {
+      color: #C4C6CC;
+    }
   }
 }
 
@@ -631,6 +649,18 @@ export default {
   }
   .group-icon {
     color: #A3C5FD;
+  }
+  .group-icon.zero-count {
+    color: #d0e1fe;
+  }
+  .group-num.zero-count {
+    background-color: #d0e1fe;
+    color: #fff;
+  }
+  &:hover {
+    .group-icon.zero-count {
+      color: #d0e1fe;
+    }
   }
 }
 .num-box {
@@ -646,12 +676,15 @@ export default {
   color: #fff;
 }
 .group-name {
-  display: inline-block;
-  width: 100px;
+  flex: 1;
+  min-width: 0; /* 重要：允许 flex 项目收缩到小于内容宽度 */
   overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  margin-right: 20px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  word-break: break-all;
+  line-height: 1;
+  margin-right: 10px;
 }
 .user-num,
 .group-num {
@@ -671,6 +704,7 @@ export default {
   border-radius: 50%;
   color: #63656e;
   padding: 1px;
+  margin-right: 10px;
 }
 .more-icon:hover {
   background-color: #DCDEE5;
@@ -680,6 +714,20 @@ export default {
   font-size: 12px;
   margin-bottom: 4px;
   color: #C4C6CC;
+}
+.group-icon.zero-count {
+  color: #ebecf1;
+}
+.group-num.zero-count {
+  background-color: #f6f7fa;
+  color: #C4C6CC;
+}
+.group-more-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  flex-shrink: 0;
 }
 .line-split {
   width: 80%;

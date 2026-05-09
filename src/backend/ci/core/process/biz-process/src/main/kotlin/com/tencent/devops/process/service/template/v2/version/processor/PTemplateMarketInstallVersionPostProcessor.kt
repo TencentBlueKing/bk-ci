@@ -58,9 +58,9 @@ class PTemplateMarketInstallVersionPostProcessor(
                 installHistoryInfo = TemplateVersionInstallHistoryInfo(
                     srcMarketTemplateProjectCode = srcTemplateProjectId,
                     srcMarketTemplateCode = srcTemplateId,
-                    version = srcTemplateVersion,
-                    versionName = srcTemplateResource.versionName!!,
-                    number = srcTemplateResource.number,
+                    srcMarketTemplateVersion = srcTemplateVersion,
+                    srcMarketTemplateVersionName = srcTemplateResource.versionName!!,
+                    srcMarketTemplateNumber = srcTemplateResource.number,
                     projectCode = projectId,
                     templateCode = templateId,
                     creator = userId

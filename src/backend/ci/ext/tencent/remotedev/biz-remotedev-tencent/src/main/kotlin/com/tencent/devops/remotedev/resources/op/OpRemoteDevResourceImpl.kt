@@ -10,6 +10,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpRemoteDevResource
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
+import com.tencent.devops.remotedev.pojo.ConfigUpdateRequest
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.WhiteList
@@ -189,8 +190,8 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         return Result(configCacheService.opFetchAllConfig())
     }
 
-    override fun updateConfigs(userId: String, key: String, value: String): Result<Boolean> {
-        return Result(configCacheService.opInsertOrUpdateConfig(key, value))
+    override fun updateConfigs(userId: String, request: ConfigUpdateRequest): Result<Boolean> {
+        return Result(configCacheService.opInsertOrUpdateConfig(request.key, request.value))
     }
 
     override fun deleteConfigs(userId: String, key: String): Result<Boolean> {

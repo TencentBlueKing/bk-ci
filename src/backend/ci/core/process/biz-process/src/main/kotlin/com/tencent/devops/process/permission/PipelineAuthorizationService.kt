@@ -3,6 +3,7 @@ package com.tencent.devops.process.permission
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthAuthorizationApi
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverDTO
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverResult
@@ -23,6 +24,12 @@ class PipelineAuthorizationService constructor(
         projectId: String,
         resourceAuthorizationList: List<ResourceAuthorizationDTO>
     ) {
+
+        resourceAuthorizationList.forEach {
+            it.resourceType = AuthResourceType.getAuthResourceTypeByChannel(
+                AuthResourceType.PIPELINE_DEFAULT
+            ).value
+        }
         authAuthorizationApi.addResourceAuthorization(
             projectId = projectId,
             resourceAuthorizationList = resourceAuthorizationList
@@ -48,18 +55,21 @@ class PipelineAuthorizationService constructor(
         resourceAuthorizationHandoverDTO: ResourceAuthorizationHandoverDTO
     ): ResourceAuthorizationHandoverResult {
         return with(resourceAuthorizationHandoverDTO) {
+            val authResourceType = AuthResourceType.get(resourceType)
             val hasHandoverToPermission = pipelinePermissionService.checkPipelinePermission(
                 userId = handoverTo!!,
                 projectId = projectCode,
                 pipelineId = resourceCode,
-                permission = AuthPermission.EXECUTE
+                permission = AuthPermission.EXECUTE,
+                authResourceType = authResourceType
             )
             val checkSubPipelinePermission = subPipelineCheckService.checkSubPipelinePermission(
-                projectId = projectCode,
-                pipelineId = resourceCode,
-                userId = handoverTo!!,
-                permission = AuthPermission.EXECUTE
-            )
+                    projectId = projectCode,
+                    pipelineId = resourceCode,
+                    userId = handoverTo!!,
+                    permission = AuthPermission.EXECUTE,
+                    authResourceType = authResourceType
+                )
             // 1.当前流水线的执行权限
             // 2.有子流水线的执行权限
             when {

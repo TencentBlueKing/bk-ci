@@ -81,8 +81,8 @@ class BkManagerCheckAspect constructor(
             )
         }
         val hasProjectManagePermission = permissionProjectService.checkProjectManager(
-            userId = userId!!,
-            projectCode = projectId!!
+            userId = userId,
+            projectCode = projectId
         )
         if (!hasProjectManagePermission) {
             throw PermissionForbiddenException(

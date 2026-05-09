@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
+import com.tencent.devops.remotedev.pojo.ConfigUpdateRequest
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.WhiteList
@@ -256,10 +257,8 @@ interface OpRemoteDevResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @QueryParam("key")
-        key: String,
-        @QueryParam("value")
-        value: String
+        @Parameter(description = "配置更新请求", required = true)
+        request: ConfigUpdateRequest
     ): Result<Boolean>
 
     @Operation(summary = "删除服务Config表配置")

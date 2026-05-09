@@ -151,6 +151,7 @@ class AuthResourceCodeConverter @Autowired constructor(
             resourceType == AuthResourceType.PIPELINE_DEFAULT.value ||
             resourceType == AuthResourceType.PIPELINE_TEMPLATE.value ||
             resourceType == AuthResourceType.CODE_REPERTORY.value ||
-            resourceType == AuthResourceType.CGS.value
+            resourceType == AuthResourceType.CGS.value ||
+            resourceType == AuthResourceType.CREATIVE_STREAM.value
     }
 }

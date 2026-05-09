@@ -805,9 +805,12 @@
                 immediate: true
             },
             'releaseParams.repoHashId': {
-                handler: function (val) {
-                    if (this.isCommitToBranch) {
+                handler: function (val, oldVal) {
+                    // 只有当 repoHashId 真正变化时才清空 targetBranch，避免初始化或相同值赋值时误清空
+                    if (this.isCommitToBranch && val !== oldVal && oldVal !== undefined) {
                         this.releaseParams.targetBranch = ''
+                    }
+                    if (val) {
                         this.$nextTick(() => {
                             this.fetchBranchList()
                         })
@@ -1126,13 +1129,24 @@
                         const tipsI18nKey = this.releaseParams.enablePac
                             ? 'pacPipelineReleaseTips'
                             : 'releaseTips'
-                        const tipsArrayLength = this.releaseParams.enablePac ? 2 : 0
+                        const tipsArrayLength = this.releaseParams.enablePac ? (this.isTemplate ? 1 : 2) : 0
                         const isPacMR
                             = this.releaseParams.enablePac
                                 && [
                                     TARGET_ACTION_ENUM.CHECKOUT_BRANCH_AND_REQUEST_MERGE,
                                     TARGET_ACTION_ENUM.COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE
                                 ].includes(this.releaseParams.targetAction)
+
+                        const getReleaseTitleKey = () => {
+                            if (isPacMR) return 'pacMRRelaseTips'
+                            if (storeFlag) return 'template.versionReleaseSuc'
+                            return 'releaseSuc'
+                        }
+                        const getReleaseContentKey = () => {
+                            if (isPacMR) return 'pacMRRelaseSuc'
+                            if (storeFlag) return isManual ? 'template.manualUpdate' : 'template.autoUpdate'
+                            return 'relaseSucTips'
+                        }
                         const h = this.$createElement
                         const instance = this.$bkInfo({
                             width: 600,
@@ -1162,12 +1176,15 @@
                                     attrs: {
                                         class: 'release-info-title'
                                     }
-                                }, this.$t(isPacMR ? 'pacMRRelaseTips' :  storeFlag ? 'template.versionReleaseSuc' :'releaseSuc', [versionName])),
+                                }, this.$t(getReleaseTitleKey(), [versionName])),
                                 h('h3', {
                                     class: 'release-info-text',
-                                }, this.$t(isPacMR?  'pacMRRelaseSuc' : storeFlag ? isManual  ? 'template.manualUpdate' : 'template.autoUpdate'  : 'relaseSucTips', [
-                                    versionName
-                                ])),
+                                    domProps: {
+                                        innerHTML: this.$t(getReleaseContentKey(), [
+                                            versionName
+                                        ])
+                                    }
+                                }),
                                 updateBuildNo && !tipsArrayLength
                                     ? h('div', { class: 'warning-box' }, [
                                         h(Logo, { size: 14, name: 'warning-circle-fill' }),
@@ -1780,6 +1797,7 @@
 
     .pipeline-release-suc-tips {
         background: #f5f6fa;
+        min-width: 500px;
         display: flex;
         font-size: 14px;
         flex-direction: column;

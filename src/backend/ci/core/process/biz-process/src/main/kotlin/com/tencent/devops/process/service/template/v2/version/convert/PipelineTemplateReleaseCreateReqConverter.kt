@@ -68,8 +68,10 @@ class PipelineTemplateReleaseCreateReqConverter @Autowired constructor(
     ): PipelineTemplateVersionCreateContext {
         request as PipelineTemplateReleaseCreateReq
         with(request) {
-            logger.info("create release version converter:$userId|$projectId|$templateId|$version|$request")
-            if (templateId == null) { throw IllegalArgumentException("templateId is null") }
+            logger.info("create release version converter:$userId|$projectId|$templateId|$version|$versionName")
+            if (templateId == null) {
+                throw IllegalArgumentException("templateId is null")
+            }
             val isNewTemplate = pipelineTemplateInfoService.getOrNull(projectId, templateId) == null
 
             val transferResult = pipelineTemplateGenerator.transfer(

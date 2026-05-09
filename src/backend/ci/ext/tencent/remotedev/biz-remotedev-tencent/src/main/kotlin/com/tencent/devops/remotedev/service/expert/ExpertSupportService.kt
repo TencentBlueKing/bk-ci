@@ -62,6 +62,7 @@ import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.service.BKNodemanService
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.client.StartCloudClient
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_QUERY_CGS_PWD
@@ -95,7 +96,8 @@ class ExpertSupportService @Autowired constructor(
     private val startCloudClient: StartCloudClient,
     private val bkNodemanService: BKNodemanService,
     private val configCacheService: ConfigCacheService,
-    private val remoteDevServiceFactory: RemoteDevServiceFactory
+    private val remoteDevServiceFactory: RemoteDevServiceFactory,
+    private val workspaceService: WorkspaceService
 ) {
     fun createSupportNew(
         userId: String,
@@ -592,7 +594,14 @@ class ExpertSupportService @Autowired constructor(
         )
     }
 
-    fun expandDiskDetail(workspaceName: String): ExpandDiskTaskDetail? {
+    fun expandDiskDetail(userId: String, workspaceName: String): ExpandDiskTaskDetail? {
+        val wr = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName) ?: return null
+        if (!permissionService.hasManagerOrViewerPermission(userId, wr.projectId, workspaceName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("We're sorry but you don't have permission to access project ${wr.projectId}")
+            )
+        }
         val record =
             workspaceOpHistoryDao.fetchLastOp(dslContext, workspaceName, WorkspaceAction.EXPAND_DISK) ?: return null
         val (status, updateTime) = remoteDevService.getLastExpandDiskStatusAndTime(workspaceName)

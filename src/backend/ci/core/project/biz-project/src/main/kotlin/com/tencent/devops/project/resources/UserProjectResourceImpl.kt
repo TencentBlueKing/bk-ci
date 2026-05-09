@@ -76,7 +76,8 @@ class UserProjectResourceImpl @Autowired constructor(
                 enabled = enabled,
                 unApproved = unApproved ?: false,
                 sortType = sortType ?: ProjectSortType.PROJECT_NAME,
-                collation = collation ?: ProjectCollation.DEFAULT
+                collation = collation ?: ProjectCollation.DEFAULT,
+                hidden = false
             )
         )
     }
@@ -260,5 +261,9 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun getPipelineDialect(userId: String, projectId: String): Result<String> {
         return Result(projectService.getPipelineDialect(projectId = projectId))
+    }
+
+    override fun isHidden(userId: String, projectId: String): Result<Boolean> {
+        return Result(projectService.isHidden(englishName = projectId))
     }
 }

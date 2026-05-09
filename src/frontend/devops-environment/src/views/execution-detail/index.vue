@@ -359,6 +359,10 @@
             handleChangeGroup (index) {
                 this.activeGroupIndex = index
                 this.hasLoadEnd = false
+                this.activeHostId = 0
+                this.activeIp = ''
+                this.activeBkCloudId = 0
+                this.activeIpStatus = ''
                 this.fetchStepInstanceStatus()
             },
             handleIpListPageChange (pageSize) {

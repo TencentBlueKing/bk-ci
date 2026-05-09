@@ -364,6 +364,7 @@ object Runner {
             variables.asSequence()
                 .filter { it.sensitive == true }
                 .map { it.value.toString() }
+                .filterNot { it.isBlank() }
                 .toList()
                 .takeIf { it.isNotEmpty() }
                 ?.let { SensitiveValueService.addSensitiveValues(it) }
