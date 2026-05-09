@@ -911,7 +911,7 @@
   "标识只能由大小写字母、数字和下划线组成，首字母必须为字母或者下划线，长度在1-32之间": "Identifier can only consist of letters, numbers, and underscores; the first character must be a letter or underscore, with a length between 1-32",
   "由汉字、英文字母、数字、连字符(-)、下划线(_)或点(.)组成，不超过40个字符": "Composed of Chinese characters, letters, numbers, hyphens (-), underscores (_), or dots (.), and does not exceed 40 characters",
   "请先删除当前错误Logo图片": "Please delete the current erroneous Logo image first",
-  "Scheme只能由大小写字母、数字和中划线组成，首字母必须为字母": "Scheme can only consist of letters, numbers, and dashes, the first character must be a letter",
+  "必须以 scheme:// 开头": "Must start with scheme://",
   "确定删除应用": "Confirm to delete application ({0})",
   "删除时将清理数据，删除后不可恢复！避免误操作，请输入标识【{0}】后再提交删除": "Data will be cleared upon deletion and cannot be recovered! To avoid mistakes, please enter the identifier 【{0}】 before submitting the deletion",
   "请输入标识【{0}】后再提交删除": "Please enter the identifier 【{0}】 before submitting the deletion",

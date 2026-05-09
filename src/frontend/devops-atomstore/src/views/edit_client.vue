@@ -197,8 +197,8 @@
         urlScheme: [
             {
                 required: true,
-                validator: (val) => /^[a-z][a-z\d-]*$/i.test(val),
-                message: $t('Scheme只能由大小写字母、数字和中划线组成，首字母必须为字母'),
+                validator: (val) => /^scheme:\/\//i.test(val),
+                message: $t('必须以 scheme:// 开头'),
                 trigger: 'blur',
             },
         ],
