@@ -37,6 +37,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
 import com.tencent.devops.process.api.service.ServiceVarResource
+import com.tencent.devops.store.api.common.ServiceStoreComponentResource
 import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.StoreBaseEnvExtManageDao
 import com.tencent.devops.store.common.dao.StoreBaseEnvManageDao
@@ -44,11 +45,16 @@ import com.tencent.devops.store.common.dao.StoreBaseEnvQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseManageDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.service.AbstractStoreHandleBuildResultService
+import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvDataPO
 import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvExtDataPO
 import com.tencent.devops.store.pojo.common.publication.StoreBuildResultRequest
 import com.tencent.devops.store.pojo.common.publication.UpdateStoreBaseDataPO
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -69,6 +75,18 @@ class DevxHandleBuildResultService @Autowired constructor(
 ) : AbstractStoreHandleBuildResultService() {
 
     private val logger = LoggerFactory.getLogger(DevxHandleBuildResultService::class.java)
+
+    companion object {
+        private val devxPkgSizeExecutor = ThreadPoolExecutor(
+            1,
+            1,
+            0L,
+            TimeUnit.MILLISECONDS,
+            LinkedBlockingQueue(1)
+        ).apply {
+            rejectedExecutionHandler = ThreadPoolExecutor.CallerRunsPolicy()
+        }
+    }
 
     override fun handleStoreBuildResult(
         pipelineId: String,
@@ -92,13 +110,21 @@ class DevxHandleBuildResultService @Autowired constructor(
             storeId = storeId
         )
         val keys = mutableSetOf<String>()
+        val fileSizeInfoKeys = mutableSetOf<String>()
         val baseEnvMap = mutableMapOf<String, TStoreBaseEnvRecord>()
         baseEnvRecords?.forEach { baseEnvRecord ->
             val osName = baseEnvRecord.osName
             val osArch = baseEnvRecord.osArch ?: ""
             keys.add("${osName}_${osArch}_signResult")
+            fileSizeInfoKeys.add("${osName}_${osArch}_fileSizeInfo")
             baseEnvMap["${osName}_$osArch"] = baseEnvRecord
         }
+        asyncHandleDevxPkgSize(
+            fileSizeInfoKeys = fileSizeInfoKeys,
+            storeId = storeId,
+            pipelineId = pipelineId,
+            buildId = buildId
+        )
         // 批量获取key在构建变量表的值
         val varMap = if (keys.isNotEmpty()) {
             client.get(ServiceVarResource::class).getBuildVars(
@@ -228,6 +254,54 @@ class DevxHandleBuildResultService @Autowired constructor(
             signResult["sha1Content"].toString() to signResult["sha256Content"]?.toString()
         } else {
             signResult.toString() to null
+        }
+    }
+
+    private fun asyncHandleDevxPkgSize(
+        fileSizeInfoKeys: Set<String>,
+        storeId: String,
+        pipelineId: String,
+        buildId: String
+    ) {
+        devxPkgSizeExecutor.submit {
+            try {
+                val sizeMap = if (fileSizeInfoKeys.isNotEmpty()) {
+                    client.get(ServiceVarResource::class).getBuildVars(
+                        projectId = storeInnerPipelineConfig.innerPipelineProject,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        keys = fileSizeInfoKeys
+                    ).data
+                } else {
+                    null
+                }
+                logger.info("asyncHandleDevxPkgSize sizeMap:$sizeMap")
+                if (!sizeMap.isNullOrEmpty()) {
+                    val storePackageInfoReqs = sizeMap.mapNotNull {
+                        val filedNames = it.key.split("_")
+                        val osName = filedNames.getOrNull(0)
+                        val osArch = filedNames.getOrNull(1)
+                        val fileSizeMap = JsonUtil.toMap(it.value)
+                        val firstValue = fileSizeMap.values.firstOrNull()?.toString()?.toLongOrNull()
+                        firstValue?.let { size ->
+                            StorePackageInfoReq(
+                                storeType = StoreTypeEnum.DEVX,
+                                osName = osName,
+                                arch = osArch,
+                                size = size
+                            )
+                        }
+                    }
+                    if (storePackageInfoReqs.isNotEmpty()) {
+                        client.get(ServiceStoreComponentResource::class).updateComponentVersionSize(
+                            storeId = storeId,
+                            storePackageInfoReqs = storePackageInfoReqs
+                        )
+                    }
+                }
+            } catch (ignored: Throwable) {
+                logger.warn("asyncHandleDevxPkgSize error:${ignored.message}", ignored)
+            }
         }
     }
 }

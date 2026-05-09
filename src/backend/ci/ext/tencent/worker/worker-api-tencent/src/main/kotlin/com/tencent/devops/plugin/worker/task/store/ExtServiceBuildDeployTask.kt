@@ -42,6 +42,7 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.BK_DOCKER_TARGE_IMAGE_NAME
 import com.tencent.devops.process.utils.BK_DOCKER_TARGE_IMAGE_TAG
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.extservice.dto.UpdateExtServiceEnvInfoDTO
 import com.tencent.devops.worker.common.api.ApiFactory
@@ -54,6 +55,9 @@ import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import io.fabric8.kubernetes.client.readiness.Readiness
 import java.io.File
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 
 @TaskClassType(classTypes = [ExtServiceBuildDeployElement.classType])
@@ -62,6 +66,16 @@ class ExtServiceBuildDeployTask : ITask() {
     private val archiveApi = ApiFactory.create(ArchiveSDKApi::class)
 
     private val logger = LoggerFactory.getLogger(ExtServiceBuildDeployTask::class.java)
+
+    private val servicePkgSizeExecutor = ThreadPoolExecutor(
+        1,
+        1,
+        0L,
+        TimeUnit.MILLISECONDS,
+        LinkedBlockingQueue(1)
+    ).apply {
+        rejectedExecutionHandler = ThreadPoolExecutor.CallerRunsPolicy()
+    }
 
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         logger.info("ExtServiceBuildDeployTask buildTask: $buildTask,buildVariables: $buildVariables")
@@ -161,7 +175,18 @@ class ExtServiceBuildDeployTask : ITask() {
             serviceVersion,
             updateExtServiceEnvInfo
         )
-        if (updateExtServiceEnvInfoResult.isOk()) {
+
+        asyncHandleExtServicePkgSize(
+            listOf(
+                StorePackageInfoReq(
+                    storeType = StoreTypeEnum.SERVICE,
+                    size = file.length()
+                )
+            ),
+            updateExtServiceEnvInfoResult.data
+        )
+
+        if (updateExtServiceEnvInfoResult.isOk() && updateExtServiceEnvInfoResult.data != null) {
             LoggerService.addNormalLine("update extService env ok!")
         } else {
             throw TaskExecuteException(
@@ -224,12 +249,37 @@ class ExtServiceBuildDeployTask : ITask() {
                     val deploymentStatus = deployment.status
                     val conditions = deploymentStatus.conditions
                     throw TaskExecuteException(
-                        errorMsg = "deployApp fail: deploy timeout($deployTimeOut minutes),conditions is:${JsonUtil.toJson(conditions)}",
+                        errorMsg = "deployApp fail: deploy timeout($deployTimeOut minutes)," +
+                                "conditions is:${JsonUtil.toJson(conditions)}",
                         errorType = ErrorType.USER,
                         errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
                     )
                 }
             }
         }
+    }
+
+    private fun asyncHandleExtServicePkgSize(
+        storePackageInfoReqs: List<StorePackageInfoReq>,
+        extServiceId: String?
+    ) {
+        servicePkgSizeExecutor.submit {
+            if (extServiceId == null) {
+                logger.warn("extServiceId is null!")
+            } else {
+                try {
+                    ExtServiceResourceApi().updateExtServiceVersionPkgSize(
+                        extServiceId = extServiceId,
+                        storePackageInfoReqs = storePackageInfoReqs
+                    )
+                } catch (ignored: Throwable) {
+                    logger.warn("asyncHandleExtServicePkgSize execute error", ignored)
+                }
+            }
+        }
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(ExtServiceBuildDeployTask::class.java)!!
     }
 }

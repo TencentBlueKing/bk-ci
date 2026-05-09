@@ -42,6 +42,8 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.common.StorePackageInfoReq
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
@@ -52,10 +54,21 @@ import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.TaskUtil
 import java.io.File
 import java.nio.file.Paths
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 @Suppress("UNUSED", "ComplexMethod")
 @TaskClassType(classTypes = [AtomBuildArchiveElement.classType])
 class AtomBuildArchiveTask : ITask() {
+
+    private val atomPkgSizeExecutor = ThreadPoolExecutor(
+        1,
+        1,
+        0L,
+        TimeUnit.MILLISECONDS,
+        LinkedBlockingQueue(1)
+    )
 
     private val atomApi = ApiFactory.create(AtomArchiveSDKApi::class)
 
@@ -176,6 +189,17 @@ class AtomBuildArchiveTask : ITask() {
             osArch = finalOsArch
         )
         val result = atomApi.updateAtomEnv(buildVariables.projectId, atomCode, atomVersion, request)
+        asyncHandleAtomPkgSize(
+            storePackageInfoReqs = listOf(
+                StorePackageInfoReq(
+                    storeType = StoreTypeEnum.ATOM,
+                    osName = osName,
+                    arch = osArch,
+                    size = File(workspace, filePath).length()
+                )
+            ),
+            atomId = atomEnv.atomId
+        )
         if (result.data != null && result.data == true) {
             LoggerService.addNormalLine("update Atom Env ok!")
         } else {
@@ -232,5 +256,25 @@ class AtomBuildArchiveTask : ITask() {
             )
         }
         return fileSha
+    }
+
+    private fun asyncHandleAtomPkgSize(
+        storePackageInfoReqs: List<StorePackageInfoReq>,
+        atomId: String?
+    ) {
+        atomPkgSizeExecutor.submit {
+            if (atomId == null) {
+                LoggerService.addNormalLine("atomId is null!")
+            } else {
+                try {
+                    atomApi.updateAtomVersionPkgSize(
+                        atomId = atomId,
+                        storePackageInfoReqs = storePackageInfoReqs
+                    )
+                } catch (ignored: Throwable) {
+                    LoggerService.addNormalLine("asyncHandleAtomPkgSize execute error: ${ignored.message}")
+                }
+            }
+        }
     }
 }
