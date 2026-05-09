@@ -30,7 +30,7 @@ class ProjectTagHistoryDao {
                     STATUS
                 ).values(
                     it.version,
-                    it.channel,
+                    it.channelCode,
                     it.projectId,
                     it.batchPercent,
                     it.sourceTag,

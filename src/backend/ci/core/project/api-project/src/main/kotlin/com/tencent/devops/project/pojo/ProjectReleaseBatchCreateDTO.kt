@@ -8,7 +8,7 @@ data class ProjectReleaseBatchCreateDTO(
     @get:Schema(title = "发布版本")
     val version: String,
     @get:Schema(title = "项目渠道")
-    val channel: String,
+    val channelCode: String,
     @get:Schema(title = "项目 ID")
     val projectId: String,
     @get:Schema(title = "批次百分比")

@@ -47,12 +47,6 @@ class OpProjectTagResourceImpl @Autowired constructor(
         return Result(projectTagService.executeReleaseBatch(request))
     }
 
-    override fun rollbackReleaseBatch(
-        request: ProjectReleaseBatchExecuteRequest
-    ): Result<ProjectReleaseBatchExecuteResult> {
-        return Result(projectTagService.rollbackReleaseBatch(request))
-    }
-
     override fun addToBlacklist(request: ProjectRoutingListRequest): Result<Long> {
         return Result(projectTagService.addToBlacklist(request.projectCodes))
     }

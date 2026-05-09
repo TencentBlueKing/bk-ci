@@ -68,19 +68,11 @@ interface OpProjectTagResource {
         request: ProjectReleaseBatchCreateRequest
     ): Result<List<ProjectReleaseBatchCreateResult>>
 
-    @Operation(summary = "执行指定项目路由发布批次")
+    @Operation(summary = "执行或回滚指定项目路由发布批次")
     @POST
     @Path("/releaseVersions/execute")
     fun executeReleaseBatch(
-        @Parameter(description = "项目路由发布批次执行请求", required = true)
-        request: ProjectReleaseBatchExecuteRequest
-    ): Result<ProjectReleaseBatchExecuteResult>
-
-    @Operation(summary = "回滚指定项目路由发布批次")
-    @POST
-    @Path("/releaseVersions/rollback")
-    fun rollbackReleaseBatch(
-        @Parameter(description = "项目路由发布批次回滚请求", required = true)
+        @Parameter(description = "项目路由发布批次执行或回滚请求", required = true)
         request: ProjectReleaseBatchExecuteRequest
     ): Result<ProjectReleaseBatchExecuteResult>
 
