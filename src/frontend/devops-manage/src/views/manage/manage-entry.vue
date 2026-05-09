@@ -16,7 +16,7 @@ const routeName = computed(()=>route.name);
 const { projectCode } = route.params;
 const projectList = window.parent?.vuexStore?.state?.projectList;
 const projectName = projectList?.find(project => project.projectCode === projectCode)?.projectName || projectCode;
-const isPersonalProject = computed(() => projectList?.find(project => project.projectCode === projectCode)?.projectName === 1);
+const isPersonalProject = computed(() => projectList?.find(project => project.projectCode === projectCode)?.projectScope === 1);
 const activeTab = ref(t('项目设置'));
 
 const manageTabs = computed(() => [
