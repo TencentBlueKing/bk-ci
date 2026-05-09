@@ -112,7 +112,7 @@
         }, 2000);
 
         function openApp() {
-            var terminal = getTerminal();
+            const terminal = getTerminal();
 
             var t1 = Date.now();
             var ifr = document.createElement("iframe");
@@ -134,10 +134,7 @@
                 validateParam = false;
             }
 
-            var schemaPrefix = "bkdevopsapp://";
-            if (terminal == 1) {
-                schemaPrefix = "bkdevopsapp://bkdevopsapp/"
-            }
+            const schemaPrefix = (terminal !== 1) ? "bkdevopsapp://" : "bkdevopsapp://bkdevopsapp/";
 
             switch (flag) {
                 case "experienceDetail":
@@ -154,6 +151,8 @@
                     validateParam = projectId && artifactoryType && artifactoryPath;
                     ifr.src = schemaPrefix + "artifactoryDetail/" + projectId + "/" + artifactoryType + "/" + artifactoryPath.replace(/%2F/g, '@@');
                     break;
+                default:
+                    return; // 不支持的逻辑，没有填充 src 无法往下走
             }
 
             if (!validateParam) {
@@ -161,7 +160,7 @@
                 return;
             }
 
-            if (terminal == 1 || terminal == 2 || terminal == 3) {
+            if(terminal >= 1 && terminal <= 3) {
                 //在 IOS 9 中，使用 ifr 的方式还是拉不起来程序，需要使用 window.location 的方式
                 //微信从6.5.6新版本后，拉起其它应该有了新限制
                 if (isNewWeixin()) {  //大于等于6.5.6
@@ -187,7 +186,15 @@
                 if ((math || mathWeixin) && (navigator.userAgent.indexOf('iPhone') > -1)) {
                     var div = document.createElement('div');
                     div.style.visibility = 'hidden';
-                    div.innerHTML = "<iframe id=\"schema\" src=\"" + ifr.src + "\" scrolling=\"no\" width=\"1\" height=\"1\"></iframe>";
+                    if (ifr.src.startsWith(schemaPrefix)) { // 防止伪造
+                        ifr.id = 'schema';
+                        ifr.style.overflow = 'hidden';
+                        ifr.width = '1';
+                        ifr.height = '1';
+                        div.appendChild(ifr);
+                    } else {
+                        div.textContent = 'Bad url: ' + ifr.src
+                    }
                     document.body.appendChild(div);
                 }
                 try_to_open_app(t1);
@@ -253,8 +260,8 @@
         }
 
         function getTerminal() {
-            var terminal = 0;
-            var u = navigator.userAgent;
+            let terminal;
+            const u = navigator.userAgent;
 
             if (u.indexOf('Android') > -1 || u.indexOf('Linux') > -1) { //Android
                 terminal = 1;
@@ -265,7 +272,7 @@
             else if (u.indexOf('iPad') > -1 && u.indexOf('Mac') > -1) {
                 terminal = 3;
             } else { // PC
-                return terminal = 4;
+                terminal = 4;
             }
 
             return terminal;

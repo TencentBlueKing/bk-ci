@@ -119,7 +119,13 @@ class AgentUpgradeJob @Autowired constructor(
             return null
         }
 
-        val currentDockerInitFileMd5 = agentPropsScope.getDockerInitFileMd5()
+        // Agent升级总数方便agent按批次升级
+        val agentMaxUpgradeCount = agentScope.getAgentMaxUpgradeCount()
+        val agentMasterUpgradeExceed = if (agentMaxUpgradeCount != null) {
+            thirdPartyAgentDao.countByMasterVersion(dslContext, currentMasterVersion) >= agentMaxUpgradeCount
+        } else {
+            false
+        }
 
         val vo = LoopUtil.LoopVo<Long, MutableSet<TEnvironmentThirdpartyAgentRecord>>(id = 0L, data = HashSet())
 
@@ -127,8 +133,8 @@ class AgentUpgradeJob @Autowired constructor(
         fetchPriorityUpgradeAgents(
             currentVersion = currentVersion,
             currentMasterVersion = currentMasterVersion,
-            currentDockerInitFileMd5 = currentDockerInitFileMd5,
             maxParallelCount = maxParallelCount,
+            agentMasterUpgradeExceed = agentMasterUpgradeExceed,
             vo = vo
         )
         //  经过前面fetchPriorityUpgradeAgents计算后，vo.data.size 不会超过 maxParallelCount，所以不可能小于0
@@ -162,7 +168,7 @@ class AgentUpgradeJob @Autowired constructor(
                         if (checkCanUpgrade(
                                 goAgentCurrentVersion = currentMasterVersion,
                                 workCurrentVersion = currentVersion,
-                                currentDockerInitFileMd5 = currentDockerInitFileMd5,
+                                agentMasterUpgradeExceed = agentMasterUpgradeExceed,
                                 record = record
                             )
                         ) {
@@ -186,8 +192,8 @@ class AgentUpgradeJob @Autowired constructor(
     private fun fetchPriorityUpgradeAgents(
         currentVersion: String,
         currentMasterVersion: String,
-        currentDockerInitFileMd5: String,
         maxParallelCount: Int,
+        agentMasterUpgradeExceed: Boolean,
         vo: LoopUtil.LoopVo<Long, MutableSet<TEnvironmentThirdpartyAgentRecord>>,
     ) {
         val priorityUpgradeProjects = mutableSetOf<String>()
@@ -214,7 +220,7 @@ class AgentUpgradeJob @Autowired constructor(
                     && checkCanUpgrade(
                         goAgentCurrentVersion = currentMasterVersion,
                         workCurrentVersion = currentVersion,
-                        currentDockerInitFileMd5 = currentDockerInitFileMd5,
+                        agentMasterUpgradeExceed = agentMasterUpgradeExceed,
                         record = agentRecord
                     )
                 ) {
@@ -238,10 +244,14 @@ class AgentUpgradeJob @Autowired constructor(
     private fun checkCanUpgrade(
         goAgentCurrentVersion: String,
         workCurrentVersion: String,
-        currentDockerInitFileMd5: String,
+        agentMasterUpgradeExceed: Boolean,
         record: TEnvironmentThirdpartyAgentRecord
     ): Boolean {
-        AgentUpgradeType.values().forEach { type ->
+        AgentUpgradeType.entries.forEach { type ->
+            // Agent超过最大升级数量的不能升级
+            if (type != AgentUpgradeType.WORKER && agentMasterUpgradeExceed) {
+                return@forEach
+            }
             // 校验这个项目下的这个类型是否可以升级
             if (!checkProjectUpgrade(record.projectId, type)) {
                 return@forEach
@@ -269,15 +279,16 @@ class AgentUpgradeJob @Autowired constructor(
                 }
 
                 AgentUpgradeType.DOCKER_INIT_FILE -> {
-                    if (currentDockerInitFileMd5.isBlank()) {
-                        return@forEach
-                    }
                     val props = agentPropsScope.parseAgentProps(record.agentProps) ?: return@forEach
                     if (props.dockerInitFileInfo?.needUpgrade != true) {
                         return@forEach
                     }
+                    val currentDockerInitFileMd5 = agentPropsScope.getDockerInitFileMd5(record.os)
+                    if (currentDockerInitFileMd5.isNullOrBlank()) {
+                        return@forEach
+                    }
                     (props.dockerInitFileInfo.fileMd5.isNotBlank() &&
-                        props.dockerInitFileInfo.fileMd5.trim() != currentDockerInitFileMd5.trim())
+                            props.dockerInitFileInfo.fileMd5.trim() != currentDockerInitFileMd5.trim())
                 }
             }
             if (res) {

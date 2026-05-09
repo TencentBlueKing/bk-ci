@@ -71,5 +71,9 @@ data class ExperienceServiceCreate(
     @get:Schema(title = "应用标识", required = false)
     val bundleIdentifier: String? = null,
     @get:Schema(title = "版本", required = false)
-    val version: String? = null
+    val version: String? = null,
+    @get:Schema(title = "允许合研环境访问", required = false)
+    val enableDevxAccess: Boolean = false,
+    @get:Schema(title = "允许基地公网访问", required = false)
+    val enablePublicAccess: Boolean = false
 )

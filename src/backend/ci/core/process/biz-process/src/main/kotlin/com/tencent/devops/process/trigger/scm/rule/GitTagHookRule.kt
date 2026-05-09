@@ -31,6 +31,8 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_CREAT
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
+import com.tencent.devops.process.trigger.scm.condition.ActionCondition
+import com.tencent.devops.process.trigger.scm.condition.ActionFilterType
 import com.tencent.devops.process.trigger.scm.condition.BranchCondition
 import com.tencent.devops.process.trigger.scm.condition.BranchFilterType
 import com.tencent.devops.process.trigger.scm.condition.UserCondition
@@ -74,6 +76,7 @@ class GitTagHookRule : WebhookRule {
             response = WebhookFilterResponse()
         )
         val conditions = listOf(
+            ActionCondition(ActionFilterType.TAG),
             BranchCondition(BranchFilterType.TAG_NAME),
             BranchCondition(BranchFilterType.TAG_CREATE_FROM),
             UserCondition()

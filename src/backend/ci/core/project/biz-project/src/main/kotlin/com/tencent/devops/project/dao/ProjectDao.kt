@@ -416,7 +416,8 @@ class ProjectDao {
                 PROPERTIES,
                 SUBJECT_SCOPES,
                 AUTH_SECRECY,
-                PRODUCT_ID
+                PRODUCT_ID,
+                HIDDEN
             ).values(
                 projectCreateInfo.projectName,
                 projectId,
@@ -447,7 +448,8 @@ class ProjectDao {
                 },
                 subjectScopesStr,
                 projectCreateInfo.authSecrecy ?: ProjectAuthSecrecyStatus.PUBLIC.value,
-                projectCreateInfo.productId
+                projectCreateInfo.productId,
+                projectCreateInfo.hidden
             ).execute()
         }
     }
@@ -482,6 +484,7 @@ class ProjectDao {
                 .set(PROJECT_TYPE, projectUpdateInfo.projectType)
                 .set(PRODUCT_ID, projectUpdateInfo.productId)
             projectUpdateInfo.authSecrecy?.let { update.set(AUTH_SECRECY, it) }
+            projectUpdateInfo.hidden?.let { update.set(HIDDEN, it) }
             logoAddress?.let { update.set(LOGO_ADDR, logoAddress) }
             projectUpdateInfo.properties?.let { update.set(PROPERTIES, JsonUtil.toJson(it, false)) }
             return update.where(PROJECT_ID.eq(projectId)).execute()
@@ -519,6 +522,20 @@ class ProjectDao {
                 .set(UPDATED_AT, LocalDateTime.now())
                 .let { if (userId == null) it else it.set(UPDATOR, userId) }
                 .where(PROJECT_ID.eq(projectId))
+                .execute()
+        }
+    }
+
+    fun updateHiddenStatus(
+        dslContext: DSLContext,
+        englishName: String,
+        hidden: Boolean
+    ): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(HIDDEN, hidden)
+                .set(UPDATED_AT, LocalDateTime.now())
+                .where(ENGLISH_NAME.eq(englishName))
                 .execute()
         }
     }
@@ -610,6 +627,7 @@ class ProjectDao {
         limit: Int? = null,
         searchName: String? = null,
         enabled: Boolean? = null,
+        hidden: Boolean? = null,
         authSecrecyStatus: ProjectAuthSecrecyStatus? = null,
         sortType: ProjectSortType? = null,
         collation: ProjectCollation? = ProjectCollation.DEFAULT,
@@ -623,6 +641,7 @@ class ProjectDao {
                 .and(IS_OFFLINED.eq(false))
                 .let { if (null == searchName) it else it.and(PROJECT_NAME.like("%$searchName%")) }
                 .let { if (null == enabled) it else it.and(ENABLED.eq(enabled)) }
+                .let { if (null == hidden) it else it.and(HIDDEN.eq(hidden)) }
                 .let { if (null == authSecrecyStatus) it else it.and(AUTH_SECRECY.eq(authSecrecyStatus.value)) }
                 .let { if (productIds.isEmpty()) it else it.and(PRODUCT_ID.`in`(productIds)) }
                 .let { if (channelCodes.isEmpty()) it else it.and(CHANNEL.`in`(channelCodes)) }

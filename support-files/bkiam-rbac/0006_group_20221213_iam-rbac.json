@@ -550,6 +550,54 @@
                   "id": "pipeline_template_manage"
                 }
               ]
+            },
+            {
+              "name": "创作流",
+              "name_en": "Creative Stream Permissions",
+              "actions": [
+                {
+                  "id": "creative_stream_create"
+                },
+                {
+                  "id": "creative_stream_list"
+                },
+                {
+                  "id": "creative_stream_view"
+                },
+                {
+                  "id": "creative_stream_edit"
+                },
+                {
+                  "id": "creative_stream_delete"
+                },
+                {
+                  "id": "creative_stream_execute"
+                },
+                {
+                  "id": "creative_stream_download"
+                },
+                {
+                  "id": "creative_stream_share"
+                },
+                {
+                  "id": "creative_stream_manage"
+                },
+                {
+                  "id": "creative_stream_archive"
+                }
+              ]
+            },
+            {
+              "name": "创作流节点",
+              "name_en": "Creative Stream Node Permissions",
+              "actions": [
+                {
+                  "id": "creative_stream_node_view"
+                },
+                {
+                  "id": "creative_stream_node_edit"
+                }
+              ]
             }
           ]
         }

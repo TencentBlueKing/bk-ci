@@ -28,7 +28,6 @@ const isChange = ref(false);
 const isToBeApproved = ref(false);
 const btnLoading = ref(false);
 const hasPermission = ref(true);
-const operationalList = ref({});
 const currentDialect = ref();
 const isDialectDialog = ref(false);
 let initdata;
@@ -109,11 +108,6 @@ const infoBoxInstance = ref();
 const updateProject = async () => {
   infoBoxInstance.value?.hide();
   btnLoading.value = true;
-  await fetchOperationalList(projectData.value.bgName);
-  await checkProductIdName({
-    id: projectData.value?.productId,
-    list: operationalList.value,
-  });
   const result = await http
     .requestUpdateProject({
       projectId: projectData.value?.englishName,
@@ -145,21 +139,6 @@ const updateProject = async () => {
   return Promise.resolve(false);
 };
 
-const fetchOperationalList = async (bgName) => {
-  if (!bgName) return
-  const res = await http.getOperationalList(bgName)
-  operationalList.value = res.map(i => ({
-    ...i,
-    value: i.ProductId,
-    label: i.ProductName,
-    id: i.ProductId,
-  }));
-};
-
-const checkProductIdName = ({ id, list }) => {
-  projectData.value.productName = list.find(i => i.ProductId === id)?.ProductName || '';
-};
-
 const showNeedApprovedTips = () => {
   infoBoxInstance.value = InfoBox({
     isShow: true,
@@ -176,23 +155,48 @@ const showNeedApprovedTips = () => {
   });
 };
 
-const undateMetadata = async (params) => {
+/**
+ * 统一更新项目和元数据
+ */
+const updateProjectAndMetadata = async (params) => {
   try {
     btnLoading.value = true;
-    const res = await http.batchUpdateMetadata(projectData.value.englishName, params)
-    if (res) {
+    
+    // 先更新项目
+    const projectResult = await http.requestUpdateProject({
+      projectId: projectData.value?.englishName,
+      projectData: projectData.value,
+    });
+    
+    // 再更新元数据
+    const metadataResult = await http.batchUpdateMetadata(projectData.value.englishName, params);
+    
+    if (projectResult && metadataResult) {
       Message({
         theme: 'success',
         message: t('保存成功'),
       });
-      goShow()
+      goShow();
+      return true;
     }
-  } catch (err) {
-    console.log(err);
+  } catch (err: any) {
+    if (err.code === 403) {
+      handleProjectManageNoPermission({
+        action: RESOURCE_ACTION.EDIT,
+        projectId: projectCode,
+        resourceCode: projectCode,
+      });
+    } else {
+      Message({
+        theme: 'error',
+        message: err.message || t('保存失败：') + err.message,
+      });
+    }
+    return false;
   } finally {
     btnLoading.value = false;
   }
-}
+};
 
 /**
  * 更新项目
@@ -204,7 +208,7 @@ const handleUpdate = (panel, params) => {
   }
   
   if (panel) {
-    undateMetadata(params)
+    updateProjectAndMetadata(params);
   } else {
     if(currentDialect.value === 'CLASSIC' && projectData.value.properties.pipelineDialect === 'CONSTRAINED'){
       isDialectDialog.value = true;

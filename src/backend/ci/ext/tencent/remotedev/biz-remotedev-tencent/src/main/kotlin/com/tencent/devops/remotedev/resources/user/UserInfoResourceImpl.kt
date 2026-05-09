@@ -1,11 +1,14 @@
 package com.tencent.devops.remotedev.resources.user
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserInfoResource
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.pojo.TrustDeviceInfo
 import com.tencent.devops.remotedev.pojo.TrustDeviceTokenGetData
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognition
 import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognitionData
@@ -14,6 +17,7 @@ import com.tencent.devops.remotedev.pojo.userinfo.UserInfoAuthCheck
 import com.tencent.devops.remotedev.pojo.userinfo.UserInfoCheckData
 import com.tencent.devops.remotedev.pojo.userinfo.UserInfoCheckResult
 import com.tencent.devops.remotedev.pojo.userinfo.UserInfoMoaCheckConfig
+import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.TrustDeviceService
 import com.tencent.devops.remotedev.service.UserInfoCertService
 import com.tencent.devops.remotedev.service.WorkspaceService
@@ -23,24 +27,42 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserInfoResourceImpl @Autowired constructor(
     private val userInfoCertService: UserInfoCertService,
     private val trustDeviceService: TrustDeviceService,
-    private val workspaceService: WorkspaceService
+    private val workspaceService: WorkspaceService,
+    private val permissionService: PermissionService
 ) : UserInfoResource {
-    override fun realNameCert(name: String): Result<Boolean> {
+    override fun realNameCert(userId: String, name: String): Result<Boolean> {
+        if (userId != name) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("Permission denied for user $name")
+            )
+        }
         return Result(userInfoCertService.needRealNameCert(name))
     }
 
     override fun multipleCert(
-        userId: String?,
+        userId: String,
         deviceId: String?,
         token: String?,
         data: UserInfoCheckData
     ): Result<UserInfoCheckResult> {
+        // 获取工作空间基本信息（轻量查询）
+        val ws = workspaceService.getWorkspaceDetail(userId, data.workspaceName, false)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf("Workspace ${data.workspaceName} not found")
+            )
+        // TODO 公共云桌面打开时候也会调用，这里客户端要改，不然加上校验后会失败。先只对团队个人云桌面做校验。
+        if (ws.ownerType == WorkspaceOwnerType.PROJECT) {
+            permissionService.checkViewerPermission(userId, data.workspaceName, ws.projectId)
+        }
+
         val res = userInfoCertService.multipleCert(data)
         // 产品要求：集团员工跳过人脸识别
-        if (userId != null && !UserUtil.isTaiUser(userId)) {
+        if (!UserUtil.isTaiUser(userId)) {
             res.faceRecognition = FaceRecognition(0, "", false)
         }
-        if (userId != null && deviceId != null && token != null) {
+        if (deviceId != null && token != null) {
             // 如果是云桌面拥有者 + token有效，才豁免ioa认证。
             if (workspaceService.checkExistWorkspaceSharedInfo(
                 workspaceName = data.workspaceName,
@@ -58,11 +80,23 @@ class UserInfoResourceImpl @Autowired constructor(
         return Result(res)
     }
 
-    override fun faceRecognition(data: FaceRecognitionData): Result<FaceRecognitionResult> {
+    override fun faceRecognition(userId: String, data: FaceRecognitionData): Result<FaceRecognitionResult> {
+        if (userId != data.username) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("Permission denied for user ${data.username}")
+            )
+        }
         return Result(userInfoCertService.faceRecognition(data))
     }
 
     override fun asyncAuthCheck(userId: String, data: UserInfoAuthCheck): Result<Boolean> {
+        if (userId != data.userId) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("Permission denied for user ${data.userId}")
+            )
+        }
         userInfoCertService.asyncAuthCheck(userId, data)
         return Result(true)
     }

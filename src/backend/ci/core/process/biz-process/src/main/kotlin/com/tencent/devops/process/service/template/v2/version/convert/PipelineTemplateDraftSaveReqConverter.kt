@@ -87,7 +87,7 @@ class PipelineTemplateDraftSaveReqConverter @Autowired constructor(
                 yaml = yaml,
                 fallbackOnError = true
             )
-            val templateInfo = if (templateId != null) {
+            val templateInfo = if (!templateId.isNullOrBlank()) {
                 pipelineTemplateInfoService.get(
                     projectId = projectId,
                     templateId = templateId

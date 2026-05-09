@@ -100,7 +100,9 @@ data class WorkspaceRecord(
     @get:Schema(title = "备份的workspace name")
     override var bakWorkspaceName: String? = null,
     @get:Schema(title = "无区域ip地址,比如:11.11.11.111")
-    override var ip: String?
+    override var ip: String?,
+    @get:Schema(title = "是否开启AI功能")
+    val coffeeAi: Boolean? = false
 ) : WorkspaceRecordInf
 
 /**
@@ -170,5 +172,7 @@ data class WorkspaceRecordWithWindows(
     @get:Schema(title = "resourceId")
     val resourceId: String?,
     @get:Schema(title = "enableRecord")
-    val enableRecord: Boolean? = false
+    val enableRecord: Boolean? = false,
+    @get:Schema(title = "是否开启AI功能")
+    val coffeeAi: Boolean? = false
 ) : WorkspaceRecordInf

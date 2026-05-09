@@ -1019,16 +1019,26 @@ open class BkRepoDownloadService(
             }
             val pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID]
             try {
-                pipelineService.validatePermission(
-                    userId,
-                    projectId,
-                    pipelineId,
-                    AuthPermission.DOWNLOAD,
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
-                        params = arrayOf(userId, projectId, pipelineId ?: "")
+                val pipelineArtifactory = artifactoryType == ArtifactoryType.PIPELINE && !pipelineId.isNullOrBlank()
+                if (pipelineArtifactory) {
+                    pipelineService.validatePermission(
+                        userId,
+                        projectId,
+                        pipelineId,
+                        AuthPermission.DOWNLOAD,
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                            params = arrayOf(userId, projectId, pipelineId ?: "")
+                        )
                     )
-                )
+                } else {
+                    // 自定义仓库制品仅需校验是否为项目成员即可
+                    pipelineService.validatePermission(
+                        userId = userId,
+                        projectId = projectId,
+                        message = "The user is not a member of this project."
+                    )
+                }
             } catch (e: Exception) {
                 logger.warn("user $userId download project $projectId pipeline $pipelineId failed, error: $e")
                 return AllowDownload(

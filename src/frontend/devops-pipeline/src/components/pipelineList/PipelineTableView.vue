@@ -1155,6 +1155,9 @@
                 }
             }
         }
+        .bk-table-empty-block {
+            background-color: #fff;
+        }
         .pipeline-name-wrapper {
             width: 100%;
             display: inline-flex;

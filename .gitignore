@@ -68,4 +68,7 @@ specs/
 CODEBUDDY.md
 AGENTS.md
 openspec/*
+!openspec/changes/
+openspec/changes/*
 !openspec/changes/archive/
+!openspec/specs/

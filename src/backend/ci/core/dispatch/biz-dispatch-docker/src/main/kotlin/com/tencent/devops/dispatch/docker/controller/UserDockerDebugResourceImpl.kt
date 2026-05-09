@@ -27,14 +27,22 @@
 
 package com.tencent.devops.dispatch.docker.controller
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.docker.api.user.UserDockerDebugResource
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.pojo.DebugResponse
@@ -47,11 +55,17 @@ import java.util.stream.Collectors
 
 @RestResource
 class UserDockerDebugResourceImpl @Autowired constructor(
-    private val dockerRoutingSdkService: DockerRoutingSdkService
+    private val dockerRoutingSdkService: DockerRoutingSdkService,
+    private val bkAuthPermissionApi: AuthPermissionApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : UserDockerDebugResource {
     @BkTimed
     override fun startDebug(userId: String, debugStartParam: DebugStartParam): Result<DebugResponse>? {
         logger.info("[$userId]| start debug, debugStartParam: $debugStartParam")
+
+        // 检验当前用户是否具有流水线编辑权限
+        checkPermission(debugStartParam.projectId, userId, debugStartParam.pipelineId)
+
         // dispatchType不在枚举工厂类内时默认为ext debug服务
         if (!DebugServiceEnum
             .values().toList()
@@ -162,6 +176,33 @@ class UserDockerDebugResourceImpl @Autowired constructor(
             clazz = ExtDebugService::class.java,
             beanName = "${dispatchValue}_BUILD_CLUSTER_RESULT"
         )
+    }
+
+    private fun checkPermission(
+        projectId: String,
+        userId: String,
+        pipelineId: String
+    ) {
+        if (!bkAuthPermissionApi.validateUserResourcePermission(
+                userId, pipelineAuthServiceCode, AuthResourceType.PIPELINE_DEFAULT,
+                projectId, pipelineId, AuthPermission.EDIT
+            )
+        ) {
+            val language = I18nUtil.getLanguage(userId)
+            logger.info("user($userId)No permissions in project($projectId) edit pipeline($pipelineId)")
+            throw PermissionForbiddenException(
+                MessageUtil.getMessageByLocale(
+                    USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    language,
+                    arrayOf(
+                        userId,
+                        projectId,
+                        AuthPermission.EDIT.getI18n(I18nUtil.getLanguage(userId)),
+                        pipelineId
+                    )
+                )
+            )
+        }
     }
 
     companion object {

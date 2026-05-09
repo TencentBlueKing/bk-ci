@@ -3755,6 +3755,346 @@
         ],
         "version": 1
       }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "creative_stream_create",
+        "name": "创建创作流",
+        "name_en": "Creative Stream Create",
+        "auth_type": "rbac",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "creative_stream_list",
+        "name": "创作流列表",
+        "name_en": "Creative Stream List",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "creative_stream",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "creative_stream_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "creative_stream_view",
+        "name": "查看创作流",
+        "name_en": "Creative Stream View",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "creative_stream",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "creative_stream_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "creative_stream_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "creative_stream_edit",
+        "name": "编辑创作流",
+        "name_en": "Creative Stream Edit",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "creative_stream",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "creative_stream_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "creative_stream_list",
+          "creative_stream_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "creative_stream_delete",
+        "name": "删除创作流",
+        "name_en": "Creative Stream Delete",
+        "auth_type": "rbac",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "creative_stream",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "creative_stream_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "creative_stream_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "creative_stream_execute",
+        "name": "执行创作流",
+        "name_en": "Creative Stream Execute",
+        "auth_type": "rbac",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "creative_stream",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "creative_stream_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "creative_stream_list",
+          "creative_stream_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "creative_stream_download",
+        "name": "下载创作流制品",
+        "name_en": "Creative Stream Download",
+        "auth_type": "rbac",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "creative_stream",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "creative_stream_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "creative_stream_list",
+          "creative_stream_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "creative_stream_share",
+        "name": "分享创作流制品",
+        "name_en": "Creative Stream Share",
+        "auth_type": "rbac",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "creative_stream",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "creative_stream_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "creative_stream_list",
+          "creative_stream_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "creative_stream_manage",
+        "name": "创作流权限管理",
+        "name_en": "Creative Stream Manage",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "creative_stream",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "creative_stream_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "creative_stream_list",
+          "creative_stream_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "creative_stream_archive",
+        "name": "归档创作流",
+        "name_en": "Creative Stream Archive",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "creative_stream",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "creative_stream_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "creative_stream_list",
+          "creative_stream_view",
+          "creative_stream_edit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "creative_stream_node_view",
+        "name": "查看创作流节点",
+        "name_en": "Creative Stream Node View",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "creative_stream_node",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "creative_stream_node_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "creative_stream_node_edit",
+        "name": "编辑创作流节点",
+        "name_en": "Creative Stream Node Edit",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "creative_stream_node",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "creative_stream_node_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "creative_stream_node_view"
+        ],
+        "version": 1
+      }
     }
   ]
 }

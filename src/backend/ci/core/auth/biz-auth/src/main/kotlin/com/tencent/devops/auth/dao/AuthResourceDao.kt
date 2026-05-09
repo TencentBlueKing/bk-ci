@@ -165,6 +165,24 @@ class AuthResourceDao {
         }
     }
 
+    fun updateRelationId(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        relationId: String
+    ): Boolean {
+        with(TAuthResource.T_AUTH_RESOURCE) {
+            return dslContext.update(this)
+                .set(RELATION_ID, relationId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .execute() == 1
+        }
+    }
+
     fun disable(
         dslContext: DSLContext,
         userId: String,
@@ -175,6 +193,7 @@ class AuthResourceDao {
         with(TAuthResource.T_AUTH_RESOURCE) {
             return dslContext.update(this)
                 .set(ENABLE, false)
+                .set(RELATION_ID, "")
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(UPDATE_USER, userId)
                 .where(PROJECT_CODE.eq(projectCode))
@@ -430,6 +449,66 @@ class AuthResourceDao {
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .and(CREATE_USER.eq(creator))
                 .orderBy(CREATE_TIME)
+                .fetch()
+        }
+    }
+
+    fun getByResourceName(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceName: String
+    ): List<TAuthResourceRecord> {
+        with(TAuthResource.T_AUTH_RESOURCE) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(RESOURCE_NAME.eq(resourceName))
+                .fetch()
+        }
+    }
+
+    fun searchResource(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        keyword: String,
+        limit: Int = 10
+    ): List<TAuthResourceRecord> {
+        with(TAuthResource.T_AUTH_RESOURCE) {
+            val byCode = dslContext.selectFrom(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(RESOURCE_CODE.eq(keyword))
+                .limit(limit).fetch()
+            if (byCode.isNotEmpty()) return byCode
+
+            val byName = dslContext.selectFrom(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(RESOURCE_NAME.eq(keyword))
+                .limit(limit).fetch()
+            if (byName.isNotEmpty()) return byName
+
+            return dslContext.selectFrom(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(RESOURCE_NAME.like("%$keyword%"))
+                .limit(limit).fetch()
+        }
+    }
+
+    fun getByResourceCode(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): List<TAuthResourceRecord> {
+        with(TAuthResource.T_AUTH_RESOURCE) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(RESOURCE_CODE.eq(resourceCode))
                 .fetch()
         }
     }

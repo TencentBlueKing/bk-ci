@@ -55,7 +55,7 @@ class WorkspaceCheckJob @Autowired constructor(
     /**
      * 定时同步更新START云桌面资源池 5min一次
      */
-    @Scheduled(cron = "0 0/5 * * * ?")
+    @Scheduled(cron = "0 0/30 * * * ?")
     fun syncStartCloudResourceList() {
         logger.info("=========>> start to sync START resource list <<=========")
         if (!SpringContextUtil.getBean(Profile::class.java).isProd()) {

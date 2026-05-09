@@ -38,9 +38,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"

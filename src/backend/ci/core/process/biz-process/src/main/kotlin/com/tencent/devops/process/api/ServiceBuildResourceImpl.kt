@@ -65,6 +65,7 @@ import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
+import com.tencent.devops.process.pojo.pipeline.BuildDetailSimple
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
@@ -356,6 +357,30 @@ class ServiceBuildResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getBuildDetailSimple(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode
+    ): Result<BuildDetailSimple> {
+        checkUserId(userId)
+        checkParam(projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            pipelineBuildFacadeService.getBuildDetailSimple(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                channelCode = channelCode,
+                checkPermission = ChannelCode.isNeedAuth(channelCode)
+            )
+        )
+    }
+
     override fun getBuildRecordByExecuteCount(
         userId: String,
         projectId: String,
@@ -468,7 +493,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         endTimeFrom: String?,
         endTimeTo: String?,
         buildNoStart: Int?,
-        buildNoEnd: Int?
+        buildNoEnd: Int?,
+        updateTimeDesc: Boolean?
     ): Result<Page<LightBuildHistory>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -484,7 +510,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
             offset = offset,
             limit = pageSize,
             buildNoStart = buildNoStart,
-            buildNoEnd = buildNoEnd
+            buildNoEnd = buildNoEnd,
+            updateTimeDesc = updateTimeDesc
         )
         val result = pipelineBuildFacadeService.getLightHistoryBuild(
             userId = userId,

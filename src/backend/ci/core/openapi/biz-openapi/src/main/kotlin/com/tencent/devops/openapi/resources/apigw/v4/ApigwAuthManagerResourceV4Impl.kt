@@ -31,6 +31,7 @@ class ApigwAuthManagerResourceV4Impl @Autowired constructor(
             "OPENAPI_AUTH_MANAGER_V4" +
                 " getProjectManagers|$appCode|${request.projectId}"
         )
+        val maxManagerCount = 5
         return client.get(ServiceResourceMemberResource::class)
             .getResourceGroupMembers(
                 token = tokenService.getSystemToken(),
@@ -38,6 +39,8 @@ class ApigwAuthManagerResourceV4Impl @Autowired constructor(
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = request.projectId,
                 group = BkAuthGroup.MANAGER
-            )
+            ).let { result ->
+                Result(result.data?.take(maxManagerCount) ?: emptyList())
+            }
     }
 }

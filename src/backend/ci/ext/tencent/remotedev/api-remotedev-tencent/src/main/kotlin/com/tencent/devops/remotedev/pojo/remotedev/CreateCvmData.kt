@@ -2,6 +2,7 @@ package com.tencent.devops.remotedev.pojo.remotedev
 
 data class CreateCvmData(
     val createOnly: Boolean?,
+    val createType: String?,
     val internal: Boolean,
     val ip: String,
     val machineType: String,

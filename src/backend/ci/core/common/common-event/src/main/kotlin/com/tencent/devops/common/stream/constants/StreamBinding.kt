@@ -242,4 +242,7 @@ object StreamBinding {
     const val PIPELINE_YAML_FILE_SCHEDULER = "pipeline.yaml.file.scheduler"
     // yaml文件执行事件
     const val PIPELINE_YAML_FILE_EXECUTOR = "pipeline.yaml.file.executor"
+
+    // AI智能体运行停止广播exchange ====================================
+    const val AI_RUN_STOP_FANOUT = "ai.run.stop.fanout"
 }

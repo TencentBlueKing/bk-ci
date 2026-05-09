@@ -77,6 +77,13 @@ class ConfigCacheService @Autowired constructor(
             whiteListDao.get(dslContext, key, WhiteListType.API) != null
         }
 
+    private val coffeeAIWhiteListCache = Caffeine.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String, Boolean> { key ->
+            whiteListDao.get(dslContext, key, WhiteListType.COFFEE_AI) != null
+        }
+
     private val windowsGpuWhiteListCache = Caffeine.newBuilder()
         .maximumSize(1000)
         .expireAfterWrite(1, TimeUnit.MINUTES)
@@ -124,6 +131,8 @@ class ConfigCacheService @Autowired constructor(
     fun getSetMembers(key: String) = redisCacheSet.get(key)
 
     fun checkApiWhiteList(name: String) = apiWhiteListCache.get(name) ?: false
+
+    fun checkApiCoffeeAIWhiteList(name: String) = coffeeAIWhiteListCache.get(name) ?: false
 
     fun checkWindowsGpuLimit(name: String) = windowsGpuWhiteListCache.get(name) ?: 0
 

@@ -227,4 +227,21 @@ interface OPProjectResource {
         @Parameter(description = "项目ID列表", required = true)
         projectCodes: List<String>
     ): Result<Boolean>
+
+    @PUT
+    @Path("/hidden")
+    @Operation(summary = "设置项目隐藏状态")
+    fun setHidden(
+        @Parameter(
+            description = "是否隐藏",
+            required = true
+        )
+        @QueryParam("hidden")
+        hidden: Boolean,
+        @Parameter(
+            description = "项目英文名列表",
+            required = true
+        )
+        englishNames: List<String>
+    ): Result<Boolean>
 }

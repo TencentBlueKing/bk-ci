@@ -163,7 +163,8 @@ class ExperienceDownloadService @Autowired constructor(
         userId: String,
         experienceId: Long,
         isOuter: Boolean = false,
-        ttl: Int? = null
+        ttl: Int? = null,
+        enablePublicAccess: Boolean = false
     ): DownloadUrl {
         val canExperience = experienceBaseService.userCanExperience(userId, experienceId, isOuter)
         if (!canExperience) {
@@ -174,6 +175,11 @@ class ExperienceDownloadService @Autowired constructor(
         }
 
         val experienceRecord = experienceDao.get(dslContext, experienceId)
+        if (enablePublicAccess && !experienceRecord.enablePublicAccess) {
+            throw ErrorCodeException(
+                errorCode = ExperienceMessageCode.PUBLIC_ACCESS_NOT_ENABLED
+            )
+        }
         checkIfExpired(experienceRecord)
 
         val artifactoryType = ArtifactoryType.valueOf(experienceRecord.artifactoryType)

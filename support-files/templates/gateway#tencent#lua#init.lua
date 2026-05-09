@@ -61,7 +61,11 @@ config = {
         host = "__IAM_HOST__",
         url = "__IAM_TOKEN_URL__", -- 接口路径
         app_code = "__APP_CODE__",
-        app_secret = "__APP_TOKEN__"
+        app_secret = "__APP_TOKEN__",
+        get_info_ip = "__GET_INFO_IP__",
+        get_info_port = "__GET_INFO_PORT__",
+        get_info_host = "__GET_INFO_HOST__",
+        get_info_url = "__GET_INFO_URL__"
     },
     artifactory = {
         port = "__JFROG_HTTP_PORT__",
@@ -137,7 +141,10 @@ config = {
         host = "frontend-bk-ci-frontend"
     },
     tag_service_table = __BK_CI_TAG_SERVICE_TABLE__,
-    tag_project_table = __BK_CI_TAG_PROJECT_TABLE__
+    tag_project_table = __BK_CI_TAG_PROJECT_TABLE__,
+    scc = {
+        domain = "__SCC_FQDN__"
+    }
 }
 
 -- 特殊域名

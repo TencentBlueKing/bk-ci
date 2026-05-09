@@ -31,9 +31,10 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
-import com.tencent.devops.process.pojo.template.TemplateOperationRet
 import com.tencent.devops.process.pojo.template.TemplateMigrateByPercentageRequest
 import com.tencent.devops.process.pojo.template.TemplateMigrateByPercentageResult
+import com.tencent.devops.process.pojo.template.TemplateOperationRet
+import com.tencent.devops.process.pojo.template.v2.FixBadParamsItem
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -43,6 +44,7 @@ import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "op_TEMPLATE_V2", description = "op-模板资源-v2")
@@ -122,4 +124,22 @@ interface OpPipelineTemplateResource {
         @PathParam("itemId")
         itemId: String
     ): Result<TemplateOperationRet>
+
+    @Operation(summary = "修复模板迁移产生的错误参数")
+    @POST
+    @Path("/migrate/{projectId}/fixBadParams")
+    fun fixBadParams(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "模板ID", required = false)
+        @QueryParam("templateId")
+        templateId: String?,
+        @Parameter(
+            description = "是否仅预览(true=只打印日志不执行, false=执行修复)",
+            required = true
+        )
+        @QueryParam("dryRun")
+        dryRun: Boolean
+    ): Result<List<FixBadParamsItem>>
 }

@@ -179,7 +179,7 @@ class MarketStoreQueryDao {
             val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
             val deptCondition = tStoreDeptRel.STORE_CODE.eq(tStoreBase.STORE_CODE)
                 .and(tStoreDeptRel.STORE_TYPE.eq(tStoreBase.STORE_TYPE))
-                .and(tStoreDeptRel.DEPT_ID.`in`(userDeptList))
+                .and(tStoreDeptRel.DEPT_ID.eq(0).or(tStoreDeptRel.DEPT_ID.`in`(userDeptList)))
             val existsCondition = DSL.exists(
                 dslContext.selectOne()
                     .from(tStoreDeptRel)

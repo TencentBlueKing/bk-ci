@@ -14,6 +14,13 @@
 <script>
     import { mapMutations, mapState } from 'vuex'
 
+    /**
+     * 与 devops-nav `AI_IFRAME_ACTIONS.UPDATE_SUB_CONTEXT` 保持一致 ——
+     * 把当前路由的项目/流水线/构建上下文上报给父窗口（devops-nav），由它
+     * 转发给 AI iframe。
+     */
+    const AI_SUB_CONTEXT_ACTION = 'updateAiSubContext'
+
     export default {
         name: 'App',
         data () {
@@ -29,6 +36,27 @@
         watch: {
             '$route.fullPath' (val) { // 同步地址到蓝盾
                 this.$syncUrl(val.replace(/^\/pipeline\//, '/'))
+            },
+            '$route.params': {
+                handler (params) {
+                    // Send the AI context up to devops-nav (parent window) so it
+                    // can forward the per-tab context to the AI iframe via
+                    // postMessage. Avoids using localStorage, which is shared
+                    // across browser tabs and caused cross-tab pollution.
+                    try {
+                        if (window.parent && window.parent !== window) {
+                            window.parent.postMessage({
+                                action: AI_SUB_CONTEXT_ACTION,
+                                params: {
+                                    projectId: params.projectId || '',
+                                    pipelineId: params.pipelineId || '',
+                                    buildId: params.buildNo || '',
+                                }
+                            }, '*')
+                        }
+                    } catch (_) { /* parent inaccessible */ }
+                },
+                immediate: true,
             },
             fetchError (error) {
                 error.message && this.$showTips({

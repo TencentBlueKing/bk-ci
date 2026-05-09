@@ -50,6 +50,6 @@ class UserExpertSupportResourceImpl @Autowired constructor(
     }
 
     override fun expandDiskDetail(userId: String, workspaceName: String): Result<ExpandDiskTaskDetail?> {
-        return Result(expertSupportService.expandDiskDetail(workspaceName))
+        return Result(expertSupportService.expandDiskDetail(userId, workspaceName))
     }
 }

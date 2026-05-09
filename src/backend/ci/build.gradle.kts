@@ -112,6 +112,12 @@ allprojects {
             }
             dependency("com.perforce:p4java:${Versions.p4}")
             dependency("io.mockk:mockk:${Versions.mockk}")
+            dependencySet("io.agentscope:${Versions.AgentScope}") {
+                entry("agentscope")
+                entry("agentscope-agui-spring-boot-starter")
+                entry("agentscope-extensions-autocontext-memory")
+                entry("agentscope-extensions-session-mysql")
+            }
             dependencySet("io.github.resilience4j:${Versions.Resilience4j}") {
                 entry("resilience4j-circuitbreaker")
                 entry("resilience4j-core")
@@ -127,6 +133,7 @@ allprojects {
             dependency("org.apache.poi:poi-ooxml:${Versions.apachepoi}")
             dependency("com.mysql:mysql-connector-j:${Versions.MysqlDriver}")
             dependency("com.tencentcloudapi:tencentcloud-sdk-java-cfs:${Versions.tencentcloudsdkcfs}")
+            dependency("com.qcloud:cos_api:${Versions.cosApi}")
             // worker需要依赖
             dependency("org.jvnet.winp:winp:${Versions.Winp}")
             dependency("net.java.dev.jna:jna:${Versions.Jna}")
@@ -139,6 +146,9 @@ allprojects {
             dependency("io.lettuce:lettuce-core:6.4.2.RELEASE")
             // spring-amqp 3.2.0 有BUG https://github.com/spring-projects/spring-amqp/issues/2914
             dependency("org.springframework.amqp:spring-amqp:3.2.8")
+            // spring-boot 3.4.0 引入的snakeyaml 2.3版本有BUG
+            // https://bitbucket.org/snakeyaml/snakeyaml/issues/1100/parsing-big-yaml-with-emoji-doesnt-work
+            dependency("org.yaml:snakeyaml:2.4")
         }
     }
 

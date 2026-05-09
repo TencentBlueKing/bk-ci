@@ -47,6 +47,7 @@ import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineIdInfo
+import com.tencent.devops.process.pojo.pipeline.PipelineCount
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineRemoteToken
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
@@ -651,6 +652,18 @@ interface ServicePipelineResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<PipelineRemoteToken>
+
+    @Operation(summary = "获取列表页列表相关的数目")
+    @GET
+    @Path("/projects/{projectId}/getCount")
+    fun getCount(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<PipelineCount>
 
     @Operation(summary = "启用/禁用流水线（修改流水线的并发设置）")
     @POST

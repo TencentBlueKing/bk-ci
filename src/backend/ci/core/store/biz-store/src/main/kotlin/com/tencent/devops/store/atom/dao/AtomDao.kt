@@ -86,6 +86,7 @@ import com.tencent.devops.store.pojo.common.KEY_RECENT_EXECUTE_NUM
 import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
 import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.net.URLDecoder
@@ -203,32 +204,50 @@ class AtomDao : AtomBaseDao() {
     /**
      * 统计分类下处于已发布状态的插件个数
      */
-    fun countReleaseAtomNumByClassifyId(dslContext: DSLContext, classifyId: String): Int {
+    fun countReleaseAtomNumByClassifyId(
+        dslContext: DSLContext,
+        classifyId: String,
+        serviceScope: ServiceScopeEnum? = null
+    ): Int {
         with(TAtom.T_ATOM) {
-            return dslContext.selectCount().from(this).where(
-                ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())
-                    .and(CLASSIFY_ID.eq(classifyId))
-            ).fetchOne(0, Int::class.java)!!
+            val classifyCondition = buildClassifyCondition(
+                ta = this,
+                classifyId = classifyId,
+                serviceScope = serviceScope
+            )
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
+            classifyCondition?.let { conditions.add(it) }
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
     }
 
     /**
      * 统计还在使用处于下架中或者已下架状态的插件的项目的个数
      */
-    fun countUndercarriageAtomNumByClassifyId(dslContext: DSLContext, classifyId: String): Int {
+    fun countUndercarriageAtomNumByClassifyId(
+        dslContext: DSLContext,
+        classifyId: String,
+        serviceScope: ServiceScopeEnum? = null
+    ): Int {
         val tAtom = TAtom.T_ATOM
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
         val atomStatusList = listOf(
             AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
             AtomStatusEnum.UNDERCARRIAGED.status.toByte()
         )
+        val classifyCondition = buildClassifyCondition(
+            ta = tAtom,
+            classifyId = classifyId,
+            serviceScope = serviceScope
+        )
+        val conditions = mutableListOf<Condition>()
+        conditions.add(tAtom.ATOM_STATUS.`in`(atomStatusList))
+        classifyCondition?.let { conditions.add(it) }
+        conditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
         return dslContext.select(countDistinct(tStoreProjectRel.PROJECT_CODE)).from(tAtom).join(tStoreProjectRel)
             .on(tAtom.ATOM_CODE.eq(tStoreProjectRel.STORE_CODE))
-            .where(
-                tAtom.ATOM_STATUS.`in`(atomStatusList)
-                    .and(tAtom.CLASSIFY_ID.eq(classifyId))
-                    .and(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
-            ).fetchOne(0, Int::class.java)!!
+            .where(conditions).fetchOne(0, Int::class.java)!!
     }
 
     fun delete(dslContext: DSLContext, id: String) {

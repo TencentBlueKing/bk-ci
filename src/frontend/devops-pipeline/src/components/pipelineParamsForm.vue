@@ -278,7 +278,7 @@
                                 : {}
                         ),
                         // eslint-disable-next-line
-                        show: Object.keys(param.displayCondition ?? {}).every((key) => this.isEqual(this.paramValues[key], param.displayCondition[key])),
+                        show: Object.keys(param.displayCondition ?? {}).every((key) => this.isEqual((this.allPipelineParamValues ?? this.paramValues)[key], param.displayCondition[key])),
                         
                     }
                 })
