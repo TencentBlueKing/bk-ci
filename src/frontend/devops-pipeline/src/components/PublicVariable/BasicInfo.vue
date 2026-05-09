@@ -196,7 +196,7 @@
         groupName: [
             {
                 required: true,
-                message: proxy.$t('publicVar.paramGroupId') + proxy.$t('required'),
+                message: proxy.$t('publicVar.paramGroupIdRequired'),
                 trigger: 'blur'
             },
             {

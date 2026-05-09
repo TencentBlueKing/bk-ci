@@ -128,6 +128,7 @@
                                                     class="bk-icon icon-copy"
                                                 ></i>
                                                 <bk-popconfirm
+                                                    v-if="!param.varGroupName"
                                                     ref="removePopConfirmRef"
                                                     :popover-options="{ appendTo: 'parent' }"
                                                     :title="$t('newui.pipelineParam.removeTitle')"

@@ -2187,12 +2187,13 @@
     "removeParamInPipeline": "パイプラインから削除",
     "beenCited": "参照されているか",
     "removeParamTitle": "この変数の削除を確認しますか？",
-    "paramGroupIdRule": "英字、数字、アンダースコアで構成され、英字で始まり、3～32文字",
+    "paramGroupIdRequired": "変数グループIDは必須です",
     "paramReferenceStatus": "変数参照状況",
     "repeatParamTips": "パイプラインに同じ名前の変数 ({0}) がある場合は、パイプライン変数を変更するか、共通変数グループを再度選択してください。",
     "publicVarGroup": "公共変数グループ - {0}",
     "repeatTips": "同じ名前の変数と競合しています。対応する変数グループを削除するか、同じ名前の変数を削除してから再度追加してください。",
-    "noUsePermission": "使用権限がありません"
+    "noUsePermission": "使用権限がありません",
+    "paramGroupIdRule": "英字、数字、アンダースコアで構成され、英字で始まり、3～32文字"
   },
   "showStageProgress": "ステージの進捗を表示",
   "showBuildInfo": "ビルド情報を表示",

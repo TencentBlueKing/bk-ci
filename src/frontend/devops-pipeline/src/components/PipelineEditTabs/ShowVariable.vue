@@ -131,7 +131,10 @@
                 return this.pipeline?.stages[0]?.containers[0] || {}
             },
             params () {
-                return [...this.container?.params, ...this.isRemoveParamsList] || []
+                const containerParams = this.container?.params || []
+                const containerParamKeys = new Set(containerParams.map(p => `${p.id}_${p.varGroupName ?? ''}`))
+                const uniqueRemoveParams = this.isRemoveParamsList.filter(p => !containerParamKeys.has(`${p.id}_${p.varGroupName ?? ''}`))
+                return [...containerParams, ...uniqueRemoveParams]
             },
             buildNo () {
                 return this.container?.buildNo || {}

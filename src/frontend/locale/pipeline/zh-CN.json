@@ -2194,7 +2194,8 @@
     "repeatParamTips": "流水线（{0}）中存在同名变量，请先修改流水线变量或重选公共变量组",
     "publicVarGroup": "公共变量组 - {0}",
     "repeatTips": "存在同名变量冲突问题，请移除对应的变量组，或删除同名变量后再添加。",
-    "noUsePermission": "无使用权限"
+    "noUsePermission": "无使用权限",
+    "paramGroupIdRequired": "变量组ID必填"
   },
   "showStageProgress": "展示 Stage 进度",
   "showBuildInfo": "展示构建信息",
