@@ -311,6 +311,12 @@ class PipelineTemplateInstanceReqConverter(
                 projectId = projectId,
                 asCodeSettings = pipelineSettingWithoutVersion.pipelineAsCodeSettings
             )
+            val yamlFileInfo = enablePac.takeIf { it }?.let {
+                PipelineYamlFileInfo(
+                    repoHashId = repoHashId!!,
+                    filePath = filePath!!,
+                )
+            }
             val pipelineModelBasicInfo = pipelineResourceFactory.createPipelineModelBasicInfo(
                 model = instanceModel,
                 projectId = projectId,
@@ -319,6 +325,7 @@ class PipelineTemplateInstanceReqConverter(
                 create = pipelineId == null,
                 versionStatus = versionStatus,
                 channelCode = ChannelCode.BS,
+                yamlFileInfo = yamlFileInfo,
                 pipelineDialect = pipelineDialect
             )
 
@@ -377,12 +384,7 @@ class PipelineTemplateInstanceReqConverter(
                 templateInstanceBasicInfo = templateInstanceBasicInfo,
                 resetBuildNo = resetBuildNo,
                 enablePac = enablePac,
-                yamlFileInfo = enablePac.takeIf { it }?.let {
-                    PipelineYamlFileInfo(
-                        repoHashId = repoHashId!!,
-                        filePath = filePath!!,
-                    )
-                },
+                yamlFileInfo = yamlFileInfo,
                 targetAction = targetAction,
                 targetBranch = targetBranch,
                 branchName = branchName
