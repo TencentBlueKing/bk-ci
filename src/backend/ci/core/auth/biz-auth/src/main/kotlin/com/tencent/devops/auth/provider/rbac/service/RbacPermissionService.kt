@@ -585,6 +585,7 @@ class RbacPermissionService(
         }
     }
 
+    @Suppress("NestedBlockDepth")
     override fun filterUserResourcesByActions(
         userId: String,
         actions: List<String>,
