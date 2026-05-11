@@ -186,6 +186,11 @@
                             </bk-button> -->
                             <bk-button
                                 text
+                                :disabled="row.projectScope === 1"
+                                v-bk-tooltips="{
+                                    content: $t('personalProjectCannotExit'),
+                                    disabled: row.projectScope !== 1
+                                }"
                                 @click="handleQuitClick(row)"
                             >
                                 {{ $t('projectExit') }}
