@@ -235,15 +235,13 @@ class NotifyControl @Autowired constructor(
             )
             notify4User(
                 userIds = userList,
-                notifyType = mutableSetOf(RemoteDevNotifyType.DESKTOP_MARQUEE),
+                notifyType = mutableSetOf(RemoteDevNotifyType.DESKTOP_TIPS),
                 bodyParams = bodyParams
             )
         }
 
         // 给所有云桌面的owner发送云桌面-LONG TIPS消息
-        if (notifyData.notifyType == null ||
-            notifyData.notifyType?.contains(RemoteDevNotifyType.DESKTOP_LONG_TIPS) == true
-        ) {
+        if (notifyData.notifyType?.contains(RemoteDevNotifyType.DESKTOP_LONG_TIPS) == true) {
             bodyParams[UserNotifyInfo::operator.name] = userId
             bodyParams["messageContent"] = JsonUtil.toJson(
                 mapOf(
