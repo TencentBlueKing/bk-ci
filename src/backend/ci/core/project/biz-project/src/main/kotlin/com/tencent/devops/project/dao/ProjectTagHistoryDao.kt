@@ -42,6 +42,24 @@ class ProjectTagHistoryDao {
         }
     }
 
+    fun deleteByProjectIds(
+        dslContext: DSLContext,
+        version: String,
+        channel: String,
+        projectIds: Set<String>
+    ): Int {
+        if (projectIds.isEmpty()) {
+            return 0
+        }
+        return with(Tables.T_PROJECT_TAG_HISTORY) {
+            dslContext.deleteFrom(this)
+                .where(VERSION.eq(version))
+                .and(CHANNEL.eq(channel))
+                .and(PROJECT_ID.`in`(projectIds))
+                .execute()
+        }
+    }
+
     fun listHistoryRecords(
         dslContext: DSLContext,
         version: String,

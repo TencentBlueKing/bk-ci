@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.consul.ConsulConstants.DEFAULT_TAG_REDIS_KEY
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_CODECC_REDIS_KEY
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.KubernetesUtils
@@ -490,14 +491,36 @@ class ProjectTagService @Autowired constructor(
             offset += pageSize
         } while (pageSize == PAGE_SIZE)
 
-        records.chunked(BATCH_SIZE).forEach {
-            projectTagHistoryDao.batchCreate(dslContext, it)
+        val createRecords = mutableListOf<ProjectReleaseBatchCreateDTO>()
+        var deletedCount = 0
+        val lock = RedisLock(
+            redisOperation = redisOperation,
+            lockKey = "$RELEASE_BATCH_CREATE_LOCK:${request.version}:${request.channelCode}",
+            expiredTimeInSeconds = 60
+        )
+        try {
+            lock.lock()
+            records.chunked(BATCH_SIZE).forEach { batchRecords ->
+                deletedCount += projectTagHistoryDao.deleteByProjectIds(
+                    dslContext = dslContext,
+                    version = request.version,
+                    channel = request.channelCode,
+                    projectIds = batchRecords.map { it.projectId }.toSet()
+                )
+                if (batchRecords.isNotEmpty()) {
+                    projectTagHistoryDao.batchCreate(dslContext, batchRecords)
+                    createRecords.addAll(batchRecords)
+                }
+            }
+        } finally {
+            lock.unlock()
         }
         logger.info(
             "createReleaseBatch|version=${request.version}|channel=${request.channelCode}|" +
-                "sourceTag=${request.sourceTag}|targetTag=${request.targetTag}|count=${records.size}"
+                "sourceTag=${request.sourceTag}|targetTag=${request.targetTag}|candidate=${records.size}|" +
+                "created=${createRecords.size}|deleted=$deletedCount"
         )
-        return records.groupBy { it.batchPercent }
+        return createRecords.groupBy { it.batchPercent }
             .map { (batchPercent, batchRecords) ->
                 ProjectReleaseBatchCreateResult(
                     batchPercent = batchPercent,
@@ -677,6 +700,7 @@ class ProjectTagService @Autowired constructor(
         private const val HASH_BUCKET_SIZE = 100L
         private const val BATCH_SIZE = 500
         private const val PAGE_SIZE = 1000
+        private const val RELEASE_BATCH_CREATE_LOCK = "project:release:batch:create"
         const val BLACKLIST_KEY = "project:percentage:routing:blacklist"
         private val logger = LoggerFactory.getLogger(ProjectTagService::class.java)
     }
