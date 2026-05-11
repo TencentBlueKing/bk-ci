@@ -598,57 +598,58 @@ class RbacPermissionService(
         val startEpoch = System.currentTimeMillis()
         val result = try {
             if (checkProjectManager(userId = userId, projectCode = projectCode)) {
-                return actions.associate {
+                actions.associate {
                     val authPermission = it.substringAfterLast("_")
                     AuthPermission.get(authPermission) to resources.map { resource -> resource.resourceCode }
                 }
-            }
-            val resourceCode2IamResourceCode = authResourceCodeConverter.batchCode2IamCode(
-                projectCode = projectCode,
-                resourceType = resourceType,
-                resourceCodes = resources.map { it.resourceCode }
-            )
-            val instanceList = resources.map { resource ->
-                val paths = mutableListOf<PathInfoDTO>()
-                resourcesPaths(
+            } else {
+                val resourceCode2IamResourceCode = authResourceCodeConverter.batchCode2IamCode(
                     projectCode = projectCode,
-                    resource = resource,
-                    child = null,
-                    paths = paths,
-                    needSystemFiled = false
+                    resourceType = resourceType,
+                    resourceCodes = resources.map { it.resourceCode }
                 )
-                val instance = InstanceDTO()
-                instance.type = resource.resourceType
-                instance.id = resourceCode2IamResourceCode[resource.resourceCode]
-                instance.system = iamConfiguration.systemId
-                instance.paths = paths
-                instance
-            }
-            val permissionMap = mutableMapOf<AuthPermission, List<String>>()
-            val traceId = MDC.get(TraceTag.BIZID)
-            actions.parallelStream().forEach { action ->
-                MDC.put(TraceTag.BIZID, traceId)
-                val authPermission = action.substringAfterLast("_")
-                // 具有action管理员权限,那么有所有资源权限
-                if (superManagerService.projectManagerCheck(
-                        userId = userId,
+                val instanceList = resources.map { resource ->
+                    val paths = mutableListOf<PathInfoDTO>()
+                    resourcesPaths(
                         projectCode = projectCode,
-                        resourceType = resourceType,
-                        action = action
+                        resource = resource,
+                        child = null,
+                        paths = paths,
+                        needSystemFiled = false
                     )
-                ) {
-                    permissionMap[AuthPermission.get(authPermission)] = resources.map { it.resourceCode }
-                } else {
-                    val iamResourceCodes = authHelper.isAllowed(userId, action, instanceList)
-                    permissionMap[AuthPermission.get(authPermission)] = getFinalResourceCodes(
-                        projectCode = projectCode,
-                        resourceType = resourceType,
-                        iamResourceCodes = iamResourceCodes,
-                        createUser = userId
-                    )
+                    val instance = InstanceDTO()
+                    instance.type = resource.resourceType
+                    instance.id = resourceCode2IamResourceCode[resource.resourceCode]
+                    instance.system = iamConfiguration.systemId
+                    instance.paths = paths
+                    instance
                 }
+                val permissionMap = mutableMapOf<AuthPermission, List<String>>()
+                val traceId = MDC.get(TraceTag.BIZID)
+                actions.parallelStream().forEach { action ->
+                    MDC.put(TraceTag.BIZID, traceId)
+                    val authPermission = action.substringAfterLast("_")
+                    // 具有action管理员权限,那么有所有资源权限
+                    if (superManagerService.projectManagerCheck(
+                            userId = userId,
+                            projectCode = projectCode,
+                            resourceType = resourceType,
+                            action = action
+                        )
+                    ) {
+                        permissionMap[AuthPermission.get(authPermission)] = resources.map { it.resourceCode }
+                    } else {
+                        val iamResourceCodes = authHelper.isAllowed(userId, action, instanceList)
+                        permissionMap[AuthPermission.get(authPermission)] = getFinalResourceCodes(
+                            projectCode = projectCode,
+                            resourceType = resourceType,
+                            iamResourceCodes = iamResourceCodes,
+                            createUser = userId
+                        )
+                    }
+                }
+                permissionMap
             }
-            permissionMap
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to filter user resources |" +
