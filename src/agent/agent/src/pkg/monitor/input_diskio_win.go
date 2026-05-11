@@ -162,11 +162,11 @@ func isDiskIONonFatalErr(err error) bool {
 	}
 	msg := strings.ToLower(err.Error())
 	nonFatalPatterns := []string{
-		"recognized file system",    // "The volume does not contain a recognized file system"
-		"not ready",                 // "The device is not ready" (空光驱)
-		"access is denied",          // 无权限访问的卷
-		"incorrect function",        // 某些虚拟磁盘返回的通用错误
-		"sem_timeout",               // 设备超时
+		"recognized file system",     // "The volume does not contain a recognized file system"
+		"not ready",                  // "The device is not ready" (空光驱)
+		"access is denied",           // 无权限访问的卷
+		"incorrect function",         // 某些虚拟磁盘返回的通用错误
+		"sem_timeout",                // 设备超时
 		"the parameter is incorrect", // 参数错误（某些虚拟设备）
 	}
 	for _, p := range nonFatalPatterns {

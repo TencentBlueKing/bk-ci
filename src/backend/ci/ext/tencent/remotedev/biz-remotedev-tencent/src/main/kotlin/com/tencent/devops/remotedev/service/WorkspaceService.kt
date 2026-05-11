@@ -425,7 +425,7 @@ class WorkspaceService @Autowired constructor(
         search: WorkspaceSearch?
     ): Page<ProjectWorkspace> {
         val pageNotNull = page ?: 1
-        val pageSizeNotNull = pageSize ?: 6666
+        val pageSizeNotNull = pageSize ?: MAX_PAGE_SIZE
         val theSearch = search?.apply {
             this.projectId = listOf(projectId)
         } ?: WorkspaceSearch(
@@ -551,7 +551,7 @@ class WorkspaceService @Autowired constructor(
         data: ProjectWorkspaceFetchData
     ): Page<ProjectWorkspace> {
         val pageNotNull = data.page ?: 1
-        val pageSizeNotNull = data.pageSize ?: 6666
+        val pageSizeNotNull = data.pageSize ?: MAX_PAGE_SIZE
         val fastSelect = data.ips?.find { it -> it.any { it in 'A'..'Z' } } == null
         val search = with(data) {
             WorkspaceSearch(
@@ -582,7 +582,7 @@ class WorkspaceService @Autowired constructor(
         val records = parseWorkspaceList(
             userId = userId,
             result = result,
-            enableExportSup = true,
+            enableExportSup = false,
             expertSupId = data.expertSupId
         )
 
@@ -952,7 +952,7 @@ class WorkspaceService @Autowired constructor(
     fun getWorkspaceList(userId: String, page: Int?, pageSize: Int?, search: WorkspaceSearch?): Page<Workspace> {
         logger.info("$userId get user workspace list")
         val pageNotNull = page ?: 1
-        val pageSizeNotNull = pageSize ?: 6666
+        val pageSizeNotNull = pageSize ?: MAX_PAGE_SIZE
         val workspaceSearch = search?.apply {
             // 客户端获取必须包含用户本身
             if (this.viewers == null || !this.viewers!!.contains(userId)) {
@@ -1798,6 +1798,7 @@ class WorkspaceService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
         private const val DEFAULT_PAGE_SIZE = 20
+        private const val MAX_PAGE_SIZE = 6666
         private const val DEFAULT_WAIT_TIME = 10
         private const val DEFAULT_LOCALE_LANGUAGE = "zh_CN"
 

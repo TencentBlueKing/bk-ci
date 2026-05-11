@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.TrustDeviceInfo
 import com.tencent.devops.remotedev.pojo.TrustDeviceTokenGetData
+import com.tencent.devops.remotedev.pojo.VerifyResult
 import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognitionData
 import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognitionResult
 import com.tencent.devops.remotedev.pojo.userinfo.UserInfoAuthCheck
@@ -100,6 +101,21 @@ interface UserInfoResource {
         @HeaderParam(X_DEVOPS_TRUST_DEVICE_TOKEN)
         token: String
     ): Result<Boolean>
+
+    @Operation(summary = "校验设备授信Token")
+    @GET
+    @Path("/trust/device/token/verifyNew")
+    fun verifyTrustDeviceTokenNew(
+        @Parameter(description = "用户ID", required = false, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "授信设备唯一标识", required = false)
+        @HeaderParam(X_DEVOPS_TRUST_DEVICE_ID)
+        deviceId: String,
+        @Parameter(description = "授信设备Token", required = false)
+        @HeaderParam(X_DEVOPS_TRUST_DEVICE_TOKEN)
+        token: String
+    ): Result<VerifyResult>
 
     @Operation(summary = "获取授信设备列表")
     @GET
