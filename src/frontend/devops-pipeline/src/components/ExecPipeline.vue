@@ -279,6 +279,15 @@
                 :exec-detail="execDetail"
             ></complete-log>
         </template>
+        <MacDebugDialog
+            ref="macDebugDialog"
+            :is-show="isShowDebug"
+            :pipeline-id="pipelineId"
+            :container-id="MACDebugContainerId"
+            :build-id="buildId"
+            :execute-count="executeCount"
+            @close="closeDebugDialog"
+        />
     </div>
 </template>
 
@@ -293,6 +302,7 @@
     import simplebar from 'simplebar-vue'
     import 'simplebar-vue/dist/simplebar.min.css'
     import { mapActions, mapGetters, mapState } from 'vuex'
+    import MacDebugDialog from '@/components/MacDebugDialog.vue'
     export default {
         components: {
             simplebar,
@@ -300,6 +310,7 @@
             CompleteLog,
             Logo,
             MiniMap,
+            MacDebugDialog,
             BkPipeline
         },
         props: {
@@ -329,6 +340,8 @@
                 element: {},
                 scrollElement: '.pipeline-detail-wrapper.biz-content',
                 isShowCheckDialog: false,
+                isShowDebug: false,
+                MACDebugContainerId: null,
                 hasHandledRouteParams: false
             }
         },
@@ -991,15 +1004,48 @@
                     })
                 })
             },
+            async openDebug (container) {
+                try {
+                    const response = await this.$store.dispatch('atom/startVmSeqDebug', {
+                        pipelineId: this.pipelineId,
+                        buildId: this.routerParams.buildNo,
+                        containerId: container.containerId,
+                        executeCount: container.executeCount
+                    })
+                    
+                    if (response.data?.actionCode === 200 && response.data?.data) {
+                        this.$refs.macDebugDialog?.setDebugData(response.data.data)
+                        this.isShowDebug = true
+                    } else {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: response.data?.actionMessage || this.$t('startDebugFailed')
+                        })
+                    }
+                } catch (err) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: err.message || err
+                    })
+                }
+            },
+            closeDebugDialog () {
+                this.isShowDebug = false
+            },
             debugDocker ({ container }) {
-                const vmSeqId = container.id
-                const { projectId, pipelineId, buildNo: buildId } = this.$route.params
-                const buildResourceType = container.dispatchType?.buildType
-                const buildIdStr = buildId ? `&buildId=${buildId}` : ''
-
-                const tab = window.open('about:blank')
-                const url = `${WEB_URL_PREFIX}/pipeline/${projectId}/dockerConsole/?pipelineId=${pipelineId}&dispatchType=${buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
-                tab.location = url
+                this.MACDebugContainerId = container.containerId
+                if (container.baseOS === "MACOS") {
+                    this.openDebug(container)
+                } else {
+                    const vmSeqId = container.id
+                    const { projectId, pipelineId, buildNo: buildId } = this.$route.params
+                    const buildResourceType = container.dispatchType?.buildType
+                    const buildIdStr = buildId ? `&buildId=${buildId}` : ''
+    
+                    const tab = window.open('about:blank')
+                    const url = `${WEB_URL_PREFIX}/pipeline/${projectId}/dockerConsole/?pipelineId=${pipelineId}&dispatchType=${buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
+                    tab.location = url
+                }
             },
             expandAllMatrix () {
                 try {

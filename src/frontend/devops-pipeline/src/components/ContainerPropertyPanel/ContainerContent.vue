@@ -1290,7 +1290,7 @@
                         pipelineId: this.pipelineId,
                         buildId: this.buildId,
                         containerId: this.container.containerId,
-                        executeCount: this.container.executeCount
+                        executeCount: this.container.executeCount ?? 1
                     })
                     
                     if (response.data?.actionCode === 200 && response.data?.data) {
