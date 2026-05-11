@@ -133,6 +133,79 @@
                         >{{ $t("learnMore") }}</a>
                     </p>
                 </article>
+                <article class="product-download">
+                    <h2>
+                        {{ $t("产品下载") }}
+                    </h2>
+                    <div
+                        v-for="(section, sIndex) in downloadSections"
+                        :key="sIndex"
+                        class="download-section"
+                    >
+                        <div class="section-header">
+                            <p class="section-title">{{ section.title }}</p>
+                            <p class="section-desc">{{ section.desc }}</p>
+                        </div>
+                        <div class="platform-cards">
+                            <div
+                                v-for="(platform, pIndex) in section.platforms"
+                                :key="pIndex"
+                                class="platform-card"
+                                :class="{
+                                    disabled: platform.disabled,
+                                    repo: section.isRepo,
+                                    large: platform.isLarge
+                                }"
+                            >
+                                <div class="card-header">
+                                    <Icon
+                                        :name="platform.icon"
+                                        size="32"
+                                    />
+                                    <span
+                                        v-if="platform.hasCornerBadge"
+                                        class="corner-badge"
+                                        :class="{ 'qr-code': platform.cornerBadgeType === 'qr-code' }"
+                                    >
+                                        <Icon
+                                            :name="platform.cornerBadgeType === 'qr-code' ? 'qrcode' : 'download'"
+                                            :size="platform.cornerBadgeType === 'qr-code' ? 14 : 12"
+                                        />
+                                    </span>
+                                </div>
+                                <div class="card-body">
+                                    <span class="platform-name">{{ platform.name }}</span>
+                                </div>
+                                <!-- 二维码悬浮显示 -->
+                                <span
+                                    v-if="platform.type === 'qr'"
+                                    class="qr-hover"
+                                >
+                                    <img
+                                        :src="platform.qrSrc"
+                                        alt=""
+                                    >
+                                    {{ $t("扫码下载") }}
+                                </span>
+                                <!-- 下载按钮悬浮显示 -->
+                                <span
+                                    v-if="platform.type === 'download'"
+                                    class="download-hover"
+                                    @click="handlePlatformClick(platform)"
+                                >
+                                    <span class="down-icon">
+                                        <Icon
+                                            name="download"
+                                            size="18"
+                                        />
+                                    </span>
+                                    {{ $t("点击下载") }}
+                                    <span class="file-name">{{ platform.fileName }}</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
                 <article v-if="related.length > 0">
                     <h2>{{ $t("relatedLink") }}</h2>
                     <div>
@@ -189,6 +262,8 @@
     import ConsultTools from '../components/ConsultTools/index.vue'
     import Logo from '../components/Logo/index.vue'
     import NavBox from '../components/NavBox/index.vue'
+    import Icon from '../components/Icon/index.vue'
+    import devopsAppQrcode from '../assets/images/devopsapp-qrcode.png'
 
     @Component({
         components: {
@@ -196,7 +271,8 @@
             Accordion,
             AccordionItem,
             Logo,
-            ConsultTools
+            ConsultTools,
+            Icon
         }
     })
     export default class Home extends Vue {
@@ -242,6 +318,66 @@
             return count - 1
         }
 
+        get downloadSections (): any[] {
+            return [
+                {
+                    title: this.$t('蓝盾 APP'),
+                    desc: this.$t('支持将 CI 编译产物安装至移动设备，便于测试与体验。'),
+                    platforms: [
+                        {
+                            icon: 'apple',
+                            name: 'iOS',
+                            type: 'qr',
+                            qrSrc: devopsAppQrcode,
+                            hasCornerBadge: true,
+                            cornerBadgeType: 'qr-code'
+                        },
+                        {
+                            icon: 'android-full',
+                            name: 'Android',
+                            type: 'qr',
+                            qrSrc: devopsAppQrcode,
+                            hasCornerBadge: true,
+                            cornerBadgeType: 'qr-code'
+                        },
+                        {
+                            icon: 'harmony',
+                            name: 'HarmonyOS',
+                            type: 'qr',
+                            qrSrc: devopsAppQrcode,
+                            hasCornerBadge: true,
+                            cornerBadgeType: 'qr-code'
+                        }
+                    ]
+                },
+                {
+                    title: this.$t('制品库客户端'),
+                    desc: this.$t('桌面端制品库，支持预约下载与下载加速，支持 Windows 应用的版本体验。'),
+                    isRepo: true,
+                    platforms: [
+                        {
+                            icon: 'windows',
+                            name: 'Windows',
+                            type: 'download',
+                            downloadUrl: 'https://bkrepo.woa.com/generic/bk-repo/public/bkartifacts/BKArtifacts-x64.exe',
+                            fileName: 'BKArtifacts-x64.exe',
+                            hasCornerBadge: true,
+                            cornerBadgeType: 'download',
+                        },
+                        {
+                            icon: 'apple',
+                            name: 'macOS',
+                            type: 'download',
+                            downloadUrl: 'https://bkrepo.woa.com/generic/bk-repo/public/bkartifacts/BKArtifacts-arm64.pkg',
+                            fileName: 'BKArtifacts-arm64.pkg',
+                            hasCornerBadge: true,
+                            cornerBadgeType: 'download'
+                        }
+                    ]
+                }
+            ]
+        }
+
         updateShowAllService (show: boolean): void {
             this.isAllServiceListShow = show
         }
@@ -257,6 +393,17 @@
 
         getFullYear () {
             return (new Date()).getFullYear()
+        }
+
+        downloadRepoClient () {
+            window.location.href = '/path/to/repo-client.exe'
+        }
+
+        handlePlatformClick (platform: any) {
+            if (platform.disabled || !platform.downloadUrl) {
+                return
+            }
+            window.location.href = platform.downloadUrl
         }
 
         created () {
@@ -457,6 +604,217 @@
                 }
                 a {
                     color: $primaryColor;
+                }
+            }
+
+            .product-download {
+
+                .download-section {
+                    margin-bottom: 16px;
+                    padding: 16px;
+                    border-radius: 2px;
+                    background: linear-gradient(108deg, #EAF2FF 21.9%, #E6F7FF 82.93%);
+
+                    .section-header {
+                        margin-bottom: 16px;
+
+                        .section-title {
+                            color: #313238;
+                            text-align: center;
+                            font-family: "Microsoft YaHei";
+                            font-size: 16px;
+                        }
+
+                        .section-desc {
+                            font-size: 12px;
+                            color: #4d4f56;
+                            line-height: 20px;
+                            margin: 4px 0 16px;
+                        }
+                    }
+
+                    .platform-cards {
+                        display: flex;
+                        gap: 8px;
+                        flex-wrap: wrap;
+
+                        .platform-card {
+                            position: relative;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            position: relative;
+                            flex: 1;
+                            height: 108px;
+                            padding: 8px 16px;
+                            background: #FFFFFF;
+                            border-radius: 8px;
+                            box-shadow: 0 0 16px 0 #1271d01a;
+                            cursor: pointer;
+
+                            &:hover:not(.disabled):not(.repo) {
+                                .card-header,
+                                .card-body {
+                                    opacity: 0;
+                                }
+
+                                .qr-hover {
+                                    opacity: 1;
+                                }
+                            }
+
+                            &.disabled {
+                                cursor: not-allowed;
+                                opacity: 0.6;
+                                background: #FAFBFD;
+
+                                .card-header {
+                                    color: #979BA5;
+
+                                    .corner-badge {
+                                        color: #DCDEE5;
+                                    }
+                                }
+
+                                .card-body .platform-name {
+                                    color: #4D4F56;
+                                }
+                            }
+
+                            .card-header {
+                                margin-bottom: 10px;
+                                color: #3A84FF;
+
+                                .corner-badge {
+                                    position: absolute;
+                                    top: 0;
+                                    right: 0;
+                                    width: 28px;
+                                    height: 28px;
+                                    padding: 6px;
+                                    color: #4D4F56;
+                                }
+                                .qr-code {
+                                    background: linear-gradient(45deg, #B9CDFA 50%, #DCE6FA 89.29%);
+                                    clip-path: polygon(100% 0, 0 0, 100% 100%);
+                                }
+                            }
+
+                            .card-body {
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                position: relative;
+
+                                .platform-name {
+                                    font-size: 12px;
+                                    color: #3A84FF;
+                                    margin-bottom: 4px;
+                                }
+
+                                > svg:last-child {
+                                    position: absolute;
+                                    top: -30px;
+                                    right: -35px;
+                                    color: #3A84FF;
+                                    opacity: 0;
+                                }
+
+                                .coming-soon {
+                                    font-size: 12px;
+                                    color: #979BA5;
+                                }
+                            }
+
+                            .qr-hover {
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                flex-direction: column;
+                                gap: 8px;
+                                position: absolute;
+                                top: 50%;
+                                left: 50%;
+                                transform: translate(-50%, -50%);
+                                color: #3A84FF;
+                                font-size: 12px;
+                                opacity: 0;
+                                pointer-events: none;
+
+                                img {
+                                    width: 58px;
+                                    height: 58px;
+                                }
+                            }
+
+                            .download-hover {
+                                width: 100%;
+                                height: 100%;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                flex-direction: column;
+                                position: absolute;
+                                top: 50%;
+                                left: 50%;
+                                transform: translate(-50%, -50%);
+                                font-size: 14px;
+                                color: #3A84FF;
+                                opacity: 0;
+                                pointer-events: none;
+                                white-space: nowrap;
+                                cursor: pointer;
+                            }
+                        }
+
+                        .large {
+                            width: 203px;
+                            flex: none;
+                        }
+
+                        .repo {
+                            &.large {
+                                width: 203px;
+                            }
+
+                            &:hover:not(.disabled) {
+                                .card-header,
+                                .card-body {
+                                    opacity: 0;
+                                }
+
+                                .download-hover {
+                                    display: flex;
+                                    flex-direction: column;
+                                    align-items: center;
+                                    justify-content: center;
+                                    font-size: 12px;
+                                    opacity: 1;
+                                    pointer-events: auto;
+
+                                    .down-icon {
+                                        width: 40px;
+                                        height: 40px;
+                                        border-radius: 50%;
+                                        background-color: #3A84FF;
+                                        color: #fff;
+                                        margin-bottom: 4px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                    }
+
+                                    .file-name {
+                                        display: inline-block;
+                                        color: #979BA5;
+                                        word-break: break-all;
+                                        text-align: center;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
