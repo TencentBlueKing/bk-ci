@@ -80,7 +80,14 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 @Service
-@SuppressWarnings("LongParameterList", "TooManyFunctions", "LongMethod", "MagicNumber", "TooGenericExceptionCaught")
+@SuppressWarnings(
+    "LongParameterList",
+    "TooManyFunctions",
+    "LongMethod",
+    "MagicNumber",
+    "TooGenericExceptionCaught",
+    "ComplexCondition"
+)
 class ProjectLocalService @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
