@@ -28,6 +28,7 @@
             </div>
         </transition>
         <button
+            v-if="!panelVisible"
             :class="['ai-float-btn', { 'ai-float-btn-active': panelVisible }]"
             type="button"
             aria-label="Open AI assistant"
