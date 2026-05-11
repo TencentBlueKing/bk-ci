@@ -81,7 +81,9 @@ class RbacPermissionResourceService(
             resourceCode = resourceCode
         )
         if (resource != null) {
-            if (resourceType != AuthResourceType.PROJECT.value && personalProjectService.isPersonalProject(projectCode)) {
+            if (resourceType != AuthResourceType.PROJECT.value &&
+                personalProjectService.isPersonalProject(projectCode)
+            ) {
                 logHistoricalPersonalProjectAsset(
                     action = "create",
                     projectCode = projectCode,
@@ -432,7 +434,7 @@ class RbacPermissionResourceService(
         if (resource != null) {
             logger.warn(
                 "Historical permission-center asset remains for personal project, skip $action|" +
-                    "$projectCode|$resourceType|$resourceCode"
+                        "$projectCode|$resourceType|$resourceCode"
             )
         }
     }
