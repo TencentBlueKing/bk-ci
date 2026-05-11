@@ -1,11 +1,10 @@
 import {
-  flowModelToYaml,
   getFlowModel,
   saveFlowModel,
-  yamlToFlowModel,
   type FlowModel,
   type FlowSettings,
   type SaveFlowModelParams,
+  type YamlHighlightBlockMap,
 } from '@/api/flowModel'
 import { getPluginProperties, type PluginProperty } from '@/api/flowContentList'
 import { defineStore } from 'pinia'
@@ -26,6 +25,10 @@ export const useFlowModelStore = defineStore('flowModel', () => {
   // YAML 格式的代码内容
   const yamlContent = ref<string>('')
 
+  // 后端返回的 YAML 区域高亮标记（pipeline/trigger/notice/setting）
+  // 用于在 Code 模式下定位不同配置区域
+  const yamlHighlightBlockMap = ref<YamlHighlightBlockMap>({})
+
   // 加载状态
   const loading = ref(false)
 
@@ -40,6 +43,13 @@ export const useFlowModelStore = defineStore('flowModel', () => {
 
   // 是否有未保存的更改
   const hasUnsavedChanges = ref(false)
+
+  // 编辑脏标记：用于判断切换模式时是否需要调用后端 transfer API
+  // - modelDirty: 用户在 UI 模式下修改了 flowModel/flowSetting，YAML 已过期
+  // - yamlDirty: 用户在 Code 模式下修改了 YAML，flowModel 已过期
+  // 两边同时为 false 表示数据已同步（无需请求后端转换）
+  const modelDirty = ref(false)
+  const yamlDirty = ref(false)
 
   // 导入模式：数据来自文件导入，尚未持久化
   const isImportMode = ref(false)
@@ -150,11 +160,15 @@ export const useFlowModelStore = defineStore('flowModel', () => {
 
       flowModel.value = model
       flowSetting.value = modelRes.modelAndSetting?.setting
-      yamlContent.value = modelRes.yamlPreview?.yaml || ''
+      const { yaml: previewYaml, ...highlightMap } = modelRes.yamlPreview ?? { yaml: '' }
+      yamlContent.value = previewYaml || ''
+      yamlHighlightBlockMap.value = highlightMap as YamlHighlightBlockMap
       if (!modelRes.yamlSupported) {
         modeStore.setMode(UI_MODE)
       }
       hasUnsavedChanges.value = false
+      modelDirty.value = false
+      yamlDirty.value = false
     } catch (error) {
       console.error('Failed to load flow model:', error)
       hasError.value = true
@@ -166,37 +180,60 @@ export const useFlowModelStore = defineStore('flowModel', () => {
 
   /**
    * 更新 Flow 模型数据
+   * 注意：仅更新 model，不会同步生成 YAML（前端无能力将 model 转 YAML）。
+   * YAML 与 model 的同步通过切换模式时调用后端 transfer API 完成。
    * @param model 新的 Flow 模型
    */
   function updateFlowModel(model: FlowModel) {
     flowModel.value = model
-    yamlContent.value = flowModelToYaml(model)
     hasUnsavedChanges.value = true
+    modelDirty.value = true
+    yamlHighlightBlockMap.value = {}
     if (isImportMode.value) persistImportData()
   }
 
   function updateFlowSetting(setting: FlowSettings) {
     flowSetting.value = setting
     hasUnsavedChanges.value = true
+    modelDirty.value = true
+    yamlHighlightBlockMap.value = {}
     if (isImportMode.value) persistImportData()
   }
 
   /**
    * 更新 YAML 内容
+   * 注意：仅更新 YAML，不会同步生成 model（前端无能力将 YAML 转 model）。
+   * YAML 与 model 的同步通过切换模式时调用后端 transfer API 完成。
    * @param yaml YAML 字符串
    */
   function updateYamlContent(yaml: string) {
     yamlContent.value = yaml
     hasUnsavedChanges.value = true
+    yamlDirty.value = true
+    yamlHighlightBlockMap.value = {}
+  }
 
-    try {
-      const model = yamlToFlowModel(yaml)
-      flowModel.value = model
-      hasError.value = false
-    } catch (error) {
-      console.error('Failed to parse YAML:', error)
-      hasError.value = true
+  /**
+   * 切换模式时由后端 transfer API 返回结果同步两侧数据。
+   * 调用后两侧均为干净状态。
+   */
+  function applyTransferResult(payload: {
+    yaml?: string
+    model?: FlowModel
+    setting?: FlowSettings
+  }) {
+    if (payload.yaml !== undefined) {
+      yamlContent.value = payload.yaml
     }
+    if (payload.model) {
+      flowModel.value = payload.model
+    }
+    if (payload.setting) {
+      flowSetting.value = payload.setting
+    }
+    modelDirty.value = false
+    yamlDirty.value = false
+    yamlHighlightBlockMap.value = {}
   }
 
   /**
@@ -234,10 +271,13 @@ export const useFlowModelStore = defineStore('flowModel', () => {
           setting: flowSetting.value!,
         },
         storageType: params.storageType || 'MODEL',
+        yaml: params.yaml ?? yamlContent.value,
       }
 
       const response = await saveFlowModel(saveParams)
       hasUnsavedChanges.value = false
+      modelDirty.value = false
+      yamlDirty.value = false
       return response
     } catch (error) {
       console.error('Failed to save flow model:', error)
@@ -276,8 +316,11 @@ export const useFlowModelStore = defineStore('flowModel', () => {
       flowModel.value = model
       flowSetting.value = setting
       yamlContent.value = yaml || ''
+      yamlHighlightBlockMap.value = {}
       isImportMode.value = true
       hasUnsavedChanges.value = true
+      modelDirty.value = false
+      yamlDirty.value = false
       currentFlowId.value = ''
       currentVersion.value = ''
       hasError.value = false
@@ -301,8 +344,11 @@ export const useFlowModelStore = defineStore('flowModel', () => {
     flowModel.value = model
     flowSetting.value = setting
     yamlContent.value = yaml || ''
+    yamlHighlightBlockMap.value = {}
     isImportMode.value = true
     hasUnsavedChanges.value = true
+    modelDirty.value = false
+    yamlDirty.value = false
     currentFlowId.value = ''
     currentVersion.value = ''
     hasError.value = false
@@ -315,12 +361,15 @@ export const useFlowModelStore = defineStore('flowModel', () => {
   function reset() {
     flowModel.value = null
     yamlContent.value = ''
+    yamlHighlightBlockMap.value = {}
     flowSetting.value = null
     loading.value = false
     hasError.value = false
     currentFlowId.value = ''
     currentVersion.value = ''
     hasUnsavedChanges.value = false
+    modelDirty.value = false
+    yamlDirty.value = false
     isImportMode.value = false
   }
 
@@ -337,11 +386,14 @@ export const useFlowModelStore = defineStore('flowModel', () => {
     flowModel,
     flowSetting,
     yamlContent,
+    yamlHighlightBlockMap,
     loading,
     hasError,
     currentFlowId,
     currentVersion,
     hasUnsavedChanges,
+    modelDirty,
+    yamlDirty,
     isImportMode,
 
     // 计算属性
@@ -359,6 +411,7 @@ export const useFlowModelStore = defineStore('flowModel', () => {
     updateFlowModel,
     updateFlowSetting,
     updateYamlContent,
+    applyTransferResult,
     saveFlow,
     reset,
     setHasError,

@@ -42,18 +42,10 @@ export default defineComponent({
 
     return () => (
       <div class={layoutStyles.detailContainer}>
-        {/* <ModeSwitch
+        <ModeSwitch
           projectId={route.params.projectId as string}
           pipelineId={route.params.flowId as string}
-          modelAndSetting={
-            flowModel.value && flowSetting.value
-              ? {
-                  model: flowModel.value,
-                  setting: flowSetting.value,
-                }
-              : undefined
-          }
-        /> */}
+        />
 
         <div class={layoutStyles.detailContent}>
           {loading.value ? (

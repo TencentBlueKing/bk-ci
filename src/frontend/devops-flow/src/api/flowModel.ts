@@ -46,9 +46,29 @@ export interface FlowModelAndSetting {
   updateTime: number
 }
 
-export interface YamlPreview {
+/**
+ * 后端返回的 YAML 区域高亮标记（行列均为 0 起始）
+ */
+export interface YamlMarkPosition {
+  line: number
+  column: number
+}
+
+export interface YamlTransferMark {
+  startMark: YamlMarkPosition
+  endMark: YamlMarkPosition
+}
+
+/**
+ * 后端 yamlPreview 支持的区域 key
+ * 对应 com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
+ */
+export type YamlPreviewSectionKey = 'pipeline' | 'trigger' | 'notice' | 'setting'
+
+export type YamlHighlightBlockMap = Partial<Record<YamlPreviewSectionKey, YamlTransferMark[]>>
+
+export interface YamlPreview extends YamlHighlightBlockMap {
   yaml: string
-  [key: string]: unknown
 }
 
 /**
@@ -73,7 +93,7 @@ export async function getFlowModel(
 export interface SaveFlowModelParams {
   projectId: string
   pipelineId?: string
-  baseVersion?: string
+  baseVersion?: number | string
   storageType?: 'MODEL' | 'YAML'
   modelAndSetting?: {
     model: FlowModel
@@ -107,27 +127,5 @@ export async function saveFlowModel(params: SaveFlowModelParams): Promise<SaveFl
   return response
 }
 
-/**
- * 将 Flow 模型转换为 YAML 格式
- * @param model Flow 模型数据
- */
-export function flowModelToYaml(model: FlowModel): string {
-  // TODO: 实现实际的转换逻辑
-  // 这里简单返回 JSON 字符串作为示例
-  return ''
-}
-
-/**
- * 将 YAML 格式转换为 Flow 模型
- * @param yaml YAML 字符串
- */
-export function yamlToFlowModel(yaml: string): FlowModel {
-  // TODO: 实现实际的转换逻辑
-  // 这里简单解析 JSON 字符串作为示例
-  try {
-    return JSON.parse(yaml)
-  } catch (error) {
-    console.error('Failed to parse YAML:', error)
-    throw new Error('Invalid YAML format')
-  }
-}
+// 注：model <-> yaml 的转换不在前端进行，统一通过后端
+// `apiTransfer`（FULL_MODEL2YAML / FULL_YAML2MODEL）完成。

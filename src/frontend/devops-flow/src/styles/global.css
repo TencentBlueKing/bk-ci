@@ -326,3 +326,7 @@ svg {
 .bk-permission-tooltips[tooltips]:hover::before {
   opacity: 1;
 }
+
+.bk-tab--top .bk-tab-header-item {
+  padding: 0 10px;
+}

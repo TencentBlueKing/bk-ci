@@ -5,6 +5,7 @@ import {
   isValidFlowEditTab,
 } from '@/constants/routes'
 import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
+import { useModeStore } from '@/stores/flowMode'
 import { useFlowModelStore } from '@/stores/flowModel'
 import { useUIStore } from '@/stores/ui'
 import { Tab } from 'bkui-vue'
@@ -13,6 +14,7 @@ import { computed, defineComponent, onBeforeUnmount, onMounted, watch } from 'vu
 import { useI18n } from 'vue-i18n'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import { EditHeader } from '../../../components/EditHeader'
+import CodeModeEditor from './CodeModeEditor'
 import styles from './Edit.module.css'
 import VariablePanel from './VariablePanel'
 
@@ -27,6 +29,7 @@ export default defineComponent({
     const version = computed(() => route.params.version as string | undefined)
 
     const flowModelStore = useFlowModelStore()
+    const modeStore = useModeStore()
     const isImportMode = computed(() => flowModelStore.isImportMode)
 
 
@@ -87,7 +90,7 @@ export default defineComponent({
     }
 
     const shouldShowVariablePanel = computed(() => {
-      return activeTab.value === orchTabName.value
+      return !modeStore.isCodeMode && activeTab.value === orchTabName.value
     })
 
     watch(activeTab, (newTab) => {
@@ -95,6 +98,15 @@ export default defineComponent({
         uiStore.setVariablePanelOpen(false)
       }
     })
+
+    watch(
+      () => modeStore.isCodeMode,
+      (isCode) => {
+        if (isCode && isVariablePanelOpen.value) {
+          uiStore.setVariablePanelOpen(false)
+        }
+      },
+    )
 
     onMounted(() => {
       if (isImportMode.value) {
@@ -128,19 +140,27 @@ export default defineComponent({
               styles.mainContentWithPanel,
             ]}
           >
-            <Tab
-              active={activeTab.value}
-              type="card-tab"
-              class={styles.tabSwitcher}
-              onChange={handleTabChange}
-            >
-              {tabConfigs.value.map((tab) => (
-                <Tab.TabPanel name={tab.name} label={t(tab.labelKey)} />
-              ))}
-            </Tab>
-            <div class={styles.tabContent}>
-              <RouterView />
-            </div>
+            {modeStore.isCodeMode ? (
+              <div class={styles.codeEditorWrapper}>
+                <CodeModeEditor />
+              </div>
+            ) : (
+              <>
+                <Tab
+                  active={activeTab.value}
+                  type="card-tab"
+                  class={styles.tabSwitcher}
+                  onChange={handleTabChange}
+                >
+                  {tabConfigs.value.map((tab) => (
+                    <Tab.TabPanel name={tab.name} label={t(tab.labelKey)} />
+                  ))}
+                </Tab>
+                <div class={styles.tabContent}>
+                  <RouterView />
+                </div>
+              </>
+            )}
           </div>
           {shouldShowVariablePanel.value && (
             <VariablePanel

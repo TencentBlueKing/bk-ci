@@ -1,5 +1,6 @@
 import type { Element } from '@/api/flowModel'
 import { SvgIcon } from '@/components/SvgIcon'
+import { useModeStore } from '@/stores/flowMode'
 import { useUIStore } from '@/stores/ui'
 import { Input, Sideslider } from 'bkui-vue'
 import { storeToRefs } from 'pinia'
@@ -29,11 +30,17 @@ export default defineComponent({
     },
   },
   emits: ['update:visible', 'chooseAtom', 'updateAtom'],
-  setup(props, { emit }) {
+  setup(props, { emit, slots }) {
     // ========== Hooks ==========
     const { t } = useI18n()
     const uiStore = useUIStore()
+    const modeStore = useModeStore()
     const { isVariablePanelOpen } = storeToRefs(uiStore)
+    const { isCodeMode } = storeToRefs(modeStore)
+    // 仅当变量面板真实可见（非代码模式）时，才让侧边栏向左偏移避让
+    const shouldOffsetForVariablePanel = computed(
+      () => isVariablePanelOpen.value && !isCodeMode.value,
+    )
 
     // ========== Refs ==========
     const nameEditing = ref(false)
@@ -106,7 +113,7 @@ export default defineComponent({
         width={640}
         transfer
         onClosed={handleClose}
-        class={['bkci-property-panel', isVariablePanelOpen.value && 'with-variable-open']}
+        class={['bkci-property-panel', shouldOffsetForVariablePanel.value && 'with-variable-open']}
       >
         {{
           header: () => (
@@ -166,6 +173,7 @@ export default defineComponent({
               onChooseAtom={handleChooseAtom}
             />
           ),
+          ...(slots.footer ? { footer: () => slots.footer?.() } : {}),
         }}
       </Sideslider>
     )
