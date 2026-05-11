@@ -21,6 +21,16 @@ BEGIN
                 COMMENT '项目组织形态：0-团队项目，1-个人项目';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PROJECT'
+                    AND COLUMN_NAME = 'PROJECT_SCOPE') THEN
+    ALTER TABLE T_PROJECT_APPROVAL
+        ADD COLUMN `PROJECT_SCOPE` int(10) NOT NULL DEFAULT '0'
+                    COMMENT '项目组织形态：0-团队项目，1-个人项目';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

@@ -36,6 +36,7 @@ import com.tencent.devops.auth.provider.rbac.pojo.enums.AuthGroupCreateMode
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupCreateEvent
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupModifyEvent
 import com.tencent.devops.auth.service.PermissionAuthorizationService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionResourceValidateService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -58,7 +59,8 @@ class RbacPermissionResourceService(
     private val iamV2ManagerService: V2ManagerService,
     private val permissionAuthorizationService: PermissionAuthorizationService,
     private val permissionResourceValidateService: PermissionResourceValidateService,
-    private val personalProjectService: PersonalProjectService
+    private val personalProjectService: PersonalProjectService,
+    private val permissionResourceGroupService: PermissionResourceGroupService
 ) : PermissionResourceService {
 
     companion object {
@@ -75,33 +77,19 @@ class RbacPermissionResourceService(
         async: Boolean
     ): Boolean {
         logger.info("resource create relation|$userId|$projectCode|$resourceType|$resourceCode|$resourceName")
-        val resource = authResourceService.getOrNull(
-            projectCode = projectCode,
-            resourceType = resourceType,
-            resourceCode = resourceCode
-        )
-        if (resource != null) {
-            if (resourceType != AuthResourceType.PROJECT.value &&
-                personalProjectService.isPersonalProject(projectCode)
-            ) {
-                logHistoricalPersonalProjectAsset(
-                    action = "create",
-                    projectCode = projectCode,
-                    resourceType = resourceType,
-                    resourceCode = resourceCode
-                )
-            }
-            logger.info(
-                "This resource has been registered. no need to register again" +
-                        ":$projectCode|$resourceType$resourceCode"
-            )
-            return true
-        }
         val iamResourceCode = authResourceCodeConverter.generateIamCode(
             resourceType = resourceType,
             resourceCode = resourceCode
         )
         var projectName = resourceName
+        val personalProject = personalProjectService.isPersonalProject(projectCode)
+        // 个人项目不需要注册非项目级资源
+        if (personalProject && resourceType != AuthResourceType.PROJECT.value) {
+            logger.info(
+                "Personal projects do not require registering resources with the Permission Center.$projectCode"
+            )
+            return true
+        }
         val managerId = if (resourceType == AuthResourceType.PROJECT.value) {
             permissionGradeManagerService.createGradeManager(
                 userId = userId,
@@ -112,18 +100,6 @@ class RbacPermissionResourceService(
                 resourceName = resourceName
             )
         } else {
-            if (personalProjectService.isPersonalProject(projectCode)) {
-                logHistoricalPersonalProjectAsset(
-                    action = "create",
-                    projectCode = projectCode,
-                    resourceType = resourceType,
-                    resourceCode = resourceCode
-                )
-                logger.info(
-                    "Personal projects do not require registering resources with the Permission Center.$projectCode"
-                )
-                return true
-            }
             val projectInfo = authResourceService.get(
                 projectCode = projectCode,
                 resourceType = AuthResourceType.PROJECT.value,
@@ -141,8 +117,21 @@ class RbacPermissionResourceService(
                 iamResourceCode = iamResourceCode
             )
         }
-        // 项目创建需要审批时,不需要保存资源信息,审批通过回调后，再进行创建。
+
         val isCreateResourceAndGroup = managerId != 0
+        // 个人项目只需要创建项目管理员组
+        if (personalProject && managerId != 0) {
+            permissionResourceGroupService.syncManagerGroup(
+                projectCode = projectCode,
+                managerId = managerId,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                resourceName = projectName,
+                iamResourceCode = projectCode
+            )
+            return true
+        }
+        // 项目创建需要审批时,不需要保存资源信息,审批通过回调后，再进行创建。
         if (isCreateResourceAndGroup) {
             createResource(
                 userId = userId,
@@ -260,13 +249,8 @@ class RbacPermissionResourceService(
         enabled: Boolean?
     ): Boolean {
         logger.info("resource modify relation|$projectCode|$resourceType|$resourceCode|$resourceName")
-        if (personalProjectService.isPersonalProject(projectCode)) {
-            logHistoricalPersonalProjectAsset(
-                action = "modify",
-                projectCode = projectCode,
-                resourceType = resourceType,
-                resourceCode = resourceCode
-            )
+        val personalProject = personalProjectService.isPersonalProject(projectCode)
+        if (personalProject && resourceType != AuthResourceType.PROJECT.value) {
             logger.info("Personal projects do not require update resources with the Permission Center.$projectCode")
             return true
         }
@@ -362,12 +346,6 @@ class RbacPermissionResourceService(
     ): Boolean {
         logger.info("resource delete relation|$projectCode|$resourceType|$resourceCode")
         if (personalProjectService.isPersonalProject(projectCode)) {
-            logHistoricalPersonalProjectAsset(
-                action = "delete",
-                projectCode = projectCode,
-                resourceType = resourceType,
-                resourceCode = resourceCode
-            )
             logger.info("Personal projects do not require delete resources with the Permission Center.$projectCode")
             return true
         }
@@ -418,25 +396,6 @@ class RbacPermissionResourceService(
             resourceCode = resourceCode
         )
         return true
-    }
-
-    private fun logHistoricalPersonalProjectAsset(
-        action: String,
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String
-    ) {
-        val resource = authResourceService.getOrNull(
-            projectCode = projectCode,
-            resourceType = resourceType,
-            resourceCode = resourceCode
-        )
-        if (resource != null) {
-            logger.warn(
-                "Historical permission-center asset remains for personal project, skip $action|" +
-                        "$projectCode|$resourceType|$resourceCode"
-            )
-        }
     }
 
     override fun resourceCancelRelation(
