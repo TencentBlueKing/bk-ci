@@ -1116,6 +1116,7 @@
     "systemTime": "系统耗时",
     "checkDesc": "审核描述",
     "checkSuggestTips": "请输入审核意见",
+    "checkSuggest": "审核意见",
     "checkResult": "审核结果",
     "agree": "同意，继续执行流水线",
     "abort": "驳回，该步骤判定为失败",

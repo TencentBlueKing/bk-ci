@@ -25,4 +25,17 @@ class AsyncConfiguration {
         executor.initialize()
         return executor
     }
+
+    @Bean("remoteDevIoExecutor")
+    fun remoteDevIoExecutor(): ThreadPoolTaskExecutor {
+        val executor = ThreadPoolTaskExecutor()
+        executor.corePoolSize = 10
+        executor.maxPoolSize = 50
+        executor.queueCapacity = 200
+        executor.keepAliveSeconds = 60
+        executor.setThreadNamePrefix("remotedev-io-")
+        executor.setRejectedExecutionHandler(ThreadPoolExecutor.CallerRunsPolicy())
+        executor.initialize()
+        return executor
+    }
 }

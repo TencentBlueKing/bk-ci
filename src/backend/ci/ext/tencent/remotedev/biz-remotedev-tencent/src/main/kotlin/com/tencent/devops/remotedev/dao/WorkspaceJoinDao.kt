@@ -25,6 +25,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
 import org.jooq.Record1
+import org.jooq.Select
 import org.jooq.SelectConditionStep
 import org.jooq.SelectJoinStep
 import org.jooq.SelectSelectStep
@@ -144,7 +145,7 @@ class WorkspaceJoinDao {
                     coffeeAi = coffeeAi
                 ),
                 checkField = checkField ?: windowsFullFields
-            ).orderBy(CREATE_TIME.desc(), ID.desc())
+            )
             return dsl.skipCheck()
                 .fetch(workspaceWithWindowsMapper)
         }
@@ -178,7 +179,7 @@ class WorkspaceJoinDao {
                     nodeHashIds = nodeHashId?.toList()
                 ),
                 checkField = checkField ?: windowsFullFields
-            ).orderBy(CREATE_TIME.desc(), ID.desc())
+            )
             return dsl.skipCheck()
                 .fetch(workspaceWithWindowsMapper)
         }
@@ -287,59 +288,35 @@ class WorkspaceJoinDao {
             conditions.add(logicalAreaGetZone(dslContext, search.logicalArea!!))
         }
 
-        // owner 条件查询（EXISTS 替代 LEFT JOIN 避免行膨胀）
+        // owner 条件查询
         search.owner?.ifEmpty { null }?.let { owners ->
-            val sharedOwnerExists = DSL.exists(
-                DSL.selectOne()
-                    .from(TWorkspaceShared.T_WORKSPACE_SHARED)
-                    .where(
-                        TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME
-                            .eq(TWorkspace.T_WORKSPACE.NAME)
-                            .and(
-                                TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE
-                                    .eq(WorkspaceShared.AssignType.OWNER.name)
-                            )
-                            .and(
-                                if (search.onFuzzyMatch) {
-                                    TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
-                                        .likeRegex(owners.joinToString("|"))
-                                } else {
-                                    TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
-                                        .`in`(owners)
-                                }
-                            )
+            conditions.add(
+                TWorkspace.T_WORKSPACE.NAME.`in`(
+                    visibleWorkspaceNamesQuery(
+                        users = owners,
+                        fuzzy = search.onFuzzyMatch,
+                        assignTypes = listOf(
+                            WorkspaceShared.AssignType.OWNER.name
+                        )
                     )
+                )
             )
-            conditions.add(sharedOwnerExists)
         }
 
-        // viewers 条件查询（EXISTS 替代 LEFT JOIN 避免行膨胀）
+        // viewers 条件查询
         search.viewers?.ifEmpty { null }?.let { viewers ->
-
-            val userMatchCond = if (search.onFuzzyMatch) {
-                TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
-                    .likeRegex(viewers.joinToString("|"))
-            } else {
-                TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
-                    .`in`(viewers)
-            }
-            val sharedViewerExists = DSL.exists(
-                DSL.selectOne()
-                    .from(TWorkspaceShared.T_WORKSPACE_SHARED)
-                    .where(
-                        TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME
-                            .eq(TWorkspace.T_WORKSPACE.NAME)
-                            .and(
-                                TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE
-                                    .`in`(
-                                        WorkspaceShared.AssignType.VIEWER.name,
-                                        WorkspaceShared.AssignType.OWNER.name
-                                    )
-                            )
-                            .and(userMatchCond)
+            conditions.add(
+                TWorkspace.T_WORKSPACE.NAME.`in`(
+                    visibleWorkspaceNamesQuery(
+                        users = viewers,
+                        fuzzy = search.onFuzzyMatch,
+                        assignTypes = listOf(
+                            WorkspaceShared.AssignType.VIEWER.name,
+                            WorkspaceShared.AssignType.OWNER.name
+                        )
                     )
+                )
             )
-            conditions.add(sharedViewerExists)
         }
 
         // machineType 条件查询
@@ -686,6 +663,36 @@ class WorkspaceJoinDao {
                     .eq(userId)
             )
             .fetch().map { it[TWorkspace.T_WORKSPACE.NAME] as String }
+    }
+
+    /**
+     * 构建用户可见 workspace names 的非关联子查询，
+     * 用 NAME IN (SELECT ...) 替代 OR + EXISTS。
+     * MySQL 会将非关联 IN 子查询物化为临时表做 hash lookup，只执行一次。
+     * 数据不经过 JVM 堆，无内存压力和 SQL 长度问题。
+     */
+    private fun visibleWorkspaceNamesQuery(
+        users: List<String>,
+        fuzzy: Boolean,
+        assignTypes: List<String>
+    ): Select<Record1<String>> {
+        val sharedUserCond = if (fuzzy) {
+            TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
+                .likeRegex(users.joinToString("|"))
+        } else {
+            TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
+                .`in`(users)
+        }
+        return DSL
+            .select(
+                TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME
+            )
+            .from(TWorkspaceShared.T_WORKSPACE_SHARED)
+            .where(sharedUserCond)
+            .and(
+                TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE
+                    .`in`(assignTypes)
+            )
     }
 
     companion object {

@@ -32,19 +32,22 @@ package wintask
 import (
 	"strings"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/capnspacehook/taskmaster"
 	"golang.org/x/sys/windows/svc/mgr"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 )
 
 type StartType string
 
 const (
-	// ServiceStart 服务
+	// ServiceStart 纯服务模式，agent 在 Session 0 中作为 SYSTEM 子进程运行
 	ServiceStart StartType = "SERVICE"
-	// TaskStart 执行计划
+	// SessionStart 会话服务模式，daemon 以服务运行并通过 WTS API 将 agent 启动到用户桌面会话
+	SessionStart StartType = "SESSION"
+	// TaskStart 执行计划模式（兼容保留）
 	TaskStart StartType = "TASK"
-	// ManualStart 手动
+	// ManualStart 手动启动
 	ManualStart StartType = "MANUAL"
 )
 

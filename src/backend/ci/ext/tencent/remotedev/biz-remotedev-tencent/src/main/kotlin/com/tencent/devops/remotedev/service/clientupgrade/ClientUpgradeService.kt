@@ -29,6 +29,10 @@ class ClientUpgradeService @Autowired constructor(
         if (data.forceUpdate != true && !upgradeProps.checkCanUpgrade(record.macAddress)) {
             return ClientUpgradeResp.noUpgrade()
         }
+        // 检查是否是当前用户
+        if (record.currentUser != userId) {
+            return ClientUpgradeResp.noUpgrade()
+        }
         // 即使在列表中时还要校验下，保证实时性
         val os = ClientOS.parse(record.os) ?: return ClientUpgradeResp.noUpgrade()
         val currentClientVersion = upgradeProps.getCurrentVersion(ClientUpgradeComp.CLIENT, os)

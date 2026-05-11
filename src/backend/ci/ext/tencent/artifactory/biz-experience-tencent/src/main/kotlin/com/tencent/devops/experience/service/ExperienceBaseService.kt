@@ -97,7 +97,8 @@ class ExperienceBaseService @Autowired constructor(
         groupByBundleId: Boolean,
         platform: Int? = null,
         experienceName: String? = null,
-        isOuter: Boolean = false
+        isOuter: Boolean = false,
+        enablePublicAccess: Boolean? = null
     ): Pagination<AppExperience> {
         val expireTime = DateUtil.today()
 
@@ -108,7 +109,8 @@ class ExperienceBaseService @Autowired constructor(
                 dslContext,
                 recordIds,
                 expireTime,
-                true
+                true,
+                enablePublicAccess = enablePublicAccess
             ).map { it.value1() }.toMutableSet()
         }
 
@@ -122,7 +124,8 @@ class ExperienceBaseService @Autowired constructor(
             online = true,
             offset = offset,
             limit = limit,
-            experienceName = experienceName
+            experienceName = experienceName,
+            enablePublicAccess = enablePublicAccess
         )
 
         // 同步图片
@@ -133,7 +136,10 @@ class ExperienceBaseService @Autowired constructor(
         val hasNext = if (result.size < limit) {
             false
         } else {
-            experienceDao.countByIds(dslContext, recordIds, platformStr, expireTime, true) > offset + limit
+            experienceDao.countByIds(
+                dslContext, recordIds, platformStr, expireTime, true,
+                enablePublicAccess = enablePublicAccess
+            ) > offset + limit
         }
 
         return Pagination(hasNext, result)

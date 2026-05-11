@@ -1,0 +1,270 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+  background: var(--chat-bg-page);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Third-party ChatContainer overrides */
+
+.ai-chat-container {
+  flex: 1;
+  min-height: 0;
+  background: var(--chat-bg-surface);
+  border-radius: 0 0 var(--chat-border-radius) var(--chat-border-radius);
+  box-shadow: 0 2px 12px var(--chat-shadow);
+}
+
+.ai-chat-container .bk-resize-layout-main,
+.ai-chat-container .bk-resize-layout-main-content {
+  min-height: 0;
+}
+
+.ai-chat-container .ai-welcome-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  padding: 0;
+}
+
+.bk-resize-layout-main-content > div:has(.ai-welcome-content) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ChatContainer dark mode overrides */
+
+[data-theme="dark"] .ai-chat-container {
+  background: var(--chat-bg-surface);
+  color: var(--chat-text-primary);
+}
+
+[data-theme="dark"] .ai-message-container {
+  background: var(--chat-bg-surface);
+}
+
+[data-theme="dark"] .ai-user-message-content {
+  background: var(--chat-primary-active-bg);
+  color: var(--chat-text-primary);
+  border-color: var(--chat-border-color);
+}
+
+[data-theme="dark"] .assistant-message-content {
+  background: var(--chat-bg-muted);
+  color: var(--chat-text-primary);
+}
+
+[data-theme="dark"] .ai-reasoning-message {
+  background: var(--chat-bg-muted);
+  color: var(--chat-text-secondary);
+  border-color: var(--chat-border-color);
+}
+
+[data-theme="dark"] .ai-reasoning-message-title {
+  color: var(--chat-text-secondary);
+}
+
+[data-theme="dark"] .chat-input-container {
+  background: var(--chat-bg-surface);
+  border-color: var(--chat-border-color);
+}
+
+[data-theme="dark"] .chat-input {
+  background: var(--chat-bg-surface);
+  color: var(--chat-text-primary);
+  border-color: var(--chat-border-color);
+}
+
+[data-theme="dark"] .chat-input:hover,
+[data-theme="dark"] .chat-input:focus-within {
+  border-color: var(--chat-primary-color);
+}
+
+[data-theme="dark"] .ai-slash-input,
+[data-theme="dark"] .ai-slash-input-wrapper {
+  color: var(--chat-text-primary);
+}
+
+[data-theme="dark"] .ai-slash-input::placeholder {
+  color: var(--chat-text-placeholder);
+}
+
+[data-theme="dark"] .send-message-icon {
+  background: var(--chat-primary-color);
+}
+
+[data-theme="dark"] .send-message-icon__disabled {
+  background: var(--chat-bg-muted);
+  color: var(--chat-text-disabled);
+}
+
+[data-theme="dark"] .ai-welcome-title,
+[data-theme="dark"] .ai-welcome-remark {
+  color: var(--chat-text-primary);
+}
+
+[data-theme="dark"] .ai-scroll-btn {
+  background: var(--chat-bg-muted);
+  border-color: var(--chat-border-color);
+  color: var(--chat-text-secondary);
+}
+
+[data-theme="dark"] .ai-loading-message {
+  color: var(--chat-text-secondary);
+}
+
+[data-theme="dark"] .markdown-body {
+  color: var(--chat-text-primary);
+}
+
+[data-theme="dark"] .markdown-body code {
+  background: var(--chat-bg-muted);
+  color: var(--chat-text-primary);
+}
+
+[data-theme="dark"] .markdown-body pre {
+  background: #161b22;
+  border-color: var(--chat-border-color);
+}
+
+[data-theme="dark"] .markdown-body blockquote {
+  color: var(--chat-text-secondary);
+  border-left-color: var(--chat-border-strong);
+}
+
+[data-theme="dark"] .markdown-body table th,
+[data-theme="dark"] .markdown-body table td {
+  border-color: var(--chat-border-color);
+}
+
+[data-theme="dark"] .markdown-body table tr {
+  background: var(--chat-bg-surface);
+  border-color: var(--chat-border-color);
+}
+
+[data-theme="dark"] .markdown-body table tr:nth-child(2n) {
+  background: var(--chat-bg-muted);
+}
+
+[data-theme="dark"] .markdown-body hr {
+  background: var(--chat-border-color);
+}
+
+[data-theme="dark"] .markdown-body a {
+  color: var(--chat-primary-color);
+}
+
+[data-theme="dark"] .message-tools-container {
+  border-color: var(--chat-border-color);
+}
+
+[data-theme="dark"] .message-tools-header {
+  background: var(--chat-bg-muted);
+  color: var(--chat-text-secondary);
+}
+
+[data-theme="dark"] .message-tools-content {
+  background: var(--chat-bg-surface);
+  color: var(--chat-text-secondary);
+}
+
+[data-theme="dark"] .ai-chat-container-tab {
+  background: var(--chat-bg-surface);
+  border-color: var(--chat-border-color);
+}
+
+[data-theme="dark"] .collapse-button {
+  background: var(--chat-border-color);
+  color: var(--chat-text-secondary);
+}
+
+[data-theme="dark"] .collapse-button:hover {
+  background: var(--chat-primary-color);
+  color: #fff;
+}
+
+[data-theme="dark"] .bk-resize-trigger {
+  background: var(--chat-border-color);
+}
+
+[data-theme="dark"] .chat-input-cite {
+  background: var(--chat-bg-muted);
+  color: var(--chat-text-secondary);
+  border-color: var(--chat-border-color);
+}
+
+[data-theme="dark"] .ai-input-attachment {
+  background: var(--chat-bg-muted);
+  border-color: var(--chat-border-color);
+  color: var(--chat-text-secondary);
+}
+
+[data-theme="dark"] .tippy-box[data-theme~="ai-chat-box"] {
+  background: var(--chat-bg-muted);
+  color: var(--chat-text-primary);
+}
+
+/* Only the “current” history user turn is sticky (see useStickyUserMessage): one at
+   a time by scroll position, not stacked. Border + inset only (no outer shadow). */
+.message-group.sticky-user-question {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.message-group.sticky-user-question.is-stuck {
+  background: #fff !important;
+  border-color: #dcdee5;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+[data-theme="dark"] .message-group.sticky-user-question.is-stuck {
+  background: var(--chat-bg-surface) !important;
+  border-color: var(--chat-border-color);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* bkui-vue divider in header */
+.bk-divider {
+  height: 16px;
+  margin: 0 4px;
+}
+
+/* TODO: temporary hidden copy icon in message-tools-container */
+.message-tools-container {
+  .message-tools .ai-tool-btn:not(:has(.ai-common-icon.ai-copy-icon)) {
+    display: none !important;
+  }
+  .ai-divider {
+    display: none !important;
+  }
+}
+
+.ai-toolcall-render {
+  margin: 8px 0;
+}

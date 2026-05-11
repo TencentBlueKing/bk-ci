@@ -35,9 +35,10 @@ class WebhookBuildParameterService @Autowired constructor(
         )
     }
 
-    fun getBuildParameters(buildId: String): List<BuildParameters>? {
+    fun getBuildParameters(projectId: String, buildId: String): List<BuildParameters>? {
         val record = webhookBuildParameterDao.get(
             dslContext = dslContext,
+            projectId = projectId,
             buildId = buildId
         )
         return record?.buildParameters?.let { JsonUtil.to(it, object : TypeReference<List<BuildParameters>>() {}) }
