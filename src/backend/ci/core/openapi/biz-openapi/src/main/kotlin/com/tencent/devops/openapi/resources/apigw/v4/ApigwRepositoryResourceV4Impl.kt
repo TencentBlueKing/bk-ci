@@ -39,6 +39,7 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.Permission
+import com.tencent.devops.repository.pojo.enums.RepoResourceType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -66,18 +67,20 @@ class ApigwRepositoryResourceV4Impl @Autowired constructor(private val client: C
         userId: String,
         projectId: String,
         repositoryType: ScmType?,
-        scmCode: String?
+        scmCode: String?,
+        repoResourceType: RepoResourceType?
     ): Result<Page<RepositoryInfo>> {
         logger.info(
             "OPENAPI_REPOSITORY_V4|$userId|get user's use repostitories in project|" +
-                    "$projectId|$repositoryType|$scmCode"
+                    "$projectId|$repositoryType|$scmCode|$repoResourceType"
         )
         return client.get(ServiceRepositoryResource::class).hasPermissionList(
             userId = userId,
             projectId = projectId,
             repositoryType = repositoryType?.name,
             permission = Permission.USE,
-            scmCode = scmCode
+            scmCode = scmCode,
+            resourceType = repoResourceType
         )
     }
 

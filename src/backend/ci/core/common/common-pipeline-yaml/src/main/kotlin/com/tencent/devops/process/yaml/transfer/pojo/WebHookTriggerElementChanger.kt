@@ -28,6 +28,7 @@
 package com.tencent.devops.process.yaml.transfer.pojo
 
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGroupWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -90,6 +91,12 @@ data class WebHookTriggerElementChanger(
     val includeNoteComment: String? = null,
     @get:Schema(title = "code note 类型", required = false)
     val includeNoteTypes: List<String>? = null,
+    @get:Schema(title = "监听的仓库路径", required = false)
+    val includeRepos: List<String>? = null,
+    @get:Schema(title = "排除的仓库路径", required = false)
+    val excludeRepos: List<String>? = null,
+    @get:Schema(title = "监听的代码库组动作", required = false)
+    val includeRepoGroupAction: List<String>? = null,
     @get:Schema(title = "是否启用回写")
     val enableCheck: Boolean? = true,
     @get:Schema(title = "issue事件action")
@@ -330,5 +337,20 @@ data class WebHookTriggerElementChanger(
         repositoryType = data.data.input.repositoryType,
         repositoryName = data.data.input.repositoryName,
         enable = data.elementEnabled()
+    )
+
+    constructor(data: CodeGitGroupWebHookTriggerElement) : this(
+        id = data.stepId,
+        name = data.name,
+        repositoryHashId = data.data.input.repositoryHashId,
+        includeUsers = WebhookUtils.convert(data.data.input.includeUsers),
+        excludeUsers = WebhookUtils.convert(data.data.input.excludeUsers),
+        includeRepos = WebhookUtils.convert(data.data.input.includeRepoNames),
+        excludeRepos = WebhookUtils.convert(data.data.input.excludeRepoNames),
+        includeRepoGroupAction = data.data.input.includeRepoGroupAction,
+        repositoryType = data.data.input.repositoryType,
+        repositoryName = data.data.input.repositoryName,
+        enable = data.elementEnabled(),
+        eventType = CodeEventType.GROUP
     )
 }

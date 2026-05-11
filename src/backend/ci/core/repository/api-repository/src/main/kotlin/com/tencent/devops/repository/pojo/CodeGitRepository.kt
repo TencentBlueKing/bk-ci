@@ -29,6 +29,7 @@ package com.tencent.devops.repository.pojo
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.pojo.enums.RepoResourceType
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -61,7 +62,9 @@ data class CodeGitRepository(
     @get:Schema(title = "代码库标识", required = false)
     override val scmCode: String = ScmType.CODE_GIT.name,
     @get:Schema(title = "凭证类型", required = false)
-    val credentialType: String? = ""
+    val credentialType: String? = "",
+    @get:Schema(title = "凭证类型", required = false)
+    val repoResourceType: RepoResourceType? = RepoResourceType.REPOSITORY
 ) : Repository {
     companion object {
         const val classType = "codeGit"
@@ -80,7 +83,11 @@ data class CodeGitRepository(
     override fun isLegal(): Boolean {
         return when (authType) {
             RepoAuthType.HTTP, RepoAuthType.OAUTH, RepoAuthType.HTTPS ->
-                GitUtils.isLegalHttpUrl(url)
+                if (repoResourceType == RepoResourceType.REPOSITORY_GROUP) { // 项目组url没有[.git]后缀
+                    GitUtils.isLegalGroupHttpUrl(url)
+                } else {
+                    GitUtils.isLegalHttpUrl(url)
+                }
             else ->
                 GitUtils.isLegalSshUrl(url)
         }

@@ -259,7 +259,8 @@ interface IGitService {
         pageSize: Int?,
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?,
-        tokenType: TokenTypeEnum
+        tokenType: TokenTypeEnum,
+        search: String?
     ): List<GitCodeGroup>
 
     fun getMembers(

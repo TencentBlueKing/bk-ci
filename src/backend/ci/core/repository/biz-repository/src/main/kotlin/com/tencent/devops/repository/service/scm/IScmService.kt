@@ -37,6 +37,7 @@ import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.LoginSession
@@ -296,4 +297,15 @@ interface IScmService {
         refType: String,
         iid: Long
     ): List<TapdWorkItem>
+
+    /**
+     * 获取代码库组详情
+     */
+    fun getProjectGroupInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        includeSubgroups: Boolean?
+    ): GitProjectGroupInfo?
 }

@@ -35,6 +35,9 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGroupWebHookTriggerData
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGroupWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGroupWebHookTriggerInput
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -62,6 +65,7 @@ import com.tencent.devops.process.yaml.transfer.pojo.WebHookTriggerElementChange
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.v3.models.on.CustomFilter
 import com.tencent.devops.process.yaml.v3.models.on.EnableType
+import com.tencent.devops.process.yaml.v3.models.on.GroupRule
 import com.tencent.devops.process.yaml.v3.models.on.IssueRule
 import com.tencent.devops.process.yaml.v3.models.on.MrRule
 import com.tencent.devops.process.yaml.v3.models.on.NoteRule
@@ -206,6 +210,26 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 }
             )
         }
+
+        triggerOn.group?.let { group ->
+            elementQueue.add(
+                CodeGitGroupWebHookTriggerElement(
+                    stepId = group.id,
+                    name = group.name ?: "Git代码库组事件触发",
+                    data = CodeGitGroupWebHookTriggerData(
+                        CodeGitGroupWebHookTriggerInput(
+                            includeUsers = group.users?.join(),
+                            excludeUsers = group.usersIgnore?.join(),
+                            includeRepoNames = group.repoNames?.join(),
+                            excludeRepoNames = group.repoNamesIgnore?.join(),
+                            includeRepoGroupAction = group.actions
+                        )
+                    )
+                ).checkTriggerElementEnable(group.enable).apply {
+                    version = "1.*"
+                }
+            )
+        }
     }
 
     @Suppress("ComplexMethod")
@@ -341,6 +365,17 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         }
                     },
                     comment = git.includeNoteComment?.disjoin()
+                )
+
+                CodeEventType.GROUP -> nowExist.group = GroupRule(
+                    id = git.id,
+                    name = git.name.nullIfDefault(defaultName),
+                    enable = git.enable.nullIfDefault(true),
+                    actions = git.includeRepoGroupAction,
+                    repoNames = git.includeRepos,
+                    repoNamesIgnore = git.excludeRepos,
+                    users = git.includeUsers,
+                    usersIgnore = git.excludeUsers
                 )
 
                 CodeEventType.POST_COMMIT -> nowExist.push = PushRule(

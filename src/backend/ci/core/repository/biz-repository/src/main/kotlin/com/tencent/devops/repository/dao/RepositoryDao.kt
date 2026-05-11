@@ -39,6 +39,7 @@ import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_NOT_FOUND
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.pojo.enums.RepoResourceType
 import com.tencent.devops.repository.pojo.enums.RepositorySortEnum
 import com.tencent.devops.repository.pojo.enums.RepositorySortTypeEnum
 import java.time.LocalDateTime
@@ -65,7 +66,8 @@ class RepositoryDao {
         type: ScmType,
         atom: Boolean? = false,
         enablePac: Boolean?,
-        scmCode: String
+        scmCode: String,
+        resourceType: RepoResourceType = RepoResourceType.REPOSITORY
     ): Long {
         val now = LocalDateTime.now()
         var repoId = 0L
@@ -85,7 +87,8 @@ class RepositoryDao {
                     UPDATED_USER,
                     ATOM,
                     ENABLE_PAC,
-                    SCM_CODE
+                    SCM_CODE,
+                    REPO_RESOURCE_TYPE
                 ).values(
                     projectId,
                     userId,
@@ -98,7 +101,8 @@ class RepositoryDao {
                     userId,
                     atom,
                     enablePac,
-                    scmCode
+                    scmCode,
+                    resourceType.name
                 )
                     .returning(REPOSITORY_ID)
                     .fetchOne()!!.repositoryId
@@ -138,7 +142,8 @@ class RepositoryDao {
         aliasName: String?,
         repositoryIds: Set<Long>?,
         enablePac: Boolean? = null,
-        scmCode: String? = null
+        scmCode: String? = null,
+        resourceType: RepoResourceType?
     ): Long {
         with(TRepository.T_REPOSITORY) {
             val step = dslContext.selectCount()
@@ -157,6 +162,9 @@ class RepositoryDao {
             }
             if (scmCode != null) {
                 step.and(SCM_CODE.eq(scmCode))
+            }
+            if (resourceType != null) {
+                step.and(REPO_RESOURCE_TYPE.eq(resourceType.name))
             }
             return when (repositoryTypes) {
                 null -> {
@@ -325,7 +333,8 @@ class RepositoryDao {
         repositoryType: ScmType?,
         repositoryIds: Set<Long>?,
         offset: Int,
-        limit: Int
+        limit: Int,
+        repoResourceType: RepoResourceType?
     ): Result<TRepositoryRecord> {
         return with(TRepository.T_REPOSITORY) {
             val query = dslContext.selectFrom(this)
@@ -337,6 +346,9 @@ class RepositoryDao {
             }
             if (repositoryType != null) {
                 query.and(TYPE.`in`(repositoryType.name))
+            }
+            if (repoResourceType != null) {
+                query.and(REPO_RESOURCE_TYPE.`in`(repoResourceType.name))
             }
             query.orderBy(REPOSITORY_ID.desc())
                 .offset(offset)
@@ -356,7 +368,8 @@ class RepositoryDao {
         sortBy: String? = null,
         sortType: String? = null,
         enablePac: Boolean? = null,
-        scmCode: String? = null
+        scmCode: String? = null,
+        resourceType: RepoResourceType?
     ): Result<TRepositoryRecord> {
         with(TRepository.T_REPOSITORY) {
             val step = dslContext.selectFrom(this)
@@ -373,6 +386,9 @@ class RepositoryDao {
             }
             if (scmCode != null) {
                 step.and(SCM_CODE.eq(scmCode))
+            }
+            if (resourceType != null) {
+                step.and(REPO_RESOURCE_TYPE.eq(resourceType.name))
             }
             when (repositoryTypes) {
                 null -> {

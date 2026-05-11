@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_DESC
 import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
 import com.tencent.devops.common.service.trace.TraceTag
@@ -55,6 +56,7 @@ import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.enums.RepoResourceType
 import com.tencent.devops.repository.pojo.webhook.WebhookParseRequest
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import com.tencent.devops.scm.api.pojo.webhook.git.GitPushHook
@@ -220,7 +222,12 @@ class WebhookGrayCompareService @Autowired constructor(
             name = matcher.getRepoName(),
             repositoryType = scmType,
             yamlPipelineIds = yamlPipelineIds,
-            compatibilityRepoNames = matcher.getCompatibilityRepoName()
+            compatibilityRepoNames = matcher.getCompatibilityRepoName(),
+            repoResourceType = if (matcher.getEventType() == CodeEventType.GROUP) {
+                RepoResourceType.REPOSITORY_GROUP
+            } else {
+                RepoResourceType.REPOSITORY
+            }
         )
         val pipelineAndParamsMap = mutableMapOf<String, Map<String, Any>>()
         triggerPipelines.forEach { (projectId, pipelineId) ->
@@ -326,7 +333,8 @@ class WebhookGrayCompareService @Autowired constructor(
                 val triggerPipelines = pipelineWebhookService.listTriggerPipeline(
                     projectId = repository.projectId!!,
                     repositoryHashId = repository.repoHashId!!,
-                    eventType = webhook.eventType
+                    eventType = webhook.eventType,
+                    repoResourceType = RepoResourceType.REPOSITORY // todo: sdk完善后，根据事件类型匹配代码库资源类型
                 )
                 triggerPipelines.forEach { (projectId, pipelineId, version) ->
                     try {

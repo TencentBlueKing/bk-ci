@@ -74,4 +74,9 @@ class OpScmWebhookResourceImpl(
     override fun getGrayRepoWeight(scmCode: String): Result<String> {
         return Result(webhookGrayService.getGrayRepoWeight(scmCode))
     }
+
+    override fun updateWebhookResourceType(projectId: String?): Result<Boolean> {
+        pipelineWebhookUpgradeService.updateWebhookResourceType(projectId)
+        return Result(true)
+    }
 }

@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.pojo
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.repository.pojo.enums.RepoResourceType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "代码库模型-基本信息")
@@ -51,5 +52,7 @@ data class RepositoryInfo(
     @get:Schema(title = "远程仓库ID", required = false)
     val remoteRepoId: Long? = null,
     @get:Schema(title = "代码库标识", required = false)
-    val scmCode: String? = null
+    val scmCode: String? = null,
+    @get:Schema(title = "代码库标识", required = false)
+    val resourceType: RepoResourceType? = null
 )

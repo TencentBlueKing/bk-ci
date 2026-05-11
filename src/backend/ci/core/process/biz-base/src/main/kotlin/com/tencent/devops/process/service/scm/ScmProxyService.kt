@@ -736,6 +736,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             CodeEventType.ISSUES -> CodeGitWebhookEvent.ISSUES_EVENTS.value
             CodeEventType.NOTE -> CodeGitWebhookEvent.NOTE_EVENTS.value
             CodeEventType.REVIEW -> CodeGitWebhookEvent.REVIEW_EVENTS.value
+            CodeEventType.GROUP -> CodeGitWebhookEvent.PROJECT_EVENTS.value
             else -> null
         }
     }

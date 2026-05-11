@@ -38,6 +38,15 @@ BEGIN
         ADD INDEX `IDX_REPOSITORY_GITHUB_TOKEN_OPERATOR`(`OPERATOR`);
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_REPOSITORY'
+                    AND COLUMN_NAME = 'REPO_RESOURCE_TYPE') THEN
+    ALTER TABLE T_REPOSITORY
+        ADD COLUMN `REPO_RESOURCE_TYPE` varchar(32) DEFAULT NULL COMMENT '代码库资源类型';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

@@ -25,26 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.code.git
+package com.tencent.devops.process.yaml.v3.models.on
 
-enum class CodeGitWebhookEvent(val value: String) {
-    PUSH_EVENTS("push_events"),
-    TAG_PUSH_EVENTS("tag_push_events"),
-    ISSUES_EVENTS("issues_events"),
-    MERGE_REQUESTS_EVENTS("merge_requests_events"),
-    NOTE_EVENTS("note_events"),
-    ENABLE_SSL_VERIFICATION("enable_ssl_verification"),
-    REVIEW_EVENTS("review_events"),
-    PROJECT_EVENTS("project_events");
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-    companion object {
-        fun find(event: String): CodeGitWebhookEvent? {
-            CodeGitWebhookEvent.values().forEach {
-                if (it.value == event) {
-                    return it
-                }
-            }
-            return null
-        }
-    }
-}
+/**
+ * model
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class GroupRule(
+    override val id: String? = null,
+    override val name: String? = null,
+    override val enable: Boolean? = true,
+    val actions: List<String>?,
+    @get:Schema(title = "repo-names")
+    @JsonProperty("repo-names")
+    val repoNames: List<String>? = null,
+    @get:Schema(title = "repo-names-ignore")
+    @JsonProperty("repo-names-ignore")
+    val repoNamesIgnore: List<String>? = null,
+    val users: List<String>? = null,
+    @get:Schema(title = "users-ignore")
+    @JsonProperty("users-ignore")
+    val usersIgnore: List<String>? = null
+) : Rule(id, name, enable)

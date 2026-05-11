@@ -429,7 +429,8 @@ class ServiceGitResourceImpl @Autowired constructor(
         pageSize: Int?,
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?,
-        tokenType: TokenTypeEnum
+        tokenType: TokenTypeEnum,
+        search: String?
     ): Result<List<GitCodeGroup>> {
         return Result(
             gitService.getProjectGroupList(
@@ -438,7 +439,8 @@ class ServiceGitResourceImpl @Autowired constructor(
                 pageSize = pageSize,
                 owned = owned,
                 minAccessLevel = minAccessLevel,
-                tokenType = tokenType
+                tokenType = tokenType,
+                search = search
             )
         )
     }

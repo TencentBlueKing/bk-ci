@@ -62,7 +62,9 @@ import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.enums.RepoResourceType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -184,7 +186,12 @@ class PipelineWebhookService @Autowired constructor(
             repositoryHashId = repository.repoHashId,
             eventType = eventType?.name ?: "",
             externalId = repository.getExternalId(),
-            externalName = getExternalName(scmType = scmType, repository.projectName)
+            externalName = getExternalName(scmType = scmType, repository.projectName),
+            repoResourceType = if (repository is CodeGitRepository) {
+                repository.repoResourceType
+            } else {
+                RepoResourceType.REPOSITORY
+            }
         )
         pipelineWebhookDao.save(
             dslContext = dslContext,
@@ -336,7 +343,8 @@ class PipelineWebhookService @Autowired constructor(
         name: String,
         repositoryType: ScmType,
         yamlPipelineIds: List<String>?,
-        compatibilityRepoNames: Set<String>
+        compatibilityRepoNames: Set<String>,
+        repoResourceType: RepoResourceType
     ): List<WebhookTriggerPipeline> {
         val pipelineSet = mutableSetOf<WebhookTriggerPipeline>()
         // 需要精确匹配的代码库类型
@@ -352,7 +360,8 @@ class PipelineWebhookService @Autowired constructor(
                 dslContext = dslContext,
                 projectNames = setOf(name),
                 repositoryType = repositoryType.name,
-                yamlPipelineIds = yamlPipelineIds
+                yamlPipelineIds = yamlPipelineIds,
+                repoResourceType = repoResourceType
             )?.toSet() ?: setOf()
         } else {
             setOf()
@@ -365,7 +374,8 @@ class PipelineWebhookService @Autowired constructor(
             dslContext = dslContext,
             projectNames = repoNames,
             repositoryType = repositoryType.name,
-            yamlPipelineIds = yamlPipelineIds
+            yamlPipelineIds = yamlPipelineIds,
+            repoResourceType = repoResourceType
         )?.toSet() ?: setOf()
         // projectName字段补充完毕后，模糊匹配结果应为空
         if (needExactMatch && fuzzyResults.isNotEmpty()) {
@@ -379,13 +389,15 @@ class PipelineWebhookService @Autowired constructor(
     fun listTriggerPipeline(
         projectId: String,
         repositoryHashId: String,
-        eventType: String
+        eventType: String,
+        repoResourceType: RepoResourceType
     ): List<WebhookTriggerPipeline> {
         return pipelineWebhookDao.listTriggerPipeline(
             dslContext = dslContext,
             projectId = projectId,
             repositoryHashId = repositoryHashId,
-            eventType = eventType
+            eventType = eventType,
+            repoResourceType = repoResourceType
         ) ?: emptyList()
     }
 

@@ -44,6 +44,7 @@ import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.LoginSession
@@ -731,6 +732,29 @@ class ScmService @Autowired constructor(
             userName = null,
             event = null
         ).getTapdWorkItems(refType = refType, iid = iid)
+    }
+
+    override fun getProjectGroupInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        includeSubgroups: Boolean?
+    ): GitProjectGroupInfo? {
+        return ScmFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null
+        ).getProjectGroupInfo(
+            groupName = projectName,
+            includeSubgroups = includeSubgroups
+        )
     }
 
     companion object {

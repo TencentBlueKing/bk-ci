@@ -38,6 +38,7 @@ enum class CodeEventType {
     ISSUES,
     NOTE,
     REVIEW,
+    GROUP,
 
     // github event
     CREATE,

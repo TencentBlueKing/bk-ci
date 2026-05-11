@@ -48,6 +48,7 @@ import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.repository.pojo.commit.CommitResponse
 import com.tencent.devops.repository.pojo.enums.Permission
+import com.tencent.devops.repository.pojo.enums.RepoResourceType
 import com.tencent.devops.repository.service.CommitService
 import com.tencent.devops.repository.service.RepoPipelineService
 import com.tencent.devops.repository.service.RepositoryService
@@ -126,7 +127,8 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         aliasName: String?,
-        scmCode: String?
+        scmCode: String?,
+        resourceType: RepoResourceType?
     ): Result<Page<RepositoryInfo>> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -152,7 +154,8 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
             offset = limit.offset,
             limit = limit.limit,
             aliasName = aliasName,
-            scmCode = scmCode
+            scmCode = scmCode,
+            resourceType = resourceType
         )
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
@@ -162,7 +165,13 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 20
         val limit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-        val result = repositoryService.listByProject(projectIds, null, limit.offset, limit.limit)
+        val result = repositoryService.listByProject(
+            projectIds,
+            null,
+            limit.offset,
+            limit.limit,
+            repoResourceType = RepoResourceType.REPOSITORY
+        )
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 
@@ -180,7 +189,13 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         val pageSizeNotNull = pageSize ?: 20
 
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        val result = repositoryService.listByProject(setOf(projectId), repositoryType, limit.offset, limit.limit)
+        val result = repositoryService.listByProject(
+            setOf(projectId),
+            repositoryType,
+            limit.offset,
+            limit.limit,
+            null
+        )
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 

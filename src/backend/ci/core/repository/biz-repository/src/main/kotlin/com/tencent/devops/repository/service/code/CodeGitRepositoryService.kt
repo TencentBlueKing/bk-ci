@@ -57,6 +57,7 @@ import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.RepoCredentialType
+import com.tencent.devops.repository.pojo.enums.RepoResourceType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.service.RepoCredentialService
 import com.tencent.devops.repository.service.permission.RepositoryAuthorizationService
@@ -66,6 +67,7 @@ import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -97,10 +99,17 @@ class CodeGitRepositoryService @Autowired constructor(
         val credentialInfo = checkCredentialInfo(projectId = projectId, repository = repository)
         var repositoryId = 0L
         // Git项目ID
-        val gitProjectId = getGitProjectInfo(
-            repo = repository,
-            token = credentialInfo.token
-        )?.id ?: throw ErrorCodeException(
+        val gitProjectId = if (repository.repoResourceType == RepoResourceType.REPOSITORY_GROUP) {
+            getGitProjectGroupInfo(
+                repo = repository,
+                token = credentialInfo.token
+            )?.id
+        } else {
+            getGitProjectInfo(
+                repo = repository,
+                token = credentialInfo.token
+            )?.id
+        } ?: throw ErrorCodeException(
             errorCode = ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
             params = arrayOf(repository.url, userId)
         )
@@ -118,12 +127,20 @@ class CodeGitRepositoryService @Autowired constructor(
                 type = ScmType.CODE_GIT,
                 atom = repository.atom,
                 enablePac = repository.enablePac,
-                scmCode = ScmType.CODE_GIT.name
+                scmCode = ScmType.CODE_GIT.name,
+                resourceType = repository.repoResourceType ?: RepoResourceType.REPOSITORY
             )
             repositoryCodeGitDao.create(
                 dslContext = transactionContext,
                 repositoryId = repositoryId,
-                projectName = GitUtils.getProjectName(repository.url),
+                projectName = GitUtils.getProjectName(repository.url).let {
+                    // 关联项目组时，解析出的projectName中存在[groups]前缀，在此处进行移除
+                    if (repository.repoResourceType == RepoResourceType.REPOSITORY_GROUP) {
+                        it.removePrefix(REPO_GROUP_FLAG)
+                    } else {
+                        it
+                    }
+                },
                 userName = repository.userName,
                 credentialId = repository.credentialId,
                 authType = repository.authType,
@@ -244,7 +261,8 @@ class CodeGitRepositoryService @Autowired constructor(
             enablePac = repository.enablePac,
             yamlSyncStatus = repository.yamlSyncStatus,
             scmCode = repository.scmCode ?: ScmType.CODE_GIT.name,
-            credentialType = record.credentialType ?: RepoCredentialType.OAUTH.name
+            credentialType = record.credentialType ?: RepoCredentialType.OAUTH.name,
+            repoResourceType = RepoResourceType.parse(repository.repoResourceType)
         )
     }
 
@@ -525,6 +543,33 @@ class CodeGitRepositoryService @Autowired constructor(
         return repositoryProjectInfo
     }
 
+    /**
+     * 获取Git项目ID
+     */
+    fun getGitProjectGroupInfo(repo: CodeGitRepository, token: String): GitProjectGroupInfo? {
+        val isOauth = repo.authType == RepoAuthType.OAUTH
+        logger.info("the repo is:$repo,token length:${StringUtils.length(token)},isOauth:$isOauth")
+        val groupInfo = if (isOauth) {
+            scmOauthService.getProjectGroupInfo(
+                projectName = repo.projectName,
+                url = repo.getFormatURL(),
+                type = ScmType.CODE_GIT,
+                token = token,
+                includeSubgroups = false
+            )
+        } else {
+            scmService.getProjectGroupInfo(
+                projectName = repo.projectName,
+                url = repo.getFormatURL(),
+                type = ScmType.CODE_GIT,
+                token = token,
+                includeSubgroups = false
+            )
+        }
+        logger.info("the groupInfo is:$groupInfo")
+        return groupInfo
+    }
+
     private fun getGitProjectInfo(repoUrl: String, userId: String, token: String): GitProjectInfo {
         val gitProjectName = GitUtils.getProjectName(repoUrl)
         return scmOauthService.getProjectInfo(
@@ -585,5 +630,7 @@ class CodeGitRepositoryService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(CodeGitRepositoryService::class.java)
+        // 工蜂项目组标识
+        private const val REPO_GROUP_FLAG = "groups"
     }
 }

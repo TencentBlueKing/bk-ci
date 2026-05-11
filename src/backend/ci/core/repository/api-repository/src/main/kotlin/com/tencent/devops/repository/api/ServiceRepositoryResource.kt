@@ -41,6 +41,7 @@ import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.repository.pojo.commit.CommitResponse
 import com.tencent.devops.repository.pojo.enums.Permission
+import com.tencent.devops.repository.pojo.enums.RepoResourceType
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -149,7 +150,10 @@ interface ServiceRepositoryResource {
         aliasName: String? = null,
         @Parameter(description = "代码库标识", required = false)
         @QueryParam("scmCode")
-        scmCode: String? = null
+        scmCode: String? = null,
+        @Parameter(description = "仓库资源标识", required = false)
+        @QueryParam("resourceType")
+        resourceType: RepoResourceType? = null
     ): Result<Page<RepositoryInfo>>
 
     @Operation(summary = "获取项目代码库列表")

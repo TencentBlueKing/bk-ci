@@ -54,6 +54,7 @@ data class PreTriggerOnV3(
     override val issue: IssueRule? = null,
     override val review: ReviewRule? = null,
     override val note: NoteRule? = null,
+    override val group: GroupRule? = null,
     @get:Schema(title = "repo_hook")
     @JsonProperty("repo_hook")
     override val repoHook: List<Any>? = null,

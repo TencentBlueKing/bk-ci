@@ -151,4 +151,13 @@ interface OpScmWebhookResource {
         @PathParam("scmCode")
         scmCode: String
     ): Result<String>
+
+    @Operation(summary = "填充webhook资源类型")
+    @PUT
+    @Path("/updateWebhookResourceType")
+    fun updateWebhookResourceType(
+        @Parameter(description = "待更新的项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?
+    ): Result<Boolean>
 }

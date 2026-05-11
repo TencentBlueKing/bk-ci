@@ -42,6 +42,7 @@ import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.LoginSession
@@ -414,6 +415,15 @@ class CodeGitScmImpl constructor(
             id = projectName,
             type = refType,
             iid = iid
+        )
+    }
+
+    override fun getProjectGroupInfo(groupName: String, includeSubgroups: Boolean?): GitProjectGroupInfo? {
+        return gitApi.getProjectGroupInfo(
+            host = apiUrl,
+            token = token,
+            groupName = groupName,
+            includeSubgroups = includeSubgroups
         )
     }
 

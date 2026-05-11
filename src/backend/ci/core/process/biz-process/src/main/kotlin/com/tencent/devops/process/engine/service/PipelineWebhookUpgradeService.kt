@@ -310,6 +310,37 @@ class PipelineWebhookUpgradeService(
         )
     }
 
+    fun updateWebhookResourceType(projectId: String?) {
+        ThreadPoolUtil.submitAction(
+            actionTitle = "updateWebhookResourceType",
+            action = {
+                updateResourceType(projectId)
+            }
+        )
+    }
+
+    private fun updateResourceType(projectId: String?) {
+        logger.info("start update webhook resource type|projectId:$projectId")
+        val offset = 0
+        val limit = 100
+        do {
+            val listEmptyResource = pipelineWebhookDao.listEmptyResource(
+                dslContext = dslContext,
+                projectId = projectId,
+                offset = offset,
+                limit = limit
+            ) ?: emptyList()
+            listEmptyResource.forEach {
+                pipelineWebhookDao.updateEmptyResource(
+                    dslContext = dslContext,
+                    projectId = it.projectId,
+                    pipelineId = it.pipelineId,
+                    taskId = it.taskId
+                )
+            }
+        } while (listEmptyResource.size == limit)
+    }
+
     private fun updateProjectName(projectId: String?, pipelineId: String?) {
         logger.info("start update webhook project name|projectId:$projectId")
         var offset = 0

@@ -82,6 +82,7 @@ import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.repository.pojo.enums.GithubAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.pojo.enums.RepoResourceType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
@@ -738,7 +739,8 @@ class RepositoryService @Autowired constructor(
                 authType = authType,
                 createUser = repository.userId,
                 createTime = repository.createdTime.timestamp(),
-                updatedUser = repository.updatedUser
+                updatedUser = repository.updatedUser,
+                repoResourceType = RepoResourceType.parse(repository.repoResourceType)
             )
         }.toList()
     }
@@ -762,7 +764,8 @@ class RepositoryService @Autowired constructor(
         offset: Int,
         limit: Int,
         sortBy: String? = null,
-        sortType: String? = null
+        sortType: String? = null,
+        resourceType: RepoResourceType?
     ): Pair<SQLPage<RepositoryInfoWithPermission>, Boolean> {
         // 校验权限
         val hasCreatePermission = validatePermission(userId, projectId, AuthPermission.CREATE)
@@ -788,7 +791,8 @@ class RepositoryService @Autowired constructor(
                 projectIds = setOf(projectId),
                 repositoryTypes = repositoryType?.let { listOf(it) },
                 aliasName = aliasName,
-                repositoryIds = hasListPermissionRepoList.toSet()
+                repositoryIds = hasListPermissionRepoList.toSet(),
+                resourceType = resourceType
             )
         val repositoryRecordList = repositoryDao.listByProject(
             dslContext = dslContext,
@@ -799,7 +803,8 @@ class RepositoryService @Autowired constructor(
             offset = offset,
             limit = limit,
             sortBy = sortBy,
-            sortType = sortType
+            sortType = sortType,
+            resourceType = resourceType
         )
         val repoGroup = repositoryRecordList.groupBy { it.type }.mapValues { it.value.map { a -> a.repositoryId } }
         val repoDetailInfoMap = mutableMapOf<Long, RepositoryDetailInfo>()
@@ -840,7 +845,8 @@ class RepositoryService @Autowired constructor(
                 atom = it.atom ?: false,
                 enablePac = it.enablePac,
                 scmCode = scmCode,
-                logoUrl = repoLogoMap[scmCode]
+                logoUrl = repoLogoMap[scmCode],
+                repoResourceType = RepoResourceType.parse(it.repoResourceType)
             )
         }
         return Pair(SQLPage(count, repositoryList), hasCreatePermission)
@@ -855,7 +861,8 @@ class RepositoryService @Autowired constructor(
         limit: Int,
         aliasName: String? = null,
         enablePac: Boolean? = null,
-        scmCode: String? = null
+        scmCode: String? = null,
+        resourceType: RepoResourceType?
     ): SQLPage<RepositoryInfo> {
         val hasPermissionList = repositoryPermissionService.filterRepository(userId, projectId, authPermission)
         val repositoryTypes = repositoryType?.split(",")?.map { ScmType.valueOf(it) }
@@ -867,7 +874,8 @@ class RepositoryService @Autowired constructor(
             aliasName = aliasName,
             repositoryIds = hasPermissionList.toSet(),
             enablePac = enablePac,
-            scmCode = scmCode
+            scmCode = scmCode,
+            resourceType = resourceType
         )
         val repositoryRecordList =
             repositoryDao.listByProject(
@@ -879,7 +887,8 @@ class RepositoryService @Autowired constructor(
                 enablePac = enablePac,
                 offset = offset,
                 limit = limit,
-                scmCode = scmCode
+                scmCode = scmCode,
+                resourceType = resourceType
             )
         val repositoryList = repositoryRecordList.map {
             RepositoryInfo(
@@ -889,7 +898,8 @@ class RepositoryService @Autowired constructor(
                 url = it.url,
                 type = ScmType.valueOf(it.type),
                 updatedTime = it.updatedTime.timestamp(),
-                scmCode = it.scmCode
+                scmCode = it.scmCode,
+                resourceType = RepoResourceType.parse(it.repoResourceType)
             )
         }
         return SQLPage(count, repositoryList)
@@ -899,7 +909,8 @@ class RepositoryService @Autowired constructor(
         projectIds: Collection<String>,
         repositoryType: ScmType?,
         offset: Int,
-        limit: Int
+        limit: Int,
+        repoResourceType: RepoResourceType?
     ): SQLPage<RepositoryInfo> {
 
         val count = repositoryDao.countByProject(
@@ -907,7 +918,8 @@ class RepositoryService @Autowired constructor(
             projectIds = projectIds,
             repositoryTypes = repositoryType?.let { listOf(it) },
             aliasName = null,
-            repositoryIds = null
+            repositoryIds = null,
+            resourceType = repoResourceType
         )
         val repositoryRecordList =
             repositoryDao.listByProject(
@@ -916,7 +928,8 @@ class RepositoryService @Autowired constructor(
                 repositoryType = repositoryType,
                 repositoryIds = null,
                 offset = offset,
-                limit = limit
+                limit = limit,
+                repoResourceType = repoResourceType
             )
         val repositoryList = repositoryRecordList.map {
             RepositoryInfo(
@@ -925,7 +938,8 @@ class RepositoryService @Autowired constructor(
                 aliasName = it.aliasName,
                 url = it.url,
                 type = ScmType.valueOf(it.type),
-                updatedTime = it.updatedTime.timestamp()
+                updatedTime = it.updatedTime.timestamp(),
+                resourceType = RepoResourceType.parse(it.repoResourceType)
             )
         }
         return SQLPage(count, repositoryList)
@@ -943,7 +957,8 @@ class RepositoryService @Autowired constructor(
             projectIds = arrayListOf(projectId),
             repositoryTypes = null,
             aliasName = aliasName,
-            repositoryIds = null
+            repositoryIds = null,
+            resourceType = null
         )
         val repositoryRecordList =
             repositoryDao.listByProject(
@@ -953,7 +968,8 @@ class RepositoryService @Autowired constructor(
                 repositoryTypes = null,
                 repositoryIds = null,
                 offset = offset,
-                limit = limit
+                limit = limit,
+                resourceType = null
             )
         val repositoryList = repositoryRecordList.map {
             RepositoryInfo(
@@ -962,7 +978,8 @@ class RepositoryService @Autowired constructor(
                 aliasName = it.aliasName,
                 url = it.url,
                 type = ScmType.valueOf(it.type),
-                updatedTime = it.updatedTime.timestamp()
+                updatedTime = it.updatedTime.timestamp(),
+                resourceType = RepoResourceType.parse(it.repoResourceType)
             )
         }
         return SQLPage(count, repositoryList)
@@ -1159,7 +1176,8 @@ class RepositoryService @Autowired constructor(
                     url = it.url,
                     type = ScmType.valueOf(it.type),
                     updatedTime = it.updatedTime.timestampmilli(),
-                    createUser = it.userId
+                    createUser = it.userId,
+                    resourceType = RepoResourceType.parse(it.repoResourceType)
                 )
             )
         }
@@ -1197,7 +1215,8 @@ class RepositoryService @Autowired constructor(
                     url = it.url,
                     type = ScmType.valueOf(it.type),
                     updatedTime = it.updatedTime.timestampmilli(),
-                    createUser = it.userId
+                    createUser = it.userId,
+                    resourceType = RepoResourceType.parse(it.repoResourceType)
                 )
             )
         }

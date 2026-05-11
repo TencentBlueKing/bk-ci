@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS `T_REPOSITORY` (
   `ENABLE_PAC` bit(1) NOT NULL DEFAULT false COMMENT '是否开启pac',
   `YAML_SYNC_STATUS` VARCHAR(10) NULL COMMENT 'pac同步状态',
   `SCM_CODE` varchar(64) default null comment '代码库标识',
+  `REPO_RESOURCE_TYPE` varchar(32) DEFAULT null COMMENT '代码库资源类型',
   PRIMARY KEY (`REPOSITORY_ID`),
   KEY `PROJECT_ID` (`PROJECT_ID`),
   KEY `inx_alias_name` (`ALIAS_NAME`)

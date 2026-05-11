@@ -114,6 +114,13 @@ object GitUtils {
         return branchName.startsWith(PRE_PUSH_BRANCH_NAME_PREFIX)
     }
 
+    /**
+     * 校验是否是合法的group http url
+     */
+    fun isLegalGroupHttpUrl(url: String): Boolean {
+        return Regex("http[s]?://([-.a-z0-9A-Z]+)(:[0-9]+)?/(.*)").matches(url)
+    }
+
     fun isLegalHttpUrl(url: String): Boolean {
         return Regex("http[s]?://([-.a-z0-9A-Z]+)(:[0-9]+)?/(.*).git").matches(url)
     }

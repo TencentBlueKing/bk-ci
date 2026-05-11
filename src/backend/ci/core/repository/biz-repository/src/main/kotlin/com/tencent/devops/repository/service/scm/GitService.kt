@@ -1481,7 +1481,8 @@ class GitService @Autowired constructor(
         pageSize: Int?,
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?,
-        tokenType: TokenTypeEnum
+        tokenType: TokenTypeEnum,
+        search: String?
     ): List<GitCodeGroup> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
@@ -1511,7 +1512,8 @@ class GitService @Autowired constructor(
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,
                 owned = owned,
-                minAccessLevel = minAccessLevel
+                minAccessLevel = minAccessLevel,
+                search = search
             )
         } else {
             GitApi().getProjectGroupsList(
@@ -1520,7 +1522,8 @@ class GitService @Autowired constructor(
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,
                 owned = owned,
-                minAccessLevel = minAccessLevel
+                minAccessLevel = minAccessLevel,
+                search = search
             )
         }
     }

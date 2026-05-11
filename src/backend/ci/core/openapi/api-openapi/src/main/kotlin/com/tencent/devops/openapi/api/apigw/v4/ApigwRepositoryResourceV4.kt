@@ -38,6 +38,7 @@ import com.tencent.devops.openapi.BkApigwApi
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
+import com.tencent.devops.repository.pojo.enums.RepoResourceType
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.ExampleObject
@@ -83,7 +84,10 @@ interface ApigwRepositoryResourceV4 {
         repositoryType: ScmType?,
         @Parameter(description = "代码库标识", required = false)
         @QueryParam("scmCode")
-        scmCode: String?
+        scmCode: String?,
+        @Parameter(description = "代码库资源类型标识", required = false)
+        @QueryParam("repoResourceType")
+        repoResourceType: RepoResourceType?
     ): Result<Page<RepositoryInfo>>
 
     @Operation(summary = "关联代码库", tags = ["v4_app_repository_create", "v4_user_repository_create"])
