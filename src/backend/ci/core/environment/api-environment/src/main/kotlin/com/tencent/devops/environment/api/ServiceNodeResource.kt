@@ -36,6 +36,7 @@ import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.common.auth.api.AuthPermission
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -282,4 +283,22 @@ interface ServiceNodeResource {
         createMode: Boolean? = null,
         data: NodeFetchReq? = null
     ): Result<Page<NodeWithPermission>>
+
+    @Operation(summary = "校验用户对节点的权限")
+    @GET
+    @Path("/projects/{projectId}/checkNodePermission")
+    fun checkNodePermission(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "节点Id", required = true)
+        @QueryParam("nodeId")
+        nodeId: Long,
+        @Parameter(description = "权限类型", required = true)
+        @QueryParam("permission")
+        permission: AuthPermission
+    ): Result<Boolean>
 }

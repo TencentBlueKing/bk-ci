@@ -66,6 +66,7 @@ import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
+import com.tencent.devops.process.pojo.pipeline.BuildDetailSimple
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
@@ -353,6 +354,30 @@ class ServiceBuildResourceImpl @Autowired constructor(
             pipelineBuildFacadeService.getBuildDetail(
                 userId, projectId, pipelineId, buildId, channelCode,
                 ChannelCode.isNeedAuth(channelCode)
+            )
+        )
+    }
+
+    override fun getBuildDetailSimple(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode
+    ): Result<BuildDetailSimple> {
+        checkUserId(userId)
+        checkParam(projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            pipelineBuildFacadeService.getBuildDetailSimple(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                channelCode = channelCode,
+                checkPermission = ChannelCode.isNeedAuth(channelCode)
             )
         )
     }
