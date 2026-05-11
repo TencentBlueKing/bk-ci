@@ -30,6 +30,7 @@ package com.tencent.devops.auth.provider.rbac.service
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.GroupMemberVerifyInfo
+import com.tencent.bk.sdk.iam.dto.manager.RoleGroupMemberInfo
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
@@ -743,11 +744,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
             it.memberType != ManagerScopesEnum.TEMPLATE.name
         }.associateBy { it.memberId }
 
-        val pageInfoDTO = V2PageInfoDTO().apply {
-            pageSize = 1000
-            page = 1
-        }
-        val iamGroupMemberList = iamV2ManagerService.getRoleGroupMemberV2(iamGroupId, pageInfoDTO).results
+        val iamGroupMemberList = getAllRoleGroupMembersV2(iamGroupId)
         val iamGroupMemberMap = iamGroupMemberList.associateBy { it.id }
 
         toDeleteMembers.addAll(resourceGroupMemberMap.filterKeys { !iamGroupMemberMap.contains(it) }.values)
@@ -826,5 +823,24 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                 )
             }
         }
+    }
+
+    private fun getAllRoleGroupMembersV2(
+        iamGroupId: Int
+    ): List<RoleGroupMemberInfo> {
+        val allMembers = mutableListOf<RoleGroupMemberInfo>()
+        val pageSize = 1000
+        var page = 1
+        do {
+            val pageInfoDTO = V2PageInfoDTO().apply {
+                this.pageSize = pageSize
+                this.page = page
+            }
+            val pageResult = iamV2ManagerService
+                .getRoleGroupMemberV2(iamGroupId, pageInfoDTO)
+            allMembers.addAll(pageResult.results)
+            page++
+        } while (pageResult.results.size == pageSize)
+        return allMembers
     }
 }

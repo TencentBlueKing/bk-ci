@@ -479,7 +479,8 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         endTimeFrom: String?,
         endTimeTo: String?,
         buildNoStart: Int?,
-        buildNoEnd: Int?
+        buildNoEnd: Int?,
+        updateTimeDesc: Boolean?
     ): Result<Page<LightBuildHistory>> {
         return client.get(ServiceBuildResource::class).getLightHistoryBuild(
             userId = userId,
@@ -494,6 +495,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             endTimeTo = endTimeTo,
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
+            updateTimeDesc = updateTimeDesc
         )
     }
 

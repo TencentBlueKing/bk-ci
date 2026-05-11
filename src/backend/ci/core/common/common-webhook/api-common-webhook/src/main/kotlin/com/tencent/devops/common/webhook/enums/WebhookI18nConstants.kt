@@ -158,4 +158,13 @@ object WebhookI18nConstants {
 
     // 代码库开启PAC事件描述
     const val ENABLE_PAC_EVENT_DESC = "bkRepoEnablePacEventDesc"
+
+    // Git Tag操作类型不匹配
+    const val TAG_ACTION_NOT_MATCH = "bkRepoTriggerTagActionNotMatch"
+
+    // Git MR Label不匹配
+    const val MR_LABEL_NOT_MATCH = "bkRepoTriggerMrLabelNotMatch"
+
+    // Git MR Label被排除
+    const val MR_LABEL_IGNORED = "bkRepoTriggerMrLabelIgnored"
 }

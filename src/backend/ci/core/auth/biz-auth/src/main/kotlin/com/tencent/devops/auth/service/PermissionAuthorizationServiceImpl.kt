@@ -55,6 +55,7 @@ class PermissionAuthorizationServiceImpl(
         private val logger = LoggerFactory.getLogger(PermissionAuthorizationServiceImpl::class.java)
         private val needToHandoverResourceTypes = listOf(
             AuthResourceType.PIPELINE_DEFAULT.value,
+            AuthResourceType.CREATIVE_STREAM.value,
             AuthResourceType.ENVIRONMENT_ENV_NODE.value,
             AuthResourceType.CODE_REPERTORY.value
         )
@@ -95,10 +96,15 @@ class PermissionAuthorizationServiceImpl(
         ) ?: throw ErrorCodeException(
             errorCode = AuthMessageCode.ERROR_RESOURCE_AUTHORIZATION_NOT_FOUND
         )
-        // 流水线代持人可能会因为被移出用户组，导致失去执行权限。
-        if (executePermissionCheck && resourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
+        // 流水线/创作流代持人可能会因为被移出用户组，导致失去执行权限。
+        if (executePermissionCheck && (
+                resourceType == AuthResourceType.PIPELINE_DEFAULT.value ||
+                    resourceType == AuthResourceType.CREATIVE_STREAM.value
+                )
+        ) {
+            val authResourceType = AuthResourceType.get(resourceType)
             val action = RbacAuthUtils.buildAction(
-                authResourceType = AuthResourceType.PIPELINE_DEFAULT,
+                authResourceType = authResourceType,
                 authPermission = AuthPermission.EXECUTE
             )
             val isHandoverFromHasExecutePermission = try {
@@ -127,7 +133,9 @@ class PermissionAuthorizationServiceImpl(
         resourceCode: String,
         memberId: String
     ): Boolean {
-        if (resourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
+        if (resourceType == AuthResourceType.PIPELINE_DEFAULT.value ||
+            resourceType == AuthResourceType.CREATIVE_STREAM.value
+        ) {
             val record = getResourceAuthorization(
                 projectCode = projectCode,
                 resourceType = resourceType,
@@ -516,7 +524,8 @@ class PermissionAuthorizationServiceImpl(
         resourceAuthorizationHandoverDTOs: List<ResourceAuthorizationHandoverDTO>
     ): Map<ResourceAuthorizationHandoverStatus, List<ResourceAuthorizationHandoverDTO>>? {
         return when (resourceType) {
-            AuthResourceType.PIPELINE_DEFAULT.value -> {
+            AuthResourceType.PIPELINE_DEFAULT.value,
+            AuthResourceType.CREATIVE_STREAM.value -> {
                 client.get(ServicePipelineAuthorizationResource::class).resetPipelineAuthorization(
                     projectId = projectId,
                     preCheck = preCheck,

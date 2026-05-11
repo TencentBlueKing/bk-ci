@@ -350,4 +350,19 @@ interface UserProjectResource {
         @PathParam("projectId")
         projectId: String
     ): Result<String>
+
+    @GET
+    @Path("/{english_name}/isHidden")
+    @Operation(summary = "判断项目是否隐藏")
+    fun isHidden(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(
+            description = "项目ID英文名标识",
+            required = true
+        )
+        @PathParam("english_name")
+        projectId: String
+    ): Result<Boolean>
 }

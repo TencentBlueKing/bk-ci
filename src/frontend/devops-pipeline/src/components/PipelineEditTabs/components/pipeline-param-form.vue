@@ -325,12 +325,15 @@
         },
         methods: {
             handleParamTypeChange (key, value) {
+                const newParam = deepCopy(DEFAULT_PARAM[value])
                 this.param = {
-                    ...deepCopy(DEFAULT_PARAM[value]),
+                    ...newParam,
                     id: this.param.id,
                     name: this.param.name,
                     constant: this.paramType === 'constant'
                 }
+                // 切换类型时，同步更新 initParamItem，确保 defaultValue 等字段使用新类型的默认值
+                this.initParamItem = deepCopy(this.param)
                 this.resetEditItem(this.param)
             },
             handleUpdateParam (key, value) {
