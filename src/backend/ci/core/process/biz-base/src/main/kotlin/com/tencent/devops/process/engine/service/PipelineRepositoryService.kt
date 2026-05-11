@@ -53,6 +53,7 @@ import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
@@ -119,11 +120,13 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
@@ -135,13 +138,13 @@ import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import jakarta.ws.rs.core.Response
+import java.time.LocalDateTime
+import java.util.concurrent.atomic.AtomicInteger
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.concurrent.atomic.AtomicInteger
 
 @Suppress(
     "LongParameterList",
@@ -185,7 +188,8 @@ class PipelineRepositoryService constructor(
     private val subPipelineTaskService: SubPipelineTaskService,
     private val pipelineInfoService: PipelineInfoService,
     private val pipelineTemplateInfoDao: PipelineTemplateInfoDao,
-    private val pipelineGroupService: PipelineGroupService
+    private val pipelineGroupService: PipelineGroupService,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) {
 
     companion object {
@@ -394,9 +398,13 @@ class PipelineRepositoryService constructor(
         val modelTasks = ArrayList<PipelineModelTask>(metaSize)
         // 初始化ID 该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
         val containerSeqId = AtomicInteger(0)
+        model.projectId = projectId
+        model.pipelineId = pipelineId
         // 跨 stage 共享的 jobId 生成器种子和已使用的 jobId 集合，确保整个 model 范围内 jobId 唯一
         val randomSeed = AtomicInteger(1)
         val jobIdSet = mutableSetOf<String>()
+        model.projectId = projectId
+        model.pipelineId = pipelineId
         model.stages.forEachIndexed { index, s ->
             s.id = VMUtils.genStageId(index + 1)
             // #4531 对存量的stage审核数据做兼容处理
@@ -871,6 +879,18 @@ class PipelineRepositoryService constructor(
                     } else null,
                     description = description
                 )
+                publicVarGroupReferManageService.handleVarGroupReferBus(
+                    PublicVarGroupReferDTO(
+                        userId = userId,
+                        projectId = projectId,
+                        model = model,
+                        referId = pipelineId,
+                        referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
+                        referName = model.name,
+                        referVersion = 1,
+                        referVersionName = versionName ?: ""
+                    )
+                )
                 // 初始化流水线构建统计表
                 pipelineBuildSummaryDao.create(dslContext, projectId, pipelineId, buildNo)
                 pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
@@ -975,7 +995,7 @@ class PipelineRepositoryService constructor(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                     params = arrayOf(pipelineId)
                 )
-                model.latestVersion = releaseResource.version
+                model.latestVersion = settingVersion
                 val latestVersion = getLatestVersionResource(
                     transactionContext = transactionContext, projectId = projectId,
                     pipelineId = pipelineId, userId = userId, releaseResource = releaseResource,
@@ -1224,7 +1244,6 @@ class PipelineRepositoryService constructor(
                         )
                     }
                 }
-
                 watcher.start("updatePipelineResourceVersion")
                 pipelineResourceVersionDao.create(
                     dslContext = transactionContext,
@@ -1247,6 +1266,18 @@ class PipelineRepositoryService constructor(
                     baseVersion = realBaseVersion ?: (version - 1)
                 )
                 watcher.start("deleteEarlyVersion")
+                publicVarGroupReferManageService.handleVarGroupReferBus(
+                    PublicVarGroupReferDTO(
+                        userId = userId,
+                        projectId = projectId,
+                        model = model,
+                        referId = pipelineId,
+                        referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
+                        referName = model.name,
+                        referVersion = version,
+                        referVersionName = versionName
+                    )
+                )
                 setting?.maxPipelineResNum?.let {
                     pipelineResourceVersionDao.deleteEarlyVersion(
                         dslContext = transactionContext,
@@ -1801,6 +1832,12 @@ class PipelineRepositoryService constructor(
                     )
                 }
             }
+
+            publicVarGroupReferManageService.deletePublicVerGroupRefByReferId(
+                referId = pipelineId,
+                projectId = projectId,
+                referType = PublicVarGroupReferenceTypeEnum.PIPELINE
+            )
             templatePipelineDao.get(
                 dslContext = dslContext,
                 projectId = projectId,

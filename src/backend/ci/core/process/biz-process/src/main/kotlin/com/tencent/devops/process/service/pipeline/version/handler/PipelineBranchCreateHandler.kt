@@ -30,14 +30,17 @@ package com.tencent.devops.process.service.pipeline.version.handler
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.control.lock.PipelineModelLock
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionPersistenceService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -49,7 +52,8 @@ import org.springframework.stereotype.Service
 class PipelineBranchCreateHandler @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineVersionGenerator: PipelineVersionGenerator,
-    private val pipelineVersionPersistenceService: PipelineVersionPersistenceService
+    private val pipelineVersionPersistenceService: PipelineVersionPersistenceService,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) : PipelineVersionCreateHandler {
     override fun support(context: PipelineVersionCreateContext): Boolean {
         return context.versionAction == PipelineVersionAction.CREATE_BRANCH
@@ -113,6 +117,18 @@ class PipelineBranchCreateHandler @Autowired constructor(
             )
             resourceOnlyVersion
         }
+        publicVarGroupReferManageService.handleVarGroupReferBus(
+            PublicVarGroupReferDTO(
+                userId = userId,
+                projectId = projectId,
+                model = pipelineResourceWithoutVersion.model,
+                referId = pipelineId,
+                referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
+                referName = pipelineBasicInfo.pipelineName,
+                referVersion = resourceOnlyVersion.version,
+                referVersionName = resourceOnlyVersion.versionName
+            )
+        )
 
         return DeployPipelineResult(
             pipelineId = pipelineId,

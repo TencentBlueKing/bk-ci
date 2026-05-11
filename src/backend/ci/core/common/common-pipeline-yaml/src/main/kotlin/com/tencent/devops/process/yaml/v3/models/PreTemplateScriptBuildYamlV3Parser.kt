@@ -131,6 +131,11 @@ data class PreTemplateScriptBuildYamlV3Parser(
         return preYaml.variables ?: emptyMap()
     }
 
+    override fun formatVariableTemplates(): List<VariableTemplate> {
+        checkInitialized()
+        return preYaml.variableTemplates ?: emptyList()
+    }
+
     override fun formatTriggerOn(default: ScmType): List<Pair<TriggerType, TriggerOn>> {
         checkInitialized()
         val runsOn = preYaml.triggerOn ?: return listOf(
