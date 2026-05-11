@@ -121,6 +121,7 @@ class PipelineTemplateCompatibilityAdapter(
             versionName = versionName
         )
         val details = pipelineTemplateFacadeService.getTemplateDetails(
+            userId = userId,
             projectId = projectId,
             templateId = templateId,
             version = resolvedVersion
