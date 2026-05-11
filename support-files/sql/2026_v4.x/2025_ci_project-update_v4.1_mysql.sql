@@ -24,7 +24,7 @@ BEGIN
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_PROJECT'
+                    AND TABLE_NAME = 'T_PROJECT_APPROVAL'
                     AND COLUMN_NAME = 'PROJECT_SCOPE') THEN
     ALTER TABLE T_PROJECT_APPROVAL
         ADD COLUMN `PROJECT_SCOPE` int(10) NOT NULL DEFAULT '0'
