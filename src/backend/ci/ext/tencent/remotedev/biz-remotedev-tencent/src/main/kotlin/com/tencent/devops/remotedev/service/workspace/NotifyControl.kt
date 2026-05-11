@@ -365,7 +365,7 @@ class NotifyControl @Autowired constructor(
                     bodyParams = bodyParams
                 )
             }.onFailure {
-                logger.warn("notifyDesktop fail", it)
+                logger.warn("notifyDesktopMarquee fail", it)
             }
         }
 
@@ -377,7 +377,7 @@ class NotifyControl @Autowired constructor(
                     bodyParams = bodyParams
                 )
             }.onFailure {
-                logger.warn("notifyDesktop fail", it)
+                logger.warn("notifyDesktopComplex fail", it)
             }
         }
 
@@ -389,7 +389,7 @@ class NotifyControl @Autowired constructor(
                     bodyParams = bodyParams
                 )
             }.onFailure {
-                logger.warn("notifyDesktop fail", it)
+                logger.warn("notifyDesktopTips fail", it)
             }
         }
 
@@ -401,7 +401,7 @@ class NotifyControl @Autowired constructor(
                     bodyParams = bodyParams
                 )
             }.onFailure {
-                logger.warn("notifyDesktop fail", it)
+                logger.warn("notifyDesktopLongTips fail", it)
             }
         }
     }
