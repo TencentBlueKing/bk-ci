@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.image.service
 
+import ImagePageData
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_VERSION
@@ -109,6 +110,7 @@ import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.pojo.image.enums.MarketImageSortTypeEnum
 import com.tencent.devops.store.pojo.image.exception.UnknownImageSourceType
 import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
+import com.tencent.devops.store.pojo.image.response.DockerRepoList
 import com.tencent.devops.store.pojo.image.response.ImageDetail
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import com.tencent.devops.store.pojo.image.response.MarketImageItem
@@ -1258,5 +1260,34 @@ abstract class ImageService @Autowired constructor() {
 
     fun isReleasedStatus(imageCode: String, imageVersion: String, imageStatus: ImageStatusEnum): Boolean {
         return imageDao.countImageRelease(dslContext, imageCode, imageVersion, imageStatus) > 0
+    }
+
+    fun getPublicImageList(imageName: String, page: Int, pageSize: Int): Result<ImagePageData> {
+        val imageList = imageDao.getPublicImageList(
+            dslContext = dslContext,
+            imageName = imageName,
+            pageNum = page,
+            pageSize = pageSize
+        )
+        val count = imageDao.countPublicImageList(dslContext = dslContext, imageName = imageName)
+        val dockerRepoList = imageList.map {
+            DockerRepoList(
+                repoUrl = it.imageRepoUrl,
+                repo = it.imageRepoName,
+                name = it.imageName,
+                createdBy = it.creator,
+                created = DateTimeUtil.localDateTimeToString(it.createTime),
+                modified = it.modifier,
+                modifiedBy = DateTimeUtil.localDateTimeToString(it.updateTime),
+                desc = it.description,
+            )
+        }
+        val imagePageData = ImagePageData(
+            imageList = dockerRepoList,
+            start = page,
+            limit = pageSize,
+            total = count
+        )
+        return Result(imagePageData)
     }
 }

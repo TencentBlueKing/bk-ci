@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.store.api.image
 
+import ImagePageData
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
@@ -213,4 +214,20 @@ interface UserMarketImageResource {
         @PathParam("imageCode")
         imageCode: String
     ): Result<List<VersionInfo>>
+
+    //获取公共镜像列表
+    @Operation(summary = "获取公共镜像列表")
+    @GET
+    @Path("/public/image/list")
+    fun getPublicImageList(
+        @Parameter(description = "镜像名", required =true)
+        @QueryParam("imageName")
+        imageName: String,
+        @Parameter(description = "页码", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页大小", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<ImagePageData>
 }
