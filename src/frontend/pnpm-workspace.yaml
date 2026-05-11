@@ -6,6 +6,22 @@ packages:
   - locale
   - common-lib
 
+allowBuilds:
+  '@parcel/watcher': true
+  bufferutil: false
+  core-js: false
+  ejs: false
+  es5-ext: false
+  esbuild: true
+  fsevents: true
+  highlight.js: false
+  nx: true
+  utf-8-validate: false
+  vue-demi: true
+  vue-echarts: true
+  yorkie: false
+  less: false
+
 catalogs:
   vue2:
     vue: "~2.7.16"
