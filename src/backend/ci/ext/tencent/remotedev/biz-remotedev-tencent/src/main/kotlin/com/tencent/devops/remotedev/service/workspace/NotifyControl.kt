@@ -344,6 +344,30 @@ class NotifyControl @Autowired constructor(
                 logger.warn("notifyDesktop fail", it)
             }
         }
+
+        if (notifyType.contains(RemoteDevNotifyType.DESKTOP_TIPS)) {
+            kotlin.runCatching {
+                notifyDesktop(
+                    userIds = userIds,
+                    dataType = RemoteDevNotifyType.DESKTOP_TIPS,
+                    bodyParams = bodyParams
+                )
+            }.onFailure {
+                logger.warn("notifyDesktop fail", it)
+            }
+        }
+
+        if (notifyType.contains(RemoteDevNotifyType.DESKTOP_LONG_TIPS)) {
+            kotlin.runCatching {
+                notifyDesktop(
+                    userIds = userIds,
+                    dataType = RemoteDevNotifyType.DESKTOP_LONG_TIPS,
+                    bodyParams = bodyParams
+                )
+            }.onFailure {
+                logger.warn("notifyDesktop fail", it)
+            }
+        }
     }
 
     private fun notifyDesktop(
