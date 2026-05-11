@@ -61,7 +61,7 @@ import org.jooq.impl.DSL.lower
 import org.springframework.stereotype.Repository
 import java.net.URLDecoder
 import java.time.LocalDateTime
-import java.util.*
+import java.util.Locale
 
 @Suppress("ALL")
 @Repository
