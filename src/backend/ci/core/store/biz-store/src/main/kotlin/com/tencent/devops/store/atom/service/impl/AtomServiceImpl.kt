@@ -669,7 +669,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             mutableListOf(atomStatus)
         } else {
             if (projectCode != null) {
-                generateAtomStatusList(atomCode, projectCode)
+                generateAtomStatusList(
+                    atomCode = atomCode,
+                    projectCode = projectCode,
+                    addCancelStatusFlag = true
+                )
             } else {
                 null
             }
@@ -824,7 +828,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
 
     private fun generateAtomStatusList(
         atomCode: String,
-        projectCode: String
+        projectCode: String,
+        addCancelStatusFlag: Boolean = false
     ): MutableList<Byte> {
         val flag = storeProjectRelDao.isTestProjectCode(dslContext, atomCode, StoreTypeEnum.ATOM, projectCode)
         logger.info("isInitTestProjectCode atomCode=$atomCode|projectCode=$projectCode|flag=$flag")
@@ -840,6 +845,15 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 AtomStatusEnum.AUDITING.status.toByte(),
                 AtomStatusEnum.RELEASED.status.toByte(),
                 AtomStatusEnum.UNDERCARRIAGING.status.toByte()
+            )
+        }
+        // 调试项目且addCancelStatusFlag为true时，额外允许查上架中止和测试结束的插件
+        if (addCancelStatusFlag) {
+            atomStatusList.addAll(
+                listOf(
+                    AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
+                    AtomStatusEnum.TESTED.status.toByte()
+                )
             )
         }
         return atomStatusList

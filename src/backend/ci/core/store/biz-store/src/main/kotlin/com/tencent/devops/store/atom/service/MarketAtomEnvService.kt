@@ -60,7 +60,8 @@ interface MarketAtomEnvService {
         atomStatus: Byte? = null,
         osName: String? = null,
         osArch: String? = null,
-        convertOsFlag: Boolean? = null
+        convertOsFlag: Boolean? = null,
+        addCancelStatusFlag: Boolean = false
     ): Result<AtomEnv?>
 
     /**
