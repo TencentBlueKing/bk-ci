@@ -220,6 +220,44 @@ class NotifyControl @Autowired constructor(
                 bodyParams = bodyParams
             )
         }
+
+        // 给所有云桌面的owner发送云桌面-TIPS消息
+        if (notifyData.notifyType == null ||
+            notifyData.notifyType?.contains(RemoteDevNotifyType.DESKTOP_TIPS) == true
+        ) {
+            bodyParams[UserNotifyInfo::operator.name] = userId
+            bodyParams["messageContent"] = JsonUtil.toJson(
+                mapOf(
+                    bodyParams[UserNotifyInfo::operator.name] to userId,
+                    bodyParams[UserNotifyInfo::title.name] to notifyData.title,
+                    bodyParams[UserNotifyInfo::body.name] to (notifyData.desc ?: "")
+                )
+            )
+            notify4User(
+                userIds = userList,
+                notifyType = mutableSetOf(RemoteDevNotifyType.DESKTOP_MARQUEE),
+                bodyParams = bodyParams
+            )
+        }
+
+        // 给所有云桌面的owner发送云桌面-LONG TIPS消息
+        if (notifyData.notifyType == null ||
+            notifyData.notifyType?.contains(RemoteDevNotifyType.DESKTOP_LONG_TIPS) == true
+        ) {
+            bodyParams[UserNotifyInfo::operator.name] = userId
+            bodyParams["messageContent"] = JsonUtil.toJson(
+                mapOf(
+                    bodyParams[UserNotifyInfo::operator.name] to userId,
+                    bodyParams[UserNotifyInfo::title.name] to notifyData.title,
+                    bodyParams[UserNotifyInfo::body.name] to (notifyData.desc ?: "")
+                )
+            )
+            notify4User(
+                userIds = userList,
+                notifyType = mutableSetOf(RemoteDevNotifyType.DESKTOP_LONG_TIPS),
+                bodyParams = bodyParams
+            )
+        }
     }
 
     fun notify4RemoteDevManager(
