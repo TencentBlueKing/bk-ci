@@ -121,7 +121,7 @@
                                 type="right-shape"
                                 class="icon-angle-right"
                             />
-    
+
                             {{ $t('buildMsg') }}
                         </header>
                         <div
@@ -148,9 +148,9 @@
                             type="right-shape"
                             class="icon-angle-right"
                         />
-    
+
                         {{ $t('buildParams') }}
-                        
+                    
                         <span
                             @click.stop=""
                         >
@@ -324,7 +324,7 @@
                         </div>
                     </section>
                 </template>
-        
+
                 <section class="params-content-item">
                     <header
                         :class="['params-collapse-trigger', {
@@ -375,6 +375,7 @@
                             :pipeline="pipelineModel"
                             :editable="false"
                             :can-skip-element="canElementSkip"
+                            @change="handlePipelineModelChange"
                         />
                     </div>
                 </section>
@@ -387,9 +388,9 @@
     import ParamSet from '@/components/ParamSet.vue'
     import Pipeline from '@/components/Pipeline'
     import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector.vue'
-    import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry.vue'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
+    import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
     import { UPDATE_PREVIEW_PIPELINE_NAME, PAC_BRANCH_CHANGE, UPDATE_PAC_ERROR_STATUS, PAC_BRANCH_LOADING, PAC_BRANCH_INIT_DONE, bus } from '@/utils/bus'
     import { allVersionKeyList } from '@/utils/pipelineConst'
@@ -427,7 +428,6 @@
                 showChangedParamsAlert: false,
                 checkTotal: true,
                 isApplySet: false,
-                pendingParamSetChange: null,
                 applySetDiff: {
                     setName: '',
                     diffMap: {
@@ -584,8 +584,8 @@
                 'togglePropertyPanel',
                 'fetchPipelineByVersion',
                 'selectPipelineVersion',
-                'fetchPacBranchPipeline',
-                'setTempParamSet'
+                'setTempParamSet',
+                'fetchPacBranchPipeline'
             ]),
             ...mapActions('pipelines', [
                 'requestStartupInfo',
@@ -667,6 +667,24 @@
             },
             handleCheckTotalChange (checkedTotal) {
                 this.setPipelineSkipProp(this.pipelineModel.stages, checkedTotal)
+            },
+            handlePipelineModelChange (updatedPipeline) {
+                // 预览模式下更新 pipelineModel（用于 skip 状态变更）
+                if (updatedPipeline?.stages) {
+                    this.pipelineModel = {
+                        ...this.pipelineModel,
+                        stages: updatedPipeline.stages
+                    }
+                    // 同步更新全选状态
+                    this.syncCheckTotalState()
+                }
+            },
+            syncCheckTotalState () {
+                // 检查是否所有可执行的元素都被选中
+                const allElements = this.getAllElements(this.pipelineModel.stages)
+                const enabledElements = allElements.filter(el => el.additionalOptions?.enable !== false)
+                const allChecked = enabledElements.length > 0 && enabledElements.every(el => el.canElementSkip !== false)
+                this.checkTotal = allChecked
             },
             getParamsValue (values) {
                 const key = this.useLastParams ? 'value' : 'defaultValue'
@@ -791,8 +809,7 @@
                             // 保存版本号，用于启动构建时指定 version
                             this.branchVersion = branchInfo.version
                             this.isBranchVersion = false
-                            // 正式版本不是最新版本时，提示过期
-                            this.expireReleasedVersion = branchInfo.version !== this.pipelineInfo?.releaseVersion
+                            this.expireReleasedVersion = false
                         } else {
                             // 分支使用 PAC 分支编排接口
                             const [res, branchPipelineRes] = await Promise.all([
@@ -808,7 +825,10 @@
                             // 保存分支版本号，用于启动构建时指定 version
                             this.branchVersion = branchPipelineRes?.version ?? null
                             this.isBranchVersion = true
-                            this.expireReleasedVersion = false
+                            if (branchPipelineRes) {
+                                const { version, latestVersion, versionStatus = '' } = branchPipelineRes
+                                this.expireReleasedVersion = versionStatus === 'RELEASED' && version !== latestVersion
+                            }
                         }
                     } else {
                         const [res, normalPipelineRes] = await Promise.all([
@@ -832,11 +852,6 @@
                     this.showChangedParamsAlert = this.startupInfo?.useLatestParameters
                     this.pacError = { show: false, type: '', message: '' }
                     bus.$emit(UPDATE_PAC_ERROR_STATUS, false)
-                    if (this.pendingParamSetChange) {
-                        const { setName, paramsValues, versionValues } = this.pendingParamSetChange
-                        this.pendingParamSetChange = null
-                        this.updateParamsValues(setName, paramsValues, versionValues)
-                    }
                 } catch (err) {
                     const errorCode = err?.code || err?.status
                     // PAC 模式下特定错误码不返回，而是展示错误页面
@@ -921,8 +936,9 @@
                 if (!paramsValid) return
                 const params = this.getExecuteParams(this.pipelineId) ?? {}
                 Object.keys(params).forEach(key => {
-                    if (key !== 'buildNo' && isObject(params[key])) {
-                        params[key] = JSON.stringify(params[key])
+                    const val = params[key]
+                    if (key !== 'buildNo' && (isObject(val) || Array.isArray(val))) {
+                        params[key] = JSON.stringify(val)
                     }
                 })
                 const skipAtoms = this.getSkipedAtoms()
@@ -976,10 +992,11 @@
                 } finally {
                     this.setExecuteStatus(false)
 
-                    message && this.$showTips({
-                        message,
-                        theme
-                    })
+                    message
+                        && this.$showTips({
+                            message,
+                            theme
+                        })
                 }
             },
 
@@ -1028,7 +1045,7 @@
                 const allParamMap = this.startupInfo?.properties?.reduce((acc, param) => {
                     acc.set(param.id, param)
                     return acc
-                }, new Map()) ?? new Map()
+                }, new Map())
                 Object.keys(partical).forEach(key => {
                     const param = allParamMap.get(key)
                     if (Object.prototype.hasOwnProperty.call(origin, key)) {
@@ -1049,10 +1066,6 @@
                 }
             },
             updateParamsValues (setName, paramsValues, versionValues) {
-                if (!this.startupInfo) {
-                    this.pendingParamSetChange = { setName, paramsValues, versionValues }
-                    return
-                }
                 const applySetDiff = {
                     setName,
                     diffMap: {
