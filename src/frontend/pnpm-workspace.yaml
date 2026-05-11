@@ -7,7 +7,7 @@ packages:
   - common-lib
 
 allowBuilds:
-  '@parcel/watcher': true
+  "@parcel/watcher": true
   bufferutil: false
   core-js: false
   ejs: false
@@ -20,6 +20,7 @@ allowBuilds:
   utf-8-validate: false
   vue-demi: true
   vue-echarts: true
+  yorkie: false
 
 catalogs:
   vue2:
