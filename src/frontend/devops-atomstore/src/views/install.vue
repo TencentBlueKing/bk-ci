@@ -208,6 +208,7 @@
                 'requestRelativeProject',
                 'requestRelativeTplProject',
                 'requestRelativeImageProject',
+                'requestRelativeServiceProject',
                 'requestServiceDetailByCode',
                 'requestProjectList',
                 'installAtom',
@@ -246,9 +247,13 @@
                 const methods = {
                     atom: this.requestRelativeProject,
                     template: this.requestRelativeTplProject,
-                    image: this.requestRelativeImageProject
+                    image: this.requestRelativeImageProject,
+                    service: this.requestRelativeServiceProject
                 }
-
+                if (!Object.keys(methods).includes(this.type) || typeof methods[this.type] !== 'function') {  
+                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                    return
+                }
                 const res = await methods[this.type](this.code)
                 this.installedProject = res
             },
