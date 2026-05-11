@@ -16,6 +16,7 @@
  *    让 utils/webSocketMessage.js 的既有监听逻辑无侵入接收。
  */
 
+import Vue from 'vue'
 import SockJS from 'sockjs-client'
 const Stomp = require('stompjs/lib/stomp.js').Stomp
 
@@ -30,14 +31,39 @@ function uuid () {
     return id
 }
 
+/**
+ * 获取当前登录用户名。
+ *
+ * 说明：
+ * - devops-pipeline 子工程并未在自身代码里挂 Vue.prototype.$userInfo，
+ *   该值由外层框架（devops-frontend）异步注入到 Vue 原型上；
+ * - 普通 JS 模块里 window.userInfo 并不可靠，main.js 中通过
+ *   global.pipelineVue = new Vue({...}) 暴露了根实例，可以从这里拿到 $userInfo；
+ * - 这里做多源兜底 + 每次调用都实时获取，避免 BKSocket 构造期 $userInfo
+ *   尚未注入而拿到空字符串、后续永远是空的问题。
+ */
 function getCurrentUserName () {
     try {
-        return (window.userInfo && window.userInfo.username)
-            || (window.GLOBAL_PIPELINE_LOGIN_USER || '')
-            || ''
+        const fromVue = global.pipelineVue
+            && global.pipelineVue.$userInfo
+            && global.pipelineVue.$userInfo.username
+        if (fromVue) return fromVue
+
+        const fromProto = Vue.prototype
+            && Vue.prototype.$userInfo
+            && Vue.prototype.$userInfo.username
+        if (fromProto) return fromProto
+
+        if (window.userInfo && window.userInfo.username) {
+            return window.userInfo.username
+        }
+        if (window.GLOBAL_PIPELINE_LOGIN_USER) {
+            return window.GLOBAL_PIPELINE_LOGIN_USER
+        }
     } catch (e) {
-        return ''
+        // ignore
     }
+    return ''
 }
 
 class BKSocket {
@@ -49,13 +75,23 @@ class BKSocket {
         this.isConnecting = false
         this.hasConnect = false
         this.isManualReconnecting = false
-        this.userName = getCurrentUserName()
+        // 注意：userName 不再在构造期一次性缓存，避免 $userInfo 异步注入晚到导致永远取空。
+        // 通过 getter 每次读取时都走 getCurrentUserName() 实时获取最新值。
         this.uuid = uuid()
         this.url = `${API_URL_PREFIX}/websocket/ws/user?sessionId=${this.uuid}`
         this.topicUrl = `/topic/bk/notify/${this.uuid}`
         this.stompClient = {}
         this.page = ''
         this.projectId = ''
+
+        // 实时返回最新的登录用户名（兼容 $userInfo 异步注入）
+        Object.defineProperty(this, 'userName', {
+            configurable: true,
+            enumerable: true,
+            get () {
+                return getCurrentUserName()
+            }
+        })
 
         this._onBeforeUnload = () => this.disconnect()
         this._onOffline = () => this.stompClient && this.stompClient.disconnect && this.stompClient.disconnect()
@@ -234,15 +270,27 @@ class BKSocket {
     sendMessage (path = '', projectId = '') {
         // 仅对 tapd iframe 路由生效：/pipeline/tapd/:projectId/...
         const reg = /^\/pipeline\/tapd\//
-        const deprecatedDetailReg = /\/detail\/b-[0-9a-f]+$/i
 
         if (!reg.test(path)) return
-        if (deprecatedDetailReg.test(path)) {
-            // 该类 detail 页面已废弃，无需上报
-            return
-        }
 
-        const page = path.replace(reg, '/console/pipeline/')
+        // 1) 路由前缀替换：/pipeline/tapd/ → /console/pipeline/
+        let page = path.replace(reg, '/console/pipeline/')
+
+        // 2) tapd 专用子路径 → 后端可识别的标准 page
+        //    后端只认 /console/pipeline/{projectId}/{pipelineId}/detail/{buildNo}/{type} 这种形式，
+        //    对 tapd 自定义的 stddetail / 缺省 type 的 detail 都不会下发推送。
+        //    这里统一规范化：
+        //      a) /stddetail/{buildNo}              → /detail/{buildNo}/executeDetail
+        //      b) /detail/{buildNo}                 → /detail/{buildNo}/executeDetail（补 type）
+        //      c) /detail/{buildNo}/{type}          → 保持不变
+        page = page.replace(
+            /\/stddetail\/([^/?#]+)(?:\/([^/?#]+))?/,
+            (_, buildNo, type) => `/detail/${buildNo}/${type || 'executeDetail'}`
+        )
+        page = page.replace(
+            /\/detail\/([^/?#]+)(?:\/([^/?#]+))?/,
+            (_, buildNo, type) => `/detail/${buildNo}/${type || 'executeDetail'}`
+        )
 
         this.page = page
         this.projectId = projectId
