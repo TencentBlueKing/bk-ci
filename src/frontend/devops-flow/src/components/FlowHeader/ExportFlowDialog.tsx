@@ -1,6 +1,7 @@
-import { downloadFlowJson } from '@/api/flowContentList'
+import { downloadFlowJson, downloadFlowYaml } from '@/api/flowContentList'
+import { useFlowModelStore } from '@/stores/flowModel'
 import { Button, Dialog, Message } from 'bkui-vue'
-import { defineComponent, ref } from 'vue'
+import { computed, defineComponent, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { SvgIcon } from '../SvgIcon'
@@ -10,6 +11,18 @@ export interface ExportFlowDialogProps {
   isShow: boolean
   flowId: string
   flowName: string
+}
+
+type ExportFormat = 'json' | 'yaml'
+
+interface ExportItem {
+  format: ExportFormat
+  title: string
+  icon: string
+  tip: string
+  buttonText: string
+  disabled: boolean
+  run: () => Promise<void>
 }
 
 export const ExportFlowDialog = defineComponent({
@@ -33,23 +46,60 @@ export const ExportFlowDialog = defineComponent({
     const { t } = useI18n()
     const route = useRoute()
     const projectId = route.params.projectId as string
-    const isExporting = ref(false)
+    const flowModelStore = useFlowModelStore()
+
+    const exportingFormat = ref<ExportFormat | null>(null)
 
     const handleClose = () => {
       emit('update:isShow', false)
     }
 
-    // 下载 JSON 格式
-    const handleExportJson = async () => {
-      isExporting.value = true
+    const exportJson = () =>
+      downloadFlowJson(projectId, props.flowId, `${props.flowName}.json`)
+
+    const exportYaml = () =>
+      downloadFlowYaml(
+        projectId,
+        props.flowId,
+        {
+          model: flowModelStore.flowModel!,
+          setting: flowModelStore.flowSetting!,
+        },
+        `${props.flowName}.yml`,
+      )
+
+    const exportList = computed<ExportItem[]>(() => [
+      {
+        format: 'json',
+        title: 'Pipeline JSON',
+        icon: 'pipeline',
+        tip: t('flow.dialog.exportFlow.exportJsonTip'),
+        buttonText: t('flow.dialog.exportFlow.exportJson'),
+        disabled: false,
+        run: exportJson,
+      },
+      {
+        format: 'yaml',
+        title: 'Pipeline YAML',
+        icon: 'pipeline',
+        tip: t('flow.dialog.exportFlow.exportYamlTip'),
+        buttonText: t('flow.dialog.exportFlow.exportYaml'),
+        disabled: !flowModelStore.flowModel || !flowModelStore.flowSetting,
+        run: exportYaml,
+      },
+    ])
+
+    const handleExport = async (item: ExportItem) => {
+      if (item.disabled) return
+      exportingFormat.value = item.format
       try {
-        await downloadFlowJson(projectId, props.flowId, `${props.flowName}.json`)
+        await item.run()
         Message({ theme: 'success', message: t('flow.content.exportSuccess') })
         handleClose()
       } catch (error: any) {
         Message({ theme: 'error', message: error?.message || t('flow.content.exportFailed') })
       } finally {
-        isExporting.value = false
+        exportingFormat.value = null
       }
     }
 
@@ -57,7 +107,7 @@ export const ExportFlowDialog = defineComponent({
       <Dialog
         isShow={props.isShow}
         title={t('flow.dialog.exportFlow.title')}
-        width={400}
+        width={640}
         showFooter={false}
         onCancel={handleClose}
         onClosed={handleClose}
@@ -65,19 +115,24 @@ export const ExportFlowDialog = defineComponent({
         {{
           default: () => (
             <div class={styles.exportList}>
-              {/* JSON 导出 */}
-              <div class={styles.exportItem}>
-                <SvgIcon name="pipeline" class={styles.exportIcon} />
-                <h5 class={styles.exportTitle}>Pipeline JSON</h5>
-                <p class={styles.exportTip}>{t('flow.dialog.exportFlow.exportJsonTip')}</p>
-                <Button
-                  class={styles.exportButton}
-                  onClick={handleExportJson}
-                  loading={isExporting.value}
-                >
-                  {t('flow.dialog.exportFlow.exportJson')}
-                </Button>
-              </div>
+              {exportList.value.map((item) => (
+                <div class={styles.exportItem} key={item.format}>
+                  <SvgIcon name={item.icon} class={styles.exportIcon} />
+                  <h5 class={styles.exportTitle}>{item.title}</h5>
+                  <p class={styles.exportTip}>{item.tip}</p>
+                  <Button
+                    class={styles.exportButton}
+                    onClick={() => handleExport(item)}
+                    loading={exportingFormat.value === item.format}
+                    disabled={
+                      item.disabled
+                      || (exportingFormat.value !== null && exportingFormat.value !== item.format)
+                    }
+                  >
+                    {item.buttonText}
+                  </Button>
+                </div>
+              ))}
             </div>
           ),
         }}

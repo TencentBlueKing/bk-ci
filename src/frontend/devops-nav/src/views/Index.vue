@@ -91,10 +91,10 @@
 
 <script lang="ts">
     import Vue from 'vue'
-    import Header from '../components/Header/index.vue'
-    import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
     import { Component, Watch } from 'vue-property-decorator'
-    import { State, Getter } from 'vuex-class'
+    import { Getter, State } from 'vuex-class'
+    import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
+    import Header from '../components/Header/index.vue'
     import eventBus from '../utils/eventBus'
 
     @Component({
@@ -158,11 +158,11 @@
         }
 
         get isPersonalProject (): boolean {
-            return this.curProject?.channelCode === 'PREBUILD'
+            return this.curProject && this.curProject.channelCode === 'PREBUILD'
         }
 
         get isCreativeFlowPage (): boolean {
-            return this.currentPage?.code === 'creative-stream'
+            return this.currentPage && this.currentPage.code === 'creative-stream'
         }
 
         switchProject () {
@@ -170,13 +170,13 @@
         }
 
         switchToPersonalProject () {
-          const projectId = `_${this.user?.username ?? ''}`
+          const projectId = this.user && this.user.username ? `_${this.user.username}` : ''
           if (this.projectList.some(project => project.projectCode === projectId)) {
             this.$router.push({
               ...this.$route,
               params: {
                 ...this.$route.params,
-                projectId: `_${this.user.username}`
+                projectId
               }
             })
           } else {
