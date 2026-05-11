@@ -259,7 +259,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     userDeptDetail = userDeptDetail,
                     subjectScopes = subjectScopes,
                     projectCreateInfo = createInfo,
-                    approvalStatus = approvalStatus
+                    approvalStatus = approvalStatus,
+                    projectScope = projectCreateInfo.projectScope
                 )
                 // 注册项目到权限中心
                 projectId = projectPermissionService.createResources(

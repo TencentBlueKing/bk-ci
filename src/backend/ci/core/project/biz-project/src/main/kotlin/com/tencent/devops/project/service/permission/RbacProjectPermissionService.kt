@@ -105,7 +105,8 @@ class RbacProjectPermissionService(
                 projectCreateInfo = projectCreateInfo,
                 approvalStatus = approvalStatus,
                 subjectScopes = subjectScopes,
-                tipsStatus = tipsStatus
+                tipsStatus = tipsStatus,
+                projectScope = projectScope
             )
         }
         authResourceApi.createResource(

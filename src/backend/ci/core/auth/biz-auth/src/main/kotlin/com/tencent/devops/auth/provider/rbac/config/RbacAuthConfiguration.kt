@@ -182,7 +182,8 @@ class RbacAuthConfiguration {
         iamV2ManagerService: V2ManagerService,
         permissionAuthorizationService: PermissionAuthorizationService,
         permissionResourceValidateService: PermissionResourceValidateService,
-        personalProjectService: PersonalProjectService
+        personalProjectService: PersonalProjectService,
+        permissionResourceGroupService: PermissionResourceGroupService
     ) = RbacPermissionResourceService(
         authResourceService = authResourceService,
         permissionGradeManagerService = permissionGradeManagerService,
@@ -192,7 +193,8 @@ class RbacAuthConfiguration {
         iamV2ManagerService = iamV2ManagerService,
         permissionAuthorizationService = permissionAuthorizationService,
         permissionResourceValidateService = permissionResourceValidateService,
-        personalProjectService = personalProjectService
+        personalProjectService = personalProjectService,
+        permissionResourceGroupService = permissionResourceGroupService
     )
 
     @Bean
