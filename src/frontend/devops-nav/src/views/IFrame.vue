@@ -17,7 +17,7 @@
                 ref="iframeEle"
                 allowfullscreen
                 allow="clipboard-read; clipboard-write"
-                :src="`https://pipeline-dev.bk-tenant-dev.woa.com/bkci${src}`"
+                :src="src"
                 @load="onLoad"
             />
         </div>
