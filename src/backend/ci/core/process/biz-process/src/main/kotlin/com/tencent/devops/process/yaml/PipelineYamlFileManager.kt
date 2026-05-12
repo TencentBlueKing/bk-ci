@@ -71,6 +71,7 @@ import com.tencent.devops.repository.api.scm.ServiceScmFileApiResource
 import com.tencent.devops.repository.api.scm.ServiceScmPullRequestApiResource
 import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
 import com.tencent.devops.repository.pojo.credential.AuthRepository
+import com.tencent.devops.repository.pojo.credential.UserOauthTokenAuthCred
 import com.tencent.devops.repository.pojo.hub.ScmFilePushReq
 import com.tencent.devops.repository.pojo.hub.ScmPullRequestCreateReq
 import com.tencent.devops.scm.api.enums.ContentKind
@@ -407,6 +408,12 @@ class PipelineYamlFileManager @Autowired constructor(
                     targetAction == CodeTargetAction.COMMIT_TO_BRANCH && targetBranch == defaultBranch -> defaultBranch
                     else -> versionName!!
                 }
+                // 发布应该使用流水线更新人的身份,不能使用pac开启人的身份
+                val pushAuthRepository = authRepository.copy(
+                    auth = UserOauthTokenAuthCred(
+                        userId = userId
+                    )
+                )
                 // 推送文件
                 val filePushResult = client.get(ServiceScmFileApiResource::class).pushFile(
                     projectId = projectId,
@@ -416,7 +423,7 @@ class PipelineYamlFileManager @Autowired constructor(
                         defaultBranch = defaultBranch,
                         content = content,
                         message = commitMessage,
-                        authRepository = authRepository
+                        authRepository = pushAuthRepository
                     )
                 ).data!!
                 // 创建mr
