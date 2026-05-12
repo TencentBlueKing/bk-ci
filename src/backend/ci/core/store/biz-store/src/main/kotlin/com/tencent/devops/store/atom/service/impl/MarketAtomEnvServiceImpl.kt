@@ -448,10 +448,10 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         projectCode: String,
         queryTestFlag: Boolean,
         queryWithoutStatusFlag: Boolean = false
-    ): List<Byte> {
+    ): List<Byte>? {
         // 构建详情页查询历史快照，不校验任何状态
         if (queryWithoutStatusFlag) {
-            return emptyList()
+            return null
         }
         
         return if (atomStatus != null) {
