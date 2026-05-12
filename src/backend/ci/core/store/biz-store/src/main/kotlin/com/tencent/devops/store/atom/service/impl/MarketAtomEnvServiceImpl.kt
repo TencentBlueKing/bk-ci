@@ -144,7 +144,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         projectCode: String,
         atomCodeList: List<String>,
         atomVersions: Set<StoreVersion>,
-        addCancelStatusFlag: Boolean = false
+        queryWithoutStatusFlag: Boolean = false
     ): Map<String, AtomRunInfo> {
         // 2、根据插件代码和版本号查找插件运行时信息
         // 判断当前项目是否是插件的调试项目
@@ -176,7 +176,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     atomName = atomName,
                     version = version,
                     testFlag = testFlag,
-                    addCancelStatusFlag = addCancelStatusFlag
+                    queryWithoutStatusFlag = queryWithoutStatusFlag
                 )
             } else {
                 // 去缓存中获取插件运行时信息
@@ -192,7 +192,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                         atomName = atomName,
                         version = version,
                         testFlag = testFlag,
-                        addCancelStatusFlag = addCancelStatusFlag
+                        queryWithoutStatusFlag = queryWithoutStatusFlag
                     )
                 }
             }
@@ -226,13 +226,13 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         atomName: String,
         version: String,
         testFlag: Boolean,
-        addCancelStatusFlag: Boolean = false
+        queryWithoutStatusFlag: Boolean = false
     ): AtomRunInfo {
         val atomEnvResult = getMarketAtomEnvInfo(
             projectCode = projectCode,
             atomCode = atomCode,
             version = version,
-            addCancelStatusFlag = addCancelStatusFlag
+            queryWithoutStatusFlag = queryWithoutStatusFlag
         )
         if (atomEnvResult.isNotOk()) {
             val params = arrayOf(projectCode, atomName)
@@ -280,9 +280,9 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         osName: String?,
         osArch: String?,
         convertOsFlag: Boolean?,
-        addCancelStatusFlag: Boolean
+        queryWithoutStatusFlag: Boolean
     ): Result<AtomEnv?> {
-        logger.info("getMarketAtomEnvInfo $projectCode,$atomCode,$version,$atomStatus,$osName,$osArch,$convertOsFlag")
+        logger.info("getMarketAtomEnvInfo $projectCode,$atomCode,$version,$atomStatus,$osName,$osArch,$convertOsFlag,$queryWithoutStatusFlag")
         // 普通项目的查已发布、下架中和已下架（需要兼容那些还在使用已下架插件插件的项目）的插件
         val normalStatusList = listOf(
             AtomStatusEnum.RELEASED.status.toByte(),
@@ -298,7 +298,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             atomCode = atomCode,
             projectCode = projectCode,
             queryTestFlag = buildingFlag,
-            addCancelStatusFlag = addCancelStatusFlag
+            queryWithoutStatusFlag = queryWithoutStatusFlag
         )
         val atomDefaultFlag = marketAtomCommonService.isPublicAtom(atomCode)
         val atomBaseInfoRecord = marketAtomEnvInfoDao.getProjectAtomBaseInfo(
@@ -447,8 +447,13 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         atomCode: String,
         projectCode: String,
         queryTestFlag: Boolean,
-        addCancelStatusFlag: Boolean = false
+        queryWithoutStatusFlag: Boolean = false
     ): List<Byte> {
+        // 构建详情页查询历史快照，不校验任何状态
+        if (queryWithoutStatusFlag) {
+            return emptyList()
+        }
+        
         return if (atomStatus != null) {
             mutableListOf(atomStatus)
         } else {
@@ -475,15 +480,6 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                             AtomStatusEnum.TESTING.status.toByte(), AtomStatusEnum.AUDITING.status.toByte()
                         )
                     )
-                    // 调试项目且addCancelStatusFlag为true时，额外允许查上架中止和测试结束的插件
-                    if (addCancelStatusFlag) {
-                        this.addAll(
-                            listOf(
-                                AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
-                                AtomStatusEnum.TESTED.status.toByte()
-                            )
-                        )
-                    }
                 }
             }
         }
@@ -556,7 +552,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             projectCode = projectCode,
             atomCodeList = atomVersions.map { it.storeCode },
             atomVersions = atomVersions,
-            addCancelStatusFlag = true
+            queryWithoutStatusFlag = true
         )
         val atomSensitiveParamInfos = mutableMapOf<String, String>()
         atomRunInfos.forEach { key, atomRunInfo ->

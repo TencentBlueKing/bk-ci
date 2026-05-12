@@ -672,7 +672,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 generateAtomStatusList(
                     atomCode = atomCode,
                     projectCode = projectCode,
-                    addCancelStatusFlag = true
+                    queryWithoutStatusFlag = false
                 )
             } else {
                 null
@@ -772,7 +772,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     override fun getPipelineAtomVersions(projectCode: String?, atomCode: String): Result<List<VersionInfo>> {
         logger.info("getPipelineAtomVersions projectCode is: $projectCode,atomCode is: $atomCode")
         val atomStatusList = if (projectCode != null) {
-            generateAtomStatusList(atomCode, projectCode)
+            generateAtomStatusList(
+                atomCode = atomCode,
+                projectCode = projectCode,
+                queryWithoutStatusFlag = false
+            )
         } else {
             null
         }
@@ -829,8 +833,13 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     private fun generateAtomStatusList(
         atomCode: String,
         projectCode: String,
-        addCancelStatusFlag: Boolean = false
+        queryWithoutStatusFlag: Boolean = false
     ): MutableList<Byte> {
+        // 构建详情页查询历史快照，不校验任何状态
+        if (queryWithoutStatusFlag) {
+            return mutableListOf() // 返回空列表表示查询所有状态
+        }
+        
         val flag = storeProjectRelDao.isTestProjectCode(dslContext, atomCode, StoreTypeEnum.ATOM, projectCode)
         logger.info("isInitTestProjectCode atomCode=$atomCode|projectCode=$projectCode|flag=$flag")
         // 普通项目的查已发布和下架中的插件
@@ -845,15 +854,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 AtomStatusEnum.AUDITING.status.toByte(),
                 AtomStatusEnum.RELEASED.status.toByte(),
                 AtomStatusEnum.UNDERCARRIAGING.status.toByte()
-            )
-        }
-        // 调试项目且addCancelStatusFlag为true时，额外允许查上架中止和测试结束的插件
-        if (addCancelStatusFlag) {
-            atomStatusList.addAll(
-                listOf(
-                    AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
-                    AtomStatusEnum.TESTED.status.toByte()
-                )
             )
         }
         return atomStatusList
@@ -1422,7 +1422,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     override fun getAtomRealVersion(projectCode: String, atomCode: String, version: String): Result<String?> {
         return if (VersionUtils.isLatestVersion(version)) {
             // 获取插件真实的版本号
-            val atomStatusList = generateAtomStatusList(atomCode, projectCode)
+            val atomStatusList = generateAtomStatusList(
+                atomCode = atomCode,
+                projectCode = projectCode,
+                queryWithoutStatusFlag = false
+            )
             atomStatusList.add(AtomStatusEnum.UNDERCARRIAGED.status.toByte())
             val realVersion = atomDao.getAtomRealVersion(
                 dslContext = dslContext,
@@ -1445,7 +1449,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             projectCode = projectCode,
             atomCode = atomCode,
             defaultFlag = defaultFlag,
-            atomStatusList = generateAtomStatusList(atomCode, projectCode),
+            atomStatusList = generateAtomStatusList(
+                atomCode = atomCode,
+                projectCode = projectCode,
+                queryWithoutStatusFlag = false
+            ),
             limitNum = 1
         )?.getOrNull(0)
         val versionInfo = defaultVersionRecord?.let {
