@@ -20,8 +20,7 @@ allowBuilds:
   vue-demi: true
   vue-echarts: true
   yorkie: false
-  less: fasle
-
+  less: false
 
 catalogs:
   vue2:
