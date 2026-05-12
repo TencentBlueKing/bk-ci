@@ -13,15 +13,30 @@ provider:
 ## 执行顺序
 
 1. 先识别用户需求属于哪个模块或领域。
-2. 如果问题跨模块、链路归属不清或是首次接触该模块，先读 `00-bkci-global-architecture`。
-3. 再读目标 skill 的主 `SKILL.md`，先吸收：
+2. 默认只读 `1` 个目标模块 skill 的主 `SKILL.md`，先吸收：
    - 适用场景
    - 不适用场景
    - 快速指导
    - 高信号规则
    - 关键陷阱
-4. 只有当主 skill 不够回答当前问题时，才继续读取它的 `reference/`。
-5. 完成以上步骤后，再搜索代码、启动子代理或修改实现。
+3. 如果任务明显涉及通用后端分层、语言规范、测试或 API 设计，最多再补 `1` 个横切 skill，例如：
+   - `backend-microservice-development`
+   - `kotlin-backend-conventions`
+   - `unit-testing`
+   - `api-interface-design`
+4. 只有当问题跨模块、链路归属不清、需要架构判断，或主 skill 仍无法判断落点时，才读取
+   `00-bkci-global-architecture`。
+5. 只有当主 `SKILL.md` 明确指向某个 `reference/`，或当前问题已经超出主 skill 能回答的范围时，
+   才继续读取它的 `reference/`。
+6. 完成以上步骤后，再搜索代码、启动子代理或修改实现。
+
+## 默认读取预算
+
+- 默认预算：`1` 个模块主 skill + 最多 `1` 个横切 skill
+- `00-bkci-global-architecture` 不是默认入口，只在模块归属不清或链路判断需要时读取
+- `reference/` 不是默认入口，只在主 skill 不足且有明确理由时读取
+- 不要因为“保险起见”连续读取多个横切 skill 或多个 `reference/`
+- 如果任务已经能在当前预算内判断落点，就停止继续扩展上下文
 
 ## 何时强制先读 skill
 
@@ -51,3 +66,4 @@ provider:
 - 不要把全局架构 skill 当成详细设计文档；它只负责导航和归属判断。
 - 本 rule 只负责上下文路由，不承载模块知识；模块细节应放在对应 `SKILL.md` 或 `reference/`。
 - 如果需要调整 rule、skill、reference 或编辑器适配目录的边界，先参考 `ai/HARNESS.md`。
+- 对单模块、小范围修复任务，优先把 token 用在代码与验证上，而不是额外阅读更多 skill。
