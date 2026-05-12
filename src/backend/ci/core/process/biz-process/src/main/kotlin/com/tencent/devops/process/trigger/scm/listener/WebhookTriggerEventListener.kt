@@ -36,6 +36,8 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_D
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_DELETE_VERSION_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_DELETE_VERSION_SUCCESS
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_DEPENDENCY_UPGRADE_FAILED
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_RENAME_FAILED
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_RENAME_SUCCESS
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_UPDATE_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_UPDATE_SUCCESS
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
@@ -188,6 +190,13 @@ class WebhookTriggerEventListener(
                 )
             }
 
+            YamlPipelineActionType.RENAME -> {
+                PipelineTriggerDetailMessageCode(
+                    messageCode = BK_YAML_PIPELINE_RENAME_SUCCESS,
+                    params = listOf(linkUrl, pipelineName ?: "", versionName ?: "", oldFilePath ?: "", filePath)
+                )
+            }
+
             YamlPipelineActionType.DELETE_VERSION -> {
                 PipelineTriggerDetailMessageCode(
                     messageCode = BK_YAML_PIPELINE_DELETE_VERSION_SUCCESS,
@@ -223,6 +232,13 @@ class WebhookTriggerEventListener(
                 PipelineTriggerDetailMessageCode(
                     messageCode = BK_YAML_PIPELINE_UPDATE_FAILED,
                     listOf(linkUrl, pipelineName ?: pipelineId ?: "")
+                )
+            }
+
+            YamlPipelineActionType.RENAME -> {
+                PipelineTriggerDetailMessageCode(
+                    messageCode = BK_YAML_PIPELINE_RENAME_FAILED,
+                    params = listOf(linkUrl, pipelineName ?: pipelineId ?: "", oldFilePath ?: "", filePath)
                 )
             }
 

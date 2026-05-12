@@ -28,7 +28,7 @@ export default defineComponent({
     const flowId = route.params.flowId as string
 
     // Use flow config code hook for Code mode
-    const { loading, yamlContent, sectionHighlight, isEmpty, flowSetting, flowModel } =
+    const { loading, yamlContent, sectionHighlight, isEmpty, flowSetting } =
       useFlowConfigCode({
         projectId,
         flowId,
@@ -38,18 +38,10 @@ export default defineComponent({
 
     return () => (
       <div class={layoutStyles.detailContainerWithRightPadding}>
-        {/* <ModeSwitch
+        <ModeSwitch
           projectId={route.params.projectId as string}
           pipelineId={route.params.flowId as string}
-          modelAndSetting={
-            flowModel.value && flowSetting.value
-              ? {
-                  model: flowModel.value,
-                  setting: flowSetting.value,
-                }
-              : undefined
-          }
-        /> */}
+        />
 
         <div class={layoutStyles.detailContent}>
           {loading.value ? (

@@ -569,6 +569,84 @@ export async function apiTransfer(
 }
 
 /**
+ * yaml 光标位置 -> 编排坐标 (stageIndex/containerIndex/stepIndex)
+ */
+export interface YamlPositionParams {
+  projectId: string
+  yaml: string
+  line: number
+  column: number
+}
+
+export interface YamlPositionResponse {
+  stageIndex?: number
+  containerIndex?: number
+  stepIndex?: number
+}
+
+export async function yamlNavToFlowModel(
+  params: YamlPositionParams,
+): Promise<YamlPositionResponse> {
+  const { projectId, yaml, line, column } = params
+  return await post<YamlPositionResponse>(
+    `${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}/position`,
+    { yaml },
+    { params: { line, column } },
+  )
+}
+
+/**
+ * 单个插件 model -> yaml
+ */
+export interface TaskToYamlParams {
+  projectId: string
+  pipelineId: string
+  data: unknown
+}
+
+/**
+ * 后端 task2yaml 直接返回 yaml 文本（envelope 解包后即为字符串）
+ */
+export async function taskToYaml(params: TaskToYamlParams): Promise<string> {
+  const { projectId, pipelineId, data } = params
+  return await post<string>(
+    `${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}/pipelines/${pipelineId}/task2yaml`,
+    data,
+  )
+}
+
+/**
+ * 在 yaml 指定位置插入插件
+ */
+export interface TaskInsertParams {
+  projectId: string
+  pipelineId: string
+  line: number
+  column: number
+  yaml: string
+  data: unknown
+  type?: 'INSERT' | 'REPLACE'
+}
+
+export interface TaskInsertResponse {
+  yaml: string
+  mark?: {
+    startMark: { line: number; column: number }
+    endMark: { line: number; column: number }
+  }
+  [key: string]: unknown
+}
+
+export async function taskInsertYaml(params: TaskInsertParams): Promise<TaskInsertResponse> {
+  const { projectId, pipelineId, line, column, ...body } = params
+  return await post<TaskInsertResponse>(
+    `${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}/pipelines/${pipelineId}/taskInsert`,
+    body,
+    { params: { line, column } },
+  )
+}
+
+/**
  * 获取流水线下插件属性列表
  */
 export async function getPluginProperties(
@@ -689,6 +767,34 @@ export async function downloadFlowJson(projectId: string, pipelineId: string, fi
       headers: { Accept: '*/*' },
     },
   )
+  triggerBlobDownload(blob, fileName)
+}
+
+/**
+ * 导出创作流 YAML，参考 devops-pipeline 的 FULL_MODEL2YAML 实现：
+ * 通过 transfer 接口将当前编辑态的 model+setting 转换为 YAML 并下载
+ */
+export async function downloadFlowYaml(
+  projectId: string,
+  pipelineId: string,
+  modelAndSetting: ModelAndSetting,
+  fileName: string,
+): Promise<void> {
+  const res = await apiTransfer({
+    projectId,
+    pipelineId,
+    actionType: 'FULL_MODEL2YAML',
+    modelAndSetting,
+  })
+  const yaml = res?.newYaml ?? ''
+  if (!yaml) {
+    throw new Error(res?.yamlInvalidMsg || 'Empty YAML')
+  }
+  const blob = new Blob([yaml], { type: 'text/yaml;charset=utf-8' })
+  triggerBlobDownload(blob, fileName)
+}
+
+function triggerBlobDownload(blob: Blob, fileName: string) {
   const blobUrl = window.URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = blobUrl

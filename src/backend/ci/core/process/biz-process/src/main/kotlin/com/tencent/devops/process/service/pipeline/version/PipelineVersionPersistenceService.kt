@@ -44,17 +44,12 @@ import com.tencent.devops.process.pojo.pipeline.PipelineBasicInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineModelBasicInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceOnlyVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReq
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReqSource
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseResult
 import com.tencent.devops.process.service.pipeline.version.processor.PipelineVersionCreatePostProcessor
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 
 /**
@@ -70,8 +65,6 @@ class PipelineVersionPersistenceService @Autowired constructor(
     private val pipelineResourceVersionDao: PipelineResourceVersionDao,
     private val pipelineSettingVersionDao: PipelineSettingVersionDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
-    @Lazy
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService,
     private val versionCreatePostProcessors: List<PipelineVersionCreatePostProcessor>
 ) {
 
@@ -511,39 +504,6 @@ class PipelineVersionPersistenceService @Autowired constructor(
                 pipelineResourceVersion = pipelineResourceVersion,
                 pipelineSetting = pipelineSetting
             )
-        }
-    }
-
-    /**
-     * 发布yaml文件
-     */
-    fun releaseYamlFile(
-        context: PipelineVersionCreateContext,
-        resourceOnlyVersion: PipelineResourceOnlyVersion,
-        source: PipelineYamlFileReleaseReqSource
-    ): PipelineYamlFileReleaseResult {
-        with(context) {
-            val yamlFileReleaseReq = PipelineYamlFileReleaseReq(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                pipelineName = pipelineBasicInfo.pipelineName,
-                version = resourceOnlyVersion.version,
-                versionName = resourceOnlyVersion.versionName,
-                repoHashId = yamlFileInfo!!.repoHashId,
-                filePath = yamlFileInfo.filePath,
-                content = pipelineResourceWithoutVersion.yaml!!,
-                commitMessage = pipelineResourceWithoutVersion.description
-                    ?: "update template ${pipelineBasicInfo.pipelineName}",
-                targetAction = targetAction!!,
-                targetBranch = branchName,
-                source = source,
-                templateName = templateInstanceBasicInfo?.templateName
-            )
-            val yamlFileReleaseResult = pipelineYamlFacadeService.releaseYamlFile(
-                yamlFileReleaseReq = yamlFileReleaseReq
-            )
-            return yamlFileReleaseResult
         }
     }
 

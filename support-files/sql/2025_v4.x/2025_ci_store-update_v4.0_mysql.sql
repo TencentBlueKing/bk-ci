@@ -23,6 +23,22 @@ BEGIN
     IF NOT EXISTS(SELECT 1
               FROM information_schema.COLUMNS
               WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_STORE_VERSION_LOG'
+                AND COLUMN_NAME = 'PACKAGE_SIZE') THEN
+     ALTER TABLE T_STORE_VERSION_LOG ADD `PACKAGE_SIZE` text DEFAULT NULL COMMENT '版本包大小';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_ATOM_VERSION_LOG'
+                    AND COLUMN_NAME = 'PACKAGE_SIZE') THEN
+     ALTER TABLE T_ATOM_VERSION_LOG ADD COLUMN `PACKAGE_SIZE` text DEFAULT NULL COMMENT '版本包大小';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
                 AND TABLE_NAME = 'T_STORE_BASE'
                 AND COLUMN_NAME = 'OWNER_STORE_CODE') THEN
     ALTER TABLE T_STORE_BASE ADD `OWNER_STORE_CODE` varchar(64) DEFAULT NULL COMMENT '归属应用标识';

@@ -123,6 +123,10 @@ class ServiceAtomResourceImpl @Autowired constructor(
         return atomClassifyService.getAtomClassifyInfo(atomCode)
     }
 
+    override fun getAtomId(atomCode: String, version: String): Result<String?> {
+        return Result(atomService.getAtomId(atomCode = atomCode, version = version))
+    }
+
     override fun listAllPipelineAtoms(
         userId: String,
         serviceScope: String?,

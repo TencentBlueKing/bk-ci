@@ -103,7 +103,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
@@ -502,7 +502,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         useSubscriptionSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false,
         description: String? = null,
-        yamlInfo: PipelineYamlVo? = null,
+        yamlFileInfo: PipelineYamlFileInfo? = null,
         pipelineDisable: Boolean? = null
     ): DeployPipelineResult {
         val watcher =
@@ -646,7 +646,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     description = description,
                     yaml = yaml,
                     baseVersion = null,
-                    yamlInfo = yamlInfo,
+                    yamlFileInfo = yamlFileInfo,
                     pipelineDisable = pipelineDisable
                 )
                 pipelineId = result.pipelineId
@@ -763,7 +763,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         isDefaultBranch: Boolean,
         description: String? = null,
         aspects: LinkedList<IPipelineTransferAspect>? = null,
-        yamlInfo: PipelineYamlVo? = null
+        yamlFileInfo: PipelineYamlFileInfo? = null
     ): DeployPipelineResult {
         val versionStatus = if (isDefaultBranch) {
             VersionStatus.RELEASED
@@ -804,7 +804,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             versionStatus = versionStatus,
             branchName = branchName,
             description = description,
-            yamlInfo = yamlInfo,
+            yamlFileInfo = yamlFileInfo,
             pipelineDisable = newResource.setting.runLockType == PipelineRunLockType.LOCK
         )
     }
@@ -819,7 +819,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         isDefaultBranch: Boolean,
         description: String? = null,
         aspects: LinkedList<IPipelineTransferAspect>? = null,
-        yamlInfo: PipelineYamlVo? = null
+        yamlFileInfo: PipelineYamlFileInfo? = null
     ): DeployPipelineResult {
         val versionStatus = if (isDefaultBranch) {
             VersionStatus.RELEASED
@@ -867,7 +867,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             versionStatus = versionStatus,
             branchName = branchName,
             description = description,
-            yamlInfo = yamlInfo,
+            yamlFileInfo = yamlFileInfo,
             pipelineDisable = newResource.setting.runLockType == PipelineRunLockType.LOCK
         )
     }
@@ -1207,7 +1207,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         branchName: String? = null,
         description: String? = null,
         baseVersion: Int? = null,
-        yamlInfo: PipelineYamlVo? = null,
+        yamlFileInfo: PipelineYamlFileInfo? = null,
         pipelineDisable: Boolean? = null
     ): DeployPipelineResult {
         if (checkTemplate && templateService.isTemplatePipeline(projectId, pipelineId)) {
@@ -1325,7 +1325,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 description = description,
                 yaml = yaml,
                 baseVersion = baseVersion,
-                yamlInfo = yamlInfo,
+                yamlFileInfo = yamlFileInfo,
                 pipelineDisable = pipelineDisable
             )
             // 审计
