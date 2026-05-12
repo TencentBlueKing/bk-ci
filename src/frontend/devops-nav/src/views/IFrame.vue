@@ -17,7 +17,7 @@
                 ref="iframeEle"
                 allowfullscreen
                 allow="clipboard-read; clipboard-write"
-                :src="src"
+                :src="iframeSrc"
                 @load="onLoad"
             />
         </div>
@@ -95,6 +95,10 @@
 
         get needLoading (): boolean {
             return this.$route.name === 'job'
+        }
+
+        get iframeSrc () {
+            return `${window.PUBLIC_URL_PREFIX}${this.src}`
         }
 
         backHome () {
