@@ -335,10 +335,6 @@
                     case this.hasDraft:
                         return this.$t('hasDraft')
                     default:
-                        // 已发布状态
-                        if (this.draftStatus === DRAFT_STATUS.PUBLISHED) {
-                            return this.$t('alreadyPublished')
-                        }
                         // 分支版本
                         if (this.isActiveBranchVersion && this.draftStatus === DRAFT_STATUS.BRANCH) {
                             return this.$t('createBranchDraftTips', [this.pipelineInfo?.versionName])

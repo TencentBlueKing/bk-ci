@@ -56,6 +56,7 @@
                 </div>
                 <!-- 编辑提示 -->
                 <template v-else>
+                    <!-- 版本落后 -->
                     <div
                         v-if="draftStatus === DRAFT_STATUS.OUTDATED"
                         class="is-active-branch-version"
@@ -68,6 +69,7 @@
                         <p>{{ $t('draftNoticeTip1') }}</p>
                         <p>{{ $t('draftNoticeTip2') }}</p>
                     </div>
+                    <!-- 草稿存在状态 -->
                     <div
                         v-if="draftStatus === DRAFT_STATUS.EXISTS"
                         class="is-active-branch-version"
@@ -77,25 +79,8 @@
                 </template>
             </div>
         </div>
-        <!-- 已发布状态 -->
-        <div v-else-if="(clickActionType === 'edit' || !isRollback) && draftStatus === DRAFT_STATUS.PUBLISHED">
-            <p
-                class="draft-info"
-            >
-                <i18n
-                    path="existingDraft"
-                    class="existing-draft"
-                >
-                    <span>{{ draftSaveInfo?.releaseUpdater }}</span>
-                    <span>{{ draftSaveInfo?.releaseUpdateTime }}</span>
-                </i18n>
-            </p>
-            <div class="is-active-branch-version">
-                <span v-html="$t('alreadyPublishedTip')"></span>
-            </div>
-        </div>
-        <!-- 基线版本落后状态 -->
-        <div v-else-if="(clickActionType === 'edit' || !isRollback) && draftStatus === DRAFT_STATUS.RELEASE_OUTDATED">
+        <!-- 基线版本落后状态 和 已发布状态 -->
+        <div v-else-if="(clickActionType === 'edit' || !isRollback) && (draftStatus === DRAFT_STATUS.RELEASE_OUTDATED || draftStatus === DRAFT_STATUS.PUBLISHED)">
             <p
                 class="draft-info"
             >
@@ -251,7 +236,13 @@
             handleConfirm () {
                 // 新建草稿：回滚到当前最新版本
                 if (!this.isActiveBranchVersion && !this.showRollbackTips) {
-                    this.$emit('confirm', this.draftSaveInfo?.releaseVersion, 'newDraft')
+                    // 有草稿的，需要回滚后跳最新版本的编辑页；
+                    // 没有草稿，直接跳最新版本的编辑页；
+                    if (this.hasDraft) {
+                        this.$emit('confirm', this.draftSaveInfo?.releaseVersion, 'newDraft')
+                    } else {
+                        this.$emit('edit-draft', this.draftSaveInfo?.releaseVersion)
+                    }
                     return
                 }
                 // 确定回滚 或 继续：触发回滚操作，传递当前版本号

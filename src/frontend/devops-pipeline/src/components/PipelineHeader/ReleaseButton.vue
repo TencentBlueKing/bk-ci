@@ -227,6 +227,7 @@
                 } else {
                     await this.requestPipelineSummary(this.$route.params)
                 }
+                this.handleReleaseSuccess()
                 await this.requestPipeline({
                     source: 'EDIT',
                     projectId: this.projectId,
@@ -234,8 +235,11 @@
                     version: this.pipelineInfo?.version
                 })
             },
-            goPipelineModel () {
+            async goPipelineModel () {
                 const routerName = this.isTemplate ? 'TemplateOverview' : 'pipelinesHistory'
+                if (this.isTemplate) {
+                    await this.requestTemplateSummary(this.$route.params)
+                }
                 this.$router.push({
                     name: routerName,
                     params: {
@@ -243,7 +247,7 @@
                         version: this.pipelineInfo?.releaseVersion,
                         type: 'pipeline'
                     },
-                    query: this.$route.query
+                    ...(this.isTemplate ? {} : { query: this.$route.query })
                 })
             },
             handleReleaseSuccess () {

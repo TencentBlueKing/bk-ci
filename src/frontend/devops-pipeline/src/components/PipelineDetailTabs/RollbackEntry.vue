@@ -169,10 +169,6 @@
 
                         // 2. 第二个条件：编辑操作
                         if (this.clickActionType === 'edit') {
-                            // 已发布状态
-                            if (this.draftStatus === DRAFT_STATUS.PUBLISHED) {
-                                return this.$t('alreadyPublished')
-                            }
                             // 基线版本落后状态
                             return this.$t('pipelineUpdated')
                         }
@@ -206,18 +202,7 @@
             async handleClick () {
                 // 回滚操作
                 if (this.isRollback) {
-                    const result = await this.fetchLatestDraftStatus({
-                        projectId: this.projectId,
-                        id: this.rollbackId,
-                        actionType: 'EDIT',
-                        isTemplate: this.isTemplate,
-                        pipelineInfo: this.pipelineInfo
-                    })
-                    
-                    this.draftStatus = result.status
-                    this.draftSaveInfo = result.draftSaveInfo
-                    
-                    this.showDraftConfirmDialog()
+                    await this.checkDraftStatusAndEdit()
                     return
                 }
 
@@ -233,6 +218,11 @@
                     return
                 }
 
+                await this.checkDraftStatusAndEdit()
+            },
+
+            // 检查草稿状态并处理编辑逻辑
+            async checkDraftStatusAndEdit () {
                 try {
                     const result = await this.fetchLatestDraftStatus({
                         projectId: this.projectId,
@@ -278,6 +268,8 @@
                 this.isShowConfirmDialog = true
             },
             close () {
+                this.draftSaveInfo = null
+                this.draftStatus = DRAFT_STATUS.NORMAL
                 this.isShowConfirmDialog = false
             },
             async rollback (rollbackVersion, actionType = '') {

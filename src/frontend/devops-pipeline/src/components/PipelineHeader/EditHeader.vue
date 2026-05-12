@@ -452,11 +452,11 @@
                         actionType: 'SAVE'
                     })
                     this.lasterDraftInfo = draftStatus
-                    if (this.lasterDraftInfo.status === DRAFT_STATUS.NORMAL) {
-                        return await this.executeSaveDraft()
-                    } else if (this.lasterDraftInfo.status === DRAFT_STATUS.CONFLICT || this.lasterDraftInfo.status === DRAFT_STATUS.PUBLISHED) {
+                    if (![DRAFT_STATUS.NORMAL, DRAFT_STATUS.BRANCH].includes(this.lasterDraftInfo.status)) {
                         this.isConflictDraft = true
                         return false
+                    } else {
+                        return await this.executeSaveDraft()
                     }
                 } catch (e) {
                     this.handleSaveDraftError(e)

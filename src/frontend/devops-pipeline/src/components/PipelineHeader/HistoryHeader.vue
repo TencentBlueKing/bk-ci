@@ -298,10 +298,6 @@
                         if (this.isActiveBranchVersion && this.draftStatus === DRAFT_STATUS.BRANCH) {
                             return this.$t('createBranchDraftTips', [this.pipelineInfo?.versionName])
                         }
-                        // 已发布状态
-                        if (this.draftStatus === DRAFT_STATUS.PUBLISHED) {
-                            return this.$t('alreadyPublished')
-                        }
                         // 基线版本落后状态
                         return this.$t('pipelineUpdated')
                 }

@@ -863,10 +863,13 @@
                 }
             },
             releaseType: {
-                handler: function (val) {
-                    if (val && this.versionName) {
-                        this.releaseParams.description = this.$t('rollbackToVersion', [this.versionName])
-                    }
+                handler: function () {
+                    this.updateRollbackDesc()
+                }
+            },
+            draftStatus: {
+                handler: function () {
+                    this.updateRollbackDesc()
                 },
                 immediate: true
             }
@@ -900,6 +903,12 @@
                 'checkTemplateVersionNameExist'
             ]),
             ...mapActions('common', ['isPACOAuth', 'getSupportPacScmTypeList', 'getPACRepoList']),
+            updateRollbackDesc () {
+                // 草稿状态为 NORMAL 且是回滚类型时，才设置回滚描述
+                if (this.releaseType && this.versionName && this.draftStatus?.status !== 'NORMAL') {
+                    this.releaseParams.description = this.$t('rollbackToVersion', [this.versionName])
+                }
+            },
             errorHandler (error) {
                 const resourceType = this.isTemplate ? RESOURCE_TYPE.TEMPLATE : RESOURCE_TYPE.PIPELINE
                 this.handleError(error, {

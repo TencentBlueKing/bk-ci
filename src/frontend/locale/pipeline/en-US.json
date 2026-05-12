@@ -1885,7 +1885,7 @@
   "yamlFilePathPlaceholder": "build.yml or build.yaml",
   "alreadyReleasedTips": "Pipeline unchanged, no release necessary",
   "newVersion": "New Version",
-  "newDraft": "New Draft",
+  "newDraft": "Edit based on latest version",
   "regenerateDraftOrEditExisting": "You can regenerate a draft based on the latest version or continue editing the existing draft.",
   "draftBaselineIsEarlierThanCurrentVersionNotice": "Draft baseline is {0}, {1} current latest version {2}, please note!",
   "Earlier": "Earlier than",

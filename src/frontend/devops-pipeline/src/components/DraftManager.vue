@@ -98,7 +98,7 @@
             <div>
                 <div
                     class="conflict-draft"
-                    v-if="isConflictStatus"
+                    v-if="isConflictStatus || isExistsStatus || isOutDatedStatus"
                 >
                     <span class="label">{{ $t('conflictingDraft') }}: </span>
                     <span>{{ conflictDraftInfo?.updater }} </span>
@@ -126,7 +126,7 @@
                 </div>
                 <div
                     class="conflict-draft"
-                    v-else-if="isPublishedStatus"
+                    v-else
                 >
                     <span class="label">{{ $t('publisher') }}: </span>
                     <span>{{ publishedInfo?.updater }} </span>
@@ -152,17 +152,26 @@
                     </VersionDiffEntry>
                 </div>
 
-                <p class="conflict-draft-tips">
+                <div class="conflict-draft-tips">
                     <span
-                        v-if="isConflictStatus"
+                        v-if="isPublishedStatus"
+                        v-html="tipsText"
+                    ></span>
+                    <div v-else-if="isOutDatedStatus">
+                        <i18n path="draftBaselineIsEarlierThanCurrentVersionNotice">
+                            <span>{{ draftSaveInfo?.draftVersionName }}</span>
+                            <span class="earlier">{{ $t('Earlier') }}</span>
+                            <span>{{ draftSaveInfo?.releaseVersionName }}</span>
+                        </i18n>
+                        <p>{{ $t('draftNoticeTip1') }}</p>
+                        <p>{{ $t('draftNoticeTip2') }}</p>
+                    </div>
+                    <span
+                        v-else
                     >
                         {{ tipsText }}
                     </span>
-                    <span
-                        v-else-if="isPublishedStatus"
-                        v-html="tipsText"
-                    ></span>
-                </p>
+                </div>
             </div>
             <footer slot="footer">
                 <bk-button
@@ -172,11 +181,13 @@
                 >
                     {{ primaryButtonText }}
                 </bk-button>
-                <bk-button @click="goPipelineModel">
+                <bk-button
+                    @click="goPipelineModel"
+                >
                     {{ secondaryButtonText }}
                 </bk-button>
                 <bk-button
-                    v-if="isConflictStatus"
+                    v-if="isConflictStatus || isExistsStatus || isOutDatedStatus"
                     @click="handleClose"
                 >
                     {{ $t('returnToEditing') }}
@@ -254,12 +265,20 @@
             hasDraftPipeline () {
                 return (this.pipelineInfo?.version !== this.pipelineInfo?.releaseVersion) ?? false
             },
-            // 冲突状态相关的computed
             isConflictStatus () {
                 return this.lasterDraftInfo?.status === DRAFT_STATUS.CONFLICT
             },
             isPublishedStatus () {
                 return this.lasterDraftInfo?.status === DRAFT_STATUS.PUBLISHED
+            },
+            isExistsStatus () {
+                return this.lasterDraftInfo?.status === DRAFT_STATUS.EXISTS
+            },
+            isOutDatedStatus () {
+                return this.lasterDraftInfo?.status === DRAFT_STATUS.OUTDATED
+            },
+            isReleaseOutDatedStatus () {
+                return this.lasterDraftInfo?.status === DRAFT_STATUS.RELEASE_OUTDATED
             },
             conflictDraftInfo () {
                 return this.lasterDraftInfo?.draft
@@ -272,30 +291,35 @@
                     return this.$t('otherUserEditingDetected')
                 } else if (this.isPublishedStatus) {
                     return this.$t('alreadyPublished')
+                } else if (this.isExistsStatus || this.isOutDatedStatus) {
+                    return this.$t('hasDraft')
+                } else {
+                    return this.$t('pipelineUpdated')
                 }
-                return ''
             },
             primaryButtonText () {
                 if (this.isConflictStatus) {
                     return this.$t('continueSaving')
-                } else if (this.isPublishedStatus) {
+                } else {
                     return this.$t('newDraft')
                 }
-                return ''
             },
             secondaryButtonText () {
-                if (this.isConflictStatus) {
+                if (this.isConflictStatus || this.isOutDatedStatus || this.isExistsStatus) {
                     return this.$t('discardChanges')
-                } else if (this.isPublishedStatus) {
+                } else {
                     return this.$t('exitEditing')
                 }
-                return ''
             },
             tipsText () {
                 if (this.isConflictStatus) {
                     return this.$t('reviewDifferencesAndOverrideChanges')
                 } else if (this.isPublishedStatus) {
                     return this.$t('alreadyPublishedTip')
+                } else if (this.isExistsStatus) {
+                    return this.$t('regenerateDraftOrEditExisting')
+                } else if (this.isReleaseOutDatedStatus) {
+                    return this.$t('pipelineUpdatedNotice', [this.pipelineInfo?.releaseVersionName, this.publishedInfo?.versionName])
                 }
                 return ''
             }
@@ -405,14 +429,13 @@
                 this.isShowDraftList = false
             },
             handleContinueSaveDraft () {
-                // 已发布状态：跳转到编辑页面
-                if (this.isPublishedStatus) {
-                    this.$emit('new-draft')
+                if (this.isConflictStatus) {
+                    // 冲突状态：触发父组件的保存草稿逻辑，覆盖冲突的草稿
+                    this.$emit('continue-save-draft')
                     return
                 }
-                
-                // 冲突状态：触发父组件的保存草稿逻辑，覆盖冲突的草稿
-                this.$emit('continue-save-draft')
+                // 已发布状态：跳转到编辑页面
+                this.$emit('new-draft')
             },
             goPipelineModel () {
                 this.$emit('go-pipeline-model')

@@ -1881,7 +1881,7 @@
   "yamlFilePathPlaceholder": "build.yml 或者 build.yaml",
   "alreadyReleasedTips": "流水线未变更，无需发布",
   "newVersion": "新建版本",
-  "newDraft": "新建草稿",
+  "newDraft": "基于最新版本编辑",
   "regenerateDraftOrEditExisting": "你可以基于最新版本重新生成草稿，也可以在原草稿基础上继续编辑。",
   "draftBaselineIsEarlierThanCurrentVersionNotice": "草稿基线为{0}，{1} 当前最新版本{2}，请注意！",
   "Earlier": "早于",

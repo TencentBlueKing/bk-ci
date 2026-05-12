@@ -1878,7 +1878,7 @@
   "yamlFilePathPlaceholder": "build.yml または build.yaml",
   "alreadyReleasedTips": "パイプラインに変更がないため、リリースする必要はありません",
   "newVersion": "新しいバージョンを作成",
-  "newDraft": "新しいドラフト",
+  "newDraft": "最新バージョンに基づいて編集",
   "regenerateDraftOrEditExisting": "最新のバージョンを基にドラフトを再生成するか、既存のドラフトを編集し続けることができます。",
   "draftBaselineIsEarlierThanCurrentVersionNotice": "ドラフトのベースラインは {0}、{1} 現在の最新バージョンは {2} ですのでご注意ください！",
   "Earlier": "以前",
