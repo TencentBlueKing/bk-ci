@@ -49,7 +49,6 @@ import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
@@ -89,6 +88,7 @@ import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.utils.VersionUtils
 import java.net.URLDecoder
 import java.time.LocalDateTime
 import org.jooq.Condition
@@ -365,7 +365,7 @@ class AtomDao : AtomBaseDao() {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(tAtom.ATOM_CODE.eq(atomCode))
-        conditions.add(tAtom.ATOM_STATUS.notEqual(AtomStatusEnum.TESTED.status.toByte()))
+
         if (version != null) {
             conditions.add(tAtom.VERSION.like(VersionUtils.generateQueryVersion(version)))
         }
@@ -373,6 +373,7 @@ class AtomDao : AtomBaseDao() {
             conditions.add(tAtom.DEFAULT_FLAG.eq(defaultFlag))
         }
         if (atomStatusList != null) {
+            conditions.add(tAtom.ATOM_STATUS.notEqual(AtomStatusEnum.TESTED.status.toByte()))
             conditions.add(tAtom.ATOM_STATUS.`in`(atomStatusList))
         }
         return conditions

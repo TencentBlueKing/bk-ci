@@ -261,7 +261,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             sensitiveParams = sensitiveParams?.joinToString(","),
             canPauseBeforeRun = props?.let { marketAtomCommonService.getAtomCanPauseBeforeRun(props) }
         )
-        if (!testFlag) {
+        if (!testFlag && !queryWithoutStatusFlag) {
             // 将db中的环境信息写入缓存
             val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
             redisOperation.hset(atomRunInfoKey, version, JsonUtil.toJson(atomRunInfo))

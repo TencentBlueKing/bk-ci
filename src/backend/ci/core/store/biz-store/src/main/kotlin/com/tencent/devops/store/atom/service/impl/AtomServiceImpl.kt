@@ -665,18 +665,20 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         queryOfflineFlag: Boolean
     ): Result<PipelineAtom?> {
         logger.info("getPipelineAtomDetail $projectCode,$atomCode,$version,$atomStatus,$queryOfflineFlag")
-        val atomStatusList = if (atomStatus != null) {
+        // 构建详情页查询历史快照时，queryOfflineFlag=true 不校验任何状态
+        val atomStatusList = if (queryOfflineFlag) {
+            // 完全不校验状态，返回 null 让 DAO 层跳过状态过滤
+            null
+        } else if (atomStatus != null) {
             mutableListOf(atomStatus)
+        } else if (projectCode != null) {
+            generateAtomStatusList(
+                atomCode = atomCode,
+                projectCode = projectCode,
+                queryWithoutStatusFlag = false
+            )
         } else {
-            if (projectCode != null) {
-                generateAtomStatusList(
-                    atomCode = atomCode,
-                    projectCode = projectCode,
-                    queryWithoutStatusFlag = queryOfflineFlag
-                )
-            } else {
-                null
-            }
+            null
         }
         val pipelineAtomRecord = if (projectCode != null) {
             atomDao.getPipelineAtom(

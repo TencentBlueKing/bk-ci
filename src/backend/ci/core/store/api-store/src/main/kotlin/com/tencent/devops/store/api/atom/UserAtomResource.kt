@@ -42,9 +42,9 @@ import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.version.VersionInfo
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
@@ -132,7 +132,7 @@ interface UserAtomResource {
         @Parameter(description = "版本号", required = true)
         @PathParam("version")
         version: String,
-        @Parameter(description = "是否查询已下架版本", required = false)
+        @Parameter(description = "是否限制", required = false)
         @QueryParam("queryOfflineFlag")
         queryOfflineFlag: Boolean? = true
     ): Result<PipelineAtom?>
