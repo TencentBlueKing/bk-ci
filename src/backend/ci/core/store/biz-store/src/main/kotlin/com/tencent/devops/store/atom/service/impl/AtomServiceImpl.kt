@@ -831,7 +831,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         atomCode: String,
         projectCode: String,
         queryWithoutStatusFlag: Boolean = false
-    ): MutableList<Byte> {
+    ): MutableList<Byte>? {
         // 构建详情页查询历史快照，不校验任何状态
         if (queryWithoutStatusFlag) {
             return null
