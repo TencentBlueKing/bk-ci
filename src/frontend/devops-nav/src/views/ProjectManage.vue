@@ -190,17 +190,20 @@
                             >
                                 {{ $t('extendManage') }}
                             </bk-button> -->
-                            <bk-button
-                                text
-                                :disabled="row.projectScope === 1"
+                            <span
                                 v-bk-tooltips="{
                                     content: $t('personalProjectCannotExit'),
                                     disabled: row.projectScope !== 1
                                 }"
-                                @click="handleQuitClick(row)"
                             >
-                                {{ $t("projectExit") }}
-                            </bk-button>
+                                <bk-button
+                                    text
+                                    :disabled="row.projectScope === 1"
+                                    @click="handleQuitClick(row)"
+                                >
+                                    {{ $t('projectExit') }}
+                                </bk-button>
+                            </span>
                         </template>
                     </bk-table-column>
                 </bk-table>
