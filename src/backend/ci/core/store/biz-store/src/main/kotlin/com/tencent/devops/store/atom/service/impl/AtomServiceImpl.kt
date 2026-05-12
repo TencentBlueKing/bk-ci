@@ -834,7 +834,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     ): MutableList<Byte> {
         // 构建详情页查询历史快照，不校验任何状态
         if (queryWithoutStatusFlag) {
-            return mutableListOf() // 返回空列表表示查询所有状态
+            return null
         }
         
         val flag = storeProjectRelDao.isTestProjectCode(dslContext, atomCode, StoreTypeEnum.ATOM, projectCode)
