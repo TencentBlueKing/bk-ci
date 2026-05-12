@@ -66,6 +66,10 @@
       var BK_IAM_URL_PREFIX = "__BK_CI_IAM_URL_PREFIX__";
       var BK_APIGW_USER_WEB_URL = "<%= BK_APIGW_USER_WEB_URL %>";
       var BK_CI_NO_COOKIE_PROJECT_PREFIX = "__BK_CI_NO_COOKIE_PROJECT_PREFIX__";
+
+      window.getRoutePrefix = function () {
+        return window.PUBLIC_URL_PREFIX + "/console";
+      };
     </script>
     <script>
       // 动态加载js
@@ -616,9 +620,6 @@
           handleVisibilityChange,
           false,
         );
-      };
-      window.getRoutePrefix = function () {
-        return window.PUBLIC_URL_PREFIX + "/console";
       };
     </script>
   </body>

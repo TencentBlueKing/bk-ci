@@ -32,6 +32,7 @@ Vue.use(Router)
 const createRouter = (store, isInIframe) => {
     const router = new Router({
         mode: 'history',
+        base: window.PUBLIC_URL_PREFIX || '/',
         routes: pipelines
     })
     router.beforeEach((to, from, next) => {

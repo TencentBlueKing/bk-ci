@@ -68,7 +68,7 @@ const ImportPipelineEdit = () => import(/* webpackChunkName: "importPipeline" */
 
 const routes = [
     {
-        path: `${window.PUBLIC_URL_PREFIX}/pipeline/:projectId`,
+        path: '/pipeline/:projectId',
         component: pipelines,
         name: 'pipelineRoot',
         redirect: {
