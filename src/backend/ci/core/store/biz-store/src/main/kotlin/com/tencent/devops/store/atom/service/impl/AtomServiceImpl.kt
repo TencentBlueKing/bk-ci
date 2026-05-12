@@ -672,14 +672,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 generateAtomStatusList(
                     atomCode = atomCode,
                     projectCode = projectCode,
-                    queryWithoutStatusFlag = false
+                    queryWithoutStatusFlag = queryOfflineFlag
                 )
             } else {
                 null
             }
-        }
-        if (queryOfflineFlag) {
-            atomStatusList?.add(AtomStatusEnum.UNDERCARRIAGED.status.toByte()) // 也要给那些还在使用已下架的插件插件展示详情
         }
         val pipelineAtomRecord = if (projectCode != null) {
             atomDao.getPipelineAtom(
