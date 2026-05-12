@@ -1424,7 +1424,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 projectCode = projectCode,
                 queryWithoutStatusFlag = false
             )
-            atomStatusList.add(AtomStatusEnum.UNDERCARRIAGED.status.toByte())
+            atomStatusList?.add(AtomStatusEnum.UNDERCARRIAGED.status.toByte())
             val realVersion = atomDao.getAtomRealVersion(
                 dslContext = dslContext,
                 projectCode = projectCode,
