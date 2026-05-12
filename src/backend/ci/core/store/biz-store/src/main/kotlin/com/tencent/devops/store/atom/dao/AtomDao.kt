@@ -1551,6 +1551,14 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
+    fun getAtomIdByVersionWithCode(dslContext: DSLContext, atomCode: String, version: String): String? {
+        return with(TAtom.T_ATOM) {
+            dslContext.select(ID).from(this)
+                .where(ATOM_CODE.eq(atomCode).and(VERSION.eq(version)))
+                .fetchOne()?.get(ID)
+        }
+    }
+
     private fun buildClassifyIdMap(
         dslContext: DSLContext,
         atomBaseInfoUpdateRequest: AtomBaseInfoUpdateRequest

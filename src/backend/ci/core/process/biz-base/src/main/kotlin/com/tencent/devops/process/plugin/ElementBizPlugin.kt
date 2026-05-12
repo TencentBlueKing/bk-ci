@@ -31,7 +31,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 
 /**
  * 流水线的Element的编排插件处理器
@@ -58,7 +58,7 @@ interface ElementBizPlugin<T : Element> {
         channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         create: Boolean,
         container: Container,
-        yamlInfo: PipelineYamlVo?
+        yamlFileInfo: PipelineYamlFileInfo?
     )
 
     /**

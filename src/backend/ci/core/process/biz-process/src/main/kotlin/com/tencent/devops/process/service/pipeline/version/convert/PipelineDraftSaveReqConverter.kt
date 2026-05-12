@@ -45,6 +45,7 @@ import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
 import com.tencent.devops.process.pojo.pipeline.PipelineTemplateInstanceBasicInfo
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.pipeline.version.PipelineDraftSaveReq
 import com.tencent.devops.process.pojo.pipeline.version.PipelineVersionCreateReq
 import com.tencent.devops.process.service.pipeline.PipelineModelParser
@@ -157,6 +158,12 @@ class PipelineDraftSaveReqConverter(
                 pipelineSettingWithoutVersion = pipelineSettingWithoutVersion,
                 versionStatus = VersionStatus.COMMITTING,
                 versionAction = PipelineVersionAction.SAVE_DRAFT,
+                yamlFileInfo = pipelineYamlInfo?.let {
+                    PipelineYamlFileInfo(
+                        repoHashId = it.repoHashId,
+                        filePath = it.filePath
+                    )
+                },
                 repoHashId = pipelineYamlInfo?.repoHashId
             )
             if (context.templateInstanceBasicInfo != null) {
