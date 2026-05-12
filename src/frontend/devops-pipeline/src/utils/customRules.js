@@ -44,16 +44,22 @@ const customeRules = {
         },
     },
     // 不同时为空
-    atlestNotEmpty: {
+    atLeastNotEmpty: {
+        getMessage: () => window.pipelineVue.$i18n.t('editPage.matrixAnyRequiredTips'),
         validate: function (value, args) {
-            console.log(args, 'not')
-            let notEmptyNum = 0
-            for (const i in args) {
-                if (args[i]) {
-                    notEmptyNum++
+            const values = Array.isArray(args) ? args : Object.values(args || {})
+            return values.some((item) => {
+                if (typeof item === 'string') {
+                    return item.trim() !== ''
                 }
-            }
-            return notEmptyNum > 0
+                if (Array.isArray(item)) {
+                    return item.length > 0
+                }
+                if (item && typeof item === 'object') {
+                    return Object.keys(item).length > 0
+                }
+                return !!item
+            })
         }
     },
     pullmode: {
@@ -155,6 +161,8 @@ const customeRules = {
         }
     }
 }
+
+customeRules.atlestNotEmpty = customeRules.atLeastNotEmpty
 
 function ExtendsCustomRules (_extends) {
     if (typeof _extends !== 'function') {

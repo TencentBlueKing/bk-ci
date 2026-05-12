@@ -1177,6 +1177,7 @@
     "optionValTips": "valueを入力してください",
     "optionNameTips": "nameを入力してください（空の場合はvalueと同じになります）",
     "requiredTips": "{0}を入力してください",
+    "matrixAnyRequiredTips": "マトリックス、追加するパラメーターの組み合わせ、除外するパラメーターの組み合わせのいずれか1つは入力してください",
     "noRepeatTips": "{0}は重複できません",
     "optionsDesc": "複数のオプションは改行で区切ります<br>各オプションには英語のコンマを含めることができません<br>重複したオプションは1つだけ表示されます<br>HTML selectタグと同様に、オプションはvalue=name / valueの2種類の形式をサポートします",
     "optionTips": "複数行の記録は改行して入力してください",

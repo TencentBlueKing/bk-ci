@@ -28,7 +28,7 @@
                 <form-field
                     :key="key"
                     :desc="obj.desc"
-                    :required="obj.required"
+                    :required="isMatrixRuleField(key) ? false : obj.required"
                     :label="obj.label"
                     :is-error="errors.has(key)"
                     :error-msg="errors.first(key)"
@@ -36,7 +36,7 @@
                     <component
                         :is="obj.component"
                         :name="key"
-                        v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })"
+                        v-validate.initial="getValidateRule(key, obj)"
                         :handle-change="handleUpdateJobMatrix"
                         :value="matrixControlOption[key]"
                         :disabled="disabled"
@@ -78,6 +78,19 @@
         computed: {
             optionModel () {
                 return this.JOB_MATRIX || {}
+            },
+            matrixRuleValues () {
+                const {
+                    strategyStr = '',
+                    includeCaseStr = '',
+                    excludeCaseStr = ''
+                } = this.matrixControlOption || {}
+
+                return {
+                    strategyStr,
+                    includeCaseStr,
+                    excludeCaseStr
+                }
             }
         },
         created () {
@@ -89,13 +102,26 @@
             ...mapActions('atom', [
                 'setPipelineEditing'
             ]),
+            isMatrixRuleField (name) {
+                return ['strategyStr', 'includeCaseStr', 'excludeCaseStr'].includes(name)
+            },
+            getValidateRule (name, option) {
+                return Object.assign(
+                    {},
+                    option.rule,
+                    this.isMatrixRuleField(name)
+                        ? { atLeastNotEmpty: this.matrixRuleValues }
+                        : {},
+                    { required: this.isMatrixRuleField(name) ? false : !!option.required }
+                )
+            },
             handleUpdateJobMatrix (name, value) {
                 this.setPipelineEditing(true)
                 this.updateContainerParams(
                     'matrixControlOption',
                     Object.assign(this.matrixControlOption || {}, { [name]: value })
                 )
-                if (name === 'strategyStr') {
+                if (this.isMatrixRuleField(name)) {
                     this.$validator.validateAll()
                 }
             },
