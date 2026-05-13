@@ -28,6 +28,7 @@
 package com.tencent.devops.store.atom.service.impl
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.artifactory.api.ServiceArchiveComponentPkgResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.DEPLOY
@@ -82,6 +83,7 @@ import com.tencent.devops.store.atom.service.MarketAtomArchiveService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.LabelDao
+import com.tencent.devops.store.common.configuration.StoreNotifyProperties
 import com.tencent.devops.store.common.dao.StoreErrorCodeInfoDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
@@ -90,9 +92,9 @@ import com.tencent.devops.store.common.dao.StoreStatisticTotalDao
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreFileService
 import com.tencent.devops.store.common.service.StoreI18nMessageService
+import com.tencent.devops.store.common.service.StoreNotifyService
 import com.tencent.devops.store.common.service.StoreWebsocketService
 import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
@@ -111,6 +113,7 @@ import com.tencent.devops.store.pojo.atom.UpdateAtomPackageInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_UPLOAD_ID_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.BK_STORE_ATOM_AUDIT_NOTIFY
 import com.tencent.devops.store.pojo.common.ERROR_JSON_NAME
 import com.tencent.devops.store.pojo.common.KEY_CODE_SRC
 import com.tencent.devops.store.pojo.common.KEY_CONFIG
@@ -126,6 +129,7 @@ import com.tencent.devops.store.pojo.common.QUALITY_JSON_NAME
 import com.tencent.devops.store.pojo.common.STORE_LATEST_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreI18nConfig
+import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.UN_RELEASE
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
@@ -137,6 +141,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.publication.StoreReleaseCreateRequest
+import com.tencent.devops.store.utils.VersionUtils
 import java.time.LocalDateTime
 import java.util.Locale
 import org.jooq.DSLContext
@@ -200,6 +205,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var storeFileService: StoreFileService
     @Autowired
     lateinit var config: CommonConfig
+    @Autowired
+    lateinit var storeNotifyService: StoreNotifyService
 
     @Value("\${store.defaultAtomErrorCodeLength:6}")
     private var defaultAtomErrorCodeLength: Int = 6
@@ -209,6 +216,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
     @Value("\${store.defaultAtomPublishReviewers:#{null}}")
     private val defaultAtomPublishReviewers: String? = null
+
+    @Autowired
+    lateinit var storeNotifyProperties: StoreNotifyProperties
 
     companion object {
         private val logger = LoggerFactory.getLogger(AtomReleaseServiceImpl::class.java)
@@ -514,7 +524,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         releaseType: Byte,
         marketAtomUpdateRequest: MarketAtomUpdateRequest,
         atomEnvRequests: List<AtomEnvRequest>,
-        repositoryHashId: String?
+        repositoryHashId: String?,
+        packageSize: String?
     ) {
         marketAtomDao.updateMarketAtom(
             dslContext = context,
@@ -525,18 +536,19 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             props = props,
             marketAtomUpdateRequest = marketAtomUpdateRequest
         )
-        marketAtomVersionLogDao.addMarketAtomVersion(
-            dslContext = context,
-            userId = userId,
-            atomId = atomId,
-            releaseType = releaseType,
-            versionContent = marketAtomUpdateRequest.versionContent
-        )
         val atomPackageSourceType = getAtomPackageSourceType(repositoryHashId)
         if (atomPackageSourceType != PackageSourceTypeEnum.UPLOAD) {
             marketAtomEnvInfoDao.deleteAtomEnvInfoById(context, atomId)
             marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomEnvRequests)
         }
+        addAtomVersionLogWithPkgSize(
+            context = context,
+            userId = userId,
+            atomId = atomId,
+            releaseType = releaseType,
+            request = marketAtomUpdateRequest,
+            packageSize = packageSize
+        )
         // 通过websocket推送状态变更消息
         storeWebsocketService.sendWebsocketMessage(userId, atomId)
     }
@@ -916,7 +928,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         classType: String,
         props: String,
         atomEnvRequests: List<AtomEnvRequest>,
-        atomRecord: TAtomRecord
+        atomRecord: TAtomRecord,
+        packageSize: String?
     ) {
         marketAtomDao.upgradeMarketAtom(
             dslContext = context,
@@ -932,15 +945,69 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         if (atomPackageSourceType != PackageSourceTypeEnum.UPLOAD) {
             marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomEnvRequests)
         }
+        addAtomVersionLogWithPkgSize(
+            context = context,
+            userId = userId,
+            atomId = atomId,
+            releaseType = marketAtomUpdateRequest.releaseType.releaseType.toByte(),
+            request = marketAtomUpdateRequest,
+            packageSize = packageSize
+        )
+        // 通过websocket推送状态变更消息
+        storeWebsocketService.sendWebsocketMessage(userId, atomId)
+    }
+
+    /**
+     * 写入版本日志并附带包大小信息。
+     */
+    private fun addAtomVersionLogWithPkgSize(
+        context: DSLContext,
+        userId: String,
+        atomId: String,
+        releaseType: Byte,
+        request: MarketAtomUpdateRequest,
+        packageSize: String?
+    ) {
         marketAtomVersionLogDao.addMarketAtomVersion(
             dslContext = context,
             userId = userId,
             atomId = atomId,
-            releaseType = marketAtomUpdateRequest.releaseType.releaseType.toByte(),
-            versionContent = marketAtomUpdateRequest.versionContent
+            releaseType = releaseType,
+            versionContent = request.versionContent,
+            packageSize = packageSize
         )
-        // 通过websocket推送状态变更消息
-        storeWebsocketService.sendWebsocketMessage(userId, atomId)
+    }
+
+    /**
+     * 根据 atomEnvRequests 中的 pkgRepoPath 调用 BkRepo 实时获取包大小，序列化为 JSON。
+     * 任意一项查询失败不阻断主流程，仅记录日志。
+     */
+    private fun fetchAtomPackageSizeJson(atomEnvRequests: List<AtomEnvRequest>): String? {
+        if (atomEnvRequests.isEmpty()) return null
+        val storePackageInfos = atomEnvRequests.mapNotNull { envRequest ->
+            val pkgPath = envRequest.pkgRepoPath
+            if (pkgPath.isBlank()) {
+                return@mapNotNull null
+            }
+            val size = try {
+                client.get(ServiceArchiveComponentPkgResource::class)
+                    .getFileSize(StoreTypeEnum.ATOM, pkgPath).data
+            } catch (ignored: Throwable) {
+                logger.warn("fetchAtomPackageSizeJson|getFileSize error, pkgPath=$pkgPath", ignored)
+                null
+            }
+            if (size == null) {
+                logger.warn("fetchAtomPackageSizeJson|size is null, pkgPath=$pkgPath")
+                return@mapNotNull null
+            }
+            StorePackageInfoReq(
+                storeType = StoreTypeEnum.ATOM,
+                osName = envRequest.osName,
+                arch = envRequest.osArch,
+                size = size
+            )
+        }
+        return if (storePackageInfos.isEmpty()) null else JsonUtil.toJson(storePackageInfos)
     }
 
     /**
@@ -1171,7 +1238,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             // 通过websocket推送状态变更消息
             storeWebsocketService.sendWebsocketMessage(userId, atomId)
             // 研发商店插件上架进入审核阶段时通知管理员审批
-            if (atomName !== null && !defaultAtomPublishReviewers.isNullOrBlank()) {
+            if (!atomName.isNullOrBlank() && !defaultAtomPublishReviewers.isNullOrBlank()) {
                 sendPendingReview(
                     userId = userId,
                     atomName = atomName,
@@ -1439,6 +1506,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             if (atomPackageSourceType == PackageSourceTypeEnum.REPO) {
                 AtomStatusEnum.COMMITTING
             } else AtomStatusEnum.TESTING
+        // 事务外预先调用 BkRepo 获取每个 OS/Arch 的包大小，避免事务内 N 次 RPC 拖慢事务
+        val packageSize = fetchAtomPackageSizeJson(atomEnvRequests)
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val props = JsonUtil.toJson(propsMap, formatted = false)
@@ -1453,7 +1522,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     releaseType = releaseType.releaseType.toByte(),
                     marketAtomUpdateRequest = convertUpdateRequest,
                     atomEnvRequests = atomEnvRequests,
-                    repositoryHashId = atomRecord.repositoryHashId
+                    repositoryHashId = atomRecord.repositoryHashId,
+                    packageSize = packageSize
                 )
             } else {
                 // 升级插件
@@ -1466,7 +1536,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     classType = classType,
                     props = props,
                     atomEnvRequests = atomEnvRequests,
-                    atomRecord = atomRecord
+                    atomRecord = atomRecord,
+                    packageSize = packageSize
                 )
             }
             if (!convertUpdateRequest.isBranchTestVersion && atomStatus == AtomStatusEnum.TESTING) {
@@ -1558,7 +1629,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             .toMutableSet()
 
         val request = SendNotifyMessageTemplateRequest(
-            templateCode = "BK_STORE_ATOM_AUDIT_NOTIFY",
+            templateCode = BK_STORE_ATOM_AUDIT_NOTIFY,
             receivers = receivers,
             bodyParams = bodyParams,
             notifyType = mutableSetOf(NotifyType.WEWORK.name)
@@ -1566,6 +1637,15 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
         try {
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
+            val weworkGroupIds = storeNotifyProperties.groupIds.filter { it.isNotBlank() }.toSet()
+            if (weworkGroupIds.isNotEmpty()) {
+                storeNotifyService.sendNotifyMessageToWeworkGroup(
+                    userId = userId,
+                    templateCode = BK_STORE_ATOM_AUDIT_NOTIFY,
+                    weworkGroupIds = weworkGroupIds,
+                    bodyParams = bodyParams
+                )
+            }
         } catch (ignored: Throwable) {
             logger.warn("Failed to send notify message", ignored)
         }

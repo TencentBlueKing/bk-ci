@@ -111,7 +111,7 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
         if (contentLength > maxFileSize) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.UPLOAD_LOGO_IS_TOO_LARGE,
-                params = arrayOf((maxFileSize / 1048576).toString() + "M"),
+                params = arrayOf((maxFileSize / 1048576).toString() + "MB"),
                 language = I18nUtil.getLanguage(userId)
             )
         }
