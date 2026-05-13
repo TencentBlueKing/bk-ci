@@ -191,6 +191,7 @@ class ProcessDataDeleteDao {
                 deletePipelineSubRef(dslContext, projectId, pipelineId)
                 deletePipelineBuildParamCombinationDetail(dslContext, projectId, pipelineId)
                 deletePipelineBuildParamCombination(dslContext, projectId, pipelineId)
+                deletePipelineVisibility(dslContext, projectId, pipelineId)
                 if (broadcastTableDeleteFlag) {
                     deletePipelineRemoteAuth(dslContext, projectId, pipelineId)
                     deletePipelineWebhook(dslContext, projectId, pipelineId)

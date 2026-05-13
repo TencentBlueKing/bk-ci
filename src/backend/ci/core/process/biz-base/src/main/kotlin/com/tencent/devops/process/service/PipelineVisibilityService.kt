@@ -49,8 +49,11 @@ class PipelineVisibilityService @Autowired constructor(
         val userInfo = userInfoCache.get(userId) {
             client.get(ServiceDeptResource::class).getUserInfo(userId = userId, name = userId).data
         } ?: return
-        val userDepartments =
-            userInfo.deptInfo?.filter { !it.fullName.isNullOrBlank() }?.map { it.fullName!! } ?: emptyList()
+        val userDepartments = userInfo.deptInfo?.lastOrNull {
+            !it.fullName.isNullOrBlank()
+        }?.let {
+            listOf(it.fullName!!)
+        } ?: emptyList()
         pipelineVisibilityDao.create(
             dslContext = transactionContext ?: dslContext,
             userId = userId,
@@ -139,7 +142,12 @@ class PipelineVisibilityService @Autowired constructor(
                 scopeId = it.scopeId,
                 scopeName = it.scopeName,
                 fullName = it.fullName,
-                userDepartments = JsonUtil.to(it.userDepartments, object : TypeReference<List<String>>() {})
+                userDepartments =
+                    it.userDepartments?.let { u ->
+                        JsonUtil.to(u, object : TypeReference<List<String>>() {})
+                    },
+                updater = it.updater,
+                updateTime = it.updateTime
             )
         }
         return SQLPage(
