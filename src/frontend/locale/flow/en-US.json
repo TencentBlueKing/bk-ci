@@ -735,7 +735,7 @@
       "organization": "Affiliated Organization",
       "personalOnly": "No restrictions currently, only available personally after publication",
       "search": "Search user/organization name",
-      "visibleRangeDesc": "「Available Range」controls which users can {0} this creation flow through specific events (such as WeMate session reminders). After configuration, only users within the range can trigger it, and other users cannot reach it.",
+      "visibleRangeDesc": "「Available Range」controls which users can {0} this creation flow through specific events (such as IMate session reminders). After configuration, only users within the range can trigger it, and other users cannot reach it.",
       "visibleRangeDescEg": "For example: An operations engineer creates a flow for \"Automatically Evaluating Database Change Requests\" and limits the available range to the business team they serve, thus avoiding interference from irrelevant requests."
     },
     "operator": {
