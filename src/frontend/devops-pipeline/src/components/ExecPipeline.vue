@@ -1007,7 +1007,7 @@
             async openDebug (container) {
                 try {
                     const response = await this.$store.dispatch('atom/startVmSeqDebug', {
-                        pipelineId: this.pipelineId,
+                        pipelineId: this.routerParams.pipelineId,
                         buildId: this.routerParams.buildNo,
                         containerId: container.containerId,
                         executeCount: container.executeCount
