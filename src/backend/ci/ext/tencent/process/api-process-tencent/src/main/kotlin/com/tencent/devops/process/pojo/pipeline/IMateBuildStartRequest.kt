@@ -2,8 +2,8 @@ package com.tencent.devops.process.pojo.pipeline
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "weMate消息提醒启动请求")
-data class WeMateBuildStartRequest(
+@Schema(title = "IMate消息提醒启动请求")
+data class IMateBuildStartRequest(
     @get:Schema(title = "触发用户", required = true)
     val triggerUser: String,
     @get:Schema(title = "消息内容", required = true)

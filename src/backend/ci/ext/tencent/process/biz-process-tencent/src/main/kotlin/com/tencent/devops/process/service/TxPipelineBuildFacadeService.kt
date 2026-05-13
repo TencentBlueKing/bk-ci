@@ -32,10 +32,10 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.trigger.GenericEventStartRequest
-import com.tencent.devops.process.pojo.pipeline.WeMateBuildStartRequest
+import com.tencent.devops.process.pojo.pipeline.IMateBuildStartRequest
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.trigger.market.MarketEventTriggerBuildService
-import com.tencent.devops.store.pojo.common.BK_STORE_CREATIVE_STREAM_WEMATE_MESSAGE_REMINDER_TRIGGER
+import com.tencent.devops.store.pojo.common.BK_STORE_CREATIVE_STREAM_IMATE_MESSAGE_REMINDER_TRIGGER
 import org.springframework.stereotype.Service
 
 @Service
@@ -45,22 +45,22 @@ class TxPipelineBuildFacadeService(
     private val pipelineVisibilityService: PipelineVisibilityService
 ) {
 
-    fun weMateBuildStart(
+    fun iMateBuildStart(
         userId: String,
         projectId: String,
         pipelineId: String,
-        request: WeMateBuildStartRequest
+        request: IMateBuildStartRequest
     ): BuildId {
         checkVisibility(userId, projectId, pipelineId)
         return marketEventTriggerBuildService.genericEventTrigger(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            eventCode = BK_STORE_CREATIVE_STREAM_WEMATE_MESSAGE_REMINDER_TRIGGER,
+            eventCode = BK_STORE_CREATIVE_STREAM_IMATE_MESSAGE_REMINDER_TRIGGER,
             request = GenericEventStartRequest(
                 eventBody = mapOf(
-                    WeMateBuildStartRequest::triggerUser.name to request.triggerUser,
-                    WeMateBuildStartRequest::message.name to request.message
+                    IMateBuildStartRequest::triggerUser.name to request.triggerUser,
+                    IMateBuildStartRequest::message.name to request.message
                 ),
                 startParams = request.startParams
             )

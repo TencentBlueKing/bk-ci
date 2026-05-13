@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
-import com.tencent.devops.process.pojo.pipeline.WeMateBuildStartRequest
+import com.tencent.devops.process.pojo.pipeline.IMateBuildStartRequest
 import com.tencent.devops.process.service.TxPipelineBuildFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -40,16 +40,16 @@ class ServiceTXBuildResourceImpl @Autowired constructor(
     private val txPipelineBuildFacadeService: TxPipelineBuildFacadeService
 ) : ServiceTXBuildResource {
 
-    override fun weMateBuildStart(
+    override fun iMateBuildStart(
         userId: String,
         projectId: String,
         pipelineId: String,
-        request: WeMateBuildStartRequest
+        request: IMateBuildStartRequest
     ): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
         return Result(
-            txPipelineBuildFacadeService.weMateBuildStart(
+            txPipelineBuildFacadeService.iMateBuildStart(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,

@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VAL
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
-import com.tencent.devops.process.pojo.pipeline.WeMateBuildStartRequest
+import com.tencent.devops.process.pojo.pipeline.IMateBuildStartRequest
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -54,12 +54,12 @@ import jakarta.ws.rs.core.MediaType
 interface ApigwTXBuildResourceV4 {
 
     @Operation(
-        summary = "weMate消息提醒启动流水线",
-        tags = ["v4_app_weMate_build_start", "v4_user_weMate_build_start"]
+        summary = "IMate消息提醒启动流水线",
+        tags = ["v4_app_imate_build_start", "v4_user_imate_build_start"]
     )
     @POST
-    @Path("/weMate_build_start")
-    fun weMateBuildStart(
+    @Path("/imate_build_start")
+    fun iMateBuildStart(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
@@ -75,8 +75,8 @@ interface ApigwTXBuildResourceV4 {
         @Parameter(description = "流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "weMate消息提醒请求体", required = true)
-        request: WeMateBuildStartRequest
+        @Parameter(description = "IMate消息提醒请求体", required = true)
+        request: IMateBuildStartRequest
     ): Result<BuildId>
 
     @Operation(

@@ -33,7 +33,7 @@ import com.tencent.devops.openapi.api.apigw.v4.ApigwTXBuildResourceV4
 import com.tencent.devops.process.api.service.ServiceTXBuildResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
-import com.tencent.devops.process.pojo.pipeline.WeMateBuildStartRequest
+import com.tencent.devops.process.pojo.pipeline.IMateBuildStartRequest
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -42,16 +42,16 @@ class ApigwTXBuildResourceV4Impl @Autowired constructor(
     private val client: Client
 ) : ApigwTXBuildResourceV4 {
 
-    override fun weMateBuildStart(
+    override fun iMateBuildStart(
         appCode: String?,
         apigwType: String?,
         userId: String,
         projectId: String,
         pipelineId: String,
-        request: WeMateBuildStartRequest
+        request: IMateBuildStartRequest
     ): Result<BuildId> {
-        logger.info("OPENAPI_TX_BUILD_V4|$userId|weMate build start|$projectId|$pipelineId")
-        return client.get(ServiceTXBuildResource::class).weMateBuildStart(
+        logger.info("OPENAPI_TX_BUILD_V4|$userId|IMate build start|$projectId|$pipelineId")
+        return client.get(ServiceTXBuildResource::class).iMateBuildStart(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
