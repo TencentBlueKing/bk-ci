@@ -48,7 +48,7 @@ export default defineComponent({
                 </p>
                 <p>
                   <i18n-t keypath="flow.delegation.tips3" tag="span">
-                    <span class={styles.highlight}>BK_CI_START_USER_ID</span>
+                    <span class={styles.highlight}>BK_CI_AUTHORIZER</span>
                   </i18n-t>
                 </p>
                 <p class={styles.tips4}>{t('flow.delegation.tips4')}</p>

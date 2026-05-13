@@ -663,7 +663,10 @@ class PipelineTemplatePersistenceService @Autowired constructor(
     ) {
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            val templateInfo = pipelineTemplateInfoService.get(templateId)
+            val templateInfo = pipelineTemplateInfoService.get(
+                projectId = projectId,
+                templateId = templateId
+            )
             pipelineTemplateRelatedService.delete(
                 transactionContext = context,
                 condition = PipelineTemplateRelatedCommonCondition(

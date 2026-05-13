@@ -234,7 +234,8 @@ class RbacPermissionResourceService(
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        enabled: Boolean?
     ): Boolean {
         logger.info("resource modify relation|$projectCode|$resourceType|$resourceCode|$resourceName")
         val resourceInfo = authResourceService.get(
@@ -246,7 +247,8 @@ class RbacPermissionResourceService(
             permissionGradeManagerService.modifyGradeManager(
                 gradeManagerId = resourceInfo.relationId,
                 projectCode = projectCode,
-                projectName = resourceName
+                projectName = resourceName,
+                enabled = enabled
             )
         } else {
             val projectInfo = authResourceService.get(
@@ -564,6 +566,48 @@ class RbacPermissionResourceService(
             projectCode = projectId,
             resourceType = resourceType,
             resourceCode = resourceCode
+        )
+    }
+
+    override fun getResourceByName(
+        projectCode: String,
+        resourceType: String,
+        resourceName: String
+    ): AuthResourceInfo? {
+        return authResourceService.getByResourceName(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceName = resourceName
+        )
+    }
+
+    override fun getResourceByCode(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): AuthResourceInfo? {
+        return authResourceService.getByResourceCode(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+    }
+
+    override fun modifyProjectEnabled(
+        projectCode: String,
+        enabled: Boolean
+    ): Boolean {
+        logger.info("modify project enabled|$projectCode|$enabled")
+        val resourceInfo = authResourceService.get(
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode
+        )
+        return permissionGradeManagerService.modifyGradeManager(
+            gradeManagerId = resourceInfo.relationId,
+            projectCode = projectCode,
+            projectName = resourceInfo.resourceName,
+            enabled = enabled
         )
     }
 }

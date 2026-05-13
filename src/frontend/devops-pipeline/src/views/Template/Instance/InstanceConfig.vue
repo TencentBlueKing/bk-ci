@@ -421,6 +421,10 @@
         } catch (e) {
             throw e
         } finally {
+            // 切换模板版本后，根据新版本模板的参数重新计算 overrideTemplateField.paramIds
+            instanceList.value?.forEach((item, index) => {
+                updateInstanceOverrideParamIds(item, index)
+            })
             isLoading.value = false
         }
     }

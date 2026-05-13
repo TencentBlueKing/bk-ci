@@ -40,10 +40,6 @@ class ExternalDispatchResourceImpl @Autowired constructor(
     private val remoteDevService: RemoteDevService
 ) : ExternalDispatchResource {
 
-    override fun workspaceTaskCallback(type: WorkspaceMountType?, taskStatus: TaskStatus): Result<Boolean> {
-        return Result(remoteDevService.workspaceTaskCallback(taskStatus, type ?: WorkspaceMountType.DEVCLOUD))
-    }
-
     override fun workspaceTaskCallbackNew(
         type: WorkspaceMountType?,
         key: String,

@@ -2572,6 +2572,27 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-app/projects/{projectId}/pipelines/pipeline_count:
+    get:
+      operationId: "v4_app_pipeline_get_count"
+      description: "获取列表页列表相关的数目"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/projects/{projectId}/pipelines/pipeline_count"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-app/projects/{projectId}/pipelines/pipeline_list:
     get:
       operationId: "v4_app_pipeline_list"
@@ -6129,6 +6150,27 @@ paths:
           method: "post"
           name: "backend-1"
           path: "/openapi/api/apigw-user/v4/projects/{projectId}/pipelines/pipeline_copying"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/projects/{projectId}/pipelines/pipeline_count:
+    get:
+      operationId: "v4_user_pipeline_get_count"
+      description: "获取列表页列表相关的数目"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/projects/{projectId}/pipelines/pipeline_count"
           timeout: 30
         enableWebsocket: false
         isPublic: true

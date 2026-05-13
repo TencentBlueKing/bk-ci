@@ -475,6 +475,7 @@ class ExperienceAppService(
         userId: String,
         experienceHashId: String,
         organization: String?,
+        ttl: Int? = null,
         enablePublicAccess: Boolean = false
     ): DownloadUrl {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
@@ -483,6 +484,7 @@ class ExperienceAppService(
         return experienceDownloadService.getExternalDownloadUrl(
             userId = userId,
             experienceId = experienceId,
+            ttl = ttl,
             isOuter = organization == ORGANIZATION_OUTER,
             enablePublicAccess = enablePublicAccess
         )

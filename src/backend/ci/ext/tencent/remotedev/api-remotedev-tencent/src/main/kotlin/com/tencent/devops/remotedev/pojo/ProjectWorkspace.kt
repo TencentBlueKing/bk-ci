@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.pojo
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.remotedev.pojo.expert.FetchSupportResp
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -89,5 +90,8 @@ data class ProjectWorkspace(
     @get:Schema(title = "主机名")
     val vmName: String? = null,
     @get:Schema(title = "母机IP")
-    val nodeIp: String? = null
+    val nodeIp: String? = null,
+    @get:Schema(title = "云区域Id")
+    @get:JsonProperty("regionId")
+    val regionId: String? = null
 ) : IWorkspace

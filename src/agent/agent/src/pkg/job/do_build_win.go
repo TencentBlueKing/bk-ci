@@ -36,10 +36,11 @@ import (
 	"os/exec"
 	"syscall"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
@@ -47,8 +48,7 @@ import (
 	ucommand "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/process"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 )
 
 func doBuild(
@@ -58,8 +58,7 @@ func doBuild(
 	goEnv map[string]string,
 	runUser string,
 ) error {
-	// windows特有环境变量
-	goEnv["DEVOPS_AGENT_WIN_SERVICE"] = config.GAgentEnv.WinTask
+	goEnv["DEVOPS_AGENT_INSTALL_MODE"] = config.GAgentEnv.InstallType
 	var err error
 	var exitGroup process.ProcessExitGroup
 	enableExitGroup := envs.FetchEnvAndCheck(constant.DevopsAgentEnableExitGroup, "true")
@@ -155,13 +154,19 @@ func doBuild(
 func StartProcessCmd(command string, args []string, workDir string, envMap map[string]string, runUser string) (*exec.Cmd, error) {
 	cmd := exec.Command(command)
 
+	// DEVOPS_AGENT_CLOSE_FD_INHERIT: optional fd isolation matching Windows' NoInheritHandles.
+	sysProcAttr := &syscall.SysProcAttr{
+		NoInheritHandles: false,
+	}
+	if envs.FetchEnvAndCheck(constant.DevopsAgentCloseFdInherit, "true") {
+		logs.Info("DEVOPS_AGENT_CLOSE_FD_INHERIT enabled: fd isolation for build process")
+		sysProcAttr.NoInheritHandles = true
+	}
 	if envs.FetchEnvAndCheck(constant.DevopsAgentEnableNewConsole, "true") {
-		cmd.SysProcAttr = &syscall.SysProcAttr{
-			CreationFlags:    constant.WinCommandNewConsole,
-			NoInheritHandles: true,
-		}
+		sysProcAttr.CreationFlags = constant.WinCommandNewConsole
 		logs.Info("DEVOPS_AGENT_ENABLE_NEW_CONSOLE enabled")
 	}
+	cmd.SysProcAttr = sysProcAttr
 
 	if len(args) > 0 {
 		cmd.Args = append(cmd.Args, args...)

@@ -40,6 +40,8 @@ data class SimplePipeline(
     var pipelineName: String,
     @get:Schema(title = "流水线描述", required = false)
     var pipelineDesc: String?,
+    @get:Schema(title = "AI自动摘要", required = false)
+    var autoSummary: String? = null,
     @get:Schema(title = "流水线任务数量", required = true)
     val taskCount: Int,
     @get:Schema(title = "是否被删除了", required = false)

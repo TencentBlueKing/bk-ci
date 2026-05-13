@@ -81,6 +81,7 @@ import com.tencent.devops.store.common.service.StoreIndexManageService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.common.utils.PublicComponentCacheManager
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
@@ -1076,6 +1077,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 } else {
                     redisOperation.removeSetMember(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
                 }
+                // 清除公共组件集合缓存，立即生效
+                PublicComponentCacheManager.invalidateCache(StoreTypeEnum.ATOM.name)
+                // 更新插件运行时信息缓存
                 marketAtomCommonService.updateAtomRunInfoCache(
                     atomId = id,
                     atomName = atomUpdateRequest.name,
@@ -1548,5 +1552,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             )
         }
         return Result(versionInfo)
+    }
+
+    override fun getAtomId(atomCode: String, version: String): String? {
+        return atomDao.getAtomIdByVersionWithCode(dslContext, atomCode, version)
     }
 }

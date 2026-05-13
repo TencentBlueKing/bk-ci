@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.listener
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.CreateAgentIdDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
@@ -51,15 +52,15 @@ class ThirdPartyBuildListener @Autowired constructor(
 ) : BuildListener {
 
     override fun getStartupQueue(): String {
-        return ""
+        return DispatchRouteKeySuffix.THIRD_PARTY.routeKeySuffix
     }
 
     override fun getStartupDemoteQueue(): String {
-        return ""
+        return DispatchRouteKeySuffix.THIRD_PARTY.routeKeySuffix
     }
 
     override fun getShutdownQueue(): String {
-        return ""
+        return DispatchRouteKeySuffix.THIRD_PARTY.routeKeySuffix
     }
 
     override fun onStartup(dispatchMessage: DispatchMessage) {

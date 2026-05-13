@@ -90,7 +90,7 @@ export default defineComponent({
     },
   },
   emits: ['update:modelValue', 'change', 'update:hasError', 'step-click'],
-  setup(props, { emit }) {
+  setup(props, { emit, expose }) {
     const { t } = useI18n()
     const editorRef = ref<HTMLDivElement>()
     const isLoading = ref(false)
@@ -135,6 +135,9 @@ export default defineComponent({
             enabled: false,
           },
           readOnly: props.readOnly,
+          // CodeLens 提供者是按语言全局注册的，readOnly 编辑器必须显式关闭，
+          // 否则会显示其他实例（如 Edit 页）注册并未及时清理的 "Plugin" CodeLens。
+          codeLens: !props.readOnly,
           scrollBeyondLastLine: false,
           fontSize: 14,
           lineNumbers: 'on',
@@ -391,13 +394,18 @@ export default defineComponent({
       }
     }
 
-    // Expose methods for parent component
-    const exposedMethods = {
+    const getPosition = () => editor?.getPosition() ?? null
+
+    const getEditor = () => editor
+
+    expose({
       format,
       insertFragmentAtPos,
       getAtomByPos,
       highlightBlocks,
-    }
+      getPosition,
+      getEditor,
+    })
 
     // Watch for value changes from parent
     watch(
@@ -416,7 +424,7 @@ export default defineComponent({
     watch(
       () => props.readOnly,
       (val) => {
-        editor?.updateOptions({ readOnly: val })
+        editor?.updateOptions({ readOnly: val, codeLens: !val })
       },
     )
 

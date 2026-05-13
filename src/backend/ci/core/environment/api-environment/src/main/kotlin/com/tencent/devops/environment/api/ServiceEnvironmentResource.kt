@@ -41,6 +41,8 @@ import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
+import com.tencent.devops.environment.pojo.enums.EnvType
+import com.tencent.devops.environment.pojo.enums.NodeStatus
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -62,16 +64,29 @@ import jakarta.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceEnvironmentResource {
+
     @Operation(summary = "获取环境列表")
     @GET
-    @Path("/projects/{projectId}")
+    @Path("/projects/{projectId}/list")
     fun list(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
-        projectId: String
+        projectId: String,
+        @Parameter(description = "环境名称", required = false)
+        @QueryParam("envName")
+        envName: String?,
+        @Parameter(description = "环境类型", required = false)
+        @QueryParam("envType")
+        envType: EnvType?,
+        @Parameter(description = "节点", required = false)
+        @QueryParam("nodeHashId")
+        nodeHashId: String?,
+        @Parameter(description = "是否是创作流模式", required = false)
+        @QueryParam("createMode")
+        createMode: Boolean?
     ): Result<List<EnvWithPermission>>
 
     @Operation(summary = "创建环境")
@@ -188,6 +203,39 @@ interface ServiceEnvironmentResource {
         pageSize: Int? = 20,
         @Parameter(description = "环境 hashId(s)", required = true)
         envHashIds: List<String>
+    ): Result<Page<NodeBaseInfo>>
+
+    @Operation(summary = "获取环境的节点列表")
+    @GET
+    @Path("/projects/{projectId}/envs/{envHashId}/listNodesNew")
+    fun listNodesNew(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "IP", required = false)
+        @QueryParam("nodeIp")
+        nodeIp: String?,
+        @Parameter(description = "别名", required = false)
+        @QueryParam("displayName")
+        displayName: String?,
+        @Parameter(description = "创建人", required = false)
+        @QueryParam("createdUser")
+        createdUser: String?,
+        @Parameter(description = "Agent 状态", required = false)
+        @QueryParam("nodeStatus")
+        nodeStatus: NodeStatus?,
+        @Parameter(description = "第几页", required = false)
+        @QueryParam("page")
+        page: Int? = 1,
+        @Parameter(description = "每页多少条", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int? = 20,
+        @Parameter(description = "环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String
     ): Result<Page<NodeBaseInfo>>
 
     @Operation(summary = "获取用户有权限使用的环境列表")

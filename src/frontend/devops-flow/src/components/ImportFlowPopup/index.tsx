@@ -1,11 +1,14 @@
-import { defineComponent } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { Dialog, Upload } from 'bkui-vue'
-import { useRoute, useRouter } from 'vue-router'
+import { apiTransfer } from '@/api/flowContentList'
 import { ROUTE_NAMES } from '@/constants/routes'
+import { useModeStore } from '@/stores/flowMode'
 import { useFlowModelStore } from '@/stores/flowModel'
 import type { FlowModel, FlowSettings } from '@/types/flow'
+import { CODE_MODE, UI_MODE } from '@/utils/flowConst'
 import { randomLenString } from '@/utils/util'
+import { Dialog, Message, Upload } from 'bkui-vue'
+import { defineComponent } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 
 export default defineComponent({
   name: 'ImportFlowPopup',
@@ -27,6 +30,7 @@ export default defineComponent({
     const route = useRoute()
     const router = useRouter()
     const flowModelStore = useFlowModelStore()
+    const modeStore = useModeStore()
 
     function checkJsonValid(json: any) {
       try {
@@ -36,21 +40,45 @@ export default defineComponent({
       }
     }
 
+    function isJsonFile(file: File) {
+      return file.type === 'application/json' || file.name.endsWith('.json')
+    }
+
+    function isYamlFile(file: File) {
+      return (
+        file.type === 'application/x-yaml'
+        || file.type === 'text/yaml'
+        || file.name.endsWith('.yaml')
+        || file.name.endsWith('.yml')
+      )
+    }
+
     function handleSelect({ file, onProgress, onSuccess, onComplete }: any) {
       const reader = new FileReader()
       reader.readAsText(file)
       reader.addEventListener('loadend', async () => {
         try {
-          if (file.type === 'application/json' || file.name.endsWith('.json')) {
+          if (isJsonFile(file)) {
             const jsonResult = JSON.parse(reader.result as string)
             const isValid = checkJsonValid(jsonResult)
             const code = isValid ? 0 : 1
-            const message = isValid ? null : t('flow.content.invalidFlowJson')
+            const message = isValid ? null : t('flow.content.invalidFlowJsonOrYaml')
 
             onSuccess({ code, message, result: jsonResult }, file)
 
             if (isValid) {
-              handleImport(jsonResult)
+              handleImportJson(jsonResult)
+            }
+          } else if (isYamlFile(file)) {
+            const yaml = reader.result as string
+            const isValid = !!yaml && yaml.trim().length > 0
+            const code = isValid ? 0 : 1
+            const message = isValid ? null : t('flow.content.invalidFlowJsonOrYaml')
+
+            onSuccess({ code, message, result: yaml }, file)
+
+            if (isValid) {
+              await handleImportYaml(yaml)
             }
           } else {
             onSuccess(
@@ -61,7 +89,7 @@ export default defineComponent({
         } catch (e) {
           console.error(e)
           onSuccess(
-            { code: 1, message: t('flow.content.invalidFlowJson'), result: '' },
+            { code: 1, message: t('flow.content.invalidFlowJsonOrYaml'), result: '' },
             file,
           )
         } finally {
@@ -71,7 +99,7 @@ export default defineComponent({
       reader.addEventListener('progress', onProgress)
     }
 
-    function handleImport(json: any) {
+    function handleImportJson(json: any) {
       const { templateId, instanceFromTemplate, ...restModel } = json.model
       const importName = `${restModel.name}_${randomLenString(6)}`
       const pipeline: FlowModel = {
@@ -89,6 +117,7 @@ export default defineComponent({
         return
       }
 
+      modeStore.setMode(UI_MODE)
       flowModelStore.setImportedFlowModel(pipeline, setting)
 
       router.push({
@@ -97,6 +126,54 @@ export default defineComponent({
       })
 
       handleClose()
+    }
+
+    async function handleImportYaml(yaml: string) {
+      try {
+        const projectId = route.params.projectId as string
+        const res = await apiTransfer({
+          projectId,
+          actionType: 'FULL_YAML2MODEL',
+          oldYaml: yaml,
+        })
+
+        if (res.yamlInvalidMsg) {
+          Message({ theme: 'error', message: res.yamlInvalidMsg })
+          return
+        }
+
+        const modelAndSetting = res.modelAndSetting
+        if (!modelAndSetting?.model || !modelAndSetting?.setting) {
+          Message({ theme: 'error', message: t('flow.content.invalidFlowJsonOrYaml') })
+          return
+        }
+
+        const { templateId, instanceFromTemplate, ...restModel } = modelAndSetting.model as any
+        const pipeline: FlowModel = { ...(restModel as FlowModel) }
+        const setting: FlowSettings = { ...modelAndSetting.setting }
+
+        if (typeof props.handleImportSuccess === 'function') {
+          props.handleImportSuccess({ pipeline, pipelineSetting: setting, yaml })
+          handleClose()
+          return
+        }
+
+        modeStore.setMode(CODE_MODE)
+        flowModelStore.setImportedFlowModel(pipeline, setting, yaml)
+
+        router.push({
+          name: ROUTE_NAMES.FLOW_IMPORT_EDIT_WORKFLOW_ORCHESTRATION,
+          params: { projectId: route.params.projectId },
+        })
+
+        handleClose()
+      } catch (error: any) {
+        console.error('Failed to transfer yaml to model:', error)
+        Message({
+          theme: 'error',
+          message: error?.message || t('flow.content.invalidFlowJsonOrYaml'),
+        })
+      }
     }
 
     function handleClose() {
@@ -117,7 +194,7 @@ export default defineComponent({
         {t('flow.content.importFlowLabel')}
         <Upload
           v-if={props.isShow}
-          accept=".json, application/json"
+          accept=".json, .yaml, .yml, application/json, application/x-yaml"
           with-credentials={true}
           custom-request={handleSelect}
         />

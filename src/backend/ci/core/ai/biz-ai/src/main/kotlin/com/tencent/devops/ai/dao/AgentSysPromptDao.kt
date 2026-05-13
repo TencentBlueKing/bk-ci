@@ -1,0 +1,122 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.ai.dao
+
+import com.tencent.devops.model.ai.tables.TAiAgentSysPrompt
+import com.tencent.devops.model.ai.tables.records.TAiAgentSysPromptRecord
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
+
+/** 智能体系统提示词 DAO，对应 T_AI_AGENT_SYS_PROMPT 表。 */
+@Repository
+class AgentSysPromptDao {
+
+    fun getEnabledPrompt(
+        dslContext: DSLContext,
+        agentName: String
+    ): String? {
+        with(TAiAgentSysPrompt.T_AI_AGENT_SYS_PROMPT) {
+            return dslContext.select(PROMPT_TEMPLATE)
+                .from(this)
+                .where(AGENT_NAME.eq(agentName))
+                .and(ENABLED.eq(true))
+                .fetchOne(PROMPT_TEMPLATE)
+        }
+    }
+
+    fun listAll(dslContext: DSLContext): Result<TAiAgentSysPromptRecord> {
+        with(TAiAgentSysPrompt.T_AI_AGENT_SYS_PROMPT) {
+            return dslContext.selectFrom(this).fetch()
+        }
+    }
+
+    fun getByAgentName(
+        dslContext: DSLContext,
+        agentName: String
+    ): TAiAgentSysPromptRecord? {
+        with(TAiAgentSysPrompt.T_AI_AGENT_SYS_PROMPT) {
+            return dslContext.selectFrom(this)
+                .where(AGENT_NAME.eq(agentName))
+                .fetchOne()
+        }
+    }
+
+    fun insert(
+        dslContext: DSLContext,
+        agentName: String,
+        promptTemplate: String,
+        description: String?,
+        enabled: Boolean
+    ) {
+        val now = LocalDateTime.now()
+        with(TAiAgentSysPrompt.T_AI_AGENT_SYS_PROMPT) {
+            dslContext.insertInto(
+                this,
+                AGENT_NAME,
+                PROMPT_TEMPLATE,
+                DESCRIPTION,
+                ENABLED,
+                CREATED_TIME,
+                UPDATED_TIME
+            ).values(
+                agentName,
+                promptTemplate,
+                description,
+                enabled,
+                now,
+                now
+            ).execute()
+        }
+    }
+
+    fun update(
+        dslContext: DSLContext,
+        agentName: String,
+        promptTemplate: String
+    ): Int {
+        with(TAiAgentSysPrompt.T_AI_AGENT_SYS_PROMPT) {
+            return dslContext.update(this)
+                .set(PROMPT_TEMPLATE, promptTemplate)
+                .where(AGENT_NAME.eq(agentName))
+                .execute()
+        }
+    }
+
+    fun delete(
+        dslContext: DSLContext,
+        agentName: String
+    ): Int {
+        with(TAiAgentSysPrompt.T_AI_AGENT_SYS_PROMPT) {
+            return dslContext.deleteFrom(this)
+                .where(AGENT_NAME.eq(agentName))
+                .execute()
+        }
+    }
+}

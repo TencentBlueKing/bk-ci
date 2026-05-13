@@ -1116,6 +1116,11 @@ class PipelineBuildDao {
                 START_USER
             ).from(this).where(DSL.trueCondition())
             makeQueryConditions(query = query, where = where)
+            when (query.updateTimeDesc) {
+                true -> where.orderBy(UPDATE_TIME.desc(), BUILD_ID)
+                false -> where.orderBy(UPDATE_TIME.asc(), BUILD_ID)
+                null -> where.orderBy(BUILD_NUM.desc())
+            }
             where.limit(query.offset, query.limit).fetch(lightMapper)
         }
     }

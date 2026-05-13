@@ -46,6 +46,8 @@ import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceWorkspaceDispatchInterface
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
+import com.tencent.devops.remotedev.pojo.CoffeeAIDelete
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
@@ -91,7 +93,8 @@ class DeleteControl @Autowired constructor(
     private val gitProxyTGitService: GitProxyTGitService,
     private val bkBaseService: BKBaseService,
     private val workspaceJoinDao: WorkspaceJoinDao,
-    private val workspaceWindowsDao: WorkspaceWindowsDao
+    private val workspaceWindowsDao: WorkspaceWindowsDao,
+    private val workspaceStartCloudClient: WorkspaceStartCloudClient
 ) {
 
     companion object {
@@ -442,6 +445,13 @@ class DeleteControl @Autowired constructor(
         // 删除时给 cmdb 去掉字段方便监控检索
         if (workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
             windowsAfterDelete(workspaceName, workspace)
+            kotlin.runCatching {
+                workspaceStartCloudClient.deleteCoffeeAIWorkspace(
+                    workspace.createUserId, CoffeeAIDelete(
+                        workspaceName = workspaceName
+                    )
+                )
+            }
         }
 
         notifyControl.dispatchWebsocketPushEvent(
@@ -516,7 +526,7 @@ class DeleteControl @Autowired constructor(
         }
 
         var deleteImmediately = false
-        kotlin.runCatching {
+        runCatching {
             workspaceCommon.checkAndFixExceptionWS(
                 status = workspace.status,
                 userId = userId,

@@ -120,6 +120,20 @@ class AuthResourceGroupPermissionDao {
         }
     }
 
+    fun listByGroupIds(
+        dslContext: DSLContext,
+        projectCode: String,
+        iamGroupIds: List<Int>
+    ): List<ResourceGroupPermissionDTO> {
+        if (iamGroupIds.isEmpty()) return emptyList()
+        return with(TAuthResourceGroupPermission.T_AUTH_RESOURCE_GROUP_PERMISSION) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(IAM_GROUP_ID.`in`(iamGroupIds))
+                .fetch().map { it.convert() }
+        }
+    }
+
     fun listGroupsWithPermissions(
         dslContext: DSLContext,
         projectCode: String

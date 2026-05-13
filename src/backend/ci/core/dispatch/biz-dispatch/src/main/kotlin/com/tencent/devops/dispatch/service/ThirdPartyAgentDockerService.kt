@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.common.redis.RedisOperation
@@ -19,6 +20,7 @@ import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyDockerDebugInf
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentDockerDebugDoLock
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentDockerDebugLock
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentUtils
+import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import org.jooq.DSLContext
@@ -208,6 +210,21 @@ class ThirdPartyAgentDockerService @Autowired constructor(
             throw ErrorCodeException(
                 errorCode = "${ErrorCodeEnum.NO_CONTAINER_IS_READY_DEBUG.errorCode}",
                 defaultMessage = "Can not found debug container.",
+                params = arrayOf(pipelineId)
+            )
+        }
+
+        // 检查是否有节点使用权限
+        val hasNodePermission = client.get(ServiceNodeResource::class).checkNodePermission(
+            userId = userId,
+            projectId = projectId,
+            nodeId = his.nodeId,
+            permission = AuthPermission.USE
+        ).data
+        if (hasNodePermission == null || !hasNodePermission) {
+            throw ErrorCodeException(
+                errorCode = "${ErrorCodeEnum.NO_NODE_PERMISSION.errorCode}",
+                defaultMessage = "No node permission.",
                 params = arrayOf(pipelineId)
             )
         }

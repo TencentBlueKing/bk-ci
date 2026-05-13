@@ -711,7 +711,8 @@ class PipelineInfoDao {
                     latestVersionStatus = latestVersionStatus?.let {
                         VersionStatus.valueOf(it)
                     } ?: VersionStatus.RELEASED,
-                    locked = t.locked
+                    locked = t.locked,
+                    autoSummary = t.autoSummary
                 )
             }
         } else {
@@ -901,6 +902,29 @@ class PipelineInfoDao {
                 .and(LOCKED.eq(true))
                 .and(DELETE.eq(false))
                 .fetch(PIPELINE_ID, String::class.java)
+        }
+    }
+
+    /**
+     * 更新流水线AI自动摘要，带版本校验（乐观锁）
+     * 只有当前版本与传入版本一致时才更新
+     */
+    fun updateAutoSummary(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        autoSummary: String,
+        version: Int
+    ): Boolean {
+        return with(T_PIPELINE_INFO) {
+            dslContext.update(this)
+                .set(AUTO_SUMMARY, autoSummary)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(VERSION.eq(version))
+                .and(DELETE.eq(false))
+                .execute() == 1
         }
     }
 

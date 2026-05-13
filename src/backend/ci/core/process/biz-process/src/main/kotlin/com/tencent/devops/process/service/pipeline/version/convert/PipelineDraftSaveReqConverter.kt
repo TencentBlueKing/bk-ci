@@ -45,6 +45,7 @@ import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
 import com.tencent.devops.process.pojo.pipeline.PipelineTemplateInstanceBasicInfo
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.pipeline.version.PipelineDraftSaveReq
 import com.tencent.devops.process.pojo.pipeline.version.PipelineVersionCreateReq
 import com.tencent.devops.process.service.pipeline.PipelineModelParser
@@ -90,6 +91,7 @@ class PipelineDraftSaveReqConverter(
                 "Start to convert draft save request|$projectId|$pipelineId|$version|$storageType|$baseVersion"
             )
             // 注意: 如果是实例化的流水线,modelAndSetting中的model不含stage字段,只有模版引用信息
+            val requestChannelCode = ChannelCode.getRequestChannelCode()
             val (modelAndSetting, yamlWithVersion) = if (storageType == PipelineStorageType.YAML) {
                 if (yaml.isNullOrEmpty()) {
                     throw IllegalArgumentException("yaml can not be empty")
@@ -99,7 +101,8 @@ class PipelineDraftSaveReqConverter(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     yaml = yaml!!,
-                    aspects = AtomUtils.checkElementCanPauseBeforeRun(client, projectId)
+                    aspects = AtomUtils.checkElementCanPauseBeforeRun(client, projectId),
+                    channelCode = requestChannelCode
                 )
             } else {
                 if (modelAndSetting == null) {
@@ -122,7 +125,8 @@ class PipelineDraftSaveReqConverter(
                             version = request.baseVersion,
                             includeDraft = true
                         )?.yaml
-                    } ?: ""
+                    } ?: "",
+                    channelCode = requestChannelCode
                 )
                 Pair(newModelAndSetting, newYaml)
             }
@@ -154,6 +158,12 @@ class PipelineDraftSaveReqConverter(
                 pipelineSettingWithoutVersion = pipelineSettingWithoutVersion,
                 versionStatus = VersionStatus.COMMITTING,
                 versionAction = PipelineVersionAction.SAVE_DRAFT,
+                yamlFileInfo = pipelineYamlInfo?.let {
+                    PipelineYamlFileInfo(
+                        repoHashId = it.repoHashId,
+                        filePath = it.filePath
+                    )
+                },
                 repoHashId = pipelineYamlInfo?.repoHashId
             )
             if (context.templateInstanceBasicInfo != null) {

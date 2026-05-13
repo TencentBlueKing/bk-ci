@@ -46,10 +46,11 @@ class MarketAtomVersionLogDao {
         userId: String,
         atomId: String,
         releaseType: Byte,
-        versionContent: String
+        versionContent: String,
+        packageSize: String? = null
     ) {
         with(TAtomVersionLog.T_ATOM_VERSION_LOG) {
-            dslContext.insertInto(this,
+            val step = dslContext.insertInto(this,
                 ID,
                 ATOM_ID,
                 RELEASE_TYPE,
@@ -70,7 +71,10 @@ class MarketAtomVersionLogDao {
                 .set(CONTENT, versionContent)
                 .set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .execute()
+            if (!packageSize.isNullOrBlank()) {
+                step.set(PACKAGE_SIZE, packageSize)
+            }
+            step.execute()
         }
     }
 

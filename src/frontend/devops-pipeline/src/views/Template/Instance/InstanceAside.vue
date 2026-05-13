@@ -159,6 +159,10 @@
     const instanceName = computed(() => {
         return renderInstanceList.value[editingIndex.value]?.pipelineName ?? ''
     })
+    watch(() => currentVersion.value,  (newVal, oldVal) => {
+        if (isInstanceCreateType.value || Number(newVal) === Number(oldVal)) return
+        fetchPipelinesDetails()
+    })
     watch(() => curTemplateDetail.value, (val) => {
         if (instanceList.value.length) return
         if (pipelineName.value && isInstanceCreateType.value) {
@@ -357,6 +361,7 @@
             }
             await fetchPipelinesDetails()
             proxy.$nextTick(() => {
+                fetchPipelinesDetails()
                 handleInstanceClick(instanceActiveIndex.value)
             })
         }

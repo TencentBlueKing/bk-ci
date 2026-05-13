@@ -29,6 +29,16 @@
   }
 }
 
+.table {
+  :global(.bk-table-body tr) {
+    cursor: pointer;
+  }
+
+  :global(.bk-table-body tr:hover) {
+    background-color: var(--bg-hover, #f5f7fa);
+  }
+}
+
 .searchInput {
   width: 100%;
   min-width: 0;
@@ -72,13 +82,7 @@
 }
 
 .buildNo {
-  cursor: pointer;
   font-weight: 500;
-  transition: opacity 0.2s;
-
-  &:hover {
-    opacity: 0.8;
-  }
 }
 
 /* 操作列 */

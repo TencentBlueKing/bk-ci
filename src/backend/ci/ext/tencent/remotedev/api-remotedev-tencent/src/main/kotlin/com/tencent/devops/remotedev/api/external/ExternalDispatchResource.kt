@@ -34,6 +34,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
@@ -46,18 +47,6 @@ import jakarta.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ExternalDispatchResource {
 
-    @Deprecated(message = "被new代替")
-    @Operation(summary = "工作空间task回调")
-    @POST
-    @Path("/task/callback")
-    fun workspaceTaskCallback(
-        @Parameter(description = "云开发环境对接容器集群类型(DEVCLOUD、START、BCS)", required = false)
-        @QueryParam("type")
-        type: WorkspaceMountType? = WorkspaceMountType.DEVCLOUD,
-        @Parameter(description = "回调信息", required = true)
-        taskStatus: TaskStatus
-    ): Result<Boolean>
-
     @Operation(summary = "工作空间task回调新")
     @POST
     @Path("/task/callback/new")
@@ -65,7 +54,7 @@ interface ExternalDispatchResource {
         @Parameter(description = "云开发环境对接容器集群类型(DEVCLOUD、START、BCS)", required = false)
         @QueryParam("type")
         type: WorkspaceMountType? = WorkspaceMountType.DEVCLOUD,
-        @QueryParam("key")
+        @HeaderParam("key")
         key: String,
         @Parameter(description = "回调信息", required = true)
         taskStatus: TaskStatus

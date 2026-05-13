@@ -73,6 +73,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_TITLE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_URL
 import com.tencent.devops.common.webhook.pojo.code.GITHUB_PR_NUMBER
+import com.tencent.devops.common.webhook.pojo.code.MATCH_LABEL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_COMMIT_MESSAGE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANCH
@@ -88,6 +89,7 @@ import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
+import com.tencent.devops.common.webhook.service.code.filter.ListContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
@@ -231,7 +233,27 @@ class GithubPrTriggerHandler @Autowired constructor(
                     params = listOf(targetBranch)
                 ).toJsonStr()
             )
-            return listOf(actionFilter, userFilter, targetBranchFilter)
+            val labelFilter = ListContainsFilter(
+                pipelineId = pipelineId,
+                filterName = "mrAction",
+                triggerOn = event.pullRequest.labels?.mapNotNull { it.name }?.toSet() ?: setOf(),
+                included = WebhookUtils.convert(includeLabels),
+                excluded = WebhookUtils.convert(excludeLabels),
+                includeFailedReason = { item ->
+                    I18Variable(
+                        WebhookI18nConstants.MR_LABEL_NOT_MATCH,
+                        params = listOf(item)
+                    ).toJsonStr()
+                },
+                excludedFailedReason = { item ->
+                    I18Variable(
+                        WebhookI18nConstants.MR_LABEL_IGNORED,
+                        params = listOf(item)
+                    ).toJsonStr()
+                },
+                includeItemKey = MATCH_LABEL
+            )
+            return listOf(actionFilter, userFilter, targetBranchFilter, labelFilter)
         }
     }
 

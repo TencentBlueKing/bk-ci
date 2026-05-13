@@ -2,6 +2,7 @@ package imagedebug
 
 import (
 	"context"
+	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -16,6 +17,8 @@ type Router struct {
 	backend Manager
 }
 
+const debugTokenHeader = "X-DEVOPS-DEBUG-TOKEN"
+
 // CreateExecReq is createExec request struct
 type CreateExecReq struct {
 	ContainerID string   `json:"container_id,omitempty"`
@@ -25,9 +28,10 @@ type CreateExecReq struct {
 
 // ResizeExecReq is resizeExec request struct
 type ResizeExecReq struct {
-	ExecID string `json:"exec_id,omitempty"`
-	Width  int    `json:"width,omitempty"`
-	Height int    `json:"height,omitempty"`
+	ExecID      string `json:"exec_id,omitempty"`
+	ContainerID string `json:"container_id,omitempty"`
+	Width       int    `json:"width,omitempty"`
+	Height      int    `json:"height,omitempty"`
 }
 
 // InitRouter return api server
@@ -38,9 +42,8 @@ func InitRouter(ctx context.Context, b Manager, conf *ConsoleProxyConfig, errorC
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/create_exec", r.createExec)
-	mux.HandleFunc("/start_exec", r.startExec)
-	mux.HandleFunc("/resize_exec", r.resizeExec)
+	mux.HandleFunc("/start_exec", r.auth(r.startExec))
+	mux.HandleFunc("/resize_exec", r.auth(r.resizeExec))
 	s := &http.Server{
 		Addr:        fmt.Sprintf("%s:%d", r.conf.Address, r.conf.Port),
 		Handler:     mux,
@@ -58,42 +61,42 @@ func InitRouter(ctx context.Context, b Manager, conf *ConsoleProxyConfig, errorC
 	return s
 }
 
+func (r *Router) auth(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		if r.conf == nil || !r.conf.IsAuth {
+			next(w, req)
+			return
+		}
+
+		token := req.URL.Query().Get("token")
+		if token == "" {
+			token = req.Header.Get(debugTokenHeader)
+		}
+		if r.conf.AuthToken == "" || token == "" || subtle.ConstantTimeCompare([]byte(token), []byte(r.conf.AuthToken)) != 1 {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		next(w, req)
+	}
+}
+
 func (r *Router) createExec(w http.ResponseWriter, req *http.Request) {
-	var createExecReq CreateExecReq
-	decoder := json.NewDecoder(req.Body)
-	err := decoder.Decode(&createExecReq)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	if createExecReq.ContainerID == "" {
-		http.Error(w, "container_id must be provided", http.StatusBadRequest)
-		return
-	}
-
-	if createExecReq.User == "" {
-		createExecReq.User = "root"
-	}
-	if createExecReq.Cmd == nil {
-		createExecReq.Cmd = r.conf.Cmd
-	}
-	webconsole := &WebSocketConfig{
-		ContainerID: createExecReq.ContainerID,
-		User:        createExecReq.User,
-		Cmd:         createExecReq.Cmd,
-	}
-
-	r.backend.CreateExec(w, req, webconsole)
+	http.NotFound(w, req)
 }
 
 func (r *Router) startExec(w http.ResponseWriter, req *http.Request) {
 	err := req.ParseForm()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	execID := req.FormValue("exec_id")
 	containerID := req.FormValue("container_id")
+	if execID == "" || containerID == "" {
+		http.Error(w, "exec_id and container_id must be provided", http.StatusBadRequest)
+		return
+	}
 
 	webconsole := &WebSocketConfig{
 		ExecID:      execID,
@@ -111,17 +114,22 @@ func (r *Router) resizeExec(w http.ResponseWriter, req *http.Request) {
 	err := decoder.Decode(&resizeExecReq)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
-	if resizeExecReq.ExecID == "" {
-		http.Error(w, "exec_id must be provided", http.StatusBadRequest)
+	if resizeExecReq.ContainerID == "" {
+		resizeExecReq.ContainerID = req.URL.Query().Get("container_id")
+	}
+	if resizeExecReq.ExecID == "" || resizeExecReq.ContainerID == "" {
+		http.Error(w, "exec_id and container_id must be provided", http.StatusBadRequest)
 		return
 	}
 
 	webconsole := &WebSocketConfig{
-		ExecID: resizeExecReq.ExecID,
-		Height: resizeExecReq.Height,
-		Width:  resizeExecReq.Width,
+		ExecID:      resizeExecReq.ExecID,
+		ContainerID: resizeExecReq.ContainerID,
+		Height:      resizeExecReq.Height,
+		Width:       resizeExecReq.Width,
 	}
 
 	r.backend.ResizeExec(w, req, webconsole)

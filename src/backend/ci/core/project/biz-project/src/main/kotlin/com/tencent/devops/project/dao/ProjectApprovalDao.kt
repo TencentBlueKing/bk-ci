@@ -80,7 +80,9 @@ class ProjectApprovalDao {
                 PROJECT_TYPE,
                 PRODUCT_ID,
                 PRODUCT_NAME,
-                PROPERTIES
+                PROPERTIES,
+                KPI_CODE,
+                KPI_NAME
             ).values(
                 projectCreateInfo.projectName,
                 projectCreateInfo.englishName,
@@ -107,7 +109,9 @@ class ProjectApprovalDao {
                 projectCreateInfo.productName,
                 projectCreateInfo.properties?.let {
                     JsonUtil.toJson(it, false)
-                }
+                },
+                projectCreateInfo.kpiCode,
+                projectCreateInfo.kpiName
             ).onDuplicateKeyUpdate()
                 .set(PROJECT_NAME, projectCreateInfo.projectName)
                 .set(DESCRIPTION, projectCreateInfo.description)
@@ -130,6 +134,8 @@ class ProjectApprovalDao {
                 .set(PROPERTIES, projectCreateInfo.properties?.let {
                     JsonUtil.toJson(it, false)
                 })
+                .set(KPI_CODE, projectCreateInfo.kpiCode)
+                .set(KPI_NAME, projectCreateInfo.kpiName)
                 .execute()
         }
     }
@@ -167,6 +173,8 @@ class ProjectApprovalDao {
                 .set(PROPERTIES, projectUpdateInfo.properties?.let {
                     JsonUtil.toJson(it, false)
                 })
+                .set(KPI_CODE, projectUpdateInfo.kpiCode)
+                .set(KPI_NAME, projectUpdateInfo.kpiName)
                 .where(ENGLISH_NAME.eq(projectUpdateInfo.englishName))
                 .execute()
         }
@@ -201,6 +209,8 @@ class ProjectApprovalDao {
                 .set(PROPERTIES, projectApprovalInfo.properties?.let {
                     JsonUtil.toJson(it, false)
                 })
+                .set(KPI_CODE, projectApprovalInfo.kpiCode)
+                .set(KPI_NAME, projectApprovalInfo.kpiName)
                 .where(ENGLISH_NAME.eq(projectApprovalInfo.englishName))
                 .execute()
         }
@@ -302,7 +312,9 @@ class ProjectApprovalDao {
                 projectType = projectType,
                 productId = productId,
                 productName = productName,
-                properties = properties?.let { JsonUtil.to(it, ProjectProperties::class.java) }
+                properties = properties?.let { JsonUtil.to(it, ProjectProperties::class.java) },
+                kpiCode = kpiCode,
+                kpiName = kpiName
             )
         }
     }

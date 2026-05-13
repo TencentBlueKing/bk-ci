@@ -8,6 +8,7 @@ import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceWindowsRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WorkspaceRecordInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import org.jooq.DSLContext
@@ -187,10 +188,16 @@ class WorkspaceWindowsDao {
     fun fetchRecordByProjectIp(
         dslContext: DSLContext,
         projectId: String,
-        ip: String
-    ): Triple<String, String?, String>? {
+        ip: String?,
+        workspaceName: String?
+    ): WorkspaceRecordInfo? {
+        if (ip.isNullOrBlank() && workspaceName.isNullOrBlank()) {
+            return null
+        }
         val dsl = dslContext.select(
+            TWorkspace.T_WORKSPACE.PROJECT_ID,
             TWorkspace.T_WORKSPACE.NAME,
+            TWorkspace.T_WORKSPACE.COFFEE_AI,
             TWorkspaceWindows.T_WORKSPACE_WINDOWS.ENABLE_RECORD_USER,
             TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP
         ).from(TWorkspace.T_WORKSPACE)
@@ -203,8 +210,19 @@ class WorkspaceWindowsDao {
                     WorkspaceStatus.DELETED.ordinal,
                     WorkspaceStatus.DELIVERING_FAILED.ordinal
                 )
-            ).and(TWorkspace.T_WORKSPACE.IP.eq(ip)).fetchAny() ?: return null
-        return Triple(dsl.value1(), dsl.value2(), dsl.value3())
+            )
+        val res = if (!workspaceName.isNullOrBlank()) {
+            dsl.and(TWorkspace.T_WORKSPACE.NAME.eq(workspaceName)).fetchAny() ?: return null
+        } else {
+            dsl.and(TWorkspace.T_WORKSPACE.IP.eq(ip)).fetchAny() ?: return null
+        }
+        return WorkspaceRecordInfo(
+            projectId = res.value1(),
+            workspaceName = res.value2(),
+            coffeeAIEnable = res.value3()?.let { it != 0.toByte() } ?: false,
+            enableUser = res.value4(),
+            hostIp = res.value5()
+        )
     }
 
     fun updateRecord(
