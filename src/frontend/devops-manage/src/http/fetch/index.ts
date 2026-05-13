@@ -70,7 +70,7 @@ const getFetchConfig = (method: string, payload: any, config: IFetchConfig) => {
 const getFetchUrl = (url: string, method: string, payload = {}) => {
   try {
     // 基础 url
-    const baseUrl = location.origin + process.env.BK_AJAX_URL_PREFIX;
+    const baseUrl = location.origin + window.PUBLIC_URL_PREFIX + process.env.BK_AJAX_URL_PREFIX;
     // 构造 url 对象
     const urlObject: URL = new URL(url, baseUrl);
     // get 请求需要将参数拼接到url上
