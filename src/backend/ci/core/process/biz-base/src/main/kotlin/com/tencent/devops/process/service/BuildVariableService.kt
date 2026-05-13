@@ -46,7 +46,10 @@ import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
+import com.tencent.devops.process.utils.PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX
+import com.tencent.devops.process.utils.PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -58,6 +61,30 @@ class BuildVariableService @Autowired constructor(
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val redisOperation: RedisOperation
 ) {
+
+    /**
+     * 大变量懒加载器的 Caffeine 缓存字符上限。
+     * 由 `pipeline.variables.lazyLoad.cacheMax` Spring 配置覆盖，默认 [PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX]（8M）。
+     *
+     * 注意：该配置**只影响新构建中懒加载大变量的内部缓存大小**，
+     * 历史构建（单变量最多 4K）走 smallVars 直读路径，对其零影响。
+     */
+    @Value("\${pipeline.variables.lazyLoad.cacheMax:$PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX}")
+    private var lazyLoadCacheMax: Long = PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX.toLong()
+
+    /**
+     * 大变量懒加载器的单会话总加载字节硬上限。
+     * 由 `pipeline.variables.lazyLoad.budgetMax` Spring 配置覆盖，默认 [PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX]（32M）。
+     *
+     * 超过该值时抛出
+     * [com.tencent.devops.process.service.BuildVarOverflowBudgetExceededException]，
+     * 阻止异常脚本一次性把多个 4M 大变量灌入内存导致 OOM。
+     *
+     * 注意：该配置**只影响新构建中懒加载大变量的总量阈值**，
+     * 历史构建（单变量最多 4K）走 smallVars 直读路径，**永远不会触发该阈值**。
+     */
+    @Value("\${pipeline.variables.lazyLoad.budgetMax:$PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX}")
+    private var lazyLoadBudgetMax: Long = PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX.toLong()
 
     /**
      * 获取构建执行次数（重试次数+1），如没有重试过，则为1
@@ -75,7 +102,11 @@ class BuildVariableService @Autowired constructor(
     }
 
     /**
-     * 将模板语法中的[template]模板字符串替换成当前构建[buildId]下对应的真正的字符串
+     * 将模板语法中的[template]模板字符串替换成当前构建[buildId]下对应的真正的字符串。
+     *
+     * 注意：旧风格 `${xxx}` 模板**不会**触发大变量懒加载——若变量是溢出值，
+     * 这里看到的是引用串 `__BK_OVF__:<len>`。这与历史 `$xxx`/`${xxx}` 行为一致：
+     * 旧语法不应感知到大值，避免脚本里直接展开 4M 内容造成日志爆炸 / OOM。
      */
     fun replaceTemplate(projectId: String, buildId: String, template: String?): String {
         return TemplateFastReplaceUtils.replaceTemplate(templateString = template) { templateWord ->
@@ -120,11 +151,16 @@ class BuildVariableService @Autowired constructor(
     /**
      * 获取构建变量"快照"。
      *
-     * 与 [getAllVariable] 不同的是，本方法**始终**返回原始（含摘要前缀）的小值 +
-     * 溢出键集合 + 懒加载器。仅在"需要按 ${{ xxx }} 表达式求值"的场景使用，
-     * 普通查询继续使用 [getAllVariable]，不会改变现有行为与内存占用。
+     * 与 [getAllVariable] 不同的是，本方法**始终**返回原始值（小变量真实值 + 大变量引用串）+
+     * 溢出键集合 + 懒加载器。
      *
-     * 仅当 [keys] 命中"溢出键"时才会触发表查询，避免无效流量。
+     * 仅在"需要按 ${{ xxx }} 表达式求值"的场景使用，普通查询继续使用 [getAllVariable]，
+     * 不会改变现有行为与内存占用。
+     *
+     * 内存安全：
+     *  - 返回的 [BuildVariableSnapshot.largeValueLoader] 由 [BuildVarOverflowLoader] 提供，
+     *    具备 Caffeine 字符加权缓存与会话级总字节预算控制；
+     *  - 调用方应将快照视为"会话级"对象，**不要**长期持有，避免持有缓存中的大变量。
      */
     fun getVariableSnapshot(
         projectId: String,
@@ -139,9 +175,17 @@ class BuildVariableService @Autowired constructor(
             keys = keys
         )
         val largeKeys = dataMap.entries.asSequence()
-            .filter { BuildVarOverflowUtils.isOverflowSummary(it.value) }
+            .filter { BuildVarOverflowUtils.isOverflowReference(it.value) }
             .map { it.key }
             .toSet()
+        val loader = BuildVarOverflowLoader(
+            overflowDao = pipelineBuildVarOverflowDao,
+            dslContext = commonDslContext,
+            projectId = projectId,
+            buildId = buildId,
+            maxCacheBytes = lazyLoadCacheMax,
+            maxBudgetBytes = lazyLoadBudgetMax
+        )
         return BuildVariableSnapshot(
             smallVars = dataMap,
             largeKeys = largeKeys,
@@ -149,7 +193,7 @@ class BuildVariableService @Autowired constructor(
                 if (key !in largeKeys) {
                     dataMap[key]
                 } else {
-                    pipelineBuildVarOverflowDao.getValue(commonDslContext, projectId, buildId, key)
+                    loader.load(key)
                 }
             }
         )
@@ -157,7 +201,11 @@ class BuildVariableService @Autowired constructor(
 
     /**
      * 单变量按需获取真实值（含溢出表）。
-     * 主要供 ${{ xxx }} 表达式按需求值时调用。
+     * 主要供 ${{ xxx }} 表达式按需求值或 REST 单变量查询使用。
+     *
+     * 注：本方法每次调用都会新建一个 [BuildVarOverflowLoader]——只走单条查询，
+     * 没有跨调用的缓存收益，但相应也不持有任何热数据；适合"零碎、单点"使用。
+     * 若需要在一次会话中多次访问大变量，请改用 [getVariableSnapshot]。
      */
     fun getVariableValue(
         projectId: String,
@@ -170,8 +218,15 @@ class BuildVariableService @Autowired constructor(
             buildId = buildId,
             keys = setOf(varName)
         )[varName]
-        return if (BuildVarOverflowUtils.isOverflowSummary(main)) {
-            pipelineBuildVarOverflowDao.getValue(commonDslContext, projectId, buildId, varName)
+        return if (BuildVarOverflowUtils.isOverflowReference(main)) {
+            BuildVarOverflowLoader(
+                overflowDao = pipelineBuildVarOverflowDao,
+                dslContext = commonDslContext,
+                projectId = projectId,
+                buildId = buildId,
+                maxCacheBytes = lazyLoadCacheMax,
+                maxBudgetBytes = lazyLoadBudgetMax
+            ).load(varName)
         } else {
             main
         }
@@ -235,7 +290,6 @@ class BuildVariableService @Autowired constructor(
     fun deleteWritableVars(dslContext: DSLContext, projectId: String, buildId: String) {
         // 先删大变量溢出，再删主表，避免出现"主表删除而溢出表残留"的孤儿。
         // 注意：当前 deleteWritableVars 仅清理 readOnly=false 的变量，溢出表不区分 readOnly，
-        // 此处采用"全量删除溢出 + 重新写回 readOnly=true 的溢出"模式过于复杂，
         // 业务侧的调用方（PipelineBuildRetryService 等）实际是为重试做"清理可写变量"，
         // 此时 readOnly=true 的内置变量不会有溢出值，全量删除溢出表数据是安全的。
         pipelineBuildVarOverflowDao.deleteByBuildId(commonDslContext, projectId, buildId)
@@ -280,12 +334,12 @@ class BuildVariableService @Autowired constructor(
         rewriteReadOnly: Boolean? = null
     ) {
         val rawValue = value.toString()
-        // 单值就先做硬上限校验，避免大对象进入锁内
-        rejectIfHardOversize(buildId, name, rawValue)
+        // 超 4M：直接丢弃 + WARN，避免单条变量值撑爆 mediumtext / 内存
+        if (!acceptWithinHardLimit(buildId, name, rawValue)) return
         val redisLock = PipelineBuildVarLock(redisOperation, buildId, name)
         try {
             redisLock.lock()
-            // 1) 先把溢出值写入溢出表，再让主表写"摘要"，保证一致性
+            // 1) 先把溢出值写入溢出表，再让主表写"引用"，保证一致性
             persistOverflowIfNeeded(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -335,9 +389,9 @@ class BuildVariableService @Autowired constructor(
         buildId: String,
         variables: Map<String, BuildParameters>
     ) {
-        val params = variables.map { it.value }
-        // 启动阶段也做溢出处理，便于一开始就让大变量进入溢出表
-        params.forEach { rejectIfHardOversize(buildId, it.key, it.value.toString()) }
+        // 启动阶段先做硬上限过滤，避免把 >4M 的脏数据继续传下去
+        val params = variables.values.filter { acceptWithinHardLimit(buildId, it.key, it.value.toString()) }
+        if (params.isEmpty()) return
         val overflowParams = params.filter { BuildVarOverflowUtils.shouldOverflow(it.value.toString()) }
         if (overflowParams.isNotEmpty()) {
             pipelineBuildVarOverflowDao.batchSave(
@@ -388,8 +442,13 @@ class BuildVariableService @Autowired constructor(
                 )
             }
         }
-        // 入库前统一做硬上限校验：超 4M 直接抛错而不是默默丢数据
-        pipelineBuildParameters.forEach { rejectIfHardOversize(buildId, it.key, it.value.toString()) }
+        // 入库前统一做硬上限校验：超 4M 直接丢弃并 WARN，避免堆积大对象在内存中
+        val acceptedParameters = pipelineBuildParameters
+            .filter { acceptWithinHardLimit(buildId, it.key, it.value.toString()) }
+        if (acceptedParameters.isEmpty()) {
+            LOG.warn("$buildId|batchSetVariable|all params dropped after hard-limit filter")
+            return
+        }
 
         val redisLock = PipelineBuildVarLock(redisOperation, buildId)
         try {
@@ -400,7 +459,7 @@ class BuildVariableService @Autowired constructor(
             val buildVarMap = pipelineBuildVarDao.getVars(dslContext, projectId, buildId)
             val insertBuildParameters = mutableListOf<BuildParameters>()
             val updateBuildParameters = mutableListOf<BuildParameters>()
-            pipelineBuildParameters.forEach {
+            acceptedParameters.forEach {
                 if (!buildVarMap.containsKey(it.key)) {
                     insertBuildParameters.add(it)
                 } else {
@@ -409,7 +468,7 @@ class BuildVariableService @Autowired constructor(
             }
             // 1) 先把溢出值写入溢出表（无论 insert 还是 update 路径）
             watch.start("overflowSave")
-            val overflowParams = pipelineBuildParameters
+            val overflowParams = acceptedParameters
                 .filter { BuildVarOverflowUtils.shouldOverflow(it.value.toString()) }
             if (overflowParams.isNotEmpty()) {
                 pipelineBuildVarOverflowDao.batchSave(
@@ -421,7 +480,7 @@ class BuildVariableService @Autowired constructor(
                 )
             }
             // 2) 由小变大、由大变小的回退也要清理：把不再溢出的 key 从溢出表清掉
-            val shrunkKeys = pipelineBuildParameters
+            val shrunkKeys = acceptedParameters
                 .filter { !BuildVarOverflowUtils.shouldOverflow(it.value.toString()) }
                 .map { it.key }
             if (shrunkKeys.isNotEmpty()) {
@@ -489,39 +548,24 @@ class BuildVariableService @Autowired constructor(
     }
 
     /**
-     * 便捷方法：基于 [getVariableSnapshot] 构造一个可直接喂给
-     * [com.tencent.devops.common.pipeline.EnvReplacementParser.parse] 的"快照入参组"。
+     * 单变量硬上限校验：超过 [BuildVarOverflowUtils.HARD_MAX_LENGTH]（默认 4M）则**直接丢弃**。
      *
-     * 调用方在替换大量片段时可以一次构造、多次复用，避免每次都查询溢出表。
+     * 设计取舍：
+     *  - 抛异常会让一次 batch save 整体失败，影响构建；
+     *  - 静默截断会让用户拿到错乱的数据；
+     *  - 选择"丢弃 + WARN"更接近过去 `failIfVariableInvalid=false` 的语义，
+     *    且与 worker 端 [com.tencent.devops.worker.common.task.TaskDaemon] 的过滤行为一致，
+     *    也是防止 16G/Pod 内存被一条异常变量击穿的关键防线。
+     *
+     * @return true 表示通过校验可以继续保存；false 表示已被丢弃。
      */
-    fun buildExpressionParseInputs(
-        projectId: String,
-        pipelineId: String,
-        buildId: String
-    ): ExpressionParseInputs {
-        val snapshot = getVariableSnapshot(projectId, pipelineId, buildId)
-        return ExpressionParseInputs(
-            contextMap = snapshot.smallVars,
-            overflowKeys = snapshot.largeKeys,
-            overflowLoader = snapshot.largeValueLoader
-        )
-    }
-
-    /** 表达式替换的标准入参组。 */
-    data class ExpressionParseInputs(
-        val contextMap: Map<String, String>,
-        val overflowKeys: Set<String>,
-        val overflowLoader: (String) -> String?
-    )
-
-    private fun rejectIfHardOversize(buildId: String, key: String, rawValue: String) {
-        if (rawValue.length <= BuildVarOverflowUtils.HARD_MAX_LENGTH) return
-        // 直接 WARN，让上游决定是抛异常还是降级。这里采用降级策略：
-        // 截断到硬上限，避免单条变量值撑爆 mediumtext。
+    private fun acceptWithinHardLimit(buildId: String, key: String, rawValue: String): Boolean {
+        if (rawValue.length <= BuildVarOverflowUtils.HARD_MAX_LENGTH) return true
         LOG.warn(
             "$buildId|VAR_HARD_OVERSIZE|key=$key|len=${rawValue.length}|" +
-                "hardMax=${BuildVarOverflowUtils.HARD_MAX_LENGTH}, will be truncated"
+                "hardMax=${BuildVarOverflowUtils.HARD_MAX_LENGTH}|dropped"
         )
+        return false
     }
 
     companion object {

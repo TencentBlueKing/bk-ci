@@ -240,12 +240,66 @@ const val PIPELINE_VARIABLES_STRING_LENGTH_MAX = 4000
 const val PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX = 4 * 1024 * 1024
 
 /**
- * 大变量主表占位符前缀。
- * 主表 VALUE 列写入摘要值时附带该前缀 + 原始长度，
- * 配合 OVERFLOW 表实现"按需加载完整值"。
- * 形如：__BK_OVF__:<length>:<truncated value>
+ * 大变量主表引用前缀。
+ * 当变量值超过 [PIPELINE_VARIABLES_STRING_LENGTH_MAX]，主表只存"纯引用"：
+ *
+ *     __BK_OVF__:<originalLength>
+ *
+ * 真实值放在 T_PIPELINE_BUILD_VAR_OVERFLOW，只在 ${{ xxx }} 表达式按需求值时加载。
+ * 主表不再保留任何截断的真实内容，避免：
+ *  - 现网无意义存储与传输放大；
+ *  - 敏感数据被截断后仍泄露在主表 / 旧 API 响应中。
  */
 const val PIPELINE_VARIABLES_OVERFLOW_PREFIX = "__BK_OVF__:"
+
+/**
+ * 单次表达式求值过程中，懒加载器允许"已实际加载"的总字符数硬上限。
+ *
+ * 设计意图：**硬上限防御性内存保护**——超过后立即抛 [BuildVarOverflowBudgetExceededException]，
+ * 终止本次表达式求值，避免新构建在恶意/异常脚本中线性放大成 OOM。
+ *
+ * 对**历史业务**的影响：**零影响**。
+ *  - T_PIPELINE_BUILD_VAR.VALUE 是 varchar(4000)，旧 build 的单变量最多 4K；
+ *  - 历史构建变量全部走 [com.tencent.devops.process.pojo.BuildVariableSnapshot].smallVars 直读路径，
+ *    **根本不会触发 loader.load**，与此预算完全无交集。
+ *
+ * 对**新业务**的影响：
+ *  - 启用大变量后，一次表达式如果合理地展开了 ≤ 8 个 4M 变量，仍然在 32M 预算内；
+ *  - 一旦超出，按"用户脚本误用"处理：硬错而非 OOM。
+ *
+ * **运营可配置**：通过 Spring 配置覆盖
+ *     `pipeline.variables.lazyLoad.budgetMax = 67108864`  # 例：调大到 64M
+ *  详见 [PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX_KEY]。
+ *
+ * 默认 32M ≈ 一次评估展开 8 个 4M 变量；现网 16G/Pod、最坏 N 并发会话峰值 ≤ N×32M，仍有充足冗余。
+ */
+const val PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX = 32 * 1024 * 1024
+
+/**
+ * Spring 配置键：覆盖 [PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX] 默认值。
+ * 单位：字符数（不是字节，Java string 内部仍按 char）。
+ */
+const val PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX_KEY = "pipeline.variables.lazyLoad.budgetMax"
+
+/**
+ * 懒加载器内 Caffeine 缓存允许保留的最大字符数（maximumWeight，weigher=string.length）。
+ *
+ * 该缓存仅在"同一次构建变量快照（BuildVariableSnapshot）的生命周期内"有效，
+ * 用来避免同一表达式中多次访问同一大变量产生 N+1 查询。
+ *
+ * 默认 8M：远小于单变量硬上限，单 Pod × 多会话总占用可控；
+ * 单值大于此上限时不进入缓存（避免 Caffeine 接受后立即驱逐造成的"独占缓存"瞬时尖峰）。
+ *
+ * **运营可配置**：通过 Spring 配置覆盖
+ *     `pipeline.variables.lazyLoad.cacheMax = 16777216`  # 例：调大到 16M
+ *  详见 [PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX_KEY]。
+ */
+const val PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX = 8 * 1024 * 1024
+
+/**
+ * Spring 配置键：覆盖 [PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX] 默认值。
+ */
+const val PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX_KEY = "pipeline.variables.lazyLoad.cacheMax"
 
 const val PIPELINE_TIME_START = "BK_CI_BUILD_START_TIME" // "pipeline.time.start"
 

@@ -109,44 +109,6 @@ class PipelineBuildVarOverflowDao {
             .fetchOne(fValue)
     }
 
-    /** 一次取多个大变量值，主要用于"必须立即聚合"的极少数场景。 */
-    fun getValues(
-        dslContext: DSLContext,
-        projectId: String,
-        buildId: String,
-        keys: Collection<String>
-    ): Map<String, String> {
-        if (keys.isEmpty()) return emptyMap()
-        val result = dslContext.select(fKey, fValue).from(table)
-            .where(fBuildId.eq(buildId))
-            .and(fProjectId.eq(projectId))
-            .and(fKey.`in`(keys))
-            .fetch()
-        val map = mutableMapOf<String, String>()
-        result.forEach { rec ->
-            val k = rec.get(fKey)
-            val v = rec.get(fValue)
-            if (k != null && v != null) {
-                map[k] = v
-            }
-        }
-        return map
-    }
-
-    /** 仅返回此构建中存在溢出的 KEY 列表，用于构建懒加载快照。 */
-    fun listKeys(
-        dslContext: DSLContext,
-        projectId: String,
-        buildId: String
-    ): Set<String> {
-        return dslContext.select(fKey).from(table)
-            .where(fBuildId.eq(buildId))
-            .and(fProjectId.eq(projectId))
-            .fetch(fKey)
-            .filterNotNull()
-            .toSet()
-    }
-
     fun deleteByKey(
         dslContext: DSLContext,
         projectId: String,
@@ -168,18 +130,6 @@ class PipelineBuildVarOverflowDao {
         return dslContext.deleteFrom(table)
             .where(fBuildId.eq(buildId))
             .and(fProjectId.eq(projectId))
-            .execute()
-    }
-
-    fun deleteByBuildIds(
-        dslContext: DSLContext,
-        projectId: String,
-        buildIds: List<String>
-    ): Int {
-        if (buildIds.isEmpty()) return 0
-        return dslContext.deleteFrom(table)
-            .where(fProjectId.eq(projectId))
-            .and(fBuildId.`in`(buildIds))
             .execute()
     }
 

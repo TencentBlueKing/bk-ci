@@ -116,21 +116,23 @@ class TaskDaemon(
         if (allEnv.isNotEmpty()) {
             allEnv.forEach { (key, value) ->
                 if (value.length > PARAM_MAX_LENGTH) {
-                    // 大变量值现在改为服务端"溢出表"按需加载，Worker 端只发警告并照常上报，
-                    // 不再丢弃变量值；服务端 BuildVariableService 会自动把超过 4K 的部分写入溢出表。
-                    LoggerService.addWarnLine(
-                        "Notice, variable [$key] is larger than ${PARAM_MAX_LENGTH_WARN} characters" +
-                            "(len=${value.length}), it will be stored in the overflow table; " +
-                            "use \${{ $key }} expression to reference it on the server side."
-                    )
-                }
-                if (value.length > PARAM_MAX_LENGTH) {
-                    // 极端情况防御：超过硬上限直接拒绝上报，避免单条记录撑爆传输/数据库。
+                    // 极端情况防御：超过硬上限（4M）直接拒绝上报，避免单条记录撑爆传输/数据库。
+                    // 与服务端 BuildVariableService.acceptWithinHardLimit 协同：
+                    // 即便此处漏过，服务端仍会丢弃并 WARN，构建不会因此失败。
                     LoggerService.addWarnLine(
                         "Warning, assignment to variable [$key] failed, " +
                             "more than $PARAM_MAX_LENGTH characters(len=${value.length})"
                     )
                     return@forEach
+                }
+                if (value.length > PARAM_MAX_LENGTH_WARN) {
+                    // 4K~4M 区间：照常上报，但提醒用户旧风格 `$xxx`/`${xxx}` 不会展开真实值，
+                    // 必须改用 ${{ xxx }} 表达式才能在服务端解析到完整值。
+                    LoggerService.addWarnLine(
+                        "Notice, variable [$key] is larger than $PARAM_MAX_LENGTH_WARN characters" +
+                            "(len=${value.length}), it will be stored in the overflow table; " +
+                            "use \${{ $key }} expression to reference it on the server side."
+                    )
                 }
                 if (SensitiveValueService.matchSensitiveValue(value)) {
                     LoggerService.addWarnLine("Warning, credentials cannot be assigned to variable[$key]")

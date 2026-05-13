@@ -102,10 +102,11 @@ object ExprReplacementUtil {
     /**
      * 构造表达式上下文，并允许把"溢出键"挂上懒加载节点。
      *
-     * - [variables] 中包含的"溢出键"对应的 value 仅是摘要（含 [com.tencent.devops.common.expression.context.LazyStringContextData] 替换前的占位字符串），
-     *   表达式真正访问该 key 时才通过 [overflowLoader] 拉取完整值；
+     * - [variables] 中包含的"溢出键"对应 value 是**纯引用串** `__BK_OVF__:<len>`；
+     *   表达式真正访问该 key 时才通过 [overflowLoader] 拉取完整值，
+     *   节省同一次评估、不同条任务都需要全量加载的内存峰值；
      * - 当前实现仅支持"单层"溢出键替换：若键名不含 `.`，可被替换为
-     *   [LazyStringContextData]；含 `.` 的复合键暂不替换（保留摘要值），
+     *   [LazyStringContextData]；含 `.` 的复合键暂不替换（保留引用串），
      *   原因是这种用法在流水线变量场景下极少出现，避免引入更复杂的路径替换逻辑。
      */
     fun getCustomExecutionContextByMap(

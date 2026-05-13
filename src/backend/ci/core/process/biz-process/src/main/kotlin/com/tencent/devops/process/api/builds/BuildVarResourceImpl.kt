@@ -41,6 +41,7 @@ import com.tencent.devops.process.enums.VariableType
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineContextService
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import org.apache.commons.lang3.StringUtils
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -91,7 +92,22 @@ class BuildVarResourceImpl @Autowired constructor(
             taskId = taskId,
             variables = variables
         )
-        return Result(variables[varName] ?: allContext[varName] ?: allContext[alisName])
+        val candidate = variables[varName] ?: allContext[varName] ?: allContext[alisName]
+        // 单变量查询接口属于"零碎、单点"使用场景：如果命中大变量引用，则按需懒加载真实值。
+        // 这样既保持向后兼容（旧调用方拿到的是真实值，而非引用串），又只产生一次溢出表查询，
+        // 不会触发 BuildVarOverflowLoader 的批量内存放大。
+        val finalValue = if (BuildVarOverflowUtils.isOverflowReference(candidate)) {
+            val keyToLoad = when {
+                BuildVarOverflowUtils.isOverflowReference(variables[varName]) -> varName
+                BuildVarOverflowUtils.isOverflowReference(allContext[varName]) -> varName
+                BuildVarOverflowUtils.isOverflowReference(allContext[alisName]) && alisName.isNotBlank() -> alisName
+                else -> null
+            }
+            keyToLoad?.let { buildVariableService.getVariableValue(projectId, buildId, it) } ?: candidate
+        } else {
+            candidate
+        }
+        return Result(finalValue)
     }
 
     fun checkPermission(projectId: String, pipelineId: String) {

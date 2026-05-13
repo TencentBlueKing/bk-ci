@@ -443,15 +443,6 @@ class PipelineBuildService(
 //        return originStartParams
     }
 
-    @Deprecated(
-        message = "Replaced by overflow-aware variable storage. Use rejectIfVariableHardOversize instead.",
-        replaceWith = ReplaceWith("rejectIfVariableHardOversize(pipelineParamMap)")
-    )
-    fun failIfVariableInvalid(pipelineParamMap: MutableMap<String, BuildParameters>) {
-        // 兼容旧调用方：始终走硬上限校验，不再使用 4K 阈值。
-        rejectIfVariableHardOversize(pipelineParamMap)
-    }
-
     /**
      * 仅做"硬上限 4M"防御性校验。
      * 超过 [com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX]

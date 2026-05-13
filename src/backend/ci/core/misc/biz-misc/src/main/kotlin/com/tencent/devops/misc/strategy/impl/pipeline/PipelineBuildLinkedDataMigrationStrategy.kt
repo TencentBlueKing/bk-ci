@@ -54,13 +54,9 @@ class PipelineBuildLinkedDataMigrationStrategy(
             override fun migrate(migratingDslContext: DSLContext, records: List<TPipelineBuildVarRecord>) =
                 processDataMigrateDao.migratePipelineBuildVarData(migratingDslContext, records)
         },
-        // 迁移 T_PIPELINE_BUILD_VAR_OVERFLOW 相关表数据，与 T_PIPELINE_BUILD_VAR 一一对应
-        object : RecordHandler<Map<String, Any?>> {
-            override fun fetch(dslContext: DSLContext, projectId: String, buildIds: List<String>) =
-                processDataMigrateDao.getPipelineBuildVarOverflowRows(dslContext, projectId, buildIds)
-            override fun migrate(migratingDslContext: DSLContext, records: List<Map<String, Any?>>) =
-                processDataMigrateDao.migratePipelineBuildVarOverflowData(migratingDslContext, records)
-        },
+        // 注：T_PIPELINE_BUILD_VAR_OVERFLOW 不在此处理。由于 mediumtext 字段单条最大 ~16M，
+        // 一次性按 SHORT_PAGE_SIZE（多个 buildId）批量加载会在迁移服务侧造成内存峰值。
+        // 改为在 migrateBuildLinkedData 中按 buildId 流式迁移，参见 [migrateOverflowPerBuild]。
         // 迁移T_PIPELINE_PAUSE_VALUE相关表数据
         object : RecordHandler<TPipelinePauseValueRecord> {
             override fun fetch(dslContext: DSLContext, projectId: String, buildIds: List<String>) =
@@ -235,6 +231,13 @@ class PipelineBuildLinkedDataMigrationStrategy(
                         projectId = projectId,
                         migratingDslContext = migratingShardingDslContext
                     )
+                    // 大变量溢出表单独按 buildId 流式迁移，避免一次性把多 build 的 mediumtext 全部加载到内存
+                    migrateOverflowPerBuild(
+                        buildIds = batchIds,
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        migratingDslContext = migratingShardingDslContext
+                    )
                 }
 
                 // 迁移通用表
@@ -245,6 +248,42 @@ class PipelineBuildLinkedDataMigrationStrategy(
                     projectId = projectId,
                     migratingDslContext = migratingShardingDslContext
                 )
+            }
+        }
+    }
+
+    /**
+     * 流式迁移单个项目下若干 buildId 对应的 T_PIPELINE_BUILD_VAR_OVERFLOW 记录。
+     *
+     * 设计要点：
+     *  - 一次只 fetch 一个 buildId 的溢出记录。即使该 build 包含多条 4M 大变量，
+     *    此处单次内存峰值也只有"该 build 的所有大变量字符之和"，不会跨 build 叠加；
+     *  - 迁移失败按"快速失败"处理，避免迁移过程中"主表已迁、溢出表丢失"造成数据不一致；
+     *  - 表不存在的兜底由 [com.tencent.devops.misc.dao.process.ProcessDataMigrateDao]
+     *    内部 swallow，便于灰度阶段未建表的环境继续推进。
+     */
+    private fun migrateOverflowPerBuild(
+        buildIds: List<String>,
+        dslContext: DSLContext,
+        projectId: String,
+        migratingDslContext: DSLContext
+    ) {
+        buildIds.forEach { buildId ->
+            try {
+                val rows = processDataMigrateDao.getPipelineBuildVarOverflowRows(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    buildIds = listOf(buildId)
+                )
+                if (rows.isNotEmpty()) {
+                    processDataMigrateDao.migratePipelineBuildVarOverflowData(
+                        migratingShardingDslContext = migratingDslContext,
+                        rows = rows
+                    )
+                }
+            } catch (e: Exception) {
+                logger.error("Failed to migrate overflow data for build[$buildId]", e)
+                throw e
             }
         }
     }

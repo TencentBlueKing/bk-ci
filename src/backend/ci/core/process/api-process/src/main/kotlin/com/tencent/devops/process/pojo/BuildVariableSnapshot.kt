@@ -30,29 +30,41 @@ package com.tencent.devops.process.pojo
 /**
  * 构建变量快照。
  *
- * 包含两类信息：
- * 1. [smallVars]：所有不超过 4K 的变量（含被截断的"摘要值"）。
- *    保持兼容老的 `$xxx`、`${xxx}` 替换逻辑：旧脚本最多看到摘要值，
- *    需要完整值时必须使用 `${{ xxx }}` 表达式语法。
- * 2. [largeKeys]：本次构建中存在溢出的变量名集合。
- * 3. [largeValueLoader]：当 ${{ xxx }} 表达式访问溢出变量时按需调用，
- *    避免一次性把所有大值加载进内存。
+ * 数据语义：
+ *  1. [smallVars]：来源于 T_PIPELINE_BUILD_VAR 的全部变量；
+ *     - 对小变量（≤ 4K），其值为真实值；
+ *     - 对大变量（> 4K），其值是**纯引用串** `__BK_OVF__:<originalLength>`，
+ *       不包含任何真实内容。
+ *
+ *     保持向后兼容：`$xxx` / `${xxx}` 旧替换逻辑直接看到的是引用串本身，
+ *     既不会"显示一半数据"，也不会发生敏感信息泄漏。需要真实值的脚本必须显式
+ *     改用 `${{ xxx }}` 表达式语法。
+ *
+ *  2. [largeKeys]：本次构建中存在溢出的变量名集合（即上面引用串所对应的 keys）。
+ *
+ *  3. [largeValueLoader]：当 `${{ xxx }}` 表达式访问溢出变量时按需调用。
+ *     由 [com.tencent.devops.process.service.BuildVarOverflowLoader] 实例提供，
+ *     内置 Caffeine 字符加权 LRU 缓存与"会话级"总加载字节硬上限（可配置）。
+ *     历史 build 的变量最大 4K，全部走 [smallVars] 路径，**不会**触发懒加载器。
+ *
+ * 生命周期：
+ *  - 实例**仅适合在一次"表达式求值会话"内重用**（如一次接口调用、一个任务的参数解析）；
+ *  - 不要长期持有该对象——它捕获了懒加载器的内部 Caffeine 缓存，长期持有会
+ *    阻止大值被 GC 回收。
  */
 data class BuildVariableSnapshot(
     val smallVars: Map<String, String>,
     val largeKeys: Set<String>,
     val largeValueLoader: (String) -> String?
 ) {
-    /** 同 [smallVars]，便于向后兼容旧 API 直接以 [Map] 返回。 */
-    val asMap: Map<String, String> get() = smallVars
-
-    /** 是否有溢出的大变量。 */
-    val hasOverflow: Boolean get() = largeKeys.isNotEmpty()
-
     /**
-     * 获取变量值。如果 [key] 是溢出键，则按需加载完整值；否则直接读 [smallVars]。
-     * 注意：该方法只供"少量、单点"调用使用，不要在循环中遍历全部 [largeKeys] —
-     * 这会等价于一次性把所有大值加载到内存，违背"按需加载"的初衷。
+     * 获取变量值。
+     *  - 小变量：直接读 [smallVars]；
+     *  - 大变量（在 [largeKeys] 中）：触发按需加载。
+     *
+     * 注意：该方法只供"少量、单点"调用使用，**不要**在循环中遍历全部 [largeKeys] ——
+     * 这会等价于一次性把所有大值加载进内存，违背"按需加载"的初衷，
+     * 并可能触发 [com.tencent.devops.process.service.BuildVarOverflowBudgetExceededException]。
      */
     fun resolve(key: String): String? {
         if (key in largeKeys) {
