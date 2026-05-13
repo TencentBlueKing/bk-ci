@@ -53,7 +53,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
-import com.tencent.devops.project.dao.UserDao
+import com.tencent.devops.project.dao.UserDailyFirstAndLastLoginDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -75,6 +75,7 @@ import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -103,7 +104,7 @@ class ProjectLocalService @Autowired constructor(
     private val bkTag: BkTag,
     private val commonConfig: CommonConfig,
     private val bkRepoConfig: BkRepoConfig,
-    private val userDao: UserDao
+    private val userDailyFirstAndLastLoginDao: UserDailyFirstAndLastLoginDao
 ) {
 
     @Value("\${tag.stream:#{null}}")
@@ -326,6 +327,7 @@ class ProjectLocalService @Autowired constructor(
     fun getOrCreatePersonalProject(userId: String, description: String? = null): ProjectVO {
         val personalProject = projectDao.getFirstPersonalProjectByCreator(dslContext, userId)
         if (personalProject != null) {
+            logger.info("personal project already exists|userId=$userId|projectCode=${personalProject.englishName}")
             return ProjectUtils.packagingBean(personalProject)
         }
 
@@ -458,32 +460,38 @@ class ProjectLocalService @Autowired constructor(
             val traceId = MDC.get(TraceTag.BIZID)
             var page = 1
             var successCount = 0
+            val loginSince = LocalDateTime.now().minusMonths(RECENT_LOGIN_LOOKBACK_MONTHS)
             var continueFlag = true
             while (continueFlag) {
                 val pageLimit = PageUtil.convertPageSizeToSQLLimit(page, BATCH_PRE_PROJECT_PAGE_SIZE)
-                val users = userDao.listNormalUsers(dslContext, pageLimit.limit, pageLimit.offset)
-                if (users.isEmpty()) {
+                val userIds = userDailyFirstAndLastLoginDao.listDistinctUserIdsLoggedInSince(
+                    dslContext = dslContext,
+                    since = loginSince,
+                    limit = pageLimit.limit,
+                    offset = pageLimit.offset
+                )
+                if (userIds.isEmpty()) {
                     break
                 }
-                val futures = users.map { record ->
+                val futures = userIds.map { userId ->
                     CompletableFuture.supplyAsync({
                         MDC.put(TraceTag.BIZID, traceId)
                         try {
-                            logger.info("create personal project for ${record.userId}")
+                            logger.info("create personal project for $userId")
                             getOrCreatePersonalProject(
-                                userId = record.userId,
-                                description = "personal project for ${record.userId}"
+                                userId = userId,
+                                description = "personal project for $userId"
                             )
                             1
                         } catch (e: Exception) {
-                            logger.warn("create personal project for ${record.userId} fail!", e)
+                            logger.warn("create personal project for $userId fail!", e)
                             0
                         }
                     }, batchPreProjectWorkerExecutor)
                 }
                 CompletableFuture.allOf(*futures.toTypedArray()).join()
                 successCount += futures.sumOf { it.join() }
-                if (users.size < pageLimit.limit) {
+                if (userIds.size < pageLimit.limit) {
                     continueFlag = false
                 } else {
                     page++
@@ -868,6 +876,7 @@ class ProjectLocalService @Autowired constructor(
         private const val PROJECT_LIST = "project_list"
         private const val PROJECT_CREATE = "project_create"
         private const val BATCH_PRE_PROJECT_PAGE_SIZE = 100
+        private const val RECENT_LOGIN_LOOKBACK_MONTHS = 3L
         private const val PRE_PROJECT_WORKER_THREADS = 5
     }
 }

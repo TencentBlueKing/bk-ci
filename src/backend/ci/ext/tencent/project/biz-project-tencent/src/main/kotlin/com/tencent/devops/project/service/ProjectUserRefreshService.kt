@@ -41,11 +41,11 @@ import com.tencent.devops.project.pojo.UserInfo
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.tof.TOFService
-import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 
 @Service
 @Suppress("ALL")
@@ -56,8 +56,7 @@ class ProjectUserRefreshService @Autowired constructor(
     val projectUserDao: ProjectUserDao,
     val projectFreshDao: ProjectFreshDao,
     val projectDispatcher: SampleEventDispatcher,
-    val dslContext: DSLContext,
-    val projectLocalService: ProjectLocalService
+    val dslContext: DSLContext
 ) {
     private val executorService = Executors.newSingleThreadExecutor()
 
@@ -147,9 +146,6 @@ class ProjectUserRefreshService @Autowired constructor(
         userDao.create(
             dslContext = dslContext,
             userDeptDetail = tofDeptInfo
-        )
-        projectLocalService.batchGetOrCreatePersonalProjectsForUserIds(
-            userIds = listOf(userId)
         )
         return tofDeptInfo
     }
