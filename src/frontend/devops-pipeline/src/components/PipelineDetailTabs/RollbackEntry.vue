@@ -156,8 +156,9 @@
                     : this.$t('edit')
             },
             draftHintTitle () {
+                // 如果是分支版本，要使用hasDraftPipeline来判断草稿
                 switch (true) {
-                    case this.hasDraft && this.isActiveBranchVersion:
+                    case this.hasDraftPipeline && this.isActiveBranchVersion && this.version !== this.pipelineInfo?.baseVersion:
                         return this.$t('template.templateCoverWarning')
                     case this.hasDraft:
                         return this.$t('hasDraft')
@@ -217,7 +218,6 @@
                     this.showDraftConfirmDialog()
                     return
                 }
-
                 await this.checkDraftStatusAndEdit()
             },
 
@@ -234,8 +234,11 @@
                     
                     this.draftStatus = result.status
                     this.draftSaveInfo = result.draftSaveInfo
-                    // 状态为NORMAL时，直接编辑
-                    if (this.draftStatus === DRAFT_STATUS.NORMAL) {
+                    
+                    // 状态为NORMAL或BRANCH时，并且是编辑，直接去编辑
+                    // 版本列表用 isRollback 判断，非版本列表用 clickActionType 判断
+                    const isEditAction = this.isVersionList ? !this.isRollback : this.clickActionType === 'edit'
+                    if (isEditAction && (this.draftStatus === DRAFT_STATUS.NORMAL || this.draftStatus === DRAFT_STATUS.BRANCH)) {
                         this.goEdit(this.draftVersion ?? this.version)
                         return
                     }
@@ -247,22 +250,6 @@
                         message: error.message || error
                     })
                 }
-            },
-
-            // 检查约束模式流水线是否允许回滚
-            async checkRollbackPermission () {
-                const res = await this.checkTemplatePipelineRollback({
-                    ...this.$route.params,
-                    version: this.version
-                })
-                if (!res.data) {
-                    this.$showTips({
-                        theme: 'error',
-                        message: this.$t('template.templatePipelineRollbackNotAllowedTips')
-                    })
-                    return false
-                }
-                return true
             },
             showDraftConfirmDialog () {
                 this.isShowConfirmDialog = true

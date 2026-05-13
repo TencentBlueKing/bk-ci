@@ -13,71 +13,72 @@
             <i class="devops-icon icon-exclamation"></i>
             {{ draftHintTitle }}
         </header>
+        <!-- 分支版本有草稿且版本与基线版本不同时提示 -->
+        <div
+            class="draft-hint-content"
+            v-if="hasDraftPipeline && isActiveBranchVersion && version !== pipelineInfo?.baseVersion"
+        >
+            <p class="is-active-branch-version">
+                {{ activeBranchVersionInfo }}
+            </p>
+        </div>
         <!-- 草稿状态 -->
         <div
-            v-if="hasDraft"
+            v-else-if="hasDraft && !isActiveBranchVersion"
             class="draft-hint-content"
         >
             <p
-                v-if="isActiveBranchVersion"
+                class="draft-info"
+            >
+                <i18n
+                    path="existingDraft"
+                    class="existing-draft"
+                >
+                    <span>{{ draftSaveInfo?.updater }}</span>
+                    <span>{{ draftSaveInfo?.updateTime }}</span>
+                </i18n>
+                <VersionDiffEntry
+                    style="cursor: pointer;"
+                    text
+                    :latest-version="draftSaveInfo?.draftVersion"
+                    :version="draftSaveInfo?.releaseVersion"
+                >
+                    <Logo
+                        name="diff"
+                        size="14"
+                    />
+                </VersionDiffEntry>
+            </p>
+            <!-- 回滚提示 -->
+            <div
+                v-if="showRollbackTips"
                 class="is-active-branch-version"
             >
-                {{ activeBranchVersionInfo }}
-            </p>
-            <div v-else>
-                <p
-                    class="draft-info"
-                >
-                    <i18n
-                        path="existingDraft"
-                        class="existing-draft"
-                    >
-                        <span>{{ draftSaveInfo?.updater }}</span>
-                        <span>{{ draftSaveInfo?.updateTime }}</span>
-                    </i18n>
-                    <VersionDiffEntry
-                        style="cursor: pointer;"
-                        text
-                        :latest-version="draftSaveInfo?.draftVersion"
-                        :version="draftSaveInfo?.releaseVersion"
-                    >
-                        <Logo
-                            name="diff"
-                            size="14"
-                        />
-                    </VersionDiffEntry>
-                </p>
-                <!-- 回滚提示 -->
+                {{ $t('rollbackTips', [versionName]) }}
+            </div>
+            <!-- 编辑提示 -->
+            <template v-else>
+                <!-- 版本落后 -->
                 <div
-                    v-if="showRollbackTips"
+                    v-if="draftStatus === DRAFT_STATUS.OUTDATED"
                     class="is-active-branch-version"
                 >
-                    {{ $t('rollbackTips', [versionName]) }}
+                    <i18n path="draftBaselineIsEarlierThanCurrentVersionNotice">
+                        <span>{{ draftSaveInfo?.draftVersionName }}</span>
+                        <span class="earlier">{{ $t('Earlier') }}</span>
+                        <span>{{ draftSaveInfo?.releaseVersionName }}</span>
+                    </i18n>
+                    <p>{{ $t('draftNoticeTip1') }}</p>
+                    <p>{{ $t('draftNoticeTip2') }}</p>
                 </div>
-                <!-- 编辑提示 -->
-                <template v-else>
-                    <!-- 版本落后 -->
-                    <div
-                        v-if="draftStatus === DRAFT_STATUS.OUTDATED"
-                        class="is-active-branch-version"
-                    >
-                        <i18n path="draftBaselineIsEarlierThanCurrentVersionNotice">
-                            <span>{{ draftSaveInfo?.draftVersionName }}</span>
-                            <span class="earlier">{{ $t('Earlier') }}</span>
-                            <span>{{ draftSaveInfo?.releaseVersionName }}</span>
-                        </i18n>
-                        <p>{{ $t('draftNoticeTip1') }}</p>
-                        <p>{{ $t('draftNoticeTip2') }}</p>
-                    </div>
-                    <!-- 草稿存在状态 -->
-                    <div
-                        v-if="draftStatus === DRAFT_STATUS.EXISTS"
-                        class="is-active-branch-version"
-                    >
-                        {{ $t('regenerateDraftOrEditExisting') }}
-                    </div>
-                </template>
-            </div>
+                <!-- 草稿存在状态 -->
+                <div
+                    v-if="draftStatus === DRAFT_STATUS.EXISTS"
+                    class="is-active-branch-version"
+                >
+                    {{ $t('regenerateDraftOrEditExisting') }}
+                </div>
+            </template>
         </div>
         <!-- 基线版本落后状态 和 已发布状态 -->
         <div v-else-if="(clickActionType === 'edit' || !isRollback) && (draftStatus === DRAFT_STATUS.RELEASE_OUTDATED || draftStatus === DRAFT_STATUS.PUBLISHED)">
@@ -122,6 +123,7 @@
     import Logo from '@/components/Logo'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
     import { DRAFT_STATUS } from '@/utils/pipelineConst'
+    import { mapState, mapGetters } from 'vuex'
 
     export default {
         name: 'DraftConfirmDialog',
@@ -211,6 +213,12 @@
             }
         },
         computed: {
+            ...mapState('atom', [
+                'pipelineInfo'
+            ]),
+            ...mapGetters({
+                hasDraftPipeline: 'atom/hasDraftPipeline'
+            }),
             // 是否显示回滚提示
             showRollbackTips () {
                 if (this.isTemplatePipeline && this.clickActionType) {

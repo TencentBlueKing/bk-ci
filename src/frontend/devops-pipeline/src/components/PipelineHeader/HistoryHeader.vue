@@ -435,6 +435,8 @@
                 })
             },
             closeDialog () {
+                this.draftSaveInfo = null
+                this.draftStatus = DRAFT_STATUS.NORMAL
                 this.isShowConfirmDialog = false
             },
             goEdit (version) {
