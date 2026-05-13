@@ -30,7 +30,9 @@ package com.tencent.devops.auth.service
 import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.AuthResourceInfo
+import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.IamGroupIdsQueryConditionDTO
+import com.tencent.devops.auth.pojo.dto.ResourceGroupPermissionDTO
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
 import com.tencent.devops.auth.pojo.request.ai.AiApplyJoinGroupReq
 import com.tencent.devops.auth.pojo.request.ai.AiRemoveMemberFromProjectReq
@@ -39,9 +41,9 @@ import com.tencent.devops.auth.pojo.request.ai.BatchOperateCheckReq
 import com.tencent.devops.auth.pojo.request.ai.BatchRemoveMembersReq
 import com.tencent.devops.auth.pojo.request.ai.BatchRenewalMembersReq
 import com.tencent.devops.auth.pojo.request.ai.GroupRecommendReq
+import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.AuthorizationHealthVO
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
-import com.tencent.devops.auth.pojo.dto.ResourceGroupPermissionDTO
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupRecommendationVO
 import com.tencent.devops.auth.pojo.vo.MemberExitCheckVO
@@ -51,9 +53,9 @@ import com.tencent.devops.auth.pojo.vo.PermissionDiagnoseVO
 import com.tencent.devops.auth.pojo.vo.ResolvedUserByNameVO
 import com.tencent.devops.auth.pojo.vo.ResourcePermissionsMatrixVO
 import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
+import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.pojo.vo.UserPermissionAnalysisVO
 import com.tencent.devops.auth.pojo.vo.UserSearchResultVO
-import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.common.api.model.SQLPage
 
 /**
@@ -61,6 +63,9 @@ import com.tencent.devops.common.api.model.SQLPage
  * 提供权限诊断、克隆、对比、健康检查等 AI 辅助功能
  */
 interface AuthAiService {
+    fun listResourceTypes(): List<ResourceTypeInfoVo>
+
+    fun listActions(resourceType: String): List<ActionInfoVo>
 
     /**
      * 权限诊断 - 分析用户为什么没有某个权限

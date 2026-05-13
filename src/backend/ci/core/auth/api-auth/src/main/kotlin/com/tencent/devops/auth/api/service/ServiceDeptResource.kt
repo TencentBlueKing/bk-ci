@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.api.service
 
+import com.tencent.devops.auth.pojo.BkUserInfo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
@@ -88,4 +89,13 @@ interface ServiceDeptResource {
         @Parameter(description = "用户名称", required = true)
         name: String
     ): Result<Boolean>
+
+    @GET
+    @Path("/getLeader")
+    @Operation(summary = "获取用户的直属 Leader")
+    fun getLeader(
+        @QueryParam("userId")
+        @Parameter(description = "用户名称", required = true)
+        userId: String
+    ): Result<BkUserInfo?>
 }

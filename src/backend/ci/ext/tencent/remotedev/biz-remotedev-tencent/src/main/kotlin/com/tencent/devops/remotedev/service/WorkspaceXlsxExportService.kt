@@ -79,7 +79,7 @@ class WorkspaceXlsxExportService @Autowired constructor(
         val records = workspaceService.parseWorkspaceList(
             userId = userId,
             result = result,
-            enableExportSup = true,
+            enableExportSup = false,
             expertSupId = data.expertSupId
         )
         // 创建表

@@ -61,6 +61,10 @@ import com.tencent.devops.notify.pojo.SubNotifyMessageTemplate
 import com.tencent.devops.notify.pojo.messageTemplate.MessageTemplate
 import com.tencent.devops.notify.service.notifier.INotifier
 import com.tencent.devops.notify.service.notifier.NotifierUtils
+import jakarta.annotation.PostConstruct
+import java.io.File
+import java.time.LocalDateTime
+import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -68,10 +72,6 @@ import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.ClassPathResource
 import org.springframework.stereotype.Service
-import java.io.File
-import java.time.LocalDateTime
-import java.util.concurrent.Executors
-import jakarta.annotation.PostConstruct
 
 @Service
 @Suppress("ALL")

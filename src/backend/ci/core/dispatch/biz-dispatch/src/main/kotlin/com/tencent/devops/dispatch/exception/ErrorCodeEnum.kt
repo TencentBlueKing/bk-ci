@@ -128,6 +128,11 @@ enum class ErrorCodeEnum(
         ErrorType.USER,
         2103023,
         "获取构建资源超时"
+    ),
+    NO_NODE_PERMISSION(
+        ErrorType.USER,
+        2103024,
+        "没有节点操作权限"
     );
 
     fun getErrorMessage(params: Array<String>? = null, language: String? = null): String {

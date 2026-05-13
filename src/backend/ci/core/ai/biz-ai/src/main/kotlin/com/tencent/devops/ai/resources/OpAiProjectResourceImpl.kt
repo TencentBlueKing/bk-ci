@@ -45,6 +45,11 @@ class OpAiProjectResourceImpl @Autowired constructor(
         return Result(aiProjectService.getProjectListForOp())
     }
 
+    override fun batchAdd(projectIds: List<String>): Result<Boolean> {
+        aiProjectService.batchAddProjects(projectIds)
+        return Result(true)
+    }
+
     override fun update(projectIds: List<String>): Result<Boolean> {
         aiProjectService.updateProjectList(projectIds)
         return Result(true)

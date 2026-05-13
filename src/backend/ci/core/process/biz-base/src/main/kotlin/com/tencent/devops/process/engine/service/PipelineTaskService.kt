@@ -363,7 +363,8 @@ class PipelineTaskService @Autowired constructor(
                     buildId = updateTaskInfo.buildId,
                     taskId = updateTaskInfo.taskId,
                     additionalOptions = taskRecord?.additionalOptions,
-                    executeCount = taskRecord?.executeCount
+                    executeCount = taskRecord?.executeCount,
+                    taskAtom = task?.taskAtom
                 )
             ) {
                 // 如果是自动重试则不重置task的时间

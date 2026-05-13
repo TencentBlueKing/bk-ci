@@ -39,6 +39,12 @@ store:
     project: demo
     user: admin
 
+  notify:
+    wework:
+      groupIds:
+        - "ww123"
+        - "ww456"
+
 logo:
   allowUploadLogoTypes: jpg,png
   allowUploadLogoWidth: 200

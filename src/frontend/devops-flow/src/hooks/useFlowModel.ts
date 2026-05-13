@@ -28,6 +28,7 @@ export function useFlowModel() {
   const {
     flowModel,
     yamlContent,
+    yamlHighlightBlockMap,
     loading,
     hasError,
     currentFlowId,
@@ -563,6 +564,7 @@ export function useFlowModel() {
     hasFinallyStage,
     triggerEvents,
     yamlContent,
+    yamlHighlightBlockMap,
     loading,
     hasError,
     currentFlowId,

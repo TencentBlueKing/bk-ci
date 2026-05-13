@@ -22,7 +22,10 @@ func (f *fakeManager) CreateExecNoHttp(conf *WebSocketConfig) (*ExecRef, error) 
 	return &ExecRef{ID: "exec-1"}, nil
 }
 
-func (f *fakeManager) StartExec(http.ResponseWriter, *http.Request, *WebSocketConfig) {}
+func (f *fakeManager) StartExec(w http.ResponseWriter, r *http.Request, conf *WebSocketConfig) {
+	f.lastConf = conf
+	_ = ResponseJSON(w, http.StatusOK, nil)
+}
 
 func (f *fakeManager) CreateExec(w http.ResponseWriter, r *http.Request, conf *WebSocketConfig) {
 	f.lastConf = conf
@@ -34,66 +37,103 @@ func (f *fakeManager) ResizeExec(w http.ResponseWriter, r *http.Request, conf *W
 	_ = ResponseJSON(w, http.StatusOK, nil)
 }
 
-func TestCreateExecHandler_Valid(t *testing.T) {
+func TestCreateExecHandler_Disabled(t *testing.T) {
 	fm := &fakeManager{}
 	router := &Router{backend: fm, conf: &ConsoleProxyConfig{Cmd: []string{"/bin/bash"}}}
-	body, _ := json.Marshal(CreateExecReq{
-		ContainerID: "c1",
-		User:        "",
-		Cmd:         nil,
-	})
+	body, _ := json.Marshal(CreateExecReq{ContainerID: "c1"})
 	req := httptest.NewRequest(http.MethodPost, "/create_exec", bytes.NewReader(body))
 	rec := httptest.NewRecorder()
 
 	router.createExec(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d body=%s", rec.Code, rec.Body.String())
+	}
+	if fm.lastConf != nil {
+		t.Fatalf("expected backend CreateExec not to be called, got %#v", fm.lastConf)
+	}
+}
+
+func TestAuthHandler_MissingToken(t *testing.T) {
+	fm := &fakeManager{}
+	router := &Router{backend: fm, conf: &ConsoleProxyConfig{IsAuth: true, AuthToken: "secret"}}
+	req := httptest.NewRequest(http.MethodGet, "/start_exec?exec_id=exec-1&container_id=c1", nil)
+	rec := httptest.NewRecorder()
+
+	router.auth(router.startExec)(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", rec.Code)
+	}
+	if fm.lastConf != nil {
+		t.Fatalf("expected backend not to be called, got %#v", fm.lastConf)
+	}
+}
+
+func TestStartExecHandler_ValidQueryToken(t *testing.T) {
+	fm := &fakeManager{}
+	router := &Router{backend: fm, conf: &ConsoleProxyConfig{IsAuth: true, AuthToken: "secret"}}
+	req := httptest.NewRequest(http.MethodGet, "/start_exec?exec_id=exec-1&container_id=c1&token=secret", nil)
+	rec := httptest.NewRecorder()
+
+	router.auth(router.startExec)(rec, req)
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d body=%s", rec.Code, rec.Body.String())
 	}
-	if fm.lastConf == nil {
-		t.Fatal("expected backend CreateExec to be called")
-	}
-	if fm.lastConf.ContainerID != "c1" {
-		t.Fatalf("container id = %q", fm.lastConf.ContainerID)
-	}
-	if fm.lastConf.User != "root" {
-		t.Fatalf("default user = %q, want root", fm.lastConf.User)
-	}
-	if len(fm.lastConf.Cmd) != 1 || fm.lastConf.Cmd[0] != "/bin/bash" {
-		t.Fatalf("default cmd = %#v", fm.lastConf.Cmd)
+	if fm.lastConf == nil || fm.lastConf.ExecID != "exec-1" || fm.lastConf.ContainerID != "c1" {
+		t.Fatalf("unexpected start conf: %#v", fm.lastConf)
 	}
 }
 
-func TestCreateExecHandler_InvalidBody(t *testing.T) {
+func TestStartExecHandler_MissingParams(t *testing.T) {
 	router := &Router{backend: &fakeManager{}, conf: &ConsoleProxyConfig{}}
-	req := httptest.NewRequest(http.MethodPost, "/create_exec", bytes.NewReader([]byte("{")))
+	req := httptest.NewRequest(http.MethodGet, "/start_exec?exec_id=exec-1", nil)
 	rec := httptest.NewRecorder()
 
-	router.createExec(rec, req)
+	router.startExec(rec, req)
 
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d", rec.Code)
 	}
 }
 
-func TestCreateExecHandler_MissingContainerID(t *testing.T) {
-	router := &Router{backend: &fakeManager{}, conf: &ConsoleProxyConfig{}}
-	body, _ := json.Marshal(CreateExecReq{})
-	req := httptest.NewRequest(http.MethodPost, "/create_exec", bytes.NewReader(body))
+func TestResizeExecHandler_ValidHeaderToken(t *testing.T) {
+	fm := &fakeManager{}
+	router := &Router{backend: fm, conf: &ConsoleProxyConfig{IsAuth: true, AuthToken: "secret"}}
+	body, _ := json.Marshal(ResizeExecReq{ExecID: "exec-1", ContainerID: "c1", Width: 100, Height: 40})
+	req := httptest.NewRequest(http.MethodPost, "/resize_exec", bytes.NewReader(body))
+	req.Header.Set(debugTokenHeader, "secret")
 	rec := httptest.NewRecorder()
 
-	router.createExec(rec, req)
+	router.auth(router.resizeExec)(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+	if fm.lastConf == nil || fm.lastConf.ExecID != "exec-1" || fm.lastConf.ContainerID != "c1" || fm.lastConf.Width != 100 || fm.lastConf.Height != 40 {
+		t.Fatalf("unexpected resize conf: %#v", fm.lastConf)
+	}
+}
+
+func TestResizeExecHandler_MissingContainerID(t *testing.T) {
+	router := &Router{backend: &fakeManager{}, conf: &ConsoleProxyConfig{}}
+	body, _ := json.Marshal(ResizeExecReq{ExecID: "exec-1", Width: 100, Height: 40})
+	req := httptest.NewRequest(http.MethodPost, "/resize_exec", bytes.NewReader(body))
+	rec := httptest.NewRecorder()
+
+	router.resizeExec(rec, req)
 
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d", rec.Code)
 	}
 }
 
-func TestResizeExecHandler_Valid(t *testing.T) {
+func TestResizeExecHandler_ContainerIDFromQuery(t *testing.T) {
 	fm := &fakeManager{}
 	router := &Router{backend: fm, conf: &ConsoleProxyConfig{}}
 	body, _ := json.Marshal(ResizeExecReq{ExecID: "exec-1", Width: 100, Height: 40})
-	req := httptest.NewRequest(http.MethodPost, "/resize_exec", bytes.NewReader(body))
+	req := httptest.NewRequest(http.MethodPost, "/resize_exec?container_id=c1", bytes.NewReader(body))
 	rec := httptest.NewRecorder()
 
 	router.resizeExec(rec, req)
@@ -101,21 +141,8 @@ func TestResizeExecHandler_Valid(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", rec.Code)
 	}
-	if fm.lastConf == nil || fm.lastConf.ExecID != "exec-1" || fm.lastConf.Width != 100 || fm.lastConf.Height != 40 {
+	if fm.lastConf == nil || fm.lastConf.ContainerID != "c1" {
 		t.Fatalf("unexpected resize conf: %#v", fm.lastConf)
-	}
-}
-
-func TestResizeExecHandler_MissingExecID(t *testing.T) {
-	router := &Router{backend: &fakeManager{}, conf: &ConsoleProxyConfig{}}
-	body, _ := json.Marshal(ResizeExecReq{Width: 100, Height: 40})
-	req := httptest.NewRequest(http.MethodPost, "/resize_exec", bytes.NewReader(body))
-	rec := httptest.NewRecorder()
-
-	router.resizeExec(rec, req)
-
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("expected 400, got %d", rec.Code)
 	}
 }
 
