@@ -23,11 +23,6 @@ metadata:
     {{- range $key, $value := .Values.ingress.annotations }}
     {{ $key }}: {{ include "common.tplvalues.render" (dict "value" $value "context" $) | quote }}
     {{- end }}
-    nginx.ingress.kubernetes.io/server-snippet: |
-      location ~* /console/static/sw\.js$ {
-          add_header Service-Worker-Allowed "/";
-          add_header Cache-Control "no-cache";
-      }
 spec:
   rules:
     - host: {{ .Values.config.bkCiHost }}
