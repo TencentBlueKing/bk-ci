@@ -138,12 +138,14 @@ class ArchiveStorePkgToLocalServiceImpl : ArchiveStorePkgServiceImpl() {
     }
 
     override fun getStoreFileSize(filePath: String, storeType: StoreTypeEnum, repoName: String?): Long? {
-        if (filePath.contains("../")) {
+        val charSet = Charsets.UTF_8.name()
+        // 先 URL 解码再做路径遍历检查，避免 %2e%2e 等编码绕过
+        val decodedFilePath = URLDecoder.decode(filePath, charSet)
+        if (decodedFilePath.contains("../")) {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(filePath))
         }
-        val charSet = Charsets.UTF_8.name()
         val fileRepoName = repoName ?: getPkgFileTypeDir(storeType)
-        val file = File("$storeArchiveLocalBasePath/$fileRepoName/${URLDecoder.decode(filePath, charSet)}")
+        val file = File("$storeArchiveLocalBasePath/$fileRepoName/$decodedFilePath")
         return if (file.exists()) {
             file.length()
         } else {

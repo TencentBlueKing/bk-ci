@@ -92,7 +92,7 @@
 <script lang="ts">
     import Vue from 'vue'
     import { Component, Watch } from 'vue-property-decorator'
-    import { Getter, State } from 'vuex-class'
+    import { State, Getter, Action } from 'vuex-class'
     import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
     import Header from '../components/Header/index.vue'
     import eventBus from '../utils/eventBus'
@@ -113,6 +113,7 @@
       @Getter enableProjectList
       @Getter disableProjectList
       @Getter approvalingProjectList
+      @Action fetchServiceHooks
       
 
       get loadingOption (): object {
@@ -219,6 +220,12 @@
                   }
               })
           })
+          if (this.currentPage) {
+              this.fetchServiceHooks({
+                  serviceId: this.currentPage.id
+              })
+          }
+
       }
     }
 </script>

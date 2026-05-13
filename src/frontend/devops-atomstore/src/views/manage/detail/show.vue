@@ -21,10 +21,10 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import atomShow from '@/components/manage/detail/atom-detail/show.vue'
     import imageShow from '@/components/manage/detail/image-detail/show.vue'
     import serviceShow from '@/components/manage/detail/service-detail/show.vue'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -45,6 +45,7 @@
     .manage-detail {
         height: 100%;
         background: #fff;
+        height: 100%;
         .manage-detail-header {
             position: absolute;
             right: 32px;

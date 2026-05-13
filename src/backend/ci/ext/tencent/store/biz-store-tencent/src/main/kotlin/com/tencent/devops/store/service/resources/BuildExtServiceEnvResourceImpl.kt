@@ -44,7 +44,7 @@ class BuildExtServiceEnvResourceImpl @Autowired constructor(
         serviceCode: String,
         version: String,
         updateExtServiceEnvInfo: UpdateExtServiceEnvInfoDTO
-    ): Result<Boolean> {
+    ): Result<String?> {
         return extServiceEnvService.updateExtServiceEnvInfo(projectCode, serviceCode, version, updateExtServiceEnvInfo)
     }
 }
