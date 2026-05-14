@@ -268,6 +268,7 @@
                 'isManage',
                 'hardViews'
             ]),
+            ...mapState(['curProject']),
             ...mapGetters('pipelines', [
                 'pipelineGroupDict',
                 'groupMap',
@@ -429,7 +430,7 @@
                         ]
                         : []),
                     ...(
-                        group.projected
+                        group.projected && this.curProject.projectScope !== 1
                             ? [
                                 {
                                     text: this.$t('pipelineGroupAuth'),
