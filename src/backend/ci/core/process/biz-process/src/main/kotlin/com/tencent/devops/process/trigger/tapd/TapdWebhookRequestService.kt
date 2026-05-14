@@ -41,6 +41,27 @@ import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_TAPD_BUG_
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_TAPD_STORY_CREATE_EVENT_DESC
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_TAPD_STORY_DELETE_EVENT_DESC
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_TAPD_STORY_UPDATE_EVENT_DESC
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ACTION
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_EVENT_FROM
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_EVENT_URL
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_ID
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_PARENT_ID
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_PRIORITY_ID
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_WORKSPACE_ID
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_BUG_URL_PATTERN
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_EVENT_SEPARATOR
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CURRENT_USER
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_EVENT
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_EVENT_FROM
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_ID
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_NAME
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_NEW_PREFIX
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PARENT_ID
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PRIORITY
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_REFERER
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_WORKSPACE_ID
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_STORY_URL_PATTERN
 import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
 import com.tencent.devops.process.pojo.trigger.GenericWebhookEventBody
 import com.tencent.devops.process.pojo.trigger.PipelineEventSubscriber
@@ -50,6 +71,7 @@ import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.event.TapdWebhookRequestEvent
 import com.tencent.devops.process.trigger.event.TapdWebhookTriggerEvent
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
+import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -71,42 +93,10 @@ class TapdWebhookRequestService(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TapdWebhookRequestService::class.java)
-
-        // ---------- TAPD payload 字段约定 ----------
-        // 事件标识字段名，例如 story::create / bug::update
-        private const val TAPD_EVENT_KEY = "event"
-        // 事件分隔符
-        private const val TAPD_EVENT_SEPARATOR = "::"
-        // 项目ID字段名（workspace_id）
-        private const val TAPD_WORKSPACE_ID_KEY = "workspace_id"
-        // 触发用户字段名
-        private const val TAPD_CURRENT_USER_KEY = "current_user"
-        // 工单ID字段名（创建/删除事件用 id；更新事件用 new_id）
-        private const val TAPD_OBJECT_ID_KEY = "id"
-        private const val TAPD_NEW_OBJECT_ID_KEY = "new_id"
-        // 工单标题字段（更新事件可能携带 new_name；创建/历史快照携带 name）
-        private const val TAPD_NAME_KEY = "name"
-        private const val TAPD_NEW_NAME_KEY = "new_name"
-        // 用于从中提取 TAPD 主机地址（schema + host）
-        private const val TAPD_REFERER_KEY = "referer"
-
-        // ---------- TAPD 工单详情页 URL 模板 ----------
-        // 需求详情：{tapdHost}/tapd_fe/{workspaceId}/story/detail/{id}
-        private const val TAPD_STORY_URL_PATTERN = "%s/tapd_fe/%s/story/detail/%s"
-        // 缺陷详情：{tapdHost}/tapd_fe/{workspaceId}/bug/detail/{id}
-        private const val TAPD_BUG_URL_PATTERN = "%s/tapd_fe/%s/bug/detail/%s"
-
-        // ---------- TAPD 触发上下文启动参数 key ----------
-        const val BK_CI_TAPD_PROJECT_ID = "BK_CI_TAPD_PROJECT_ID"
-        const val BK_CI_TAPD_EVENT_TYPE = "BK_CI_TAPD_EVENT_TYPE"
-        const val BK_CI_TAPD_EVENT_ACTION = "BK_CI_TAPD_EVENT_ACTION"
-        const val BK_CI_TAPD_TRIGGER_USER = "BK_CI_TAPD_TRIGGER_USER"
-        const val BK_CI_TAPD_RAW_EVENT = "BK_CI_TAPD_RAW_EVENT"
-        const val BK_CI_TAPD_OBJECT_ID = "BK_CI_TAPD_OBJECT_ID"
     }
 
     fun dispatch(body: Map<String, Any>): Result<Boolean> {
-        val rawEvent = body[TAPD_EVENT_KEY]?.toString() ?: run {
+        val rawEvent = body[TAPD_KEY_EVENT]?.toString() ?: run {
             logger.warn("Tapd webhook missing event field")
             return Result(false)
         }
@@ -117,13 +107,13 @@ class TapdWebhookRequestService(
         }
         val eventType = parts[0].lowercase()
         val eventAction = parts[1].lowercase()
-        val tapdProjectId = body[TAPD_WORKSPACE_ID_KEY]?.toString() ?: run {
+        val tapdProjectId = body[TAPD_KEY_WORKSPACE_ID]?.toString() ?: run {
             logger.warn("Tapd webhook missing workspace_id|event=$rawEvent")
             return Result(false)
         }
-        val triggerUser = body[TAPD_CURRENT_USER_KEY]?.toString() ?: ""
+        val triggerUser = body.getHookField(TAPD_KEY_CURRENT_USER)
         // 提取host
-        val tapdHost = extractHost(body[TAPD_REFERER_KEY]?.toString())
+        val tapdHost = extractHost(body.getHookField(TAPD_KEY_REFERER))
         sampleEventDispatcher.dispatch(
             TapdWebhookRequestEvent(
                 tapdProjectId = tapdProjectId,
@@ -150,7 +140,14 @@ class TapdWebhookRequestService(
             logger.info("no pipelines subscribed|tapdProjectId=${event.tapdProjectId}|eventType=${eventType.value}")
             return
         }
-        val objectId = extractObjectId(event.body)
+        val objectId = event.body.getHookField(TAPD_KEY_ID, eventAction == TapdEventAction.UPDATE)
+        // 仅生成一次工单详情页 URL，复用于触发事件描述和流水线启动参数（CI_EVENT_URL）
+        val objectUrl = buildObjectUrl(
+            tapdHost = event.tapdHost,
+            workspaceId = event.tapdProjectId,
+            objectId = objectId,
+            eventType = eventType
+        )
         // 2. 按 projectId 分组保存触发事件，并为每条流水线投递触发事件
         subscribers.groupBy { it.projectId }.forEach { (projectId, pipelines) ->
             val triggerEvent = buildTriggerEvent(
@@ -158,7 +155,8 @@ class TapdWebhookRequestService(
                 event = event,
                 eventType = eventType,
                 eventAction = eventAction,
-                objectId = objectId
+                objectId = objectId,
+                objectUrl = objectUrl
             )
             try {
                 pipelineTriggerEventService.saveTriggerEvent(triggerEvent = triggerEvent)
@@ -171,32 +169,30 @@ class TapdWebhookRequestService(
                 eventId = triggerEvent.eventId ?: 0L,
                 tapdProjectId = event.tapdProjectId,
                 triggerUser = event.triggerUser,
-                rawEvent = event.rawEvent,
                 body = event.body,
                 eventType = eventType,
                 eventAction = eventAction,
-                objectId = objectId
+                objectId = objectId,
+                objectUrl = objectUrl
             )
         }
     }
 
     /**
-     * 回放 TAPD 触发事件。
-     * - 当 [ReplayWebhookEvent.pipelineId] 不为空时，仅回放指定的目标流水线；
-     * - 否则按 (tapdProjectId + eventType) 重新查询订阅关系，重放给所有当前仍订阅的流水线。
+     * 回放 TAPD 触发事件
      */
     fun replay(replayEvent: ReplayWebhookEvent, sourceTriggerEvent: PipelineTriggerEvent) {
         logger.info("Receive tapd replay event|${JsonUtil.toJson(replayEvent, false)}")
         val body = extractReplayBody(sourceTriggerEvent) ?: return
-        val rawEvent = body[TAPD_EVENT_KEY] ?: run {
+        val rawEvent = body[TAPD_KEY_EVENT] ?: run {
             logger.warn("tapd replay missing event field|eventId=${sourceTriggerEvent.eventId}")
             return
         }
         val (eventType, eventAction) = parseRawEvent(rawEvent) ?: return
 
-        val tapdProjectId = body[TAPD_WORKSPACE_ID_KEY] ?: sourceTriggerEvent.eventSource ?: ""
-        val triggerUser = replayEvent.userId.ifBlank { body[TAPD_CURRENT_USER_KEY] ?: "" }
-        val objectId = extractObjectId(body)
+        val tapdProjectId = body[TAPD_KEY_WORKSPACE_ID] ?: sourceTriggerEvent.eventSource ?: ""
+        val triggerUser = replayEvent.userId.ifBlank { body[TAPD_KEY_CURRENT_USER] ?: "" }
+        val objectId = body.getHookField(TAPD_KEY_ID, eventAction == TapdEventAction.UPDATE)
         val pipelines = resolveReplayPipelines(
             replayEvent = replayEvent,
             tapdProjectId = tapdProjectId,
@@ -214,18 +210,19 @@ class TapdWebhookRequestService(
             eventId = replayEvent.eventId,
             tapdProjectId = tapdProjectId,
             triggerUser = triggerUser,
-            rawEvent = rawEvent,
             body = body,
             eventType = eventType,
             eventAction = eventAction,
-            objectId = objectId
+            objectId = objectId,
+            objectUrl = buildObjectUrl(
+                tapdHost = extractHost(body.getHookField(TAPD_KEY_REFERER)),
+                workspaceId = tapdProjectId,
+                objectId = objectId,
+                eventType = eventType
+            )
         )
     }
 
-    /**
-     * 从源触发事件中提取回放所需的 TAPD payload（通用 webhook eventBody.body）
-     * 任一环节缺失即返回 null，并打印告警。
-     */
     private fun extractReplayBody(sourceTriggerEvent: PipelineTriggerEvent): Map<String, String>? {
         val eventId = sourceTriggerEvent.eventId
         val eventBody = sourceTriggerEvent.eventBody as? GenericWebhookEventBody
@@ -242,7 +239,7 @@ class TapdWebhookRequestService(
     }
 
     /**
-     * 解析 TAPD 原始事件字符串（例如 `story::create`），失败返回 null 并打印告警。
+     * 解析 TAPD 原始事件字符串（例如 `story::create`）
      */
     private fun parseRawEvent(rawEvent: String): Pair<TapdEventType, TapdEventAction>? {
         val parts = rawEvent.split(TAPD_EVENT_SEPARATOR)
@@ -253,11 +250,6 @@ class TapdWebhookRequestService(
         return parseEvent(eventTypeRaw = parts[0], eventActionRaw = parts[1])
     }
 
-    /**
-     * 决定本次回放要触发的流水线列表：
-     * - [ReplayWebhookEvent.pipelineId] 不为空：只回放该目标流水线；
-     * - 否则按 (tapdProjectId + eventType) 查订阅，并限定在 [ReplayWebhookEvent.projectId] 下。
-     */
     private fun resolveReplayPipelines(
         replayEvent: ReplayWebhookEvent,
         tapdProjectId: String,
@@ -278,9 +270,6 @@ class TapdWebhookRequestService(
         }
     }
 
-    /**
-     * 解析 TAPD 事件类型与动作字符串为枚举，解析失败返回 null 并打印日志。
-     */
     private fun parseEvent(
         eventTypeRaw: String,
         eventActionRaw: String
@@ -296,18 +285,6 @@ class TapdWebhookRequestService(
         return eventType to eventAction
     }
 
-    /**
-     * 从 TAPD payload 中提取工单 ID。优先 [TAPD_OBJECT_ID_KEY]（创建/删除事件），否则 [TAPD_NEW_OBJECT_ID_KEY]（更新事件）。
-     */
-    private fun extractObjectId(body: Map<String, Any?>): String {
-        return body[TAPD_OBJECT_ID_KEY]?.toString()?.takeIf { it.isNotBlank() }
-            ?: body[TAPD_NEW_OBJECT_ID_KEY]?.toString()?.takeIf { it.isNotBlank() }
-            ?: ""
-    }
-
-    /**
-     * 查询订阅了 (tapdProjectId + eventType) 的流水线
-     */
     private fun listSubscribers(
         tapdProjectId: String,
         eventType: TapdEventType
@@ -320,28 +297,25 @@ class TapdWebhookRequestService(
         )
     }
 
-    /**
-     * 构建启动参数后向多条流水线分发 [TapdWebhookTriggerEvent]
-     */
     private fun dispatchTriggerEvents(
         pipelines: List<PipelineEventSubscriber>,
         eventId: Long,
         tapdProjectId: String,
         triggerUser: String,
-        rawEvent: String,
         body: Map<String, Any?>,
         eventType: TapdEventType,
         eventAction: TapdEventAction,
-        objectId: String
+        objectId: String,
+        objectUrl: String
     ) {
         val startParams = buildStartParams(
             tapdProjectId = tapdProjectId,
             triggerUser = triggerUser,
-            rawEvent = rawEvent,
             body = body,
             eventType = eventType,
             eventAction = eventAction,
-            objectId = objectId
+            objectId = objectId,
+            objectUrl = objectUrl
         )
         pipelines.forEach { pipeline ->
             sampleEventDispatcher.dispatch(
@@ -360,60 +334,71 @@ class TapdWebhookRequestService(
     }
 
     /**
-     * 预构建流水线启动参数
+     * 流水线启动参数
      */
     private fun buildStartParams(
         tapdProjectId: String,
         triggerUser: String,
-        rawEvent: String,
         body: Map<String, Any?>,
         eventType: TapdEventType,
         eventAction: TapdEventAction,
-        objectId: String
+        objectId: String,
+        objectUrl: String
     ): Map<String, String> {
+        val update = eventAction == TapdEventAction.UPDATE
         val params = mutableMapOf(
-            BK_CI_TAPD_PROJECT_ID to tapdProjectId,
-            BK_CI_TAPD_EVENT_TYPE to eventType.value,
-            BK_CI_TAPD_EVENT_ACTION to eventAction.value,
-            BK_CI_TAPD_TRIGGER_USER to triggerUser,
-            BK_CI_TAPD_RAW_EVENT to rawEvent,
+            CI_ACTION to eventAction.value,
+            CI_EVENT_URL to objectUrl,
+            CI_EVENT_FROM to body.getHookField(TAPD_KEY_EVENT_FROM),
+            CI_TAPD_WORKSPACE_ID to tapdProjectId,
+            CI_TAPD_ID to objectId,
+            CI_TAPD_PARENT_ID to body.getHookField(TAPD_KEY_PARENT_ID, update),
+            CI_TAPD_PRIORITY_ID to body.getHookField(TAPD_KEY_PRIORITY, update),
             PIPELINE_BUILD_MSG to buildPipelineBuildMsg(
-                body = body,
+                name = body.getHookField(TAPD_KEY_NAME, update),
                 eventType = eventType,
                 eventAction = eventAction,
                 objectId = objectId
-            )
+            ),
+            PIPELINE_WEBHOOK_EVENT_TYPE to eventType.value,
+            PIPELINE_START_WEBHOOK_USER_ID to triggerUser
         )
-        if (objectId.isNotBlank()) {
-            params[BK_CI_TAPD_OBJECT_ID] = objectId
-        }
         return params
     }
 
+    private fun Map<String,Any?>.getHookField(
+        key: String,
+        update: Boolean = false
+    ): String {
+        val finalKey = if (update) {
+            "${TAPD_KEY_NEW_PREFIX}_$key"
+        } else {
+            key
+        }
+        return this[finalKey]?.toString() ?: ""
+    }
+
     private fun buildPipelineBuildMsg(
-        body: Map<String, Any?>,
+        name: String,
         eventType: TapdEventType,
         eventAction: TapdEventAction,
         objectId: String
     ): String {
-        val fallback = "${eventAction.value} ${eventType.value}[$objectId]"
-        if (eventAction == TapdEventAction.DELETE) {
-            return fallback
+        val title = if (eventAction == TapdEventAction.DELETE) {
+            objectId
+        } else {
+            name
         }
-        val name = body[TAPD_NEW_NAME_KEY]?.toString()?.takeIf { it.isNotBlank() }
-            ?: body[TAPD_NAME_KEY]?.toString()?.takeIf { it.isNotBlank() }
-        return name ?: fallback
+        return "[${eventAction.value} ${eventType.value}] $title"
     }
 
-    /**
-     * 构建 [PipelineTriggerEvent]，使用 [PipelineTriggerEventService.getEventId] 申请 eventId
-     */
     private fun buildTriggerEvent(
         projectId: String,
         event: TapdWebhookRequestEvent,
         eventType: TapdEventType,
         eventAction: TapdEventAction,
-        objectId: String
+        objectId: String,
+        objectUrl: String
     ): PipelineTriggerEvent {
         val requestId = MDC.get(TraceTag.BIZID) ?: ""
         val eventId = pipelineTriggerEventService.getEventId()
@@ -421,7 +406,8 @@ class TapdWebhookRequestService(
             event = event,
             eventType = eventType,
             eventAction = eventAction,
-            objectId = objectId
+            objectId = objectId,
+            objectUrl = objectUrl
         )
         // 用通用 webhook eventBody 记录原始 payload，便于回放/排查
         val eventBody = GenericWebhookEventBody(
@@ -447,14 +433,9 @@ class TapdWebhookRequestService(
         event: TapdWebhookRequestEvent,
         eventType: TapdEventType,
         eventAction: TapdEventAction,
-        objectId: String
+        objectId: String,
+        objectUrl: String
     ): String {
-        val objectUrl = buildObjectUrl(
-            tapdHost = event.tapdHost,
-            workspaceId = event.tapdProjectId,
-            objectId = objectId,
-            eventType = eventType
-        )
         val i18nCode = getEventDescI18nCode(eventType = eventType, eventAction = eventAction)
         return I18Variable(
             code = i18nCode,

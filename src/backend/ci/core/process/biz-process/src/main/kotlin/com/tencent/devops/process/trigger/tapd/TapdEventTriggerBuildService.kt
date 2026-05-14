@@ -30,6 +30,7 @@ package com.tencent.devops.process.trigger.tapd
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.TapdEventAction
 import com.tencent.devops.common.pipeline.enums.TapdEventType
@@ -38,6 +39,7 @@ import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TRIGGER_COND
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
+import com.tencent.devops.process.service.CreateStreamTriggerSupportService
 import com.tencent.devops.process.trigger.WebhookTriggerBuildService
 import com.tencent.devops.process.trigger.enums.MatchStatus
 import com.tencent.devops.process.trigger.event.TapdWebhookTriggerEvent
@@ -50,16 +52,14 @@ import org.springframework.stereotype.Service
 
 /**
  * TAPD 事件触发构建服务
- *
- * 消费 [TapdWebhookTriggerEvent]，对**单条流水线**完成：加载资源 → 调 matcher → 启动构建 / 写 detail。
- * 启动参数已由 [TapdWebhookRequestService] 预构建在 [TapdWebhookTriggerEvent.startParams] 中，本服务只需透传。
  */
 @Service
 class TapdEventTriggerBuildService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val webhookTriggerManager: WebhookTriggerManager,
     private val webhookTriggerBuildService: WebhookTriggerBuildService,
-    private val tapdEventMatcher: TapdEventTriggerMatcher
+    private val tapdEventMatcher: TapdEventTriggerMatcher,
+    private val createStreamTriggerSupportService: CreateStreamTriggerSupportService
 ) {
 
     companion object {
@@ -94,7 +94,36 @@ class TapdEventTriggerBuildService @Autowired constructor(
                 )
                 if (pipelineInfo.locked == true) return
                 context.pipelineInfo = pipelineInfo
-
+                val externalStartParams = mutableMapOf<String, String>()
+                if (pipelineInfo.channelCode == ChannelCode.CREATIVE_STREAM) {
+                    // 对创作环境下所有的创作节点，逐一启动
+                    val envHashId = pipelineRepositoryService.getSetting(
+                        projectId = projectId,
+                        pipelineId = pipelineId
+                    )?.envHashId ?: ""
+                    val oauthUserId = pipelineRepositoryService.getPipelineOauthUser(
+                        projectId = projectId,
+                        pipelineId = pipelineId
+                    ) ?: pipelineInfo.lastModifyUser
+                    val creativeStreamParams = createStreamTriggerSupportService.getEnvNodeList(
+                        projectId = projectId,
+                        envHashId = envHashId,
+                        userId = oauthUserId
+                    ).takeIf { it.isNotEmpty() }?.firstOrNull()?.let { agentHashId ->
+                        createStreamTriggerSupportService.creativeStreamParams(
+                            projectId = projectId,
+                            agentHashId = agentHashId,
+                            userId = oauthUserId
+                        )
+                    } ?: run {
+                        logger.warn(
+                            "skip trigger $pipelineId|no available node found in " +
+                                    "env[$envHashId] of project[$projectId]"
+                        )
+                        mapOf()
+                    }
+                    externalStartParams.putAll(creativeStreamParams)
+                }
                 val resource = pipelineRepositoryService.getPipelineResourceVersion(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -123,7 +152,7 @@ class TapdEventTriggerBuildService @Autowired constructor(
                                     context = context,
                                     pipelineInfo = pipelineInfo,
                                     resource = resource,
-                                    startParams = startParams
+                                    startParams = startParams.plus(externalStartParams)
                                 )
                                 logger.info(
                                     "tapd webhook trigger success|$projectId|$pipelineId|element=${element.id}"

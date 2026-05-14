@@ -25,31 +25,46 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.trigger.event
+package com.tencent.devops.process.yaml.v3.models.on
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.pojo.IEvent
-import com.tencent.devops.common.stream.constants.StreamBinding
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
- * TAPD Webhook 请求事件
+ * TAPD 触发器 YAML 规则
+ *
+ * 对应 YAML：
+ * ```yaml
+ * on:
+ *   tapd:
+ *     - tapd-project-id: "12345"
+ *       event-type: story
+ *       include-actions: [create, update]
+ *       include-users: [user1]
+ *       exclude-users: [user2]
+ * ```
  */
-@Event(StreamBinding.TAPD_WEBHOOK_REQUEST_EVENT)
-@Schema(title = "TAPD webhook 请求事件")
-data class TapdWebhookRequestEvent(
-    @get:Schema(description = "TAPD 项目ID")
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TapdRule(
+    override val id: String? = null,
+    override val name: String? = null,
+    override val enable: Boolean? = true,
+    @get:Schema(title = "tapd-project-id")
+    @JsonProperty("tapd-project-id")
     val tapdProjectId: String,
-    @get:Schema(description = "事件类型")
-    val eventType: String,
-    @get:Schema(description = "事件动作")
-    val eventAction: String,
-    @get:Schema(description = "原始 event 字符串")
-    val rawEvent: String,
-    @get:Schema(description = "触发用户 (current_user)")
-    val triggerUser: String,
-    @get:Schema(description = "TAPD 主机地址（schema + host）")
-    val tapdHost: String,
-    @get:Schema(description = "原始请求体")
-    val body: Map<String, Any?>
-) : IEvent()
+    @get:Schema(title = "event-type")
+    @JsonProperty("event-type")
+    val eventType: String?,
+    @get:Schema(title = "include-actions")
+    @JsonProperty("include-actions")
+    val includeActions: List<String>? = null,
+    @get:Schema(title = "include-users")
+    @JsonProperty("include-users")
+    val includeUsers: List<String>? = null,
+    @get:Schema(title = "exclude-users")
+    @JsonProperty("exclude-users")
+    val excludeUsers: List<String>? = null
+) : Rule(id, name, enable)

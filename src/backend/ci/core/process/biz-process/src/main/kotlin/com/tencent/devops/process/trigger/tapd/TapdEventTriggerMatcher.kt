@@ -41,7 +41,6 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.process.trigger.enums.MatchStatus
 import com.tencent.devops.process.trigger.pojo.WebhookAtomResponse
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 /**
@@ -49,10 +48,6 @@ import org.springframework.stereotype.Service
  */
 @Service
 class TapdEventTriggerMatcher {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(TapdEventTriggerMatcher::class.java)
-    }
 
     fun matches(
         element: TapdWebHookTriggerElement,
@@ -65,16 +60,10 @@ class TapdEventTriggerMatcher {
         val taskId = element.id ?: ""
         // 1. 项目过滤
         if (input.tapdProjectId.isBlank() || input.tapdProjectId != tapdProjectId) {
-            logger.info(
-                "tapd trigger project mismatch|element=${input.tapdProjectId}|webhook=$tapdProjectId"
-            )
             return WebhookAtomResponse(MatchStatus.REPOSITORY_NOT_MATCH)
         }
         // 2. 事件类型过滤
         if (input.eventType != eventType) {
-            logger.info(
-                "tapd trigger event type mismatch|element=${input.eventType}|webhook=${eventType.value}"
-            )
             return WebhookAtomResponse(matchStatus = MatchStatus.EVENT_TYPE_NOT_MATCH)
         }
         // 3. 其他过滤条件
