@@ -54,6 +54,8 @@
     import jobOptionConfigMixin from '@/store/modules/common/jobOptionConfigMixin'
     import { mapActions } from 'vuex'
 
+    const MATRIX_RULE_FIELDS = ['strategyStr', 'includeCaseStr', 'excludeCaseStr']
+
     export default {
         name: 'job-mutual',
         mixins: [atomMixin, validMixins, jobOptionConfigMixin],
@@ -93,6 +95,15 @@
                 }
             }
         },
+        watch: {
+            enableMatrix (enable) {
+                if (enable) {
+                    this.validateMatrixFields()
+                    return
+                }
+                this.clearMatrixFieldErrors()
+            }
+        },
         created () {
             if (!this.disabled) {
                 this.initOptionConfig()
@@ -103,7 +114,7 @@
                 'setPipelineEditing'
             ]),
             isMatrixRuleField (name) {
-                return ['strategyStr', 'includeCaseStr', 'excludeCaseStr'].includes(name)
+                return MATRIX_RULE_FIELDS.includes(name)
             },
             getValidateRule (name, option) {
                 return Object.assign(
@@ -115,14 +126,26 @@
                     { required: this.isMatrixRuleField(name) ? false : !!option.required }
                 )
             },
+            validateMatrixFields () {
+                this.$nextTick(() => {
+                    MATRIX_RULE_FIELDS.forEach((field) => {
+                        this.$validator.validate(field, this.matrixControlOption?.[field] || '')
+                    })
+                })
+            },
+            clearMatrixFieldErrors () {
+                MATRIX_RULE_FIELDS.forEach((field) => {
+                    this.errors.remove(field)
+                })
+            },
             handleUpdateJobMatrix (name, value) {
                 this.setPipelineEditing(true)
                 this.updateContainerParams(
                     'matrixControlOption',
-                    Object.assign(this.matrixControlOption || {}, { [name]: value })
+                    Object.assign({}, this.matrixControlOption || {}, { [name]: value })
                 )
                 if (this.isMatrixRuleField(name)) {
-                    this.$validator.validateAll()
+                    this.validateMatrixFields()
                 }
             },
             toggleMatrix (e) {
