@@ -61,9 +61,13 @@ const getFetchConfig = (method: string, payload: any, config: IFetchConfig) => {
 };
 
 const joinUrl = (url: string) => {
-  const ajaxUrlPrefix = window.PUBLIC_URL_PREFIX + process.env.BK_AJAX_URL_PREFIX;
   if (url.startsWith('http') || url.startsWith('https')) {
     return url;
+  }
+  let ajaxUrlPrefix = window.PUBLIC_URL_PREFIX + process.env.BK_AJAX_URL_PREFIX;
+  // if ajaxUrlPrefix ends with /, remove it
+  if (ajaxUrlPrefix.endsWith('/')) {
+    ajaxUrlPrefix = ajaxUrlPrefix.slice(0, -1);
   }
   if (url.startsWith('/')) {
     return `${ajaxUrlPrefix}${url}`;
