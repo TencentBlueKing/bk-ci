@@ -66,13 +66,21 @@ const getFetchConfig = (method: string, payload: any, config: IFetchConfig) => {
   return fetchConfig;
 };
 
+const joinUrl = (url: string) => {
+  const ajaxUrlPrefix = window.PUBLIC_URL_PREFIX + process.env.BK_AJAX_URL_PREFIX;
+  if (url.startsWith('http') || url.startsWith('https')) {
+    return url;
+  }
+  if (url.startsWith('/')) {
+    return `${ajaxUrlPrefix}${url}`;
+  }
+  return `${ajaxUrlPrefix}/${url}`;
+}
+
 // 拼装发送请求 url
 const getFetchUrl = (url: string, method: string, payload = {}) => {
   try {
-    // 基础 url
-    const baseUrl = location.origin + window.PUBLIC_URL_PREFIX + process.env.BK_AJAX_URL_PREFIX;
-    // 构造 url 对象
-    const urlObject: URL = new URL(url, baseUrl);
+    const urlObject: URL = new URL(joinUrl(url), location.origin);
     // get 请求需要将参数拼接到url上
     if (methodsWithoutData.includes(method)) {
       Object.keys(payload).forEach((key) => {
