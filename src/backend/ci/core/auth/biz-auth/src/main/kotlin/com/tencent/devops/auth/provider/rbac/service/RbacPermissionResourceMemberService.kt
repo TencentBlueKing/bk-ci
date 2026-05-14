@@ -404,7 +404,7 @@ class RbacPermissionResourceMemberService(
             skippedUsersByReason = skippedUsersByReason,
             skippedDepartments = skippedDepartments
         )
-        return Result(message = resultMessage, data = iamMemberInfos.isNotEmpty())
+        return Result(message = resultMessage, data = true)
     }
 
     private fun verifyGroupBelongToProject(
