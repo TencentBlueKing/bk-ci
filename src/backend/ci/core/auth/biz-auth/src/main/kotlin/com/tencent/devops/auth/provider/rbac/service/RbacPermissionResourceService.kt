@@ -83,10 +83,14 @@ class RbacPermissionResourceService(
         )
         var projectName = resourceName
         val personalProject = personalProjectService.isPersonalProject(projectCode)
-        // 个人项目不需要注册非项目级资源
-        if (personalProject && resourceType != AuthResourceType.PROJECT.value) {
-            logger.info(
-                "Personal projects do not require registering resources with the Permission Center.$projectCode"
+        if (personalProject) {
+            createPersonalProjectResourceRelation(
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                resourceName = resourceName,
+                iamResourceCode = iamResourceCode
             )
             return true
         }
@@ -119,28 +123,23 @@ class RbacPermissionResourceService(
         }
 
         val isCreateResourceAndGroup = managerId != 0
-        // 个人项目只需要创建项目管理员组
-        if (personalProject && managerId != 0) {
-            permissionResourceGroupService.syncManagerGroup(
-                projectCode = projectCode,
-                managerId = managerId,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode,
-                resourceName = projectName,
-                iamResourceCode = projectCode
-            )
-            return true
-        }
         // 项目创建需要审批时,不需要保存资源信息,审批通过回调后，再进行创建。
         if (isCreateResourceAndGroup) {
-            createResource(
+            createLocalResource(
                 userId = userId,
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceName = resourceName,
                 resourceCode = resourceCode,
                 iamResourceCode = iamResourceCode,
-                managerId = managerId
+                relationId = managerId.toString(),
+                cleanup = {
+                    if (resourceType == AuthResourceType.PROJECT.value) {
+                        iamV2ManagerService.deleteManagerV2(managerId.toString())
+                    } else {
+                        iamV2ManagerService.deleteSubsetManager(managerId.toString())
+                    }
+                }
             )
             createResourceDefaultGroup(
                 userId = userId,
@@ -157,14 +156,68 @@ class RbacPermissionResourceService(
         return true
     }
 
-    private fun createResource(
+    private fun createPersonalProjectResourceRelation(
+        userId: String,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String,
+        iamResourceCode: String
+    ) {
+        if (resourceType == AuthResourceType.PROJECT.value) {
+            // 个人项目的项目级资源仍然保留分级管理员，但不继续创建默认组。
+            val gradeManagerId = permissionGradeManagerService.createGradeManager(
+                userId = userId,
+                projectCode = projectCode,
+                projectName = resourceName,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                resourceName = resourceName
+            )
+            createLocalResource(
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceName = resourceName,
+                resourceCode = resourceCode,
+                iamResourceCode = iamResourceCode,
+                relationId = gradeManagerId.toString(),
+                cleanup = { iamV2ManagerService.deleteManagerV2(gradeManagerId.toString()) }
+            )
+            permissionResourceGroupService.syncManagerGroup(
+                projectCode = projectCode,
+                managerId = gradeManagerId,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                resourceName = resourceName,
+                iamResourceCode = projectCode
+            )
+        }
+        logger.info(
+            "Personal projects only persist local auth resource without subset manager|" +
+                    "$projectCode|$resourceType|$resourceCode"
+        )
+        // 个人项目的非项目级资源只保留本地 resource 记录，不注册二级管理员和用户组。
+        createLocalResource(
+            userId = userId,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceName = resourceName,
+            resourceCode = resourceCode,
+            iamResourceCode = iamResourceCode,
+            relationId = ""
+        )
+    }
+
+    private fun createLocalResource(
         userId: String,
         projectCode: String,
         resourceType: String,
         resourceName: String,
         resourceCode: String,
         iamResourceCode: String,
-        managerId: Int
+        relationId: String,
+        cleanup: (() -> Unit)? = null
     ) {
         try {
             authResourceService.create(
@@ -176,14 +229,10 @@ class RbacPermissionResourceService(
                 iamResourceCode = iamResourceCode,
                 // 流水线组需要主动开启权限管理
                 enable = resourceType != AuthResourceType.PIPELINE_GROUP.value,
-                relationId = managerId.toString()
+                relationId = relationId
             )
         } catch (ignore: Exception) {
-            if (resourceType == AuthResourceType.PROJECT.value) {
-                iamV2ManagerService.deleteManagerV2(managerId.toString())
-            } else {
-                iamV2ManagerService.deleteSubsetManager(managerId.toString())
-            }
+            cleanup?.invoke()
             logger.warn("create resource failed|$userId|$projectCode|$resourceType|$resourceName", ignore)
             throw ErrorCodeException(
                 errorCode = ERROR_RESOURCE_CREATE_FAIL,
@@ -249,11 +298,6 @@ class RbacPermissionResourceService(
         enabled: Boolean?
     ): Boolean {
         logger.info("resource modify relation|$projectCode|$resourceType|$resourceCode|$resourceName")
-        val personalProject = personalProjectService.isPersonalProject(projectCode)
-        if (personalProject && resourceType != AuthResourceType.PROJECT.value) {
-            logger.info("Personal projects do not require update resources with the Permission Center.$projectCode")
-            return true
-        }
         val resourceInfo = authResourceService.get(
             projectCode = projectCode,
             resourceType = resourceType,
@@ -267,38 +311,24 @@ class RbacPermissionResourceService(
                 enabled = enabled
             )
         } else {
-            val projectInfo = authResourceService.get(
-                projectCode = projectCode,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode
-            )
-            // 如果发现资源已经被禁用，并且relationId为空,
-            // 说明二级管理员已在禁用时被删除,无需修改二级管理员以及用户组相关信息。
-            // 只需要对 Resource 表的名称进行修改即可
-            if (!resourceInfo.enable && resourceInfo.relationId.isBlank()) {
+            if (resourceInfo.relationId.isBlank()) {
+                // relationId 为空表示该资源只存在本地，不需要触发 IAM 二级管理员链路。
                 logger.info(
-                    "resource is disabled and relationId is empty, " +
-                            "skip modify subset manager" +
-                            "|$projectCode|$resourceType|$resourceCode"
+                    "resource relationId is empty, skip modify subset manager|$projectCode|$resourceType|$resourceCode"
                 )
-                authResourceService.update(
+                updateLocalResourceAndAuthorization(
                     projectCode = projectCode,
                     resourceType = resourceType,
                     resourceCode = resourceCode,
                     resourceName = resourceName
                 )
-                permissionAuthorizationService.modifyResourceAuthorization(
-                    listOf(
-                        ResourceAuthorizationDTO(
-                            projectCode = projectCode,
-                            resourceType = resourceType,
-                            resourceCode = resourceCode,
-                            resourceName = resourceName
-                        )
-                    )
-                )
                 return true
             }
+            val projectInfo = authResourceService.get(
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode
+            )
             permissionSubsetManagerService.modifySubsetManager(
                 subsetManagerId = resourceInfo.relationId,
                 projectCode = projectCode,
@@ -310,21 +340,11 @@ class RbacPermissionResourceService(
             )
         }
         if (updateAuthResource) {
-            authResourceService.update(
+            updateLocalResourceAndAuthorization(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 resourceName = resourceName
-            )
-            permissionAuthorizationService.modifyResourceAuthorization(
-                listOf(
-                    ResourceAuthorizationDTO(
-                        projectCode = projectCode,
-                        resourceType = resourceType,
-                        resourceCode = resourceCode,
-                        resourceName = resourceName
-                    )
-                )
             )
             traceEventDispatcher.dispatch(
                 AuthResourceGroupModifyEvent(
@@ -345,10 +365,6 @@ class RbacPermissionResourceService(
         resourceCode: String
     ): Boolean {
         logger.info("resource delete relation|$projectCode|$resourceType|$resourceCode")
-        if (personalProjectService.isPersonalProject(projectCode)) {
-            logger.info("Personal projects do not require delete resources with the Permission Center.$projectCode")
-            return true
-        }
         // 项目不能删除,不需要删除分级管理员
         if (resourceType != AuthResourceType.PROJECT.value) {
             val resourceInfo = authResourceService.getOrNull(
@@ -357,11 +373,11 @@ class RbacPermissionResourceService(
                 resourceCode = resourceCode
             )
             if (resourceInfo != null) {
-                // 资源已禁用且relationId为空,说明二级管理员已在禁用时被删除,无需再调用IAM删除接口
-                if (!resourceInfo.enable && resourceInfo.relationId.isBlank()) {
+                if (resourceInfo.relationId.isBlank()) {
+                    // 仅本地资源删除时，直接清理本地数据即可。
                     logger.info(
-                        "resource is disabled and relationId is empty, " +
-                                "skip delete subset manager|$projectCode|$resourceType|$resourceCode"
+                        "resource relationId is empty, skip delete subset manager|" +
+                                "$projectCode|$resourceType|$resourceCode"
                     )
                 } else {
                     val projectInfo = authResourceService.get(
@@ -465,33 +481,23 @@ class RbacPermissionResourceService(
             logger.info("resource has enable permission manager|$userId|$projectId|$resourceType|$resourceCode")
             return true
         }
-        // 如果发现resourceInfo.relationId不为空，说明二级管理员已存在，不需要再创建
-        val subsetManagerId: Int
-        val createMode: AuthGroupCreateMode
-        if (resourceInfo.relationId.isNotBlank()) {
-            subsetManagerId = resourceInfo.relationId.toInt()
-            createMode = AuthGroupCreateMode.ENABLE
-        } else {
-            // 重新创建二级管理员
-            subsetManagerId = permissionSubsetManagerService.createSubsetManager(
-                gradeManagerId = projectInfo.relationId,
+        if (resourceInfo.relationId.isBlank()) {
+            // 个人项目的这类资源没有关联二级管理员，只切换本地启用态。
+            logger.info(
+                "resource relationId is empty, enable local resource only|" +
+                        "$userId|$projectId|$resourceType|$resourceCode"
+            )
+            return authResourceService.enable(
                 userId = userId,
                 projectCode = projectId,
-                projectName = projectInfo.resourceName,
                 resourceType = resourceType,
-                resourceCode = resourceCode,
-                resourceName = resourceInfo.resourceName,
-                iamResourceCode = resourceInfo.iamResourceCode
-            )
-            createMode = AuthGroupCreateMode.CREATE
-            // 更新资源的二级管理员关联ID
-            authResourceService.updateRelationId(
-                projectCode = projectId,
-                resourceType = resourceType,
-                resourceCode = resourceCode,
-                relationId = subsetManagerId.toString()
+                resourceCode = resourceCode
             )
         }
+        val subsetManagerId: Int
+        val createMode: AuthGroupCreateMode
+        subsetManagerId = resourceInfo.relationId.toInt()
+        createMode = AuthGroupCreateMode.ENABLE
         // 创建默认用户组
         permissionSubsetManagerService.createSubsetManagerDefaultGroup(
             subsetManagerId = subsetManagerId,
@@ -541,6 +547,20 @@ class RbacPermissionResourceService(
             logger.info("resource has enable permission manager|$userId|$projectId|$resourceType|$resourceCode")
             return true
         }
+        if (resourceInfo.relationId.isBlank()) {
+            // 仅本地资源关闭权限时，不需要删除 IAM 侧默认组。
+            logger.info(
+                "resource relationId is empty, disable local resource only|" +
+                        "$userId|$projectId|$resourceType|$resourceCode"
+            )
+            authResourceService.disable(
+                userId = userId,
+                projectCode = projectId,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
+            return true
+        }
         permissionSubsetManagerService.deleteSubsetManagerDefaultGroup(
             userId = userId,
             subsetManagerId = resourceInfo.relationId.toInt(),
@@ -549,6 +569,30 @@ class RbacPermissionResourceService(
             resourceCode = resourceCode
         )
         return true
+    }
+
+    private fun updateLocalResourceAndAuthorization(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ) {
+        authResourceService.update(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            resourceName = resourceName
+        )
+        permissionAuthorizationService.modifyResourceAuthorization(
+            listOf(
+                ResourceAuthorizationDTO(
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    resourceName = resourceName
+                )
+            )
+        )
     }
 
     override fun listResources(
