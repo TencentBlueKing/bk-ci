@@ -24,6 +24,7 @@ import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -276,7 +277,7 @@ class RbacPermissionResourceMemberService(
         expiredTime: Long,
         members: List<String>?,
         departments: List<String>?
-    ): Boolean {
+    ): Result<Boolean> {
         logger.info("batch add resource group members :$projectCode|$iamGroupId|$expiredTime|$members|$departments")
         // 校验用户组是否属于该项目
         verifyGroupBelongToProject(
@@ -293,33 +294,56 @@ class RbacPermissionResourceMemberService(
         }.map { it.id }.toSet()
         // 校验用户是否应该加入用户组
         val iamMemberInfos = mutableListOf<ManagerMember>()
+        val addedUsers = mutableListOf<String>()
+        val addedDepartments = mutableListOf<String>()
+        val skippedUsersByReason = linkedMapOf<BatchAddSkipReason, MutableList<String>>()
+        val skippedDepartments = mutableListOf<String>()
         if (!members.isNullOrEmpty()) {
             val departedMembers = deptService.listDepartedMembers(
                 memberIds = members
             )
-            members.filterNot {
-                val isMemberDeparted = departedMembers.contains(it)
-                if (isMemberDeparted) {
-                    logger.warn("This user has departed and does not need to join $projectCode|$iamGroupId|$it")
-                }
-                isMemberDeparted
-            }.forEach {
-                val shouldAddUserToGroup = shouldAddUserToGroup(
-                    projectCode = projectCode,
-                    iamGroupId = iamGroupId,
-                    groupUserMap = groupUserMap,
-                    groupDepartmentSet = groupDepartmentSet,
-                    member = it
-                )
-                if (shouldAddUserToGroup) {
-                    iamMemberInfos.add(ManagerMember(userType, it))
+            members.forEach { member ->
+                if (departedMembers.contains(member)) {
+                    logger.warn(
+                        "This user does not exist or has departed and does not need to join " +
+                            "$projectCode|$iamGroupId|$member"
+                    )
+                    skippedUsersByReason
+                        .getOrPut(BatchAddSkipReason.USER_NOT_FOUND_OR_DEPARTED) { mutableListOf() }
+                        .add(member)
+                } else {
+                    when (
+                        val batchAddUserResult = checkUserCanBeAddedToGroup(
+                            projectCode = projectCode,
+                            iamGroupId = iamGroupId,
+                            groupUserMap = groupUserMap,
+                            groupDepartmentSet = groupDepartmentSet,
+                            member = member
+                        )
+                    ) {
+                        BatchAddUserResult.ADD -> {
+                            iamMemberInfos.add(ManagerMember(userType, member))
+                            addedUsers.add(member)
+                        }
+
+                        BatchAddUserResult.ALREADY_IN_GROUP,
+                        BatchAddUserResult.ALREADY_IN_GROUP_BY_DEPARTMENT,
+                        BatchAddUserResult.USER_NOT_FOUND_OR_DEPARTED -> {
+                            skippedUsersByReason
+                                .getOrPut(batchAddUserResult.reason!!) { mutableListOf() }
+                                .add(member)
+                        }
+                    }
                 }
             }
         }
         if (!departments.isNullOrEmpty()) {
-            departments.forEach {
-                if (!groupDepartmentSet.contains(it)) {
-                    iamMemberInfos.add(ManagerMember(deptType, it))
+            departments.forEach { department ->
+                if (!groupDepartmentSet.contains(department)) {
+                    iamMemberInfos.add(ManagerMember(deptType, department))
+                    addedDepartments.add(department)
+                } else {
+                    skippedDepartments.add(department)
                 }
             }
         }
@@ -374,7 +398,13 @@ class RbacPermissionResourceMemberService(
                 iamGroupIds = listOf(iamGroupId)
             )
         )
-        return true
+        val resultMessage = buildBatchAddResourceGroupMembersMessage(
+            addedUsers = addedUsers,
+            addedDepartments = addedDepartments,
+            skippedUsersByReason = skippedUsersByReason,
+            skippedDepartments = skippedDepartments
+        )
+        return Result(message = resultMessage, data = iamMemberInfos.isNotEmpty())
     }
 
     private fun verifyGroupBelongToProject(
@@ -394,13 +424,13 @@ class RbacPermissionResourceMemberService(
         }
     }
 
-    private fun shouldAddUserToGroup(
+    private fun checkUserCanBeAddedToGroup(
         projectCode: String,
         iamGroupId: Int,
         groupUserMap: Map<String, RoleGroupMemberInfo>,
         groupDepartmentSet: Set<String>,
         member: String
-    ): Boolean {
+    ): BatchAddUserResult {
         // 校验是否将用户加入组，如果用户已经在用户组,并且过期时间超过180天,则不再添加
         val expectExpiredAt = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(VALID_EXPIRED_AT)
         if (groupUserMap.containsKey(member) && groupUserMap[member]!!.expiredAt > expectExpiredAt) {
@@ -408,7 +438,7 @@ class RbacPermissionResourceMemberService(
                 "The user's validity period in the group exceeds 180 days and does not need to be added!" +
                         "$projectCode|$iamGroupId|$member"
             )
-            return false
+            return BatchAddUserResult.ALREADY_IN_GROUP
         }
         // 校验用户的部门是否已经加入组，若部门已经加入，则不再添加该用户
         try {
@@ -419,16 +449,50 @@ class RbacPermissionResourceMemberService(
                     "The department of this user has already been added to the group. No need to join!" +
                             "$projectCode|$groupDepartmentSet|$iamGroupId|$member"
                 )
-                return false
+                return BatchAddUserResult.ALREADY_IN_GROUP_BY_DEPARTMENT
             }
         } catch (ignore: Exception) {
-            throw ErrorCodeException(
-                errorCode = AuthMessageCode.USER_NOT_EXIST,
-                params = arrayOf(member),
-                defaultMessage = "user $member not exist"
+            logger.warn(
+                "failed to get user department info, skip add user $projectCode|$iamGroupId|$member",
+                ignore
             )
+            return BatchAddUserResult.USER_NOT_FOUND_OR_DEPARTED
         }
-        return true
+        return BatchAddUserResult.ADD
+    }
+
+    private fun buildBatchAddResourceGroupMembersMessage(
+        addedUsers: List<String>,
+        addedDepartments: List<String>,
+        skippedUsersByReason: Map<BatchAddSkipReason, List<String>>,
+        skippedDepartments: List<String>
+    ): String {
+        val messageParts = mutableListOf<String>()
+        if (addedUsers.isNotEmpty()) {
+            messageParts.add("成功添加用户：${addedUsers.joinToString(",")}")
+        }
+        if (addedDepartments.isNotEmpty()) {
+            messageParts.add("成功添加组织：${addedDepartments.joinToString(",")}")
+        }
+        skippedUsersByReason.forEach { (reason, memberIds) ->
+            if (memberIds.isNotEmpty()) {
+                messageParts.add("${reason.messagePrefix}：${memberIds.joinToString(",")}")
+            }
+        }
+        if (skippedDepartments.isNotEmpty()) {
+            messageParts.add("以下组织已在当前组中，无需重复添加：${skippedDepartments.joinToString(",")}")
+        }
+        if (messageParts.isEmpty()) {
+            return "未传入用户或组织，无法添加成员"
+        }
+        val summary = if (addedUsers.isNotEmpty() || addedDepartments.isNotEmpty()) {
+            "成员添加完成"
+        } else {
+            "未新增任何成员"
+        }
+        return listOf(summary)
+            .plus(messageParts)
+            .joinToString(separator = "；")
     }
 
     override fun batchDeleteResourceGroupMembers(
@@ -763,7 +827,5 @@ class RbacPermissionResourceMemberService(
 
         // 自动续期默认180天
         private val AUTO_RENEWAL_EXPIRED_AT = TimeUnit.DAYS.toSeconds(180)
-
-        private val executorService = Executors.newFixedThreadPool(30)
     }
 }

@@ -5,6 +5,7 @@ import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.vo.ResourceMemberCountVO
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 
@@ -105,7 +106,7 @@ interface PermissionResourceMemberService {
         expiredTime: Long,
         members: List<String>? = emptyList(),
         departments: List<String>? = emptyList()
-    ): Boolean
+    ): Result<Boolean>
 
     /**
      * 获取用户在项目下加入的用户组列表（未过期）

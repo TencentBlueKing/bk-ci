@@ -253,14 +253,12 @@ class ServiceAuthAiResourceImpl(
         val expiredTime = now + TimeUnit.DAYS.toSeconds(
             createInfo.expiredTime ?: DEFAULT_EXPIRED_DAYS
         )
-        return Result(
-            permissionResourceMemberService.batchAddResourceGroupMembers(
-                projectCode = projectId,
-                iamGroupId = createInfo.groupId!!,
-                expiredTime = expiredTime,
-                members = createInfo.userIds,
-                departments = createInfo.deptIds
-            )
+        return permissionResourceMemberService.batchAddResourceGroupMembers(
+            projectCode = projectId,
+            iamGroupId = createInfo.groupId!!,
+            expiredTime = expiredTime,
+            members = createInfo.userIds,
+            departments = createInfo.deptIds
         )
     }
 
