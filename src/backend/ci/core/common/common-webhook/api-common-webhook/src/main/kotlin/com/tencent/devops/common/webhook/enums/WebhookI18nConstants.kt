@@ -167,4 +167,28 @@ object WebhookI18nConstants {
 
     // Git MR Label被排除
     const val MR_LABEL_IGNORED = "bkRepoTriggerMrLabelIgnored"
+
+    // TAPD 触发事件描述: 需求 [<a href="{0}">!{1}</a>] 由 {2} 创建
+    const val BK_TAPD_STORY_CREATE_EVENT_DESC = "bkTapdStoryCreateEventDesc"
+
+    // TAPD 触发事件描述: 需求 [<a href="{0}">!{1}</a>] 由 {2} 更新
+    const val BK_TAPD_STORY_UPDATE_EVENT_DESC = "bkTapdStoryUpdateEventDesc"
+
+    // TAPD 触发事件描述: 需求 [<a href="{0}">!{1}</a>] 由 {2} 删除
+    const val BK_TAPD_STORY_DELETE_EVENT_DESC = "bkTapdStoryDeleteEventDesc"
+
+    // TAPD 触发事件描述: 缺陷 [<a href="{0}">!{1}</a>] 由 {2} 创建
+    const val BK_TAPD_BUG_CREATE_EVENT_DESC = "bkTapdBugCreateEventDesc"
+
+    // TAPD 触发事件描述: 缺陷 [<a href="{0}">!{1}</a>] 由 {2} 更新
+    const val BK_TAPD_BUG_UPDATE_EVENT_DESC = "bkTapdBugUpdateEventDesc"
+
+    // TAPD 触发事件描述: 缺陷 [<a href="{0}">!{1}</a>] 由 {2} 删除
+    const val BK_TAPD_BUG_DELETE_EVENT_DESC = "bkTapdBugDeleteEventDesc"
+
+    // 通用: 事件动作不匹配
+    const val BK_TRIGGER_ACTION_NOT_MATCH = "bkTriggerActionNotMatch"
+
+    // 通用: 触发人员不匹配
+    const val BK_RIGGER_ACTION_NOT_MATCH = "bkTriggerActionNotMatch"
 }
