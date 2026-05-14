@@ -1,0 +1,54 @@
+---
+description: Process 模块新增表时的分片与 misc 配套检查
+globs: support-files/sql/1001_ci_process_ddl_mysql.sql
+alwaysApply: false
+enabled: true
+---
+
+# Process 新增表规则
+
+当在 `support-files/sql/1001_ci_process_ddl_mysql.sql` 中新增表时，必须先完成下面检查，再继续修改代码。
+
+## 1. 先确认表类型
+
+发现新增 `CREATE TABLE` 时，必须先咨询用户：
+
+- 这个表是**广播表**还是**分片表**
+
+确认后，必须同步更新 `support-files/templates/#etc#ci#common.yml` 中的 `datasource.tableRuleConfigs` 配置。
+
+要求：
+
+- 新增对应表名配置
+- 配置的 `databaseShardingStrategy` 必须与用户确认结果一致
+- 不允许只改 DDL，不改 `#etc#ci#common.yml`
+- 如果是广播表，`#etc#ci#common.yml` 中必须显式填写 `broadcastFlag: true`
+- 如果不是广播表，`broadcastFlag` 可以使用默认值，不强制显式填写
+- 如果是分片表，对应 DAO 查询必须带 `projectId` 字段，避免跨分片查询
+
+## 2. 必须确认 misc 配套逻辑
+
+新增 Process 表时，必须先咨询用户，这张表属于哪一类：
+
+1. **构建维度表**：数据按构建产生，通常和 `buildId` 关联
+2. **流水线维度表**：数据按流水线长期存在，通常和 `pipelineId` 关联
+
+确认类型后，必须直接补齐对应的 `misc` 服务逻辑，不能只停留在 SQL 建表。
+
+## 3. 对应实现要求
+
+必须按表类型补齐以下能力：
+
+- 如果是**构建维度表**，在 `com.tencent.devops.misc.service.process.ProcessDataClearService#clearOtherBuildData` 增加逻辑
+- 如果是**流水线维度表**，在 `com.tencent.devops.misc.service.process.ProcessDataClearService#clearPipelineData` 增加逻辑
+
+如果用户尚未明确，必须先提问，不能自行假设。
+
+## 4. 提交前检查清单
+
+- [ ] 已确认新增表是广播表还是分片表
+- [ ] 已更新 `support-files/templates/#etc#ci#common.yml`
+- [ ] 如果是广播表，已显式配置 `broadcastFlag: true`
+- [ ] 如果是分片表，对应 DAO 查询已带 `projectId`
+- [ ] 已确认这张表是构建维度表还是流水线维度表
+- [ ] 已按表类型补齐 `misc` 服务逻辑
