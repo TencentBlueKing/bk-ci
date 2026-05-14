@@ -671,8 +671,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             if (projectCode != null) {
                 generateAtomStatusList(
                     atomCode = atomCode,
-                    projectCode = projectCode,
-                    queryWithoutStatusFlag = false
+                    projectCode = projectCode
                 )
             } else {
                 null
@@ -774,8 +773,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val atomStatusList = if (projectCode != null) {
             generateAtomStatusList(
                 atomCode = atomCode,
-                projectCode = projectCode,
-                queryWithoutStatusFlag = false
+                projectCode = projectCode
             )
         } else {
             null
@@ -832,14 +830,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
 
     private fun generateAtomStatusList(
         atomCode: String,
-        projectCode: String,
-        queryWithoutStatusFlag: Boolean = false
-    ): MutableList<Byte>? {
-        // 构建详情页查询历史快照，不校验任何状态
-        if (queryWithoutStatusFlag) {
-            return null
-        }
-        
+        projectCode: String
+    ): MutableList<Byte> {
         val flag = storeProjectRelDao.isTestProjectCode(dslContext, atomCode, StoreTypeEnum.ATOM, projectCode)
         logger.info("isInitTestProjectCode atomCode=$atomCode|projectCode=$projectCode|flag=$flag")
         // 普通项目的查已发布和下架中的插件
@@ -1424,10 +1416,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             // 获取插件真实的版本号
             val atomStatusList = generateAtomStatusList(
                 atomCode = atomCode,
-                projectCode = projectCode,
-                queryWithoutStatusFlag = false
+                projectCode = projectCode
             )
-            atomStatusList?.add(AtomStatusEnum.UNDERCARRIAGED.status.toByte())
+            atomStatusList.add(AtomStatusEnum.UNDERCARRIAGED.status.toByte())
             val realVersion = atomDao.getAtomRealVersion(
                 dslContext = dslContext,
                 projectCode = projectCode,
@@ -1451,8 +1442,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             defaultFlag = defaultFlag,
             atomStatusList = generateAtomStatusList(
                 atomCode = atomCode,
-                projectCode = projectCode,
-                queryWithoutStatusFlag = false
+                projectCode = projectCode
             ),
             limitNum = 1
         )?.getOrNull(0)
