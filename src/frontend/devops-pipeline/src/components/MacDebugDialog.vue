@@ -7,127 +7,147 @@
         class="debug-dialog"
     >
         <div slot="default">
-            <bk-alert
-                type="warning"
+            <div
+                v-bkloading="{ isLoading: isLoading }"
+                class="content"
             >
-                <i-18n
-                    slot="title"
-                    path="debugDisconnectNotice"
-                >
-                    <span class="warning-text">{{ $t('tenMinutes') }}</span>
-                    <span class="warning-text">{{ $t('autoExit') }}</span>
-                </i-18n>
-            </bk-alert>
-
-            <div class="debug-content">
-                <!-- 左侧工具列表 -->
-                <div class="debug-tools-list">
-                    <p class="debug-title">{{ $t('debugConnectionMethod') }}</p>
-                    <div
-                        v-for="tool in toolList"
-                        :key="tool.type"
-                        class="tool-item"
-                        :class="{ 'is-active': currentTool === tool.type }"
-                        @click="currentTool = tool.type"
+                <!-- 错误状态 -->
+                <template v-if="errorMessage && !isLoading">
+                    <div class="debug-error">
+                        <bk-alert
+                            type="error"
+                            :title="errorMessage"
+                        />
+                        <bk-button
+                            theme="primary"
+                            @click="$emit('close')"
+                        >
+                            {{ $t('close') }}
+                        </bk-button>
+                    </div>
+                </template>
+                <!-- 正常状态 -->
+                <template v-else-if="!errorMessage && hasDebugData">
+                    <bk-alert
+                        type="warning"
                     >
-                        <div class="tool-item-content">
-                            <div class="tool-info">
-                                <div class="tool-name">{{ $t(tool.nameKey) }}</div>
-                                <div class="tool-desc">{{ $t(tool.descKey) }}</div>
-                            </div>
+                        <i-18n
+                            slot="title"
+                            path="debugDisconnectNotice"
+                        >
+                            <span class="warning-text">{{ $t('tenMinutes') }}</span>
+                            <span class="warning-text">{{ $t('autoExit') }}</span>
+                        </i-18n>
+                    </bk-alert>
+
+                    <div class="debug-content">
+                        <!-- 左侧工具列表 -->
+                        <div class="debug-tools-list">
+                            <p class="debug-title">{{ $t('debugConnectionMethod') }}</p>
                             <div
-                                class="tool-icon"
-                                :class="`tool-icon-${tool.type}`"
-                            ></div>
-                        </div>
-                    </div>
-
-                    <p
-                        class="more-guide"
-                        @click="viewMoreGuide"
-                    >
-                        <Logo
-                            name="jump"
-                            size="12"
-                        />
-                        {{ $t('viewMoreGuidance') }}
-                    </p>
-                </div>
-
-                <!-- 右侧详情内容 -->
-                <div
-                    class="debug-detail"
-                    v-bkloading="{ isLoading: isLoading }"
-                >
-                    <span class="debugging">{{ $t('debugging') }}</span>
-                    
-                    <div class="debug-info-box">
-                        <div
-                            class="debug-info-item"
-                            v-if="currentTool === 'command'"
-                        >
-                            <div class="info-label">{{ $t('loginCommand') }}</div>
-                            <div class="info-value">
-                                <code>{{ debugData.ssh }}</code>
-                                <i
-                                    class="bk-icon icon-copy"
-                                    @click="copy(debugData.ssh)"
-                                ></i>
-                            </div>
-                        </div>
-                        <div
-                            class="debug-info-item"
-                            v-else-if="currentTool === 'vnc'"
-                        >
-                            <div class="info-label">{{ $t('vncAddress') }}</div>
-                            <div class="info-value">
-                                <code>{{ debugData.vnc }}</code>
-                                <i
-                                    class="bk-icon icon-copy"
-                                    @click="copy(debugData.vnc)"
-                                ></i>
-                            </div>
-                        </div>
-
-                        <div class="debug-info-item vnc-info">
-                            <div v-if="debugData.username">
-                                <div class="info-label">{{ $t('loginUsername') }}</div>
-                                <div class="info-value">
-                                    <span class="password-dots">{{ debugData.username }}</span>
-                                    <i
-                                        class="bk-icon icon-copy"
-                                        @click="copy(debugData.username)"
-                                    ></i>
+                                v-for="tool in toolList"
+                                :key="tool.type"
+                                class="tool-item"
+                                :class="{ 'is-active': currentTool === tool.type }"
+                                @click="currentTool = tool.type"
+                            >
+                                <div class="tool-item-content">
+                                    <div class="tool-info">
+                                        <div class="tool-name">{{ $t(tool.nameKey) }}</div>
+                                        <div class="tool-desc">{{ $t(tool.descKey) }}</div>
+                                    </div>
+                                    <div
+                                        class="tool-icon"
+                                        :class="`tool-icon-${tool.type}`"
+                                    ></div>
                                 </div>
                             </div>
-                            <div>
-                                <div class="info-label">{{ $t('loginPassword') }}</div>
-                                <div class="info-value password-value">
-                                    <span class="password-dots">{{ showPassword ? debugData.password : '●●●●●●●●' }}</span>
-                                    <bk-icon
-                                        :type="showPassword ? 'eye' : 'eye-slash'"
-                                        @click="showPassword = !showPassword"
-                                    />
-                                    <i
-                                        class="bk-icon icon-copy"
-                                        @click="copy(debugData.password)"
-                                    ></i>
+
+                            <p
+                                class="more-guide"
+                                @click="viewMoreGuide"
+                            >
+                                <Logo
+                                    name="jump"
+                                    size="12"
+                                />
+                                {{ $t('viewMoreGuidance') }}
+                            </p>
+                        </div>
+
+                        <!-- 右侧详情内容 -->
+                        <div class="debug-detail">
+                            <span class="debugging">{{ $t('debugging') }}</span>
+
+                            <div class="debug-info-box">
+                                <div
+                                    class="debug-info-item"
+                                    v-if="currentTool === 'command'"
+                                >
+                                    <div class="info-label">{{ $t('loginCommand') }}</div>
+                                    <div class="info-value">
+                                        <code>{{ debugData.ssh }}</code>
+                                        <i
+                                            class="bk-icon icon-copy"
+                                            @click="copy(debugData.ssh)"
+                                        ></i>
+                                    </div>
                                 </div>
+                                <div
+                                    class="debug-info-item"
+                                    v-else-if="currentTool === 'vnc'"
+                                >
+                                    <div class="info-label">{{ $t('vncAddress') }}</div>
+                                    <div class="info-value">
+                                        <code>{{ debugData.vnc }}</code>
+                                        <i
+                                            class="bk-icon icon-copy"
+                                            @click="copy(debugData.vnc)"
+                                        ></i>
+                                    </div>
+                                </div>
+
+                                <div class="debug-info-item vnc-info">
+                                    <div v-if="debugData.username">
+                                        <div class="info-label">{{ $t('loginUsername') }}</div>
+                                        <div class="info-value">
+                                            <span class="password-dots">{{ debugData.username }}</span>
+                                            <i
+                                                class="bk-icon icon-copy"
+                                                @click="copy(debugData.username)"
+                                            ></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="info-label">{{ $t('loginPassword') }}</div>
+                                        <div class="info-value password-value">
+                                            <span class="password-dots">{{ showPassword ? debugData.password : '●●●●●●●●' }}</span>
+                                            <bk-icon
+                                                :type="showPassword ? 'eye' : 'eye-slash'"
+                                                @click="showPassword = !showPassword"
+                                            />
+                                            <i
+                                                class="bk-icon icon-copy"
+                                                @click="copy(debugData.password)"
+                                            ></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                class="debug-footer"
+                                @click="exitDebug"
+                            >
+                                <Logo
+                                    name="shutdown"
+                                    size="14"
+                                />
+                                {{ $t('exitDebug') }}
                             </div>
                         </div>
                     </div>
-
-                    <div
-                        class="debug-footer"
-                        @click="exitDebug"
-                    >
-                        <Logo
-                            name="shutdown"
-                            size="14"
-                        />
-                        {{ $t('exitDebug') }}
-                    </div>
-                </div>
+                </template>
             </div>
         </div>
         <div slot="tools">
@@ -181,6 +201,7 @@
                 showPassword: false,
                 currentTool: 'command', // 当前选中的工具：command 或 vnc
                 isLoading: false,
+                errorMessage: '', // 存储接口错误信息
                 toolList: [
                     {
                         type: 'command',
@@ -202,11 +223,20 @@
                 }
             }
         },
-        computed: {},
+        computed: {
+            // 判断是否有调试数据
+            hasDebugData () {
+                return this.debugData && (this.debugData.ssh || this.debugData.vnc)
+            }
+        },
         watch: {
             isShow (val) {
                 if (!val) {
+                    // 关闭弹窗时重置状态
                     this.showPassword = false
+                } else {
+                    // 打开弹窗时自动调用接口获取调试数据
+                    this.fetchDebugData()
                 }
             }
         },
@@ -215,10 +245,35 @@
                 'startVmSeqDebug',
                 'stopVmSeqDebug'
             ]),
-            // 供父组件调用的设置数据
-            setDebugData (data) {
-                if (data) {
-                    this.debugData = data
+            // 获取调试数据
+            async fetchDebugData () {
+                this.isLoading = true
+                this.errorMessage = ''
+                // 重置 debugData
+                this.debugData = {
+                    ssh: '',
+                    vnc: '',
+                    username: '',
+                    password: ''
+                }
+                
+                try {
+                    const response = await this.startVmSeqDebug({
+                        pipelineId: this.pipelineId,
+                        buildId: this.buildId,
+                        containerId: this.containerId,
+                        executeCount: this.executeCount
+                    })
+                    
+                    if (response.data?.actionCode === 200 && response.data?.data) {
+                        this.debugData = response.data.data
+                    } else {
+                        this.errorMessage = response.data?.actionMessage || this.$t('startDebugFailed')
+                    }
+                } catch (err) {
+                    this.errorMessage = err.message || err || this.$t('startDebugFailed')
+                } finally {
+                    this.isLoading = false
                 }
             },
             exitDebug () {
@@ -276,6 +331,9 @@
     .bk-dialog-body {
         padding: 0;
     }
+    .content {
+        min-height: 200px;
+    }
     .debug-tools {
         display: flex;
         align-items: center;
@@ -290,6 +348,32 @@
     }
     .warning-text {
         color: #E38B02;
+    }
+    
+    // 错误状态样式 - 在 loading 容器内部，debug-content 外部
+    .debug-error {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 200px;
+        padding: 24px;
+        gap: 16px;
+        
+        .bk-alert {
+            width: 100%;
+        }
+    }
+    
+    // 警告提示样式
+    .bk-alert-warning {
+        margin-bottom: 0;
+        
+        .bk-alert-title {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
     }
     
     .debug-content {
@@ -393,7 +477,7 @@
             display: flex;
             flex-direction: column;
             background-color: #F5F7FA;
-
+            
             .debugging {
                 width: 84px;
                 height: 24px;

@@ -282,7 +282,7 @@
         <MacDebugDialog
             ref="macDebugDialog"
             :is-show="isShowDebug"
-            :pipeline-id="pipelineId"
+            :pipeline-id="routerParams.pipelineId"
             :container-id="MACDebugContainerId"
             :build-id="buildId"
             :execute-count="executeCount"
@@ -1004,30 +1004,10 @@
                     })
                 })
             },
-            async openDebug (container) {
-                try {
-                    const response = await this.$store.dispatch('atom/startVmSeqDebug', {
-                        pipelineId: this.routerParams.pipelineId,
-                        buildId: this.routerParams.buildNo,
-                        containerId: container.containerId,
-                        executeCount: container.executeCount
-                    })
-                    
-                    if (response.data?.actionCode === 200 && response.data?.data) {
-                        this.$refs.macDebugDialog?.setDebugData(response.data.data)
-                        this.isShowDebug = true
-                    } else {
-                        this.$bkMessage({
-                            theme: 'error',
-                            message: response.data?.actionMessage || this.$t('startDebugFailed')
-                        })
-                    }
-                } catch (err) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: err.message || err
-                    })
-                }
+            openDebug (container) {
+                console.log("🚀 ~ container:", container)
+                this.MACDebugContainerId = container.containerId
+                this.isShowDebug = true
             },
             closeDebugDialog () {
                 this.isShowDebug = false

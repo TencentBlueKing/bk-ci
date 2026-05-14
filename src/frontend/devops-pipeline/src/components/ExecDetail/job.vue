@@ -23,7 +23,6 @@
             v-if="currentTab === 'setting' && showDebugDockerBtn"
             class="head-tool"
             text
-            :loading="isDebugLoading"
             @click="handleDebug"
         >
             {{ $t('editPage.docker.debugConsole') }}
@@ -102,7 +101,6 @@
             return {
                 showTime: false,
                 searchStr: '',
-                isDebugLoading: false,
                 currentTab: 'log'
             }
         },
@@ -159,13 +157,11 @@
             }
         },
         methods: {
-            async handleDebug () {
+            handleDebug () {
                 if (this.currentJob.baseOS === 'LINUX') {
                     this.$refs.container.startDebug?.()
                 } else {
-                    this.isDebugLoading = true
-                    await this.$refs.container.openDebug?.()
-                    this.isDebugLoading = false
+                    this.$refs.container.openDebug?.()
                 }
             }
         }

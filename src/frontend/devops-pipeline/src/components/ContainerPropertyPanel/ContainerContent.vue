@@ -1284,30 +1284,8 @@
                 const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/dockerConsole/?pipelineId=${this.pipelineId}&dispatchType=${this.buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
                 tab.location = url
             },
-            async openDebug () {
-                try {
-                    const response = await this.$store.dispatch('atom/startVmSeqDebug', {
-                        pipelineId: this.pipelineId,
-                        buildId: this.buildId,
-                        containerId: this.container.containerId,
-                        executeCount: this.container.executeCount ?? 1
-                    })
-                    
-                    if (response.data?.actionCode === 200 && response.data?.data) {
-                        this.$refs.macDebugDialog?.setDebugData(response.data.data)
-                        this.isShowDebug = true
-                    } else {
-                        this.$bkMessage({
-                            theme: 'error',
-                            message: response.data?.actionMessage || this.$t('startDebugFailed')
-                        })
-                    }
-                } catch (err) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: err.message || err
-                    })
-                }
+            openDebug () {
+                this.isShowDebug = true
             },
             closeDebugDialog () {
                 this.isShowDebug = false

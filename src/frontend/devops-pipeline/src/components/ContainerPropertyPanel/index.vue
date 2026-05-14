@@ -40,7 +40,6 @@
             >
                 <bk-button
                     theme="warning"
-                    :loading="isDebugLoading"
                     @click="startDebug"
                 >
                     {{ $t('editPage.docker.debugConsole') }}
@@ -75,7 +74,6 @@
         },
         data () {
             return {
-                isDebugLoading: false,
                 nameEditing: false
             }
         },
@@ -128,13 +126,11 @@
                     }
                 })
             },
-            async startDebug () {
+            startDebug () {
                 if (this.container.baseOS === 'LINUX') {
                     this.$refs.container.startDebug()
                 } else {
-                    this.isDebugLoading = true
-                    await this.$refs.container.openDebug()
-                    this.isDebugLoading = false
+                    this.$refs.container.openDebug()
                 }
             }
         }
