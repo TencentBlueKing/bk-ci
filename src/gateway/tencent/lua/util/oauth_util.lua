@@ -432,7 +432,7 @@ function _M:introspect_token(access_token)
 
     local res, err = httpc:request_uri(path, {
         method = "POST",
-        ssl_verify = false,
+        ssl_verify = true,
         headers = {
             ["Host"] = config.bkauth.host,
             ["Content-Type"] = "application/x-www-form-urlencoded",
