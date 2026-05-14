@@ -120,12 +120,14 @@ class LogServiceESImpl(
     }
 
     /**
-     * 用 buildId 生成 routing preference：
-     *  - `_local` 优先本地分片，减少跨节点开销；
-     *  - `|$buildId` 作为 hash key，保证同一构建的多次查询稳定落到同一副本，
-     *    彻底消除主副本与副本之间因复制延迟 / 段合并差异导致的"条数飘动"。
+     * 用 buildId 作为 custom routing preference：
+     *  - ES 会基于该字符串做 hash，保证同一 buildId 的多次查询稳定命中同一副本，
+     *    彻底消除主副本与副本之间因复制延迟 / 段合并差异导致的"条数飘动"；
+     *  - 注意 ES 5.x 之后 custom preference 不能以 `_` 开头（会被识别为预设关键字），
+     *    且 `_local|customKey` 这种组合写法已不被支持，否则会触发 IllegalArgumentException。
      */
-    private fun routingPreference(buildId: String): String = "_local|$buildId"
+    private fun routingPreference(buildId: String): String =
+        if (buildId.startsWith("_")) "b_$buildId" else buildId
 
     /**
      * 统一日志排序：先按 timestamp，再按 lineNo。
@@ -293,17 +295,13 @@ class LogServiceESImpl(
             }
             if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
         } catch (e: ElasticsearchStatusException) {
-            e.status()
-            val exString = e.toString()
-            if (exString.contains("index_closed_exception")) {
-                logger.warn("[$buildId] Can't search because of index_closed_exception", e)
-                queryLogs.status = LogStatus.CLOSED.status
-            }
+            handleSearchStatusException(buildId, "queryLogsBetweenLines", queryLogs, e)
         } catch (ignore: Exception) {
             logger.warn(
                 "Query more logs between lines failed because of ${ignore.javaClass}. buildId: $buildId",
                 ignore
             )
+            queryLogs.status = LogStatus.FAIL.status
         }
         return queryLogs
     }
@@ -578,14 +576,7 @@ class LogServiceESImpl(
             )
             if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
         } catch (e: ElasticsearchStatusException) {
-            val exString = e.toString()
-            if (exString.contains("index_closed_exception")) {
-                logger.warn("[$buildId] Can't search because of index_closed_exception", e)
-                queryLogs.status = LogStatus.CLOSED.status
-            } else if (exString.contains("Too Many Requests")) {
-                logger.warn("[$buildId] Too many query requests", e)
-                queryLogs.status = LogStatus.FAIL.status
-            }
+            handleSearchStatusException(buildId, "queryInitLogsPage", queryLogs, e)
         } catch (ignore: Throwable) {
             logger.warn("Query init logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
@@ -764,14 +755,7 @@ class LogServiceESImpl(
             queryLogs.hasMore = totalHits > logs.size
             return queryLogs
         } catch (e: ElasticsearchStatusException) {
-            val exString = e.toString()
-            if (exString.contains("index_closed_exception")) {
-                logger.warn("[$buildId] Can't search because of index_closed_exception", e)
-                queryLogs.status = LogStatus.CLOSED.status
-            } else if (exString.contains("Too Many Requests")) {
-                logger.warn("[$buildId] Too many query requests", e)
-                queryLogs.status = LogStatus.FAIL.status
-            }
+            handleSearchStatusException(buildId, "doGetEndLogs", queryLogs, e)
         } catch (ignore: Throwable) {
             logger.warn("Query end logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
@@ -847,14 +831,7 @@ class LogServiceESImpl(
             if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
             queryLogs.hasMore = totalHits > queryLogs.logs.size
         } catch (e: ElasticsearchStatusException) {
-            val exString = e.toString()
-            if (exString.contains("index_closed_exception")) {
-                logger.warn("[$buildId] Can't search because of index_closed_exception", e)
-                queryLogs.status = LogStatus.CLOSED.status
-            } else if (exString.contains("Too Many Requests")) {
-                logger.warn("[$buildId] Too many query requests", e)
-                queryLogs.status = LogStatus.FAIL.status
-            }
+            handleSearchStatusException(buildId, "doQueryInitLogs", queryLogs, e)
         } catch (ignore: Throwable) {
             logger.warn("Query init logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
@@ -935,14 +912,7 @@ class LogServiceESImpl(
 
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
         } catch (e: ElasticsearchStatusException) {
-            val exString = e.toString()
-            if (exString.contains("index_closed_exception")) {
-                logger.warn("[$buildId] Can't search because of index_closed_exception", e)
-                queryLogs.status = LogStatus.CLOSED.status
-            } else if (exString.contains("Too Many Requests")) {
-                logger.warn("[$buildId] Too many query requests", e)
-                queryLogs.status = LogStatus.FAIL.status
-            }
+            handleSearchStatusException(buildId, "doQueryLogsAfterLine", queryLogs, e)
         } catch (ignore: Throwable) {
             logger.warn("Query after logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
@@ -1023,14 +993,7 @@ class LogServiceESImpl(
             queryLogs.hasMore = totalBefore > logs.size
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
         } catch (e: ElasticsearchStatusException) {
-            val exString = e.toString()
-            if (exString.contains("index_closed_exception")) {
-                logger.warn("[$buildId] Can't search because of index_closed_exception", e)
-                queryLogs.status = LogStatus.CLOSED.status
-            } else if (exString.contains("Too Many Requests")) {
-                logger.warn("[$buildId] Too many query requests", e)
-                queryLogs.status = LogStatus.FAIL.status
-            }
+            handleSearchStatusException(buildId, "doQueryLogsBeforeLine", queryLogs, e)
         } catch (ignore: Throwable) {
             logger.warn("Query before logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
@@ -1142,6 +1105,33 @@ class LogServiceESImpl(
         val countRequest = CountRequest(index).query(query).preference(routingPreference(buildId))
         val countResponse = logClient.hashClient(buildId).restClient.count(countRequest, RequestOptions.DEFAULT)
         return countResponse.count
+    }
+
+    /**
+     * 统一处理 ES 查询异常，避免出现"已知关键字命中状态置位，未识别异常被静默吞掉"
+     * 导致前端拿到 SUCCEED + 空 logs 的假象。
+     */
+    private fun handleSearchStatusException(
+        buildId: String,
+        scenario: String,
+        queryLogs: QueryLogs,
+        e: ElasticsearchStatusException
+    ) {
+        val exString = e.toString()
+        when {
+            exString.contains("index_closed_exception") -> {
+                logger.warn("[$buildId] Can't search because of index_closed_exception", e)
+                queryLogs.status = LogStatus.CLOSED.status
+            }
+            exString.contains("Too Many Requests") -> {
+                logger.warn("[$buildId] Too many query requests", e)
+                queryLogs.status = LogStatus.FAIL.status
+            }
+            else -> {
+                logger.warn("[$buildId][$scenario] Query failed by ElasticsearchStatusException", e)
+                queryLogs.status = LogStatus.FAIL.status
+            }
+        }
     }
 
     private fun clearScrollQuietly(client: ESClient, scrollId: String?) {
