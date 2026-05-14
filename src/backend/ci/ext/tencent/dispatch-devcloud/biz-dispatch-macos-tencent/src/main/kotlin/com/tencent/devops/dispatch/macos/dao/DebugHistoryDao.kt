@@ -137,6 +137,31 @@ class DebugHistoryDao {
     }
 
     /**
+     * 更新调试记录状态为已停止
+     * @param dslContext DSL上下文
+     * @param buildId 构建ID
+     * @param vmSeqId 虚拟机序列ID
+     * @param executeCount 执行次数
+     * @return 是否更新成功
+     */
+    fun updateStatusToStoppedByBuildId(
+        dslContext: DSLContext,
+        buildId: String,
+        vmSeqId: String,
+        executeCount: Int
+    ): Boolean {
+        with(TDebugHistory.T_DEBUG_HISTORY) {
+            return dslContext.update(this)
+                .set(STATUS, STATUS_STOPPED)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(BUILD_ID.eq(buildId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .and(EXECUTE_COUNT.eq(executeCount))
+                .execute() > 0
+        }
+    }
+
+    /**
      * 查询超过指定小时数仍处于DEBUGGING状态的记录
      * @param dslContext DSL上下文
      * @param timeoutHours 超时小时数

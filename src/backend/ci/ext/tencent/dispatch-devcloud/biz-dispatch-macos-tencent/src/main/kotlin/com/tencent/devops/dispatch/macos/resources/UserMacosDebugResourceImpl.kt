@@ -42,7 +42,7 @@ class UserMacosDebugResourceImpl @Autowired constructor(
             )
 
             if (debugLoginResponse == null) {
-                Result(status = 404, message = "构建历史记录不存在或调试登录失败")
+                Result(status = 404, message = "此 Job 尚未启动过构建，不支持登录调试")
             } else {
                 Result(data = debugLoginResponse)
             }
@@ -80,7 +80,7 @@ class UserMacosDebugResourceImpl @Autowired constructor(
             if (success) {
                 Result(data = true)
             } else {
-                Result(status = 404, message = "构建历史记录不存在或关闭调试登录失败")
+                Result(status = 404, message = "停止登录调试异常")
             }
         } catch (e: Exception) {
             logger.error(

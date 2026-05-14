@@ -248,8 +248,17 @@ class DevCloudMacosService @Autowired constructor(
 
     fun deleteVM(
         creator: String,
-        devCloudMacosVmDelete: DevCloudMacosVmDelete
+        devCloudMacosVmDelete: DevCloudMacosVmDelete,
+        executeCount: Int = 1
     ): Boolean {
+        // 更新debug记录状态为已停止
+        debugHistoryDao.updateStatusToStoppedByBuildId(
+            dslContext = dslContext,
+            buildId = devCloudMacosVmDelete.buildId,
+            vmSeqId = devCloudMacosVmDelete.vmSeqId,
+            executeCount = executeCount
+        )
+
         val url = "$devCloudUrl/api/mac/vm/delete"
         val body = ObjectMapper().writeValueAsString(devCloudMacosVmDelete)
         logger.info("Delete MacOS VM body:$body")
@@ -536,16 +545,22 @@ class DevCloudMacosService @Autowired constructor(
         buildId: String?,
         executeCount: Int
     ): DevCloudMacosVmDebugLoginResponse? {
+        val fixExecuteCount = if (executeCount < 1) {
+            1
+        } else {
+            executeCount
+        }
+
         logger.info(
             "Start macOS debug login - userId: $userId, pipelineId: $pipelineId, vmSeqId: $vmSeqId, " +
-                "buildId: $buildId, executeCount: $executeCount"
+                "buildId: $buildId, executeCount: $fixExecuteCount"
         )
 
-        val debugTaskInfo = getTaskIdFromBuildHistory(pipelineId, vmSeqId, buildId, executeCount, userId)
+        val debugTaskInfo = getTaskIdFromBuildHistory(pipelineId, vmSeqId, buildId, fixExecuteCount, userId)
         if (debugTaskInfo == null) {
             logger.warn(
                 "TaskId not found for startDebug - pipelineId: $pipelineId, vmSeqId: $vmSeqId, " +
-                    "buildId: $buildId, executeCount: $executeCount"
+                    "buildId: $buildId, executeCount: $fixExecuteCount"
             )
             return null
         }
@@ -595,7 +610,7 @@ class DevCloudMacosService @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = actualBuildId,
                 vmSeqId = vmSeqId,
-                executeCount = executeCount,
+                executeCount = fixExecuteCount,
                 taskId = taskId,
                 newCreatedVm = newCreatedVm,
                 userId = userId

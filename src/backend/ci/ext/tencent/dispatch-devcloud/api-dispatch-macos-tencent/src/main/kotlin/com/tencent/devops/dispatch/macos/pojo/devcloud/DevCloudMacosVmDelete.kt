@@ -10,5 +10,6 @@ data class DevCloudMacosVmDelete(
     var buildId: String,
     var vmSeqId: String,
     @JsonProperty("id")
-    var id: String
+    var id: String,
+    var taskId: String = ""
 )

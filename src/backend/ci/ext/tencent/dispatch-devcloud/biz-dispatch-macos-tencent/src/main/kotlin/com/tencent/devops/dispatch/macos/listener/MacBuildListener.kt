@@ -20,6 +20,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.macos.dao.DebugHistoryDao
 import com.tencent.devops.dispatch.macos.enums.MacJobStatus
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmDelete
 import com.tencent.devops.dispatch.macos.service.BuildHistoryService
@@ -47,7 +48,8 @@ class MacBuildListener @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val devCloudMacosService: DevCloudMacosService,
     private val macosVMRedisService: MacosVMRedisService,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val debugHistoryDao: DebugHistoryDao
 ) : BuildListener {
 
     override fun getShutdownQueue(): String {
@@ -280,7 +282,8 @@ class MacBuildListener @Autowired constructor(
                         buildId = buildTask.buildId,
                         vmSeqId = buildTask.vmSeqId,
                         id = vmId.toString()
-                    )
+                    ),
+                    executeCount = buildTask.executeCount
                 )
 
                 logger.info("${event.buildId}|${event.vmSeqId} end build. buildId: ${buildTask.id}")
