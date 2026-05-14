@@ -665,7 +665,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         queryOfflineFlag: Boolean
     ): Result<PipelineAtom?> {
         logger.info("getPipelineAtomDetail $projectCode,$atomCode,$version,$atomStatus,$queryOfflineFlag")
-        // 构建详情页查询历史快照时，queryOfflineFlag=true 不校验任何状态
         val atomStatusList = if (atomStatus != null) {
             mutableListOf(atomStatus)
         } else {
