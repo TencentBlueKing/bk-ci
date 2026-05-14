@@ -41,6 +41,8 @@ const exceptionObj = ref({
 const showFailedEnableDialog = ref(false);
 const showDisableProjectDialog = ref(false);
 const activeTab = ref('projectSettings');
+// KPI代码字段显示控制
+const showKpiCode = ref(false)
 const tabPanels = computed(() => [
   {
     name: 'projectSettings',
@@ -75,6 +77,49 @@ const tabPanels = computed(() => [
 ])
 
 const projectList: any[] = [];
+
+const getInitKpiData = () => {
+  // 如果kpiCode和kpiName为空，那么默认为选中的产品
+  if (!projectData.value.kpiName && !projectData.value.kpiCode) {
+    const selectedProduct = operationalList.value.find((i: any) => i?.ProductId === projectData.value.productId);
+
+    if (selectedProduct?.icosProductCode && selectedProduct?.icosProductName) {
+      projectData.value.kpiCode = selectedProduct.icosProductCode ?? '';
+      projectData.value.kpiName = selectedProduct.icosProductName ?? '';
+    }
+  }
+}
+
+// 检查是否需要显示KPI代码字段
+const checkKpiCodeVisibility = async () => {
+  try {
+    // 收集组织信息参数
+    const orgParams = getOrganizationParams()
+    
+    // 如果没有组织信息，不显示KPI字段
+    if (Object.keys(orgParams).length === 0) {
+      showKpiCode.value = false
+      return
+    }
+    
+    // 调用接口检查是否需要货币化
+    const needMonetization = await http.checkNeedMonetization(orgParams)
+    showKpiCode.value = Boolean(needMonetization)
+  } catch (err: any) {
+    showKpiCode.value = false
+  }
+}
+
+// 获取组织信息参数
+const getOrganizationParams = () => {
+  const params: any = {}
+  
+  if (projectData.value.bgId) params.bgId = projectData.value.bgId
+  if (projectData.value.businessLineId) params.businessLineId = projectData.value.businessLineId
+  if (projectData.value.deptId) params.deptId = projectData.value.deptId
+  if (projectData.value.centerId) params.centerId = projectData.value.centerId
+  return params
+}
 const fetchProjectData = async () => {
   isLoading.value = true;
   await http
@@ -96,6 +141,9 @@ const fetchProjectData = async () => {
       if ([1, 3, 4].includes(projectData.value.approvalStatus)) {
         fetchApprovalInfo();
       }
+      
+      // 检查KPI代码显示状态
+      checkKpiCodeVisibility()
     })
     .catch((err) => {
       showException.value = true;
@@ -175,6 +223,10 @@ const fieldMap = [
   {
     current: 'productName',
     after: 'afterProductName'
+  },
+  {
+    current: 'kpiName',
+    after: 'afterKpiName'
   },
 
 ];
@@ -267,8 +319,9 @@ const handleCancelUpdate = () => {
         theme: 'success',
         message: t('取消更新成功'),
       });
-      fetchProjectData();
+      await fetchProjectData();
       projectDiffData.value = {};
+      getInitKpiData()
     }
   };
 
@@ -423,6 +476,7 @@ onMounted(async () => {
   await getUserInfo();
   await fetchProjectData();
   await fetchOperationalList(projectData.value.bgName);
+  getInitKpiData()
 });
 </script>
 
@@ -518,6 +572,16 @@ onMounted(async () => {
                               {{ t('本次更新：') }}
                             </p>
                             <span>{{ projectData.afterProductName || projectData.afterProductId }}</span>
+                          </div>
+                        </bk-form-item>
+                        <bk-form-item :label="t('KPI代码')" property="bg" v-if="showKpiCode">
+                          <span>{{ projectData.kpiName || projectData.kpiCode }}</span>
+                          {{ projectData.afterKpiCode }}
+                          <div class="diff-content" v-if="projectData.afterKpiName">
+                            <p class="update-title">
+                              {{ t('本次更新：') }}
+                            </p>
+                            <span>{{ projectData.afterKpiName || projectData.afterKpiCode }}</span>
                           </div>
                         </bk-form-item>
                         <bk-form-item :label="t('项目所属组织')" property="bg">

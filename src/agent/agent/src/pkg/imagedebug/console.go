@@ -2,13 +2,14 @@ package imagedebug
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
-
-	"fmt"
+	"os"
+	"os/exec"
 	"time"
 
-	docker "github.com/fsouza/go-dockerclient"
+	"github.com/creack/pty"
 	"github.com/gorilla/websocket"
 )
 
@@ -87,6 +88,10 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *WebSoc
 		ResponseJSON(w, http.StatusBadRequest, nil)
 		return
 	}
+	if _, err := m.getExecSession(conf); err != nil {
+		ResponseJSON(w, http.StatusBadRequest, errMsg{err.Error()})
+		return
+	}
 
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -163,66 +168,118 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *WebSoc
 // CreateExec xxx
 func (m *manager) CreateExec(w http.ResponseWriter, r *http.Request, conf *WebSocketConfig) {
 	imageDebugLogs.Debug(fmt.Sprintf("start create exec for container %s", conf.ContainerID))
-	// 创建连接
-	exec, err := m.dockerClient.CreateExec(docker.CreateExecOptions{
-		AttachStdin:  true,
-		AttachStdout: true,
-		AttachStderr: true,
-		Tty:          m.conf.Tty,
-		Env:          nil,
-		Cmd:          conf.Cmd,
-		Container:    conf.ContainerID,
-		User:         conf.User,
-		Privileged:   m.conf.Privilege,
-	})
-
+	execRef, err := m.CreateExecNoHttp(conf)
 	if err != nil {
 		ResponseJSON(w, http.StatusBadRequest, errMsg{err.Error()})
 		return
 	}
-
-	ResponseJSON(w, http.StatusOK, exec)
+	ResponseJSON(w, http.StatusOK, execRef)
 }
 
-func (m *manager) CreateExecNoHttp(conf *WebSocketConfig) (*docker.Exec, error) {
-	// 创建连接
-	exec, err := m.dockerClient.CreateExec(docker.CreateExecOptions{
-		AttachStdin:  true,
-		AttachStdout: true,
-		AttachStderr: true,
-		Tty:          m.conf.Tty,
-		Env:          nil,
-		Cmd:          conf.Cmd,
-		Container:    conf.ContainerID,
-		User:         conf.User,
-		Privileged:   m.conf.Privilege,
-	})
-
-	if err != nil {
-		return nil, err
+func (m *manager) CreateExecNoHttp(conf *WebSocketConfig) (*ExecRef, error) {
+	if conf == nil || conf.ContainerID == "" {
+		return nil, fmt.Errorf("container id is required")
 	}
+	id := fmt.Sprintf("exec-%d", time.Now().UnixNano())
+	m.Lock()
+	m.execSessions[id] = &execSession{conf: conf}
+	m.Unlock()
+	return &ExecRef{ID: id}, nil
+}
 
-	return exec, nil
+func (m *manager) getExecSession(conf *WebSocketConfig) (*execSession, error) {
+	if conf == nil || conf.ExecID == "" {
+		return nil, fmt.Errorf("exec id is required")
+	}
+	m.RLock()
+	session, ok := m.execSessions[conf.ExecID]
+	m.RUnlock()
+	if !ok || session == nil || session.conf == nil {
+		return nil, fmt.Errorf("exec session %s not found", conf.ExecID)
+	}
+	if conf.ContainerID == "" {
+		return nil, fmt.Errorf("container id is required")
+	}
+	if session.conf.ContainerID != conf.ContainerID {
+		return nil, fmt.Errorf("exec session %s does not belong to container %s", conf.ExecID, conf.ContainerID)
+	}
+	return session, nil
 }
 
 func (m *manager) startExec(ws io.ReadWriter, conf *WebSocketConfig) error {
-	// 执行连接
-	err := m.dockerClient.StartExec(conf.ExecID, docker.StartExecOptions{
-		InputStream:  ws,
-		OutputStream: ws,
-		ErrorStream:  ws,
-		Detach:       false,
-		Tty:          m.conf.Tty,
-		RawTerminal:  true,
-	})
+	session, err := m.getExecSession(conf)
+	if err != nil {
+		return err
+	}
 
-	return err
+	args := []string{"exec"}
+	if m.conf.Privilege {
+		args = append(args, "--privileged")
+	}
+	if m.conf.Tty {
+		args = append(args, "-it")
+	} else {
+		args = append(args, "-i")
+	}
+	if session.conf.User != "" {
+		args = append(args, "-u", session.conf.User)
+	}
+	args = append(args, session.conf.ContainerID)
+	args = append(args, session.conf.Cmd...)
+
+	cmd := exec.Command(m.runner.Binary(), args...)
+
+	f, err := pty.Start(cmd)
+	if err != nil {
+		return err
+	}
+
+	m.Lock()
+	session.cmd = cmd
+	session.pty = f
+	m.Unlock()
+	defer func() {
+		f.Close()
+		m.Lock()
+		delete(m.execSessions, conf.ExecID)
+		m.Unlock()
+	}()
+
+	errCh := make(chan error, 2)
+	go func() {
+		_, err := io.Copy(f, ws)
+		errCh <- err
+	}()
+	go func() {
+		_, err := io.Copy(ws, f)
+		errCh <- err
+	}()
+
+	select {
+	case err := <-errCh:
+		return err
+	case <-m.doneChan.C:
+		return nil
+	}
 }
 
 // ResizeExec xxx
 func (m *manager) ResizeExec(w http.ResponseWriter, r *http.Request, conf *WebSocketConfig) {
 	imageDebugLogs.Debug(fmt.Sprintf("start resize for container exec_id %s", conf.ExecID))
-	err := m.dockerClient.ResizeExecTTY(conf.ExecID, conf.Height, conf.Width)
+	session, err := m.getExecSession(conf)
+	if err != nil || session.pty == nil {
+		if err == nil {
+			err = fmt.Errorf("exec session not found")
+		}
+		ResponseJSON(w, http.StatusBadRequest, errMsg{err.Error()})
+		return
+	}
+	ptmx, ok := session.pty.(*os.File)
+	if !ok {
+		ResponseJSON(w, http.StatusBadRequest, errMsg{"exec session pty invalid"})
+		return
+	}
+	err = pty.Setsize(ptmx, &pty.Winsize{Rows: uint16(conf.Height), Cols: uint16(conf.Width)})
 	if err != nil {
 		ResponseJSON(w, http.StatusBadRequest, errMsg{err.Error()})
 		return

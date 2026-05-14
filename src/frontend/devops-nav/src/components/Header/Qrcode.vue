@@ -5,13 +5,14 @@
     >
         <div
             @click="toggleOrcode(show)"
+            class="qrcode"
         >
-            <div class="flag-box">
-                <Icon
-                    name="phone"
-                    size="20"
-                />
-            </div>
+            <Icon
+                name="mobilePhone"
+                size="20"
+                class="qrcode-icon"
+            />
+            {{ $t('APP 下载') }}
         </div>
         <div
             v-if="show"
@@ -72,7 +73,27 @@
         height: 100%;
         display: flex;
         align-items: center;
+        margin-right: 32px;
         color: $fontLighterColor;
+
+        .qrcode {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 32px;
+            padding: 5px 16px;
+            font-size: 14px;
+            color: #CDDFFE;
+            border-radius: 16px;
+            background: linear-gradient(145deg, #167A8D 16.34%, #3745AF 87.36%);
+
+            svg {
+                margin-right: 8px;
+            }
+        }
+        &:hover .qrcode {
+            color: #ffffff;
+        }
 
         > .qrcode-tips {
             margin: 0 10px;

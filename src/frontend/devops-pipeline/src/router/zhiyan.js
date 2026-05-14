@@ -37,7 +37,8 @@ export default [{
                 icon: 'pipeline',
                 title: 'pipeline',
                 header: 'pipeline',
-                to: 'pipelinesList'
+                to: 'pipelinesList',
+                edit: true
             },
             components: {
                 header: EditHeader,

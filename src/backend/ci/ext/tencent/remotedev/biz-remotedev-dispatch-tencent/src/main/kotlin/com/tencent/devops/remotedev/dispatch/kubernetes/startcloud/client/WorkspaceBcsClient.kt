@@ -309,7 +309,7 @@ class WorkspaceBcsClient @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
-                logger.info("get cgs list response: ${response.rid()}|${response.code}|$responseContent")
+                logger.info("get cgs list response: ${response.rid()}|${response.code}")
                 if (!response.isSuccessful) {
                     throw WorkspaceDispatchException(
                         " 获取listcgs接口异常: ${response.code}"

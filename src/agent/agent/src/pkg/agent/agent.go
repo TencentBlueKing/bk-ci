@@ -30,13 +30,8 @@ package agent
 import (
 	"time"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
-
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/collector"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/cron"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
@@ -44,9 +39,12 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/imagedebug"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/mcp"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/monitor"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/pipeline"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 )
 
 func Run(isDebug bool) {
@@ -75,7 +73,7 @@ func Run(isDebug bool) {
 	}
 
 	// 数据采集
-	go collector.Collect()
+	safeGo("monitor", monitor.Collect)
 
 	// 定期清理
 	go cron.CleanJob()
@@ -90,7 +88,6 @@ func Run(isDebug bool) {
 
 	for {
 		doAsk()
-		// 请求完更新下IP
 		config.LoadAgentIp()
 		time.Sleep(5 * time.Second)
 	}

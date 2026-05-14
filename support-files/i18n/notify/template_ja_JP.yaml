@@ -40,6 +40,7 @@
     id: "b236e73c17cb48bbbd7cc38ffbcae407"
     title: "プロジェクト【${projectName}】下のパイプライン【${pipelineName}】#${buildNum} 構築Stage審査"
     body: "構築が「${rejectUserId}」により却下されました。パイプライン状態は「Stage成功」です。\n却下理由:  \n${suggest} \n[PC端クリック](${reviewUrl})\n[スマホ端クリック](${reviewAppUrl})"
+    sender: "DevOps"
   creator: "system"
   modifior: "system"
 - index: 2
@@ -117,6 +118,7 @@
   templateName: "storeコメントメッセージ通知テンプレート"
   notifyTypeScope:
     - "RTX"
+    - "WEWORK_GROUP"
   priority: 0
   source: 0
   weworkTemplate:
@@ -124,6 +126,11 @@
     sender: "DevOps"
     title: "【BlueKing開発ストア】コメント通知"
     body: "${userId} が ${storeName} にコメントしました\n評価: ${score}\nコメント: ${commentContent}\n[返信に行く | ${url}]"
+  weworkGroupTemplate:
+    id: "a3b7e9f2d4c1085b6e9f3a7c2d5b8e41"
+    title: "【BlueKing開発ストア】コメント通知"
+    body: "${userId} が ${storeName} にコメントしました\n評価: ${score}\nコメント: ${commentContent}\n[返信に行く | ${url}]"
+    sender: "DevOps"
   creator: "system"
   modifior: "system"
 - index: 6
@@ -153,6 +160,11 @@
     id: "jgj46v0knzlkhcah57rcutao30tqza5v"
     taskName: "構築成功"
     content: "${successContent}"
+  weworkGroupTemplate:
+    id: "3ffdfe998646421ba8672a9268069e4c"
+    sender: "DevOps"
+    title: "BlueKing CIパイプライン【${pipelineName}】#${buildNum} 構築成功"
+    body: "✔️${successContent}\n詳細を見る:${detailUrl}"
   creator: "system"
   modifior: "system"
 - index: 7
@@ -214,6 +226,7 @@
     id: "0ca84f7d0dcf4453b30b3e465f1c4caf"
     title: "${content}"
     body: "審査説明: \n${reviewDesc} \nPC端: [審査に行く](${reviewUrl}) \nスマホ端: [審査に行く](${reviewAppUrl})"
+    sender: "DevOps"
   creator: "system"
   modifior: "system"
 - index: 10
@@ -794,6 +807,7 @@
     id: "cead07553b364b5a9c3f0290e35c82da"
     title: "プロジェクト【${projectName}】下のパイプライン【${pipelineName}】#${buildNum} 構築Stage審査"
     body: "構築状態为stage success，需要「${reviewers}」的審査才执行後続流程\n\n審査説明: \n${reviewDesc}\n\n[PC端点击](${reviewUrl})\n[スマホ端点击](${reviewAppUrl})"
+    sender: "DevOps"
   creator: "system"
   modifior: "system"
 - index: 37
@@ -1067,6 +1081,7 @@
   templateName: "開発ストアプラグイン上架審査通知テンプレート"
   notifyTypeScope:
     - "WEWORK"
+    - "WEWORK_GROUP"
   priority: 0
   source: 0
   weworkTemplate:
@@ -1074,5 +1089,10 @@
     sender: "DevOps"
     title: "開発ストアプラグイン審査リマインダー"
     body: "${userId}が上架プラグイン申請を提交しました。審査をお願いします。\nプラグイン：${atomName} \nバージョン： ${version}"
+  weworkGroupTemplate:
+    id: "f47ac10b58cc4372a5670e02b2c3d479"
+    title: "開発ストアプラグイン審査リマインダー"
+    body: "${userId}が上架プラグイン申請を提交しました。審査をお願いします。\nプラグイン：${atomName} \nバージョン： ${version}"
+    sender: "DevOps"
   creator: "system"
   modifior: "system"
