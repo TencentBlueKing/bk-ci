@@ -3,6 +3,8 @@
         v-model="value"
         :width="480"
         footer-position="center"
+        :key="false"
+        :esc-close="false"
         theme="primary"
         @cancel="close"
     >
@@ -24,7 +26,7 @@
         </div>
         <!-- 草稿状态 -->
         <div
-            v-else-if="hasDraft && !isActiveBranchVersion"
+            v-else-if="hasDraft"
             class="draft-hint-content"
         >
             <p

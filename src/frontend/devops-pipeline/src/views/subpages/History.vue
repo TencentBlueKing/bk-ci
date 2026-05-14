@@ -197,6 +197,7 @@
             }
         },
         beforeDestroy () {
+            this.$store.commit('common/SET_HAS_DRAFT', false)
             this.resetHistoryFilterCondition({ retainArchiveFlag: this.shouldRetainArchiveFlag })
             this.selectPipelineVersion(null)
             this.resetAtomModalMap()

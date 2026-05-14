@@ -289,6 +289,7 @@
             })
             this.clearPipelineSnapshot() // 清除流水线快照，防止内存泄漏
             this.errors.clear()
+            this.$store.commit('common/SET_HAS_DRAFT', false)  // 清除草稿状态
         },
         beforeRouteUpdate (to, from, next) {
             if (from.name !== to.name) {

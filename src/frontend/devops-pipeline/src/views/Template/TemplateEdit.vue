@@ -189,6 +189,7 @@
             this.requestMatchTemplateRules()
         },
         beforeDestroy () {
+            this.$store.commit('common/SET_HAS_DRAFT', false)
             this.setPipeline(null)
             this.setPipelineEditing(false)
             this.setAtomEditing(false)
