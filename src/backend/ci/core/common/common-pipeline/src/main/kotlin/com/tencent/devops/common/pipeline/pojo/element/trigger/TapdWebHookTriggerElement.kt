@@ -51,7 +51,7 @@ data class TapdWebHookTriggerElement(
     val data: TapdWebHookTriggerData
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
-        const val classType = "tapdWebHookTrigger"
+        const val classType = "codeTapdWebHookTrigger"
     }
 
     override fun getClassType() = classType
