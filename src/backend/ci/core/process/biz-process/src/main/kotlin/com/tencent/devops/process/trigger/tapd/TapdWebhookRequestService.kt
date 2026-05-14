@@ -43,6 +43,7 @@ import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_TAPD_STOR
 import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
 import com.tencent.devops.process.pojo.trigger.GenericWebhookEventBody
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.event.TapdWebhookRequestEvent
 import com.tencent.devops.process.trigger.event.TapdWebhookTriggerEvent
@@ -270,7 +271,7 @@ class TapdWebhookRequestService(
             requestId = requestId,
             projectId = projectId,
             eventId = eventId,
-            triggerType = "TAPD",
+            triggerType = PipelineTriggerType.TAPD.name,
             eventSource = event.tapdProjectId,
             eventType = eventType.value,
             triggerUser = event.triggerUser,
