@@ -385,9 +385,11 @@
                 projectViewList: true
             }
 
+            this.requestProjectDetail({ projectId: this.projectId })
             this.refreshPipelineGroup()
         },
         methods: {
+            ...mapActions(['requestProjectDetail']),
             ...mapActions('pipelines', [
                 'requestGetGroupLists',
                 'addPipelineGroup',
@@ -695,7 +697,6 @@
 
             .pipeline-group-header-name {
                 flex: 1;
-                @include ellipsis();
             }
             .add-pipeline-group-btn {
                 display: flex;
