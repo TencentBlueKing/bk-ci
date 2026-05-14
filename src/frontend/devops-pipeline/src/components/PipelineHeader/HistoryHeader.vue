@@ -295,7 +295,7 @@
                         return this.$t('hasDraft')
                     default:
                         // 1. 分支版本
-                        if (this.isActiveBranchVersion && this.draftStatus === DRAFT_STATUS.BRANCH) {
+                        if (this.isActiveBranchVersion) {
                             return this.$t('createBranchDraftTips', [this.pipelineInfo?.versionName])
                         }
                         // 基线版本落后状态

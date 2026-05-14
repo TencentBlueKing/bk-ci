@@ -83,7 +83,7 @@
             </template>
         </div>
         <!-- 基线版本落后状态 和 已发布状态 -->
-        <div v-else-if="(clickActionType === 'edit' || !isRollback) && (draftStatus === DRAFT_STATUS.RELEASE_OUTDATED || draftStatus === DRAFT_STATUS.PUBLISHED)">
+        <div v-else-if="!isActiveBranchVersion && (clickActionType === 'edit' || !isRollback) && (draftStatus === DRAFT_STATUS.RELEASE_OUTDATED || draftStatus === DRAFT_STATUS.PUBLISHED)">
             <p
                 class="draft-info"
             >
