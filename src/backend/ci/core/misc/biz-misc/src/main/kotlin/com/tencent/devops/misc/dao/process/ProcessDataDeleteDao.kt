@@ -72,6 +72,7 @@ import com.tencent.devops.model.process.tables.TPipelineTriggerEvent
 import com.tencent.devops.model.process.tables.TPipelineTriggerReview
 import com.tencent.devops.model.process.tables.TPipelineView
 import com.tencent.devops.model.process.tables.TPipelineViewGroup
+import com.tencent.devops.model.process.tables.TPipelineVisibility
 import com.tencent.devops.model.process.tables.TPipelineViewTop
 import com.tencent.devops.model.process.tables.TPipelineViewUserLastView
 import com.tencent.devops.model.process.tables.TPipelineViewUserSettings
@@ -190,6 +191,7 @@ class ProcessDataDeleteDao {
                 deletePipelineSubRef(dslContext, projectId, pipelineId)
                 deletePipelineBuildParamCombinationDetail(dslContext, projectId, pipelineId)
                 deletePipelineBuildParamCombination(dslContext, projectId, pipelineId)
+                deletePipelineVisibility(dslContext, projectId, pipelineId)
                 if (broadcastTableDeleteFlag) {
                     deletePipelineRemoteAuth(dslContext, projectId, pipelineId)
                     deletePipelineWebhook(dslContext, projectId, pipelineId)
@@ -736,6 +738,14 @@ class ProcessDataDeleteDao {
 
     fun deletePipelineBuildParamCombinationDetail(dslContext: DSLContext, projectId: String, pipelineId: String) {
         with(TPipelineBuildParamCombinationDetail.T_PIPELINE_BUILD_PARAM_COMBINATION_DETAIL) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .execute()
+        }
+    }
+
+    fun deletePipelineVisibility(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        with(TPipelineVisibility.T_PIPELINE_VISIBILITY) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
                 .execute()
