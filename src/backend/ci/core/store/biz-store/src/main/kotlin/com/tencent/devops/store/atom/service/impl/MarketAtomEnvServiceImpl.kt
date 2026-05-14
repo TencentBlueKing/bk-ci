@@ -228,11 +228,11 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         testFlag: Boolean,
         queryWithoutStatusFlag: Boolean = false
     ): AtomRunInfo {
-        val atomEnvResult = getMarketAtomEnvInfo(
+        val atomEnvResult = doGetMarketAtomEnvInfo(
             projectCode = projectCode,
             atomCode = atomCode,
             version = version,
-            queryWithoutStatusFlag = queryWithoutStatusFlag
+            historyBuildQueryFlag = queryWithoutStatusFlag
         )
         if (atomEnvResult.isNotOk()) {
             val params = arrayOf(projectCode, atomName)
@@ -279,28 +279,64 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         atomStatus: Byte?,
         osName: String?,
         osArch: String?,
-        convertOsFlag: Boolean?,
-        queryWithoutStatusFlag: Boolean
+        convertOsFlag: Boolean?
     ): Result<AtomEnv?> {
-        logger.info("getMarketAtomEnvInfo $projectCode,$atomCode,$version,$atomStatus,$osName,$osArch,$convertOsFlag,$queryWithoutStatusFlag")
+        return doGetMarketAtomEnvInfo(
+            projectCode = projectCode,
+            atomCode = atomCode,
+            version = version,
+            atomStatus = atomStatus,
+            osName = osName,
+            osArch = osArch,
+            convertOsFlag = convertOsFlag,
+            historyBuildQueryFlag = false
+        )
+    }
+
+    /**
+     * 真正的实现是 private，flag 收敛在 impl 内
+     */
+    private fun doGetMarketAtomEnvInfo(
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        atomStatus: Byte? = null,
+        osName: String? = null,
+        osArch: String? = null,
+        convertOsFlag: Boolean? = null,
+        historyBuildQueryFlag: Boolean
+    ): Result<AtomEnv?> {
+        logger.info(
+            "getMarketAtomEnvInfo $projectCode,$atomCode,$version,$atomStatus," +
+                "$osName,$osArch,$convertOsFlag,$historyBuildQueryFlag"
+        )
         // 普通项目的查已发布、下架中和已下架（需要兼容那些还在使用已下架插件插件的项目）的插件
         val normalStatusList = listOf(
             AtomStatusEnum.RELEASED.status.toByte(),
             AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
             AtomStatusEnum.UNDERCARRIAGED.status.toByte()
         )
-        val buildingFlag =
-            projectCode == storeInnerPipelineConfig.innerPipelineProject && atomStatus == AtomStatusEnum.BUILDING.status.toByte()
-        val atomStatusList = getAtomStatusList(
-            atomStatus = atomStatus,
-            version = version,
-            normalStatusList = normalStatusList,
-            atomCode = atomCode,
-            projectCode = projectCode,
-            queryTestFlag = buildingFlag,
-            queryWithoutStatusFlag = queryWithoutStatusFlag
-        )
+        val buildingFlag = projectCode == storeInnerPipelineConfig.innerPipelineProject &&
+            atomStatus == AtomStatusEnum.BUILDING.status.toByte()
+        // 历史构建详情查的是当时构建用的版本，不做状态过滤
+        val atomStatusList: List<Byte>? = if (historyBuildQueryFlag) {
+            null
+        } else {
+            getAtomStatusList(
+                atomStatus = atomStatus,
+                version = version,
+                normalStatusList = normalStatusList,
+                atomCode = atomCode,
+                projectCode = projectCode,
+                queryTestFlag = buildingFlag
+            )
+        }
         val atomDefaultFlag = marketAtomCommonService.isPublicAtom(atomCode)
+        logger.info(
+            "getProjectAtomBaseInfo params: projectCode=$projectCode, atomCode=$atomCode, " +
+                "version=$version, atomDefaultFlag=$atomDefaultFlag, atomStatusList=$atomStatusList, " +
+                "queryProjectFlag=${!buildingFlag}"
+        )
         val atomBaseInfoRecord = marketAtomEnvInfoDao.getProjectAtomBaseInfo(
             dslContext = dslContext,
             projectCode = projectCode,
@@ -446,14 +482,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         normalStatusList: List<Byte>,
         atomCode: String,
         projectCode: String,
-        queryTestFlag: Boolean,
-        queryWithoutStatusFlag: Boolean = false
+        queryTestFlag: Boolean
     ): List<Byte>? {
-        // 构建详情页查询历史快照，不校验任何状态
-        if (queryWithoutStatusFlag) {
-            return null
-        }
-        
         return if (atomStatus != null) {
             mutableListOf(atomStatus)
         } else {

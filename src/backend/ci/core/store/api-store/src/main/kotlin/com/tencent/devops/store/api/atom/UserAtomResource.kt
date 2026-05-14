@@ -132,7 +132,7 @@ interface UserAtomResource {
         @Parameter(description = "版本号", required = true)
         @PathParam("version")
         version: String,
-        @Parameter(description = "是否限制", required = false)
+        @Parameter(description = "是否查询已下架版本", required = false)
         @QueryParam("queryOfflineFlag")
         queryOfflineFlag: Boolean? = true
     ): Result<PipelineAtom?>
