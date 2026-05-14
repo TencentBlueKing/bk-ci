@@ -293,9 +293,6 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         )
     }
 
-    /**
-     * 真正的实现是 private，flag 收敛在 impl 内
-     */
     private fun doGetMarketAtomEnvInfo(
         projectCode: String,
         atomCode: String,
