@@ -21,12 +21,13 @@
     "public:master": "pnpm run build"
   },
   "dependencies": {
+    "@blueking/bk-org-selector": "^0.1.6",
     "@blueking/crontab": "0.0.2-beta.7",
     "@blueking/search-select-v3": "0.0.1-beta.10",
     "axios": "1.13.6",
     "bk-permission": "workspace:bk-permission",
     "bkui-pipeline": "workspace:bk-pipeline",
-    "bkui-vue": "2.0.2-beta.92",
+    "bkui-vue": "2.1.0-beta.7",
     "monaco-editor": "^0.52.2",
     "monaco-yaml": "^5.2.2",
     "pinia": "^3.0.3",

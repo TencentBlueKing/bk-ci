@@ -28,7 +28,10 @@
       "true": "はい",
       "false": "いいえ",
       "pleaseSelect": "作成ノードを選択してください",
-      "unAccessUser": "ユーザー{0}は現在のプロジェクトメンバーではありません"
+      "unAccessUser": "ユーザー{0}は現在のプロジェクトメンバーではありません",
+      "add": "追加",
+      "remove": "削除",
+      "all": "すべて"
     },
     "sidebar": {
       "myFlows": "自分の作成フロー",
@@ -164,6 +167,7 @@
       "more": "もっと",
       "permissionSettings": "権限設定",
       "permissionDelegation": "権限の委譲",
+      "visibleRange": "利用可能範囲",
       "operationLog": "操作ログ",
       "status": "ステータス",
       "repository": "コード庫",
@@ -707,6 +711,20 @@
       "expiredTips": "実行権限がなく、期限切れです",
       "resetFailed": "認可のリセットに失敗しました",
       "confirm": "確認"
+    },
+    "visibleRange": {
+      "aiCall": "AI 呼び出し",
+      "apiTrigger": "API トリガー",
+      "removeConfirm": "{0}の削除を確認しますか？",
+      "removeSuccess": "削除成功",
+      "userOrg": "ユーザー/組織",
+      "user": "ユーザー",
+      "org": "組織",
+      "organization": "所属組織",
+      "personalOnly": "現在制限なし、公開後は個人のみ利用可能",
+      "search": "ユーザー/組織名を検索",
+      "visibleRangeDesc": "「利用可能範囲」は、どのユーザーが特定のイベント（IMateセッションリマインダーなど）を通じてこの作成フローを{0}できるかを制御します。設定後、範囲内のユーザーのみがトリガーでき、それ以外のユーザーはアクセスできません。",
+      "visibleRangeDescEg": "例：運用エンジニアが「データベース変更リクエストの自動評価」フローを作成し、利用可能範囲を担当するビジネスチームに制限することで、無関係なリクエストによる干渉を回避できます。"
     },
     "operator": {
       "operator": "オペレーター",

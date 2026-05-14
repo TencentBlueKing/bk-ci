@@ -40,6 +40,13 @@
   overflow-y: auto;
 }
 
+.visibleRangeText {
+  width: 100%;
+  border-top: 1px solid var(--border-color);
+  padding: 24px 0 12px;
+  margin-top: 24px;
+}
+
 .releaseForm {
   display: flex;
   flex-direction: column;

@@ -102,6 +102,12 @@ const router = createRouter({
                   props: true,
                 },
                 {
+                  path: 'visible-range',
+                  component: () => import('../views/Flow/Detail/VisibleRange'),
+                  name: ROUTE_NAMES.FLOW_DETAIL_VISIBLE_RANGE,
+                  props: true,
+                },
+                {
                   path: 'operation-log',
                   component: () => import('../views/Flow/Detail/ChangeLog'),
                   name: ROUTE_NAMES.FLOW_DETAIL_OPERATION_LOG,

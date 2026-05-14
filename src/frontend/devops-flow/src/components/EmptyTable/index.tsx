@@ -10,12 +10,15 @@ export default defineComponent({
       type: String as () => 'empty' | 'search-empty',
       default: 'empty',
     },
+    desc: {
+      type: String,
+    }
   },
   emits: ['clear'],
   setup(props, { emit }) {
     const { t } = useI18n()
     const typeMap = {
-      empty: t('flow.common.noData'),
+      empty: props.desc || t('flow.common.noData'),
       'search-empty': t('flow.searchResultsEmpty'),
     }
     function handleClear() {
