@@ -161,7 +161,7 @@ class OpAtomServiceImpl @Autowired constructor(
             category = category,
             classifyId = classifyId,
             atomStatus = atomStatus,
-            sortType = sortType?.sortType,
+            sortType = sortType,
             desc = desc,
             page = page,
             pageSize = pageSize
