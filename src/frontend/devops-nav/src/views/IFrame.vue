@@ -98,6 +98,9 @@
         }
 
         get iframeSrc () {
+            if (this.src.startsWith('http') || this.src.startsWith('https')) {
+                return this.src
+            }
             return `${window.PUBLIC_URL_PREFIX}${this.src}`
         }
 
