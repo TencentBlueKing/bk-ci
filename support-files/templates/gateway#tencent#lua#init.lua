@@ -67,6 +67,14 @@ config = {
         get_info_host = "__GET_INFO_HOST__",
         get_info_url = "__GET_INFO_URL__"
     },
+    bkauth = {
+        ip = "__BK_CI_BKAUTH_IP__",
+        port = __BK_CI_BKAUTH_PORT__,
+        host = "__BK_CI_BKAUTH_HOST__",
+        realm = "bk-devops",
+        app_code = "__APP_CODE__",
+        app_secret = "__APP_TOKEN__"
+    },
     artifactory = {
         port = "__JFROG_HTTP_PORT__",
         docker = "__DOCKER_PORT__",
