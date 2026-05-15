@@ -144,7 +144,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         projectCode: String,
         atomCodeList: List<String>,
         atomVersions: Set<StoreVersion>,
-        queryWithoutStatusFlag: Boolean = false
+        historyBuildQueryFlag: Boolean = false
     ): Map<String, AtomRunInfo> {
         // 2、根据插件代码和版本号查找插件运行时信息
         // 判断当前项目是否是插件的调试项目
@@ -176,7 +176,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     atomName = atomName,
                     version = version,
                     testFlag = testFlag,
-                    queryWithoutStatusFlag = queryWithoutStatusFlag
+                    historyBuildQueryFlag = historyBuildQueryFlag
                 )
             } else {
                 // 去缓存中获取插件运行时信息
@@ -187,12 +187,12 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     atomRunInfoMap[atomRunInfoName] = atomRunInfo
                 } else {
                     atomRunInfoMap[atomRunInfoName] = queryAtomRunInfoFromDb(
-                        projectCode = projectCode,
-                        atomCode = atomCode,
-                        atomName = atomName,
-                        version = version,
-                        testFlag = testFlag,
-                        queryWithoutStatusFlag = queryWithoutStatusFlag
+                    projectCode = projectCode,
+                    atomCode = atomCode,
+                    atomName = atomName,
+                    version = version,
+                    testFlag = testFlag,
+                    historyBuildQueryFlag = historyBuildQueryFlag
                     )
                 }
             }
@@ -226,13 +226,13 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         atomName: String,
         version: String,
         testFlag: Boolean,
-        queryWithoutStatusFlag: Boolean = false
+        historyBuildQueryFlag: Boolean = false
     ): AtomRunInfo {
         val atomEnvResult = doGetMarketAtomEnvInfo(
             projectCode = projectCode,
             atomCode = atomCode,
             version = version,
-            historyBuildQueryFlag = queryWithoutStatusFlag
+            historyBuildQueryFlag = historyBuildQueryFlag
         )
         if (atomEnvResult.isNotOk()) {
             val params = arrayOf(projectCode, atomName)
@@ -261,7 +261,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             sensitiveParams = sensitiveParams?.joinToString(","),
             canPauseBeforeRun = props?.let { marketAtomCommonService.getAtomCanPauseBeforeRun(props) }
         )
-        if (!testFlag && !queryWithoutStatusFlag) {
+        if (!testFlag && !historyBuildQueryFlag) {
             // 将db中的环境信息写入缓存
             val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
             redisOperation.hset(atomRunInfoKey, version, JsonUtil.toJson(atomRunInfo))
@@ -329,11 +329,6 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             )
         }
         val atomDefaultFlag = marketAtomCommonService.isPublicAtom(atomCode)
-        logger.info(
-            "getProjectAtomBaseInfo params: projectCode=$projectCode, atomCode=$atomCode, " +
-                "version=$version, atomDefaultFlag=$atomDefaultFlag, atomStatusList=$atomStatusList, " +
-                "queryProjectFlag=${!buildingFlag}"
-        )
         val atomBaseInfoRecord = marketAtomEnvInfoDao.getProjectAtomBaseInfo(
             dslContext = dslContext,
             projectCode = projectCode,
@@ -480,7 +475,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         atomCode: String,
         projectCode: String,
         queryTestFlag: Boolean
-    ): List<Byte>? {
+    ): List<Byte> {
         return if (atomStatus != null) {
             mutableListOf(atomStatus)
         } else {
@@ -579,7 +574,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             projectCode = projectCode,
             atomCodeList = atomVersions.map { it.storeCode },
             atomVersions = atomVersions,
-            queryWithoutStatusFlag = true
+            historyBuildQueryFlag = true
         )
         val atomSensitiveParamInfos = mutableMapOf<String, String>()
         atomRunInfos.forEach { key, atomRunInfo ->

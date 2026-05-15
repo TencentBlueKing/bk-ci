@@ -669,10 +669,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             mutableListOf(atomStatus)
         } else {
             if (projectCode != null) {
-                generateAtomStatusList(
-                    atomCode = atomCode,
-                    projectCode = projectCode
-                )
+                generateAtomStatusList(atomCode, projectCode)
             } else {
                 null
             }
@@ -771,10 +768,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     override fun getPipelineAtomVersions(projectCode: String?, atomCode: String): Result<List<VersionInfo>> {
         logger.info("getPipelineAtomVersions projectCode is: $projectCode,atomCode is: $atomCode")
         val atomStatusList = if (projectCode != null) {
-            generateAtomStatusList(
-                atomCode = atomCode,
-                projectCode = projectCode
-            )
+            generateAtomStatusList(atomCode, projectCode)
         } else {
             null
         }
@@ -1414,10 +1408,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     override fun getAtomRealVersion(projectCode: String, atomCode: String, version: String): Result<String?> {
         return if (VersionUtils.isLatestVersion(version)) {
             // 获取插件真实的版本号
-            val atomStatusList = generateAtomStatusList(
-                atomCode = atomCode,
-                projectCode = projectCode
-            )
+            val atomStatusList = generateAtomStatusList(atomCode, projectCode)
             atomStatusList.add(AtomStatusEnum.UNDERCARRIAGED.status.toByte())
             val realVersion = atomDao.getAtomRealVersion(
                 dslContext = dslContext,
@@ -1440,10 +1431,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             projectCode = projectCode,
             atomCode = atomCode,
             defaultFlag = defaultFlag,
-            atomStatusList = generateAtomStatusList(
-                atomCode = atomCode,
-                projectCode = projectCode
-            ),
+            atomStatusList = generateAtomStatusList(atomCode, projectCode),
             limitNum = 1
         )?.getOrNull(0)
         val versionInfo = defaultVersionRecord?.let {
