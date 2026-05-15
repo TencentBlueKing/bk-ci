@@ -13,26 +13,29 @@ provider:
 ## 执行顺序
 
 1. 先识别用户需求属于哪个模块或领域。
-2. 默认只读 `1` 个目标模块 skill 的主 `SKILL.md`，先吸收：
+2. 如果用户要求制定 AI 流程、判断是否需要 OpenSpec / 多 Agent，或任务影响面不清，先读
+   `lightweight-ai-workflow` 做分流。
+3. 默认只读 `1` 个目标模块 skill 的主 `SKILL.md`，先吸收：
    - 适用场景
    - 不适用场景
    - 快速指导
    - 高信号规则
    - 关键陷阱
-3. 如果任务明显涉及通用后端分层、语言规范、测试或 API 设计，最多再补 `1` 个横切 skill，例如：
+4. 如果任务明显涉及通用后端分层、语言规范、测试或 API 设计，最多再补 `1` 个横切 skill，例如：
    - `backend-microservice-development`
    - `kotlin-backend-conventions`
    - `unit-testing`
    - `api-interface-design`
-4. 只有当问题跨模块、链路归属不清、需要架构判断，或主 skill 仍无法判断落点时，才读取
+5. 只有当问题跨模块、链路归属不清、需要架构判断，或主 skill 仍无法判断落点时，才读取
    `00-bkci-global-architecture`。
-5. 只有当主 `SKILL.md` 明确指向某个 `reference/`，或当前问题已经超出主 skill 能回答的范围时，
+6. 只有当主 `SKILL.md` 明确指向某个 `reference/`，或当前问题已经超出主 skill 能回答的范围时，
    才继续读取它的 `reference/`。
-6. 完成以上步骤后，再搜索代码、启动子代理或修改实现。
+7. 完成以上步骤后，再搜索代码、启动子代理或修改实现。
 
 ## 默认读取预算
 
 - 默认预算：`1` 个模块主 skill + 最多 `1` 个横切 skill
+- `lightweight-ai-workflow` 只在流程分流、影响面不清或验证闭环不清时读取
 - `00-bkci-global-architecture` 不是默认入口，只在模块归属不清或链路判断需要时读取
 - `reference/` 不是默认入口，只在主 skill 不足且有明确理由时读取
 - 不要因为“保险起见”连续读取多个横切 skill 或多个 `reference/`
@@ -48,6 +51,7 @@ provider:
 ## 常用路由
 
 - 后端开发：`backend-microservice-development`
+- AI 任务分流 / 影响面 / 验证闭环：`lightweight-ai-workflow`
 - Kotlin / Spring Boot：`kotlin-backend-conventions`、`springboot-backend-conventions`
 - API 设计：`api-interface-design`
 - 单元测试：`unit-testing`

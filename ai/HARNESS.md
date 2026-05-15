@@ -71,12 +71,13 @@ AI 只有在主 skill 不足以完成任务时才继续读取 reference，避免
 ## 标准工作流
 
 1. 识别任务类型，优先匹配 rule 和 skill。
-2. 复杂或跨模块需求先进入 Plan Mode，调研后再实现。
-3. 如果已有 OpenSpec 变更目录，先更新 OpenSpec 文档。
-4. 修改代码前按读取预算先读目标模块 skill；只有主 skill 不足时，再升级到全局 skill 或
+2. 如果任务需要判断轻流程、OpenSpec 或多 Agent，先读 `lightweight-ai-workflow` 做分流。
+3. 复杂或跨模块需求先进入 Plan Mode，调研后再实现。
+4. 如果已有 OpenSpec 变更目录，先更新 OpenSpec 文档。
+5. 修改代码前按读取预算先读目标模块 skill；只有主 skill 不足时，再升级到全局 skill 或
    `reference/`。
-5. 实现后运行最小必要验证，例如 lint、单测、类型检查或人工验收清单。
-6. 如果 AI 失败，记录失败原因，并反哺到 rule、skill、reference、eval 或测试信号。
+6. 实现后运行最小必要验证，例如 lint、单测、类型检查或人工验收清单。
+7. 如果 AI 失败，记录失败原因，并反哺到 rule、skill、reference、eval 或测试信号。
 
 ## 失败归因
 

@@ -83,3 +83,11 @@ YYYYMMDD-short-task-name.md
 3. 记录结果和失败归因。
 4. 只把重复出现的问题反哺到 rule 或 skill。
 5. 每次 Harness 调整后，回放一小批任务验证收益。
+
+## 轻量工作流试点
+
+轻量 AI 研发改造优先使用 `lightweight-ai-workflow-pilot.md` 记录 3 类真实任务：
+
+- 单模块小改动：验证是否避免过度读取和过度流程化。
+- 跨模块中等需求：验证 impact checklist 是否能提前暴露联动点。
+- 结构性 OpenSpec 变更：验证文档优先和 verification checklist 是否有效。
