@@ -38,7 +38,7 @@
                         :name="key"
                         v-validate.initial="getValidateRule(key, obj)"
                         :handle-change="handleUpdateJobMatrix"
-                        :value="matrixControlOption[key]"
+                        :value="normalizedMatrixControlOption[key]"
                         :disabled="disabled"
                         v-bind="obj"
                     />
@@ -81,12 +81,22 @@
             optionModel () {
                 return this.JOB_MATRIX || {}
             },
+            normalizedMatrixControlOption () {
+                const matrixControlOption = this.matrixControlOption || {}
+
+                return {
+                    ...matrixControlOption,
+                    strategyStr: matrixControlOption.strategyStr ?? matrixControlOption.strategy ?? '',
+                    includeCaseStr: matrixControlOption.includeCaseStr ?? matrixControlOption.include ?? '',
+                    excludeCaseStr: matrixControlOption.excludeCaseStr ?? matrixControlOption.exclude ?? ''
+                }
+            },
             matrixRuleValues () {
                 const {
                     strategyStr = '',
                     includeCaseStr = '',
                     excludeCaseStr = ''
-                } = this.matrixControlOption || {}
+                } = this.normalizedMatrixControlOption
 
                 return {
                     strategyStr,
@@ -102,6 +112,14 @@
                     return
                 }
                 this.clearMatrixFieldErrors()
+            },
+            matrixControlOption: {
+                deep: true,
+                handler () {
+                    if (!this.disabled) {
+                        this.initOptionConfig()
+                    }
+                }
             }
         },
         created () {
@@ -129,7 +147,7 @@
             validateMatrixFields () {
                 this.$nextTick(() => {
                     MATRIX_RULE_FIELDS.forEach((field) => {
-                        this.$validator.validate(field, this.matrixControlOption?.[field] || '')
+                        this.$validator.validate(field, this.normalizedMatrixControlOption[field] || '')
                     })
                 })
             },
@@ -154,7 +172,19 @@
                 this.updateContainerParams('matrixGroupFlag', enable)
             },
             initOptionConfig () {
-                this.updateContainerParams('matrixControlOption', this.getJobOptionDefault(this.JOB_MATRIX, this.matrixControlOption))
+                const matrixControlOption = this.getJobOptionDefault(this.JOB_MATRIX, this.matrixControlOption || {})
+                const compatibleMatrixControlOption = {
+                    ...matrixControlOption,
+                    strategyStr: matrixControlOption.strategyStr ?? matrixControlOption.strategy ?? '',
+                    includeCaseStr: matrixControlOption.includeCaseStr ?? matrixControlOption.include ?? '',
+                    excludeCaseStr: matrixControlOption.excludeCaseStr ?? matrixControlOption.exclude ?? ''
+                }
+                const shouldSync = ['strategyStr', 'includeCaseStr', 'excludeCaseStr', 'fastKill', 'maxConcurrency']
+                    .some(key => matrixControlOption[key] !== compatibleMatrixControlOption[key])
+
+                if (shouldSync) {
+                    this.updateContainerParams('matrixControlOption', compatibleMatrixControlOption)
+                }
             }
         }
     }
