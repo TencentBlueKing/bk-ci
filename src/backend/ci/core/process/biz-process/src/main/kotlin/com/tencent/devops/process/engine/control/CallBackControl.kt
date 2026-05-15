@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.control
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
@@ -104,6 +105,31 @@ class CallBackControl @Autowired constructor(
 
     @Value("\${callback.failureDisableTimePeriod:#{43200000}}")
     private val failureDisableTimePeriod: Long = DEFAULT_FAILURE_DISABLE_TIME_PERIOD
+
+    /**
+     * 是否允许 callback 指向 RFC1918 站点本地内网（与 [ProjectPipelineCallBackService] 共用同一开关）。
+     *
+     * - `false`（默认）：strictCallbackClient 走 [OkhttpUtils.ssrfSafeDns]，拦截一切内网；
+     * - `true`：metadataSafeCallbackClient 走 [OkhttpUtils.metadataSafeDns]，仅拦截 L1
+     *   （回环 / 链路本地 / 元数据 host），允许 RFC1918 内网回调，适合私有云 / IDC 部署。
+     *
+     * 即便置为 `true`，回环、链路本地（含云平台元数据）、`metadata.google.internal`、
+     * `kubernetes.default` 等 host 仍会在 DNS 层被拒绝。
+     */
+    @Value("\${project.callback.allow-internal-url:false}")
+    private val allowInternalCallbackUrl: Boolean = false
+
+    /**
+     * 实际使用的 callback OkHttpClient：根据 [allowInternalCallbackUrl] 选择 strict 或 metadata-safe 版本。
+     * 两者均带 DNS pinning，能防御 DNS rebinding 把外部 host 重绑定到回环 / 元数据地址。
+     */
+    private val activeCallbackClient: OkHttpClient by lazy {
+        if (allowInternalCallbackUrl) {
+            metadataSafeCallbackClient
+        } else {
+            strictCallbackClient
+        }
+    }
 
     fun pipelineCreateEvent(projectId: String, pipelineId: String) {
         callBackPipelineEvent(projectId, pipelineId, CallBackEvent.CREATE_PIPELINE)
@@ -319,7 +345,7 @@ class CallBackControl @Autowired constructor(
         try {
             breaker.executeCallable {
                 HttpRetryUtils.retry(MAX_RETRY_COUNT) {
-                    callbackClient.newCall(request).execute()
+                    activeCallbackClient.newCall(request).execute().closeQuietly()
                 }
                 if (callBack.failureTime != null) {
                     projectPipelineCallBackService.updateFailureTime(
@@ -564,7 +590,21 @@ class CallBackControl @Autowired constructor(
             override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
         })
 
-        private val callbackClient = OkHttpClient.Builder()
+        // 严格模式：拦截一切内网（回环 / 链路本地 / 元数据 / RFC1918 站点本地），
+        // 适用于公网 / SaaS 部署。
+        private val strictCallbackClient = OkHttpClient.Builder()
+            .dns(OkhttpUtils.ssrfSafeDns())
+            .connectTimeout(connectTimeout, TimeUnit.SECONDS)
+            .readTimeout(readTimeout, TimeUnit.SECONDS)
+            .writeTimeout(writeTimeout, TimeUnit.SECONDS)
+            .sslSocketFactory(anySslSocketFactory(), trustAnyCerts[0] as X509TrustManager)
+            .hostnameVerifier { _, _ -> true }
+            .build()
+
+        // 元数据安全模式：仅拦截 L1（回环 / 链路本地 / 元数据 host），
+        // 允许 RFC1918 站点本地内网回调，适用于私有云 / IDC 部署。
+        private val metadataSafeCallbackClient = OkHttpClient.Builder()
+            .dns(OkhttpUtils.metadataSafeDns())
             .connectTimeout(connectTimeout, TimeUnit.SECONDS)
             .readTimeout(readTimeout, TimeUnit.SECONDS)
             .writeTimeout(writeTimeout, TimeUnit.SECONDS)

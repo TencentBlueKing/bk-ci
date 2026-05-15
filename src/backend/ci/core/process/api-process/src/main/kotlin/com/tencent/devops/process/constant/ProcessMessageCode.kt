@@ -362,6 +362,9 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_BUILD_START_PARAM_NO_EMPTY = "2101254" // 构建启动参数如果必填，不能为空
     const val ERROR_REPEATEDLY_START_VM = "2101255" // 重复启动构建机，当前构建机的状态为：{0}
 
+    // 回调URL[{0}]指向内网/元数据地址，禁止使用以防止SSRF攻击
+    const val ERROR_CALLBACK_URL_INTERNAL_HOST = "2101366"
+
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}
