@@ -201,7 +201,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         values: Map<String, String>,
         channelCode: ChannelCode,
         buildNo: Int?,
-        version: Int?
+        version: Int?,
+        imateSessionId: String?
     ): Result<BuildId> {
         return manualStartupNew(
             userId = userId,
@@ -211,7 +212,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
             values = values,
             version = version,
             channelCode = channelCode,
-            buildNo = buildNo
+            buildNo = buildNo,
+            imateSessionId = imateSessionId
         )
     }
 
@@ -889,7 +891,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         channelCode: ChannelCode,
         buildNo: Int?,
         startType: StartType,
-        version: Int?
+        version: Int?,
+        imateSessionId: String?
     ): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -907,7 +910,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 buildNo = buildNo,
                 version = version,
                 checkPermission = ChannelCode.isNeedAuth(channelCode),
-                frequencyLimit = true
+                frequencyLimit = true,
+                imateSessionId = imateSessionId
             )
         )
     }

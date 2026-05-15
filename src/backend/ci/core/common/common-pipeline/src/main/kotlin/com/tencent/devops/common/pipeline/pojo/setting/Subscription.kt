@@ -46,7 +46,15 @@ data class Subscription(
     @get:Schema(title = "通知的流水线详情连接开关", required = false)
     val detailFlag: Boolean = false,
     @get:Schema(title = "自定义通知内容", required = false)
-    val content: String = ""
+    val content: String = "",
+    /**
+     * IMate 会话ID（创作流场景）。
+     * - 为空时，ImateNotifier 会自动从 build 变量 ci.imate_session_id 读取（通过启动接口请求头透传）。
+     * - 非空时，以本字段为准，可支持向多个会话推送，使用英文逗号或分号分隔。
+     * - 仅当 [types] 包含 [PipelineSubscriptionType.IMATE] 时生效。
+     */
+    @get:Schema(title = "IMate会话ID（创作流场景，留空则使用启动时透传的 ci.imate_session_id）", required = false)
+    val imateSessionId: String? = null
 ) {
 
     // 转换企业微信组通知

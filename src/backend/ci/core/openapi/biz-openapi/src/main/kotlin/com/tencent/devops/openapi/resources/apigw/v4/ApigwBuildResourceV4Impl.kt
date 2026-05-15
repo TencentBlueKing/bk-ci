@@ -183,9 +183,10 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         values: Map<String, String>?,
-        buildNo: Int?
+        buildNo: Int?,
+        imateSessionId: String?
     ): Result<BuildId> {
-        logger.info("OPENAPI_BUILD_V4|$userId|start|$projectId|$pipelineId|$values|$buildNo")
+        logger.info("OPENAPI_BUILD_V4|$userId|start|$projectId|$pipelineId|$values|$buildNo|imate=$imateSessionId")
         return client.get(ServiceBuildResource::class).manualStartupNew(
             userId = userId,
             projectId = projectId,
@@ -193,7 +194,8 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             values = values ?: emptyMap(),
             buildNo = buildNo,
             channelCode = apiGatewayUtil.getChannelCode(),
-            startType = StartType.SERVICE
+            startType = StartType.SERVICE,
+            imateSessionId = imateSessionId
         )
     }
 

@@ -1,0 +1,49 @@
+<!--
+    创作流 - 流水线运行失败通知 - IMate 卡片
+    可用占位符:
+        - projectName / pipelineName / buildNum / dataTime
+        - failContent        失败消息正文 (用户在订阅 content 字段中配置)
+        - failTaskName       失败任务名称 (可选)
+        - failReason         失败原因 (可选)
+        - detailUrl / detailAppUrl
+        - duration
+-->
+<div class="bk-imate-card bk-imate-finish bk-imate-finish-fail">
+    <header class="bk-imate-header">
+        <span class="bk-imate-tag bk-imate-tag-fail">执行失败</span>
+        <h3 class="bk-imate-title">{{projectName}} · {{pipelineName}}</h3>
+    </header>
+
+    <section class="bk-imate-meta">
+        <div><span class="bk-imate-label">构建编号</span><span class="bk-imate-value">#{{buildNum}}</span></div>
+        <div><span class="bk-imate-label">失败时间</span><span class="bk-imate-value">{{dataTime}}</span></div>
+        <div><span class="bk-imate-label">执行耗时</span><span class="bk-imate-value">{{duration}}</span></div>
+        <div><span class="bk-imate-label">失败任务</span><span class="bk-imate-value">{{failTaskName}}</span></div>
+    </section>
+
+    <section class="bk-imate-body">
+        <p class="bk-imate-desc">{{failContent}}</p>
+        <p class="bk-imate-reason">原因：{{failReason}}</p>
+    </section>
+
+    <footer class="bk-imate-actions">
+        <a class="bk-imate-btn bk-imate-btn-primary" href="{{detailUrl}}" target="_blank">查看详情</a>
+    </footer>
+</div>
+
+<style>
+    .bk-imate-card { font-family: -apple-system, "PingFang SC", sans-serif; border:1px solid #e6e9ef;
+        border-radius:6px; padding:16px; background:#fff; max-width:520px; }
+    .bk-imate-header { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+    .bk-imate-tag { display:inline-block; padding:2px 8px; border-radius:10px; font-size:12px; }
+    .bk-imate-tag-fail { background:#feebeb; color:#ea3636; }
+    .bk-imate-title { font-size:15px; margin:0; color:#313238; }
+    .bk-imate-meta > div { display:flex; gap:8px; padding:4px 0; font-size:13px; color:#63656e; }
+    .bk-imate-label { width:64px; color:#979ba5; }
+    .bk-imate-desc { font-size:13px; color:#313238; line-height:1.6; margin:8px 0 0; white-space:pre-line; }
+    .bk-imate-reason { font-size:12px; color:#ea3636; margin:4px 0 0; }
+    .bk-imate-actions { display:flex; gap:8px; margin-top:16px; }
+    .bk-imate-btn { display:inline-block; padding:6px 14px; border-radius:4px; font-size:13px; cursor:pointer;
+        text-decoration:none; }
+    .bk-imate-btn-primary { background:#3a84ff; color:#fff; }
+</style>

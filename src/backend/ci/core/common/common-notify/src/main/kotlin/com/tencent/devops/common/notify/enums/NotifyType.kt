@@ -34,7 +34,9 @@ enum class NotifyType {
     SMS,
     WEWORK,
     WEWORK_GROUP,
-    VOICE
+    VOICE,
+    // IMate 会话消息（创作流场景使用，向 IMate 会话推送可交互的 HTML 卡片）
+    IMATE
     ;
 
     /**
@@ -42,6 +44,7 @@ enum class NotifyType {
      */
     companion object {
         fun opEditable(): List<NotifyType> {
+            // 注意：IMATE 模板由 IMate 后台统一维护（不在 bk-ci 这边登记），所以不出现在 OP 可编辑列表中。
             return listOf(EMAIL, RTX, WECHAT, WEWORK_GROUP)
         }
     }

@@ -28,6 +28,7 @@
 package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_IMATE_SESSION_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
@@ -247,7 +248,10 @@ interface ServiceBuildResource {
         buildNo: Int? = null,
         @Parameter(description = "指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        version: Int? = null
+        version: Int? = null,
+        @Parameter(description = "IMate会话ID（仅创作流渠道生效，用于后续IMate消息回写）", required = false)
+        @HeaderParam(AUTH_HEADER_IMATE_SESSION_ID)
+        imateSessionId: String? = null
     ): Result<BuildId>
 
     @Operation(summary = "重试流水线-重试或者跳过失败插件")
@@ -961,7 +965,10 @@ interface ServiceBuildResource {
         startType: StartType,
         @Parameter(description = "指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        version: Int? = null
+        version: Int? = null,
+        @Parameter(description = "IMate会话ID（仅创作流渠道生效，用于后续IMate消息回写）", required = false)
+        @HeaderParam(AUTH_HEADER_IMATE_SESSION_ID)
+        imateSessionId: String? = null
     ): Result<BuildId>
 
     @Operation(summary = "取消并发起新构建")

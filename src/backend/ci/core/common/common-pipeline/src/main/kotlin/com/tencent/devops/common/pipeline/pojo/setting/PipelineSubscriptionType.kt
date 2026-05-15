@@ -38,5 +38,7 @@ enum class PipelineSubscriptionType {
     WEWORK,
     VOICE,
     // 企业微信群通知
-    WEWORK_GROUP
+    WEWORK_GROUP,
+    // IMate 会话消息（创作流场景使用，向 IMate 会话推送可交互的 HTML 卡片）
+    IMATE
 }

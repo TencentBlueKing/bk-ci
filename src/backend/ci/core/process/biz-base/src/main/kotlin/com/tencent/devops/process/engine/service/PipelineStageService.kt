@@ -45,6 +45,7 @@ import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
+import com.tencent.devops.process.constant.PipelineBuildParamKey
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_STAGE_REVIEW_EMPTY_REVIEWER
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_ABORT_STAGE
@@ -669,7 +670,10 @@ class PipelineStageService @Autowired constructor(
         stage: PipelineBuildStage,
         pipelineName: String,
         buildNum: String,
-        debug: Boolean
+        debug: Boolean,
+        // IMate 会话ID：可选，由调用方从 build 变量 ci.imate_session_id 读取后传入；
+        // checkIn.notifyImateSessionId 优先级高于本参数。
+        imateSessionIdFromVariables: String? = null
     ) {
         val checkIn = stage.checkIn ?: return
         val group = stage.checkIn?.groupToReview() ?: return
@@ -694,6 +698,13 @@ class PipelineStageService @Autowired constructor(
             )
             return
         }
+        // IMate 会话ID 解析顺序：
+        // 1) checkIn 中显式配置的 notifyImateSessionId（已经过 parseReviewVariables 完成变量替换）
+        // 2) 启动时透传到 build 变量 ci.imate_session_id 中的会话ID（由调用方传入）
+        val resolvedImateSessionId = checkIn.notifyImateSessionId
+            ?.takeIf { it.isNotBlank() }
+            ?: imateSessionIdFromVariables
+            ?: ""
         pipelineEventDispatcher.dispatch(
             PipelineBuildReviewBroadCastEvent(
                 source = "s(${stage.stageId}) waiting for REVIEW",
@@ -721,7 +732,9 @@ class PipelineStageService @Autowired constructor(
                     "reviewDesc" to (checkIn.reviewDesc ?: ""),
                     "reviewers" to group.reviewers.joinToString(),
                     // 企业微信组
-                    NotifyUtils.WEWORK_GROUP_KEY to (checkIn.notifyGroup?.joinToString(separator = ",") ?: "")
+                    NotifyUtils.WEWORK_GROUP_KEY to (checkIn.notifyGroup?.joinToString(separator = ",") ?: ""),
+                    // IMate 会话ID（仅 IMATE 通知类型生效，由 ImateNotifier 取出真正调用 IMate 后台）
+                    NotifyUtils.IMATE_SESSION_ID_KEY to resolvedImateSessionId
                 ),
                 position = ControlPointPosition.BEFORE_POSITION,
                 stageSeq = stage.seq,

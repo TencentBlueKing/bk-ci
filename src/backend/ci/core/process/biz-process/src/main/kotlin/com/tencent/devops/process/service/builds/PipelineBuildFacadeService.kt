@@ -465,7 +465,8 @@ class PipelineBuildFacadeService(
         buildNo: Int? = null,
         frequencyLimit: Boolean = true,
         triggerReviewers: List<String>? = null,
-        version: Int? = null
+        version: Int? = null,
+        imateSessionId: String? = null
     ): BuildId {
         logger.info("[$pipelineId] Manual build start with buildNo[$buildNo] and vars: $values")
         if (checkPermission) {
@@ -582,6 +583,17 @@ class PipelineBuildFacadeService(
                     userId = userId
                 )
                 paramMap.putAll(creativeParam)
+                // IMate 会话ID（用于运行/审核结束后给 IMate 会话回写交互卡片消息），
+                // 仅在创作流渠道时透传，非创作流渠道忽略，不影响历史逻辑。
+                if (!imateSessionId.isNullOrBlank()) {
+                    paramMap[com.tencent.devops.process.constant.PipelineBuildParamKey.CI_IMATE_SESSION_ID] =
+                        BuildParameters(
+                            key = com.tencent.devops.process.constant.PipelineBuildParamKey.CI_IMATE_SESSION_ID,
+                            value = imateSessionId,
+                            readOnly = true,
+                            valueType = BuildFormPropertyType.STRING
+                        )
+                }
             }
 
             return pipelineBuildService.startPipeline(

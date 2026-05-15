@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
+import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
@@ -142,10 +143,28 @@ class PipelineBuildNotifyListener @Autowired constructor(
             bodyParams["reviewUrl"] = reviewUrl
             bodyParams["reviewAppUrl"] = reviewAppUrl
             bodyParams["projectName"] = projectName
+            // 审核通知含 IMate 会话ID 时，把业务上下文 + 场景标识透传给 ImateNotifier；
+            // 其它渠道不读 IMATE_* keys，零侵入。
+            attachImateContextIfNeeded()
             sendNotifyRequest(buildNotifyRequest())
         } catch (ignored: Exception) {
             logger.warn("[$buildId]|[$source]|PIPELINE_SEND_NOTIFY_FAIL| receivers: $receivers error: $ignored")
         }
+    }
+
+    /**
+     * 若当前事件是 stage 审核且携带 IMate 会话ID，把审核坐标写入 bodyParams，供 ImateNotifier 取出后填给 IMate；
+     * IMate 端必须保存这些字段并在审核按钮回调中原样回传到 stream 后台 Open 接口。
+     */
+    private fun PipelineBuildNotifyEvent.attachImateContextIfNeeded() {
+        val imateSession = bodyParams[NotifyUtils.IMATE_SESSION_ID_KEY]
+        if (imateSession.isNullOrBlank()) return
+        val targetStageId = stageId ?: return
+        bodyParams[NotifyUtils.IMATE_SCENE_KEY] = NotifyUtils.IMATE_SCENE_STAGE_REVIEW
+        bodyParams[NotifyUtils.IMATE_CTX_PROJECT_ID] = projectId
+        bodyParams[NotifyUtils.IMATE_CTX_PIPELINE_ID] = pipelineId
+        bodyParams[NotifyUtils.IMATE_CTX_BUILD_ID] = buildId
+        bodyParams[NotifyUtils.IMATE_CTX_STAGE_ID] = targetStageId
     }
 
     /**

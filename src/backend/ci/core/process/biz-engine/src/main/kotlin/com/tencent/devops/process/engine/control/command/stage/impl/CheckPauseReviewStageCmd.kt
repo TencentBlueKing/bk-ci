@@ -39,6 +39,7 @@ import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
+import com.tencent.devops.process.constant.PipelineBuildParamKey
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.service.BuildVariableService
@@ -109,7 +110,9 @@ class CheckPauseReviewStageCmd(
                     stage = stage,
                     pipelineName = commandContext.variables[PIPELINE_NAME] ?: stage.pipelineId,
                     buildNum = commandContext.variables[PIPELINE_BUILD_NUM] ?: "1",
-                    debug = commandContext.debug
+                    debug = commandContext.debug,
+                    // 启动接口透传至 build 变量的 IMate 会话ID（仅创作流场景有值）
+                    imateSessionIdFromVariables = commandContext.variables[PipelineBuildParamKey.CI_IMATE_SESSION_ID]
                 )
                 commandContext.buildStatus = BuildStatus.STAGE_SUCCESS
                 commandContext.latestSummary = "s(${stage.stageId}) waiting for REVIEW"

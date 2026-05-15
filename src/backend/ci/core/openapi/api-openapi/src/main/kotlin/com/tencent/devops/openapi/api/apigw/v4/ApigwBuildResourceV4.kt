@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_IMATE_SESSION_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
@@ -116,7 +117,10 @@ interface ApigwBuildResourceV4 {
         values: Map<String, String>?,
         @Parameter(description = "手动指定构建版本参数", required = false)
         @QueryParam("buildNo")
-        buildNo: Int? = null
+        buildNo: Int? = null,
+        @Parameter(description = "IMate会话ID（仅创作流渠道生效，用于后续IMate消息回写）", required = false)
+        @HeaderParam(AUTH_HEADER_IMATE_SESSION_ID)
+        imateSessionId: String? = null
     ): Result<BuildId>
 
     @Operation(summary = "停止构建", tags = ["v4_app_build_stop", "v4_user_build_stop"])

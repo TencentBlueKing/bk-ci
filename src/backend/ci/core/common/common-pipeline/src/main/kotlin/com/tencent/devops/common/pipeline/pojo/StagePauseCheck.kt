@@ -61,7 +61,15 @@ data class StagePauseCheck(
     @get:Schema(title = "发送的通知类型", required = false)
     var notifyType: MutableList<String>? = mutableListOf("RTX"), // 通知类型[企业微信群消息]
     @get:Schema(title = "企业微信群id", required = false)
-    var notifyGroup: MutableList<String>? = null
+    var notifyGroup: MutableList<String>? = null,
+    /**
+     * IMate 会话ID（创作流场景）。
+     * - 为空时，ImateNotifier 会自动从 build 变量 ci.imate_session_id 读取（通过启动接口请求头透传）。
+     * - 非空时，以本字段为准，可支持向多个会话推送，使用英文逗号或分号分隔；支持流水线变量替换。
+     * - 仅当 [notifyType] 包含 IMATE 时生效。
+     */
+    @get:Schema(title = "IMate会话ID（创作流场景，留空则使用启动时透传的 ci.imate_session_id）", required = false)
+    var notifyImateSessionId: String? = null
 ) {
 
     /**
@@ -220,6 +228,15 @@ data class StagePauseCheck(
                 contextPair = contextPair
             )
         }?.toMutableList()
+        // IMate 会话ID 也支持变量替换（可填 ${ci.imate_session_id} 等）
+        notifyImateSessionId = notifyImateSessionId?.let {
+            EnvReplacementParser.parse(
+                value = it,
+                contextMap = variables,
+                onlyExpression = dialect.supportUseExpression(),
+                contextPair = contextPair
+            )
+        }
         reviewParams?.forEach { it.parseValueWithType(variables) }
     }
 

@@ -637,7 +637,10 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         val notifiers = SpringContextUtil.getBeansWithClass(INotifier::class.java)
         for (notifier in notifiers) {
             if (sendAllNotify || request.notifyType?.contains(notifier.type().name) == true) {
-                if (!notifyTypeScope.contains(notifier.type().name)) {
+                // 渠道豁免：IMate 模板由 IMate 后台维护（不在本端的 T_COMMON_NOTIFY_MESSAGE_TEMPLATE 注册），
+                // 因此跳过本地 notifyTypeScope 校验，只要业务方在 notifyType 中显式声明了 IMATE 即可发送。
+                val isImateChannel = notifier.type() == NotifyType.IMATE
+                if (!isImateChannel && !notifyTypeScope.contains(notifier.type().name)) {
                     logger.warn(
                         "COMMON_NOTIFY_MESSAGE_TEMPLATE_NOT_FOUND|If needed, add on the OP" +
                                 "|type=${notifier.type()}|template=${request.templateCode}"

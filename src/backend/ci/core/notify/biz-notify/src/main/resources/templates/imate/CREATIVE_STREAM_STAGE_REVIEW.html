@@ -1,0 +1,54 @@
+<!--
+    创作流 - Stage 审核请求 - IMate 卡片
+    用法: 由 ImateTemplateRenderer 加载, 用 {{var}} 形式替换占位符 (XSS 由调用方保证, 渲染时只做字符串替换)
+    可用占位符 (在 SendNotifyMessageTemplateRequest.bodyParams 中提供):
+        - projectName        项目中文名
+        - pipelineName       流水线名
+        - buildNum           构建编号
+        - reviewDesc         审核描述 (可空)
+        - reviewers          审核人列表
+        - dataTime           触发时间
+        - reviewUrl          web 审核链接
+        - reviewAppUrl       移动端审核链接
+        - projectId / pipelineId / buildId / stageId   业务坐标 (可在按钮 href 拼接)
+-->
+<div class="bk-imate-card bk-imate-stage-review">
+    <header class="bk-imate-header">
+        <span class="bk-imate-tag bk-imate-tag-review">待审核</span>
+        <h3 class="bk-imate-title">{{projectName}} · {{pipelineName}} 等你拍板</h3>
+    </header>
+
+    <section class="bk-imate-meta">
+        <div><span class="bk-imate-label">构建编号</span><span class="bk-imate-value">#{{buildNum}}</span></div>
+        <div><span class="bk-imate-label">触发时间</span><span class="bk-imate-value">{{dataTime}}</span></div>
+        <div><span class="bk-imate-label">审核人</span><span class="bk-imate-value">{{reviewers}}</span></div>
+    </section>
+
+    <section class="bk-imate-body">
+        <p class="bk-imate-desc">{{reviewDesc}}</p>
+    </section>
+
+    <footer class="bk-imate-actions">
+        <a class="bk-imate-btn bk-imate-btn-primary" data-action="APPROVE">同意，继续执行</a>
+        <a class="bk-imate-btn bk-imate-btn-danger" data-action="REJECT">驳回，终止流水线</a>
+        <a class="bk-imate-btn bk-imate-btn-link" href="{{reviewUrl}}" target="_blank">在 Web 端查看</a>
+    </footer>
+</div>
+
+<style>
+    .bk-imate-card { font-family: -apple-system, "PingFang SC", sans-serif; border:1px solid #e6e9ef;
+        border-radius:6px; padding:16px; background:#fff; max-width:520px; }
+    .bk-imate-header { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+    .bk-imate-tag { display:inline-block; padding:2px 8px; border-radius:10px; font-size:12px; }
+    .bk-imate-tag-review { background:#fff7e6; color:#fa8c16; }
+    .bk-imate-title { font-size:15px; margin:0; color:#313238; }
+    .bk-imate-meta > div { display:flex; gap:8px; padding:4px 0; font-size:13px; color:#63656e; }
+    .bk-imate-label { width:64px; color:#979ba5; }
+    .bk-imate-desc { font-size:13px; color:#313238; line-height:1.6; margin:8px 0 0; }
+    .bk-imate-actions { display:flex; gap:8px; margin-top:16px; }
+    .bk-imate-btn { display:inline-block; padding:6px 14px; border-radius:4px; font-size:13px; cursor:pointer;
+        text-decoration:none; }
+    .bk-imate-btn-primary { background:#3a84ff; color:#fff; }
+    .bk-imate-btn-danger { background:#ea3636; color:#fff; }
+    .bk-imate-btn-link { background:transparent; color:#3a84ff; padding-left:0; }
+</style>
