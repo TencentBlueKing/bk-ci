@@ -14,8 +14,16 @@
                             'active': activeIndex === index
                         }" @click="handleShowDetail(item, index)">
                         <div class="title">
-                            <StatusIcon class="icon" :status="item.total === item.success ? 'normal' : 'error'"></StatusIcon>
-                            <span class="desc" :title="getEventDescTitle(item.eventDesc)" v-html="item.eventDesc"></span>
+                            <StatusIcon
+                                class="icon"
+                                :status="item.total === item.success ? 'normal' : 'error'"
+                            ></StatusIcon>
+                            <span
+                                class="desc"
+                                :title="getEventDescTitle(item.eventDesc)"
+                            >
+                                <EventDesc :event-desc="item.eventDesc" />
+                            </span>
                             <span class="trigger-time">
                                 {{ new Date(item.eventTime).toLocaleString().split('.').join('-') }}
                             </span>
@@ -158,11 +166,13 @@
     } from '@/utils/permission'
     import StatusIcon from '../status-icon.vue'
     import EmptyTableStatusVue from '../empty-table-status.vue'
+    import EventDesc from './EventDesc.vue'
     export default {
         name: 'timeline-collapse',
         components: {
             StatusIcon,
-            EmptyTableStatusVue
+            EmptyTableStatusVue,
+            EventDesc
         },
         props: {
             data: {
@@ -310,8 +320,19 @@
                 this.pagination.current = page
                 this.getEventDetail()
             },
-            getEventDescTitle (str) {
-                return str.replace(/(<\/?font.*?>)|(<\/?span.*?>)|(<\/?a.*?>)/gi, '')
+            getEventDescTitle (eventDesc) {
+                if (eventDesc && typeof eventDesc === 'object') {
+                    return eventDesc.defaultMessage || ''
+                }
+                if (typeof eventDesc === 'string') {
+                    try {
+                        const desc = JSON.parse(eventDesc)
+                        return desc.defaultMessage || ''
+                    } catch (e) {
+                        return eventDesc.replace(/(<\/?font.*?>)|(<\/?span.*?>)|(<\/?a.*?>)/gi, '')
+                    }
+                }
+                return ''
             },
             handleToggleTab (tab) {
                 this.filterTab = tab.id
