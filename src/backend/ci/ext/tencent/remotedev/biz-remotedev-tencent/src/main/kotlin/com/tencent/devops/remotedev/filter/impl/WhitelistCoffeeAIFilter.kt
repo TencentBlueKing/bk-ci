@@ -1,8 +1,10 @@
 package com.tencent.devops.remotedev.filter.impl
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.filter.ApiFilter
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
@@ -17,7 +19,8 @@ import org.slf4j.LoggerFactory
 @PreMatching
 @RequestFilter
 class WhitelistCoffeeAIFilter constructor(
-    private val cacheService: ConfigCacheService
+    private val cacheService: ConfigCacheService,
+    private val client: Client
 ) : ApiFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(WhitelistCoffeeAIFilter::class.java)
@@ -38,7 +41,10 @@ class WhitelistCoffeeAIFilter constructor(
             )
             return true
         }
-        if (!cacheService.checkApiCoffeeAIWhiteList(userId)) {
+        if (!cacheService.checkApiCoffeeAIWhiteList(userId) && runCatching {
+                client.get(ServiceTxUserResource::class).get(userId)
+            }.onFailure { logger.warn("get $userId info error|${it.message}") }
+                .getOrNull()?.data?.bgName?.let { cacheService.checkApiCoffeeAIWhiteList(it) } != true) {
             logger.info("user($userId)wants to access the resource($path), but is blocked.")
             return false
         }
