@@ -42,7 +42,7 @@ import com.tencent.devops.process.plugin.ElementBizPlugin
 import com.tencent.devops.process.plugin.annotation.ElementBiz
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerTriggerTaskService
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import org.slf4j.LoggerFactory
 
 @ElementBiz
@@ -67,7 +67,7 @@ class TimerTriggerElementBizPlugin constructor(
         channelCode: ChannelCode,
         create: Boolean,
         container: Container,
-        yamlInfo: PipelineYamlVo?
+        yamlFileInfo: PipelineYamlFileInfo?
     ) {
         val params = pipelineRepositoryService.getTriggerParams((container as TriggerContainer))
         logger.info("[$pipelineId]|$userId| Timer trigger [${element.name}] enable=${element.elementEnabled()}")
@@ -79,7 +79,7 @@ class TimerTriggerElementBizPlugin constructor(
             projectId = projectId,
             element = element,
             params = params,
-            yamlInfo = yamlInfo
+            yamlFileInfo = yamlFileInfo
         )
         // svn仓库分支必填
         if (repo != null && repo.getScmType() == ScmType.CODE_SVN && element.branches.isNullOrEmpty()) {

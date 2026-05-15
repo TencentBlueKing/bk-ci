@@ -234,7 +234,8 @@ class RbacPermissionResourceService(
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        enabled: Boolean?
     ): Boolean {
         logger.info("resource modify relation|$projectCode|$resourceType|$resourceCode|$resourceName")
         val resourceInfo = authResourceService.get(
@@ -246,7 +247,8 @@ class RbacPermissionResourceService(
             permissionGradeManagerService.modifyGradeManager(
                 gradeManagerId = resourceInfo.relationId,
                 projectCode = projectCode,
-                projectName = resourceName
+                projectName = resourceName,
+                enabled = enabled
             )
         } else {
             val projectInfo = authResourceService.get(
@@ -254,6 +256,33 @@ class RbacPermissionResourceService(
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = projectCode
             )
+            // 如果发现资源已经被禁用，并且relationId为空,
+            // 说明二级管理员已在禁用时被删除,无需修改二级管理员以及用户组相关信息。
+            // 只需要对 Resource 表的名称进行修改即可
+            if (!resourceInfo.enable && resourceInfo.relationId.isBlank()) {
+                logger.info(
+                    "resource is disabled and relationId is empty, " +
+                        "skip modify subset manager" +
+                        "|$projectCode|$resourceType|$resourceCode"
+                )
+                authResourceService.update(
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    resourceName = resourceName
+                )
+                permissionAuthorizationService.modifyResourceAuthorization(
+                    listOf(
+                        ResourceAuthorizationDTO(
+                            projectCode = projectCode,
+                            resourceType = resourceType,
+                            resourceCode = resourceCode,
+                            resourceName = resourceName
+                        )
+                    )
+                )
+                return true
+            }
             permissionSubsetManagerService.modifySubsetManager(
                 subsetManagerId = resourceInfo.relationId,
                 projectCode = projectCode,
@@ -416,24 +445,33 @@ class RbacPermissionResourceService(
             logger.info("resource has enable permission manager|$userId|$projectId|$resourceType|$resourceCode")
             return true
         }
-        // 重新创建二级管理员
-        val subsetManagerId = permissionSubsetManagerService.createSubsetManager(
-            gradeManagerId = projectInfo.relationId,
-            userId = userId,
-            projectCode = projectId,
-            projectName = projectInfo.resourceName,
-            resourceType = resourceType,
-            resourceCode = resourceCode,
-            resourceName = resourceInfo.resourceName,
-            iamResourceCode = resourceInfo.iamResourceCode
-        )
-        // 更新资源的二级管理员关联ID
-        authResourceService.updateRelationId(
-            projectCode = projectId,
-            resourceType = resourceType,
-            resourceCode = resourceCode,
-            relationId = subsetManagerId.toString()
-        )
+        // 如果发现resourceInfo.relationId不为空，说明二级管理员已存在，不需要再创建
+        val subsetManagerId: Int
+        val createMode: AuthGroupCreateMode
+        if (resourceInfo.relationId.isNotBlank()) {
+            subsetManagerId = resourceInfo.relationId.toInt()
+            createMode = AuthGroupCreateMode.ENABLE
+        } else {
+            // 重新创建二级管理员
+            subsetManagerId = permissionSubsetManagerService.createSubsetManager(
+                gradeManagerId = projectInfo.relationId,
+                userId = userId,
+                projectCode = projectId,
+                projectName = projectInfo.resourceName,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                resourceName = resourceInfo.resourceName,
+                iamResourceCode = resourceInfo.iamResourceCode
+            )
+            createMode = AuthGroupCreateMode.CREATE
+            // 更新资源的二级管理员关联ID
+            authResourceService.updateRelationId(
+                projectCode = projectId,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                relationId = subsetManagerId.toString()
+            )
+        }
         // 创建默认用户组
         permissionSubsetManagerService.createSubsetManagerDefaultGroup(
             subsetManagerId = subsetManagerId,
@@ -444,7 +482,7 @@ class RbacPermissionResourceService(
             resourceCode = resourceCode,
             resourceName = resourceInfo.resourceName,
             iamResourceCode = resourceInfo.iamResourceCode,
-            createMode = AuthGroupCreateMode.CREATE
+            createMode = createMode
         )
         return authResourceService.enable(
             userId = userId,
@@ -528,6 +566,48 @@ class RbacPermissionResourceService(
             projectCode = projectId,
             resourceType = resourceType,
             resourceCode = resourceCode
+        )
+    }
+
+    override fun getResourceByName(
+        projectCode: String,
+        resourceType: String,
+        resourceName: String
+    ): AuthResourceInfo? {
+        return authResourceService.getByResourceName(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceName = resourceName
+        )
+    }
+
+    override fun getResourceByCode(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): AuthResourceInfo? {
+        return authResourceService.getByResourceCode(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+    }
+
+    override fun modifyProjectEnabled(
+        projectCode: String,
+        enabled: Boolean
+    ): Boolean {
+        logger.info("modify project enabled|$projectCode|$enabled")
+        val resourceInfo = authResourceService.get(
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode
+        )
+        return permissionGradeManagerService.modifyGradeManager(
+            gradeManagerId = resourceInfo.relationId,
+            projectCode = projectCode,
+            projectName = resourceInfo.resourceName,
+            enabled = enabled
         )
     }
 }

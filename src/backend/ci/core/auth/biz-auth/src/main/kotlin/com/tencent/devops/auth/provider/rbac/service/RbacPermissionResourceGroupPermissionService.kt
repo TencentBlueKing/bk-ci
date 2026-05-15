@@ -53,6 +53,7 @@ import com.tencent.devops.auth.pojo.enum.AuthSyncDataType
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
+import com.tencent.devops.auth.pojo.vo.PipelineViewWithoutDownloadGroupVO
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissionsSyncEvent
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
 import com.tencent.devops.auth.service.AuthMonitorSpaceService
@@ -76,6 +77,7 @@ import com.tencent.devops.common.util.CacheHelper
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -402,6 +404,91 @@ class RbacPermissionResourceGroupPermissionService(
             actionRelatedResourceType = actionRelatedResourceType,
             action = action
         )
+    }
+
+    override fun listProjectGroupsWithPipelineViewButNoDownload(
+        projectCodes: List<String>?
+    ): List<PipelineViewWithoutDownloadGroupVO> {
+        val result = mutableListOf<PipelineViewWithoutDownloadGroupVO>()
+        val filteredProjectCodes = projectCodes?.filter { it.isNotBlank() }?.distinct()
+        if (!filteredProjectCodes.isNullOrEmpty()) {
+            filteredProjectCodes.forEach { projectCode ->
+                result.addAll(listProjectGroupsWithPipelineViewButNoDownload(projectCode = projectCode))
+            }
+            logger.info(
+                "list project groups with pipeline view but no download by projectCodes, size: {}",
+                result.size
+            )
+            return result
+        }
+        var offset = 0
+        val limit = PageUtil.MAX_PAGE_SIZE / 2
+        do {
+            val projects = client.get(ServiceProjectResource::class).listProjectsByCondition(
+                projectConditionDTO = ProjectConditionDTO(
+                    enabled = true,
+                    channelCode = ProjectChannelCode.BS.name
+                ),
+                limit = limit,
+                offset = offset
+            ).data ?: break
+            projects.forEach { project ->
+                result.addAll(
+                    listProjectGroupsWithPipelineViewButNoDownload(projectCode = project.englishName)
+                )
+            }
+            offset += limit
+        } while (projects.size == limit)
+        logger.info("list project groups with pipeline view but no download, size: {}", result.size)
+        return result
+    }
+
+    private fun listProjectGroupsWithPipelineViewButNoDownload(
+        projectCode: String
+    ): List<PipelineViewWithoutDownloadGroupVO> {
+        val iamGroupIds = authResourceGroupDao.listIamGroupIdsByConditions(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode
+        )
+        return iamGroupIds.mapNotNull { iamGroupId ->
+            val permissions = resourceGroupPermissionDao.getProjectLevelPermission(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                iamGroupId = iamGroupId
+            )
+            if (!isPipelineViewWithoutDownloadGroup(permissions)) {
+                return@mapNotNull null
+            }
+            val group = authResourceGroupDao.get(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                relationId = iamGroupId.toString()
+            ) ?: return@mapNotNull null
+            PipelineViewWithoutDownloadGroupVO(
+                projectCode = projectCode,
+                iamGroupId = iamGroupId,
+                groupName = group.groupName,
+                memberCount = countValidGroupMembers(projectCode = projectCode, iamGroupId = iamGroupId)
+            )
+        }
+    }
+
+    private fun isPipelineViewWithoutDownloadGroup(permissions: List<String>): Boolean {
+        return permissions.contains(ActionId.PIPELINE_VIEW) &&
+                !permissions.contains(ActionId.PIPELINE_DOWNLOAD)
+    }
+
+    private fun countValidGroupMembers(projectCode: String, iamGroupId: Int): Int {
+        return authResourceMemberDao.listResourceGroupMember(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode,
+            iamGroupId = iamGroupId,
+            minExpiredTime = LocalDateTime.now()
+        ).count { it.memberType != MemberType.TEMPLATE.type }
     }
 
     override fun listGroupResourcesWithPermission(
@@ -866,7 +953,7 @@ class RbacPermissionResourceGroupPermissionService(
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms " +
-                    "sync group project level permissions $projectCode|$iamGroupId"
+                        "sync group project level permissions $projectCode|$iamGroupId"
             )
         }
 

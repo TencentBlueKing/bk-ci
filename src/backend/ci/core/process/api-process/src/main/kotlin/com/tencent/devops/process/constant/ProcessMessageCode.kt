@@ -458,6 +458,8 @@ object ProcessMessageCode {
     const val ERROR_NON_CONSTRAINED_PIPELINE_CANNOT_SAVE_AS_CONSTRAINED = "2101363"
     // 实例化异常：流水线其他变量[{0}]默认值被改成模版默认值,请联系助手分析
     const val ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN = "2101364"
+    // YAML文件[{0}]已绑定其他流水线[{1}]，不能重命名
+    const val ERROR_PAC_YAML_FILE_BINDTO_OTHER_PIPELINE = "2101365"
     // 分支版本[{0}]不存在, 目标分支不存在或流水线引用的Yaml文件[{1}]在分支[{0}]不存在或已被删除
     const val ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND = "2101378"
     // 分支版本[{0}]不存在, 请检查分支版本是否被成功创建
@@ -692,6 +694,9 @@ object ProcessMessageCode {
     // [<a href={0}>{1}</a>]更新成功,版本:{2}
     const val BK_YAML_PIPELINE_UPDATE_SUCCESS = "bkYamlPipelineUpdateSuccess"
 
+    // [<a href={0}>{1}</a>|{2}]重命名成功,{3} → {4}
+    const val BK_YAML_PIPELINE_RENAME_SUCCESS = "bkYamlPipelineRenameSuccess"
+
     // [<a href={0}>{1}</a>]删除版本成功,版本:{2}
     const val BK_YAML_PIPELINE_DELETE_VERSION_SUCCESS = "bkYamlPipelineDeleteVersionSuccess"
 
@@ -703,6 +708,9 @@ object ProcessMessageCode {
 
     // [<a href={0}>{1}</a>]更新失败
     const val BK_YAML_PIPELINE_UPDATE_FAILED = "bkYamlPipelineUpdateFailed"
+
+    // [<a href={0}>{1}</a>]重命名失败,{2} → {3}
+    const val BK_YAML_PIPELINE_RENAME_FAILED = "bkYamlPipelineRenameFailed"
 
     // [<a href={0}>{1}</a>]更新失败
     const val BK_YAML_PIPELINE_DEPENDENCY_UPGRADE_FAILED = "bkYamlPipelineDependencyUpgradeFailed"

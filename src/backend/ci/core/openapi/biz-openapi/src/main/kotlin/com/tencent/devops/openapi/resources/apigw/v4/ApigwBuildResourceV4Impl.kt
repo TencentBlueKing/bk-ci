@@ -52,6 +52,7 @@ import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
+import com.tencent.devops.process.pojo.task.PipelineFailTaskDetail
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -447,6 +448,24 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         )
     }
 
+    override fun getBuildFailedTasks(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String?,
+        buildId: String,
+        executeCount: Int?
+    ): Result<List<PipelineFailTaskDetail>> {
+        logger.info("OPENAPI_BUILD_V4|$userId|get build failed tasks|$projectId|$pipelineId|$buildId|$executeCount")
+        return client.get(ServiceBuildResource::class).getBuildFailedTasks(
+            projectId = projectId,
+            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
+            buildId = buildId,
+            executeCount = executeCount
+        )
+    }
+
     private fun checkPipelineId(projectId: String, pipelineId: String?, buildId: String): String {
         val pipelineIdFormDB = indexService.getHandle(buildId) {
             kotlin.runCatching {
@@ -483,7 +502,8 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         endTimeFrom: String?,
         endTimeTo: String?,
         buildNoStart: Int?,
-        buildNoEnd: Int?
+        buildNoEnd: Int?,
+        updateTimeDesc: Boolean?
     ): Result<Page<LightBuildHistory>> {
         return client.get(ServiceBuildResource::class).getLightHistoryBuild(
             userId = userId,
@@ -498,6 +518,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             endTimeTo = endTimeTo,
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
+            updateTimeDesc = updateTimeDesc
         )
     }
 

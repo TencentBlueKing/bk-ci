@@ -27,6 +27,8 @@
 
 package com.tencent.devops.environment.service.thirdpartyagent
 
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.benmanes.caffeine.cache.LoadingCache
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.agent.UpgradeItem
@@ -43,6 +45,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Duration
 
 @Suppress("ComplexMethod", "LongMethod", "ReturnCount")
 @Service
@@ -135,7 +138,7 @@ class UpgradeService @Autowired constructor(
         val currentWorkerVersion = agentPropsScope.getWorkerVersion()
         val currentGoAgentVersion = agentPropsScope.getAgentVersion()
         val currentJdkVersion = agentPropsScope.getJdkVersion(os, props?.arch)
-        val currentDockerInitFileMd5 = agentPropsScope.getDockerInitFileMd5()
+        val currentDockerInitFileMd5 = agentPropsScope.getDockerInitFileMd5(os)
 
         val canUpgrade = agentScope.checkCanUpgrade(agentId)
 
@@ -155,6 +158,7 @@ class UpgradeService @Autowired constructor(
          * 1、判断组件版本信息是否配置，未配置不升级
          * 2、判断组件的强制升级或者锁定升级，锁定升级不升级，强制升级判断版本信息是否一致看是否升级
          * 3、判断组件是否符合项目升级标准，不符合则不升级
+         * 4、判断是否已经超过最大升级数量限制，超过则不升级
          * 4、正常判断组件是否可以升级
          */
 
@@ -169,6 +173,7 @@ class UpgradeService @Autowired constructor(
 
         // 除了worker之外的组件都和agent走一个项目检查
         val agentProjectCheck = checkProjectUpgrade(projectId, AgentUpgradeType.GO_AGENT)
+        val agentMaxUpgradeCheck = checkExceedAgentMaxUpgradeCount(currentGoAgentVersion)
 
         val goAgentCheckFun = fun() = currentGoAgentVersion != info.goAgentVersion
         val goAgentVersion = when {
@@ -176,6 +181,7 @@ class UpgradeService @Autowired constructor(
             agentScope.checkLockUpgrade(agentId, AgentUpgradeType.GO_AGENT) -> false
             agentScope.checkForceUpgrade(agentId, AgentUpgradeType.GO_AGENT) && goAgentCheckFun() -> true
             !agentProjectCheck -> false
+            agentMaxUpgradeCheck -> false
             else -> canUpgrade && goAgentCheckFun()
         }
 
@@ -186,18 +192,20 @@ class UpgradeService @Autowired constructor(
             agentScope.checkLockUpgrade(agentId, AgentUpgradeType.JDK) -> false
             agentScope.checkForceUpgrade(agentId, AgentUpgradeType.JDK) && jdkCheckFun() -> true
             !agentProjectCheck -> false
+            agentMaxUpgradeCheck -> false
             else -> canUpgrade && jdkCheckFun()
         }
 
         val dockerInitFileCheckFun = fun() = info.dockerInitFileInfo?.fileMd5 != currentDockerInitFileMd5
         val dockerInitFile = when {
-            currentDockerInitFileMd5.isBlank() -> false
-            // 目前存在非linux系统的不支持，旧数据或agent不使用docker构建机，所以不校验升级
+            currentDockerInitFileMd5.isNullOrBlank() -> false
+            // 旧数据或agent不使用docker构建机，所以不校验升级
             info.dockerInitFileInfo == null -> false
             info.dockerInitFileInfo?.needUpgrade != true -> false
             agentScope.checkLockUpgrade(agentId, AgentUpgradeType.DOCKER_INIT_FILE) -> false
             agentScope.checkForceUpgrade(agentId, AgentUpgradeType.DOCKER_INIT_FILE) && dockerInitFileCheckFun() -> true
             !agentProjectCheck -> false
+            agentMaxUpgradeCheck -> false
             else -> canUpgrade && dockerInitFileCheckFun()
         }
 
@@ -244,4 +252,18 @@ class UpgradeService @Autowired constructor(
         // 校验是否在优先升级的项目列表中，如果不在里面并且优先升级项目的列表为空也允许Agent升级。
         return projectScope.checkInPriorityUpgradeProjectOrEmpty(projectId, type)
     }
+
+    /**
+     * 校验是否超过项目的最大升级限制
+     * @return true 不能升级 false 可以升级
+     */
+    private fun checkExceedAgentMaxUpgradeCount(version: String): Boolean {
+        val agentMaxUpgradeCount = agentScope.getAgentMaxUpgradeCount() ?: return false
+        return agentVersionCountCache.get(version) >= agentMaxUpgradeCount
+    }
+
+    private val agentVersionCountCache: LoadingCache<String, Long> = Caffeine.newBuilder()
+        .maximumSize(10)
+        .expireAfterWrite(Duration.ofSeconds(5))
+        .build { key -> thirdPartyAgentDao.countByMasterVersion(dslContext, key) }
 }
