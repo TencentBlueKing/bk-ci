@@ -150,9 +150,9 @@ export function importStyle (href, oHead) {
 }
 
 export function getServiceAliasByPath (path: string): string {
-    const serviceAliasREG = new RegExp(`^${window.getRoutePrefix()}/?([^\/]+)\/?`)
+    const serviceAliasREG = new RegExp(`(^\/(${window.getRoutePrefix()}/)?([^\/]+)\/?`)
     const execRes = serviceAliasREG.exec(path) || []
-    return execRes[1] || path
+    return execRes[2] || path
 }
 
 export function isAbsoluteUrl (url) {

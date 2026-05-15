@@ -20,7 +20,7 @@ export function registerImgServiceWorker (): void {
     const swUrl = `${prefix}/console/static/sw.js?prefix=${encodeURIComponent(prefix)}`
 
     navigator.serviceWorker
-        .register(swUrl, { scope: '/' })
+        .register(swUrl, { scope: '/ms' })
         .catch((e) => {
             console.warn('[img-sw] register failed', e)
         })
