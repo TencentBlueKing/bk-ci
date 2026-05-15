@@ -919,7 +919,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         )
     }
 
-    fun getAgentByEnvName(projectId: String, envName: String, userId: String?): Pair<Long?, List<EnvNodeAgent>> {
+    fun getAgentByEnvName(projectId: String, envName: String, userId: String?): Pair<Long, List<EnvNodeAgent>> {
         // 共享环境由 被共享的项目ID@环境名称 组成，这里通过@分隔出的数量来区分是否是共享环境
         val envNameItems = envName.split("@")
         val thirdPartyAgentList = mutableListOf<EnvNodeAgent>()
@@ -964,7 +964,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         sharedEnvName: String?,
         sharedEnvId: Long?,
         userId: String?
-    ): Pair<Long?, List<EnvNodeAgent>> {
+    ): Pair<Long, List<EnvNodeAgent>> {
         logger.info("[$projectId|$sharedProjectId|$sharedEnvName|$sharedEnvId]get shared third party agent list")
         val sharedEnvRecord = when {
             !sharedEnvName.isNullOrBlank() -> {
@@ -981,7 +981,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     ) ?: throw CustomException(
                         Response.Status.FORBIDDEN,
                         I18nUtil.getCodeLanMessage(THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST) +
-                            "($sharedProjectId:$sharedEnvId)"
+                                "($sharedProjectId:$sharedEnvId)"
                     )
                     envShareProjectDao.list(
                         dslContext = dslContext,
@@ -1020,15 +1020,18 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (sharedEnvRecord.isEmpty()) {
             logger.info(
                 "env name not exists, envName: $sharedEnvName, envId: $sharedEnvId, projectId：$projectId, " +
-                    "mainProjectId: $sharedProjectId"
+                        "mainProjectId: $sharedProjectId"
             )
             throw CustomException(
                 Response.Status.FORBIDDEN,
                 I18nUtil.getCodeLanMessage(ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV) +
-                    "($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
+                        "($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
             )
         }
-        logger.info("sharedEnvRecord size: ${sharedEnvRecord.size}")
+        logger.info(
+            "envName: $sharedEnvName, envId: $sharedEnvId, projectId：$projectId, " +
+                    "sharedEnvRecord size: ${sharedEnvRecord.size}"
+        )
         val sharedThirdPartyAgents = mutableListOf<EnvNodeAgent>()
 
         run outSide@{
@@ -1077,11 +1080,15 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             throw CustomException(
                 Response.Status.FORBIDDEN,
                 I18nUtil.getCodeLanMessage(ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV) +
-                    "($sharedProjectId:$sharedEnvName)"
+                        "($sharedProjectId:$sharedEnvName)"
             )
         }
-        logger.info("sharedThirdPartyAgents size: ${sharedThirdPartyAgents.size}")
-        return Pair(sharedEnvRecord.getOrNull(0)?.envId, sharedThirdPartyAgents)
+        logger.info(
+            "envName: $sharedEnvName, envId: $sharedEnvId, projectId：$projectId, " +
+                    "sharedThirdPartyAgents size: ${sharedThirdPartyAgents.size}"
+        )
+        // 逻辑上不会返回空
+        return Pair(sharedEnvRecord.firstOrNull()!!.envId, sharedThirdPartyAgents)
     }
 
     fun getAgentByEnvId(projectId: String, envHashId: String, userId: String?): List<EnvNodeAgent> {
