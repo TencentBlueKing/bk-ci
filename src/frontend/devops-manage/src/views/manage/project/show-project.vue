@@ -295,7 +295,7 @@ const handleCancelCreation = () => {
         theme: 'success',
         message: t('取消创建成功'),
       });
-      window.parent.location.href = `${location.origin}/${window.getRoutePrefix()}/pm`
+      window.parent.location.href = `${location.origin}${window.getRoutePrefix()}/pm`
     }
   };
   InfoBox({
