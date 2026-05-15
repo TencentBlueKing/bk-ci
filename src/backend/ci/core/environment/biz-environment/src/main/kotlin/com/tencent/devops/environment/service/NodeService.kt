@@ -479,7 +479,7 @@ class NodeService @Autowired constructor(
             emptyMap()
         }
         val nodeIds = nodeListResult.map { it.nodeId }
-        val tagMaps = nodeTagService.fetchNodeTags(projectId, nodeIds)
+        val tagMaps = nodeTagService.fetchNodeTags(projectId, nodeIds.toSet())
         val nodeEnvs = envNodeDao.listNodeIds(dslContext, projectId, nodeIds)
         val envInfos = envDao.listServerEnvByIdsAllType(
             dslContext, nodeEnvs.map { it.envId }.toSet()
