@@ -30,7 +30,9 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import org.apache.commons.lang3.RandomUtils
 import org.jooq.DSLContext
@@ -48,7 +50,8 @@ class RbacPermissionResourceMemberService(
     private val dslContext: DSLContext,
     private val deptService: DeptService,
     private val authResourceSyncDao: AuthResourceSyncDao,
-    private val traceEventDispatcher: TraceEventDispatcher
+    private val traceEventDispatcher: TraceEventDispatcher,
+    private val client: Client
 ) : PermissionResourceMemberService {
     override fun getResourceGroupMembers(
         projectCode: String,
@@ -91,15 +94,14 @@ class RbacPermissionResourceMemberService(
         resourceType: String,
         resourceCode: String
     ): List<BkAuthGroupAndUserList> {
-        // 已经同步过的项目（启用中的项目），直接从数据库查询，否则调iam接口查询
-        val isSync = authResourceSyncDao.get(dslContext, projectCode) != null
+        val enabled = client.get(ServiceProjectResource::class).get(projectCode).data?.enabled ?: return emptyList()
         val resourceGroups = authResourceGroupDao.listByResourceCode(
             dslContext = dslContext,
             projectCode = projectCode,
             resourceType = resourceType,
             resourceCode = resourceCode
         )
-        return if (isSync) {
+        return if (enabled) {
             val groupId2Members = authResourceGroupMemberDao.listResourceGroupMember(
                 dslContext = dslContext,
                 projectCode = projectCode,
@@ -307,7 +309,7 @@ class RbacPermissionResourceMemberService(
                 if (departedMembers.contains(member)) {
                     logger.warn(
                         "This user does not exist or has departed and does not need to join " +
-                            "$projectCode|$iamGroupId|$member"
+                                "$projectCode|$iamGroupId|$member"
                     )
                     skippedUsersByReason
                         .getOrPut(BatchAddSkipReason.USER_NOT_FOUND_OR_DEPARTED) { mutableListOf() }
