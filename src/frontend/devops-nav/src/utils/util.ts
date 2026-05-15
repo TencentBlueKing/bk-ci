@@ -150,7 +150,7 @@ export function importStyle (href, oHead) {
 }
 
 export function getServiceAliasByPath (path: string): string {
-    const serviceAliasREG = new RegExp(`(^\/(${window.getRoutePrefix()}/)?([^\/]+)\/?`)
+    const serviceAliasREG = new RegExp(`^\/(${window.getRoutePrefix().slice(1)}/)?([^\/]+)\/?`)
     const execRes = serviceAliasREG.exec(path) || []
     return execRes[2] || path
 }
