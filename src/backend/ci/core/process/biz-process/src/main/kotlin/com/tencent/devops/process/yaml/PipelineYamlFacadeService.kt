@@ -29,8 +29,13 @@
 package com.tencent.devops.process.yaml
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.constant.HTTP_401
+import com.tencent.devops.common.api.constant.HTTP_403
+import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -40,6 +45,7 @@ import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
@@ -56,7 +62,9 @@ import com.tencent.devops.process.yaml.mq.PipelineYamlTriggerEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.credential.AuthRepository
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

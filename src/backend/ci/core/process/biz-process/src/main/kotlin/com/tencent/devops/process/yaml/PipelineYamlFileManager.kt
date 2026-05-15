@@ -1272,6 +1272,9 @@ class PipelineYamlFileManager @Autowired constructor(
             path = filePath,
             ref = commitId,
             authRepository = authRepository!!
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_REF_TEMPLATE_YAML_FILE_NOT_FOUND,
+            params = arrayOf(filePath, commitId)
         )
         val deployPipelineResult = pipelineYamlResourceManager.updateYamlPipeline(
             userId = authUser,
