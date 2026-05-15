@@ -326,7 +326,8 @@ class RbacAuthConfiguration {
         deptService: DeptService,
         rbacCommonService: RbacCommonService,
         authResourceSyncDao: AuthResourceSyncDao,
-        traceEventDispatcher: TraceEventDispatcher
+        traceEventDispatcher: TraceEventDispatcher,
+        client: Client
     ) = RbacPermissionResourceMemberService(
         authResourceService = authResourceService,
         iamV2ManagerService = iamV2ManagerService,
@@ -335,7 +336,8 @@ class RbacAuthConfiguration {
         dslContext = dslContext,
         deptService = deptService,
         traceEventDispatcher = traceEventDispatcher,
-        authResourceSyncDao = authResourceSyncDao
+        authResourceSyncDao = authResourceSyncDao,
+        client = client
     )
 
     @Bean
