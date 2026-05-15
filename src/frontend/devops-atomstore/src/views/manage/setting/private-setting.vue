@@ -17,6 +17,7 @@
                 :data="privateList"
                 :outer-border="false"
                 :header-border="false"
+                :max-height="521"
                 :header-cell-style="{ background: '#fff' }"
                 v-if="!isLoading"
             >
