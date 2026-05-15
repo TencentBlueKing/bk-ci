@@ -108,3 +108,7 @@ api:
   project:
     permission:
       switch: true
+
+project:
+  callback:
+    aes-key: __BK_CI_PROCESS_CALLBACK_AES_KEY__
