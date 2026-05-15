@@ -43,7 +43,6 @@ import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Result
 import org.jooq.SelectJoinStep
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Suppress("ALL")
