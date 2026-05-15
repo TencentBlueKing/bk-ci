@@ -40,6 +40,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.store.common.utils.PublicComponentCacheManager
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.ReasonRelDao
@@ -53,12 +54,14 @@ import com.tencent.devops.store.common.dao.StoreBaseManageDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreLabelRelDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
+import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.common.handler.StoreDeleteCheckHandler
 import com.tencent.devops.store.common.handler.StoreDeleteCodeRepositoryHandler
 import com.tencent.devops.store.common.handler.StoreDeleteDataPersistHandler
 import com.tencent.devops.store.common.handler.StoreDeleteHandlerChain
 import com.tencent.devops.store.common.handler.StoreDeleteRepoFileHandler
 import com.tencent.devops.store.common.lock.StoreCodeLock
+import com.tencent.devops.store.common.service.AbstractStoreComponentPkgSizeHandleService
 import com.tencent.devops.store.common.service.StoreBaseInstallService
 import com.tencent.devops.store.common.service.StoreComponentManageService
 import com.tencent.devops.store.common.service.StoreManagementExtraService
@@ -71,6 +74,7 @@ import com.tencent.devops.store.pojo.common.InstalledPkgFileShaContentRequest
 import com.tencent.devops.store.pojo.common.KEY_REPOSITORY_AUTHORIZER
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
+import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
@@ -146,6 +150,9 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
 
     @Autowired
     lateinit var redisOperation: RedisOperation
+
+    @Autowired
+    lateinit var storeVersionLogDao: StoreVersionLogDao
 
     companion object {
         private val logger = LoggerFactory.getLogger(StoreComponentManageServiceImpl::class.java)
@@ -428,8 +435,8 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
             publisher = baseRecord.publisher,
             classifyId = baseRecord.classifyId
         )
-        val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(storeType.name)
-        if (redisOperation.isMember(storePublicFlagKey, storeCode)) {
+        // 使用缓存管理器检查是否是公共组件（优化性能）
+        if (PublicComponentCacheManager.isPublicComponent(redisOperation, storeType.name, storeCode)) {
             // 如果从缓存中查出该组件是公共组件则无需权限校验
             storeBaseInfo.publicFlag = true
             return Result(storeBaseInfo)
@@ -550,6 +557,32 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         return SpringContextUtil.getBean(
             StoreBaseInstallService::class.java,
             beanName
+        )
+    }
+
+    override fun updateComponentVersionSize(
+        storeId: String,
+        storePackageInfoReqs: List<StorePackageInfoReq>
+    ): Boolean {
+        if (storePackageInfoReqs.isEmpty()) {
+            return false
+        }
+        val storeType = storePackageInfoReqs.first().storeType
+        return getStoreComponentPkgSizeHandleService(storeType.name).updateComponentVersionSize(
+            storeId = storeId,
+            storePackageInfoReqs = storePackageInfoReqs,
+            storeType = storeType
+        )
+    }
+
+    override fun batchUpdateComponentsVersionSize(storeType: StoreTypeEnum) {
+        getStoreComponentPkgSizeHandleService(storeType.name).batchUpdateComponentsVersionSize()
+    }
+
+    private fun getStoreComponentPkgSizeHandleService(storeType: String): AbstractStoreComponentPkgSizeHandleService {
+        return SpringContextUtil.getBean(
+            AbstractStoreComponentPkgSizeHandleService::class.java,
+            "${storeType}_PKG_SIZE_HANDLE_SERVICE"
         )
     }
 }
