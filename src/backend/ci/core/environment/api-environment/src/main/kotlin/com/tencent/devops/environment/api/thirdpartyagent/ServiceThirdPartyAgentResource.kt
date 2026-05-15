@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.pojo.agent.UpgradeItem
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.EnvVar
+import com.tencent.devops.environment.pojo.EnabledStrategiesWithTags
 import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
@@ -457,7 +458,7 @@ interface ServiceThirdPartyAgentResource {
         envName: String,
         @QueryParam("userId")
         userId: String? = null
-    ): Result<Pair<Long?, List<EnvNodeAgent>>>
+    ): Result<Pair<Long, List<EnvNodeAgent>>>
 
     @Operation(summary = "批量查询Agent环境变量")
     @POST
@@ -515,4 +516,17 @@ interface ServiceThirdPartyAgentResource {
         @QueryParam("createMode")
         createMode: Boolean?
     ): Result<List<NodeTag>>
+
+    @Operation(summary = "获取环境已启用的调度策略及标签数据（合并接口）")
+    @POST
+    @Path("/enabledStrategiesWithTags")
+    fun getEnabledStrategiesWithTags(
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "环境ID", required = true)
+        @QueryParam("envId")
+        envId: Long,
+        nodeIds: Set<Long>
+    ): Result<EnabledStrategiesWithTags>
 }

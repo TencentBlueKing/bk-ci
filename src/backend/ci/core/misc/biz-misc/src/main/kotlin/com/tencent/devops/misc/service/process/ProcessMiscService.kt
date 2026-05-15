@@ -119,7 +119,10 @@ class ProcessMiscService @Autowired constructor(
         } else {
             val idList = mutableListOf<String>()
             records.forEach { record ->
-                idList.add(record.getValue(0) as String)
+                val value = record.getValue(0) as? String
+                if (!value.isNullOrEmpty()) {
+                    idList.add(value)
+                }
             }
             idList
         }
