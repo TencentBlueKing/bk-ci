@@ -38,7 +38,6 @@ import org.apache.commons.lang3.RandomUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Suppress("SpreadOperator", "LongParameterList")
@@ -274,6 +273,7 @@ class RbacPermissionResourceMemberService(
         return true
     }
 
+    @Suppress("NestedBlockDepth")
     override fun batchAddResourceGroupMembers(
         projectCode: String,
         iamGroupId: Int,
