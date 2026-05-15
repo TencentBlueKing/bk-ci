@@ -106,6 +106,20 @@ class ApigwAtomResourceV4Impl @Autowired constructor(private val client: Client)
         return client.get(ServiceMarketAtomResource::class).installAtom(userId, channelCode, installAtomReq)
     }
 
+    override fun getAtomYmlV2Info(
+        appCode: String?,
+        apigwType: String?,
+        atomCode: String,
+        userId: String,
+        defaultShowFlag: Boolean?
+    ): Result<String?> {
+        logger.info("OPENAPI_ATOM_V4|$appCode|$userId|getAtomYmlV2Info: $atomCode, $defaultShowFlag")
+        return client.get(ServiceMarketAtomResource::class).getAtomYmlV2Info(
+            atomCode = atomCode,
+            defaultShowFlag = defaultShowFlag
+        )
+    }
+
     override fun getAtomDetail(
         appCode: String?,
         apigwType: String?,

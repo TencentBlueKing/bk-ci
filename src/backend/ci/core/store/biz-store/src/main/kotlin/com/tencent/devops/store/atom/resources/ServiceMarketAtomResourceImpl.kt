@@ -109,6 +109,15 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getAtomYmlV2Info(atomCode: String, defaultShowFlag: Boolean?): Result<String?> {
+        return Result(
+            marketAtomService.generateCiV2Yaml(
+                atomCode = atomCode,
+                defaultShowFlag = defaultShowFlag ?: false
+            )
+        )
+    }
+
     override fun getPostAtoms(projectCode: String, atomItems: Set<AtomPostReqItem>): Result<AtomPostResp> {
         return marketAtomService.getPostAtoms(projectCode, atomItems)
     }
