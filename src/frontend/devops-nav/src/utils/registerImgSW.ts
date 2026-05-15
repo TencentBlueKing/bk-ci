@@ -17,7 +17,7 @@ export function registerImgServiceWorker (): void {
     const prefix = window.PUBLIC_URL_PREFIX || ''
     if (!prefix) return
 
-    const swUrl = `/console/static/sw.js?prefix=${encodeURIComponent(prefix)}`
+    const swUrl = `${prefix}/console/static/sw.js?prefix=${encodeURIComponent(prefix)}`
 
     navigator.serviceWorker
         .register(swUrl, { scope: '/ms' })
