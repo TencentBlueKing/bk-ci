@@ -1747,21 +1747,9 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 templateId = templateId,
                 version = version
             )
+            // 如果前端传了version,则判断该版本是否已经发布
             if (record != null && record.status != VersionStatus.COMMITTING) {
-                val templateInfo = pipelineTemplateInfoService.get(
-                    projectId = projectId,
-                    templateId = templateId
-                )
-                val releaseResource = pipelineTemplateResourceService.getTemplateResourceVersion(
-                    projectId = projectId,
-                    templateId = templateId,
-                    version = templateInfo.releasedVersion
-                )
-                // 如果当前版本已经发布,则返回最新的发布版本,最新的发布版本不一定是当前版本,返回最新版本让前端能够基于最新版本创建
-                return PipelineTemplateDraftStatusResult(
-                    status = PipelineDraftStatus.PUBLISHED,
-                    release = releaseResource?.let { PipelineTemplateVersionSimple(it) }
-                )
+                return getPipelineTemplateDraftStatusWhenPublished(projectId, templateId, releaseVersion)
             }
             record
         } ?: return PipelineTemplateDraftStatusResult(status = PipelineDraftStatus.NORMAL)
@@ -1790,6 +1778,35 @@ class PipelineTemplateFacadeService @Autowired constructor(
                     draftResource = draftResource
                 )
             }
+        }
+    }
+
+    private fun getPipelineTemplateDraftStatusWhenPublished(
+        projectId: String,
+        templateId: String,
+        releaseVersion: Long?
+    ): PipelineTemplateDraftStatusResult {
+        val templateInfo = pipelineTemplateInfoService.get(
+            projectId = projectId,
+            templateId = templateId
+        )
+        val releaseResource = pipelineTemplateResourceService.getTemplateResourceVersion(
+            projectId = projectId,
+            templateId = templateId,
+            version = templateInfo.releasedVersion
+        )
+        // 草稿版本已经发布,但是发布的是分支版本,则返回正常状态,前端可以新创建草稿版本
+        return if (releaseResource != null && releaseVersion == releaseResource.version) {
+            PipelineTemplateDraftStatusResult(
+                status = PipelineDraftStatus.NORMAL,
+                release = PipelineTemplateVersionSimple(releaseResource)
+            )
+        } else {
+            // 如果当前版本已经发布,则返回最新的发布版本,最新的发布版本不一定是当前版本,返回最新版本让前端能够基于最新版本创建
+            PipelineTemplateDraftStatusResult(
+                status = PipelineDraftStatus.PUBLISHED,
+                release = releaseResource?.let { PipelineTemplateVersionSimple(it) }
+            )
         }
     }
 

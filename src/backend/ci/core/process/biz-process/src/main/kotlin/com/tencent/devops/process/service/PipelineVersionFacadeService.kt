@@ -982,21 +982,10 @@ class PipelineVersionFacadeService @Autowired constructor(
             )
             // 这里判断是不是已发布,不能直接判断版本是不是RELEASE,因为发布可能分支版本
             if (record != null && record.status != VersionStatus.COMMITTING) {
-                val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
-                    projectId = projectId,
-                    pipelineId = pipelineId
-                ) ?: throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
-                )
-                val releaseResource = pipelineRepositoryService.getPipelineResourceVersion(
+                return getPipelineDraftStatusWhenPublished(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    version = pipelineInfo.version
-                )
-                return PipelineDraftStatusResult(
-                    status = PipelineDraftStatus.PUBLISHED,
-                    release = PipelineVersionSimple(releaseResource!!)
+                    releaseVersion = releaseVersion
                 )
             }
             record
@@ -1026,6 +1015,38 @@ class PipelineVersionFacadeService @Autowired constructor(
                     draftResource = draftResource
                 )
             }
+        }
+    }
+
+    private fun getPipelineDraftStatusWhenPublished(
+        projectId: String,
+        pipelineId: String,
+        releaseVersion: Int?
+    ): PipelineDraftStatusResult {
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
+        )
+        val releaseResource = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = pipelineInfo.version
+        )
+        // 如果草稿版本发布到分支版本上,那么在详情页编辑时,需要判断是否是最新正式版本
+        return if (releaseResource != null && releaseResource.version == releaseVersion) {
+            PipelineDraftStatusResult(
+                status = PipelineDraftStatus.NORMAL,
+                release = PipelineVersionSimple(releaseResource)
+            )
+        } else {
+            // 如果当前版本已经发布,则返回最新的发布版本,最新的发布版本不一定是当前版本,返回最新版本让前端能够基于最新版本创建
+            PipelineDraftStatusResult(
+                status = PipelineDraftStatus.PUBLISHED,
+                release = releaseResource?.let { PipelineVersionSimple(it) }
+            )
         }
     }
 
