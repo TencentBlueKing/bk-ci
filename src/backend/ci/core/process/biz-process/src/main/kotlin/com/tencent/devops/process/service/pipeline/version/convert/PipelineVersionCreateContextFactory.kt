@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceWithoutVersion
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.pipeline.version.PipelineResourceFactory
@@ -107,6 +108,7 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
             create = pipelineInfo == null,
             versionStatus = versionStatus,
             channelCode = channelCode,
+            yamlFileInfo = yamlFileInfo,
             pipelineDialect = pipelineDialect
         )
         return PipelineVersionCreateContext(
@@ -121,6 +123,7 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
             pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
             pipelineSettingWithoutVersion = pipelineSettingWithoutVersion,
             branchName = branchName,
+            yamlFileInfo = yamlFileInfo,
             baseDraftVersion = baseDraftVersion
         )
     }
@@ -175,6 +178,7 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
             create = pipelineInfo == null,
             versionStatus = versionStatus,
             channelCode = channelCode,
+            yamlFileInfo = yamlFileInfo,
             pipelineDialect = pipelineDialect
         )
 
@@ -202,6 +206,7 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
             pipelineSettingWithoutVersion = instanceSetting,
             templateInstanceBasicInfo = templateInstanceBasicInfo,
             branchName = branchName,
+            yamlFileInfo = yamlFileInfo,
             baseDraftVersion = baseDraftVersion
         )
     }

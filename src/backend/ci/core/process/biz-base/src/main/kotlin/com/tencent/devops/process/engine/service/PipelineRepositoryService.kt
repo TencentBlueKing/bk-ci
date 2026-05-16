@@ -118,7 +118,7 @@ import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceDraftVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.service.PipelineAsCodeService
@@ -260,7 +260,7 @@ class PipelineRepositoryService constructor(
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         branchName: String? = null,
         description: String? = null,
-        yamlInfo: PipelineYamlVo? = null,
+        yamlFileInfo: PipelineYamlFileInfo? = null,
         pipelineDisable: Boolean? = null
     ): DeployPipelineResult {
 
@@ -284,7 +284,7 @@ class PipelineRepositoryService constructor(
             create = create,
             versionStatus = versionStatus,
             channelCode = channelCode,
-            yamlInfo = yamlInfo,
+            yamlFileInfo = yamlFileInfo,
             pipelineDialect = pipelineDialect
         )
         val triggerContainer = model.getTriggerContainer()
@@ -379,7 +379,7 @@ class PipelineRepositoryService constructor(
         create: Boolean = true,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         channelCode: ChannelCode,
-        yamlInfo: PipelineYamlVo? = null,
+        yamlFileInfo: PipelineYamlFileInfo? = null,
         pipelineDialect: IPipelineDialect? = null
     ): List<PipelineModelTask> {
         val metaSize = modelCheckPlugin.checkModelIntegrity(
@@ -418,7 +418,7 @@ class PipelineRepositoryService constructor(
                     create = create,
                     distIds = distinctIdSet,
                     versionStatus = versionStatus,
-                    yamlInfo = yamlInfo
+                    yamlFileInfo = yamlFileInfo
                 )
             } else {
                 initOtherContainer(
@@ -433,7 +433,7 @@ class PipelineRepositoryService constructor(
                     create = create,
                     distIds = distinctIdSet,
                     versionStatus = versionStatus,
-                    yamlInfo = yamlInfo,
+                    yamlFileInfo = yamlFileInfo,
                     stageIndex = index,
                     randomSeed = randomSeed,
                     jobIdSet = jobIdSet
@@ -455,7 +455,7 @@ class PipelineRepositoryService constructor(
         create: Boolean,
         distIds: HashSet<String>,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
-        yamlInfo: PipelineYamlVo?
+        yamlFileInfo: PipelineYamlFileInfo?
     ) {
         if (stage.containers.size != 1) {
             logger.warn("The trigger stage contain more than one container (${stage.containers.size})")
@@ -497,7 +497,7 @@ class PipelineRepositoryService constructor(
                     channelCode = channelCode,
                     create = create,
                     container = c,
-                    yamlInfo = yamlInfo
+                    yamlFileInfo = yamlFileInfo
                 )
             }
 
@@ -533,7 +533,7 @@ class PipelineRepositoryService constructor(
         create: Boolean,
         distIds: HashSet<String>,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
-        yamlInfo: PipelineYamlVo?,
+        yamlFileInfo: PipelineYamlFileInfo?,
         stageIndex: Int,
         randomSeed: AtomicInteger,
         jobIdSet: MutableSet<String>
@@ -616,7 +616,7 @@ class PipelineRepositoryService constructor(
                         channelCode = channelCode,
                         create = create,
                         container = c,
-                        yamlInfo = yamlInfo
+                        yamlFileInfo = yamlFileInfo
                     )
                 }
 

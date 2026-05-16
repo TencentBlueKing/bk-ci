@@ -180,6 +180,7 @@ class PipelineDraftReleaseReqConvert @Autowired constructor(
                 versionStatus = versionStatus,
                 branchName = branchName,
                 versionAction = PipelineVersionAction.RELEASE_DRAFT,
+                yamlFileInfo = yamlInfo?.let { PipelineYamlFileInfo(it) },
                 repoHashId = yamlInfo?.repoHashId,
                 description = description
             )
@@ -187,7 +188,6 @@ class PipelineDraftReleaseReqConvert @Autowired constructor(
             return pipelineVersionCreateContextFactory.create(
                 contextParam = contextParam
             ).copy(
-                yamlFileInfo = yamlInfo?.let { PipelineYamlFileInfo(it) },
                 enablePac = enablePac,
                 targetAction = targetAction,
                 targetBranch = targetBranch

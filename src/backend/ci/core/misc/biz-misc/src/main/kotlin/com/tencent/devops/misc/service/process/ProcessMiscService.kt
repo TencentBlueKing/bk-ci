@@ -55,7 +55,8 @@ class ProcessMiscService @Autowired constructor(
         maxBuildNum: Int? = null,
         maxStartTime: LocalDateTime? = null,
         geTimeFlag: Boolean? = null,
-        archiveFlag: Boolean? = null
+        archiveFlag: Boolean? = null,
+        clearAllStatus: Boolean = false
     ): List<String>? {
         val historyBuildIdRecords = processDao.getHistoryBuildIdList(
             dslContext = generateQueryDslContext(archiveFlag),
@@ -66,7 +67,8 @@ class ProcessMiscService @Autowired constructor(
             isCompletelyDelete = isCompletelyDelete,
             maxBuildNum = maxBuildNum,
             maxStartTime = maxStartTime,
-            geTimeFlag = geTimeFlag
+            geTimeFlag = geTimeFlag,
+            clearAllStatus = clearAllStatus
         )
         return generateIdList(historyBuildIdRecords)
     }
@@ -117,7 +119,10 @@ class ProcessMiscService @Autowired constructor(
         } else {
             val idList = mutableListOf<String>()
             records.forEach { record ->
-                idList.add(record.getValue(0) as String)
+                val value = record.getValue(0) as? String
+                if (!value.isNullOrEmpty()) {
+                    idList.add(value)
+                }
             }
             idList
         }
@@ -137,17 +142,29 @@ class ProcessMiscService @Autowired constructor(
 
     fun getMaxPipelineBuildNum(
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        clearAllStatus: Boolean = false
     ): Long {
-        return processDao.getMaxPipelineBuildNum(dslContext, projectId, pipelineId)
+        return processDao.getMaxPipelineBuildNum(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            clearAllStatus = clearAllStatus
+        )
     }
 
     fun getMinPipelineBuildNum(
         projectId: String,
         pipelineId: String,
-        archiveFlag: Boolean? = null
+        archiveFlag: Boolean? = null,
+        clearAllStatus: Boolean = false
     ): Long {
-        return processDao.getMinPipelineBuildNum(generateQueryDslContext(archiveFlag), projectId, pipelineId)
+        return processDao.getMinPipelineBuildNum(
+            dslContext = generateQueryDslContext(archiveFlag),
+            projectId = projectId,
+            pipelineId = pipelineId,
+            clearAllStatus = clearAllStatus
+        )
     }
 
     fun getMaxPipelineBuildNum(
@@ -156,7 +173,8 @@ class ProcessMiscService @Autowired constructor(
         maxBuildNum: Int? = null,
         maxStartTime: LocalDateTime? = null,
         geTimeFlag: Boolean? = null,
-        archiveFlag: Boolean? = null
+        archiveFlag: Boolean? = null,
+        clearAllStatus: Boolean = false
     ): Long {
         return processDao.getMaxPipelineBuildNum(
             dslContext = generateQueryDslContext(archiveFlag),
@@ -164,7 +182,8 @@ class ProcessMiscService @Autowired constructor(
             pipelineId = pipelineId,
             maxBuildNum = maxBuildNum,
             maxStartTime = maxStartTime,
-            geTimeFlag = geTimeFlag
+            geTimeFlag = geTimeFlag,
+            clearAllStatus = clearAllStatus
         )
     }
 

@@ -125,6 +125,7 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
                 pipelineSettingWithoutVersion = pipelineSettingWithoutVersion,
                 versionStatus = versionStatus,
                 versionAction = versionAction,
+                yamlFileInfo = yamlFileInfo,
                 repoHashId = yamlFileInfo!!.repoHashId,
                 branchName = branchName
             )
@@ -132,7 +133,6 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
                 contextParam = contextParam
             ).copy(
                 enablePac = true,
-                yamlFileInfo = yamlFileInfo,
                 pullRequestUrl = pullRequestUrl,
                 pullRequestId = pullRequestId
             )
