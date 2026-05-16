@@ -31,6 +31,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.misc.config.MiscBuildDataClearConfig
 import com.tencent.devops.misc.service.process.PipelineBuildDataClearService
+import com.tencent.devops.misc.service.process.PipelineTemplateDataClearService
 import com.tencent.devops.misc.service.process.ProcessMiscService
 import com.tencent.devops.misc.service.project.ProjectDataClearConfigFactory
 import com.tencent.devops.misc.service.project.ProjectDataClearConfigService
@@ -47,7 +48,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.time.LocalDateTime
 
 @Component
 @Suppress("ALL")
@@ -56,7 +56,8 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
     private val miscBuildDataClearConfig: MiscBuildDataClearConfig,
     private val projectMiscService: ProjectMiscService,
     private val processMiscService: ProcessMiscService,
-    private val pipelineBuildDataClearService: PipelineBuildDataClearService
+    private val pipelineBuildDataClearService: PipelineBuildDataClearService,
+    private val pipelineTemplateDataClearService: PipelineTemplateDataClearService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildHistoryDataClearJob::class.java)
@@ -294,46 +295,18 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
         var templateOffset = 0
         do {
             val templateIds = processMiscService.getTemplateIdsByProjectId(
-                projectId = projectId, gapDays = draftVersionStoreDays,
-                limit = DEFAULT_PAGE_SIZE, offset = templateOffset
+                projectId = projectId,
+                limit = DEFAULT_PAGE_SIZE,
+                offset = templateOffset
             )
-            if (templateIds.isEmpty()) break
+            if (templateIds.isEmpty()) return
             templateIds.forEach { templateId ->
-                clearTemplateDraftVersionData(projectId, templateId)
+                pipelineTemplateDataClearService.clearTemplateDraftVersionData(
+                    projectId = projectId,
+                    templateId = templateId
+                )
             }
             templateOffset += DEFAULT_PAGE_SIZE
-        } while (templateIds.size >= DEFAULT_PAGE_SIZE)
-    }
-
-    private fun clearTemplateDraftVersionData(projectId: String, templateId: String) {
-        val expireTime = LocalDateTime.now().minusDays(draftVersionStoreDays)
-        var offset = 0
-        do {
-            // 1. 从草稿表中获取模版版本
-            val versions = processMiscService.listTemplateDraftVersions(
-                projectId = projectId, templateId = templateId,
-                limit = DEFAULT_PAGE_SIZE, offset = offset
-            )
-            if (versions.isEmpty()) break
-            // 2. 获取已经发布超过X天的版本
-            val expiredVersions = processMiscService.getExpiredTemplateVersions(
-                projectId = projectId, templateId = templateId,
-                versions = versions, expireTime = expireTime
-            )
-            if (expiredVersions.isEmpty()) break
-            try {
-                logger.info("clearTemplateDraftVersionData|$projectId|$templateId|$expiredVersions")
-                processDataClearService.deleteTemplateDraftData(
-                    projectId = projectId, templateId = templateId,
-                    versions = expiredVersions
-                )
-            } catch (ignored: Throwable) {
-                logger.warn(
-                    "clearTemplateDraftVersionData failed|$projectId|$templateId|$expiredVersions",
-                    ignored
-                )
-            }
-            offset += DEFAULT_PAGE_SIZE
-        } while (versions.size >= DEFAULT_PAGE_SIZE)
+        } while (templateIds.size == DEFAULT_PAGE_SIZE)
     }
 }

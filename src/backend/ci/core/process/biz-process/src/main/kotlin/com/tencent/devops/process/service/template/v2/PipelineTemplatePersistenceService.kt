@@ -735,6 +735,16 @@ class PipelineTemplatePersistenceService @Autowired constructor(
             )
             pipelineYamlInfoDao.deleteByPipelineId(context, projectId, templateId)
             pipelineYamlVersionDao.deleteByPipelineId(context, projectId, templateId)
+            pipelineTemplateResourceDraftVersionDao.delete(
+                dslContext = context,
+                projectId = projectId,
+                templateId = templateId
+            )
+            pipelineTemplateSettingDraftVersionDao.delete(
+                dslContext = context,
+                projectId = projectId,
+                templateId = templateId
+            )
             if (templateInfo.mode == TemplateType.CONSTRAINT) {
                 client.get(ServiceStoreResource::class).uninstall(
                     storeCode = templateInfo.srcTemplateId!!,

@@ -184,6 +184,19 @@ class PipelineTemplateResourceDraftVersionDao {
         }
     }
 
+    fun delete(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String
+    ) {
+        with(T_PIPELINE_TEMPLATE_RESOURCE_DRAFT_VERSION) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TEMPLATE_ID.eq(templateId))
+                .execute()
+        }
+    }
+
     private class TemplateResourceDraftVersionJooqMapper :
         RecordMapper<TPipelineTemplateResourceDraftVersionRecord, PipelineTemplateResourceDraftVersion> {
         override fun map(record: TPipelineTemplateResourceDraftVersionRecord?): PipelineTemplateResourceDraftVersion? {

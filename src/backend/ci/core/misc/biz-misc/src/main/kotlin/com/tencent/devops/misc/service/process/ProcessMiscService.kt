@@ -189,13 +189,14 @@ class ProcessMiscService @Autowired constructor(
 
     fun getTemplateIdsByProjectId(
         projectId: String,
-        gapDays: Long,
         limit: Int,
         offset: Int
     ): List<String> {
         return processDao.listTemplateIdsByProjectId(
-            dslContext = dslContext, projectId = projectId,
-            gapDays = gapDays, limit = limit, offset = offset
+            dslContext = dslContext,
+            projectId = projectId,
+            limit = limit,
+            offset = offset
         )
     }
 

@@ -514,7 +514,6 @@ class ProcessDao {
     fun listTemplateIdsByProjectId(
         dslContext: DSLContext,
         projectId: String,
-        gapDays: Long,
         limit: Int,
         offset: Int
     ): List<String> {
@@ -522,7 +521,6 @@ class ProcessDao {
             return dslContext.select(ID)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(UPDATE_TIME.ge(LocalDateTime.now().minusDays(gapDays)))
                 .orderBy(UPDATE_TIME.asc())
                 .limit(limit).offset(offset)
                 .fetch(ID)
