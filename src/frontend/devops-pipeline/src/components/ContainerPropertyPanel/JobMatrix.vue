@@ -52,9 +52,11 @@
     import atomMixin from '@/components/AtomPropertyPanel/atomMixin'
     import validMixins from '@/components/validMixins'
     import jobOptionConfigMixin from '@/store/modules/common/jobOptionConfigMixin'
+    import { hasAnyMatrixRuleValue } from '@/utils/matrixRule'
     import { mapActions } from 'vuex'
 
     const MATRIX_RULE_FIELDS = ['strategyStr', 'includeCaseStr', 'excludeCaseStr']
+    const MATRIX_REQUIRED_ERROR_FIELD = 'matrixRuleRequired'
 
     export default {
         name: 'job-mutual',
@@ -119,6 +121,7 @@
                     if (!this.disabled) {
                         this.initOptionConfig()
                     }
+                    this.syncMatrixRequiredStatus()
                 }
             }
         },
@@ -126,6 +129,7 @@
             if (!this.disabled) {
                 this.initOptionConfig()
             }
+            this.syncMatrixRequiredStatus()
         },
         methods: {
             ...mapActions('atom', [
@@ -144,17 +148,37 @@
                     { required: this.isMatrixRuleField(name) ? false : !!option.required }
                 )
             },
+            syncMatrixRequiredStatus () {
+                if (!this.enableMatrix) {
+                    this.errors.remove(MATRIX_REQUIRED_ERROR_FIELD)
+                    return
+                }
+
+                if (hasAnyMatrixRuleValue(this.matrixRuleValues)) {
+                    this.errors.remove(MATRIX_REQUIRED_ERROR_FIELD)
+                    return
+                }
+
+                if (this.errors.items.every(err => err.field !== MATRIX_REQUIRED_ERROR_FIELD)) {
+                    this.errors.add({
+                        field: MATRIX_REQUIRED_ERROR_FIELD,
+                        msg: this.$t('editPage.matrixAnyRequiredTips')
+                    })
+                }
+            },
             validateMatrixFields () {
                 this.$nextTick(() => {
                     MATRIX_RULE_FIELDS.forEach((field) => {
                         this.$validator.validate(field, this.normalizedMatrixControlOption[field] || '')
                     })
+                    this.syncMatrixRequiredStatus()
                 })
             },
             clearMatrixFieldErrors () {
                 MATRIX_RULE_FIELDS.forEach((field) => {
                     this.errors.remove(field)
                 })
+                this.errors.remove(MATRIX_REQUIRED_ERROR_FIELD)
             },
             handleUpdateJobMatrix (name, value) {
                 this.setPipelineEditing(true)
