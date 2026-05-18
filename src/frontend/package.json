@@ -23,7 +23,18 @@
   },
   "resolutions": {
     "glob-parent": "5.1.2",
-    "webpack": "5.58.1"
+    "webpack": "5.58.1",
+    "flatted": "3.4.2",
+    "socket.io-parser": "4.2.6",
+    "vite": "7.3.2",
+    "axios": "1.15.2",
+    "@intlify/message-resolver": "9.1.11",
+    "undici": "6.24.0",
+    "picomatch": "4.0.4",
+    "node-forge": "1.4.0",
+    "lodash": "4.18.1",
+    "handlebars": "4.7.9",
+    "@xmldom/xmldom": "0.8.13"
   },
   "scripts": {
     "start": "lerna bootstrap",
@@ -79,7 +90,6 @@
     "eslint": "^7.3.1",
     "eslint-plugin-vue": "6.2.2",
     "glob-parent": "5.1.2",
-    "gulp-hash": "^4.2.2",
     "gulp-htmlmin": "^5.0.1",
     "gulp-inject": "^5.0.5",
     "gulp-replace": "^1.1.4",

@@ -1,11 +1,12 @@
 const { src, dest, parallel, series, task } = require('gulp')
+const crypto = require('crypto')
 const fs = require('fs')
 const path = require('path')
+const { Transform } = require('stream')
 const htmlmin = require('gulp-htmlmin')
 const svgSprite = require('gulp-svg-sprite')
 const inject = require('gulp-inject')
 const rename = require('gulp-rename')
-const hash = require('gulp-hash')
 const replace = require('gulp-replace')
 const Ora = require('ora')
 const yargs = require('yargs')
@@ -54,9 +55,36 @@ function generatorSvgJs (type) {
         return src('./svg-sprites/svgjs-template.js')
             .pipe(replace('__SVG_SPRITES_SYMBOLS__', svgCode))
             .pipe(rename(`${type}_sprite.js`))
-            .pipe(hash())
+            .pipe(renameWithContentHash())
             .pipe(dest(`${dist}/svg-sprites/`))
     }
+}
+
+function renameWithContentHash () {
+    return new Transform({
+        objectMode: true,
+        transform (file, enc, cb) {
+            if (file.isNull()) {
+                cb(null, file)
+                return
+            }
+
+            if (file.isStream()) {
+                cb(new Error('Streaming files are not supported for hashing'))
+                return
+            }
+
+            const parsed = path.parse(file.path)
+            const digest = crypto
+                .createHash('md5')
+                .update(file.contents)
+                .digest('hex')
+                .slice(0, 10)
+
+            file.path = path.join(parsed.dir, `${parsed.name}-${digest}${parsed.ext}`)
+            cb(null, file)
+        }
+    })
 }
 
 function getScopeStr (scope) {
@@ -114,7 +142,7 @@ task('build', series([cb => {
     const fileContent = `window.SERVICE_ASSETS = ${fs.readFileSync(`${dist}/assets_bundle.json`, 'utf8')}`
     fs.writeFileSync(`${dist}/assetsBundles.js`, fileContent)
     return src(`${dist}/assetsBundles.js`)
-        .pipe(hash())
+        .pipe(renameWithContentHash())
         .pipe(dest(`${dist}/`))
 }, (cb) => {
     ['console', 'pipeline'].map(prefix => {
