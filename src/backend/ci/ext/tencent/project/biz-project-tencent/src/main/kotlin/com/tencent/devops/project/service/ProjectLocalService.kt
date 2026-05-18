@@ -877,6 +877,6 @@ class ProjectLocalService @Autowired constructor(
         private const val PROJECT_CREATE = "project_create"
         private const val BATCH_PRE_PROJECT_PAGE_SIZE = 100
         private const val RECENT_LOGIN_LOOKBACK_MONTHS = 3L
-        private const val PRE_PROJECT_WORKER_THREADS = 5
+        private const val PRE_PROJECT_WORKER_THREADS = 2
     }
 }
