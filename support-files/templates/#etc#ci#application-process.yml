@@ -121,3 +121,4 @@ project:
     #   * 元数据 host：metadata.google.internal、kubernetes.default、metadata.tencentyun.com 等
     #   * 任意本地 0.0.0.0、组播
     allow-internal-url: false
+    aes-key: __BK_CI_PROCESS_CALLBACK_AES_KEY__

@@ -93,8 +93,8 @@ class ProjectPipelineCallBackService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService
 ) {
 
-    @Value("\${project.callback.secretParam.aes-key:project_callback_aes_key}")
-    private val aesKey = ""
+    @Value("\${project.callback.aes-key}")
+    private lateinit var aesKey: String
 
     @Value("\${project.callback.black-ports:#{null}}")
     private val blackPorts: List<Int> = listOf()

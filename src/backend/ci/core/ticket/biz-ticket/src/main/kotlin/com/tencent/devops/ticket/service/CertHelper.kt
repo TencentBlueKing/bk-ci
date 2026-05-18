@@ -43,7 +43,7 @@ import java.time.ZoneId
 class CertHelper {
 
     @Value("\${cert.aes-key}")
-    private val aesKey = "d/R%3{?OS}IeGT21"
+    private lateinit var aesKey: String
 
     companion object {
         private const val JKS = "JKS"
