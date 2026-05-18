@@ -77,9 +77,7 @@
                 return normalizeEventDesc(this.eventDesc)
             },
             descKey () {
-                const localeMessage = this.$i18n.getLocaleMessage(this.$i18n.locale) || {}
-                const codelibMessages = localeMessage.codelib || {}
-                return codelibMessages[this.normalized.code] ? `${I18N_PREFIX}${this.normalized.code}` : ''
+                return EVENT_DESC_PARAM_MAPPERS[this.normalized.code] ? `${I18N_PREFIX}${this.normalized.code}` : ''
             },
             fallbackMessage () {
                 return this.normalized.defaultMessage
