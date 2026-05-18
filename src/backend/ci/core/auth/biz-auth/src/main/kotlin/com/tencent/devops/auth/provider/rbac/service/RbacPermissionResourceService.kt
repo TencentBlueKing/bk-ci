@@ -133,7 +133,6 @@ class RbacPermissionResourceService(
                 iamResourceCode = iamResourceCode
             )
         }
-
         val isCreateResourceAndGroup = managerId != 0
         // 项目创建需要审批时,不需要保存资源信息,审批通过回调后，再进行创建。
         if (isCreateResourceAndGroup) {
