@@ -192,7 +192,7 @@ class PipelineTriggerEventDao {
                     eventSource = it.value5(),
                     eventType = it.value6(),
                     triggerUser = it.value7(),
-                    eventDesc = it.value8(),
+                    eventDesc = I18Variable(code = "", defaultMessage = it.value8()),
                     eventTime = it.value9().timestampmilli(),
                     status = it.value10(),
                     pipelineId = it.value11(),

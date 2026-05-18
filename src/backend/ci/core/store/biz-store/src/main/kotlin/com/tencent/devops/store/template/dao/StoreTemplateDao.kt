@@ -31,19 +31,18 @@ import com.tencent.devops.model.store.tables.TCategory
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.TStoreProjectRel
-import com.tencent.devops.model.store.tables.TStoreStatistics
 import com.tencent.devops.model.store.tables.TTemplate
 import com.tencent.devops.model.store.tables.TTemplateCategoryRel
 import com.tencent.devops.model.store.tables.TTemplateLabelRel
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.template.enums.MarketTemplateSortTypeEnum
+import com.tencent.devops.store.pojo.template.enums.OpTemplateSortTypeEnum
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Result
 import org.jooq.SelectJoinStep
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Suppress("ALL")
@@ -59,7 +58,7 @@ class StoreTemplateDao {
         categoryList: List<String>?,
         labelCodeList: List<String>?,
         latestFlag: Boolean?,
-        sortType: String?,
+        sortType: OpTemplateSortTypeEnum?,
         desc: Boolean?,
         page: Int?,
         pageSize: Int?
@@ -101,18 +100,11 @@ class StoreTemplateDao {
         )
 
         if (null != sortType) {
-            if (sortType == MarketTemplateSortTypeEnum.DOWNLOAD_COUNT.name) {
-                val tas = TStoreStatistics.T_STORE_STATISTICS
-                val t = dslContext
-                    .select(tas.STORE_CODE, DSL.sum(tas.DOWNLOADS).`as`(MarketTemplateSortTypeEnum.DOWNLOAD_COUNT.name))
-                    .from(tas).groupBy(tas.STORE_CODE).asTable("t")
-                baseStep.leftJoin(t).on(tt.TEMPLATE_CODE.eq(t.field("STORE_CODE", String::class.java)))
-            }
-
+            val sortField = tt.getOpTemplateSortField(sortType)
             if (desc != null && desc) {
-                baseStep.where(conditions).orderBy(DSL.field(sortType).desc())
+                baseStep.where(conditions).orderBy(sortField.desc())
             } else {
-                baseStep.where(conditions).orderBy(DSL.field(sortType).asc())
+                baseStep.where(conditions).orderBy(sortField.asc())
             }
         } else {
             baseStep.where(conditions)
@@ -211,6 +203,22 @@ class StoreTemplateDao {
             conditions.add(ttlr.LABEL_ID.`in`(labelIdList))
         }
         return conditions
+    }
+
+    private fun TTemplate.getOpTemplateSortField(sortType: OpTemplateSortTypeEnum): Field<*> {
+        return when (sortType) {
+            OpTemplateSortTypeEnum.TEMPLATE_CODE -> TEMPLATE_CODE
+            OpTemplateSortTypeEnum.TEMPLATE_NAME -> TEMPLATE_NAME
+            OpTemplateSortTypeEnum.CLASSIFY_ID -> CLASSIFY_ID
+            OpTemplateSortTypeEnum.TEMPLATE_STATUS -> TEMPLATE_STATUS
+            OpTemplateSortTypeEnum.TEMPLATE_TYPE -> TEMPLATE_TYPE
+            OpTemplateSortTypeEnum.LATEST_FLAG -> LATEST_FLAG
+            OpTemplateSortTypeEnum.PUBLISHER -> PUBLISHER
+            OpTemplateSortTypeEnum.CREATOR -> CREATOR
+            OpTemplateSortTypeEnum.MODIFIER -> MODIFIER
+            OpTemplateSortTypeEnum.CREATE_TIME -> CREATE_TIME
+            OpTemplateSortTypeEnum.UPDATE_TIME -> UPDATE_TIME
+        }
     }
 
     /**

@@ -52,6 +52,7 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Result
 import org.jooq.SelectOnConditionStep
@@ -204,17 +205,12 @@ class MarketAtomDao : AtomBaseDao() {
                 baseStep.leftJoin(t).on(ta.ATOM_CODE.eq(t.field("STORE_CODE", String::class.java)))
             }
 
-            val realSortType =
-                if (flag) {
-                    DSL.field(sortType.name)
-                } else {
-                    ta.field(sortType.name)
-                }
+            val realSortType = getMarketAtomSortField(ta, sortType)
 
             if (desc != null && desc) {
-                baseStep.where(conditions).orderBy(realSortType!!.desc())
+                baseStep.where(conditions).orderBy(realSortType.desc())
             } else {
-                baseStep.where(conditions).orderBy(realSortType!!.asc())
+                baseStep.where(conditions).orderBy(realSortType.asc())
             }
         } else {
             baseStep.where(conditions)
@@ -223,6 +219,23 @@ class MarketAtomDao : AtomBaseDao() {
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()
         } else {
             baseStep.fetch()
+        }
+    }
+
+    private fun getMarketAtomSortField(ta: TAtom, sortType: MarketAtomSortTypeEnum): Field<*> {
+        return when (sortType) {
+            MarketAtomSortTypeEnum.NAME -> ta.NAME
+            MarketAtomSortTypeEnum.CREATE_TIME -> ta.CREATE_TIME
+            MarketAtomSortTypeEnum.UPDATE_TIME -> ta.UPDATE_TIME
+            MarketAtomSortTypeEnum.PUBLISHER -> ta.PUBLISHER
+            MarketAtomSortTypeEnum.DOWNLOAD_COUNT -> DSL.field(
+                DSL.name(MarketAtomSortTypeEnum.DOWNLOAD_COUNT.name),
+                Int::class.java
+            )
+            MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM -> DSL.field(
+                DSL.name(MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM.name),
+                Int::class.java
+            )
         }
     }
 

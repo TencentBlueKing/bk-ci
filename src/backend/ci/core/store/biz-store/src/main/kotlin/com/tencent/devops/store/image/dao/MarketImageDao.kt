@@ -83,6 +83,7 @@ import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Record18
@@ -301,26 +302,13 @@ class MarketImageDao @Autowired constructor() {
                 baseStep.leftJoin(t).on(tImage.IMAGE_CODE.eq(t.field("STORE_CODE", String::class.java)))
             }
 
-            // 排序字段
-            val realSortType = when (sortType) {
-                MarketImageSortTypeEnum.DOWNLOAD_COUNT -> {
-                    DSL.field(MarketImageSortTypeEnum.getSortType(sortType.name))
-                }
-                MarketImageSortTypeEnum.CREATE_TIME -> {
-                    // 创建时间按照tImageFeature表计算
-                    tImageFeature.field(MarketImageSortTypeEnum.getSortType(sortType.name))
-                }
-                else -> {
-                    // 更新时间按照tImage表计算
-                    tImage.field(MarketImageSortTypeEnum.getSortType(sortType.name))
-                }
-            }
+            val realSortType = getMarketImageSortField(tImage, tImageFeature, sortType)
 
             // 排序
             if (desc != null && desc) {
-                baseStep.where(conditions).orderBy(realSortType!!.desc())
+                baseStep.where(conditions).orderBy(realSortType.desc())
             } else {
-                baseStep.where(conditions).orderBy(realSortType!!.asc())
+                baseStep.where(conditions).orderBy(realSortType.asc())
             }
         } else {
             baseStep.where(conditions)
@@ -332,6 +320,24 @@ class MarketImageDao @Autowired constructor() {
             baseStep
         }
         return finalStep.fetch()
+    }
+
+    private fun getMarketImageSortField(
+        tImage: TImage,
+        tImageFeature: TImageFeature,
+        sortType: MarketImageSortTypeEnum
+    ): Field<*> {
+        return when (sortType) {
+            MarketImageSortTypeEnum.NAME -> tImage.IMAGE_NAME
+            // 创建时间按照tImageFeature表计算，保持历史排序逻辑
+            MarketImageSortTypeEnum.CREATE_TIME -> tImageFeature.CREATE_TIME
+            MarketImageSortTypeEnum.UPDATE_TIME -> tImage.UPDATE_TIME
+            MarketImageSortTypeEnum.PUBLISHER -> tImage.PUBLISHER
+            MarketImageSortTypeEnum.DOWNLOAD_COUNT -> DSL.field(
+                DSL.name(MarketImageSortTypeEnum.DOWNLOAD_COUNT.name),
+                Int::class.java
+            )
+        }
     }
 
     fun count(
