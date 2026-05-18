@@ -87,15 +87,26 @@
             getHomeCards () {
                 const urls = {
                     atom: 'store/requestAtomHome',
+                    creative: 'store/requestAtomHome',
                     template: 'store/requestTemplateHome',
                     ide: 'store/requestIDEHome',
                     image: 'store/requestImageHome',
                     service: 'store/requestServiceHome'
                 }
+                
+                // 定义 serviceScope 映射关系
+                const serviceScopeMap = {
+                    atom: 'PIPELINE',
+                    creative: 'CREATIVE_STREAM'
+                }
+                
                 const type = this.$route.query.pipeType || 'atom'
                 const url = urls[type]
+                
+                // 构建参数对象，只有 atom 和 creative 类型需要传递 serviceScope
+                const params = (type === 'atom' || type === 'creative') ? { serviceScope: serviceScopeMap[type] } : undefined
 
-                return this.$store.dispatch(url).then((res) => {
+                return this.$store.dispatch(url, params).then((res) => {
                     const data = res || []
                     data.forEach(item => item.records.splice(8))
                     this.cardGroups = data

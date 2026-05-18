@@ -708,8 +708,6 @@
             changePipelineJobType () {
                 this.formErrors.pipelineEnvError = false
                 this.formErrors.pipelineJobError = false
-                // 清空操作系统选择
-                this.pipelineCategory.os = []
             },
 
             changeCreativeJobType () {
