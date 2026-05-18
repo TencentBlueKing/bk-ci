@@ -66,6 +66,7 @@ import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -646,7 +647,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         if (blackPorts.contains(port)) {
             logger.warn("$projectId|callback url[$url] with high-risk port[$port] detected")
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_CONTAINS_HIGH_RISK_PORT,
+                errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_INTERNAL_HOST,
                 params = arrayOf(port.toString())
             )
         }
