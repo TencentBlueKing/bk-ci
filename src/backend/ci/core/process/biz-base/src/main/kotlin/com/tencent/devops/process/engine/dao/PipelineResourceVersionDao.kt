@@ -678,6 +678,7 @@ class PipelineResourceVersionDao {
                     versionName = versionName,
                     createTime = record.createTime,
                     updateTime = record.updateTime,
+                    releaseTime = record.releaseTime,
                     versionNum = versionNum,
                     pipelineVersion = record.pipelineVersion,
                     triggerVersion = record.triggerVersion,

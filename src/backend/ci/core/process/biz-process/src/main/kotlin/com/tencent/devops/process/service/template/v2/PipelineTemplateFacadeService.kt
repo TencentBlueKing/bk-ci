@@ -1856,23 +1856,24 @@ class PipelineTemplateFacadeService @Autowired constructor(
             projectId = projectId,
             templateId = templateId
         )
+        val baseResource = draftResource.baseVersion?.let { baseVersion ->
+            pipelineTemplateResourceService.getTemplateResourceVersion(
+                projectId = projectId,
+                templateId = templateId,
+                version = baseVersion
+            )
+        }
         val updateTime = draftResource.updateTime ?: draftResource.createdTime!!
         val updater = draftResource.updater ?: draftResource.creator
+        val releaseTime = releaseResource?.releaseTime
+        val baseReleaseTime = baseResource?.releaseTime
         return when {
             // 若草稿基线版本早于当前最新版本,则提示草稿版本落后
-            releaseResource != null && draftResource.baseVersion != null &&
-                    releaseResource.version > draftResource.baseVersion!! -> {
-                val draftBaseResource = draftResource.baseVersion?.let { baseVersion ->
-                    pipelineTemplateResourceService.getTemplateResourceVersion(
-                        projectId = projectId,
-                        templateId = templateId,
-                        version = baseVersion
-                    )
-                }
+            releaseTime != null && baseReleaseTime != null && releaseTime > baseReleaseTime -> {
                 PipelineTemplateDraftStatusResult(
                     status = PipelineDraftStatus.OUTDATED,
                     draft = PipelineTemplateVersionSimple(draftResource).copy(
-                        baseVersionName = draftBaseResource?.versionName
+                        baseVersionName = baseResource.versionName
                     ),
                     release = PipelineTemplateVersionSimple(releaseResource)
                 )
