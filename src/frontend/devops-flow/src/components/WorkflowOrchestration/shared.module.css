@@ -34,6 +34,14 @@
   width: 420px;
 }
 
+.nameInputEnterHint {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  padding-right: var(--spacing-xs);
+}
+
 .editIcon {
   display: flex;
   cursor: pointer;
@@ -48,7 +56,6 @@
 
 .infoIcon {
   color: var(--color-text-tertiary);
-  cursor: help;
   display: inline-flex;
   align-items: center;
   margin-left: var(--spacing-xs);
@@ -135,4 +142,21 @@
   color: var(--color-danger);
   margin-top: 4px;
   line-height: 1.4;
+}
+
+/* 与下方双列表单行对齐：左侧字段约占 50% 宽（Step ID、Job ID 等） */
+.propertyPanelHalfRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-xxl);
+  align-items: flex-start;
+  margin-bottom: var(--spacing-lg);
+}
+
+.propertyPanelHalfCell {
+  min-width: 0;
+}
+
+.propertyPanelHalfWidthInput {
+  width: 100% !important;
 }

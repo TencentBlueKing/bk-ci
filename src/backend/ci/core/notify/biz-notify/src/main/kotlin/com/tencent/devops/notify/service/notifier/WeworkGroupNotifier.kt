@@ -32,28 +32,47 @@ class WeworkGroupNotifier @Autowired constructor(
         request: SendNotifyMessageTemplateRequest,
         commonNotifyMessageTemplateRecord: TCommonNotifyMessageTemplateRecord
     ) {
-        logger.info("send WEWORK_GROUP msg: $commonNotifyMessageTemplateRecord.id")
+        logger.info("send WEWORK_GROUP msg: ${commonNotifyMessageTemplateRecord.id}")
         val groups = request.bodyParams?.get(NotifyUtils.WEWORK_GROUP_KEY)?.split("[,;]".toRegex())
         if (groups.isNullOrEmpty()) {
             logger.info("wework group is empty, so return.")
             return
         }
-        val weworkTplRecord =
+        // 有RTX就从RTX表查，没有才从WEWORK_GROUP表查
+        val rtxTplRecord = if (
+            request.notifyType?.contains(NotifyType.RTX.name) != false
+        ) {
             notifyMessageTemplateDao.getRtxNotifyMessageTemplate(
                 dslContext = dslContext,
                 commonTemplateId = commonNotifyMessageTemplateRecord.id
-            )!!
+            )
+        } else {
+            null
+        }
+        val weworkGroupTplRecord = if (
+            rtxTplRecord == null && request.notifyType?.contains(NotifyType.WEWORK_GROUP.name) == true
+        ) {
+            notifyMessageTemplateDao.getWeworkGroupNotifyMessageTemplate(
+                dslContext = dslContext,
+                commonTemplateId = commonNotifyMessageTemplateRecord.id
+            )
+        } else {
+            null
+        }
+        if (rtxTplRecord == null && weworkGroupTplRecord == null) {
+            logger.warn("no rtx or wework group template found for ${commonNotifyMessageTemplateRecord.id}")
+            return
+        }
         // 先对 DB 原始模板做渠道关键字替换（如 CREATIVE_STREAM 渠道将「流水线」替换为「创作流」），再替换占位符
         val language = commonConfig.devopsDefaultLocaleLanguage
-        val rawTitle = NotifierUtils.replaceNotifyKeywordByChannel(weworkTplRecord.title, language)
-        val rawBody = NotifierUtils.replaceNotifyKeywordByChannel(
-            if (request.markdownContent == true) {
-                weworkTplRecord.bodyMd ?: weworkTplRecord.body
-            } else {
-                weworkTplRecord.body
-            },
-            language
-        )
+        val title = rtxTplRecord?.title ?: weworkGroupTplRecord?.title ?: ""
+        val rawTitle = NotifierUtils.replaceNotifyKeywordByChannel(title, language)
+        val body = if (request.markdownContent == true) {
+            rtxTplRecord?.bodyMd ?: rtxTplRecord?.body ?: weworkGroupTplRecord?.body ?: ""
+        } else {
+            rtxTplRecord?.body ?: weworkGroupTplRecord?.body ?: ""
+        }
+        val rawBody = NotifierUtils.replaceNotifyKeywordByChannel(body, language)
         val finalTitle = NotifierUtils.replaceContentParams(request.titleParams, rawTitle)
         val finalBody = NotifierUtils.replaceContentParams(request.bodyParams, rawBody)
 

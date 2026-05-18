@@ -59,9 +59,11 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_CHANGE_USER_NOT_SUPPORT
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_DUPLICATE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_OR_ID_INVALID
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_CMDB_PRIMARY_BAK_OPERATOR
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_IMPORT_PERMISSION_NODES
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_CMDB_PRIMARY_BAK_OPERATOR
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_TYPE_TO_CHANGE_CREATOR_ONLY_SUPPORT_CMDB
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.NODE_USAGE_BUILD
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.NODE_USAGE_DEPLOYMENT
@@ -182,6 +184,10 @@ class NodeService @Autowired constructor(
 
     fun hasCreatePermission(userId: String, projectId: String): Boolean {
         return environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE)
+    }
+
+    fun checkNodePermission(userId: String, projectId: String, nodeId: Long, permission: AuthPermission): Boolean {
+        return environmentPermissionService.checkNodePermission(userId, projectId, nodeId, permission)
     }
 
     fun list(userId: String, projectId: String): List<NodeWithPermission> {
@@ -473,7 +479,7 @@ class NodeService @Autowired constructor(
             emptyMap()
         }
         val nodeIds = nodeListResult.map { it.nodeId }
-        val tagMaps = nodeTagService.fetchNodeTags(projectId, nodeIds)
+        val tagMaps = nodeTagService.fetchNodeTags(projectId, nodeIds.toSet())
         val nodeEnvs = envNodeDao.listNodeIds(dslContext, projectId, nodeIds)
         val envInfos = envDao.listServerEnvByIdsAllType(
             dslContext, nodeEnvs.map { it.envId }.toSet()
@@ -783,9 +789,9 @@ class NodeService @Autowired constructor(
                     nodeDao.updateCreatedUser(dslContext, nodeId, userId)
                 } else {
                     throw ErrorCodeException(
-                        errorCode = ERROR_NODE_NO_EDIT_PERMISSSION,
+                        errorCode = ERROR_NODE_NOT_CMDB_PRIMARY_BAK_OPERATOR,
                         defaultMessage = MessageUtil.getMessageByLocale(
-                            messageCode = ERROR_NODE_NO_EDIT_PERMISSSION,
+                            messageCode = ERROR_NODE_NOT_CMDB_PRIMARY_BAK_OPERATOR,
                             language = I18nUtil.getLanguage(userId)
                         )
                     )
@@ -896,9 +902,9 @@ class NodeService @Autowired constructor(
                     true
                 } else {
                     throw ErrorCodeException(
-                        errorCode = ERROR_NODE_NO_EDIT_PERMISSSION,
+                        errorCode = ERROR_NODE_NOT_CMDB_PRIMARY_BAK_OPERATOR,
                         defaultMessage = MessageUtil.getMessageByLocale(
-                            messageCode = ERROR_NODE_NO_EDIT_PERMISSSION,
+                            messageCode = ERROR_NODE_NOT_CMDB_PRIMARY_BAK_OPERATOR,
                             language = I18nUtil.getLanguage(userId)
                         )
                     )

@@ -149,6 +149,18 @@ interface ServiceMarketAtomResource {
         installAtomReq: InstallAtomReq
     ): Result<Boolean>
 
+    @Operation(summary = "查看插件的yml 2.0信息")
+    @GET
+    @Path("/atoms/{atomCode}/yml/2.0/detail")
+    fun getAtomYmlV2Info(
+        @Parameter(description = "atomCode", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @Parameter(description = "是否展示系统自带的yml信息", required = false)
+        @QueryParam("defaultShowFlag")
+        defaultShowFlag: Boolean?
+    ): Result<String?>
+
     @Operation(summary = "获取带post属性的插件")
     @POST
     @Path("/project/{projectCode}/getPostAtoms")

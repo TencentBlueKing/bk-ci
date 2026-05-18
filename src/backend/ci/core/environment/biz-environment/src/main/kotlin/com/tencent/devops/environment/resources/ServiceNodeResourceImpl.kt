@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceNodeResource
@@ -218,5 +219,14 @@ class ServiceNodeResourceImpl @Autowired constructor(
                 data = data
             )
         )
+    }
+
+    override fun checkNodePermission(
+        userId: String,
+        projectId: String,
+        nodeId: Long,
+        permission: AuthPermission
+    ): Result<Boolean> {
+        return Result(nodeService.checkNodePermission(userId, projectId, nodeId, permission))
     }
 }

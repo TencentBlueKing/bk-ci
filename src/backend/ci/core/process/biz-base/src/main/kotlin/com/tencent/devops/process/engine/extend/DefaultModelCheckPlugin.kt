@@ -474,11 +474,10 @@ open class DefaultModelCheckPlugin constructor(
         val triggerContainer = (trigger.containers.getOrNull(0) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
         )) as TriggerContainer
-        return if (supportChineseVarName != false) {
-            triggerContainer.params.associateBy { it.id }
-        } else {
-            PipelineUtils.checkPipelineParams(triggerContainer.params)
-        }
+        return PipelineUtils.checkPipelineParams(
+            params = triggerContainer.params,
+            supportChineseVarName = supportChineseVarName
+        )
     }
 
     companion object {

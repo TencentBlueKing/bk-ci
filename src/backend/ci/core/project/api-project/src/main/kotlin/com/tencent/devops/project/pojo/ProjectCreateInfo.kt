@@ -59,6 +59,8 @@ data class ProjectCreateInfo(
     val centerName: String = "",
     @get:Schema(title = "是否保密")
     var secrecy: Boolean = false,
+    @get:Schema(title = "是否隐藏")
+    val hidden: Boolean = false,
     @get:Schema(title = "kind")
     val kind: Int = 0,
     @get:Schema(title = "项目相关配置")
@@ -74,5 +76,9 @@ data class ProjectCreateInfo(
     @get:Schema(title = "运营产品ID")
     val productId: Int? = null,
     @get:Schema(title = "运营产品名称")
-    val productName: String? = null
+    val productName: String? = null,
+    @get:Schema(title = "KPI代码")
+    val kpiCode: String? = null,
+    @get:Schema(title = "KPI名称")
+    val kpiName: String? = null
 )

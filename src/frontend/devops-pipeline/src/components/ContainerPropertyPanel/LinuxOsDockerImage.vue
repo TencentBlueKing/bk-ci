@@ -144,6 +144,26 @@
                     @change="(val) => changeOptions('gpus', val)"
                 />
             </form-field>
+            <form-field
+                label="Network"
+            >
+                <input-parameter-array
+                    name="network"
+                    placeholder="bridge"
+                    :value="buildNetwork"
+                    :handle-change="changeOptions"
+                />
+            </form-field>
+
+            <form-field
+                label="User"
+            >
+                <bk-input
+                    placeholder="root"
+                    :value="buildUser"
+                    @change="(val) => changeOptions('user', val)"
+                />
+            </form-field>
 
             <form-field>
                 <atom-checkbox
@@ -245,6 +265,12 @@
             },
             buildGpus () {
                 return this.container.dispatchType?.dockerInfo?.options?.gpus ?? ''
+            },
+            buildNetwork () {
+                return this.container.dispatchType?.dockerInfo?.options?.network ?? []
+            },
+            buildUser () {
+                return this.container.dispatchType?.dockerInfo?.options?.user ?? ''
             },
             buildPrivileged () {
                 return this.container.dispatchType?.dockerInfo?.options?.privileged ?? false

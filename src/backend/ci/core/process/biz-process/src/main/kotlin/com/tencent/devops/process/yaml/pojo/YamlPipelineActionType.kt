@@ -36,6 +36,9 @@ enum class YamlPipelineActionType {
     // 更新
     UPDATE,
 
+    // 重命名
+    RENAME,
+
     DEPENDENCY_UPGRADE,
 
     // 删除版本

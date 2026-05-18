@@ -220,6 +220,7 @@ class UserPipelineTemplateV2ResourceImpl(
         )
         return Result(
             templateFacadeService.getTemplateDetails(
+                userId = userId,
                 projectId = projectId,
                 templateId = templateId,
                 version = version
@@ -236,6 +237,7 @@ class UserPipelineTemplateV2ResourceImpl(
         logger.info("get latest template details {}|{}|{}", userId, projectId, templateId)
         return Result(
             templateFacadeService.getTemplateDetails(
+                userId = userId,
                 projectId = projectId,
                 templateId = templateId,
                 version = null

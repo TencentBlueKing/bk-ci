@@ -58,7 +58,7 @@ export default {
                     break
                 case isVmContainer(container):
                     iconProps = {
-                        name: baseOS.toLowerCase(),
+                        name: baseOS.toLowerCase() || 'WINDOWS',
                         title: vmNames.join(","),
                     }
                     break

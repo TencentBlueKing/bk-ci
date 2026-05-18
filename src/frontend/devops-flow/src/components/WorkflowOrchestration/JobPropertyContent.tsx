@@ -526,18 +526,23 @@ export default defineComponent({
 
             {/* Job ID */}
             {props.showJobIdField && (
-              <FormItem
-                label={t('flow.orchestration.jobId')}
-                property="jobId"
-                required
-                class={containerErrorFields.value.includes('jobId') ? sharedStyles.fieldError : ''}
-              >
-                <Input
-                  v-model={formData.value.jobId}
-                  placeholder={t('flow.orchestration.jobIdPlaceholder')}
-                  disabled={!props.editable}
-                />
-              </FormItem>
+              <div class={sharedStyles.propertyPanelHalfRow}>
+                <div class={sharedStyles.propertyPanelHalfCell}>
+                  <FormItem
+                    label={t('flow.orchestration.jobId')}
+                    property="jobId"
+                    required
+                    class={containerErrorFields.value.includes('jobId') ? sharedStyles.fieldError : ''}
+                  >
+                    <Input
+                      v-model={formData.value.jobId}
+                      placeholder={t('flow.orchestration.jobIdPlaceholder')}
+                      disabled={!props.editable}
+                      class={sharedStyles.propertyPanelHalfWidthInput}
+                    />
+                  </FormItem>
+                </div>
+              </div>
             )}
 
             {/* Matrix Job */}

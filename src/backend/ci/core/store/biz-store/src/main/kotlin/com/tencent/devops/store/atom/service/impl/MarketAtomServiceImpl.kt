@@ -61,7 +61,6 @@ import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.AtomLabelRelDao
 import com.tencent.devops.store.atom.dao.MarketAtomClassifyDao
 import com.tencent.devops.store.atom.dao.MarketAtomDao
-import com.tencent.devops.store.pojo.atom.MarketAtomDaoQuery
 import com.tencent.devops.store.atom.dao.MarketAtomEnvInfoDao
 import com.tencent.devops.store.atom.dao.MarketAtomFeatureDao
 import com.tencent.devops.store.atom.dao.MarketAtomVersionLogDao
@@ -72,12 +71,12 @@ import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.atom.service.MarketAtomEnvService
 import com.tencent.devops.store.atom.service.MarketAtomService
 import com.tencent.devops.store.atom.util.AtomServiceScopeUtil
+import com.tencent.devops.store.common.dao.ClassifyDao
+import com.tencent.devops.store.common.dao.LabelDao
 import com.tencent.devops.store.common.dao.StoreBuildInfoDao
 import com.tencent.devops.store.common.dao.StoreErrorCodeInfoDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
-import com.tencent.devops.store.common.dao.ClassifyDao
-import com.tencent.devops.store.common.dao.LabelDao
 import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.common.service.StoreCommentService
 import com.tencent.devops.store.common.service.StoreCommonService
@@ -89,6 +88,7 @@ import com.tencent.devops.store.common.service.StoreTotalStatisticService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.StoreWebsocketService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.common.utils.PublicComponentCacheManager
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
@@ -104,6 +104,7 @@ import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
+import com.tencent.devops.store.pojo.atom.MarketAtomDaoQuery
 import com.tencent.devops.store.pojo.atom.MarketAtomListQuery
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.MyAtomResp
@@ -138,7 +139,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
-import java.util.Calendar
+import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -1050,8 +1051,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             atomLabelRelDao.deleteByAtomCode(context, atomCode)
             marketAtomVersionLogDao.deleteByAtomCode(context, atomCode)
             marketAtomDao.deleteByAtomCode(context, atomCode)
-            // 清理缓存
+            // 删除插件默认标识缓存
             redisOperation.removeSetMember(StoreUtils.getStorePublicFlagKey(typeName), atomCode)
+            // 清除公共组件集合缓存，立即生效
+            PublicComponentCacheManager.invalidateCache(StoreTypeEnum.ATOM.name)
+            // 清空插件post信息缓存
             redisOperation.delete("$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode")
             redisOperation.delete(StoreUtils.getStoreRunInfoKey(typeName, atomCode))
         }

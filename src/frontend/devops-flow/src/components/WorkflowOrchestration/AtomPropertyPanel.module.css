@@ -162,11 +162,6 @@
   border-bottom: 1px solid var(--border-color);
 }
 
-/* Step ID 宽度限制 */
-.stepIdInput {
-  width: 400px !important;
-}
-
 /* 覆盖 bk-form-item 的默认 margin，使紧凑布局更好看 */
 .flexItem :global(.bk-form-item) {
   margin-bottom: 0 !important;

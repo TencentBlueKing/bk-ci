@@ -140,6 +140,7 @@ import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
+import com.tencent.devops.process.pojo.pipeline.BuildDetailSimple
 import com.tencent.devops.process.pojo.pipeline.BuildRecordInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
@@ -147,10 +148,12 @@ import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
+import com.tencent.devops.process.pojo.pipeline.toBuildDetailSimple
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.CreateStreamTriggerSupportService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.strategy.bus.impl.UserNormalPipelinePermissionCheckStrategy
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
@@ -211,6 +214,7 @@ class PipelineBuildFacadeService(
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplatePermissionService: PipelineTemplatePermissionService,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
+    private val pipelineRecordModelService: PipelineRecordModelService,
     private val historyConditionQueryStrategyFactory: HistoryConditionQueryStrategyFactory,
     private val createStreamService: CreateStreamTriggerSupportService
 ) {
@@ -880,7 +884,7 @@ class PipelineBuildFacadeService(
                     if (el is ManualReviewUserTaskElement) {
                         trueElementId = el.id!!
                         checkReviewUser(
-                            reviewUsers = el.reviewUsers,
+                            reviewUsers = el.actualReviewUsers ?: el.reviewUsers,
                             projectId = projectId,
                             buildId = buildId,
                             userId = userId
@@ -901,7 +905,7 @@ class PipelineBuildFacadeService(
                                     projectId = projectId,
                                     buildId = buildId,
                                     userId = userId,
-                                    reviewUsers = el.reviewUsers ?: emptyList()
+                                    reviewUsers = el.actualReviewUsers ?: el.reviewUsers ?: emptyList()
                                 )
                             }
                         }
@@ -1276,9 +1280,10 @@ class PipelineBuildFacadeService(
                             buildId = buildId,
                             userId = userId,
                             pipelineId = pipelineId,
-                            reviewUsers = el.reviewUsers,
+                            reviewUsers = el.actualReviewUsers ?: el.reviewUsers,
                             params = el.params,
-                            desc = el.desc ?: ""
+                            desc = el.desc ?: "",
+                            suggestRequired = el.suggestRequired
                         )
                     }
                 }
@@ -1294,9 +1299,10 @@ class PipelineBuildFacadeService(
                                     buildId = buildId,
                                     userId = userId,
                                     pipelineId = pipelineId,
-                                    reviewUsers = el.reviewUsers ?: emptyList(),
+                                    reviewUsers = el.actualReviewUsers ?: el.reviewUsers ?: emptyList(),
                                     params = el.params ?: mutableListOf(),
-                                    desc = el.desc ?: ""
+                                    desc = el.desc ?: "",
+                                    suggestRequired = el.suggestRequired
                                 )
                             }
                         }
@@ -1314,7 +1320,8 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         reviewUsers: List<String>,
         params: MutableList<ManualReviewParam>,
-        desc: String
+        desc: String,
+        suggestRequired: Boolean? = false
     ): ReviewParam {
         val reviewUser = mutableListOf<String>()
         reviewUsers.forEach { user ->
@@ -1352,7 +1359,8 @@ class PipelineBuildFacadeService(
             status = null,
             desc = buildVariableService.replaceTemplate(projectId, buildId, desc),
             suggest = "",
-            params = params
+            params = params,
+            suggestRequired = suggestRequired
         )
         logger.info("reviewParam : $reviewParam")
         return reviewParam
@@ -1443,6 +1451,24 @@ class PipelineBuildFacadeService(
             pipelineId = pipelineId,
             buildId = buildId
         )
+    }
+
+    fun getBuildDetailSimple(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode,
+        checkPermission: Boolean = true
+    ): BuildDetailSimple {
+        return getBuildDetail(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            channelCode = channelCode,
+            checkPermission = checkPermission
+        ).toBuildDetailSimple()
     }
 
     fun getBuildDetail(
@@ -2203,17 +2229,23 @@ class PipelineBuildFacadeService(
             permission = AuthPermission.VIEW
         )
 
-        // 查询总数
-        val newTotalCount = pipelineRuntimeService.getLightPipelineBuildHistoryCount(query)
-
         // 查询构建历史记录
         val newHistoryBuilds = pipelineRuntimeService.listLightPipelineBuildHistory(
             query = query
         )
+
+        val totalCount: Long = if (query.offset == 0 && newHistoryBuilds.size < query.limit) {
+            // 第一页且不满一页（包含空结果），总数为返回的记录数
+            newHistoryBuilds.size.toLong()
+        } else {
+            // 其他情况查询精确总数
+            pipelineRuntimeService.getLightPipelineBuildHistoryCount(query).toLong()
+        }
+
         return Page(
             page = page,
             pageSize = query.limit,
-            count = newTotalCount.toLong(),
+            count = totalCount,
             records = newHistoryBuilds
         )
     }
@@ -3187,6 +3219,18 @@ class PipelineBuildFacadeService(
         }
     }
 
+    fun getBuildFailedTasks(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int?
+    ) = buildRecordService.getBuildFailedTasks(
+        projectId = projectId,
+        pipelineId = pipelineId,
+        buildId = buildId,
+        executeCount = executeCount
+    )
+
     private fun getBuildManualParams(
         projectId: String,
         pipelineId: String,
@@ -3315,7 +3359,10 @@ class PipelineBuildFacadeService(
         val startType = StartType.toStartType(buildInfo.trigger)
         // 发起新构建
         return if (startType == StartType.WEB_HOOK) {
-            webhookBuildParameterService.getBuildParameters(buildId = buildInfo.buildId)?.forEach { param ->
+            webhookBuildParameterService.getBuildParameters(
+                projectId = projectId,
+                buildId = buildInfo.buildId
+            )?.forEach { param ->
                 startParameters[param.key] = param.value.toString()
             }
             webhookTriggerPipelineBuild(

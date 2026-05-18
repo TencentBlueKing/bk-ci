@@ -34,6 +34,7 @@ import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.PipelineCollation
+import com.tencent.devops.process.pojo.PipelineInfoQueryCondition
 import com.tencent.devops.process.pojo.PipelineSortType
 import java.time.LocalDateTime
 import org.jooq.Condition
@@ -582,6 +583,66 @@ class PipelineInfoDao {
         }
     }
 
+    fun listByCondition(
+        dslContext: DSLContext,
+        condition: PipelineInfoQueryCondition
+    ): Result<TPipelineInfoRecord> {
+        return with(T_PIPELINE_INFO) {
+            val query = dslContext.selectFrom(this)
+                .where(buildConditions(condition))
+            if (condition.limit != null && condition.offset != null) {
+                query.limit(condition.limit).offset(condition.offset)
+            }
+            query.fetch()
+        }
+    }
+
+    fun countByCondition(
+        dslContext: DSLContext,
+        condition: PipelineInfoQueryCondition
+    ): Long {
+        return with(T_PIPELINE_INFO) {
+            dslContext.selectCount()
+                .from(this)
+                .where(buildConditions(condition))
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    private fun buildConditions(
+        condition: PipelineInfoQueryCondition
+    ): List<Condition> {
+        return with(T_PIPELINE_INFO) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(condition.projectId))
+            if (!condition.pipelineIds.isNullOrEmpty()) {
+                conditions.add(PIPELINE_ID.`in`(condition.pipelineIds))
+            }
+            conditions.add(DELETE.eq(false))
+            if (!condition.pipelineName.isNullOrBlank()) {
+                conditions.add(
+                    PIPELINE_NAME.like("%${condition.pipelineName}%")
+                )
+            }
+            conditions
+        }
+    }
+
+    fun searchPipelineIdsByName(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineName: String
+    ): Set<String> {
+        return with(T_PIPELINE_INFO) {
+            dslContext.select(PIPELINE_ID)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(DELETE.eq(false))
+                .and(PIPELINE_NAME.like("%$pipelineName%"))
+                .fetch().map { it.value1() }.toSet()
+        }
+    }
+
     fun getPipelineInfo(
         dslContext: DSLContext,
         projectId: String,
@@ -650,7 +711,8 @@ class PipelineInfoDao {
                     latestVersionStatus = latestVersionStatus?.let {
                         VersionStatus.valueOf(it)
                     } ?: VersionStatus.RELEASED,
-                    locked = t.locked
+                    locked = t.locked,
+                    autoSummary = t.autoSummary
                 )
             }
         } else {
@@ -840,6 +902,29 @@ class PipelineInfoDao {
                 .and(LOCKED.eq(true))
                 .and(DELETE.eq(false))
                 .fetch(PIPELINE_ID, String::class.java)
+        }
+    }
+
+    /**
+     * 更新流水线AI自动摘要，带版本校验（乐观锁）
+     * 只有当前版本与传入版本一致时才更新
+     */
+    fun updateAutoSummary(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        autoSummary: String,
+        version: Int
+    ): Boolean {
+        return with(T_PIPELINE_INFO) {
+            dslContext.update(this)
+                .set(AUTO_SUMMARY, autoSummary)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(VERSION.eq(version))
+                .and(DELETE.eq(false))
+                .execute() == 1
         }
     }
 

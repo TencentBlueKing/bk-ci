@@ -23,7 +23,7 @@ export const RES_TYPE_STORAGE_KEY = 'bk_devops_environment_res_type'
 
 export const SERVICE_RESOURCE_TYPE = {
     PIPELINE: 'pipeline',
-    CREATE: 'creative'
+    CREATE: 'creative-stream'
 }
 export const ENV_TYPE_MAP = {
     ALL: 'ALL',

@@ -155,7 +155,20 @@ export default defineComponent({
                       onChange={(val: string) => formData.value && (formData.value.name = val)}
                       class={sharedStyles.nameInput}
                       autoFocus
-                    />
+                    >
+                      {{
+                        suffix: () => (
+                          <span
+                            class={sharedStyles.nameInputEnterHint}
+                            v-bk-tooltips={{
+                              content: t('flow.orchestration.jobNameEnterToConfirm'),
+                            }}
+                          >
+                            <SvgIcon name="enter" size={14} />
+                          </span>
+                        ),
+                      }}
+                    </Input>
                   ) : (
                     <>
                       <p class={sharedStyles.nameText} title={formData.value?.name}>

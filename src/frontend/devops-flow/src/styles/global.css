@@ -234,6 +234,12 @@ svg {
   vertical-align: middle;
 }
 
+.bk-sideslider-content {
+ .bk-form-item {
+  margin-bottom: var(--spacing-sm);
+ }
+}
+
 .bkci-property-panel .bk-form-label,
 .bkci-property-panel .bk-checkbox,
 .bkci-property-panel .bk-radio-label {
@@ -319,4 +325,8 @@ svg {
 .bk-permission-tooltips[tooltips]:hover::after,
 .bk-permission-tooltips[tooltips]:hover::before {
   opacity: 1;
+}
+
+.bk-tab--top .bk-tab-header-item {
+  padding: 0 10px;
 }

@@ -1,10 +1,12 @@
+import ModeSwitch from '@/components/ModeSwitch'
 import { ReleaseSlider } from '@/components/ReleaseSlider'
 import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
 import { FLOW_EDIT_TABS, FLOW_IMPORT_EDIT_TABS, ROUTE_NAMES, isValidFlowImportEditTab } from '@/constants/routes'
 import { useFlowModel } from '@/hooks/useFlowModel'
+import { useModeStore } from '@/stores/flowMode'
 import { useFlowModelStore } from '@/stores/flowModel'
 import { useUIStore } from '@/stores/ui'
-import { VERSION_STATUS_ENUM } from '@/utils/flowConst'
+import { CODE_MODE, UI_MODE, VERSION_STATUS_ENUM } from '@/utils/flowConst'
 import { Button, Message, Tag } from 'bkui-vue'
 import { computed, defineComponent, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -31,6 +33,7 @@ export const EditHeader = defineComponent({
 
     const flowModel = useFlowModel()
     const flowModelStore = useFlowModelStore()
+    const modeStore = useModeStore()
     const inImportEditMode = computed(() => flowModelStore.isImportMode)
     const { flowInfo, refreshFlowInfo } = useFlowInfo()
     const uiStore = useUIStore()
@@ -146,7 +149,9 @@ export const EditHeader = defineComponent({
         const response = await flowModel.saveFlow({
           projectId: projectId.value,
           pipelineId: inImportEditMode.value ? undefined : flowId.value,
-          storageType: 'MODEL',
+          baseVersion: inImportEditMode.value ? undefined : flowInfo.value?.baseVersion,
+          storageType: modeStore.isCodeMode ? CODE_MODE : UI_MODE,
+          yaml: flowModel.yamlContent.value,
         })
 
         Message({
@@ -186,6 +191,7 @@ export const EditHeader = defineComponent({
             query: route.query,
           })
         }
+        await refreshFlowInfo()
       } catch (error: any) {
         console.error('Failed to save flow:', error)
         Message({
@@ -251,6 +257,12 @@ export const EditHeader = defineComponent({
               ),
             'version-selector': () =>
               !inImportEditMode.value ? renderVersionTag() : null,
+            center: () => (
+              <ModeSwitch
+                projectId={projectId.value}
+                pipelineId={flowId.value || ''}
+              />
+            ),
             actions: () => (
               <div class={styles.headerRight}>
                 <Button onClick={handleCancel} disabled={isSaving.value}>
