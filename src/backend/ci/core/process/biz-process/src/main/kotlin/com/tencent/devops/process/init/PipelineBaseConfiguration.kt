@@ -33,6 +33,7 @@ import com.tencent.devops.process.engine.listener.pipeline.MQPipelineCreateListe
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineDeleteListener
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineRestoreListener
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineUpdateListener
+import com.tencent.devops.process.engine.listener.pipeline.PipelineBatchTaskListener
 import com.tencent.devops.process.engine.listener.template.MQTemplateMigrateListener
 import com.tencent.devops.process.engine.listener.template.MQTemplateTriggerUpgradesListener
 import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
@@ -42,6 +43,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineTemplateInstanceEven
 import com.tencent.devops.process.engine.pojo.event.PipelineTemplateMigrateEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineTemplateTriggerUpgradesEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskExecuteEvent
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInstanceListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
@@ -83,6 +85,16 @@ class PipelineBaseConfiguration {
     fun pipelineRestoreConsumer(
         @Autowired restoreListener: MQPipelineRestoreListener
     ) = ScsConsumerBuilder.build<PipelineRestoreEvent> { restoreListener.run(it) }
+
+    /**
+     * 流水线批量任务执行队列--- 并发一般
+     */
+    @EventConsumer
+    fun pipelineBatchTaskExecuteConsumer(
+        @Autowired listeners: List<PipelineBatchTaskListener>
+    ) = ScsConsumerBuilder.build<PipelineBatchTaskExecuteEvent> { event ->
+        listeners.forEach { it.execute(event) }
+    }
 
     /**
      * 流水线模板实例--- 并发一般

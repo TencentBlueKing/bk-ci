@@ -49,6 +49,8 @@ object StreamBinding {
 
     const val PIPELINE_RESTORE = "engine.pipeline.restore"
 
+    const val PIPELINE_BATCH_TASK_EXECUTE = "engine.pipeline.task.execute"
+
     const val PIPELINE_TIMER = "engine.pipeline.timer"
 
     const val PIPELINE_BUILD_START = "engine.pipeline.build.start"
