@@ -39,11 +39,10 @@ import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
+import com.tencent.devops.store.pojo.atom.MarketAtomListQuery
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.MyAtomResp
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
-import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
-import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
@@ -66,22 +65,7 @@ interface MarketAtomService {
     /**
      * 插件市场，查询插件列表
      */
-    fun list(
-        userId: String,
-        keyword: String?,
-        classifyCode: String?,
-        labelCode: String?,
-        score: Int?,
-        rdType: AtomTypeEnum?,
-        yamlFlag: Boolean?,
-        recommendFlag: Boolean?,
-        qualityFlag: Boolean?,
-        sortType: MarketAtomSortTypeEnum?,
-        page: Int? = 1,
-        pageSize: Int? = 100,
-        urlProtocolTrim: Boolean = false,
-        serviceScope: ServiceScopeEnum? = null
-    ): MarketAtomResp
+    fun list(query: MarketAtomListQuery): MarketAtomResp
 
     /**
      * 根据用户和插件名称获取插件信息
