@@ -11,5 +11,6 @@ enum class PipelineBatchTaskStatus(
     SUCCESS("成功"),
     FAILED("失败"),
     PARTIAL_FAILED("部分失败"),
-    CANCELED("取消")
+    CANCELED("取消"),
+    DELETED("已删除")
 }

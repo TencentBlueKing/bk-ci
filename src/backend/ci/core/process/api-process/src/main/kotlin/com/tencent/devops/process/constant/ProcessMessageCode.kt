@@ -460,6 +460,8 @@ object ProcessMessageCode {
     const val ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN = "2101364"
     // YAML文件[{0}]已绑定其他流水线[{1}]，不能重命名
     const val ERROR_PAC_YAML_FILE_BINDTO_OTHER_PIPELINE = "2101365"
+    const val ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS = "2101366" // 流水线批量任务{0}不存在
+    const val ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_DELETE = "2101367" // 流水线批量任务{0}当前状态为{1}，不能删除
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

@@ -71,6 +71,20 @@ class UserPipelineBatchTaskResourceImpl @Autowired constructor(
         )
     }
 
+    override fun delete(
+        userId: String,
+        projectId: String,
+        taskId: String
+    ): Result<Boolean> {
+        return Result(
+            pipelineBatchTaskService.delete(
+                userId = userId,
+                projectId = projectId,
+                taskId = taskId
+            )
+        )
+    }
+
     override fun retry(
         userId: String,
         projectId: String,

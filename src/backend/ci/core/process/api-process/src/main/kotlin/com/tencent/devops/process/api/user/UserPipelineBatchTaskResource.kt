@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DefaultValue
+import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
@@ -110,6 +111,21 @@ interface UserPipelineBatchTaskResource {
         @DefaultValue("20")
         pageSize: Int
     ): Result<SQLPage<PipelineBatchTaskDetailInfo>>
+
+    @Operation(summary = "删除流水线批量任务")
+    @DELETE
+    @Path("/{projectId}/tasks/{taskId}")
+    fun delete(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "任务ID", required = true)
+        @PathParam("taskId")
+        taskId: String
+    ): Result<Boolean>
 
     @Operation(summary = "重试失败流水线批量任务")
     @POST

@@ -1,15 +1,18 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineBatchTaskDao
 import com.tencent.devops.process.dao.PipelineBatchTaskDetailDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.listener.pipeline.PipelineBatchTaskListener
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailInfo
@@ -29,7 +32,8 @@ class PipelineBatchTaskService @Autowired constructor(
     private val pipelineBatchTaskDetailDao: PipelineBatchTaskDetailDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val sampleEventDispatcher: SampleEventDispatcher
+    private val sampleEventDispatcher: SampleEventDispatcher,
+    private val listeners: List<PipelineBatchTaskListener>
 ) {
 
     fun list(
@@ -66,6 +70,11 @@ class PipelineBatchTaskService @Autowired constructor(
         request: PipelineBatchTaskCreateRequest
     ): String {
         validateCreateRequest(request)
+        validateWhenCreate(
+            userId = userId,
+            projectId = projectId,
+            request = request
+        )
         val pipelineIds = request.pipelineIds.distinct()
         pipelineIds.forEach { pipelineId ->
             pipelinePermissionService.validPipelinePermission(
@@ -152,6 +161,38 @@ class PipelineBatchTaskService @Autowired constructor(
         return SQLPage(count = count, records = records)
     }
 
+    fun delete(
+        userId: String,
+        projectId: String,
+        taskId: String
+    ): Boolean {
+        val task = pipelineBatchTaskDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            taskId = taskId
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS,
+            params = arrayOf(taskId)
+        )
+        if (task.status != PipelineBatchTaskStatus.DRAFT) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_DELETE,
+                params = arrayOf(taskId, task.status.desc)
+            )
+        }
+        validateWhenDelete(
+            userId = userId,
+            projectId = projectId,
+            task = task
+        )
+        return pipelineBatchTaskDao.updateStatus(
+            dslContext = dslContext,
+            projectId = projectId,
+            taskId = taskId,
+            status = PipelineBatchTaskStatus.DELETED
+        ) == 1
+    }
+
     fun retry(projectId: String, taskId: String): Boolean {
         val task = pipelineBatchTaskDao.get(
             dslContext = dslContext,
@@ -174,6 +215,34 @@ class PipelineBatchTaskService @Autowired constructor(
         }
         if (request.pipelineIds.isEmpty()) {
             throw InvalidParamException("pipelineIds cannot be empty")
+        }
+    }
+
+    private fun validateWhenCreate(
+        userId: String,
+        projectId: String,
+        request: PipelineBatchTaskCreateRequest
+    ) {
+        listeners.filter { it.support(request.taskType) }.forEach {
+            it.validateWhenCreate(
+                userId = userId,
+                projectId = projectId,
+                request = request
+            )
+        }
+    }
+
+    private fun validateWhenDelete(
+        userId: String,
+        projectId: String,
+        task: PipelineBatchTaskInfo
+    ) {
+        listeners.filter { it.support(task.taskType) }.forEach {
+            it.validateWhenDelete(
+                userId = userId,
+                projectId = projectId,
+                task = task
+            )
         }
     }
 }

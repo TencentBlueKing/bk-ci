@@ -150,6 +150,7 @@ class PipelineBatchTaskDao {
         return with(T_PIPELINE_BATCH_TASK) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(STATUS.ne(PipelineBatchTaskStatus.DELETED.name))
             if (type != null) {
                 conditions.add(TASK_TYPE.eq(type.name))
             }
