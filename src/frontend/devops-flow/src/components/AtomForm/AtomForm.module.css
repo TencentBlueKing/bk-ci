@@ -8,7 +8,8 @@
 .fieldError :global(.bk-input),
 .fieldError :global(.bk-input--text),
 .fieldError :global(.bk-select),
-.fieldError :global(.bk-textarea) {
+.fieldError :global(.bk-textarea),
+.fieldError textarea {
   border-color: var(--color-danger) !important;
 }
 
@@ -175,5 +176,16 @@
     &:focus {
       box-shadow: none;
     }
+  }
+
+  textarea {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background-color: transparent;
+  }
+
+  textarea:focus {
+    box-shadow: none;
   }
 }

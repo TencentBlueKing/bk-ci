@@ -44,6 +44,14 @@ export default defineComponent({
       emit('update:modelValue', baseInfoData.value)
     }
 
+    function handleFieldChange<K extends keyof typeof baseInfoData.value>(
+      key: K,
+      value: (typeof baseInfoData.value)[K],
+    ) {
+      baseInfoData.value[key] = value
+      handleChange()
+    }
+
     function updateAuthoringEnv(env: string) {
       baseInfoData.value.envHashId = env
       handleChange()
@@ -64,15 +72,15 @@ export default defineComponent({
             maxlength={128}
           >
             <Input
-              v-model={baseInfoData.value.pipelineName}
-              onChange={handleChange}
+              modelValue={baseInfoData.value.pipelineName}
+              onUpdate:modelValue={(value: string) => handleFieldChange('pipelineName', value)}
               placeholder={t('flow.content.inputFlowName')}
             ></Input>
           </Form.FormItem>
           <Form.FormItem label={t('flow.content.description')} property="pipelineDesc">
             <Input
-              v-model={baseInfoData.value.pipelineDesc}
-              onChange={handleChange}
+              modelValue={baseInfoData.value.pipelineDesc}
+              onUpdate:modelValue={(value: string) => handleFieldChange('pipelineDesc', value)}
               type="textarea"
             ></Input>
           </Form.FormItem>
