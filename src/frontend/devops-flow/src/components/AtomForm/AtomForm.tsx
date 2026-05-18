@@ -59,6 +59,31 @@ const COMPONENT_MAP: Record<string, any> = {
   'select-input': SelectInput,
 }
 
+const TEXTAREA_COMPONENT_ALIASES = new Set(['vuex-textarea', 'textarea', 'bk-textarea'])
+const INPUT_COMPONENT_ALIASES = new Set(['vuex-input', 'input', 'text', 'bk-input'])
+
+function resolveFieldComponentType(field: Record<string, any>): string {
+  const rawType = String(field.component || field.type || field.inputType || '').trim()
+  if (!rawType) {
+    return 'vuex-input'
+  }
+
+  const normalizedType = rawType.toLowerCase()
+  if (COMPONENT_MAP[normalizedType]) {
+    return normalizedType
+  }
+
+  if (TEXTAREA_COMPONENT_ALIASES.has(normalizedType) || normalizedType.includes('textarea')) {
+    return 'vuex-textarea'
+  }
+
+  if (INPUT_COMPONENT_ALIASES.has(normalizedType)) {
+    return 'vuex-input'
+  }
+
+  return normalizedType
+}
+
 // Display mode types
 export const DISPLAY_MODE = {
   ACCORDION: 'accordion', // 手风琴折叠模式（用于插件）
@@ -221,7 +246,7 @@ export default defineComponent({
     const renderFormField = (key: string, obj: any) => {
       if (isHidden(obj, props.element)) return null
 
-      const componentType = obj.component || obj.type
+      const componentType = resolveFieldComponentType(obj)
       const Component = COMPONENT_MAP[componentType] || VuexInput
       const value = props.atomValue[key] ?? obj.default ?? ''
       const hasError = props.errorFields.includes(key)
@@ -256,7 +281,8 @@ export default defineComponent({
     const renderTriggerFormField = (key: string, obj: any) => {
       if (isHidden(obj, props.element)) return null
 
-      const Component = COMPONENT_MAP[obj.component] || COMPONENT_MAP[obj.type] || VuexInput
+      const componentType = resolveFieldComponentType(obj)
+      const Component = COMPONENT_MAP[componentType] || VuexInput
       const value = props.atomValue[key] ?? obj.default ?? ''
       const hasError = props.errorFields.includes(key)
       // remove '@type' from obj

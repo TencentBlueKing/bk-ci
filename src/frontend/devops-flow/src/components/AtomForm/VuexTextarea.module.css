@@ -1,0 +1,53 @@
+.textarea {
+  width: 100%;
+  min-height: 72px;
+  padding: 5px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background-color: var(--bg-primary);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-xs);
+  line-height: 22px;
+  resize: vertical;
+  box-sizing: border-box;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.textarea::placeholder {
+  color: var(--color-text-disabled);
+}
+
+.textarea:hover {
+  border-color: var(--color-primary);
+}
+
+.textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+.textarea:disabled {
+  color: var(--color-text-disabled);
+  cursor: not-allowed;
+  background-color: var(--bg-disabled);
+}
+
+.clickUnfold {
+  position: absolute;
+  min-height: 32px;
+  resize: none;
+  margin-top: 1px;
+}
+
+.clickUnfold:focus {
+  min-height: 100px;
+  z-index: 10;
+}
+
+.hoverUnfold:hover {
+  min-height: 100px;
+  z-index: 10;
+}
