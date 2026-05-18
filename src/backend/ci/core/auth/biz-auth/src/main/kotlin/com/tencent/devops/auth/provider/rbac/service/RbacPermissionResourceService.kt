@@ -77,6 +77,18 @@ class RbacPermissionResourceService(
         async: Boolean
     ): Boolean {
         logger.info("resource create relation|$userId|$projectCode|$resourceType|$resourceCode|$resourceName")
+        val resource = authResourceService.getOrNull(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+        if (resource != null) {
+            logger.info(
+                "This resource has been registered. no need to register again" +
+                        ":$projectCode|$resourceType$resourceCode"
+            )
+            return true
+        }
         val iamResourceCode = authResourceCodeConverter.generateIamCode(
             resourceType = resourceType,
             resourceCode = resourceCode
@@ -192,7 +204,9 @@ class RbacPermissionResourceService(
                 resourceName = resourceName,
                 iamResourceCode = projectCode
             )
+            return
         }
+
         logger.info(
             "Personal projects only persist local auth resource without subset manager|" +
                     "$projectCode|$resourceType|$resourceCode"
@@ -481,7 +495,7 @@ class RbacPermissionResourceService(
             logger.info("resource has enable permission manager|$userId|$projectId|$resourceType|$resourceCode")
             return true
         }
-        if (resourceInfo.relationId.isBlank()) {
+        if (personalProjectService.isPersonalProject(projectId)) {
             // 个人项目的这类资源没有关联二级管理员，只切换本地启用态。
             logger.info(
                 "resource relationId is empty, enable local resource only|" +
@@ -494,10 +508,33 @@ class RbacPermissionResourceService(
                 resourceCode = resourceCode
             )
         }
+        // 如果发现resourceInfo.relationId不为空，说明二级管理员已存在，不需要再创建
         val subsetManagerId: Int
         val createMode: AuthGroupCreateMode
-        subsetManagerId = resourceInfo.relationId.toInt()
-        createMode = AuthGroupCreateMode.ENABLE
+        if (resourceInfo.relationId.isNotBlank()) {
+            subsetManagerId = resourceInfo.relationId.toInt()
+            createMode = AuthGroupCreateMode.ENABLE
+        } else {
+            // 重新创建二级管理员
+            subsetManagerId = permissionSubsetManagerService.createSubsetManager(
+                gradeManagerId = projectInfo.relationId,
+                userId = userId,
+                projectCode = projectId,
+                projectName = projectInfo.resourceName,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                resourceName = resourceInfo.resourceName,
+                iamResourceCode = resourceInfo.iamResourceCode
+            )
+            createMode = AuthGroupCreateMode.CREATE
+            // 更新资源的二级管理员关联ID
+            authResourceService.updateRelationId(
+                projectCode = projectId,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                relationId = subsetManagerId.toString()
+            )
+        }
         // 创建默认用户组
         permissionSubsetManagerService.createSubsetManagerDefaultGroup(
             subsetManagerId = subsetManagerId,
@@ -547,7 +584,7 @@ class RbacPermissionResourceService(
             logger.info("resource has enable permission manager|$userId|$projectId|$resourceType|$resourceCode")
             return true
         }
-        if (resourceInfo.relationId.isBlank()) {
+        if (personalProjectService.isPersonalProject(projectId)) {
             // 仅本地资源关闭权限时，不需要删除 IAM 侧默认组。
             logger.info(
                 "resource relationId is empty, disable local resource only|" +
