@@ -59,6 +59,7 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_CREATE_REF
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_CREATE_REF_TYPE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_CREATE_TIME
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_EVENT
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_EVENT_FROM
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_EVENT_URL
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_FAILED_TASKNAMES
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_FAILED_TASKS
@@ -518,7 +519,8 @@ object TriggerBuildParamUtils {
             CI_TAPD_WORKSPACE_ID,
             CI_TAPD_ID,
             CI_TAPD_PARENT_ID,
-            CI_TAPD_PRIORITY_ID
+            CI_TAPD_PRIORITY_ID,
+            CI_EVENT_FROM
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[TapdWebHookTriggerElement.classType] = mutableMapOf("common" to params)
     }
