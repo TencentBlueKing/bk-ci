@@ -14,7 +14,8 @@ data class FailoverModelCandidate(
 )
 
 class FailoverChatModel(
-    private val candidates: List<FailoverModelCandidate>
+    private val candidates: List<FailoverModelCandidate>,
+    private val errorClassifier: AiErrorClassifier
 ) : Model {
 
     override fun stream(
@@ -65,43 +66,78 @@ class FailoverChatModel(
                     )
                 }
                 .onErrorResume { error ->
-                    val nextIndex = candidateIndex + 1
-                    if (nextIndex >= candidates.size) {
-                        logger.error(
-                            "[LLM-Failover] all candidates failed, lastCandidate={} ({}), " +
-                                "position={}/{}, reasonType={}, reason={}",
-                            candidate.id,
-                            candidate.model.getModelName(),
-                            candidateIndex + 1,
-                            candidates.size,
-                            error.javaClass.simpleName,
-                            error.message,
-                            error
-                        )
-                        Flux.error(error)
-                    } else {
-                        val nextCandidate = candidates[nextIndex]
-                        logger.warn(
-                            "[LLM-Failover] candidate failed, switching: current={} ({}), " +
-                                "next={} ({}), currentPosition={}/{}, reasonType={}, reason={}",
-                            candidate.id,
-                            candidate.model.getModelName(),
-                            nextCandidate.id,
-                            nextCandidate.model.getModelName(),
-                            candidateIndex + 1,
-                            candidates.size,
-                            error.javaClass.simpleName,
-                            error.message
-                        )
-                        streamWithCandidate(
-                            candidateIndex = nextIndex,
-                            messages = messages,
-                            toolSchemas = toolSchemas,
-                            options = options
-                        )
-                    }
+                    handleCandidateError(
+                        error = error,
+                        candidateIndex = candidateIndex,
+                        candidate = candidate,
+                        messages = messages,
+                        toolSchemas = toolSchemas,
+                        options = options
+                    )
                 }
         }
+    }
+
+    private fun handleCandidateError(
+        error: Throwable,
+        candidateIndex: Int,
+        candidate: FailoverModelCandidate,
+        messages: MutableList<Msg>?,
+        toolSchemas: MutableList<ToolSchema>?,
+        options: GenerateOptions?
+    ): Flux<ChatResponse> {
+        val nextIndex = candidateIndex + 1
+        val isLast = nextIndex >= candidates.size
+        // 永久性客户端错误（4xx）切到下一个模型也注定失败，立即 fail-fast，
+        // 避免浪费用户等待时间并保留原始错误归因。最后一个候选无论可重试与否都已无处可切，
+        // 维持原有「全失败抛出」语义。
+        if (!isLast && !errorClassifier.isRetryable(error)) {
+            logger.warn(
+                "[LLM-Failover] non-retryable error, fail-fast: current={} ({}), " +
+                    "position={}/{}, reasonType={}, reason={} | cause: {}",
+                candidate.id,
+                candidate.model.getModelName(),
+                candidateIndex + 1,
+                candidates.size,
+                error.javaClass.simpleName,
+                error.message,
+                errorClassifier.describeCauseChain(error)
+            )
+            return Flux.error(error)
+        }
+        if (isLast) {
+            logger.error(
+                "[LLM-Failover] all candidates failed, lastCandidate={} ({}), " +
+                    "position={}/{}, reasonType={}, reason={}",
+                candidate.id,
+                candidate.model.getModelName(),
+                candidateIndex + 1,
+                candidates.size,
+                error.javaClass.simpleName,
+                error.message,
+                error
+            )
+            return Flux.error(error)
+        }
+        val nextCandidate = candidates[nextIndex]
+        logger.warn(
+            "[LLM-Failover] candidate failed, switching: current={} ({}), " +
+                "next={} ({}), currentPosition={}/{}, reasonType={}, reason={}",
+            candidate.id,
+            candidate.model.getModelName(),
+            nextCandidate.id,
+            nextCandidate.model.getModelName(),
+            candidateIndex + 1,
+            candidates.size,
+            error.javaClass.simpleName,
+            error.message
+        )
+        return streamWithCandidate(
+            candidateIndex = nextIndex,
+            messages = messages,
+            toolSchemas = toolSchemas,
+            options = options
+        )
     }
 
     companion object {

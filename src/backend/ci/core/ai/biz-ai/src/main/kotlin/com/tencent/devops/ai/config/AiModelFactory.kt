@@ -1,19 +1,11 @@
 package com.tencent.devops.ai.config
 
+import com.tencent.devops.ai.model.AiErrorClassifier
 import com.tencent.devops.ai.properties.AiLlmModelProperties
 import io.agentscope.core.formatter.openai.OpenAIMultiAgentFormatter
 import io.agentscope.core.model.ExecutionConfig
 import io.agentscope.core.model.GenerateOptions
-import io.agentscope.core.model.ModelException
 import io.agentscope.core.model.OpenAIChatModel
-import io.agentscope.core.model.exception.AuthenticationException
-import io.agentscope.core.model.exception.BadRequestException
-import io.agentscope.core.model.exception.InternalServerException
-import io.agentscope.core.model.exception.NotFoundException
-import io.agentscope.core.model.exception.OpenAIException
-import io.agentscope.core.model.exception.PermissionDeniedException
-import io.agentscope.core.model.exception.RateLimitException
-import io.agentscope.core.model.exception.UnprocessableEntityException
 import io.agentscope.core.model.transport.HttpTransportConfig
 import io.agentscope.core.model.transport.JdkHttpTransport
 import org.slf4j.LoggerFactory
@@ -22,7 +14,9 @@ import java.time.Duration
 import java.util.function.Predicate
 
 @Component
-class AiModelFactory {
+class AiModelFactory(
+    private val errorClassifier: AiErrorClassifier
+) {
 
     fun create(properties: AiLlmModelProperties): OpenAIChatModel {
         return create(
@@ -74,7 +68,8 @@ class AiModelFactory {
             .build()
 
         val retryPredicate = Predicate<Throwable> { error ->
-            val retryable = evaluateRetryable(error)
+            val retryable = errorClassifier.isRetryable(error)
+            val cause = errorClassifier.describeCauseChain(error)
             if (retryable && maxAttempts > SINGLE_ATTEMPT) {
                 logger.warn(
                     "[LLM-Retry] will retry modelId={}, retryMode={}, maxAttempts={}: {} - {} | cause: {}",
@@ -83,7 +78,7 @@ class AiModelFactory {
                     maxAttempts,
                     error.javaClass.simpleName,
                     error.message,
-                    describeCauseChain(error)
+                    cause
                 )
             } else if (retryable) {
                 logger.warn(
@@ -94,7 +89,7 @@ class AiModelFactory {
                     maxAttempts,
                     error.javaClass.simpleName,
                     error.message,
-                    describeCauseChain(error)
+                    cause
                 )
             } else {
                 logger.warn(
@@ -104,7 +99,7 @@ class AiModelFactory {
                     maxAttempts,
                     error.javaClass.simpleName,
                     error.message,
-                    describeCauseChain(error)
+                    cause
                 )
             }
             retryable
@@ -143,64 +138,9 @@ class AiModelFactory {
         return builder.build()
     }
 
-    /**
-     * 判定一个 Throwable 是否应触发重试。
-     */
-    private fun evaluateRetryable(error: Throwable): Boolean {
-        return when {
-            error is BadRequestException -> false
-            error is AuthenticationException -> false
-            error is PermissionDeniedException -> false
-            error is NotFoundException -> false
-            error is UnprocessableEntityException -> false
-
-            error is RateLimitException -> true
-            error is InternalServerException -> true
-            error is OpenAIException && (error.statusCode ?: 0) >= 500 -> true
-
-            error is ModelException && isStreamingRetryable(error.message) -> true
-
-            else -> ExecutionConfig.RETRYABLE_ERRORS.test(error)
-        }
-    }
-
-    private fun isStreamingRetryable(message: String?): Boolean {
-        if (message.isNullOrBlank()) return false
-        return RETRYABLE_MESSAGE_KEYWORDS.any { keyword ->
-            message.contains(keyword, ignoreCase = true)
-        }
-    }
-
-    private fun describeCauseChain(error: Throwable): String {
-        val sb = StringBuilder()
-        var current: Throwable? = error.cause
-        var depth = 0
-        while (current != null && depth < 5) {
-            if (sb.isNotEmpty()) sb.append(" -> ")
-            sb.append(current.javaClass.simpleName)
-                .append("(")
-                .append(current.message ?: "null")
-                .append(")")
-            current = current.cause
-            depth++
-        }
-        return sb.ifEmpty { "none" }.toString()
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(AiModelFactory::class.java)
 
         private const val SINGLE_ATTEMPT = 1
-
-        private val RETRYABLE_MESSAGE_KEYWORDS = listOf(
-            "timeout",
-            "timed out",
-            "connection reset",
-            "broken pipe",
-            "connection closed",
-            "stream closed",
-            "premature",
-            "unexpected end"
-        )
     }
 }

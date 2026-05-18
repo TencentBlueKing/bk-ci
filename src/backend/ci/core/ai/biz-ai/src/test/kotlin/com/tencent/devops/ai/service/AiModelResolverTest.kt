@@ -1,6 +1,7 @@
 package com.tencent.devops.ai.service
 
 import com.tencent.devops.ai.config.AiModelFactory
+import com.tencent.devops.ai.model.AiErrorClassifier
 import com.tencent.devops.ai.model.FailoverChatModel
 import com.tencent.devops.ai.properties.AiLlmModelProperties
 import com.tencent.devops.ai.properties.AiLlmProperties
@@ -16,6 +17,7 @@ class AiModelResolverTest {
 
     private val modelFactory = mockk<AiModelFactory>()
     private val userLlmConfigService = mockk<UserLlmConfigService>()
+    private val errorClassifier = AiErrorClassifier()
 
     @Test
     fun `should use user model with platform fallback when user model exists`() {
@@ -39,7 +41,8 @@ class AiModelResolverTest {
                 models = listOf(platformConfig)
             ),
             modelFactory = modelFactory,
-            userLlmConfigService = userLlmConfigService
+            userLlmConfigService = userLlmConfigService,
+            errorClassifier = errorClassifier
         )
 
         every { modelFactory.createSingleAttempt(userConfig) } returns userModel
@@ -76,7 +79,8 @@ class AiModelResolverTest {
         val resolver = AiModelResolver(
             properties = AiLlmProperties(models = listOf(backupConfig, primaryConfig)),
             modelFactory = modelFactory,
-            userLlmConfigService = userLlmConfigService
+            userLlmConfigService = userLlmConfigService,
+            errorClassifier = errorClassifier
         )
 
         val resolved = resolver.resolve("tester")

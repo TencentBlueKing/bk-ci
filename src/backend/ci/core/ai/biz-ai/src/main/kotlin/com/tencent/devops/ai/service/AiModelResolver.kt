@@ -1,6 +1,7 @@
 package com.tencent.devops.ai.service
 
 import com.tencent.devops.ai.config.AiModelFactory
+import com.tencent.devops.ai.model.AiErrorClassifier
 import com.tencent.devops.ai.model.FailoverChatModel
 import com.tencent.devops.ai.model.FailoverModelCandidate
 import com.tencent.devops.ai.properties.AiLlmModelProperties
@@ -24,7 +25,8 @@ data class ResolvedAiModel(
 class AiModelResolver(
     private val properties: AiLlmProperties,
     private val modelFactory: AiModelFactory,
-    private val userLlmConfigService: UserLlmConfigService
+    private val userLlmConfigService: UserLlmConfigService,
+    private val errorClassifier: AiErrorClassifier
 ) {
     private val platformModel by lazy { buildPlatformModel() }
 
@@ -54,7 +56,7 @@ class AiModelResolver(
         )
         return ResolvedAiModel(
             model = FailoverChatModel(
-                listOf(
+                candidates = listOf(
                     FailoverModelCandidate(
                         id = userModelConfig.id,
                         model = modelFactory.createSingleAttempt(userModelConfig)
@@ -63,7 +65,8 @@ class AiModelResolver(
                         id = "platform:${fallback.identifier}",
                         model = fallback.model
                     )
-                )
+                ),
+                errorClassifier = errorClassifier
             ),
             source = AiModelSource.USER,
             identifier = chainId
@@ -100,7 +103,10 @@ class AiModelResolver(
             chainId
         )
         return ResolvedAiModel(
-            model = FailoverChatModel(candidates),
+            model = FailoverChatModel(
+                candidates = candidates,
+                errorClassifier = errorClassifier
+            ),
             source = AiModelSource.PLATFORM,
             identifier = chainId
         )
