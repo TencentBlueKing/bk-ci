@@ -27,18 +27,17 @@
 
 package com.tencent.devops.misc.service.process
 
-import com.tencent.devops.misc.cron.process.PipelineBuildHistoryDataClearJob
 import com.tencent.devops.misc.pojo.project.ProjectDataClearConfig
 import com.tencent.devops.misc.service.artifactory.ArtifactoryDataClearService
 import com.tencent.devops.misc.service.dispatch.DispatchDataClearService
 import com.tencent.devops.misc.service.plugin.PluginDataClearService
 import com.tencent.devops.misc.service.quality.QualityDataClearService
 import com.tencent.devops.misc.service.repository.RepositoryDataClearService
-import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 流水线构建数据清理核心服务

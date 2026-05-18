@@ -32,7 +32,6 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceWithoutVersion
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.pipeline.version.PipelineResourceFactory
