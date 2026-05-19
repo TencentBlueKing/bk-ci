@@ -95,6 +95,7 @@ object ProjectUtils {
                 offlined = isOfflined,
                 secrecy = isSecrecy,
                 hidden = hidden,
+                projectScope = projectScope,
                 helmChartEnabled = isHelmChartEnabled,
                 kind = kind,
                 logoAddr = logoAddr ?: "",
