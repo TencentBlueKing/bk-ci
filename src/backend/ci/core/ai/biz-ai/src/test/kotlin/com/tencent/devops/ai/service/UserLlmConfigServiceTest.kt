@@ -2,6 +2,7 @@ package com.tencent.devops.ai.service
 
 import com.tencent.devops.ai.dao.UserLlmConfigDao
 import com.tencent.devops.ai.pojo.UserLlmConfigUpsertRequest
+import com.tencent.devops.model.ai.tables.TAiUserLlmConfig
 import com.tencent.devops.model.ai.tables.records.TAiUserLlmConfigRecord
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.AESUtil
@@ -52,6 +53,7 @@ class UserLlmConfigServiceTest {
     @Test
     fun `should preserve existing api key when request omits secret`() {
         val captured = slot<TAiUserLlmConfigRecord>()
+        every { dslContext.newRecord(TAiUserLlmConfig.T_AI_USER_LLM_CONFIG) } returns TAiUserLlmConfigRecord()
         every { dao.getByUserId(dslContext, "tester") } returns storedConfig(
             encryptedApiKey = AESUtil.encrypt("aes-key", "secret-key")
         )
