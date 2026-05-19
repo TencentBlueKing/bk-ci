@@ -1267,4 +1267,34 @@ interface ApigwRemoteDevResource {
         )
         search: WorkspaceSearch
     ): Result<Page<Workspace>>
+
+    @Operation(
+        summary = "分页批量获取THUMBNAIL的实例id列表",
+        tags = ["v4_app_remotedev_batch_query_thumbnail_workspaces"]
+    )
+    @GET
+    @Path("/batch_query_thumbnail_workspaces")
+    fun batchQueryThumbnailWorkspaces(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(
+            description = "ENABLE状态：true=开启THUMBNAIL，false=关闭THUMBNAIL",
+            required = true
+        )
+        @QueryParam("enable")
+        enable: Boolean,
+        @Parameter(description = "第几页（从1开始）", required = true, example = "1")
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "每页多少条（最大1000）", required = true, example = "100")
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<Page<String>>
 }

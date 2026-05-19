@@ -860,4 +860,25 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
                 search = search
             )
     }
+
+    override fun batchQueryThumbnailWorkspaces(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        enable: Boolean,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<String>> {
+        logger.info(
+            "batchQueryThumbnailWorkspaces" +
+                " |$appCode|$userId|enable=$enable|page=$page|pageSize=$pageSize"
+        )
+        return client.get(ServiceRemoteDevResource::class)
+            .batchQueryThumbnailWorkspaces(
+                userId = userId,
+                enable = enable,
+                page = page,
+                pageSize = pageSize
+            )
+    }
 }
