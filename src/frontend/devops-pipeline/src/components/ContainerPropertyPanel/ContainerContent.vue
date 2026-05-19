@@ -1070,8 +1070,6 @@
                     if (res.data) {
                         this.macOSHwSpecList = res.data.models
                         this.systemVersionList = res.data.images
-                        
-                        console.log(this.systemVersion,'????????????????')
                         // 如果是存量数据，没有 macOSHwSpec 或者 macOSHwSpec 为空，设置macOSHwSpec默认值为VMware
                         if (!this.macOSHwSpec && res.data.models.length > 0) {
                             const defaultMacOSHwSpec = res.data.models.find(i => i.uid === 'VMware')
@@ -1107,7 +1105,6 @@
                 // 如果是编辑模式，需要更新systemVersionList，如果是查看模式，不需要更新systemVersionList
                 if (this.editable) {
                     this.systemVersionList = this.macOSHwSpecList.find(i => i.uid === value).images
-                    console.log("🚀 ~ this.macOSHwSpecList:", this.macOSHwSpecList)
                 }
             },
 
