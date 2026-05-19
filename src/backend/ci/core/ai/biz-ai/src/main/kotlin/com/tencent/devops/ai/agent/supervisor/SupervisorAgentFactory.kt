@@ -257,7 +257,7 @@ class SupervisorAgentFactory(
         private const val MAX_ITERS = 10
 
         @Suppress("MaxLineLength")
-        private val DEFAULT_SUPERVISOR_PROMPT ="""
+        private val DEFAULT_SUPERVISOR_PROMPT = """
         |你是蓝盾 DevOps 平台的 AI 助手。
         |
         |{{context_block}}
