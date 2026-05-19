@@ -25,6 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:ai:api-ai"))
-}
+package com.tencent.devops.project.pojo
+
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "运维：按用户列表迁移个人预置项目")
+data class OpPreProjectMigrateRequest(
+    @get:Schema(description = "用户 ID 列表", required = true)
+    val userIds: List<String>
+)

@@ -22,9 +22,22 @@
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * SOFTWARE OR THE USE OF OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:ai:api-ai"))
+package com.tencent.devops.project.pojo.enums
+
+/**
+ * 项目在平台中的组织形态：团队项目（默认）或个人项目。
+ */
+enum class ProjectScopeType(val value: Int, val desc: String) {
+    TEAM(0, "团队项目"),
+    PERSONAL(1, "个人项目");
+
+    companion object {
+        fun fromValue(value: Int?): ProjectScopeType {
+            if (value == null) return TEAM
+            return values().find { it.value == value } ?: TEAM
+        }
+    }
 }

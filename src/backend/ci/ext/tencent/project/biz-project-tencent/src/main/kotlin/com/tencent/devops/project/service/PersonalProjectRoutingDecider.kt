@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,57 +27,43 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-import com.tencent.devops.project.pojo.AuthProjectCreateInfo
-import com.tencent.devops.project.pojo.ResourceUpdateInfo
+enum class PersonalProjectRoutingAction {
+    REUSE_LEGACY_PROJECT,
+    CREATE_NEW_PERSONAL_PROJECT
+}
 
-@Suppress("TooManyFunctions")
-interface ProjectPermissionService {
+data class PersonalProjectRoutingDecision(
+    val action: PersonalProjectRoutingAction,
+    val shouldPromoteLegacyProject: Boolean = false,
+    val shouldDemoteLegacyProject: Boolean = false
+)
 
-    /**
-     * 校验用户是否有这个项目的权限
-     */
-    fun verifyUserProjectPermission(projectCode: String, userId: String): Boolean
-
-    fun createResources(
-        resourceRegisterInfo: ResourceRegisterInfo,
-        authProjectCreateInfo: AuthProjectCreateInfo
-    ): String
-
-    fun deleteResource(projectCode: String)
-
-    fun modifyResource(
-        resourceUpdateInfo: ResourceUpdateInfo
-    )
-
-    fun getUserProjects(userId: String): List<String>
-
-    fun getUserProjectsAvailable(userId: String): Map<String, String>
-
-    fun filterProjects(
+object PersonalProjectRoutingDecider {
+    fun decide(
         userId: String,
-        permission: AuthPermission,
-        resourceType: String? = null
-    ): List<String>?
+        legacyProjectCode: String?,
+        legacyProjectMembers: Set<String>
+    ): PersonalProjectRoutingDecision {
+        return when {
+            legacyProjectCode == null -> {
+                PersonalProjectRoutingDecision(
+                    action = PersonalProjectRoutingAction.CREATE_NEW_PERSONAL_PROJECT
+                )
+            }
 
-    fun verifyUserProjectPermission(
-        projectCode: String,
-        userId: String,
-        permission: AuthPermission
-    ): Boolean
+            legacyProjectMembers.size == 1 && legacyProjectMembers.contains(userId) -> {
+                PersonalProjectRoutingDecision(
+                    action = PersonalProjectRoutingAction.REUSE_LEGACY_PROJECT,
+                    shouldPromoteLegacyProject = true
+                )
+            }
 
-    fun cancelCreateAuthProject(
-        userId: String,
-        projectCode: String
-    )
-
-    fun cancelUpdateAuthProject(
-        userId: String,
-        projectCode: String
-    )
-
-    fun needApproval(needApproval: Boolean?, projectScope: Int): Boolean
-
-    fun isShowUserManageIcon(): Boolean
+            else -> {
+                PersonalProjectRoutingDecision(
+                    action = PersonalProjectRoutingAction.CREATE_NEW_PERSONAL_PROJECT,
+                    shouldDemoteLegacyProject = true
+                )
+            }
+        }
+    }
 }
