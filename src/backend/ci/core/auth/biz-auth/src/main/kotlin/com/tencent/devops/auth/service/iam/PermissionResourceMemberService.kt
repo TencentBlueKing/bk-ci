@@ -2,7 +2,6 @@ package com.tencent.devops.auth.service.iam
 
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
-import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.vo.ResourceMemberCountVO
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
@@ -74,9 +73,8 @@ interface PermissionResourceMemberService {
     fun renewalGroupMember(
         userId: String,
         projectCode: String,
-        resourceType: String,
-        groupId: Int,
-        memberRenewalDTO: GroupMemberRenewalDTO
+        groupIds: List<Int>,
+        expiredAt: Long
     ): Boolean
 
     fun renewalIamGroupMembers(

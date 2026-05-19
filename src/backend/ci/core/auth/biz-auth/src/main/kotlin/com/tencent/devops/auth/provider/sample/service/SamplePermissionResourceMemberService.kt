@@ -2,7 +2,6 @@ package com.tencent.devops.auth.provider.sample.service
 
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
-import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.vo.ResourceMemberCountVO
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.model.SQLPage
@@ -60,9 +59,8 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
     override fun renewalGroupMember(
         userId: String,
         projectCode: String,
-        resourceType: String,
-        groupId: Int,
-        memberRenewalDTO: GroupMemberRenewalDTO
+        groupIds: List<Int>,
+        expiredAt: Long
     ): Boolean = true
 
     override fun renewalIamGroupMembers(

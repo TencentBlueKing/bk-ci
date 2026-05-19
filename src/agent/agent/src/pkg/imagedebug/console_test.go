@@ -48,6 +48,23 @@ func TestCreateExecNoHttp_Invalid(t *testing.T) {
 	}
 }
 
+func TestGetExecSession_ContainerMismatch(t *testing.T) {
+	logs.UNTestDebugInit()
+	Init()
+	mgr := NewManager(&ConsoleProxyConfig{Tty: true}, NewOnceChan[struct{}]()).(*manager)
+	ref, err := mgr.CreateExecNoHttp(&WebSocketConfig{ContainerID: "c1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := mgr.getExecSession(&WebSocketConfig{ExecID: ref.ID, ContainerID: "c2"}); err == nil {
+		t.Fatal("expected error for container mismatch")
+	}
+	if _, err := mgr.getExecSession(&WebSocketConfig{ExecID: ref.ID, ContainerID: "c1"}); err != nil {
+		t.Fatalf("expected matching container to pass: %v", err)
+	}
+}
+
 func TestResponseJSON(t *testing.T) {
 	logs.UNTestDebugInit()
 	Init()

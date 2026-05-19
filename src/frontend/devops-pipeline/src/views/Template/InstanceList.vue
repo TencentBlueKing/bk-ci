@@ -129,6 +129,7 @@
                                     <span class="template-version">
                                         {{ $t('template.UpgradeFailed') }}
                                         <logo
+                                            v-if="getErrorType(row) === 'msg'"
                                             v-bk-tooltips="{
                                                 content: (row?.instanceErrorInfo && JSON.parse(row?.instanceErrorInfo).message) ?? '--'
                                             }"
@@ -136,6 +137,17 @@
                                             name="circle-alert-filled"
                                             :size="14"
                                         />
+                                        <span
+                                            v-else
+                                            @click="showErrorDetail(row)"
+                                        >
+                                            <logo
+                                                
+                                                class="status-failed-icon clickable"
+                                                name="circle-alert-filled"
+                                                :size="14"
+                                            />
+                                        </span>
                                     </span>
                                 </template>
                             </div>
@@ -249,6 +261,13 @@
             v-bind="emptyTipsConfig"
         >
         </empty-tips>
+        <instance-error-message
+            :show-instance-message="showErrorDialog"
+            :fail-list="errorFailList"
+            :success-list="[]"
+            :fail-message="errorFailMessage"
+            @cancel="showErrorDialog = false"
+        />
     </div>
 </template>
 
@@ -257,6 +276,7 @@
     import PacTag from '@/components/PacTag'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
     import emptyTips from '@/components/pipelineList/imgEmptyTips'
+    import InstanceErrorMessage from '@/components/Template/instance-error-message.vue'
     import UseInstance from '@/hook/useInstance'
     import {
         SET_INSTANCE_LIST,
@@ -273,6 +293,9 @@
     const searchValue = ref([])
     const instanceList = ref([])
     const selectItemList = ref([])
+    const showErrorDialog = ref(false)
+    const errorFailList = ref([])
+    const errorFailMessage = ref({})
     const pagination = ref({
         current: 1,
         count: 0,
@@ -515,6 +538,23 @@
             }
         })
     }
+
+    function getErrorType (row) {
+        try {
+            return row?.instanceErrorInfo ? JSON.parse(row.instanceErrorInfo)['@type'] : 'msg'
+        } catch (e) {
+            return 'msg'
+        }
+    }
+
+    function showErrorDetail (row) {
+        const pipelineName = row?.pipelineName || ''
+        errorFailList.value = [pipelineName]
+        errorFailMessage.value = {
+            [pipelineName]: row?.instanceErrorInfo || ''
+        }
+        showErrorDialog.value = true
+    }
 </script>
 
 <style lang="scss">
@@ -621,6 +661,10 @@
                 cursor: pointer;
                 position: relative;
                 top: 2px;
+                &.clickable {
+                    cursor: pointer;
+                    color: $dangerColor;
+                }
             }
             .loading-icon {
                 display: ruby;

@@ -149,6 +149,17 @@ class ProjectDao {
         }
     }
 
+    fun countByCondition(
+        dslContext: DSLContext,
+        projectConditionDTO: ProjectConditionDTO
+    ): Int {
+        return with(TProject.T_PROJECT) {
+            dslContext.selectCount().from(this)
+                .where(buildProjectCondition(projectConditionDTO))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
     fun buildProjectCondition(
         projectConditionDTO: ProjectConditionDTO
     ): MutableList<Condition> {
@@ -197,6 +208,9 @@ class ProjectDao {
                             ROUTER_TAG.like("%${projectConditionDTO.routerTag!!.value}%")
                         )
                     }
+                }
+                if (!dbRouteTag.isNullOrBlank()) {
+                    conditions.add(ROUTER_TAG.eq(dbRouteTag))
                 }
                 if (queryRemoteDevFlag == true) {
                     conditions.add(JooqUtils.jsonExtractAny<Boolean>(PROPERTIES, "\$.remotedev").isTrue)

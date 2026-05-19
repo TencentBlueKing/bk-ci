@@ -783,7 +783,8 @@ class RbacAuthConfiguration {
         resourceGroupPermissionService: PermissionResourceGroupPermissionService,
         deptService: DeptService,
         traceEventDispatcher: TraceEventDispatcher,
-        syncDataTaskDao: AuthSyncDataTaskDao
+        syncDataTaskDao: AuthSyncDataTaskDao,
+        userService: UserManageService
     ) = RbacPermissionResourceGroupSyncService(
         client = client,
         dslContext = dslContext,
@@ -798,6 +799,7 @@ class RbacAuthConfiguration {
         resourceGroupPermissionService = resourceGroupPermissionService,
         deptService = deptService,
         traceEventDispatcher = traceEventDispatcher,
-        syncDataTaskDao = syncDataTaskDao
+        syncDataTaskDao = syncDataTaskDao,
+        userService = userService
     )
 }

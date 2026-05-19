@@ -39,6 +39,7 @@
     id: "b236e73c17cb48bbbd7cc38ffbcae407"
     title: "The pipeline under the project [${projectName}] [${pipelineName}] # ${buildNum} builds Stage audit"
     body: "The build has been rejected by \"${rejectUserId}\" with a pipeline status of \"Stage successful\".\nReasons for rejection:\n${suggest}\n[click on the computer side] (${reviewUrl})\n[click on mobile] (${reviewAppUrl})"
+    sender: "DevOps"
   creator: "system"
   modifior: "system"
 - index: 2
@@ -116,6 +117,7 @@
   templateName: "Store comment message Notification template"
   notifyTypeScope:
     - "WEWORK"
+    - "WEWORK_GROUP"
   priority: 0
   source: 0
   weworkTemplate:
@@ -123,6 +125,11 @@
     sender: "DevOps"
     title: "[BK-CI  Store] comment notice"
     body: "${userId} commented on ${storeName}\nRating: ${score}\nComment: ${commentContent}\n[reply | ${url}]"
+  weworkGroupTemplate:
+    id: "a3b7e9f2d4c1085b6e9f3a7c2d5b8e41"
+    title: "[BK-CI  Store] comment notice"
+    body: "${userId} commented on ${storeName}\nRating: ${score}\nComment: ${commentContent}\n[reply | ${url}]"
+    sender: "DevOps"
   creator: "system"
   modifior: "system"
 - index: 6
@@ -217,6 +224,7 @@
     id: "0ca84f7d0dcf4453b30b3e465f1c4caf"
     title: "${content}"
     body: "Audit description:\n${reviewDesc}\nComputer side: [to audit] (${reviewUrl})\nMobile: [check] (${reviewAppUrl})"
+    sender: "DevOps"
   creator: "system"
   modifior: "system"
 - index: 10
@@ -812,6 +820,7 @@
     id: "cead07553b364b5a9c3f0290e35c82da"
     title: "The pipeline under the project [${projectName}] [${pipelineName}] # ${buildNum} builds Stage audit"
     body: "The build status is stage success, and an audit of \"${reviewers}\" is required to execute the subsequent process.\n\nAudit description:\n${reviewDesc}\n\n[click on the computer side] (${reviewUrl})\n[click on mobile] (${reviewAppUrl})"
+    sender: "DevOps"
   creator: "system"
   modifior: "system"
 - index: 37
@@ -1085,6 +1094,7 @@
   templateName: "Developer store plugin listing review notification template"
   notifyTypeScope:
     - "WEWORK"
+    - "WEWORK_GROUP"
   priority: 0
   source: 0
   weworkTemplate:
@@ -1092,5 +1102,10 @@
     sender: "DevOps"
     title: "Developer store plugin review notification"
     body: "${userId} submitted an application to publish a plugin. Please review promptly.\nPlugin: ${atomName}\nVersion: ${version} \nGo for review: ${url}"
+  weworkGroupTemplate:
+    id: "f47ac10b58cc4372a5670e02b2c3d479"
+    title: "Developer store plugin review notification"
+    body: "${userId} submitted an application to publish a plugin. Please review promptly.\nPlugin: ${atomName}\nVersion: ${version} \nGo for review: ${url}"
+    sender: "DevOps"
   creator: "system"
   modifior: "system"

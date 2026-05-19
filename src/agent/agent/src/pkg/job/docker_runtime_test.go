@@ -114,10 +114,10 @@ func TestMapDockerRunnerLogLevel(t *testing.T) {
 		want api.LogType
 	}{
 		{"debug", dockercli.LogLevelDebug, api.LogtypeDebug},
-		{"info", dockercli.LogLevelInfo, api.LogtypeLog},
+		{"info", dockercli.LogLevelInfo, api.LogtypeDebug},
 		{"warn", dockercli.LogLevelWarn, api.LogtypeWarn},
 		{"error", dockercli.LogLevelError, api.LogtypeError},
-		{"unknown_defaults_to_log", dockercli.LogLevel("OTHER"), api.LogtypeLog},
+		{"unknown_defaults_to_log", dockercli.LogLevel("OTHER"), api.LogtypeDebug},
 	}
 
 	for _, tt := range tests {
