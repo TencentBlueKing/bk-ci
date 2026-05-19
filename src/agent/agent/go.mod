@@ -1,6 +1,6 @@
 module github.com/TencentBlueKing/bk-ci/agent
 
-go 1.21
+go 1.19
 
 require (
 	github.com/ThinkInAIXYZ/go-mcp v0.2.24
