@@ -30,7 +30,6 @@ package com.tencent.devops.process.trigger.tapd
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.TapdEventAction
 import com.tencent.devops.common.pipeline.enums.TapdEventType
@@ -106,8 +105,13 @@ class TapdEventTriggerBuildService @Autowired constructor(
         if (pipelineInfo.locked == true) return@with
         context.pipelineInfo = pipelineInfo
 
+        val oauthUserId = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId)
+            ?: pipelineInfo.lastModifyUser
         // 3. 创作环境下需要补充节点相关启动参数
-        val externalStartParams = externalStartParams(pipelineInfo)
+        val externalStartParams = createStreamTriggerSupportService.externalWebhookStartParams(
+            pipelineInfo = pipelineInfo,
+            userId = oauthUserId
+        )
 
         // 4. 匹配触发器并启动构建
         val resource = pipelineRepositoryService.getPipelineResourceVersion(
@@ -126,32 +130,6 @@ class TapdEventTriggerBuildService @Autowired constructor(
             tapdEventType = tapdEventType,
             tapdEventAction = tapdEventAction,
             externalStartParams = externalStartParams
-        )
-    }
-
-    /**
-     * 补充扩展参数
-     */
-    private fun TapdWebhookTriggerEvent.externalStartParams(
-        pipelineInfo: PipelineInfo
-    ): Map<String, String> {
-        if (pipelineInfo.channelCode != ChannelCode.CREATIVE_STREAM) return mapOf()
-
-        val envHashId = pipelineRepositoryService.getSetting(projectId, pipelineId)?.envHashId ?: ""
-        val oauthUserId = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId)
-            ?: pipelineInfo.lastModifyUser
-        val agentHashId = createStreamTriggerSupportService.getEnvNodeList(
-            projectId = projectId,
-            envHashId = envHashId,
-            userId = oauthUserId
-        ).firstOrNull() ?: run {
-            logger.warn("skip trigger $pipelineId|no available node found in env[$envHashId] of project[$projectId]")
-            return mapOf()
-        }
-        return createStreamTriggerSupportService.creativeStreamParams(
-            projectId = projectId,
-            agentHashId = agentHashId,
-            userId = oauthUserId
         )
     }
 

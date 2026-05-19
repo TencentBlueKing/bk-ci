@@ -756,4 +756,7 @@ object ProcessMessageCode {
 
     // 创作流启动节点为空
     const val BK_CREATIVE_STREAM_START_TASK_IS_EMPTY = "bkCreativeStreamStartTaskIsEmpty"
+
+    // [{0}]创作环境下的创作节点为空
+    const val BK_CREATIVE_STREAM_ENV_NODE_IS_EMPTY = "bkCreativeStreamEnvNodeIsEmpty"
 }
