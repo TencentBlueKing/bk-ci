@@ -3,6 +3,7 @@ package com.tencent.devops.ai.service
 import com.tencent.devops.ai.config.AiModelFactory
 import com.tencent.devops.ai.model.AiErrorClassifier
 import com.tencent.devops.ai.model.FailoverChatModel
+import com.tencent.devops.ai.properties.AiLlmModelOverride
 import com.tencent.devops.ai.properties.AiLlmModelProperties
 import com.tencent.devops.ai.properties.AiLlmProperties
 import io.agentscope.core.model.OpenAIChatModel
@@ -27,57 +28,63 @@ class AiModelResolverTest {
             modelName = "user-model",
             apiKey = "user-key"
         )
-        val platformConfig = AiLlmModelProperties(
+        val platformOverride = AiLlmModelOverride(
             id = "platform",
             baseUrl = "https://platform.example.com",
             modelName = "platform-model",
             apiKey = "platform-key"
         )
+        val properties = AiLlmProperties(models = listOf(platformOverride))
+        val platformEffective = platformOverride.toEffective(properties)
+
         val userModel = mockk<OpenAIChatModel>(relaxed = true)
         val platformModel = mockk<OpenAIChatModel>(relaxed = true)
         every { userLlmConfigService.getEnabledModel("tester") } returns userConfig
+
         val resolver = AiModelResolver(
-            properties = AiLlmProperties(
-                models = listOf(platformConfig)
-            ),
+            properties = properties,
             modelFactory = modelFactory,
             userLlmConfigService = userLlmConfigService,
             errorClassifier = errorClassifier
         )
 
         every { modelFactory.createSingleAttempt(userConfig) } returns userModel
-        every { modelFactory.create(platformConfig) } returns platformModel
+        every { modelFactory.create(platformEffective) } returns platformModel
         val resolved = resolver.resolve("tester")
 
         assertEquals(AiModelSource.USER, resolved.source)
         assertEquals("user-tester -> platform", resolved.identifier)
         assertTrue(resolved.model is FailoverChatModel)
         verify(exactly = 1) { modelFactory.createSingleAttempt(userConfig) }
-        verify(exactly = 1) { modelFactory.create(platformConfig) }
+        verify(exactly = 1) { modelFactory.create(platformEffective) }
     }
 
     @Test
     fun `should build platform failover chain with single attempt candidates when user model is absent`() {
-        val primaryConfig = AiLlmModelProperties(
+        val primaryOverride = AiLlmModelOverride(
             id = "primary",
             baseUrl = "https://primary.example.com",
             modelName = "primary-model",
             apiKey = "primary-key",
             priority = 10
         )
-        val backupConfig = AiLlmModelProperties(
+        val backupOverride = AiLlmModelOverride(
             id = "backup",
             baseUrl = "https://backup.example.com",
             modelName = "backup-model",
             apiKey = "backup-key",
             priority = 20
         )
+        val properties = AiLlmProperties(models = listOf(backupOverride, primaryOverride))
+        val primaryEffective = primaryOverride.toEffective(properties)
+        val backupEffective = backupOverride.toEffective(properties)
+
         every { userLlmConfigService.getEnabledModel("tester") } returns null
-        every { modelFactory.createSingleAttempt(primaryConfig) } returns mockk(relaxed = true)
-        every { modelFactory.createSingleAttempt(backupConfig) } returns mockk(relaxed = true)
+        every { modelFactory.createSingleAttempt(primaryEffective) } returns mockk(relaxed = true)
+        every { modelFactory.createSingleAttempt(backupEffective) } returns mockk(relaxed = true)
 
         val resolver = AiModelResolver(
-            properties = AiLlmProperties(models = listOf(backupConfig, primaryConfig)),
+            properties = properties,
             modelFactory = modelFactory,
             userLlmConfigService = userLlmConfigService,
             errorClassifier = errorClassifier
@@ -89,7 +96,7 @@ class AiModelResolverTest {
         assertEquals("primary -> backup", resolved.identifier)
         assertTrue(resolved.model is FailoverChatModel)
         verify(exactly = 0) { modelFactory.create(any()) }
-        verify(exactly = 1) { modelFactory.createSingleAttempt(primaryConfig) }
-        verify(exactly = 1) { modelFactory.createSingleAttempt(backupConfig) }
+        verify(exactly = 1) { modelFactory.createSingleAttempt(primaryEffective) }
+        verify(exactly = 1) { modelFactory.createSingleAttempt(backupEffective) }
     }
 }
