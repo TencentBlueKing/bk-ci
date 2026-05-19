@@ -9,6 +9,7 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.GroupMemberRenewApplicationDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
+import com.tencent.devops.auth.constant.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
@@ -26,6 +27,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -33,6 +35,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import org.apache.commons.lang3.RandomUtils
@@ -469,32 +472,88 @@ class RbacPermissionResourceMemberService(
         skippedUsersByReason: Map<BatchAddSkipReason, List<String>>,
         skippedDepartments: List<String>
     ): String {
+        val language = I18nUtil.getRequestUserLanguage()
         val messageParts = mutableListOf<String>()
         if (addedUsers.isNotEmpty()) {
-            messageParts.add("成功添加用户：${addedUsers.joinToString(",")}")
+            messageParts.add(
+                getBatchAddMembersMessage(
+                    messageCode = AuthI18nConstants.BK_BATCH_ADD_MEMBERS_ADDED_USERS,
+                    language = language,
+                    memberIds = addedUsers,
+                    defaultMessagePrefix = "成功添加用户"
+                )
+            )
         }
         if (addedDepartments.isNotEmpty()) {
-            messageParts.add("成功添加组织：${addedDepartments.joinToString(",")}")
+            messageParts.add(
+                getBatchAddMembersMessage(
+                    messageCode = AuthI18nConstants.BK_BATCH_ADD_MEMBERS_ADDED_DEPARTMENTS,
+                    language = language,
+                    memberIds = addedDepartments,
+                    defaultMessagePrefix = "成功添加组织"
+                )
+            )
         }
         skippedUsersByReason.forEach { (reason, memberIds) ->
             if (memberIds.isNotEmpty()) {
-                messageParts.add("${reason.messagePrefix}：${memberIds.joinToString(",")}")
+                messageParts.add(
+                    getBatchAddMembersMessage(
+                        messageCode = reason.messageCode,
+                        language = language,
+                        memberIds = memberIds,
+                        defaultMessagePrefix = reason.defaultMessage
+                    )
+                )
             }
         }
         if (skippedDepartments.isNotEmpty()) {
-            messageParts.add("以下组织已在当前组中，无需重复添加：${skippedDepartments.joinToString(",")}")
+            messageParts.add(
+                getBatchAddMembersMessage(
+                    messageCode = AuthI18nConstants.BK_BATCH_ADD_MEMBERS_SKIP_DEPARTMENTS,
+                    language = language,
+                    memberIds = skippedDepartments,
+                    defaultMessagePrefix = "以下组织已在当前组中，无需重复添加"
+                )
+            )
         }
         if (messageParts.isEmpty()) {
-            return "未传入用户或组织，无法添加成员"
+            return MessageUtil.getMessageByLocale(
+                messageCode = AuthI18nConstants.BK_BATCH_ADD_MEMBERS_NO_INPUT,
+                language = language,
+                defaultMessage = "未传入用户或组织，无法添加成员"
+            )
         }
         val summary = if (addedUsers.isNotEmpty() || addedDepartments.isNotEmpty()) {
-            "成员添加完成"
+            MessageUtil.getMessageByLocale(
+                messageCode = AuthI18nConstants.BK_BATCH_ADD_MEMBERS_COMPLETED,
+                language = language,
+                defaultMessage = "成员添加完成"
+            )
         } else {
-            "未新增任何成员"
+            MessageUtil.getMessageByLocale(
+                messageCode = AuthI18nConstants.BK_BATCH_ADD_MEMBERS_NONE_ADDED,
+                language = language,
+                defaultMessage = "未新增任何成员"
+            )
         }
         return listOf(summary)
             .plus(messageParts)
-            .joinToString(separator = "；")
+            .joinToString(separator = "; ")
+    }
+
+    private fun getBatchAddMembersMessage(
+        messageCode: String,
+        language: String,
+        memberIds: List<String>,
+        defaultMessagePrefix: String
+    ): String {
+        val memberIdsText = memberIds.joinToString(",")
+        return MessageUtil.getMessageByLocale(
+            messageCode = messageCode,
+            language = language,
+            params = arrayOf(memberIdsText),
+            defaultMessage = "$defaultMessagePrefix：$memberIdsText"
+        )
     }
 
     override fun batchDeleteResourceGroupMembers(
