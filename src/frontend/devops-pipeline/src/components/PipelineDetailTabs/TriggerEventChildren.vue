@@ -52,7 +52,7 @@
 <script>
     import { statusColorMap } from '@/utils/pipelineStatus'
     import { convertTime } from '@/utils/util'
-    import { mapActions, mapState } from 'vuex'
+    import { mapActions } from 'vuex'
     import { BUILD_NUM_LINK_REG, safeUrl, toText } from './eventDescConfig'
     import EventDesc from './EventDesc.vue'
 
