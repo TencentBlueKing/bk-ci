@@ -20,6 +20,7 @@ type ConsoleProxyConfig struct {
 	Tty            bool
 	Ips            []string
 	IsAuth         bool
+	AuthToken      string
 	IsOneSeesion   bool
 }
 

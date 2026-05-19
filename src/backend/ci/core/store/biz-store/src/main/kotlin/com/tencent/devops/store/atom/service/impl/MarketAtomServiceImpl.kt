@@ -99,6 +99,7 @@ import com.tencent.devops.store.common.service.StoreTotalStatisticService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.StoreWebsocketService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.common.utils.PublicComponentCacheManager
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
@@ -1137,6 +1138,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             marketAtomDao.deleteByAtomCode(context, atomCode)
             // 删除插件默认标识缓存
             redisOperation.removeSetMember(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
+            // 清除公共组件集合缓存，立即生效
+            PublicComponentCacheManager.invalidateCache(StoreTypeEnum.ATOM.name)
             // 清空插件post信息缓存
             redisOperation.delete("$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode")
             // 清空插件运行时信息缓存

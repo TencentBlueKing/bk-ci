@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceWithoutVersion
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.pipeline.version.PipelineResourceFactory
@@ -68,6 +69,7 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
         pipelineSettingWithoutVersion: PipelineSetting,
         versionStatus: VersionStatus,
         versionAction: PipelineVersionAction,
+        yamlFileInfo: PipelineYamlFileInfo? = null,
         repoHashId: String? = null,
         branchName: String? = null
     ): PipelineVersionCreateContext {
@@ -85,6 +87,7 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
                 pipelineSettingWithoutVersion = pipelineSettingWithoutVersion,
                 versionStatus = versionStatus,
                 versionAction = versionAction,
+                yamlFileInfo = yamlFileInfo,
                 repoHashId = repoHashId,
                 branchName = branchName
             )
@@ -102,6 +105,7 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
                 pipelineSettingWithoutVersion = pipelineSettingWithoutVersion,
                 versionStatus = versionStatus,
                 versionAction = versionAction,
+                yamlFileInfo = yamlFileInfo,
                 branchName = branchName
             )
         }
@@ -120,6 +124,7 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
         pipelineSettingWithoutVersion: PipelineSetting,
         versionStatus: VersionStatus,
         versionAction: PipelineVersionAction,
+        yamlFileInfo: PipelineYamlFileInfo? = null,
         branchName: String? = null
     ): PipelineVersionCreateContext {
         val pipelineResourceWithoutVersion = PipelineResourceWithoutVersion(
@@ -164,6 +169,7 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
             create = pipelineInfo == null,
             versionStatus = versionStatus,
             channelCode = channelCode,
+            yamlFileInfo = yamlFileInfo,
             pipelineDialect = pipelineDialect
         )
         return PipelineVersionCreateContext(
@@ -177,6 +183,7 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
             pipelineModelBasicInfo = pipelineModelBasicInfo,
             pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
             pipelineSettingWithoutVersion = pipelineSettingWithoutVersion,
+            yamlFileInfo = yamlFileInfo,
             branchName = branchName
         )
     }
@@ -194,6 +201,7 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
         pipelineSettingWithoutVersion: PipelineSetting,
         versionStatus: VersionStatus,
         versionAction: PipelineVersionAction,
+        yamlFileInfo: PipelineYamlFileInfo? = null,
         repoHashId: String? = null,
         branchName: String? = null
     ): PipelineVersionCreateContext {
@@ -246,6 +254,7 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
             create = pipelineInfo == null,
             versionStatus = versionStatus,
             channelCode = channelCode,
+            yamlFileInfo = yamlFileInfo,
             pipelineDialect = pipelineDialect
         )
 
@@ -272,6 +281,7 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
             pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
             pipelineSettingWithoutVersion = instanceSetting,
             templateInstanceBasicInfo = templateInstanceBasicInfo,
+            yamlFileInfo = yamlFileInfo,
             branchName = branchName
         )
     }

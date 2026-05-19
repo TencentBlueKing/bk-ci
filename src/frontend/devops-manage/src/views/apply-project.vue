@@ -38,11 +38,12 @@ const projectData = ref({
     loggingLineLimit: null
   }
 });
-const projectForm = ref(null);
+const projectForm = ref<any>(null);
 const btnLoading = ref(false);
+const infoBoxInstance = ref<any>(null);
 const handleConfirm = () => {
   const confirmFn = async () => {
-    infoBoxInstance.value.hide();
+    infoBoxInstance.value?.hide();
     btnLoading.value = true;
     const result = await http.requestCreateProject({
       projectData: projectData.value,
@@ -50,6 +51,7 @@ const handleConfirm = () => {
       .catch(() => false)
       .finally(() => {
         btnLoading.value = false;
+        infoBoxInstance.value = null;
       });
     if (result) {
       Message({
@@ -61,7 +63,6 @@ const handleConfirm = () => {
       });
     }
   };
-  const infoBoxInstance = ref();
   projectForm.value?.validate().then(() => {
     infoBoxInstance.value = InfoBox({
       isShow: true,
@@ -73,7 +74,10 @@ const handleConfirm = () => {
       confirmText: t('确认提交'),
       cancelText: t('取消'),
       onConfirm: confirmFn,
-      onClosed: () => true,
+      onClose: () => {
+        infoBoxInstance.value = null;
+        return true
+      },
     });
   });
 };
@@ -98,7 +102,6 @@ const handleCancel = () => {
     <article class="apply-project-content">
       <section class="create-project-form">
         <project-form
-          ref="projectForm"
           type="apply"
           :data="projectData"
           @initProjectForm="initProjectForm"
