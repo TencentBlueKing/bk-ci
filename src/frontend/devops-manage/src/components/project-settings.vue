@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { BaseInfoContent, PermissionContent, PipelineContent, ArtifactoryContent } from "@/components/project-form-item/";
 import { RESOURCE_ACTION, RESOURCE_TYPE} from '@/utils/permission.js';
@@ -24,21 +24,24 @@ const isChange = ref(false);
 const infoBoxRef = ref();
 const metadataList = ref([]);
 const panelActive = ref('projectSettings')
+const isPersonalProject = computed(() => projectData.value.projectScope === 1)
 const tabPanels = [
   {
     name: 'projectSettings',
     label: '项目信息',
     activeCollapse: ['baseInfo', 'permission'],
-    panels: [{
-      name: 'baseInfo',
-      title: '基础信息',
-      component: BaseInfoContent,
-    },
-    ...props.isRbac ? [{
-      name: 'permission',
-      title: '权限',
-      component: PermissionContent,
-    }] : []]
+    panels: [
+      {
+        name: 'baseInfo',
+        title: '基础信息',
+        component: BaseInfoContent,
+      },
+      ...(props.isRbac && !isPersonalProject.value) ? [{
+        name: 'permission',
+        title: '权限',
+        component: PermissionContent,
+      }] : []
+    ]
   },
   {
     name: 'pipelineSettings',
