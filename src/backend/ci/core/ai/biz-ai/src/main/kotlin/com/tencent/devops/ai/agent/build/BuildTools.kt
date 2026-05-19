@@ -34,6 +34,7 @@ import com.tencent.devops.common.log.pojo.LogLine
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -87,7 +88,16 @@ class BuildTools(
             val data = result.data ?: return@safeQuery "搜索失败"
             val records = data.records
             if (records.isEmpty()) return@safeQuery "未找到匹配的流水线"
-            toJson(data)
+            val resultMap = JsonUtil.toMutableMap(data)
+            resultMap["records"] = records.map { record ->
+                JsonUtil.toMutableMap(record).apply {
+                    this["pipelineDetailUrl"] = buildPipelineDetailUrl(
+                        projectId = record.projectId,
+                        pipelineId = record.pipelineId
+                    )
+                }
+            }
+            toJson(resultMap)
         }
     }
 
@@ -677,6 +687,10 @@ class BuildTools(
             "content" to content
         )
         return JsonUtil.toJson(result)
+    }
+
+    private fun buildPipelineDetailUrl(projectId: String, pipelineId: String): String {
+        return "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/history"
     }
 
     companion object {

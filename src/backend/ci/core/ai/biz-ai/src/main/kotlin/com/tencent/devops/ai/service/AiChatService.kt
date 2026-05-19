@@ -66,7 +66,8 @@ class AiChatService @Autowired constructor(
     private val aiSessionService: AiSessionService,
     private val activeRunManager: ActiveRunManager,
     private val sessionContext: AgentSessionContext,
-    private val aiRunEventService: AiRunEventService
+    private val aiRunEventService: AiRunEventService,
+    private val aiMessageService: AiMessageService
 ) {
 
     /** 缓存 AgentBase.running 字段的反射引用，避免每次重复查找 */
@@ -172,7 +173,14 @@ class AiChatService @Autowired constructor(
                     logger.warn(
                         "[AguiChat] Reasoning-only stream detected,compensating TEXT_MESSAGE: threadId={}", threadId
                     )
-                    Flux.fromIterable(tracker.buildCompensationEvents())
+                    val message = aiMessageService.createMessage(
+                        sessionId = threadId ?: "",
+                        role = ReasoningCompensationTracker.ROLE_ASSISTANT,
+                        content = tracker.compensationText()
+                    )
+                    Flux.fromIterable(
+                        message?.let { tracker.buildCompensationEvents(msgId = it.id) } ?: emptyList()
+                    )
                 } else {
                     Flux.empty()
                 }

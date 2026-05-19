@@ -67,4 +67,9 @@ object AiMessageCode {
     const val AGENT_NOT_FOUND = "2133061"
     const val AGENT_RUN_TIMEOUT = "2133062"
     const val AGENT_RUN_FAILED = "2133063"
+
+    // ── 用户自定义大模型相关 (071-080) ──
+    const val USER_LLM_CONFIG_SAVE_FAILED = "2133071"
+    const val USER_LLM_CONFIG_INVALID = "2133072"
+    const val USER_LLM_CONFIG_AES_KEY_MISSING = "2133073"
 }

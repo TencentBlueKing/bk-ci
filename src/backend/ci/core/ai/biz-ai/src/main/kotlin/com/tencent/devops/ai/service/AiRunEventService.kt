@@ -27,7 +27,6 @@
 
 package com.tencent.devops.ai.service
 
-import com.tencent.devops.ai.dao.AiAgentStageDao
 import com.tencent.devops.ai.dao.AiRunEventDao
 import com.tencent.devops.ai.pojo.AiAgentStageMetadata.SessionStatus
 import com.tencent.devops.ai.pojo.event.AiRunStopBroadcastEvent
@@ -50,7 +49,7 @@ import java.util.concurrent.TimeUnit
 class AiRunEventService @Autowired constructor(
     private val streamBridge: StreamBridge,
     private val aiRunEventDao: AiRunEventDao,
-    private val aiAgentStageDao: AiAgentStageDao,
+    private val aiAgentStageService: AiAgentStageService,
     private val dslContext: DSLContext,
     private val activeRunManager: ActiveRunManager
 ) {
@@ -249,7 +248,7 @@ class AiRunEventService @Autowired constructor(
 
         try {
             if (event.status == SessionStatus.TIMEOUT) {
-                val updated = aiAgentStageDao.timeoutBySession(dslContext, event.threadId)
+                val updated = aiAgentStageService.timeoutBySession(sessionId = event.threadId)
                 if (updated > 0) {
                     logger.info(
                         "[AiRunEvent] Timeout cleanup: marked {} RUNNING stage(s) as TIMEOUT for threadId={}",
@@ -257,7 +256,7 @@ class AiRunEventService @Autowired constructor(
                     )
                 }
             } else {
-                val cancelled = aiAgentStageDao.cancelBySession(dslContext, event.threadId)
+                val cancelled = aiAgentStageService.cancelBySession(sessionId = event.threadId)
                 if (cancelled > 0) {
                     logger.info(
                         "[AiRunEvent] Cancelled {} running stage(s): threadId={}",
