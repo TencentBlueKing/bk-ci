@@ -169,6 +169,7 @@
                 width="200"
             />
             <bk-table-column
+                v-if="!isBuiltInEnv"
                 :label="$t('environment.enableTitle')"
                 prop="operate"
                 fixed="right"
