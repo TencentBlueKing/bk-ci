@@ -157,16 +157,21 @@ object ZipUtil {
     ) {
         var inputStream: InputStream? = null
         var fos: OutputStream? = null
+        // createRootDirFlag=false 剥掉根目录后可能出现空 entryName（合法 no-op），保持与历史行为兼容
+        if (entryName.isNullOrEmpty()) {
+            return
+        }
+        // 防御 Zip Slip：使用 canonical path 校验，确保解压目标始终位于目标目录之下
+        val destDir = File(destDirPath).canonicalFile
+        val targetFile = File(destDir, entryName).canonicalFile
+        if (!targetFile.toPath().startsWith(destDir.toPath())) {
+            throw SecurityException("Zip Slip detected: $entryName")
+        }
         if (entry.isDirectory) {
-            val dirPath = "$destDirPath/$entryName"
-            val dir = File(dirPath)
-            dir.mkdirs()
+            targetFile.mkdirs()
         } else {
             // 如果是文件，就先创建一个文件，然后用io流把内容copy过去
-            val targetFile = File("$destDirPath/$entryName")
-            if (!targetFile.parentFile.exists()) {
-                targetFile.parentFile.mkdirs()
-            }
+            targetFile.parentFile?.let { if (!it.exists()) it.mkdirs() }
             targetFile.createNewFile()
             try {
                 // 将压缩文件内容写入到这个文件中

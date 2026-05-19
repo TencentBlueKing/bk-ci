@@ -156,19 +156,25 @@ object FileUtil {
 
     fun unzipTgzFile(tgzFile: String, destDir: String = "./") {
         val blockSize = 4096
-        val inputStream = TarArchiveInputStream(GzipCompressorInputStream(File(tgzFile).inputStream()), blockSize)
-        while (true) {
-            val entry = inputStream.nextTarEntry ?: break
-            if (entry.isDirectory) { // 是目录
-                val dir = File(destDir, entry.name)
-                if (!dir.exists()) dir.mkdirs()
-            } else { // 是文件
-                File(destDir, entry.name).outputStream().use { outputStream ->
-                    while (true) {
-                        val buf = ByteArray(4096)
-                        val len = inputStream.read(buf)
-                        if (len == -1) break
-                        outputStream.write(buf, 0, len)
+        val destDirFile = File(destDir).canonicalFile
+        TarArchiveInputStream(
+            GzipCompressorInputStream(File(tgzFile).inputStream()),
+            blockSize
+        ).use { inputStream ->
+            while (true) {
+                val entry = inputStream.nextTarEntry ?: break
+                val target = resolveSafeEntryFile(destDirFile, entry.name) ?: continue
+                if (entry.isDirectory) { // 是目录
+                    if (!target.exists()) target.mkdirs()
+                } else { // 是文件
+                    target.parentFile?.let { if (!it.exists()) it.mkdirs() }
+                    target.outputStream().use { outputStream ->
+                        val buf = ByteArray(blockSize)
+                        while (true) {
+                            val len = inputStream.read(buf)
+                            if (len == -1) break
+                            outputStream.write(buf, 0, len)
+                        }
                     }
                 }
             }
@@ -177,24 +183,44 @@ object FileUtil {
 
     fun unzipFile(zipFile: String, destDir: String = "./") {
         val blockSize = 4096
-        val inputStream = ZipArchiveInputStream(BufferedInputStream(FileInputStream(File(zipFile)), blockSize))
-
-        while (true) {
-            val entry = inputStream.nextZipEntry ?: break
-            if (entry.isDirectory) { // 是目录
-                val dir = File(destDir, entry.name)
-                if (!dir.exists()) dir.mkdirs()
-            } else { // 是文件
-                File(destDir, entry.name).outputStream().use { outputStream ->
-                    while (true) {
-                        val buf = ByteArray(4096)
-                        val len = inputStream.read(buf)
-                        if (len == -1) break
-                        outputStream.write(buf, 0, len)
+        val destDirFile = File(destDir).canonicalFile
+        ZipArchiveInputStream(
+            BufferedInputStream(FileInputStream(File(zipFile)), blockSize)
+        ).use { inputStream ->
+            while (true) {
+                val entry = inputStream.nextZipEntry ?: break
+                val target = resolveSafeEntryFile(destDirFile, entry.name) ?: continue
+                if (entry.isDirectory) { // 是目录
+                    if (!target.exists()) target.mkdirs()
+                } else { // 是文件
+                    target.parentFile?.let { if (!it.exists()) it.mkdirs() }
+                    target.outputStream().use { outputStream ->
+                        val buf = ByteArray(blockSize)
+                        while (true) {
+                            val len = inputStream.read(buf)
+                            if (len == -1) break
+                            outputStream.write(buf, 0, len)
+                        }
                     }
                 }
             }
         }
+    }
+
+    /**
+     * 防御 Zip Slip：将解压条目名安全地解析到目标目录之下。
+     * 使用 canonical path 校验，若解析结果逃离目标目录则抛出 SecurityException。
+     * 空 entry name 返回 null，由调用方按 no-op 处理（与历史行为兼容）。
+     */
+    private fun resolveSafeEntryFile(destDir: File, entryName: String?): File? {
+        if (entryName.isNullOrEmpty()) {
+            return null
+        }
+        val target = File(destDir, entryName).canonicalFile
+        if (!target.toPath().startsWith(destDir.toPath())) {
+            throw SecurityException("Zip Slip detected: $entryName")
+        }
+        return target
     }
 
     fun getSHA1(file: File): String {

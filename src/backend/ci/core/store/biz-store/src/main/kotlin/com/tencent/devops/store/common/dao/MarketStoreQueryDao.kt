@@ -42,6 +42,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Result
@@ -96,10 +97,10 @@ class MarketStoreQueryDao {
             storeInfoQuery = storeInfoQuery,
             baseStep = baseStep
         )
+        val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
         if (null != sortType) {
             val flag = sortType == StoreSortTypeEnum.DOWNLOAD_COUNT
             if (flag && storeInfoQuery.score == null) {
-                val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
                 val t =
                     dslContext.select(
                         tStoreStatisticsTotal.STORE_CODE,
@@ -110,14 +111,29 @@ class MarketStoreQueryDao {
                 baseStep.leftJoin(t).on(tStoreBase.STORE_CODE.eq(t.field(KEY_STORE_CODE, String::class.java)))
             }
 
-            val realSortType = if (flag) { DSL.field(sortType.name) } else { tStoreBase.field(sortType.name) }
-            baseStep.orderBy(realSortType!!.desc())
+            val sortField = getStoreSortField(tStoreBase, tStoreStatisticsTotal, sortType)
+            baseStep.orderBy(sortField.desc())
         }
         return baseStep.where(conditions)
             .limit(
                 (storeInfoQuery.page - 1) * storeInfoQuery.pageSize,
                 storeInfoQuery.pageSize
             ).skipCheck().fetch()
+    }
+
+    private fun getStoreSortField(
+        tStoreBase: TStoreBase,
+        tStoreStatisticsTotal: TStoreStatisticsTotal,
+        sortType: StoreSortTypeEnum
+    ): Field<*> {
+        return when (sortType) {
+            StoreSortTypeEnum.NAME -> tStoreBase.NAME
+            StoreSortTypeEnum.CREATE_TIME -> tStoreBase.CREATE_TIME
+            StoreSortTypeEnum.UPDATE_TIME -> tStoreBase.UPDATE_TIME
+            StoreSortTypeEnum.PUBLISHER -> tStoreBase.PUBLISHER
+            StoreSortTypeEnum.DOWNLOAD_COUNT -> tStoreStatisticsTotal.DOWNLOADS
+            StoreSortTypeEnum.UPGRADE -> throw IllegalArgumentException("Invalid sort field")
+        }
     }
 
     private fun createBaseStep(dslContext: DSLContext): SelectJoinStep<out Record> {

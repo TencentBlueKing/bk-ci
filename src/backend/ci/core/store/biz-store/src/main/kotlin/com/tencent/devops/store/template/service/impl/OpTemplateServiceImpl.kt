@@ -92,8 +92,19 @@ class OpTemplateServiceImpl @Autowired constructor(
         val count = storeTemplateDao.count(dslContext, templateName, templateStatus?.status?.toByte(),
             templateType?.type?.toByte(), classifyCode, categoryList, labelCodeList, latestFlag)
         val templates = storeTemplateDao.list(
-            dslContext, templateName, templateStatus?.status?.toByte(), templateType?.type?.toByte(), classifyCode,
-            categoryList, labelCodeList, latestFlag, sortType?.sortType, desc, page, pageSize)
+            dslContext = dslContext,
+            templateName = templateName,
+            templateStatus = templateStatus?.status?.toByte(),
+            templateType = templateType?.type?.toByte(),
+            classifyCode = classifyCode,
+            categoryList = categoryList,
+            labelCodeList = labelCodeList,
+            latestFlag = latestFlag,
+            sortType = sortType,
+            desc = desc,
+            page = page,
+            pageSize = pageSize
+        )
         val classifyListTemp = templateClassifyService.getAllClassify(StoreTypeEnum.TEMPLATE.type.toByte()).data
         val classifyMap = mutableMapOf<String, Classify>()
         classifyListTemp?.forEach {
