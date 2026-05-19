@@ -1,5 +1,7 @@
 package com.tencent.devops.environment.service
 
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
@@ -39,7 +41,9 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 class NodeTagService @Autowired constructor(
@@ -54,6 +58,12 @@ class NodeTagService @Autowired constructor(
     private val authProjectApi: AuthProjectApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) {
+    @Value("\${environment.nodetag.key.count:20}")
+    private val tagsKeyCount: Int = 20
+
+    @Value("\${environment.nodetag.key.values.count:50}")
+    private val tagsKeyValueCount: Int = 50
+
     @ActionAuditRecord(
         actionId = ActionId.ENV_NODE_TAG_CREATE,
         instance = AuditInstanceRecord(
@@ -72,13 +82,24 @@ class NodeTagService @Autowired constructor(
     ) {
         if (!authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
             throw PermissionForbiddenException(
-                message = I18nUtil.getCodeLanMessage(
-                    ERROR_NODE_TAG_NO_EDIT_PERMISSSION,
-                    language = I18nUtil.getLanguage(userId)
-                )
+                message = I18nUtil.getCodeLanMessage(ERROR_NODE_TAG_NO_EDIT_PERMISSSION)
             )
         }
-        val allInternalKeys = nodeTagKeyDao.fetchAllInternalKeys(dslContext).map { it.keyName }.toSet()
+        // 检查标签限制
+        val tagKeyCount = nodeTagKeyDao.fetchNodeKeyCount(dslContext, projectId)
+        if (tagKeyCount > tagsKeyCount) {
+            val projectCount =
+                redisOperation.get(genNodeTagKeysCountKey(projectId), true)?.toIntOrNull() ?: tagsKeyCount
+            if (tagKeyCount > projectCount) {
+                throw PermissionForbiddenException(
+                    message = I18nUtil.getCodeLanMessage(
+                        EnvironmentMessageCode.ERROR_ENV_NODETAG_KEY_COUNT_EXCEEDED,
+                        params = arrayOf(projectCount.toString())
+                    )
+                )
+            }
+        }
+        val allInternalKeys = getInternalKeys().values
         if (nodeTagKeyDao.fetchNodeKey(dslContext, projectId, tagKey) != null || allInternalKeys.contains(tagKey)) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_EXIST, params = arrayOf(tagKey))
         }
@@ -102,7 +123,7 @@ class NodeTagService @Autowired constructor(
     ): List<NodeTag> {
         val tags = mutableListOf<NodeTag>().apply {
             addAll(nodeTagDao.fetchTagAndNode(dslContext, projectId))
-            addAll(nodeTagDao.fetchInternalTag(dslContext).values)
+            addAll((nodeTagDao.fetchInternalTag(dslContext).values))
         }
         val nodeTags = nodeTagDao.fetchNodeTag(dslContext, projectId)
         val nodeTagsCountMap = mutableMapOf<Long, MutableMap<Long, Int>>()
@@ -227,7 +248,7 @@ class NodeTagService @Autowired constructor(
             )
         }
         // 检查标签是否支持多个值同时添加
-        val tagKeyIds = data.map { it.tags.map { tag -> tag.tagKeyId } }.flatten().toSet()
+        val tagKeyIds = data.flatMap { it.tags.map { tag -> tag.tagKeyId } }.toSet()
         val tagKeys = nodeTagKeyDao.fetchNodeKeyByIds(
             dslContext = dslContext,
             projectId = projectId,
@@ -358,19 +379,6 @@ class NodeTagService @Autowired constructor(
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_INTERNAL_NOT_EDIT)
         }
         val lock = RedisLock(redisOperation, genUpdateNodeTagLockKey(projectId, data.tagKeyId), 5)
-
-        // 获取老的节点标签
-        val tags = nodeTagDao.fetchTag(dslContext, projectId, data.tagKeyId) ?: run {
-            // 为空说明之前的标签已经被删除了，直接修改即可，理论上不会出现，先返回
-            throw PermissionForbiddenException(
-                message = I18nUtil.getCodeLanMessage(
-                    ERROR_NODE_TAG_NOW_UPDATING,
-                    language = I18nUtil.getLanguage(userId)
-                )
-            )
-        }
-        val oldTagKeyName = tags.first
-        val oldTagValues = tags.second
         if (!lock.tryLock()) {
             throw PermissionForbiddenException(
                 message = I18nUtil.getCodeLanMessage(
@@ -380,6 +388,32 @@ class NodeTagService @Autowired constructor(
             )
         }
         try {
+            // 获取老的节点标签
+            val tags = nodeTagDao.fetchTag(dslContext, projectId, data.tagKeyId) ?: run {
+                // 为空说明之前的标签已经被删除了，直接修改即可，理论上不会出现，先返回
+                throw PermissionForbiddenException(
+                    message = I18nUtil.getCodeLanMessage(
+                        ERROR_NODE_TAG_NOW_UPDATING,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
+            }
+            val oldTagKeyName = tags.first
+            val oldTagValues = tags.second
+            // 校验标签值是否超过限制
+            val tagValuesCount = data.tagValues?.count() ?: 0
+            if (tagValuesCount > tagsKeyValueCount) {
+                val projectCount =
+                    redisOperation.get(genNodeTagKeyValuesCountKey(projectId), true)?.toIntOrNull() ?: tagsKeyValueCount
+                if (tagValuesCount > projectCount) {
+                    throw PermissionForbiddenException(
+                        message = I18nUtil.getCodeLanMessage(
+                            EnvironmentMessageCode.ERROR_ENV_NODETAG_KEY_VALUE_COUNT_EXCEEDED,
+                            params = arrayOf(oldTagKeyName, projectCount.toString())
+                        )
+                    )
+                }
+            }
             ActionAuditContext.current()
                 .addInstanceInfo("${data.tagKeyId}", data.tagValues?.joinToString(separator = ","), null, null)
             dslContext.transaction { config ->
@@ -507,14 +541,32 @@ class NodeTagService @Autowired constructor(
 
         return try {
             JsonUtil.to(agentRecord.agentProps, AgentProps::class.java)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
+    }
+
+    fun getInternalKeys(): Map<Long, String> {
+        return internalTagKeyCache.get(INTERNAL_TAG_CACHE_KEY) {
+            nodeTagKeyDao.fetchAllInternalKeys(dslContext).associate { it.id to it.keyName }
+        } ?: nodeTagKeyDao.fetchAllInternalKeys(dslContext).associate { it.id to it.keyName }
     }
 
     companion object {
         private fun genUpdateNodeTagLockKey(projectId: String, tagKeyId: Long) =
             "environment.nodetag.update:$projectId:$tagKeyId"
+
+        private fun genNodeTagKeysCountKey(projectId: String) = "environment:nodetag:$projectId:key:count"
+        private fun genNodeTagKeyValuesCountKey(projectId: String) = "environment:nodetag:$projectId:key:values:count"
+
+        private const val INTERNAL_TAG_CACHE_KEY = "internal_tag"
+        private const val INTERNAL_TAG_CACHE_MAX_SIZE = 100L
+        private const val INTERNAL_TAG_CACHE_EXPIRE_MINUTES = 10L
+
+        private val internalTagKeyCache: Cache<String, Map<Long, String>> = Caffeine.newBuilder()
+            .expireAfterWrite(INTERNAL_TAG_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
+            .maximumSize(INTERNAL_TAG_CACHE_MAX_SIZE)
+            .build()
 
         private val logger = LoggerFactory.getLogger(NodeTagService::class.java)
     }
