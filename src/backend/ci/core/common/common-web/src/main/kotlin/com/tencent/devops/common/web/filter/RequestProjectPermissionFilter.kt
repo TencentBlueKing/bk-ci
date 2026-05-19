@@ -39,7 +39,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.constant.BkApiHandleType
-import com.tencent.devops.common.web.utils.BkApiUtil
+import com.tencent.devops.common.web.utils.ApiAccessLimitCacheManager
 import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -105,17 +105,17 @@ class RequestProjectPermissionFilter(
         val projectId =
             (requestContext.getHeaderString(AUTH_HEADER_PROJECT_ID) ?: uriInfo.pathParameters.getFirst(KEY_PROJECT_ID)
             ?: uriInfo.queryParameters.getFirst(KEY_PROJECT_ID))?.toString()
-        // 判断项目是否在限制接口访问的列表中
-        if (apiProjectPermissionSwitch && !projectId.isNullOrBlank() && redisOperation.isMember(
-                key = BkApiUtil.getApiAccessLimitProjectsKey(),
-                item = projectId
-            )
-        ) {
-            logger.info("Project[$projectId] does not have access permission for interface[$url]")
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.ERROR_PROJECT_API_ACCESS_NO_PERMISSION,
-                params = arrayOf(projectId, url)
-            )
+        // 判断项目是否在限制接口访问的列表中（使用 Caffeine 本地缓存整个限制列表）
+        if (apiProjectPermissionSwitch && !projectId.isNullOrBlank()) {
+            // 从缓存管理器获取整个限制列表（如果缓存未命中，会自动从 Redis 加载）
+            val limitSet = ApiAccessLimitCacheManager.getProjectLimitSet(redisOperation)
+            if (limitSet.contains(projectId)) {
+                logger.info("Project[$projectId] does not have access permission for interface[$url]")
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.ERROR_PROJECT_API_ACCESS_NO_PERMISSION,
+                    params = arrayOf(projectId, url)
+                )
+            }
         }
     }
 
@@ -127,17 +127,20 @@ class RequestProjectPermissionFilter(
         val pipelineId =
             (requestContext.getHeaderString(AUTH_HEADER_PIPELINE_ID) ?: uriInfo.pathParameters.getFirst(KEY_PIPELINE_ID)
             ?: uriInfo.queryParameters.getFirst(KEY_PIPELINE_ID))?.toString()
-        // 判断流水线是否在限制接口访问的列表中
-        if (apiPipelinePermissionSwitch && !pipelineId.isNullOrBlank() && redisOperation.isMember(
-                key = BkApiUtil.getApiAccessLimitPipelinesKey(),
-                item = pipelineId
+        // 判断流水线是否在限制接口访问的列表中（使用缓存管理器优化）
+        if (apiPipelinePermissionSwitch && !pipelineId.isNullOrBlank()) {
+            // 使用缓存管理器检查流水线限制状态（按需缓存单个流水线状态）
+            val result = ApiAccessLimitCacheManager.checkPipelineLimitStatus(
+                redisOperation = redisOperation,
+                pipelineIds = arrayOf(pipelineId)
             )
-        ) {
-            logger.info("Pipeline[$pipelineId] does not have access permission for interface[$url]")
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.ERROR_PIPELINE_API_ACCESS_NO_PERMISSION,
-                params = arrayOf(pipelineId, url)
-            )
+            if (result[pipelineId] == true) {
+                logger.info("Pipeline[$pipelineId] does not have access permission for interface[$url]")
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.ERROR_PIPELINE_API_ACCESS_NO_PERMISSION,
+                    params = arrayOf(pipelineId, url)
+                )
+            }
         }
     }
 }
