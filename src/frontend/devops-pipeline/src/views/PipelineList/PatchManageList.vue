@@ -22,6 +22,13 @@
                 >
                     {{ $t('archive.batchArchiving') }}
                 </bk-button>
+                <bk-button
+                    v-if="!isArchiveView"
+                    :disabled="!isSelected"
+                    @click="toggleCrossProjectCopy"
+                >
+                    {{ $t('crossProjectCopy') }}
+                </bk-button>
                 <span v-bk-tooltips="notAllowPatchDeleteTips">
                     <bk-button
                         :disabled="!isSelected || isPacGroup"
@@ -159,6 +166,18 @@
         methods: {
             updateTableHeight () {
                 this.tableHeight = this.$refs.tableBox.offsetHeight
+            },
+            toggleCrossProjectCopy () {
+                const pipelineIds = this.selected.map(item => item.pipelineId)
+                // TODO: 在这里调用后端接口，传递 pipelineIds
+                console.log('Selected pipelineIds:', pipelineIds)
+                
+                this.$router.push({
+                    name: 'crossProjectCopy',
+                    params: {
+                        tab: 'configScope'
+                    }
+                })
             },
             exitPatch () {
                 this.$router.push({
