@@ -1,11 +1,13 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.pojo.EnvData
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_ID
@@ -210,9 +212,11 @@ class CreateStreamTriggerSupportService constructor(
                 "creative stream pipeline[$pipelineId] resolved nodes from env[${it.envHashId}]: $list"
             )
             if (list.isEmpty()) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.BK_CREATIVE_STREAM_ENV_NODE_IS_EMPTY,
-                    params = arrayOf(it.envHashId ?: "")
+                throw OperationException(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.BK_CREATIVE_STREAM_ENV_NODE_IS_EMPTY,
+                        params = arrayOf(it.envHashId ?: "")
+                    )
                 )
             }
             // 现阶段取环境下的第一个节点，后续根据实际需求进行调整
