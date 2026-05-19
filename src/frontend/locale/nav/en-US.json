@@ -274,6 +274,7 @@
   "disclosureTip0": "<em>After signing, strictly comply with confidentiality obligations. It is prohibited to disclose any information related to {0} to third parties in any way (including but not limited to photography, screenshots, written descriptions, verbal accounts, etc.)</em>",
   "disclosureTip1": "In case of information leakage, we will conduct thorough investigation and impose severe penalties. <em>The leaker (both company and individual)</em> will face <em>criminal charges, compensation for breach of NDA, and other punitive measures.</em>",
   "请输入移交人": "Please enter the transferee",
+  "personalProjectCannotExit": "Personal projects are not allowed to exit",
   "蓝盾 APP": "Blue Shield APP",
   "产品下载": "Product Download",
   "APP 下载": "APP Download",
