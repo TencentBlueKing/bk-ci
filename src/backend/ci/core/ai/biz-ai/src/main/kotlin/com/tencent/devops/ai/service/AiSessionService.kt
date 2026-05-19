@@ -28,14 +28,12 @@
 package com.tencent.devops.ai.service
 
 import com.tencent.devops.ai.constant.AiMessageCode
-import com.tencent.devops.ai.dao.AiMessageDao
 import com.tencent.devops.ai.dao.AiSessionDao
 import com.tencent.devops.ai.pojo.AiMessageInfo
 import com.tencent.devops.ai.pojo.AiSessionCreate
 import com.tencent.devops.ai.pojo.AiSessionInfo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.model.ai.tables.records.TAiMessageRecord
 import com.tencent.devops.model.ai.tables.records.TAiSessionRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -53,7 +51,7 @@ import java.time.ZoneOffset
 class AiSessionService @Autowired constructor(
     private val dslContext: DSLContext,
     private val aiSessionDao: AiSessionDao,
-    private val aiMessageDao: AiMessageDao
+    private val aiMessageService: AiMessageService
 ) {
 
     fun createSession(
@@ -216,9 +214,7 @@ class AiSessionService @Autowired constructor(
                 params = arrayOf(sessionId)
             )
         }
-        val msgCount = aiMessageDao.deleteBySessionId(
-            dslContext, sessionId
-        )
+        val msgCount = aiMessageService.deleteBySessionId(sessionId = sessionId)
         logger.info(
             "[Session] 级联删除 {} 条消息, " +
                 "会话={}",
@@ -251,9 +247,7 @@ class AiSessionService @Autowired constructor(
                 params = arrayOf(sessionId)
             )
         }
-        val result = aiMessageDao.listBySessionId(
-            dslContext, sessionId
-        ).map { toMessageInfo(it) }
+        val result = aiMessageService.listMessages(sessionId = sessionId)
         logger.info(
             "[Session] GetMessages: sessionId={}, count={}",
             sessionId, result.size
@@ -279,18 +273,6 @@ class AiSessionService @Autowired constructor(
             createdTime = record.createdTime
                 .toInstant(ZoneOffset.ofHours(8)).toEpochMilli(),
             updatedTime = record.updatedTime
-                .toInstant(ZoneOffset.ofHours(8)).toEpochMilli()
-        )
-    }
-
-    private fun toMessageInfo(record: TAiMessageRecord): AiMessageInfo {
-        return AiMessageInfo(
-            id = record.id,
-            sessionId = record.sessionId,
-            role = record.role,
-            content = record.content,
-            extraData = record.extraData,
-            createdTime = record.createdTime
                 .toInstant(ZoneOffset.ofHours(8)).toEpochMilli()
         )
     }

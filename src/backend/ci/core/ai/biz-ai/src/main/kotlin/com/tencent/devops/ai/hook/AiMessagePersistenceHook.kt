@@ -1,15 +1,12 @@
 package com.tencent.devops.ai.hook
 
-import com.tencent.devops.ai.dao.AiMessageDao
-import com.tencent.devops.ai.dao.AiSessionDao
 import com.tencent.devops.ai.context.AgentSessionContext
-import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.ai.service.AiMessageService
 import io.agentscope.core.hook.Hook
 import io.agentscope.core.hook.HookEvent
 import io.agentscope.core.hook.PostCallEvent
 import io.agentscope.core.hook.PreCallEvent
 import io.agentscope.core.message.MsgRole
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -24,9 +21,7 @@ import reactor.core.scheduler.Schedulers
  */
 @Component
 class AiMessagePersistenceHook @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val aiMessageDao: AiMessageDao,
-    private val aiSessionDao: AiSessionDao,
+    private val aiMessageService: AiMessageService,
     private val sessionContext: AgentSessionContext
 ) : Hook {
 
@@ -64,8 +59,10 @@ class AiMessagePersistenceHook @Autowired constructor(
         return Mono.fromRunnable<Void> {
             userMsgs.forEach { msg ->
                 persistMessage(
-                    sessionId, msg.role.name,
-                    msg.textContent
+                    sessionId = sessionId,
+                    role = msg.role.name,
+                    content = msg.textContent,
+                    updateSessionTime = false
                 )
             }
         }.subscribeOn(Schedulers.boundedElastic())
@@ -92,8 +89,11 @@ class AiMessagePersistenceHook @Autowired constructor(
             sessionId, content.length
         )
         return Mono.fromRunnable<Void> {
-            persistMessage(sessionId, ROLE_ASSISTANT, content)
-            aiSessionDao.updateTime(dslContext, sessionId)
+            persistMessage(
+                sessionId = sessionId,
+                role = ROLE_ASSISTANT,
+                content = content
+            )
         }.subscribeOn(Schedulers.boundedElastic())
             .thenReturn(event)
     }
@@ -106,22 +106,22 @@ class AiMessagePersistenceHook @Autowired constructor(
         sessionId: String,
         role: String,
         content: String?,
-        extraData: String? = null
+        extraData: String? = null,
+        updateSessionTime: Boolean = true
     ) {
         if (content.isNullOrBlank()) return
         try {
-            val nextIndex = aiMessageDao.getMaxIndex(
-                dslContext, sessionId
-            ) + 1
-            val msgId = UUIDUtil.generate()
-            aiMessageDao.create(
-                dslContext, msgId, sessionId,
-                role, content, nextIndex, extraData
-            )
+            val result = aiMessageService.createMessage(
+                sessionId = sessionId,
+                role = role,
+                content = content,
+                extraData = extraData,
+                updateSessionTime = updateSessionTime
+            ) ?: return
             logger.info(
                 "[Hook] Persisted {}: sessionId={}, " +
                         "index={}, len={}, extraDataLen={}",
-                role, sessionId, nextIndex, content.length,
+                role, sessionId, result.messageIndex, content.length,
                 extraData?.length ?: 0
             )
         } catch (e: Exception) {
