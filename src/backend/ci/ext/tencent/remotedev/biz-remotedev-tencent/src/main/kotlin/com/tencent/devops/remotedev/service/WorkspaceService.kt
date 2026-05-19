@@ -215,17 +215,6 @@ class WorkspaceService @Autowired constructor(
             )
         }
 
-        try {
-            client.get(ServiceAgentResource::class).updateDisplayNameByWorkspaceId(
-                userId = userId,
-                projectId = ws.projectId,
-                workspaceId = workspaceName,
-                displayName = displayName
-            )
-        } catch (e: Exception) {
-            logger.error("update create node displayName error", e)
-        }
-
         return true
     }
 

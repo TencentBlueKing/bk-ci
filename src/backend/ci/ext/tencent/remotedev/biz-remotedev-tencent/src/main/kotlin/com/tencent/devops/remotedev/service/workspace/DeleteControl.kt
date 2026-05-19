@@ -39,6 +39,7 @@ import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.environment.api.thirdpartyagent.ServiceAgentResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -76,6 +77,7 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import kotlin.math.log
 
 @Service
 @Suppress("LongMethod")
@@ -452,6 +454,13 @@ class DeleteControl @Autowired constructor(
                     )
                 )
             }
+        }
+
+        // 删除是同时删除创作流节点
+        try {
+            client.get(ServiceAgentResource::class).deleteCreateNode(operator, workspace.projectId, workspaceName)
+        } catch (e: Exception) {
+            logger.warn("delete workspace $workspaceName create node error", e)
         }
 
         notifyControl.dispatchWebsocketPushEvent(
