@@ -116,11 +116,12 @@ import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineOperationLogService
+import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
@@ -183,7 +184,8 @@ class PipelineRepositoryService constructor(
     private val pipelineCallbackDao: PipelineCallbackDao,
     private val subPipelineTaskService: SubPipelineTaskService,
     private val pipelineInfoService: PipelineInfoService,
-    private val pipelineTemplateInfoDao: PipelineTemplateInfoDao
+    private val pipelineTemplateInfoDao: PipelineTemplateInfoDao,
+    private val pipelineGroupService: PipelineGroupService
 ) {
 
     companion object {
@@ -255,7 +257,7 @@ class PipelineRepositoryService constructor(
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         branchName: String? = null,
         description: String? = null,
-        yamlInfo: PipelineYamlVo? = null,
+        yamlFileInfo: PipelineYamlFileInfo? = null,
         pipelineDisable: Boolean? = null
     ): DeployPipelineResult {
 
@@ -279,7 +281,7 @@ class PipelineRepositoryService constructor(
             create = create,
             versionStatus = versionStatus,
             channelCode = channelCode,
-            yamlInfo = yamlInfo,
+            yamlFileInfo = yamlFileInfo,
             pipelineDialect = pipelineDialect
         )
         val triggerContainer = model.getTriggerContainer()
@@ -374,7 +376,7 @@ class PipelineRepositoryService constructor(
         create: Boolean = true,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         channelCode: ChannelCode,
-        yamlInfo: PipelineYamlVo? = null,
+        yamlFileInfo: PipelineYamlFileInfo? = null,
         pipelineDialect: IPipelineDialect? = null
     ): List<PipelineModelTask> {
         val metaSize = modelCheckPlugin.checkModelIntegrity(
@@ -413,7 +415,7 @@ class PipelineRepositoryService constructor(
                     create = create,
                     distIds = distinctIdSet,
                     versionStatus = versionStatus,
-                    yamlInfo = yamlInfo
+                    yamlFileInfo = yamlFileInfo
                 )
             } else {
                 initOtherContainer(
@@ -428,7 +430,7 @@ class PipelineRepositoryService constructor(
                     create = create,
                     distIds = distinctIdSet,
                     versionStatus = versionStatus,
-                    yamlInfo = yamlInfo,
+                    yamlFileInfo = yamlFileInfo,
                     stageIndex = index,
                     randomSeed = randomSeed,
                     jobIdSet = jobIdSet
@@ -450,7 +452,7 @@ class PipelineRepositoryService constructor(
         create: Boolean,
         distIds: HashSet<String>,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
-        yamlInfo: PipelineYamlVo?
+        yamlFileInfo: PipelineYamlFileInfo?
     ) {
         if (stage.containers.size != 1) {
             logger.warn("The trigger stage contain more than one container (${stage.containers.size})")
@@ -492,7 +494,7 @@ class PipelineRepositoryService constructor(
                     channelCode = channelCode,
                     create = create,
                     container = c,
-                    yamlInfo = yamlInfo
+                    yamlFileInfo = yamlFileInfo
                 )
             }
 
@@ -528,7 +530,7 @@ class PipelineRepositoryService constructor(
         create: Boolean,
         distIds: HashSet<String>,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
-        yamlInfo: PipelineYamlVo?,
+        yamlFileInfo: PipelineYamlFileInfo?,
         stageIndex: Int,
         randomSeed: AtomicInteger,
         jobIdSet: MutableSet<String>
@@ -611,7 +613,7 @@ class PipelineRepositoryService constructor(
                         channelCode = channelCode,
                         create = create,
                         container = c,
-                        yamlInfo = yamlInfo
+                        yamlFileInfo = yamlFileInfo
                     )
                 }
 
@@ -1873,6 +1875,27 @@ class PipelineRepositoryService constructor(
         return pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
     }
 
+    /**
+     * settingVersion表中labels字段可能为空(如实例化流水线),需要单独再查询
+     */
+    fun getSettingWithLabels(userId: String, projectId: String, pipelineId: String): PipelineSetting? {
+        val labels = ArrayList<String>()
+        val labelNames = ArrayList<String>()
+        pipelineGroupService.getGroups(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId
+        ).forEach {
+            labels.addAll(it.labels)
+            labelNames.addAll(it.labelNames)
+        }
+        return pipelineSettingDao.getSetting(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )?.copy(labels = labels, labelNames = labelNames)
+    }
+
     fun getSettingByPipelineVersion(
         projectId: String,
         pipelineId: String,
@@ -2245,6 +2268,7 @@ class PipelineRepositoryService constructor(
             // 2、update settingName
             pipelineSettingDao.updateSettingName(
                 dslContext = transactionContext,
+                projectId = projectId,
                 pipelineIdList = listOf(pipelineId),
                 name = modelName
             )

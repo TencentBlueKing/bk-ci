@@ -500,7 +500,8 @@ class ElementTransfer @Autowired(required = false) constructor(
                     notifyTitle = pre?.notifyTitle,
                     markdownContent = pre?.markdownContent,
                     notifyGroup = pre?.notifyGroup,
-                    reminderTime = pre?.reminderTime
+                    reminderTime = pre?.reminderTime,
+                    suggestRequired = pre?.suggestRequired
                 )
             }
 

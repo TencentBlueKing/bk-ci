@@ -28,6 +28,7 @@ package com.tencent.devops.store.common.resources
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.OpStoreComponentResource
 import com.tencent.devops.store.common.service.OpStoreComponentService
@@ -177,5 +178,12 @@ class OpStoreComponentResourceImpl @Autowired constructor(
             version = version,
             installedPkgFileShaContentRequest = installedPkgFileShaContentRequest
         )
+    }
+
+    override fun batchUpdateComponentsVersionSize(storeType: StoreTypeEnum): Result<Boolean> {
+        ThreadPoolUtil.submitAction(actionTitle = "batchUpdateComponentsSize", action = {
+            storeComponentManageService.batchUpdateComponentsVersionSize(storeType)
+        })
+        return Result(true)
     }
 }

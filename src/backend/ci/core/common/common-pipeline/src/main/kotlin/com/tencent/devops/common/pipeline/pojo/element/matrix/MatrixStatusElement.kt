@@ -68,7 +68,9 @@ data class MatrixStatusElement(
     @get:Schema(title = "描述(人工审核插件使用)", required = false)
     var desc: String? = null,
     @get:Schema(title = "参数列表(人工审核插件使用)", required = false)
-    var params: MutableList<ManualReviewParam>? = null
+    var params: MutableList<ManualReviewParam>? = null,
+    @get:Schema(title = "描述是否必填(人工审核插件使用)", required = false)
+    var suggestRequired: Boolean? = false
 ) : Element(
     name = name,
     status = status,
