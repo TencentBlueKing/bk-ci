@@ -2,36 +2,51 @@
     <div class="node-container">
         <div class="node-list-main-header">
             <div class="header-left">
-                <bk-button
-                    theme="primary"
-                    v-perm="{
-                        permissionData: {
-                            projectId: projectId,
-                            resourceType: ENV_RESOURCE_TYPE,
-                            resourceCode: envHashId,
-                            action: ENV_RESOURCE_ACTION.EDIT
-                        }
+                <span
+                    v-bk-tooltips="{
+                        content: $t('environment.builtInEnvRelateNodeTips'),
+                        disabled: !isBuiltInEnv
                     }"
-                    key="relatedNodes"
-                    @click="handleShowAddNodesDialog"
                 >
-                    {{ $t('environment.relatedNodes') }}
-                </bk-button>
-                <bk-button
-                    :disabled="!selectedNodesList.length"
-                    v-perm="{
-                        permissionData: {
-                            projectId: projectId,
-                            resourceType: ENV_RESOURCE_TYPE,
-                            resourceCode: envHashId,
-                            action: ENV_RESOURCE_ACTION.EDIT
-                        }
+                    <bk-button
+                        theme="primary"
+                        :disabled="isBuiltInEnv"
+                        v-perm="{
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: ENV_RESOURCE_TYPE,
+                                resourceCode: envHashId,
+                                action: ENV_RESOURCE_ACTION.EDIT
+                            }
+                        }"
+                        key="relatedNodes"
+                        @click="handleShowAddNodesDialog"
+                    >
+                        {{ $t('environment.relatedNodes') }}
+                    </bk-button>
+                </span>
+                <span
+                    v-bk-tooltips="{
+                        content: $t('environment.builtInEnvRemoveNodeTips'),
+                        disabled: !isBuiltInEnv || !!selectedNodesList.length
                     }"
-                    key="bulkRemove"
-                    @click="handleBatchRemove"
                 >
-                    {{ $t('environment.bulkRemove') }}
-                </bk-button>
+                    <bk-button
+                        :disabled="isBuiltInEnv || !selectedNodesList.length"
+                        v-perm="{
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: ENV_RESOURCE_TYPE,
+                                resourceCode: envHashId,
+                                action: ENV_RESOURCE_ACTION.EDIT
+                            }
+                        }"
+                        key="bulkRemove"
+                        @click="handleBatchRemove"
+                    >
+                        {{ $t('environment.bulkRemove') }}
+                    </bk-button>
+                </span>
             </div>
             <search-select
                 ref="searchSelect"
@@ -175,13 +190,21 @@
                 min-width="100"
             >
                 <template slot-scope="{ row }">
-                    <bk-button
-                        theme="primary"
-                        text
-                        @click="handleRemoveNode(row)"
+                    <span
+                        v-bk-tooltips="{
+                            content: $t('environment.builtInEnvRemoveNodeTips'),
+                            disabled: !isBuiltInEnv || !!selectedNodesList.length
+                        }"
                     >
-                        {{ $t('environment.remove') }}
-                    </bk-button>
+                        <bk-button
+                            theme="primary"
+                            text
+                            :disabled="isBuiltInEnv"
+                            @click="handleRemoveNode(row)"
+                        >
+                            {{ $t('environment.remove') }}
+                        </bk-button>
+                    </span>
                 </template>
             </bk-table-column>
         </bk-table>
@@ -236,7 +259,8 @@
                 fetchEnvDetail,
                 fetchEnvNodeList,
                 requestRemoveNode,
-                toggleEnableNode
+                toggleEnableNode,
+                isBuiltInEnv
             } = useEnvDetail()
             const isLoading = ref(false)
             const tableSize = ref('small')
@@ -469,6 +493,7 @@
                 failStatus,
                 projectId,
                 envHashId,
+                isBuiltInEnv,
                 ENV_RESOURCE_ACTION,
                 ENV_RESOURCE_TYPE,
 

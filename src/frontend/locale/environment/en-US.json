@@ -395,6 +395,8 @@
     "fieldCannotEmpty": "Field cannot be empty",
     "deployTask": "Deployment task",
     "relatedNodes": "related nodes",
+    "builtInEnvRelateNodeTips": "Built-in environment cannot associate nodes",
+    "builtInEnvRemoveNodeTips": "Built-in environment cannot remove nodes",
     "confirmBatchRemoveNode": "Are you sure you want to remove {0} nodes?",
     "confirmRemoveNode": "Confirm removal of node [{0}]?",
     "lastModifyTime": "last modified time",

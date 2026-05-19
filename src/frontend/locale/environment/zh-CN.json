@@ -390,6 +390,8 @@
     "fieldCannotEmpty": "字段不能为空",
     "deployTask": "部署任务",
     "relatedNodes": "关联节点",
+    "builtInEnvRelateNodeTips": "内置环境不可关联节点",
+    "builtInEnvRemoveNodeTips": "内置环境不可移除节点",
     "confirmBatchRemoveNode": "确定移除{0}个节点？",
     "confirmRemoveNode": "确定移除节点【{0}】？",
     "lastModifyTime": "最近修改时间",
