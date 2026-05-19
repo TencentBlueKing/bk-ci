@@ -84,12 +84,10 @@ import com.tencent.devops.process.service.builds.PipelineBuildCommitService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
-import com.tencent.devops.process.utils.NODE_AGENT_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.repository.pojo.Repository
 import io.micrometer.core.instrument.Tags
 import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
@@ -276,17 +274,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId)?.let {
             variables[PIPELINE_PAC_REPO_HASH_ID] = it.repoHashId
         }
-        val pipelineSetting = pipelineRepositoryService.getSetting(
-            projectId = projectId,
-            pipelineId = pipelineId
-        ) ?: return false
-        // 获取创作流相关信息
-        val envNodeList = creativeStreamTriggerSupportService.getEnvNodeList(
-            pipelineInfo = pipelineInfo,
-            pipelineSetting = pipelineSetting,
-            userId = userId
-        ) ?: listOf()
-        logger.info("trigger creative stream[$pipelineId] with envNodeList: $envNodeList")
+
         val failedMatchElements = mutableListOf<PipelineTriggerFailedMatchElement>()
         // 寻找代码触发原子
         container.elements.forEach elements@{ element ->
@@ -326,6 +314,11 @@ class PipelineBuildWebhookService @Autowired constructor(
                         projectId = projectId,
                         pipelineId = pipelineId
                     )
+                    // 创作流相关参数，触发成功时才去校验创作流运行环境，避免重复查询创作流环境信息
+                    val externalStartParams = creativeStreamTriggerSupportService.externalWebhookStartParams(
+                        pipelineInfo = pipelineInfo,
+                        userId = userId
+                    )
                     val webhookCommit = WebhookCommit(
                         userId = userId,
                         pipelineId = pipelineId,
@@ -338,7 +331,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                             variables = variables,
                             params = webHookParams,
                             matchResult = matchResult
-                        ),
+                        ).plus(externalStartParams),
                         repositoryConfig = repositoryConfig,
                         repoName = matcher.getRepoName(),
                         commitId = matcher.getRevision(),
@@ -346,48 +339,30 @@ class PipelineBuildWebhookService @Autowired constructor(
                         eventType = matcher.getEventType(),
                         codeType = matcher.getCodeType()
                     )
-                    if (pipelineInfo.channelCode == ChannelCode.CREATIVE_STREAM) {
-                        if (envNodeList.isEmpty()) {
-                            builder.status(PipelineTriggerStatus.FAILED.name)
-                                .eventSource(eventSource = repo.repoHashId!!)
-                                .reason(PipelineTriggerReason.TRIGGER_FAILED.name)
-                                .reasonDetail(
-                                    PipelineTriggerFailedErrorCode(
-                                        errorCode = ProcessMessageCode.BK_CREATIVE_STREAM_ENV_NODE_IS_EMPTY,
-                                        params = listOf(pipelineSetting.envHashId ?: "")
-                                    )
-                                )
-                            return false
-                        }
-                        envNodeList.forEach { nodeHashId ->
-                            trigger(
-                                userId = userId,
-                                projectId = projectId,
-                                pipelineId = pipelineId,
-                                webhookCommit = webhookCommit.let {
-                                    val params = it.params.toMutableMap()
-                                    params[NODE_AGENT_ID] = nodeHashId
-                                    it.copy(params = params)
-                                },
-                                matcher = matcher,
-                                repo = repo,
-                                channelCode = pipelineInfo.channelCode,
-                                elementName = element.name,
-                                builder = builder
-                            )
-                        }
-                    } else {
-                        trigger(
-                            userId = userId,
+                    val buildId =
+                        client.getGateway(ServiceScmWebhookResource::class).webhookCommit(projectId, webhookCommit).data
+                    logger.info("$pipelineId|$buildId|webhook trigger|(${element.name}|repo(${matcher.getRepoName()})")
+                    if (!buildId.isNullOrEmpty()) {
+                        pipelineBuildCommitService.create(
                             projectId = projectId,
                             pipelineId = pipelineId,
-                            webhookCommit = webhookCommit,
+                            buildId = buildId,
                             matcher = matcher,
                             repo = repo,
-                            channelCode = pipelineInfo.channelCode,
-                            elementName = element.name,
-                            builder = builder
+                            channelCode = pipelineInfo.channelCode
                         )
+                        val buildDetail = client.getGateway(ServiceBuildResource::class).getBuildDetail(
+                            userId = userId,
+                            buildId = buildId,
+                            pipelineId = pipelineId,
+                            projectId = projectId,
+                            channelCode = ChannelCode.BS
+                        ).data
+                        builder.buildId(buildId)
+                            .status(PipelineTriggerStatus.SUCCEED.name)
+                            .eventSource(eventSource = repo.repoHashId!!)
+                            .reason(PipelineTriggerReason.TRIGGER_SUCCESS.name)
+                            .buildNum(buildDetail?.buildNum.toString())
                     }
                 } catch (permissionException: PermissionForbiddenException) {
                     logger.warn("check permission failed", permissionException)
@@ -746,47 +721,5 @@ class PipelineBuildWebhookService @Autowired constructor(
             }
         }
         return variables
-    }
-
-    /**
-     * 触发 webhook 构建，记录构建提交信息，并将触发结果更新到 builder
-     */
-    private fun trigger(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        webhookCommit: WebhookCommit,
-        matcher: ScmWebhookMatcher,
-        repo: Repository,
-        channelCode: ChannelCode,
-        elementName: String,
-        builder: PipelineTriggerDetailBuilder
-    ) {
-        val buildId = client.getGateway(ServiceScmWebhookResource::class).webhookCommit(
-            projectId = projectId,
-            webhookCommit = webhookCommit
-        ).data
-        logger.info("$pipelineId|$buildId|webhook trigger|($elementName|repo(${matcher.getRepoName()}))")
-        if (buildId.isNullOrEmpty()) return
-        pipelineBuildCommitService.create(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            matcher = matcher,
-            repo = repo,
-            channelCode = channelCode
-        )
-        val buildDetail = client.getGateway(ServiceBuildResource::class).getBuildDetail(
-            userId = userId,
-            buildId = buildId,
-            pipelineId = pipelineId,
-            projectId = projectId,
-            channelCode = channelCode
-        ).data
-        builder.buildId(buildId)
-            .status(PipelineTriggerStatus.SUCCEED.name)
-            .eventSource(eventSource = repo.repoHashId!!)
-            .reason(PipelineTriggerReason.TRIGGER_SUCCESS.name)
-            .buildNum(buildDetail?.buildNum.toString())
     }
 }
