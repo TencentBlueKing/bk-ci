@@ -4,11 +4,11 @@ import com.tencent.devops.ai.agent.SubAgentDefinition
 import com.tencent.devops.ai.agent.SubAgentFactory
 import com.tencent.devops.ai.agent.supervisor.SupervisorAgentFactory
 import com.tencent.devops.ai.service.AgentSysPromptService
+import com.tencent.devops.ai.service.AiModelResolver
 import com.tencent.devops.ai.context.AgentSessionContext
 import com.tencent.devops.common.client.Client
 import io.agentscope.core.ReActAgent
 import io.agentscope.core.memory.autocontext.AutoContextConfig
-import io.agentscope.core.model.OpenAIChatModel
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -20,7 +20,7 @@ class AiSupervisorConfig {
 
     @Bean
     fun supervisorAgentFactory(
-        openAIChatModel: OpenAIChatModel,
+        modelResolver: AiModelResolver,
         autoContextConfig: AutoContextConfig,
         sessionContext: AgentSessionContext,
         sysPromptService: AgentSysPromptService,
@@ -29,7 +29,7 @@ class AiSupervisorConfig {
         client: Client
     ): Supplier<ReActAgent> {
         val factory = SupervisorAgentFactory(
-            model = openAIChatModel,
+            modelResolver = modelResolver,
             autoContextConfig = autoContextConfig,
             sessionContext = sessionContext,
             sysPromptService = sysPromptService,
