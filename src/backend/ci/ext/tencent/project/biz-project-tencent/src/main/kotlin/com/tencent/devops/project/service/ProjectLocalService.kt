@@ -325,6 +325,7 @@ class ProjectLocalService @Autowired constructor(
     }
 
     fun getOrCreatePersonalProject(userId: String, description: String? = null): ProjectVO {
+        logger.info("create personal project for $userId")
         val personalProject = projectDao.getFirstPersonalProjectByCreator(dslContext, userId)
         if (personalProject != null) {
             logger.info("personal project already exists|userId=$userId|projectCode=${personalProject.englishName}")
@@ -481,7 +482,6 @@ class ProjectLocalService @Autowired constructor(
                     CompletableFuture.supplyAsync({
                         MDC.put(TraceTag.BIZID, traceId)
                         try {
-                            logger.info("create personal project for $userId")
                             getOrCreatePersonalProject(
                                 userId = userId,
                                 description = "personal project for $userId"
