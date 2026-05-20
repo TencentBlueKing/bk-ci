@@ -248,5 +248,6 @@
     "部署节点授权": "Deployment node authorization",
     "资源唯一拥有者": "Sole owner of the resource",
     "输入交接人，选中回车进行校验": "Enter the handover person, and press enter to validate",
-    "存在需清理或交接的权限/授权": "There are permissions/authorizations that need to be cleared or handed over"
+    "存在需清理或交接的权限/授权": "There are permissions/authorizations that need to be cleared or handed over",
+    "personalProjectCannotExit": "Personal projects are not allowed to exit"
 }

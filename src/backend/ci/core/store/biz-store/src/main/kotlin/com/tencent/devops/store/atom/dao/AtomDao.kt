@@ -57,6 +57,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
+import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
 import com.tencent.devops.store.pojo.common.KEY_ATOM_STATUS
 import com.tencent.devops.store.pojo.common.KEY_ATOM_TYPE
@@ -365,7 +366,7 @@ class AtomDao : AtomBaseDao() {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(tAtom.ATOM_CODE.eq(atomCode))
-        conditions.add(tAtom.ATOM_STATUS.notEqual(AtomStatusEnum.TESTED.status.toByte()))
+
         if (version != null) {
             conditions.add(tAtom.VERSION.like(VersionUtils.generateQueryVersion(version)))
         }
@@ -373,6 +374,7 @@ class AtomDao : AtomBaseDao() {
             conditions.add(tAtom.DEFAULT_FLAG.eq(defaultFlag))
         }
         if (atomStatusList != null) {
+            conditions.add(tAtom.ATOM_STATUS.notEqual(AtomStatusEnum.TESTED.status.toByte()))
             conditions.add(tAtom.ATOM_STATUS.`in`(atomStatusList))
         }
         return conditions
@@ -388,7 +390,7 @@ class AtomDao : AtomBaseDao() {
         category: String?,
         classifyId: String?,
         atomStatus: AtomStatusEnum?,
-        sortType: String?,
+        sortType: OpSortTypeEnum?,
         desc: Boolean?,
         page: Int,
         pageSize: Int
@@ -406,10 +408,11 @@ class AtomDao : AtomBaseDao() {
             )
             val baseStep = dslContext.selectFrom(this)
             if (null != sortType) {
+                val sortField = getOpAtomSortField(sortType)
                 if (desc != null && desc) {
-                    baseStep.where(conditions).orderBy(CREATE_TIME.desc(), DSL.field(sortType).desc())
+                    baseStep.where(conditions).orderBy(CREATE_TIME.desc(), sortField.desc())
                 } else {
-                    baseStep.where(conditions).orderBy(CREATE_TIME.desc(), DSL.field(sortType).asc())
+                    baseStep.where(conditions).orderBy(CREATE_TIME.desc(), sortField.asc())
                 }
             } else {
                 baseStep.where(conditions).orderBy(CREATE_TIME.desc())
@@ -418,6 +421,25 @@ class AtomDao : AtomBaseDao() {
             return baseStep.limit((page - 1) * pageSize, pageSize)
                 .skipCheck() // ATOM 表量小以及 OP 接口频率可忽略索引问题
                 .fetch()
+        }
+    }
+
+    private fun TAtom.getOpAtomSortField(sortType: OpSortTypeEnum): Field<*> {
+        return when (sortType) {
+            OpSortTypeEnum.ATOM_NAME -> NAME
+            OpSortTypeEnum.ATOM_CODE -> ATOM_CODE
+            OpSortTypeEnum.JOB_TYPE -> JOB_TYPE
+            OpSortTypeEnum.CLASSIFY_ID -> CLASSIFY_ID
+            OpSortTypeEnum.ATOM_TYPE -> ATOM_TYPE
+            OpSortTypeEnum.ATOM_STATUS -> ATOM_STATUS
+            OpSortTypeEnum.DEFAULT_FLAG -> DEFAULT_FLAG
+            OpSortTypeEnum.LATEST_FLAG -> LATEST_FLAG
+            OpSortTypeEnum.PUBLISHER -> PUBLISHER
+            OpSortTypeEnum.WEIGHT -> WEIGHT
+            OpSortTypeEnum.CREATOR -> CREATOR
+            OpSortTypeEnum.MODIFIER -> MODIFIER
+            OpSortTypeEnum.CREATE_TIME -> CREATE_TIME
+            OpSortTypeEnum.UPDATE_TIME -> UPDATE_TIME
         }
     }
 

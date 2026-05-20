@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_process
 
-**文档版本：** 1.0.18
+**文档版本：** 1.0.19
 
 **文档描述：** devops_ci_process 的数据库文档
 | 表名                  | 说明       |
@@ -1453,7 +1453,7 @@
 |  11   | UPDATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 修改时间  |
 |  12   | RESOURCE_ID |   varchar   | 64 |   0    |    N     |  N   |       | 资源 ID,流水线 ID/模版 ID  |
 |  13   | RESOURCE_TYPE |   varchar   | 32 |   0    |    N     |  N   |   PIPELINE    | 资源类型,流水线/模版  |
-|  14   | OLD_FILE_PATH |   varchar   | 512 |   0    |    Y     |  N   |       | 重命名前的文件路径, 用于保留原流水线时追溯  |
+|  14   | OLD_FILE_PATH |   varchar   | 512 |   0    |    Y     |  N   |       | 重命名前的文件路径，用于保留原流水线时追溯  |
 
 **表名：** <a>T_PIPELINE_YAML_SYNC</a>
 
