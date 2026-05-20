@@ -41,6 +41,7 @@ import com.tencent.devops.environment.permission.EnvNodeAuthorizationService
 import com.tencent.devops.environment.pojo.DisplayName
 import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.pojo.enums.NodeOperatorStatus
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.service.NodeService
@@ -108,6 +109,7 @@ class UserNodeResourceImpl @Autowired constructor(
                 keywords = keywords,
                 nodeType = nodeType,
                 nodeStatus = nodeStatus,
+                operatorStatus = null,
                 agentVersion = agentVersion,
                 osName = osName,
                 latestBuildPipelineId = latestBuildPipelineId,
@@ -132,6 +134,7 @@ class UserNodeResourceImpl @Autowired constructor(
         keywords: String?,
         nodeType: NodeType?,
         nodeStatus: NodeStatus?,
+        operatorStatus: NodeOperatorStatus?,
         agentVersion: String?,
         osName: String?,
         latestBuildPipelineId: String?,
@@ -154,6 +157,7 @@ class UserNodeResourceImpl @Autowired constructor(
                 keywords = keywords,
                 nodeType = nodeType,
                 nodeStatus = nodeStatus,
+                operatorStatus = operatorStatus,
                 agentVersion = agentVersion,
                 osName = osName,
                 latestBuildPipelineId = latestBuildPipelineId,

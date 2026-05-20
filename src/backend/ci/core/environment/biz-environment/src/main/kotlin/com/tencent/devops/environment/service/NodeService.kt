@@ -62,7 +62,6 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_IMPORT_PERMISSION_NODES
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_CMDB_PRIMARY_BAK_OPERATOR
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_TYPE_TO_CHANGE_CREATOR_ONLY_SUPPORT_CMDB
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.NODE_USAGE_BUILD
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.NODE_USAGE_DEPLOYMENT
@@ -78,6 +77,7 @@ import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.pojo.enums.NodeOperatorStatus
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.enums.OsType
@@ -210,6 +210,7 @@ class NodeService @Autowired constructor(
         keywords: String?,
         nodeType: NodeType?,
         nodeStatus: NodeStatus?,
+        operatorStatus: NodeOperatorStatus?,
         agentVersion: String?,
         osName: String?,
         latestBuildPipelineId: String?,
@@ -250,7 +251,8 @@ class NodeService @Autowired constructor(
                     latestBuildTimeEnd = latestBuildTimeEnd,
                     sortType = sortType,
                     collation = collation,
-                    tagValueIds = tagValues
+                    tagValueIds = tagValues,
+                    operatorStatus = operatorStatus
                 )
             } else {
                 nodeDao.listNodes(dslContext = dslContext, projectId = projectId, nodeType = nodeType)
@@ -275,7 +277,8 @@ class NodeService @Autowired constructor(
             latestBuildTimeEnd = latestBuildTimeEnd,
             sortType = sortType,
             collation = collation,
-            tagValueIds = tagValues
+            tagValueIds = tagValues,
+            operatorStatus = operatorStatus
         ).toLong()
         val nodes = formatNodeWithPermissions(userId, projectId, nodeRecordList)
         if (-1 != page) {
@@ -356,6 +359,7 @@ class NodeService @Autowired constructor(
                 keywords = keywords,
                 nodeType = nodeType,
                 nodeStatus = nodeStatus,
+                operatorStatus = null,
                 agentVersion = agentVersion,
                 osName = osName,
                 latestBuildPipelineId = latestBuildPipelineId,
@@ -513,7 +517,8 @@ class NodeService @Autowired constructor(
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastBuildTime)
                 },
                 tags = tagMaps[it.nodeId],
-                envEnableNode = nodeIdMaps[it.nodeId] ?: true
+                envEnableNode = nodeIdMaps[it.nodeId] ?: true,
+                operatorStatus = NodeOperatorStatus.valOf(it.operatorStatus)?.name
             )
         }
     }
@@ -632,7 +637,8 @@ class NodeService @Autowired constructor(
                 taskId = null,
                 osType = it.osType,
                 serverId = it.serverId,
-                envEnableNode = null
+                envEnableNode = null,
+                operatorStatus = NodeOperatorStatus.valOf(it.operatorStatus)?.name
             )
         }
     }
@@ -690,7 +696,8 @@ class NodeService @Autowired constructor(
                 taskId = null,
                 osType = it.osType,
                 serverId = it.serverId,
-                envEnableNode = null
+                envEnableNode = null,
+                operatorStatus = NodeOperatorStatus.valOf(it.operatorStatus)?.name
             )
         }
     }
