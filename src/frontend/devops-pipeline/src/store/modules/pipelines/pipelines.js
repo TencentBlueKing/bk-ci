@@ -399,8 +399,12 @@ const actions = {
     deletePipelineVersion (_, { projectId, pipelineId, version }) {
         return ajax.delete(`${prefix}${projectId}/${pipelineId}/${version}`)
     },
-    async rollbackPipelineVersion ({ rootCommit }, { projectId, pipelineId, version }) {
-        const res = await ajax.post(`${versionPrefix}/projects/${projectId}/pipelines/${pipelineId}/rollbackDraft?version=${version}`)
+    async rollbackPipelineVersion ({ rootCommit }, { projectId, pipelineId, version, draftVersion }) {
+        const params = new URLSearchParams({ version })
+        if (draftVersion) params.append('draftVersion', draftVersion)
+        
+        const url = `${versionPrefix}/projects/${projectId}/pipelines/${pipelineId}/rollbackDraft?${params}`
+        const res = await ajax.post(url)
         return res.data
     },
     updateBuildRemark (_, { projectId, pipelineId, buildId, remark }) {

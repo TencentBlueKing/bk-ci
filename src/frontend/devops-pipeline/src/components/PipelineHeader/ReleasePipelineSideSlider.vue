@@ -70,6 +70,18 @@
                         v-bkloading="{ isLoading: isLoading || releasing }"
                         class="release-pipeline-pac-form"
                     >
+                        <bk-alert
+                            v-if="draftStatus && draftStatus.status === DRAFT_STATUS.OUTDATED"
+                            type="warning"
+                        >
+                            <template slot="title">
+                                <i18n path="template.draftPublished">
+                                    <span>{{ draftStatus?.draft?.baseVersionName }}</span>
+                                    <span class="red-tip">{{ $t('Earlier') }}</span>
+                                    <span>{{ draftStatus?.release?.versionName }}</span>
+                                </i18n>
+                            </template>
+                        </bk-alert>
                         <!-- 构建号重置提醒 -->
                         <bk-alert
                             v-if="isTemplateInstanceMode && !!resetBuildNoInstanceCount"
@@ -509,7 +521,7 @@
         SHOW_TASK_DETAIL
     } from '@/store/modules/templates/constants'
     import { RESOURCE_TYPE } from '@/utils/permission'
-    import { TARGET_ACTION_ENUM, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
+    import { TARGET_ACTION_ENUM, VERSION_STATUS_ENUM, DRAFT_STATUS } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
     export default {
         components: {
@@ -546,6 +558,10 @@
             handleChangeFilePath: {
                 type: Function,
                 default: () => {}
+            },
+            draftStatus: {
+                type: Object,
+                default: null
             }
         },
         data () {
@@ -847,13 +863,19 @@
                 }
             },
             releaseType: {
-                handler: function (val) {
-                    if (val && this.versionName) {
-                        this.releaseParams.description = this.$t('rollbackToVersion', [this.versionName])
-                    }
+                handler: function () {
+                    this.updateRollbackDesc()
+                }
+            },
+            draftStatus: {
+                handler: function () {
+                    this.updateRollbackDesc()
                 },
                 immediate: true
             }
+        },
+        created () {
+            this.DRAFT_STATUS = DRAFT_STATUS
         },
         mounted () {
             this.preZIndex = window.__bk_zIndex_manager.zIndex
@@ -881,6 +903,12 @@
                 'checkTemplateVersionNameExist'
             ]),
             ...mapActions('common', ['isPACOAuth', 'getSupportPacScmTypeList', 'getPACRepoList']),
+            updateRollbackDesc () {
+                // 草稿状态为 NORMAL 且是回滚类型时，才设置回滚描述
+                if (this.releaseType && this.versionName && this.draftStatus?.status !== 'NORMAL') {
+                    this.releaseParams.description = this.$t('rollbackToVersion', [this.versionName])
+                }
+            },
             errorHandler (error) {
                 const resourceType = this.isTemplate ? RESOURCE_TYPE.TEMPLATE : RESOURCE_TYPE.PIPELINE
                 this.handleError(error, {
@@ -1353,6 +1381,9 @@
                                 )
                             ])
                         })
+                        // 发布成功，触发事件通知父组件刷新草稿列表
+                        this.$emit('release-success')
+                        
                         this.hideReleaseSlider()
                     } catch (e) {
                         if (e.state === 'error') {
@@ -1605,6 +1636,10 @@
 
 .release-pipeline-pac-form {
     overflow: auto;
+
+    .red-tip {
+        color: #ff7e73;
+    }
 
     .release-pac-pipeline-form-header {
         display: flex;
