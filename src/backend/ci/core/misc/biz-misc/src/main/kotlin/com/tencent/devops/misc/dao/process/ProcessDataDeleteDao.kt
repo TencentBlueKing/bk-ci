@@ -61,8 +61,10 @@ import com.tencent.devops.model.process.tables.TPipelinePauseValue
 import com.tencent.devops.model.process.tables.TPipelineRecentUse
 import com.tencent.devops.model.process.tables.TPipelineRemoteAuth
 import com.tencent.devops.model.process.tables.TPipelineResource
+import com.tencent.devops.model.process.tables.TPipelineResourceDraftVersion
 import com.tencent.devops.model.process.tables.TPipelineResourceVersion
 import com.tencent.devops.model.process.tables.TPipelineSetting
+import com.tencent.devops.model.process.tables.TPipelineSettingDraftVersion
 import com.tencent.devops.model.process.tables.TPipelineSettingVersion
 import com.tencent.devops.model.process.tables.TPipelineSubRef
 import com.tencent.devops.model.process.tables.TPipelineTimer
@@ -87,6 +89,8 @@ import com.tencent.devops.model.process.tables.TPipelineYamlView
 import com.tencent.devops.model.process.tables.TProjectPipelineCallback
 import com.tencent.devops.model.process.tables.TProjectPipelineCallbackHistory
 import com.tencent.devops.model.process.tables.TReport
+import com.tencent.devops.model.process.tables.TPipelineTemplateResourceDraftVersion
+import com.tencent.devops.model.process.tables.TPipelineTemplateSettingDraftVersion
 import com.tencent.devops.model.process.tables.TTemplate
 import com.tencent.devops.model.process.tables.TTemplatePipeline
 import org.jooq.Condition
@@ -190,6 +194,8 @@ class ProcessDataDeleteDao {
                 deletePipelineSubRef(dslContext, projectId, pipelineId)
                 deletePipelineBuildParamCombinationDetail(dslContext, projectId, pipelineId)
                 deletePipelineBuildParamCombination(dslContext, projectId, pipelineId)
+                deletePipelineResourceDraftVersion(dslContext, projectId, pipelineId)
+                deletePipelineSettingDraftVersion(dslContext, projectId, pipelineId)
                 if (broadcastTableDeleteFlag) {
                     deletePipelineRemoteAuth(dslContext, projectId, pipelineId)
                     deletePipelineWebhook(dslContext, projectId, pipelineId)
@@ -738,6 +744,107 @@ class ProcessDataDeleteDao {
         with(TPipelineBuildParamCombinationDetail.T_PIPELINE_BUILD_PARAM_COMBINATION_DETAIL) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .execute()
+        }
+    }
+
+    fun deletePipelineResourceDraftVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        versions: List<Int>
+    ): Int {
+        with(TPipelineResourceDraftVersion.T_PIPELINE_RESOURCE_DRAFT_VERSION) {
+            return dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(VERSION.`in`(versions))
+                .execute()
+        }
+    }
+
+    fun deletePipelineResourceDraftVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ) {
+        with(TPipelineResourceDraftVersion.T_PIPELINE_RESOURCE_DRAFT_VERSION) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
+    }
+
+    fun deletePipelineSettingDraftVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        versions: List<Int>
+    ): Int {
+        with(TPipelineSettingDraftVersion.T_PIPELINE_SETTING_DRAFT_VERSION) {
+            return dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(VERSION.`in`(versions))
+                .execute()
+        }
+    }
+
+    fun deletePipelineSettingDraftVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ) {
+        with(TPipelineSettingDraftVersion.T_PIPELINE_SETTING_DRAFT_VERSION) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
+    }
+
+    fun deletePipelineBuildHistoryDebug(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        versions: List<Int>
+    ): Int {
+        with(TPipelineBuildHistoryDebug.T_PIPELINE_BUILD_HISTORY_DEBUG) {
+            return dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(VERSION.`in`(versions))
+                .execute()
+        }
+    }
+
+    fun deleteTemplateResourceDraftVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String,
+        versions: List<Long>
+    ): Int {
+        with(TPipelineTemplateResourceDraftVersion.T_PIPELINE_TEMPLATE_RESOURCE_DRAFT_VERSION) {
+            return dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TEMPLATE_ID.eq(templateId))
+                .and(VERSION.`in`(versions))
+                .execute()
+        }
+    }
+
+    fun deleteTemplateSettingDraftVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String,
+        versions: List<Long>
+    ): Int {
+        with(TPipelineTemplateSettingDraftVersion.T_PIPELINE_TEMPLATE_SETTING_DRAFT_VERSION) {
+            return dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TEMPLATE_ID.eq(templateId))
+                .and(VERSION.`in`(versions))
                 .execute()
         }
     }

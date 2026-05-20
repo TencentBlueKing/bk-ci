@@ -27,10 +27,12 @@
 
 package com.tencent.devops.process.pojo.setting
 
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "流水线版本摘要")
+@Schema(title = "流水线版本pre")
 data class PipelineVersionSimple(
     @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
@@ -71,5 +73,29 @@ data class PipelineVersionSimple(
     @get:Schema(title = "基准版本的版本名称")
     var baseVersionName: String? = null,
     @get:Schema(title = "当前最新正式版本标识", required = false)
-    var latestReleasedFlag: Boolean? = false
-)
+    var latestReleasedFlag: Boolean? = false,
+    @get:Schema(title = "该版本来源的草稿版本,草稿保存时传入", required = false)
+    val draftVersion: Int? = null
+) {
+    constructor(resource: PipelineResourceVersion) : this(
+        pipelineId = resource.pipelineId,
+        creator = resource.creator,
+        createTime = resource.createTime.timestampmilli(),
+        updater = resource.updater,
+        updateTime = resource.updateTime?.timestampmilli(),
+        version = resource.version,
+        versionName = resource.versionName ?: "",
+        yamlVersion = resource.yamlVersion,
+        referFlag = resource.referFlag,
+        referCount = resource.referCount,
+        versionNum = resource.versionNum,
+        pipelineVersion = resource.pipelineVersion,
+        triggerVersion = resource.triggerVersion,
+        settingVersion = resource.settingVersion,
+        status = resource.status,
+        description = resource.description,
+        debugBuildId = resource.debugBuildId,
+        baseVersion = resource.baseVersion,
+        draftVersion = resource.draftVersion
+    )
+}

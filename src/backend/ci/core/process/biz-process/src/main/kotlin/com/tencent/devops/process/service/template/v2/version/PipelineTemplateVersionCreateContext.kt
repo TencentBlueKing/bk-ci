@@ -63,6 +63,8 @@ data class PipelineTemplateVersionCreateContext(
     val pTemplateResourceWithoutVersion: PTemplateResourceWithoutVersion,
     @get:Schema(title = "模版设置", required = true)
     val pTemplateSettingWithoutVersion: PipelineSetting,
+    @get:Schema(title = "来源的草稿版本", required = false)
+    val baseDraftVersion: Int? = null,
 
     @get:Schema(title = "是否开启PAC", required = true)
     val enablePac: Boolean = false,

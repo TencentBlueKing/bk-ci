@@ -62,7 +62,8 @@ class PipelineTemplateResourceDao {
                 UPDATER,
                 RELEASE_TIME,
                 CREATED_TIME,
-                UPDATE_TIME
+                UPDATE_TIME,
+                DRAFT_VERSION
             ).values(
                 record.projectId,
                 record.templateId,
@@ -92,7 +93,8 @@ class PipelineTemplateResourceDao {
                 record.updater,
                 record.releaseTime.toLocalDateTimeOrDefault(),
                 record.createdTime.toLocalDateTimeOrDefault(),
-                record.updateTime.toLocalDateTimeOrDefault()
+                record.updateTime.toLocalDateTimeOrDefault(),
+                record.draftVersion
             ).onDuplicateKeyUpdate()
                 .set(STORE_STATUS, record.storeStatus.name)
                 .set(SETTING_VERSION, record.settingVersion)
@@ -114,6 +116,7 @@ class PipelineTemplateResourceDao {
                 .set(UPDATER, record.updater)
                 .set(UPDATE_TIME, record.updateTime.toLocalDateTimeOrDefault())
                 .set(RELEASE_TIME, record.releaseTime?.toLocalDateTime())
+                .set(DRAFT_VERSION, record.draftVersion)
                 .execute()
         }
     }
@@ -145,6 +148,7 @@ class PipelineTemplateResourceDao {
                     record.updater?.let { set(UPDATER, it) }
                     record.sortWeight?.let { set(SORT_WEIGHT, it) }
                     record.storeStatus?.let { set(STORE_STATUS, it.name) }
+                    record.draftVersion?.let { set(DRAFT_VERSION, it) }
                 }
                 .set(UPDATE_TIME, now)
                 .where(buildQueryCondition(commonCondition))
@@ -300,7 +304,8 @@ class PipelineTemplateResourceDao {
                 CREATED_TIME,
                 UPDATE_TIME,
                 STORE_STATUS,
-                NUMBER
+                NUMBER,
+                DRAFT_VERSION
             ).from(this)
                 .where(buildQueryCondition(commonCondition))
                 .orderBy(SORT_WEIGHT.desc(), RELEASE_TIME.desc(), NUMBER.desc())
@@ -334,7 +339,8 @@ class PipelineTemplateResourceDao {
                         createTime = it.value17().timestampmilli(),
                         updateTime = it.value18().timestampmilli(),
                         storeFlag = it.value19() == TemplateStatusEnum.RELEASED.name,
-                        number = it.value20()
+                        number = it.value20(),
+                        draftVersion = it.value21()
                     )
                 }
         }
@@ -551,9 +557,12 @@ class PipelineTemplateResourceDao {
             description = this.description,
             creator = this.creator,
             updater = this.updater,
+            createdTime = this.createdTime.timestampmilli(),
+            updateTime = this.updateTime.timestampmilli(),
             releaseTime = this.releaseTime?.timestampmilli(),
             sortWeight = this.sortWeight,
-            storeStatus = TemplateStatusEnum.valueOf(this.storeStatus)
+            storeStatus = TemplateStatusEnum.valueOf(this.storeStatus),
+            draftVersion = this.draftVersion
         )
     }
 }

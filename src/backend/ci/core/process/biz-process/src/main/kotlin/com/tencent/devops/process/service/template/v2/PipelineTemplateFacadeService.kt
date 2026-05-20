@@ -5,6 +5,7 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLLimit
@@ -47,10 +48,14 @@ import com.tencent.devops.process.pojo.PipelinePermissions
 import com.tencent.devops.process.pojo.PipelineTemplateVersionSimple
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineDraftActionType
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineDraftStatus
 import com.tencent.devops.process.pojo.template.CloneTemplateSettingExist
 import com.tencent.devops.process.pojo.template.HighlightType
 import com.tencent.devops.process.pojo.template.OptionalTemplate
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
+import com.tencent.devops.process.pojo.template.PipelineTemplateDraftStatusResult
+import com.tencent.devops.process.pojo.template.PipelineTemplateDraftVersionSimple
 import com.tencent.devops.process.pojo.template.PipelineTemplateListResponse
 import com.tencent.devops.process.pojo.template.PipelineTemplateListSimpleResponse
 import com.tencent.devops.process.pojo.template.TemplatePreviewDetail
@@ -65,7 +70,7 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCopyCreateReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCustomCreateReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateDetailsResponse
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateDraftReleaseReq
-import com.tencent.devops.process.pojo.template.v2.PipelineTemplateDraftRollbackReq
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRollbackReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateDraftSaveReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoResponse
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoUpdateInfo
@@ -95,7 +100,9 @@ import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 /**
  * 流水线模版门面类
@@ -126,6 +133,14 @@ class PipelineTemplateFacadeService @Autowired constructor(
     private val pipelineLabelPipelineDao: PipelineLabelPipelineDao,
     private val pipelineModelParser: PipelineModelParser
 ) {
+
+    /**
+     * 流水线草稿编辑提醒阈值（单位：天）
+     * 当草稿编辑天数超过该阈值时，会触发提醒
+     */
+    @Value("\${pipeline.draft.max_reminder_days:7}")
+    private val maxReminderDays: Long = 7L
+
     @ActionAuditRecord(
         actionId = ActionId.PIPELINE_TEMPLATE_CREATE,
         instance = AuditInstanceRecord(resourceType = ResourceTypeId.PIPELINE_TEMPLATE),
@@ -420,14 +435,17 @@ class PipelineTemplateFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         templateId: String,
-        version: Long
+        version: Long,
+        draftVersion: Int? = null
     ): DeployTemplateResult {
         return pipelineTemplateVersionManager.deployTemplate(
             userId = userId,
             projectId = projectId,
             templateId = templateId,
             version = version,
-            request = PipelineTemplateDraftRollbackReq()
+            request = PipelineTemplateRollbackReq(
+                draftVersion = draftVersion
+            )
         ).also {
             ActionAuditContext.current()
                 .setInstanceId(it.templateId)
@@ -786,7 +804,8 @@ class PipelineTemplateFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         templateId: String,
-        version: Long?
+        version: Long?,
+        draftVersion: Int? = null
     ): PipelineTemplateDetailsResponse {
         val templateResource = if (version == null) {
             pipelineTemplateResourceService.getLatestReleasedResource(
@@ -794,11 +813,20 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 templateId = templateId
             )
         } else {
-            pipelineTemplateResourceService.get(
-                projectId = projectId,
-                templateId = templateId,
-                version = version
-            )
+            if (draftVersion == null) {
+                pipelineTemplateResourceService.get(
+                    projectId = projectId,
+                    templateId = templateId,
+                    version = version
+                )
+            } else {
+                pipelineTemplateResourceService.getByDraftVersion(
+                    projectId = projectId,
+                    templateId = templateId,
+                    version = version,
+                    draftVersion = draftVersion
+                )
+            }
         } ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_NOT_EXISTS)
         return getTemplateDetails(
             userId = userId,
@@ -1185,10 +1213,10 @@ class PipelineTemplateFacadeService @Autowired constructor(
             }
         }
         // 草稿版本和版本名,如果有草稿版本,则使用草稿版本,否则使用最新版本
-        val (version, versionName) = if (draftResource == null) {
-            Pair(releaseVersion, releaseVersionName)
+        val (version, versionName, versionStatus) = if (draftResource == null) {
+            Triple(releaseVersion, releaseVersionName, releaseResource.status)
         } else {
-            Pair(draftResource.version, null)
+            Triple(draftResource.version, null, draftResource.status)
         }
         val permission2TemplatesMap = pipelineTemplatePermissionService.getResourcesByPermission(
             userId = userId,
@@ -1302,6 +1330,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
             canRelease = draftResource?.model != null,
             version = version,
             versionName = versionName,
+            versionStatus = versionStatus,
             baseVersion = baseResource?.version,
             baseVersionName = baseResource?.versionName,
             baseVersionStatus = baseResource?.status,
@@ -1313,7 +1342,8 @@ class PipelineTemplateFacadeService @Autowired constructor(
             ),
             yamlInfo = yamlInfo,
             yamlExist = yamlExist,
-            pipelineTemplateMarketRelatedInfo = pipelineTemplateMarketRelatedInfo
+            pipelineTemplateMarketRelatedInfo = pipelineTemplateMarketRelatedInfo,
+            draftVersion = draftResource?.draftVersion
         )
     }
 
@@ -1679,6 +1709,276 @@ class PipelineTemplateFacadeService @Autowired constructor(
             )
         }
         return true
+    }
+
+    fun getPipelineTemplateDraftStatus(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        actionType: PipelineDraftActionType,
+        version: Long?,
+        baseDraftVersion: Int?,
+        releaseVersion: Long?
+    ): PipelineTemplateDraftStatusResult {
+        if (actionType == PipelineDraftActionType.RELEASE && version == null) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf("version")
+            )
+        }
+        val draftResource = if (version == null) {
+            val record = pipelineTemplateResourceService.getDraftVersionResource(
+                projectId = projectId,
+                templateId = templateId
+            )
+            // 如果前端没有传version,则判断是否有草稿,没有草稿说明是新创建草稿版本,需要判断基线版本是否是最新版本
+            if (record == null) {
+                return getPipelineTemplateDraftStatusWhenDraftEmpty(
+                    projectId = projectId,
+                    templateId = templateId,
+                    releaseVersion = releaseVersion
+                )
+            }
+            record
+        } else {
+            // 如果传了version,则判断该版本是否已经发布
+            val record = pipelineTemplateResourceService.getTemplateResourceVersion(
+                projectId = projectId,
+                templateId = templateId,
+                version = version
+            )
+            // 如果前端传了version,则判断该版本是否已经发布
+            if (record != null && record.status != VersionStatus.COMMITTING) {
+                return getPipelineTemplateDraftStatusWhenPublished(projectId, templateId, releaseVersion)
+            }
+            record
+        } ?: return PipelineTemplateDraftStatusResult(status = PipelineDraftStatus.NORMAL)
+
+        return when (actionType) {
+            PipelineDraftActionType.EDIT -> {
+                getPipelineTemplateDraftStatusWhenEdit(
+                    userId = userId,
+                    projectId = projectId,
+                    templateId = templateId,
+                    draftResource = draftResource
+                )
+            }
+
+            PipelineDraftActionType.SAVE -> {
+                getPipelineTemplateDraftStatusWhenSave(
+                    baseDraftVersion = baseDraftVersion,
+                    draftResource = draftResource
+                )
+            }
+
+            PipelineDraftActionType.RELEASE -> {
+                getPipelineTemplateDraftStatusWhenRelease(
+                    projectId = projectId,
+                    templateId = templateId,
+                    draftResource = draftResource
+                )
+            }
+        }
+    }
+
+    private fun getPipelineTemplateDraftStatusWhenPublished(
+        projectId: String,
+        templateId: String,
+        releaseVersion: Long?
+    ): PipelineTemplateDraftStatusResult {
+        val templateInfo = pipelineTemplateInfoService.get(
+            projectId = projectId,
+            templateId = templateId
+        )
+        val releaseResource = pipelineTemplateResourceService.getTemplateResourceVersion(
+            projectId = projectId,
+            templateId = templateId,
+            version = templateInfo.releasedVersion
+        )
+        // 草稿版本已经发布,但是发布的是分支版本,则返回正常状态,前端可以新创建草稿版本
+        return if (releaseResource != null && releaseVersion == releaseResource.version) {
+            PipelineTemplateDraftStatusResult(
+                status = PipelineDraftStatus.NORMAL,
+                release = PipelineTemplateVersionSimple(releaseResource)
+            )
+        } else {
+            // 如果当前版本已经发布,则返回最新的发布版本,最新的发布版本不一定是当前版本,返回最新版本让前端能够基于最新版本创建
+            PipelineTemplateDraftStatusResult(
+                status = PipelineDraftStatus.PUBLISHED,
+                release = releaseResource?.let { PipelineTemplateVersionSimple(it) }
+            )
+        }
+    }
+
+    private fun getPipelineTemplateDraftStatusWhenDraftEmpty(
+        projectId: String,
+        templateId: String,
+        releaseVersion: Long?
+    ): PipelineTemplateDraftStatusResult {
+        if (releaseVersion == null) {
+            return PipelineTemplateDraftStatusResult(status = PipelineDraftStatus.NORMAL)
+        }
+        // 前端展示的正式版本
+        val webReleaseResource = pipelineTemplateResourceService.getTemplateResourceVersion(
+            projectId = projectId,
+            templateId = templateId,
+            version = releaseVersion
+        ) ?: return PipelineTemplateDraftStatusResult(status = PipelineDraftStatus.NORMAL)
+        if (webReleaseResource.status == VersionStatus.BRANCH) {
+            return PipelineTemplateDraftStatusResult(
+                status = PipelineDraftStatus.BRANCH,
+                release = PipelineTemplateVersionSimple(webReleaseResource)
+            )
+        }
+        // 当前最新的正式版本
+        val latestReleaseResource = pipelineTemplateResourceService.getLatestReleasedResource(
+            projectId = projectId,
+            templateId = templateId
+        ) ?: return PipelineTemplateDraftStatusResult(status = PipelineDraftStatus.NORMAL)
+        return if (latestReleaseResource.version == releaseVersion) {
+            PipelineTemplateDraftStatusResult(status = PipelineDraftStatus.NORMAL)
+        } else {
+            PipelineTemplateDraftStatusResult(
+                status = PipelineDraftStatus.RELEASE_OUTDATED,
+                draft = PipelineTemplateVersionSimple(webReleaseResource),
+                release = PipelineTemplateVersionSimple(latestReleaseResource)
+            )
+        }
+    }
+
+    private fun getPipelineTemplateDraftStatusWhenEdit(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        draftResource: PipelineTemplateResource
+    ): PipelineTemplateDraftStatusResult {
+        val releaseResource = pipelineTemplateResourceService.getLatestReleasedResource(
+            projectId = projectId,
+            templateId = templateId
+        )
+        val baseResource = draftResource.baseVersion?.let { baseVersion ->
+            pipelineTemplateResourceService.getTemplateResourceVersion(
+                projectId = projectId,
+                templateId = templateId,
+                version = baseVersion
+            )
+        }
+        val updateTime = draftResource.updateTime ?: draftResource.createdTime!!
+        val updater = draftResource.updater ?: draftResource.creator
+        val releaseTime = releaseResource?.releaseTime
+        val baseReleaseTime = baseResource?.releaseTime
+        return when {
+            // 若草稿基线版本早于当前最新版本,则提示草稿版本落后
+            releaseTime != null && baseReleaseTime != null && releaseTime > baseReleaseTime -> {
+                PipelineTemplateDraftStatusResult(
+                    status = PipelineDraftStatus.OUTDATED,
+                    draft = PipelineTemplateVersionSimple(draftResource).copy(
+                        baseVersionName = baseResource.versionName
+                    ),
+                    release = PipelineTemplateVersionSimple(releaseResource)
+                )
+            }
+
+            // 1. 若当前操作人和原草稿的保存人不相同
+            // 2. 当前操作人和原草稿的保存人相同，则检查最近保存时间是否超过 7 天，若未超过则不重复提醒
+            updater != userId ||
+                    System.currentTimeMillis() - updateTime > TimeUnit.DAYS.toMillis(maxReminderDays) -> {
+                PipelineTemplateDraftStatusResult(
+                    status = PipelineDraftStatus.EXISTS,
+                    draft = PipelineTemplateVersionSimple(draftResource)
+                )
+            }
+
+            else -> PipelineTemplateDraftStatusResult(
+                status = PipelineDraftStatus.NORMAL,
+                draft = PipelineTemplateVersionSimple(draftResource)
+            )
+        }
+    }
+
+    private fun getPipelineTemplateDraftStatusWhenSave(
+        baseDraftVersion: Int?,
+        draftResource: PipelineTemplateResource,
+    ): PipelineTemplateDraftStatusResult {
+        // 保存时检查是否有其他人也修改了模板，若存在则提示冲突
+        return if (draftResource.draftVersion != baseDraftVersion) {
+            PipelineTemplateDraftStatusResult(
+                status = PipelineDraftStatus.CONFLICT,
+                draft = PipelineTemplateVersionSimple(draftResource)
+            )
+        } else {
+            PipelineTemplateDraftStatusResult(
+                status = PipelineDraftStatus.NORMAL,
+                draft = PipelineTemplateVersionSimple(draftResource)
+            )
+        }
+    }
+
+    private fun getPipelineTemplateDraftStatusWhenRelease(
+        projectId: String,
+        templateId: String,
+        draftResource: PipelineTemplateResource,
+    ): PipelineTemplateDraftStatusResult {
+        val releaseResource = pipelineTemplateResourceService.getLatestReleasedResource(
+            projectId = projectId,
+            templateId = templateId
+        )
+        // 发布时，检查当前待发布版本的基线版本，和当前最新版本是否一致
+        return if (releaseResource != null && releaseResource.version != draftResource.baseVersion) {
+            PipelineTemplateDraftStatusResult(
+                status = PipelineDraftStatus.OUTDATED,
+                draft = PipelineTemplateVersionSimple(draftResource),
+                release = PipelineTemplateVersionSimple(releaseResource)
+            )
+        } else {
+            PipelineTemplateDraftStatusResult(
+                status = PipelineDraftStatus.NORMAL,
+                draft = PipelineTemplateVersionSimple(draftResource)
+            )
+        }
+    }
+
+    fun listTemplateDraftVersions(
+        projectId: String,
+        templateId: String,
+        version: Long,
+        page: Int?,
+        pageSize: Int?
+    ): Page<PipelineTemplateDraftVersionSimple> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: PageUtil.DEFAULT_PAGE_SIZE
+        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val templateResource = pipelineTemplateResourceService.get(
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
+        if (templateResource.status != VersionStatus.COMMITTING) {
+            return Page(
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                count = 0,
+                records = emptyList()
+            )
+        }
+        val count = pipelineTemplateResourceService.countTemplateDraftVersion(
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
+        val records = pipelineTemplateResourceService.listTemplateDraftVersions(
+            projectId = projectId,
+            templateId = templateId,
+            version = version,
+            limit = limit.limit,
+            offset = limit.offset
+        )
+        return Page(
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            count = count,
+            records = records
+        )
     }
 
     private val templateDetailRedirectUri = "${config.devopsHostGateway}/console/pipeline/%s/template/%s/%s"

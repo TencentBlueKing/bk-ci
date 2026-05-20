@@ -168,7 +168,8 @@ class PipelineBuildDao {
                         CONCURRENCY_GROUP,
                         YAML_VERSION,
                         RESOURCE_MODEL,
-                        EXECUTE_COUNT
+                        EXECUTE_COUNT,
+                        DRAFT_VERSION
                     ).values(
                         startBuildContext.buildId,
                         startBuildContext.buildNum,
@@ -193,7 +194,8 @@ class PipelineBuildDao {
                         startBuildContext.concurrencyGroup,
                         startBuildContext.yamlVersion,
                         startBuildContext.debugModelStr,
-                        startBuildContext.executeCount
+                        startBuildContext.executeCount,
+                        startBuildContext.draftVersion
                     ).execute()
                 }
             }
@@ -2186,7 +2188,8 @@ class PipelineBuildDao {
                     buildNumAlias = t.buildNumAlias,
                     remark = t.remark,
                     debug = true, // #8164 原历史表中查出的记录均为非调试的记录
-                    versionChange = t.versionChange
+                    versionChange = t.versionChange,
+                    draftVersion = t.draftVersion
                 )
             }
         }

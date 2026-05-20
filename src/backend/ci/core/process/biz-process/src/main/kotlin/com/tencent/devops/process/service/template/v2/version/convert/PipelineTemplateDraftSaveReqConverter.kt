@@ -134,7 +134,8 @@ class PipelineTemplateDraftSaveReqConverter @Autowired constructor(
                 versionAction = PipelineVersionAction.SAVE_DRAFT,
                 pipelineTemplateInfo = templateInfo,
                 pTemplateResourceWithoutVersion = pTemplateResourceWithoutVersion,
-                pTemplateSettingWithoutVersion = pTemplateSettingWithoutVersion
+                pTemplateSettingWithoutVersion = pTemplateSettingWithoutVersion,
+                baseDraftVersion = baseDraftVersion
             )
         }
     }

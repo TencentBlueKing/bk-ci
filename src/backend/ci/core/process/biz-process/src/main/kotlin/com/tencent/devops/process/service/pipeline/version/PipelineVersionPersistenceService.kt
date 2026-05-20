@@ -34,10 +34,12 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.dao.PipelineSettingDraftVersionDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDraftVersionDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.pojo.pipeline.PipelineBasicInfo
@@ -65,7 +67,9 @@ class PipelineVersionPersistenceService @Autowired constructor(
     private val pipelineResourceVersionDao: PipelineResourceVersionDao,
     private val pipelineSettingVersionDao: PipelineSettingVersionDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
-    private val versionCreatePostProcessors: List<PipelineVersionCreatePostProcessor>
+    private val versionCreatePostProcessors: List<PipelineVersionCreatePostProcessor>,
+    private val pipelineResourceDraftVersionDao: PipelineResourceDraftVersionDao,
+    private val pipelineSettingDraftVersionDao: PipelineSettingDraftVersionDao
 ) {
 
     fun initializePipeline(
@@ -244,6 +248,11 @@ class PipelineVersionPersistenceService @Autowired constructor(
             val pipelineSetting = pipelineSettingWithoutVersion.copy(
                 version = resourceOnlyVersion.settingVersion!!
             )
+            postProcessBeforeVersionCreate(
+                context = context,
+                pipelineResourceVersion = pipelineResourceVersion,
+                pipelineSetting = pipelineSetting
+            )
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 createPipelineResourceVersion(
@@ -255,7 +264,35 @@ class PipelineVersionPersistenceService @Autowired constructor(
                     transactionContext = transactionContext,
                     pipelineSetting = pipelineSetting
                 )
+                // 保存到T_PIPELINE_RESOURCE_DRAFT_VERSION表
+                pipelineResourceDraftVersionDao.create(
+                    dslContext = transactionContext,
+                    userId = userId,
+                    pipelineResourceVersion = pipelineResourceVersion,
+                    draftVersion = pipelineResourceVersion.draftVersion!!,
+                    baseDraftVersion = baseDraftVersion,
+                    baseVersionName = resourceOnlyVersion.baseVersionName
+                )
+
+                // 保存到T_PIPELINE_SETTING_DRAFT_VERSION表
+                pipelineSettingDraftVersionDao.create(
+                    dslContext = transactionContext,
+                    setting = pipelineSetting,
+                    version = pipelineResourceVersion.version,
+                    draftVersion = pipelineResourceVersion.draftVersion!!
+                )
+                postProcessInTransactionVersionCreate(
+                    transactionContext = transactionContext,
+                    context = context,
+                    pipelineResourceVersion = pipelineResourceVersion,
+                    pipelineSetting = pipelineSetting
+                )
             }
+            postProcessAfterVersionCreate(
+                context = context,
+                pipelineResourceVersion = pipelineResourceVersion,
+                pipelineSetting = pipelineSetting
+            )
         }
     }
 
@@ -274,6 +311,11 @@ class PipelineVersionPersistenceService @Autowired constructor(
             val pipelineSetting = pipelineSettingWithoutVersion.copy(
                 version = resourceOnlyVersion.settingVersion!!
             )
+            postProcessBeforeVersionCreate(
+                context = context,
+                pipelineResourceVersion = pipelineResourceVersion,
+                pipelineSetting = pipelineSetting
+            )
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 createPipelineResourceVersion(
@@ -285,7 +327,35 @@ class PipelineVersionPersistenceService @Autowired constructor(
                     dslContext = transactionContext,
                     setting = pipelineSetting
                 )
+                // 保存到T_PIPELINE_RESOURCE_DRAFT_VERSION表
+                pipelineResourceDraftVersionDao.create(
+                    dslContext = transactionContext,
+                    userId = userId,
+                    pipelineResourceVersion = pipelineResourceVersion,
+                    draftVersion = pipelineResourceVersion.draftVersion!!,
+                    baseDraftVersion = baseDraftVersion,
+                    baseVersionName = resourceOnlyVersion.baseVersionName
+                )
+
+                // 保存到T_PIPELINE_SETTING_DRAFT_VERSION表
+                pipelineSettingDraftVersionDao.create(
+                    dslContext = transactionContext,
+                    setting = pipelineSetting,
+                    version = pipelineResourceVersion.version,
+                    draftVersion = pipelineResourceVersion.draftVersion!!
+                )
+                postProcessInTransactionVersionCreate(
+                    transactionContext = transactionContext,
+                    context = context,
+                    pipelineResourceVersion = pipelineResourceVersion,
+                    pipelineSetting = pipelineSetting
+                )
             }
+            postProcessAfterVersionCreate(
+                context = context,
+                pipelineResourceVersion = pipelineResourceVersion,
+                pipelineSetting = pipelineSetting
+            )
         }
     }
 
@@ -312,6 +382,11 @@ class PipelineVersionPersistenceService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId
+            )
+            postProcessBeforeVersionCreate(
+                context = context,
+                pipelineResourceVersion = pipelineResourceVersion,
+                pipelineSetting = pipelineSetting
             )
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
@@ -453,6 +528,11 @@ class PipelineVersionPersistenceService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId
+            )
+            postProcessBeforeVersionCreate(
+                context = context,
+                pipelineResourceVersion = pipelineResourceVersion,
+                pipelineSetting = pipelineSetting
             )
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
@@ -623,6 +703,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
                 versionName = versionName ?: "",
                 model = model,
                 baseVersion = baseVersion,
+                draftVersion = draftVersion,
                 yamlStr = yaml,
                 yamlVersion = yamlVersion,
                 versionNum = versionNum,

@@ -64,6 +64,8 @@ data class PipelineTemplateInfoResponse(
     val version: Long?,
     @get:Schema(title = "用于前端交互的版本名称")
     val versionName: String?,
+    @get:Schema(title = "版本状态")
+    val versionStatus: VersionStatus?,
     @get:Schema(title = "草稿的基准版本（存在草稿才有值）", required = false)
     val baseVersion: Long?,
     @get:Schema(title = "草稿的基准版本的状态（存在草稿才有值）", required = false)
@@ -83,5 +85,7 @@ data class PipelineTemplateInfoResponse(
     @get:Schema(title = "yaml文件在默认分支是否存在", required = false)
     var yamlExist: Boolean? = false,
     @get:Schema(title = "流水线模版研发商店相关", required = false)
-    val pipelineTemplateMarketRelatedInfo: PipelineTemplateMarketRelatedInfo?
+    val pipelineTemplateMarketRelatedInfo: PipelineTemplateMarketRelatedInfo?,
+    @get:Schema(title = "草稿版本号", required = false)
+    val draftVersion: Int? = null
 )

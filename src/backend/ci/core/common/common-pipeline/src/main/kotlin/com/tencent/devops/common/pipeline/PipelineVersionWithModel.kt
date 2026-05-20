@@ -55,5 +55,7 @@ data class PipelineVersionWithModel(
     @get:Schema(title = "更新操作人", required = true)
     val updater: String?,
     @get:Schema(title = "版本修改时间", required = true)
-    val updateTime: Long?
+    val updateTime: Long?,
+    @get:Schema(title = "该版本来源的草稿版本", required = false)
+    val draftVersion: Int? = null
 )

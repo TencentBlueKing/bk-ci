@@ -222,4 +222,44 @@ class ProcessDataClearService @Autowired constructor(
             skipTaskDeleteFlag = true
         )
     }
+
+    fun deletePipelineDraftData(
+        projectId: String,
+        pipelineId: String,
+        versions: List<Int>
+    ) {
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            processDataDeleteDao.deletePipelineResourceDraftVersion(
+                dslContext = context, projectId = projectId,
+                pipelineId = pipelineId, versions = versions
+            )
+            processDataDeleteDao.deletePipelineSettingDraftVersion(
+                dslContext = context, projectId = projectId,
+                pipelineId = pipelineId, versions = versions
+            )
+            processDataDeleteDao.deletePipelineBuildHistoryDebug(
+                dslContext = context, projectId = projectId,
+                pipelineId = pipelineId, versions = versions
+            )
+        }
+    }
+
+    fun deleteTemplateDraftData(
+        projectId: String,
+        templateId: String,
+        versions: List<Long>
+    ) {
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            processDataDeleteDao.deleteTemplateResourceDraftVersion(
+                dslContext = context, projectId = projectId,
+                templateId = templateId, versions = versions
+            )
+            processDataDeleteDao.deleteTemplateSettingDraftVersion(
+                dslContext = context, projectId = projectId,
+                templateId = templateId, versions = versions
+            )
+        }
+    }
 }

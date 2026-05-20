@@ -460,6 +460,8 @@ object ProcessMessageCode {
     const val ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN = "2101364"
     // YAML文件[{0}]已绑定其他流水线[{1}]，不能重命名
     const val ERROR_PAC_YAML_FILE_BINDTO_OTHER_PIPELINE = "2101365"
+    const val ERROR_TEMPLATE_RESOURCE_DRAFT_VERSION_NOT_EXISTS = "2101366" // 模板草稿版本编排[{0}]记录不存在
+    const val ERROR_TEMPLATE_SETTING_DRAFT_VERSION_NOT_EXISTS = "2101367" // 模板草稿版本设置[{0}]不存在
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
