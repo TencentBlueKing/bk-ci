@@ -189,6 +189,6 @@ object WebhookI18nConstants {
     // 通用: 事件动作不匹配
     const val BK_TRIGGER_ACTION_NOT_MATCH = "bkTriggerActionNotMatch"
 
-    // 通用: 触发人员不匹配
-    const val BK_RIGGER_ACTION_NOT_MATCH = "bkTriggerActionNotMatch"
+    // 通用: 触发来源不匹配
+    const val BK_RIGGER_EVENT_FROM_NOT_MATCH = "bkRiggerEventFromNotMatch"
 }

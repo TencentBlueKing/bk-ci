@@ -52,6 +52,7 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_WORKSPA
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_BUG_URL_PATTERN
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_EVENT_SEPARATOR
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CURRENT_USER
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_ENTITY_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_EVENT
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_EVENT_FROM
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_ID
@@ -60,6 +61,7 @@ import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_NEW_PREF
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PARENT_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PRIORITY
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_REFERER
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_TARGET_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_WORKSPACE_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_STORY_URL_PATTERN
 import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
@@ -192,7 +194,7 @@ class TapdWebhookRequestService(
 
         val tapdProjectId = body[TAPD_KEY_WORKSPACE_ID] ?: sourceTriggerEvent.eventSource ?: ""
         val triggerUser = replayEvent.userId.ifBlank { body[TAPD_KEY_CURRENT_USER] ?: "" }
-        val objectId = body.getHookField(TAPD_KEY_ID, eventAction == TapdEventAction.UPDATE)
+        val objectId = getEventObjectId(eventAction, body)
         val pipelines = resolveReplayPipelines(
             replayEvent = replayEvent,
             tapdProjectId = tapdProjectId,
@@ -264,7 +266,7 @@ class TapdWebhookRequestService(
                 PipelineEventSubscriber(
                     projectId = replayEvent.projectId,
                     pipelineId = targetPipelineId,
-                    channelCode = ChannelCode.BS
+                    channelCode = ChannelCode.getRequestChannelCode()
                 )
             )
         }
@@ -282,7 +284,49 @@ class TapdWebhookRequestService(
             logger.warn("Unsupported tapd event action|$eventActionRaw")
             return null
         }
-        return eventType to eventAction
+        return convertEvent(eventType, eventAction)
+    }
+
+    /**
+     * 转化事件类型及其动作
+     */
+    private fun convertEvent(eventType: TapdEventType, eventAction: TapdEventAction) = when (eventType) {
+        TapdEventType.STORY_COMMENT -> {
+            TapdEventType.STORY to convertCommentAction(eventAction)
+        }
+
+        TapdEventType.BUG_COMMENT -> {
+            TapdEventType.BUG to convertCommentAction(eventAction)
+        }
+
+        else -> eventType to eventAction
+    }
+
+    private fun convertCommentAction(eventAction: TapdEventAction) = when (eventAction) {
+        TapdEventAction.ADD -> TapdEventAction.ADD_COMMENT
+        TapdEventAction.UPDATE -> TapdEventAction.UPDATE_COMMENT
+        TapdEventAction.DELETE -> TapdEventAction.DELETE_COMMENT
+        else -> eventAction
+    }
+
+    private fun getEventObjectId(
+        eventAction: TapdEventAction,
+        body: Map<String, Any?>
+    ) = when (eventAction) {
+        TapdEventAction.ADD_COMMENT,
+        TapdEventAction.UPDATE_COMMENT,
+        TapdEventAction.DELETE_COMMENT -> {
+            body.getHookField(TAPD_KEY_ENTITY_ID)
+        }
+
+        TapdEventAction.BUG_LINK,
+        TapdEventAction.BUG_UNLINK,
+        TapdEventAction.STORY_LINK,
+        TapdEventAction.STORY_UNLINK -> {
+            body.getHookField(TAPD_KEY_TARGET_ID)
+        }
+
+        else -> body.getHookField(TAPD_KEY_ID, eventAction == TapdEventAction.UPDATE)
     }
 
     private fun listSubscribers(

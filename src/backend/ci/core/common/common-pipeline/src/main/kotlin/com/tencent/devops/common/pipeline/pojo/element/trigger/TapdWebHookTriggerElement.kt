@@ -116,5 +116,10 @@ data class TapdWebHookTriggerInput(
     @get:Schema(title = "用户白名单 (current_user)", required = false)
     val includeUsers: List<String>? = null,
     @get:Schema(title = "用户黑名单 (current_user)", required = false)
-    val excludeUsers: List<String>? = null
+    val excludeUsers: List<String>? = null,
+    @get:Schema(
+        title = "事件来源",
+        required = false
+    )
+    val includeEventFrom: List<String>? = null,
 )

@@ -21,6 +21,14 @@ object TapdWebhookConstant {
     // 工单ID字段名（创建/删除事件用）
     const val TAPD_KEY_ID = "id"
 
+    const val TAPD_KEY_ENTITY_ID = "entity_id"
+
+    // 目标对象ID
+    const val TAPD_KEY_TARGET_ID = "target_id"
+
+    // 优先级标题
+    const val TAPD_KEY_PRIORITY_LABEL = "priority_label"
+
     // 工单标题字段
     const val TAPD_KEY_NAME = "name"
 

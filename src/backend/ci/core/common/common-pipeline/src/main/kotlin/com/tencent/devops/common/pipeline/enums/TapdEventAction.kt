@@ -19,7 +19,12 @@ enum class TapdEventAction(val value: String) {
     // 提交关联
     LINK("link"),
     UNLINK("unlink"),
-
+    // bug关联
+    BUG_LINK("bug_link"),
+    BUG_UNLINK("bug_unlink"),
+    // story关联
+    STORY_LINK("story_link"),
+    STORY_UNLINK("story_unlink"),
     // 测试计划用例
     LINK_TCASE("link_tcase"),
     UNLINK_TCASE("unlink_tcase"),
@@ -37,7 +42,13 @@ enum class TapdEventAction(val value: String) {
 
     // 角色加入/退出
     JOIN("join"),
-    QUIT("quit");
+    QUIT("quit"),
+
+    // 扩展动作, 按照事件类型进行合并，实际不存在
+    ADD_COMMENT("add_comment"),
+    UPDATE_COMMENT("update_comment"),
+    DELETE_COMMENT("delete_comment"),
+    STATUS_CHANGE("status_change");
 
     companion object {
         fun parse(value: String?): TapdEventAction? {

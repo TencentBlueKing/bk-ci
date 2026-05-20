@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.enums.TapdEventAction
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerInput
 import com.tencent.devops.common.pipeline.enums.TapdEventType
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_RIGGER_EVENT_FROM_NOT_MATCH
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_TRIGGER_ACTION_NOT_MATCH
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.USER_IGNORED
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.USER_NOT_MATCH
@@ -90,6 +91,16 @@ class TapdEventTriggerMatcher {
         eventAction: TapdEventAction,
         triggerUser: String
     ): List<WebhookFilter> {
+        val eventFromFilter = ContainsFilter(
+            pipelineId = taskId,
+            filterName = "tapdEventForm",
+            triggerOn = eventAction.value,
+            included = input.includeEventFrom ?: emptyList(),
+            failedReason = I18Variable(
+                code = BK_RIGGER_EVENT_FROM_NOT_MATCH,
+                params = listOf()
+            ).toJsonStr()
+        )
         val actionFilter = ContainsFilter(
             pipelineId = taskId,
             filterName = "tapdAction",
@@ -118,6 +129,6 @@ class TapdEventTriggerMatcher {
                 params = listOf(triggerUser)
             ).toJsonStr()
         )
-        return listOf(actionFilter, userFilter)
+        return listOf(eventFromFilter, actionFilter, userFilter)
     }
 }
