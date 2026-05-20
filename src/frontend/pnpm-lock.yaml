@@ -1439,6 +1439,9 @@ importers:
       '@blueking/search-select':
         specifier: 0.0.1-beta.2
         version: 0.0.1-beta.2
+      '@blueking/xss-filter':
+        specifier: 0.0.10
+        version: 0.0.10
       '@icon-cool/bk-icon-devops':
         specifier: ^0.2.1
         version: 0.2.1
@@ -3285,6 +3288,9 @@ packages:
 
   '@blueking/user-selector@1.0.14':
     resolution: {integrity: sha512-P2ksMb6kipY+yQ49SI8IMb6JIiurWDkK3fHSXTLWn23O5q0zlN7GM+Edv9IfeG8gqK7q5LrDH+H8lQVoviUPoA==}
+
+  '@blueking/xss-filter@0.0.10':
+    resolution: {integrity: sha512-IKI2u2AtRPSQh3ILyJ0G+PhUPj0Hk5pQpPM1Vc/VDlQIN3OrV8C4yVZhu7hKpnA8quozp5TLEjImZcmUWpBU5Q==}
 
   '@cacheable/memory@2.0.8':
     resolution: {integrity: sha512-FvEb29x5wVwu/Kf93IWwsOOEuhHh6dYCJF3vcKLzXc0KXIW181AOzv6ceT4ZpBHDvAfG60eqb+ekmrnLHIy+jw==}
@@ -18674,6 +18680,11 @@ snapshots:
       '@icon-cool/bk-icon-bk-biz-components': 0.0.4
       lodash.throttle: 4.1.1
       tippy.js: 6.3.7
+
+  '@blueking/xss-filter@0.0.10':
+    dependencies:
+      lodash: 4.17.23
+      xss: 1.0.15
 
   '@cacheable/memory@2.0.8':
     dependencies:
