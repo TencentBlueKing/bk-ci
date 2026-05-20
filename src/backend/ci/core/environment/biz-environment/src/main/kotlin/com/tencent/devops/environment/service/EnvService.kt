@@ -524,6 +524,62 @@ class EnvService @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.ENVIRONMENT_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.ENVIRONMENT
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.ENVIRONMENT_VIEW_CONTENT
+    )
+    override fun getEnvironmentByName(
+        userId: String,
+        projectId: String,
+        envName: String,
+        checkPermission: Boolean
+    ): EnvWithPermission {
+        val env = envDao.getByEnvName(dslContext, projectId, envName)
+            ?: throw ErrorCodeException(errorCode = ERROR_ENV_NOT_EXISTS)
+        val envId = env.envId
+        if (checkPermission && !environmentPermissionService.checkEnvPermission(
+                userId = userId,
+                projectId = projectId,
+                envId = envId,
+                permission = AuthPermission.VIEW
+            )
+        ) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_VIEW_PERMISSSION)
+            )
+        }
+        ActionAuditContext.current()
+            .setInstanceId(envId.toString())
+            .setInstanceName(env.envName)
+        val nodeCount = envNodeDao.count(dslContext, projectId, envId)
+        return EnvWithPermission(
+            envHashId = HashUtil.encodeLongId(env.envId),
+            name = env.envName,
+            desc = env.envDesc,
+            envType = if (env.envType == EnvType.TEST.name) EnvType.DEV.name else env.envType, // 兼容性代码
+            nodeCount = nodeCount,
+            envVars = jacksonObjectMapper().readValue(env.envVars),
+            createdUser = env.createdUser,
+            createdTime = env.createdTime.timestamp(),
+            updatedUser = env.updatedUser,
+            updatedTime = env.updatedTime.timestamp(),
+            canEdit = environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT),
+            canDelete = environmentPermissionService.checkEnvPermission(
+                userId,
+                projectId,
+                envId,
+                AuthPermission.DELETE
+            ),
+            canUse = null,
+            projectName = client.get(ServiceProjectResource::class).get(env.projectId).data?.projectName
+        )
+    }
+
     override fun listRawEnvByHashIds(
         userId: String,
         projectId: String,

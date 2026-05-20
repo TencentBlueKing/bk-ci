@@ -618,6 +618,25 @@ class PipelineInfoDao {
         }
     }
 
+    fun getPipelineInfoByName(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineName: String,
+        channelCode: ChannelCode? = null,
+        filterDelete: Boolean = true
+    ): TPipelineInfoRecord? {
+        return with(T_PIPELINE_INFO) {
+            val query = dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_NAME.eq(pipelineName))
+            if (channelCode != null) {
+                query.and(CHANNEL.eq(channelCode.name))
+            }
+            if (filterDelete) query.and(DELETE.eq(false))
+            query.fetchAny()
+        }
+    }
+
     fun convert(t: TPipelineInfoRecord?, templateId: String?): PipelineInfo? {
         return if (t != null) {
             with(t) {

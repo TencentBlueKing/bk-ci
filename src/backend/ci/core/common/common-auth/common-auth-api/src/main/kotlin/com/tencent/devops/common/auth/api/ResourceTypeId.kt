@@ -22,4 +22,5 @@ object ResourceTypeId {
 
     // 自定义
     const val SECURITY = "security"
+    const val PIPELINE_LABEL = "pipeline_label"
 }

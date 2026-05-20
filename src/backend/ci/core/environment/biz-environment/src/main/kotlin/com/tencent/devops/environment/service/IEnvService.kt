@@ -60,6 +60,13 @@ interface IEnvService {
         checkPermission: Boolean = true
     ): EnvWithPermission
 
+    fun getEnvironmentByName(
+        userId: String,
+        projectId: String,
+        envName: String,
+        checkPermission: Boolean = true
+    ): EnvWithPermission
+
     fun listRawEnvByHashIds(userId: String, projectId: String, envHashIds: List<String>): List<EnvWithPermission>
     fun listRawEnvByHashIdsAllType(envHashIds: List<String>): List<EnvWithPermission>
     fun listRawEnvByEnvNames(userId: String, projectId: String, envNames: List<String>): List<EnvWithPermission>
