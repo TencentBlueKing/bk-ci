@@ -30,7 +30,6 @@ package com.tencent.devops.notify.service.notifier
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
-import com.tencent.devops.notify.pojo.ImateAction
 import com.tencent.devops.notify.pojo.ImateBizContext
 import com.tencent.devops.notify.pojo.ImateSendMessageRequest
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
@@ -44,11 +43,12 @@ import org.springframework.stereotype.Component
  * IMate 通知器：把 stream 后台的通知请求翻译成 IMate API 入参。
  *
  * 关键设计：
- * - **模板源在 stream 后台**（classpath HTML），由 [ImateTemplateRenderer] 本地渲染好最终 HTML 后发送；
+ * - **模板源在 stream 后台**（classpath HTML），由 [ImateTemplateRenderer] 本地渲染好最终内容后发送；
  * - 业务上下文（projectId/pipelineId/buildId/stageId/groupId/executeCount）通过 bodyParams 中的
  *   `IMATE_CTX_*` keys 透传，再填入 [ImateSendMessageRequest.bizContext]，
  *   IMate 必须保存并在审核按钮回调中原样回传给 stream 后台的 Open 接口；
- * - sceneCode 通过 bodyParams[IMATE_SCENE_KEY] 决定走哪个模板；缺失时按 SendNotifyMessageTemplateRequest.templateCode 回退。
+ * - templateCode 优先从 bodyParams[IMATE_TEMPLATE_CODE_KEY] 取（允许业务方按场景覆盖），
+ *   缺失时回退到 SendNotifyMessageTemplateRequest.templateCode。
  */
 @Component
 class ImateNotifier @Autowired constructor(
@@ -72,13 +72,13 @@ class ImateNotifier @Autowired constructor(
             return
         }
 
-        val sceneCode = request.bodyParams?.get(NotifyUtils.IMATE_SCENE_KEY)
+        val templateCode = request.bodyParams?.get(NotifyUtils.IMATE_TEMPLATE_CODE_KEY)
             ?.takeIf { it.isNotBlank() }
             ?: request.templateCode
         val bizContext = buildBizContext(request.bodyParams)
         if (bizContext == null) {
             logger.warn(
-                "[IMATE] missing biz context (projectId/pipelineId/buildId), skip. scene=$sceneCode"
+                "[IMATE] missing biz context (projectId/pipelineId/buildId), skip. templateCode=$templateCode"
             )
             return
         }
@@ -87,23 +87,20 @@ class ImateNotifier @Autowired constructor(
         val mergedParams: MutableMap<String, String?> = mutableMapOf()
         request.titleParams?.forEach { (k, v) -> if (k !in INTERNAL_KEYS) mergedParams[k] = v }
         request.bodyParams?.forEach { (k, v) -> if (k !in INTERNAL_KEYS) mergedParams[k] = v }
-        val html = imateTemplateRenderer.render(sceneCode, mergedParams)
-        if (html.isNullOrBlank()) {
-            logger.warn("[IMATE] template render failed/empty, skip. scene=$sceneCode")
+        val body = imateTemplateRenderer.render(templateCode, mergedParams)
+        if (body.isNullOrBlank()) {
+            logger.warn("[IMATE] template render failed/empty, skip. templateCode=$templateCode")
             return
         }
-
-        val actions = if (sceneCode == NotifyUtils.IMATE_SCENE_STAGE_REVIEW) REVIEW_ACTIONS else null
 
         sessions.forEach { sessionId ->
             val payload = ImateSendMessageRequest(
                 sessionId = sessionId,
                 bizType = "CREATIVE_STREAM",
-                sceneCode = sceneCode,
+                templateCode = templateCode,
                 title = commonNotifyMessageTemplateRecord.templateName,
-                html = html,
-                bizContext = bizContext,
-                actions = actions
+                body = body,
+                bizContext = bizContext
             )
             imateService.send(payload)
         }
@@ -138,7 +135,7 @@ class ImateNotifier @Autowired constructor(
         // bodyParams 中的内部占位 key，不应作为模板变量参与 {{var}} 替换
         private val INTERNAL_KEYS = setOf(
             NotifyUtils.IMATE_SESSION_ID_KEY,
-            NotifyUtils.IMATE_SCENE_KEY,
+            NotifyUtils.IMATE_TEMPLATE_CODE_KEY,
             NotifyUtils.IMATE_CTX_PROJECT_ID,
             NotifyUtils.IMATE_CTX_PIPELINE_ID,
             NotifyUtils.IMATE_CTX_BUILD_ID,
@@ -146,11 +143,6 @@ class ImateNotifier @Autowired constructor(
             NotifyUtils.IMATE_CTX_GROUP_ID,
             NotifyUtils.IMATE_CTX_EXECUTE_COUNT,
             NotifyUtils.WEWORK_GROUP_KEY
-        )
-
-        private val REVIEW_ACTIONS = listOf(
-            ImateAction(code = "APPROVE", label = "同意，继续执行", style = "primary"),
-            ImateAction(code = "REJECT", label = "驳回，终止流水线", style = "danger")
         )
     }
 }

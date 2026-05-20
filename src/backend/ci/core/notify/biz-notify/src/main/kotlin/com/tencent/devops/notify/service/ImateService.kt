@@ -67,7 +67,7 @@ class ImateService {
             return false
         }
         if (request.sessionId.isBlank()) {
-            logger.warn("[IMATE] sessionId is blank, skip send. scene=${request.sceneCode}")
+            logger.warn("[IMATE] sessionId is blank, skip send. templateCode=${request.templateCode}")
             return false
         }
         return try {
@@ -81,22 +81,23 @@ class ImateService {
                 val responseStr = response.body?.string()
                 if (response.isSuccessful) {
                     logger.info(
-                        "[IMATE] send success. sessionId=${request.sessionId}, scene=${request.sceneCode}, " +
-                            "build=${request.bizContext.buildId}"
+                        "[IMATE] send success. sessionId=${request.sessionId}, " +
+                            "templateCode=${request.templateCode}, build=${request.bizContext.buildId}"
                     )
                     true
                 } else {
                     logger.warn(
-                        "[IMATE] send failed. sessionId=${request.sessionId}, scene=${request.sceneCode}, " +
-                            "build=${request.bizContext.buildId}, status=${response.code}, body=$responseStr"
+                        "[IMATE] send failed. sessionId=${request.sessionId}, " +
+                            "templateCode=${request.templateCode}, build=${request.bizContext.buildId}, " +
+                            "status=${response.code}, body=$responseStr"
                     )
                     false
                 }
             }
         } catch (ignored: Throwable) {
             logger.warn(
-                "[IMATE] send error. sessionId=${request.sessionId}, scene=${request.sceneCode}, " +
-                    "build=${request.bizContext.buildId}",
+                "[IMATE] send error. sessionId=${request.sessionId}, " +
+                    "templateCode=${request.templateCode}, build=${request.bizContext.buildId}",
                 ignored
             )
             false

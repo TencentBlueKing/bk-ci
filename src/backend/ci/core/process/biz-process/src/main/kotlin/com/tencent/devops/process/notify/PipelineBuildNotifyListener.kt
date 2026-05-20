@@ -160,7 +160,7 @@ class PipelineBuildNotifyListener @Autowired constructor(
         val imateSession = bodyParams[NotifyUtils.IMATE_SESSION_ID_KEY]
         if (imateSession.isNullOrBlank()) return
         val targetStageId = stageId ?: return
-        bodyParams[NotifyUtils.IMATE_SCENE_KEY] = NotifyUtils.IMATE_SCENE_STAGE_REVIEW
+        bodyParams[NotifyUtils.IMATE_TEMPLATE_CODE_KEY] = NotifyUtils.IMATE_TPL_STAGE_REVIEW
         bodyParams[NotifyUtils.IMATE_CTX_PROJECT_ID] = projectId
         bodyParams[NotifyUtils.IMATE_CTX_PIPELINE_ID] = pipelineId
         bodyParams[NotifyUtils.IMATE_CTX_BUILD_ID] = buildId

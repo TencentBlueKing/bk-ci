@@ -10,12 +10,13 @@ object NotifyUtils {
     // ImateNotifier 在发送前从该 key 取出真正的会话ID（参考 WEWORK_GROUP_KEY 的设计）。
     const val IMATE_SESSION_ID_KEY = "__IMATE_SESSION_ID__"
 
-    // 业务场景编码（必填于发送 IMate 的入口；用于选择 classpath 模板及作为 IMate 端的 sceneCode）：
-    //   STAGE_REVIEW / PIPELINE_FINISH_SUCCESS / PIPELINE_FINISH_FAIL ...
-    const val IMATE_SCENE_KEY = "__IMATE_SCENE__"
-    const val IMATE_SCENE_STAGE_REVIEW = "CREATIVE_STREAM_STAGE_REVIEW"
-    const val IMATE_SCENE_PIPELINE_SUCCESS = "CREATIVE_STREAM_PIPELINE_FINISH_SUCCESS"
-    const val IMATE_SCENE_PIPELINE_FAIL = "CREATIVE_STREAM_PIPELINE_FINISH_FAIL"
+    // IMate 模板代码（与 SendNotifyMessageTemplateRequest.templateCode 同语义）：
+    //   - 既是 stream 后台 classpath 模板文件名 (templates/imate/{code}.html)；
+    //   - 也是发给 IMate 后台的 ImateSendMessageRequest.templateCode（IMate 端仅用于日志归类 / 灰度 / 风控）。
+    const val IMATE_TEMPLATE_CODE_KEY = "__IMATE_TEMPLATE_CODE__"
+    const val IMATE_TPL_STAGE_REVIEW = "CREATIVE_STREAM_STAGE_REVIEW"
+    const val IMATE_TPL_PIPELINE_SUCCESS = "CREATIVE_STREAM_PIPELINE_FINISH_SUCCESS"
+    const val IMATE_TPL_PIPELINE_FAIL = "CREATIVE_STREAM_PIPELINE_FINISH_FAIL"
 
     // 业务上下文 keys：在通知发起处放入 bodyParams，
     // 由 ImateNotifier 取出后填入 ImateSendMessageRequest.bizContext，

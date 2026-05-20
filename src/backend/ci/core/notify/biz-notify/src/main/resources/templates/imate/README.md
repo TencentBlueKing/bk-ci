@@ -20,7 +20,7 @@ templates/imate/
 └── README.md
 ```
 
-> 模板文件名（去掉 `.html` 后缀）即为 `sceneCode`，由 `ImateTemplateRenderer` 在加载时识别。
+> 模板文件名（去掉 `.html` 后缀）即为 `templateCode`，由 `ImateTemplateRenderer` 在加载时识别；同名常量在 `NotifyUtils.IMATE_TPL_*` 中维护，避免散落字符串字面量。
 
 ## 占位符约定
 
@@ -36,6 +36,18 @@ templates/imate/
 | `dataTime` | 时间戳（发送时刻） |
 | `detailUrl` / `detailAppUrl` | 构建详情 Web/移动端链接 |
 | `reviewUrl` / `reviewAppUrl` | Stage 审核 Web/移动端链接 |
+
+## 按钮交互契约
+
+为避免「按钮文案在 HTML 里写一份、又在 POJO 字段 `actions` 里写一份」造成的双源真相，本方案约定：
+
+- **按钮全部写在 HTML 里**，统一形如 `<button data-action="APPROVE">同意</button>`；
+- IMate 客户端只需在卡片 root 节点上对 `[data-action]` 元素做 click 事件代理；命中后读取：
+  - `el.dataset.action` —— 必填，作为回调请求体的 `action` 字段（取值：`APPROVE` / `REJECT`）；
+  - `el.dataset.suggest` —— 可选，作为回调请求体的 `suggest` 字段；
+- 若按钮在触发回调前还需要前端二次确认 / 收集额外输入（比如「驳回必须填原因」），就在模板里写**内联 JS**，在事件冒泡过程中先弹 prompt 把结果写回 `dataset.suggest`，再让 IMate 客户端的事件代理触发回调。
+
+`ImateSendMessageRequest` 因此不再带 `actions` 字段 —— 业务卡片的 UI 与交互完全由 HTML 自描述，IMate 后端只负责「转发渲染 + 拦截 click 事件 + 回调业务方」。
 
 ## 审核回调
 

@@ -32,13 +32,15 @@ import io.swagger.v3.oas.annotations.media.Schema
 /**
  * 发送 IMate 会话消息请求体（创作流后台 -> IMate 后台）。
  *
- * 设计要点：
- * - **模板源在 stream 后台**：bk-ci 用 classpath 模板 + 业务参数本地渲染好 [html] 后发送，
- *   IMate 仅作为渲染容器和交互按钮事件转发器；
- * - 业务上下文（projectId/pipelineId/buildId/stageId/groupId/executeCount）必须 IMate 端持久化保存；
- *   当用户点击审核卡片上的「同意/驳回」按钮时，IMate 把这些字段原样回传到本端
- *   [com.tencent.devops.process.api.open.OpenStreamImateReviewResource.callback] 接口；
- * - 本对象**不带模板编码、不带占位符变量**——这是和「模板存 IMate 后台」方案的关键区别。
+ * 契约约定（与 IMate 端）：
+ * - **UI 与交互都在 [body] 内**：bk-ci 用 classpath 模板 + 业务参数本地渲染好 HTML 后发送，
+ *   按钮也写在 HTML 里（形如 `<button data-action="APPROVE">同意</button>`），如需更复杂的交互可在模板里写内联 JS；
+ *   IMate 客户端只需在卡片 root 节点上委托监听 `click` 事件，命中 `[data-action]` 元素时
+ *   读取其 `dataset.action`（必要时还有 `dataset.*` 携带的额外字段）作为回调入参；
+ * - **业务上下文走 [bizContext]**：IMate 端必须按卡片维度持久化保存，按钮点击回调时
+ *   原样回传到本端 [com.tencent.devops.process.api.open.OpenStreamImateReviewResource.callback]；
+ * - 本对象不带占位符变量 / 按钮结构化描述 —— [templateCode] 与 [com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest.templateCode]
+ *   语义一致，IMate 端只用作日志归类 / 灰度 / 风控键，不参与渲染（渲染已在 stream 后台完成）。
  */
 @Schema(title = "IMate 会话消息发送请求")
 data class ImateSendMessageRequest(
@@ -47,25 +49,28 @@ data class ImateSendMessageRequest(
     @get:Schema(title = "业务来源（如 CREATIVE_STREAM）", required = true)
     val bizType: String = "CREATIVE_STREAM",
     @get:Schema(
-        title = "业务场景编码（如 STAGE_REVIEW / PIPELINE_FINISH_SUCCESS / PIPELINE_FINISH_FAIL）",
+        title = "通知模板代码（如 CREATIVE_STREAM_STAGE_REVIEW / CREATIVE_STREAM_PIPELINE_FINISH_SUCCESS 等），" +
+            "供 IMate 端做日志归类 / 灰度 / 风控使用，不参与渲染",
         required = true
     )
-    val sceneCode: String,
-    @get:Schema(title = "卡片标题", required = false)
+    val templateCode: String,
+    @get:Schema(title = "卡片标题（用于会话列表预览 / 通知栏；正文样式以 body 为准）", required = false)
     val title: String? = null,
-    @get:Schema(title = "已渲染好的最终 HTML（含交互按钮 data-action='APPROVE/REJECT'）", required = true)
-    val html: String,
     @get:Schema(
-        title = "业务上下文：IMate 端必须持久化保存，按钮点击回调时原样回传到 stream 后台",
+        title = "已渲染好的最终消息内容（HTML，含交互按钮 `<button data-action='APPROVE|REJECT'>` 及必要的内联 JS）",
         required = true
     )
-    val bizContext: ImateBizContext,
-    @get:Schema(title = "交互按钮列表（同意/驳回 等，含按钮代码与文案）", required = false)
-    val actions: List<ImateAction>? = null
+    val body: String,
+    @get:Schema(
+        title = "业务上下文：IMate 端必须按卡片维度持久化保存，按钮点击回调时原样回传到 stream 后台",
+        required = true
+    )
+    val bizContext: ImateBizContext
 )
 
 /**
- * 业务上下文
+ * 业务上下文 —— 用于把审核卡片绑定到具体的某次 stage 审核。
+ * IMate 端必须保存并在按钮点击回调中原样回传
  */
 @Schema(title = "IMate 卡片业务上下文")
 data class ImateBizContext(
@@ -79,16 +84,6 @@ data class ImateBizContext(
     val stageId: String? = null,
     @get:Schema(title = "审核组 ID（仅 STAGE_REVIEW 场景；不传则按当前活跃组处理）", required = false)
     val groupId: String? = null,
-    @get:Schema(title = "执行次数（重试场景区分）", required = false)
+    @get:Schema(title = "执行次数", required = false)
     val executeCount: Int? = null
-)
-
-@Schema(title = "IMate 交互按钮")
-data class ImateAction(
-    @get:Schema(title = "按钮唯一标识，如 APPROVE / REJECT", required = true)
-    val code: String,
-    @get:Schema(title = "按钮文案", required = true)
-    val label: String,
-    @get:Schema(title = "按钮样式：primary / danger / default", required = false)
-    val style: String? = "default"
 )

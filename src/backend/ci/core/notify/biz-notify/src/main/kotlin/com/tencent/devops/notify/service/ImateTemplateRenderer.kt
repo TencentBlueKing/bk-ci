@@ -36,7 +36,7 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * IMate 模板渲染器（创作流）。
  *
- * - 模板源：classpath `templates/imate/{sceneCode}.html`，由 stream 后台维护和发版；
+ * - 模板源：classpath `templates/imate/{templateCode}.html`，由 stream 后台维护和发版；
  * - 渲染：`{{var}}` 形式占位符做字符串替换，缺失变量替换为空字符串；
  * - 缓存：模板文件读后常驻进程内存（模板数量少且只在发版时变化，不需要 TTL/驱逐）；
  * - 业务方在 IMate 后台不再需要约定模板编码，bk-ci 这边发的就是已渲染好的最终 HTML。
@@ -48,41 +48,41 @@ class ImateTemplateRenderer {
     private val missingMarker: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
     /**
-     * 加载并渲染 [sceneCode] 对应的模板。
+     * 加载并渲染 [templateCode] 对应的模板。
      * 模板加载失败时返回 null（调用方决定是 silent fallback 还是直接放弃发送）。
      */
-    fun render(sceneCode: String, params: Map<String, String?>): String? {
-        val raw = loadTemplate(sceneCode) ?: return null
+    fun render(templateCode: String, params: Map<String, String?>): String? {
+        val raw = loadTemplate(templateCode) ?: return null
         return PLACEHOLDER_REGEX.replace(raw) { mr ->
             val key = mr.groupValues[1].trim()
             params[key].orEmpty()
         }
     }
 
-    private fun loadTemplate(sceneCode: String): String? {
-        templateCache[sceneCode]?.let { return it }
-        if (sceneCode in missingMarker) return null
+    private fun loadTemplate(templateCode: String): String? {
+        templateCache[templateCode]?.let { return it }
+        if (templateCode in missingMarker) return null
 
-        // sceneCode 仅允许字母、数字、下划线，避免 path traversal
-        if (!SAFE_NAME_REGEX.matches(sceneCode)) {
-            logger.warn("[IMATE_TPL] illegal sceneCode=$sceneCode, refuse to load")
-            missingMarker.add(sceneCode)
+        // templateCode 仅允许字母、数字、下划线，避免 path traversal
+        if (!SAFE_NAME_REGEX.matches(templateCode)) {
+            logger.warn("[IMATE_TPL] illegal templateCode=$templateCode, refuse to load")
+            missingMarker.add(templateCode)
             return null
         }
-        val resource = ClassPathResource("templates/imate/$sceneCode.html")
+        val resource = ClassPathResource("templates/imate/$templateCode.html")
         if (!resource.exists()) {
-            logger.info("[IMATE_TPL] template not found scene=$sceneCode")
-            missingMarker.add(sceneCode)
+            logger.info("[IMATE_TPL] template not found templateCode=$templateCode")
+            missingMarker.add(templateCode)
             return null
         }
-        val content = try {
+        val raw = try {
             resource.inputStream.use { it.readBytes().toString(StandardCharsets.UTF_8) }
         } catch (e: Exception) {
-            logger.warn("[IMATE_TPL] read failed scene=$sceneCode", e)
+            logger.warn("[IMATE_TPL] read failed templateCode=$templateCode", e)
             return null
         }
-        templateCache[sceneCode] = content
-        return content
+        templateCache[templateCode] = raw
+        return raw
     }
 
     companion object {

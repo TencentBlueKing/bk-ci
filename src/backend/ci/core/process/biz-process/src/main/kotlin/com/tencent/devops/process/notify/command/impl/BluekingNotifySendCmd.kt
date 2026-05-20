@@ -81,7 +81,7 @@ class BluekingNotifySendCmd @Autowired constructor(
                     if (successSubscription.types.contains(PipelineSubscriptionType.IMATE)) {
                         attachImateContext(
                             commandContext = commandContext,
-                            scene = NotifyUtils.IMATE_SCENE_PIPELINE_SUCCESS
+                            templateCode = NotifyUtils.IMATE_TPL_PIPELINE_SUCCESS
                         )
                         sendNotifyByTemplate(
                             templateCode = getNotifyTemplateCode(shutdownType, successSubscription.detailFlag),
@@ -144,7 +144,7 @@ class BluekingNotifySendCmd @Autowired constructor(
                     if (failSubscription.types.contains(PipelineSubscriptionType.IMATE)) {
                         attachImateContext(
                             commandContext = commandContext,
-                            scene = NotifyUtils.IMATE_SCENE_PIPELINE_FAIL
+                            templateCode = NotifyUtils.IMATE_TPL_PIPELINE_FAIL
                         )
                         sendNotifyByTemplate(
                             templateCode = getNotifyTemplateCode(shutdownType, failSubscription.detailFlag),
@@ -180,13 +180,13 @@ class BluekingNotifySendCmd @Autowired constructor(
     }
 
     /**
-     * 把 IMate 业务上下文（场景 + 项目/流水线/构建坐标）写入 notifyValue，
+     * 把 IMate 业务上下文（模板代码 + 项目/流水线/构建坐标）写入 notifyValue，
      * 由 [com.tencent.devops.notify.service.notifier.ImateNotifier] 从 bodyParams 取出后填给 IMate；
      * IMate 端必须保存并在按钮点击回调中原样回传到 stream 后台 Open 接口。
      * 流水线运行结束场景没有 stage 维度，因此不写 STAGE_ID。
      */
-    private fun attachImateContext(commandContext: BuildNotifyContext, scene: String) {
-        commandContext.notifyValue[NotifyUtils.IMATE_SCENE_KEY] = scene
+    private fun attachImateContext(commandContext: BuildNotifyContext, templateCode: String) {
+        commandContext.notifyValue[NotifyUtils.IMATE_TEMPLATE_CODE_KEY] = templateCode
         commandContext.notifyValue[NotifyUtils.IMATE_CTX_PROJECT_ID] = commandContext.projectId
         commandContext.notifyValue[NotifyUtils.IMATE_CTX_PIPELINE_ID] = commandContext.pipelineId
         commandContext.notifyValue[NotifyUtils.IMATE_CTX_BUILD_ID] = commandContext.buildId

@@ -10,9 +10,15 @@
         - dataTime           触发时间
         - reviewUrl          web 审核链接
         - reviewAppUrl       移动端审核链接
-        - projectId / pipelineId / buildId / stageId   业务坐标 (可在按钮 href 拼接)
+        - projectId / pipelineId / buildId / stageId   业务坐标 (兜底; 主要由 bizContext 传给 IMate)
+
+    与 IMate 客户端的交互契约:
+        - 客户端在卡片 root 上对 [data-action] 元素做 click 事件代理;
+        - 命中时, 把元素 dataset.action (APPROVE | REJECT) 及 dataset.suggest (可选)
+          连同 bizContext 一起回传到 stream 后台 /open/stream-review/callback;
+        - 驳回按钮点击时弹一个 prompt 收集 suggest 写回元素 dataset, 再触发回调.
 -->
-<div class="bk-imate-card bk-imate-stage-review">
+<div class="bk-imate-card bk-imate-stage-review" id="bk-imate-stage-review">
     <header class="bk-imate-header">
         <span class="bk-imate-tag bk-imate-tag-review">待审核</span>
         <h3 class="bk-imate-title">{{projectName}} · {{pipelineName}} 等你拍板</h3>
@@ -29,11 +35,39 @@
     </section>
 
     <footer class="bk-imate-actions">
-        <a class="bk-imate-btn bk-imate-btn-primary" data-action="APPROVE">同意，继续执行</a>
-        <a class="bk-imate-btn bk-imate-btn-danger" data-action="REJECT">驳回，终止流水线</a>
+        <button type="button" class="bk-imate-btn bk-imate-btn-primary" data-action="APPROVE">
+            同意，继续执行
+        </button>
+        <button type="button" class="bk-imate-btn bk-imate-btn-danger" data-action="REJECT" data-prompt-suggest="1">
+            驳回，终止流水线
+        </button>
         <a class="bk-imate-btn bk-imate-btn-link" href="{{reviewUrl}}" target="_blank">在 Web 端查看</a>
     </footer>
 </div>
+
+<script>
+    (function () {
+        var root = document.getElementById('bk-imate-stage-review');
+        if (!root || root.dataset.bound === '1') return;
+        root.dataset.bound = '1';
+
+        // 驳回前弹 prompt 收 suggest, 写回 dataset.suggest 让 IMate 客户端在事件代理时一并回传
+        root.addEventListener('click', function (ev) {
+            var el = ev.target.closest('[data-action]');
+            if (!el || !root.contains(el)) return;
+            if (el.dataset.promptSuggest === '1') {
+                var suggest = window.prompt('请填写驳回原因（必填）');
+                if (suggest === null || suggest.trim() === '') {
+                    ev.preventDefault();
+                    ev.stopImmediatePropagation();
+                    return;
+                }
+                el.dataset.suggest = suggest.trim();
+            }
+            // 真正的回调由 IMate 客户端在更外层做事件代理后发起, 这里不直接做 HTTP 请求
+        }, true);
+    })();
+</script>
 
 <style>
     .bk-imate-card { font-family: -apple-system, "PingFang SC", sans-serif; border:1px solid #e6e9ef;
@@ -47,7 +81,7 @@
     .bk-imate-desc { font-size:13px; color:#313238; line-height:1.6; margin:8px 0 0; }
     .bk-imate-actions { display:flex; gap:8px; margin-top:16px; }
     .bk-imate-btn { display:inline-block; padding:6px 14px; border-radius:4px; font-size:13px; cursor:pointer;
-        text-decoration:none; }
+        text-decoration:none; border:none; }
     .bk-imate-btn-primary { background:#3a84ff; color:#fff; }
     .bk-imate-btn-danger { background:#ea3636; color:#fff; }
     .bk-imate-btn-link { background:transparent; color:#3a84ff; padding-left:0; }
