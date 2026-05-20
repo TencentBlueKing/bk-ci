@@ -85,6 +85,7 @@ import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.PipelineBuildParamKey
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_HISTORY
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_STATUS
@@ -465,9 +466,13 @@ class PipelineBuildFacadeService(
         buildNo: Int? = null,
         frequencyLimit: Boolean = true,
         triggerReviewers: List<String>? = null,
-        version: Int? = null
+        version: Int? = null,
+        imateSessionId: String? = null
     ): BuildId {
-        logger.info("[$pipelineId] Manual build start with buildNo[$buildNo] and vars: $values")
+        val mergedValues = imateSessionId?.takeIf { it.isNotBlank() }?.let {
+            values + (PipelineBuildParamKey.CI_IMATE_SESSION_ID to it)
+        } ?: values
+        logger.info("[$pipelineId] Manual build start with buildNo[$buildNo] and vars: $mergedValues")
         if (checkPermission) {
             val permission = AuthPermission.EXECUTE
             pipelinePermissionService.validPipelinePermission(
@@ -564,7 +569,7 @@ class PipelineBuildFacadeService(
 
             val paramMap = buildParamCompatibilityTransformer.parseTriggerParam(
                 userId = userId, projectId = projectId, pipelineId = pipelineId,
-                paramProperties = triggerContainer.params, paramValues = values
+                paramProperties = triggerContainer.params, paramValues = mergedValues
             )
             // 如果是PAC流水线,需要加上代码库hashId,给checkout:self使用
             pipelineYamlFacadeService.buildYamlManualParamMap(
@@ -578,7 +583,7 @@ class PipelineBuildFacadeService(
                 val creativeParam = createStreamService.creativeStreamBuildParameters(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    paramMap = values,
+                    paramMap = mergedValues,
                     userId = userId
                 )
                 paramMap.putAll(creativeParam)
@@ -594,7 +599,7 @@ class PipelineBuildFacadeService(
                 resource = resource,
                 frequencyLimit = frequencyLimit,
                 buildNo = buildNo,
-                startValues = values,
+                startValues = mergedValues,
                 triggerReviewers = triggerReviewers,
                 signPipelineVersion = version,
                 debug = debug
