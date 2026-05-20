@@ -95,6 +95,7 @@
                     :is="currentTabComponent"
                     :form-data="formData"
                     @update-form-data="handleUpdateFormData"
+                    @update-task-title="handleUpdateTaskTitle"
                     ref="currentComponent"
                 />
             </div>
@@ -109,10 +110,10 @@
                     <div class="section-header">
                         <h3 class="section-title">{{ $t('submitCheck') }}</h3>
                         <span
-                            v-if="validationErrors.length > 0"
+                            v-if="validationItems.length > 0"
                             class="error-count-badge"
                         >
-                            {{ $t('waitingForHandle', [validationErrors.length]) }}
+                            {{ $t('waitingForHandle', [validationItems.length]) }}
                         </span>
                     </div>
                     
@@ -121,13 +122,22 @@
                         class="check-list"
                     >
                         <div
-                            v-for="(error, index) in validationErrors"
+                            v-for="(item, index) in validationItems"
                             :key="index"
-                            class="check-item"
-                            @click="handleErrorClick(error)"
+                            :class="['check-item', `check-item-${item.type}`]"
+                            @click="handleErrorClick(item)"
                         >
-                            <i class="devops-icon icon-close-small error-icon"></i>
-                            <span class="error-text">{{ error.message }}</span>
+                            <i
+                                v-if="item.type === 'success'"
+                                class="devops-icon icon-check-1 success-icon"
+                            />
+                            <i
+                                v-else
+                                class="devops-icon icon-close-small error-icon"
+                            />
+                            <span
+                                :class="item.type === 'success' ? 'success-text' : 'error-text'"
+                            >{{ item.message }}</span>
                         </div>
                     </div>
                 </div>
@@ -200,16 +210,21 @@
 
         <!-- 底部操作栏 -->
         <div class="footer-actions">
-            <bk-button
+            <bk-popover
                 v-for="btn in footerButtons"
                 :key="btn.action"
-                :theme="btn.theme"
-                :disabled="btn.disabled"
-                v-bk-tooltips="btn.tooltip || ''"
-                @click="btn.handler"
+                :disabled="!btn.tooltip"
+                placement="top"
             >
-                {{ btn.text }}
-            </bk-button>
+                <bk-button
+                    :theme="btn.theme"
+                    :disabled="btn.disabled"
+                    @click="btn.handler"
+                >
+                    {{ btn.text }}
+                </bk-button>
+                <div slot="content">{{ btn.tooltip }}</div>
+            </bk-popover>
         </div>
     </div>
 </template>
@@ -252,7 +267,7 @@
                     configScope: {
                         targetProjectId: '',
                         taskName: '',
-                        pipelineIdStrategy: 'auto', // 'auto' | 'keep'
+                        pipelineIdStrategy: '', // 'auto' | 'keep'
                         selectedPipelines: [],
                         copyOptions: []
                     },
@@ -298,18 +313,38 @@
             currentTabComponent () {
                 return this.tabs[this.currentStepIndex].component
             },
-            validationErrors () {
-                const errors = []
-                // 检查目标项目是否选择
-                if (!this.targetProjectName) {
-                    errors.push({
-                        field: 'targetProject',
-                        message: this.$t('notSelectedTargetProject'),
-                        stepIndex: 0
-                    })
-                }
-                // 可以根据当前步骤添加更多检查项
-                return errors
+            validationItems () {
+                const items = []
+                
+                // 检查第一步（配置复制范围）的必填项
+                // 1. 检查目标项目
+                const hasTargetProject = !!this.formData.configScope.targetProjectId
+                items.push({
+                    field: 'targetProjectId',
+                    message: hasTargetProject ? this.$t('selectedTargetProject') : this.$t('notSelectedTargetProject'),
+                    stepIndex: 0,
+                    type: hasTargetProject ? 'success' : 'error'
+                })
+                
+                // 2. 检查任务名称
+                const hasTaskName = !!(this.formData.configScope.taskName && this.formData.configScope.taskName.trim())
+                items.push({
+                    field: 'taskName',
+                    message: hasTaskName ? this.$t('filledTaskName') : this.$t('notFilledTaskName'),
+                    stepIndex: 0,
+                    type: hasTaskName ? 'success' : 'error'
+                })
+                
+                // 3. 检查ID处理策略
+                const hasPipelineIdStrategy = !!this.formData.configScope.pipelineIdStrategy
+                items.push({
+                    field: 'pipelineIdStrategy',
+                    message: hasPipelineIdStrategy ? this.$t('selectedIdStrategy') : this.$t('notSelectedIdStrategy'),
+                    stepIndex: 0,
+                    type: hasPipelineIdStrategy ? 'success' : 'error'
+                })
+                
+                return items
             },
             footerButtons () {
                 const buttons = []
@@ -322,16 +357,39 @@
                     })
                 }
                 if (this.currentStepIndex < this.steps.length - 1) {
-                    const isStep2 = this.currentStepIndex === 1
-                    const isResourceSelected = this.formData.resourceDependency.selectedResources.length > 0
+                    let isDisabled = false
+                    let tooltip = ''
+                    
+                    // 第一步：检查必填项
+                    if (this.currentStepIndex === 0) {
+                        const hasTargetProject = !!this.formData.configScope.targetProjectId
+                        const hasTaskName = !!(this.formData.configScope.taskName && this.formData.configScope.taskName.trim())
+                        const hasPipelineIdStrategy = !!this.formData.configScope.pipelineIdStrategy
+                        
+                        isDisabled = !hasTargetProject || !hasTaskName || !hasPipelineIdStrategy
+                        
+                        if (!hasTargetProject) {
+                            tooltip = this.$t('pleaseSelectTargetProjectFirst')
+                        } else if (!hasTaskName) {
+                            tooltip = this.$t('pleaseEnterTaskName')
+                        } else if (!hasPipelineIdStrategy) {
+                            tooltip = this.$t('pleaseSelectPipelineIdStrategy')
+                        }
+                    } else if (this.currentStepIndex === 1) {
+                        // 第二步：检查资源是否选择
+                        const isResourceSelected = this.formData.resourceDependency.selectedResources.length > 0
+                        isDisabled = !isResourceSelected
+                        tooltip = isDisabled ? this.$t('pleaseSelectResourceHandle') : ''
+                    }
+                    
                     buttons.push({
                         action: 'next',
                         theme: 'primary',
                         text: this.currentStepIndex === 0
                             ? this.$t('nextStepToResourceDependency')
                             : this.$t('nextStepToTaskExecution'),
-                        disabled: isStep2 && !isResourceSelected,
-                        tooltip: isStep2 && !isResourceSelected ? this.$t('pleaseSelectResourceHandle') : '',
+                        disabled: isDisabled,
+                        tooltip: tooltip,
                         handler: this.handleNext
                     })
                 } else {
@@ -370,6 +428,21 @@
                     this.setupResizeObserver()
                     this.checkContentHeight()
                 })
+            },
+            // 监听目标项目ID变化,更新显示的项目名称
+            'formData.configScope.targetProjectId' (newVal) {
+                if (newVal) {
+                    // 通过子组件获取项目列表
+                    const currentComponent = this.$refs.currentComponent
+                    if (currentComponent && currentComponent.projectList) {
+                        const targetProject = currentComponent.projectList.find(p => p.id === newVal)
+                        this.targetProjectName = targetProject ? targetProject.name : newVal
+                    } else {
+                        this.targetProjectName = newVal
+                    }
+                } else {
+                    this.targetProjectName = ''
+                }
             }
         },
         mounted () {
@@ -399,6 +472,9 @@
                 if (this.formData[stepName]) {
                     this.$set(this.formData[stepName], field, value)
                 }
+            },
+            handleUpdateTaskTitle (title) {
+                this.taskName = title
             },
             initData () {
                 this.sourceProjectName = this.$route.params.projectId || ''
@@ -463,11 +539,17 @@
                 const scrollTop = el ? el.scrollTop : 0
                 this.isSticky = scrollTop > 0
             },
-            handleNext () {
-                if (this.currentStepIndex < this.steps.length - 1) {
-                    this.steps[this.currentStepIndex].completed = true
-                    this.currentStepIndex++
-                    this.syncRoute()
+            async handleNext () {
+                // 校验当前步骤的表单
+                const currentComponent = this.$refs.currentComponent
+                if (currentComponent && typeof currentComponent.validate === 'function') {
+                    await currentComponent.validate()
+                    
+                    if (this.currentStepIndex < this.steps.length - 1) {
+                        this.steps[this.currentStepIndex].completed = true
+                        this.currentStepIndex++
+                        this.syncRoute()
+                    }
                 }
             },
             handlePrev () {
@@ -486,12 +568,20 @@
             handleCancel () {
                 this.$router.back()
             },
-            handleErrorClick (error) {
-                // 点击错误项，跳转到对应步骤
-                if (error.stepIndex !== undefined && error.stepIndex !== this.currentStepIndex) {
-                    this.currentStepIndex = error.stepIndex
+            handleErrorClick (item) {
+                // 如果错误项不在当前步骤,先跳转到对应步骤
+                if (item.stepIndex !== undefined && item.stepIndex !== this.currentStepIndex) {
+                    this.currentStepIndex = item.stepIndex
                     this.syncRoute()
                 }
+                
+                // 等待组件渲染完成后,触发指定字段的校验
+                this.$nextTick(() => {
+                    const currentComponent = this.$refs.currentComponent
+                    if (currentComponent && typeof currentComponent.validateField === 'function') {
+                        currentComponent.validateField(item.field)
+                    }
+                })
             },
             syncRoute () {
                 this.$router.push({
@@ -811,7 +901,7 @@
                 cursor: pointer;
                 transition: background 0.2s;
                 
-                &:hover {
+                &.check-item-error:hover {
                     background: #FFF0F0;
                 }
                 
@@ -828,10 +918,27 @@
                     margin-right: 8px;
                 }
                 
+                .success-icon {
+                    color: #65C389;
+                    background-color: #EBFAF0;
+                    border-radius: 50%;
+                    font-size: 8px;
+                    padding: 3px;
+                    flex-shrink: 0;
+                    margin-right: 8px;
+                }
+                
                 .error-text {
                     flex: 1;
                     font-size: 12px;
                     color: #EA3636;
+                    line-height: 20px;
+                }
+                
+                .success-text {
+                    flex: 1;
+                    font-size: 12px;
+                    color: #299E56;
                     line-height: 20px;
                 }
             }

@@ -2,14 +2,27 @@
     <div class="config-scope">
         <!-- 配置任务信息表单 -->
         <div class="config-form-section">
-            <h3 class="section-title">{{ $t('configTaskInfo') }}</h3>
+            <div class="section-title">
+                <p>
+                    <span class="title-text">{{ $t('configTaskInfo') }}</span>
+                    <i18n
+                        class="pipeline-count"
+                        path="pipelineCount"
+                        tag="span"
+                    >
+                        <span class="blod">{{ pipelineCount }}</span>
+                        <span>{{ autoPipelineCount }}</span>
+                    </i18n>
+                </p>
+                <p class="pipeline-desc">{{ $t('configTaskInfoDesc') }}</p>
+            </div>
+            <hr style="border: 0; border-top: 1px solid #DCDEE5; margin: 16px 0 24px;" />
             <bk-form
                 :model="formData.configScope"
                 :rules="formRules"
                 ref="configForm"
                 form-type="vertical"
             >
-                <!-- 目标项目和任务名称在同一行 -->
                 <div class="form-row">
                     <bk-form-item
                         :label="$t('targetProject')"
@@ -40,27 +53,43 @@
                         <bk-input
                             :value="formData.configScope.taskName"
                             @change="handleUpdate('configScope', 'taskName', $event)"
+                            @blur="handleTaskNameBlur"
                             :placeholder="$t('enterTaskName')"
                         />
                     </bk-form-item>
                 </div>
-                <!-- 流水线ID处理策略单独一行 -->
                 <bk-form-item
                     :label="$t('pipelineIdStrategy')"
                     :required="true"
                     property="pipelineIdStrategy"
                 >
                     <bk-radio-group
+                        class="pipeline-strategy"
                         :value="formData.configScope.pipelineIdStrategy"
                         @change="handleUpdate('configScope', 'pipelineIdStrategy', $event)"
                     >
-                        <bk-radio value="auto">{{ $t('autoGenerateNewId') }}</bk-radio>
-                        <bk-radio value="keep">{{ $t('keepSourceId') }}</bk-radio>
+                        <div
+                            class="pipeline-strategy-item"
+                            :class="{ active: formData.configScope.pipelineIdStrategy === 'auto' }"
+                        >
+                            <bk-radio value="auto">
+                                {{ $t('autoGenerateNewId') }}
+                                <span class="recommend">{{ $t('recommend') }}</span>
+                            </bk-radio>
+                            <p>{{ $t('autoGenerateNewIdDesc') }}</p>
+                        </div>
+                        <div
+                            class="pipeline-strategy-item"
+                            :class="{ active: formData.configScope.pipelineIdStrategy === 'keep' }"
+                        >
+                            <bk-radio value="keep">{{ $t('keepSourceId') }}</bk-radio>
+                            <p>{{ $t('keepSourceIdDesc') }}</p>
+                        </div>
                     </bk-radio-group>
                 </bk-form-item>
             </bk-form>
         </div>
-
+        <hr style="border: 0; border-top: 1px solid #DCDEE5; margin: 24px 0 24px;" />
         <!-- 提示栏区域 -->
         <div
             class="alert-bars-section"
@@ -137,7 +166,7 @@
                             @click="handleTabChange(tab.name)"
                         >
                             <span class="tab-label">{{ tab.label }}</span>
-                            <span class="tab-count">{{ tab.count }}555</span>
+                            <span class="tab-count">{{ tab.count }}</span>
                         </div>
                     </div>
                 </div>
@@ -171,20 +200,36 @@
                     <template slot-scope="{ row }">
                         <div class="pipeline-name-cell">
                             <span class="pipeline-name-text">{{ row.pipelineName }}</span>
-                            <bk-tag
+                            <span
                                 v-if="row.type === 'sub'"
-                                theme="success"
-                                type="filled"
+                                class="sub-tag"
                             >
                                 {{ $t('subPipeline') }}
-                            </bk-tag>
-                            <bk-tag
-                                v-else-if="row.type === 'pac'"
-                                theme="info"
-                                type="filled"
+                                <Logo
+                                    name="link"
+                                    size="10"
+                                />
+                            </span>
+                            <span
+                                v-if="row.type === 'pac'"
+                                class="pac-tag"
                             >
-                                {{ $t('pacPipeline') }}
+                                <i class="devops-icon icon-code" />
+                                PAC
+                            </span>
+                            <bk-tag
+                                v-if="row.onlyDraftVersion"
+                                theme="success"
+                                class="draft-tag"
+                            >
+                                {{ $t('draft') }}
                             </bk-tag>
+                            <span
+                                v-if="row.templateId"
+                                class="template-tag"
+                            >
+                                {{ $t('constraint') }}
+                            </span>
                         </div>
                     </template>
                 </bk-table-column>
@@ -266,6 +311,8 @@
                 searchKeyword: '',
                 // 从提示栏点击「查看明细」时的类型筛选
                 typeFilter: '',
+                pipelineCount: 9,
+                autoPipelineCount: 3,
                 // 项目列表
                 projectList: [
                     { id: 'proj-001', name: '项目A' },
@@ -274,13 +321,13 @@
                 ],
                 // 流水线列表（Mock 数据）
                 pipelineList: [
-                    { pipelineId: 'p-001', pipelineName: 'yamb1-trigger', groupName: '构建发布，精品服务', creator: 'fayewang', status: 'pending', type: 'sub', canExclude: true, autoAction: '系统自动添加' },
+                    { pipelineId: 'p-001', pipelineName: 'yamb1-trigger', groupName: '构建发布，精品服务', creator: 'fayewang', status: 'pending', type: 'normal', templateId: '123456', canExclude: true, autoAction: '系统自动添加' },
                     { pipelineId: 'p-002', pipelineName: 'frontend-app / 灰度流水线', groupName: '质量测试', creator: 'fayewang', status: 'pending', type: 'pac', canExclude: false, autoAction: '' },
-                    { pipelineId: 'p-003', pipelineName: 'data-pipeline / ETL任务', groupName: '核心服务', creator: 'fayewang', status: 'pending', type: 'normal', canExclude: true, autoAction: '' },
+                    { pipelineId: 'p-003', pipelineName: 'data-pipeline / ETL任务', onlyDraftVersion: true, groupName: '核心服务', creator: 'fayewang', status: 'pending', type: 'normal', canExclude: true, autoAction: '' },
                     { pipelineId: 'p-004', pipelineName: 'mobile-sdk / 质量扫描', groupName: '质量扫描', creator: 'fayewang', status: 'pending', type: 'sub', canExclude: true, autoAction: '系统自动添加' },
                     { pipelineId: 'p-005', pipelineName: 'gateway / 回归测试', groupName: '自动化测试', creator: 'fayewang', status: 'pending', type: 'normal', canExclude: true, autoAction: '' },
                     { pipelineId: 'p-006', pipelineName: 'infra / 基础设施监控', groupName: '基础设施', creator: 'fayewang', status: 'pending', type: 'normal', canExclude: true, autoAction: '' },
-                    { pipelineId: 'p-007', pipelineName: 'infra / 测试环境', groupName: '基础设施', creator: 'fayewang', status: 'excluded', type: 'pac', canRestore: true, autoAction: '' },
+                    { pipelineId: 'p-007', pipelineName: 'infra / 测试环境', groupName: '基础设施', creator: 'fayewang', status: 'excluded', type: 'normal', canRestore: true, autoAction: '' },
                     { pipelineId: 'p-008', pipelineName: 'security / 安全扫描', groupName: '质量扫描', creator: 'fayewang', status: 'pending', type: 'normal', canExclude: true, autoAction: '' },
                     { pipelineId: 'p-009', pipelineName: 'nightly-regression / 夜间回归', groupName: '自动化测试', creator: 'fayewang', status: 'pending', type: 'normal', canExclude: true, autoAction: '' },
                     { pipelineId: 'p-010', pipelineName: 'asset-center / 资产构建 #098', groupName: '质量扫描', creator: 'fayewang', status: 'excluded', type: 'pac', canRestore: false, autoAction: '暂不支持迁移' }
@@ -359,6 +406,34 @@
         methods: {
             handleUpdate (stepName, field, value) {
                 this.$emit('update-form-data', stepName, field, value)
+                
+                // 当选择目标项目时，如果任务名称为空，则自动填充默认名称
+                if (field === 'targetProjectId' && value) {
+                    if (!this.formData.configScope.taskName || !this.formData.configScope.taskName.trim()) {
+                        // 获取目标项目名称
+                        const targetProject = this.projectList.find(p => p.id === value)
+                        const projectName = targetProject ? targetProject.name : value
+                        
+                        // 生成时间戳：格式为 YYYYMMDDHHmm
+                        const now = new Date()
+                        const prezero = (num) => num < 10 ? '0' + num : num
+                        const timestamp = `${now.getFullYear()}${prezero(now.getMonth() + 1)}${prezero(now.getDate())}${prezero(now.getHours())}${prezero(now.getMinutes())}`
+                        
+                        // 生成默认任务名称
+                        const defaultTaskName = `copy-to-${projectName}-${timestamp}`
+                        this.$emit('update-form-data', stepName, 'taskName', defaultTaskName)
+                        
+                        // 通知父组件更新顶部标题
+                        this.$emit('update-task-title', defaultTaskName)
+                    }
+                }
+            },
+            handleTaskNameBlur () {
+                // 任务名称失焦时，同步更新顶部标题
+                const taskName = this.formData.configScope.taskName
+                if (taskName && taskName.trim()) {
+                    this.$emit('update-task-title', taskName)
+                }
             },
             handleTabChange (name) {
                 this.activeTab = name
@@ -420,26 +495,107 @@
                 this.tablePagination.current = 1
             },
             /**
-             * 表单验证方法，供父组件调用
+             * 表单验证方法,供父组件调用
              */
             validate () {
                 return this.$refs.configForm?.validate?.() || Promise.resolve()
+            },
+            /**
+             * 校验指定字段
+             * @param {string} fieldName - 字段名称
+             */
+            validateField (fieldName) {
+                if (this.$refs.configForm && typeof this.$refs.configForm.validateField === 'function') {
+                    this.$refs.configForm.validateField(fieldName)
+                }
             }
         }
     }
 </script>
 
 <style lang="scss" scoped>
+    @import '@/scss/conf.scss';
+    
     .config-form-section {
         background: #FFFFFF;
         border-radius: 2px;
         margin-bottom: 16px;
 
+        .pipeline-strategy {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            .pipeline-strategy-item {
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+                padding: 12px 16px;
+                align-items: flex-start;
+                gap: 8px;
+                height: 90px;
+                border-radius: 2px;
+                background: #F5F7FA;
+                border: 1px solid transparent;
+
+                .recommend {
+                    padding: 2px 8px;
+                    margin-left: 8px;
+                    border-radius: 2px;
+                    border: 1px #A1E3BA solid;
+                    background: #DAF6E5;
+                    color: #299e56;
+                    font-size: 12px;
+                    line-height: 20px;
+                }
+
+                ::v-deep .bk-radio-text {
+                    margin-left: 4px;
+                    color: #313238;
+                }
+
+                &.active {
+                    border: 1px solid #C4C6CC;
+                }
+
+                p {
+                    color: #979ba5;
+                    font-size: 12px;
+                    line-height: 20px;
+                    margin-left: 18px;
+                }
+            }
+        }
+
         .section-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #313238;
-            margin: 0 0 16px 0;
+
+            .title-text {
+                color: #313238;
+                font-size: 14px;
+                font-weight: 700;
+                line-height: 22px;
+                margin-right: 16px;
+            }
+
+            .pipeline-count {
+                display: inline-block;
+                padding: 0 8px;
+                font-size: 12px;
+                flex-wrap: wrap;
+                border-radius: 2px;
+                font-weight: 400;
+                background:#F0F1F5;
+
+                .blod {
+                    font-weight: 700;
+                }
+            }
+            .pipeline-desc {
+                color: #979ba5;
+                font-size: 12px;
+                line-height: 20px;
+                margin-top: 9px;
+            }
         }
 
         .form-row {
@@ -472,15 +628,11 @@
             }
         }
 
-        ::v-deep .bk-form-item__label {
+        ::v-deep .bk-label-text {
             font-size: 12px;
-            color: #63656E;
+            color: #4D4F56;
             margin-bottom: 6px;
-        }
-
-        ::v-deep .bk-radio-group {
-            display: flex;
-            gap: 24px;
+            font-weight: 400;
         }
     }
 
@@ -559,6 +711,54 @@
         background: #FFFFFF;
         border-radius: 2px;
 
+        .pac-tag {
+            background: #E1ECFF;
+            border-radius: 12px;
+            width: 60px;
+            height: 22px;
+            line-height: 1;
+            display: grid;
+            align-items: center;
+            grid-auto-flow: column;
+            font-size: 12px;
+            color: #699DF4;
+            cursor: pointer;
+            &:hover {
+                color: #3A84FF;
+                .devops-icon {
+                    background: #3A84FF;
+                }
+            }
+            .devops-icon {
+                width: 20px;
+                height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: #699DF4;
+                color: white;
+                border-radius: 50%;
+                flex-shrink: 0;
+            }
+        }
+
+        .sub-tag {
+            padding: 2px 6px;
+            border-radius: 2px;
+            font-size: 10px;
+            color: #1768EF;
+            background: #E1ECFF;
+        }
+
+        .template-tag {
+            padding: 2px 6px;
+            border-radius: 2px;
+            font-size: 10px;
+            color: #4D4F56;
+            border: 1px solid #DCDEE5;
+            background-color: #F0F1F5;
+        }
+
         .table-toolbar {
             display: flex;
             align-items: center;
@@ -596,10 +796,6 @@
                             padding: 0px 6px;
                             border-radius: 8px;
                             background-color: #fff;
-                        }
-
-                        &:hover {
-                            background: rgba(255, 255, 255, 0.5);
                         }
 
                         &.is-active {
