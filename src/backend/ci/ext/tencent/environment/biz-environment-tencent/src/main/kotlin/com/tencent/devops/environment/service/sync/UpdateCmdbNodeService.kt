@@ -41,6 +41,7 @@ import com.tencent.devops.environment.constant.T_NODE_SERVER_ID
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.pojo.dto.NodeUpdateAttrDTO
 import com.tencent.devops.environment.pojo.enums.NodeStatus
+import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.job.AgentVersion
 import com.tencent.devops.environment.pojo.job.ccres.CCHost
 import com.tencent.devops.environment.pojo.job.jobresp.NodeAttr
@@ -106,7 +107,7 @@ class UpdateCmdbNodeService @Autowired constructor(
 
         var maxNodeId = nodeId
 
-        // 1.在CMDB中存在的节点：更新主备负责人、操作系统名称
+        // 1.在CMDB中存在的节点：更新主备负责人、操作系统名称、操作人合规状态(OPERATOR_STATUS)
         val nodeAttrList = cmdbNodeList.filter {
             StringUtils.isNotBlank(it.nodeIp)
         }.mapNotNull { oldCmdbNode ->
@@ -115,12 +116,21 @@ class UpdateCmdbNodeService @Autowired constructor(
             }
             val newCmdbServer = ipToCmdbServerMap[oldCmdbNode.nodeIp]
             if (oldCmdbNode.operatorOrServerIdOrOsNameChanged(newCmdbServer)) {
+                val newBakOperator = newCmdbServer?.getBakOperatorStrLessThanMaxLength()
+                // 凡写 OPERATOR / BAK_OPERATOR 的代码路径都同写 OPERATOR_STATUS，避免脏窗口。
+                val operatorStatus = CmdbNodeService.calcOperatorStatus(
+                    nodeType = NodeType.CMDB.name,
+                    createdUser = oldCmdbNode.createdUser ?: "",
+                    operator = newCmdbServer?.operator,
+                    bakOperator = newBakOperator
+                )
                 NodeUpdateAttrDTO(
                     nodeIp = oldCmdbNode.nodeIp,
                     serverId = newCmdbServer?.serverId,
                     operator = newCmdbServer?.operator,
-                    bakOperator = newCmdbServer?.getBakOperatorStrLessThanMaxLength(),
-                    osName = newCmdbServer?.getOsNameLessThanMaxLength()
+                    bakOperator = newBakOperator,
+                    osName = newCmdbServer?.getOsNameLessThanMaxLength(),
+                    operatorStatus = operatorStatus
                 )
             } else null
         }

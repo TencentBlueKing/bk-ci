@@ -65,6 +65,7 @@ import com.tencent.devops.environment.permission.EnvNodeAuthorizationService
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.CmdbNode
 import com.tencent.devops.environment.pojo.cmdb.common.CmdbServerDTO
+import com.tencent.devops.environment.pojo.enums.NodeOperatorStatus
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.enums.OsType
@@ -117,6 +118,31 @@ class CmdbNodeService @Autowired constructor(
         const val NODE_AGENT_STATUS_ABNORMAL = 0
         const val NODE_AGENT_STATUS_NORMAL = 1
         const val NODE_AGENT_STATUS_NOT_INSTALLED = 2
+
+        private val OPERATOR_STATUS_NODE_TYPES = setOf(NodeType.CMDB.name)
+
+        /**
+         * 根据节点导入人 / 主负责人 / 备份负责人计算节点的操作人状态。
+         *
+         * - 仅 [NodeType.CMDB] 类型节点参与判定，其它类型返回 null。
+         * - CMDB 节点的 `bakOperator` 用 `;` 分隔；CC 节点的 `bakOperator` 视为单值。两者差异在此函数内消化。
+         * - 当 `createdUser == operator` 或 `createdUser ∈ baks` 时认为合规（[NodeOperatorStatus.NORMAL]），
+         *   否则视为"负责人已变更"（[NodeOperatorStatus.OPERATOR_CHANGED]）。
+         */
+        fun calcOperatorStatus(
+            nodeType: String,
+            createdUser: String,
+            operator: String?,
+            bakOperator: String?
+        ): NodeOperatorStatus? {
+            if (nodeType !in OPERATOR_STATUS_NODE_TYPES) {
+                return null
+            }
+            val bakOperators = bakOperator?.split(";")?.filter { it.isNotBlank() } ?: emptyList()
+
+            val ok = createdUser == operator || createdUser in bakOperators
+            return if (ok) NodeOperatorStatus.NORMAL else NodeOperatorStatus.OPERATOR_CHANGED
+        }
     }
 
     fun getUserCmdbNodesNew(
@@ -434,6 +460,7 @@ class CmdbNodeService @Autowired constructor(
         }.map {
             val cmdbNode = cmdbIpToNodeMap[it]!!
             val nodeIp = cmdbNode.getFirstIp()
+            val bakOperatorStr = cmdbNode.getBakOperatorStrLessThanMaxLength()
             CreateNodeModel(
                 nodeStringId = "",
                 projectId = projectId,
@@ -448,12 +475,18 @@ class CmdbNodeService @Autowired constructor(
                 createdUser = userId,
                 osName = cmdbNode.getOsNameLessThanMaxLength(),
                 operator = cmdbNode.operator,
-                bakOperator = cmdbNode.getBakOperatorStrLessThanMaxLength(),
+                bakOperator = bakOperatorStr,
                 agentVersion = ipToAgentVersionMap?.get(nodeIp)?.version,
                 hostId = queryCCIpToCCInfoMap[nodeIp]?.bkHostId,
                 cloudAreaId = queryCCIpToCCInfoMap[nodeIp]?.bkCloudId?.toLong(),
                 osType = queryCCIpToCCInfoMap[nodeIp]?.osType,
-                serverId = cmdbNode.serverId
+                serverId = cmdbNode.serverId,
+                operatorStatus = calcOperatorStatus(
+                    nodeType = NodeType.CMDB.name,
+                    createdUser = userId,
+                    operator = cmdbNode.operator,
+                    bakOperator = bakOperatorStr
+                )?.code
             )
         }
         val time6 = LocalDateTime.now()
@@ -550,6 +583,7 @@ class CmdbNodeService @Autowired constructor(
         }.map {
             val cmdbNode = serverIdToCmdbServerMap[it]!!
             val ccInfo = queryCCServerIdToCCInfoMap[cmdbNode.serverId]
+            val bakOperatorStr = cmdbNode.getBakOperatorStrLessThanMaxLength()
             CreateNodeModel(
                 nodeStringId = "",
                 projectId = projectId,
@@ -564,12 +598,18 @@ class CmdbNodeService @Autowired constructor(
                 createdUser = userId,
                 osName = cmdbNode.getOsNameLessThanMaxLength(),
                 operator = cmdbNode.operator,
-                bakOperator = cmdbNode.getBakOperatorStrLessThanMaxLength(),
+                bakOperator = bakOperatorStr,
                 agentVersion = serverIdToAgentVersionMap?.get(cmdbNode.serverId)?.version,
                 hostId = ccInfo?.bkHostId,
                 cloudAreaId = ccInfo?.bkCloudId?.toLong(),
                 osType = ccInfo?.osType,
-                serverId = cmdbNode.serverId
+                serverId = cmdbNode.serverId,
+                operatorStatus = calcOperatorStatus(
+                    nodeType = NodeType.CMDB.name,
+                    createdUser = userId,
+                    operator = cmdbNode.operator,
+                    bakOperator = bakOperatorStr
+                )?.code
             )
         }
         val time5 = LocalDateTime.now()

@@ -185,6 +185,9 @@ class CmdbNodeDao @Autowired constructor(
         }
     }
 
+    /**
+     * 更新CMDB节点的主备份负责人、操作系统名称、节点导入人状态（节点责任人是否变更）
+     */
     fun batchUpdateNodeMaintainerAndOsNameByNodeIp(nodeAttrList: List<NodeUpdateAttrDTO>) {
         with(TNode.T_NODE) {
             val batchUpdate = defaultDSLContext.batch(
@@ -195,6 +198,7 @@ class CmdbNodeDao @Autowired constructor(
                         .set(BAK_OPERATOR, it.bakOperator)
                         .set(OS_NAME, it.osName)
                         .set(SYSTEM_UPDATE_TIME, LocalDateTime.now())
+                        .set(OPERATOR_STATUS, it.operatorStatus?.code)
                         .where(NODE_IP.eq(it.nodeIp))
                         .and(buildCmdbNodeTypeCondition())
                 }
@@ -397,7 +401,8 @@ class CmdbNodeDao @Autowired constructor(
                         HOST_ID,
                         CLOUD_AREA_ID,
                         OS_TYPE,
-                        SERVER_ID
+                        SERVER_ID,
+                        OPERATOR_STATUS
                     ).values(
                         it.nodeStringId,
                         it.projectId,
@@ -425,7 +430,8 @@ class CmdbNodeDao @Autowired constructor(
                         it.hostId,
                         it.cloudAreaId,
                         it.osType,
-                        it.serverId
+                        it.serverId,
+                        it.operatorStatus
                     ).returning(NODE_ID).fetchOne()!!.let { newRecord ->
                         val hashId = HashUtil.encodeLongId(newRecord.nodeId)
                         val displayName = it.nodeType + "-" + hashId + "-" + newRecord.nodeId
@@ -535,7 +541,8 @@ class CmdbNodeDao @Autowired constructor(
                 SERVER_ID,
                 OPERATOR,
                 BAK_OPERATOR,
-                OS_NAME
+                OS_NAME,
+                CREATED_USER
             ).from(this)
                 .where(buildCmdbNodeTypeCondition())
                 .and(NODE_ID.gt(startNodeId))
@@ -549,7 +556,8 @@ class CmdbNodeDao @Autowired constructor(
                     serverId = record.get(table.SERVER_ID),
                     operator = record.get(table.OPERATOR),
                     bakOperator = record.get(table.BAK_OPERATOR),
-                    osName = record.get(table.OS_NAME)
+                    osName = record.get(table.OS_NAME),
+                    createdUser = record.get(table.CREATED_USER)
                 )
             }
         }
