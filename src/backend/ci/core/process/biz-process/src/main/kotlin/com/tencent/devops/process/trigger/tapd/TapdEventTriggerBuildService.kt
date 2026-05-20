@@ -87,16 +87,7 @@ class TapdEventTriggerBuildService @Autowired constructor(
     }
 
     private fun doTrigger(event: TapdWebhookTriggerEvent, context: WebhookTriggerContext) = with(event) {
-        // 1. 解析事件类型与动作
-        val tapdEventType = TapdEventType.parse(eventType) ?: run {
-            logger.warn("Unsupported tapd event type|$eventType")
-            return@with
-        }
-        val tapdEventAction = TapdEventAction.parse(eventAction) ?: run {
-            logger.warn("Unsupported tapd event action|$eventAction")
-            return@with
-        }
-        // 2. 查询流水线信息，已锁定的流水线跳过
+        // 1. 查询流水线信息，已锁定的流水线跳过
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
@@ -107,13 +98,12 @@ class TapdEventTriggerBuildService @Autowired constructor(
 
         val oauthUserId = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId)
             ?: pipelineInfo.lastModifyUser
-        // 3. 创作环境下需要补充节点相关启动参数
+        // 2. 创作环境下需要补充节点相关启动参数
         val externalStartParams = createStreamTriggerSupportService.externalWebhookStartParams(
             pipelineInfo = pipelineInfo,
             userId = oauthUserId
         )
-
-        // 4. 匹配触发器并启动构建
+        // 3. 匹配触发器并启动构建
         val resource = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -127,8 +117,6 @@ class TapdEventTriggerBuildService @Autowired constructor(
             context = context,
             pipelineInfo = pipelineInfo,
             resource = resource,
-            tapdEventType = tapdEventType,
-            tapdEventAction = tapdEventAction,
             externalStartParams = externalStartParams
         )
     }
@@ -139,8 +127,6 @@ class TapdEventTriggerBuildService @Autowired constructor(
         context: WebhookTriggerContext,
         pipelineInfo: PipelineInfo,
         resource: PipelineResourceVersion,
-        tapdEventType: TapdEventType,
-        tapdEventAction: TapdEventAction,
         externalStartParams: Map<String, String>
     ) {
         val elements = resource.model.getTriggerContainer().elements
@@ -155,10 +141,7 @@ class TapdEventTriggerBuildService @Autowired constructor(
         for (element in elements) {
             val atomResponse = tapdEventMatcher.matches(
                 element = element,
-                tapdProjectId = event.tapdProjectId,
-                eventType = tapdEventType,
-                eventAction = tapdEventAction,
-                triggerUser = event.triggerUser
+                event = event
             )
             when (atomResponse.matchStatus) {
                 MatchStatus.SUCCESS -> {

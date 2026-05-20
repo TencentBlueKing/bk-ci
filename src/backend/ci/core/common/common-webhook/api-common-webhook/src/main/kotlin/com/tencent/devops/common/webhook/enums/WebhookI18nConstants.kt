@@ -191,4 +191,13 @@ object WebhookI18nConstants {
 
     // 通用: 触发来源不匹配
     const val BK_RIGGER_EVENT_FROM_NOT_MATCH = "bkRiggerEventFromNotMatch"
+
+    // 通用: label不匹配
+    const val BK_TRIGGER_LABEL_NOT_MATCH = "bkTriggerLabelNotMatch"
+
+    // 通用: label被排除
+    const val BK_TRIGGER_LABEL_IGNORED = "bkTriggerLabelIgnored"
+
+    // 通用: 优先级不匹配
+    const val BK_TRIGGER_PRIORITY_NOT_MATCH = "bkTriggerPriorityNotMatch"
 }

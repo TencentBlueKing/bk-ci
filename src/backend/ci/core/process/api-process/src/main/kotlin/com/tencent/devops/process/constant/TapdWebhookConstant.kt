@@ -29,8 +29,12 @@ object TapdWebhookConstant {
     // 优先级标题
     const val TAPD_KEY_PRIORITY_LABEL = "priority_label"
 
+    const val TAPD_KEY_LABEL = "label"
+
     // 工单标题字段
     const val TAPD_KEY_NAME = "name"
+
+    const val TAPD_KEY_OWNER = "owner"
 
     const val TAPD_KEY_PRIORITY = "priority"
 

@@ -122,4 +122,14 @@ data class TapdWebHookTriggerInput(
         required = false
     )
     val includeEventFrom: List<String>? = null,
+    @get:Schema(title = "监听标签", required = false)
+    val includeLabels: String? = null,
+    @get:Schema(title = "忽略标签", required = false)
+    val excludeLabels: String? = null,
+    @get:Schema(title = "监听优先级", required = false)
+    val includePriority: String? = null,
+    @get:Schema(title = "监听处理人", required = false)
+    val includeOwner: List<String>? = null,
+    @get:Schema(title = "忽略处理人", required = false)
+    val excludeOwner: List<String>? = null
 )

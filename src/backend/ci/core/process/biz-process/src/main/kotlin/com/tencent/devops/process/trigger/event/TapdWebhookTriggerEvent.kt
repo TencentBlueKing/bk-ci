@@ -29,6 +29,8 @@ package com.tencent.devops.process.trigger.event
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.pojo.IEvent
+import com.tencent.devops.common.pipeline.enums.TapdEventAction
+import com.tencent.devops.common.pipeline.enums.TapdEventType
 import com.tencent.devops.common.stream.constants.StreamBinding
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -47,11 +49,17 @@ data class TapdWebhookTriggerEvent(
     @get:Schema(description = "TAPD 项目ID（workspace_id）")
     val tapdProjectId: String,
     @get:Schema(description = "事件类型")
-    val eventType: String,
+    val eventType: TapdEventType,
     @get:Schema(description = "事件动作")
-    val eventAction: String,
+    val eventAction: TapdEventAction,
     @get:Schema(description = "触发用户")
     val triggerUser: String,
+    @get:Schema(description = "触发标签")
+    val triggerLabels: String?,
+    @get:Schema(description = "触发优先级")
+    val triggerPriority: String?,
+    @get:Schema(description = "当前处理人")
+    val triggerOwner: String?,
     @get:Schema(description = "流水线启动参数")
     val startParams: Map<String, String>
 ) : IEvent()

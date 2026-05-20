@@ -56,10 +56,13 @@ import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_ENTITY_I
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_EVENT
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_EVENT_FROM
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_ID
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_LABEL
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_NAME
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_NEW_PREFIX
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_OWNER
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PARENT_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PRIORITY
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PRIORITY_LABEL
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_REFERER
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_TARGET_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_WORKSPACE_ID
@@ -69,6 +72,7 @@ import com.tencent.devops.process.pojo.trigger.GenericWebhookEventBody
 import com.tencent.devops.process.pojo.trigger.PipelineEventSubscriber
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
+import com.tencent.devops.process.service.TapdSupportService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.event.TapdWebhookRequestEvent
 import com.tencent.devops.process.trigger.event.TapdWebhookTriggerEvent
@@ -90,7 +94,8 @@ class TapdWebhookRequestService(
     private val dslContext: DSLContext,
     private val pipelineEventSubscriptionDao: PipelineEventSubscriptionDao,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
-    private val sampleEventDispatcher: SampleEventDispatcher
+    private val sampleEventDispatcher: SampleEventDispatcher,
+    private val tapdSupportService: TapdSupportService
 ) {
 
     companion object {
@@ -150,11 +155,20 @@ class TapdWebhookRequestService(
             objectId = objectId,
             eventType = eventType
         )
+        // 追加部分基础信息，填充到原始event中
+        val finalEvent = getTapdObjectBaseInfo(
+            eventType = eventType,
+            eventAction = eventAction,
+            workspaceId = event.tapdProjectId,
+            objectId = objectId
+        )?.let {
+            event.copy(body = event.body.plus(it))
+        } ?: event
         // 2. 按 projectId 分组保存触发事件，并为每条流水线投递触发事件
         subscribers.groupBy { it.projectId }.forEach { (projectId, pipelines) ->
             val triggerEvent = buildTriggerEvent(
                 projectId = projectId,
-                event = event,
+                event = finalEvent,
                 eventType = eventType,
                 eventAction = eventAction,
                 objectId = objectId,
@@ -169,9 +183,9 @@ class TapdWebhookRequestService(
             dispatchTriggerEvents(
                 pipelines = pipelines,
                 eventId = triggerEvent.eventId ?: 0L,
-                tapdProjectId = event.tapdProjectId,
-                triggerUser = event.triggerUser,
-                body = event.body,
+                tapdProjectId = finalEvent.tapdProjectId,
+                triggerUser = finalEvent.triggerUser,
+                body = finalEvent.body,
                 eventType = eventType,
                 eventAction = eventAction,
                 objectId = objectId,
@@ -203,7 +217,7 @@ class TapdWebhookRequestService(
         if (pipelines.isEmpty()) {
             logger.info(
                 "no pipelines for tapd replay|eventId=${replayEvent.eventId}|" +
-                    "projectId=${replayEvent.projectId}|tapdProjectId=$tapdProjectId|eventType=${eventType.value}"
+                        "projectId=${replayEvent.projectId}|tapdProjectId=$tapdProjectId|eventType=${eventType.value}"
             )
             return
         }
@@ -224,6 +238,57 @@ class TapdWebhookRequestService(
             )
         )
     }
+
+    private fun getTapdObjectBaseInfo(
+        eventType: TapdEventType,
+        eventAction: TapdEventAction,
+        workspaceId: String,
+        objectId: String
+    ) = if (needGetInfo(eventAction)) {
+        when (eventType) {
+            TapdEventType.BUG -> {
+                getBugInfo(workspaceId, objectId)?.let {
+                    mapOf(
+                        TAPD_KEY_LABEL to (it.label ?: ""),
+                        TAPD_KEY_PRIORITY_LABEL to (it.priorityLabel ?: ""),
+                        TAPD_KEY_OWNER to (it.currentOwner ?: "")
+                    )
+                }
+            }
+
+            TapdEventType.STORY -> {
+                getStoryInfo(workspaceId, objectId)?.let {
+                    mapOf(
+                        TAPD_KEY_LABEL to (it.label ?: ""),
+                        TAPD_KEY_PRIORITY_LABEL to (it.priorityLabel ?: ""),
+                        TAPD_KEY_OWNER to (it.owner ?: "")
+                    )
+                }
+            }
+
+            else -> null
+        }
+    } else null
+
+    private fun needGetInfo(eventAction: TapdEventAction) = listOf(
+        TapdEventAction.ADD_COMMENT,
+        TapdEventAction.UPDATE_COMMENT,
+        TapdEventAction.DELETE_COMMENT,
+        TapdEventAction.BUG_LINK,
+        TapdEventAction.BUG_UNLINK,
+        TapdEventAction.STORY_LINK,
+        TapdEventAction.STORY_UNLINK,
+    ).contains(eventAction)
+
+    private fun getStoryInfo(workspaceId: String, storyId: String) = tapdSupportService.getStoryInfo(
+        workspaceId = workspaceId,
+        storyId = storyId
+    )
+
+    private fun getBugInfo(workspaceId: String, bugId: String) = tapdSupportService.getBugInfo(
+        workspaceId = workspaceId,
+        bugId = bugId
+    )
 
     private fun extractReplayBody(sourceTriggerEvent: PipelineTriggerEvent): Map<String, String>? {
         val eventId = sourceTriggerEvent.eventId
@@ -260,7 +325,7 @@ class TapdWebhookRequestService(
         val targetPipelineId = replayEvent.pipelineId
         return if (targetPipelineId.isNullOrBlank()) {
             listSubscribers(tapdProjectId = tapdProjectId, eventType = eventType)
-                .filter { it.projectId == replayEvent.projectId }
+                    .filter { it.projectId == replayEvent.projectId }
         } else {
             listOf(
                 PipelineEventSubscriber(
@@ -361,6 +426,7 @@ class TapdWebhookRequestService(
             objectId = objectId,
             objectUrl = objectUrl
         )
+        val update = eventAction == TapdEventAction.UPDATE
         pipelines.forEach { pipeline ->
             sampleEventDispatcher.dispatch(
                 TapdWebhookTriggerEvent(
@@ -368,10 +434,13 @@ class TapdWebhookRequestService(
                     pipelineId = pipeline.pipelineId,
                     eventId = eventId,
                     tapdProjectId = tapdProjectId,
-                    eventType = eventType.value,
-                    eventAction = eventAction.value,
+                    eventType = eventType,
+                    eventAction = eventAction,
                     triggerUser = triggerUser,
-                    startParams = startParams
+                    startParams = startParams,
+                    triggerPriority = body.getHookField(TAPD_KEY_PRIORITY_LABEL, update),
+                    triggerLabels = body.getHookField(TAPD_KEY_LABEL, update),
+                    triggerOwner = body.getHookField(TAPD_KEY_OWNER, update)
                 )
             )
         }
@@ -410,7 +479,7 @@ class TapdWebhookRequestService(
         return params
     }
 
-    private fun Map<String,Any?>.getHookField(
+    private fun Map<String, Any?>.getHookField(
         key: String,
         update: Boolean = false
     ): String {
@@ -498,6 +567,7 @@ class TapdWebhookRequestService(
             // STORY 类型下其他动作（如 add/link 等）当前未提供专属描述，复用更新描述兜底
             else -> ""
         }
+
         TapdEventType.BUG -> when (eventAction) {
             TapdEventAction.CREATE -> BK_TAPD_BUG_CREATE_EVENT_DESC
             TapdEventAction.UPDATE -> BK_TAPD_BUG_UPDATE_EVENT_DESC
