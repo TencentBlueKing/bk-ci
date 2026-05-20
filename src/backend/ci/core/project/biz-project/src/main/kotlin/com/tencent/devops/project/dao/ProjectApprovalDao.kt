@@ -52,7 +52,8 @@ class ProjectApprovalDao {
         projectCreateInfo: ProjectCreateInfo,
         approvalStatus: Int,
         subjectScopes: List<SubjectScopeInfo>,
-        tipsStatus: Int
+        tipsStatus: Int,
+        projectScope: Int
     ): Int {
         with(TProjectApproval.T_PROJECT_APPROVAL) {
             return dslContext.insertInto(
@@ -82,7 +83,8 @@ class ProjectApprovalDao {
                 PRODUCT_NAME,
                 PROPERTIES,
                 KPI_CODE,
-                KPI_NAME
+                KPI_NAME,
+                PROJECT_SCOPE
             ).values(
                 projectCreateInfo.projectName,
                 projectCreateInfo.englishName,
@@ -111,7 +113,8 @@ class ProjectApprovalDao {
                     JsonUtil.toJson(it, false)
                 },
                 projectCreateInfo.kpiCode,
-                projectCreateInfo.kpiName
+                projectCreateInfo.kpiName,
+                projectScope
             ).onDuplicateKeyUpdate()
                 .set(PROJECT_NAME, projectCreateInfo.projectName)
                 .set(DESCRIPTION, projectCreateInfo.description)
@@ -136,6 +139,7 @@ class ProjectApprovalDao {
                 })
                 .set(KPI_CODE, projectCreateInfo.kpiCode)
                 .set(KPI_NAME, projectCreateInfo.kpiName)
+                .set(PROJECT_SCOPE, projectScope)
                 .execute()
         }
     }
@@ -314,7 +318,8 @@ class ProjectApprovalDao {
                 productName = productName,
                 properties = properties?.let { JsonUtil.to(it, ProjectProperties::class.java) },
                 kpiCode = kpiCode,
-                kpiName = kpiName
+                kpiName = kpiName,
+                projectScope = projectScope
             )
         }
     }
