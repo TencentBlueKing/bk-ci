@@ -41,6 +41,7 @@ import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.pojo.enums.NodeOperatorStatus
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.service.EnvService
@@ -179,6 +180,7 @@ class ServiceNodeResourceImpl @Autowired constructor(
         keywords: String?,
         nodeType: NodeType?,
         nodeStatus: NodeStatus?,
+        operatorStatus: NodeOperatorStatus?,
         agentVersion: String?,
         osName: String?,
         latestBuildPipelineId: String?,
@@ -201,6 +203,7 @@ class ServiceNodeResourceImpl @Autowired constructor(
                 keywords = keywords,
                 nodeType = nodeType,
                 nodeStatus = nodeStatus,
+                operatorStatus = operatorStatus,
                 agentVersion = agentVersion,
                 osName = osName,
                 latestBuildPipelineId = latestBuildPipelineId,

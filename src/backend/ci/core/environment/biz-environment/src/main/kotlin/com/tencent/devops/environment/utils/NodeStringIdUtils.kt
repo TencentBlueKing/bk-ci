@@ -30,6 +30,7 @@ package com.tencent.devops.environment.utils
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.enums.NodeOperatorStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 
@@ -66,7 +67,8 @@ object NodeStringIdUtils {
             displayName = displayName,
             envEnableNode = null,
             nodeName = nodeRecord.nodeName,
-            lastModifyTime = (nodeRecord.lastModifyTime ?: nodeRecord.createdTime).timestampmilli()
+            lastModifyTime = (nodeRecord.lastModifyTime ?: nodeRecord.createdTime).timestampmilli(),
+            operatorStatus = NodeOperatorStatus.valOf(nodeRecord.operatorStatus)?.name
         )
     }
 }

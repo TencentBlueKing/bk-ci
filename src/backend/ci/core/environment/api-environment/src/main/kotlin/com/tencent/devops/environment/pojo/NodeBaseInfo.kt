@@ -66,5 +66,11 @@ data class NodeBaseInfo(
     @get:Schema(title = "主机名")
     val nodeName: String? = null,
     @get:Schema(title = "机型")
-    val size: String? = null
+    val size: String? = null,
+    @get:Schema(
+        title = "操作人状态：NORMAL 表示操作人正常 / OPERATOR_CHANGED 表示负责人已变更（禁止使用）；可为NULL，为NULL表示未计算。" +
+            "只有nodeType为CMDB的时候，此字段不为空。判断CMDB节点是否责任人变更，条件为 " +
+            "nodeType==CMDB && operatorStatus==OPERATOR_CHANGED"
+    )
+    val operatorStatus: String? = null
 )
