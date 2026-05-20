@@ -255,6 +255,7 @@ export default defineComponent({
           api-base-url={apiBaseUrl}
           avatarBaseUrl={avatarBaseUrl}
           has-user
+          onlyLeafOrgSelectable
           virtual-render
           display-mode="simple"
           onConfirm={handleAddConfirm}
