@@ -466,6 +466,9 @@ object ProcessMessageCode {
     const val ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH = "2101379"
     const val ERROR_PIPELINE_IS_NOT_PAC = "2101389" // [{0}]不是PAC流水线
 
+    // 回调URL[{0}]指向内网/元数据地址，禁止使用以防止SSRF攻击
+    const val ERROR_CALLBACK_URL_INTERNAL_HOST = "2101366"
+
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}
