@@ -169,6 +169,42 @@ BEGIN
             ADD COLUMN `BEFORE_TEMPLATE_VERSION` bigint(20) DEFAULT NULL COMMENT '更新前模板版本',
             ADD COLUMN `AFTER_TEMPLATE_VERSION` bigint(20) DEFAULT NULL COMMENT '更新后模板版本';
     END IF;
+
+    IF EXISTS(SELECT 1
+              FROM information_schema.STATISTICS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_PIPELINE_YAML_INFO'
+                AND INDEX_NAME = 'UQE_PIPELINE') THEN
+        ALTER TABLE `T_PIPELINE_YAML_INFO` DROP INDEX `UQE_PIPELINE`;
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.STATISTICS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_YAML_INFO'
+                    AND INDEX_NAME = 'IDX_PIPELINE') THEN
+        ALTER TABLE `T_PIPELINE_YAML_INFO`
+            ADD INDEX `IDX_PIPELINE` (`PROJECT_ID`, `PIPELINE_ID`);
+    END IF;
+
+    -- 为 T_PIPELINE_YAML_INFO 添加 OLD_FILE_PATH 字段，用于 YAML 文件重命名时追溯前身文件路径，保留原流水线
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_YAML_INFO'
+                    AND COLUMN_NAME = 'OLD_FILE_PATH') THEN
+        ALTER TABLE `T_PIPELINE_YAML_INFO`
+            ADD COLUMN `OLD_FILE_PATH` varchar(512) DEFAULT NULL COMMENT '重命名前的文件路径，用于保留原流水线时追溯';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.STATISTICS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_YAML_INFO'
+                    AND INDEX_NAME = 'IDX_REPO_OLD_FILE_PATH') THEN
+        ALTER TABLE `T_PIPELINE_YAML_INFO`
+            ADD INDEX `IDX_REPO_OLD_FILE_PATH` (`PROJECT_ID`, `REPO_HASH_ID`, `OLD_FILE_PATH`);
+    END IF;
 COMMIT;
 
 END <CI_UBF>

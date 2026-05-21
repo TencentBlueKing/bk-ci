@@ -81,12 +81,15 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_CREATE_WORK
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_OWNER_CHANGE_NOTIFY
 import java.time.Duration
 import java.time.LocalDateTime
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executor
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Lazy
@@ -121,7 +124,8 @@ class WorkspaceCommon @Autowired constructor(
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val workspaceDailyCgsdataDao: WorkspaceDailyCgsdataDao,
     private val remoteDevCommonConfig: RemoteDevCommonConfig,
-    private val apiGwService: ApiGwService
+    private val apiGwService: ApiGwService,
+    @Qualifier("remoteDevIoExecutor") private val ioExecutor: Executor
 ) {
 
     companion object {
@@ -540,44 +544,48 @@ class WorkspaceCommon @Autowired constructor(
         }
         sharedDao.batchCreate(dslContext, workspaceName, operator, assigns, resourceId)
         if (notify) {
-            assigns.forEach {
-                // 没有注册setting就注册
-                remoteDevSettingDao.fetchOneSetting(dslContext, it.userId)
-                whiteListService.shareWorkspace(operator, it.userId)
-                if (it.type == WorkspaceShared.AssignType.OWNER) {
-                    notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
-                        userIds = mutableSetOf(it.userId),
-                        workspaceName = workspaceName,
-                        cc = mutableSetOf(operator),
-                        projectId = projectId,
-                        notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
-                        bodyParams = mutableMapOf(
-                            "workspaceName" to workspaceName,
-                            "cgsId" to cgsId,
-                            "notifyTemplateCode" to WINDOWS_GPU_OWNER_CHANGE_NOTIFY,
-                            "userId" to it.userId
+            CompletableFuture.runAsync({
+                assigns.forEach {
+                    try {
+                        remoteDevSettingDao.fetchOneSetting(dslContext, it.userId)
+                        whiteListService.shareWorkspace(operator, it.userId)
+                        if (it.type == WorkspaceShared.AssignType.OWNER) {
+                            notifyControl.notify4UserAndCCRemoteDevManagerAndCCShareUser(
+                                userIds = mutableSetOf(it.userId),
+                                workspaceName = workspaceName,
+                                cc = mutableSetOf(operator),
+                                projectId = projectId,
+                                notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
+                                bodyParams = mutableMapOf(
+                                    "workspaceName" to workspaceName,
+                                    "cgsId" to cgsId,
+                                    "notifyTemplateCode" to WINDOWS_GPU_OWNER_CHANGE_NOTIFY,
+                                    "userId" to it.userId
+                                )
+                            )
+                            makeDiskMount(
+                                ip = cgsId.substringAfter("."),
+                                user = operator
+                            )
+                        }
+                        notifyControl.dispatchWebsocketPushEvent(
+                            userId = it.userId,
+                            workspaceName = workspaceName,
+                            workspaceHost = null,
+                            errorMsg = null,
+                            type = WebSocketActionType.WORKSPACE_ASSIGN,
+                            status = true,
+                            action = WorkspaceAction.ASSIGN,
+                            systemType = null,
+                            workspaceMountType = mountType,
+                            ownerType = null,
+                            projectId = ""
                         )
-                    )
-                    // 分配拥有者后触发L盘挂载
-                    makeDiskMount(
-                        ip = cgsId.substringAfter("."),
-                        user = operator
-                    )
+                    } catch (e: Exception) {
+                        logger.warn("shareWorkspace post-process error for ${it.userId}", e)
+                    }
                 }
-                notifyControl.dispatchWebsocketPushEvent(
-                    userId = it.userId,
-                    workspaceName = workspaceName,
-                    workspaceHost = null,
-                    errorMsg = null,
-                    type = WebSocketActionType.WORKSPACE_ASSIGN,
-                    status = true,
-                    action = WorkspaceAction.ASSIGN,
-                    systemType = null,
-                    workspaceMountType = mountType,
-                    ownerType = null,
-                    projectId = ""
-                )
-            }
+            }, ioExecutor)
         }
     }
 
@@ -866,27 +874,35 @@ class WorkspaceCommon @Autowired constructor(
         if (!type.checkWindows()) {
             return
         }
-        val detail = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName) ?: return
-        val regId = detail.regionId ?: run {
-            logger.warn("update $workspaceName but regionid is null")
-            return
+        try {
+            val detail = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName) ?: return
+            val regId = detail.regionId ?: run {
+                logger.warn("update $workspaceName but regionid is null")
+                return
+            }
+            val ip = detail.hostIp?.substringAfter(".") ?: run {
+                logger.warn("update $workspaceName but hostIp is null")
+                return
+            }
+            updateHostMonitor(regId, ip, props, type)
+        } catch (e: Exception) {
+            logger.warn("updateHostMonitor failed for $workspaceName", e)
         }
-        val ip = detail.hostIp?.substringAfter(".") ?: run {
-            logger.warn("update $workspaceName but hostIp is null")
-            return
-        }
-        updateHostMonitor(regId, ip, props, type)
     }
 
     fun updateHostMonitor(regionId: Int, ip: String, props: Map<String, Any>, type: WorkspaceSystemType) {
         if (!type.checkWindows()) {
             return
         }
-        bkccService.updateHostMonitor(
-            regionId = regionId,
-            ip = ip,
-            props = props
-        )
+        try {
+            bkccService.updateHostMonitor(
+                regionId = regionId,
+                ip = ip,
+                props = props
+            )
+        } catch (e: Exception) {
+            logger.warn("updateHostMonitor BKCC call failed for ip=$ip", e)
+        }
     }
 
     fun getGameIdAndAppId(projectId: String?, ownerType: WorkspaceOwnerType): Pair<String, Long> {

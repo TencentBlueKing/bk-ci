@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_auth
 
-**文档版本：** 1.0.18
+**文档版本：** 1.0.19
 
 **文档描述：** devops_ci_auth 的数据库文档
 | 表名                  | 说明       |
@@ -510,6 +510,7 @@
 |  12   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 |  13   | DESCRIPTION |   varchar   | 512 |   0    |    Y     |  N   |       | 用户组描述  |
 |  14   | IAM_TEMPLATE_ID |   int   | 10 |   0    |    Y     |  N   |       | 人员模板 ID  |
+|  15   | APPLY_DISABLE |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否禁止申请，当 true 为禁止  |
 
 **表名：** <a>T_AUTH_RESOURCE_GROUP_APPLY</a>
 
@@ -568,6 +569,7 @@
 |  10   | EXPIRED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 过期时间  |
 |  11   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  12   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  13   | JOINED_AT |   datetime   | 19 |   0    |    Y     |  N   |       | 加入时间  |
 
 **表名：** <a>T_AUTH_RESOURCE_GROUP_PERMISSION</a>
 

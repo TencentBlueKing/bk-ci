@@ -402,7 +402,7 @@ class RepositoryScmConfigService @Autowired constructor(
             throw OperationException(
                 message = I18nUtil.getCodeLanMessage(
                     messageCode = CommonMessageCode.ERROR_LOGO_FILE_SIZE_EXCEEDED,
-                    params = arrayOf((maxFileSize / BYTES_PER_MB).toString() + "M"),
+                    params = arrayOf((maxFileSize / BYTES_PER_MB).toString() + "MB"),
                     language = I18nUtil.getLanguage(userId)
                 )
             )

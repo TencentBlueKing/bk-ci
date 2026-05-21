@@ -12,6 +12,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 )
 
 const (
@@ -19,22 +21,25 @@ const (
 )
 
 func platformUnzip(src, dest string) error {
-	// Try PowerShell Expand-Archive first (requires PowerShell 5.0+).
-	psErr := expandArchiveViaPowerShell(src, dest)
-	if psErr == nil {
+	// 优先使用 Go 原生 archive/zip 解压，避免通过 PowerShell/外部命令
+	// 传递用户可控路径导致的命令注入风险，同时做 ZipSlip 防护。
+	if err := fileutil.Unzip(src, dest); err == nil {
 		return nil
+	} else {
+		printWarn(msgf("native unzip failed: %v, trying unzip.exe fallback ...",
+			"原生解压失败: %v, 尝试 unzip.exe 兜底 ...", err))
 	}
-	printWarn(msgf("Expand-Archive failed: %v, trying unzip.exe fallback ...",
-		"Expand-Archive 失败: %v, 尝试 unzip.exe 兜底 ...", psErr))
 
-	// Fallback: look for unzip.exe next to the agent binary.
-	exePath, _ := os.Executable()
-	unzipExe := filepath.Join(filepath.Dir(exePath), "unzip.exe")
+	// 兜底：优先找当前运行 devopsAgent.exe 同目录下的 unzip.exe；若该目录中的
+	// unzip.exe 已在 reinstall 清理阶段被删掉，再退回到当前可执行文件旁边查找。
+	// 注意：src/dest 作为 exec.Command 的独立参数传入，不参与命令行解析，
+	// 与 PowerShell -Command 字符串拼接不同，这里不存在注入风险。
+	unzipExe := findUnzipExe(dest)
 	if _, err := os.Stat(unzipExe); err != nil {
 		return fmt.Errorf(msgf(
-			"Expand-Archive failed and unzip.exe not found in %s: %v",
-			"Expand-Archive 失败且 %s 下未找到 unzip.exe: %v",
-			filepath.Dir(exePath), psErr))
+			"native unzip failed and unzip.exe not found near %s or current executable",
+			"原生解压失败且 %s 或当前可执行文件目录下未找到 unzip.exe",
+			dest))
 	}
 
 	cmd := exec.Command(unzipExe, "-o", src, "-d", dest)
@@ -42,19 +47,49 @@ func platformUnzip(src, dest string) error {
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf(msgf(
-			"unzip.exe also failed: %v (Expand-Archive error: %v)",
-			"unzip.exe 也失败了: %v (Expand-Archive 错误: %v)",
-			err, psErr))
+			"unzip.exe also failed: %v",
+			"unzip.exe 也失败了: %v", err))
 	}
 	return nil
 }
 
-func expandArchiveViaPowerShell(src, dest string) error {
-	cmd := exec.Command("powershell", "-NoProfile", "-Command",
-		fmt.Sprintf("Expand-Archive -Path '%s' -DestinationPath '%s' -Force", src, dest))
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+func findUnzipExe(dest string) string {
+	for _, dir := range unzipCandidateDirs(dest) {
+		if dir == "" {
+			continue
+		}
+		candidate := filepath.Join(dir, "unzip.exe")
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate
+		}
+	}
+
+	// 保持返回一个稳定候选路径，便于上层错误信息可读。
+	if len(unzipCandidateDirs(dest)) > 0 {
+		return filepath.Join(unzipCandidateDirs(dest)[0], "unzip.exe")
+	}
+	return "unzip.exe"
+}
+
+func unzipCandidateDirs(dest string) []string {
+	dirs := make([]string, 0, 2)
+	if dest != "" {
+		dirs = append(dirs, dest)
+	}
+	if exePath, err := os.Executable(); err == nil {
+		exeDir := filepath.Dir(exePath)
+		duplicate := false
+		for _, dir := range dirs {
+			if strings.EqualFold(dir, exeDir) {
+				duplicate = true
+				break
+			}
+		}
+		if !duplicate {
+			dirs = append(dirs, exeDir)
+		}
+	}
+	return dirs
 }
 
 func handleInstall(workDir string, args []string) error {

@@ -150,6 +150,7 @@ import com.tencent.devops.process.pojo.pipeline.toBuildDetailSimple
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.strategy.bus.impl.UserNormalPipelinePermissionCheckStrategy
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
@@ -205,7 +206,8 @@ class PipelineBuildFacadeService(
     private val pipelineBuildRetryService: PipelineBuildRetryService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplatePermissionService: PipelineTemplatePermissionService,
-    private val pipelineTriggerEventService: PipelineTriggerEventService
+    private val pipelineTriggerEventService: PipelineTriggerEventService,
+    private val pipelineRecordModelService: PipelineRecordModelService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -3213,6 +3215,18 @@ class PipelineBuildFacadeService(
             }
         }
     }
+
+    fun getBuildFailedTasks(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int?
+    ) = buildRecordService.getBuildFailedTasks(
+        projectId = projectId,
+        pipelineId = pipelineId,
+        buildId = buildId,
+        executeCount = executeCount
+    )
 
     private fun getBuildManualParams(
         projectId: String,

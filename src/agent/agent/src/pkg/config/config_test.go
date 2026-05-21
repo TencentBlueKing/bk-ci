@@ -1,6 +1,9 @@
 package config
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -154,4 +157,133 @@ func TestSyncPersistedProxyEnvs(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestValidateConfigContent(t *testing.T) {
+	validContent := `devops.project.id=proj1
+devops.agent.id=agent1
+devops.agent.secret.key=secret1
+landun.gateway=gw.example.com
+devops.parallel.task.count=4
+`
+	t.Run("valid_config_passes", func(t *testing.T) {
+		if err := validateConfigContent([]byte(validContent)); err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("empty_projectId_fails", func(t *testing.T) {
+		bad := strings.Replace(validContent, "proj1", "", 1)
+		if err := validateConfigContent([]byte(bad)); err == nil {
+			t.Error("expected validation error for empty projectId")
+		}
+	})
+
+	t.Run("empty_agentId_fails", func(t *testing.T) {
+		bad := strings.Replace(validContent, "agent1", "", 1)
+		if err := validateConfigContent([]byte(bad)); err == nil {
+			t.Error("expected validation error for empty agentId")
+		}
+	})
+
+	t.Run("empty_secretKey_fails", func(t *testing.T) {
+		bad := strings.Replace(validContent, "secret1", "", 1)
+		if err := validateConfigContent([]byte(bad)); err == nil {
+			t.Error("expected validation error for empty secretKey")
+		}
+	})
+
+	t.Run("missing_gateway_fails", func(t *testing.T) {
+		bad := strings.Replace(validContent, "landun.gateway=gw.example.com\n", "", 1)
+		if err := validateConfigContent([]byte(bad)); err == nil {
+			t.Error("expected validation error for missing gateway")
+		}
+	})
+
+	t.Run("negative_task_count_fails", func(t *testing.T) {
+		bad := strings.Replace(validContent, "count=4", "count=-1", 1)
+		if err := validateConfigContent([]byte(bad)); err == nil {
+			t.Error("expected validation error for negative task count")
+		}
+	})
+
+	t.Run("non_numeric_task_count_fails", func(t *testing.T) {
+		bad := strings.Replace(validContent, "count=4", "count=abc", 1)
+		if err := validateConfigContent([]byte(bad)); err == nil {
+			t.Error("expected validation error for non-numeric task count")
+		}
+	})
+
+	t.Run("garbage_input_fails", func(t *testing.T) {
+		if err := validateConfigContent([]byte{0x00, 0xFF, 0xFE}); err == nil {
+			t.Error("expected error for garbage input")
+		}
+	})
+}
+
+func TestLoadConfigFromBackup(t *testing.T) {
+	validContent := `devops.project.id=proj1
+devops.agent.id=agent1
+devops.agent.secret.key=secret1
+landun.gateway=gw.example.com
+landun.env=PROD
+devops.parallel.task.count=4
+`
+
+	t.Run("recovers_from_valid_backup", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configPath := filepath.Join(tmpDir, ".agent.properties")
+		bakPath := configPath + ".bak"
+
+		os.WriteFile(bakPath, []byte(validContent), 0644)
+
+		conf, err := loadConfigFromBackup(configPath, bakPath)
+		if err != nil {
+			t.Fatalf("recovery failed: %v", err)
+		}
+		if conf.Section("").Key("devops.project.id").String() != "proj1" {
+			t.Error("recovered config has wrong projectId")
+		}
+		// Main file should be restored
+		if _, err := os.Stat(configPath); err != nil {
+			t.Error("main config file should be restored after recovery")
+		}
+	})
+
+	t.Run("fails_when_no_backup_exists", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configPath := filepath.Join(tmpDir, ".agent.properties")
+		bakPath := configPath + ".bak"
+
+		_, err := loadConfigFromBackup(configPath, bakPath)
+		if err == nil {
+			t.Error("expected error when backup doesn't exist")
+		}
+	})
+
+	t.Run("fails_when_backup_is_corrupt", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configPath := filepath.Join(tmpDir, ".agent.properties")
+		bakPath := configPath + ".bak"
+
+		os.WriteFile(bakPath, []byte{0x00, 0xFF, 0xFE}, 0644)
+
+		_, err := loadConfigFromBackup(configPath, bakPath)
+		if err == nil {
+			t.Error("expected error when backup is corrupt")
+		}
+	})
+
+	t.Run("fails_when_backup_missing_required_fields", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configPath := filepath.Join(tmpDir, ".agent.properties")
+		bakPath := configPath + ".bak"
+
+		os.WriteFile(bakPath, []byte("devops.project.id=proj1\n"), 0644)
+
+		_, err := loadConfigFromBackup(configPath, bakPath)
+		if err == nil {
+			t.Error("expected error when backup is missing required fields")
+		}
+	})
 }

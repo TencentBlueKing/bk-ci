@@ -39,6 +39,7 @@ import validationJAMessages from 'vee-validate/dist/locale/ja'
 import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
+import tapdSocketManager from './utils/tapdSocketManager'
 
 import { handlePipelineNoPermission, RESOURCE_ACTION } from '@/utils/permission'
 import bkMagic from '@tencent/bk-magic-vue'
@@ -151,3 +152,19 @@ global.pipelineVue = new Vue({
     },
     template: '<App/>'
 })
+
+// tapd iframe 场景：以路由守卫统一控制 BK-CI WebSocket 的启停与页面上报。
+// 覆盖所有 /pipeline/tapd/ 子路由（含同级的 tapdPipelinesDetail、tapdCreatePipeline），
+// 避免业务组件有的是在 /pipeline/tapd/ 下但不走 views/tapd/index.vue 入口、从而拿不到 socket 推送的问题。
+const pipelineRouter = global.pipelineVue.$router
+if (pipelineRouter && typeof pipelineRouter.afterEach === 'function') {
+    pipelineRouter.afterEach((to) => {
+        const path = (to && to.path) || ''
+        if (tapdSocketManager.isTapdPath(path)) {
+            tapdSocketManager.ensureStarted()
+            tapdSocketManager.notifyRoute(to)
+        } else {
+            tapdSocketManager.stop()
+        }
+    })
+}

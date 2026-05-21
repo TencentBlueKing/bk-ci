@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 )
 
 const (
@@ -21,6 +23,16 @@ const (
 )
 
 func platformUnzip(src, dest string) error {
+	// 优先使用 Go 原生 archive/zip 解压（带 ZipSlip 防护），
+	// 避免通过外部命令传递用户可控路径带来的潜在风险。
+	if err := fileutil.Unzip(src, dest); err == nil {
+		return nil
+	} else {
+		printWarn(msgf("native unzip failed: %v, trying unzip fallback ...",
+			"原生解压失败: %v, 尝试 unzip 兜底 ...", err))
+	}
+
+	// 兜底：调用系统 unzip。src/dest 作为独立参数传入，不存在注入风险。
 	cmd := exec.Command("unzip", "-q", "-o", src, "-d", dest)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

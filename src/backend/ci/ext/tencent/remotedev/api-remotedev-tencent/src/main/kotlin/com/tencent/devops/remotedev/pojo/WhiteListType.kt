@@ -63,6 +63,9 @@ enum class WhiteListType {
     // SSL模式-单个实例级别开启
     CDS_SSL_WORKSPACE,
 
+    // 豁免自动回收-工作空间级别
+    NOT_AUTO_RECYCLED_WORKSPACE,
+
     // 设备管控白名单
     PROJECT_ACCESS_DEVICE;
 

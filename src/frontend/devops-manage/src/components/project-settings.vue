@@ -1,12 +1,12 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { BaseInfoContent, PermissionContent, PipelineContent, ArtifactoryContent } from "@/components/project-form-item/";
 import { RESOURCE_ACTION, RESOURCE_TYPE} from '@/utils/permission.js';
 import { InfoBox, Popover } from 'bkui-vue';
 import { useRoute } from 'vue-router';
 const { t } = useI18n();
-const emits = defineEmits(['change', 'clearValidate', 'handleCancel', 'initProjectData', 'handleUpdate']);
+const emits = defineEmits(['change', 'clearValidate', 'handleCancel', 'initProjectData', 'handleUpdate', 'setProjectDeptProp', 'updateKpiCodeConfig']);
 const props = defineProps({
   data: Object,
   type: String,
@@ -24,21 +24,24 @@ const isChange = ref(false);
 const infoBoxRef = ref();
 const metadataList = ref([]);
 const panelActive = ref('projectSettings')
+const isPersonalProject = computed(() => projectData.value.projectScope === 1)
 const tabPanels = [
   {
     name: 'projectSettings',
     label: '项目信息',
     activeCollapse: ['baseInfo', 'permission'],
-    panels: [{
-      name: 'baseInfo',
-      title: '基础信息',
-      component: BaseInfoContent,
-    },
-    {
-      name: 'permission',
-      title: '权限',
-      component: PermissionContent,
-    }]
+    panels: [
+      {
+        name: 'baseInfo',
+        title: '基础信息',
+        component: BaseInfoContent,
+      },
+      ...!isPersonalProject.value ? [{
+        name: 'permission',
+        title: '权限',
+        component: PermissionContent,
+      }] : []
+    ]
   },
   {
     name: 'pipelineSettings',
@@ -78,6 +81,10 @@ function handleClearValidate () {
 };
 function setProjectDeptProp (dept) {
   emits('setProjectDeptProp', dept)
+}
+
+function handleKpiConfigUpdate (config) {
+  emits('updateKpiCodeConfig', config)
 }
 function tabBeforeChange(name){
   if (props.type === 'edit' && isChange.value) {
@@ -167,6 +174,7 @@ onMounted(() => {
                       @handle-change-form="handleChangeForm"
                       @clearValidate="handleClearValidate"
                       @setProjectDeptProp="setProjectDeptProp"
+                      @updateKpiCodeConfig="handleKpiConfigUpdate"
                       :curDeptInfo="curDeptInfo"
                     />
                   </div>

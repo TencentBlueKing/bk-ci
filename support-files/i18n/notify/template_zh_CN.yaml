@@ -40,6 +40,7 @@
     id: "b236e73c17cb48bbbd7cc38ffbcae407"
     title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建Stage审核"
     body: "构建已被「${rejectUserId}」驳回，流水线状态为「 Stage成功」。\n驳回理由:  \n${suggest} \n[电脑端点击](${reviewUrl}) \n[手机端点击](${reviewAppUrl})"
+    sender: "DevOps"
   creator: "system"
   modifior: "system"
 - index: 2
@@ -117,6 +118,7 @@
   templateName: "store评论消息通知模板"
   notifyTypeScope:
     - "RTX"
+    - "WEWORK_GROUP"
   priority: 0
   source: 0
   weworkTemplate:
@@ -124,6 +126,11 @@
     sender: "DevOps"
     title: "【蓝盾研发商店】评论通知"
     body: "${userId} 评论了 ${storeName}\n评分: ${score}\n评论: ${commentContent}\n[去回复 | ${url}]"
+  weworkGroupTemplate:
+    id: "a3b7e9f2d4c1085b6e9f3a7c2d5b8e41"
+    title: "【蓝盾研发商店】评论通知"
+    body: "${userId} 评论了 ${storeName}\n评分: ${score}\n评论: ${commentContent}\n[去回复 | ${url}]"
+    sender: "DevOps"
   creator: "system"
   modifior: "system"
 - index: 6
@@ -153,6 +160,11 @@
     id: "jgj46v0knzlkhcah57rcutao30tqza5v"
     taskName: "构建成功"
     content: "${successContent}"
+  weworkGroupTemplate:
+    id: "3ffdfe998646421ba8672a9268069e4c"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建成功"
+    body: "✔️${successContent}\n查看详情:${detailUrl}"
   creator: "system"
   modifior: "system"
 - index: 7
@@ -214,6 +226,7 @@
     id: "0ca84f7d0dcf4453b30b3e465f1c4caf"
     title: "${content}"
     body: "审核说明: \n${reviewDesc} \n电脑端: [去审核](${reviewUrl}) \n手机端: [去审核](${reviewAppUrl})"
+    sender: "DevOps"
   creator: "system"
   modifior: "system"
 - index: 10
@@ -359,6 +372,11 @@
     id: "qlzxaotr2zvr8gnj1dkpj2x5lx19wkpt"
     taskName: "构建失败"
     content: "${failContent}"
+  weworkGroupTemplate:
+    id: "3cfc1a1ca58f4b92bf4c6d3fc8bcf790"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建失败"
+    body: "❌${failContent}"
   creator: "system"
   modifior: "system"
 - index: 17
@@ -483,6 +501,11 @@
     id: "x79oetbqquqfjhep7zifheqe9b3tkwvx"
     taskName: "构建失败"
     content: "${failContent}"
+  weworkGroupTemplate:
+    id: "391b2aed3ca1479b9fd78b609b23f49b"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建失败"
+    body: "❌${failContent}\n\n查看详情:${detailUrl}"
   creator: "system"
   modifior: "system"
 - index: 23
@@ -627,6 +650,11 @@
     id: "zjeufw8tfnf53tnibu4s43leju8xgnor"
     taskName: "构建成功"
     content: "${successContent}"
+  weworkGroupTemplate:
+    id: "9c424b5784f54ba9b75e89a266951659"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建成功"
+    body: "✔️${successContent}"
   creator: "system"
   modifior: "system"
 - index: 29
@@ -794,6 +822,7 @@
     id: "cead07553b364b5a9c3f0290e35c82da"
     title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建Stage审核"
     body: "构建状态为stage success，需要「${reviewers}」的审核才执行后续流程\n\n审核说明: \n${reviewDesc}\n\n[电脑端点击](${reviewUrl})\n[手机端点击](${reviewAppUrl})"
+    sender: "DevOps"
   creator: "system"
   modifior: "system"
 - index: 37
@@ -1067,6 +1096,7 @@
   templateName: "研发商店插件上架审核通知模版"
   notifyTypeScope:
     - "WEWORK"
+    - "WEWORK_GROUP"
   priority: 0
   source: 0
   weworkTemplate:
@@ -1074,6 +1104,11 @@
     sender: "DevOps"
     title: "研发商店插件审核提醒"
     body: "${userId}提交了上架插件申请，请尽快审批。\n插件：${atomName} \n版本： ${version} \n去审核：${url}"
+  weworkGroupTemplate:
+    id: "f47ac10b58cc4372a5670e02b2c3d479"
+    title: "研发商店插件审核提醒"
+    body: "${userId}提交了上架插件申请，请尽快审批。\n插件：${atomName} \n版本： ${version} \n去审核：${url}"
+    sender: "DevOps"
   creator: "system"
   modifior: "system"
 - index: 52

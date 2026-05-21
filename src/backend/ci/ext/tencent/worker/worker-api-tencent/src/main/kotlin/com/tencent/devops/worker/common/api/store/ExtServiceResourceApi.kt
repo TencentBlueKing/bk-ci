@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.api.store
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.extservice.dto.UpdateExtServiceEnvInfoDTO
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -41,7 +42,7 @@ class ExtServiceResourceApi : AbstractBuildResourceApi() {
         serviceCode: String,
         version: String,
         updateExtServiceEnvInfo: UpdateExtServiceEnvInfoDTO
-    ): Result<Boolean> {
+    ): Result<String?> {
         val path = "/ms/store/api/build/ext/services/env/projects/$projectCode/services/$serviceCode/versions/$version"
         val body = RequestBody.create(
             "application/json; charset=utf-8".toMediaTypeOrNull(),
@@ -49,6 +50,23 @@ class ExtServiceResourceApi : AbstractBuildResourceApi() {
         )
         val request = buildPut(path, body)
         val responseContent = request(request, "updateExtServiceEnv fail")
+        return objectMapper.readValue(responseContent)
+    }
+
+    fun updateExtServiceVersionPkgSize(
+        extServiceId: String,
+        storePackageInfoReqs: List<StorePackageInfoReq>
+    ): Result<Boolean> {
+        val path = "/ms/store/api/service/store/components/storeId/$extServiceId/version/info/update"
+        val body = RequestBody.create(
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
+            objectMapper.writeValueAsString(storePackageInfoReqs)
+        )
+        val request = buildPut(path, body)
+        val responseContent = request(
+            request,
+            "updateExtServiceVersionPkgSize fail"
+        )
         return objectMapper.readValue(responseContent)
     }
 }

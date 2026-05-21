@@ -268,6 +268,7 @@
                 'isManage',
                 'hardViews'
             ]),
+            ...mapState(['curProject']),
             ...mapGetters('pipelines', [
                 'pipelineGroupDict',
                 'groupMap',
@@ -370,11 +371,82 @@
                         isCheckPermission: false
                     }
                 ]
+            },
+            pipelineGroupActions () {
+                return (group) => {
+                    if (this.fixedGroupIdSet.has(group.id)) return []
+                    const hasPermission = !group.projected || this.isManage
+                    return [
+                        ...(hasPermission && !group.pac
+                            ? [
+                                {
+                                    text: this.$t('rename'),
+                                    disabled: this.renaming,
+                                    handler: (group) => {
+                                        this.editingGroupId = group.id
+                                        this.newViewName = group.name
+                                    }
+                                }
+                            ]
+                            : []),
+                        ...(
+                            group.projected && this.curProject?.projectScope === 0
+                                ? [
+                                    {
+                                        text: this.$t('pipelineGroupAuth'),
+                                        handler: () => {
+                                            this.$router.push({
+                                                name: 'PipelineListAuth',
+                                                params: {
+                                                    id: group.id,
+                                                    groupName: group.name
+                                                }
+                                            })
+                                        },
+                                        hasPermission: this.isManage,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: this.projectId,
+                                            resourceType: 'project',
+                                            resourceCode: this.projectId,
+                                            action: PROJECT_RESOURCE_ACTION.MANAGE
+                                        }
+                                    }
+                                ]
+                                : []
+                        ),
+                        {
+                            text: this.$t(group.top ? 'unStickyTop' : 'stickyTop'),
+                            disabled: this.isSticking,
+                            handler: () => this.stickTop(group)
+                        },
+                        ...(hasPermission && !group.pac
+                            ? [
+                                {
+                                    text: this.$t('delete'),
+                                    disabled: this.isDeleting,
+                                    handler: () => {
+                                        this.$bkInfo({
+                                            type: 'warning',
+                                            title: this.$t('deleteGroupTitle', [group.name]),
+                                            subTitle: this.$t('deleteGroupTips'),
+                                            cancelText: this.$t('close'),
+                                            confirmFn: () => {
+                                                this.deleteGroup(group)
+                                            }
+                                        })
+                                    }
+                                }
+                            ]
+                            : [])
+                    ]
+                }
             }
         },
         watch: {
-            '$route.params.projectId': function () {
+            '$route.params.projectId': function (projectId) {
                 this.closeAddPipelineGroupDialog()
+                this.$store.dispatch('requestProjectDetail', { projectId })
                 this.$nextTick(this.refreshPipelineGroup)
             }
         },
@@ -383,8 +455,10 @@
                 personalViewList: true,
                 projectViewList: true
             }
-
             this.refreshPipelineGroup()
+            this.$store.dispatch('requestProjectDetail', {
+                projectId: this.$route.params.projectId
+            })
         },
         methods: {
             ...mapActions('pipelines', [
@@ -411,74 +485,6 @@
                 const res = await this.requestGetGroupLists(this.$route.params)
                 this.isLoading = false
                 return res
-            },
-            pipelineGroupActions (group) {
-                if (this.fixedGroupIdSet.has(group.id)) return []
-                const hasPermission = !group.projected || this.isManage
-                return [
-                    ...(hasPermission && !group.pac
-                        ? [
-                            {
-                                text: this.$t('rename'),
-                                disabled: this.renaming,
-                                handler: (group) => {
-                                    this.editingGroupId = group.id
-                                    this.newViewName = group.name
-                                }
-                            }
-                        ]
-                        : []),
-                    ...(
-                        group.projected
-                            ? [
-                                {
-                                    text: this.$t('pipelineGroupAuth'),
-                                    handler: () => {
-                                        this.$router.push({
-                                            name: 'PipelineListAuth',
-                                            params: {
-                                                id: group.id,
-                                                groupName: group.name
-                                            }
-                                        })
-                                    },
-                                    hasPermission: this.isManage,
-                                    disablePermissionApi: true,
-                                    permissionData: {
-                                        projectId: this.projectId,
-                                        resourceType: 'project',
-                                        resourceCode: this.projectId,
-                                        action: PROJECT_RESOURCE_ACTION.MANAGE
-                                    }
-                                }
-                            ]
-                            : []
-                    ),
-                    {
-                        text: this.$t(group.top ? 'unStickyTop' : 'stickyTop'),
-                        disabled: this.isSticking,
-                        handler: () => this.stickTop(group)
-                    },
-                    ...(hasPermission && !group.pac
-                        ? [
-                            {
-                                text: this.$t('delete'),
-                                disabled: this.isDeleting,
-                                handler: () => {
-                                    this.$bkInfo({
-                                        type: 'warning',
-                                        title: this.$t('deleteGroupTitle', [group.name]),
-                                        subTitle: this.$t('deleteGroupTips'),
-                                        cancelText: this.$t('close'),
-                                        confirmFn: () => {
-                                            this.deleteGroup(group)
-                                        }
-                                    })
-                                }
-                            }
-                        ]
-                        : [])
-                ]
             },
             toggle (id) {
                 this.showClassify[id] = !this.showClassify[id]
@@ -694,7 +700,6 @@
 
             .pipeline-group-header-name {
                 flex: 1;
-                @include ellipsis();
             }
             .add-pipeline-group-btn {
                 display: flex;

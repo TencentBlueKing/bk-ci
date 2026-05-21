@@ -110,11 +110,11 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         projectId: String?,
         ip: String?,
         envId: String?,
-        workspaceName: String?
+        workspaceName: String?,
+        hasDepartmentsInfo: Boolean?
     ): Result<List<WeSecProjectWorkspace>> {
         logger.info("Get  projects workspace ,projectId:$projectId, ip:$ip, envId:$envId")
         if (projectId.isNullOrEmpty() && ip.isNullOrEmpty() && envId.isNullOrEmpty() && workspaceName.isNullOrEmpty()) {
-            // 三个参数都为空, 返回空列表
             return Result(emptyList())
         }
         return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(
@@ -123,7 +123,8 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             envId = envId,
             businessLineName = null,
             ownerName = null,
-            workspaceName = workspaceName
+            workspaceName = workspaceName,
+            hasDepartmentsInfo = hasDepartmentsInfo
         )
     }
 

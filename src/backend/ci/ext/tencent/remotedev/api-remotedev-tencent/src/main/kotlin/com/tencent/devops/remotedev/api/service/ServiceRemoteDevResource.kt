@@ -127,7 +127,10 @@ interface ServiceRemoteDevResource {
         ownerName: String?,
         @Parameter(description = "workspaceName", required = false)
         @QueryParam("workspaceName")
-        workspaceName: String?
+        workspaceName: String?,
+        @Parameter(description = "是否包含部门信息", required = false)
+        @QueryParam("hasDepartmentsInfo")
+        hasDepartmentsInfo: Boolean? = null
     ): Result<List<WeSecProjectWorkspace>>
 
     @Operation(summary = "提供给wesec获取项目下云桌面信息")

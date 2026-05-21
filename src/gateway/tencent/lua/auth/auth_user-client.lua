@@ -180,6 +180,21 @@ else
     end
 end
 
+-- BKAuth Token Introspection
+if config.bkauth then
+    local auth_header = ngx.var.http_x_devops_oauth_token
+    if auth_header then
+        local bearer_token = string.match(auth_header, "^Bearer%s+(.+)$")
+        if bearer_token and string.sub(bearer_token, 1, 5) == "bkci_" then
+            local result = oauthUtil:introspect_token(bearer_token)
+            if result then
+                ngx.header["x-devops-uid"] = result.username
+                ngx.exit(200)
+            end
+        end
+    end
+end
+
 ngx.log(ngx.WARN, "auth user failed")
 ngx.exit(401)
 return

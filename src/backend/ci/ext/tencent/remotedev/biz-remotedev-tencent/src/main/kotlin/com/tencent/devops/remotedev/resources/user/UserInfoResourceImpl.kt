@@ -8,6 +8,7 @@ import com.tencent.devops.remotedev.api.user.UserInfoResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.pojo.TrustDeviceInfo
 import com.tencent.devops.remotedev.pojo.TrustDeviceTokenGetData
+import com.tencent.devops.remotedev.pojo.VerifyResult
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognition
@@ -65,14 +66,14 @@ class UserInfoResourceImpl @Autowired constructor(
         if (deviceId != null && token != null) {
             // 如果是云桌面拥有者 + token有效，才豁免ioa认证。
             if (workspaceService.checkExistWorkspaceSharedInfo(
-                workspaceName = data.workspaceName,
-                sharedUser = userId,
-                assignType = WorkspaceShared.AssignType.OWNER
-            ) && trustDeviceService.checkTrustDevice(
+                    workspaceName = data.workspaceName,
+                    sharedUser = userId,
+                    assignType = WorkspaceShared.AssignType.OWNER
+                ) && trustDeviceService.checkTrustDevice(
                     userId = userId,
                     deviceId = deviceId,
                     token = token
-            )
+                ).result
             ) {
                 return Result(res.copy(moa = UserInfoMoaCheckConfig(false)))
             }
@@ -106,6 +107,10 @@ class UserInfoResourceImpl @Autowired constructor(
     }
 
     override fun verifyTrustDeviceToken(userId: String, deviceId: String, token: String): Result<Boolean> {
+        return Result(trustDeviceService.checkTrustDevice(userId, deviceId, token).result)
+    }
+
+    override fun verifyTrustDeviceTokenNew(userId: String, deviceId: String, token: String): Result<VerifyResult> {
         return Result(trustDeviceService.checkTrustDevice(userId, deviceId, token))
     }
 
