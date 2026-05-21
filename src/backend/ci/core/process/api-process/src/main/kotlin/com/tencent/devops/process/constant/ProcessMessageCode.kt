@@ -462,6 +462,11 @@ object ProcessMessageCode {
     const val ERROR_PAC_YAML_FILE_BINDTO_OTHER_PIPELINE = "2101365"
     const val ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS = "2101366" // 流水线批量任务{0}不存在
     const val ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_DELETE = "2101367" // 流水线批量任务{0}当前状态为{1}，不能删除
+    const val ERROR_PIPELINE_BATCH_TASK_DETAIL_NOT_EXISTS = "2101368" // 流水线批量任务明细{0}不存在
+    // 流水线批量任务明细{0}当前状态为{1}，不能排除
+    const val ERROR_PIPELINE_BATCH_TASK_DETAIL_CAN_NOT_EXCLUDE = "2101369"
+    // 流水线批量任务明细{0}当前状态为{1}，不能恢复
+    const val ERROR_PIPELINE_BATCH_TASK_DETAIL_CAN_NOT_RESTORE = "2101370"
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

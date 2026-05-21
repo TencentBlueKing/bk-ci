@@ -1,35 +1,28 @@
 package com.tencent.devops.process.engine.listener.pipeline
 
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateRequest
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskConfigEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskExecuteEvent
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskType
-import org.springframework.stereotype.Component
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 
-@Component
-@Suppress("ALL")
-interface PipelineBatchTaskListener {
-
-    fun support(taskType: PipelineBatchTaskType): Boolean
+@Service
+class PipelineBatchTaskListener {
 
     fun execute(event: PipelineBatchTaskExecuteEvent) {
-        if (!support(event.taskType)) {
-            return
-        }
-        doExecute(event)
+        logger.info(
+            "pipeline batch task execute event received|projectId=${event.projectId}|" +
+                "taskId=${event.taskId}|taskType=${event.taskType}"
+        )
     }
 
-    fun doExecute(event: PipelineBatchTaskExecuteEvent)
+    fun config(event: PipelineBatchTaskConfigEvent) {
+        logger.info(
+            "pipeline batch task config event received|projectId=${event.projectId}|" +
+                "taskId=${event.taskId}|taskType=${event.taskType}"
+        )
+    }
 
-    fun validateWhenCreate(
-        userId: String,
-        projectId: String,
-        request: PipelineBatchTaskCreateRequest
-    ) = Unit
-
-    fun validateWhenDelete(
-        userId: String,
-        projectId: String,
-        task: PipelineBatchTaskInfo
-    ) = Unit
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineBatchTaskListener::class.java)
+    }
 }

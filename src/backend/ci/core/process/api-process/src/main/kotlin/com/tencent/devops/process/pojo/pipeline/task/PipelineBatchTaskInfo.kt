@@ -9,14 +9,16 @@ data class PipelineBatchTaskInfo(
     val taskId: String,
     @get:Schema(description = "项目ID", required = true)
     val projectId: String,
-    @get:Schema(description = "任务名称", required = true)
-    val taskName: String,
+    @get:Schema(description = "任务名称")
+    val taskName: String?,
     @get:Schema(description = "任务类型", required = true)
     val taskType: PipelineBatchTaskType,
     @get:Schema(description = "任务参数")
     val taskParam: String?,
     @get:Schema(description = "任务状态", required = true)
     val status: PipelineBatchTaskStatus,
+    @get:Schema(description = "当前步骤", required = true)
+    val step: PipelineBatchTaskStep,
     @get:Schema(description = "总数", required = true)
     val totalCount: Int,
     @get:Schema(description = "成功数", required = true)

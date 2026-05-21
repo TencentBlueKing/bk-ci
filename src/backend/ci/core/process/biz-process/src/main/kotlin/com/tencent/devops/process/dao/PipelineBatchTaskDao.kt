@@ -3,7 +3,9 @@ package com.tencent.devops.process.dao
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BATCH_TASK
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskStatus
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskStep
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskType
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -17,9 +19,10 @@ class PipelineBatchTaskDao {
         dslContext: DSLContext,
         taskId: String,
         projectId: String,
-        taskName: String,
+        taskName: String?,
         taskType: PipelineBatchTaskType,
         taskParam: String?,
+        step: PipelineBatchTaskStep,
         totalCount: Int,
         creator: String
     ): Int {
@@ -32,6 +35,7 @@ class PipelineBatchTaskDao {
                 TASK_TYPE,
                 TASK_PARAM,
                 STATUS,
+                STEP,
                 TOTAL_COUNT,
                 SUCCESS_COUNT,
                 FAILED_COUNT,
@@ -45,6 +49,7 @@ class PipelineBatchTaskDao {
                 taskType.name,
                 taskParam,
                 PipelineBatchTaskStatus.DRAFT.name,
+                step.name,
                 totalCount,
                 0,
                 0,
@@ -117,26 +122,31 @@ class PipelineBatchTaskDao {
         }
     }
 
-    fun updateStatus(
+    fun update(
         dslContext: DSLContext,
-        projectId: String,
-        taskId: String,
-        status: PipelineBatchTaskStatus,
-        successCount: Int? = null,
-        failedCount: Int? = null
+        update: PipelineBatchTaskUpdate
     ): Int {
         return with(T_PIPELINE_BATCH_TASK) {
-            val update = dslContext.update(this)
-                .set(STATUS, status.name)
-                .set(UPDATE_TIME, LocalDateTime.now())
-            if (successCount != null) {
-                update.set(SUCCESS_COUNT, successCount)
+            val query = dslContext.update(this)
+            if (update.taskName != null) {
+                query.set(TASK_NAME, update.taskName)
+                query.set(TASK_PARAM, update.taskParam)
             }
-            if (failedCount != null) {
-                update.set(FAILED_COUNT, failedCount)
+            if (update.status != null) {
+                query.set(STATUS, update.status.name)
             }
-            update.where(PROJECT_ID.eq(projectId))
-                .and(TASK_ID.eq(taskId))
+            if (update.successCount != null) {
+                query.set(SUCCESS_COUNT, update.successCount)
+            }
+            if (update.failedCount != null) {
+                query.set(FAILED_COUNT, update.failedCount)
+            }
+            if (update.step != null) {
+                query.set(STEP, update.step.name)
+            }
+            query.set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(update.projectId))
+                .and(TASK_ID.eq(update.taskId))
                 .execute()
         }
     }
@@ -173,6 +183,7 @@ class PipelineBatchTaskDao {
                 taskType = PipelineBatchTaskType.valueOf(record.get(TASK_TYPE)),
                 taskParam = record.get(TASK_PARAM),
                 status = PipelineBatchTaskStatus.valueOf(record.get(STATUS)),
+                step = PipelineBatchTaskStep.valueOf(record.get(STEP)),
                 totalCount = record.get(TOTAL_COUNT),
                 successCount = record.get(SUCCESS_COUNT),
                 failedCount = record.get(FAILED_COUNT),

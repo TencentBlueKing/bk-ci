@@ -9,12 +9,24 @@ data class PipelineBatchTaskDetailInfo(
     val taskId: String,
     @get:Schema(description = "项目ID", required = true)
     val projectId: String,
+    @get:Schema(description = "任务类型", required = true)
+    val taskType: PipelineBatchTaskType,
     @get:Schema(description = "流水线ID", required = true)
     val pipelineId: String,
     @get:Schema(description = "流水线名称", required = true)
     val pipelineName: String,
+    @get:Schema(description = "是否开启PAC", required = true)
+    val pac: Boolean = false,
+    @get:Schema(description = "是否是约束流水线", required = true)
+    val constraint: Boolean = false,
+    @get:Schema(description = "是否是系统自动添加", required = true)
+    val systemAdd: Boolean = false,
+    @get:Schema(description = "流水线是否禁用", required = true)
+    val locked: Boolean = false,
+    @get:Schema(description = "是否修改", required = true)
+    val change: Boolean = true,
     @get:Schema(description = "明细状态", required = true)
-    val status: PipelineBatchTaskStatus,
+    val status: PipelineBatchTaskDetailStatus,
     @get:Schema(description = "错误信息")
     val errorMessage: String?,
     @get:Schema(description = "开始时间")

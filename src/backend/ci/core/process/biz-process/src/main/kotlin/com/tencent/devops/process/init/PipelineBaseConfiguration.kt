@@ -43,6 +43,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineTemplateInstanceEven
 import com.tencent.devops.process.engine.pojo.event.PipelineTemplateMigrateEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineTemplateTriggerUpgradesEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskConfigEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskExecuteEvent
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInstanceListener
 import org.springframework.beans.factory.annotation.Autowired
@@ -91,10 +92,16 @@ class PipelineBaseConfiguration {
      */
     @EventConsumer
     fun pipelineBatchTaskExecuteConsumer(
-        @Autowired listeners: List<PipelineBatchTaskListener>
-    ) = ScsConsumerBuilder.build<PipelineBatchTaskExecuteEvent> { event ->
-        listeners.forEach { it.execute(event) }
-    }
+        @Autowired listener: PipelineBatchTaskListener
+    ) = ScsConsumerBuilder.build<PipelineBatchTaskExecuteEvent> { listener.execute(it) }
+
+    /**
+     * 流水线批量任务配置队列--- 并发一般
+     */
+    @EventConsumer
+    fun pipelineBatchTaskConfigConsumer(
+        @Autowired listener: PipelineBatchTaskListener
+    ) = ScsConsumerBuilder.build<PipelineBatchTaskConfigEvent> { listener.config(it) }
 
     /**
      * 流水线模板实例--- 并发一般

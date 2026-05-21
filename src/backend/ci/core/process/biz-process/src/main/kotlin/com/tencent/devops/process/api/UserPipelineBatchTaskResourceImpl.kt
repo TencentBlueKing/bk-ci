@@ -4,12 +4,15 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineBatchTaskResource
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskConfigRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailInfo
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatus
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskStatusSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskType
-import com.tencent.devops.process.service.PipelineBatchTaskService
+import com.tencent.devops.process.service.task.PipelineBatchTaskService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -58,6 +61,10 @@ class UserPipelineBatchTaskResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         taskId: String,
+        pipelineName: String?,
+        status: PipelineBatchTaskDetailStatus?,
+        pac: Boolean?,
+        systemAdd: Boolean?,
         page: Int,
         pageSize: Int
     ): Result<SQLPage<PipelineBatchTaskDetailInfo>> {
@@ -65,8 +72,73 @@ class UserPipelineBatchTaskResourceImpl @Autowired constructor(
             pipelineBatchTaskService.listDetails(
                 projectId = projectId,
                 taskId = taskId,
+                pipelineName = pipelineName,
+                status = status,
+                pac = pac,
+                systemAdd = systemAdd,
                 page = page,
                 pageSize = pageSize
+            )
+        )
+    }
+
+    override fun statusSummary(
+        userId: String,
+        projectId: String,
+        taskId: String,
+        taskType: PipelineBatchTaskType
+    ): Result<List<PipelineBatchTaskStatusSummary>> {
+        return Result(
+            pipelineBatchTaskService.statusSummary(
+                projectId = projectId,
+                taskId = taskId,
+                taskType = taskType
+            )
+        )
+    }
+
+    override fun config(
+        userId: String,
+        projectId: String,
+        taskId: String,
+        request: PipelineBatchTaskConfigRequest
+    ): Result<Boolean> {
+        return Result(
+            pipelineBatchTaskService.config(
+                userId = userId,
+                projectId = projectId,
+                taskId = taskId,
+                request = request
+            )
+        )
+    }
+
+    override fun excludePipeline(
+        userId: String,
+        projectId: String,
+        taskId: String,
+        pipelineId: String
+    ): Result<Boolean> {
+        return Result(
+            pipelineBatchTaskService.excludePipeline(
+                projectId = projectId,
+                taskId = taskId,
+                pipelineId = pipelineId
+            )
+        )
+    }
+
+    override fun restorePipeline(
+        userId: String,
+        projectId: String,
+        taskId: String,
+        pipelineId: String
+    ): Result<Boolean> {
+        return Result(
+            pipelineBatchTaskService.restorePipeline(
+                projectId = projectId,
+                taskId = taskId,
+                pipelineId = pipelineId
             )
         )
     }
