@@ -27,12 +27,24 @@
                 />
             </div>
         </transition>
-        <span
-            :class="['ai-float-btn', { 'ai-float-btn-active': panelVisible }]"
-            @click="togglePanel"
+        <div
+            v-if="!panelVisible"
+            class="ai-float-hit-zone"
         >
-            <img :src="aiblukeingBanner" />
-        </span>
+            <button
+                :class="['ai-float-btn', {
+                    'ai-float-btn-active': panelVisible
+                }]"
+                type="button"
+                aria-label="Open AI assistant"
+                @click="togglePanel"
+            >
+                <img
+                    :src="aiblukeingBanner"
+                    alt=""
+                />
+            </button>
+        </div>
     </div>
 </template>
 
@@ -196,11 +208,40 @@
 
 <style lang="scss" scoped>
 .ai-float-wrapper {
+    --ai-float-size: 48px;
+    --ai-float-hidden-offset: -32px;
+    --ai-float-visible-offset: 16px;
+    --ai-float-hover-scale: 1.08;
+    --ai-float-shadow: 0 4px 16px rgba(58, 132, 255, .4);
+    --ai-float-shadow-hover: 0 12px 30px rgba(58, 132, 255, .5);
     position: fixed;
     right: 24px;
     bottom: 24px;
     z-index: 2500;
     background-color: #fff;
+}
+
+// 固定大小、固定位置的 hover 命中区。
+// 比按钮本身大，覆盖 peek 与 hover 两种状态下按钮可能出现的全部位置；
+// hit-zone 自身不会随 hover 移动，所以光标贴视口右边缘也不会触发"按钮滑离 -> hover 撤销 -> 复位"的抖动循环。
+.ai-float-hit-zone {
+    position: relative;
+    pointer-events: auto;
+    width: calc(var(--ai-float-size) + var(--ai-float-visible-offset) + 16px); // 80px：覆盖到 hover 后按钮左缘左侧再多留 16px 缓冲
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    cursor: pointer;
+
+    &:hover {
+        .ai-float-btn {
+            margin-right: var(--ai-float-visible-offset);
+            transform: scale(var(--ai-float-hover-scale));
+            box-shadow: var(--ai-float-shadow-hover);
+        }
+    }
+
 }
 
 .ai-float-btn {
@@ -213,26 +254,29 @@
     border-radius: 50%;
     background-color: white;
     cursor: pointer;
-    padding: 8px;
-    border: 3px solid #eaebf0;
-    box-shadow: 0 4px 16px rgba(58, 132, 255, .4);
-    transition: transform .2s, box-shadow .2s;
-
-    &:hover {
-        transform: scale(1.08);
-    }
+    padding: 6px;
+    border: 2px solid #eaebf0;
+    box-shadow: var(--ai-float-shadow);
+    margin-right: var(--ai-float-hidden-offset);
+    transform: scale(1);
+    transform-origin: right center;
+    transition: margin-right .22s ease, transform .22s ease, box-shadow .22s ease, background .22s ease;
+    will-change: transform, box-shadow;
 
     > img {
         width: 100%;
         height: 100%;
         object-fit: cover;
+        pointer-events: none;
+        -webkit-user-drag: none;
     }
 
     &-active {
+        margin-right: var(--ai-float-visible-offset);
         background: linear-gradient(135deg, #7b61ff 0%, #3a84ff 100%);
     }
-}
 
+}
 
 .ai-panel {
     position: fixed;
