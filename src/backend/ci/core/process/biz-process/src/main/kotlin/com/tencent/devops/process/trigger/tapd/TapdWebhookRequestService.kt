@@ -147,7 +147,7 @@ class TapdWebhookRequestService(
             logger.info("no pipelines subscribed|tapdProjectId=${event.tapdProjectId}|eventType=${eventType.value}")
             return
         }
-        val objectId = event.body.getHookField(TAPD_KEY_ID, eventAction == TapdEventAction.UPDATE)
+        val objectId = getEventObjectId(eventAction, event.body)
         // 仅生成一次工单详情页 URL，复用于触发事件描述和流水线启动参数（CI_EVENT_URL）
         val objectUrl = buildObjectUrl(
             tapdHost = event.tapdHost,
