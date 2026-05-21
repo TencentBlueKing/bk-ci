@@ -169,7 +169,7 @@
                 width="200"
             />
             <bk-table-column
-                v-if="!isBuiltInEnv"
+                v-if="!isCreateResType"
                 :label="$t('environment.enableTitle')"
                 prop="operate"
                 fixed="right"
@@ -251,7 +251,8 @@
                 handleShowRelatedNodes
             } = useRelatedNodes()
             const {
-                fetchEnvList
+                fetchEnvList,
+                isCreateResType
             } = useEnvAside()
             const {
                 projectId,
@@ -494,6 +495,7 @@
                 failStatus,
                 projectId,
                 envHashId,
+                isCreateResType,
                 isBuiltInEnv,
                 ENV_RESOURCE_ACTION,
                 ENV_RESOURCE_TYPE,
