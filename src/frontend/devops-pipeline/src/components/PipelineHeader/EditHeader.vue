@@ -277,7 +277,7 @@
                     const { projectId, pipelineId } = this.$route.params
 
                     if (e.code === 2101244) {
-                        showPipelineCheckMsg(this.$bkMessage, e.message, this.$createElement)
+                        showPipelineCheckMsg(this.$bkMessage, e.code, e.message, this.$createElement)
                     } else {
                         this.handleError(e, {
                             projectId,
@@ -340,6 +340,8 @@
             margin-bottom: 12px;
         }
         .pipeline-save-error-list {
+            max-height: 480px;
+            overflow: auto;
             > li {
                 line-height: 26px;
                 a {

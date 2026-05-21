@@ -28,6 +28,7 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.ApiAccessLimitCacheManager
 import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.project.service.ProjectManageService
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,8 +41,12 @@ class ProjectManageServiceImpl @Autowired constructor(
     override fun lockProjectPipelineBuildPermission(userId: String, projectId: String, pipelineId: String?): Boolean {
         if (pipelineId.isNullOrBlank()) {
             redisOperation.addSetValue(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)
+            // 清除本地缓存，立即生效
+            ApiAccessLimitCacheManager.invalidateProjectLimitCache()
         } else {
             redisOperation.addSetValue(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)
+            // 清除该流水线的限制状态缓存，立即生效
+            ApiAccessLimitCacheManager.invalidatePipelineLimitCache(pipelineId)
         }
         return true
     }
@@ -49,8 +54,12 @@ class ProjectManageServiceImpl @Autowired constructor(
     override fun unlockProjectPipelineBuildPermission(userId: String, projectId: String, pipelineId: String?): Boolean {
         if (pipelineId.isNullOrBlank()) {
             redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)
+            // 清除本地缓存，立即生效
+            ApiAccessLimitCacheManager.invalidateProjectLimitCache()
         } else {
             redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)
+            // 清除该流水线的限制状态缓存，立即生效
+            ApiAccessLimitCacheManager.invalidatePipelineLimitCache(pipelineId)
         }
         return true
     }

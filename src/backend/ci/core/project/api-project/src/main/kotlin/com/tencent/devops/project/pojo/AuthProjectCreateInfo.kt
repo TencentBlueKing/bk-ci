@@ -15,5 +15,7 @@ data class AuthProjectCreateInfo(
     @get:Schema(title = "projectCreateInfo")
     val projectCreateInfo: ProjectCreateInfo,
     @get:Schema(title = "审批状态")
-    val approvalStatus: Int
+    val approvalStatus: Int,
+    @get:Schema(title = "项目组织形态", description = "0-团队项目，1-个人项目")
+    val projectScope: Int
 )

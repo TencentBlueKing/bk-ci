@@ -42,6 +42,7 @@ object PipelineBuildParamKey {
     const val CI_MILESTONE_NAME = "ci.milestone_name"
     const val CI_MILESTONE_ID = "ci.milestone_id"
     const val CI_TAPD_ISSUES = "ci.mr_tapd_issues"
+    const val CI_MR_LABELS = "ci.mr_labels"
 
     // GIT TAG参数
     const val CI_COMMIT_AUTHOR = "ci.commit_author"
@@ -78,7 +79,7 @@ object PipelineBuildParamKey {
     const val CI_CREATE_REF_TYPE = "ci.create_type"
 
     // 流水线基础变量
-    const val CI_BUILD_NO = "ci.build-no"
+    const val CI_BUILD_NO = "ci.build_no"
     const val CI_BUILD_NUM = "ci.build_num"
     const val CI_PIPELINE_CREATOR = "ci.pipeline_creator"
     const val CI_PIPELINE_MODIFIER = "ci.pipeline_modifier"

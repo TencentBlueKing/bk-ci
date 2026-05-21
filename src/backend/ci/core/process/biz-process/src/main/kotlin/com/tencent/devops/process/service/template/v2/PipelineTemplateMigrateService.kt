@@ -660,9 +660,9 @@ class PipelineTemplateMigrateService(
                     srcMarketTemplateCode = resource.srcTemplateId!!,
                     projectCode = resource.projectId,
                     templateCode = resource.templateId,
-                    version = srcTemplateResource.version,
-                    versionName = versionInfo.versionName,
-                    number = resource.number,
+                    srcMarketTemplateVersion = srcTemplateResource.version,
+                    srcMarketTemplateVersionName = versionInfo.versionName,
+                    srcMarketTemplateNumber = resource.number,
                     createTime = resource.releaseTime
                 )
             )

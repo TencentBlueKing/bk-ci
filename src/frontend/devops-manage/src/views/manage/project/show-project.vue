@@ -38,6 +38,7 @@ const exceptionObj = ref({
   showBtn: false
 })
 const activeTab = ref('projectSettings');
+const isPersonalProject = computed(() => projectData.value.projectScope === 1)
 const tabPanels = computed(() => [
   {
     name: 'projectSettings',
@@ -47,7 +48,7 @@ const tabPanels = computed(() => [
       name: 'baseInfo',
       title: '基础信息',
     },
-    ...isRbac.value ? [{
+    ...(isRbac.value && !isPersonalProject.value) ? [{
       name: 'permission',
       title: '权限',
     }] : []]

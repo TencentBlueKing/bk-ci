@@ -97,7 +97,9 @@ data class CodeTGitWebHookTriggerElement(
                         vuexInput(name = "includePaths", value = includePaths),
                         vuexInput(name = "excludePaths", value = excludePaths),
                         staffInput(name = "includeUsers", value = includeUsers),
-                        staffInput(name = "excludeUsers", value = excludeUsers)
+                        staffInput(name = "excludeUsers", value = excludeUsers),
+                        vuexInput(name = "includeLabels", value = includeLabels),
+                        vuexInput(name = "excludeLabels", value = excludeLabels)
                     )
                 }
 
@@ -117,12 +119,15 @@ data class CodeTGitWebHookTriggerElement(
                         vuexInput(name = "includePaths", value = includePaths),
                         vuexInput(name = "excludePaths", value = excludePaths),
                         staffInput(name = "includeUsers", value = includeUsers),
-                        staffInput(name = "excludeUsers", value = excludeUsers)
+                        staffInput(name = "excludeUsers", value = excludeUsers),
+                        vuexInput(name = "includeLabels", value = includeLabels),
+                        vuexInput(name = "excludeLabels", value = excludeLabels)
                     )
                 }
 
                 CodeEventType.TAG_PUSH -> {
                     listOf(
+                        vuexInput(name = "action", value = joinToString(includeTagAction)),
                         vuexInput(name = "tagName", value = tagName),
                         vuexInput(name = "excludeTagName", value = excludeTagName),
                         vuexInput(name = "fromBranches", value = fromBranches),
@@ -220,5 +225,11 @@ data class CodeTGitWebHookTriggerInput(
     @get:Schema(title = "是否启用第三方过滤")
     val enableThirdFilter: Boolean? = false,
     @get:Schema(title = "跳过WIP")
-    val skipWip: Boolean? = false
+    val skipWip: Boolean? = false,
+    @get:Schema(title = "tag事件action")
+    val includeTagAction: List<String>? = null,
+    @get:Schema(title = "用于包含的label", required = false)
+    val includeLabels: String? = null,
+    @get:Schema(title = "用于排除的label", required = false)
+    val excludeLabels: String? = null
 )
