@@ -7,7 +7,7 @@ packages:
   - common-lib
 
 allowBuilds:
-  "@parcel/watcher": true
+  '@parcel/watcher': true
   bufferutil: false
   core-js: false
   ejs: false
