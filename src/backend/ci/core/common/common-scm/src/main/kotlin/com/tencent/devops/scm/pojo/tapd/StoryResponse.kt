@@ -25,34 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.sdk.tapd.service
+package com.tencent.devops.scm.pojo.tapd
 
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.repository.sdk.tapd.DefaultTapdClient
-import com.tencent.devops.scm.config.TapdProperties
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import com.fasterxml.jackson.annotation.JsonProperty
 
-@Service
-class TapdOauthService @Autowired constructor(
-    val defaultTapdClient: DefaultTapdClient,
-    val tapdProperties: TapdProperties
-) : ITapdOauthService {
-
-    override fun appInstallUrl(userId: String): String {
-        val state = mapOf(
-            "userId" to userId,
-            "redirectUrl" to tapdProperties.redirectUrl
-        )
-        return defaultTapdClient.appInstallUrl(
-            cb = tapdProperties.callbackUrl,
-            state = JsonUtil.toJson(state),
-            test = 1,
-            showInstalled = 1
-        )
-    }
-
-    override fun callbackUrl(code: String, state: String, resource: String): String {
-        return tapdProperties.redirectUrl
-    }
-}
+/**
+ * TAPD 需求列表外层包装
+ */
+data class StoryResponse(
+    @JsonProperty("Story")
+    val story: TapdStory
+)

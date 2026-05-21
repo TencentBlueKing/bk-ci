@@ -1,4 +1,4 @@
-package com.tencent.devops.repository.sdk.tapd
+package com.tencent.devops.scm.pojo.tapd
 
 data class TapdResult<T>(
     val status: Int,

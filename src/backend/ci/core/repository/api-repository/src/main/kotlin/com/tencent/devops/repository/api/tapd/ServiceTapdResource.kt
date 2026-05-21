@@ -29,12 +29,17 @@ package com.tencent.devops.repository.api.tapd
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.sdk.tapd.request.StatusMapRequest
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.scm.pojo.tapd.TapdBug
+import com.tencent.devops.scm.pojo.tapd.TapdStory
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_TAPD", description = "tapd服务接口")
@@ -47,4 +52,28 @@ interface ServiceTapdResource {
     @POST
     @Path("/getWorkflowStatusMap")
     fun getWorkflowStatusMap(request: StatusMapRequest): Result<Map<String, String>>
+
+    @Operation(summary = "查询 TAPD 需求详情")
+    @GET
+    @Path("/stories")
+    fun getStoryInfo(
+        @Parameter(description = "TAPD 项目 ID", required = true)
+        @QueryParam("workspaceId")
+        workspaceId: String,
+        @Parameter(description = "TAPD 需求 ID", required = true)
+        @QueryParam("storyId")
+        storyId: String
+    ): Result<TapdStory?>
+
+    @Operation(summary = "查询 TAPD 缺陷详情")
+    @GET
+    @Path("/bugs")
+    fun getBugInfo(
+        @Parameter(description = "TAPD 项目 ID", required = true)
+        @QueryParam("workspaceId")
+        workspaceId: String,
+        @Parameter(description = "TAPD 缺陷 ID", required = true)
+        @QueryParam("bugId")
+        bugId: String
+    ): Result<TapdBug?>
 }

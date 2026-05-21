@@ -25,34 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.sdk.tapd.service
+package com.tencent.devops.scm
 
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.repository.sdk.tapd.DefaultTapdClient
-import com.tencent.devops.scm.config.TapdProperties
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import com.tencent.devops.scm.pojo.tapd.TapdBug
+import com.tencent.devops.scm.pojo.tapd.TapdStory
 
-@Service
-class TapdOauthService @Autowired constructor(
-    val defaultTapdClient: DefaultTapdClient,
-    val tapdProperties: TapdProperties
-) : ITapdOauthService {
+/**
+ * TAPD 业务对象（需求/缺陷）查询服务
+ */
+interface ITapdItemService {
 
-    override fun appInstallUrl(userId: String): String {
-        val state = mapOf(
-            "userId" to userId,
-            "redirectUrl" to tapdProperties.redirectUrl
-        )
-        return defaultTapdClient.appInstallUrl(
-            cb = tapdProperties.callbackUrl,
-            state = JsonUtil.toJson(state),
-            test = 1,
-            showInstalled = 1
-        )
-    }
+    /**
+     * 查询 TAPD 需求详情
+     */
+    fun getStoryInfo(workspaceId: String, storyId: String): TapdStory?
 
-    override fun callbackUrl(code: String, state: String, resource: String): String {
-        return tapdProperties.redirectUrl
-    }
+    /**
+     * 查询 TAPD 缺陷详情
+     */
+    fun getBugInfo(workspaceId: String, bugId: String): TapdBug?
 }

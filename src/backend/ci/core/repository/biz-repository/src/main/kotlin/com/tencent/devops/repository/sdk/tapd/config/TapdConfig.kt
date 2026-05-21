@@ -29,6 +29,7 @@ package com.tencent.devops.repository.sdk.tapd.config
 
 import com.tencent.devops.repository.sdk.tapd.AutoRetryTapdClient
 import com.tencent.devops.repository.sdk.tapd.DefaultTapdClient
+import com.tencent.devops.scm.config.TapdProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

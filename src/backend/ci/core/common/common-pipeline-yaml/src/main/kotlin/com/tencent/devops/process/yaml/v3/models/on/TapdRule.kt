@@ -25,34 +25,46 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.sdk.tapd.service
+package com.tencent.devops.process.yaml.v3.models.on
 
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.repository.sdk.tapd.DefaultTapdClient
-import com.tencent.devops.scm.config.TapdProperties
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@Service
-class TapdOauthService @Autowired constructor(
-    val defaultTapdClient: DefaultTapdClient,
-    val tapdProperties: TapdProperties
-) : ITapdOauthService {
-
-    override fun appInstallUrl(userId: String): String {
-        val state = mapOf(
-            "userId" to userId,
-            "redirectUrl" to tapdProperties.redirectUrl
-        )
-        return defaultTapdClient.appInstallUrl(
-            cb = tapdProperties.callbackUrl,
-            state = JsonUtil.toJson(state),
-            test = 1,
-            showInstalled = 1
-        )
-    }
-
-    override fun callbackUrl(code: String, state: String, resource: String): String {
-        return tapdProperties.redirectUrl
-    }
-}
+/**
+ * TAPD 触发器 YAML 规则
+ *
+ * 对应 YAML：
+ * ```yaml
+ * on:
+ *   tapd:
+ *     - tapd-project-id: "12345"
+ *       event-type: story
+ *       include-actions: [create, update]
+ *       include-users: [user1]
+ *       exclude-users: [user2]
+ * ```
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TapdRule(
+    override val id: String? = null,
+    override val name: String? = null,
+    override val enable: Boolean? = true,
+    @get:Schema(title = "tapd-project-id")
+    @JsonProperty("tapd-project-id")
+    val tapdProjectId: String,
+    @get:Schema(title = "event-type")
+    @JsonProperty("event-type")
+    val eventType: String?,
+    @get:Schema(title = "include-actions")
+    @JsonProperty("include-actions")
+    val includeActions: List<String>? = null,
+    @get:Schema(title = "include-users")
+    @JsonProperty("include-users")
+    val includeUsers: List<String>? = null,
+    @get:Schema(title = "exclude-users")
+    @JsonProperty("exclude-users")
+    val excludeUsers: List<String>? = null
+) : Rule(id, name, enable)

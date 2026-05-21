@@ -25,34 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.sdk.tapd.service
+package com.tencent.devops.repository.sdk.tapd.request
 
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.repository.sdk.tapd.DefaultTapdClient
-import com.tencent.devops.scm.config.TapdProperties
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.repository.sdk.common.enums.HttpMethod
+import com.tencent.devops.repository.sdk.tapd.TapdRequest
+import com.tencent.devops.scm.pojo.tapd.TapdResult
+import com.tencent.devops.scm.pojo.tapd.StoryResponse
 
-@Service
-class TapdOauthService @Autowired constructor(
-    val defaultTapdClient: DefaultTapdClient,
-    val tapdProperties: TapdProperties
-) : ITapdOauthService {
+/**
+ * 查询 TAPD 需求详情请求
+ *
+ * 接口：`GET /stories?workspace_id=xx&id=yy`
+ */
+data class GetStoryRequest(
+    /** TAPD 项目 ID */
+    @JsonProperty("workspace_id")
+    val workspaceId: String,
+    /** TAPD 需求 ID */
+    val id: String
+) : TapdRequest<TapdResult<List<StoryResponse>>>() {
 
-    override fun appInstallUrl(userId: String): String {
-        val state = mapOf(
-            "userId" to userId,
-            "redirectUrl" to tapdProperties.redirectUrl
-        )
-        return defaultTapdClient.appInstallUrl(
-            cb = tapdProperties.callbackUrl,
-            state = JsonUtil.toJson(state),
-            test = 1,
-            showInstalled = 1
-        )
-    }
+    override fun getHttpMethod(): HttpMethod = HttpMethod.GET
 
-    override fun callbackUrl(code: String, state: String, resource: String): String {
-        return tapdProperties.redirectUrl
-    }
+    override fun getApiPath(): String = "stories"
 }
