@@ -33,7 +33,7 @@ import com.tencent.devops.repository.api.tapd.ServiceTapdResource
 import com.tencent.devops.repository.sdk.tapd.request.StatusMapRequest
 import com.tencent.devops.scm.pojo.tapd.TapdBug
 import com.tencent.devops.scm.pojo.tapd.TapdStory
-import com.tencent.devops.scm.ITapdItemService
+import com.tencent.devops.repository.sdk.tapd.service.ITapdItemService
 import com.tencent.devops.repository.sdk.tapd.service.ITapdWorkflowService
 import org.springframework.beans.factory.annotation.Autowired
 
