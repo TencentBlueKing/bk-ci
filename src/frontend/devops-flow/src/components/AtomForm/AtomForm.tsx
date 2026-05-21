@@ -207,12 +207,13 @@ export default defineComponent({
         const groupedMap: Record<string, GroupEntry> = {}
         Object.keys(input).forEach((key) => {
           const prop = input[key]
-          if (prop.groupName && inputGroupMap[prop.groupName]) {
-            ;(inputGroupMap[prop.groupName].props as Array<Record<string, any>>).push({
+          const inputGroup = prop.groupName ? inputGroupMap[prop.groupName] : undefined
+          if (inputGroup) {
+            ;(inputGroup.props as Array<Record<string, any>>).push({
               key,
               ...prop,
             })
-            groupedMap[prop.groupName] = inputGroupMap[prop.groupName]
+            groupedMap[prop.groupName] = inputGroup
           } else {
             groupedMap[key] = {
               key,
@@ -488,7 +489,7 @@ export default defineComponent({
               class={styles.groupCollapse}
               useBlockTheme
               headerIconAlign="left"
-              onChange={(value) => {
+              onChange={(value: unknown) => {
                 expandedGroups.value = Array.isArray(value) ? value.map(String) : []
               }}
             >
