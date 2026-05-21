@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm
+package com.tencent.devops.repository.sdk.tapd.service
 
 import com.tencent.devops.scm.pojo.tapd.TapdBug
 import com.tencent.devops.scm.pojo.tapd.TapdStory

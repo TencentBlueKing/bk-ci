@@ -32,7 +32,6 @@ import com.tencent.devops.repository.sdk.tapd.request.GetBugRequest
 import com.tencent.devops.repository.sdk.tapd.request.GetStoryRequest
 import com.tencent.devops.scm.pojo.tapd.TapdBug
 import com.tencent.devops.scm.pojo.tapd.TapdStory
-import com.tencent.devops.scm.ITapdItemService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
