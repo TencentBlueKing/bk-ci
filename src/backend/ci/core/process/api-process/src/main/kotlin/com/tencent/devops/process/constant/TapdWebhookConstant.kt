@@ -45,6 +45,10 @@ object TapdWebhookConstant {
     // 用于从中提取 TAPD 主机地址（schema + host）
     const val TAPD_KEY_REFERER = "referer"
 
+    const val TAPD_KEY_CHANGE_FIELDS = "change_fields"
+
+    const val TAPD_KEY_STATUS = "status"
+
     // 需求详情：{tapdHost}/tapd_fe/{workspaceId}/story/detail/{id}
     const val TAPD_STORY_URL_PATTERN = "%s/tapd_fe/%s/story/detail/%s"
 

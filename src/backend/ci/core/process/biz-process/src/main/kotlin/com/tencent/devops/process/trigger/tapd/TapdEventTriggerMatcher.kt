@@ -92,7 +92,7 @@ class TapdEventTriggerMatcher {
         val eventFromFilter = ContainsFilter(
             pipelineId = taskId,
             filterName = "tapdEventForm",
-            triggerOn = eventAction.value,
+            triggerOn = event.eventFrom ?: "web",
             included = input.includeEventFrom ?: emptyList(),
             failedReason = I18Variable(
                 code = BK_RIGGER_EVENT_FROM_NOT_MATCH,
@@ -131,7 +131,7 @@ class TapdEventTriggerMatcher {
         // 标签过滤
         val labelFilter = ListContainsFilter(
             pipelineId = taskId,
-            filterName = "tapdAction",
+            filterName = "tapdLabel",
             triggerOn = event.triggerLabels?.split("|")?.toSet() ?: setOf(),
             included = WebhookUtils.convert(input.includeLabels),
             excluded = WebhookUtils.convert(input.excludeLabels),
@@ -161,6 +161,7 @@ class TapdEventTriggerMatcher {
         )
         // 当前处理人过滤
         val ownerFilter = UserFilter(
+            filterName = "tapdOwner",
             pipelineId = taskId,
             triggerOnUser = triggerOwner ?: "",
             includedUsers = input.includeOwner?.filter { it.isNotBlank() } ?: emptyList(),

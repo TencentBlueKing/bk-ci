@@ -51,6 +51,7 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_PRIORIT
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_WORKSPACE_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_BUG_URL_PATTERN
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_EVENT_SEPARATOR
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CHANGE_FIELDS
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CURRENT_USER
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_ENTITY_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_EVENT
@@ -64,6 +65,7 @@ import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PARENT_I
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PRIORITY
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PRIORITY_LABEL
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_REFERER
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_STATUS
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_TARGET_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_WORKSPACE_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_STORY_URL_PATTERN
@@ -355,13 +357,22 @@ class TapdWebhookRequestService(
     /**
      * 转化事件类型及其动作
      */
-    private fun convertEvent(eventType: TapdEventType, eventAction: TapdEventAction) = when (eventType) {
-        TapdEventType.STORY_COMMENT -> {
+    private fun convertEvent(
+        eventType: TapdEventType,
+        eventAction: TapdEventAction,
+        body: Map<String, Any?> = mapOf()
+    ) = when {
+        eventType == TapdEventType.STORY_COMMENT -> {
             TapdEventType.STORY to convertCommentAction(eventAction)
         }
 
-        TapdEventType.BUG_COMMENT -> {
+        eventType == TapdEventType.BUG_COMMENT -> {
             TapdEventType.BUG to convertCommentAction(eventAction)
+        }
+
+        // 状态更新
+        body.getHookField(TAPD_KEY_CHANGE_FIELDS).contains(TAPD_KEY_STATUS) -> {
+            eventType to TapdEventAction.STATUS_CHANGE
         }
 
         else -> eventType to eventAction
@@ -440,7 +451,8 @@ class TapdWebhookRequestService(
                     startParams = startParams,
                     triggerPriority = body.getHookField(TAPD_KEY_PRIORITY_LABEL, update),
                     triggerLabels = body.getHookField(TAPD_KEY_LABEL, update),
-                    triggerOwner = body.getHookField(TAPD_KEY_OWNER, update)
+                    triggerOwner = body.getHookField(TAPD_KEY_OWNER, update),
+                    eventFrom = body.getHookField(TAPD_KEY_EVENT_FROM)
                 )
             )
         }

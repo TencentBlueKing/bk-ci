@@ -29,7 +29,7 @@ package com.tencent.devops.repository.sdk.tapd.service
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.repository.sdk.tapd.DefaultTapdClient
-import com.tencent.devops.scm.config.TapdProperties
+import com.tencent.devops.repository.sdk.tapd.config.TapdProperties
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
