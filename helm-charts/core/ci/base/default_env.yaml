@@ -57,3 +57,8 @@ bkCiOpenapiApiAuth: false
 bkCiMqDefaultBinder: core-rabbit
 bkCiJwtEnable: false
 bkCiNotifyUserBlackListCacheSize: 50000
+bkCiStoreAesKey: J%k^yO{?vt}3tXpG
+bkCiTicketCertAesKey: gHi(xG9Af)jEvCx&
+bkCiTicketCredentialAesKey: G/I%yP{?ST}2TXPg
+bkCiEnvironmentBatchInstallAesKey: 6fQyK-&Ht49zlBwhB8TW*xAJ/JZz0ZreVcDVCSj+5bY=
+bkCiProcessCallbackAesKey: project_callback_aes_key
