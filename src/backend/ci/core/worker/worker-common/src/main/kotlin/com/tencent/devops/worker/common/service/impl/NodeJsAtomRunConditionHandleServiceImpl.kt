@@ -53,6 +53,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
     }
 
     override fun prepareRunEnv(
+        atomCode: String,
         osType: OSType,
         language: String,
         runtimeVersion: String,

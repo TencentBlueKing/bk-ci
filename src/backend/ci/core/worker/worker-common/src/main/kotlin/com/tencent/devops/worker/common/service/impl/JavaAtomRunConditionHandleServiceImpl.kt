@@ -41,6 +41,7 @@ class JavaAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
     private val logger = LoggerFactory.getLogger(JavaAtomRunConditionHandleServiceImpl::class.java)
 
     override fun prepareRunEnv(
+        atomCode: String,
         osType: OSType,
         language: String,
         runtimeVersion: String,
@@ -64,6 +65,7 @@ class JavaAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 javaPath = atomJdkPath
             }
         }
+        logger.info("prepareRunEnv atomCode:$atomCode, final javaPath:$javaPath")
         return javaPath
     }
 

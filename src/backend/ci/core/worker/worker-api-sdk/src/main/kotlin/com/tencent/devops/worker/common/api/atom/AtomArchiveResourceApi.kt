@@ -43,8 +43,8 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.pojo.atom.AtomDevLanguageEnvVar
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
-import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
 import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_BUILD_NO
@@ -66,7 +66,8 @@ import java.io.File
 import java.net.URLEncoder
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
 
@@ -114,10 +115,8 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         atomEnvRequest: AtomEnvRequest
     ): Result<Boolean> {
         val path = "/ms/store/api/build/market/atom/env/$projectCode/$atomCode/$atomVersion"
-        val body = RequestBody.create(
-            "application/json; charset=utf-8".toMediaTypeOrNull(),
-            objectMapper.writeValueAsString(atomEnvRequest)
-        )
+        val body = objectMapper.writeValueAsString(atomEnvRequest)
+            .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
         val request = buildPut(path, body)
             val responseContent = request(
                 request,
@@ -192,13 +191,13 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
             url.append(";$ARCHIVE_PROPS_SOURCE=pipeline")
         }
 
-        val request = buildPut(url.toString(), RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file))
+        val request = buildPut(url.toString(), file.asRequestBody("application/octet-stream".toMediaTypeOrNull()))
         val responseContent = request(
             request,
             MessageUtil.getMessageByLocale(ARCHIVE_ATOM_FILE_FAIL, language = AgentEnv.getLocaleLanguage())
         )
         try {
-            val obj = JsonParser().parse(responseContent).asJsonObject
+            val obj = JsonParser.parseString(responseContent).asJsonObject
             if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("${obj["code"]}")
         } catch (ignored: Exception) {
             LoggerService.addNormalLine(ignored.message ?: "")
@@ -221,7 +220,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val fileType = FileTypeEnum.BK_PLUGIN_FE
         val url =
             "/ms/artifactory/api/build/artifactories/file/archive?fileType=$fileType&customFilePath=$purePath"
-        val fileBody = RequestBody.create(MultipartFormData, file)
+        val fileBody = file.asRequestBody(MultipartFormData)
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
             .addFormDataPart("file", fileName, fileBody)
@@ -230,7 +229,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val request = buildPost(url, requestBody)
         val response = request(request, "upload file:$fileName fail")
         try {
-            val obj = JsonParser().parse(response).asJsonObject
+            val obj = JsonParser.parseString(response).asJsonObject
             if (obj.has("code") && obj["code"].asString != "200") {
                 throw RemoteServiceException("upload file:$fileName fail")
             }
@@ -298,10 +297,8 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         platformCodes: Set<String>
     ): Result<Boolean> {
         val path = "/ms/store/api/build/store/docking/platforms/types/ATOM/codes/$atomCode/add"
-        val body = RequestBody.create(
-            "application/json; charset=utf-8".toMediaTypeOrNull(),
-            objectMapper.writeValueAsString(platformCodes)
-        )
+        val body = objectMapper.writeValueAsString(platformCodes)
+            .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
         val request = buildPost(path, body)
         val responseContent = request(
             request,
@@ -324,5 +321,24 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val request = buildGet(path)
         val responseContent = request(request, "get pkgRunEnvInfo fail")
         return objectMapper.readValue(responseContent)
+    }
+
+    /**
+     * 检查插件是否在指定类型的白名单中
+     * HTTP 异常时返回 Result(false) fail-close 不放行
+     */
+    override fun isAtomInWhitelist(
+        atomCode: String,
+        whitelistType: String
+    ): Result<Boolean> {
+        return try {
+            val path = "/ms/store/api/service/atom/whitelist/types/$whitelistType/codes/$atomCode/check"
+            val request = buildGet(path)
+            val responseContent = request(request, "atom whitelist check fail")
+            objectMapper.readValue(responseContent)
+        } catch (e: Exception) {
+            logger.warn("isAtomInWhitelist fail|atomCode=$atomCode|type=$whitelistType", e)
+            Result(false)
+        }
     }
 }

@@ -34,8 +34,10 @@ interface AtomRunConditionHandleService {
 
     /**
      * 准备运行时环境，返回虚拟环境bin路径（null表示未设置环境路径）
+     * @param atomCode 插件代码
      */
     fun prepareRunEnv(
+        atomCode: String,
         osType: OSType,
         language: String,
         runtimeVersion: String,

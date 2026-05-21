@@ -175,4 +175,7 @@ object StoreMessageCode {
     // 组件包文件[{0}]不存在，请检查文件所在路径是否正确
     const val STORE_PACKAGE_FILE_NOT_FOUND = "2120939"
     const val OFFSET_REASON_IS_NOT_ALLOW_NULL = "2120940" // 下架原因不允许为空
+
+    // ========== 白名单相关错误码 ==========
+    const val WHITELIST_NOT_FOUND = "2120942" // 研发商店：白名单记录不存在，whitelistType={0}
 }

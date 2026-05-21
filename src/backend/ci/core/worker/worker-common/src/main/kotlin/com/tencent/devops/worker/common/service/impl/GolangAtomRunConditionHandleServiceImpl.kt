@@ -39,6 +39,7 @@ class GolangAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
     private val logger = LoggerFactory.getLogger(GolangAtomRunConditionHandleServiceImpl::class.java)
 
     override fun prepareRunEnv(
+        atomCode: String,
         osType: OSType,
         language: String,
         runtimeVersion: String,

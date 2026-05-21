@@ -317,6 +317,7 @@ open class MarketAtomTask : ITask() {
             atomData.runtimeVersion?.let {
                 // 准备插件运行环境，返回虚拟环境bin路径
                 val atomExecutePath = atomRunConditionHandleService.prepareRunEnv(
+                    atomCode = atomCode,
                     osType = AgentEnv.getOS(),
                     language = atomLanguage,
                     runtimeVersion = it,

@@ -33,6 +33,8 @@ import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.worker.common.BK_ATOM_PYTHON_VENV_ENABLED
 import com.tencent.devops.worker.common.PYTHON_VENV_DIR
+import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.AtomRunConditionHandleService
 import java.io.File
@@ -43,6 +45,7 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
     private val logger = LoggerFactory.getLogger(PythonAtomRunConditionHandleServiceImpl::class.java)
 
     override fun prepareRunEnv(
+        atomCode: String,
         osType: OSType,
         language: String,
         runtimeVersion: String,
@@ -51,13 +54,25 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         runtimeVariables: Map<String, String>
     ): String? {
         if (atomTmpSpace == null) {
-            logger.warn("prepareRunEnv atomTmpSpace is null, skip venv creation")
+            logger.warn("prepareRunEnv atomCode:$atomCode, atomTmpSpace is null, skip venv creation")
             return null
         }
         // 从插件配置的环境变量中判断是否启用虚拟环境
         val venvEnabled = runtimeVariables[BK_ATOM_PYTHON_VENV_ENABLED]
         if (venvEnabled?.toBoolean() != true) {
-            LoggerService.addWarnLine("prepareRunEnv python venv is not enabled, skip")
+            LoggerService.addWarnLine("prepareRunEnv atomCode:$atomCode, python venv is not enabled, skip")
+            return null
+        }
+        // 检查插件是否在 PYTHON_VENV 白名单中
+        val atomApi = ApiFactory.create(AtomArchiveSDKApi::class)
+        val isInWhitelist = atomApi.isAtomInWhitelist(
+            atomCode = atomCode,
+            whitelistType = "PYTHON_VENV"
+        ).data ?: false
+        if (!isInWhitelist) {
+            LoggerService.addWarnLine(
+                "prepareRunEnv atomCode:$atomCode is not in PYTHON_VENV whitelist, skip venv creation"
+            )
             return null
         }
         // 根据runtimeVersion确定Python命令
