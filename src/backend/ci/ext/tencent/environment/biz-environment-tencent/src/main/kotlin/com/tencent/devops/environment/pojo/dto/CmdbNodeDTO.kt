@@ -1,6 +1,8 @@
 package com.tencent.devops.environment.pojo.dto
 
 import com.tencent.devops.environment.pojo.cmdb.common.CmdbServerDTO
+import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.utils.CmdbNodeUtils
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "类型为CMDB的节点信息")
@@ -19,7 +21,7 @@ data class CmdbNodeDTO(
     /**
      * 是否需要更新DB中的节点信息
      * 判断条件：
-     *   1. DB中operator_status为空（未被计算）
+     *   1. DB中operator_status为空（未被计算） 或不正确
      *   2. 主备份负责人变化
      *   3. 服务器ID变化
      *   4. 操作系统名称变化
@@ -30,7 +32,14 @@ data class CmdbNodeDTO(
         if (cmdbServerDTO == null) {
             return false
         }
-        return operatorStatus == null ||
+        val operatorStatusIndeed = CmdbNodeUtils.calcOperatorStatus(
+            nodeType = NodeType.CMDB.name,
+            createdUser = createdUser ?: "",
+            operator = cmdbServerDTO.operator,
+            bakOperator = cmdbServerDTO.getBakOperatorStrLessThanMaxLength()
+        )?.code
+
+        return  operatorStatus != operatorStatusIndeed ||
             operator != cmdbServerDTO.operator ||
             bakOperator != cmdbServerDTO.getBakOperatorStr() ||
             serverId != cmdbServerDTO.serverId ||

@@ -49,6 +49,7 @@ import com.tencent.devops.environment.service.cc.TencentCCService
 import com.tencent.devops.environment.service.cmdb.TencentCmdbService
 import com.tencent.devops.environment.service.gseagent.GSEAgentService
 import com.tencent.devops.environment.service.job.QueryAgentStatusService
+import com.tencent.devops.environment.utils.CmdbNodeUtils
 import com.tencent.devops.environment.utils.ComputeTimeUtils
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
@@ -119,7 +120,7 @@ class UpdateCmdbNodeService @Autowired constructor(
             if (oldCmdbNode.needToModifyCmdbNodeInDB(newCmdbServer)) {
                 val newBakOperator = newCmdbServer?.getBakOperatorStrLessThanMaxLength()
                 // 凡写 OPERATOR / BAK_OPERATOR 的代码路径都同写 OPERATOR_STATUS，避免脏窗口。
-                val operatorStatus = CmdbNodeService.calcOperatorStatus(
+                val operatorStatus = CmdbNodeUtils.calcOperatorStatus(
                     nodeType = NodeType.CMDB.name,
                     createdUser = oldCmdbNode.createdUser ?: "",
                     operator = newCmdbServer?.operator,
