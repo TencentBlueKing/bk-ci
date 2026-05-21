@@ -4,6 +4,7 @@ import com.tencent.devops.ai.agent.SubAgentDefinition
 import com.tencent.devops.ai.agent.SubAgentFactory
 import com.tencent.devops.ai.context.AiChatContext
 import com.tencent.devops.ai.context.AgentSessionContext
+import com.tencent.devops.ai.session.AiLlmConfigBindingTracker
 import com.tencent.devops.ai.session.PersistentAgentResolver
 import com.tencent.devops.ai.service.AiModelResolver
 import io.agentscope.core.ReActAgent
@@ -113,7 +114,8 @@ class AguiAgentConfig {
         sessionManager: ThreadSessionManager,
         session: Session,
         props: AguiProperties,
-        sessionContext: AgentSessionContext
+        sessionContext: AgentSessionContext,
+        llmConfigBindingTracker: AiLlmConfigBindingTracker
     ): PersistentAgentResolver {
         logger.info(
             "[AguiConfig] PersistentAgentResolver created " +
@@ -127,7 +129,8 @@ class AguiAgentConfig {
             sessionManager = sessionManager,
             session = session,
             serverSideMemory = props.isServerSideMemory,
-            sessionContext = sessionContext
+            sessionContext = sessionContext,
+            llmConfigBindingTracker = llmConfigBindingTracker
         )
     }
 
