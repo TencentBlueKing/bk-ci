@@ -87,12 +87,6 @@ class CmdbNodeDao @Autowired constructor(
         }
     }
 
-    fun updateVersionByNodeId(dslContext: DSLContext, nodeId: Long, version:String) {
-        with(TNode.T_NODE) {
-            dslContext.update(this).set(AGENT_VERSION, version).where(NODE_ID.eq(nodeId)).execute()
-        }
-    }
-
     fun batchUpdateHostIdAndCloudAreaIdByNodeId(
         nodeNodeAttrList: List<NodeAttr>
     ): Int {
@@ -308,15 +302,6 @@ class CmdbNodeDao @Autowired constructor(
         }
     }
 
-    fun countDeployNodes(dslContext: DSLContext): Int {
-        with(TNode.T_NODE) {
-            return dslContext.selectCount()
-                .from(TNode.T_NODE)
-                .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
-                .fetchOne(0, Int::class.java)!!
-        }
-    }
-
     fun countDeployNodesServerIdNull(dslContext: DSLContext): Int {
         with(TNode.T_NODE) {
             return dslContext.selectCount()
@@ -324,18 +309,6 @@ class CmdbNodeDao @Autowired constructor(
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(SERVER_ID.isNull)
                 .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
-                .fetchOne(0, Int::class.java)!!
-        }
-    }
-
-    fun countNodeInCmdb(): Int {
-        with(TNode.T_NODE) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(buildCmdbNodeTypeCondition())
-            conditions.add(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
-            return defaultDSLContext.selectCount()
-                .from(TNode.T_NODE)
-                .where(conditions)
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -542,7 +515,8 @@ class CmdbNodeDao @Autowired constructor(
                 OPERATOR,
                 BAK_OPERATOR,
                 OS_NAME,
-                CREATED_USER
+                CREATED_USER,
+                OPERATOR_STATUS
             ).from(this)
                 .where(buildCmdbNodeTypeCondition())
                 .and(NODE_ID.gt(startNodeId))
@@ -557,7 +531,8 @@ class CmdbNodeDao @Autowired constructor(
                     operator = record.get(table.OPERATOR),
                     bakOperator = record.get(table.BAK_OPERATOR),
                     osName = record.get(table.OS_NAME),
-                    createdUser = record.get(table.CREATED_USER)
+                    createdUser = record.get(table.CREATED_USER),
+                    operatorStatus = record.get(table.OPERATOR_STATUS)
                 )
             }
         }
@@ -709,18 +684,6 @@ class CmdbNodeDao @Autowired constructor(
                     createdUser = record.get(table.CREATED_USER)
                 )
             }
-        }
-    }
-
-    fun getNodesFromHostListByBkHostId(dslContext: DSLContext, hostList: List<Host>): Result<Record2<Long, Long>> {
-        val hostIdList = hostList.map { it.bkHostId }
-        return with(TNode.T_NODE) {
-            dslContext.select(
-                NODE_ID.`as`(T_NODE_NODE_ID),
-                HOST_ID.`as`(T_NODE_HOST_ID)
-            ).from(this)
-                .where(HOST_ID.`in`(hostIdList))
-                .fetch()
         }
     }
 

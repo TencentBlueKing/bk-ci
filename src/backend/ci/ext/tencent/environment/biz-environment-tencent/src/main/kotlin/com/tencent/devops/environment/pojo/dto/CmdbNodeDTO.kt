@@ -13,30 +13,28 @@ data class CmdbNodeDTO(
     var osName: String? = null,
     var cloudAreaId: Long? = null,
     var hostId: Long? = null,
-    var createdUser: String? = null
+    var createdUser: String? = null,
+    var operatorStatus: Byte? = null
 ) {
-    fun operatorOrServerIdOrOsNameChanged(cmdbServerDTO: CmdbServerDTO?): Boolean {
+    /**
+     * 是否需要更新DB中的节点信息
+     * 判断条件：
+     *   1. DB中operator_status为空（未被计算）
+     *   2. 主备份负责人变化
+     *   3. 服务器ID变化
+     *   4. 操作系统名称变化
+     *
+     * @param cmdbServerDTO 新查询的CMDB服务器信息
+     */
+    fun needToModifyCmdbNodeInDB(cmdbServerDTO: CmdbServerDTO?): Boolean {
         if (cmdbServerDTO == null) {
             return false
         }
-        return operator != cmdbServerDTO.operator ||
+        return operatorStatus == null ||
+            operator != cmdbServerDTO.operator ||
             bakOperator != cmdbServerDTO.getBakOperatorStr() ||
             serverId != cmdbServerDTO.serverId ||
             osName != cmdbServerDTO.osName
     }
 
-    private fun hasBakOperator(userId: String): Boolean {
-        if (null == bakOperator) {
-            return false
-        }
-        val bakOperatorSet = bakOperator!!.split(";").toSet()
-        return bakOperatorSet.contains(userId)
-    }
-
-    /**
-     * 当前用户是否为该机器的运维负责人或备份负责人
-     */
-    fun hasOperatorOrBak(userId: String): Boolean {
-        return operator == userId || hasBakOperator(userId)
-    }
 }
