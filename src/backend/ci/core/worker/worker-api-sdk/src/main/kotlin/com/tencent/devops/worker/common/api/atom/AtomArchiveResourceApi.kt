@@ -66,8 +66,7 @@ import java.io.File
 import java.net.URLEncoder
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.asRequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.RequestBody
 
 class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
 
@@ -115,8 +114,10 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         atomEnvRequest: AtomEnvRequest
     ): Result<Boolean> {
         val path = "/ms/store/api/build/market/atom/env/$projectCode/$atomCode/$atomVersion"
-        val body = objectMapper.writeValueAsString(atomEnvRequest)
-            .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        val body = RequestBody.create(
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
+            objectMapper.writeValueAsString(atomEnvRequest)
+        )
         val request = buildPut(path, body)
             val responseContent = request(
                 request,
@@ -191,13 +192,13 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
             url.append(";$ARCHIVE_PROPS_SOURCE=pipeline")
         }
 
-        val request = buildPut(url.toString(), file.asRequestBody("application/octet-stream".toMediaTypeOrNull()))
+        val request = buildPut(url.toString(), RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file))
         val responseContent = request(
             request,
             MessageUtil.getMessageByLocale(ARCHIVE_ATOM_FILE_FAIL, language = AgentEnv.getLocaleLanguage())
         )
         try {
-            val obj = JsonParser.parseString(responseContent).asJsonObject
+            val obj = JsonParser().parse(responseContent).asJsonObject
             if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("${obj["code"]}")
         } catch (ignored: Exception) {
             LoggerService.addNormalLine(ignored.message ?: "")
@@ -220,7 +221,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val fileType = FileTypeEnum.BK_PLUGIN_FE
         val url =
             "/ms/artifactory/api/build/artifactories/file/archive?fileType=$fileType&customFilePath=$purePath"
-        val fileBody = file.asRequestBody(MultipartFormData)
+        val fileBody = RequestBody.create(MultipartFormData, file)
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
             .addFormDataPart("file", fileName, fileBody)
@@ -229,7 +230,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val request = buildPost(url, requestBody)
         val response = request(request, "upload file:$fileName fail")
         try {
-            val obj = JsonParser.parseString(response).asJsonObject
+            val obj = JsonParser().parse(response).asJsonObject
             if (obj.has("code") && obj["code"].asString != "200") {
                 throw RemoteServiceException("upload file:$fileName fail")
             }
@@ -297,8 +298,10 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         platformCodes: Set<String>
     ): Result<Boolean> {
         val path = "/ms/store/api/build/store/docking/platforms/types/ATOM/codes/$atomCode/add"
-        val body = objectMapper.writeValueAsString(platformCodes)
-            .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        val body = RequestBody.create(
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
+            objectMapper.writeValueAsString(platformCodes)
+        )
         val request = buildPost(path, body)
         val responseContent = request(
             request,
