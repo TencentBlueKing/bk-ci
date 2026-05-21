@@ -28,11 +28,14 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.repository.sdk.tapd.config.TapdProperties
 import com.tencent.devops.repository.sdk.tapd.service.ITapdItemService
 import com.tencent.devops.scm.api.ServiceTapdResource
+import okhttp3.Credentials
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import java.util.Base64
 
 /**
  * TAPD 业务对象查询服务实现
@@ -40,13 +43,16 @@ import org.springframework.stereotype.Service
 @Primary
 @Service
 class TencentTapdItemService @Autowired constructor(
-    private val client: Client
+    private val client: Client,
+    private val tapdProperties: TapdProperties
 ) : ITapdItemService {
 
     override fun getStoryInfo(
         workspaceId: String,
         storyId: String
     ) = client.getScm(ServiceTapdResource::class).getStoryInfo(
+        apiUrl = tapdProperties.apiUrl,
+        authorToken = buildAuthorToken(),
         workspaceId = workspaceId,
         storyId = storyId
     ).data
@@ -55,7 +61,14 @@ class TencentTapdItemService @Autowired constructor(
         workspaceId: String,
         bugId: String
     ) = client.getScm(ServiceTapdResource::class).getBugInfo(
+        apiUrl = tapdProperties.apiUrl,
+        authorToken = buildAuthorToken(),
         workspaceId = workspaceId,
         bugId = bugId
     ).data
+
+    /**
+     * 基于 TAPD 应用的 clientId/clientSecret 构造 Basic Authorization 头
+     */
+    private fun buildAuthorToken() = Credentials.basic(tapdProperties.clientId, tapdProperties.clientSecret)
 }

@@ -39,11 +39,35 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceTapdResourceImpl @Autowired constructor(
     private val tapdItemService: TapdItemService
 ) : ServiceTapdResource {
-    override fun getStoryInfo(workspaceId: String, storyId: String): Result<TapdStory?> {
-        return Result(tapdItemService.getStoryInfo(workspaceId, storyId))
+    override fun getStoryInfo(
+        apiUrl: String,
+        authorToken: String,
+        workspaceId: String,
+        storyId: String
+    ): Result<TapdStory?> {
+        return Result(
+            tapdItemService.getStoryInfo(
+                apiUrl = apiUrl,
+                authorToken = authorToken,
+                workspaceId = workspaceId,
+                storyId = storyId
+            )
+        )
     }
 
-    override fun getBugInfo(workspaceId: String, bugId: String): Result<TapdBug?> {
-        return Result(tapdItemService.getBugInfo(workspaceId, bugId))
+    override fun getBugInfo(
+        apiUrl: String,
+        authorToken: String,
+        workspaceId: String,
+        bugId: String
+    ): Result<TapdBug?> {
+        return Result(
+            tapdItemService.getBugInfo(
+                apiUrl = apiUrl,
+                authorToken = authorToken,
+                workspaceId = workspaceId,
+                bugId = bugId
+            )
+        )
     }
 }

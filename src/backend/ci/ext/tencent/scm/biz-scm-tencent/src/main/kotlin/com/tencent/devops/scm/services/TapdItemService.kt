@@ -32,27 +32,24 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.scm.pojo.tapd.TapdBug
 import com.tencent.devops.scm.pojo.tapd.TapdStory
-import com.tencent.devops.scm.config.TapdProperties
 import com.tencent.devops.scm.pojo.tapd.BugResponse
 import com.tencent.devops.scm.pojo.tapd.StoryResponse
 import com.tencent.devops.scm.pojo.tapd.TapdResult
 import com.tencent.devops.scm.utils.RetryUtils
-import okhttp3.Credentials
 import okhttp3.Headers
 import okhttp3.Request
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 /**
  * TAPD 业务对象查询服务实现
  */
 @Service
-class TapdItemService @Autowired constructor(
-    val tapdConfig: TapdProperties
-) {
+class TapdItemService {
 
     fun getStoryInfo(
+        apiUrl: String,
+        authorToken: String,
         workspaceId: String,
         storyId: String
     ): TapdStory? {
@@ -60,7 +57,7 @@ class TapdItemService @Autowired constructor(
             logger.warn("invalid tapd story query|workspaceId=$workspaceId|storyId=$storyId")
             return null
         }
-        val url = "${tapdConfig.apiUrl.removeSuffix("/")}/stories".addParams(
+        val url = "${apiUrl.removeSuffix("/")}/stories".addParams(
             mapOf(
                 "workspace_id" to workspaceId,
                 "id" to storyId
@@ -68,7 +65,7 @@ class TapdItemService @Autowired constructor(
         )
         val request = Request.Builder()
                 .url(url)
-                .headers(authHeaders())
+                .headers(authHeaders(authorToken))
                 .get()
                 .build()
         RetryUtils.doRetryHttp(request).use { response ->
@@ -88,6 +85,8 @@ class TapdItemService @Autowired constructor(
     }
 
     fun getBugInfo(
+        apiUrl: String,
+        authorToken: String,
         workspaceId: String,
         bugId: String
     ): TapdBug? {
@@ -95,7 +94,7 @@ class TapdItemService @Autowired constructor(
             logger.warn("invalid tapd bug query|workspaceId=$workspaceId|bugId=$bugId")
             return null
         }
-        val url = "${tapdConfig.apiUrl.removeSuffix("/")}/bugs".addParams(
+        val url = "${apiUrl.removeSuffix("/")}/bugs".addParams(
             mapOf(
                 "workspace_id" to workspaceId,
                 "id" to bugId
@@ -103,7 +102,7 @@ class TapdItemService @Autowired constructor(
         )
         val request = Request.Builder()
                 .url(url)
-                .headers(authHeaders())
+                .headers(authHeaders(authorToken))
                 .get()
                 .build()
         RetryUtils.doRetryHttp(request).use { response ->
@@ -132,8 +131,8 @@ class TapdItemService @Autowired constructor(
         return sb.toString()
     }
 
-    private fun authHeaders() = Headers.Builder().add(
-        "Authorization", Credentials.basic(tapdConfig.clientId, tapdConfig.clientSecret)
+    private fun authHeaders(authorToken: String) = Headers.Builder().add(
+        "Authorization", authorToken
     ).build()
 
     companion object {

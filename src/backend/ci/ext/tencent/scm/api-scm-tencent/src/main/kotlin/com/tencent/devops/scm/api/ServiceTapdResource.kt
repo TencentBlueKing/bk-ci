@@ -49,6 +49,12 @@ interface ServiceTapdResource {
     @GET
     @Path("/stories")
     fun getStoryInfo(
+        @Parameter(description = "TAPD api 地址", required = true)
+        @QueryParam("apiUrl")
+        apiUrl: String,
+        @Parameter(description = "TAPD 鉴权 token（已构造好的 Authorization header 值）", required = true)
+        @QueryParam("authorToken")
+        authorToken: String,
         @Parameter(description = "TAPD 项目 ID", required = true)
         @QueryParam("workspaceId")
         workspaceId: String,
@@ -61,6 +67,12 @@ interface ServiceTapdResource {
     @GET
     @Path("/bugs")
     fun getBugInfo(
+        @Parameter(description = "TAPD api 地址", required = true)
+        @QueryParam("apiUrl")
+        apiUrl: String,
+        @Parameter(description = "TAPD 鉴权 token（已构造好的 Authorization header 值）", required = true)
+        @QueryParam("authorToken")
+        authorToken: String,
         @Parameter(description = "TAPD 项目 ID", required = true)
         @QueryParam("workspaceId")
         workspaceId: String,
