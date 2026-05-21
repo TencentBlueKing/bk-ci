@@ -25,42 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.service.impl
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.worker.common.service.AtomRunConditionHandleService
-import java.io.File
+import io.swagger.v3.oas.annotations.media.Schema
 
-class CommonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
-
-    override fun prepareRunEnv(
-        atomCode: String,
-        osType: OSType,
-        language: String,
-        runtimeVersion: String,
-        workspace: File,
-        atomTmpSpace: File?,
-        runtimeVariables: Map<String, String>
-    ): String? {
-        return null
-    }
-
-    override fun handleAtomTarget(
-        target: String,
-        osType: OSType,
-        postEntryParam: String?,
-        atomExecuteEnvPath: String?
-    ): String {
-        return target
-    }
-
-    override fun handleAtomPreCmd(
-        preCmd: String,
-        osName: String,
-        pkgName: String,
-        runtimeVersion: String?,
-        atomExecuteEnvPath: String?
-    ): String {
-        return preCmd
-    }
-}
+@Schema(title = "原子功能白名单响应报文")
+data class AtomWhitelist(
+    @get:Schema(title = "白名单类型", required = true)
+    val whitelistType: String,
+    @get:Schema(title = "原子代码列表", required = true)
+    val atomCodes: List<String>,
+    @get:Schema(title = "描述", required = false)
+    val description: String? = null,
+    @get:Schema(title = "是否启用", required = true)
+    val enabled: Boolean,
+    @get:Schema(title = "创建者", required = false)
+    val creator: String? = null,
+    @get:Schema(title = "创建时间", required = false)
+    val createTime: Long? = null,
+    @get:Schema(title = "修改者", required = false)
+    val modifier: String? = null,
+    @get:Schema(title = "更新时间", required = false)
+    val updateTime: Long? = null
+)

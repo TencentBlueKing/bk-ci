@@ -72,3 +72,7 @@ const val LOG_FILE_LENGTH_LIMIT = 1073741824 // 1 GB = 1073741824 Byte
 val PIPELINE_SCRIPT_ATOM_CODE = listOf("PipelineScriptDev", "PipelineScriptTest", "PipelineScript")
 
 const val BK_CI_ATOM_EXECUTE_ENV_PATH = "BK_CI_ATOM_EXECUTE_ENV_PATH"
+
+const val BK_ATOM_PYTHON_VENV_ENABLED = "BK_ATOM_PYTHON_VENV_ENABLED"
+
+const val PYTHON_VENV_DIR = ".venv"
