@@ -44,6 +44,7 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
+import com.tencent.devops.project.pojo.enums.ProjectScopeType
 import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
@@ -74,7 +75,8 @@ class ProjectApprovalService @Autowired constructor(
         projectCreateInfo: ProjectCreateInfo,
         approvalStatus: Int,
         subjectScopes: List<SubjectScopeInfo>,
-        tipsStatus: Int
+        tipsStatus: Int,
+        projectScope: Int = ProjectScopeType.TEAM.value
     ): Int {
         return projectApprovalDao.create(
             dslContext = dslContext,
@@ -82,7 +84,8 @@ class ProjectApprovalService @Autowired constructor(
             projectCreateInfo = projectCreateInfo,
             approvalStatus = approvalStatus,
             subjectScopes = subjectScopes,
-            tipsStatus = tipsStatus
+            tipsStatus = tipsStatus,
+            projectScope = projectScope
         )
     }
 

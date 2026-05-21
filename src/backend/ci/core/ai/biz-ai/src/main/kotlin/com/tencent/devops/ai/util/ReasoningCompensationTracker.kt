@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,7 +28,6 @@
 package com.tencent.devops.ai.util
 
 import io.agentscope.core.agui.event.AguiEvent
-import java.util.UUID
 
 /**
  * 跟踪单次 run 的事件流，检测 reasoning-only 场景并生成补偿事件。
@@ -60,31 +59,39 @@ class ReasoningCompensationTracker(
             is AguiEvent.TextMessageContent -> {
                 hasTextMessage = true
             }
+
             is AguiEvent.ReasoningMessageStart -> {
                 hasReasoningMessage = true
                 lastReasoningBuffer.clear()
             }
+
             is AguiEvent.ReasoningMessageContent -> {
                 hasReasoningMessage = true
                 lastReasoningBuffer.append(event.delta)
             }
+
             else -> {}
         }
     }
 
     fun needsCompensation(): Boolean = hasReasoningMessage && !hasTextMessage && lastReasoningBuffer.isNotEmpty()
 
-    fun buildCompensationEvents(): List<AguiEvent> {
-        val msgId = UUID.randomUUID().toString()
-        val text = lastReasoningBuffer.toString()
+    fun compensationText(): String = lastReasoningBuffer.toString()
+
+    fun buildCompensationEvents(msgId: String): List<AguiEvent> {
+        val text = compensationText()
         return listOf(
             AguiEvent.TextMessageStart(
-                threadId, runId, msgId, "assistant"
+                threadId, runId, msgId, ROLE_ASSISTANT
             ),
             AguiEvent.TextMessageContent(
                 threadId, runId, msgId, text
             ),
             AguiEvent.TextMessageEnd(threadId, runId, msgId)
         )
+    }
+
+    companion object {
+        const val ROLE_ASSISTANT = "assistant"
     }
 }

@@ -38,6 +38,8 @@ import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
+import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
+import com.tencent.devops.store.pojo.common.version.StoreVersionSizeInfo
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 
 interface StoreComponentQueryService {
@@ -138,4 +140,25 @@ interface StoreComponentQueryService {
         storeCode: String,
         version: String
     ): Result<String?>
+
+    /**
+     * 根据组件id获取组件版本发布日志
+     */
+    fun getStoreVersionLogs(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<StoreVersionLogInfo>>
+
+    /**
+     * 根据组件Code和版本号获取组件的大小
+     */
+    fun getStoreVersionSize(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        version: String,
+        osName: String?,
+        osArch: String?
+    ): StoreVersionSizeInfo
 }

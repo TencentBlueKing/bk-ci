@@ -113,6 +113,9 @@ object StreamBinding {
     // 定时变更广播exchange ====================================
     const val PIPELINE_TIMER_CHANGE_FANOUT = "engine.pipeline.timer.change"
 
+    // 流水线构建历史数据清理 ====================================
+    const val PIPELINE_BUILD_HISTORY_DATA_CLEAR = "engine.pipeline.build.history.data.clear"
+
     // 流水线扩展交换器 ====================================
     const val PIPELINE_EXTENDS_FANOUT = "engine.pipeline.extends.fanout"
 

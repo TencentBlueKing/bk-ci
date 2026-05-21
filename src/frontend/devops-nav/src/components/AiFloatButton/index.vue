@@ -27,12 +27,18 @@
                 />
             </div>
         </transition>
-        <span
+        <button
+            v-if="!panelVisible"
             :class="['ai-float-btn', { 'ai-float-btn-active': panelVisible }]"
+            type="button"
+            aria-label="Open AI assistant"
             @click="togglePanel"
         >
-            <img :src="aiblukeingBanner" />
-        </span>
+            <img
+                :src="aiblukeingBanner"
+                alt=""
+            />
+        </button>
     </div>
 </template>
 
@@ -196,30 +202,50 @@
 
 <style lang="scss" scoped>
 .ai-float-wrapper {
+    --ai-float-size: 66px;
+    --ai-float-hidden-offset: -33px;
+    --ai-float-peek-shift: -18px;
+    --ai-float-hover-shift: -6px;
+    --ai-float-peek-scale: 1.08;
+    --ai-float-shadow: 0 4px 16px rgba(58, 132, 255, .4);
+    --ai-float-shadow-peek: 0 12px 30px rgba(58, 132, 255, .62);
+    --ai-float-shadow-hover: 0 12px 30px rgba(58, 132, 255, .5);
     position: fixed;
-    right: 24px;
+    right: 0;
     bottom: 24px;
     z-index: 2500;
-    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    pointer-events: none;
 }
 
 .ai-float-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 66px;
-    height: 66px;
+    width: var(--ai-float-size);
+    height: var(--ai-float-size);
+    appearance: none;
     border: none;
     border-radius: 50%;
     background-color: white;
     cursor: pointer;
     padding: 8px;
     border: 3px solid #eaebf0;
-    box-shadow: 0 4px 16px rgba(58, 132, 255, .4);
-    transition: transform .2s, box-shadow .2s;
+    box-shadow: var(--ai-float-shadow);
+    margin-right: var(--ai-float-hidden-offset);
+    pointer-events: auto;
+    animation: ai-float-nudge 1.8s cubic-bezier(.22, .61, .36, 1) infinite;
+    transform: translateX(0) scale(1);
+    transition: margin-right .22s ease, transform .22s ease, box-shadow .22s ease, background .22s ease;
+    will-change: transform, box-shadow;
 
     &:hover {
-        transform: scale(1.08);
+        margin-right: 0;
+        transform: translateX(var(--ai-float-hover-shift)) scale(var(--ai-float-peek-scale));
+        box-shadow: var(--ai-float-shadow-hover);
+        animation: none;
     }
 
     > img {
@@ -229,15 +255,16 @@
     }
 
     &-active {
+        margin-right: 0;
+        transform: translateX(0) scale(1);
         background: linear-gradient(135deg, #7b61ff 0%, #3a84ff 100%);
+        animation: none;
     }
 }
 
 
 .ai-panel {
     position: fixed;
-    right: 0;
-    bottom: 60px;
     width: 666px;
     height: 100vh;
     right: 0;
@@ -247,6 +274,7 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    pointer-events: auto;
 }
 .ai-panel-loading {
     position: absolute;
@@ -273,6 +301,26 @@
     to { transform: rotate(360deg); }
 }
 
+@keyframes ai-float-nudge {
+    0%, 58%, 100% {
+        margin-right: var(--ai-float-hidden-offset);
+        transform: translateX(0) scale(1);
+        box-shadow: var(--ai-float-shadow);
+    }
+
+    24% {
+        margin-right: var(--ai-float-hidden-offset);
+        transform: translateX(var(--ai-float-peek-shift)) scale(var(--ai-float-peek-scale));
+        box-shadow: var(--ai-float-shadow-peek);
+    }
+
+    40% {
+        margin-right: var(--ai-float-hidden-offset);
+        transform: translateX(0) scale(1);
+        box-shadow: var(--ai-float-shadow);
+    }
+}
+
 .ai-loading-text {
     font-size: 13px;
     color: #979ba5;
@@ -297,5 +345,28 @@
 .ai-panel-slide-leave-to {
     opacity: 0;
     transform: translateY(16px) scale(.96);
+}
+
+@media (max-width: 768px) {
+    .ai-float-wrapper {
+        --ai-float-size: 56px;
+        --ai-float-hidden-offset: -28px;
+        --ai-float-peek-shift: -14px;
+        --ai-float-hover-shift: -4px;
+        --ai-float-peek-scale: 1.06;
+        --ai-float-shadow-peek: 0 10px 26px rgba(58, 132, 255, .58);
+        --ai-float-shadow-hover: 0 10px 26px rgba(58, 132, 255, .48);
+        bottom: 16px;
+    }
+
+    .ai-float-btn {
+        &:hover {
+            transform: translateX(var(--ai-float-hover-shift)) scale(var(--ai-float-peek-scale));
+        }
+    }
+
+    .ai-panel {
+        width: min(100vw, 666px);
+    }
 }
 </style>

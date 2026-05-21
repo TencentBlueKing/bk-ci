@@ -60,6 +60,16 @@ class ConfigCacheService @Autowired constructor(
             }.getOrNull() ?: ""
         }
 
+    private val userBgNameCache = Caffeine.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String, String> { key ->
+            runCatching {
+                client.get(ServiceTxUserResource::class).get(key).data?.bgName
+            }.onFailure { logger.warn("get $key bg name error|${it.message}") }
+                .getOrNull() ?: ""
+        }
+
     private val redisCache = Caffeine.newBuilder()
         .maximumSize(200)
         .expireAfterWrite(1, TimeUnit.MINUTES)
@@ -140,6 +150,8 @@ class ConfigCacheService @Autowired constructor(
         expertSupportCache.get(ExpertSupportConfigType.SUPPORTER)?.contains(userId) ?: false
 
     fun getUserName(key: String): String = userNameCache.get(key)
+
+    fun getUserBgName(key: String): String = userBgNameCache.get(key)
 
     // Windows 资源配置缓存相关方法
     fun getWindowsResourceType(withUnavailable: Boolean, onlySpecModel: Boolean?): List<WindowsResourceTypeConfig> {

@@ -29,6 +29,7 @@ package com.tencent.devops.project.pojo
 
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
+import com.tencent.devops.project.pojo.enums.ProjectScopeType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目-新增模型")
@@ -61,6 +62,8 @@ data class ProjectCreateInfo(
     var secrecy: Boolean = false,
     @get:Schema(title = "是否隐藏")
     val hidden: Boolean = false,
+    @get:Schema(title = "项目组织形态", description = "0 团队项目，1 个人项目，默认团队")
+    val projectScope: Int = ProjectScopeType.TEAM.value,
     @get:Schema(title = "kind")
     val kind: Int = 0,
     @get:Schema(title = "项目相关配置")

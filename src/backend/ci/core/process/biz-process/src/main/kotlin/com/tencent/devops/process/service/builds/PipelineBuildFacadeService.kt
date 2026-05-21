@@ -84,6 +84,7 @@ import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_HISTORY
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_STATUS
@@ -150,6 +151,7 @@ import com.tencent.devops.process.pojo.pipeline.toBuildDetailSimple
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.strategy.bus.impl.UserNormalPipelinePermissionCheckStrategy
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
@@ -205,7 +207,8 @@ class PipelineBuildFacadeService(
     private val pipelineBuildRetryService: PipelineBuildRetryService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplatePermissionService: PipelineTemplatePermissionService,
-    private val pipelineTriggerEventService: PipelineTriggerEventService
+    private val pipelineTriggerEventService: PipelineTriggerEventService,
+    private val pipelineRecordModelService: PipelineRecordModelService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -232,7 +235,8 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
-        version: Int? = null
+        version: Int? = null,
+        branch: String? = null
     ): BuildManualStartupInfo {
 
         if (checkPermission) { // 不用校验查看权限，只校验执行权限
@@ -251,8 +255,15 @@ class PipelineBuildFacadeService(
                 )
             )
         }
+        val targetVersion = version ?: branch?.takeIf { it.isNotBlank() }?.let {
+            pipelineYamlFacadeService.getPipelineYamlVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                branch = branch
+            )
+        }
         val (pipeline, resource, debug) = pipelineRepositoryService.getBuildTriggerInfo(
-            projectId, pipelineId, version
+            projectId, pipelineId, targetVersion
         )
         if (pipeline.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
@@ -422,9 +433,13 @@ class PipelineBuildFacadeService(
         buildNo: Int? = null,
         frequencyLimit: Boolean = true,
         triggerReviewers: List<String>? = null,
-        version: Int? = null
+        version: Int? = null,
+        branch: String? = null
     ): BuildId {
-        logger.info("[$pipelineId] Manual build start with buildNo[$buildNo] and vars: $values")
+        logger.info(
+            "[$pipelineId] Manual build start with buildNo[$buildNo] and vars: $values " +
+                    "and version[${version ?: branch}]"
+        )
         if (checkPermission) {
             val permission = AuthPermission.EXECUTE
             pipelinePermissionService.validPipelinePermission(
@@ -447,8 +462,17 @@ class PipelineBuildFacadeService(
 
         val startEpoch = System.currentTimeMillis()
         try {
+            // 优先使用version参数，如果version为空，则使用branchName
+            val targetVersion = version ?: branch?.takeIf { it.isNotBlank() }?.let {
+                pipelineYamlFacadeService.getPipelineYamlVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    branch = it
+                )
+            }
+
             val (readyToBuildPipelineInfo, resource, debug) = pipelineRepositoryService.getBuildTriggerInfo(
-                projectId, pipelineId, version
+                projectId, pipelineId, targetVersion
             )
             if (readyToBuildPipelineInfo.locked == true) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
@@ -457,13 +481,47 @@ class PipelineBuildFacadeService(
                 // 服务间的API触发需要兼容老用户，为避免意外产生调试构建，直接拦截
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION)
             }
+            // PAC流水线相关参数
+            val yamlParams = mutableMapOf<String, BuildParameters>()
+            // 如果是PAC流水线,需要加上代码库hashId,给checkout:self使用，如果用户已有yaml参数, 则以用户侧为准
+            pipelineYamlFacadeService.buildYamlManualParamMap(
+                projectId = projectId,
+                pipelineId = pipelineId
+            )?.let {
+                yamlParams.putAll(it)
+                when {
+                    version == null && !branch.isNullOrBlank() -> {
+                        branch
+                    }
+
+                    // 指定version执行时，若是分支版本则记录分支信息，发布瞬间兼容旧前端
+                    version != null && resource.status == VersionStatus.BRANCH -> {
+                        resource.versionName ?: ""
+                    }
+
+                    else -> {
+                        null
+                    }
+                }?.let { branchName ->
+                    yamlParams[BK_REPO_GIT_WEBHOOK_BRANCH] = BuildParameters(
+                        key = BK_REPO_GIT_WEBHOOK_BRANCH,
+                        value = branchName
+                    )
+                }
+            }
+            // 非PAC流水线的正式版本必须使用最新版本执行
             // 正式版本,必须使用最新版本执行
             if (version != null &&
                 resource.status == VersionStatus.RELEASED &&
                 readyToBuildPipelineInfo.version != version
             ) {
+                logger.warn(
+                    "version resource [${resource.versionName}] for version [$targetVersion] of [$pipelineId] " +
+                            "pipeline is RELEASED and not the latest pipeline version"
+                )
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_NON_LATEST_RELEASE_VERSION)
             }
+            logger.info("[$pipelineId] start with version[${resource.versionName}] status is ${resource.status}")
 
             /**
              * 验证流水线参数构建启动参数
@@ -516,13 +574,7 @@ class PipelineBuildFacadeService(
                 userId = userId, projectId = projectId, pipelineId = pipelineId,
                 paramProperties = triggerContainer.params, paramValues = values
             )
-            // 如果是PAC流水线,需要加上代码库hashId,给checkout:self使用
-            pipelineYamlFacadeService.buildYamlManualParamMap(
-                projectId = projectId,
-                pipelineId = pipelineId
-            )?.let {
-                paramMap.putAll(it)
-            }
+            yamlParams.forEach { paramMap.putIfAbsent(it.key, it.value) }
 
             return pipelineBuildService.startPipeline(
                 userId = userId,
@@ -536,7 +588,7 @@ class PipelineBuildFacadeService(
                 buildNo = buildNo,
                 startValues = values,
                 triggerReviewers = triggerReviewers,
-                signPipelineVersion = version,
+                signPipelineVersion = targetVersion,
                 debug = debug
             )
         } finally {
@@ -3213,6 +3265,30 @@ class PipelineBuildFacadeService(
             }
         }
     }
+
+    fun getBuildFailedTasks(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int?
+    ) = buildRecordService.getBuildFailedTasks(
+        projectId = projectId,
+        pipelineId = pipelineId,
+        buildId = buildId,
+        executeCount = executeCount
+    )
+
+    fun getPipelineYamlVersion(
+        projectId: String,
+        pipelineId: String,
+        branchName: String,
+        yamlParams: MutableMap<String, BuildParameters>
+    ) = pipelineYamlFacadeService.getPipelineYamlVersion(
+        projectId = projectId,
+        pipelineId = pipelineId,
+        branch = branchName,
+        yamlParams = yamlParams
+    )
 
     private fun getBuildManualParams(
         projectId: String,

@@ -954,8 +954,9 @@ class WorkspaceService @Autowired constructor(
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: MAX_PAGE_SIZE
         val workspaceSearch = search?.apply {
-            // 客户端获取必须包含用户本身
-            if (this.viewers == null || !this.viewers!!.contains(userId)) {
+            if (this.owner.isNullOrEmpty() &&
+                (this.viewers == null || !this.viewers!!.contains(userId))
+            ) {
                 this.viewers = listOf(userId)
             }
         } ?: WorkspaceSearch(
