@@ -43,6 +43,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.pojo.atom.AtomDevLanguageEnvVar
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
+import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
 import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
@@ -343,5 +344,23 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
             logger.warn("isAtomInWhitelist fail|atomCode=$atomCode|type=$whitelistType", e)
             Result(false)
         }
+    }
+
+    override fun updateAtomVersionPkgSize(
+        atomId: String,
+        storePackageInfoReqs: List<StorePackageInfoReq>
+    ): Result<Boolean> {
+        val path = "/ms/store/api/service/store/components/storeIds/$atomId/version/info/update"
+        val jsonBody = objectMapper.writeValueAsString(storePackageInfoReqs)
+        val body = RequestBody.create(
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
+            jsonBody
+        )
+        val request = buildPut(path, body)
+        val responseContent = request(
+            request,
+            "updateAtomVersionPkgSize fail"
+        )
+        return objectMapper.readValue(responseContent)
     }
 }

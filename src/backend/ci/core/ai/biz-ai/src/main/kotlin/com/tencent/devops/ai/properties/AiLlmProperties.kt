@@ -53,5 +53,109 @@ data class AiLlmProperties(
      */
     val maxBackoffSeconds: Long = 8,
     /** 退避倍数，默认 2.0（指数退避），与 OpenAI SDK 一致 */
-    val backoffMultiplier: Double = 2.0
-)
+    val backoffMultiplier: Double = 2.0,
+    /**
+     * 平台侧模型列表。
+     * 每个 override 只需填差异化字段（id / baseUrl / modelName / 凭证 / priority / enabled），
+     * 通用字段（HTTP 超时、重试、退避）从顶层继承；
+     * 留空时退回到顶层 baseUrl 表示的单模型 legacy 配置。
+     */
+    val models: List<AiLlmModelOverride> = emptyList()
+) {
+    fun enabledPlatformModels(): List<AiLlmModelProperties> {
+        if (models.isNotEmpty()) {
+            return models
+                .asSequence()
+                .filter { it.enabled }
+                .sortedBy { it.priority }
+                .map { it.toEffective(this) }
+                .toList()
+        }
+        if (baseUrl.isBlank()) {
+            return emptyList()
+        }
+        return listOf(
+            AiLlmModelProperties(
+                id = "default",
+                baseUrl = baseUrl,
+                modelName = modelName,
+                apiKey = apiKey,
+                bkAppCode = bkAppCode,
+                bkAppSecret = bkAppSecret,
+                connectTimeoutSeconds = connectTimeoutSeconds,
+                readTimeoutSeconds = readTimeoutSeconds,
+                writeTimeoutSeconds = writeTimeoutSeconds,
+                executionTimeoutSeconds = executionTimeoutSeconds,
+                maxAttempts = maxAttempts,
+                initialBackoffSeconds = initialBackoffSeconds,
+                maxBackoffSeconds = maxBackoffSeconds,
+                backoffMultiplier = backoffMultiplier
+            )
+        )
+    }
+}
+
+/**
+ * 平台模型 yaml 绑定类型。
+ *
+ * 仅 [id] / [baseUrl] / [modelName] 必填；其余字段省略时从顶层 [AiLlmProperties] 继承默认值。
+ * 通过 [toEffective] 合并出下游使用的非空 [AiLlmModelProperties]。
+ */
+data class AiLlmModelOverride(
+    val id: String,
+    val baseUrl: String,
+    val modelName: String,
+    val apiKey: String? = null,
+    val bkAppCode: String? = null,
+    val bkAppSecret: String? = null,
+    val connectTimeoutSeconds: Long? = null,
+    val readTimeoutSeconds: Long? = null,
+    val writeTimeoutSeconds: Long? = null,
+    val executionTimeoutSeconds: Long? = null,
+    val maxAttempts: Int? = null,
+    val initialBackoffSeconds: Long? = null,
+    val maxBackoffSeconds: Long? = null,
+    val backoffMultiplier: Double? = null,
+    val priority: Int = 100,
+    val enabled: Boolean = true
+) {
+    fun toEffective(defaults: AiLlmProperties): AiLlmModelProperties = AiLlmModelProperties(
+        id = id,
+        baseUrl = baseUrl,
+        modelName = modelName,
+        apiKey = apiKey ?: defaults.apiKey,
+        bkAppCode = bkAppCode ?: defaults.bkAppCode,
+        bkAppSecret = bkAppSecret ?: defaults.bkAppSecret,
+        connectTimeoutSeconds = connectTimeoutSeconds ?: defaults.connectTimeoutSeconds,
+        readTimeoutSeconds = readTimeoutSeconds ?: defaults.readTimeoutSeconds,
+        writeTimeoutSeconds = writeTimeoutSeconds ?: defaults.writeTimeoutSeconds,
+        executionTimeoutSeconds = executionTimeoutSeconds ?: defaults.executionTimeoutSeconds,
+        maxAttempts = maxAttempts ?: defaults.maxAttempts,
+        initialBackoffSeconds = initialBackoffSeconds ?: defaults.initialBackoffSeconds,
+        maxBackoffSeconds = maxBackoffSeconds ?: defaults.maxBackoffSeconds,
+        backoffMultiplier = backoffMultiplier ?: defaults.backoffMultiplier,
+        priority = priority,
+        enabled = enabled
+    )
+}
+
+data class AiLlmModelProperties(
+    val id: String,
+    val baseUrl: String,
+    val modelName: String,
+    val apiKey: String = "",
+    val bkAppCode: String = "",
+    val bkAppSecret: String = "",
+    val connectTimeoutSeconds: Long = 10,
+    val readTimeoutSeconds: Long = 90,
+    val writeTimeoutSeconds: Long = 30,
+    val executionTimeoutSeconds: Long = 60,
+    val maxAttempts: Int = 5,
+    val initialBackoffSeconds: Long = 1,
+    val maxBackoffSeconds: Long = 8,
+    val backoffMultiplier: Double = 2.0,
+    val priority: Int = 100,
+    val enabled: Boolean = true
+) {
+    fun useBkGateway(): Boolean = bkAppCode.isNotBlank()
+}

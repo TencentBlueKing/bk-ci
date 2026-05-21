@@ -17,6 +17,7 @@ import com.tencent.devops.auth.pojo.request.ai.BatchRemoveMembersReq
 import com.tencent.devops.auth.pojo.request.ai.BatchRenewalMembersReq
 import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
+import com.tencent.devops.auth.pojo.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.vo.MemberExitsProjectCheckVo
 import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.auth.pojo.vo.UserSearchResultVO
@@ -629,6 +630,57 @@ interface ApigwAuthMemberManageResourceV4 {
         @Parameter(description = "批量将成员移出项目请求体", required = true)
         request: AiBatchRemoveMemberFromProjectReq
     ): Result<BatchRemoveMemberFromProjectResponse>
+
+    @GET
+    @Path("/groups_for_apply")
+    @Operation(
+        summary = "查询可申请的用户组列表",
+        tags = ["v4_app_list_groups_for_apply", "v4_user_list_groups_for_apply"]
+    )
+    fun listGroupsForApply(
+        @Parameter(description = "应用Code(OpenAPI调用方标识)", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "网关类型,取值为apigw-user、apigw-app或apigw", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "操作人用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "用户组级别(PROJECT-项目级/OTHER-其他资源级)", required = false)
+        @QueryParam("groupLevel")
+        groupLevel: String? = null,
+        @Parameter(description = "操作id筛选", required = false)
+        @QueryParam("actionId")
+        actionId: String? = null,
+        @Parameter(description = "资源类型筛选", required = false)
+        @QueryParam("resourceType(流水线-pipeline,项目-project)")
+        resourceType: String? = null,
+        @Parameter(description = "资源实例筛选", required = false)
+        @QueryParam("resourceCode")
+        resourceCode: String? = null,
+        @Parameter(description = "IAM资源实例筛选", required = false)
+        @QueryParam("iamResourceCode")
+        iamResourceCode: String? = null,
+        @Parameter(description = "用户组名称", required = false)
+        @QueryParam("name")
+        name: String? = null,
+        @Parameter(description = "用户组描述", required = false)
+        @QueryParam("description")
+        description: String? = null,
+        @Parameter(description = "用户组id", required = false)
+        @QueryParam("groupId")
+        groupId: Int? = null,
+        @Parameter(description = "页码,默认1", required = false)
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "每页条数,默认20", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int = 20
+    ): Result<ManagerRoleGroupVO>
 
     @GET
     @Path("/users/search")
