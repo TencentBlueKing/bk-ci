@@ -23,7 +23,6 @@ allowBuilds:
   less: false
   yorkie: false
 
-
 catalogs:
   vue2:
     vue: "~2.7.16"
