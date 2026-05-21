@@ -183,8 +183,8 @@ importers:
   bk-permission:
     dependencies:
       axios:
-        specifier: 1.13.6
-        version: 1.13.6(debug@4.4.3)
+        specifier: 1.15.2
+        version: 1.15.2
       vue:
         specifier: ~2.7.16
         version: 2.7.16
@@ -1153,8 +1153,8 @@ importers:
         specifier: 0.0.4
         version: 0.0.4
       axios:
-        specifier: 1.13.6
-        version: 1.13.6(debug@4.4.3)
+        specifier: 1.15.2
+        version: 1.15.2
       bk-permission:
         specifier: workspace:bk-permission
         version: link:../bk-permission
@@ -1332,8 +1332,8 @@ importers:
         specifier: 2.5.10-beta.14
         version: 2.5.10-beta.14(vue@2.7.16)
       axios:
-        specifier: 1.13.6
-        version: 1.13.6(debug@4.4.3)
+        specifier: 1.15.2
+        version: 1.15.2
       bk-permission:
         specifier: workspace:bk-permission
         version: link:../bk-permission
@@ -1531,8 +1531,8 @@ importers:
         specifier: 2.0.0-beta.26
         version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.45(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5)))(dayjs@1.11.19)(vue@3.4.38(typescript@4.9.5))
       axios:
-        specifier: 1.13.6
-        version: 1.13.6(debug@4.4.3)
+        specifier: 1.15.2
+        version: 1.15.2
       bkui-vue:
         specifier: 2.0.2-beta.45
         version: 2.0.2-beta.45(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5))
@@ -1633,6 +1633,9 @@ importers:
       '@blueking/search-select':
         specifier: 0.0.1-beta.2
         version: 0.0.1-beta.2
+      '@blueking/xss-filter':
+        specifier: 0.0.10
+        version: 0.0.10
       '@icon-cool/bk-icon-devops':
         specifier: ^0.2.1
         version: 0.2.1
@@ -1640,8 +1643,8 @@ importers:
         specifier: 2.5.10-beta.14
         version: 2.5.10-beta.14(vue@2.7.16)
       axios:
-        specifier: 1.13.6
-        version: 1.13.6(debug@4.4.3)
+        specifier: 1.15.2
+        version: 1.15.2
       bk-permission:
         specifier: workspace:bk-permission
         version: link:../bk-permission
@@ -2126,8 +2129,8 @@ importers:
         specifier: ^6.0.5
         version: 6.4.2
       axios:
-        specifier: 1.13.6
-        version: 1.13.6(debug@4.4.3)
+        specifier: 1.15.2
+        version: 1.15.2
       babel-loader:
         specifier: ^8.0.2
         version: 8.4.1(@babel/core@7.29.0)(webpack@5.76.3)
@@ -2691,8 +2694,8 @@ importers:
         specifier: 2.5.10-beta.14
         version: 2.5.10-beta.14(vue@2.7.16)
       axios:
-        specifier: 1.13.6
-        version: 1.13.6(debug@4.4.3)
+        specifier: 1.15.2
+        version: 1.15.2
       js-cookie:
         specifier: ^3.0.5
         version: 3.0.5
@@ -3611,6 +3614,9 @@ packages:
 
   '@blueking/user-selector@1.0.14':
     resolution: {integrity: sha512-P2ksMb6kipY+yQ49SI8IMb6JIiurWDkK3fHSXTLWn23O5q0zlN7GM+Edv9IfeG8gqK7q5LrDH+H8lQVoviUPoA==}
+
+  '@blueking/xss-filter@0.0.10':
+    resolution: {integrity: sha512-IKI2u2AtRPSQh3ILyJ0G+PhUPj0Hk5pQpPM1Vc/VDlQIN3OrV8C4yVZhu7hKpnA8quozp5TLEjImZcmUWpBU5Q==}
 
   '@braintree/sanitize-url@7.1.2':
     resolution: {integrity: sha512-jigsZK+sMF/cuiB7sERuo9V7N9jx+dhmHHnQyDSVdpZwVutaBu7WvNYqMDLSgFgfB30n452TP3vjDAvFC973mA==}
@@ -7720,6 +7726,9 @@ packages:
 
   axios@1.13.6:
     resolution: {integrity: sha512-ChTCHMouEe2kn713WHbQGcuYrr6fXTBiu460OTwWrWob16g1bXn4vtz07Ope7ewMozJAnEquLk5lWQWtBig9DQ==}
+
+  axios@1.15.2:
+    resolution: {integrity: sha512-wLrXxPtcrPTsNlJmKjkPnNPK2Ihe0hn0wGSaTEiHRPxwjvJwT3hKmXF4dpqxmPO9SoNb2FsYXj/xEo0gHN+D5A==}
 
   babel-code-frame@6.26.0:
     resolution: {integrity: sha512-XqYMR2dfdGMW+hd0IUZ2PwK+fGeFkOxZJ0wY+JaQAHzt1Zx8LcvpiZD2NiGkEG8qx0CfkAOr5xt76d1e8vG90g==}
@@ -12784,6 +12793,9 @@ packages:
   lodash-es@4.18.1:
     resolution: {integrity: sha512-J8xewKD/Gk22OZbhpOVSwcs60zhd95ESDwezOFuA3/099925PdHJ7OFHNTGtajL3AlZkykD32HykiMo+BIBI8A==}
 
+  lodash-es@4.18.1:
+    resolution: {integrity: sha512-J8xewKD/Gk22OZbhpOVSwcs60zhd95ESDwezOFuA3/099925PdHJ7OFHNTGtajL3AlZkykD32HykiMo+BIBI8A==}
+
   lodash._basebind@2.4.1:
     resolution: {integrity: sha512-VGHm6DH+1UiuafQdE/DNMqxOcSyhRu0xO9+jPDq7xITRn5YOorGrHVQmavMVXCYmTm80YRTZZCn/jTW7MokwLg==}
 
@@ -12936,6 +12948,9 @@ packages:
 
   lodash@4.17.23:
     resolution: {integrity: sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==}
+
+  lodash@4.18.1:
+    resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
 
   lodash@4.18.1:
     resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
@@ -15577,6 +15592,10 @@ packages:
 
   proxy-from-env@1.1.0:
     resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
+
+  proxy-from-env@2.1.0:
+    resolution: {integrity: sha512-cJ+oHTW1VAEa8cJslgmUZrc+sjRKgAKl3Zyse6+PV38hZe/V6Z14TbCuXcan9F9ghlz4QrFr2c92TNF82UkYHA==}
+    engines: {node: '>=10'}
 
   prr@1.0.1:
     resolution: {integrity: sha512-yPw4Sng1gWghHQWj0B3ZggWUm4qVbPwPFcRG8KyxiU7J2OHFSoEHKS+EZ3fv5l1t9CyCiop6l/ZYeWbrgoQejw==}
@@ -20111,6 +20130,11 @@ snapshots:
       '@icon-cool/bk-icon-bk-biz-components': 0.0.4
       lodash.throttle: 4.1.1
       tippy.js: 6.3.7
+
+  '@blueking/xss-filter@0.0.10':
+    dependencies:
+      lodash: 4.18.1
+      xss: 1.0.15
 
   '@braintree/sanitize-url@7.1.2': {}
 
@@ -25885,6 +25909,14 @@ snapshots:
       follow-redirects: 1.15.11(debug@4.4.3)
       form-data: 4.0.5
       proxy-from-env: 1.1.0
+    transitivePeerDependencies:
+      - debug
+
+  axios@1.15.2:
+    dependencies:
+      follow-redirects: 1.15.11(debug@4.4.3)
+      form-data: 4.0.5
+      proxy-from-env: 2.1.0
     transitivePeerDependencies:
       - debug
 
@@ -32480,6 +32512,8 @@ snapshots:
 
   lodash-es@4.18.1: {}
 
+  lodash-es@4.18.1: {}
+
   lodash._basebind@2.4.1:
     dependencies:
       lodash._basecreate: 2.4.1
@@ -32653,6 +32687,8 @@ snapshots:
       lodash.keys: 2.4.1
 
   lodash@4.17.23: {}
+
+  lodash@4.18.1: {}
 
   lodash@4.18.1: {}
 
@@ -35996,6 +36032,8 @@ snapshots:
       ipaddr.js: 1.9.1
 
   proxy-from-env@1.1.0: {}
+
+  proxy-from-env@2.1.0: {}
 
   prr@1.0.1: {}
 

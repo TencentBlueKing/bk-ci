@@ -325,6 +325,7 @@ class ProjectLocalService @Autowired constructor(
     }
 
     fun getOrCreatePersonalProject(userId: String, description: String? = null): ProjectVO {
+        logger.info("create personal project for $userId")
         val personalProject = projectDao.getFirstPersonalProjectByCreator(dslContext, userId)
         if (personalProject != null) {
             logger.info("personal project already exists|userId=$userId|projectCode=${personalProject.englishName}")
@@ -333,18 +334,22 @@ class ProjectLocalService @Autowired constructor(
 
         val legacyProjectCode = "_$userId"
         val legacyProject = projectDao.getByEnglishName(dslContext, legacyProjectCode)
-        val legacyMembers = if (legacyProject != null) {
+        val legacyProjectDisabled = legacyProject != null && legacyProject.enabled == false
+
+        // 已禁用的旧项目无需走成员校验，跳过远程调用，交给 decider 直接判定复用
+        val legacyMembers = if (legacyProject != null && !legacyProjectDisabled) {
             getLegacyProjectMembers(legacyProjectCode)
         } else {
             emptySet()
         }
-        if (legacyProject != null && legacyMembers == null) {
+        if (legacyProject != null && !legacyProjectDisabled && legacyMembers == null) {
             logger.warn("skip personal project routing because member lookup failed|$legacyProjectCode")
             return ProjectUtils.packagingBean(legacyProject)
         }
         val decision = PersonalProjectRoutingDecider.decide(
             userId = userId,
             legacyProjectCode = legacyProject?.englishName,
+            legacyProjectDisabled = legacyProjectDisabled,
             legacyProjectMembers = legacyMembers ?: emptySet()
         )
         when (decision.action) {
@@ -477,7 +482,6 @@ class ProjectLocalService @Autowired constructor(
                     CompletableFuture.supplyAsync({
                         MDC.put(TraceTag.BIZID, traceId)
                         try {
-                            logger.info("create personal project for $userId")
                             getOrCreatePersonalProject(
                                 userId = userId,
                                 description = "personal project for $userId"

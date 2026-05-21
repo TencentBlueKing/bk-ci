@@ -386,7 +386,7 @@ data class StartBuildContext(
                 webhookMessage = params[PIPELINE_WEBHOOK_COMMIT_MESSAGE],
                 webhookRepoUrl = params[BK_REPO_WEBHOOK_REPO_URL],
                 webhookType = params[PIPELINE_WEBHOOK_TYPE],
-                webhookBranch = params[PIPELINE_WEBHOOK_BRANCH],
+                webhookBranch = params[PIPELINE_WEBHOOK_BRANCH].takeIf { startType == StartType.WEB_HOOK.name },
                 webhookAliasName = params[BK_REPO_WEBHOOK_REPO_ALIAS_NAME],
                 // GIT事件分为MR和MR accept,但是PIPELINE_WEBHOOK_EVENT_TYPE值只有MR
                 webhookEventType = if (params[PIPELINE_WEBHOOK_TYPE] == CodeType.GIT.name) {
