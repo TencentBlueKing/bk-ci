@@ -3,8 +3,8 @@ package com.tencent.devops.process.service
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -34,7 +34,10 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
 import com.tencent.devops.process.pojo.pipeline.PipelineDependentResourceRef
-import com.tencent.devops.process.pojo.pipeline.ReferenceType
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceRefType
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
+import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
+import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.ticket.api.ServiceCredentialResource
@@ -55,6 +58,8 @@ class PipelineDependentResourceService @Autowired constructor(
     private val pipelineLabelPipelineDao: PipelineLabelPipelineDao,
     private val pipelineLabelDao: PipelineLabelDao,
     private val pipelineInfoDao: PipelineInfoDao,
+    private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
+    private val pipelineTemplateInfoService: PipelineTemplateInfoService,
     private val pipelineRepositoryService: PipelineRepositoryService
 ) {
 
@@ -66,6 +71,7 @@ class PipelineDependentResourceService @Autowired constructor(
         val resources = mutableSetOf<PipelineDependentResource>()
         resources.addAll(collectPipelineGroupResources(projectId = projectId, pipelineId = pipelineId))
         resources.addAll(collectPipelineLabelResources(projectId = projectId, pipelineId = pipelineId))
+        collectPipelineTemplateResource(projectId = projectId, pipelineId = pipelineId)?.let { resources.add(it) }
 
         val refs = mutableSetOf<PipelineDependentResourceRef>()
         val model = pipelineRepositoryService.getModel(
@@ -89,10 +95,49 @@ class PipelineDependentResourceService @Autowired constructor(
         projectId: String,
         pipelineId: String
     ): Set<PipelineDependentResource> {
+        return collectSubPipelineDependencies(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            visited = mutableSetOf(pipelineKey(projectId = projectId, pipelineId = pipelineId))
+        )
+    }
+
+    private fun collectSubPipelineDependencies(
+        projectId: String,
+        pipelineId: String,
+        visited: MutableSet<String>
+    ): Set<PipelineDependentResource> {
         val model = pipelineRepositoryService.getModel(
             projectId = projectId,
             pipelineId = pipelineId
         ) ?: return emptySet()
+        val resources = mutableSetOf<PipelineDependentResource>()
+        collectSubPipelineRefs(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            model = model
+        ).forEach { ref ->
+            val resource = resolveSubPipelineRef(ref) ?: return@forEach
+            val resourceKey = pipelineKey(projectId = resource.projectId, pipelineId = resource.resourceId)
+            if (visited.add(resourceKey)) {
+                resources.add(resource)
+                resources.addAll(
+                    collectSubPipelineDependencies(
+                        projectId = resource.projectId,
+                        pipelineId = resource.resourceId,
+                        visited = visited
+                    )
+                )
+            }
+        }
+        return resources
+    }
+
+    private fun collectSubPipelineRefs(
+        projectId: String,
+        pipelineId: String,
+        model: Model
+    ): Set<PipelineDependentResourceRef> {
         val variables = getContextMap(model)
         val refs = mutableSetOf<PipelineDependentResourceRef>()
         model.stages.forEach { stage ->
@@ -120,7 +165,7 @@ class PipelineDependentResourceService @Autowired constructor(
                 }
             }
         }
-        return refs.mapNotNull { resolveSubPipelineRef(it) }.toSet()
+        return refs
     }
 
     private fun collectPipelineGroupResources(
@@ -144,7 +189,7 @@ class PipelineDependentResourceService @Autowired constructor(
         return viewIds.map {
             PipelineDependentResource(
                 projectId = projectId,
-                resourceType = ResourceTypeId.PIPELINE_GROUP,
+                resourceType = PipelineDependentResourceType.PIPELINE_GROUP,
                 resourceId = it.toString(),
                 resourceName = viewMap[it]?.name ?: it.toString()
             )
@@ -172,11 +217,36 @@ class PipelineDependentResourceService @Autowired constructor(
         return labelIds.map {
             PipelineDependentResource(
                 projectId = projectId,
-                resourceType = ResourceTypeId.PIPELINE_LABEL,
+                resourceType = PipelineDependentResourceType.PIPELINE_LABEL,
                 resourceId = it.toString(),
                 resourceName = labelMap[it]?.name ?: it.toString()
             )
         }.toSet()
+    }
+
+    private fun collectPipelineTemplateResource(
+        projectId: String,
+        pipelineId: String
+    ): PipelineDependentResource? {
+        val pipelineTemplateRelated = pipelineTemplateRelatedService.get(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        if (pipelineTemplateRelated == null ||
+            pipelineTemplateRelated.instanceType != PipelineInstanceTypeEnum.CONSTRAINT
+        ) {
+            return null
+        }
+        val template = pipelineTemplateInfoService.getOrNull(
+            projectId = projectId,
+            templateId = pipelineTemplateRelated.templateId
+        ) ?: return null
+        return PipelineDependentResource(
+            projectId = projectId,
+            resourceType = PipelineDependentResourceType.PIPELINE_TEMPLATE,
+            resourceId = pipelineTemplateRelated.templateId,
+            resourceName = template.name
+        )
     }
 
     private fun collectModelResourceRefs(
@@ -358,7 +428,7 @@ class PipelineDependentResourceService @Autowired constructor(
         }
         return PipelineDependentResourceRef(
             projectId = projectId,
-            resourceType = ResourceTypeId.REPERTORY,
+            resourceType = PipelineDependentResourceType.REPOSITORY,
             refType = referenceType(repositoryType),
             refValue = refValue
         )
@@ -372,8 +442,8 @@ class PipelineDependentResourceService @Autowired constructor(
         return if (dispatchType.agentType == AgentType.ID) {
             PipelineDependentResourceRef(
                 projectId = projectId,
-                resourceType = ResourceTypeId.ENVIRONMENT,
-                refType = ReferenceType.ID,
+                resourceType = PipelineDependentResourceType.ENVIRONMENT,
+                refType = PipelineDependentResourceRefType.ID,
                 refValue = dispatchType.value
             )
         } else {
@@ -382,8 +452,8 @@ class PipelineDependentResourceService @Autowired constructor(
             val envValue = EnvUtils.parseEnv(dispatchType.value, variables)
             PipelineDependentResourceRef(
                 projectId = envProjectId,
-                resourceType = ResourceTypeId.ENVIRONMENT,
-                refType = ReferenceType.NAME,
+                resourceType = PipelineDependentResourceType.ENVIRONMENT,
+                refType = PipelineDependentResourceRefType.NAME,
                 refValue = envValue
             )
         }
@@ -397,16 +467,16 @@ class PipelineDependentResourceService @Autowired constructor(
         return if (dispatchType.idType()) {
             PipelineDependentResourceRef(
                 projectId = projectId,
-                resourceType = ResourceTypeId.ENV_NODE,
-                refType = ReferenceType.ID,
+                resourceType = PipelineDependentResourceType.BUILD_NODE,
+                refType = PipelineDependentResourceRefType.ID,
                 refValue = dispatchType.displayName
             )
         } else {
             val nodeValue = EnvUtils.parseEnv(dispatchType.value, variables).takeIf { it.isNotBlank() } ?: return null
             PipelineDependentResourceRef(
                 projectId = projectId,
-                resourceType = ResourceTypeId.ENV_NODE,
-                refType = ReferenceType.NAME,
+                resourceType = PipelineDependentResourceType.BUILD_NODE,
+                refType = PipelineDependentResourceRefType.NAME,
                 refValue = nodeValue
             )
         }
@@ -423,8 +493,8 @@ class PipelineDependentResourceService @Autowired constructor(
         val finalProjectId = EnvUtils.parseEnv(credentialProjectId, variables).takeIf { it.isNotBlank() } ?: projectId
         return PipelineDependentResourceRef(
             projectId = finalProjectId,
-            resourceType = ResourceTypeId.CREDENTIAL,
-            refType = ReferenceType.ID,
+            resourceType = PipelineDependentResourceType.CREDENTIAL,
+            refType = PipelineDependentResourceRefType.ID,
             refValue = finalCredentialId
         )
     }
@@ -436,24 +506,29 @@ class PipelineDependentResourceService @Autowired constructor(
         val resources = mutableSetOf<PipelineDependentResource>()
         refs.forEach { ref ->
             when (ref.resourceType) {
-                ResourceTypeId.REPERTORY -> resources.addAll(
+                PipelineDependentResourceType.REPOSITORY -> resources.addAll(
                     resolveRepositoryRef(
                         userId = userId,
                         ref = ref
                     )
                 )
-                ResourceTypeId.ENVIRONMENT -> resolveEnvironmentRef(
+                PipelineDependentResourceType.ENVIRONMENT -> resolveEnvironmentRef(
                     userId = userId,
                     ref = ref
                 )?.let { resources.add(it) }
 
-                ResourceTypeId.ENV_NODE -> resolveNodeRef(
+                PipelineDependentResourceType.BUILD_NODE,
+                PipelineDependentResourceType.DEPLOY_NODE -> resolveNodeRef(
                     userId = userId, ref = ref
                 )?.let { resources.add(it) }
 
-                ResourceTypeId.CREDENTIAL -> resolveCredentialRef(
+                PipelineDependentResourceType.CREDENTIAL -> resolveCredentialRef(
                     userId = userId, ref = ref
                 )?.let { resources.add(it) }
+
+                else -> {
+                    logger.warn("not support dependent resource type|${ref.projectId}|${ref.resourceType}")
+                }
             }
         }
         return resources
@@ -486,8 +561,8 @@ class PipelineDependentResourceService @Autowired constructor(
                 userId = userId,
                 ref = PipelineDependentResourceRef(
                     projectId = repository.projectId ?: ref.projectId,
-                    resourceType = ResourceTypeId.CREDENTIAL,
-                    refType = ReferenceType.ID,
+                    resourceType = PipelineDependentResourceType.CREDENTIAL,
+                    refType = PipelineDependentResourceRefType.ID,
                     refValue = credentialId
                 )
             )?.let { resources.add(it) }
@@ -497,7 +572,7 @@ class PipelineDependentResourceService @Autowired constructor(
 
     private fun resolveEnvironmentRef(userId: String, ref: PipelineDependentResourceRef): PipelineDependentResource? {
         val env = try {
-            if (ref.refType == ReferenceType.ID) {
+            if (ref.refType == PipelineDependentResourceRefType.ID) {
                 client.get(ServiceEnvironmentResource::class).get(
                     userId = userId,
                     projectId = ref.projectId,
@@ -524,7 +599,7 @@ class PipelineDependentResourceService @Autowired constructor(
 
     private fun resolveNodeRef(userId: String, ref: PipelineDependentResourceRef): PipelineDependentResource? {
         val node = try {
-            if (ref.refType == ReferenceType.ID) {
+            if (ref.refType == PipelineDependentResourceRefType.ID) {
                 client.get(ServiceNodeResource::class).getNodeStatus(
                     userId = userId,
                     projectId = ref.projectId,
@@ -661,8 +736,8 @@ class PipelineDependentResourceService @Autowired constructor(
             }
             PipelineDependentResourceRef(
                 projectId = subProjectId,
-                resourceType = ResourceTypeId.PIPELINE,
-                refType = ReferenceType.ID,
+                resourceType = PipelineDependentResourceType.PIPELINE,
+                refType = PipelineDependentResourceRefType.ID,
                 refValue = subPipelineId
             )
         } else {
@@ -673,19 +748,15 @@ class PipelineDependentResourceService @Autowired constructor(
             val finalSubPipelineName = EnvUtils.parseEnv(subPipelineName, contextMap)
             PipelineDependentResourceRef(
                 projectId = finalSubProjectId,
-                resourceType = ResourceTypeId.PIPELINE,
-                refType = ReferenceType.NAME,
+                resourceType = PipelineDependentResourceType.PIPELINE,
+                refType = PipelineDependentResourceRefType.NAME,
                 refValue = finalSubPipelineName
             )
         }
     }
 
-    private fun resolveSubPipelineRefs(refs: Set<PipelineDependentResourceRef>): Set<PipelineDependentResource> {
-        return refs.mapNotNull { resolveSubPipelineRef(it) }.toSet()
-    }
-
     private fun resolveSubPipelineRef(ref: PipelineDependentResourceRef): PipelineDependentResource? {
-        val pipelineInfo = if (ref.refType == ReferenceType.ID) {
+        val pipelineInfo = if (ref.refType == PipelineDependentResourceRefType.ID) {
             pipelineInfoDao.getPipelineInfo(
                 dslContext = dslContext,
                 projectId = ref.projectId,
@@ -707,10 +778,14 @@ class PipelineDependentResourceService @Autowired constructor(
         }
         return PipelineDependentResource(
             projectId = ref.projectId,
-            resourceType = ResourceTypeId.PIPELINE,
+            resourceType = PipelineDependentResourceType.PIPELINE,
             resourceId = pipelineInfo.pipelineId,
             resourceName = pipelineInfo.pipelineName
         )
+    }
+
+    private fun pipelineKey(projectId: String, pipelineId: String): String {
+        return "$projectId:$pipelineId"
     }
 
     private fun getContextMap(model: Model): Map<String, String> {
@@ -722,16 +797,16 @@ class PipelineDependentResourceService @Autowired constructor(
         return PipelineVarUtil.fillVariableMap(variables)
     }
 
-    private fun referenceType(repositoryType: RepositoryType): ReferenceType {
+    private fun referenceType(repositoryType: RepositoryType): PipelineDependentResourceRefType {
         return if (repositoryType == RepositoryType.ID) {
-            ReferenceType.ID
+            PipelineDependentResourceRefType.ID
         } else {
-            ReferenceType.NAME
+            PipelineDependentResourceRefType.NAME
         }
     }
 
-    private fun ReferenceType.toRepositoryType(): RepositoryType {
-        return if (this == ReferenceType.ID) {
+    private fun PipelineDependentResourceRefType.toRepositoryType(): RepositoryType {
+        return if (this == PipelineDependentResourceRefType.ID) {
             RepositoryType.ID
         } else {
             RepositoryType.NAME
