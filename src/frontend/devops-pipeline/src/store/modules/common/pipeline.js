@@ -445,6 +445,20 @@ export const actions = {
         const { data } = await request.post(`${REPOSITORY_API_URL_PREFIX}/user/copilot/summary/rate?projectName=${projectName}&processId=${processId}&type=${type}`)
         return data
     },
+    /**
+     * 获取PAC分支列表
+     * @param {String} projectId 项目ID
+     * @param {String} pipelineId 流水线ID
+     * @param {String} search 搜索关键字
+     * @returns {Promise}
+     */
+    getPACBranchList: (_, { projectId, pipelineId, search = '', page, pageSize }) => {
+        return request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/listPacVersions?page=${page}&pageSize=${pageSize}`, {
+            params: {
+                search
+            }
+        }).then(response => response.data)
+    },
     validatePermission: async (_, { projectId, ...params }) => {
         return request.post(`${AUTH_URL_PREFIX}/user/auth/permission/batch/validate`, params, {
             headers: {
