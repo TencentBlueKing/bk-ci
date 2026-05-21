@@ -209,7 +209,7 @@
 <style lang="scss" scoped>
 .ai-float-wrapper {
     --ai-float-size: 48px;
-    --ai-float-hidden-offset: -32px;
+    --ai-float-hidden-offset: -24px;
     --ai-float-visible-offset: 16px;
     --ai-float-hover-scale: 1.08;
     --ai-float-shadow: 0 4px 16px rgba(58, 132, 255, .4);
