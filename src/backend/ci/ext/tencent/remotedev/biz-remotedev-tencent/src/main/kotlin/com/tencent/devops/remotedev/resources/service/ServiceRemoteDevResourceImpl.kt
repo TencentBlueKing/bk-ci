@@ -1081,4 +1081,21 @@ class ServiceRemoteDevResourceImpl(
             )
         )
     }
+
+    override fun enableWorkspaceThumbnail(
+        userId: String,
+        workspaceName: String,
+        enable: Boolean
+    ): Result<Boolean> {
+        logger.info(
+            "enableWorkspaceThumbnail" +
+                " |$userId|$workspaceName|enable=$enable"
+        )
+        return Result(
+            workspaceRecordService.enableThumbnail(
+                workspaceName = workspaceName,
+                enable = enable
+            )
+        )
+    }
 }

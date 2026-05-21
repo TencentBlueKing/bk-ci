@@ -1297,4 +1297,42 @@ interface ApigwRemoteDevResource {
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Page<String>>
+
+    @Operation(
+        summary = "开启或关闭工作空间缩略图",
+        tags = ["v4_app_remotedev_enable_workspace_thumbnail"]
+    )
+    @POST
+    @Path("/enable_workspace_thumbnail")
+    fun enableWorkspaceThumbnail(
+        @Parameter(
+            description = "appCode",
+            required = true,
+            example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(
+            description = "用户ID",
+            required = true,
+            example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(
+            description = "工作空间名称",
+            required = true
+        )
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(
+            description = "是否启用：true=开启，false=关闭",
+            required = true
+        )
+        @QueryParam("enable")
+        enable: Boolean
+    ): Result<Boolean>
 }

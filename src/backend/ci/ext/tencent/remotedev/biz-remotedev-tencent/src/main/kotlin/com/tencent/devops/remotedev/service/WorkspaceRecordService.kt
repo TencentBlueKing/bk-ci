@@ -642,6 +642,22 @@ class WorkspaceRecordService @Autowired constructor(
         )
     }
 
+    fun enableThumbnail(
+        workspaceName: String,
+        enable: Boolean
+    ): Boolean {
+        if (enable) {
+            saveWorkspaceRecordTicket(
+                workspaceName, WorkspaceRecordTicketType.THUMBNAIL
+            )
+        }
+        return updateWorkspaceRecordTicketEnable(
+            workspaceName = workspaceName,
+            type = WorkspaceRecordTicketType.THUMBNAIL,
+            enable = enable
+        )
+    }
+
     /**
      * 分页批量获取 THUMBNAIL 类型实例 id 列表
      *

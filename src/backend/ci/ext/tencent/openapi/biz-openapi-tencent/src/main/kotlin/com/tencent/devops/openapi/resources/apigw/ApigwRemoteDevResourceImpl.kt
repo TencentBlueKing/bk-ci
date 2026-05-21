@@ -881,4 +881,23 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
                 pageSize = pageSize
             )
     }
+
+    override fun enableWorkspaceThumbnail(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        workspaceName: String,
+        enable: Boolean
+    ): Result<Boolean> {
+        logger.info(
+            "enableWorkspaceThumbnail" +
+                " |$appCode|$userId|$workspaceName|enable=$enable"
+        )
+        return client.get(ServiceRemoteDevResource::class)
+            .enableWorkspaceThumbnail(
+                userId = userId,
+                workspaceName = workspaceName,
+                enable = enable
+            )
+    }
 }

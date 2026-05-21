@@ -1150,4 +1150,29 @@ interface ServiceRemoteDevResource {
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Page<String>>
+
+    @Operation(summary = "开启或关闭工作空间缩略图")
+    @POST
+    @Path("/enable_workspace_thumbnail")
+    fun enableWorkspaceThumbnail(
+        @Parameter(
+            description = "用户ID",
+            required = true,
+            example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(
+            description = "工作空间名称",
+            required = true
+        )
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(
+            description = "是否启用：true=开启，false=关闭",
+            required = true
+        )
+        @QueryParam("enable")
+        enable: Boolean
+    ): Result<Boolean>
 }
