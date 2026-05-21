@@ -9,6 +9,17 @@ func init() {
 	Init()
 }
 
+func TestIsIdentityEnvKey(t *testing.T) {
+	for _, key := range []string{"USERNAME", "username", "USERDOMAIN", "USERPROFILE", "HOMEDRIVE", "HOMEPATH", "APPDATA", "LOCALAPPDATA"} {
+		if !isIdentityEnvKey(key) {
+			t.Errorf("isIdentityEnvKey(%q) = false, want true", key)
+		}
+	}
+	if isIdentityEnvKey("PATH") {
+		t.Error("PATH should not be treated as identity env key")
+	}
+}
+
 func TestFetchEnvAndCheck(t *testing.T) {
 	tests := []struct {
 		name       string
