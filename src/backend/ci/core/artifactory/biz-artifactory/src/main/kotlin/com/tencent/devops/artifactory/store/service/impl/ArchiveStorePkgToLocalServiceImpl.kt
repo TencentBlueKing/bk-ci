@@ -28,8 +28,7 @@
 package com.tencent.devops.artifactory.store.service.impl
 
 import com.tencent.devops.artifactory.constant.REALM_LOCAL
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -75,12 +74,14 @@ class ArchiveStorePkgToLocalServiceImpl : ArchiveStorePkgServiceImpl() {
     }
 
     override fun getStoreFileContent(filePath: String, storeType: StoreTypeEnum): String {
-        if (filePath.contains("../")) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(filePath))
-        }
         val charSet = Charsets.UTF_8.name()
         val pkgFileTypeDir = getPkgFileTypeDir(storeType)
-        val file = File("$storeArchiveLocalBasePath/$pkgFileTypeDir/${URLDecoder.decode(filePath, charSet)}")
+        // 弱字符串匹配（如 contains("../")）易被 ..\、URL 二次编码绕过，
+        // 改用 canonical-path 校验，确保最终落点严格位于 $storeArchiveLocalBasePath/$pkgFileTypeDir 之下
+        val file = FileUtil.resolveSafeChildFile(
+            "$storeArchiveLocalBasePath/$pkgFileTypeDir",
+            URLDecoder.decode(filePath, charSet)
+        )
         return if (file.exists()) {
             FileUtils.readFileToString(file, charSet)
         } else {
