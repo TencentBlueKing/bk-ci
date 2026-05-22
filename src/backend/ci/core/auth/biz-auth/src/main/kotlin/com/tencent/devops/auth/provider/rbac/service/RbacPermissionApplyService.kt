@@ -125,8 +125,11 @@ class RbacPermissionApplyService @Autowired constructor(
             else -> null
         }
         val resourceType = searchGroupInfo.resourceType
-        // 如果没有访问权限，不允许访问资源级别的组，只允许访问项目级别的组
-        if (!visitProjectPermission && searchGroupInfo.groupLevel == GroupLevel.OTHER) {
+        // 如果没有访问权限并且非跳转申请权限场景，不允许访问资源级别的组，只允许访问项目级别的组
+        if (!visitProjectPermission &&
+            searchGroupInfo.groupLevel == GroupLevel.OTHER &&
+            searchGroupInfo.redirect != true
+        ) {
             return ManagerRoleGroupVO(
                 count = 0,
                 results = emptyList()
