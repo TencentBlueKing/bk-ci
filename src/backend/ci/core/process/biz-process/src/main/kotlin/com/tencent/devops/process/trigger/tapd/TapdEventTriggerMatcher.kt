@@ -28,6 +28,7 @@
 package com.tencent.devops.process.trigger.tapd
 
 import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerInput
 import com.tencent.devops.common.pipeline.enums.TapdEventType
@@ -55,7 +56,8 @@ class TapdEventTriggerMatcher {
 
     fun matches(
         element: TapdWebHookTriggerElement,
-        event: TapdWebhookTriggerEvent
+        event: TapdWebhookTriggerEvent,
+        variables: Map<String, String>
     ): WebhookAtomResponse {
         val input = element.data.input
         val taskId = element.id ?: ""
@@ -71,7 +73,8 @@ class TapdEventTriggerMatcher {
         getEventFilters(
             input = input,
             taskId = taskId,
-            event = event
+            event = event,
+            variables = variables
         ).forEach {
             val filterResponse = WebhookFilterResponse()
             if (!it.doFilter(filterResponse)) {
@@ -87,7 +90,8 @@ class TapdEventTriggerMatcher {
     private fun getEventFilters(
         input: TapdWebHookTriggerInput,
         taskId: String,
-        event: TapdWebhookTriggerEvent
+        event: TapdWebhookTriggerEvent,
+        variables: Map<String, String>
     ) = with(event) {
         val eventFromFilter = ContainsFilter(
             pipelineId = taskId,
@@ -117,8 +121,12 @@ class TapdEventTriggerMatcher {
         val userFilter = UserFilter(
             pipelineId = taskId,
             triggerOnUser = triggerUser,
-            includedUsers = input.includeUsers?.filter { it.isNotBlank() } ?: emptyList(),
-            excludedUsers = input.excludeUsers?.filter { it.isNotBlank() } ?: emptyList(),
+            includedUsers = (input.includeUsers?.filter { it.isNotBlank() } ?: emptyList()).map {
+                EnvUtils.parseEnv(it, variables)
+            },
+            excludedUsers = (input.excludeUsers?.filter { it.isNotBlank() } ?: emptyList()).map {
+                EnvUtils.parseEnv(it, variables)
+            },
             includedFailedReason = I18Variable(
                 code = USER_NOT_MATCH,
                 params = listOf(triggerUser)
@@ -133,8 +141,12 @@ class TapdEventTriggerMatcher {
             pipelineId = taskId,
             filterName = "tapdLabel",
             triggerOn = event.triggerLabels?.split("|")?.toSet() ?: setOf(),
-            included = WebhookUtils.convert(input.includeLabels),
-            excluded = WebhookUtils.convert(input.excludeLabels),
+            included = WebhookUtils.convert(input.includeLabels).map {
+                EnvUtils.parseEnv(it, variables)
+            },
+            excluded = WebhookUtils.convert(input.excludeLabels).map {
+                EnvUtils.parseEnv(it, variables)
+            },
             includeFailedReason = { item ->
                 I18Variable(
                     WebhookI18nConstants.BK_TRIGGER_LABEL_NOT_MATCH,
@@ -153,7 +165,9 @@ class TapdEventTriggerMatcher {
             pipelineId = taskId,
             filterName = "tapdPriorityFilter",
             triggerOn = event.triggerPriority ?: "",
-            included = WebhookUtils.convert(input.includePriority),
+            included = WebhookUtils.convert(input.includePriority).map {
+                EnvUtils.parseEnv(it, variables)
+            },
             failedReason = I18Variable(
                 code = BK_TRIGGER_PRIORITY_NOT_MATCH,
                 params = listOf()
@@ -164,8 +178,12 @@ class TapdEventTriggerMatcher {
             filterName = "tapdOwner",
             pipelineId = taskId,
             triggerOnUser = triggerOwner ?: "",
-            includedUsers = input.includeOwner?.filter { it.isNotBlank() } ?: emptyList(),
-            excludedUsers = input.excludeOwner?.filter { it.isNotBlank() } ?: emptyList(),
+            includedUsers = (input.includeOwner?.filter { it.isNotBlank() } ?: emptyList()).map {
+                EnvUtils.parseEnv(it, variables)
+            },
+            excludedUsers = (input.excludeOwner?.filter { it.isNotBlank() } ?: emptyList()).map {
+                EnvUtils.parseEnv(it, variables)
+            },
             includedFailedReason = I18Variable(
                 code = USER_NOT_MATCH,
                 params = listOf(triggerOwner ?: "")

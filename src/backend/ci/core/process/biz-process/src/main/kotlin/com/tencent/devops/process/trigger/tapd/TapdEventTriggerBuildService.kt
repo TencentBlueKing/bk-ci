@@ -137,11 +137,13 @@ class TapdEventTriggerBuildService @Autowired constructor(
             return
         }
 
+        val variables = pipelineRepositoryService.getTriggerParams(resource.model.getTriggerContainer())
         val failedMatchElements = mutableListOf<PipelineTriggerFailedMatchElement>()
         for (element in elements) {
             val atomResponse = tapdEventMatcher.matches(
                 element = element,
-                event = event
+                event = event,
+                variables = variables
             )
             when (atomResponse.matchStatus) {
                 MatchStatus.SUCCESS -> {

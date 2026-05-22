@@ -271,7 +271,7 @@ class TapdWebhookRequestService(
                     mapOf(
                         TAPD_KEY_LABEL to (it.label ?: ""),
                         TAPD_KEY_PRIORITY_LABEL to (it.priorityLabel ?: ""),
-                        TAPD_KEY_OWNER to (it.currentOwner ?: "")
+                        TAPD_KEY_OWNER to (it.currentOwner?.removeSuffix(";") ?: "")
                     )
                 }
             }
@@ -281,7 +281,7 @@ class TapdWebhookRequestService(
                     mapOf(
                         TAPD_KEY_LABEL to (it.label ?: ""),
                         TAPD_KEY_PRIORITY_LABEL to (it.priorityLabel ?: ""),
-                        TAPD_KEY_OWNER to (it.owner ?: "")
+                        TAPD_KEY_OWNER to (it.owner?.removeSuffix(";") ?: "")
                     )
                 }
             }
