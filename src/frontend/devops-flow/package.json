@@ -21,7 +21,7 @@
     "public:master": "pnpm run build"
   },
   "dependencies": {
-    "@blueking/bk-org-selector": "^0.1.6",
+    "@blueking/bk-org-selector": "^0.3.0",
     "@blueking/crontab": "0.0.2-beta.7",
     "@blueking/search-select-v3": "0.0.1-beta.10",
     "axios": "1.13.6",
