@@ -25,11 +25,16 @@ const AtomDatePicker = defineAsyncComponent(() => import('./AtomDatePicker'))
 const CronTab = defineAsyncComponent(() => import('./CronTab'))
 const SubParameter = defineAsyncComponent(() => import('./SubParameter'))
 const SelectInput = defineAsyncComponent(() => import('./SelectInput'))
+const FormFieldGroup = defineAsyncComponent(() => import('./FormFieldGroup'))
+const EnumButton = defineAsyncComponent(() => import('./EnumButton'))
+const CompositeInput = defineAsyncComponent(() => import('./CompositeInput'))
+const TipsSimple = defineAsyncComponent(() => import('./TipsSimple'))
+const ConditionalInputSelector = defineAsyncComponent(() => import('./ConditionalInputSelector'))
 
 const SELF_ERROR_COMPONENTS = new Set(['timer-cron-tab'])
 
 // 组件映射表
-const COMPONENT_MAP: Record<string, any> = {
+export const COMPONENT_MAP: Record<string, any> = {
   'vuex-input': VuexInput,
   'vuex-textarea': VuexTextarea,
   selector: Selector,
@@ -57,6 +62,10 @@ const COMPONENT_MAP: Record<string, any> = {
   'sub-parameter': SubParameter,
   'request-selector': Selector,
   'select-input': SelectInput,
+  'enum-button': EnumButton,
+  'composite-input': CompositeInput,
+  'tips-simple': TipsSimple,
+  'conditional-input-selector': ConditionalInputSelector,
 }
 
 // Display mode types
@@ -220,6 +229,59 @@ export default defineComponent({
     // 渲染单个表单字段（默认模式）
     const renderFormField = (key: string, obj: any) => {
       if (isHidden(obj, props.element)) return null
+
+      // group 类型：使用 FormFieldGroup 包裹子字段
+      if (obj.type === 'group') {
+        return (
+          <FormFieldGroup
+            key={key}
+            label={obj.label}
+            desc={obj.desc}
+            name={key}
+            value={props.atomValue[key] ?? obj.default ?? false}
+            showSwitch={obj.showSwitch ?? false}
+            topDivider={obj.topDivider ?? false}
+            docs={obj.docs}
+            docsLink={obj.docsLink}
+            handleChange={handleChange}
+          >
+            {obj.children?.map((child: any) => {
+              if (isHidden(child, props.element)) return null
+
+              const childKey = child.key
+              const componentType = child.component || child.type
+              const ChildComponent = COMPONENT_MAP[componentType] || VuexInput
+              const childValue = props.atomValue[childKey] ?? child.default ?? ''
+              const hasError = props.errorFields.includes(childKey)
+              const showDefaultError = hasError && !SELF_ERROR_COMPONENTS.has(componentType)
+              const { '@type': _type, ...childRest } = child
+
+              return (
+                <FormItem
+                  key={childKey}
+                  label={child.label}
+                  required={child.required}
+                  property={childKey}
+                  description={child.desc}
+                  class={hasError ? styles.fieldError : ''}
+                >
+                  <ChildComponent
+                    name={childKey}
+                    value={childValue}
+                    disabled={props.disabled}
+                    readOnly={props.disabled}
+                    placeholder={getPlaceholder(child)}
+                    handleChange={handleChange}
+                    atomValue={props.atomValue}
+                    {...childRest}
+                  />
+                  {showDefaultError && <p class={styles.fieldErrorMessage}>{t('flow.orchestration.fieldRequired')}</p>}
+                </FormItem>
+              )
+            })}
+          </FormFieldGroup>
+        )
+      }
 
       const componentType = obj.component || obj.type
       const Component = COMPONENT_MAP[componentType] || VuexInput

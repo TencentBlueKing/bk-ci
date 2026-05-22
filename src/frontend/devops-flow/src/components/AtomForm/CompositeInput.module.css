@@ -1,0 +1,15 @@
+.compositeInputWrapper {
+  display: flex;
+}
+
+.iconDesc {
+  margin-left: 10px;
+  line-height: 32px;
+  cursor: pointer;
+}
+
+.groupText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
