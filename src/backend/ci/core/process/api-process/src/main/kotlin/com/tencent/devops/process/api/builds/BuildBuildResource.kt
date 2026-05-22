@@ -184,4 +184,22 @@ interface BuildBuildResource {
         @BkField(required = false)
         executeCount: Int?
     ): Result<List<PipelineFailTaskDetail>>
+
+    @Operation(summary = "获取构建任务的原始参数(TASK_PARAMS)")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildId}/tasks/{taskId}/source_param")
+    fun getTaskSourceParam(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @Parameter(description = "任务ID", required = true)
+        @PathParam("taskId")
+        taskId: String
+    ): Result<Map<String, Any>?>
 }
