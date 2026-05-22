@@ -108,6 +108,12 @@ object WebhookI18nConstants {
     // 用户被排除
     const val USER_IGNORED = "bkRepoTriggerUserIgnored"
 
+    // 当前处理人不匹配
+    const val OWNER_NOT_MATCH = "bkRepoTriggerOwnerNotMatch"
+
+    // 当前处理人被排除
+    const val OWNER_IGNORED = "bkRepoTriggerOwnerIgnored"
+
     // 路径不匹配
     const val PATH_NOT_MATCH = "bkRepoTriggerPathNotMatch"
 
@@ -221,8 +227,6 @@ object WebhookI18nConstants {
 
     // TAPD 触发事件描述: 缺陷 [<a href="{0}">!{1}</a>] 由 {2} 变更状态
     const val BK_TAPD_BUG_STATUS_CHANGE_EVENT_DESC = "bkTapdBugStatusChangeEventDesc"
-
-
 
     // TAPD 触发事件描述（通用兜底）：TAPD {3} 事件 [!{1}] 由 {2} 触发动作 [{4}]
     // 占位符: {0}=详情页URL（可能为空）, {1}=对象ID, {2}=触发用户, {3}=事件类型, {4}=事件动作

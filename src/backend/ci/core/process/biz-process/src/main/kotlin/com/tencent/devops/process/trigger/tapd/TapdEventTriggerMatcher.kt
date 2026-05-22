@@ -36,6 +36,8 @@ import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_RIGGER_EVENT_FROM_NOT_MATCH
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_TRIGGER_ACTION_NOT_MATCH
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_TRIGGER_PRIORITY_NOT_MATCH
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.OWNER_IGNORED
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.OWNER_NOT_MATCH
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.USER_IGNORED
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.USER_NOT_MATCH
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
@@ -185,11 +187,11 @@ class TapdEventTriggerMatcher {
                 EnvUtils.parseEnv(it, variables)
             },
             includedFailedReason = I18Variable(
-                code = USER_NOT_MATCH,
+                code = OWNER_NOT_MATCH,
                 params = listOf(triggerOwner ?: "")
             ).toJsonStr(),
             excludedFailedReason = I18Variable(
-                code = USER_IGNORED,
+                code = OWNER_IGNORED,
                 params = listOf(triggerOwner ?: "")
             ).toJsonStr()
         )
