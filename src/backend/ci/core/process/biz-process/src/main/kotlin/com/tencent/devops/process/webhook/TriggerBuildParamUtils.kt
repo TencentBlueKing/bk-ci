@@ -117,6 +117,8 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAG_DESC
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAG_FROM
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_ISSUES
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_LINK_ID
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_LINK_TYPE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_PARENT_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_PRIORITY_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_WORKSPACE_ID
@@ -520,6 +522,8 @@ object TriggerBuildParamUtils {
             CI_TAPD_ID,
             CI_TAPD_PARENT_ID,
             CI_TAPD_PRIORITY_ID,
+            CI_TAPD_LINK_ID,
+            CI_TAPD_LINK_TYPE,
             CI_EVENT_FROM
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[TapdWebHookTriggerElement.classType] = mutableMapOf("common" to params)
