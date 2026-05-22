@@ -23,6 +23,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
+import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
@@ -859,5 +860,20 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
                 pageSize = pageSize,
                 search = search
             )
+    }
+
+    override fun startCloudWorkspaceDetail(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        workspaceName: String?,
+        envHashId: String?
+    ): Result<WorkspaceStartCloudDetail?> {
+        logger.info("startCloudWorkspaceDetail |$appCode|$userId|$workspaceName|$envHashId")
+        return client.get(ServiceRemoteDevResource::class).startCloudWorkspaceDetail(
+            userId = userId,
+            workspaceName = workspaceName,
+            envHashId = envHashId
+        )
     }
 }
