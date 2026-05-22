@@ -862,6 +862,46 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             )
     }
 
+    override fun batchQueryThumbnailWorkspaces(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        enable: Boolean,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<String>> {
+        logger.info(
+            "batchQueryThumbnailWorkspaces" +
+                " |$appCode|$userId|enable=$enable|page=$page|pageSize=$pageSize"
+        )
+        return client.get(ServiceRemoteDevResource::class)
+            .batchQueryThumbnailWorkspaces(
+                userId = userId,
+                enable = enable,
+                page = page,
+                pageSize = pageSize
+            )
+    }
+
+    override fun enableWorkspaceThumbnail(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        workspaceName: String,
+        enable: Boolean
+    ): Result<Boolean> {
+        logger.info(
+            "enableWorkspaceThumbnail" +
+                " |$appCode|$userId|$workspaceName|enable=$enable"
+        )
+        return client.get(ServiceRemoteDevResource::class)
+            .enableWorkspaceThumbnail(
+                userId = userId,
+                workspaceName = workspaceName,
+                enable = enable
+            )
+    }
+
     override fun startCloudWorkspaceDetail(
         appCode: String?,
         apigwType: String?,
