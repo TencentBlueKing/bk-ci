@@ -29,6 +29,10 @@ object TapdWebhookConstant {
     // 源对象ID
     const val TAPD_KEY_SOURCE_ID = "source_id"
 
+    const val TAPD_KEY_STORY_ID = "story_id"
+
+    const val TAPD_KEY_BUG_ID = "bug_id"
+
     // 优先级标题
     const val TAPD_KEY_PRIORITY_LABEL = "priority_label"
 

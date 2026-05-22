@@ -69,6 +69,7 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_TITLE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_WORKSPACE_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_BUG_URL_PATTERN
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_EVENT_SEPARATOR
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_BUG_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CHANGE_FIELDS
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CURRENT_USER
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_DESCRIPTION
@@ -87,6 +88,7 @@ import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PRIORITY
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_REFERER
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_SOURCE_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_STATUS
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_STORY_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_TARGET_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_TITLE
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_WORKSPACE_ID
@@ -277,7 +279,8 @@ class TapdWebhookRequestService(
                     mapOf(
                         TAPD_KEY_LABEL to (it.label ?: ""),
                         TAPD_KEY_PRIORITY_LABEL to (it.priorityLabel ?: ""),
-                        TAPD_KEY_OWNER to (it.currentOwner?.removeSuffix(";") ?: "")
+                        TAPD_KEY_OWNER to (it.currentOwner?.removeSuffix(";") ?: ""),
+                        TAPD_KEY_NAME to it.title
                     )
                 }
             }
@@ -287,7 +290,8 @@ class TapdWebhookRequestService(
                     mapOf(
                         TAPD_KEY_LABEL to (it.label ?: ""),
                         TAPD_KEY_PRIORITY_LABEL to (it.priorityLabel ?: ""),
-                        TAPD_KEY_OWNER to (it.owner?.removeSuffix(";") ?: "")
+                        TAPD_KEY_OWNER to (it.owner?.removeSuffix(";") ?: ""),
+                        TAPD_KEY_NAME to it.name
                     )
                 }
             }
@@ -417,12 +421,12 @@ class TapdWebhookRequestService(
             body.getHookField(TAPD_KEY_ENTITY_ID)
         }
 
-        TapdEventAction.BUG_LINK, TapdEventAction.STORY_LINK -> {
-            body.getHookField(TAPD_KEY_TARGET_ID)
+        TapdEventAction.STORY_LINK, TapdEventAction.STORY_UNLINK -> {
+            body.getHookField(TAPD_KEY_SOURCE_ID)
         }
 
-        TapdEventAction.STORY_UNLINK, TapdEventAction.BUG_UNLINK -> {
-            body.getHookField(TAPD_KEY_SOURCE_ID)
+        TapdEventAction.BUG_LINK, TapdEventAction.BUG_UNLINK -> {
+            body.getHookField(TAPD_KEY_STORY_ID)
         }
 
         else -> body.getHookField(TAPD_KEY_ID, eventAction == TapdEventAction.UPDATE)
@@ -505,7 +509,7 @@ class TapdWebhookRequestService(
             CI_TAPD_WORKSPACE_ID to tapdProjectId,
             CI_TAPD_ID to objectId,
             CI_TAPD_PARENT_ID to body.getHookField(TAPD_KEY_PARENT_ID, update),
-            CI_TAPD_PRIORITY_ID to body.getHookField(TAPD_KEY_PRIORITY, update),
+            CI_TAPD_PRIORITY_ID to body.getHookField(TAPD_KEY_PRIORITY_LABEL, update),
             CI_TAPD_TITLE to title,
             PIPELINE_BUILD_MSG to buildPipelineBuildMsg(
                 name = title,
@@ -518,12 +522,13 @@ class TapdWebhookRequestService(
             PIPELINE_WEBHOOK_NOTE_COMMENT to body.getHookField(TAPD_KEY_DESCRIPTION)
         )
         if (eventAction == TapdEventAction.BUG_LINK || eventAction == TapdEventAction.STORY_LINK) {
-            params[CI_TAPD_LINK_TYPE] = when (eventAction) {
-                TapdEventAction.BUG_LINK -> TapdEventType.BUG.value
-                TapdEventAction.STORY_LINK -> TapdEventType.STORY.value
-                else -> ""
+            val (type, id) = when (eventAction) {
+                TapdEventAction.BUG_LINK -> TapdEventType.BUG.value to body.getHookField(TAPD_KEY_BUG_ID)
+                TapdEventAction.STORY_LINK -> TapdEventType.STORY.value to body.getHookField(TAPD_KEY_TARGET_ID)
+                else -> "" to ""
             }
-            params[CI_TAPD_LINK_ID] = body.getHookField(TAPD_KEY_SOURCE_ID)
+            params[CI_TAPD_LINK_TYPE] = type
+            params[CI_TAPD_LINK_ID] = id
         }
         return params
     }
