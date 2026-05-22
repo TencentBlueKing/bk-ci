@@ -199,7 +199,6 @@
                                 <bk-button
                                     text
                                     :disabled="row.projectScope === 1"
-                               
                                     @click="handleQuitClick(row)"
                                 >
                                     {{ $t('projectExit') }}

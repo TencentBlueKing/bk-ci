@@ -700,7 +700,6 @@
 
             .pipeline-group-header-name {
                 flex: 1;
-                @include ellipsis();
             }
             .add-pipeline-group-btn {
                 display: flex;

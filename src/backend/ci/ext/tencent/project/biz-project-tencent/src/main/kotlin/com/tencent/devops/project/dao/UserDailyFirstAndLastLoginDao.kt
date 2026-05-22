@@ -29,6 +29,7 @@ package com.tencent.devops.project.dao
 
 import com.tencent.devops.model.project.tables.TUserDailyFirstAndLastLogin
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -58,6 +59,28 @@ class UserDailyFirstAndLastLoginDao {
             ).onDuplicateKeyUpdate()
                 .set(LAST_LOGIN_TIME, lastLoginTime)
                 .execute()
+        }
+    }
+
+    fun listDistinctUserIdsLoggedInSince(
+        dslContext: DSLContext,
+        since: LocalDateTime,
+        limit: Int,
+        offset: Int
+    ): List<String> {
+        with(TUserDailyFirstAndLastLogin.T_USER_DAILY_FIRST_AND_LAST_LOGIN) {
+            val recentLoginUsers = dslContext.select(USER_ID)
+                .from(this)
+                .groupBy(USER_ID)
+                .having(DSL.max(LAST_LOGIN_TIME).greaterOrEqual(since))
+                .asTable("recent_login_users")
+            val userIdField = recentLoginUsers.field(USER_ID)!!
+            return dslContext.select(userIdField)
+                .from(recentLoginUsers)
+                .orderBy(userIdField)
+                .limit(limit)
+                .offset(offset)
+                .fetch(userIdField)
         }
     }
 }

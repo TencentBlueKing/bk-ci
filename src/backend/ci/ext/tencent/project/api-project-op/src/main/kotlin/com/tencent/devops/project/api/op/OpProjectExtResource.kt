@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,6 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:ai:api-ai"))
+package com.tencent.devops.project.api.op
+
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.project.pojo.OpPreProjectMigrateRequest
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.core.MediaType
+
+@Tag(name = "OP_EXT_PROJECT", description = "内部项目op接口")
+@Path("/op/project/ext")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpProjectExtResource {
+
+    @POST
+    @Path("/migrate/all")
+    @Operation(summary = "迁移所有个人项目")
+    fun migratePreProjectsForAllStoredNormalUsers(): Result<Boolean>
+
+    @POST
+    @Path("/migrate")
+    @Operation(summary = "迁移个人项目")
+    fun migratePreProjectsByUserIds(
+        @Parameter(description = "待补全预置项目的用户ID列表", required = true)
+        request: OpPreProjectMigrateRequest
+    ): Result<Boolean>
 }

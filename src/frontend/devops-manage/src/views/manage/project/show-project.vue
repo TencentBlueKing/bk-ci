@@ -49,14 +49,15 @@ const tabPanels = computed(() => [
     name: 'projectSettings',
     label: '项目信息',
     activeCollapse: ['baseInfo', 'permission'],
-    panels: [{
-      name: 'baseInfo',
-      title: '基础信息',
-    },
-    ...(!isPersonalProject.value ? [{
-      name: 'permission',
-      title: '权限',
-    }] : [])
+    panels: [
+      {
+        name: 'baseInfo',
+        title: '基础信息',
+      },
+      ...(!isPersonalProject.value ? [{
+        name: 'permission',
+        title: '权限',
+      }] : [])
     ]
   },
   {
