@@ -43,7 +43,8 @@
             return {
                 environmentUrl,
                 containerWidth: 0,
-                currentResType: SERVICE_RESOURCE_TYPE.PIPELINE
+                currentResType: SERVICE_RESOURCE_TYPE.PIPELINE,
+                SERVICE_RESOURCE_TYPE
             }
         },
 
