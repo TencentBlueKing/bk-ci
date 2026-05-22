@@ -37,5 +37,8 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 data class ElementHolder(
     val element: Element,
     val stage: Stage,
-    val container: Container
+    val container: Container,
+    val stageIndex: Int = -1,
+    val containerIndex: Int = -1,
+    val elementIndex: Int = -1
 )

@@ -43,6 +43,7 @@ const showDisableProjectDialog = ref(false);
 const activeTab = ref('projectSettings');
 // KPI代码字段显示控制
 const showKpiCode = ref(false)
+const isPersonalProject = computed(() => projectData.value.projectScope === 1)
 const tabPanels = computed(() => [
   {
     name: 'projectSettings',
@@ -51,10 +52,12 @@ const tabPanels = computed(() => [
     panels: [{
       name: 'baseInfo',
       title: '基础信息',
-    }, {
+    },
+    ...(!isPersonalProject.value ? [{
       name: 'permission',
       title: '权限',
-    }]
+    }] : [])
+    ]
   },
   {
     name: 'pipelineSettings',

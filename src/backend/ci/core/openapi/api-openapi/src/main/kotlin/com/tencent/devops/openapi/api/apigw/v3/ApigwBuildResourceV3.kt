@@ -106,7 +106,10 @@ interface ApigwBuildResourceV3 {
         values: Map<String, String>?,
         @Parameter(description = "手动指定构建版本参数", required = false)
         @QueryParam("buildNo")
-        buildNo: Int? = null
+        buildNo: Int? = null,
+        @Parameter(description = "分支版本, 仅PAC流水线有效", required = false)
+        @QueryParam("branch")
+        branch: String? = null
     ): Result<BuildId>
 
     @Operation(summary = "停止构建", tags = ["v3_app_build_stop", "v3_user_build_stop"])
@@ -253,7 +256,10 @@ interface ApigwBuildResourceV3 {
         pipelineId: String,
         @Parameter(description = "指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        debugVersion: Int?
+        debugVersion: Int?,
+        @Parameter(description = "分支版本, 仅PAC流水线有效", required = false)
+        @QueryParam("branch")
+        branch: String? = null
     ): Result<BuildManualStartupInfo>
 
     @Operation(summary = "构建详情", tags = ["v3_app_build_detail", "v3_user_build_detail"])

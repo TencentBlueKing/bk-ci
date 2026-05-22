@@ -46,6 +46,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Result
@@ -396,7 +397,7 @@ class StoreBaseQueryDao {
             conditions.add(tStoreBase.CLASSIFY_ID.eq(it))
         }
         if (null != sortType && sortType != StoreSortTypeEnum.DOWNLOAD_COUNT) {
-            baseStep.where(conditions).orderBy(tStoreBase.field(sortType.name)!!.desc())
+            baseStep.where(conditions).orderBy(tStoreBase.getStoreSortField(sortType).desc())
         } else {
             baseStep.where(conditions)
         }
@@ -405,6 +406,17 @@ class StoreBaseQueryDao {
                 (queryComponentsParam.page - 1) * queryComponentsParam.pageSize,
                 queryComponentsParam.pageSize
             ).fetch()
+    }
+
+    private fun TStoreBase.getStoreSortField(sortType: StoreSortTypeEnum): Field<*> {
+        return when (sortType) {
+            StoreSortTypeEnum.NAME -> NAME
+            StoreSortTypeEnum.CREATE_TIME -> CREATE_TIME
+            StoreSortTypeEnum.UPDATE_TIME -> UPDATE_TIME
+            StoreSortTypeEnum.PUBLISHER -> PUBLISHER
+            StoreSortTypeEnum.DOWNLOAD_COUNT,
+            StoreSortTypeEnum.UPGRADE -> throw IllegalArgumentException("Invalid sort field")
+        }
     }
 
     fun getProcessingComponents(

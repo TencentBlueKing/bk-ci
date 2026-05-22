@@ -241,7 +241,7 @@ class PipelineRepositoryService constructor(
         }
     }
 
-    @Value("\${project.callback.secretParam.aes-key:project_callback_aes_key}")
+    @Value("\${project.callback.aes-key}")
     private val aesKey = ""
 
     @SuppressWarnings("NestedBlockDepth")

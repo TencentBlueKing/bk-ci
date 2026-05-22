@@ -54,6 +54,7 @@ import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Result
 import org.jooq.SelectOnConditionStep
@@ -162,8 +163,8 @@ class MarketAtomDao : AtomBaseDao() {
                 baseStep.leftJoin(t).on(ta.ATOM_CODE.eq(t.field("STORE_CODE", String::class.java)))
             }
 
-            val realSortType = if (isStatSortType) DSL.field(sortType.name) else ta.field(sortType.name)
-            val orderField = if (query.desc == true) realSortType!!.desc() else realSortType!!.asc()
+            val realSortType = getMarketAtomSortField(ta, sortType)
+            val orderField = if (query.desc == true) realSortType.desc() else realSortType.asc()
             baseStep.where(conditions).orderBy(orderField)
         } ?: baseStep.where(conditions)
 
@@ -173,6 +174,23 @@ class MarketAtomDao : AtomBaseDao() {
                 baseStep.limit((page - 1) * pageSize, pageSize).fetch()
             }
         } ?: baseStep.fetch()
+    }
+
+    private fun getMarketAtomSortField(ta: TAtom, sortType: MarketAtomSortTypeEnum): Field<*> {
+        return when (sortType) {
+            MarketAtomSortTypeEnum.NAME -> ta.NAME
+            MarketAtomSortTypeEnum.CREATE_TIME -> ta.CREATE_TIME
+            MarketAtomSortTypeEnum.UPDATE_TIME -> ta.UPDATE_TIME
+            MarketAtomSortTypeEnum.PUBLISHER -> ta.PUBLISHER
+            MarketAtomSortTypeEnum.DOWNLOAD_COUNT -> DSL.field(
+                DSL.name(MarketAtomSortTypeEnum.DOWNLOAD_COUNT.name),
+                Int::class.java
+            )
+            MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM -> DSL.field(
+                DSL.name(MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM.name),
+                Int::class.java
+            )
+        }
     }
 
     private fun handleMainListBaseStep(
