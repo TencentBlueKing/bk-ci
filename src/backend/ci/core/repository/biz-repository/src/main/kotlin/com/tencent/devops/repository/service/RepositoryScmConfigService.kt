@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.IdValue
+import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPlatformApi
@@ -381,7 +382,8 @@ class RepositoryScmConfigService @Autowired constructor(
         disposition: FormDataContentDisposition
     ): RepositoryConfigLogoInfo {
         validateUserPlatformPermission(userId = userId)
-        val fileName = disposition.fileName
+        // multipart filename 由客户端控制，basename 化阻断 ../、绝对路径等可能流入 fileType 的污染
+        val fileName = FileUtil.getSafeFileName(disposition.fileName)
         logger.info("upload repository config logo file fileName is:$fileName,contentLength is:$contentLength")
         val index = fileName.lastIndexOf(".")
         val fileType = fileName.substring(index + 1).lowercase()
