@@ -1,5 +1,6 @@
 import {
   fetchAuthoringNodeList,
+  getAuthoringNodeDisplayText,
   type AuthoringNodeItem,
   type AuthoringNodeResponse,
 } from '@/api/authoringEnvironmentApi'
@@ -7,6 +8,7 @@ import { get, post } from '@/utils/http'
 
 // Re-export types for backward compatibility
 export type { AuthoringNodeItem, AuthoringNodeResponse as AuthoringNodesResponse }
+export { getAuthoringNodeDisplayText }
 
 /**
  * Startup info response from API

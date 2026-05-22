@@ -2,7 +2,7 @@ import type { Element } from '@/api/flowModel'
 import { rely } from '@/utils/atom'
 import { Collapse, Form } from 'bkui-vue'
 import type { InjectionKey } from 'vue'
-import { computed, defineAsyncComponent, defineComponent, provide, ref, watch, type PropType } from 'vue'
+import { defineComponent, computed, defineAsyncComponent, provide, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import styles from './AtomForm.module.css'
 
@@ -73,11 +73,16 @@ interface InputGroup {
   isExpanded: boolean
   props: Record<string, any>
 }
-interface GroupMapItem {
+interface GroupEntry {
+  key: string
+  isInputGroup: boolean
   name?: string
   label?: string
   isExpanded?: boolean
-  props: Record<string, any>
+  propKey?: string
+  prop?: Record<string, any>
+  props: Record<string, any> | Array<Record<string, any>>
+  [key: string]: any
 }
 
 export interface AtomPropsModel {
@@ -119,9 +124,7 @@ export default defineComponent({
   emits: ['change', 'fieldError'],
   setup(props, { emit }) {
     const { t } = useI18n()
-    // 折叠面板的展开状态
     const expandedGroups = ref<string[]>([])
-
     const fieldErrors = ref<Set<string>>(new Set())
     const reportFieldError: ReportFieldErrorFn = (name, hasError) => {
       const next = new Set(fieldErrors.value)
@@ -180,7 +183,9 @@ export default defineComponent({
       return false
     })
 
-    const paramsGroupMap = computed<Record<string, GroupMapItem>>(() => {
+    const paramsGroupSort = computed<string[]>(() => props.atomPropsModel?.sort || [])
+
+    const paramsGroupEntries = computed<GroupEntry[]>(() => {
       const { inputGroups = [] } = props.atomPropsModel
       let { input } = props.atomPropsModel
 
@@ -188,34 +193,92 @@ export default defineComponent({
         input = props.atomPropsModel
       }
 
-      // 初始化分组映射，包含 rootProps 用于存放未分组的字段
-      const groupMap = inputGroups.reduce<Record<string, GroupMapItem>>(
-        (acc, group) => {
+      if (paramsGroupSort.value.length) {
+        const inputGroupMap = inputGroups.reduce<Record<string, GroupEntry>>((acc, group) => {
           acc[group.name] = {
-            name: group.name,
-            label: group.label,
-            props: {},
+            ...group,
+            key: group.name,
+            isInputGroup: true,
+            props: [],
           }
           return acc
-        },
-        {
-          rootProps: {
-            props: {},
-          },
-        },
-      )
+        }, {})
 
-      // 将字段分配到对应的分组
+        const groupedMap: Record<string, GroupEntry> = {}
+        Object.keys(input).forEach((key) => {
+          const prop = input[key]
+          const inputGroup = prop.groupName ? inputGroupMap[prop.groupName] : undefined
+          if (inputGroup) {
+            ;(inputGroup.props as Array<Record<string, any>>).push({
+              key,
+              ...prop,
+            })
+            groupedMap[prop.groupName] = inputGroup
+          } else {
+            groupedMap[key] = {
+              key,
+              propKey: key,
+              prop,
+              isInputGroup: false,
+              props: [],
+            }
+          }
+        })
+
+        return paramsGroupSort.value
+          .map((key) => groupedMap[key])
+          .filter((entry): entry is GroupEntry => !!entry)
+      }
+
+      const groupMap = inputGroups.reduce<Record<string, GroupEntry>>((acc, group) => {
+        acc[group.name] = {
+          ...group,
+          key: group.name,
+          isInputGroup: true,
+          props: {},
+        }
+        return acc
+      }, {})
+
+      const rootProps: Record<string, any> = {}
       Object.keys(input).forEach((key) => {
         const prop = input[key]
-        // 如果字段指定了 groupName 且该分组存在，则放入对应分组
-        const targetGroup =
-          prop.groupName && groupMap[prop.groupName] ? groupMap[prop.groupName] : groupMap.rootProps
-        targetGroup!.props[key] = prop
+        const targetGroup = prop.groupName && groupMap[prop.groupName]
+          ? groupMap[prop.groupName]
+          : null
+
+        if (targetGroup) {
+          ;(targetGroup.props as Record<string, any>)[key] = prop
+        } else {
+          rootProps[key] = prop
+        }
       })
 
-      return groupMap
+      const entries: GroupEntry[] = []
+      if (Object.keys(rootProps).length > 0) {
+        entries.push({
+          key: 'rootProps',
+          isInputGroup: false,
+          props: rootProps,
+        })
+      }
+
+      Object.values(groupMap).forEach((group) => {
+        entries.push(group)
+      })
+
+      return entries
     })
+
+    watch(
+      paramsGroupEntries,
+      (entries) => {
+        expandedGroups.value = entries
+          .filter((entry) => entry.isInputGroup && entry.isExpanded)
+          .map((entry) => entry.key)
+      },
+      { immediate: true },
+    )
 
     // 渲染单个表单字段（默认模式）
     const renderFormField = (key: string, obj: any) => {
@@ -297,15 +360,96 @@ export default defineComponent({
 
     // 渲染 Trigger 模式下的分组
     const renderTriggerGroups = () => {
-      return Object.entries(paramsGroupMap.value)
-        .filter(([key, group]) => key !== 'rootProps' && Object.keys(group.props).length > 0)
-        .map(([key, group]) => (
-          <div key={key} class={styles.triggerGroup}>
-            <div class={styles.triggerGroupTitle}>{group.label || key}:</div>
-            <div class={styles.triggerGroupContent}>{renderTriggerGroupContent(group.props)}</div>
-          </div>
-        ))
+      return paramsGroupEntries.value
+        .filter((group) => group.isInputGroup && rely(group, props.atomValue))
+        .map((group) => {
+          const groupProps = Array.isArray(group.props)
+            ? Object.fromEntries(group.props.map((item) => [item.key, item]))
+            : group.props
+
+          if (Object.keys(groupProps).length === 0) return null
+
+          return (
+            <div key={group.key} class={styles.triggerGroup}>
+              <div class={styles.triggerGroupTitle}>{group.label || group.key}:</div>
+              <div class={styles.triggerGroupContent}>{renderTriggerGroupContent(groupProps)}</div>
+            </div>
+          )
+        })
     }
+
+    const renderAccordionEntries = () => {
+      return paramsGroupEntries.value.map((entry) => {
+        if (!entry.isInputGroup) {
+          if (entry.propKey && entry.prop) {
+            return renderFormField(entry.propKey, entry.prop)
+          }
+
+          if (!Array.isArray(entry.props)) {
+            return renderGroupContent(entry.props)
+          }
+
+          return null
+        }
+
+        if (!rely(entry, props.atomValue)) {
+          return null
+        }
+
+        const groupProps = Array.isArray(entry.props)
+          ? Object.fromEntries(entry.props.map((item) => [item.key, item]))
+          : entry.props
+
+        if (Object.keys(groupProps).length === 0) {
+          return null
+        }
+
+        return (
+          <Collapse.CollapsePanel
+            key={entry.key}
+            name={entry.key}
+            title={entry.label || entry.key}
+            class={styles.groupPanel}
+          >
+            {{
+              content: () => <div class={styles.groupContent}>{renderGroupContent(groupProps)}</div>,
+            }}
+          </Collapse.CollapsePanel>
+        )
+      })
+    }
+
+    const renderRootOrSortedFields = () => {
+      return paramsGroupEntries.value
+        .filter((entry) => !entry.isInputGroup)
+        .map((entry) => {
+          if (entry.propKey && entry.prop) {
+            return renderFormField(entry.propKey, entry.prop)
+          }
+
+          if (!Array.isArray(entry.props)) {
+            return renderGroupContent(entry.props)
+          }
+
+          return null
+        })
+    }
+
+    const getRootPropsForTrigger = () => {
+      return paramsGroupEntries.value.reduce<Record<string, any>>((acc, entry) => {
+        if (entry.isInputGroup) return acc
+        if (entry.propKey && entry.prop) {
+          acc[entry.propKey] = entry.prop
+          return acc
+        }
+        if (!Array.isArray(entry.props)) {
+          Object.assign(acc, entry.props)
+        }
+        return acc
+      }, {})
+    }
+
+    const rootPropsForTrigger = computed(() => getRootPropsForTrigger())
 
     return () => {
       // Trigger 模式：只有当有分组时才使用特殊样式，无分组时使用正常表单
@@ -314,7 +458,7 @@ export default defineComponent({
         if (!hasGroups.value) {
           return (
             <Form formType="vertical" class={styles.atomForm}>
-              {renderGroupContent(paramsGroupMap.value.rootProps!.props)}
+              {renderRootOrSortedFields()}
             </Form>
           )
         }
@@ -323,9 +467,9 @@ export default defineComponent({
         return (
           <div class={styles.triggerForm}>
             {/* 渲染根级别字段（未分组的字段） */}
-            {Object.keys(paramsGroupMap.value.rootProps!.props).length > 0 && (
+            {Object.keys(rootPropsForTrigger.value).length > 0 && (
               <Form formType="vertical" class={styles.atomForm}>
-                {renderGroupContent(paramsGroupMap.value.rootProps!.props)}
+                {renderGroupContent(rootPropsForTrigger.value)}
               </Form>
             )}
 
@@ -338,23 +482,18 @@ export default defineComponent({
       // 默认手风琴模式
       return (
         <Form formType="vertical" class={styles.atomForm}>
-          {/* 渲染根级别字段（未分组的字段） */}
-          {Object.keys(paramsGroupMap.value.rootProps!.props).length > 0 &&
-            renderGroupContent(paramsGroupMap.value.rootProps!.props)}
-
-          {/* 渲染分组 */}
+          {!hasGroups.value && renderRootOrSortedFields()}
           {hasGroups.value && (
-            <Collapse modelValue={expandedGroups.value} class={styles.groupCollapse} useBlockTheme>
-              {Object.entries(paramsGroupMap.value)
-                .filter(([key, group]) => key !== 'rootProps')
-                .map(([key, group]) => (
-                  <Collapse.CollapsePanel key={key} name={key}>
-                    {{
-                      header: () => <span class={styles.groupHeader}>{group.label || key}</span>,
-                      content: () => renderGroupContent(group.props),
-                    }}
-                  </Collapse.CollapsePanel>
-                ))}
+            <Collapse
+              modelValue={expandedGroups.value}
+              class={styles.groupCollapse}
+              useBlockTheme
+              headerIconAlign="left"
+              onChange={(value: unknown) => {
+                expandedGroups.value = Array.isArray(value) ? value.map(String) : []
+              }}
+            >
+              {renderAccordionEntries()}
             </Collapse>
           )}
         </Form>
