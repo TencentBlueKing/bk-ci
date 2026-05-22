@@ -20,6 +20,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
+import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
@@ -1175,4 +1176,19 @@ interface ServiceRemoteDevResource {
         @QueryParam("enable")
         enable: Boolean
     ): Result<Boolean>
+
+    @Operation(summary = "获取指定工作空间详情")
+    @GET
+    @Path("/start_cloud_workspace_detail")
+    fun startCloudWorkspaceDetail(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
+        @Parameter(description = "环境id", required = true)
+        @QueryParam("envHashId")
+        envHashId: String?
+    ): Result<WorkspaceStartCloudDetail?>
 }

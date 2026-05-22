@@ -29,6 +29,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
+import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.async.AsyncNotify
@@ -1097,5 +1098,13 @@ class ServiceRemoteDevResourceImpl(
                 enable = enable
             )
         )
+    }
+
+    override fun startCloudWorkspaceDetail(
+        userId: String,
+        workspaceName: String?,
+        envHashId: String?
+    ): Result<WorkspaceStartCloudDetail?> {
+        return Result(workspaceService.startCloudWorkspaceDetail(userId, workspaceName, envHashId))
     }
 }
