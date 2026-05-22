@@ -735,7 +735,7 @@ class NodeService @Autowired constructor(
                 val isOperator = userId == node.operator
                 val isBakOperator = node.bakOperator.split(";").contains(userId)
                 if (isOperator || isBakOperator) {
-                    nodeDao.updateCreatedUser(dslContext, nodeId, userId)
+                    nodeDao.updateCreatedUser(dslContext, nodeId, userId, NodeOperatorStatus.NORMAL)
                 } else {
                     throw ErrorCodeException(
                         errorCode = ERROR_NODE_NOT_CMDB_PRIMARY_BAK_OPERATOR,
@@ -778,9 +778,11 @@ class NodeService @Autowired constructor(
 
         val toChangeNodeIds = nodeList.map { it.nodeId }
         // 分批更新，以免单次where in 大列表
+        // createdUser变更后需重新计算operatorStatus，这里所有节点均为CMDB类型，
+        // 且userId已通过checkNodesImportPermission校验为operator或bakOperator之一，故状态为NORMAL
         val nodeIdsInBatch = toChangeNodeIds.chunked(2000)
         nodeIdsInBatch.forEach { it ->
-            nodeDao.batchUpdateNodeCreatedUser(dslContext, it, userId)
+            nodeDao.batchUpdateNodeCreatedUser(dslContext, it, userId, NodeOperatorStatus.NORMAL)
         }
 
         return nodeList.map { Pair(it.nodeHashId, it.displayName) }
