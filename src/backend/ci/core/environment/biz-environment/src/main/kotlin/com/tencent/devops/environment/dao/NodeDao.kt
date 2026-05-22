@@ -529,20 +529,36 @@ class NodeDao {
         }
     }
 
-    fun updateCreatedUser(dslContext: DSLContext, nodeId: Long, userId: String) {
+    fun updateCreatedUser(
+        dslContext: DSLContext,
+        nodeId: Long,
+        userId: String,
+        operatorStatus: NodeOperatorStatus? = null
+    ) {
         with(TNode.T_NODE) {
-            dslContext.update(this)
+            val update = dslContext.update(this)
                 .set(CREATED_USER, userId)
-                .where(NODE_ID.eq(nodeId))
+            if (operatorStatus != null) {
+                update.set(OPERATOR_STATUS, operatorStatus.code)
+            }
+            update.where(NODE_ID.eq(nodeId))
                 .execute()
         }
     }
 
-    fun batchUpdateNodeCreatedUser(dslContext: DSLContext, nodeIdList: List<Long>, userId: String) {
+    fun batchUpdateNodeCreatedUser(
+        dslContext: DSLContext,
+        nodeIdList: List<Long>,
+        userId: String,
+        operatorStatus: NodeOperatorStatus? = null
+    ) {
         with(TNode.T_NODE) {
-            dslContext.update(this)
+            val update = dslContext.update(this)
                 .set(CREATED_USER, userId)
-                .where(NODE_ID.`in`(nodeIdList))
+            if (operatorStatus != null) {
+                update.set(OPERATOR_STATUS, operatorStatus.code)
+            }
+            update.where(NODE_ID.`in`(nodeIdList))
                 .execute()
         }
     }
