@@ -51,6 +51,8 @@ const rules = {
     },
   ]
 };
+
+const isPersonalProject = computed(() => projectData.value.projectScope === 1)
 const initPipelineDialect = ref();
 const activeCollapse = ref(['baseInfo', 'permission', 'pipeline', 'artifactory']);
 const collapsePanels = computed(() => [
@@ -59,11 +61,11 @@ const collapsePanels = computed(() => [
     title: '基础信息',
     component: BaseInfoContent,
   },
-  {
+  ...(!isPersonalProject.value ? [{
     name: 'permission',
     title: '权限',
     component: PermissionContent,
-  },
+  }] : []),
   // ...projectData.value.properties ? [{
   //   name: 'pipeline',
   //   title: '流水线',

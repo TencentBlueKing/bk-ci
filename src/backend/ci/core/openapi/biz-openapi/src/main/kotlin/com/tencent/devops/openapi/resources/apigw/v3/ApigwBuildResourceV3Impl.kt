@@ -58,15 +58,17 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        debugVersion: Int?
+        debugVersion: Int?,
+        branch: String?
     ): Result<BuildManualStartupInfo> {
-        logger.info("OPENAPI_BUILD_V3|$userId|manual startup info|$projectId|$pipelineId")
+        logger.info("OPENAPI_BUILD_V3|$userId|manual startup info|$projectId|$pipelineId|$branch")
         return client.get(ServiceBuildResource::class).manualStartupInfo(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             version = debugVersion,
-            channelCode = apiGatewayUtil.getChannelCode()
+            channelCode = apiGatewayUtil.getChannelCode(),
+            branch = branch
         )
     }
 
@@ -140,9 +142,10 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         values: Map<String, String>?,
-        buildNo: Int?
+        buildNo: Int?,
+        branch: String?
     ): Result<BuildId> {
-        logger.info("OPENAPI_BUILD_V3|$userId|start|$projectId|$pipelineId|$values|$buildNo")
+        logger.info("OPENAPI_BUILD_V3|$userId|start|$projectId|$pipelineId|$values|$buildNo|$branch")
         return client.get(ServiceBuildResource::class).manualStartupNew(
             userId = userId,
             projectId = projectId,
@@ -150,7 +153,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             values = values ?: emptyMap(),
             buildNo = buildNo,
             channelCode = apiGatewayUtil.getChannelCode(),
-            startType = StartType.SERVICE
+            startType = StartType.SERVICE,
+            branch = branch
         )
     }
 
