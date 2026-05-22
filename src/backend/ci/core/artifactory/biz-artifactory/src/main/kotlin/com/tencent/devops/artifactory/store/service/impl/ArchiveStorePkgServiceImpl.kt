@@ -36,6 +36,7 @@ import com.tencent.devops.artifactory.store.service.ArchiveStorePkgService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.STATIC
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
@@ -99,6 +100,8 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         }
         val storePkgEnvInfos: List<StorePkgEnvInfo>?
         var packageFileInfos: MutableList<PackageFileInfo>? = null
+        // 上传 multipart 的 filename 由客户端控制，必须先 basename 化以阻断 ../、绝对路径、盘符等路径穿越
+        val safeFileName = FileUtil.getSafeFileName(disposition.fileName)
         try {
             handleArchiveFile(
                 disposition = disposition,
@@ -126,9 +129,11 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                     packageFileInfos = mutableListOf()
                 }
                 if (pkgLocalPath.isNullOrBlank()) {
-                    pkgLocalPath = disposition.fileName
+                    pkgLocalPath = safeFileName
                 }
-                val packageFile = File("$storeArchivePath/$pkgLocalPath")
+                // pkgLocalPath 在 config.yml/task.json 配置中由外部输入控制，必须做 canonical-path 校验，
+                // 防止 ../、绝对路径等穿越逃离 storeArchivePath
+                val packageFile = FileUtil.resolveSafeChildFile(storeArchivePath, pkgLocalPath)
                 val packageFileInfo = PackageFileInfo(
                     packageFileName = packageFile.name,
                     packageFilePath = packageFile.absolutePath.removePrefix(getStoreArchiveBasePath()),
@@ -203,7 +208,8 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         storeCode: String,
         version: String
     ) {
-        val fileName = disposition.fileName
+        // multipart 的 filename 由客户端控制，必须先 basename 化以阻断 ../、绝对路径、盘符等路径穿越
+        val fileName = FileUtil.getSafeFileName(disposition.fileName)
         val storeArchivePath = buildStoreArchivePath(storeType, storeCode, version)
         val file = File(storeArchivePath, fileName)
         val parentDir = file.parentFile
