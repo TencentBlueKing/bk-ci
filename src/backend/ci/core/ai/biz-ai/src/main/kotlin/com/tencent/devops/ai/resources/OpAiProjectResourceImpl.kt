@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -43,6 +43,11 @@ class OpAiProjectResourceImpl @Autowired constructor(
 
     override fun list(): Result<List<String>> {
         return Result(aiProjectService.getProjectListForOp())
+    }
+
+    override fun batchAdd(projectIds: List<String>): Result<Boolean> {
+        aiProjectService.batchAddProjects(projectIds)
+        return Result(true)
     }
 
     override fun update(projectIds: List<String>): Result<Boolean> {

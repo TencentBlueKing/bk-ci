@@ -36,7 +36,6 @@ import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.pojo.vo.UserPermissionAnalysisVO
 import com.tencent.devops.auth.pojo.vo.UserSearchResultVO
-import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
 import com.tencent.devops.auth.service.AuthAiService
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
@@ -52,8 +51,8 @@ import java.util.concurrent.TimeUnit
 
 @RestResource
 @Suppress("TooManyFunctions", "LongParameterList")
-class ServiceAuthAiResourceImpl(
-    private val rbacCommonService: RbacCommonService,
+class
+ServiceAuthAiResourceImpl(
     private val permissionResourceService: PermissionResourceService,
     private val permissionResourceMemberService: PermissionResourceMemberService,
     private val permissionManageFacadeService: PermissionManageFacadeService,
@@ -61,11 +60,11 @@ class ServiceAuthAiResourceImpl(
 ) : ServiceAuthAiResource {
 
     override fun listResourceTypes(userId: String): Result<List<ResourceTypeInfoVo>> {
-        return Result(rbacCommonService.listResourceTypes())
+        return Result(authAiService.listResourceTypes())
     }
 
     override fun listActions(userId: String, resourceType: String): Result<List<ActionInfoVo>> {
-        return Result(rbacCommonService.listResourceType2Action(resourceType))
+        return Result(authAiService.listActions(resourceType))
     }
 
     @BkProjectMemberCheck
@@ -253,14 +252,12 @@ class ServiceAuthAiResourceImpl(
         val expiredTime = now + TimeUnit.DAYS.toSeconds(
             createInfo.expiredTime ?: DEFAULT_EXPIRED_DAYS
         )
-        return Result(
-            permissionResourceMemberService.batchAddResourceGroupMembers(
-                projectCode = projectId,
-                iamGroupId = createInfo.groupId!!,
-                expiredTime = expiredTime,
-                members = createInfo.userIds,
-                departments = createInfo.deptIds
-            )
+        return permissionResourceMemberService.batchAddResourceGroupMembers(
+            projectCode = projectId,
+            iamGroupId = createInfo.groupId!!,
+            expiredTime = expiredTime,
+            members = createInfo.userIds,
+            departments = createInfo.deptIds
         )
     }
 

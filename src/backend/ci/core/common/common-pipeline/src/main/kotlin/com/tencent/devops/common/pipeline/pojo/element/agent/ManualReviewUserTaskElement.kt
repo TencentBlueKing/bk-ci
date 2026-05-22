@@ -70,9 +70,10 @@ data class ManualReviewUserTaskElement(
 ) : Element(name, id, status) {
     companion object {
         const val classType = "manualReviewUserTask"
+        const val TASK_ATOM = "manualReviewTaskAtom"
     }
 
-    override fun getTaskAtom() = "manualReviewTaskAtom"
+    override fun getTaskAtom() = TASK_ATOM
 
     override fun transferYaml(defaultValue: JSONObject?): PreStep {
         val input = mutableMapOf<String, Any>().apply {

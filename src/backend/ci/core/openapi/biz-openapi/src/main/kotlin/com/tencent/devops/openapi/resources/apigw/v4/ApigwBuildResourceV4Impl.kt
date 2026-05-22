@@ -52,6 +52,7 @@ import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
+import com.tencent.devops.process.pojo.task.PipelineFailTaskDetail
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -67,15 +68,17 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        debugVersion: Int?
+        debugVersion: Int?,
+        branch: String?
     ): Result<BuildManualStartupInfo> {
-        logger.info("OPENAPI_BUILD_V4|$userId|manual startup info|$projectId|$pipelineId")
+        logger.info("OPENAPI_BUILD_V4|$userId|manual startup info|$projectId|$pipelineId|$branch")
         return client.get(ServiceBuildResource::class).manualStartupInfo(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             version = debugVersion,
-            channelCode = apiGatewayUtil.getChannelCode()
+            channelCode = apiGatewayUtil.getChannelCode(),
+            branch = branch
         )
     }
 
@@ -182,9 +185,10 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         values: Map<String, String>?,
-        buildNo: Int?
+        buildNo: Int?,
+        branch: String?
     ): Result<BuildId> {
-        logger.info("OPENAPI_BUILD_V4|$userId|start|$projectId|$pipelineId|$values|$buildNo")
+        logger.info("OPENAPI_BUILD_V4|$userId|start|$projectId|$pipelineId|$values|$buildNo|$branch")
         return client.get(ServiceBuildResource::class).manualStartupNew(
             userId = userId,
             projectId = projectId,
@@ -192,7 +196,8 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             values = values ?: emptyMap(),
             buildNo = buildNo,
             channelCode = apiGatewayUtil.getChannelCode(),
-            startType = StartType.SERVICE
+            startType = StartType.SERVICE,
+            branch = branch
         )
     }
 
@@ -440,6 +445,24 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildIds = buildIds
+        )
+    }
+
+    override fun getBuildFailedTasks(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String?,
+        buildId: String,
+        executeCount: Int?
+    ): Result<List<PipelineFailTaskDetail>> {
+        logger.info("OPENAPI_BUILD_V4|$userId|get build failed tasks|$projectId|$pipelineId|$buildId|$executeCount")
+        return client.get(ServiceBuildResource::class).getBuildFailedTasks(
+            projectId = projectId,
+            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
+            buildId = buildId,
+            executeCount = executeCount
         )
     }
 
