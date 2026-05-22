@@ -1,4 +1,5 @@
 import type { AuthoringNodeItem, StartupProperty } from '@/api/preview'
+import { getAuthoringNodeDisplayText } from '@/api/preview'
 import { SvgIcon } from '@/components/SvgIcon'
 import { usePreview, type ParamType } from '@/hooks/usePreview'
 import { ParamType as VariableParamType } from '@/types/variable'
@@ -283,12 +284,11 @@ export default defineComponent({
                         <Select.Option
                           key={node.agentId}
                           value={node.agentHashId}
-                          label={node.displayName || `${node.name} (${node.ip})`}
+                          label={getAuthoringNodeDisplayText(node)}
                           disabled={!node.envEnableNode}
                         >
                           <div class={styles.nodeOption}>
-                            <span class={styles.nodeName}>{node.displayName}</span>
-                            <span class={styles.nodeIp}>({node.ip})</span>
+                            <span class={styles.nodeName}>{getAuthoringNodeDisplayText(node)}</span>
                             {!node.agentStatus && (
                               <span class={styles.nodeOffline}>[{t('flow.preview.offline')}]</span>
                             )}

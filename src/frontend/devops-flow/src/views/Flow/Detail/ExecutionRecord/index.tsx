@@ -29,7 +29,7 @@ const LS_COLUMN_KEY = 'flow_execution_record_columns'
 export const EXECUTION_RECORD_COLUMNS = [
   { field: 'buildNo', labelKey: 'flow.content.buildNo', disabled: true },
   { field: 'stageStatus', labelKey: 'flow.content.stageStatus' },
-  { field: 'nodeName', labelKey: 'flow.content.workflowNode' },
+  { field: 'nodeIp', labelKey: 'flow.content.workflowNode' },
   { field: 'triggerAndUser', labelKey: 'flow.content.triggerMethodAndUser' },
   { field: 'triggerTime', labelKey: 'flow.content.triggerTime' },
   { field: 'startTime', labelKey: 'flow.content.executionStartTime' },

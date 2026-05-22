@@ -1,3 +1,4 @@
+import { getAuthoringNodeDisplayText } from '@/api/authoringEnvironmentApi'
 import { SvgIcon } from '@/components/SvgIcon'
 import useAuthoringEnvironment, { type EnvSelectItem } from '@/hooks/useAuthoringEnvironment'
 import { Loading, Select, Tag } from 'bkui-vue'
@@ -79,6 +80,7 @@ export default defineComponent({
         <p class={styles.authoringHeader}>
           {props.isEdit ? (
             <Select
+              class={styles.envSelect}
               v-model={envHashId.value}
               filterable
               list={props.envList}
@@ -104,7 +106,7 @@ export default defineComponent({
               <div class={styles.nodeTag}>
                 {props.nodeList.length > 0
                   ? props.nodeList.map((node: any) => (
-                      <Tag key={node.nodeId}>{node.displayName}</Tag>
+                      <Tag key={node.nodeId}>{getAuthoringNodeDisplayText(node)}</Tag>
                     ))
                   : '--'}
               </div>

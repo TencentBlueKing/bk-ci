@@ -28,6 +28,25 @@
   }
 }
 
+.envSelect {
+  width: 200px;
+
+  :global(.bk-select-trigger) {
+    width: 100%;
+  }
+
+  :global(.bk-input--suffix-icon) {
+    position: static;
+    margin-left: var(--spacing-xs);
+    color: var(--color-text-secondary);
+  }
+
+  :global(.bk-input--text) {
+    flex: none;
+    padding-right: 0;
+  }
+}
+
 .authoringContent {
   min-height: 176px;
   width: 592px;
