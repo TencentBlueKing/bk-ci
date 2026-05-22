@@ -11,6 +11,7 @@ export default function useEnvDetail () {
     const envHashId = computed(() => proxy.$route.params?.envId)
     const projectId = computed(() => proxy.$route.params?.projectId)
     const envList = computed(() => proxy.$store.getters['environment/getEnvList'] || [])
+    const isBuiltInEnv = computed(() => envHashId.value?.startsWith('-'))
     
     // 获取环境节点列表
     const fetchEnvNodeList = async (params) => {
@@ -141,6 +142,8 @@ export default function useEnvDetail () {
         envHashId,
         relatedProjectList,
         envDetailLoaded,
+        envList,
+        isBuiltInEnv,
 
         // function
         fetchEnvNodeList,
