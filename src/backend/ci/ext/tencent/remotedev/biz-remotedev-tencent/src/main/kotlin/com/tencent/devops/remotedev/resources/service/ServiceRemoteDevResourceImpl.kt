@@ -1062,4 +1062,40 @@ class ServiceRemoteDevResourceImpl(
             )
         )
     }
+
+    override fun batchQueryThumbnailWorkspaces(
+        userId: String,
+        enable: Boolean,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<String>> {
+        logger.info(
+            "batchQueryThumbnailWorkspaces" +
+                " |$userId|enable=$enable|page=$page|pageSize=$pageSize"
+        )
+        return Result(
+            workspaceRecordService.batchQueryThumbnailWorkspaces(
+                enable = enable,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
+    override fun enableWorkspaceThumbnail(
+        userId: String,
+        workspaceName: String,
+        enable: Boolean
+    ): Result<Boolean> {
+        logger.info(
+            "enableWorkspaceThumbnail" +
+                " |$userId|$workspaceName|enable=$enable"
+        )
+        return Result(
+            workspaceRecordService.enableThumbnail(
+                workspaceName = workspaceName,
+                enable = enable
+            )
+        )
+    }
 }
