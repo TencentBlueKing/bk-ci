@@ -211,14 +211,16 @@ class PipelineRuntimeService @Autowired constructor(
         private const val TAG = "startVM-0"
         private const val JOB_ID = "0"
         private const val BUILD_REMARK_MAX_LENGTH = 4096
-        private const val NODE_NAME_CACHE_MAX_SIZE = 5000
-        private const val NODE_NAME_CACHE_EXPIRE_MINUTES = 30L
+        private const val NODE_INFO_CACHE_MAX_SIZE = 5000
+        private const val NODE_INFO_CACHE_EXPIRE_MINUTES = 30L
     }
 
-    private val nodeNameCache: Cache<String, String> = Caffeine.newBuilder()
-        .maximumSize(NODE_NAME_CACHE_MAX_SIZE.toLong())
-        .expireAfterWrite(NODE_NAME_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
-        .build<String, String>()
+    private data class NodeDisplayInfo(val name: String, val ip: String?)
+
+    private val nodeInfoCache: Cache<String, NodeDisplayInfo> = Caffeine.newBuilder()
+        .maximumSize(NODE_INFO_CACHE_MAX_SIZE.toLong())
+        .expireAfterWrite(NODE_INFO_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
+        .build<String, NodeDisplayInfo>()
 
     fun cancelPendingTask(projectId: String, pipelineId: String, userId: String) {
         val runningBuilds = pipelineBuildDao.getBuildTasksByStatus(
@@ -374,7 +376,7 @@ class PipelineRuntimeService @Autowired constructor(
             limit = if (limit < 0) 1000 else limit,
             updateTimeDesc = updateTimeDesc
         )
-        val hashIdToName = getNodeNamesByHashIds(
+        val hashIdToInfo = getNodeInfoByHashIds(
             projectId = projectId,
             userId = null,
             hashIds = list.mapNotNull { it.nodeHashId }.filter { it.isNotBlank() }.toSet()
@@ -382,12 +384,14 @@ class PipelineRuntimeService @Autowired constructor(
         val result = mutableListOf<BuildHistory>()
         var prevBuildVersion: Int? = null
         list.reversed().forEach {
+            val nodeInfo = it.nodeHashId?.let { hashId -> hashIdToInfo[hashId] }
             result.add(
                 genBuildHistory(
                     buildInfo = it,
                     currentTimestamp = currentTimestamp,
                     prevBuildVersion = prevBuildVersion,
-                    nodeName = it.nodeHashId?.let { hashId -> hashIdToName[hashId] }
+                    nodeName = nodeInfo?.name,
+                    nodeIp = nodeInfo?.ip
                 )
             )
             prevBuildVersion = it.version
@@ -414,7 +418,7 @@ class PipelineRuntimeService @Autowired constructor(
             } else limit,
             updateTimeDesc = updateTimeDesc
         )
-        val hashIdToName = getNodeNamesByHashIds(
+        val hashIdToInfo = getNodeInfoByHashIds(
             projectId = queryParam.projectId,
             userId = userId,
             hashIds = list.mapNotNull { it.nodeHashId }.filter { it.isNotBlank() }.toSet()
@@ -429,13 +433,15 @@ class PipelineRuntimeService @Autowired constructor(
                 projectId = queryParam.projectId,
                 artifactQualityList = buildInfo.artifactQualityList
             )
+            val nodeInfo = buildInfo.nodeHashId?.let { hashIdToInfo[it] }
             result.add(
                 genBuildHistory(
                     buildInfo = buildInfo,
                     currentTimestamp = currentTimestamp,
                     artifactQuality = artifactQuality,
                     prevBuildVersion = prevBuildVersion,
-                    nodeName = buildInfo.nodeHashId?.let { hashIdToName[it] },
+                    nodeName = nodeInfo?.name,
+                    nodeIp = nodeInfo?.ip,
                     triggerEventInfo = triggerEventInfo
                 )
             )
@@ -575,14 +581,14 @@ class PipelineRuntimeService @Autowired constructor(
         }
     }
 
-    private fun getNodeNamesByHashIds(
+    private fun getNodeInfoByHashIds(
         projectId: String,
         userId: String?,
         hashIds: Set<String>
-    ): Map<String, String> {
+    ): Map<String, NodeDisplayInfo> {
         if (hashIds.isEmpty()) return emptyMap()
         val cached = hashIds.mapNotNull { hashId ->
-            nodeNameCache.getIfPresent(cacheKey(projectId, hashId))?.let { hashId to it }
+            nodeInfoCache.getIfPresent(cacheKey(projectId, hashId))?.let { hashId to it }
         }.toMap()
         val missedIds = hashIds - cached.keys
         if (missedIds.isEmpty()) return cached
@@ -599,9 +605,12 @@ class PipelineRuntimeService @Autowired constructor(
                 it.nodeHashId.isNotBlank() && getNodeDisplayName(it).isNotBlank()
             }
             .associate { node ->
-                val nodeName = getNodeDisplayName(node)
-                nodeNameCache.put(cacheKey(projectId, node.nodeHashId), nodeName)
-                node.nodeHashId to nodeName
+                val info = NodeDisplayInfo(
+                    name = getNodeDisplayName(node),
+                    ip = node.ip.takeIf { it.isNotBlank() }
+                )
+                nodeInfoCache.put(cacheKey(projectId, node.nodeHashId), info)
+                node.nodeHashId to info
             }
         return cached + freshMap
     }
@@ -618,6 +627,7 @@ class PipelineRuntimeService @Autowired constructor(
         artifactQuality: Map<String, List<ArtifactQualityMetadataAnalytics>>? = null,
         prevBuildVersion: Int? = null,
         nodeName: String? = null,
+        nodeIp: String? = null,
         triggerEventInfo: Map<String, String> = mapOf()
     ): BuildHistory {
         return with(buildInfo) {
@@ -664,7 +674,8 @@ class PipelineRuntimeService @Autowired constructor(
                 concurrencyGroup = concurrencyGroup,
                 executeCount = executeCount,
                 versionChange = (versionChange ?: false) || (prevBuildVersion != null && version != prevBuildVersion),
-                nodeName = nodeName
+                nodeName = nodeName,
+                nodeIp = nodeIp
             )
         }
     }
