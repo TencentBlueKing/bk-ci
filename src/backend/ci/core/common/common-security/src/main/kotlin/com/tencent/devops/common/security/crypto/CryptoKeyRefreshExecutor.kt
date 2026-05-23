@@ -37,16 +37,27 @@ class CryptoKeyRefreshExecutor(
      * 循环执行单个刷新器，直到该刷新器不再返回待处理数据。
      */
     private fun runWriterUntilDone(applicationName: String, writer: CryptoKeyRefreshWriter) {
+        var page = 0
+        var totalSuccess = 0
+        var totalFailed = 0
         while (true) {
             val rows = writer.fetchBatch(properties.batchSize)
             if (rows.isEmpty()) {
-                logger.info("Crypto key refresh writer done|applicationName=$applicationName|writer=${writer.name}")
+                logger.info(
+                    "Crypto key refresh writer done|applicationName=$applicationName|writer=${writer.name}|" +
+                        "pages=$page|success=$totalSuccess|failed=$totalFailed"
+                )
                 return
             }
+            page++
+            var batchSuccess = 0
+            var batchFailed = 0
             rows.forEach { row ->
                 try {
                     writer.updateRow(row)
+                    batchSuccess++
                 } catch (e: Throwable) {
+                    batchFailed++
                     logger.error(
                         "Crypto key refresh row failed|applicationName=$applicationName|" +
                             "writer=${writer.name}|row=${row.rowKey()}",
@@ -54,6 +65,13 @@ class CryptoKeyRefreshExecutor(
                     )
                 }
             }
+            totalSuccess += batchSuccess
+            totalFailed += batchFailed
+            logger.info(
+                "Crypto key refresh batch done|applicationName=$applicationName|writer=${writer.name}|" +
+                    "page=$page|rows=${rows.size}|success=$batchSuccess|failed=$batchFailed|" +
+                    "totalSuccess=$totalSuccess|totalFailed=$totalFailed"
+            )
             if (properties.sleepMsBetweenBatch > 0) {
                 Thread.sleep(properties.sleepMsBetweenBatch)
             }

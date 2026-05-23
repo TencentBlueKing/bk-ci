@@ -72,7 +72,7 @@ class SensitiveConfDao {
         fieldValue: String,
         fieldType: String,
         fieldDesc: String?,
-        aesKeySha: String
+        aesKeySha: String?
     ) {
         with(TStoreSensitiveConf.T_STORE_SENSITIVE_CONF) {
             dslContext.insertInto(
@@ -114,7 +114,7 @@ class SensitiveConfDao {
         fieldType: String,
         fieldValue: String?,
         fieldDesc: String?,
-        aesKeySha: String
+        aesKeySha: String?
     ) {
         with(TStoreSensitiveConf.T_STORE_SENSITIVE_CONF) {
             val baseStep = dslContext.update(this)

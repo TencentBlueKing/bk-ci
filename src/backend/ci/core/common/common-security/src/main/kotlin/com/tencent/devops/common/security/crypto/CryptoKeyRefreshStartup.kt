@@ -23,6 +23,10 @@ class CryptoKeyRefreshStartup(
         if (!started.compareAndSet(false, true)) {
             return
         }
+        if (!properties.enabled) {
+            logger.info("Crypto key refresh disabled|applicationName=$applicationName")
+            return
+        }
         Thread {
             try {
                 Thread.sleep(properties.initialDelayMs)
