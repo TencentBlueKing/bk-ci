@@ -82,6 +82,13 @@ object BkCryptoUtil {
     }
 
     /**
+     * 解析逗号分隔的历史AES密钥配置，保留空字符串密钥。
+     */
+    fun parseAesKeys(keys: String): List<String> {
+        return keys.split(",")
+    }
+
+    /**
      * 加密SM4(没有开启则不加密)
      */
     fun encryptSm4ButNone(content: String): String {
@@ -147,7 +154,7 @@ object BkCryptoUtil {
             return SM4_CRYPTO.decrypt(sm4Key(), content)
         }
         var lastError: Throwable? = null
-        keys.filter { it.isNotBlank() }.distinct().forEach { key ->
+        keys.distinct().forEach { key ->
             try {
                 return AESUtil.decrypt(key, content)
             } catch (ignored: Throwable) {
@@ -165,7 +172,7 @@ object BkCryptoUtil {
             return SM4_CRYPTO.decrypt(sm4Key().toByteArray(UTF8), content)
         }
         var lastError: Throwable? = null
-        keys.filter { it.isNotBlank() }.distinct().forEach { key ->
+        keys.distinct().forEach { key ->
             try {
                 return AESUtil.decrypt(key, content)
             } catch (ignored: Throwable) {

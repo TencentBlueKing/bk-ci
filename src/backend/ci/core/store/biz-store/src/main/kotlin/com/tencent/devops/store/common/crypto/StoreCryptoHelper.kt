@@ -12,14 +12,18 @@ class StoreCryptoHelper {
     private lateinit var aesKey: String
 
     @Value("\${aes.usedAesKeys:}")
-    private var usedAesKeys: List<String> = emptyList()
+    private var usedAesKeys: String = ""
 
     fun currentKeySha(): String = ShaUtils.sha256Fingerprint(aesKey)
 
     fun encryptSm4ButAes(content: String): String = BkCryptoUtil.encryptSm4ButAes(aesKey, content)
 
     fun decryptSm4OrAes(content: String): String {
-        return BkCryptoUtil.decryptSm4OrAes(aesKey = aesKey, usedAesKeys = usedAesKeys, content = content)
+        return BkCryptoUtil.decryptSm4OrAes(
+            aesKey = aesKey,
+            usedAesKeys = BkCryptoUtil.parseAesKeys(usedAesKeys),
+            content = content
+        )
     }
 
     /**
@@ -28,24 +32,33 @@ class StoreCryptoHelper {
     fun refreshSm4OrAes(content: String): String {
         return BkCryptoUtil.encryptSm4ButAes(
             aesKey,
-            BkCryptoUtil.decryptSm4OrAesForRefresh(aesKey = aesKey, usedAesKeys = usedAesKeys, content = content)
+            BkCryptoUtil.decryptSm4OrAesForRefresh(
+                aesKey = aesKey,
+                usedAesKeys = BkCryptoUtil.parseAesKeys(usedAesKeys),
+                content = content
+            )
         )
     }
 
     fun encryptAes(content: String): String = AESUtil.encrypt(aesKey, content)
 
-    fun decryptAes(content: String): String = decryptAesByKeys(keys = listOf(aesKey) + usedAesKeys, content = content)
+    fun decryptAes(content: String): String {
+        return decryptAesByKeys(listOf(aesKey) + BkCryptoUtil.parseAesKeys(usedAesKeys), content)
+    }
 
     /**
      * 仅用于历史 AES 数据的密钥轮换，优先用历史密钥解密后再用当前密钥加密。
      */
     fun refreshAes(content: String): String {
-        return AESUtil.encrypt(aesKey, decryptAesByKeys(keys = usedAesKeys + aesKey, content = content))
+        return AESUtil.encrypt(
+            aesKey,
+            decryptAesByKeys(keys = BkCryptoUtil.parseAesKeys(usedAesKeys) + aesKey, content = content)
+        )
     }
 
     private fun decryptAesByKeys(keys: List<String>, content: String): String {
         var lastError: Throwable? = null
-        keys.filter { it.isNotBlank() }.distinct().forEach { key ->
+        keys.distinct().forEach { key ->
             try {
                 return AESUtil.decrypt(key, content)
             } catch (ignored: Throwable) {
