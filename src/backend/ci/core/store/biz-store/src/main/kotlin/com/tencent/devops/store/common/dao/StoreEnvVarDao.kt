@@ -236,8 +236,7 @@ class StoreEnvVarDao {
                 CREATOR.`as`(KEY_CREATOR),
                 MODIFIER.`as`(KEY_MODIFIER),
                 CREATE_TIME.`as`(KEY_CREATE_TIME),
-                UPDATE_TIME.`as`(KEY_UPDATE_TIME),
-                AES_KEY_SHA
+                UPDATE_TIME.`as`(KEY_UPDATE_TIME)
             ).from(this)
                 .where(STORE_CODE.eq(storeCode)
                     .and(STORE_TYPE.eq(storeType))

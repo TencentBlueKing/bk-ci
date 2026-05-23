@@ -113,7 +113,7 @@ class CertTlsDao {
         aesKeySha: String
     ) {
         with(TCertTls.T_CERT_TLS) {
-            val step = dslContext.update(this)
+            dslContext.update(this)
                 .set(CERT_SERVER_CRT_FILE_NAME, serverCrtFileName)
                 .set(CERT_SERVER_CRT_FILE, serverCrtFile)
                 .set(CERT_SERVER_KEY_FILE_NAME, serverKeyFileName)
