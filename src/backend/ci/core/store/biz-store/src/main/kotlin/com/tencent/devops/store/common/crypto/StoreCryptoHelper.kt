@@ -45,7 +45,7 @@ class StoreCryptoHelper {
 
     private fun decryptAesByKeys(keys: List<String>, content: String): String {
         var lastError: Throwable? = null
-        keys.filter { it.isNotBlank() }.distinct().forEach { key ->
+        keys.distinct().forEach { key ->
             try {
                 return AESUtil.decrypt(key, content)
             } catch (ignored: Throwable) {
