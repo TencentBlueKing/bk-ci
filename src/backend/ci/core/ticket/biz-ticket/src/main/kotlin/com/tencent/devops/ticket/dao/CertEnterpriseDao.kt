@@ -55,7 +55,8 @@ class CertEnterpriseDao {
         certDeveloperName: String,
         certTeamName: String,
         certUUID: String,
-        certExpireDate: LocalDateTime
+        certExpireDate: LocalDateTime,
+        aesKeySha: String
 
     ) {
         val now = LocalDateTime.now()
@@ -72,7 +73,8 @@ class CertEnterpriseDao {
                     CERT_UUID,
                     CERT_EXPIRE_DATE,
                     CERT_CREATE_TIME,
-                    CERT_UPDATE_TIME
+                    CERT_UPDATE_TIME,
+                    AES_KEY_SHA
                 )
                 .values(
                     projectId,
@@ -84,7 +86,8 @@ class CertEnterpriseDao {
                     certUUID,
                     now,
                     certExpireDate,
-                    now
+                    now,
+                    aesKeySha
                 )
                 .execute()
         }
@@ -99,7 +102,8 @@ class CertEnterpriseDao {
         certDeveloperName: String?,
         certTeamName: String,
         certUUID: String,
-        certExpireDate: LocalDateTime
+        certExpireDate: LocalDateTime,
+        aesKeySha: String
     ) {
         with(TCertEnterprise.T_CERT_ENTERPRISE) {
             dslContext.update(this)
@@ -109,6 +113,7 @@ class CertEnterpriseDao {
                 .set(CERT_TEAM_NAME, certTeamName)
                 .set(CERT_UUID, certUUID)
                 .set(CERT_EXPIRE_DATE, certExpireDate)
+                .set(AES_KEY_SHA, aesKeySha)
                 .where(PROJECT_ID.eq(projectId))
                 .and(CERT_ID.eq(certId))
                 .execute()
@@ -123,4 +128,5 @@ class CertEnterpriseDao {
                 .execute()
         }
     }
+
 }

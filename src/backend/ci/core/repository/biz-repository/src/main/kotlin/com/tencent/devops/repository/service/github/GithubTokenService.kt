@@ -34,16 +34,15 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.RepoAuthServiceCode
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode
+import com.tencent.devops.repository.crypto.RepositoryCryptoHelper
 import com.tencent.devops.repository.dao.GithubTokenDao
 import com.tencent.devops.repository.pojo.github.GithubToken
 import com.tencent.devops.repository.pojo.oauth.GithubTokenType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import jakarta.ws.rs.core.Response
 
@@ -53,7 +52,8 @@ class GithubTokenService @Autowired constructor(
     private val githubTokenDao: GithubTokenDao,
     private val client: Client,
     private val authProjectApi: AuthProjectApi,
-    private val repoAuthServiceCode: RepoAuthServiceCode
+    private val repoAuthServiceCode: RepoAuthServiceCode,
+    private val repositoryCryptoHelper: RepositoryCryptoHelper
 ) {
     @Value("\${aes.github:#{null}}")
     private val aesKey = ""
@@ -71,7 +71,7 @@ class GithubTokenService @Autowired constructor(
         githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP,
         operator: String
     ) {
-        val encryptedAccessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, accessToken)
+        val encryptedAccessToken = repositoryCryptoHelper.encryptSm4ButAes(accessToken)
         val githubTokenRecord = githubTokenDao.getOrNull(dslContext, userId, githubTokenType)
         if (githubTokenRecord == null) {
             githubTokenDao.create(
@@ -81,7 +81,8 @@ class GithubTokenService @Autowired constructor(
                 tokenType = tokenType,
                 scope = scope,
                 githubTokenType = githubTokenType,
-                operator = operator
+                operator = operator,
+                aesKeySha = repositoryCryptoHelper.currentKeySha()
             )
         } else {
             if (githubTokenRecord.operator != operator) {
@@ -97,7 +98,8 @@ class GithubTokenService @Autowired constructor(
                 tokenType = tokenType,
                 scope = scope,
                 githubTokenType = githubTokenType,
-                operator = operator
+                operator = operator,
+                aesKeySha = repositoryCryptoHelper.currentKeySha(),
             )
         }
     }
@@ -112,7 +114,7 @@ class GithubTokenService @Autowired constructor(
     ): GithubToken? {
         val githubTokenRecord = githubTokenDao.getOrNull(dslContext, userId, tokenType) ?: return null
         return GithubToken(
-            BkCryptoUtil.decryptSm4OrAes(aesKey, githubTokenRecord.accessToken),
+            repositoryCryptoHelper.decryptSm4OrAes(githubTokenRecord.accessToken),
             githubTokenRecord.tokenType,
             githubTokenRecord.scope,
             githubTokenRecord.createTime.timestampmilli(),

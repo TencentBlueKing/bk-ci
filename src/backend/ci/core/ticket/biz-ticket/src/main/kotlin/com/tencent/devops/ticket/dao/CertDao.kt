@@ -91,7 +91,8 @@ class CertDao {
         certTeamName: String,
         certUUID: String,
         certExpireDate: LocalDateTime,
-        credentialId: String?
+        credentialId: String?,
+        aesKeySha: String
     ) {
         val now = LocalDateTime.now()
         with(TCert.T_CERT) {
@@ -117,7 +118,8 @@ class CertDao {
                             CERT_EXPIRE_DATE,
                             CERT_CREATE_TIME,
                             CERT_UPDATE_TIME,
-                            CREDENTIAL_ID
+                            CREDENTIAL_ID,
+                            AES_KEY_SHA
                     )
                     .values(
                             projectId,
@@ -139,7 +141,8 @@ class CertDao {
                             certExpireDate,
                             now,
                             now,
-                            credentialId
+                            credentialId,
+                            aesKeySha
                     )
                     .execute()
         }
@@ -163,12 +166,14 @@ class CertDao {
         certTeamName: String?,
         certUUID: String?,
         certExpireDate: LocalDateTime?,
-        credentialId: String?
+        credentialId: String?,
+        aesKeySha: String
     ) {
         with(TCert.T_CERT) {
             val step = dslContext.update(this)
-                    .set(CERT_USER_ID, certUserId)
-                    .set(CERT_REMARK, certRemark)
+                .set(CERT_USER_ID, certUserId)
+                .set(CERT_REMARK, certRemark)
+                .set(AES_KEY_SHA, aesKeySha)
 
             val step1 = if (certP12FileName != null) step.set(CERT_P12_FILE_NAME, certP12FileName) else step
             val step2 = if (certP12FileContent != null) step.set(CERT_P12_FILE_CONTENT, certP12FileContent) else step1

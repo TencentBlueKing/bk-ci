@@ -41,12 +41,44 @@ object BkCryptoUtil {
     }
 
     /**
+     * 解密SM4或者AES，AES解密时按当前密钥、历史密钥顺序依次尝试。
+     */
+    fun decryptSm4OrAes(aesKey: String, usedAesKeys: List<String>, content: String): String {
+        return decryptSm4OrAesByKeys(keys = listOf(aesKey) + usedAesKeys, content = content)
+    }
+
+    /**
+     * 仅用于AES key刷新场景的解密。
+     *
+     * AES解密时优先尝试历史密钥，普通解密场景应使用[decryptSm4OrAes]。
+     */
+    fun decryptSm4OrAesForRefresh(aesKey: String, usedAesKeys: List<String>, content: String): String {
+        return decryptSm4OrAesByKeys(keys = usedAesKeys + aesKey, content = content)
+    }
+
+    /**
      * 解密SM4或者AES
      */
     fun decryptSm4OrAes(aesKey: String, content: ByteArray): ByteArray {
         return decryptSm4OrOther(content) {
             AESUtil.decrypt(aesKey, it)
         }
+    }
+
+    /**
+     * 解密SM4或者AES字节数据，AES解密时按当前密钥、历史密钥顺序依次尝试。
+     */
+    fun decryptSm4OrAes(aesKey: String, usedAesKeys: List<String>, content: ByteArray): ByteArray {
+        return decryptSm4OrAesByKeys(keys = listOf(aesKey) + usedAesKeys, content = content)
+    }
+
+    /**
+     * 仅用于AES key刷新场景的字节数据解密。
+     *
+     * AES解密时优先尝试历史密钥，普通解密场景应使用[decryptSm4OrAes]。
+     */
+    fun decryptSm4OrAesForRefresh(aesKey: String, usedAesKeys: List<String>, content: ByteArray): ByteArray {
+        return decryptSm4OrAesByKeys(keys = usedAesKeys + aesKey, content = content)
     }
 
     /**
@@ -105,6 +137,42 @@ object BkCryptoUtil {
         } else {
             other(content)
         }
+    }
+
+    /**
+     * 使用多个AES密钥依次尝试解密字符串密文。
+     */
+    private fun decryptSm4OrAesByKeys(keys: List<String>, content: String): String {
+        if (content.startsWith(SM4_CRYPTO.stringCipherPrefix)) {
+            return SM4_CRYPTO.decrypt(sm4Key(), content)
+        }
+        var lastError: Throwable? = null
+        keys.filter { it.isNotBlank() }.distinct().forEach { key ->
+            try {
+                return AESUtil.decrypt(key, content)
+            } catch (ignored: Throwable) {
+                lastError = ignored
+            }
+        }
+        throw lastError ?: IllegalArgumentException("No available aes key")
+    }
+
+    /**
+     * 使用多个AES密钥依次尝试解密字节密文。
+     */
+    private fun decryptSm4OrAesByKeys(keys: List<String>, content: ByteArray): ByteArray {
+        if (content.toString(UTF8).startsWith(SM4_CRYPTO.stringCipherPrefix)) {
+            return SM4_CRYPTO.decrypt(sm4Key().toByteArray(UTF8), content)
+        }
+        var lastError: Throwable? = null
+        keys.filter { it.isNotBlank() }.distinct().forEach { key ->
+            try {
+                return AESUtil.decrypt(key, content)
+            } catch (ignored: Throwable) {
+                lastError = ignored
+            }
+        }
+        throw lastError ?: IllegalArgumentException("No available aes key")
     }
 
     private fun isSm4Enabled() = SpringContextUtil.getValue("sm4.enabled") == "true"

@@ -29,6 +29,8 @@ package com.tencent.devops.ticket.service
 
 import com.tencent.devops.common.api.exception.EncryptException
 import com.tencent.devops.common.api.util.AESUtil
+import com.tencent.devops.common.api.util.ShaUtils
+import com.tencent.devops.common.security.util.BkCryptoUtil
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.io.ByteArrayInputStream
@@ -47,6 +49,11 @@ class CertHelper {
 
     @Value("\${cert.aes-key}")
     private lateinit var aesKey: String
+
+    @Value("\${cert.used-aes-keys:}")
+    private var usedAesKeys: List<String> = emptyList()
+
+    fun currentKeySha(): String = ShaUtils.sha256Fingerprint(aesKey)
 
     companion object {
         private const val JKS = "JKS"
@@ -144,7 +151,15 @@ class CertHelper {
     fun decryptBytes(bytes: ByteArray?): ByteArray? {
         return if (bytes != null) {
             AESUtil.decrypt(aesKey, bytes)
+            BkCryptoUtil.decryptSm4OrAes(aesKey, usedAesKeys, bytes)
         } else null
+    }
+
+    fun refreshBytes(bytes: ByteArray?): ByteArray? {
+        return if (bytes != null && bytes.isNotEmpty()) {
+            val plainBytes = BkCryptoUtil.decryptSm4OrAesForRefresh(aesKey, usedAesKeys, bytes)
+            BkCryptoUtil.encryptSm4ButAes(aesKey, plainBytes)
+        } else bytes
     }
 
     data class JksInfo(
