@@ -54,7 +54,7 @@ class CredentialHelper {
     private lateinit var aesKey: String
 
     @Value("\${credential.used-aes-keys:}")
-    private var usedAesKeys: List<String> = emptyList()
+    private var usedAesKeys: String = ""
 
     fun currentKeySha(): String = ShaUtils.sha256Fingerprint(aesKey)
 
@@ -144,7 +144,11 @@ class CredentialHelper {
             return null
         }
         try {
-            val credential = BkCryptoUtil.decryptSm4OrAes(aesKey, usedAesKeys, aesEncryptedCredential)
+            val credential = BkCryptoUtil.decryptSm4OrAes(
+                aesKey,
+                BkCryptoUtil.parseAesKeys(usedAesKeys),
+                aesEncryptedCredential
+            )
             val credentialEncryptedContent =
                 DHUtil.encrypt(
                     data = credential.toByteArray(),
@@ -162,7 +166,7 @@ class CredentialHelper {
         if (aesCredential.isNullOrBlank()) {
             return null
         }
-        return BkCryptoUtil.decryptSm4OrAes(aesKey, usedAesKeys, aesCredential)
+        return BkCryptoUtil.decryptSm4OrAes(aesKey, BkCryptoUtil.parseAesKeys(usedAesKeys), aesCredential)
     }
 
     fun encryptCredential(credential: String?): String? {
@@ -179,7 +183,11 @@ class CredentialHelper {
         if (aesCredential.isNullOrBlank()) {
             return aesCredential
         }
-        val credential = BkCryptoUtil.decryptSm4OrAesForRefresh(aesKey, usedAesKeys, aesCredential)
+        val credential = BkCryptoUtil.decryptSm4OrAesForRefresh(
+            aesKey,
+            BkCryptoUtil.parseAesKeys(usedAesKeys),
+            aesCredential
+        )
         return BkCryptoUtil.encryptSm4ButAes(aesKey, credential)
     }
 }
