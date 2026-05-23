@@ -41,7 +41,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode
-import com.tencent.devops.repository.crypto.RepositoryCryptoHelper
+import com.tencent.devops.repository.crypto.GitTokenCryptoHelper
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
@@ -70,9 +70,8 @@ class GitOauthService @Autowired constructor(
     private val gitService: IGitService,
     private val authProjectApi: AuthProjectApi,
     private val repoAuthServiceCode: RepoAuthServiceCode,
-    private val repositoryCryptoHelper: RepositoryCryptoHelper
+    private val gitTokenCryptoHelper: GitTokenCryptoHelper
 ) : IGitOauthService {
-
     companion object {
         private val logger = LoggerFactory.getLogger(GitOauthService::class.java)
     }
@@ -306,8 +305,8 @@ class GitOauthService @Autowired constructor(
     private fun doGetAccessToken(userId: String): GitToken? {
         return gitTokenDao.getAccessToken(dslContext, userId)?.let {
             GitToken(
-                accessToken = repositoryCryptoHelper.decryptSm4OrAes(it.accessToken),
-                refreshToken = repositoryCryptoHelper.decryptSm4OrAes(it.refreshToken),
+                accessToken = gitTokenCryptoHelper.decryptSm4OrAes(it.accessToken),
+                refreshToken = gitTokenCryptoHelper.decryptSm4OrAes(it.refreshToken),
                 tokenType = it.tokenType,
                 expiresIn = it.expiresIn,
                 createTime = it.createTime.timestampmilli(),
@@ -322,19 +321,19 @@ class GitOauthService @Autowired constructor(
         val token = gitService.refreshToken(userId, gitToken)
         token.operator = gitToken.operator
         saveAccessToken(userId, token)
-        token.accessToken = repositoryCryptoHelper.decryptSm4OrAes(token.accessToken)
-        token.refreshToken = repositoryCryptoHelper.decryptSm4OrAes(token.refreshToken)
+        token.accessToken = gitTokenCryptoHelper.decryptSm4OrAes(token.accessToken)
+        token.refreshToken = gitTokenCryptoHelper.decryptSm4OrAes(token.refreshToken)
         return token
     }
 
     override fun saveAccessToken(userId: String, tGitToken: GitToken): Int {
-        tGitToken.accessToken = repositoryCryptoHelper.encryptSm4ButAes(tGitToken.accessToken)
-        tGitToken.refreshToken = repositoryCryptoHelper.encryptSm4ButAes(tGitToken.refreshToken)
+        tGitToken.accessToken = gitTokenCryptoHelper.encryptSm4ButAes(tGitToken.accessToken)
+        tGitToken.refreshToken = gitTokenCryptoHelper.encryptSm4ButAes(tGitToken.refreshToken)
         return gitTokenDao.saveAccessToken(
             dslContext = dslContext,
             userId = userId,
             token = tGitToken,
-            aesKeySha = repositoryCryptoHelper.currentKeySha()
+            aesKeySha = gitTokenCryptoHelper.currentKeySha()
         )
     }
 

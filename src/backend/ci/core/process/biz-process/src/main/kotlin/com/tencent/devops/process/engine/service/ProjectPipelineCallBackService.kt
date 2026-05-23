@@ -57,6 +57,7 @@ import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineCallbackDao
 import com.tencent.devops.process.crypto.ProcessCryptoHelper
+import com.tencent.devops.process.crypto.PipelineCallbackCryptoHelper
 import com.tencent.devops.process.dao.ProjectPipelineCallbackDao
 import com.tencent.devops.process.dao.ProjectPipelineCallbackHistoryDao
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -93,7 +94,8 @@ class ProjectPipelineCallBackService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineCallbackDao: PipelineCallbackDao,
-    private val processCryptoHelper: ProcessCryptoHelper
+    private val processCryptoHelper: ProcessCryptoHelper,
+    private val pipelineCallbackCryptoHelper: PipelineCallbackCryptoHelper
 ) {
 
     @Value("\${project.callback.black-ports:#{null}}")
@@ -167,9 +169,9 @@ class ProjectPipelineCallBackService @Autowired constructor(
                         "PROJECT_PIPELINE_CALLBACK"
                     ).data,
                     secretParam = secretParam?.let {
-                        processCryptoHelper.encrypt(JsonUtil.toJson(secretParam, false))
+                        pipelineCallbackCryptoHelper.encryptSm4ButAes(JsonUtil.toJson(secretParam, false))
                     },
-                    aesKeySha = processCryptoHelper.currentKeySha()
+                    aesKeySha = pipelineCallbackCryptoHelper.currentKeySha()
                 )
                 successEvents.add(it.name)
             } catch (e: Throwable) {
@@ -203,7 +205,10 @@ class ProjectPipelineCallBackService @Autowired constructor(
                     secretParam = if (it.secretParam.isNullOrBlank()) {
                         null
                     } else {
-                        JsonUtil.to(processCryptoHelper.decrypt(it.secretParam), ISecretParam::class.java)
+                        JsonUtil.to(
+                            pipelineCallbackCryptoHelper.decryptSm4OrAes(it.secretParam),
+                            ISecretParam::class.java
+                        )
                     }
                 )
             )

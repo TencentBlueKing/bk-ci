@@ -22,6 +22,9 @@ class StoreCryptoHelper {
         return BkCryptoUtil.decryptSm4OrAes(aesKey = aesKey, usedAesKeys = usedAesKeys, content = content)
     }
 
+    /**
+     * 密钥轮换时使用：优先用历史密钥解密旧数据，再用当前密钥重新加密。
+     */
     fun refreshSm4OrAes(content: String): String {
         return BkCryptoUtil.encryptSm4ButAes(
             aesKey,
@@ -33,6 +36,9 @@ class StoreCryptoHelper {
 
     fun decryptAes(content: String): String = decryptAesByKeys(keys = listOf(aesKey) + usedAesKeys, content = content)
 
+    /**
+     * 仅用于历史 AES 数据的密钥轮换，优先用历史密钥解密后再用当前密钥加密。
+     */
     fun refreshAes(content: String): String {
         return AESUtil.encrypt(aesKey, decryptAesByKeys(keys = usedAesKeys + aesKey, content = content))
     }
