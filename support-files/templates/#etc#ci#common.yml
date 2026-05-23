@@ -416,6 +416,11 @@ sm4:
   key: "__BK_CI_SM4_KEY__"
 
 aes:
+  # 升级 aesKey 并开启密钥刷新前，请先备份以下会被刷新任务改写的表：
+  # - process: T_PROJECT_PIPELINE_CALLBACK
+  # - repository: T_REPOSITORY_GIT_TOKEN, T_REPOSITORY_TGIT_TOKEN, T_REPOSITORY_GITHUB_TOKEN
+  # - store: T_STORE_SENSITIVE_CONF, T_STORE_ENV_VAR
+  # - ticket: T_CERT, T_CERT_ENTERPRISE, T_CERT_TLS, T_CREDENTIAL
   refresh:
     # 是否开启密钥刷新，默认关闭
     enabled: __BK_CI_AES_REFRESH_ENABLED__

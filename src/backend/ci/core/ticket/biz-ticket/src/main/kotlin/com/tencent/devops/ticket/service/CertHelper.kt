@@ -150,6 +150,9 @@ class CertHelper {
         } else null
     }
 
+    /**
+     * 密钥轮换时使用：优先用历史密钥解密旧数据，再用当前密钥重新加密。
+     */
     fun refreshBytes(bytes: ByteArray?): ByteArray? {
         return if (bytes != null && bytes.isNotEmpty()) {
             val plainBytes = BkCryptoUtil.decryptSm4OrAesForRefresh(aesKey, usedAesKeys, bytes)

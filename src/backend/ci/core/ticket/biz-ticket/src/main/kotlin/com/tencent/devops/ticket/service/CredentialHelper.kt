@@ -166,6 +166,9 @@ class CredentialHelper {
         return BkCryptoUtil.encryptSm4ButAes(aesKey, credential)
     }
 
+    /**
+     * 密钥轮换时使用：优先用历史密钥解密旧数据，再用当前密钥重新加密。
+     */
     fun refreshCredential(aesCredential: String?): String? {
         if (aesCredential.isNullOrBlank()) {
             return aesCredential
