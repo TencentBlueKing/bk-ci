@@ -87,7 +87,7 @@ class CryptoKeyRefreshExecutor(
     }
 
     companion object {
-        private const val LOCK_SECONDS = 3600L
+        private const val LOCK_SECONDS = 600L
         private val logger = LoggerFactory.getLogger(CryptoKeyRefreshExecutor::class.java)
     }
 }
