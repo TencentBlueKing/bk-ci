@@ -420,11 +420,11 @@ aes:
     # 是否开启密钥刷新，默认关闭
     enabled: __BK_CI_AES_REFRESH_ENABLED__
     # 服务启动后首次触发前的延迟毫秒数，默认 10000ms
-    initialDelayMs: __BK_CI_AES_REFRESH_INITIAL_DELAY_MS__
+    initialDelayMs: 10000
     # 每批处理的最大行数
-    batchSize: __BK_CI_AES_REFRESH_BATCH_SIZE__
+    batchSize: 500
     # 每批处理完成后等待的毫秒数，用于限速
-    sleepMsBetweenBatch: __BK_CI_AES_REFRESH_SLEEP_MS_BETWEEN_BATCH__
+    sleepMsBetweenBatch: 0
 
 # 是否开启审计
 audit:
