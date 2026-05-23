@@ -147,7 +147,7 @@ object BkCryptoUtil {
             return SM4_CRYPTO.decrypt(sm4Key(), content)
         }
         var lastError: Throwable? = null
-        keys.filter { it.isNotBlank() }.distinct().forEach { key ->
+        keys.distinct().forEach { key ->
             try {
                 return AESUtil.decrypt(key, content)
             } catch (ignored: Throwable) {
@@ -165,7 +165,7 @@ object BkCryptoUtil {
             return SM4_CRYPTO.decrypt(sm4Key().toByteArray(UTF8), content)
         }
         var lastError: Throwable? = null
-        keys.filter { it.isNotBlank() }.distinct().forEach { key ->
+        keys.distinct().forEach { key ->
             try {
                 return AESUtil.decrypt(key, content)
             } catch (ignored: Throwable) {
