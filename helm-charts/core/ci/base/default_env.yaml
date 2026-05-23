@@ -51,25 +51,13 @@ bkCiSupportLanguages: zh_CN,en_US
 bkEsbEnabled: false
 bkCiSm4Key: s31^dDjd!3k
 bkCiSm4Enabled: false
-bkCiAesRefreshEnabled: false
+bkCiAesRefreshEnabled: true
 bkCiStoreAesKey: ""
-bkCiStoreUsedAesKeys: 
-  - J%k^yO{?vt}3tXpG
 bkCiRepositoryAesGit: ""
-bkCiRepositoryUsedAesGit: 
-  - ""
 bkCiRepositoryAesGithub: ""
-bkCiRepositoryUsedAesGithub:
-  - ""
 bkCiTicketCertAesKey: ""
-bkCiTicketCertUsedAesKeys: 
-  - gHi(xG9Af)jEvCx&
 bkCiTicketCredentialAesKey: ""
-bkCiTicketCredentialUsedAesKeys: 
-  - G/I%yP{?ST}2TXPg
 bkCiProcessCallbackAesKey: ""
-bkCiProcessCallbackUsedAesKeys: 
-  - project_callback_aes_key
 bkCiMonitorRegister: false
 bkCiBuildDataClearSwitch: false
 bkCiOpenapiApiAuth: false
