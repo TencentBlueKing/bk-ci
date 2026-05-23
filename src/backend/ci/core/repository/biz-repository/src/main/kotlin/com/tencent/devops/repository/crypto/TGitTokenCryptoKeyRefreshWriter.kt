@@ -10,17 +10,15 @@ import org.springframework.stereotype.Service
 @Service
 class TGitTokenCryptoKeyRefreshWriter(
     private val dslContext: DSLContext,
-    private val repositoryCryptoHelper: RepositoryCryptoHelper
+    private val gitTokenCryptoHelper: GitTokenCryptoHelper
 ) : CryptoKeyRefreshWriter {
     override val name = "repository-tgit-token"
-
-    private val currentKeySha = repositoryCryptoHelper.currentKeySha()
 
     override fun fetchBatch(limit: Int): List<CryptoKeyRefreshRow> {
         return with(TRepositoryTgitToken.T_REPOSITORY_TGIT_TOKEN) {
             dslContext.select(USER_ID, ACCESS_TOKEN, REFRESH_TOKEN, AES_KEY_SHA)
                 .from(this)
-                .where(AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(currentKeySha)))
+                .where(AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(gitTokenCryptoHelper.currentKeySha())))
                 .limit(limit)
                 .fetch()
                 .map(::toRow)
@@ -31,9 +29,9 @@ class TGitTokenCryptoKeyRefreshWriter(
         val tGitTokenRow = row as TGitTokenCryptoKeyRefreshRow
         with(TRepositoryTgitToken.T_REPOSITORY_TGIT_TOKEN) {
             dslContext.update(this)
-                .set(ACCESS_TOKEN, tGitTokenRow.accessToken?.let(repositoryCryptoHelper::refreshSm4OrAes))
-                .set(REFRESH_TOKEN, tGitTokenRow.refreshToken?.let(repositoryCryptoHelper::refreshSm4OrAes))
-                .set(AES_KEY_SHA, currentKeySha)
+                .set(ACCESS_TOKEN, tGitTokenRow.accessToken?.let(gitTokenCryptoHelper::refreshSm4OrAes))
+                .set(REFRESH_TOKEN, tGitTokenRow.refreshToken?.let(gitTokenCryptoHelper::refreshSm4OrAes))
+                .set(AES_KEY_SHA, gitTokenCryptoHelper.currentKeySha())
                 .where(USER_ID.eq(tGitTokenRow.userId))
                 .execute()
         }

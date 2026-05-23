@@ -10,17 +10,15 @@ import org.springframework.stereotype.Service
 @Service
 class GithubTokenCryptoKeyRefreshWriter(
     private val dslContext: DSLContext,
-    private val repositoryCryptoHelper: RepositoryCryptoHelper
+    private val githubTokenCryptoHelper: GithubTokenCryptoHelper
 ) : CryptoKeyRefreshWriter {
     override val name = "repository-github-token"
-
-    private val currentKeySha = repositoryCryptoHelper.currentKeySha()
 
     override fun fetchBatch(limit: Int): List<CryptoKeyRefreshRow> {
         return with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
             dslContext.select(USER_ID, TYPE, ACCESS_TOKEN, AES_KEY_SHA)
                 .from(this)
-                .where(AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(currentKeySha)))
+                .where(AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(githubTokenCryptoHelper.currentKeySha())))
                 .limit(limit)
                 .fetch()
                 .map(::toRow)
@@ -31,8 +29,8 @@ class GithubTokenCryptoKeyRefreshWriter(
         val githubTokenRow = row as GithubTokenCryptoKeyRefreshRow
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
             dslContext.update(this)
-                .set(ACCESS_TOKEN, repositoryCryptoHelper.refreshSm4OrAes(githubTokenRow.accessToken))
-                .set(AES_KEY_SHA, currentKeySha)
+                .set(ACCESS_TOKEN, githubTokenCryptoHelper.refreshSm4OrAes(githubTokenRow.accessToken))
+                .set(AES_KEY_SHA, githubTokenCryptoHelper.currentKeySha())
                 .where(USER_ID.eq(githubTokenRow.userId))
                 .and(TYPE.eq(githubTokenRow.type))
                 .execute()

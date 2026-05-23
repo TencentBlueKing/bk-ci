@@ -39,7 +39,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
-import com.tencent.devops.repository.crypto.RepositoryCryptoHelper
+import com.tencent.devops.repository.crypto.GitTokenCryptoHelper
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.dao.TGitTokenDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
@@ -85,9 +85,8 @@ class RepoFileService @Autowired constructor(
     private val gitService: IGitService,
     private val svnService: ISvnService,
     private val p4Service: Ip4Service,
-    private val repositoryCryptoHelper: RepositoryCryptoHelper
+    private val gitTokenCryptoHelper: GitTokenCryptoHelper
 ) {
-
     companion object {
         private val logger = LoggerFactory.getLogger(RepoFileService::class.java)
     }
@@ -306,7 +305,7 @@ class RepoFileService @Autowired constructor(
 
     private fun getGitSingleFile(repo: CodeGitRepository, filePath: String, ref: String, subModule: String?): String {
         val token = if (repo.authType == RepoAuthType.OAUTH) {
-            repositoryCryptoHelper.decryptSm4OrAes(
+            gitTokenCryptoHelper.decryptSm4OrAes(
                 gitTokenDao.getAccessToken(dslContext, repo.userName)?.accessToken
                     ?: throw NotFoundException("get access token for user(${repo.userName}) fail")
             )
@@ -375,7 +374,7 @@ class RepoFileService @Autowired constructor(
     ): String {
         logger.info("getTGitSingleFile for repo: ${repo.projectName}(subModule: $subModule)")
         val token = if (repo.authType == RepoAuthType.OAUTH) {
-            repositoryCryptoHelper.decryptSm4OrAes(
+            gitTokenCryptoHelper.decryptSm4OrAes(
                 tGitTokenDao.getAccessToken(dslContext, repo.userName)?.accessToken
                     ?: throw NotFoundException("get access token for user(${repo.userName}) fail")
             )

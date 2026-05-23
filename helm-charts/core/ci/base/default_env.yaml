@@ -56,7 +56,10 @@ bkCiStoreAesKey: ""
 bkCiStoreUsedAesKeys: 
   - J%k^yO{?vt}3tXpG
 bkCiRepositoryAesGit: ""
-bkCiRepositoryUsedAesGitKeys: 
+bkCiRepositoryUsedAesGit: 
+  - ""
+bkCiRepositoryAesGithub: ""
+bkCiRepositoryUsedAesGithub:
   - ""
 bkCiTicketCertAesKey: ""
 bkCiTicketCertUsedAesKeys: 

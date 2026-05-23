@@ -72,6 +72,13 @@ class CryptoKeyRefreshExecutor(
                     "page=$page|rows=${rows.size}|success=$batchSuccess|failed=$batchFailed|" +
                     "totalSuccess=$totalSuccess|totalFailed=$totalFailed"
             )
+            if (batchSuccess == 0) {
+                logger.error(
+                    "Crypto key refresh writer stopped without progress|applicationName=$applicationName|" +
+                        "writer=${writer.name}|page=$page|rows=${rows.size}|totalFailed=$totalFailed"
+                )
+                return
+            }
             if (properties.sleepMsBetweenBatch > 0) {
                 Thread.sleep(properties.sleepMsBetweenBatch)
             }
