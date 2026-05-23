@@ -30,14 +30,12 @@ package com.tencent.devops.repository.service
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.repository.crypto.RepositoryCryptoHelper
-import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -45,9 +43,7 @@ import org.springframework.stereotype.Service
 @Suppress("ALL")
 class CommonRepoFileService @Autowired constructor(
     private val gitService: IGitService,
-    private val gitTokenDao: GitTokenDao,
-    private val dslContext: DSLContext,
-    private val repositoryCryptoHelper: RepositoryCryptoHelper
+    private val gitOauthService: IGitOauthService
 ) {
 
     fun getGitFileContent(
@@ -70,10 +66,7 @@ class CommonRepoFileService @Autowired constructor(
     }
 
     fun getGitFileContentOauth(userId: String, repoName: String, filePath: String, ref: String?): Result<String> {
-        val token = repositoryCryptoHelper.decryptSm4OrAes(
-            gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
-                ?: return invalidOauthToken(userId)
-        )
+        val token = gitOauthService.getAccessToken(userId)?.accessToken ?: return invalidOauthToken(userId)
         return Result(
             gitService.getGitFileContent(
                 repoUrl = null,
@@ -87,10 +80,7 @@ class CommonRepoFileService @Autowired constructor(
     }
 
     fun getGitProjectMembers(repoUrl: String, userId: String): Result<List<GitMember>> {
-        val token = repositoryCryptoHelper.decryptSm4OrAes(
-            gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
-                ?: return invalidOauthToken(userId)
-        )
+        val token = gitOauthService.getAccessToken(userId)?.accessToken ?: return invalidOauthToken(userId)
         return Result(
             data = gitService.getRepoMembers(
                 accessToken = token,
@@ -101,10 +91,7 @@ class CommonRepoFileService @Autowired constructor(
     }
 
     fun getGitProjectAllMembers(repoUrl: String, userId: String): Result<List<GitMember>> {
-        val token = repositoryCryptoHelper.decryptSm4OrAes(
-            gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
-                ?: return invalidOauthToken(userId)
-        )
+        val token = gitOauthService.getAccessToken(userId)?.accessToken ?: return invalidOauthToken(userId)
         return Result(
             data = gitService.getRepoAllMembers(
                 accessToken = token,
@@ -115,10 +102,7 @@ class CommonRepoFileService @Autowired constructor(
     }
 
     fun isProjectMember(repoUrl: String, userId: String): Result<Boolean> {
-        val token = repositoryCryptoHelper.decryptSm4OrAes(
-            gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
-                ?: return invalidOauthToken(userId)
-        )
+        val token = gitOauthService.getAccessToken(userId)?.accessToken ?: return invalidOauthToken(userId)
         val projectUser = gitService.getProjectMembersAll(
             gitProjectId = GitUtils.getProjectName(repoUrl),
             page = 1,

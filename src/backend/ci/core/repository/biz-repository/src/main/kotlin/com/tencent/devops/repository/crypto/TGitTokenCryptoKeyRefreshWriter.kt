@@ -31,8 +31,8 @@ class TGitTokenCryptoKeyRefreshWriter(
         val tGitTokenRow = row as TGitTokenCryptoKeyRefreshRow
         with(TRepositoryTgitToken.T_REPOSITORY_TGIT_TOKEN) {
             dslContext.update(this)
-                .set(ACCESS_TOKEN, tGitTokenRow.accessToken?.let(repositoryCryptoHelper::refreshAes))
-                .set(REFRESH_TOKEN, tGitTokenRow.refreshToken?.let(repositoryCryptoHelper::refreshAes))
+                .set(ACCESS_TOKEN, tGitTokenRow.accessToken?.let(repositoryCryptoHelper::refreshSm4OrAes))
+                .set(REFRESH_TOKEN, tGitTokenRow.refreshToken?.let(repositoryCryptoHelper::refreshSm4OrAes))
                 .set(AES_KEY_SHA, currentKeySha)
                 .where(USER_ID.eq(tGitTokenRow.userId))
                 .execute()

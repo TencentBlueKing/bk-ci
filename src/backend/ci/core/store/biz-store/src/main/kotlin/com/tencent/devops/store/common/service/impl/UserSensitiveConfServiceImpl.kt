@@ -131,7 +131,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
             fieldType = fieldType,
             fieldValue = finalFieldValue,
             fieldDesc = sensitiveConfReq.fieldDesc,
-            aesKeySha = storeCryptoHelper.currentKeySha()
+            aesKeySha = currentKeyShaIfBackend(fieldType)
         )
         return Result(true)
     }
@@ -197,7 +197,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
             fieldType = fieldType,
             fieldValue = finalFieldValue,
             fieldDesc = sensitiveConfReq.fieldDesc,
-            aesKeySha = storeCryptoHelper.currentKeySha()
+            aesKeySha = currentKeyShaIfBackend(fieldType)
         )
         return Result(true)
     }
@@ -331,5 +331,9 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
                 params = arrayOf(storeCode)
             )
         }
+    }
+
+    private fun currentKeyShaIfBackend(fieldType: String): String? {
+        return if (fieldType == FieldTypeEnum.BACKEND.name) storeCryptoHelper.currentKeySha() else null
     }
 }

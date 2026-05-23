@@ -67,7 +67,7 @@ class StoreEnvVarDao {
         userId: String,
         version: Int,
         storeEnvVarRequest: StoreEnvVarRequest,
-        aesKeySha: String
+        aesKeySha: String?
     ) {
         with(TStoreEnvVar.T_STORE_ENV_VAR) {
             val encryptFlag = storeEnvVarRequest.encryptFlag
@@ -101,7 +101,7 @@ class StoreEnvVarDao {
                     version,
                     userId,
                     userId,
-                    aesKeySha
+                    aesKeySha.takeIf { encryptFlag }
                 ).execute()
         }
     }
@@ -185,14 +185,14 @@ class StoreEnvVarDao {
         varValue: String,
         varDesc: String,
         encryptFlag: Boolean,
-        aesKeySha: String
+        aesKeySha: String?
     ): Int {
         with(TStoreEnvVar.T_STORE_ENV_VAR) {
             return dslContext.update(this)
                 .set(this.VAR_VALUE, varValue)
                 .set(this.VAR_DESC, varDesc)
                 .set(this.ENCRYPT_FLAG, encryptFlag)
-                .set(this.AES_KEY_SHA, aesKeySha)
+                .set(this.AES_KEY_SHA, aesKeySha.takeIf { encryptFlag })
                 .where(STORE_CODE.eq(storeCode)
                     .and(STORE_TYPE.eq(storeType))
                     .and(ID.eq(variableId)))
@@ -236,7 +236,8 @@ class StoreEnvVarDao {
                 CREATOR.`as`(KEY_CREATOR),
                 MODIFIER.`as`(KEY_MODIFIER),
                 CREATE_TIME.`as`(KEY_CREATE_TIME),
-                UPDATE_TIME.`as`(KEY_UPDATE_TIME)
+                UPDATE_TIME.`as`(KEY_UPDATE_TIME),
+                AES_KEY_SHA
             ).from(this)
                 .where(STORE_CODE.eq(storeCode)
                     .and(STORE_TYPE.eq(storeType))

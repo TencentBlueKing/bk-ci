@@ -70,8 +70,8 @@ class TGitTokenService @Autowired constructor(
     private fun doGetAccessToken(userId: String): GitToken? {
         return tGitTokenDao.getAccessToken(dslContext, userId)?.let {
             GitToken(
-                accessToken = repositoryCryptoHelper.decryptAes(it.accessToken),
-                refreshToken = repositoryCryptoHelper.decryptAes(it.refreshToken),
+                accessToken = repositoryCryptoHelper.decryptSm4OrAes(it.accessToken),
+                refreshToken = repositoryCryptoHelper.decryptSm4OrAes(it.refreshToken),
                 tokenType = it.tokenType,
                 expiresIn = it.expiresIn,
                 createTime = it.createTime.timestampmilli()
@@ -88,14 +88,14 @@ class TGitTokenService @Autowired constructor(
         val token = tGitService.refreshToken(userId, gitToken)
         val oauthUserId = tGitService.getUserInfoByToken(token.accessToken).username ?: userId
         saveAccessToken(userId, oauthUserId, token)
-        token.accessToken = repositoryCryptoHelper.decryptAes(token.accessToken)
-        token.refreshToken = repositoryCryptoHelper.decryptAes(token.refreshToken)
+        token.accessToken = repositoryCryptoHelper.decryptSm4OrAes(token.accessToken)
+        token.refreshToken = repositoryCryptoHelper.decryptSm4OrAes(token.refreshToken)
         return token
     }
 
     fun saveAccessToken(userId: String, oauthUserId: String, tGitToken: GitToken): Int {
-        tGitToken.accessToken = repositoryCryptoHelper.encryptAes(tGitToken.accessToken)
-        tGitToken.refreshToken = repositoryCryptoHelper.encryptAes(tGitToken.refreshToken)
+        tGitToken.accessToken = repositoryCryptoHelper.encryptSm4ButAes(tGitToken.accessToken)
+        tGitToken.refreshToken = repositoryCryptoHelper.encryptSm4ButAes(tGitToken.refreshToken)
         return tGitTokenDao.saveAccessToken(
             dslContext = dslContext,
             userId = userId,

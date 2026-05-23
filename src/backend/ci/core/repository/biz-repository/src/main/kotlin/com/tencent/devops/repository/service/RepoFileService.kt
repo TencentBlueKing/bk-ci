@@ -375,7 +375,7 @@ class RepoFileService @Autowired constructor(
     ): String {
         logger.info("getTGitSingleFile for repo: ${repo.projectName}(subModule: $subModule)")
         val token = if (repo.authType == RepoAuthType.OAUTH) {
-            repositoryCryptoHelper.decryptAes(
+            repositoryCryptoHelper.decryptSm4OrAes(
                 tGitTokenDao.getAccessToken(dslContext, repo.userName)?.accessToken
                     ?: throw NotFoundException("get access token for user(${repo.userName}) fail")
             )
