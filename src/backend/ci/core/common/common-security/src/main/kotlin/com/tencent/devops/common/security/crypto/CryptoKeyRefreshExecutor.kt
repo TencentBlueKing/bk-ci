@@ -28,6 +28,7 @@ class CryptoKeyRefreshExecutor(
                 return
             }
             writers.forEach { writer ->
+                logger.info("Crypto key refresh writer started|applicationName=$applicationName|writer=${writer.name}")
                 runWriterUntilDone(applicationName = applicationName, writer = writer)
             }
         }
