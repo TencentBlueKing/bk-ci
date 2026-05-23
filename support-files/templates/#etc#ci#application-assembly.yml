@@ -341,7 +341,12 @@ logo:
 aes:
   # 部署前修改好，后续升级如果再修改，会导致历史数据读取不了，所以如果修改需要先解密重新入库
   aesKey: __BK_CI_STORE_AES_KEY__
+  usedAesKeys: __BK_CI_STORE_USED_AES_KEYS__
   aesMock: "******"
+  git: __BK_CI_REPOSITORY_AES_GIT__
+  used-git-keys: __BK_CI_REPOSITORY_USED_AES_GIT__
+  github: __BK_CI_REPOSITORY_AES_GITHUB__
+  used-github-keys: __BK_CI_REPOSITORY_USED_AES_GITHUB__
 
 statistics:
   timeSpanMonth: -3
@@ -351,11 +356,13 @@ statistics:
 cert:
   # 部署前修改好，后续升级如果再修改，会导致历史数据读取不了，所以如果修改需要先解密重新入库
   aes-key: __BK_CI_TICKET_CERT_AES_KEY__
+  used-aes-keys: __BK_CI_TICKET_CERT_USED_AES_KEYS__
 
 credential:
   mixer: "******"
   # 部署前修改好，后续升级如果再修改，会导致历史数据读取不了，所以如果修改需要先解密重新入库
   aes-key: __BK_CI_TICKET_CREDENTIAL_AES_KEY__
+  used-aes-keys: __BK_CI_TICKET_CREDENTIAL_USED_AES_KEYS__
 
 #### websocket
 
@@ -416,6 +423,7 @@ pipeline:
 project:
   callback:
     aes-key: __BK_CI_PROCESS_CALLBACK_AES_KEY__
+    used-aes-keys: __BK_CI_PROCESS_CALLBACK_USED_AES_KEYS__
 
 notify:
   weworkChannel: __BK_CI_NOTIFY_WEWORK_SEND_CHANNEL__  #发送企业微信的通道: weworkAgent 企业微信应用,blueking 蓝鲸消息通道, weworkRobot 企业微信机器人(待开放)

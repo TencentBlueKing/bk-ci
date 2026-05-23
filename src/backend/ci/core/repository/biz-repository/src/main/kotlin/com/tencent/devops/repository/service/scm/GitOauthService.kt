@@ -39,9 +39,9 @@ import com.tencent.devops.common.auth.code.RepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode
+import com.tencent.devops.repository.crypto.GitTokenCryptoHelper
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
@@ -54,7 +54,6 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -68,12 +67,9 @@ class GitOauthService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val gitService: IGitService,
     private val authProjectApi: AuthProjectApi,
-    private val repoAuthServiceCode: RepoAuthServiceCode
+    private val repoAuthServiceCode: RepoAuthServiceCode,
+    private val gitTokenCryptoHelper: GitTokenCryptoHelper
 ) : IGitOauthService {
-
-    @Value("\${aes.git:#{null}}")
-    private val aesKey: String = ""
-
     companion object {
         private val logger = LoggerFactory.getLogger(GitOauthService::class.java)
     }
@@ -269,8 +265,8 @@ class GitOauthService @Autowired constructor(
     private fun doGetAccessToken(userId: String): GitToken? {
         return gitTokenDao.getAccessToken(dslContext, userId)?.let {
             GitToken(
-                accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.accessToken),
-                refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
+                accessToken = gitTokenCryptoHelper.decryptSm4OrAes(it.accessToken),
+                refreshToken = gitTokenCryptoHelper.decryptSm4OrAes(it.refreshToken),
                 tokenType = it.tokenType,
                 expiresIn = it.expiresIn,
                 createTime = it.createTime.timestampmilli()
@@ -281,15 +277,20 @@ class GitOauthService @Autowired constructor(
     private fun refreshToken(userId: String, gitToken: GitToken): GitToken {
         val token = gitService.refreshToken(userId, gitToken)
         saveAccessToken(userId, token)
-        token.accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, token.accessToken)
-        token.refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, token.refreshToken)
+        token.accessToken = gitTokenCryptoHelper.decryptSm4OrAes(token.accessToken)
+        token.refreshToken = gitTokenCryptoHelper.decryptSm4OrAes(token.refreshToken)
         return token
     }
 
     override fun saveAccessToken(userId: String, tGitToken: GitToken): Int {
-        tGitToken.accessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, tGitToken.accessToken)
-        tGitToken.refreshToken = BkCryptoUtil.encryptSm4ButAes(aesKey, tGitToken.refreshToken)
-        return gitTokenDao.saveAccessToken(dslContext, userId, tGitToken)
+        tGitToken.accessToken = gitTokenCryptoHelper.encryptSm4ButAes(tGitToken.accessToken)
+        tGitToken.refreshToken = gitTokenCryptoHelper.encryptSm4ButAes(tGitToken.refreshToken)
+        return gitTokenDao.saveAccessToken(
+            dslContext = dslContext,
+            userId = userId,
+            token = tGitToken,
+            aesKeySha = gitTokenCryptoHelper.currentKeySha()
+        )
     }
 
     override fun deleteToken(userId: String): Int {

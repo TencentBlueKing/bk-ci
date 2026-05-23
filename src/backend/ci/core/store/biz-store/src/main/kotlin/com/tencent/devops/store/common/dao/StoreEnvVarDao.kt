@@ -66,7 +66,8 @@ class StoreEnvVarDao {
         dslContext: DSLContext,
         userId: String,
         version: Int,
-        storeEnvVarRequest: StoreEnvVarRequest
+        storeEnvVarRequest: StoreEnvVarRequest,
+        aesKeySha: String?
     ) {
         with(TStoreEnvVar.T_STORE_ENV_VAR) {
             val encryptFlag = storeEnvVarRequest.encryptFlag
@@ -82,7 +83,8 @@ class StoreEnvVarDao {
                 ENCRYPT_FLAG,
                 VERSION,
                 CREATOR,
-                MODIFIER
+                MODIFIER,
+                AES_KEY_SHA
             )
                 .values(
                     UUIDUtil.generate(),
@@ -98,7 +100,8 @@ class StoreEnvVarDao {
                     encryptFlag,
                     version,
                     userId,
-                    userId
+                    userId,
+                    aesKeySha.takeIf { encryptFlag }
                 ).execute()
         }
     }
@@ -181,13 +184,15 @@ class StoreEnvVarDao {
         variableId: String,
         varValue: String,
         varDesc: String,
-        encryptFlag: Boolean
+        encryptFlag: Boolean,
+        aesKeySha: String?
     ): Int {
         with(TStoreEnvVar.T_STORE_ENV_VAR) {
             return dslContext.update(this)
                 .set(this.VAR_VALUE, varValue)
                 .set(this.VAR_DESC, varDesc)
                 .set(this.ENCRYPT_FLAG, encryptFlag)
+                .set(this.AES_KEY_SHA, aesKeySha.takeIf { encryptFlag })
                 .where(STORE_CODE.eq(storeCode)
                     .and(STORE_TYPE.eq(storeType))
                     .and(ID.eq(variableId)))

@@ -66,3 +66,6 @@ tapd:
 
 aes:
   git: __BK_CI_REPOSITORY_AES_GIT__
+  used-git-keys: __BK_CI_REPOSITORY_USED_AES_GIT__
+  github: __BK_CI_REPOSITORY_AES_GITHUB__
+  used-github-keys: __BK_CI_REPOSITORY_USED_AES_GITHUB__

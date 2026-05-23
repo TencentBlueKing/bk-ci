@@ -29,15 +29,16 @@ package com.tencent.devops.store.common.service.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
+import com.tencent.devops.store.common.crypto.StoreCryptoHelper
 import com.tencent.devops.store.common.dao.StoreEnvVarDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
+import com.tencent.devops.store.common.service.StoreEnvVarService
+import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_CREATOR
 import com.tencent.devops.store.pojo.common.KEY_ENCRYPT_FLAG
@@ -50,17 +51,16 @@ import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_VAR_DESC
 import com.tencent.devops.store.pojo.common.KEY_VAR_NAME
 import com.tencent.devops.store.pojo.common.KEY_VAR_VALUE
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.env.StoreEnvChangeLogInfo
 import com.tencent.devops.store.pojo.common.env.StoreEnvVarInfo
 import com.tencent.devops.store.pojo.common.env.StoreEnvVarRequest
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.service.StoreEnvVarService
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Service
@@ -68,13 +68,11 @@ class StoreEnvVarServiceImpl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val dslContext: DSLContext,
     private val storeMemberDao: StoreMemberDao,
-    private val storeEnvVarDao: StoreEnvVarDao
+    private val storeEnvVarDao: StoreEnvVarDao,
+    private val storeCryptoHelper: StoreCryptoHelper
 ) : StoreEnvVarService {
 
     private val logger = LoggerFactory.getLogger(StoreEnvVarServiceImpl::class.java)
-
-    @Value("\${aes.aesKey}")
-    private lateinit var aesKey: String
 
     @Value("\${aes.aesMock}")
     private lateinit var aesMock: String
@@ -120,7 +118,8 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                     dslContext = dslContext,
                     userId = userId,
                     version = maxVersion + 1,
-                    storeEnvVarRequest = storeEnvVarRequest
+                    storeEnvVarRequest = storeEnvVarRequest,
+                    aesKeySha = currentKeyShaIfEncrypted(storeEnvVarRequest.encryptFlag)
                 )
             }
         } catch (ignored: Throwable) {
@@ -190,7 +189,10 @@ class StoreEnvVarServiceImpl @Autowired constructor(
         try {
             if (lock.tryLock()) {
                 // 判断是否修改变量环境或变量名
-                if (storeEnvVarRequest.scope != maxVersionData.scope || storeEnvVarRequest.varName != maxVersionData.varName) {
+                if (
+                    storeEnvVarRequest.scope != maxVersionData.scope ||
+                    storeEnvVarRequest.varName != maxVersionData.varName
+                ) {
                     storeEnvVarDao.updateVariableEnvironment(
                             dslContext = dslContext,
                             userId = userId,
@@ -203,19 +205,23 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                         )
                 }
                 // 如变量值变更，则添加新记录
-                if (storeEnvVarRequest.varValue != maxVersionData.varValue && storeEnvVarRequest.varValue != "******") {
+                if (
+                    storeEnvVarRequest.varValue != maxVersionData.varValue &&
+                    storeEnvVarRequest.varValue != "******"
+                ) {
                     storeEnvVarDao.create(
                         dslContext = dslContext,
                         userId = userId,
                         version = maxVersionData.version + 1,
-                        storeEnvVarRequest = storeEnvVarRequest
+                        storeEnvVarRequest = storeEnvVarRequest,
+                        aesKeySha = currentKeyShaIfEncrypted(storeEnvVarRequest.encryptFlag)
                     )
                 } else {
                     // 判断变量值是否需要进行加密或解密
                     val value = if (storeEnvVarRequest.encryptFlag != maxVersionData.encryptFlag) {
                         if (storeEnvVarRequest.encryptFlag)
-                            AESUtil.encrypt(aesKey, maxVersionData.varValue)
-                        else AESUtil.decrypt(aesKey, maxVersionData.varValue)
+                            storeCryptoHelper.encryptAes(maxVersionData.varValue)
+                        else storeCryptoHelper.decryptAes(maxVersionData.varValue)
                     } else maxVersionData.varValue
                     storeEnvVarDao.updateVariable(
                         dslContext = dslContext,
@@ -224,7 +230,8 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                         variableId = maxVersionData.id,
                         varValue = value,
                         varDesc = storeEnvVarRequest.varDesc ?: "",
-                        encryptFlag = storeEnvVarRequest.encryptFlag
+                        encryptFlag = storeEnvVarRequest.encryptFlag,
+                        aesKeySha = currentKeyShaIfEncrypted(storeEnvVarRequest.encryptFlag)
                     )
                 }
             }
@@ -310,7 +317,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
             latestEnvVarRecords.forEach {
                 val encryptFlag = it[KEY_ENCRYPT_FLAG] as Boolean
                 val varValue = if (encryptFlag) {
-                    if (isDecrypt) AESUtil.decrypt(aesKey, it[KEY_VAR_VALUE] as String) else aesMock
+                    if (isDecrypt) storeCryptoHelper.decryptAes(it[KEY_VAR_VALUE] as String) else aesMock
                 } else {
                     it[KEY_VAR_VALUE] as String
                 }
@@ -386,5 +393,9 @@ class StoreEnvVarServiceImpl @Autowired constructor(
         } else {
             Result(data = null)
         }
+    }
+
+    private fun currentKeyShaIfEncrypted(encryptFlag: Boolean): String? {
+        return if (encryptFlag) storeCryptoHelper.currentKeySha() else null
     }
 }

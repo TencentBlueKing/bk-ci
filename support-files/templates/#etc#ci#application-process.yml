@@ -122,3 +122,4 @@ project:
     #   * 任意本地 0.0.0.0、组播
     allow-internal-url: false
     aes-key: __BK_CI_PROCESS_CALLBACK_AES_KEY__
+    used-aes-keys: __BK_CI_PROCESS_CALLBACK_USED_AES_KEYS__

@@ -33,12 +33,12 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.common.web.utils.AtomRuntimeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.BUILD_VISIT_NO_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
+import com.tencent.devops.store.common.crypto.StoreCryptoHelper
 import com.tencent.devops.store.common.dao.SensitiveConfDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfReq
@@ -60,13 +60,11 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val sensitiveConfDao: SensitiveConfDao,
-    private val storeMemberDao: StoreMemberDao
+    private val storeMemberDao: StoreMemberDao,
+    private val storeCryptoHelper: StoreCryptoHelper
 ) : UserSensitiveConfService {
 
     private val logger = LoggerFactory.getLogger(UserSensitiveConfServiceImpl::class.java)
-
-    @Value("\${aes.aesKey}")
-    private lateinit var aesKey: String
 
     @Value("\${aes.aesMock}")
     private lateinit var aesMock: String
@@ -119,7 +117,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         val fieldType = sensitiveConfReq.fieldType
         val finalFieldValue = if (fieldType == FieldTypeEnum.BACKEND.name) {
             // 字段如果只是给后端使用需要对字段值进行加密
-            BkCryptoUtil.encryptSm4ButAes(aesKey, fieldValue)
+            storeCryptoHelper.encryptSm4ButAes(fieldValue)
         } else {
             fieldValue
         }
@@ -132,7 +130,8 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
             fieldName = fieldName,
             fieldType = fieldType,
             fieldValue = finalFieldValue,
-            fieldDesc = sensitiveConfReq.fieldDesc
+            fieldDesc = sensitiveConfReq.fieldDesc,
+            aesKeySha = currentKeyShaIfBackend(fieldType)
         )
         return Result(true)
     }
@@ -179,13 +178,13 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
             val dbFieldType = sensitiveConfRecord.fieldType
             if (dbFieldType == FieldTypeEnum.BACKEND.name && dbFieldType != fieldType) {
                 // 如果字段类型由BACKEND改为其它，需把数据库里字段内容解密存储
-                BkCryptoUtil.decryptSm4OrAes(aesKey, sensitiveConfRecord.fieldValue)
+                storeCryptoHelper.decryptSm4OrAes(sensitiveConfRecord.fieldValue)
             } else {
                 null
             }
         } else {
             if (fieldType == FieldTypeEnum.BACKEND.name) {
-                BkCryptoUtil.encryptSm4ButAes(aesKey, fieldValue)
+                storeCryptoHelper.encryptSm4ButAes(fieldValue)
             } else {
                 fieldValue
             }
@@ -197,7 +196,8 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
             fieldName = fieldName,
             fieldType = fieldType,
             fieldValue = finalFieldValue,
-            fieldDesc = sensitiveConfReq.fieldDesc
+            fieldDesc = sensitiveConfReq.fieldDesc,
+            aesKeySha = currentKeyShaIfBackend(fieldType)
         )
         return Result(true)
     }
@@ -273,7 +273,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         records?.forEach {
             val fieldType = it.fieldType
             val fieldValue = if (fieldType == FieldTypeEnum.BACKEND.name) {
-                if (isDecrypt) BkCryptoUtil.decryptSm4OrAes(aesKey, it.fieldValue) else aesMock
+                if (isDecrypt) storeCryptoHelper.decryptSm4OrAes(it.fieldValue) else aesMock
             } else {
                 it.fieldValue
             }
@@ -331,5 +331,9 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
                 params = arrayOf(storeCode)
             )
         }
+    }
+
+    private fun currentKeyShaIfBackend(fieldType: String): String? {
+        return if (fieldType == FieldTypeEnum.BACKEND.name) storeCryptoHelper.currentKeySha() else null
     }
 }
