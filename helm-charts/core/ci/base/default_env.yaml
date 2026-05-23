@@ -52,9 +52,6 @@ bkEsbEnabled: false
 bkCiSm4Key: s31^dDjd!3k
 bkCiSm4Enabled: false
 bkCiAesRefreshEnabled: false
-bkCiAesRefreshInitialDelayMs: 10000
-bkCiAesRefreshBatchSize: 500
-bkCiAesRefreshSleepMsBetweenBatch: 0
 bkCiStoreAesKey: ""
 bkCiStoreUsedAesKeys: 
   - J%k^yO{?vt}3tXpG

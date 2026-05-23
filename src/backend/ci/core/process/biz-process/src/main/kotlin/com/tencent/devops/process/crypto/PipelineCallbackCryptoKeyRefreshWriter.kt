@@ -8,7 +8,7 @@ import org.jooq.Record
 import org.springframework.stereotype.Service
 
 @Service
-class ProjectPipelineCallbackCryptoKeyRefreshWriter(
+class PipelineCallbackCryptoKeyRefreshWriter(
     private val dslContext: DSLContext,
     private val processCryptoHelper: ProcessCryptoHelper
 ) : CryptoKeyRefreshWriter {
