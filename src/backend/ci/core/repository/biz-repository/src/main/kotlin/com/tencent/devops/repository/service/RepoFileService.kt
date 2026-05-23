@@ -33,13 +33,13 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
+import com.tencent.devops.repository.crypto.RepositoryCryptoHelper
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.dao.TGitTokenDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
@@ -71,7 +71,6 @@ import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -85,15 +84,13 @@ class RepoFileService @Autowired constructor(
     private val githubService: IGithubService,
     private val gitService: IGitService,
     private val svnService: ISvnService,
-    private val p4Service: Ip4Service
+    private val p4Service: Ip4Service,
+    private val repositoryCryptoHelper: RepositoryCryptoHelper
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(RepoFileService::class.java)
     }
-
-    @Value("\${aes.git:#{null}}")
-    private val aesKey: String = ""
 
     fun getFileContent(
         repositoryConfig: RepositoryConfig,
@@ -309,9 +306,8 @@ class RepoFileService @Autowired constructor(
 
     private fun getGitSingleFile(repo: CodeGitRepository, filePath: String, ref: String, subModule: String?): String {
         val token = if (repo.authType == RepoAuthType.OAUTH) {
-            AESUtil.decrypt(
-                key = aesKey,
-                content = gitTokenDao.getAccessToken(dslContext, repo.userName)?.accessToken
+            repositoryCryptoHelper.decryptSm4OrAes(
+                gitTokenDao.getAccessToken(dslContext, repo.userName)?.accessToken
                     ?: throw NotFoundException("get access token for user(${repo.userName}) fail")
             )
         } else {
@@ -379,9 +375,8 @@ class RepoFileService @Autowired constructor(
     ): String {
         logger.info("getTGitSingleFile for repo: ${repo.projectName}(subModule: $subModule)")
         val token = if (repo.authType == RepoAuthType.OAUTH) {
-            AESUtil.decrypt(
-                key = aesKey,
-                content = tGitTokenDao.getAccessToken(dslContext, repo.userName)?.accessToken
+            repositoryCryptoHelper.decryptAes(
+                tGitTokenDao.getAccessToken(dslContext, repo.userName)?.accessToken
                     ?: throw NotFoundException("get access token for user(${repo.userName}) fail")
             )
         } else {

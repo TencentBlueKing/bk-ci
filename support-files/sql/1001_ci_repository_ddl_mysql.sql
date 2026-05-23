@@ -127,6 +127,7 @@ CREATE TABLE IF NOT EXISTS `T_REPOSITORY_GITHUB_TOKEN` (
   `CREATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `UPDATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `TYPE` varchar(32) DEFAULT 'GITHUB_APP' COMMENT 'GitHub token类型（GITHUB_APP、OAUTH_APP）',
+  `AES_KEY_SHA` varchar(64) DEFAULT NULL COMMENT '加密密钥SHA指纹',
   PRIMARY KEY (`ID`),
   UNIQUE KEY `USER_ID` (`USER_ID`, `TYPE`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='github oauth token表';
@@ -143,6 +144,7 @@ CREATE TABLE IF NOT EXISTS `T_REPOSITORY_GIT_TOKEN` (
   `TOKEN_TYPE` varchar(64) DEFAULT NULL COMMENT 'token类型',
   `EXPIRES_IN` bigint(20) DEFAULT NULL COMMENT '过期时间',
   `CREATE_TIME` datetime DEFAULT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'token的创建时间',
+  `AES_KEY_SHA` varchar(64) DEFAULT NULL COMMENT '加密密钥SHA指纹',
   PRIMARY KEY (`ID`),
   UNIQUE KEY `USER_ID` (`USER_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工蜂commit checker表';
@@ -193,6 +195,7 @@ CREATE TABLE IF NOT EXISTS `T_REPOSITORY_TGIT_TOKEN`
     `EXPIRES_IN`    bigint                             null comment '过期时间',
     `CREATE_TIME`   datetime default CURRENT_TIMESTAMP null comment 'token的创建时间',
     `OAUTH_USER_ID` varchar(64)                        not null comment '账户实际名称',
+    `AES_KEY_SHA`   varchar(64)                        null comment '加密密钥SHA指纹',
     constraint `USER_ID`
         unique (`USER_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 comment '外网工蜂OAUTH token表';

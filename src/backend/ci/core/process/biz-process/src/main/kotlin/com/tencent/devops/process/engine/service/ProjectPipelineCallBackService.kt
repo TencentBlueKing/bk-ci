@@ -33,7 +33,6 @@ import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
-import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.timestampmilli
@@ -56,6 +55,7 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.crypto.ProcessCryptoHelper
 import com.tencent.devops.process.dao.ProjectPipelineCallbackDao
 import com.tencent.devops.process.dao.ProjectPipelineCallbackHistoryDao
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -90,11 +90,9 @@ class ProjectPipelineCallBackService @Autowired constructor(
     private val projectPipelineCallBackUrlGenerator: ProjectPipelineCallBackUrlGenerator,
     private val client: Client,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelinePermissionService: PipelinePermissionService
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val processCryptoHelper: ProcessCryptoHelper
 ) {
-
-    @Value("\${project.callback.aes-key}")
-    private lateinit var aesKey: String
 
     @Value("\${project.callback.black-ports:#{null}}")
     private val blackPorts: List<Int> = listOf()
@@ -167,8 +165,9 @@ class ProjectPipelineCallBackService @Autowired constructor(
                         "PROJECT_PIPELINE_CALLBACK"
                     ).data,
                     secretParam = secretParam?.let {
-                        AESUtil.encrypt(aesKey, JsonUtil.toJson(secretParam, false))
-                    }
+                        processCryptoHelper.encrypt(JsonUtil.toJson(secretParam, false))
+                    },
+                    aesKeySha = processCryptoHelper.currentKeySha()
                 )
                 successEvents.add(it.name)
             } catch (e: Throwable) {
@@ -202,7 +201,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
                     secretParam = if (it.secretParam.isNullOrBlank()) {
                         null
                     } else {
-                        JsonUtil.to(AESUtil.decrypt(aesKey, it.secretParam), ISecretParam::class.java)
+                        JsonUtil.to(processCryptoHelper.decrypt(it.secretParam), ISecretParam::class.java)
                     }
                 )
             )

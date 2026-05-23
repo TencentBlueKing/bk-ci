@@ -414,6 +414,16 @@ wechatWork:
 sm4:
   enabled: __BK_CI_SM4_ENABLED__
   key: "__BK_CI_SM4_KEY__"
+
+aes:
+  refresh:
+    # 服务启动后首次触发前的延迟毫秒数，默认 10000ms
+    initialDelayMs: 10000
+    # 每批处理的最大行数
+    batchSize: 500
+    # 每批处理完成后等待的毫秒数，用于限速
+    sleepMsBetweenBatch: 0
+
 # 是否开启审计
 audit:
   enabled: __BK_CI_AUDIT_ENABLED__
