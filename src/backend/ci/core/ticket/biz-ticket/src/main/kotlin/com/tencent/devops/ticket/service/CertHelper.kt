@@ -47,7 +47,7 @@ class CertHelper {
     private lateinit var aesKey: String
 
     @Value("\${cert.used-aes-keys:}")
-    private var usedAesKeys: List<String> = emptyList()
+    private var usedAesKeys: String = ""
 
     fun currentKeySha(): String = ShaUtils.sha256Fingerprint(aesKey)
 
@@ -146,7 +146,7 @@ class CertHelper {
 
     fun decryptBytes(bytes: ByteArray?): ByteArray? {
         return if (bytes != null) {
-            BkCryptoUtil.decryptSm4OrAes(aesKey, usedAesKeys, bytes)
+            BkCryptoUtil.decryptSm4OrAes(aesKey, BkCryptoUtil.parseAesKeys(usedAesKeys), bytes)
         } else null
     }
 
@@ -155,7 +155,11 @@ class CertHelper {
      */
     fun refreshBytes(bytes: ByteArray?): ByteArray? {
         return if (bytes != null && bytes.isNotEmpty()) {
-            val plainBytes = BkCryptoUtil.decryptSm4OrAesForRefresh(aesKey, usedAesKeys, bytes)
+            val plainBytes = BkCryptoUtil.decryptSm4OrAesForRefresh(
+                aesKey,
+                BkCryptoUtil.parseAesKeys(usedAesKeys),
+                bytes
+            )
             BkCryptoUtil.encryptSm4ButAes(aesKey, plainBytes)
         } else bytes
     }

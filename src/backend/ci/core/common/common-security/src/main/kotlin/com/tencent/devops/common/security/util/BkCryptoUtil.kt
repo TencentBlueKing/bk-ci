@@ -82,6 +82,13 @@ object BkCryptoUtil {
     }
 
     /**
+     * 解析逗号分隔的历史AES密钥配置，保留空字符串密钥。
+     */
+    fun parseAesKeys(keys: String): List<String> {
+        return keys.split(",")
+    }
+
+    /**
      * 加密SM4(没有开启则不加密)
      */
     fun encryptSm4ButNone(content: String): String {

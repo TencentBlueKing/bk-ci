@@ -11,14 +11,18 @@ class GitTokenCryptoHelper {
     private var aesKey: String = ""
 
     @Value("\${aes.used-git-keys:}")
-    private var usedAesKeys: List<String> = emptyList()
+    private var usedAesKeys: String = ""
 
     fun currentKeySha(): String = ShaUtils.sha256Fingerprint(aesKey)
 
     fun encryptSm4ButAes(content: String): String = BkCryptoUtil.encryptSm4ButAes(aesKey, content)
 
     fun decryptSm4OrAes(content: String): String {
-        return BkCryptoUtil.decryptSm4OrAes(aesKey = aesKey, usedAesKeys = usedAesKeys, content = content)
+        return BkCryptoUtil.decryptSm4OrAes(
+            aesKey = aesKey,
+            usedAesKeys = BkCryptoUtil.parseAesKeys(usedAesKeys),
+            content = content
+        )
     }
 
     /**
@@ -27,7 +31,7 @@ class GitTokenCryptoHelper {
     fun refreshSm4OrAes(content: String): String {
         return BkCryptoUtil.encryptSm4ButAes(
             aesKey,
-            BkCryptoUtil.decryptSm4OrAesForRefresh(aesKey, usedAesKeys, content)
+            BkCryptoUtil.decryptSm4OrAesForRefresh(aesKey, BkCryptoUtil.parseAesKeys(usedAesKeys), content)
         )
     }
 }
