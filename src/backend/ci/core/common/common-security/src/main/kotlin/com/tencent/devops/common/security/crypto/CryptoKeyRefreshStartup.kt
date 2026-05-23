@@ -29,6 +29,7 @@ class CryptoKeyRefreshStartup(
         }
         Thread {
             try {
+                logger.info("Crypto key refresh started|applicationName=$applicationName")
                 Thread.sleep(properties.initialDelayMs)
                 executor.runUntilAllDone(applicationName = applicationName, writers = writers)
             } catch (e: InterruptedException) {
