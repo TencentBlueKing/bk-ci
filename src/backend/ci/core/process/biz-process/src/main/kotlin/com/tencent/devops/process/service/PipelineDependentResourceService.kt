@@ -10,14 +10,11 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
@@ -30,8 +27,8 @@ import com.tencent.devops.process.dao.label.PipelineLabelDao
 import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
 import com.tencent.devops.process.dao.label.PipelineViewGroupDao
-import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.SubPipelineRefService
 import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
 import com.tencent.devops.process.pojo.pipeline.PipelineDependentResourceRef
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceRefType
@@ -57,7 +54,7 @@ class PipelineDependentResourceService @Autowired constructor(
     private val pipelineViewDao: PipelineViewDao,
     private val pipelineLabelPipelineDao: PipelineLabelPipelineDao,
     private val pipelineLabelDao: PipelineLabelDao,
-    private val pipelineInfoDao: PipelineInfoDao,
+    private val subPipelineRefService: SubPipelineRefService,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     private val pipelineTemplateInfoService: PipelineTemplateInfoService,
     private val pipelineRepositoryService: PipelineRepositoryService
@@ -107,17 +104,19 @@ class PipelineDependentResourceService @Autowired constructor(
         pipelineId: String,
         visited: MutableSet<String>
     ): Set<PipelineDependentResource> {
-        val model = pipelineRepositoryService.getModel(
+        val resources = mutableSetOf<PipelineDependentResource>()
+        subPipelineRefService.list(
             projectId = projectId,
             pipelineId = pipelineId
-        ) ?: return emptySet()
-        val resources = mutableSetOf<PipelineDependentResource>()
-        collectSubPipelineRefs(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            model = model
         ).forEach { ref ->
-            val resource = resolveSubPipelineRef(ref) ?: return@forEach
+            val subProjectId = ref.subProjectId?.takeIf { it.isNotBlank() } ?: return@forEach
+            val subPipelineId = ref.subPipelineId?.takeIf { it.isNotBlank() } ?: return@forEach
+            val resource = PipelineDependentResource(
+                projectId = subProjectId,
+                resourceType = PipelineDependentResourceType.PIPELINE,
+                resourceId = subPipelineId,
+                resourceName = ref.subPipelineName?.takeIf { it.isNotBlank() } ?: subPipelineId
+            )
             val resourceKey = pipelineKey(projectId = resource.projectId, pipelineId = resource.resourceId)
             if (visited.add(resourceKey)) {
                 resources.add(resource)
@@ -131,41 +130,6 @@ class PipelineDependentResourceService @Autowired constructor(
             }
         }
         return resources
-    }
-
-    private fun collectSubPipelineRefs(
-        projectId: String,
-        pipelineId: String,
-        model: Model
-    ): Set<PipelineDependentResourceRef> {
-        val variables = getContextMap(model)
-        val refs = mutableSetOf<PipelineDependentResourceRef>()
-        model.stages.forEach { stage ->
-            if (!stage.stageEnabled()) {
-                return@forEach
-            }
-            stage.containers.forEach c@{ container ->
-                if (container is TriggerContainer || !container.containerEnabled()) {
-                    return@c
-                }
-                container.elements.forEach e@{ element ->
-                    if (!element.elementEnabled() || !supportSubPipelineElement(element)) {
-                        return@e
-                    }
-                    try {
-                        getSubPipelineRef(
-                            projectId = projectId, element = element, contextMap = variables
-                        )?.let { refs.add(it) }
-                    } catch (ignored: Exception) {
-                        logger.warn(
-                            "analysis sub pipeline dependency failed|$projectId|$pipelineId|${element.id}",
-                            ignored
-                        )
-                    }
-                }
-            }
-        }
-        return refs
     }
 
     private fun collectPipelineGroupResources(
@@ -647,143 +611,6 @@ class PipelineDependentResourceService @Autowired constructor(
         )
     }
 
-    private fun supportSubPipelineElement(element: Element): Boolean {
-        return element is SubPipelineCallElement ||
-            (element is MarketBuildAtomElement && element.getAtomCode() == SUB_PIPELINE_EXEC_ATOM_CODE) ||
-            (element is MarketBuildLessAtomElement && element.getAtomCode() == SUB_PIPELINE_EXEC_ATOM_CODE)
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun getSubPipelineRef(
-        projectId: String,
-        element: Element,
-        contextMap: Map<String, String>
-    ): PipelineDependentResourceRef? {
-        return when (element) {
-            is SubPipelineCallElement -> getSubPipelineCallRef(
-                projectId = projectId,
-                element = element,
-                contextMap = contextMap
-            )
-            is MarketBuildAtomElement -> getSubPipelineExecRef(
-                projectId = projectId,
-                inputMap = element.data["input"] as? Map<String, Any> ?: return null,
-                contextMap = contextMap
-            )
-            is MarketBuildLessAtomElement -> getSubPipelineExecRef(
-                projectId = projectId,
-                inputMap = element.data["input"] as? Map<String, Any> ?: return null,
-                contextMap = contextMap
-            )
-            else -> null
-        }
-    }
-
-    private fun getSubPipelineCallRef(
-        projectId: String,
-        element: SubPipelineCallElement,
-        contextMap: Map<String, String>
-    ): PipelineDependentResourceRef? {
-        val subPipelineType = element.subPipelineType ?: SubPipelineType.ID
-        return getSubPipelineRef(
-            projectId = projectId,
-            subProjectId = projectId,
-            subPipelineType = subPipelineType,
-            subPipelineId = element.subPipelineId,
-            subPipelineName = element.subPipelineName,
-            contextMap = contextMap
-        )
-    }
-
-    private fun getSubPipelineExecRef(
-        projectId: String,
-        inputMap: Map<String, Any>,
-        contextMap: Map<String, String>
-    ): PipelineDependentResourceRef? {
-        val subProjectId = inputMap["projectId"]?.let { projectIdStr ->
-            if (projectIdStr is String && projectIdStr.isNotBlank()) projectIdStr else null
-        } ?: projectId
-        val subPipelineTypeStr = inputMap.getOrDefault("subPipelineType", "ID")
-        val subPipelineName = inputMap["subPipelineName"]?.toString()
-        val subPipelineId = inputMap["subPip"]?.toString()
-        val subPipelineType = when (subPipelineTypeStr) {
-            "ID" -> SubPipelineType.ID
-            "NAME" -> SubPipelineType.NAME
-            else -> return null
-        }
-        return getSubPipelineRef(
-            projectId = projectId,
-            subProjectId = subProjectId,
-            subPipelineType = subPipelineType,
-            subPipelineId = subPipelineId,
-            subPipelineName = subPipelineName,
-            contextMap = contextMap
-        )
-    }
-
-    @SuppressWarnings("LongParameterList")
-    private fun getSubPipelineRef(
-        projectId: String,
-        subProjectId: String,
-        subPipelineType: SubPipelineType,
-        subPipelineId: String?,
-        subPipelineName: String?,
-        contextMap: Map<String, String>
-    ): PipelineDependentResourceRef? {
-        return if (subPipelineType == SubPipelineType.ID) {
-            if (subPipelineId.isNullOrBlank()) {
-                return null
-            }
-            PipelineDependentResourceRef(
-                projectId = subProjectId,
-                resourceType = PipelineDependentResourceType.PIPELINE,
-                refType = PipelineDependentResourceRefType.ID,
-                refValue = subPipelineId
-            )
-        } else {
-            if (subPipelineName.isNullOrBlank()) {
-                return null
-            }
-            val finalSubProjectId = EnvUtils.parseEnv(subProjectId, contextMap)
-            val finalSubPipelineName = EnvUtils.parseEnv(subPipelineName, contextMap)
-            PipelineDependentResourceRef(
-                projectId = finalSubProjectId,
-                resourceType = PipelineDependentResourceType.PIPELINE,
-                refType = PipelineDependentResourceRefType.NAME,
-                refValue = finalSubPipelineName
-            )
-        }
-    }
-
-    private fun resolveSubPipelineRef(ref: PipelineDependentResourceRef): PipelineDependentResource? {
-        val pipelineInfo = if (ref.refType == PipelineDependentResourceRefType.ID) {
-            pipelineInfoDao.getPipelineInfo(
-                dslContext = dslContext,
-                projectId = ref.projectId,
-                pipelineId = ref.refValue
-            )
-        } else {
-            pipelineInfoDao.getPipelineInfoByName(
-                dslContext = dslContext,
-                projectId = ref.projectId,
-                pipelineName = ref.refValue,
-                filterDelete = true
-            )
-        } ?: run {
-            logger.info(
-                "sub-pipeline not found|projectId:${ref.projectId}|refType:${ref.refType}|" +
-                        "refValue:${ref.refValue}"
-            )
-            return null
-        }
-        return PipelineDependentResource(
-            projectId = ref.projectId,
-            resourceType = PipelineDependentResourceType.PIPELINE,
-            resourceId = pipelineInfo.pipelineId,
-            resourceName = pipelineInfo.pipelineName
-        )
-    }
-
     private fun pipelineKey(projectId: String, pipelineId: String): String {
         return "$projectId:$pipelineId"
     }
@@ -815,7 +642,6 @@ class PipelineDependentResourceService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineDependentResourceService::class.java)
-        private const val SUB_PIPELINE_EXEC_ATOM_CODE = "SubPipelineExec"
 
         private val REPO_CHECKOUT_ATOM_CODES = setOf(
             "gitCodeRepo", "PullFromGithub", "Gitlab", "atomtgit", "checkout", "svnCodeRepo"
