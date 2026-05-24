@@ -8,8 +8,9 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskConfigRequ
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatus
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskStatusSummary
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatusSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskInfo
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskLabelSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskType
 import com.tencent.devops.process.service.task.PipelineBatchTaskService
@@ -64,7 +65,7 @@ class UserPipelineBatchTaskResourceImpl @Autowired constructor(
         pipelineName: String?,
         status: PipelineBatchTaskDetailStatus?,
         pac: Boolean?,
-        systemAdd: Boolean?,
+        subPipeline: Boolean?,
         page: Int,
         pageSize: Int
     ): Result<SQLPage<PipelineBatchTaskDetailInfo>> {
@@ -75,24 +76,37 @@ class UserPipelineBatchTaskResourceImpl @Autowired constructor(
                 pipelineName = pipelineName,
                 status = status,
                 pac = pac,
-                systemAdd = systemAdd,
+                subPipeline = subPipeline,
                 page = page,
                 pageSize = pageSize
             )
         )
     }
 
-    override fun statusSummary(
+    override fun detailStatusSummary(
         userId: String,
         projectId: String,
         taskId: String,
         taskType: PipelineBatchTaskType
-    ): Result<List<PipelineBatchTaskStatusSummary>> {
+    ): Result<List<PipelineBatchTaskDetailStatusSummary>> {
         return Result(
-            pipelineBatchTaskService.statusSummary(
+            pipelineBatchTaskService.detailStatusSummary(
                 projectId = projectId,
                 taskId = taskId,
                 taskType = taskType
+            )
+        )
+    }
+
+    override fun taskLabelSummary(
+        userId: String,
+        projectId: String,
+        taskId: String
+    ): Result<PipelineBatchTaskLabelSummary> {
+        return Result(
+            pipelineBatchTaskService.taskLabelSummary(
+                projectId = projectId,
+                taskId = taskId
             )
         )
     }
@@ -103,14 +117,13 @@ class UserPipelineBatchTaskResourceImpl @Autowired constructor(
         taskId: String,
         request: PipelineBatchTaskConfigRequest
     ): Result<Boolean> {
-        return Result(
-            pipelineBatchTaskService.config(
-                userId = userId,
-                projectId = projectId,
-                taskId = taskId,
-                request = request
-            )
+        pipelineBatchTaskService.config(
+            userId = userId,
+            projectId = projectId,
+            taskId = taskId,
+            request = request
         )
+        return Result(true)
     }
 
     override fun excludePipeline(
@@ -119,13 +132,12 @@ class UserPipelineBatchTaskResourceImpl @Autowired constructor(
         taskId: String,
         pipelineId: String
     ): Result<Boolean> {
-        return Result(
-            pipelineBatchTaskService.excludePipeline(
-                projectId = projectId,
-                taskId = taskId,
-                pipelineId = pipelineId
-            )
+        pipelineBatchTaskService.excludePipeline(
+            projectId = projectId,
+            taskId = taskId,
+            pipelineId = pipelineId
         )
+        return Result(true)
     }
 
     override fun restorePipeline(
@@ -134,13 +146,25 @@ class UserPipelineBatchTaskResourceImpl @Autowired constructor(
         taskId: String,
         pipelineId: String
     ): Result<Boolean> {
-        return Result(
-            pipelineBatchTaskService.restorePipeline(
-                projectId = projectId,
-                taskId = taskId,
-                pipelineId = pipelineId
-            )
+        pipelineBatchTaskService.restorePipeline(
+            projectId = projectId,
+            taskId = taskId,
+            pipelineId = pipelineId
         )
+        return Result(true)
+    }
+
+    override fun execute(
+        userId: String,
+        projectId: String,
+        taskId: String
+    ): Result<Boolean> {
+        pipelineBatchTaskService.execute(
+            userId = userId,
+            projectId = projectId,
+            taskId = taskId
+        )
+        return Result(true)
     }
 
     override fun delete(

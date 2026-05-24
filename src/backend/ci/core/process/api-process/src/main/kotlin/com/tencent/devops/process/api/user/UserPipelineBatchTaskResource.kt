@@ -8,8 +8,9 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskConfigRequ
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatus
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskStatusSummary
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatusSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskInfo
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskLabelSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskType
 import io.swagger.v3.oas.annotations.Operation
@@ -114,9 +115,9 @@ interface UserPipelineBatchTaskResource {
         @Parameter(description = "是否开启PAC", required = false)
         @QueryParam("pac")
         pac: Boolean?,
-        @Parameter(description = "是否系统自动添加", required = false)
-        @QueryParam("systemAdd")
-        systemAdd: Boolean?,
+        @Parameter(description = "是否是子流水线添加", required = false)
+        @QueryParam("subPipeline")
+        subPipeline: Boolean?,
         @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         @DefaultValue("1")
@@ -130,7 +131,7 @@ interface UserPipelineBatchTaskResource {
     @Operation(summary = "查询流水线批量任务明细状态汇总")
     @GET
     @Path("/{projectId}/tasks/{taskId}/details/status/summary")
-    fun statusSummary(
+    fun detailStatusSummary(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -143,7 +144,22 @@ interface UserPipelineBatchTaskResource {
         @Parameter(description = "任务类型", required = true)
         @QueryParam("taskType")
         taskType: PipelineBatchTaskType
-    ): Result<List<PipelineBatchTaskStatusSummary>>
+    ): Result<List<PipelineBatchTaskDetailStatusSummary>>
+
+    @Operation(summary = "查询流水线批量任务标签汇总")
+    @GET
+    @Path("/{projectId}/tasks/{taskId}/labels/summary")
+    fun taskLabelSummary(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "任务ID", required = true)
+        @PathParam("taskId")
+        taskId: String
+    ): Result<PipelineBatchTaskLabelSummary>
 
     @Operation(summary = "配置流水线批量任务")
     @POST
@@ -196,6 +212,21 @@ interface UserPipelineBatchTaskResource {
         @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
+    ): Result<Boolean>
+
+    @Operation(summary = "执行流水线批量任务")
+    @POST
+    @Path("/{projectId}/tasks/{taskId}/execute")
+    fun execute(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "任务ID", required = true)
+        @PathParam("taskId")
+        taskId: String
     ): Result<Boolean>
 
     @Operation(summary = "删除流水线批量任务")

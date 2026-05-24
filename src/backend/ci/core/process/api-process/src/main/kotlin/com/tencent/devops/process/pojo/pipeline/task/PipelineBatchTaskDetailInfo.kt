@@ -19,8 +19,8 @@ data class PipelineBatchTaskDetailInfo(
     val pac: Boolean = false,
     @get:Schema(description = "是否是约束流水线", required = true)
     val constraint: Boolean = false,
-    @get:Schema(description = "是否是系统自动添加", required = true)
-    val systemAdd: Boolean = false,
+    @get:Schema(description = "是否是子流水线添加", required = true)
+    val subPipeline: Boolean = false,
     @get:Schema(description = "流水线是否禁用", required = true)
     val locked: Boolean = false,
     @get:Schema(description = "是否修改", required = true)

@@ -22,6 +22,7 @@ class PipelineBatchTaskDao {
         taskName: String?,
         taskType: PipelineBatchTaskType,
         taskParam: String?,
+        status: PipelineBatchTaskStatus,
         step: PipelineBatchTaskStep,
         totalCount: Int,
         creator: String
@@ -48,7 +49,7 @@ class PipelineBatchTaskDao {
                 taskName,
                 taskType.name,
                 taskParam,
-                PipelineBatchTaskStatus.DRAFT.name,
+                status.name,
                 step.name,
                 totalCount,
                 0,
@@ -133,7 +134,7 @@ class PipelineBatchTaskDao {
                 query.set(TASK_PARAM, update.taskParam)
             }
             if (update.status != null) {
-                query.set(STATUS, update.status.name)
+                query.set(STATUS, update.status!!.name)
             }
             if (update.successCount != null) {
                 query.set(SUCCESS_COUNT, update.successCount)
@@ -142,7 +143,7 @@ class PipelineBatchTaskDao {
                 query.set(FAILED_COUNT, update.failedCount)
             }
             if (update.step != null) {
-                query.set(STEP, update.step.name)
+                query.set(STEP, update.step!!.name)
             }
             query.set(UPDATE_TIME, LocalDateTime.now())
                 .where(PROJECT_ID.eq(update.projectId))

@@ -4,7 +4,7 @@ import com.tencent.devops.model.process.Tables.T_PIPELINE_BATCH_TASK_DETAIL
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailUpdate
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskStatusSummary
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatusSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskType
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -33,7 +33,7 @@ class PipelineBatchTaskDetailDao {
                     PIPELINE_NAME,
                     PAC,
                     CONSTRAINT,
-                    SYSTEM_ADD,
+                    SUB_PIPELINE,
                     LOCKED,
                     CHANGE,
                     STATUS,
@@ -48,7 +48,7 @@ class PipelineBatchTaskDetailDao {
                     detail.pipelineName,
                     detail.pac,
                     detail.constraint,
-                    detail.systemAdd,
+                    detail.subPipeline,
                     detail.locked,
                     detail.change,
                     detail.status.name,
@@ -65,10 +65,10 @@ class PipelineBatchTaskDetailDao {
         dslContext: DSLContext,
         projectId: String,
         taskId: String,
-        pipelineName: String?,
-        status: PipelineBatchTaskDetailStatus?,
-        pac: Boolean?,
-        systemAdd: Boolean?
+        pipelineName: String? = null,
+        status: PipelineBatchTaskDetailStatus? = null,
+        pac: Boolean? = null,
+        subPipeline: Boolean? = null
     ): Long {
         return with(T_PIPELINE_BATCH_TASK_DETAIL) {
             dslContext.selectCount()
@@ -80,7 +80,7 @@ class PipelineBatchTaskDetailDao {
                         pipelineName = pipelineName,
                         status = status,
                         pac = pac,
-                        systemAdd = systemAdd
+                        subPipeline = subPipeline
                     )
                 )
                 .fetchOne(0, Long::class.java) ?: 0L
@@ -91,10 +91,10 @@ class PipelineBatchTaskDetailDao {
         dslContext: DSLContext,
         projectId: String,
         taskId: String,
-        pipelineName: String?,
-        status: PipelineBatchTaskDetailStatus?,
-        pac: Boolean?,
-        systemAdd: Boolean?,
+        pipelineName: String? = null,
+        status: PipelineBatchTaskDetailStatus? = null,
+        pac: Boolean? = null,
+        subPipeline: Boolean? = null,
         offset: Int,
         limit: Int
     ): List<PipelineBatchTaskDetailInfo> {
@@ -107,7 +107,7 @@ class PipelineBatchTaskDetailDao {
                         pipelineName = pipelineName,
                         status = status,
                         pac = pac,
-                        systemAdd = systemAdd
+                        subPipeline = subPipeline
                     )
                 )
                 .orderBy(PIPELINE_NAME.asc(), PIPELINE_ID.asc())
@@ -130,12 +130,12 @@ class PipelineBatchTaskDetailDao {
         }
     }
 
-    fun statusSummary(
+    fun detailStatusSummary(
         dslContext: DSLContext,
         projectId: String,
         taskId: String,
         taskType: PipelineBatchTaskType
-    ): List<PipelineBatchTaskStatusSummary> {
+    ): List<PipelineBatchTaskDetailStatusSummary> {
         return with(T_PIPELINE_BATCH_TASK_DETAIL) {
             dslContext.select(STATUS, DSL.count())
                 .from(this)
@@ -145,7 +145,7 @@ class PipelineBatchTaskDetailDao {
                 .groupBy(STATUS)
                 .fetch()
                 .map { record ->
-                    PipelineBatchTaskStatusSummary(
+                    PipelineBatchTaskDetailStatusSummary(
                         status = PipelineBatchTaskDetailStatus.valueOf(record.get(STATUS)),
                         count = record.value2().toLong()
                     )
@@ -194,7 +194,7 @@ class PipelineBatchTaskDetailDao {
         pipelineName: String? = null,
         status: PipelineBatchTaskDetailStatus? = null,
         pac: Boolean? = null,
-        systemAdd: Boolean? = null
+        subPipeline: Boolean? = null
     ): List<Condition> {
         return with(T_PIPELINE_BATCH_TASK_DETAIL) {
             val conditions = mutableListOf<Condition>()
@@ -209,8 +209,8 @@ class PipelineBatchTaskDetailDao {
             if (pac != null) {
                 conditions.add(PAC.eq(pac))
             }
-            if (systemAdd != null) {
-                conditions.add(SYSTEM_ADD.eq(systemAdd))
+            if (subPipeline != null) {
+                conditions.add(SUB_PIPELINE.eq(subPipeline))
             }
             conditions
         }
@@ -226,7 +226,7 @@ class PipelineBatchTaskDetailDao {
                 pipelineName = record.get(PIPELINE_NAME),
                 pac = record.get(PAC),
                 constraint = record.get(CONSTRAINT),
-                systemAdd = record.get(SYSTEM_ADD),
+                subPipeline = record.get(SUB_PIPELINE),
                 locked = record.get(LOCKED),
                 change = record.get(CHANGE),
                 status = PipelineBatchTaskDetailStatus.valueOf(record.get(STATUS)),
