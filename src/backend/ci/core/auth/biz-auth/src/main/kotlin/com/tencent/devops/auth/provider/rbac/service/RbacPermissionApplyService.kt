@@ -304,7 +304,8 @@ class RbacPermissionApplyService @Autowired constructor(
                 resourceType = resourceType,
                 resourceTypeName = resourceTypeName,
                 resourceName = resourceName,
-                resourceCode = resourceCode
+                resourceCode = resourceCode,
+                applyDisable = gInfo.applyDisable,
             )
         }.sortedBy { it.resourceType }
     }
