@@ -1,6 +1,17 @@
 import { get, post } from '@/utils/http'
 import { PROCESS_API_URL_PREFIX } from '@/utils/apiUrlPrefix'
 import { type StatusType } from '@/types/flow'
+
+/**
+ * 后端下发的事件描述结构。新版接口返回对象（{ code, params, defaultMessage }），
+ * 旧版本可能返回 JSON 字符串或纯 HTML 字符串。前端在 EventDesc 组件中统一兼容。
+ */
+export interface EventDescObject {
+  code?: string
+  params?: unknown[]
+  defaultMessage?: string
+}
+
 /**
  * 触发记录相关 API
  */
@@ -12,7 +23,7 @@ export interface TriggerRecordItem {
   eventSource: string
   eventType: string
   triggerUser: string
-  eventDesc: string
+  eventDesc: EventDescObject | string
   eventTime: number
   status: StatusType
   pipelineId: string

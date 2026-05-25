@@ -55,7 +55,11 @@ export default defineComponent({
       <div class={styles.compositeInputWrapper}>
         <Input
           class={styles.compositeInput}
-          style={{ width: props.width ? `${props.width}px` : '100%' }}
+          style={{
+            width: props.width ? `${props.width}px` : '100%',
+            textAlign: 'center',
+            '--composite-label-width': `${props.labelWidth}px` || undefined,
+          } as any}
           disabled={props.disabled}
           modelValue={props.value}
           placeholder={props.placeholder}

@@ -8,6 +8,12 @@ import { overflowTitle } from 'bkui-vue/lib/directives'
 import { storeToRefs } from 'pinia'
 import { computed, h, withDirectives } from 'vue'
 import { useTriggerRecordStore } from '../stores/triggerRecord'
+import EventDesc from '@/views/Flow/Detail/TriggerRecord/EventDesc'
+import {
+  BUILD_NUM_LINK_REG,
+  safeUrl,
+  toText,
+} from '@/views/Flow/Detail/TriggerRecord/eventDescConfig'
 
 export interface Styles {
   iconStarBtn: string
@@ -32,6 +38,32 @@ export function useTriggerRecordData(styles: Styles) {
    */
   function convertTime(time: number) {
     return formatDate(time, 'YYYY-MM-DD HH:mm:ss')
+  }
+
+  /**
+   * 渲染 buildNum：后端历史会下发 `<a href="..." target="_blank">xxx</a>` 这样的 HTML 串，
+   * 这里通过 BUILD_NUM_LINK_REG 解析出 href/text，再用 safeUrl 校验后用 vnode 渲染，
+   * 避免 v-html / innerHTML 导致的 XSS 风险。校验失败则降级为纯文本。
+   */
+  function renderBuildNum(buildNum: string) {
+    const match = toText(buildNum).match(BUILD_NUM_LINK_REG)
+    if (match) {
+      const href = safeUrl(match[1])
+      if (href) {
+        return h(
+          'a',
+          {
+            class: 'text-link',
+            href,
+            target: '_blank',
+            rel: 'noopener noreferrer',
+          },
+          match[2],
+        )
+      }
+      return match[2]
+    }
+    return buildNum
   }
 
   /**
@@ -81,7 +113,7 @@ export function useTriggerRecordData(styles: Styles) {
                 { class: styles['trigger-event-desc'] },
                 withDirectives(
                   h('p', { class: 'text-ellipsis' }, [
-                    h('span', { innerHTML: event.eventDesc }),
+                    h(EventDesc, { eventDesc: event.eventDesc }),
                     h('span', convertTime(event.eventTime)),
                   ]),
                   [[overflowTitle, { type: 'tips' }]],
@@ -95,7 +127,7 @@ export function useTriggerRecordData(styles: Styles) {
                 [
                   event.reason && h('span', event.reason),
                   event.reason && ' | ',
-                  event.buildNum && h('em', { innerHTML: event.buildNum }),
+                  event.buildNum && h('em', renderBuildNum(event.buildNum)),
                   !event.buildNum &&
                     Array.isArray(event.reasonDetailList) &&
                     h(
