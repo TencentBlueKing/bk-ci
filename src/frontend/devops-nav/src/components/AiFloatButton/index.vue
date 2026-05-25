@@ -35,6 +35,7 @@
             aria-label="Open AI assistant"
             @click="handleFloatButtonClick"
             @pointerdown="handleDragStart"
+            @lostpointercapture="handleLostPointerCapture"
         >
             <span
                 ref="floatIconRef"
@@ -101,6 +102,7 @@
     let dragOffsetY = 0
     let dragStarted = false
     let dragOriginPosition = { left: 0, top: 0 }
+    let activeDragTarget: HTMLElement | null = null
     let ignoreNextClick = false
 
     /** Latest context reported by the inner pipeline iframe in this tab. */
@@ -270,25 +272,78 @@
         window.removeEventListener('pointermove', handleDragMove)
         window.removeEventListener('pointerup', handleDragEnd)
         window.removeEventListener('pointercancel', handleDragEnd)
+        window.removeEventListener('blur', handleDragAbort)
+    }
+
+    function releaseActivePointerCapture () {
+        const target = activeDragTarget
+        const pointerId = activePointerId
+        activeDragTarget = null
+        activePointerId = null
+
+        if (target && pointerId !== null && target.hasPointerCapture(pointerId)) {
+            try {
+                target.releasePointerCapture(pointerId)
+            } catch (e) {
+                // Capture may already be released by the browser.
+            }
+        }
+    }
+
+    function suppressNextClick () {
+        ignoreNextClick = true
+        window.setTimeout(() => {
+            ignoreNextClick = false
+        }, 200)
+    }
+
+    function finishActiveDrag (shouldSuppressClick = true) {
+        const shouldSnap = dragStarted
+        removeDragListeners()
+
+        if (shouldSnap && floatPosition.value) {
+            const snappedPosition = getSnappedFloatPosition(floatPosition.value.left, floatPosition.value.top)
+            floatSnapEdge.value = snappedPosition.edge
+            floatPosition.value = {
+                left: snappedPosition.left,
+                top: snappedPosition.top,
+            }
+        }
+
+        if (shouldSnap && shouldSuppressClick) {
+            suppressNextClick()
+        }
+
+        isDragging.value = false
+        dragStarted = false
+        releaseActivePointerCapture()
     }
 
     function handleDragStart (event: PointerEvent) {
         if (panelVisible.value || event.button !== 0) {
             return
         }
-        const rect = (floatIconRef.value || event.currentTarget as HTMLElement).getBoundingClientRect()
+        if (activePointerId !== null) {
+            finishActiveDrag(false)
+        }
+
+        const target = event.currentTarget as HTMLElement
+        const rect = (floatIconRef.value || target).getBoundingClientRect()
         const position = getClampedFloatPosition(rect.left, rect.top)
 
         activePointerId = event.pointerId
+        activeDragTarget = target
         dragStartX = event.clientX
         dragStartY = event.clientY
         dragOffsetX = event.clientX - position.left
         dragOffsetY = event.clientY - position.top
         dragStarted = false
         dragOriginPosition = position
+        target.setPointerCapture(event.pointerId)
         window.addEventListener('pointermove', handleDragMove)
         window.addEventListener('pointerup', handleDragEnd)
         window.addEventListener('pointercancel', handleDragEnd)
+        window.addEventListener('blur', handleDragAbort)
     }
 
     function handleDragMove (event: PointerEvent) {
@@ -317,27 +372,21 @@
         if (activePointerId !== event.pointerId) {
             return
         }
-        removeDragListeners()
-        activePointerId = null
+        finishActiveDrag()
+    }
 
-        if (!dragStarted) {
+    function handleLostPointerCapture (event: PointerEvent) {
+        if (activePointerId !== event.pointerId) {
             return
         }
+        finishActiveDrag()
+    }
 
-        isDragging.value = false
-        dragStarted = false
-        if (floatPosition.value) {
-            const snappedPosition = getSnappedFloatPosition(floatPosition.value.left, floatPosition.value.top)
-            floatSnapEdge.value = snappedPosition.edge
-            floatPosition.value = {
-                left: snappedPosition.left,
-                top: snappedPosition.top,
-            }
+    function handleDragAbort () {
+        if (activePointerId === null) {
+            return
         }
-        ignoreNextClick = true
-        window.setTimeout(() => {
-            ignoreNextClick = false
-        }, 200)
+        finishActiveDrag(false)
     }
 
     function handleViewportResize () {
