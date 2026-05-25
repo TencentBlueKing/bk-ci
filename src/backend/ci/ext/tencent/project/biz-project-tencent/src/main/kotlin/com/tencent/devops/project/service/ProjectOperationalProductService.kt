@@ -249,7 +249,7 @@ class ProjectOperationalProductService(
             products.filter {
                 it.kpiName.contains(kpiName, ignoreCase = true) ||
                     it.kpiCode.contains(kpiName, ignoreCase = true)
-            }.distinct()
+            }.distinct().filterNot { it.kpiCode == "9999" }
         }
     }
 
