@@ -45,6 +45,8 @@ object TapdWebhookConstant {
 
     const val TAPD_KEY_EVENT_FROM = "event_from"
 
+    const val TAPD_KEY_EVENT_ID = "event_id"
+
     // 用于从中提取 TAPD 主机地址（schema + host）
     const val TAPD_KEY_REFERER = "referer"
 

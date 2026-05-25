@@ -57,6 +57,7 @@ import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_TAPD_STOR
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ACTION
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_EVENT_FROM
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_EVENT_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_EVENT_URL
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_LINK_ID
@@ -71,6 +72,7 @@ import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CURRENT_
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_ENTITY_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_EVENT
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_EVENT_FROM
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_EVENT_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_LABEL
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_NAME
@@ -492,6 +494,7 @@ class TapdWebhookRequestService(
             CI_ACTION to eventAction.value,
             CI_EVENT_URL to objectUrl,
             CI_EVENT_FROM to body.getHookField(TAPD_KEY_EVENT_FROM),
+            CI_EVENT_ID to body.getHookField(TAPD_KEY_EVENT_ID),
             CI_TAPD_WORKSPACE_ID to tapdProjectId,
             CI_TAPD_ID to objectId,
             CI_TAPD_PARENT_ID to body.getHookField(TAPD_KEY_PARENT_ID, update),
