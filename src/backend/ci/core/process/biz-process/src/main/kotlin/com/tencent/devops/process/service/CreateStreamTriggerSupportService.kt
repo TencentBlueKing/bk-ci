@@ -1,6 +1,5 @@
 package com.tencent.devops.process.service
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
