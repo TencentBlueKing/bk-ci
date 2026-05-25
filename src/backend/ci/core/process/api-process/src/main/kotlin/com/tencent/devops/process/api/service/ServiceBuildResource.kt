@@ -199,7 +199,10 @@ interface ServiceBuildResource {
         version: Int? = null,
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        @Parameter(description = "分支版本, 仅PAC流水线有效", required = false)
+        @QueryParam("branch")
+        branch: String? = null
     ): Result<BuildManualStartupInfo>
 
     @Operation(summary = "搜索流水线参数")
@@ -965,7 +968,10 @@ interface ServiceBuildResource {
         version: Int? = null,
         @Parameter(description = "iMate会话ID", required = false)
         @HeaderParam(AUTH_HEADER_IMATE_SESSION_ID)
-        imateSessionId: String? = null
+        imateSessionId: String? = null,
+        @Parameter(description = "分支版本, 仅PAC流水线有效, 此参数和version同时存在时, 优先使用version参数", required = false)
+        @QueryParam("branch")
+        branch: String? = null
     ): Result<BuildId>
 
     @Operation(summary = "取消并发起新构建")

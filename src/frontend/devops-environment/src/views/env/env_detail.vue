@@ -102,7 +102,13 @@
                 envList,
                 isCreateResType
             } = useEnvAside()
-            
+
+            // 获取当前项目的 projectScope
+            const projectScope = computed(() => {
+                const projectList = proxy.$store.state.projectList || []
+                const curProject = projectList.find(p => p.projectCode === projectId.value)
+                return curProject?.projectScope
+            })
 
             const emptyInfo = ref({
                 title: proxy.$t('environment.envInfo.emptyEnv'),
@@ -176,10 +182,10 @@
                             : proxy.$t('environment.nodeInfo.buildTask')
                     }
                 ] : []),
-                {
+                ...(projectScope.value !== 1 ? [{
                     name: 'auth',
                     label: proxy.$t('environment.authManage')
-                }
+                }] : [])
             ])
             
             // 获取可用的 tab 名称列表
