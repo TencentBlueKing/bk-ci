@@ -37,4 +37,10 @@ class OpPermissionFacadeResourceImpl(
             )
         )
     }
+
+    override fun listProjectGroupsWithPipelineViewButNoDownload(
+        projectCodes: List<String>?
+    ) = Result(
+        resourceGroupPermissionService.listProjectGroupsWithPipelineViewButNoDownload(projectCodes)
+    )
 }

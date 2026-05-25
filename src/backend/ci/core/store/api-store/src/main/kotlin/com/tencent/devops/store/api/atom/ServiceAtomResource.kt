@@ -47,6 +47,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
@@ -74,7 +75,8 @@ interface ServiceAtomResource {
         userId: String,
         @Parameter(description = "支持的服务范围", required = false)
         @QueryParam("serviceScope")
-        serviceScope: ServiceScopeEnum?,
+        @DefaultValue("PIPELINE")
+        serviceScope: ServiceScopeEnum? = ServiceScopeEnum.PIPELINE,
         @Parameter(description = "搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
@@ -180,6 +182,18 @@ interface ServiceAtomResource {
         @PathParam("atomCode")
         atomCode: String
     ): Result<AtomClassifyInfo?>
+
+    @Operation(summary = "根据插件代码和版本号精确获取插件id")
+    @GET
+    @Path("/codes/{atomCode}/versions/{version}/atomId/get")
+    fun getAtomId(
+        @Parameter(description = "插件代码", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @Parameter(description = "版本号", required = true)
+        @PathParam("version")
+        version: String
+    ): Result<String?>
 
     @Operation(summary = "获取所有流水线插件信息")
     @GET

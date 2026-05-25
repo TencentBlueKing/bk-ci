@@ -41,6 +41,7 @@ import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.InstalledAtom
+import com.tencent.devops.store.pojo.atom.MarketAtomListQuery
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
@@ -73,20 +74,22 @@ class ServiceAtomResourceImpl @Autowired constructor(
     ): Result<MarketAtomResp> {
         return Result(
             marketAtomService.list(
-                userId = userId.trim(),
-                keyword = keyword?.trim(),
-                classifyCode = classifyCode?.trim(),
-                labelCode = labelCode?.trim(),
-                score = score,
-                rdType = rdType,
-                yamlFlag = yamlFlag,
-                recommendFlag = recommendFlag,
-                qualityFlag = qualityFlag,
-                sortType = sortType,
-                page = page,
-                pageSize = pageSize,
-                urlProtocolTrim = true,
-                serviceScope = serviceScope
+                MarketAtomListQuery(
+                    userId = userId.trim(),
+                    keyword = keyword?.trim(),
+                    classifyCode = classifyCode?.trim(),
+                    labelCode = labelCode?.trim(),
+                    score = score,
+                    rdType = rdType,
+                    yamlFlag = yamlFlag,
+                    recommendFlag = recommendFlag,
+                    qualityFlag = qualityFlag,
+                    sortType = sortType,
+                    page = page,
+                    pageSize = pageSize,
+                    urlProtocolTrim = true,
+                    serviceScope = serviceScope
+                )
             )
         )
     }
@@ -121,6 +124,10 @@ class ServiceAtomResourceImpl @Autowired constructor(
 
     override fun getAtomClassifyInfo(atomCode: String): Result<AtomClassifyInfo?> {
         return atomClassifyService.getAtomClassifyInfo(atomCode)
+    }
+
+    override fun getAtomId(atomCode: String, version: String): Result<String?> {
+        return Result(atomService.getAtomId(atomCode = atomCode, version = version))
     }
 
     override fun listAllPipelineAtoms(

@@ -51,6 +51,7 @@ import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
+import com.tencent.devops.process.pojo.PipelineYamlBuildVersion
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
@@ -561,6 +562,54 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             targetBuildNo = buildNo.currentBuildNo
         )
         return Result(true)
+    }
+
+    override fun getVersionByBranch(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        branch: String,
+        archiveFlag: Boolean?,
+        source: PipelineGetVersionSource?
+    ): Result<PipelineVersionWithModel> {
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.VIEW
+        )
+        return Result(
+            pipelineVersionFacadeService.getVersionByBranch(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                branch = branch,
+                archiveFlag = archiveFlag,
+                source = source
+            )
+        )
+    }
+
+    override fun listPacVersions(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        search: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<PipelineYamlBuildVersion>> {
+        return Result(
+            pipelineVersionFacadeService.listPacVersions(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                search = search,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     private fun checkParam(userId: String, projectId: String) {

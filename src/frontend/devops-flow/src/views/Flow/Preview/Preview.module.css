@@ -393,11 +393,6 @@
   color: var(--color-text-primary);
 }
 
-.nodeIp {
-  color: var(--color-text-tertiary);
-  font-size: var(--font-size-xs);
-}
-
 .nodeOffline {
   color: var(--color-danger);
   font-size: var(--font-size-xs);

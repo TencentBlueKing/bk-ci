@@ -617,14 +617,9 @@ export default defineComponent({
                   {/* Custom environment variables */}
                   {props.showCustomEnvSection && (
                     <div class={styles.customEnvSection}>
-                      <Collapse useBlockTheme>
-                        <CollapsePanel>
+                      <Collapse useBlockTheme headerIconAlign="left">
+                        <CollapsePanel title={t('flow.orchestration.customEnv')}>
                           {{
-                            default: () => (
-                              <div class={sharedStyles.collapseHeader}>
-                                <span>{t('flow.orchestration.customEnv')}</span>
-                              </div>
-                            ),
                             content: () => (
                               <div class={sharedStyles.collapseContent}>
                                 <KeyValueMap
@@ -647,14 +642,12 @@ export default defineComponent({
                   {/* Flow control options */}
                   {props.showFlowControlSection && (
                     <div class={styles.processControlSection}>
-                      <Collapse modelValue={activeIndex.value} useBlockTheme>
-                        <CollapsePanel name="flowControl">
+                      <Collapse modelValue={activeIndex.value} useBlockTheme headerIconAlign="left">
+                        <CollapsePanel
+                          name="flowControl"
+                          title={t('flow.orchestration.flowControlOptions')}
+                        >
                           {{
-                            default: () => (
-                              <div class={sharedStyles.collapseHeader}>
-                                <span>{t('flow.orchestration.flowControlOptions')}</span>
-                              </div>
-                            ),
                             content: () => (
                               <div class={sharedStyles.collapseContent}>
                                 <Form labelWidth={120} formType="vertical">

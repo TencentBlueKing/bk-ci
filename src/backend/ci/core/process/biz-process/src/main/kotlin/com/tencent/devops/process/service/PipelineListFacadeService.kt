@@ -57,7 +57,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.web.utils.BkApiUtil
+import com.tencent.devops.common.web.utils.ApiAccessLimitCacheManager
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TTemplatePipeline
@@ -87,6 +87,7 @@ import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineDetailInfo
 import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineIdInfo
+import com.tencent.devops.process.pojo.PipelineInfoQueryCondition
 import com.tencent.devops.process.pojo.PipelinePermissions
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.app.PipelinePage
@@ -150,7 +151,8 @@ class PipelineListFacadeService @Autowired constructor(
     private val pipelineRecentUseService: PipelineRecentUseService,
     private val pipelineListQueryParamService: PipelineListQueryParamService,
     private val pipelineYamlService: PipelineYamlService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val pipelineVisibilityService: PipelineVisibilityService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -914,12 +916,15 @@ class PipelineListFacadeService @Autowired constructor(
             ),
             pipelineIds = pipelineList.map { it.pipelineId }
         )
+        // 使用缓存管理器批量检查限制状态（优化性能）
+        val pipelineLimitMap = ApiAccessLimitCacheManager.checkPipelineLimitStatus(
+            redisOperation = redisOperation,
+            pipelineIds = pipelineList.map { it.pipelineId }.toTypedArray()
+        )
         return pipelineList.map { pipeline ->
             val pipelineId = pipeline.pipelineId
-            val limitFlag = redisOperation.isMember(
-                key = BkApiUtil.getApiAccessLimitPipelinesKey(),
-                item = pipelineId
-            )
+            // 从缓存结果中获取限制状态
+            val limitFlag = pipelineLimitMap[pipelineId] == true
             val permissions = if (limitFlag) {
                 PipelinePermissions(canManage = false, canView = true)
             } else {
@@ -934,10 +939,12 @@ class PipelineListFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String
     ): PipelinePermissions {
-        val limitFlag = redisOperation.isMember(
-            key = BkApiUtil.getApiAccessLimitPipelinesKey(),
-            item = pipelineId
+        // 使用缓存管理器检查限制状态（优化性能）
+        val result = ApiAccessLimitCacheManager.checkPipelineLimitStatus(
+            redisOperation = redisOperation,
+            pipelineIds = arrayOf(pipelineId)
         )
+        val limitFlag = result[pipelineId] == true
         return if (limitFlag) {
             PipelinePermissions(canManage = false, canView = true)
         } else {
@@ -1545,10 +1552,11 @@ class PipelineListFacadeService @Autowired constructor(
             projectId = projectId, pipelineIds = pipelineIds.toList()
         )
 
-        // 获取归档中的流水线信息
-        val pipelineArchivingFlagMap = redisOperation.isMember(
-            key = BkApiUtil.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
-            items = pipelineIds.toTypedArray()
+        // 获取归档中的流水线信息（使用缓存管理器优化）
+        val pipelineArchivingFlagMap = ApiAccessLimitCacheManager.checkMigratingPipelines(
+            redisOperation = redisOperation,
+            moduleCode = SystemModuleEnum.PROCESS.name,
+            pipelineIds = pipelineIds.toTypedArray()
         )
 
         // 完善数据
@@ -2324,6 +2332,62 @@ class PipelineListFacadeService @Autowired constructor(
         return pipelineInfoDao.listDisabledPipelineIds(
             dslContext = dslContext,
             projectId = projectId
+        )
+    }
+
+    fun listVisiblePipelines(
+        userId: String,
+        projectId: String,
+        targetUserId: String,
+        pipelineName: String? = null,
+        page: Int,
+        pageSize: Int
+    ): SQLPage<SimplePipeline> {
+        // 1. 如果有流水线名称，先从 T_PIPELINE_INFO 按名称搜索得到候选 ID
+        val candidatePipelineIds = if (!pipelineName.isNullOrBlank()) {
+            val pipelineIds = pipelineInfoDao.searchPipelineIdsByName(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineName = pipelineName
+            )
+            if (pipelineIds.isEmpty()) {
+                return SQLPage(count = 0, records = emptyList())
+            }
+            pipelineIds
+        } else {
+            null
+        }
+
+        // 2. 在 T_PIPELINE_VISIBILITY 分页查询可见流水线 ID
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+        val visiblePipelineIds = pipelineVisibilityService.listVisiblePipelineIds(
+            requestUserId = userId,
+            projectId = projectId,
+            targetUserId = targetUserId,
+            pipelineIds = candidatePipelineIds,
+            limit = sqlLimit.limit,
+            offset = sqlLimit.offset
+        )
+        if (visiblePipelineIds.isEmpty()) {
+            return SQLPage(count = 0, records = emptyList())
+        }
+
+        // 3. 根据分页后的流水线 ID 查询 T_PIPELINE_INFO 获取详情
+        val condition = PipelineInfoQueryCondition(
+            projectId = projectId,
+            pipelineIds = visiblePipelineIds.toSet()
+        )
+        val count = pipelineInfoDao.countByCondition(
+            dslContext = dslContext,
+            condition = condition
+        )
+        val records = pipelineInfoDao.listByCondition(
+            dslContext = dslContext,
+            condition = condition
+        )
+        return SQLPage(
+            count = count,
+            records = generateSimplePipelines(records)
         )
     }
 }

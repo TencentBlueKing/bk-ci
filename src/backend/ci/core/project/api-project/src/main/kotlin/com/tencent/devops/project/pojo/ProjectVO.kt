@@ -90,6 +90,8 @@ data class ProjectVO(
     val secrecy: Boolean?,
     @get:Schema(title = "是否隐藏")
     val hidden: Boolean? = null,
+    @get:Schema(title = "项目组织形态", description = "0-团队项目，1-个人项目")
+    val projectScope: Int? = 0,
     @get:Schema(title = "是否启用图表激活")
     val helmChartEnabled: Boolean?,
     @get:Schema(title = "kind")
@@ -161,5 +163,9 @@ data class ProjectVO(
     @get:Schema(title = "是否可以查看")
     val canView: Boolean? = null,
     @get:Schema(title = "安装模板权限")
-    val pipelineTemplateInstallPerm: Boolean? = null
+    val pipelineTemplateInstallPerm: Boolean? = null,
+    @get:Schema(title = "KPI产品编码")
+    val kpiCode: String? = null,
+    @get:Schema(title = "KPI产品名称")
+    val kpiName: String? = null
 )

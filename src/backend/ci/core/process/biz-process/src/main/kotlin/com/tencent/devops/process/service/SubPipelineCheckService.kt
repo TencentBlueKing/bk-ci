@@ -4,12 +4,14 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementHolder
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.api.service.ServicePipelineVersionResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.SubPipelineTaskService
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -30,7 +32,8 @@ import jakarta.ws.rs.core.Response
 class SubPipelineCheckService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val subPipelineRefService: SubPipelineRefService,
-    private val subPipelineTaskService: SubPipelineTaskService
+    private val subPipelineTaskService: SubPipelineTaskService,
+    private val client: Client
 ) {
 
     /**
@@ -321,7 +324,7 @@ class SubPipelineCheckService @Autowired constructor(
         val errorDetails = mutableSetOf<String>()
         subPipelineElementMap.filter {
             !it.key.branch.isNullOrBlank()
-        }.forEach { (subPipeline, _) ->
+        }.forEach { (subPipeline, holderList) ->
             val subProjectId = subPipeline.projectId
             val subPipelineId = subPipeline.pipelineId
             val subPipelineBranch = subPipeline.branch!!
@@ -332,16 +335,25 @@ class SubPipelineCheckService @Autowired constructor(
                 branch = subPipelineBranch
             )
             if (branchVersionResource == null) {
-                errorDetails.add(
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH,
-                        params = arrayOf(
-                            "/console/pipeline/$subProjectId/$subPipelineId",
-                            subPipelineName,
-                            subPipelineBranch
+                holderList.sortedWith(
+                    compareBy(
+                        { it.stageIndex },
+                        { it.containerIndex },
+                        { it.elementIndex }
+                    )
+                ).forEach { holder ->
+                    errorDetails.add(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH,
+                            params = arrayOf(
+                                "${holder.stageIndex}-${holder.containerIndex}-${holder.elementIndex}",
+                                "/console/pipeline/$subProjectId/$subPipelineId",
+                                subPipelineName,
+                                subPipelineBranch
+                            )
                         )
                     )
-                )
+                }
             }
         }
         return errorDetails
@@ -412,11 +424,16 @@ class SubPipelineCheckService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         branch: String
-    ) = subPipelineTaskService.getBranchVersionResource(
-        projectId = projectId,
-        pipelineId = pipelineId,
-        branchName = branch
-    )
+    ) = try {
+        client.get(ServicePipelineVersionResource::class).getVersionByBranch(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            branch = branch
+        ).data
+    } catch (ignored: Exception) {
+        logger.warn("fail to get [$branch]branch version of pipeline[$pipelineId]", ignored)
+        null
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(SubPipelineCheckService::class.java)
