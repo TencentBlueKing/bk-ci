@@ -113,7 +113,7 @@ class ProjectOperationalProductService(
                 val productId = obsProductInfo.productId!!.toInt()
 
                 val iCosProductVO = productMapping.firstOrNull {
-                    it.productId == productId && !it.iCosProductCode.isNullOrBlank()
+                    it.productId == productId && !it.iCosProductCode.isNullOrBlank() && it.iCosProductCode != "9999"
                 }
                 val crosProductVO = iCosProductVO?.let { iCosProduct ->
                     kpiCodeInfo.firstOrNull {
@@ -248,7 +248,7 @@ class ProjectOperationalProductService(
         } else {
             products.filter {
                 it.kpiName.contains(kpiName, ignoreCase = true) ||
-                    it.kpiCode.contains(kpiName, ignoreCase = true)
+                        it.kpiCode.contains(kpiName, ignoreCase = true)
             }.distinct().filterNot { it.kpiCode == "9999" }
         }
     }
@@ -394,7 +394,7 @@ class ProjectOperationalProductService(
         if (inputIds.any { it in bkCostsProperties.excludeDeptId }) {
             logger.info(
                 "checkNeedMonetization|excluded|bgId=$bgId|businessLineId=$businessLineId|" +
-                    "deptId=$deptId|centerId=$centerId"
+                        "deptId=$deptId|centerId=$centerId"
             )
             return false
         }
@@ -402,7 +402,7 @@ class ProjectOperationalProductService(
         // 检查是否匹配配置的组织ID
         val bgMatch = !bgId.isNullOrBlank() && bgId.trim() in bkCostsProperties.bgId
         val businessLineMatch = !businessLineId.isNullOrBlank() &&
-            businessLineId.trim() in bkCostsProperties.businessLineId
+                businessLineId.trim() in bkCostsProperties.businessLineId
         val deptMatch = !deptId.isNullOrBlank() && deptId.trim() in bkCostsProperties.deptId
         val centerMatch = !centerId.isNullOrBlank() && centerId.trim() in bkCostsProperties.centerId
 
@@ -410,8 +410,8 @@ class ProjectOperationalProductService(
 
         logger.info(
             "checkNeedMonetization|result=$needMonetization|bgId=$bgId(match=$bgMatch)|" +
-                "businessLineId=$businessLineId(match=$businessLineMatch)|" +
-                "deptId=$deptId(match=$deptMatch)|centerId=$centerId(match=$centerMatch)"
+                    "businessLineId=$businessLineId(match=$businessLineMatch)|" +
+                    "deptId=$deptId(match=$deptMatch)|centerId=$centerId(match=$centerMatch)"
         )
 
         return needMonetization
