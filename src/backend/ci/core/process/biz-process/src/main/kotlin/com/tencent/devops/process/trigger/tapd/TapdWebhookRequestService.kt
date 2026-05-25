@@ -405,20 +405,18 @@ class TapdWebhookRequestService(
     }
 
     private fun getEventObjectId(
-        eventAction: TapdEventAction,
-        body: Map<String, Any?>
+        eventAction: TapdEventAction, body: Map<String, Any?>
     ) = when (eventAction) {
-        TapdEventAction.ADD_COMMENT,
-        TapdEventAction.UPDATE_COMMENT,
-        TapdEventAction.DELETE_COMMENT -> {
+        TapdEventAction.ADD_COMMENT, TapdEventAction.UPDATE_COMMENT, TapdEventAction.DELETE_COMMENT -> {
             body.getHookField(TAPD_KEY_ENTITY_ID)
         }
 
-        TapdEventAction.BUG_LINK,
-        TapdEventAction.BUG_UNLINK,
-        TapdEventAction.STORY_LINK,
-        TapdEventAction.STORY_UNLINK -> {
+        TapdEventAction.BUG_LINK, TapdEventAction.STORY_LINK -> {
             body.getHookField(TAPD_KEY_TARGET_ID)
+        }
+
+        TapdEventAction.STORY_UNLINK, TapdEventAction.BUG_UNLINK -> {
+            body.getHookField(TAPD_KEY_SOURCE_ID)
         }
 
         else -> body.getHookField(TAPD_KEY_ID, eventAction == TapdEventAction.UPDATE)
