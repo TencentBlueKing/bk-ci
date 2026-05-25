@@ -195,7 +195,7 @@ class OffshoreTGitApiClient @Autowired constructor(
             "/api/v3/projects"
         }
 
-        logger.info("create offshore $uri|$name|$namespaceId")
+        logger.info("create offshore $uri|$name|$svnProject|$namespaceId")
 
         val url = "${tGitConfig.tGitUrl}$uri".addQuery(
             "policy" to "offshore",
