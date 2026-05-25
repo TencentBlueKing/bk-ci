@@ -46,6 +46,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.project.pojo.enums.ProjectScopeType
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.util.ProjectUtils
 import org.jooq.Condition
@@ -60,7 +61,7 @@ import org.jooq.impl.DSL.lower
 import org.springframework.stereotype.Repository
 import java.net.URLDecoder
 import java.time.LocalDateTime
-import java.util.Locale
+import java.util.*
 
 @Suppress("ALL")
 @Repository
@@ -313,6 +314,27 @@ class ProjectDao {
         }
     }
 
+    fun getFirstPersonalProjectByCreator(dslContext: DSLContext, creator: String): TProjectRecord? {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectFrom(this)
+                .where(CREATOR.eq(creator))
+                .and(PROJECT_SCOPE.eq(ProjectScopeType.PERSONAL.value))
+                .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
+                .orderBy(CREATED_AT.desc())
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
+    fun updateProjectScopeByCode(dslContext: DSLContext, projectCode: String, projectScope: Int): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(PROJECT_SCOPE, projectScope)
+                .where(ENGLISH_NAME.eq(projectCode))
+                .execute()
+        }
+    }
+
     fun create(dslContext: DSLContext, paasProject: PaasProject): Int {
         with(TProject.T_PROJECT) {
             return dslContext.insertInto(
@@ -431,7 +453,8 @@ class ProjectDao {
                 SUBJECT_SCOPES,
                 AUTH_SECRECY,
                 PRODUCT_ID,
-                HIDDEN
+                HIDDEN,
+                PROJECT_SCOPE
             ).values(
                 projectCreateInfo.projectName,
                 projectId,
@@ -463,7 +486,8 @@ class ProjectDao {
                 subjectScopesStr,
                 projectCreateInfo.authSecrecy ?: ProjectAuthSecrecyStatus.PUBLIC.value,
                 projectCreateInfo.productId,
-                projectCreateInfo.hidden
+                projectCreateInfo.hidden,
+                projectCreateInfo.projectScope
             ).execute()
         }
     }
@@ -746,7 +770,8 @@ class ProjectDao {
 
     private fun TProject.generateQueryProjectForApplyCondition(): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        conditions.add(CHANNEL.eq(ProjectChannelCode.BS.name).or(CHANNEL.eq(ProjectChannelCode.PREBUILD.name)))
+        conditions.add(CHANNEL.eq(ProjectChannelCode.BS.name))
+        conditions.add(PROJECT_SCOPE.eq(ProjectScopeType.TEAM.value))
         conditions.add(IS_OFFLINED.eq(false))
         conditions.add(ENABLED.eq(true))
         conditions.add(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))

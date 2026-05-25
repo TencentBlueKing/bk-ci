@@ -642,11 +642,70 @@ class WorkspaceRecordService @Autowired constructor(
         )
     }
 
+    fun enableThumbnail(
+        workspaceName: String,
+        enable: Boolean
+    ): Boolean {
+        if (enable) {
+            saveWorkspaceRecordTicket(
+                workspaceName, WorkspaceRecordTicketType.THUMBNAIL
+            )
+        }
+        return updateWorkspaceRecordTicketEnable(
+            workspaceName = workspaceName,
+            type = WorkspaceRecordTicketType.THUMBNAIL,
+            enable = enable
+        )
+    }
+
+    /**
+     * 分页批量获取 THUMBNAIL 类型实例 id 列表
+     *
+     * 按 enable 参数过滤 T_WORKSPACE_RECORD_TICKET.ENABLE 状态，
+     * 并 JOIN T_WORKSPACE 过滤掉已删除实例（STATUS != DELETED）
+     *
+     * @param enable true=开启 THUMBNAIL；false=关闭 THUMBNAIL
+     * @param page 第几页，从 1 开始；小于 1 自动归一为 1
+     * @param pageSize 每页大小，会被限制在 [1, MAX_PAGE_SIZE] 区间
+     */
+    fun batchQueryThumbnailWorkspaces(
+        enable: Boolean,
+        page: Int,
+        pageSize: Int
+    ): Page<String> {
+        val pageNotNull = if (page < 1) 1 else page
+        val pageSizeNotNull = pageSize.coerceIn(1, MAX_PAGE_SIZE)
+        val offset = (pageNotNull - 1) * pageSizeNotNull
+        val total = workspaceJoinDao.countThumbnailWorkspaces(
+            dslContext = dslContext,
+            enable = enable
+        )
+        val names = workspaceJoinDao.fetchThumbnailWorkspaceNames(
+            dslContext = dslContext,
+            enable = enable,
+            limit = pageSizeNotNull,
+            offset = offset
+        )
+        val totalPages = if (pageSizeNotNull == 0) {
+            0
+        } else {
+            ((total + pageSizeNotNull - 1) / pageSizeNotNull).toInt()
+        }
+        return Page(
+            count = total,
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            totalPages = totalPages,
+            records = names
+        )
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(WorkspaceRecordService::class.java)
 
         private const val BKREPO_WORKSPACE_REPONAME_PREFIX = "REMOTEDEV_"
         private const val THUMBNAIL_ENCRYPTED_TICKET_CACHE_KEY_PREFIX = "remotedev:thumbnail:encrypted-ticket:"
+        private const val MAX_PAGE_SIZE = 1000
 
         private fun genRepoName(workspaceName: String) = "$BKREPO_WORKSPACE_REPONAME_PREFIX$workspaceName"
 

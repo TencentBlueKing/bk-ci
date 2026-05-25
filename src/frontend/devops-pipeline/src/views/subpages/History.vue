@@ -188,15 +188,20 @@
                     {
                         title: this.$t('more'),
                         children: [
-                            {
-                                title: this.$t('authSetting'),
-                                disableTooltip: {
-                                    content: this.$refs.disableToolTips?.[2],
-                                    disabled: this.isReleaseVersion,
-                                    delay: [300, 0]
-                                },
-                                name: 'permission'
-                            },
+                            ...(this.$store.state.curProject.projectScope !== 1
+                                ? [
+                                    {
+                                        title: this.$t('authSetting'),
+                                        disableTooltip: {
+                                            content: this.$refs.disableToolTips?.[2],
+                                            disabled: this.isReleaseVersion,
+                                            delay: [300, 0]
+                                        },
+                                        name: 'permission'
+                                    }
+                                ]
+                                : []
+                            ),
                             {
                                 title: this.$t('delegationPermission'),
                                 name: 'delegation'
