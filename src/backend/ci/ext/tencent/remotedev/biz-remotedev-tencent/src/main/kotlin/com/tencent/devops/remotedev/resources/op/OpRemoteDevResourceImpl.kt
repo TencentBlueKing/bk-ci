@@ -27,6 +27,7 @@ import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.SleepControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import jakarta.ws.rs.core.Response
+import java.util.stream.Collectors
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -129,23 +130,39 @@ class OpRemoteDevResourceImpl @Autowired constructor(
                 (data.status == null || it.status == data.status) &&
                 (data.lockedFlag == null || it.locked == data.lockedFlag)
         }
+        val totalCount = filteredResources.size.toLong()
         val start = (pageNotNull - 1) * pageSizeNotNull
-        val end = (start + pageSizeNotNull).coerceAtMost(filteredResources.size)
-        return if (start >= filteredResources.size) {
-            Result(
+        if (start >= filteredResources.size) {
+            return Result(
                 Page(
-                    page = pageNotNull, pageSize = pageSizeNotNull, count = filteredResources.size.toLong(),
-                    records = emptyList()
-                )
-            )
-        } else {
-            Result(
-                Page(
-                    page = pageNotNull, pageSize = pageSizeNotNull, count = filteredResources.size.toLong(),
-                    records = filteredResources.subList(start, end).map { JsonUtil.toMap(it) }
+                    page = pageNotNull, pageSize = pageSizeNotNull, count = totalCount, records = emptyList()
                 )
             )
         }
+        val end = (start + pageSizeNotNull).coerceAtMost(filteredResources.size)
+        val pagedResources = filteredResources.subList(start, end)
+
+        val bcsStatusMap: Map<String, String> = pagedResources
+            .filter { it.status == UNUSED_CGS_STATUS && !it.envId.isNullOrBlank() }
+            .parallelStream()
+            .map { resource ->
+                val bcsStatus = kotlin.runCatching {
+                    workspaceCommon.getWorkspaceInfoByEid(resource.envId!!)?.status?.name
+                }.getOrNull() ?: BCS_STATUS_UNKNOWN
+                resource.envId!! to bcsStatus
+            }
+            .collect(Collectors.toMap({ it.first }, { it.second }, { a, _ -> a }))
+
+        val records = pagedResources.map { item ->
+            val map = JsonUtil.toMap(item).toMutableMap()
+            if (item.status == UNUSED_CGS_STATUS && item.envId != null) {
+                map["bcsStatus"] = bcsStatusMap[item.envId] ?: BCS_STATUS_UNKNOWN
+            }
+            map
+        }
+        return Result(
+            Page(page = pageNotNull, pageSize = pageSizeNotNull, count = totalCount, records = records)
+        )
     }
 
     override fun getCgsConfig(userId: String): Result<CgsResourceConfig> {
@@ -217,5 +234,11 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         workspaceNames: List<String>
     ): Result<Boolean> {
         return Result(makeMoneyService.reduceWorkspaceBills(workspaceNames, startDate, endDate))
+    }
+
+    companion object {
+        // CGS 资源池中表示"未使用/空闲"的状态码（来自 BCS listcgs 接口）
+        private const val UNUSED_CGS_STATUS = 11
+        private const val BCS_STATUS_UNKNOWN = "unknown"
     }
 }
