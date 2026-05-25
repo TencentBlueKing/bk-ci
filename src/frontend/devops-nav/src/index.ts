@@ -52,7 +52,7 @@ declare module 'vue/types/vue' {
 }
 
 Vue.use(bkMagic)
-Vue.use(PermissionDirective(handleProjectNoPermission))
+Vue.use(PermissionDirective(handleProjectNoPermission, window.PUBLIC_URL_PREFIX))
 
 Vue.component('AsideNav', AsideNav)
 Vue.component('ContentHeader', ContentHeader)
