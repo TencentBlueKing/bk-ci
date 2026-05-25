@@ -117,7 +117,10 @@ interface UserAtomResource {
         @Parameter(description = "每页数量", required = true)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
-        pageSize: Int = 10
+        pageSize: Int = 10,
+        @Parameter(description = "归属应用标识", required = true)
+        @QueryParam("ownerStoreCode")
+        ownerStoreCode: String?
     ): Result<AtomResp<AtomRespItem>?>
 
     @Operation(summary = "根据插件代码和版本号获取流水线插件详细信息")
