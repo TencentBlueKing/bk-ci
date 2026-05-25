@@ -27,6 +27,7 @@
 
 package com.tencent.devops.ai.service
 
+import com.tencent.devops.ai.context.AgentSessionContext
 import com.tencent.devops.ai.dao.AiRunEventDao
 import com.tencent.devops.ai.pojo.AiAgentStageMetadata.SessionStatus
 import com.tencent.devops.ai.pojo.event.AiRunStopBroadcastEvent
@@ -51,7 +52,8 @@ class AiRunEventService @Autowired constructor(
     private val aiRunEventDao: AiRunEventDao,
     private val aiAgentStageService: AiAgentStageService,
     private val dslContext: DSLContext,
-    private val activeRunManager: ActiveRunManager
+    private val activeRunManager: ActiveRunManager,
+    private val sessionContext: AgentSessionContext
 ) {
 
     /**
@@ -235,9 +237,19 @@ class AiRunEventService @Autowired constructor(
         val activeRun = activeRunManager.get(event.threadId)
         if (activeRun != null) {
             logger.info(
-                "[AiRunEvent] Handling stop broadcast: threadId={}, runId={}",
-                event.threadId, activeRun.runId
+                "[AiRunEvent] Handling stop broadcast: threadId={}, runId={}, status={}",
+                event.threadId, activeRun.runId, event.status
             )
+            // 主动向前端推送终止事件，避免前端因 agent.interrupt() 不能立即让
+            // result.events() 完成而长时间停留在 running 状态。
+            // TIMEOUT 路径已在 cleanupOnTimeout 中提前发过 Raw + RunFinished，
+            // 这里仅 CANCELLED（用户主动停止）补发 RunFinished；
+            // 重复发送由 writeOutgoingEvent 的 terminalEventSent 去重保证幂等。
+            if (event.status != SessionStatus.TIMEOUT) {
+                sessionContext.getSinkByThreadId(event.threadId)?.let { sinkInfo ->
+                    SseEventWriter.emitFinish(sinkInfo.sink, sinkInfo.threadId, sinkInfo.runId)
+                }
+            }
             activeRun.agent.interrupt()
             activeRun.replaySink.tryEmitComplete()
         }

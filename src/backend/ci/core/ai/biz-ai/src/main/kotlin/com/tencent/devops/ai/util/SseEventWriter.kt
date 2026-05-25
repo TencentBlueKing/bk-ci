@@ -58,4 +58,23 @@ object SseEventWriter {
             logger.debug("[SseEventWriter] Failed to emit error events to sink: {}", e.message)
         }
     }
+
+    /**
+     * 通过 Reactor Sink 仅发射 RunFinished 事件（无错误信息）。
+     * 用于用户主动停止等正常终止场景，避免前端长期停留在 running 状态。
+     * 事件会经由 mergedEvents 流到达 subscribeAndAwait 的 onNext，最终写入 SSE 输出。
+     * 若框架后续也发出 RunFinished，writeOutgoingEvent 的 terminalEventSent 去重逻辑会兜底。
+     */
+    fun emitFinish(
+        sink: Sinks.Many<AguiEvent>,
+        threadId: String?,
+        runId: String?
+    ) {
+        try {
+            val finish = AguiEvent.RunFinished(threadId, runId)
+            sink.tryEmitNext(finish)
+        } catch (e: Exception) {
+            logger.debug("[SseEventWriter] Failed to emit finish event to sink: {}", e.message)
+        }
+    }
 }
