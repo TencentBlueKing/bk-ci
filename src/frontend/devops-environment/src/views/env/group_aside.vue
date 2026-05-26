@@ -484,6 +484,8 @@
             }
         }
     }
+    
+    // 环境操作下拉菜单样式
     .env-operation-dropdown {
         .bk-dropdown-list {
             li {
