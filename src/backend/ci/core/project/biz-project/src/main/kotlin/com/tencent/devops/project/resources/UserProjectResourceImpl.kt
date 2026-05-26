@@ -130,7 +130,7 @@ class UserProjectResourceImpl @Autowired constructor(
             try {
                 projectService.getByEnglishName(userId, projectId)
             } catch (ex: Exception) {
-                return null
+                null
             }
         )
     }
