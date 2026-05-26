@@ -126,7 +126,13 @@ class UserProjectResourceImpl @Autowired constructor(
     }
 
     override fun getContainEmpty(userId: String, projectId: String): Result<ProjectVO?> {
-        return Result(projectService.getByEnglishName(userId, projectId))
+        return Result(
+            try {
+                projectService.getByEnglishName(userId, projectId)
+            } catch (ex: Exception) {
+                return null
+            }
+        )
     }
 
     @AuditEntry(actionId = PROJECT_CREATE)
