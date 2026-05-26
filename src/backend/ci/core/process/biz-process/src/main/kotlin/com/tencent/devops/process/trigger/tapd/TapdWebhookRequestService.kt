@@ -291,7 +291,8 @@ class TapdWebhookRequestService(
                         TAPD_KEY_LABEL to (it.label ?: ""),
                         TAPD_KEY_PRIORITY_LABEL to (it.priorityLabel ?: ""),
                         TAPD_KEY_OWNER to (it.owner?.removeSuffix(";") ?: ""),
-                        TAPD_KEY_NAME to it.name
+                        TAPD_KEY_NAME to it.name,
+                        TAPD_KEY_PARENT_ID to it.parentId
                     )
                 }
             }
