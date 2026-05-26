@@ -5,6 +5,7 @@ import io.agentscope.core.agui.event.AguiEvent
 import org.glassfish.jersey.server.ChunkedOutput
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Sinks
+import java.time.Duration
 
 /**
  * SSE 事件推送工具，统一处理向前端写入错误/超时终止事件的逻辑。
@@ -18,6 +19,14 @@ object SseEventWriter {
     private val logger = LoggerFactory.getLogger(SseEventWriter::class.java)
 
     private val encoder = AguiEventEncoder()
+
+    /**
+     * 多线程并发 emit 时，[Sinks.Many.tryEmitNext] 可能返回 `FAIL_NON_SERIALIZED` 被静默丢弃。
+     * 用 busyLooping 在短窗口内自旋重试，确保关键终止事件不丢。
+     */
+    private val emitFailureHandler = Sinks.EmitFailureHandler.busyLooping(
+        Duration.ofMillis(EMIT_BUSY_LOOP_MILLIS)
+    )
 
     /**
      * 向 SSE 输出写入 Raw(error) + RunFinished，确保前端能感知错误并终止流。
@@ -49,14 +58,10 @@ object SseEventWriter {
         runId: String?,
         errorMessage: String
     ) {
-        try {
-            val raw = AguiEvent.Raw(threadId, runId, mapOf("error" to errorMessage))
-            val finish = AguiEvent.RunFinished(threadId, runId)
-            sink.tryEmitNext(raw)
-            sink.tryEmitNext(finish)
-        } catch (e: Exception) {
-            logger.debug("[SseEventWriter] Failed to emit error events to sink: {}", e.message)
-        }
+        val raw = AguiEvent.Raw(threadId, runId, mapOf("error" to errorMessage))
+        val finish = AguiEvent.RunFinished(threadId, runId)
+        emitOrLog(sink, raw, "Raw(error)", threadId, runId)
+        emitOrLog(sink, finish, "RunFinished", threadId, runId)
     }
 
     /**
@@ -70,11 +75,31 @@ object SseEventWriter {
         threadId: String?,
         runId: String?
     ) {
+        val finish = AguiEvent.RunFinished(threadId, runId)
+        emitOrLog(sink, finish, "RunFinished", threadId, runId)
+    }
+
+    /**
+     * 用 [Sinks.EmitFailureHandler] 包装 emit，避免因瞬时并发未串行化导致丢事件；
+     * 出现终止态等不可恢复的失败时记录详细日志。
+     */
+    private fun emitOrLog(
+        sink: Sinks.Many<AguiEvent>,
+        event: AguiEvent,
+        eventLabel: String,
+        threadId: String?,
+        runId: String?
+    ) {
         try {
-            val finish = AguiEvent.RunFinished(threadId, runId)
-            sink.tryEmitNext(finish)
+            sink.emitNext(event, emitFailureHandler)
         } catch (e: Exception) {
-            logger.debug("[SseEventWriter] Failed to emit finish event to sink: {}", e.message)
+            logger.warn(
+                "[SseEventWriter] Failed to emit {} event to sink: threadId={}, runId={}, error={}",
+                eventLabel, threadId, runId, e.message
+            )
         }
     }
+
+    /** busyLoop 重试 emit 失败的最大时长（毫秒） */
+    private const val EMIT_BUSY_LOOP_MILLIS = 100L
 }

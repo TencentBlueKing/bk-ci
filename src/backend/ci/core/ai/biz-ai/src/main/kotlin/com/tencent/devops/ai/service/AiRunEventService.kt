@@ -212,18 +212,32 @@ class AiRunEventService @Autowired constructor(
     }
 
     /**
-     * 广播 Stop 指令到所有 ai-service 实例。
-     * 使用 fanout exchange，每个实例都会收到；RUNNING 阶段的 DB 收尾在 [handleStopBroadcast] 中按事件标志处理。
+     * 广播 Stop 指令。
+     *
+     * 设计要点：
+     * 1. **先本地同步处理** —— 用户主动停止时 HTTP 线程已经知道 threadId，本实例若持有
+     *    ActiveRun，立刻 emit RunFinished + interrupt，避免前端等 MQ 异步往返。
+     * 2. **再异步 fanout 广播** —— 多实例部署时 ActiveRun 可能在其他实例上，由其他实例
+     *    通过 [handleStopBroadcast] 兜底处理。本实例 self-loop 收回时 ActiveRun 已被 remove，
+     *    `handleStopBroadcast` 自身的幂等性保证不会重复处理。
      */
     fun broadcastStop(
         threadId: String,
         status: SessionStatus = SessionStatus.CANCELLED
     ) {
+        logger.info(
+            "[AiRunEvent] Broadcasting stop: threadId={}, status={}",
+            threadId, status
+        )
         try {
-            logger.info(
-                "[AiRunEvent] Broadcasting stop: threadId={}, status={}",
-                threadId, status
+            handleStopBroadcast(AiRunStopBroadcastEvent(threadId, status), activeRunManager)
+        } catch (e: Exception) {
+            logger.warn(
+                "[AiRunEvent] Local stop processing failed: threadId={}",
+                threadId, e
             )
+        }
+        try {
             AiRunStopBroadcastEvent(threadId, status).sendTo(streamBridge)
         } catch (e: Exception) {
             logger.warn("[AiRunEvent] Failed to broadcast stop: threadId={}", threadId, e)
@@ -246,12 +260,27 @@ class AiRunEventService @Autowired constructor(
             // 这里仅 CANCELLED（用户主动停止）补发 RunFinished；
             // 重复发送由 writeOutgoingEvent 的 terminalEventSent 去重保证幂等。
             if (event.status != SessionStatus.TIMEOUT) {
-                sessionContext.getSinkByThreadId(event.threadId)?.let { sinkInfo ->
+                val sinkInfo = sessionContext.getSinkByThreadId(event.threadId)
+                if (sinkInfo != null) {
+                    logger.info(
+                        "[AiRunEvent] Emitting RunFinished to sink: threadId={}, runId={}",
+                        sinkInfo.threadId, sinkInfo.runId
+                    )
                     SseEventWriter.emitFinish(sinkInfo.sink, sinkInfo.threadId, sinkInfo.runId)
+                } else {
+                    logger.warn(
+                        "[AiRunEvent] No sink registered for thread, RunFinished emit skipped: threadId={}",
+                        event.threadId
+                    )
                 }
             }
             activeRun.agent.interrupt()
             activeRun.replaySink.tryEmitComplete()
+        } else {
+            logger.info(
+                "[AiRunEvent] Handling stop broadcast (no local ActiveRun): threadId={}, status={}",
+                event.threadId, event.status
+            )
         }
         // 无论本地是否持有 ActiveRun，都执行 remove 以确保 Redis key 被清理。
         // 场景：并发时 cleanup() 已从本地 Map 移除但 Redis 残留，
