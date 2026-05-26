@@ -186,7 +186,6 @@
                                     {{ item.tagKeyName }}: {{ item.tagValues[0].tagValueName }}
                                 </bk-tag>
                             </span>
-
                             <bk-popover
                                 placement="top"
                                 theme="light"
@@ -961,7 +960,7 @@
                     }
                 })
             },
-            handleRowClick  (node) {
+            handleRowClick (node) {
                 if (!this.isFlod) return
                 if (this.canShowDetail(node)) {
                     this.$router.replace({
@@ -973,6 +972,7 @@
                             ...this.$route.query,
                             nodeHashId: node.nodeHashId
                         }
+
                     })
                 }
             },

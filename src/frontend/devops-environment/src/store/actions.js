@@ -444,7 +444,6 @@ const actions = {
     },
     requestShareEnvProjectList (_, { projectId, envHashId, params }) {
         return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/list`, { params })
-      
     },
 
     requestProjects (_, { projectId, envHashId, page, pageSize, search }) {
