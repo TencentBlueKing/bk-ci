@@ -51,6 +51,7 @@ import com.tencent.devops.process.yaml.v3.models.image.PoolType
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.RunsOn
 import com.tencent.devops.process.yaml.v3.utils.StreamDispatchUtils
+import com.tencent.devops.process.utils.NODE_AGENT_ID
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -73,9 +74,9 @@ class DispatchTransfer @Autowired(required = false) constructor(
         job: Job,
         buildTemplateAcrossInfo: BuildTemplateAcrossInfo?,
         channelCode: ChannelCode = ChannelCode.BS
-    ): Pair<DispatchType, VMBaseOS> {
+    ): Pair<DispatchType, VMBaseOS?> {
         if (channelCode == ChannelCode.CREATIVE_STREAM) {
-            return Pair(CreateAgentIdDispatchType(value = ""), VMBaseOS.LINUX)
+            return Pair(CreateAgentIdDispatchType(value = "\${{variables.$NODE_AGENT_ID}}"), null)
         }
         // linux构建机
         dispatcherLinux(job, buildTemplateAcrossInfo)?.let { return Pair(it, VMBaseOS.LINUX) }
