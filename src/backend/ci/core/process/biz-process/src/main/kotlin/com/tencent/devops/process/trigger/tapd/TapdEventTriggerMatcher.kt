@@ -123,12 +123,8 @@ class TapdEventTriggerMatcher {
         val userFilter = UserFilter(
             pipelineId = taskId,
             triggerOnUser = triggerUser,
-            includedUsers = (input.includeUsers?.filter { it.isNotBlank() } ?: emptyList()).map {
-                EnvUtils.parseEnv(it, variables)
-            },
-            excludedUsers = (input.excludeUsers?.filter { it.isNotBlank() } ?: emptyList()).map {
-                EnvUtils.parseEnv(it, variables)
-            },
+            includedUsers = input.includeUsers?.parseEnv(variables) ?: listOf(),
+            excludedUsers = input.excludeUsers?.parseEnv(variables) ?: listOf(),
             includedFailedReason = I18Variable(
                 code = USER_NOT_MATCH,
                 params = listOf(triggerUser)
@@ -143,12 +139,8 @@ class TapdEventTriggerMatcher {
             pipelineId = taskId,
             filterName = "tapdLabel",
             triggerOn = event.triggerLabels?.split("|")?.toSet() ?: setOf(),
-            included = WebhookUtils.convert(input.includeLabels).map {
-                EnvUtils.parseEnv(it, variables)
-            },
-            excluded = WebhookUtils.convert(input.excludeLabels).map {
-                EnvUtils.parseEnv(it, variables)
-            },
+            included = WebhookUtils.convert(input.includeLabels).parseEnv(variables),
+            excluded = WebhookUtils.convert(input.excludeLabels).parseEnv(variables),
             includeFailedReason = { item ->
                 I18Variable(
                     WebhookI18nConstants.BK_TRIGGER_LABEL_NOT_MATCH,
@@ -167,9 +159,7 @@ class TapdEventTriggerMatcher {
             pipelineId = taskId,
             filterName = "tapdPriorityFilter",
             triggerOn = event.triggerPriority ?: "",
-            included = WebhookUtils.convert(input.includePriority).map {
-                EnvUtils.parseEnv(it, variables)
-            },
+            included = WebhookUtils.convert(input.includePriority).parseEnv(variables),
             failedReason = I18Variable(
                 code = BK_TRIGGER_PRIORITY_NOT_MATCH,
                 params = listOf()
@@ -180,12 +170,8 @@ class TapdEventTriggerMatcher {
             filterName = "tapdOwner",
             pipelineId = taskId,
             triggerOnUser = triggerOwner ?: "",
-            includedUsers = (input.includeOwner?.filter { it.isNotBlank() } ?: emptyList()).map {
-                EnvUtils.parseEnv(it, variables)
-            },
-            excludedUsers = (input.excludeOwner?.filter { it.isNotBlank() } ?: emptyList()).map {
-                EnvUtils.parseEnv(it, variables)
-            },
+            includedUsers = input.includeOwner?.parseEnv(variables) ?: listOf(),
+            excludedUsers = input.excludeOwner?.parseEnv(variables) ?: listOf(),
             includedFailedReason = I18Variable(
                 code = OWNER_NOT_MATCH,
                 params = listOf(triggerOwner ?: "")
@@ -199,5 +185,9 @@ class TapdEventTriggerMatcher {
             eventFromFilter, actionFilter, userFilter,
             labelFilter, priorityFilter, ownerFilter
         )
+    }
+
+    private fun List<String>.parseEnv(variables: Map<String, String>): List<String> {
+        return this.map { EnvUtils.parseEnv(it, variables) }.filter { it.isNotBlank() }
     }
 }

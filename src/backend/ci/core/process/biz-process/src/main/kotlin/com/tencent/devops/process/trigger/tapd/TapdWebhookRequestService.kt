@@ -521,14 +521,17 @@ class TapdWebhookRequestService(
             PIPELINE_START_WEBHOOK_USER_ID to triggerUser,
             PIPELINE_WEBHOOK_NOTE_COMMENT to body.getHookField(TAPD_KEY_DESCRIPTION)
         )
-        if (eventAction == TapdEventAction.BUG_LINK || eventAction == TapdEventAction.STORY_LINK) {
-            val (type, id) = when (eventAction) {
-                TapdEventAction.BUG_LINK -> TapdEventType.BUG.value to body.getHookField(TAPD_KEY_BUG_ID)
-                TapdEventAction.STORY_LINK -> TapdEventType.STORY.value to body.getHookField(TAPD_KEY_TARGET_ID)
-                else -> "" to ""
-            }
-            params[CI_TAPD_LINK_TYPE] = type
-            params[CI_TAPD_LINK_ID] = id
+        when (eventAction) {
+            TapdEventAction.BUG_LINK, TapdEventAction.BUG_UNLINK ->
+                TapdEventType.BUG.value to body.getHookField(TAPD_KEY_BUG_ID)
+
+            TapdEventAction.STORY_LINK, TapdEventAction.STORY_UNLINK ->
+                TapdEventType.STORY.value to body.getHookField(TAPD_KEY_TARGET_ID)
+
+            else -> null
+        }?.let {
+            params[CI_TAPD_LINK_TYPE] = it.first
+            params[CI_TAPD_LINK_ID] = it.second
         }
         return params
     }
