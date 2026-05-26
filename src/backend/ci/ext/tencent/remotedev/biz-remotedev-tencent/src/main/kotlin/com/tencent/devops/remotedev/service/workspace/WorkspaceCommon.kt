@@ -69,6 +69,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
+import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.remotedev.pojo.remotedev.FetchWinPoolData
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
@@ -454,6 +455,15 @@ class WorkspaceCommon @Autowired constructor(
         }.onFailure {
             logger.warn("Error syncing start cloud resource list: ${it.message}")
         }.getOrNull() ?: emptyList()
+    }
+
+    fun getWorkspaceInfoByEid(eid: String): WorkspaceInfo? {
+        return kotlin.runCatching {
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
+                .getWorkspaceInfoByEid(eid).data
+        }.onFailure {
+            logger.warn("Error getting workspace info by eid $eid: ${it.message}")
+        }.getOrNull()
     }
 
     fun getCgsData(
