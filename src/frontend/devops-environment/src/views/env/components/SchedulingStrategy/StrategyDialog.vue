@@ -206,7 +206,6 @@
     import { ref, computed, watch } from 'vue'
     import useInstance from '@/hooks/useInstance'
     import useEnvDetail from '@/hooks/useEnvDetail'
-    import  useEnvAside from '@/hooks/useEnvAside'
 
     export default {
         name: 'StrategyDialog',

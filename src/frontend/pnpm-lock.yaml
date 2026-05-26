@@ -1694,6 +1694,9 @@ importers:
       '@blueking/crontab':
         specifier: 0.0.2-beta.7
         version: 0.0.2-beta.7(@blueking/bkui-library@0.0.0-beta.6)(vue@2.7.16)
+      '@blueking/date-picker':
+        specifier: 2.0.0-beta.26
+        version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.1.0-beta.7(highlight.js@11.11.1)(vue@2.7.16))(dayjs@1.11.19)(vue@2.7.16)
       '@blueking/log':
         specifier: 2.2.3
         version: 2.2.3(vue@2.7.16)
@@ -20909,6 +20912,13 @@ snapshots:
       dayjs: 1.11.19
       vue: 3.4.38(typescript@4.9.5)
 
+  '@blueking/date-picker@2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.1.0-beta.7(highlight.js@11.11.1)(vue@2.7.16))(dayjs@1.11.19)(vue@2.7.16)':
+    dependencies:
+      '@blueking/bkui-library': 0.0.0-beta.6
+      bkui-vue: 2.1.0-beta.7(highlight.js@11.11.1)(vue@2.7.16)
+      dayjs: 1.11.19
+      vue: 2.7.16
+
   '@blueking/eslint-config-bk@2.1.0(@babel/core@7.29.0)':
     dependencies:
       '@babel/eslint-parser': 7.28.6(@babel/core@7.29.0)(eslint@8.57.1)
@@ -21004,6 +21014,11 @@ snapshots:
       - webpack-command
 
   '@blueking/login-modal@1.0.4': {}
+
+  '@blueking/login-userinfo@0.0.13(vue@2.7.16)':
+    dependencies:
+      js-cookie: 3.0.5
+      vue: 2.7.16
 
   '@blueking/login-userinfo@0.0.13(vue@3.5.29(typescript@5.9.3))':
     dependencies:
@@ -27677,6 +27692,21 @@ snapshots:
       tinycolor2: 1.6.0
       vue: 3.5.29(typescript@6.0.2)
       vue-types: 4.1.1(vue@3.5.29(typescript@6.0.2))
+
+  bkui-vue@2.1.0-beta.7(highlight.js@11.11.1)(vue@2.7.16):
+    dependencies:
+      '@blueking/login-userinfo': 0.0.13(vue@2.7.16)
+      '@floating-ui/dom': 1.5.4
+      '@popperjs/core': 2.11.8
+      date-fns: 2.30.0
+      dompurify: 3.2.6
+      highlight.js: 11.11.1
+      js-calendar: 1.2.3
+      json-formatter-js: 2.3.4
+      lodash: 4.17.23
+      tinycolor2: 1.6.0
+      vue: 2.7.16
+      vue-types: 4.1.1(vue@2.7.16)
 
   bkui-vue@2.1.0-beta.7(highlight.js@11.11.1)(vue@3.5.29(typescript@5.9.3)):
     dependencies:
@@ -41697,6 +41727,11 @@ snapshots:
       '@volar/typescript': 2.4.28
       '@vue/language-core': 3.3.1
       typescript: 5.9.3
+
+  vue-types@4.1.1(vue@2.7.16):
+    dependencies:
+      is-plain-object: 5.0.0
+      vue: 2.7.16
 
   vue-types@4.1.1(vue@3.4.38(typescript@4.9.5)):
     dependencies:
