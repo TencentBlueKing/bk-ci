@@ -75,7 +75,7 @@ class DispatchTransfer @Autowired(required = false) constructor(
         channelCode: ChannelCode = ChannelCode.BS
     ): Pair<DispatchType, VMBaseOS> {
         if (channelCode == ChannelCode.CREATIVE_STREAM) {
-            return Pair(CreateAgentIdDispatchType(value = ""), VMBaseOS.LINUX)
+            return Pair(CreateAgentIdDispatchType(value = "\${{variables.BK_CI_NODE_AGENT_ID}}"), VMBaseOS.ALL)
         }
         // linux构建机
         dispatcherLinux(job, buildTemplateAcrossInfo)?.let { return Pair(it, VMBaseOS.LINUX) }
