@@ -65,9 +65,11 @@ import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
+import com.tencent.devops.process.pojo.pipeline.BuildDetailSimple
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
+import com.tencent.devops.process.pojo.task.PipelineFailTaskDetail
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildMaintainFacadeService
 import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
@@ -157,7 +159,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int?,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        branch: String?
     ): Result<BuildManualStartupInfo> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -168,7 +171,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 version = version,
                 channelCode = channelCode,
-                checkPermission = ChannelCode.isNeedAuth(channelCode)
+                checkPermission = ChannelCode.isNeedAuth(channelCode),
+                branch = branch
             )
         )
     }
@@ -356,6 +360,30 @@ class ServiceBuildResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getBuildDetailSimple(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode
+    ): Result<BuildDetailSimple> {
+        checkUserId(userId)
+        checkParam(projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            pipelineBuildFacadeService.getBuildDetailSimple(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                channelCode = channelCode,
+                checkPermission = ChannelCode.isNeedAuth(channelCode)
+            )
+        )
+    }
+
     override fun getBuildRecordByExecuteCount(
         userId: String,
         projectId: String,
@@ -468,7 +496,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         endTimeFrom: String?,
         endTimeTo: String?,
         buildNoStart: Int?,
-        buildNoEnd: Int?
+        buildNoEnd: Int?,
+        updateTimeDesc: Boolean?
     ): Result<Page<LightBuildHistory>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -484,7 +513,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
             offset = offset,
             limit = pageSize,
             buildNoStart = buildNoStart,
-            buildNoEnd = buildNoEnd
+            buildNoEnd = buildNoEnd,
+            updateTimeDesc = updateTimeDesc
         )
         val result = pipelineBuildFacadeService.getLightHistoryBuild(
             userId = userId,
@@ -855,7 +885,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         channelCode: ChannelCode,
         buildNo: Int?,
         startType: StartType,
-        version: Int?
+        version: Int?,
+        branch: String?
     ): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -873,7 +904,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 buildNo = buildNo,
                 version = version,
                 checkPermission = ChannelCode.isNeedAuth(channelCode),
-                frequencyLimit = true
+                frequencyLimit = true,
+                branch = branch
             )
         )
     }
@@ -954,6 +986,22 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 debug = debug ?: false
+            )
+        )
+    }
+
+    override fun getBuildFailedTasks(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int?
+    ): Result<List<PipelineFailTaskDetail>> {
+        return Result(
+            pipelineBuildFacadeService.getBuildFailedTasks(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                executeCount = executeCount
             )
         )
     }

@@ -44,6 +44,7 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
+import com.tencent.devops.project.pojo.enums.ProjectScopeType
 import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
@@ -74,7 +75,8 @@ class ProjectApprovalService @Autowired constructor(
         projectCreateInfo: ProjectCreateInfo,
         approvalStatus: Int,
         subjectScopes: List<SubjectScopeInfo>,
-        tipsStatus: Int
+        tipsStatus: Int,
+        projectScope: Int = ProjectScopeType.TEAM.value
     ): Int {
         return projectApprovalDao.create(
             dslContext = dslContext,
@@ -82,7 +84,8 @@ class ProjectApprovalService @Autowired constructor(
             projectCreateInfo = projectCreateInfo,
             approvalStatus = approvalStatus,
             subjectScopes = subjectScopes,
-            tipsStatus = tipsStatus
+            tipsStatus = tipsStatus,
+            projectScope = projectScope
         )
     }
 
@@ -151,6 +154,8 @@ class ProjectApprovalService @Autowired constructor(
                 params = arrayOf(projectId),
                 defaultMessage = "project $projectId is not exist"
             )
+        // 从审批表读取 kpiCode/kpiName
+        val projectApprovalInfo = projectApprovalDao.getByEnglishName(dslContext = dslContext, englishName = projectId)
         val projectCreateInfo = with(projectInfo) {
             ProjectCreateInfo(
                 projectName = projectName,
@@ -164,7 +169,11 @@ class ProjectApprovalService @Autowired constructor(
                 centerId = centerId?.toLong() ?: 0L,
                 centerName = centerName ?: "",
                 kind = kind ?: 0,
-                logoAddress = logoAddr
+                logoAddress = logoAddr,
+                productId = productId,
+                productName = projectApprovalInfo?.productName,
+                kpiCode = projectApprovalInfo?.kpiCode,
+                kpiName = projectApprovalInfo?.kpiName
             )
         }
         dslContext.transaction { configuration ->
@@ -281,6 +290,9 @@ class ProjectApprovalService @Autowired constructor(
                 kind = projectInfo.kind,
                 projectType = projectType ?: 0,
                 productId = projectApprovalInfo.productId,
+                productName = projectApprovalInfo.productName,
+                kpiCode = projectApprovalInfo.kpiCode,
+                kpiName = projectApprovalInfo.kpiName,
                 properties = updateProjectProperties
             )
         }
@@ -324,6 +336,13 @@ class ProjectApprovalService @Autowired constructor(
                 )
             }
         }
+        // 同步共享制品开关变更到 BkRepo
+        projectExtService.syncShareArtifactIfChanged(
+            userId = applicant,
+            projectId = projectId,
+            oldProperties = projectProperties,
+            newProperties = updateProjectProperties
+        )
     }
 
     fun updateRejectOrRevoke(

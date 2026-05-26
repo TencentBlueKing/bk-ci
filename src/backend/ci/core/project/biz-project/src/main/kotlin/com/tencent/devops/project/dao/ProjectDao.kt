@@ -46,6 +46,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.project.pojo.enums.ProjectScopeType
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.util.ProjectUtils
 import org.jooq.Condition
@@ -148,6 +149,17 @@ class ProjectDao {
         }
     }
 
+    fun countByCondition(
+        dslContext: DSLContext,
+        projectConditionDTO: ProjectConditionDTO
+    ): Int {
+        return with(TProject.T_PROJECT) {
+            dslContext.selectCount().from(this)
+                .where(buildProjectCondition(projectConditionDTO))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
     fun buildProjectCondition(
         projectConditionDTO: ProjectConditionDTO
     ): MutableList<Condition> {
@@ -196,6 +208,9 @@ class ProjectDao {
                             ROUTER_TAG.like("%${projectConditionDTO.routerTag!!.value}%")
                         )
                     }
+                }
+                if (!dbRouteTag.isNullOrBlank()) {
+                    conditions.add(ROUTER_TAG.eq(dbRouteTag))
                 }
                 if (queryRemoteDevFlag == true) {
                     conditions.add(JooqUtils.jsonExtractAny<Boolean>(PROPERTIES, "\$.remotedev").isTrue)
@@ -296,6 +311,27 @@ class ProjectDao {
     fun getByCnName(dslContext: DSLContext, projectName: String): TProjectRecord? {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this).where(PROJECT_NAME.eq(projectName)).fetchAny()
+        }
+    }
+
+    fun getFirstPersonalProjectByCreator(dslContext: DSLContext, creator: String): TProjectRecord? {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectFrom(this)
+                .where(CREATOR.eq(creator))
+                .and(PROJECT_SCOPE.eq(ProjectScopeType.PERSONAL.value))
+                .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
+                .orderBy(CREATED_AT.desc())
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
+    fun updateProjectScopeByCode(dslContext: DSLContext, projectCode: String, projectScope: Int): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(PROJECT_SCOPE, projectScope)
+                .where(ENGLISH_NAME.eq(projectCode))
+                .execute()
         }
     }
 
@@ -416,7 +452,9 @@ class ProjectDao {
                 PROPERTIES,
                 SUBJECT_SCOPES,
                 AUTH_SECRECY,
-                PRODUCT_ID
+                PRODUCT_ID,
+                HIDDEN,
+                PROJECT_SCOPE
             ).values(
                 projectCreateInfo.projectName,
                 projectId,
@@ -447,7 +485,9 @@ class ProjectDao {
                 },
                 subjectScopesStr,
                 projectCreateInfo.authSecrecy ?: ProjectAuthSecrecyStatus.PUBLIC.value,
-                projectCreateInfo.productId
+                projectCreateInfo.productId,
+                projectCreateInfo.hidden,
+                projectCreateInfo.projectScope
             ).execute()
         }
     }
@@ -482,6 +522,7 @@ class ProjectDao {
                 .set(PROJECT_TYPE, projectUpdateInfo.projectType)
                 .set(PRODUCT_ID, projectUpdateInfo.productId)
             projectUpdateInfo.authSecrecy?.let { update.set(AUTH_SECRECY, it) }
+            projectUpdateInfo.hidden?.let { update.set(HIDDEN, it) }
             logoAddress?.let { update.set(LOGO_ADDR, logoAddress) }
             projectUpdateInfo.properties?.let { update.set(PROPERTIES, JsonUtil.toJson(it, false)) }
             return update.where(PROJECT_ID.eq(projectId)).execute()
@@ -519,6 +560,20 @@ class ProjectDao {
                 .set(UPDATED_AT, LocalDateTime.now())
                 .let { if (userId == null) it else it.set(UPDATOR, userId) }
                 .where(PROJECT_ID.eq(projectId))
+                .execute()
+        }
+    }
+
+    fun updateHiddenStatus(
+        dslContext: DSLContext,
+        englishName: String,
+        hidden: Boolean
+    ): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(HIDDEN, hidden)
+                .set(UPDATED_AT, LocalDateTime.now())
+                .where(ENGLISH_NAME.eq(englishName))
                 .execute()
         }
     }
@@ -610,6 +665,7 @@ class ProjectDao {
         limit: Int? = null,
         searchName: String? = null,
         enabled: Boolean? = null,
+        hidden: Boolean? = null,
         authSecrecyStatus: ProjectAuthSecrecyStatus? = null,
         sortType: ProjectSortType? = null,
         collation: ProjectCollation? = ProjectCollation.DEFAULT,
@@ -623,6 +679,7 @@ class ProjectDao {
                 .and(IS_OFFLINED.eq(false))
                 .let { if (null == searchName) it else it.and(PROJECT_NAME.like("%$searchName%")) }
                 .let { if (null == enabled) it else it.and(ENABLED.eq(enabled)) }
+                .let { if (null == hidden) it else it.and(HIDDEN.eq(hidden)) }
                 .let { if (null == authSecrecyStatus) it else it.and(AUTH_SECRECY.eq(authSecrecyStatus.value)) }
                 .let { if (productIds.isEmpty()) it else it.and(PRODUCT_ID.`in`(productIds)) }
                 .let { if (channelCodes.isEmpty()) it else it.and(CHANNEL.`in`(channelCodes)) }
@@ -713,7 +770,8 @@ class ProjectDao {
 
     private fun TProject.generateQueryProjectForApplyCondition(): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        conditions.add(CHANNEL.eq(ProjectChannelCode.BS.name).or(CHANNEL.eq(ProjectChannelCode.PREBUILD.name)))
+        conditions.add(CHANNEL.eq(ProjectChannelCode.BS.name))
+        conditions.add(PROJECT_SCOPE.eq(ProjectScopeType.TEAM.value))
         conditions.add(IS_OFFLINED.eq(false))
         conditions.add(ENABLED.eq(true))
         conditions.add(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))

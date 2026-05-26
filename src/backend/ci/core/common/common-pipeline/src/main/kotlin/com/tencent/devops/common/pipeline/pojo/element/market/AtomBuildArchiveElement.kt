@@ -39,23 +39,25 @@ data class AtomBuildArchiveElement(
     @get:Schema(title = "状态", required = false)
     override var status: String? = null,
     @get:Schema(title = "插件发布包名称", required = true)
-    val packageName: String = "\${packageName}",
+    val packageName: String = "\${{steps.scriptStep.outputs.packageName}}",
     @get:Schema(title = "插件发布包所在相对路径", required = true)
-    val filePath: String = "\${filePath}",
+    val filePath: String = "\${{steps.scriptStep.outputs.filePath}}",
     @get:Schema(title = "插件发布包上传至仓库的目标路径", required = true)
-    val destPath: String = "\${atomCode}/\${version}/\${packageName}",
+    val destPath: String = "\${{variables.atomCode}}/\${{variables.version}}/\${{steps.scriptStep.outputs.packageName}}",
     @get:Schema(title = "插件自定义UI前端文件所在相对路径", required = false)
     val frontendFilePath: String? = "\${BK_CI_CUSTOM_FRONTEND_DIST_PATH}",
     @get:Schema(title = "插件自定义UI前端文件上传至仓库的目标路径", required = false)
-    val frontendDestPath: String? = "\${atomCode}/\${version}",
+    val frontendDestPath: String? = "\${{variables.atomCode}}/\${{variables.version}}",
     @get:Schema(title = "操作系统名称", required = false)
-    val osName: String? = "\${matrixOsName}",
+    val osName: String? = "\${{steps.scriptStep.outputs.matrixOsName}}",
     @get:Schema(title = "操作系统cpu架构", required = false)
-    val osArch: String? = "\${matrixOsArch}",
+    val osArch: String? = "\${{steps.scriptStep.outputs.matrixOsArch}}",
     @get:Schema(title = "是否有可用的操作系统名称配置", required = false)
     val validOsNameFlag: String? = null,
     @get:Schema(title = "是否有可用的操作系统cpu架构配置", required = false)
-    val validOsArchFlag: String? = null
+    val validOsArchFlag: String? = null,
+    @get:Schema(title = "原子执行入口", required = true)
+    val target: String = "\${{steps.scriptStep.outputs.target}}"
 ) : Element(name, id, status) {
 
     companion object {

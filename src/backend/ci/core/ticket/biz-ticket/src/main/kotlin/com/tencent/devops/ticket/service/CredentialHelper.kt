@@ -50,7 +50,7 @@ class CredentialHelper {
     val credentialMixer = "******"
 
     @Value("\${credential.aes-key}")
-    private val aesKey = "C/R%3{?OS}IeGT21"
+    private lateinit var aesKey: String
 
     fun isValid(credentialCreate: CredentialCreate): Boolean {
         return isValid(
