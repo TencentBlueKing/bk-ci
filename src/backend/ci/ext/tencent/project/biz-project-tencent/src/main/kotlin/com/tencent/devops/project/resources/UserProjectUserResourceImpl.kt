@@ -80,8 +80,8 @@ class UserProjectUserResourceImpl @Autowired constructor(
         return Result(tofService.getUserDeptDetail(userId, bkToken))
     }
 
-    override fun getPersonalProject(userId: String): Result<ProjectVO> {
-        return Result(projectLocalService.getOrCreatePersonalProject(userId))
+    override fun getPersonalProject(userId: String): Result<String> {
+        return Result(projectLocalService.getOrCreatePersonalProject(userId).englishName)
     }
 
     override fun getProjectUsers(userId: String, projectCode: String): Result<List<String>?> {

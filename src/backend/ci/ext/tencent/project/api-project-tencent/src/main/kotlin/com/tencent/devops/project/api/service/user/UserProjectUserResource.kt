@@ -83,7 +83,7 @@ interface UserProjectUserResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
-    ): Result<ProjectVO>
+    ): Result<String>
 
     @GET
     @Path("/projects/{projectCode}/list")
