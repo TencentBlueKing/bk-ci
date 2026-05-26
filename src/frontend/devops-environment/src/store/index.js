@@ -20,9 +20,9 @@
 import actions from './actions'
 import mutations from './mutations'
 // import { nodeTypeMap, nodeStatusMap } from './constants'
+
 const store = {
     namespaced: true,
-    model: {},
     state: {
         publicDockerList: [],
         customizeDockerList: [],
@@ -35,12 +35,9 @@ const store = {
         currentSelectedModel: {},
         nodeTagList: [],
         nodeCount: {},
-        selectionTagList: [],
-        envList: []
+        selectionTagList: []
     },
-    getters: {
-        getEnvList: (state) => state.envList
-    },
+    getters: {},
     mutations,
     actions
 }

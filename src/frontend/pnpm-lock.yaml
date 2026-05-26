@@ -831,9 +831,6 @@ importers:
       vue-file-upload:
         specifier: ^0.1.12
         version: 0.1.12
-      vuedraggable:
-        specifier: ^2.24.3
-        version: 2.24.3
       vuex-class:
         specifier: ^0.3.0
         version: 0.3.2(vue-class-component@6.3.2)(vue@2.7.16)(vuex@3.6.2(vue@2.7.16))
