@@ -78,7 +78,7 @@ class AtomWhitelistDao {
         atomCodes: List<String>,
         description: String?,
         userId: String
-    ): Int {
+    ): Boolean {
         val atomCodesJson = JsonUtil.toJson(atomCodes, formatted = false)
         val now = LocalDateTime.now()
         with(TAtomWhitelist.T_ATOM_WHITELIST) {
@@ -101,7 +101,7 @@ class AtomWhitelistDao {
                 userId,
                 now,
                 now
-            ).execute()
+            ).execute() > 0
         }
     }
 
@@ -194,7 +194,7 @@ class AtomWhitelistDao {
         val records = dslContext.select()
             .from(t)
             .where(conditions)
-            .orderBy(t.CREATE_TIME.desc())
+            .orderBy(t.CREATE_TIME.desc(), t.ID.desc())
             .limit(pageSize)
             .offset((page - 1) * pageSize)
             .fetch()
