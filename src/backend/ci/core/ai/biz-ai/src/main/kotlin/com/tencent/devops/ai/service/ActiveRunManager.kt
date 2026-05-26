@@ -30,10 +30,12 @@ package com.tencent.devops.ai.service
 import com.tencent.devops.common.redis.RedisOperation
 import io.agentscope.core.agent.Agent
 import io.agentscope.core.agui.event.AguiEvent
+import org.glassfish.jersey.server.ChunkedOutput
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Sinks
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -54,6 +56,10 @@ class ActiveRunManager(
      * @param runId 本次运行 ID
      * @param agent Agent 实例引用
      * @param replaySink replay sink，保留所有已发出事件供重连回放
+     * @param output 当前 SSE 长连接的 ChunkedOutput，供外部线程（如 stop 广播处理器）
+     *               同步直写终止事件，绕开 reactor 异步链路与客户端关连接的赛跑
+     * @param terminalEventSent 终止事件去重标志，供 subscribeAndAwait 与 handleStopBroadcast 共享
+     * @param clientDisconnected 客户端断连标志，避免对已断开连接重复 write 抛错
      * @param eventIndexCounter 事件序号计数器，线程安全自增，保证单 run 内事件顺序
      * @param startTime 运行开始时间戳
      */
@@ -62,6 +68,9 @@ class ActiveRunManager(
         val runId: String,
         val agent: Agent,
         val replaySink: Sinks.Many<AguiEvent>,
+        val output: ChunkedOutput<String>,
+        val terminalEventSent: AtomicBoolean = AtomicBoolean(false),
+        val clientDisconnected: AtomicBoolean = AtomicBoolean(false),
         val eventIndexCounter: AtomicInteger = AtomicInteger(0),
         val startTime: Long = System.currentTimeMillis()
     ) {
@@ -80,10 +89,11 @@ class ActiveRunManager(
     fun register(
         threadId: String,
         runId: String,
-        agent: Agent
+        agent: Agent,
+        output: ChunkedOutput<String>
     ): ActiveRun {
         val sink = Sinks.many().replay().all<AguiEvent>()
-        val run = ActiveRun(threadId, runId, agent, sink)
+        val run = ActiveRun(threadId, runId, agent, sink, output)
         activeRuns[threadId] = run
         try {
             redisOperation.set(redisKey(threadId), runId, REDIS_TTL_SECONDS)

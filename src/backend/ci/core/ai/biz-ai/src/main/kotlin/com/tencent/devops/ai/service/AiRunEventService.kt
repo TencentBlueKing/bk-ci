@@ -33,6 +33,7 @@ import com.tencent.devops.ai.pojo.AiAgentStageMetadata.SessionStatus
 import com.tencent.devops.ai.pojo.event.AiRunStopBroadcastEvent
 import com.tencent.devops.ai.util.SseEventWriter
 import io.agentscope.core.agui.encoder.AguiEventEncoder
+import io.agentscope.core.agui.event.AguiEvent
 import org.glassfish.jersey.server.ChunkedOutput
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -215,11 +216,18 @@ class AiRunEventService @Autowired constructor(
      * 广播 Stop 指令。
      *
      * 设计要点：
-     * 1. **先本地同步处理** —— 用户主动停止时 HTTP 线程已经知道 threadId，本实例若持有
-     *    ActiveRun，立刻 emit RunFinished + interrupt，避免前端等 MQ 异步往返。
-     * 2. **再异步 fanout 广播** —— 多实例部署时 ActiveRun 可能在其他实例上，由其他实例
-     *    通过 [handleStopBroadcast] 兜底处理。本实例 self-loop 收回时 ActiveRun 已被 remove，
-     *    `handleStopBroadcast` 自身的幂等性保证不会重复处理。
+     * 1. **CANCELLED（用户主动停止）：先本地同步处理 + 再 fanout 广播**
+     *    - HTTP 线程必须在响应返回前同步直写 SSE output，避免前端 200 OK 后立即关 SSE 的赛跑。
+     *    - 本地 handleStopBroadcast 是同步直写 output（[SseEventWriter.writeFinishIfMissing]），
+     *      不依赖 sub-agent sink 异步消费，因此立即 interrupt 不会丢事件。
+     *    - MQ self-loop 回来时 ActiveRun 已被 remove，handleStopBroadcast 幂等 noop。
+     *
+     * 2. **TIMEOUT（cleanupOnTimeout 触发）：仅 fanout 广播**
+     *    - 上游 [AgentStageTimingHook.cleanupOnTimeout] 已经把 Raw + RunFinished 通过 sub-agent
+     *      sink emit 出去，由 subscribeAndAwait 异步消费写 output。
+     *    - 这里若也同步 handleStopBroadcast 会立即 agent.interrupt()，可能让 result.events()
+     *      抛错，Flux.merge 向下游传播 onError 时 sub-agent sink 上未消费的 Raw/RunFinished 会丢失。
+     *    - 因此 TIMEOUT 路径维持原有 MQ 异步流程，给 sub-agent sink 留消费窗口。
      */
     fun broadcastStop(
         threadId: String,
@@ -229,13 +237,15 @@ class AiRunEventService @Autowired constructor(
             "[AiRunEvent] Broadcasting stop: threadId={}, status={}",
             threadId, status
         )
-        try {
-            handleStopBroadcast(AiRunStopBroadcastEvent(threadId, status), activeRunManager)
-        } catch (e: Exception) {
-            logger.warn(
-                "[AiRunEvent] Local stop processing failed: threadId={}",
-                threadId, e
-            )
+        if (status == SessionStatus.CANCELLED) {
+            try {
+                handleStopBroadcast(AiRunStopBroadcastEvent(threadId, status), activeRunManager)
+            } catch (e: Exception) {
+                logger.warn(
+                    "[AiRunEvent] Local stop processing failed: threadId={}",
+                    threadId, e
+                )
+            }
         }
         try {
             AiRunStopBroadcastEvent(threadId, status).sendTo(streamBridge)
@@ -256,22 +266,31 @@ class AiRunEventService @Autowired constructor(
             )
             // 主动向前端推送终止事件，避免前端因 agent.interrupt() 不能立即让
             // result.events() 完成而长时间停留在 running 状态。
-            // TIMEOUT 路径已在 cleanupOnTimeout 中提前发过 Raw + RunFinished，
-            // 这里仅 CANCELLED（用户主动停止）补发 RunFinished；
-            // 重复发送由 writeOutgoingEvent 的 terminalEventSent 去重保证幂等。
+            //
+            // TIMEOUT 路径已在 cleanupOnTimeout 中通过 sub-agent sink 发过 Raw + RunFinished，
+            // 这里仅 CANCELLED（用户主动停止）补发 RunFinished。
+            //
+            // 关键点：必须在 stopRun HTTP 线程**同步直写** ActiveRun.output，
+            // 而不是 emit 进 sink 走 reactor 异步链路 —— 否则前端 stop 200 OK 后立即关闭
+            // SSE 连接时，异步链路上的 output.write 还没执行完就赛跑到 IOException，
+            // 导致前端永远收不到 RunFinished。
             if (event.status != SessionStatus.TIMEOUT) {
-                val sinkInfo = sessionContext.getSinkByThreadId(event.threadId)
-                if (sinkInfo != null) {
-                    logger.info(
-                        "[AiRunEvent] Emitting RunFinished to sink: threadId={}, runId={}",
-                        sinkInfo.threadId, sinkInfo.runId
-                    )
-                    SseEventWriter.emitFinish(sinkInfo.sink, sinkInfo.threadId, sinkInfo.runId)
-                } else {
-                    logger.warn(
-                        "[AiRunEvent] No sink registered for thread, RunFinished emit skipped: threadId={}",
-                        event.threadId
-                    )
+                val written = SseEventWriter.writeFinishIfMissing(
+                    output = activeRun.output,
+                    threadId = activeRun.threadId,
+                    runId = activeRun.runId,
+                    terminalEventSent = activeRun.terminalEventSent,
+                    clientDisconnected = activeRun.clientDisconnected
+                )
+                logger.info(
+                    "[AiRunEvent] Sync write RunFinished: threadId={}, runId={}, written={}",
+                    activeRun.threadId, activeRun.runId, written
+                )
+                if (written) {
+                    // 同步直写 output 没经过 writeOutgoingEvent，replaySink 与 DB 不会自动落事件。
+                    // 这里手动补齐，保证后续重连（reconnectFromMemory / replayFromDb）能拿到 RunFinished，
+                    // 否则重连客户端会错过终止事件。
+                    persistTerminalRunFinished(activeRun)
                 }
             }
             activeRun.agent.interrupt()
@@ -308,6 +327,31 @@ class AiRunEventService @Autowired constructor(
         } catch (e: Exception) {
             val action = if (event.status == SessionStatus.TIMEOUT) "timeout" else "cancel"
             logger.warn("[AiRunEvent] Failed to {} stages: threadId={}", action, event.threadId, e)
+        }
+    }
+
+    /**
+     * 同步直写 output 后，把 RunFinished 补齐到 replaySink + DB，
+     * 让 reconnectFromMemory 和 replayFromDb 在重连时仍能取到终止事件。
+     *
+     * 注意：必须使用与 [AiChatService.writeOutgoingEvent] 相同的 [AguiEventEncoder] / 序号生成逻辑，
+     * 保证事件格式与已有事件兼容。
+     */
+    private fun persistTerminalRunFinished(activeRun: ActiveRunManager.ActiveRun) {
+        try {
+            val finishEvent = AguiEvent.RunFinished(activeRun.threadId, activeRun.runId)
+            activeRun.replaySink.tryEmitNext(finishEvent)
+            sendPersistEvent(
+                threadId = activeRun.threadId,
+                runId = activeRun.runId,
+                eventIndex = activeRun.nextEventIndex(),
+                eventData = AguiEventEncoder().encode(finishEvent)
+            )
+        } catch (e: Exception) {
+            logger.warn(
+                "[AiRunEvent] Failed to persist terminal RunFinished: threadId={}, runId={}, error={}",
+                activeRun.threadId, activeRun.runId, e.message
+            )
         }
     }
 

@@ -102,11 +102,10 @@ class AiChatService @Autowired constructor(
             }
             val result = processor.process(input, null, null)
             agent = result.agent()
-            val (activeRun, mergedEvents) = setupEventStream(agent, result, threadId, runId)
+            val (activeRun, mergedEvents) = setupEventStream(agent, result, output, threadId, runId)
             subscribeAndAwait(
                 mergedEvents = mergedEvents,
                 activeRun = activeRun,
-                output = output,
                 encoder = AguiEventEncoder(),
                 threadId = threadId,
                 runId = runId
@@ -150,6 +149,7 @@ class AiChatService @Autowired constructor(
     private fun setupEventStream(
         agent: Agent,
         result: AguiRequestProcessor.ProcessResult,
+        output: ChunkedOutput<String>,
         threadId: String?,
         runId: String?
     ): Pair<ActiveRunManager.ActiveRun, Flux<AguiEvent>> {
@@ -158,7 +158,7 @@ class AiChatService @Autowired constructor(
             agent,
             AgentSessionContext.SinkInfo(subAgentSink, threadId ?: "", runId ?: "")
         )
-        val activeRun = activeRunManager.register(threadId ?: "", runId ?: "", agent)
+        val activeRun = activeRunManager.register(threadId ?: "", runId ?: "", agent, output)
 
         val tracker = ReasoningCompensationTracker(threadId ?: "", runId ?: "")
         val mergedEvents = Flux.merge(
@@ -192,26 +192,20 @@ class AiChatService @Autowired constructor(
     private fun subscribeAndAwait(
         mergedEvents: Flux<AguiEvent>,
         activeRun: ActiveRunManager.ActiveRun,
-        output: ChunkedOutput<String>,
         encoder: AguiEventEncoder,
         threadId: String?,
         runId: String?
     ) {
         val latch = CountDownLatch(1)
-        val clientDisconnected = AtomicBoolean(false)
-        val terminalEventSent = AtomicBoolean(false)
 
         mergedEvents.subscribe(
             { event ->
                 writeOutgoingEvent(
                     event = event,
                     activeRun = activeRun,
-                    output = output,
                     encoder = encoder,
                     threadId = threadId,
-                    runId = runId,
-                    clientDisconnected = clientDisconnected,
-                    terminalEventSent = terminalEventSent
+                    runId = runId
                 )
             },
             { error ->
@@ -219,12 +213,9 @@ class AiChatService @Autowired constructor(
                 writeErrorAndFinish(
                     errorMessage = toFriendlyErrorMessage(error),
                     activeRun = activeRun,
-                    output = output,
                     encoder = encoder,
                     threadId = threadId,
-                    runId = runId,
-                    clientDisconnected = clientDisconnected,
-                    terminalEventSent = terminalEventSent
+                    runId = runId
                 )
                 activeRun.replaySink.tryEmitComplete()
                 activeRunManager.remove(threadId ?: "")
@@ -237,12 +228,9 @@ class AiChatService @Autowired constructor(
                 writeRunFinishedIfMissing(
                     reason = "stream completed without terminal event",
                     activeRun = activeRun,
-                    output = output,
                     encoder = encoder,
                     threadId = threadId,
-                    runId = runId,
-                    clientDisconnected = clientDisconnected,
-                    terminalEventSent = terminalEventSent
+                    runId = runId
                 )
                 activeRun.replaySink.tryEmitComplete()
                 activeRunManager.remove(threadId ?: "")
@@ -258,12 +246,9 @@ class AiChatService @Autowired constructor(
             writeErrorAndFinish(
                 errorMessage = "对话超时（${STREAM_TIMEOUT_MINUTES}分钟），请重新发起。",
                 activeRun = activeRun,
-                output = output,
                 encoder = encoder,
                 threadId = threadId,
-                runId = runId,
-                clientDisconnected = clientDisconnected,
-                terminalEventSent = terminalEventSent
+                runId = runId
             )
             activeRun.replaySink.tryEmitComplete()
             activeRunManager.remove(threadId ?: "")
@@ -279,12 +264,9 @@ class AiChatService @Autowired constructor(
     private fun writeOutgoingEvent(
         event: AguiEvent,
         activeRun: ActiveRunManager.ActiveRun,
-        output: ChunkedOutput<String>,
         encoder: AguiEventEncoder,
         threadId: String?,
-        runId: String?,
-        clientDisconnected: AtomicBoolean,
-        terminalEventSent: AtomicBoolean
+        runId: String?
     ) {
         val encoded = encoder.encode(event)
         val sanitizedEncoded = AguiEventSanitizer.sanitizeEncodedEvent(encoded)
@@ -296,7 +278,7 @@ class AiChatService @Autowired constructor(
             return
         }
         val duplicatedTerminalEvent = isTerminalEvent(sanitizedEncoded) &&
-            !terminalEventSent.compareAndSet(false, true)
+            !activeRun.terminalEventSent.compareAndSet(false, true)
         if (duplicatedTerminalEvent) {
             logger.info(
                 "[AguiChat] Skip duplicated terminal event: threadId={}, runId={}",
@@ -312,11 +294,11 @@ class AiChatService @Autowired constructor(
             eventIndex = activeRun.nextEventIndex(),
             eventData = sanitizedEncoded
         )
-        if (!clientDisconnected.get()) {
+        if (!activeRun.clientDisconnected.get()) {
             try {
-                output.write(sanitizedEncoded)
+                activeRun.output.write(sanitizedEncoded)
             } catch (e: Exception) {
-                clientDisconnected.set(true)
+                activeRun.clientDisconnected.set(true)
                 logger.info(
                     "[AguiChat] Client disconnected, agent continues: threadId={}",
                     threadId
@@ -333,32 +315,23 @@ class AiChatService @Autowired constructor(
     private fun writeErrorAndFinish(
         errorMessage: String,
         activeRun: ActiveRunManager.ActiveRun,
-        output: ChunkedOutput<String>,
         encoder: AguiEventEncoder,
         threadId: String?,
-        runId: String?,
-        clientDisconnected: AtomicBoolean,
-        terminalEventSent: AtomicBoolean
+        runId: String?
     ) {
         writeOutgoingEvent(
             event = AguiEvent.Raw(threadId, runId, mapOf("error" to errorMessage)),
             activeRun = activeRun,
-            output = output,
             encoder = encoder,
             threadId = threadId,
-            runId = runId,
-            clientDisconnected = clientDisconnected,
-            terminalEventSent = terminalEventSent
+            runId = runId
         )
         writeRunFinishedIfMissing(
             reason = "stream terminated with error",
             activeRun = activeRun,
-            output = output,
             encoder = encoder,
             threadId = threadId,
-            runId = runId,
-            clientDisconnected = clientDisconnected,
-            terminalEventSent = terminalEventSent
+            runId = runId
         )
     }
 
@@ -366,14 +339,11 @@ class AiChatService @Autowired constructor(
     private fun writeRunFinishedIfMissing(
         reason: String,
         activeRun: ActiveRunManager.ActiveRun,
-        output: ChunkedOutput<String>,
         encoder: AguiEventEncoder,
         threadId: String?,
-        runId: String?,
-        clientDisconnected: AtomicBoolean,
-        terminalEventSent: AtomicBoolean
+        runId: String?
     ) {
-        if (terminalEventSent.get()) {
+        if (activeRun.terminalEventSent.get()) {
             return
         }
         logger.warn(
@@ -383,12 +353,9 @@ class AiChatService @Autowired constructor(
         writeOutgoingEvent(
             event = AguiEvent.RunFinished(threadId, runId),
             activeRun = activeRun,
-            output = output,
             encoder = encoder,
             threadId = threadId,
-            runId = runId,
-            clientDisconnected = clientDisconnected,
-            terminalEventSent = terminalEventSent
+            runId = runId
         )
     }
 

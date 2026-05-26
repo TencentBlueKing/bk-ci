@@ -6,13 +6,14 @@ import org.glassfish.jersey.server.ChunkedOutput
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Sinks
 import java.time.Duration
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * SSE 事件推送工具，统一处理向前端写入错误/超时终止事件的逻辑。
  *
  * 支持两种推送方式：
- * - [writeErrorAndFinish]：直接写入 [ChunkedOutput]（用于 Resource / Service 层）
- * - [emitErrorAndFinish]：通过 Reactor [Sinks.Many] 发射（用于 Hook 等无法直接访问 output 的场景）
+ * - [writeErrorAndFinish] / [writeFinishIfMissing]：直接写入 [ChunkedOutput]，调用线程内同步完成
+ * - [emitErrorAndFinish] / [emitFinish]：通过 Reactor [Sinks.Many] 异步发射，由订阅者线程消费
  */
 object SseEventWriter {
 
@@ -77,6 +78,46 @@ object SseEventWriter {
     ) {
         val finish = AguiEvent.RunFinished(threadId, runId)
         emitOrLog(sink, finish, "RunFinished", threadId, runId)
+    }
+
+    /**
+     * 在调用线程内同步直写 RunFinished 到 SSE [output]，绕开 reactor 异步链路。
+     *
+     * 用于用户主动停止 / 超时等场景：HTTP 线程必须在响应返回前确保 RunFinished
+     * 已经 write 到 output，避免前端 stop 200 OK 后立即关闭 SSE 长连接、
+     * 导致后续异步路径写出时连接已断的赛跑问题。
+     *
+     * 通过 [terminalEventSent] CAS 保证全局只发出一次终止事件，
+     * 与 subscribeAndAwait 的 writeOutgoingEvent 共享同一份去重状态。
+     *
+     * @return true 当本次实际写入了 RunFinished；false 已被去重或客户端已断开
+     */
+    fun writeFinishIfMissing(
+        output: ChunkedOutput<String>,
+        threadId: String?,
+        runId: String?,
+        terminalEventSent: AtomicBoolean,
+        clientDisconnected: AtomicBoolean
+    ): Boolean {
+        if (!terminalEventSent.compareAndSet(false, true)) {
+            return false
+        }
+        if (clientDisconnected.get()) {
+            return false
+        }
+        return try {
+            val finish = AguiEvent.RunFinished(threadId, runId)
+            output.write(encoder.encode(finish))
+            true
+        } catch (e: Exception) {
+            clientDisconnected.set(true)
+            logger.info(
+                "[SseEventWriter] Sync write RunFinished failed, client disconnected: " +
+                    "threadId={}, runId={}, error={}",
+                threadId, runId, e.message
+            )
+            false
+        }
     }
 
     /**
