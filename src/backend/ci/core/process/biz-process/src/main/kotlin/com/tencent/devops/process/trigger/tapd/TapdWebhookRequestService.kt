@@ -55,6 +55,7 @@ import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_TAPD_STOR
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_TAPD_STORY_BUG_LINK_EVENT_DESC
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_TAPD_STORY_BUG_UNLINK_EVENT_DESC
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_NOTE_COMMENT
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ACTION
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_EVENT_FROM
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_EVENT_ID
@@ -64,11 +65,13 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_LINK_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_LINK_TYPE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_PARENT_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_PRIORITY_ID
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_TITLE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_WORKSPACE_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_BUG_URL_PATTERN
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_EVENT_SEPARATOR
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CHANGE_FIELDS
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CURRENT_USER
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_DESCRIPTION
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_ENTITY_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_EVENT
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_EVENT_FROM
@@ -85,6 +88,7 @@ import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_REFERER
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_SOURCE_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_STATUS
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_TARGET_ID
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_TITLE
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_WORKSPACE_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_STORY_URL_PATTERN
 import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
@@ -490,6 +494,9 @@ class TapdWebhookRequestService(
         objectUrl: String
     ): Map<String, String> {
         val update = eventAction == TapdEventAction.UPDATE
+        val title = body.getHookField(TAPD_KEY_NAME, update).ifBlank {
+            body.getHookField(TAPD_KEY_TITLE)
+        }
         val params = mutableMapOf(
             CI_ACTION to eventAction.value,
             CI_EVENT_URL to objectUrl,
@@ -499,14 +506,16 @@ class TapdWebhookRequestService(
             CI_TAPD_ID to objectId,
             CI_TAPD_PARENT_ID to body.getHookField(TAPD_KEY_PARENT_ID, update),
             CI_TAPD_PRIORITY_ID to body.getHookField(TAPD_KEY_PRIORITY, update),
+            CI_TAPD_TITLE to title,
             PIPELINE_BUILD_MSG to buildPipelineBuildMsg(
-                name = body.getHookField(TAPD_KEY_NAME, update),
+                name = title,
                 eventType = eventType,
                 eventAction = eventAction,
                 objectId = objectId
             ),
             PIPELINE_WEBHOOK_EVENT_TYPE to eventType.value,
-            PIPELINE_START_WEBHOOK_USER_ID to triggerUser
+            PIPELINE_START_WEBHOOK_USER_ID to triggerUser,
+            PIPELINE_WEBHOOK_NOTE_COMMENT to body.getHookField(TAPD_KEY_DESCRIPTION)
         )
         if (eventAction == TapdEventAction.BUG_LINK || eventAction == TapdEventAction.STORY_LINK) {
             params[CI_TAPD_LINK_TYPE] = when (eventAction) {

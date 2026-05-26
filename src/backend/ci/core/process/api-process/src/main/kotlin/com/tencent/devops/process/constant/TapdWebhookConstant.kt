@@ -37,6 +37,9 @@ object TapdWebhookConstant {
     // 工单标题字段
     const val TAPD_KEY_NAME = "name"
 
+    // 工单标题字段
+    const val TAPD_KEY_TITLE = "title"
+
     const val TAPD_KEY_OWNER = "owner"
 
     const val TAPD_KEY_PRIORITY = "priority"
@@ -53,6 +56,8 @@ object TapdWebhookConstant {
     const val TAPD_KEY_CHANGE_FIELDS = "change_fields"
 
     const val TAPD_KEY_STATUS = "status"
+
+    const val TAPD_KEY_DESCRIPTION = "description"
 
     // 需求详情：{tapdHost}/tapd_fe/{workspaceId}/story/detail/{id}
     const val TAPD_STORY_URL_PATTERN = "%s/tapd_fe/%s/story/detail/%s"
