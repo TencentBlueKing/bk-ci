@@ -67,6 +67,7 @@
     import AuthManage from './components/Auth/index.vue'
     import SchedulingStrategy from './components/SchedulingStrategy/index.vue'
     import emptyNode from '../empty_node'
+    import AdvancedSetting from './components/AdvancedSetting/index.vue'
 
     export default {
         name: 'EnvDetail',
@@ -78,6 +79,7 @@
             BuildTask,
             DeployTask,
             emptyNode,
+            AdvancedSetting,
             SchedulingStrategy
         },
         setup () {
@@ -112,6 +114,7 @@
                     buildTask: BuildTask,
                     deployTask: DeployTask,
                     auth: AuthManage,
+                    advancedSetting: AdvancedSetting,
                     schedulingStrategy: SchedulingStrategy
                 }
                 return comMap[tabActive.value]
@@ -160,6 +163,12 @@
                     {
                         name: 'buildTask',
                         label: proxy.$t('environment.nodeInfo.buildTask')
+                    }
+                ] : []),
+                ...(currentEnv.value?.envType === ENV_TYPE_MAP.DEVX ? [
+                    {
+                        name: 'advancedSetting',
+                        label: proxy.$t('environment.advancedSetting')
                     }
                 ] : []),
                 {
