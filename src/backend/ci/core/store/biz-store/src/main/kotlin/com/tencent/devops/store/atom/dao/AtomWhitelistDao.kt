@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.store.tables.TAtomWhitelist
 import com.tencent.devops.store.pojo.common.AtomWhitelist
 import java.time.LocalDateTime
-import java.time.ZoneId
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -106,32 +105,21 @@ class AtomWhitelistDao {
         }
     }
 
-    /**
-     * 更新插件code列表
-     * @param dslContext DSL上下文
-     * @param whitelistType 白名单类型
-     * @param atomCodes 新的插件code列表
-     * @param userId 用户ID
-     * @return 是否更新成功
-     */
     fun updateAtomCodes(
         dslContext: DSLContext,
         whitelistType: String,
         atomCodes: List<String>,
+        description: String?,
         userId: String
     ): Boolean {
         val t = TAtomWhitelist.T_ATOM_WHITELIST
-        val atomCodesJson = JsonUtil.toJson(atomCodes, formatted = false)
-        val now = LocalDateTime.now()
-
-        val updatedRows = dslContext.update(t)
-            .set(t.ATOM_CODES, atomCodesJson)
+        return dslContext.update(t)
+            .set(t.ATOM_CODES, JsonUtil.toJson(atomCodes, formatted = false))
+            .set(t.DESCRIPTION, description)
             .set(t.MODIFIER, userId)
-            .set(t.UPDATE_TIME, now)
+            .set(t.UPDATE_TIME, LocalDateTime.now())
             .where(t.WHITELIST_TYPE.eq(whitelistType))
-            .execute()
-
-        return updatedRows > 0
+            .execute() > 0
     }
 
     /**
@@ -218,9 +206,9 @@ class AtomWhitelistDao {
                 description = record.get(t.DESCRIPTION),
                 enabled = record.get(t.ENABLED) ?: false,
                 creator = record.get(t.CREATOR),
-                createTime = record.get(t.CREATE_TIME)?.atZone(ZoneId.systemDefault())?.toInstant()?.toEpochMilli(),
+                createTime = record.get(t.CREATE_TIME),
                 modifier = record.get(t.MODIFIER),
-                updateTime = record.get(t.UPDATE_TIME)?.atZone(ZoneId.systemDefault())?.toInstant()?.toEpochMilli()
+                updateTime = record.get(t.UPDATE_TIME)
             )
         }
     }

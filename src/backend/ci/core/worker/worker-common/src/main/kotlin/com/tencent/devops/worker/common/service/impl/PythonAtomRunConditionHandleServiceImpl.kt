@@ -82,15 +82,15 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             else -> "python"
         }
         logger.info("prepareRunEnv pythonCmd:$pythonCmd, runtimeVersion:$runtimeVersion")
-        // 验证Python命令是否可用
-        if (!isPythonAvailable(pythonCmd)) {
+        // 验证Python命令是否可用，同时获取版本信息
+        val pythonVersion = getPythonVersion(pythonCmd)
+        if (pythonVersion == null) {
             logger.warn("prepareRunEnv python command[$pythonCmd] is not available, fallback to system env")
             LoggerService.addWarnLine("Python command [$pythonCmd] is not available, skip venv creation")
             return null
         }
         val venvPath = File(atomTmpSpace, PYTHON_VENV_DIR)
-        // 根据Python版本创建虚拟环境，支持python3.x场景
-        val binPath = if (runtimeVersion.startsWith("python3")) {
+        val binPath = if (pythonVersion.contains("Python 3", ignoreCase = true)) {
             createPython3Venv(pythonCmd = pythonCmd, venvPath = venvPath, osType = osType)
         } else {
             createPython2Venv(pythonCmd = pythonCmd, venvPath = venvPath, osType = osType)
@@ -146,18 +146,17 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         return JsonUtil.toJson(preCmds, false)
     }
 
-    /** 验证Python命令是否可用 */
-    private fun isPythonAvailable(pythonCmd: String): Boolean {
+    /** Get python version string, return null if command is not available */
+    private fun getPythonVersion(pythonCmd: String): String? {
         return try {
             CommandLineUtils.execute(
                 command = "$pythonCmd --version",
                 workspace = null,
                 print2Logger = true
             )
-            true
         } catch (ignored: Throwable) {
-            logger.warn("isPythonAvailable check [$pythonCmd --version] failed: ${ignored.message}")
-            false
+            logger.warn("getPythonVersion [$pythonCmd] failed: ${ignored.message}")
+            null
         }
     }
 

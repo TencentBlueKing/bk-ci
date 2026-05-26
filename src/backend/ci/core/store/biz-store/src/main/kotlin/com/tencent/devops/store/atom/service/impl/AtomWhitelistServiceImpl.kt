@@ -96,7 +96,8 @@ class AtomWhitelistServiceImpl @Autowired constructor(
                 dslContext = dslContext,
                 whitelistType = whitelistType,
                 atomCodes = atomCodes,
-                userId = operator
+                userId = operator,
+                description = description
             )
         } else {
             atomWhitelistDao.addWhitelist(
