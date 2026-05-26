@@ -8,6 +8,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpRemoteDevResource
+import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.ConfigUpdateRequest
@@ -143,7 +144,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         val pagedResources = filteredResources.subList(start, end)
 
         val envStatusMap: Map<String, String> = pagedResources
-            .filter { it.status == UNUSED_CGS_STATUS && !it.envId.isNullOrBlank() }
+            .filter { it.status == Constansts.CGS_AVAIABLE_STATUS && !it.envId.isNullOrBlank() }
             .parallelStream()
             .map { resource ->
                 val envStatus = kotlin.runCatching {
@@ -155,7 +156,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
 
         val records = pagedResources.map { item ->
             val map = JsonUtil.toMap(item).toMutableMap()
-            if (item.status == UNUSED_CGS_STATUS && item.envId != null) {
+            if (item.status == Constansts.CGS_AVAIABLE_STATUS && item.envId != null) {
                 map["envStatus"] = envStatusMap[item.envId] ?: ENV_STATUS_UNKNOWN
             }
             map
@@ -237,8 +238,6 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     }
 
     companion object {
-        // CGS 资源池中表示"未使用/空闲"的状态码（来自 BCS listcgs 接口）
-        private const val UNUSED_CGS_STATUS = 11
         private const val ENV_STATUS_UNKNOWN = "unknown"
     }
 }
