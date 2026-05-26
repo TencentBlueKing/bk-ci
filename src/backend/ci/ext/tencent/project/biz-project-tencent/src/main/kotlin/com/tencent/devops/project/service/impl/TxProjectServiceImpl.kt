@@ -557,15 +557,6 @@ class TxProjectServiceImpl @Autowired constructor(
                 )
             }
         }
-        if (bgId == IEG_BG_ID && productId == COMMON_KPI_PRODUCT_ID) {
-            throw ErrorCodeException(
-                errorCode = ProjectMessageCode.ERROR_KPI_PRODUCT_COMMON_NOT_ALLOWED,
-                defaultMessage = MessageUtil.getMessageByLocale(
-                    messageCode = ProjectMessageCode.ERROR_KPI_PRODUCT_COMMON_NOT_ALLOWED,
-                    language = I18nUtil.getLanguage(userId)
-                )
-            )
-        }
     }
 
     /**
