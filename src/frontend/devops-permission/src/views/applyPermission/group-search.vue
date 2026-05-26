@@ -248,7 +248,7 @@ const renderSelectionCell = ({ row, column }) => h(
   BkCheckbox,
   {
     modelValue: row.joined ? row.joined : selections.value.some(item => item.id === row.id),
-    disabled: row.joined,
+    disabled: row.joined || row.applyDisable,
     class: 'label-text',
     title: row.joined ? t('你已获得该权限') : '',
     onChange(val) {
