@@ -77,7 +77,7 @@ class RbacPermissionApplyService @Autowired constructor(
 
     private val authApplyRedirectUrl = "${config.devopsHostGateway}/console/permission/apply?" +
             "project_code=%s&projectName=%s&resourceType=%s&resourceName=%s" +
-            "&iamResourceCode=%s&action=%s&groupName=%s&groupId=%s&iamRelatedResourceType=%s"
+            "&iamResourceCode=%s&action=%s&groupName=%s&groupId=%s&iamRelatedResourceType=%s&redirect=true"
     private val pipelineDetailRedirectUri = "${config.devopsHostGateway}/console/pipeline/%s/%s/history"
     private val environmentDetailRedirectUri = "${config.devopsHostGateway}/console/environment/%s/envDetail/%s"
     private val codeccTaskDetailRedirectUri =
