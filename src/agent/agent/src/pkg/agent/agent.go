@@ -31,10 +31,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/create"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/create"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/cron"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
