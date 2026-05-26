@@ -169,13 +169,13 @@ const actions: ActionTree<RootState, any> = {
     },
 
     fetchVersionsLogList () {
-        return Request.get(`${window.location.origin}/bundledVersionLog.json?t=${Date.now()}`, {
+        return Request.get(`${window.location.origin}${window.PUBLIC_URL_PREFIX}/bundledVersionLog.json?t=${Date.now()}`, {
             originalResponse: true
         } as AxiosRequestConfig & { originalResponse: boolean })
     },
 
     fetchVersionsLogListEn () {
-        return Request.get(`${window.location.origin}/bundledVersionLog_en.json?t=${Date.now()}`, {
+        return Request.get(`${window.location.origin}${window.PUBLIC_URL_PREFIX}/bundledVersionLog_en.json?t=${Date.now()}`, {
             originalResponse: true
         } as AxiosRequestConfig & { originalResponse: boolean })
     },
