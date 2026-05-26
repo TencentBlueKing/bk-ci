@@ -19,12 +19,11 @@ class ServiceAgentResourceImpl @Autowired constructor(
         return Result(agentService.getWorkspaceInfo(userId, projectId, agentHashId))
     }
 
-    override fun updateDisplayNameByWorkspaceId(
+    override fun deleteCreateNode(
         userId: String,
         projectId: String,
-        workspaceId: String,
-        displayName: String
-    ) {
-        agentService.updateDisplayNameByWorkspaceId(userId, projectId, workspaceId, displayName)
+        workspaceName: String
+    ): Result<Boolean> {
+        return Result(agentService.deleteCreateNode(userId, projectId, workspaceName))
     }
 }

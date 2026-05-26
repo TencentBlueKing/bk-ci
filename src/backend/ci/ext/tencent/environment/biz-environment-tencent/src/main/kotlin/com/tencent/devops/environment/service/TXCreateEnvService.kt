@@ -25,6 +25,8 @@ class TXCreateEnvService @Autowired constructor(
     override fun getWorkspaceDisplayName(userId: String, projectId: String, workspaceId: String?): String? {
         return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(
             userId, projectId, workspaceId ?: return null
-        ).data?.displayName
+        ).data?.innerIp
     }
+
+
 }

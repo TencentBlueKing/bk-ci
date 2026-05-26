@@ -53,7 +53,6 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.ServiceLocaleResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.devx.ServiceDEVXResource
-import com.tencent.devops.environment.api.thirdpartyagent.ServiceAgentResource
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
@@ -213,17 +212,6 @@ class WorkspaceService @Autowired constructor(
                 workspaceName = workspaceName,
                 displayName = displayName
             )
-        }
-
-        try {
-            client.get(ServiceAgentResource::class).updateDisplayNameByWorkspaceId(
-                userId = userId,
-                projectId = ws.projectId,
-                workspaceId = workspaceName,
-                displayName = displayName
-            )
-        } catch (e: Exception) {
-            logger.error("update create node displayName error", e)
         }
 
         return true
