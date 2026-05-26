@@ -1,5 +1,8 @@
 package com.tencent.devops.process.pojo.pipeline.task
 
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStep
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 

@@ -13,6 +13,7 @@ import com.tencent.devops.process.dao.PipelineBatchTaskDao
 import com.tencent.devops.process.dao.PipelineBatchTaskDetailDao
 import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskConfigEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskConfigRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateEvent
@@ -23,10 +24,10 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailUpda
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskExecuteEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskLabelSummary
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskStatus
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatusSummary
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskStep
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskType
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStep
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import org.jooq.DSLContext
@@ -43,7 +44,8 @@ class PipelineBatchTaskService @Autowired constructor(
     private val sampleEventDispatcher: SampleEventDispatcher,
     private val handlers: List<PipelineBatchTaskHandler>,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
-    private val pipelineTemplateRelatedService: PipelineTemplateRelatedService
+    private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) {
 
     fun list(
@@ -94,6 +96,9 @@ class PipelineBatchTaskService @Autowired constructor(
         )
         val pipelineNameMap = pipelineInfos.associate { it.pipelineId to it.pipelineName }
         val pipelineLockedMap = pipelineInfos.associate { it.pipelineId to (it.locked ?: false) }
+        val pipelineDraftSet = pipelineIds.filter {
+            pipelineRepositoryService.getDraftVersionResource(projectId = projectId, pipelineId = it) != null
+        }.toSet()
         val pipelineEnablePacSet = pipelineYamlInfoDao.listByPipelineIds(
             dslContext = dslContext,
             projectId = projectId,
@@ -109,6 +114,7 @@ class PipelineBatchTaskService @Autowired constructor(
         if (missingPipelineIds.isNotEmpty()) {
             throw InvalidParamException("Pipeline not found: ${missingPipelineIds.joinToString(",")}")
         }
+        val taskParam = request.taskParam?.let { JsonUtil.toJson(it, formatted = false) }
         val taskId = UUIDUtil.generate()
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -118,7 +124,7 @@ class PipelineBatchTaskService @Autowired constructor(
                 projectId = projectId,
                 taskName = request.taskName,
                 taskType = request.taskType,
-                taskParam = null,
+                taskParam = taskParam,
                 status = handler.taskStatusWhenCreate(),
                 step = PipelineBatchTaskStep.CONFIG,
                 totalCount = pipelineIds.size,
@@ -137,6 +143,7 @@ class PipelineBatchTaskService @Autowired constructor(
                         constraint = pipelineConstraintSet.contains(pipelineId),
                         subPipeline = false,
                         locked = pipelineLockedMap[pipelineId] ?: false,
+                        draft = pipelineDraftSet.contains(pipelineId),
                         status = handler.detailStatusWhenCreate(),
                         errorMessage = null,
                         startTime = null,
@@ -234,6 +241,9 @@ class PipelineBatchTaskService @Autowired constructor(
     ) {
         validateConfigRequest(request)
         val task = getTask(projectId = projectId, taskId = taskId)
+        if (task.status != PipelineBatchTaskStatus.DRAFT) {
+            throw InvalidParamException("task $taskId status ${task.status.name} cannot config")
+        }
         val handler = getHandler(taskType = task.taskType)
         handler.validateWhenConfig(
             userId = userId,
@@ -269,7 +279,7 @@ class PipelineBatchTaskService @Autowired constructor(
         if (detail.subPipeline || detail.status in DETAIL_STATUS_CAN_NOT_EXCLUDE) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_DETAIL_CAN_NOT_EXCLUDE,
-                params = arrayOf(pipelineId, detail.status.desc)
+                params = arrayOf(pipelineId, detail.status.name)
             )
         }
         pipelineBatchTaskDetailDao.update(
@@ -293,7 +303,7 @@ class PipelineBatchTaskService @Autowired constructor(
         if (detail.status != PipelineBatchTaskDetailStatus.EXCLUDED) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_DETAIL_CAN_NOT_RESTORE,
-                params = arrayOf(pipelineId, detail.status.desc)
+                params = arrayOf(pipelineId, detail.status.name)
             )
         }
         pipelineBatchTaskDetailDao.update(
@@ -317,7 +327,7 @@ class PipelineBatchTaskService @Autowired constructor(
         if (task.status != PipelineBatchTaskStatus.DRAFT) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_EXECUTE,
-                params = arrayOf(taskId, task.status.desc)
+                params = arrayOf(taskId, task.status.name)
             )
         }
         val handler = getHandler(taskType = task.taskType)
@@ -351,7 +361,7 @@ class PipelineBatchTaskService @Autowired constructor(
         if (task.status != PipelineBatchTaskStatus.DRAFT) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_DELETE,
-                params = arrayOf(taskId, task.status.desc)
+                params = arrayOf(taskId, task.status.name)
             )
         }
         getHandler(taskType = task.taskType).validateWhenDelete(

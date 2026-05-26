@@ -123,6 +123,24 @@ class EnvNodeDao {
         }
     }
 
+    fun updateProjectId(
+        dslContext: DSLContext,
+        sourceProjectId: String,
+        targetProjectId: String,
+        nodeIds: List<Long>
+    ): Int {
+        if (nodeIds.isEmpty()) {
+            return 0
+        }
+        return with(TEnvNode.T_ENV_NODE) {
+            dslContext.update(this)
+                .set(PROJECT_ID, targetProjectId)
+                .where(PROJECT_ID.eq(sourceProjectId))
+                .and(NODE_ID.`in`(nodeIds))
+                .execute()
+        }
+    }
+
     fun deleteByEnvId(dslContext: DSLContext, envId: Long) {
         with(TEnvNode.T_ENV_NODE) {
             dslContext.deleteFrom(this)

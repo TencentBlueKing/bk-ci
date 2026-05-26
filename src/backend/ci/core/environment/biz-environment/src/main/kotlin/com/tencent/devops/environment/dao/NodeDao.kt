@@ -58,6 +58,24 @@ class NodeDao {
         }
     }
 
+    fun updateProjectId(
+        dslContext: DSLContext,
+        sourceProjectId: String,
+        targetProjectId: String,
+        nodeIds: List<Long>
+    ): Int {
+        if (nodeIds.isEmpty()) {
+            return 0
+        }
+        return with(TNode.T_NODE) {
+            dslContext.update(this)
+                .set(PROJECT_ID, targetProjectId)
+                .where(PROJECT_ID.eq(sourceProjectId))
+                .and(NODE_ID.`in`(nodeIds))
+                .execute()
+        }
+    }
+
     fun get(dslContext: DSLContext, projectId: String, nodeId: Long): TNodeRecord? {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)

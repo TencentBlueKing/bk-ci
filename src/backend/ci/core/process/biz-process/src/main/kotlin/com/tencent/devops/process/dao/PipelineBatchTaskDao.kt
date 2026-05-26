@@ -2,9 +2,9 @@ package com.tencent.devops.process.dao
 
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BATCH_TASK
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskStatus
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskStep
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskType
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStep
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -131,6 +131,8 @@ class PipelineBatchTaskDao {
             val query = dslContext.update(this)
             if (update.taskName != null) {
                 query.set(TASK_NAME, update.taskName)
+            }
+            if (update.taskParam != null) {
                 query.set(TASK_PARAM, update.taskParam)
             }
             if (update.status != null) {
@@ -148,6 +150,22 @@ class PipelineBatchTaskDao {
             query.set(UPDATE_TIME, LocalDateTime.now())
                 .where(PROJECT_ID.eq(update.projectId))
                 .and(TASK_ID.eq(update.taskId))
+                .execute()
+        }
+    }
+
+    fun updateStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        taskId: String,
+        status: PipelineBatchTaskStatus
+    ): Int {
+        return with(T_PIPELINE_BATCH_TASK) {
+            dslContext.update(this)
+                .set(STATUS, status.name)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(projectId))
+                .and(TASK_ID.eq(taskId))
                 .execute()
         }
     }

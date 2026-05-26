@@ -139,6 +139,22 @@ class ServiceNodeResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun transferNodes(
+        userId: String,
+        projectId: String,
+        targetProjectId: String,
+        nodeHashIds: List<String>
+    ): Result<Boolean> {
+        return Result(
+            nodeService.transferNodes(
+                userId = userId,
+                sourceProjectId = projectId,
+                targetProjectId = targetProjectId,
+                nodeHashIds = nodeHashIds
+            )
+        )
+    }
+
     @AuditEntry(actionId = ActionId.ENV_NODE_DELETE)
     override fun deleteThirdPartyNode(userId: String, projectId: String, agentId: String): Result<Boolean> {
         if (agentId.isEmpty()) return Result(false)

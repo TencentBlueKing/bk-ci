@@ -11,8 +11,8 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStat
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatusSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskLabelSummary
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskStatus
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskType
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.service.task.PipelineBatchTaskService
 import org.springframework.beans.factory.annotation.Autowired
 

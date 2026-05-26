@@ -5,7 +5,7 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatusSummary
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskType
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -35,6 +35,7 @@ class PipelineBatchTaskDetailDao {
                     CONSTRAINT,
                     SUB_PIPELINE,
                     LOCKED,
+                    DRAFT,
                     CHANGE,
                     STATUS,
                     ERROR_MESSAGE,
@@ -50,6 +51,7 @@ class PipelineBatchTaskDetailDao {
                     detail.constraint,
                     detail.subPipeline,
                     detail.locked,
+                    detail.draft,
                     detail.change,
                     detail.status.name,
                     detail.errorMessage,
@@ -68,7 +70,8 @@ class PipelineBatchTaskDetailDao {
         pipelineName: String? = null,
         status: PipelineBatchTaskDetailStatus? = null,
         pac: Boolean? = null,
-        subPipeline: Boolean? = null
+        subPipeline: Boolean? = null,
+        change: Boolean? = null
     ): Long {
         return with(T_PIPELINE_BATCH_TASK_DETAIL) {
             dslContext.selectCount()
@@ -80,7 +83,8 @@ class PipelineBatchTaskDetailDao {
                         pipelineName = pipelineName,
                         status = status,
                         pac = pac,
-                        subPipeline = subPipeline
+                        subPipeline = subPipeline,
+                        change = change
                     )
                 )
                 .fetchOne(0, Long::class.java) ?: 0L
@@ -95,11 +99,17 @@ class PipelineBatchTaskDetailDao {
         status: PipelineBatchTaskDetailStatus? = null,
         pac: Boolean? = null,
         subPipeline: Boolean? = null,
-        offset: Int,
-        limit: Int
+        change: Boolean? = null,
+        pipelineIds: Set<String>? = null,
+        resourceIds: Set<String>? = null,
+        offset: Int? = null,
+        limit: Int? = null
     ): List<PipelineBatchTaskDetailInfo> {
+        if ((pipelineIds != null && pipelineIds.isEmpty()) || (resourceIds != null && resourceIds.isEmpty())) {
+            return emptyList()
+        }
         return with(T_PIPELINE_BATCH_TASK_DETAIL) {
-            dslContext.selectFrom(this)
+            val query = dslContext.selectFrom(this)
                 .where(
                     buildTaskConditions(
                         projectId = projectId,
@@ -107,24 +117,30 @@ class PipelineBatchTaskDetailDao {
                         pipelineName = pipelineName,
                         status = status,
                         pac = pac,
-                        subPipeline = subPipeline
+                        subPipeline = subPipeline,
+                        change = change,
+                        pipelineIds = pipelineIds,
+                        resourceIds = resourceIds
                     )
                 )
                 .orderBy(PIPELINE_NAME.asc(), PIPELINE_ID.asc())
-                .limit(offset, limit)
-                .fetch()
-                .map(::convert)
+            if (offset != null && limit != null) {
+                query.limit(offset, limit).fetch().map(::convert)
+            } else {
+                query.fetch().map(::convert)
+            }
         }
     }
 
     fun listByTaskId(
         dslContext: DSLContext,
         projectId: String,
-        taskId: String
+        taskId: String,
+        change: Boolean? = null
     ): List<PipelineBatchTaskDetailInfo> {
         return with(T_PIPELINE_BATCH_TASK_DETAIL) {
             dslContext.selectFrom(this)
-                .where(buildTaskConditions(projectId = projectId, taskId = taskId))
+                .where(buildTaskConditions(projectId = projectId, taskId = taskId, change = change))
                 .fetch()
                 .map(::convert)
         }
@@ -176,14 +192,70 @@ class PipelineBatchTaskDetailDao {
         return with(T_PIPELINE_BATCH_TASK_DETAIL) {
             val query = dslContext.update(this)
             if (update.status != null) {
-                query.set(STATUS, update.status.name)
+                query.set(STATUS, update.status!!.name)
             }
             if (update.change != null) {
                 query.set(CHANGE, update.change)
             }
+            val pipelineIdCondition = when {
+                !update.pipelineIds.isNullOrEmpty() -> PIPELINE_ID.`in`(update.pipelineIds)
+                update.pipelineId != null -> PIPELINE_ID.eq(update.pipelineId)
+                else -> return 0
+            }
             query.where(PROJECT_ID.eq(update.projectId))
                 .and(TASK_ID.eq(update.taskId))
-                .and(PIPELINE_ID.eq(update.pipelineId))
+                .and(pipelineIdCondition)
+                .execute()
+        }
+    }
+
+    fun updateByPipelineIds(
+        dslContext: DSLContext,
+        projectId: String,
+        taskId: String,
+        pipelineIds: Set<String>,
+        status: PipelineBatchTaskDetailStatus? = null,
+        change: Boolean? = null
+    ): Int {
+        if (pipelineIds.isEmpty()) {
+            return 0
+        }
+        return with(T_PIPELINE_BATCH_TASK_DETAIL) {
+            var result = 0
+            if (status != null) {
+                result = dslContext.update(this)
+                    .set(STATUS, status.name)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(TASK_ID.eq(taskId))
+                    .and(PIPELINE_ID.`in`(pipelineIds))
+                    .execute()
+            }
+            if (change != null) {
+                result = dslContext.update(this)
+                    .set(CHANGE, change)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(TASK_ID.eq(taskId))
+                    .and(PIPELINE_ID.`in`(pipelineIds))
+                    .execute()
+            }
+            result
+        }
+    }
+
+    fun deleteByPipelineIds(
+        dslContext: DSLContext,
+        projectId: String,
+        taskId: String,
+        pipelineIds: Set<String>
+    ): Int {
+        if (pipelineIds.isEmpty()) {
+            return 0
+        }
+        return with(T_PIPELINE_BATCH_TASK_DETAIL) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TASK_ID.eq(taskId))
+                .and(PIPELINE_ID.`in`(pipelineIds))
                 .execute()
         }
     }
@@ -194,7 +266,10 @@ class PipelineBatchTaskDetailDao {
         pipelineName: String? = null,
         status: PipelineBatchTaskDetailStatus? = null,
         pac: Boolean? = null,
-        subPipeline: Boolean? = null
+        subPipeline: Boolean? = null,
+        change: Boolean? = null,
+        pipelineIds: Set<String>? = null,
+        resourceIds: Set<String>? = null
     ): List<Condition> {
         return with(T_PIPELINE_BATCH_TASK_DETAIL) {
             val conditions = mutableListOf<Condition>()
@@ -212,6 +287,15 @@ class PipelineBatchTaskDetailDao {
             if (subPipeline != null) {
                 conditions.add(SUB_PIPELINE.eq(subPipeline))
             }
+            if (change != null) {
+                conditions.add(CHANGE.eq(change))
+            }
+            if (!pipelineIds.isNullOrEmpty()) {
+                conditions.add(PIPELINE_ID.`in`(pipelineIds))
+            }
+            if (!resourceIds.isNullOrEmpty()) {
+                conditions.add(PIPELINE_ID.`in`(resourceIds))
+            }
             conditions
         }
     }
@@ -228,6 +312,7 @@ class PipelineBatchTaskDetailDao {
                 constraint = record.get(CONSTRAINT),
                 subPipeline = record.get(SUB_PIPELINE),
                 locked = record.get(LOCKED),
+                draft = record.get(DRAFT),
                 change = record.get(CHANGE),
                 status = PipelineBatchTaskDetailStatus.valueOf(record.get(STATUS)),
                 errorMessage = record.get(ERROR_MESSAGE),

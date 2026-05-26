@@ -867,6 +867,38 @@ class NodeService @Autowired constructor(
         }
     }
 
+    fun transferNodes(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String,
+        nodeHashIds: List<String>
+    ): Boolean {
+        if (nodeHashIds.isEmpty()) {
+            return true
+        }
+        val nodeIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            nodeDao.updateProjectId(
+                dslContext = transactionContext,
+                sourceProjectId = sourceProjectId,
+                targetProjectId = targetProjectId,
+                nodeIds = nodeIds
+            )
+            envNodeDao.updateProjectId(
+                dslContext = transactionContext,
+                sourceProjectId = sourceProjectId,
+                targetProjectId = targetProjectId,
+                nodeIds = nodeIds
+            )
+        }
+        logger.info(
+            "transfer nodes success|userId=$userId|sourceProjectId=$sourceProjectId|" +
+                "targetProjectId=$targetProjectId|nodeHashIds=$nodeHashIds"
+        )
+        return true
+    }
+
     private fun checkDisplayName(projectId: String, nodeId: Long?, displayName: String) {
         if (nodeDao.isDisplayNameExist(dslContext, projectId, nodeId, displayName)) {
             throw ErrorCodeException(errorCode = ERROR_NODE_NAME_DUPLICATE, params = arrayOf(displayName))

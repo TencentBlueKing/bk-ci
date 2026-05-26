@@ -7,8 +7,8 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateRequ
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskExecuteEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskStatus
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskType
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 
 /**
  * 流水线批量任务处理器

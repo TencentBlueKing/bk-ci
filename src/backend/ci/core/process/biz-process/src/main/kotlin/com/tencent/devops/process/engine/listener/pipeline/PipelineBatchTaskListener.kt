@@ -4,7 +4,7 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskConfigEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskExecuteEvent
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskType
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.service.task.PipelineBatchTaskHandler
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
