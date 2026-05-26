@@ -106,7 +106,7 @@ class AtomWhitelistServiceImpl @Autowired constructor(
                 atomCodes = atomCodes,
                 description = description,
                 userId = operator
-            ) > 0
+            )
         }
         if (success) {
             invalidateCache(whitelistType)
