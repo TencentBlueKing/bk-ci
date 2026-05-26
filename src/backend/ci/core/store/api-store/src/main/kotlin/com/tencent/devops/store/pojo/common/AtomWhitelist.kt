@@ -28,8 +28,9 @@
 package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
 
-@Schema(title = "原子功能白名单响应报文")
+@Schema(title = "插件功能白名单响应报文")
 data class AtomWhitelist(
     @get:Schema(title = "白名单类型", required = true)
     val whitelistType: String,
@@ -42,9 +43,9 @@ data class AtomWhitelist(
     @get:Schema(title = "创建者", required = false)
     val creator: String? = null,
     @get:Schema(title = "创建时间", required = false)
-    val createTime: Long? = null,
+    val createTime: LocalDateTime? = null,
     @get:Schema(title = "修改者", required = false)
     val modifier: String? = null,
     @get:Schema(title = "更新时间", required = false)
-    val updateTime: Long? = null
+    val updateTime: LocalDateTime? = null
 )
