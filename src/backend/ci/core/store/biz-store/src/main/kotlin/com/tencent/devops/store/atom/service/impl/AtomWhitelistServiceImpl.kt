@@ -87,11 +87,11 @@ class AtomWhitelistServiceImpl @Autowired constructor(
         description: String?,
         operator: String
     ): Result<Boolean> {
-        val count = atomWhitelistDao.countWhitelists(
+        val exists = atomWhitelistDao.existsWhitelist(
             dslContext = dslContext,
             whitelistType = whitelistType
         )
-        val success = if (count > 0) {
+        val success = if (exists) {
             atomWhitelistDao.updateAtomCodes(
                 dslContext = dslContext,
                 whitelistType = whitelistType,
@@ -116,11 +116,10 @@ class AtomWhitelistServiceImpl @Autowired constructor(
     }
 
     override fun delete(whitelistType: String, operator: String): Result<Boolean> {
-        val count = atomWhitelistDao.countWhitelists(
+        if (!atomWhitelistDao.existsWhitelist(
             dslContext = dslContext,
             whitelistType = whitelistType
-        )
-        if (count == 0L) {
+        )) {
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.WHITELIST_NOT_FOUND,
                 params = arrayOf(whitelistType)
@@ -138,11 +137,10 @@ class AtomWhitelistServiceImpl @Autowired constructor(
     }
 
     override fun enableOrDisable(whitelistType: String, enabled: Boolean, operator: String): Result<Boolean> {
-        val count = atomWhitelistDao.countWhitelists(
+        if (!atomWhitelistDao.existsWhitelist(
             dslContext = dslContext,
             whitelistType = whitelistType
-        )
-        if (count == 0L) {
+        )) {
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.WHITELIST_NOT_FOUND,
                 params = arrayOf(whitelistType)
