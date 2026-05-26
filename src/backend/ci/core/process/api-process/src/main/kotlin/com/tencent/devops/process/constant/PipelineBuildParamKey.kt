@@ -124,4 +124,6 @@ object PipelineBuildParamKey {
     const val CI_NODE_NAME = "ci.node_name"
     // 云桌面IP
     const val CI_NODE_IP = "ci.node_ip"
+    // IMATE会话ID
+    const val CI_IMATE_SESSION_ID = "ci.imate_session_id"
 }

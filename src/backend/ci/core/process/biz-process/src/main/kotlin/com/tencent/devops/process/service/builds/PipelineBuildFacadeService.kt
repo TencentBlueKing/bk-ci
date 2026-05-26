@@ -86,6 +86,7 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
+import com.tencent.devops.process.constant.PipelineBuildParamKey
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_HISTORY
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_STATUS
@@ -164,10 +165,10 @@ import com.tencent.devops.process.strategy.pojo.HistoryConditionQueryRequest
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.BUILD_NO
-import com.tencent.devops.process.utils.NODE_AGENT_ID
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
 import com.tencent.devops.process.utils.MINORVERSION
+import com.tencent.devops.process.utils.NODE_AGENT_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
@@ -178,10 +179,10 @@ import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.store.pojo.common.BK_STORE_CREATIVE_STREAM_MANUAL_TRIGGER
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.UriBuilder
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -475,10 +476,14 @@ class PipelineBuildFacadeService(
         frequencyLimit: Boolean = true,
         triggerReviewers: List<String>? = null,
         version: Int? = null,
+        imateSessionId: String? = null,
         branch: String? = null
     ): BuildId {
+        val mergedValues = imateSessionId?.takeIf { it.isNotBlank() }?.let {
+            values + (PipelineBuildParamKey.CI_IMATE_SESSION_ID to it)
+        } ?: values
         logger.info(
-            "[$pipelineId] Manual build start with buildNo[$buildNo] and vars: $values " +
+            "[$pipelineId] Manual build start with buildNo[$buildNo] and vars: $mergedValues " +
                     "and version[${version ?: branch}]"
         )
         if (checkPermission) {
@@ -620,7 +625,7 @@ class PipelineBuildFacadeService(
 
             val paramMap = buildParamCompatibilityTransformer.parseTriggerParam(
                 userId = userId, projectId = projectId, pipelineId = pipelineId,
-                paramProperties = triggerContainer.params, paramValues = values
+                paramProperties = triggerContainer.params, paramValues = mergedValues
             )
             yamlParams.forEach { paramMap.putIfAbsent(it.key, it.value) }
 
@@ -629,7 +634,7 @@ class PipelineBuildFacadeService(
                 val creativeParam = createStreamService.creativeStreamBuildParameters(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    paramMap = values,
+                    paramMap = mergedValues,
                     userId = userId
                 )
                 paramMap.putAll(creativeParam)
@@ -645,7 +650,7 @@ class PipelineBuildFacadeService(
                 resource = resource,
                 frequencyLimit = frequencyLimit,
                 buildNo = buildNo,
-                startValues = values,
+                startValues = mergedValues,
                 triggerReviewers = triggerReviewers,
                 signPipelineVersion = targetVersion,
                 debug = debug

@@ -892,6 +892,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         buildNo: Int?,
         startType: StartType,
         version: Int?,
+        imateSessionId: String?,
         branch: String?
     ): Result<BuildId> {
         checkUserId(userId)
@@ -911,6 +912,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 version = version,
                 checkPermission = ChannelCode.isNeedAuth(channelCode),
                 frequencyLimit = true,
+                imateSessionId = imateSessionId,
                 branch = branch
             )
         )
