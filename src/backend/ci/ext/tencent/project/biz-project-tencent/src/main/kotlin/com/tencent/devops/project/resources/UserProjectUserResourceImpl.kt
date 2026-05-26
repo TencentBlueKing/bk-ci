@@ -34,6 +34,7 @@ import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.user.UserProjectUserResource
+import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.UserRole
 import com.tencent.devops.project.pojo.user.ProjectUser
@@ -77,6 +78,10 @@ class UserProjectUserResourceImpl @Autowired constructor(
 
     override fun getDetail(userId: String, bkToken: String): Result<UserDeptDetail> {
         return Result(tofService.getUserDeptDetail(userId, bkToken))
+    }
+
+    override fun getPersonalProject(userId: String): Result<ProjectVO> {
+        return Result(projectLocalService.getOrCreatePersonalProject(userId))
     }
 
     override fun getProjectUsers(userId: String, projectCode: String): Result<List<String>?> {

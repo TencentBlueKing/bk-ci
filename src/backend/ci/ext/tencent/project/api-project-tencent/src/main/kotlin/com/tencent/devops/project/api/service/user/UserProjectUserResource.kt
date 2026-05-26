@@ -30,6 +30,7 @@ package com.tencent.devops.project.api.service.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.UserRole
 import com.tencent.devops.project.pojo.user.ProjectUser
@@ -74,6 +75,15 @@ interface UserProjectUserResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         bkToken: String
     ): Result<UserDeptDetail>
+
+    @GET
+    @Path("/projects/personal")
+    @Operation(summary = "获取用户个人项目，不存在时自动创建")
+    fun getPersonalProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String
+    ): Result<ProjectVO>
 
     @GET
     @Path("/projects/{projectCode}/list")
