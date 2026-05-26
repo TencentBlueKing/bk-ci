@@ -183,7 +183,7 @@ class AtomWhitelistDao {
         val t = TAtomWhitelist.T_ATOM_WHITELIST
         val conditions = mutableListOf<Condition>()
 
-        if (!whitelistType.isNullOrBlank()) {
+        if (whitelistType != null) {
             conditions.add(t.WHITELIST_TYPE.eq(whitelistType))
         }
 
@@ -218,13 +218,13 @@ class AtomWhitelistDao {
         return JsonUtil.to(jsonStr, object : TypeReference<List<String>>() {})
     }
 
-    /**
-     * 统计白名单记录数量
-     * @param dslContext DSL上下文
-     * @param whitelistType 白名单类型（可选）
-     * @param enabled 是否启用（可选）
-     * @return 记录数量
-     */
+    fun existsWhitelist(dslContext: DSLContext, whitelistType: String): Boolean {
+        val t = TAtomWhitelist.T_ATOM_WHITELIST
+        return dslContext.fetchExists(
+            dslContext.selectOne().from(t).where(t.WHITELIST_TYPE.eq(whitelistType))
+        )
+    }
+
     fun countWhitelists(
         dslContext: DSLContext,
         whitelistType: String? = null,
@@ -232,15 +232,12 @@ class AtomWhitelistDao {
     ): Long {
         val t = TAtomWhitelist.T_ATOM_WHITELIST
         val conditions = mutableListOf<Condition>()
-
-        if (!whitelistType.isNullOrBlank()) {
+        if (whitelistType != null) {
             conditions.add(t.WHITELIST_TYPE.eq(whitelistType))
         }
-
         if (enabled != null) {
             conditions.add(t.ENABLED.eq(enabled))
         }
-
         return dslContext.selectCount()
             .from(t)
             .where(conditions)
