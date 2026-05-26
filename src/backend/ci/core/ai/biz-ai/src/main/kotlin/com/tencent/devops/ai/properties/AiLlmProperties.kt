@@ -1,5 +1,6 @@
 package com.tencent.devops.ai.properties
 
+import kotlin.random.Random
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 /** LLM 模型连接配置属性（API URL、API Key、模型名称、HTTP 超时等）。 */
@@ -59,17 +60,28 @@ data class AiLlmProperties(
      * 每个 override 只需填差异化字段（id / baseUrl / modelName / 凭证 / priority / enabled），
      * 通用字段（HTTP 超时、重试、退避）从顶层继承；
      * 留空时退回到顶层 baseUrl 表示的单模型 legacy 配置。
+     *
+     * 排序规则：按 priority 升序构成 failover 链；priority 相同的模型，
+     * 在进程启动时会被随机打散一次，避免集群所有实例固定调用同一个模型，
+     * 进程生命周期内顺序稳定，便于通过启动日志排障。
      */
     val models: List<AiLlmModelOverride> = emptyList()
 ) {
-    fun enabledPlatformModels(): List<AiLlmModelProperties> {
+    fun enabledPlatformModels(): List<AiLlmModelProperties> =
+        enabledPlatformModels(Random.Default)
+
+    internal fun enabledPlatformModels(
+        random: Random
+    ): List<AiLlmModelProperties> {
         if (models.isNotEmpty()) {
             return models
                 .asSequence()
                 .filter { it.enabled }
-                .sortedBy { it.priority }
+                .groupBy { it.priority }
+                .toSortedMap()
+                .values
+                .flatMap { it.shuffled(random) }
                 .map { it.toEffective(this) }
-                .toList()
         }
         if (baseUrl.isBlank()) {
             return emptyList()
