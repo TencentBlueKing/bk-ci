@@ -75,8 +75,12 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             )
             return null
         }
-        // 根据runtimeVersion确定Python命令
-        val pythonCmd = if (runtimeVersion in setOf("python3", "python2")) runtimeVersion else "python"
+        // 根据runtimeVersion确定Python命令，支持python3.x场景
+        val pythonCmd = when {
+            runtimeVersion.startsWith("python3") -> runtimeVersion
+            runtimeVersion.startsWith("python2") -> runtimeVersion
+            else -> "python"
+        }
         logger.info("prepareRunEnv pythonCmd:$pythonCmd, runtimeVersion:$runtimeVersion")
         // 验证Python命令是否可用
         if (!isPythonAvailable(pythonCmd)) {
@@ -85,8 +89,8 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             return null
         }
         val venvPath = File(atomTmpSpace, PYTHON_VENV_DIR)
-        // 根据Python版本创建虚拟环境
-        val binPath = if (runtimeVersion == "python3") {
+        // 根据Python版本创建虚拟环境，支持python3.x场景
+        val binPath = if (runtimeVersion.startsWith("python3")) {
             createPython3Venv(pythonCmd = pythonCmd, venvPath = venvPath, osType = osType)
         } else {
             createPython2Venv(pythonCmd = pythonCmd, venvPath = venvPath, osType = osType)
@@ -129,7 +133,7 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         atomExecuteEnvPath: String?
     ): String {
         val preCmds = CommonUtils.strToList(preCmd).toMutableList()
-        val pipCmd = if (runtimeVersion == "python3") "pip3" else "pip"
+        val pipCmd = if (runtimeVersion?.startsWith("python3") == true) "pip3" else "pip"
         // 若虚拟环境路径存在，使用绝对路径执行pip，Windows路径用双引号包裹
         val fullPipCmd = if (!atomExecuteEnvPath.isNullOrBlank()) {
             val fullPath = "$atomExecuteEnvPath${File.separator}$pipCmd"
