@@ -250,12 +250,18 @@ const renderSelectionCell = ({ row, column }) => h(
     modelValue: row.joined ? row.joined : selections.value.some(item => item.id === row.id),
     disabled: row.joined || row.applyDisable,
     class: 'label-text',
-    title: row.joined ? t('你已获得该权限') : '',
+    title: getDisableGroupTitle(row),
     onChange(val) {
       handleSelectRow(val, row);
     },
   },
 );
+
+const getDisableGroupTitle = (row: any) => {
+  if (row.joined) return t('你已获得该权限');
+  if (row.applyDisable) return t('该组不可被申请，请联系管理员主动授权');
+  return ''
+}
 
 const renderSelectionHeader = (col: any) => h(
   BkCheckbox,
