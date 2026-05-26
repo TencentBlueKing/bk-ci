@@ -1281,7 +1281,9 @@ class RbacPermissionManageFacadeServiceImpl(
         projectCode: String,
         handoverToId: String
     ) {
-        val subjectScopes = client.get(ServiceProjectResource::class).get(projectCode).data!!.subjectScopes ?: emptyList()
+        val subjectScopes = client.get(ServiceProjectResource::class).get(
+            englishName = projectCode
+        ).data!!.subjectScopes ?: emptyList()
         if (subjectScopes.isEmpty() || subjectScopes.any { it.id == "*" }) {
             return
         }
@@ -1297,7 +1299,7 @@ class RbacPermissionManageFacadeServiceImpl(
             .toSet()
         val handoverToDeptPath = handoverToInfo.path?.map { it.toString() }.orEmpty()
         val handoverToInSubjectScopes = handoverToId in subjectScopeUsernames ||
-            handoverToDeptPath.any { it in subjectScopeDeptIds }
+                handoverToDeptPath.any { it in subjectScopeDeptIds }
         if (!handoverToInSubjectScopes) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.ERROR_USER_NOT_BELONG_TO_THE_PROJECT,
