@@ -33,11 +33,14 @@ import com.tencent.devops.store.api.atom.BuildMarketAtomEnvResource
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.atom.service.MarketAtomEnvService
+import com.tencent.devops.store.common.service.AtomWhitelistService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class BuildMarketAtomEnvResourceImpl @Autowired constructor(private val marketAtomEnvService: MarketAtomEnvService) :
-    BuildMarketAtomEnvResource {
+class BuildMarketAtomEnvResourceImpl @Autowired constructor(
+    private val marketAtomEnvService: MarketAtomEnvService,
+    private val atomWhitelistService: AtomWhitelistService
+) : BuildMarketAtomEnvResource {
 
     override fun getAtomEnv(
         projectCode: String,
@@ -66,5 +69,10 @@ class BuildMarketAtomEnvResourceImpl @Autowired constructor(private val marketAt
         atomEnvRequest: AtomEnvRequest
     ): Result<Boolean> {
         return marketAtomEnvService.updateMarketAtomEnvInfo(projectCode, atomCode, version, atomEnvRequest)
+    }
+
+    override fun isAtomInWhitelist(whitelistType: String, atomCode: String): Result<Boolean> {
+        return Result(atomWhitelistService.isAtomInWhitelist(atomCode, whitelistType))
+
     }
 }
