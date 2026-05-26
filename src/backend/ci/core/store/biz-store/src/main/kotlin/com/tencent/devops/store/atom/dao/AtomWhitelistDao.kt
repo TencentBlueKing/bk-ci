@@ -35,15 +35,10 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
 @Repository
 class AtomWhitelistDao {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(AtomWhitelistDao::class.java)
-    }
 
     /**
      * 根据白名单类型查询所有启用的插件code
@@ -55,21 +50,16 @@ class AtomWhitelistDao {
         dslContext: DSLContext,
         whitelistType: String
     ): List<String> {
-        return try {
-            val t = TAtomWhitelist.T_ATOM_WHITELIST
-            val record = dslContext.select(t.ATOM_CODES)
-                .from(t)
-                .where(t.WHITELIST_TYPE.eq(whitelistType).and(t.ENABLED.eq(true)))
-                .fetchOne()
+        val t = TAtomWhitelist.T_ATOM_WHITELIST
+        val record = dslContext.select(t.ATOM_CODES)
+            .from(t)
+            .where(t.WHITELIST_TYPE.eq(whitelistType).and(t.ENABLED.eq(true)))
+            .fetchOne()
 
-            if (record != null) {
-                val jsonArray = record.get(0) as? String ?: "[]"
-                JsonUtil.to(jsonArray, object : TypeReference<List<String>>() {})
-            } else {
-                emptyList()
-            }
-        } catch (e: Exception) {
-            logger.warn("getAtomCodesByType failed for whitelistType=$whitelistType", e)
+        return if (record != null) {
+            val jsonArray = record.get(0) as? String ?: "[]"
+            JsonUtil.to(jsonArray, object : TypeReference<List<String>>() {})
+        } else {
             emptyList()
         }
     }
@@ -202,56 +192,42 @@ class AtomWhitelistDao {
         page: Int = 1,
         pageSize: Int = 10
     ): List<AtomWhitelist> {
-        return try {
-            val t = TAtomWhitelist.T_ATOM_WHITELIST
-            val conditions = mutableListOf<Condition>()
+        val t = TAtomWhitelist.T_ATOM_WHITELIST
+        val conditions = mutableListOf<Condition>()
 
-            if (!whitelistType.isNullOrBlank()) {
-                conditions.add(t.WHITELIST_TYPE.eq(whitelistType))
-            }
+        if (!whitelistType.isNullOrBlank()) {
+            conditions.add(t.WHITELIST_TYPE.eq(whitelistType))
+        }
 
-            if (enabled != null) {
-                conditions.add(t.ENABLED.eq(enabled))
-            }
+        if (enabled != null) {
+            conditions.add(t.ENABLED.eq(enabled))
+        }
 
-            val records = dslContext.select()
-                .from(t)
-                .where(conditions)
-                .orderBy(t.CREATE_TIME.desc())
-                .limit(pageSize)
-                .offset((page - 1) * pageSize)
-                .fetch()
+        val records = dslContext.select()
+            .from(t)
+            .where(conditions)
+            .orderBy(t.CREATE_TIME.desc())
+            .limit(pageSize)
+            .offset((page - 1) * pageSize)
+            .fetch()
 
-            records.map { record ->
-                AtomWhitelist(
-                    whitelistType = record.get(t.WHITELIST_TYPE),
-                    atomCodes = parseAtomCodes(record.get(t.ATOM_CODES)),
-                    description = record.get(t.DESCRIPTION),
-                    enabled = record.get(t.ENABLED) ?: false,
-                    creator = record.get(t.CREATOR),
-                    createTime = record.get(t.CREATE_TIME)?.let {
-                        it.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                    },
-                    modifier = record.get(t.MODIFIER),
-                    updateTime = record.get(t.UPDATE_TIME)?.let {
-                        it.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                    }
-                )
-            }
-        } catch (e: Exception) {
-            logger.warn("listWhitelists failed", e)
-            emptyList()
+        return records.map { record ->
+            AtomWhitelist(
+                whitelistType = record.get(t.WHITELIST_TYPE),
+                atomCodes = parseAtomCodes(record.get(t.ATOM_CODES)),
+                description = record.get(t.DESCRIPTION),
+                enabled = record.get(t.ENABLED) ?: false,
+                creator = record.get(t.CREATOR),
+                createTime = record.get(t.CREATE_TIME)?.atZone(ZoneId.systemDefault())?.toInstant()?.toEpochMilli(),
+                modifier = record.get(t.MODIFIER),
+                updateTime = record.get(t.UPDATE_TIME)?.atZone(ZoneId.systemDefault())?.toInstant()?.toEpochMilli()
+            )
         }
     }
 
     private fun parseAtomCodes(jsonStr: String?): List<String> {
         if (jsonStr.isNullOrBlank()) return emptyList()
-        return try {
-            JsonUtil.to(jsonStr, object : TypeReference<List<String>>() {})
-        } catch (e: Exception) {
-            logger.warn("parseAtomCodes failed, jsonStr=$jsonStr", e)
-            emptyList()
-        }
+        return JsonUtil.to(jsonStr, object : TypeReference<List<String>>() {})
     }
 
     /**
@@ -266,25 +242,20 @@ class AtomWhitelistDao {
         whitelistType: String? = null,
         enabled: Boolean? = null
     ): Long {
-        return try {
-            val t = TAtomWhitelist.T_ATOM_WHITELIST
-            val conditions = mutableListOf<Condition>()
+        val t = TAtomWhitelist.T_ATOM_WHITELIST
+        val conditions = mutableListOf<Condition>()
 
-            if (!whitelistType.isNullOrBlank()) {
-                conditions.add(t.WHITELIST_TYPE.eq(whitelistType))
-            }
-
-            if (enabled != null) {
-                conditions.add(t.ENABLED.eq(enabled))
-            }
-
-            dslContext.selectCount()
-                .from(t)
-                .where(conditions)
-                .fetchOne(0, Long::class.java) ?: 0L
-        } catch (e: Exception) {
-            logger.warn("countWhitelists failed", e)
-            0L
+        if (!whitelistType.isNullOrBlank()) {
+            conditions.add(t.WHITELIST_TYPE.eq(whitelistType))
         }
+
+        if (enabled != null) {
+            conditions.add(t.ENABLED.eq(enabled))
+        }
+
+        return dslContext.selectCount()
+            .from(t)
+            .where(conditions)
+            .fetchOne(0, Long::class.java) ?: 0L
     }
 }
