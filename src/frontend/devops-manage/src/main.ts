@@ -85,7 +85,7 @@ async function initializeApp() {
       locale: bkUiLocaleAliasMap[cookiesObj.blueking_language] || bkuiZhCn
     })
     .use(i18n)
-  .use(AuthorityDirectiveV3(handleProjectManageNoPermission))
+  .use(AuthorityDirectiveV3(handleProjectManageNoPermission, window.PUBLIC_URL_PREFIX || ''))
     .mount('.app');
   app.directive('bk-tooltips', bkTooltips)
 }
