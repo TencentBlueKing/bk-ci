@@ -377,7 +377,12 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
+    override fun deleteProjectWorkspace(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        delaySeconds: Int?
+    ): Result<Boolean> {
         val record = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
         if (record == null || !record.ownerType.projectUse() || record.projectId != projectId) {
             logger.warn("delete project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
@@ -388,7 +393,8 @@ class ServiceRemoteDevResourceImpl(
             deleteControl.deleteWorkspace(
                 userId = userId,
                 workspaceName = workspaceName,
-                needPermission = !permissionService.hasUserManager(userId, projectId)
+                needPermission = !permissionService.hasUserManager(userId, projectId),
+                delaySeconds = delaySeconds
             )
         )
     }
