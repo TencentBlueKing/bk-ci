@@ -17,12 +17,28 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 const path = require('path')
+const fs = require('fs')
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin')
 const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const webpackBaseConfig = require('../webpack.base')
 const getConfig = require('./constConfig.js')
+
+const resolveVue2DatePickerPath = () => {
+    const { dependencies = {} } = require('./package.json')
+    const datePickerVersion = dependencies['@blueking/date-picker']
+    const pnpmDir = path.join(__dirname, '../node_modules/.pnpm')
+    const datePickerDir = fs.readdirSync(pnpmDir).find(name => (
+        datePickerVersion && name.startsWith(`@blueking+date-picker@${datePickerVersion}`)
+    )) || fs.readdirSync(pnpmDir).find(name => name.startsWith('@blueking+date-picker@'))
+
+    if (!datePickerDir) {
+        throw new Error('Unable to locate @blueking/date-picker in pnpm store')
+    }
+
+    return path.join(pnpmDir, datePickerDir, 'node_modules/@blueking/date-picker')
+}
 
 module.exports = (env, argv) => {
     const isProd = argv.mode === 'production'
@@ -40,6 +56,12 @@ module.exports = (env, argv) => {
         dist: '/pipeline',
         port: 8006
     })
+    const vue2DatePickerRoot = resolveVue2DatePickerPath()
+    config.resolve.alias = {
+        ...config.resolve.alias,
+        '@blueking/date-picker/vue2$': path.join(vue2DatePickerRoot, 'vue2/index.umd.min.js'),
+        '@blueking/date-picker/vue2/vue2.css$': path.join(vue2DatePickerRoot, 'vue2/vue2.css')
+    }
     config.plugins.pop()
     config.plugins = [
         ...config.plugins,
