@@ -61,9 +61,8 @@ data class AiLlmProperties(
      * 通用字段（HTTP 超时、重试、退避）从顶层继承；
      * 留空时退回到顶层 baseUrl 表示的单模型 legacy 配置。
      *
-     * 排序规则：按 priority 升序构成 failover 链；priority 相同的模型，
-     * 在进程启动时会被随机打散一次，避免集群所有实例固定调用同一个模型，
-     * 进程生命周期内顺序稳定，便于通过启动日志排障。
+     * 排序规则：按 priority 升序构成 failover 链；priority 相同的模型会在每次 resolve
+     * 平台模型链路时随机打散，避免同一优先级下的流量固定打到某一个模型。
      */
     val models: List<AiLlmModelOverride> = emptyList()
 ) {

@@ -32,6 +32,7 @@ class AiModelResolver(
 ) {
     /**
      * 平台模型实例缓存：modelId → 已构建的底层 [Model]（含 HTTP 客户端）。
+     * 平台模型配置按进程启动加载，配置变更需重启后生效；
      * 进程内只构建一次，每次 resolve 时复用，避免反复创建 HTTP 客户端；
      * 调用顺序由每次 resolve 时新一次的 [AiLlmProperties.enabledPlatformModels] 决定。
      */
