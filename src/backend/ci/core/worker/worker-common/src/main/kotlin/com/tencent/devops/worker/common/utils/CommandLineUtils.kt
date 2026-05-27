@@ -31,7 +31,10 @@ import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.CharsetType
+import com.tencent.devops.common.pipeline.pojo.progress.BuildTaskProgressDetail
+import com.tencent.devops.common.pipeline.pojo.progress.BuildTaskProgressDetailValidator
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.worker.common.env.AgentEnv.getOS
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
@@ -111,7 +114,8 @@ object CommandLineUtils {
                 }
                 reportProgressRate(
                     taskId = taskId,
-                    tmpLine = tmpLine
+                    tmpLine = tmpLine,
+                    buildId = buildId
                 )
                 if (print2Logger) {
                     appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, jobId, stepId)
@@ -183,22 +187,89 @@ object CommandLineUtils {
 
     fun reportProgressRate(
         taskId: String?,
-        tmpLine: String
+        tmpLine: String,
+        buildId: String? = null
     ): Double? {
         val pattern = Pattern.compile("^[\"]?::set-progress-rate\\s*(.*)$")
         val matcher = pattern.matcher(tmpLine.trim())
         if (matcher.find()) {
-            val progressRate = matcher.group(1).removeSuffix("\"").toDoubleOrNull()
-            if (taskId != null && progressRate != null) {
-                Heartbeat.recordTaskProgressRate(
-                    taskId = taskId,
-                    progressRate = progressRate
-                )
+            val payload = matcher.group(1).removeSuffix("\"").trim()
+            if (payload.isBlank()) {
+                logIgnoredProgressPayload(buildId, taskId, "EMPTY_PAYLOAD", payload)
+                return null
             }
-            logger.info("report progress rate:$tmpLine|$taskId|$progressRate")
-            return progressRate
+            if (BuildTaskProgressDetailValidator.isPayloadTooLarge(payload)) {
+                logIgnoredProgressPayload(buildId, taskId, "PAYLOAD_TOO_LARGE", payload)
+                return null
+            }
+            return if (payload.startsWith("{")) {
+                reportProgressDetail(taskId = taskId, buildId = buildId, payload = payload)
+            } else {
+                reportNumericProgressRate(taskId = taskId, buildId = buildId, payload = payload, tmpLine = tmpLine)
+            }
         }
         return null
+    }
+
+    private fun reportNumericProgressRate(
+        taskId: String?,
+        buildId: String?,
+        payload: String,
+        tmpLine: String
+    ): Double? {
+        val progressRate = payload.toDoubleOrNull()
+        if (progressRate == null) {
+            logIgnoredProgressPayload(buildId, taskId, "INVALID_NUMBER", payload)
+            return null
+        }
+        val normalizedProgressRate = try {
+            BuildTaskProgressDetailValidator.normalizeProgress(progressRate)
+        } catch (ignored: IllegalArgumentException) {
+            logIgnoredProgressPayload(buildId, taskId, "INVALID_NUMBER_RANGE", payload)
+            return null
+        }
+        if (taskId != null) {
+            Heartbeat.recordTaskProgressRate(
+                taskId = taskId,
+                progressRate = normalizedProgressRate
+            )
+        }
+        logger.info("report progress rate:$tmpLine|$taskId|$normalizedProgressRate")
+        return normalizedProgressRate
+    }
+
+    private fun reportProgressDetail(
+        taskId: String?,
+        buildId: String?,
+        payload: String
+    ): Double? {
+        val progressDetail = try {
+            val detail = JsonUtil.to(payload, BuildTaskProgressDetail::class.java)
+            BuildTaskProgressDetailValidator.normalize(detail)
+        } catch (ignored: Exception) {
+            logIgnoredProgressPayload(buildId, taskId, "INVALID_JSON_OR_SCHEMA", payload)
+            return null
+        }
+        if (taskId != null) {
+            Heartbeat.recordTaskProgressDetail(
+                taskId = taskId,
+                progressDetail = progressDetail
+            )
+        }
+        logger.info("report progress detail:$buildId|$taskId|${progressDetail.progress.value}")
+        return progressDetail.progress.value
+    }
+
+    private fun logIgnoredProgressPayload(
+        buildId: String?,
+        taskId: String?,
+        reason: String,
+        payload: String
+    ) {
+        logger.warn(
+            "ignore progress payload|buildId=$buildId|taskId=$taskId|reason=$reason|" +
+                "payloadLength=${payload.toByteArray(Charsets.UTF_8).size}"
+        )
     }
 
     private fun appendResultToFile(

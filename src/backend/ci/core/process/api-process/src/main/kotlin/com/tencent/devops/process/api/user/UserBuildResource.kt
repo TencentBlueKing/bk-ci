@@ -45,6 +45,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildReplayResult
 import com.tencent.devops.process.pojo.BuildStageProgressInfo
+import com.tencent.devops.process.pojo.BuildTaskProgressInfo
 import com.tencent.devops.process.pojo.BuildVersionDiff
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.BuildRecordInfo
@@ -712,6 +713,30 @@ interface UserBuildResource {
         @QueryParam("stageId")
         stageId: String
     ): Result<BuildStageProgressInfo>
+
+    @Operation(summary = "获取构建步骤进度明细")
+    @GET
+    @Path("/{projectId}/{pipelineId}/getTaskProgressDetail/")
+    fun getTaskProgressDetail(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @QueryParam("buildId")
+        buildId: String,
+        @Parameter(description = "任务ID", required = true)
+        @QueryParam("taskId")
+        taskId: String,
+        @Parameter(description = "执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int? = null
+    ): Result<BuildTaskProgressInfo>
 
     @Operation(summary = "回放指定构建任务的触发事件")
     @POST
