@@ -21,6 +21,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.Runs
 import io.mockk.slot
+import java.util.Locale
 import org.jooq.DSLContext
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
@@ -112,7 +113,7 @@ class PipelineProgressRateServiceTest {
                 mutableMapOf("progressRate" to 0.1, "progressDetail" to progressDetail)
             )
         )
-        every { pipelineTaskService.getBuildTask(PROJECT_ID, BUILD_ID, TASK_ID) } returns buildTask()
+        every { pipelineTaskService.getAllBuildTask(PROJECT_ID, BUILD_ID) } returns listOf(buildTask())
         every {
             buildRecordService.getContainerOrderInStage(
                 projectId = PROJECT_ID,
@@ -124,12 +125,18 @@ class PipelineProgressRateServiceTest {
             )
         } returns 1
 
-        val result = service.calculateStageProgressRate(
-            projectId = PROJECT_ID,
-            pipelineId = PIPELINE_ID,
-            buildId = BUILD_ID,
-            stageId = STAGE_ID
-        )
+        val defaultLocale = Locale.getDefault()
+        val result = try {
+            Locale.setDefault(Locale.GERMANY)
+            service.calculateStageProgressRate(
+                projectId = PROJECT_ID,
+                pipelineId = PIPELINE_ID,
+                buildId = BUILD_ID,
+                stageId = STAGE_ID
+            )
+        } finally {
+            Locale.setDefault(defaultLocale)
+        }
 
         Assertions.assertEquals(0.8334, result.stageProgressRete)
         Assertions.assertEquals(0.6667, result.taskProgressList?.first()?.taskProgressRete)

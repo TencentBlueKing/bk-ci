@@ -13,6 +13,9 @@ import com.tencent.devops.process.engine.service.record.ContainerBuildRecordServ
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.pojo.BuildStageProgressInfo
 import com.tencent.devops.process.pojo.BuildTaskProgressInfo
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
+import java.math.BigDecimal
+import java.math.RoundingMode
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -53,9 +56,9 @@ class PipelineProgressRateService constructor(
                 runCatching { BuildTaskProgressDetailValidator.normalize(it) }.getOrNull()
             }
             val progressRate = progressDetail?.progress?.value ?: task2ProgressRate[taskId] ?: return@forEach
-            val taskVar = mutableMapOf<String, Any>(progressRatePlaceholder to progressRate)
+            val taskVar = mutableMapOf<String, Any>(PROGRESS_RATE_PLACEHOLDER to progressRate)
             if (progressDetail != null) {
-                taskVar[progressDetailPlaceholder] = progressDetail
+                taskVar[PROGRESS_DETAIL_PLACEHOLDER] = progressDetail
             }
             try {
                 taskBuildRecordService.updateTaskRecord(
@@ -78,7 +81,6 @@ class PipelineProgressRateService constructor(
         }
     }
 
-    @Suppress("ImplicitDefaultLocale")
     fun calculateStageProgressRate(
         projectId: String,
         pipelineId: String,
@@ -111,26 +113,35 @@ class PipelineProgressRateService constructor(
         if (stageTasks.isEmpty()) {
             return BuildStageProgressInfo(stageProgressRete = 0.0, taskProgressList = emptyList())
         }
-        val runningTaskTotalProgressRate = runningTasks.sumOf { getProgressRate(it.taskVar) }
+        val runningTaskProgresses = runningTasks.map(::toTaskProgress)
+        val runningTaskTotalProgressRate = runningTaskProgresses.sumOf { it.progressRate }
         val stageProgressRate = (completedTasks.size + runningTaskTotalProgressRate) / stageTasks.size
-        val taskProgressList = runningTasks.map {
-            val taskName = pipelineTaskService.getBuildTask(projectId, buildId, it.taskId)?.taskName
+        val taskNameMap = getTaskNameMap(
+            projectId = projectId,
+            buildId = buildId,
+            taskIds = runningTasks.map { it.taskId }
+        )
+        val jobExecutionOrderCache = mutableMapOf<String, String>()
+        val taskProgressList = runningTaskProgresses.map {
+            val taskName = taskNameMap[it.record.taskId]
             BuildTaskProgressInfo(
-                taskProgressRete = getProgressRate(it.taskVar),
+                taskProgressRete = it.progressRate,
                 taskName = taskName,
-                jobExecutionOrder = getJobExecutionOrder(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    executeCount = executeCount,
-                    stageId = stageId,
-                    containerId = it.containerId
-                ),
-                progressDetail = getProgressDetail(it.taskVar)?.withDefaultTitles(taskName)
+                jobExecutionOrder = jobExecutionOrderCache.getOrPut(it.record.containerId) {
+                    getJobExecutionOrder(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        executeCount = executeCount,
+                        stageId = stageId,
+                        containerId = it.record.containerId
+                    )
+                },
+                progressDetail = it.progressDetail?.withDefaultTitles(taskName)
             )
         }.sortedBy { it.jobExecutionOrder }
         return BuildStageProgressInfo(
-            stageProgressRete = String.format("%.4f", stageProgressRate).toDouble(),
+            stageProgressRete = roundProgressRate(stageProgressRate),
             taskProgressList = taskProgressList
         )
     }
@@ -186,14 +197,40 @@ class PipelineProgressRateService constructor(
         return "$stageOrder-$jobOrder"
     }
 
-    private fun getProgressRate(taskVar: Map<String, Any>): Double {
-        return getProgressDetail(taskVar)?.progress?.value
-            ?: taskVar[progressRatePlaceholder]?.toString()?.toDoubleOrNull()
+    private fun toTaskProgress(record: BuildRecordTask): RunningTaskProgress {
+        val progressDetail = getProgressDetail(record.taskVar)
+        return RunningTaskProgress(
+            record = record,
+            progressRate = getProgressRate(record.taskVar, progressDetail),
+            progressDetail = progressDetail
+        )
+    }
+
+    private fun getTaskNameMap(
+        projectId: String,
+        buildId: String,
+        taskIds: List<String>
+    ): Map<String, String?> {
+        if (taskIds.isEmpty()) {
+            return emptyMap()
+        }
+        val taskIdSet = taskIds.toSet()
+        return pipelineTaskService.getAllBuildTask(projectId, buildId)
+            .filter { it.taskId in taskIdSet }
+            .associate { it.taskId to it.taskName }
+    }
+
+    private fun getProgressRate(
+        taskVar: Map<String, Any>,
+        progressDetail: BuildTaskProgressDetail? = getProgressDetail(taskVar)
+    ): Double {
+        return progressDetail?.progress?.value
+            ?: taskVar[PROGRESS_RATE_PLACEHOLDER]?.toString()?.toDoubleOrNull()
             ?: 0.0
     }
 
     private fun getProgressDetail(taskVar: Map<String, Any>): BuildTaskProgressDetail? {
-        val progressDetail = taskVar[progressDetailPlaceholder] ?: return null
+        val progressDetail = taskVar[PROGRESS_DETAIL_PLACEHOLDER] ?: return null
         return when (progressDetail) {
             is BuildTaskProgressDetail -> progressDetail
             is String -> JsonUtil.toOrNull(progressDetail, BuildTaskProgressDetail::class.java)
@@ -215,9 +252,20 @@ class PipelineProgressRateService constructor(
         )
     }
 
+    private fun roundProgressRate(value: Double): Double {
+        return BigDecimal.valueOf(value).setScale(PROGRESS_SCALE, RoundingMode.HALF_UP).toDouble()
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineProgressRateService::class.java)
-        private const val progressRatePlaceholder = "progressRate"
-        private const val progressDetailPlaceholder = "progressDetail"
+        private const val PROGRESS_RATE_PLACEHOLDER = "progressRate"
+        private const val PROGRESS_DETAIL_PLACEHOLDER = "progressDetail"
+        private const val PROGRESS_SCALE = 4
     }
+
+    private data class RunningTaskProgress(
+        val record: BuildRecordTask,
+        val progressRate: Double,
+        val progressDetail: BuildTaskProgressDetail?
+    )
 }
