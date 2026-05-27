@@ -35,7 +35,6 @@ import com.tencent.devops.process.plugin.ElementBizPlugin
 import com.tencent.devops.process.plugin.annotation.ElementBiz
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import org.slf4j.LoggerFactory
 
 @ElementBiz

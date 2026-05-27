@@ -460,10 +460,24 @@ object ProcessMessageCode {
     const val ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN = "2101364"
     // YAML文件[{0}]已绑定其他流水线[{1}]，不能重命名
     const val ERROR_PAC_YAML_FILE_BINDTO_OTHER_PIPELINE = "2101365"
+    // 分支版本[{0}]不存在, 目标分支不存在或流水线引用的Yaml文件[{1}]在分支[{0}]不存在或已被删除
+    const val ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND = "2101378"
+    // 分支版本[{0}]不存在, 请检查分支版本是否被成功创建
+    const val ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH = "2101379"
+    const val ERROR_PIPELINE_IS_NOT_PAC = "2101389" // [{0}]不是PAC流水线
+
+    // 回调URL[{0}]指向内网/元数据地址，禁止使用以防止SSRF攻击
+    const val ERROR_CALLBACK_URL_INTERNAL_HOST = "2101366"
 
     const val BUILD_MSG_TRIGGER_EVENT = "2101368" // 通用事件触发
+    // 流水线{0}的权限代持人不存在
+    const val ERROR_PIPELINE_AUTH_USER_NOT_EXISTS = "2101369"
+    // 用户({0})不在流水线({1})的可见范围内
+    const val ERROR_PIPELINE_USER_NOT_VISIBLE = "2101370"
+
     // 模型变量引用表达式不合规：仅允许双大括号${{xxx}}，且前缀须为 variables./stages./jobs./steps.。不合规项（含位置 positionPath）：{0}
     const val ERROR_PIPELINE_MODEL_VAR_REF_INVALID = "2101376"
+
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}

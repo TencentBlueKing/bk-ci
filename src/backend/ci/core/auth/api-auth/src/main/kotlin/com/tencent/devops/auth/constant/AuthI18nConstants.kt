@@ -48,6 +48,19 @@ object AuthI18nConstants {
     const val BK_MEMBER_EXPIRED_AT_DISPLAY_EXPIRED = "bkMemberExpiredAtDisplayExpired" // 有效期: 已过期
     const val BK_MEMBER_EXPIRED_AT_DISPLAY_NORMAL = "bkMemberExpiredAtDisplayNormal" // 有效期: {0}天
     const val BK_MEMBER_EXPIRED_AT_DISPLAY_PERMANENT = "bkMemberExpiredAtDisplayPermanent" // 有效期: 永久
+    const val BK_BATCH_ADD_MEMBERS_COMPLETED = "bkBatchAddMembersCompleted" // 成员添加完成
+    const val BK_BATCH_ADD_MEMBERS_NONE_ADDED = "bkBatchAddMembersNoneAdded" // 未新增任何成员
+    const val BK_BATCH_ADD_MEMBERS_NO_INPUT = "bkBatchAddMembersNoInput" // 未传入用户或组织，无法添加成员
+    const val BK_BATCH_ADD_MEMBERS_ADDED_USERS = "bkBatchAddMembersAddedUsers" // 成功添加用户：{0}
+    const val BK_BATCH_ADD_MEMBERS_ADDED_DEPARTMENTS = "bkBatchAddMembersAddedDepartments" // 成功添加组织：{0}
+    const val BK_BATCH_ADD_MEMBERS_SKIP_USER_NOT_FOUND_OR_DEPARTED =
+        "bkBatchAddMembersSkipUserNotFoundOrDeparted" // 以下用户不存在或已离职，未添加：{0}
+    const val BK_BATCH_ADD_MEMBERS_SKIP_USER_ALREADY_IN_GROUP =
+        "bkBatchAddMembersSkipUserAlreadyInGroup" // 以下用户已在当前组中，无需重复添加：{0}
+    const val BK_BATCH_ADD_MEMBERS_SKIP_USER_ALREADY_IN_GROUP_BY_DEPARTMENT =
+        "bkBatchAddMembersSkipUserAlreadyInGroupByDepartment" // 以下用户已通过所在组织加入当前组，无需重复添加：{0}
+    const val BK_BATCH_ADD_MEMBERS_SKIP_DEPARTMENTS =
+        "bkBatchAddMembersSkipDepartments" // 以下组织已在当前组中，无需重复添加：{0}
 
     const val BK_APPLY_TO_HANDOVER = "bkApplyToHandover" // 申请移交
     const val BK_HANDOVER_GROUPS = "bkHandoverGroups" // 个权限用户组

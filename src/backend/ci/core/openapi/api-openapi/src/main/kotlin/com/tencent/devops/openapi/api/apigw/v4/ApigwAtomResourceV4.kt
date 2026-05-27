@@ -53,6 +53,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
@@ -152,6 +153,27 @@ interface ApigwAtomResourceV4 {
         installAtomReq: InstallAtomReq
     ): Result<Boolean>
 
+    @Operation(summary = "查看插件的yml 2.0信息", tags = ["v4_user_atom_yml_v2_detail", "v4_app_atom_yml_v2_detail"])
+    @GET
+    @Path("/atom_yml_v2_detail")
+    fun getAtomYmlV2Info(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "插件代码", required = true)
+        @QueryParam("atomCode")
+        atomCode: String,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "是否展示系统自带的yml信息", required = false)
+        @QueryParam("defaultShowFlag")
+        defaultShowFlag: Boolean?
+    ): Result<String?>
+
     @Operation(summary = "根据插件代码获取插件详细信息", tags = ["v4_user_atom_detail"])
     @GET
     @Path("/atom_detail")
@@ -191,7 +213,8 @@ interface ApigwAtomResourceV4 {
         userId: String,
         @Parameter(description = "支持的服务范围", required = false)
         @QueryParam("serviceScope")
-        serviceScope: ServiceScopeEnum? = null,
+        @DefaultValue("PIPELINE")
+        serviceScope: ServiceScopeEnum? = ServiceScopeEnum.PIPELINE,
         @Parameter(description = "搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
