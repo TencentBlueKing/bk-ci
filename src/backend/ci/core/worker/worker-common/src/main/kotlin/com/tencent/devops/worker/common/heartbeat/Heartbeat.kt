@@ -30,6 +30,7 @@ package com.tencent.devops.worker.common.heartbeat
 import com.tencent.devops.common.api.constant.HTTP_500
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.pipeline.pojo.JobHeartbeatRequest
+import com.tencent.devops.common.pipeline.pojo.progress.BuildTaskProgressDetail
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.EngineService
@@ -46,6 +47,7 @@ object Heartbeat {
     private val executor = Executors.newScheduledThreadPool(2)
     private var running = false
     private val task2ProgressRate = mutableMapOf<String, Double>()
+    private val task2ProgressDetail = mutableMapOf<String, BuildTaskProgressDetail>()
 
     @Synchronized
     fun start(jobTimeoutMills: Long = TimeUnit.MINUTES.toMillis(900), executeCount: Int = 1) {
@@ -61,7 +63,8 @@ object Heartbeat {
                     val heartBeatInfo = EngineService.heartbeat(
                         executeCount = executeCount,
                         jobHeartbeatRequest = JobHeartbeatRequest(
-                            task2ProgressRate = task2ProgressRate
+                            task2ProgressRate = task2ProgressRate,
+                            task2ProgressDetail = task2ProgressDetail
                         )
                     )
                     val cancelTaskIds = heartBeatInfo.cancelTaskIds
@@ -117,6 +120,14 @@ object Heartbeat {
         progressRate: Double
     ) {
         task2ProgressRate[taskId] = progressRate
+    }
+
+    fun recordTaskProgressDetail(
+        taskId: String,
+        progressDetail: BuildTaskProgressDetail
+    ) {
+        task2ProgressRate[taskId] = progressDetail.progress.value
+        task2ProgressDetail[taskId] = progressDetail
     }
 
     private class KillCancelTaskProcessRunnable(
