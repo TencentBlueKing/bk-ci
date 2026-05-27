@@ -115,7 +115,8 @@ object CommandLineUtils {
                 reportProgressRate(
                     taskId = taskId,
                     tmpLine = tmpLine,
-                    buildId = buildId
+                    buildId = buildId,
+                    print2Logger = print2Logger
                 )
                 if (print2Logger) {
                     appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, jobId, stepId)
@@ -188,24 +189,48 @@ object CommandLineUtils {
     fun reportProgressRate(
         taskId: String?,
         tmpLine: String,
-        buildId: String? = null
+        buildId: String? = null,
+        print2Logger: Boolean = false
     ): Double? {
         val pattern = Pattern.compile("^[\"]?::set-progress-rate\\s*(.*)$")
         val matcher = pattern.matcher(tmpLine.trim())
         if (matcher.find()) {
             val payload = matcher.group(1).removeSuffix("\"").trim()
             if (payload.isBlank()) {
-                logIgnoredProgressPayload(buildId, taskId, "EMPTY_PAYLOAD", payload)
+                logIgnoredProgressPayload(
+                    buildId = buildId,
+                    taskId = taskId,
+                    reason = BuildTaskProgressPayloadIgnoreReason.EMPTY_PAYLOAD,
+                    payload = payload,
+                    print2Logger = print2Logger
+                )
                 return null
             }
             if (BuildTaskProgressDetailValidator.isPayloadTooLarge(payload)) {
-                logIgnoredProgressPayload(buildId, taskId, "PAYLOAD_TOO_LARGE", payload)
+                logIgnoredProgressPayload(
+                    buildId = buildId,
+                    taskId = taskId,
+                    reason = BuildTaskProgressPayloadIgnoreReason.PAYLOAD_TOO_LARGE,
+                    payload = payload,
+                    print2Logger = print2Logger
+                )
                 return null
             }
             return if (payload.startsWith("{")) {
-                reportProgressDetail(taskId = taskId, buildId = buildId, payload = payload)
+                reportProgressDetail(
+                    taskId = taskId,
+                    buildId = buildId,
+                    payload = payload,
+                    print2Logger = print2Logger
+                )
             } else {
-                reportNumericProgressRate(taskId = taskId, buildId = buildId, payload = payload, tmpLine = tmpLine)
+                reportNumericProgressRate(
+                    taskId = taskId,
+                    buildId = buildId,
+                    payload = payload,
+                    tmpLine = tmpLine,
+                    print2Logger = print2Logger
+                )
             }
         }
         return null
@@ -215,17 +240,30 @@ object CommandLineUtils {
         taskId: String?,
         buildId: String?,
         payload: String,
-        tmpLine: String
+        tmpLine: String,
+        print2Logger: Boolean
     ): Double? {
         val progressRate = payload.toDoubleOrNull()
         if (progressRate == null) {
-            logIgnoredProgressPayload(buildId, taskId, "INVALID_NUMBER", payload)
+            logIgnoredProgressPayload(
+                buildId = buildId,
+                taskId = taskId,
+                reason = BuildTaskProgressPayloadIgnoreReason.INVALID_NUMBER,
+                payload = payload,
+                print2Logger = print2Logger
+            )
             return null
         }
         val normalizedProgressRate = try {
             BuildTaskProgressDetailValidator.normalizeProgress(progressRate)
         } catch (ignored: IllegalArgumentException) {
-            logIgnoredProgressPayload(buildId, taskId, "INVALID_NUMBER_RANGE", payload)
+            logIgnoredProgressPayload(
+                buildId = buildId,
+                taskId = taskId,
+                reason = BuildTaskProgressPayloadIgnoreReason.INVALID_NUMBER_RANGE,
+                payload = payload,
+                print2Logger = print2Logger
+            )
             return null
         }
         if (taskId != null) {
@@ -241,13 +279,20 @@ object CommandLineUtils {
     private fun reportProgressDetail(
         taskId: String?,
         buildId: String?,
-        payload: String
+        payload: String,
+        print2Logger: Boolean
     ): Double? {
         val progressDetail = try {
             val detail = JsonUtil.to(payload, BuildTaskProgressDetail::class.java)
             BuildTaskProgressDetailValidator.normalize(detail)
         } catch (ignored: Exception) {
-            logIgnoredProgressPayload(buildId, taskId, "INVALID_JSON_OR_SCHEMA", payload)
+            logIgnoredProgressPayload(
+                buildId = buildId,
+                taskId = taskId,
+                reason = BuildTaskProgressPayloadIgnoreReason.INVALID_JSON_OR_SCHEMA,
+                payload = payload,
+                print2Logger = print2Logger
+            )
             return null
         }
         if (taskId != null) {
@@ -263,13 +308,17 @@ object CommandLineUtils {
     private fun logIgnoredProgressPayload(
         buildId: String?,
         taskId: String?,
-        reason: String,
-        payload: String
+        reason: BuildTaskProgressPayloadIgnoreReason,
+        payload: String,
+        print2Logger: Boolean
     ) {
         logger.warn(
-            "ignore progress payload|buildId=$buildId|taskId=$taskId|reason=$reason|" +
+            "ignore progress payload|buildId=$buildId|taskId=$taskId|reason=${reason.name}|" +
                 "payloadLength=${payload.toByteArray(Charsets.UTF_8).size}"
         )
+        if (print2Logger) {
+            LoggerService.addErrorLine(reason.localizedMessage())
+        }
     }
 
     private fun appendResultToFile(
