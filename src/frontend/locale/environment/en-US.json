@@ -282,7 +282,8 @@
             "scheduledTasksTips": "Triggered by scheduled tasks. Requires user login after reboot to execute. Recommended when pipeline needs to launch UI applications (e.g., browser automation tests)."
         },
         "switchRunningAccount": "Auto Switch Running Account",
-        "switchAccountTips": "Defaults to running as system user 'system'. To access user-specific data (e.g., environment variables), account switching is required. Supports automatic switching with credentials or manual switching after installation."
+        "switchAccountTips": "Defaults to running as system user 'system'. To access user-specific data (e.g., environment variables), account switching is required. Supports automatic switching with credentials or manual switching after installation.",
+        "operatorStatus": "Operator Status"
     },
     "nodeTypeMap": {
         "CC": "CC",
@@ -565,5 +566,9 @@
     "重置成功": "Reset Successful",
     "没有能导入的节点": "No nodes available for import",
     "未选择构建节点，不支持修改": "No build nodes selected, modification not supported",
-    "未选择部署节点，不支持重置": "No deployment nodes selected, reset not supported"
+    "未选择部署节点，不支持重置": "No deployment nodes selected, reset not supported",
+    "operatorStatus": {
+        "NORMAL": "Normal",
+        "OPERATOR_CHANGED": "Operator Changed"
+    }
 }

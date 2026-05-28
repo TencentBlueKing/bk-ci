@@ -194,8 +194,7 @@
                         </template>
                         <!-- 责任人已变更 -->
                         <template
-                            v-else-if="((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && props.row.createdUser !== props.row.bakOperator)
-                                || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator?.split(';').indexOf(props.row.createdUser) === -1))"
+                            v-else-if="props.row.operatorStatus === 'OPERATOR_CHANGED'"
                         >
                             <span class="prompt-operator">
                                 <i class="devops-icon icon-exclamation-circle"></i>
@@ -336,8 +335,7 @@
                                     }"
                                 >
                                     <bk-button
-                                        v-if="((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && !props.row.bakOperator.includes(props.row.createdUser))
-                                            || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator?.split(';').indexOf(props.row.createdUser) === -1))"
+                                        v-if="props.row.operatorStatus === 'OPERATOR_CHANGED'"
                                         class="mr5"
                                         :disabled="props.row.allOperator.split(';').indexOf(userInfo.username) === -1"
                                         text
