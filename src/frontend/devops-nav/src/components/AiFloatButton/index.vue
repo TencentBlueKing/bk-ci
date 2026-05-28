@@ -1,7 +1,7 @@
 <template>
     <div
-        v-if="showAiEntry"
-        class="ai-float-wrapper"
+        :class="floatWrapperClasses"
+        :style="floatWrapperStyle"
     >
         <transition name="ai-panel-slide">
             <div
@@ -27,24 +27,26 @@
                 />
             </div>
         </transition>
-        <div
+        <button
             v-if="!panelVisible"
             class="ai-float-hit-zone"
+            type="button"
+            aria-label="Open AI assistant"
+            @click="handleFloatButtonClick"
+            @pointerdown="handleDragStart"
+            @lostpointercapture="handleLostPointerCapture"
         >
-            <button
-                :class="['ai-float-btn', {
-                    'ai-float-btn-active': panelVisible
-                }]"
-                type="button"
-                aria-label="Open AI assistant"
-                @click="togglePanel"
+            <span
+                ref="floatIconRef"
+                class="ai-float-btn"
+                aria-hidden="true"
             >
                 <img
                     :src="aiblukeingBanner"
                     alt=""
                 />
-            </button>
-        </div>
+            </span>
+        </button>
     </div>
 </template>
 
@@ -54,7 +56,6 @@
     import cookie from 'js-cookie'
     import { AI_IFRAME_EVENTS } from '@/utils/constants'
     import eventBus from '@/utils/eventBus'
-    import request from '@/utils/request'
     import {
         computed,
         getCurrentInstance,
@@ -76,16 +77,55 @@
     const panelVisible = ref(false)
     const iframeLoading = ref(true)
     const iframeRef = ref<HTMLIFrameElement | null>(null)
-    const aiEligibleProjectCodes = ref<Set<string>>(new Set())
-    const aiProjectsFetchDone = ref(false)
-    const showAiEntry = ref(false)
+    const floatIconRef = ref<HTMLElement | null>(null)
     const store = useStore()
+
+    type FloatSnapEdge = 'left' | 'right' | 'top' | 'bottom' | null
+
+    const FLOAT_BUTTON_SIZE = 48
+    const FLOAT_EDGE_VISIBLE_SIZE = 24
+    const FLOAT_EDGE_SNAP_DISTANCE = 16
+    const FLOAT_DRAG_THRESHOLD = 4
+    const hasDragged = ref(false)
+    const isDragging = ref(false)
+    const floatPosition = ref<{ left: number; top: number } | null>(null)
+    const floatSnapEdge = ref<FloatSnapEdge>(null)
+    let activePointerId: number | null = null
+    let dragStartX = 0
+    let dragStartY = 0
+    let dragOffsetX = 0
+    let dragOffsetY = 0
+    let dragStarted = false
+    let dragOriginPosition = { left: 0, top: 0 }
+    let activeDragTarget: HTMLElement | null = null
+    let ignoreNextClick = false
 
     /** Latest context reported by the inner pipeline iframe in this tab. */
     const subAppContext = ref<{ projectId?: string; pipelineId?: string; buildId?: string }>({})
 
     const iframeSrc = computed(() => {
         return `${window.PUBLIC_URL_PREFIX || ''}/ai/`
+    })
+
+    const floatWrapperClasses = computed(() => {
+        return [
+            'ai-float-wrapper',
+            {
+                'ai-float-wrapper-dragged': hasDragged.value,
+                'ai-float-wrapper-dragging': isDragging.value,
+                [`ai-float-wrapper-snapped-${floatSnapEdge.value}`]: !!floatSnapEdge.value,
+            },
+        ]
+    })
+
+    const floatWrapperStyle = computed(() => {
+        if (!hasDragged.value || !floatPosition.value) {
+            return {}
+        }
+        return {
+            left: `${floatPosition.value.left}px`,
+            top: `${floatPosition.value.top}px`,
+        }
     })
 
     const instance = getCurrentInstance()
@@ -117,28 +157,6 @@
         return hit?.projectName != null && hit.projectName !== '' ? String(hit.projectName) : ''
     }
 
-    function syncShowAiEntry () {
-        if (!aiProjectsFetchDone.value) {
-            showAiEntry.value = false
-            return
-        }
-        const code = getCurrentProjectCode()
-        showAiEntry.value = !!code && aiEligibleProjectCodes.value.has(code)
-    }
-
-    async function loadAiEligibleProjects () {
-        try {
-            const res: string[] = await request.get(`ai/api/user/ai/projects`)
-            aiEligibleProjectCodes.value = new Set(res)
-        } catch (e) {
-            console.warn('[AiFloatButton] failed to load AI-enabled projects', e)
-            aiEligibleProjectCodes.value = new Set()
-        } finally {
-            aiProjectsFetchDone.value = true
-            syncShowAiEntry()
-        }
-    }
-
     function getMergedContext () {
         const projectId = getCurrentProjectCode()
         const subProjectId = String(subAppContext.value.projectId || '')
@@ -162,6 +180,201 @@
         panelVisible.value = !panelVisible.value
     }
 
+    function handleFloatButtonClick (event: MouseEvent) {
+        if (ignoreNextClick) {
+            event.preventDefault()
+            ignoreNextClick = false
+            return
+        }
+        togglePanel()
+    }
+
+    function getViewportSize () {
+        return {
+            width: window.innerWidth,
+            height: window.innerHeight,
+        }
+    }
+
+    function clamp (value: number, min: number, max: number) {
+        return Math.min(Math.max(value, min), Math.max(min, max))
+    }
+
+    function getClampedFloatPosition (left: number, top: number) {
+        const { width, height } = getViewportSize()
+        return {
+            left: clamp(left, 0, width - FLOAT_BUTTON_SIZE),
+            top: clamp(top, 0, height - FLOAT_BUTTON_SIZE),
+        }
+    }
+
+    function getSnappedFloatPosition (left: number, top: number) {
+        const { width, height } = getViewportSize()
+        const maxLeft = Math.max(0, width - FLOAT_BUTTON_SIZE)
+        const maxTop = Math.max(0, height - FLOAT_BUTTON_SIZE)
+        const position = getClampedFloatPosition(left, top)
+        const snapOptions: Array<{ edge: NonNullable<FloatSnapEdge>; distance: number }> = [
+            { edge: 'left', distance: position.left },
+            { edge: 'right', distance: maxLeft - position.left },
+            { edge: 'top', distance: position.top },
+            { edge: 'bottom', distance: maxTop - position.top },
+        ]
+        const snapEdge = snapOptions
+            .filter(item => item.distance <= FLOAT_EDGE_SNAP_DISTANCE)
+            .sort((a, b) => a.distance - b.distance)[0]?.edge || null
+
+        if (snapEdge === 'left') {
+            position.left = 0
+        } else if (snapEdge === 'right') {
+            position.left = Math.max(0, width - FLOAT_EDGE_VISIBLE_SIZE)
+        }
+
+        if (snapEdge === 'top') {
+            position.top = 0
+        } else if (snapEdge === 'bottom') {
+            position.top = Math.max(0, height - FLOAT_EDGE_VISIBLE_SIZE)
+        }
+
+        return {
+            ...position,
+            edge: snapEdge,
+        }
+    }
+
+    function removeDragListeners () {
+        window.removeEventListener('pointermove', handleDragMove)
+        window.removeEventListener('pointerup', handleDragEnd)
+        window.removeEventListener('pointercancel', handleDragEnd)
+        window.removeEventListener('blur', handleDragAbort)
+    }
+
+    function releaseActivePointerCapture () {
+        const target = activeDragTarget
+        const pointerId = activePointerId
+        activeDragTarget = null
+        activePointerId = null
+
+        if (target && pointerId !== null && target.hasPointerCapture(pointerId)) {
+            try {
+                target.releasePointerCapture(pointerId)
+            } catch (e) {
+                // Capture may already be released by the browser.
+            }
+        }
+    }
+
+    function suppressNextClick () {
+        ignoreNextClick = true
+        window.setTimeout(() => {
+            ignoreNextClick = false
+        }, 200)
+    }
+
+    function finishActiveDrag (shouldSuppressClick = true) {
+        const shouldSnap = dragStarted
+        removeDragListeners()
+
+        if (shouldSnap && floatPosition.value) {
+            const snappedPosition = getSnappedFloatPosition(floatPosition.value.left, floatPosition.value.top)
+            floatSnapEdge.value = snappedPosition.edge
+            floatPosition.value = {
+                left: snappedPosition.left,
+                top: snappedPosition.top,
+            }
+        }
+
+        if (shouldSnap && shouldSuppressClick) {
+            suppressNextClick()
+        }
+
+        isDragging.value = false
+        dragStarted = false
+        releaseActivePointerCapture()
+    }
+
+    function handleDragStart (event: PointerEvent) {
+        if (panelVisible.value || event.button !== 0) {
+            return
+        }
+        if (activePointerId !== null) {
+            finishActiveDrag(false)
+        }
+
+        const target = event.currentTarget as HTMLElement
+        const rect = (floatIconRef.value || target).getBoundingClientRect()
+        const position = getClampedFloatPosition(rect.left, rect.top)
+
+        activePointerId = event.pointerId
+        activeDragTarget = target
+        dragStartX = event.clientX
+        dragStartY = event.clientY
+        dragOffsetX = event.clientX - position.left
+        dragOffsetY = event.clientY - position.top
+        dragStarted = false
+        dragOriginPosition = position
+        target.setPointerCapture(event.pointerId)
+        window.addEventListener('pointermove', handleDragMove)
+        window.addEventListener('pointerup', handleDragEnd)
+        window.addEventListener('pointercancel', handleDragEnd)
+        window.addEventListener('blur', handleDragAbort)
+    }
+
+    function handleDragMove (event: PointerEvent) {
+        if (activePointerId !== event.pointerId) {
+            return
+        }
+        const movedDistance = Math.hypot(event.clientX - dragStartX, event.clientY - dragStartY)
+        if (!dragStarted && movedDistance <= FLOAT_DRAG_THRESHOLD) {
+            return
+        }
+        if (!dragStarted) {
+            dragStarted = true
+            hasDragged.value = true
+            isDragging.value = true
+            floatSnapEdge.value = null
+            floatPosition.value = dragOriginPosition
+        }
+        floatPosition.value = getClampedFloatPosition(
+            event.clientX - dragOffsetX,
+            event.clientY - dragOffsetY,
+        )
+        event.preventDefault()
+    }
+
+    function handleDragEnd (event: PointerEvent) {
+        if (activePointerId !== event.pointerId) {
+            return
+        }
+        finishActiveDrag()
+    }
+
+    function handleLostPointerCapture (event: PointerEvent) {
+        if (activePointerId !== event.pointerId) {
+            return
+        }
+        finishActiveDrag()
+    }
+
+    function handleDragAbort () {
+        if (activePointerId === null) {
+            return
+        }
+        finishActiveDrag(false)
+    }
+
+    function handleViewportResize () {
+        if (hasDragged.value && floatPosition.value) {
+            const { width, height } = getViewportSize()
+            const position = getClampedFloatPosition(floatPosition.value.left, floatPosition.value.top)
+            if (floatSnapEdge.value === 'right') {
+                position.left = Math.max(0, width - FLOAT_EDGE_VISIBLE_SIZE)
+            } else if (floatSnapEdge.value === 'bottom') {
+                position.top = Math.max(0, height - FLOAT_EDGE_VISIBLE_SIZE)
+            }
+            floatPosition.value = position
+        }
+    }
+
     function handleClickOutside () {
         if (panelVisible.value) {
             panelVisible.value = false
@@ -182,34 +395,32 @@
     }
 
     onMounted(() => {
-        loadAiEligibleProjects()
         eventBus.$on(AI_IFRAME_EVENTS.CLOSE_PANEL, handleClosePanel)
         eventBus.$on(AI_IFRAME_EVENTS.UPDATE_SUB_CONTEXT, handleSubContextUpdate)
         eventBus.$on(AI_IFRAME_EVENTS.REQUEST_CONTEXT, postContextToAi)
+        window.addEventListener('resize', handleViewportResize)
     })
 
     onBeforeUnmount(() => {
         eventBus.$off(AI_IFRAME_EVENTS.CLOSE_PANEL, handleClosePanel)
         eventBus.$off(AI_IFRAME_EVENTS.UPDATE_SUB_CONTEXT, handleSubContextUpdate)
         eventBus.$off(AI_IFRAME_EVENTS.REQUEST_CONTEXT, postContextToAi)
+        window.removeEventListener('resize', handleViewportResize)
+        removeDragListeners()
     })
 
     watch(subAppContext, () => {
-        syncShowAiEntry()
         postContextToAi()
     }, { deep: true })
-
-    watch(showAiEntry, (visible) => {
-        if (!visible) {
-            panelVisible.value = false
-        }
-    })
 </script>
 
 <style lang="scss" scoped>
 .ai-float-wrapper {
     --ai-float-size: 48px;
     --ai-float-hidden-offset: -24px;
+    --ai-float-visible-width: 24px;
+    --ai-float-hover-buffer: 6px;
+    --ai-float-hit-zone-size: calc(var(--ai-float-visible-width) + var(--ai-float-hover-buffer));
     --ai-float-visible-offset: 16px;
     --ai-float-hover-scale: 1.08;
     --ai-float-shadow: 0 4px 16px rgba(58, 132, 255, .4);
@@ -224,30 +435,150 @@
     pointer-events: none;
 }
 
-// 固定大小、固定位置的 hover 命中区。
-// 比按钮本身大，覆盖 peek 与 hover 两种状态下按钮可能出现的全部位置；
-// hit-zone 自身不会随 hover 移动，所以光标贴视口右边缘也不会触发"按钮滑离 -> hover 撤销 -> 复位"的抖动循环。
+.ai-float-wrapper-dragged {
+    right: auto;
+    bottom: auto;
+}
+
+.ai-float-wrapper-dragged:not(.ai-float-wrapper-dragging) {
+    transition: left .18s ease, top .18s ease;
+}
+
 .ai-float-hit-zone {
     position: relative;
+    display: block;
+    appearance: none;
+    width: var(--ai-float-hit-zone-size);
+    height: var(--ai-float-size);
+    padding: 0;
+    border: 0;
+    background: transparent;
     pointer-events: auto;
-    width: calc(var(--ai-float-size) + var(--ai-float-visible-offset) + 16px); // 80px：覆盖到 hover 后按钮左缘左侧再多留 16px 缓冲
-    height: 64px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
     cursor: pointer;
+    touch-action: none;
+    user-select: none;
+}
 
-    &:hover {
+.ai-float-wrapper:not(.ai-float-wrapper-dragged) {
+    .ai-float-hit-zone:hover {
         .ai-float-btn {
-            margin-right: var(--ai-float-visible-offset);
+            right: var(--ai-float-visible-offset);
             transform: scale(var(--ai-float-hover-scale));
             box-shadow: var(--ai-float-shadow-hover);
         }
     }
+}
 
+.ai-float-wrapper-dragged {
+    .ai-float-hit-zone {
+        width: var(--ai-float-size);
+        height: var(--ai-float-size);
+        cursor: grab;
+    }
+
+    .ai-float-btn {
+        right: 0;
+    }
+}
+
+.ai-float-wrapper-snapped-left,
+.ai-float-wrapper-snapped-right {
+    .ai-float-hit-zone {
+        width: var(--ai-float-hit-zone-size);
+        height: var(--ai-float-size);
+    }
+}
+
+.ai-float-wrapper-snapped-top,
+.ai-float-wrapper-snapped-bottom {
+    .ai-float-hit-zone {
+        width: var(--ai-float-size);
+        height: var(--ai-float-hit-zone-size);
+    }
+}
+
+.ai-float-wrapper-snapped-left {
+    .ai-float-btn {
+        right: auto;
+        left: var(--ai-float-hidden-offset);
+        transform-origin: left center;
+    }
+
+    .ai-float-hit-zone:hover {
+        .ai-float-btn {
+            left: var(--ai-float-visible-offset);
+            transform: scale(var(--ai-float-hover-scale));
+            box-shadow: var(--ai-float-shadow-hover);
+        }
+    }
+}
+
+.ai-float-wrapper-snapped-right {
+    .ai-float-btn {
+        right: var(--ai-float-hidden-offset);
+        transform-origin: right center;
+    }
+
+    .ai-float-hit-zone:hover {
+        .ai-float-btn {
+            right: var(--ai-float-visible-offset);
+            transform: scale(var(--ai-float-hover-scale));
+            box-shadow: var(--ai-float-shadow-hover);
+        }
+    }
+}
+
+.ai-float-wrapper-snapped-top {
+    .ai-float-btn {
+        top: var(--ai-float-hidden-offset);
+        right: auto;
+        left: 0;
+        transform-origin: center top;
+    }
+
+    .ai-float-hit-zone:hover {
+        .ai-float-btn {
+            top: var(--ai-float-visible-offset);
+            transform: scale(var(--ai-float-hover-scale));
+            box-shadow: var(--ai-float-shadow-hover);
+        }
+    }
+}
+
+.ai-float-wrapper-snapped-bottom {
+    .ai-float-btn {
+        top: auto;
+        right: auto;
+        bottom: var(--ai-float-hidden-offset);
+        left: 0;
+        transform-origin: center bottom;
+    }
+
+    .ai-float-hit-zone:hover {
+        .ai-float-btn {
+            bottom: var(--ai-float-visible-offset);
+            transform: scale(var(--ai-float-hover-scale));
+            box-shadow: var(--ai-float-shadow-hover);
+        }
+    }
+}
+
+.ai-float-wrapper-dragging {
+    .ai-float-hit-zone {
+        cursor: grabbing;
+    }
+
+    .ai-float-btn {
+        transition: none;
+        box-shadow: var(--ai-float-shadow-hover);
+    }
 }
 
 .ai-float-btn {
+    position: absolute;
+    top: 0;
+    right: var(--ai-float-hidden-offset);
+    box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -257,16 +588,14 @@
     border: none;
     border-radius: 50%;
     background-color: white;
-    cursor: pointer;
     padding: 6px;
     border: 2px solid #eaebf0;
     box-shadow: var(--ai-float-shadow);
-    margin-right: var(--ai-float-hidden-offset);
+    pointer-events: auto;
     transform: scale(1);
     transform-origin: right center;
-    transition: margin-right .22s ease, transform .22s ease, box-shadow .22s ease, background .22s ease;
+    transition: right .22s ease, left .22s ease, top .22s ease, bottom .22s ease, transform .22s ease, box-shadow .22s ease, background .22s ease;
     will-change: transform, box-shadow;
-    
 
     > img {
         width: 100%;
@@ -277,10 +606,9 @@
     }
 
     &-active {
-        margin-right: var(--ai-float-visible-offset);
+        right: var(--ai-float-visible-offset);
         background: linear-gradient(135deg, #7b61ff 0%, #3a84ff 100%);
     }
-
 }
 
 .ai-panel {
