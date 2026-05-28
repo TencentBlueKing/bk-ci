@@ -127,7 +127,11 @@
                 })
             },
             startDebug () {
-                this.$refs.container.startDebug()
+                if (this.container.baseOS === 'LINUX') {
+                    this.$refs.container.startDebug()
+                } else {
+                    this.$refs.container.openDebug()
+                }
             }
         }
     }

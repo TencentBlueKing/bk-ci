@@ -51,6 +51,10 @@
                 {
                     label: vm.proxy.$t('pipelineDataBoard'),
                     name: 'PipelineDataBoard'
+                },
+                {
+                    label: vm.proxy.$t('pipelineRealTimeMonitor'),
+                    name: 'realTimeMonitor'
                 }
             ]
 
