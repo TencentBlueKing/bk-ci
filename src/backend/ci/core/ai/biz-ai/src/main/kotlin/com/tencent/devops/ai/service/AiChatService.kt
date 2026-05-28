@@ -30,6 +30,7 @@ package com.tencent.devops.ai.service
 import com.tencent.devops.ai.context.AgentSessionContext
 import com.tencent.devops.ai.context.AiChatContext
 import com.tencent.devops.ai.pojo.ChatContextDTO
+import com.tencent.devops.ai.pojo.event.AiRunStopBroadcastEvent
 import com.tencent.devops.ai.session.PersistentAgentResolver
 import com.tencent.devops.ai.util.AguiEventSanitizer
 import com.tencent.devops.ai.util.AiErrorMessageTranslator
@@ -103,6 +104,8 @@ class AiChatService @Autowired constructor(
             val result = processor.process(input, null, null)
             agent = result.agent()
             val (activeRun, mergedEvents) = setupEventStream(agent, result, output, threadId, runId)
+            // 处理"早到 stop"，详见 [ActiveRunManager.pendingStops]。
+            applyPendingStopIfAny(threadId, runId)
             subscribeAndAwait(
                 mergedEvents = mergedEvents,
                 activeRun = activeRun,
@@ -112,6 +115,36 @@ class AiChatService @Autowired constructor(
             )
         } finally {
             cleanup(threadId, agent)
+        }
+    }
+
+    /**
+     * 处理"早到 stop"：register 之前到达的 stop 请求由 [ActiveRunManager.pendingStops] 暂存，
+     * 这里命中即复用 [AiRunEventService.handleStopBroadcast] 的同步终止流程。
+     *
+     * 后续 [subscribeAndAwait] 会因 result.events() 被 interrupt 而快速 onComplete，
+     * `terminalEventSent` 已置位，[writeRunFinishedIfMissing] 会 dedup 跳过，不重复写出。
+     */
+    private fun applyPendingStopIfAny(
+        threadId: String?,
+        runId: String?
+    ) {
+        if (threadId.isNullOrBlank()) return
+        val pending = activeRunManager.consumePendingStop(threadId) ?: return
+        logger.info(
+            "[AguiChat] Apply pending stop registered before ActiveRun: threadId={}, runId={}, status={}",
+            threadId, runId, pending.status
+        )
+        try {
+            aiRunEventService.handleStopBroadcast(
+                AiRunStopBroadcastEvent(threadId, pending.status),
+                activeRunManager
+            )
+        } catch (e: Exception) {
+            logger.warn(
+                "[AguiChat] Apply pending stop failed: threadId={}, runId={}, error={}",
+                threadId, runId, e.message
+            )
         }
     }
 
@@ -364,7 +397,21 @@ class AiChatService @Autowired constructor(
 
     /** 清理活跃运行、Sink、ThreadLocal 及上下文绑定。 */
     private fun cleanup(threadId: String?, agent: Agent?) {
+        // 兜底确保 USER 消息后跟着 ASSISTANT。中途被打断（CANCELLED / TIMEOUT / ERROR / 流超时）时，
+        // PostCall hook 不会触发，ASSISTANT 不会落库；末尾停留在 USER 会让前端打开历史会话时自动重发，
+        // 详见 [AiMessageService.ensureAssistantPlaceholderIfMissing]。
         if (!threadId.isNullOrBlank()) {
+            try {
+                aiMessageService.ensureAssistantPlaceholderIfMissing(
+                    sessionId = threadId,
+                    placeholder = ASSISTANT_TERMINATED_PLACEHOLDER
+                )
+            } catch (e: Exception) {
+                logger.warn(
+                    "[AguiChat] Ensure assistant placeholder failed: threadId={}, error={}",
+                    threadId, e.message
+                )
+            }
             activeRunManager.remove(threadId)
             sessionContext.evictAll(threadId)
         }
@@ -500,5 +547,8 @@ class AiChatService @Autowired constructor(
 
         /** 轮询 Agent running 标志的间隔（毫秒） */
         private const val AGENT_IDLE_POLL_INTERVAL_MS = 200L
+
+        /** 会话被中途打断时的 ASSISTANT 占位文案，避免历史会话末尾停留在 USER。 */
+        private const val ASSISTANT_TERMINATED_PLACEHOLDER = "本次回答已中止。"
     }
 }

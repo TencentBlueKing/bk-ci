@@ -218,7 +218,7 @@ class AiRunEventService @Autowired constructor(
      * 设计要点：
      * 1. **CANCELLED（用户主动停止）：先本地同步处理 + 再 fanout 广播**
      *    - HTTP 线程必须在响应返回前同步直写 SSE output，避免前端 200 OK 后立即关 SSE 的赛跑。
-     *    - 本地 handleStopBroadcast 是同步直写 output（[SseEventWriter.writeFinishIfMissing]），
+     *    - 本地 [handleStopBroadcast] 同步直写（[SseEventWriter.writeFinishIfMissing]），
      *      不依赖 sub-agent sink 异步消费，因此立即 interrupt 不会丢事件。
      *    - MQ self-loop 回来时 ActiveRun 已被 remove，handleStopBroadcast 幂等 noop。
      *
@@ -228,6 +228,10 @@ class AiRunEventService @Autowired constructor(
      *    - 这里若也同步 handleStopBroadcast 会立即 agent.interrupt()，可能让 result.events()
      *      抛错，Flux.merge 向下游传播 onError 时 sub-agent sink 上未消费的 Raw/RunFinished 会丢失。
      *    - 因此 TIMEOUT 路径维持原有 MQ 异步流程，给 sub-agent sink 留消费窗口。
+     *
+     * 3. **早到 stop（ActiveRun 尚未 register）**
+     *    - [handleStopBroadcast] 找不到 ActiveRun 时会暂存到 [ActiveRunManager.pendingStops]，
+     *      由 runChat 在 register 后立刻消费触发同步终止。详见 [ActiveRunManager.pendingStops]。
      */
     fun broadcastStop(
         threadId: String,
@@ -264,16 +268,9 @@ class AiRunEventService @Autowired constructor(
                 "[AiRunEvent] Handling stop broadcast: threadId={}, runId={}, status={}",
                 event.threadId, activeRun.runId, event.status
             )
-            // 主动向前端推送终止事件，避免前端因 agent.interrupt() 不能立即让
-            // result.events() 完成而长时间停留在 running 状态。
-            //
-            // TIMEOUT 路径已在 cleanupOnTimeout 中通过 sub-agent sink 发过 Raw + RunFinished，
-            // 这里仅 CANCELLED（用户主动停止）补发 RunFinished。
-            //
-            // 关键点：必须在 stopRun HTTP 线程**同步直写** ActiveRun.output，
-            // 而不是 emit 进 sink 走 reactor 异步链路 —— 否则前端 stop 200 OK 后立即关闭
-            // SSE 连接时，异步链路上的 output.write 还没执行完就赛跑到 IOException，
-            // 导致前端永远收不到 RunFinished。
+            // CANCELLED 路径必须在 stopRun HTTP 线程同步直写 ActiveRun.output，而不是 emit 进 sink 走
+            // reactor 异步链路 —— 前端 stop 200 OK 后立即关 SSE，异步 write 会赛跑到 IOException。
+            // TIMEOUT 路径已在 cleanupOnTimeout 中通过 sub-agent sink 发过 Raw + RunFinished，跳过。
             if (event.status != SessionStatus.TIMEOUT) {
                 val written = SseEventWriter.writeFinishIfMissing(
                     output = activeRun.output,
@@ -287,23 +284,24 @@ class AiRunEventService @Autowired constructor(
                     activeRun.threadId, activeRun.runId, written
                 )
                 if (written) {
-                    // 同步直写 output 没经过 writeOutgoingEvent，replaySink 与 DB 不会自动落事件。
-                    // 这里手动补齐，保证后续重连（reconnectFromMemory / replayFromDb）能拿到 RunFinished，
-                    // 否则重连客户端会错过终止事件。
+                    // 同步直写 output 绕过了 writeOutgoingEvent，replaySink 与 DB 不会自动落事件，
+                    // 手动补齐以避免后续重连（reconnectFromMemory / replayFromDb）错过终止事件。
                     persistTerminalRunFinished(activeRun)
                 }
             }
             activeRun.agent.interrupt()
             activeRun.replaySink.tryEmitComplete()
         } else {
+            // 早到 stop：ActiveRun 尚未 register，先暂存等 runChat 消费。详见 [ActiveRunManager.pendingStops]。
+            activeRunManager.recordPendingStop(event.threadId, event.status)
             logger.info(
-                "[AiRunEvent] Handling stop broadcast (no local ActiveRun): threadId={}, status={}",
+                "[AiRunEvent] Handling stop broadcast (no local ActiveRun, pending recorded): " +
+                    "threadId={}, status={}",
                 event.threadId, event.status
             )
         }
-        // 无论本地是否持有 ActiveRun，都执行 remove 以确保 Redis key 被清理。
-        // 场景：并发时 cleanup() 已从本地 Map 移除但 Redis 残留，
-        // 或多实例部署时 ActiveRun 在其他实例。
+        // 无论本地是否持有 ActiveRun，都执行一次 remove 以清理 Redis lock 与 ConcurrentHashMap entry：
+        // 并发场景下 cleanup() 已移除本地但 Redis 残留；多实例部署时 ActiveRun 在其他实例。
         activeRunManager.remove(event.threadId)
 
         try {
@@ -331,10 +329,10 @@ class AiRunEventService @Autowired constructor(
     }
 
     /**
-     * 同步直写 output 后，把 RunFinished 补齐到 replaySink + DB，
-     * 让 reconnectFromMemory 和 replayFromDb 在重连时仍能取到终止事件。
+     * 把同步直写过的 RUN_FINISHED 补登到 replaySink + DB，让重连链路（reconnectFromMemory /
+     * replayFromDb）仍能取到终止事件。
      *
-     * 注意：必须使用与 [AiChatService.writeOutgoingEvent] 相同的 [AguiEventEncoder] / 序号生成逻辑，
+     * 必须使用与 [AiChatService.writeOutgoingEvent] 相同的 [AguiEventEncoder] / 序号生成逻辑，
      * 保证事件格式与已有事件兼容。
      */
     private fun persistTerminalRunFinished(activeRun: ActiveRunManager.ActiveRun) {
