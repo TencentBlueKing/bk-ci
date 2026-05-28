@@ -6,9 +6,9 @@ import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线批量任务配置事件")
-@Event(StreamBinding.PIPELINE_BATCH_TASK_CONFIG)
-data class PipelineBatchTaskConfigEvent(
+@Schema(description = "流水线批量任务分析事件")
+@Event(StreamBinding.PIPELINE_BATCH_TASK_ANALYZE)
+data class PipelineBatchTaskAnalyzeEvent(
     @get:Schema(description = "任务ID", required = true)
     val taskId: String,
     @get:Schema(description = "任务类型", required = true)

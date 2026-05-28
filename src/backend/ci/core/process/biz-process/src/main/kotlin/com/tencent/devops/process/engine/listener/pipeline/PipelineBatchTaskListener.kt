@@ -1,7 +1,7 @@
 package com.tencent.devops.process.engine.listener.pipeline
 
 import com.tencent.devops.common.api.exception.InvalidParamException
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskConfigEvent
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskAnalyzeEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskExecuteEvent
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
@@ -20,7 +20,7 @@ class PipelineBatchTaskListener @Autowired constructor(
             "pipeline batch task create event received|projectId=${event.projectId}|" +
                 "taskId=${event.taskId}|taskType=${event.taskType}"
         )
-        getHandler(taskType = event.taskType).create(event)
+        getHandler(taskType = event.taskType).handleCreateEvent(event)
     }
 
     fun execute(event: PipelineBatchTaskExecuteEvent) {
@@ -28,15 +28,15 @@ class PipelineBatchTaskListener @Autowired constructor(
             "pipeline batch task execute event received|projectId=${event.projectId}|" +
                 "taskId=${event.taskId}|taskType=${event.taskType}"
         )
-        getHandler(taskType = event.taskType).execute(event)
+        getHandler(taskType = event.taskType).handleExecuteEvent(event)
     }
 
-    fun config(event: PipelineBatchTaskConfigEvent) {
+    fun analyze(event: PipelineBatchTaskAnalyzeEvent) {
         logger.info(
             "pipeline batch task config event received|projectId=${event.projectId}|" +
                 "taskId=${event.taskId}|taskType=${event.taskType}"
         )
-        getHandler(taskType = event.taskType).config(event)
+        getHandler(taskType = event.taskType).handleAnalyzeEvent(event)
     }
 
     private fun getHandler(taskType: PipelineBatchTaskType): PipelineBatchTaskHandler {

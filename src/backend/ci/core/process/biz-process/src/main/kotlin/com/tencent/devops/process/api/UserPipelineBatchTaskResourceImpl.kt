@@ -4,13 +4,11 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineBatchTaskResource
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskConfigRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatusSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskLabelSummary
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.service.task.PipelineBatchTaskService
@@ -96,34 +94,6 @@ class UserPipelineBatchTaskResourceImpl @Autowired constructor(
                 taskType = taskType
             )
         )
-    }
-
-    override fun taskLabelSummary(
-        userId: String,
-        projectId: String,
-        taskId: String
-    ): Result<PipelineBatchTaskLabelSummary> {
-        return Result(
-            pipelineBatchTaskService.taskLabelSummary(
-                projectId = projectId,
-                taskId = taskId
-            )
-        )
-    }
-
-    override fun config(
-        userId: String,
-        projectId: String,
-        taskId: String,
-        request: PipelineBatchTaskConfigRequest
-    ): Result<Boolean> {
-        pipelineBatchTaskService.config(
-            userId = userId,
-            projectId = projectId,
-            taskId = taskId,
-            request = request
-        )
-        return Result(true)
     }
 
     override fun excludePipeline(

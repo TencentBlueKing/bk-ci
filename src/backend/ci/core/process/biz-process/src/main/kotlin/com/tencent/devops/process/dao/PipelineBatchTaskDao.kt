@@ -1,6 +1,7 @@
 package com.tencent.devops.process.dao
 
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BATCH_TASK
+import com.tencent.devops.model.process.tables.records.TPipelineBatchTaskRecord
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskInfo
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStep
@@ -8,7 +9,6 @@ import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -193,22 +193,22 @@ class PipelineBatchTaskDao {
         }
     }
 
-    private fun convert(record: Record): PipelineBatchTaskInfo {
-        return with(T_PIPELINE_BATCH_TASK) {
+    private fun convert(record: TPipelineBatchTaskRecord): PipelineBatchTaskInfo {
+        return with(record) {
             PipelineBatchTaskInfo(
-                taskId = record.get(TASK_ID),
-                projectId = record.get(PROJECT_ID),
-                taskName = record.get(TASK_NAME),
-                taskType = PipelineBatchTaskType.valueOf(record.get(TASK_TYPE)),
-                taskParam = record.get(TASK_PARAM),
-                status = PipelineBatchTaskStatus.valueOf(record.get(STATUS)),
-                step = PipelineBatchTaskStep.valueOf(record.get(STEP)),
-                totalCount = record.get(TOTAL_COUNT),
-                successCount = record.get(SUCCESS_COUNT),
-                failedCount = record.get(FAILED_COUNT),
-                creator = record.get(CREATOR),
-                createTime = record.get(CREATE_TIME),
-                updateTime = record.get(UPDATE_TIME)
+                taskId = taskId,
+                projectId = projectId,
+                taskName = taskName,
+                taskType = PipelineBatchTaskType.valueOf(taskType),
+                taskParam = taskParam,
+                status = PipelineBatchTaskStatus.valueOf(status),
+                step = PipelineBatchTaskStep.valueOf(step),
+                totalCount = totalCount,
+                successCount = successCount,
+                failedCount = failedCount,
+                creator = creator,
+                createTime = createTime,
+                updateTime = updateTime
             )
         }
     }

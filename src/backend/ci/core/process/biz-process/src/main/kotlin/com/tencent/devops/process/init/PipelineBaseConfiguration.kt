@@ -43,7 +43,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineTemplateInstanceEven
 import com.tencent.devops.process.engine.pojo.event.PipelineTemplateMigrateEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineTemplateTriggerUpgradesEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskConfigEvent
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskAnalyzeEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskExecuteEvent
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInstanceListener
@@ -108,9 +108,9 @@ class PipelineBaseConfiguration {
      * 流水线批量任务配置队列--- 并发一般
      */
     @EventConsumer
-    fun pipelineBatchTaskConfigConsumer(
+    fun pipelineBatchTaskAnalyzeConsumer(
         @Autowired listener: PipelineBatchTaskListener
-    ) = ScsConsumerBuilder.build<PipelineBatchTaskConfigEvent> { listener.config(it) }
+    ) = ScsConsumerBuilder.build<PipelineBatchTaskAnalyzeEvent> { listener.analyze(it) }
 
     /**
      * 流水线模板实例--- 并发一般

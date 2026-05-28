@@ -3,31 +3,24 @@ package com.tencent.devops.process.service.task
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.model.SQLPage
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
-import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineBatchTaskDao
 import com.tencent.devops.process.dao.PipelineBatchTaskDetailDao
 import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskConfigEvent
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskConfigRequest
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStep
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatus
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailUpdate
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatusSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskExecuteEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskLabelSummary
-import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatusSummary
-import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStep
-import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import org.jooq.DSLContext
@@ -45,7 +38,7 @@ class PipelineBatchTaskService @Autowired constructor(
     private val handlers: List<PipelineBatchTaskHandler>,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineBatchTaskFactory: PipelineBatchTaskFactory
 ) {
 
     fun list(
@@ -88,34 +81,14 @@ class PipelineBatchTaskService @Autowired constructor(
             projectId = projectId,
             request = request
         )
-        val pipelineIds = request.pipelineIds.distinct()
-        val pipelineInfos = pipelineInfoDao.listInfoByPipelineIds(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineIds = pipelineIds.toSet()
-        )
-        val pipelineNameMap = pipelineInfos.associate { it.pipelineId to it.pipelineName }
-        val pipelineLockedMap = pipelineInfos.associate { it.pipelineId to (it.locked ?: false) }
-        val pipelineDraftSet = pipelineIds.filter {
-            pipelineRepositoryService.getDraftVersionResource(projectId = projectId, pipelineId = it) != null
-        }.toSet()
-        val pipelineEnablePacSet = pipelineYamlInfoDao.listByPipelineIds(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineIds = pipelineIds
-        ).map { it.pipelineId }.toSet()
-        val pipelineConstraintSet = pipelineTemplateRelatedService.listByPipelineIds(
-            projectId = projectId,
-            pipelineIds = pipelineIds.toSet()
-        ).filter { it.instanceType == PipelineInstanceTypeEnum.CONSTRAINT }
-            .map { it.pipelineId }
-            .toSet()
-        val missingPipelineIds = pipelineIds.filterNot { pipelineNameMap.containsKey(it) }
-        if (missingPipelineIds.isNotEmpty()) {
-            throw InvalidParamException("Pipeline not found: ${missingPipelineIds.joinToString(",")}")
-        }
-        val taskParam = request.taskParam?.let { JsonUtil.toJson(it, formatted = false) }
         val taskId = UUIDUtil.generate()
+        val details = pipelineBatchTaskFactory.buildBatchTaskDetail(
+            projectId = projectId,
+            taskId = taskId,
+            taskType = request.taskType,
+            status = handler.detailStatusWhenCreate(),
+            pipelineIds = request.pipelineIds
+        )
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             pipelineBatchTaskDao.create(
@@ -124,32 +97,22 @@ class PipelineBatchTaskService @Autowired constructor(
                 projectId = projectId,
                 taskName = request.taskName,
                 taskType = request.taskType,
-                taskParam = taskParam,
-                status = handler.taskStatusWhenCreate(),
+                taskParam = null,
+                status = PipelineBatchTaskStatus.DRAFT,
                 step = PipelineBatchTaskStep.CONFIG,
-                totalCount = pipelineIds.size,
+                totalCount = details.size,
                 creator = userId
             )
             pipelineBatchTaskDetailDao.batchCreate(
                 dslContext = transactionContext,
-                details = pipelineIds.map { pipelineId ->
-                    PipelineBatchTaskDetailInfo(
-                        taskId = taskId,
-                        projectId = projectId,
-                        taskType = request.taskType,
-                        pipelineId = pipelineId,
-                        pipelineName = pipelineNameMap[pipelineId].orEmpty(),
-                        pac = pipelineEnablePacSet.contains(pipelineId),
-                        constraint = pipelineConstraintSet.contains(pipelineId),
-                        subPipeline = false,
-                        locked = pipelineLockedMap[pipelineId] ?: false,
-                        draft = pipelineDraftSet.contains(pipelineId),
-                        status = handler.detailStatusWhenCreate(),
-                        errorMessage = null,
-                        startTime = null,
-                        endTime = null
-                    )
-                }
+                details = details
+            )
+            handler.create(
+                dslContext = transactionContext,
+                userId = userId,
+                projectId = projectId,
+                taskId = taskId,
+                request = request
             )
         }
         sampleEventDispatcher.dispatch(
@@ -213,63 +176,6 @@ class PipelineBatchTaskService @Autowired constructor(
         )
     }
 
-    fun taskLabelSummary(
-        projectId: String,
-        taskId: String
-    ): PipelineBatchTaskLabelSummary {
-        return PipelineBatchTaskLabelSummary(
-            pacCount = pipelineBatchTaskDetailDao.count(
-                dslContext = dslContext,
-                projectId = projectId,
-                taskId = taskId,
-                pac = true
-            ),
-            subPipelineCount = pipelineBatchTaskDetailDao.count(
-                dslContext = dslContext,
-                projectId = projectId,
-                taskId = taskId,
-                subPipeline = true
-            )
-        )
-    }
-
-    fun config(
-        userId: String,
-        projectId: String,
-        taskId: String,
-        request: PipelineBatchTaskConfigRequest
-    ) {
-        validateConfigRequest(request)
-        val task = getTask(projectId = projectId, taskId = taskId)
-        if (task.status != PipelineBatchTaskStatus.DRAFT) {
-            throw InvalidParamException("task $taskId status ${task.status.name} cannot config")
-        }
-        val handler = getHandler(taskType = task.taskType)
-        handler.validateWhenConfig(
-            userId = userId,
-            projectId = projectId,
-            task = task,
-            request = request
-        )
-        val taskParam = request.taskParam?.let { JsonUtil.toJson(it, formatted = false) }
-        pipelineBatchTaskDao.update(
-            dslContext = dslContext,
-            update = PipelineBatchTaskUpdate(
-                projectId = projectId,
-                taskId = taskId,
-                taskName = request.taskName,
-                taskParam = taskParam
-            )
-        )
-        sampleEventDispatcher.dispatch(
-            PipelineBatchTaskConfigEvent(
-                taskId = task.taskId,
-                taskType = task.taskType,
-                projectId = task.projectId
-            )
-        )
-    }
-
     fun excludePipeline(
         projectId: String,
         taskId: String,
@@ -282,15 +188,13 @@ class PipelineBatchTaskService @Autowired constructor(
                 params = arrayOf(pipelineId, detail.status.name)
             )
         }
-        pipelineBatchTaskDetailDao.update(
+        pipelineBatchTaskDetailDao.updateStatus(
             dslContext = dslContext,
-            update = PipelineBatchTaskDetailUpdate(
-                projectId = projectId,
-                taskId = taskId,
-                pipelineId = pipelineId,
-                status = PipelineBatchTaskDetailStatus.EXCLUDED,
-                change = true
-            )
+            projectId = projectId,
+            taskId = taskId,
+            pipelineIds = setOf(pipelineId),
+            status = PipelineBatchTaskDetailStatus.EXCLUDED,
+            change = true
         )
     }
 
@@ -306,15 +210,13 @@ class PipelineBatchTaskService @Autowired constructor(
                 params = arrayOf(pipelineId, detail.status.name)
             )
         }
-        pipelineBatchTaskDetailDao.update(
+        pipelineBatchTaskDetailDao.updateStatus(
             dslContext = dslContext,
-            update = PipelineBatchTaskDetailUpdate(
-                projectId = projectId,
-                taskId = taskId,
-                pipelineId = pipelineId,
-                status = PipelineBatchTaskDetailStatus.WAIT_COPY,
-                change = true
-            )
+            projectId = projectId,
+            taskId = taskId,
+            pipelineIds = setOf(pipelineId),
+            status = getHandler(detail.taskType).detailStatusWhenCreate(),
+            change = true
         )
     }
 
@@ -398,12 +300,6 @@ class PipelineBatchTaskService @Autowired constructor(
     private fun validateCreateRequest(request: PipelineBatchTaskCreateRequest) {
         if (request.pipelineIds.isEmpty()) {
             throw InvalidParamException("pipelineIds cannot be empty")
-        }
-    }
-
-    private fun validateConfigRequest(request: PipelineBatchTaskConfigRequest) {
-        if (request.taskName.isBlank()) {
-            throw InvalidParamException("taskName cannot be blank")
         }
     }
 

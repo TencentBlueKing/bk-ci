@@ -1,5 +1,6 @@
 package com.tencent.devops.process.pojo.pipeline.task
 
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
@@ -24,8 +25,8 @@ data class PipelineBatchTaskDetailInfo(
     val subPipeline: Boolean = false,
     @get:Schema(description = "流水线是否禁用", required = true)
     val locked: Boolean = false,
-    @get:Schema(description = "流水线是否是草稿", required = true)
-    val draft: Boolean = false,
+    @get:Schema(description = "流水线版本状态")
+    val versionStatus: VersionStatus? = null,
     @get:Schema(description = "是否修改", required = true)
     val change: Boolean = true,
     @get:Schema(description = "明细状态", required = true)

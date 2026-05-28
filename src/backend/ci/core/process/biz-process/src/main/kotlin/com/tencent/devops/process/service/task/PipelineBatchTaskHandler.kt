@@ -1,14 +1,13 @@
 package com.tencent.devops.process.service.task
 
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskConfigRequest
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskConfigEvent
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskAnalyzeEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskExecuteEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskInfo
-import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
-import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
+import org.jooq.DSLContext
 
 /**
  * 流水线批量任务处理器
@@ -23,14 +22,9 @@ interface PipelineBatchTaskHandler {
     fun support(taskType: PipelineBatchTaskType): Boolean
 
     /**
-     * 创建任务时的初始任务状态
-     */
-    fun taskStatusWhenCreate(): PipelineBatchTaskStatus = PipelineBatchTaskStatus.DRAFT
-
-    /**
      * 创建任务明细时的初始明细状态
      */
-    fun detailStatusWhenCreate(): PipelineBatchTaskDetailStatus = PipelineBatchTaskDetailStatus.WAIT_COPY
+    fun detailStatusWhenCreate(): PipelineBatchTaskDetailStatus
 
     /**
      * 创建任务前的校验
@@ -41,25 +35,23 @@ interface PipelineBatchTaskHandler {
         request: PipelineBatchTaskCreateRequest
     ) = Unit
 
-    /**
-     * 创建任务后的业务处理
-     */
-    fun create(event: PipelineBatchTaskCreateEvent) = Unit
-
-    /**
-     * 配置任务前的校验
-     */
-    fun validateWhenConfig(
+    fun create(
+        dslContext: DSLContext,
         userId: String,
         projectId: String,
-        task: PipelineBatchTaskInfo,
-        request: PipelineBatchTaskConfigRequest
+        taskId: String,
+        request: PipelineBatchTaskCreateRequest
     ) = Unit
 
     /**
-     * 配置任务时的业务处理
+     * 创建任务后的业务处理
      */
-    fun config(event: PipelineBatchTaskConfigEvent) = Unit
+    fun handleCreateEvent(event: PipelineBatchTaskCreateEvent) = Unit
+
+    /**
+     * 处理任务分析事件
+     */
+    fun handleAnalyzeEvent(event: PipelineBatchTaskAnalyzeEvent) = Unit
 
     /**
      * 执行任务前的校验
@@ -71,9 +63,9 @@ interface PipelineBatchTaskHandler {
     ) = Unit
 
     /**
-     * 执行任务时的业务处理
+     * 处理执行任务事件
      */
-    fun execute(event: PipelineBatchTaskExecuteEvent) = Unit
+    fun handleExecuteEvent(event: PipelineBatchTaskExecuteEvent) = Unit
 
     /**
      * 删除任务前的校验

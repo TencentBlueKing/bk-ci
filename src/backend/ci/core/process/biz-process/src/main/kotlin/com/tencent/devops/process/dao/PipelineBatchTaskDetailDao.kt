@@ -1,14 +1,14 @@
 package com.tencent.devops.process.dao
 
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BATCH_TASK_DETAIL
+import com.tencent.devops.model.process.tables.records.TPipelineBatchTaskDetailRecord
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatus
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatusSummary
-import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
@@ -35,7 +35,7 @@ class PipelineBatchTaskDetailDao {
                     CONSTRAINT,
                     SUB_PIPELINE,
                     LOCKED,
-                    DRAFT,
+                    VERSION_STATUS,
                     CHANGE,
                     STATUS,
                     ERROR_MESSAGE,
@@ -51,7 +51,7 @@ class PipelineBatchTaskDetailDao {
                     detail.constraint,
                     detail.subPipeline,
                     detail.locked,
-                    detail.draft,
+                    detail.versionStatus?.name,
                     detail.change,
                     detail.status.name,
                     detail.errorMessage,
@@ -185,26 +185,21 @@ class PipelineBatchTaskDetailDao {
         }
     }
 
-    fun update(
+    fun updateStatus(
         dslContext: DSLContext,
-        update: PipelineBatchTaskDetailUpdate
+        projectId: String,
+        taskId: String,
+        pipelineIds: Set<String>,
+        status: PipelineBatchTaskDetailStatus,
+        change: Boolean
     ): Int {
         return with(T_PIPELINE_BATCH_TASK_DETAIL) {
             val query = dslContext.update(this)
-            if (update.status != null) {
-                query.set(STATUS, update.status!!.name)
-            }
-            if (update.change != null) {
-                query.set(CHANGE, update.change)
-            }
-            val pipelineIdCondition = when {
-                !update.pipelineIds.isNullOrEmpty() -> PIPELINE_ID.`in`(update.pipelineIds)
-                update.pipelineId != null -> PIPELINE_ID.eq(update.pipelineId)
-                else -> return 0
-            }
-            query.where(PROJECT_ID.eq(update.projectId))
-                .and(TASK_ID.eq(update.taskId))
-                .and(pipelineIdCondition)
+                .set(STATUS, status.name)
+                .set(CHANGE, change)
+            query.where(PROJECT_ID.eq(projectId))
+                .and(TASK_ID.eq(taskId))
+                .and(PIPELINE_ID.`in`(pipelineIds))
                 .execute()
         }
     }
@@ -300,26 +295,26 @@ class PipelineBatchTaskDetailDao {
         }
     }
 
-    private fun convert(record: Record): PipelineBatchTaskDetailInfo {
-        return with(T_PIPELINE_BATCH_TASK_DETAIL) {
+    private fun convert(record: TPipelineBatchTaskDetailRecord): PipelineBatchTaskDetailInfo {
+        return with(record) {
             PipelineBatchTaskDetailInfo(
-                taskId = record.get(TASK_ID),
-                projectId = record.get(PROJECT_ID),
-                taskType = PipelineBatchTaskType.valueOf(record.get(TASK_TYPE)),
-                pipelineId = record.get(PIPELINE_ID),
-                pipelineName = record.get(PIPELINE_NAME),
-                pac = record.get(PAC),
-                constraint = record.get(CONSTRAINT),
-                subPipeline = record.get(SUB_PIPELINE),
-                locked = record.get(LOCKED),
-                draft = record.get(DRAFT),
-                change = record.get(CHANGE),
-                status = PipelineBatchTaskDetailStatus.valueOf(record.get(STATUS)),
-                errorMessage = record.get(ERROR_MESSAGE),
-                startTime = record.get(START_TIME),
-                endTime = record.get(END_TIME),
-                createTime = record.get(CREATE_TIME),
-                updateTime = record.get(UPDATE_TIME)
+                taskId = taskId,
+                projectId = projectId,
+                taskType = PipelineBatchTaskType.valueOf(taskType),
+                pipelineId = pipelineId,
+                pipelineName = pipelineName,
+                pac = pac,
+                constraint = constraint,
+                subPipeline = subPipeline,
+                locked = locked,
+                versionStatus = versionStatus?.let { VersionStatus.valueOf(it) },
+                change = change,
+                status = PipelineBatchTaskDetailStatus.valueOf(status),
+                errorMessage = errorMessage,
+                startTime = startTime,
+                endTime = endTime,
+                createTime = createTime,
+                updateTime = updateTime
             )
         }
     }

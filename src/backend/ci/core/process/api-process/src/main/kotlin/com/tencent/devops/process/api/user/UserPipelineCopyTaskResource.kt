@@ -3,14 +3,13 @@ package com.tencent.devops.process.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskStatus
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyPipelineInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyResourceBasicInfoGroup
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyResourceDetail
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyResourceDetailGroup
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskConfigRequest
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskCreateRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteStatus
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskInfo
 import io.swagger.v3.oas.annotations.Operation
@@ -32,19 +31,6 @@ import jakarta.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface UserPipelineCopyTaskResource {
-
-    @Operation(summary = "创建流水线复制任务")
-    @POST
-    fun create(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "流水线复制任务创建请求", required = true)
-        request: PipelineCopyTaskCreateRequest
-    ): Result<String>
 
     @Operation(summary = "获取流水线复制任务")
     @GET
@@ -74,7 +60,7 @@ interface UserPipelineCopyTaskResource {
         @Parameter(description = "任务ID", required = true)
         @PathParam("taskId")
         taskId: String
-    ): Result<PipelineCopyTaskStatus>
+    ): Result<PipelineBatchTaskStatus>
 
     @Operation(summary = "保存流水线复制配置草稿")
     @POST

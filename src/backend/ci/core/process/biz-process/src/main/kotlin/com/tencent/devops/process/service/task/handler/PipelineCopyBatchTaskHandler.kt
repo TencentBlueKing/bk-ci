@@ -3,45 +3,37 @@ package com.tencent.devops.process.service.task.handler
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
-import com.tencent.devops.environment.pojo.EnvCreateInfo
-import com.tencent.devops.environment.pojo.enums.EnvType
-import com.tencent.devops.environment.pojo.enums.NodeSource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineBatchTaskDao
 import com.tencent.devops.process.dao.PipelineBatchTaskDetailDao
+import com.tencent.devops.process.dao.PipelineCopyTaskDao
 import com.tencent.devops.process.dao.PipelineCopyTaskResourceDao
-import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchCopyTaskParam
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskConfigEvent
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskConfigRequest
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskAnalyzeEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatus
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskExecuteEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskInfo
-import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
-import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceStatus
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyStrategy
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceStatus
 import com.tencent.devops.process.pojo.pipeline.task.RepositoryCopyResourceProperties
 import com.tencent.devops.process.service.PipelineDependentResourceService
+import com.tencent.devops.process.service.task.PipelineBatchTaskFactory
 import com.tencent.devops.process.service.task.PipelineBatchTaskHandler
-import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.ticket.api.ServiceCredentialResource
@@ -57,20 +49,15 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
     private val client: Client,
     private val pipelineBatchTaskDao: PipelineBatchTaskDao,
     private val pipelineBatchTaskDetailDao: PipelineBatchTaskDetailDao,
+    private val pipelineCopyTaskDao: PipelineCopyTaskDao,
     private val pipelineCopyTaskResourceDao: PipelineCopyTaskResourceDao,
-    private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val pipelineInfoDao: PipelineInfoDao,
-    private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val pipelineDependentResourceService: PipelineDependentResourceService
+    private val pipelineDependentResourceService: PipelineDependentResourceService,
+    private val pipelineBatchTaskFactory: PipelineBatchTaskFactory
 ) : PipelineBatchTaskHandler {
 
     override fun support(taskType: PipelineBatchTaskType): Boolean = taskType == PipelineBatchTaskType.PIPELINE_COPY
-
-    override fun taskStatusWhenCreate(): PipelineBatchTaskStatus {
-        return PipelineBatchTaskStatus.COPY_SUB_PIPELINE_ANALYZING
-    }
 
     override fun validateWhenCreate(
         userId: String,
@@ -85,7 +72,28 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
         }
     }
 
-    override fun create(event: PipelineBatchTaskCreateEvent) {
+    override fun detailStatusWhenCreate(): PipelineBatchTaskDetailStatus {
+        return PipelineBatchTaskDetailStatus.WAIT_COPY
+    }
+
+    override fun create(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        taskId: String,
+        request: PipelineBatchTaskCreateRequest
+    ) {
+        pipelineCopyTaskDao.create(
+            dslContext = dslContext,
+            pipelineCopyTaskInfo = PipelineCopyTaskInfo(
+                projectId = projectId,
+                taskId = taskId,
+                status = PipelineCopyTaskStatus.SUB_PIPELINE_ANALYZING
+            )
+        )
+    }
+
+    override fun handleCreateEvent(event: PipelineBatchTaskCreateEvent) {
         getTask(projectId = event.projectId, taskId = event.taskId) ?: return
         val details = pipelineBatchTaskDetailDao.listByTaskId(
             dslContext = dslContext,
@@ -100,43 +108,19 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
                     pipelineId = detail.pipelineId
                 )
             }
-            .filter { it.resourceType == PipelineDependentResourceType.PIPELINE }
             .distinctBy { it.resourceId }
         val existsPipelineIds = details.map { it.pipelineId }.toSet()
-        val subPipelineIds = subPipelineResources.map { it.resourceId }
-        val pacPipelineIds = pipelineYamlInfoDao.listByPipelineIds(
-            dslContext = dslContext,
+        val subPipelineIds = subPipelineResources.filterNot {
+            existsPipelineIds.contains(it.resourceId)
+        }.map { it.resourceId }
+        val subDetails = pipelineBatchTaskFactory.buildBatchTaskDetail(
             projectId = event.projectId,
-            pipelineIds = subPipelineIds
-        ).map { it.pipelineId }.toSet()
-        val draftPipelineIds = subPipelineIds.filter {
-            pipelineRepositoryService.getDraftVersionResource(projectId = event.projectId, pipelineId = it) != null
-        }.toSet()
-        val constraintPipelineIds = pipelineTemplateRelatedService.listByPipelineIds(
-            projectId = event.projectId,
-            pipelineIds = subPipelineIds.toSet()
-        ).filter { it.instanceType == PipelineInstanceTypeEnum.CONSTRAINT }
-            .map { it.pipelineId }
-            .toSet()
-        val subDetails = subPipelineResources
-            .filterNot { existsPipelineIds.contains(it.resourceId) }
-            .map { resource ->
-                PipelineBatchTaskDetailInfo(
-                    taskId = event.taskId,
-                    projectId = event.projectId,
-                    taskType = event.taskType,
-                    pipelineId = resource.resourceId,
-                    pipelineName = resource.resourceName,
-                    pac = pacPipelineIds.contains(resource.resourceId),
-                    constraint = constraintPipelineIds.contains(resource.resourceId),
-                    subPipeline = true,
-                    draft = draftPipelineIds.contains(resource.resourceId),
-                    status = PipelineBatchTaskDetailStatus.WAIT_COPY,
-                    errorMessage = null,
-                    startTime = null,
-                    endTime = null
-                )
-            }
+            taskId = event.taskId,
+            taskType = event.taskType,
+            status = PipelineBatchTaskDetailStatus.WAIT_COPY,
+            pipelineIds = subPipelineIds,
+            subPipeline = true
+        )
         val allDetails = mutableListOf<PipelineBatchTaskDetailInfo>().apply {
             addAll(details)
             addAll(subDetails)
@@ -151,37 +135,10 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
                 dslContext = transactionContext,
                 resources = allDetails.map(::buildPipelineCopyResource)
             )
-            pipelineBatchTaskDao.updateStatus(
-                dslContext = transactionContext,
-                projectId = event.projectId,
-                taskId = event.taskId,
-                status = PipelineBatchTaskStatus.COPY_SUB_PIPELINE_ANALYSIS_FINISHED
-            )
         }
     }
 
-    override fun validateWhenConfig(
-        userId: String,
-        projectId: String,
-        task: PipelineBatchTaskInfo,
-        request: PipelineBatchTaskConfigRequest
-    ) {
-        if (request.taskParam == null) {
-            throw InvalidParamException("taskParam cannot be null")
-        }
-        val param = request.taskParam as? PipelineBatchCopyTaskParam
-            ?: throw InvalidParamException("taskParam must be PipelineBatchCopyTaskParam")
-        param.pipelineCopyStrategy.takeIf { it.support(PipelineDependentResourceType.PIPELINE) }
-            ?: throw InvalidParamException("pipelineCopyStrategy only supports PIPELINE")
-        if (!pipelinePermissionService.checkProjectManager(userId = userId, projectId = param.targetProjectId)) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PERMISSION_NOT_PROJECT_MANAGER,
-                params = arrayOf(userId, param.targetProjectId)
-            )
-        }
-    }
-
-    override fun config(event: PipelineBatchTaskConfigEvent) {
+    override fun handleAnalyzeEvent(event: PipelineBatchTaskAnalyzeEvent) {
         getTask(projectId = event.projectId, taskId = event.taskId) ?: return
         val changeCount = pipelineBatchTaskDetailDao.count(
             dslContext = dslContext,
@@ -215,36 +172,7 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
         }
     }
 
-    override fun execute(event: PipelineBatchTaskExecuteEvent) {
-        val task = getTask(projectId = event.projectId, taskId = event.taskId) ?: return
-        val resources = pipelineCopyTaskResourceDao.list(
-            dslContext = dslContext,
-            projectId = event.projectId,
-            taskId = event.taskId
-        ).filter { it.status == PipelineCopyTaskResourceStatus.PROCESSED }
-        resources.sortedWith(compareBy { RESOURCE_ORDER[it.resourceType] ?: Int.MAX_VALUE })
-            .forEach { detail ->
-                try {
-                    executeResource(task = task, detail = detail)
-                } catch (ignored: Exception) {
-                    logger.warn(
-                        "copy resource failed|projectId=${event.projectId}|taskId=${event.taskId}|" +
-                            "resourceType=${detail.resourceType}|resourceId=${detail.resourceId}",
-                        ignored
-                    )
-                    pipelineCopyTaskResourceDao.update(
-                        dslContext = dslContext,
-                        update = PipelineCopyTaskResourceUpdate(
-                            projectId = detail.projectId,
-                            taskId = detail.taskId,
-                            resourceType = detail.resourceType,
-                            resourceId = detail.resourceId,
-                            status = PipelineCopyTaskResourceStatus.FAILED,
-                            errorMessage = ignored.message
-                        )
-                    )
-                }
-            }
+    override fun handleExecuteEvent(event: PipelineBatchTaskExecuteEvent) {
     }
 
     private fun buildPipelineCopyResource(detail: PipelineBatchTaskDetailInfo): PipelineCopyTaskResourceInfo {
@@ -385,15 +313,13 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
         if (excludeSubPipelineIds.isEmpty()) {
             return
         }
-        pipelineBatchTaskDetailDao.update(
+        pipelineBatchTaskDetailDao.updateStatus(
             dslContext = dslContext,
-            update = PipelineBatchTaskDetailUpdate(
-                projectId = projectId,
-                taskId = taskId,
-                pipelineIds = excludeSubPipelineIds,
-                status = PipelineBatchTaskDetailStatus.EXCLUDED,
-                change = true
-            )
+            projectId = projectId,
+            taskId = taskId,
+            pipelineIds = excludeSubPipelineIds,
+            status = PipelineBatchTaskDetailStatus.EXCLUDED,
+            change = true
         )
     }
 
@@ -412,7 +338,6 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
             projectId = projectId,
             taskId = taskId,
             change = true,
-            subPipeline = false,
             status = PipelineBatchTaskDetailStatus.EXCLUDED
         )
         if (taskDetails.isEmpty()) {
@@ -434,168 +359,6 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
         taskId: String
     ) {
 
-    }
-
-    private fun executeResource(task: PipelineBatchTaskInfo, detail: PipelineCopyTaskResourceInfo) {
-        when (detail.resourceType) {
-            PipelineDependentResourceType.CREDENTIAL -> executeCredential(task, detail)
-            PipelineDependentResourceType.REPOSITORY -> executeRepository(task, detail)
-            PipelineDependentResourceType.BUILD_NODE,
-            PipelineDependentResourceType.DEPLOY_NODE -> executeNode(task, detail)
-            PipelineDependentResourceType.ENVIRONMENT -> executeEnvironment(task, detail)
-            PipelineDependentResourceType.PIPELINE_LABEL,
-            PipelineDependentResourceType.PIPELINE_GROUP -> autoFinish(detail)
-            PipelineDependentResourceType.PIPELINE -> copySuccess(detail)
-            PipelineDependentResourceType.PIPELINE_TEMPLATE -> copySuccess(detail)
-        }
-    }
-
-    private fun executeCredential(task: PipelineBatchTaskInfo, detail: PipelineCopyTaskResourceInfo) {
-        val param = getParam(task)
-        val credential = client.get(ServiceCredentialResource::class).getBasicInfo(
-            userId = task.creator,
-            projectId = task.projectId,
-            credentialId = detail.resourceId
-        ).data ?: throw InvalidParamException("credential ${detail.resourceId} not found")
-        val targetCredential = client.get(ServiceCredentialResource::class).list(
-            projectId = param.targetProjectId,
-            page = 1,
-            pageSize = 1000
-        ).data?.records?.firstOrNull { it.credentialName == detail.resourceName || it.credentialId == detail.resourceId }
-        if (detail.copyStrategy == PipelineCopyStrategy.CREDENTIAL_CREATE_NEW) {
-            throw InvalidParamException("credential secret value is required to create new credential")
-        }
-        val targetId = targetCredential?.credentialId ?: detail.targetResourceId
-            ?: throw InvalidParamException("target credential not found")
-        updateSuccess(
-            detail = detail,
-            targetResourceId = targetId,
-            targetResourceName = targetCredential?.credentialName ?: credential.credentialName ?: detail.resourceName,
-            status = PipelineCopyTaskResourceStatus.SUCCESS
-        )
-    }
-
-    private fun executeRepository(task: PipelineBatchTaskInfo, detail: PipelineCopyTaskResourceInfo) {
-        val param = getParam(task)
-        val repository = client.get(ServiceRepositoryResource::class).get(
-            projectId = task.projectId,
-            repositoryId = detail.resourceId,
-            repositoryType = RepositoryType.ID
-        ).data ?: throw InvalidParamException("repository ${detail.resourceId} not found")
-        if (detail.copyStrategy == PipelineCopyStrategy.REPOSITORY_CREATE_NEW) {
-            val targetId = client.get(ServiceRepositoryResource::class).create(
-                userId = task.creator,
-                projectId = param.targetProjectId,
-                repository = repository
-            ).data?.hashId ?: throw InvalidParamException("create repository failed")
-            updateSuccess(
-                detail = detail,
-                targetResourceId = targetId,
-                targetResourceName = repository.aliasName,
-                targetResourceProperties = repositoryProperties(repository),
-                status = PipelineCopyTaskResourceStatus.AUTO_FINISHED
-            )
-            return
-        }
-        val targetRepository = client.get(ServiceRepositoryResource::class).list(
-            projectId = param.targetProjectId,
-            repositoryType = null
-        ).data?.firstOrNull { it.aliasName == detail.resourceName && it.type == repository.getScmType() }
-            ?: throw InvalidParamException("target repository ${detail.resourceName} not found")
-        updateSuccess(
-            detail = detail,
-            targetResourceId = targetRepository.repositoryHashId,
-            targetResourceName = targetRepository.aliasName,
-            targetResourceProperties = RepositoryCopyResourceProperties(
-                authType = null,
-                authInfo = null,
-                repositoryType = targetRepository.type.name,
-                repositoryUrl = targetRepository.url
-            ),
-            status = PipelineCopyTaskResourceStatus.SUCCESS
-        )
-    }
-
-    private fun executeNode(task: PipelineBatchTaskInfo, detail: PipelineCopyTaskResourceInfo) {
-        val param = getParam(task)
-        if (detail.copyStrategy == PipelineCopyStrategy.BUILD_NODE_MOVE_TO_TARGET_PROJECT ||
-            detail.copyStrategy == PipelineCopyStrategy.DEPLOY_NODE_MOVE_TO_TARGET_PROJECT
-        ) {
-            client.get(ServiceNodeResource::class).transferNodes(
-                userId = task.creator,
-                projectId = task.projectId,
-                targetProjectId = param.targetProjectId,
-                nodeHashIds = listOf(detail.resourceId)
-            )
-            updateSuccess(
-                detail = detail,
-                targetResourceId = detail.resourceId,
-                targetResourceName = detail.resourceName,
-                status = PipelineCopyTaskResourceStatus.TRANSFER_TODO
-            )
-            return
-        }
-        val targetNode = client.get(ServiceNodeResource::class).getNodeStatus(
-            userId = task.creator,
-            projectId = param.targetProjectId,
-            nodeHashId = null,
-            nodeName = detail.resourceName,
-            agentHashId = null
-        ).data ?: throw InvalidParamException("target node ${detail.resourceName} not found")
-        updateSuccess(
-            detail = detail,
-            targetResourceId = targetNode.nodeHashId,
-            targetResourceName = targetNode.displayName,
-            status = PipelineCopyTaskResourceStatus.SUCCESS
-        )
-    }
-
-    private fun executeEnvironment(task: PipelineBatchTaskInfo, detail: PipelineCopyTaskResourceInfo) {
-        val param = getParam(task)
-        val environmentResource = client.get(ServiceEnvironmentResource::class)
-        if (detail.copyStrategy == PipelineCopyStrategy.ENVIRONMENT_REUSE_SAME_NAME) {
-            val targetEnv = environmentResource.getByName(
-                userId = task.creator,
-                projectId = param.targetProjectId,
-                envName = detail.resourceName,
-                checkPermission = false
-            ).data ?: throw InvalidParamException("target environment ${detail.resourceName} not found")
-            updateSuccess(
-                detail = detail,
-                targetResourceId = targetEnv.envHashId,
-                targetResourceName = targetEnv.name,
-                status = PipelineCopyTaskResourceStatus.SUCCESS
-            )
-            return
-        }
-        val sourceEnv = environmentResource.get(
-            userId = task.creator,
-            projectId = task.projectId,
-            envHashId = detail.resourceId,
-            checkPermission = false
-        ).data ?: throw InvalidParamException("environment ${detail.resourceId} not found")
-        val targetEnvId = environmentResource.create(
-            userId = task.creator,
-            projectId = param.targetProjectId,
-            environment = EnvCreateInfo(
-                name = sourceEnv.name,
-                desc = sourceEnv.desc,
-                envType = EnvType.valueOf(sourceEnv.envType),
-                envVars = sourceEnv.envVars,
-                source = NodeSource.EXISTING,
-                nodeHashIds = emptyList()
-            )
-        ).data?.hashId ?: throw InvalidParamException("create environment failed")
-        updateSuccess(
-            detail = detail,
-            targetResourceId = targetEnvId,
-            targetResourceName = sourceEnv.name,
-            status = if (detail.copyStrategy == PipelineCopyStrategy.ENVIRONMENT_CREATE_WITHOUT_NODE) {
-                PipelineCopyTaskResourceStatus.PENDING_COMPLETION
-            } else {
-                PipelineCopyTaskResourceStatus.AUTO_FINISHED
-            }
-        )
     }
 
     private fun targetNameExists(
@@ -675,47 +438,6 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
         )
     }
 
-    private fun updateSuccess(
-        detail: PipelineCopyTaskResourceInfo,
-        targetResourceId: String?,
-        targetResourceName: String?,
-        targetResourceProperties: com.tencent.devops.process.pojo.pipeline.task.PipelineCopyResourceProperties? = null,
-        status: PipelineCopyTaskResourceStatus
-    ) {
-        pipelineCopyTaskResourceDao.update(
-            dslContext = dslContext,
-            update = PipelineCopyTaskResourceUpdate(
-                projectId = detail.projectId,
-                taskId = detail.taskId,
-                resourceType = detail.resourceType,
-                resourceId = detail.resourceId,
-                targetResourceType = detail.resourceType,
-                targetResourceId = targetResourceId,
-                targetResourceName = targetResourceName,
-                targetResourceProperties = targetResourceProperties,
-                status = status
-            )
-        )
-    }
-
-    private fun autoFinish(detail: PipelineCopyTaskResourceInfo) {
-        updateSuccess(
-            detail = detail,
-            targetResourceId = detail.targetResourceId,
-            targetResourceName = detail.targetResourceName ?: detail.resourceName,
-            status = PipelineCopyTaskResourceStatus.AUTO_FINISHED
-        )
-    }
-
-    private fun copySuccess(detail: PipelineCopyTaskResourceInfo) {
-        updateSuccess(
-            detail = detail,
-            targetResourceId = detail.targetResourceId ?: detail.resourceId,
-            targetResourceName = detail.targetResourceName ?: detail.resourceName,
-            status = PipelineCopyTaskResourceStatus.SUCCESS
-        )
-    }
-
     private fun getTask(projectId: String, taskId: String): PipelineBatchTaskInfo? {
         return pipelineBatchTaskDao.get(
             dslContext = dslContext,
@@ -734,21 +456,7 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
             ?: throw InvalidParamException("taskParam must be PipelineBatchCopyTaskParam")
     }
 
-    private fun <T> Result<T>.requireData(message: String): T {
-        return data ?: throw InvalidParamException(message)
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineCopyBatchTaskHandler::class.java)
-        private val RESOURCE_ORDER = mapOf(
-            PipelineDependentResourceType.CREDENTIAL to 1,
-            PipelineDependentResourceType.REPOSITORY to 2,
-            PipelineDependentResourceType.BUILD_NODE to 3,
-            PipelineDependentResourceType.DEPLOY_NODE to 3,
-            PipelineDependentResourceType.ENVIRONMENT to 4,
-            PipelineDependentResourceType.PIPELINE_LABEL to 5,
-            PipelineDependentResourceType.PIPELINE_GROUP to 5,
-            PipelineDependentResourceType.PIPELINE to 6
-        )
     }
 }

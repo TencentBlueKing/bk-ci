@@ -51,7 +51,7 @@ object StreamBinding {
 
     const val PIPELINE_BATCH_TASK_CREATE = "engine.pipeline.task.create"
 
-    const val PIPELINE_BATCH_TASK_CONFIG = "engine.pipeline.task.config"
+    const val PIPELINE_BATCH_TASK_ANALYZE = "engine.pipeline.task.analyze"
 
     const val PIPELINE_BATCH_TASK_EXECUTE = "engine.pipeline.task.execute"
 

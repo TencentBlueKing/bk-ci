@@ -2,6 +2,7 @@ package com.tencent.devops.process.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.process.Tables.T_PIPELINE_COPY_TASK_RESOURCE
+import com.tencent.devops.model.process.tables.records.TPipelineCopyTaskResourceRecord
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyResourceProperties
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceStatus
@@ -10,8 +11,8 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceInf
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class PipelineCopyTaskResourceDao {
@@ -166,7 +167,8 @@ class PipelineCopyTaskResourceDao {
             update.needCompletion?.let { query.set(NEED_COMPLETION, it) }
             update.needTransfer?.let { query.set(NEED_TRANSFER, it) }
             update.confirmed?.let { query.set(CONFIRMED, it) }
-            query.where(PROJECT_ID.eq(update.projectId))
+            query.set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(update.projectId))
                 .and(TASK_ID.eq(update.taskId))
                 .and(RESOURCE_TYPE.eq(update.resourceType.name))
                 .and(RESOURCE_ID.eq(update.resourceId))
@@ -174,35 +176,35 @@ class PipelineCopyTaskResourceDao {
         }
     }
 
-    private fun convert(record: Record): PipelineCopyTaskResourceInfo {
-        return with(T_PIPELINE_COPY_TASK_RESOURCE) {
+    private fun convert(record: TPipelineCopyTaskResourceRecord): PipelineCopyTaskResourceInfo {
+        return with(record) {
             PipelineCopyTaskResourceInfo(
-                taskId = record.get(TASK_ID),
-                projectId = record.get(PROJECT_ID),
-                pipelineId = record.get(PIPELINE_ID),
-                resourceType = PipelineDependentResourceType.valueOf(record.get(RESOURCE_TYPE)),
-                resourceId = record.get(RESOURCE_ID),
-                resourceName = record.get(RESOURCE_NAME),
-                resourceProperties = toProperties(record.get(RESOURCE_PROPERTIES)),
-                copyStrategy = record.get(COPY_STRATEGY)?.let { PipelineCopyStrategy.valueOf(it) },
-                targetProjectId = record.get(TARGET_PROJECT_ID),
-                targetResourceType = record.get(TARGET_RESOURCE_TYPE)?.let {
+                taskId = taskId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                resourceType = PipelineDependentResourceType.valueOf(resourceType),
+                resourceId = resourceId,
+                resourceName = resourceName,
+                resourceProperties = toProperties(resourceProperties),
+                copyStrategy = copyStrategy?.let { PipelineCopyStrategy.valueOf(it) },
+                targetProjectId = targetProjectId,
+                targetResourceType = targetResourceType?.let {
                     PipelineDependentResourceType.valueOf(it)
                 },
-                targetResourceId = record.get(TARGET_RESOURCE_ID),
-                targetResourceName = record.get(TARGET_RESOURCE_NAME),
-                targetResourceProperties = toProperties(record.get(TARGET_RESOURCE_PROPERTIES)),
-                status = PipelineCopyTaskResourceStatus.valueOf(record.get(STATUS)),
-                errorMessage = record.get(ERROR_MESSAGE),
-                highRisk = record.get(HIGH_RISK),
-                targetNameExists = record.get(TARGET_NAME_EXISTS),
-                targetIdExists = record.get(TARGET_ID_EXISTS),
-                autoFinish = record.get(AUTO_FINISH),
-                needCompletion = record.get(NEED_COMPLETION),
-                needTransfer = record.get(NEED_TRANSFER),
-                confirmed = record.get(CONFIRMED),
-                createTime = record.get(CREATE_TIME),
-                updateTime = record.get(UPDATE_TIME)
+                targetResourceId = targetResourceId,
+                targetResourceName = targetResourceName,
+                targetResourceProperties = toProperties(targetResourceProperties),
+                status = PipelineCopyTaskResourceStatus.valueOf(status),
+                errorMessage = errorMessage,
+                highRisk = highRisk,
+                targetNameExists = targetNameExists,
+                targetIdExists = targetIdExists,
+                autoFinish = autoFinish,
+                needCompletion = needCompletion,
+                needTransfer = needTransfer,
+                confirmed = confirmed,
+                createTime = createTime,
+                updateTime = updateTime
             )
         }
     }

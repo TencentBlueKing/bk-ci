@@ -9,6 +9,8 @@ data class PipelineCopyTaskUpdate(
     val taskId: String,
     @get:Schema(description = "项目ID", required = true)
     val projectId: String,
+    @get:Schema(description = "任务名称")
+    val taskName: String? = null,
     @get:Schema(description = "目标项目ID")
     val targetProjectId: String? = null,
     @get:Schema(description = "流水线ID处理策略")

@@ -4,13 +4,11 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskConfigRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatusSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskLabelSummary
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import io.swagger.v3.oas.annotations.Operation
@@ -145,38 +143,6 @@ interface UserPipelineBatchTaskResource {
         @QueryParam("taskType")
         taskType: PipelineBatchTaskType
     ): Result<List<PipelineBatchTaskDetailStatusSummary>>
-
-    @Operation(summary = "查询流水线批量任务标签汇总")
-    @GET
-    @Path("/{projectId}/tasks/{taskId}/labels/summary")
-    fun taskLabelSummary(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "任务ID", required = true)
-        @PathParam("taskId")
-        taskId: String
-    ): Result<PipelineBatchTaskLabelSummary>
-
-    @Operation(summary = "配置流水线批量任务")
-    @POST
-    @Path("/{projectId}/tasks/{taskId}/config")
-    fun config(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "任务ID", required = true)
-        @PathParam("taskId")
-        taskId: String,
-        @Parameter(description = "流水线批量任务配置请求", required = true)
-        request: PipelineBatchTaskConfigRequest
-    ): Result<Boolean>
 
     @Operation(summary = "排除流水线批量任务明细")
     @POST
