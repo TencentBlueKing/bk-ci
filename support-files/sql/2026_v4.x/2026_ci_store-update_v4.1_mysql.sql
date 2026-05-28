@@ -142,6 +142,14 @@ BEGIN
       ALTER TABLE `T_ATOM` DROP INDEX `inx_tpca_service_code`;
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_ATOM'
+                AND COLUMN_NAME = 'OWNER_STORE_CODE') THEN
+    ALTER TABLE T_ATOM ADD `OWNER_STORE_CODE` varchar(64) DEFAULT NULL COMMENT '归属应用标识';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
