@@ -1,6 +1,8 @@
 package com.tencent.devops.ai.properties
 
+import kotlin.random.Random
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class AiLlmPropertiesTest {
@@ -112,6 +114,117 @@ class AiLlmPropertiesTest {
         assertEquals(2.5, effective.backoffMultiplier)
         assertEquals(1, effective.priority)
         assertEquals(true, effective.enabled)
+    }
+
+    @Test
+    fun `should keep priority order across groups but shuffle within same priority`() {
+        val properties = AiLlmProperties(
+            models = listOf(
+                AiLlmModelOverride(
+                    id = "a",
+                    baseUrl = "https://a.example.com",
+                    modelName = "a-model",
+                    apiKey = "a-key",
+                    priority = 1
+                ),
+                AiLlmModelOverride(
+                    id = "b",
+                    baseUrl = "https://b.example.com",
+                    modelName = "b-model",
+                    apiKey = "b-key",
+                    priority = 1
+                ),
+                AiLlmModelOverride(
+                    id = "c",
+                    baseUrl = "https://c.example.com",
+                    modelName = "c-model",
+                    apiKey = "c-key",
+                    priority = 2
+                )
+            )
+        )
+
+        val ids = properties.enabledPlatformModels(Random(42)).map { it.id }
+
+        assertEquals(3, ids.size)
+        assertEquals(setOf("a", "b"), ids.subList(0, 2).toSet())
+        assertEquals("c", ids[2])
+    }
+
+    @Test
+    fun `should produce both orderings for same priority across different seeds`() {
+        val properties = AiLlmProperties(
+            models = listOf(
+                AiLlmModelOverride(
+                    id = "a",
+                    baseUrl = "https://a.example.com",
+                    modelName = "a-model",
+                    apiKey = "a-key",
+                    priority = 1
+                ),
+                AiLlmModelOverride(
+                    id = "b",
+                    baseUrl = "https://b.example.com",
+                    modelName = "b-model",
+                    apiKey = "b-key",
+                    priority = 1
+                )
+            )
+        )
+
+        val observed = (0..50)
+            .map { seed -> properties.enabledPlatformModels(Random(seed.toLong())).map { it.id } }
+            .toSet()
+
+        assertTrue(
+            observed.contains(listOf("a", "b")),
+            "expected to observe order [a, b] across seeds, got $observed"
+        )
+        assertTrue(
+            observed.contains(listOf("b", "a")),
+            "expected to observe order [b, a] across seeds, got $observed"
+        )
+    }
+
+    @Test
+    fun `should be deterministic given the same random seed`() {
+        val properties = AiLlmProperties(
+            models = listOf(
+                AiLlmModelOverride(
+                    id = "alpha",
+                    baseUrl = "https://alpha.example.com",
+                    modelName = "alpha-model",
+                    apiKey = "alpha-key",
+                    priority = 1
+                ),
+                AiLlmModelOverride(
+                    id = "beta",
+                    baseUrl = "https://beta.example.com",
+                    modelName = "beta-model",
+                    apiKey = "beta-key",
+                    priority = 1
+                ),
+                AiLlmModelOverride(
+                    id = "gamma",
+                    baseUrl = "https://gamma.example.com",
+                    modelName = "gamma-model",
+                    apiKey = "gamma-key",
+                    priority = 1
+                ),
+                AiLlmModelOverride(
+                    id = "delta",
+                    baseUrl = "https://delta.example.com",
+                    modelName = "delta-model",
+                    apiKey = "delta-key",
+                    priority = 2
+                )
+            )
+        )
+
+        val firstRun = properties.enabledPlatformModels(Random(7)).map { it.id }
+        val secondRun = properties.enabledPlatformModels(Random(7)).map { it.id }
+
+        assertEquals(firstRun, secondRun)
     }
 
     @Test
