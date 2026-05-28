@@ -34,9 +34,9 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.UserRole
 import com.tencent.devops.project.pojo.user.ProjectUser
 import com.tencent.devops.project.pojo.user.UserDeptDetail
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
@@ -74,6 +74,15 @@ interface UserProjectUserResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         bkToken: String
     ): Result<UserDeptDetail>
+
+    @GET
+    @Path("/projects/personal")
+    @Operation(summary = "获取用户个人项目，不存在时自动创建")
+    fun getPersonalProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String
+    ): Result<String>
 
     @GET
     @Path("/projects/{projectCode}/list")

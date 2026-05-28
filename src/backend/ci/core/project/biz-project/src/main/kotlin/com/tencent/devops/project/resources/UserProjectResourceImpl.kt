@@ -54,6 +54,7 @@ import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
@@ -126,7 +127,14 @@ class UserProjectResourceImpl @Autowired constructor(
     }
 
     override fun getContainEmpty(userId: String, projectId: String): Result<ProjectVO?> {
-        return Result(projectService.getByEnglishName(userId, projectId))
+        return Result(
+            try {
+                projectService.getByEnglishName(userId, projectId)
+            } catch (ex: Exception) {
+                logger.warn("Failed to get project by english name: $projectId for user: $userId", ex)
+                null
+            }
+        )
     }
 
     @AuditEntry(actionId = PROJECT_CREATE)
@@ -265,5 +273,9 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun isHidden(userId: String, projectId: String): Result<Boolean> {
         return Result(projectService.isHidden(englishName = projectId))
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(UserProjectResourceImpl::class.java)
     }
 }
