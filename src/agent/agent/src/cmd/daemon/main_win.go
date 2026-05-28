@@ -46,13 +46,12 @@ import (
 	"golang.org/x/sys/windows"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/agentcli"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/codesign"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/create"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/codesign"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
 

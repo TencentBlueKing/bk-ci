@@ -77,7 +77,8 @@
     import Settings from './components/Settings/index.vue'
     import AdvancedSetting from './components/AdvancedSetting/index.vue'
     import SharedSettings from './components/SharedSetting/index.vue'
-    
+    import SchedulingStrategy from './components/SchedulingStrategy/index.vue'
+
     export default {
         name: 'EnvDetail',
         components: {
@@ -89,7 +90,8 @@
             DeployTask,
             Settings,
             emptyNode,
-            AdvancedSetting
+            AdvancedSetting,
+            SchedulingStrategy
         },
         setup () {
             const { proxy } = useInstance()
@@ -104,7 +106,13 @@
                 envList,
                 isCreateResType
             } = useEnvAside()
-            
+
+            // 获取当前项目的 projectScope
+            const projectScope = computed(() => {
+                const projectList = proxy.$store.state.projectList || []
+                const curProject = projectList.find(p => p.projectCode === projectId.value)
+                return curProject?.projectScope
+            })
 
             const emptyInfo = ref({
                 title: proxy.$t('environment.envInfo.emptyEnv'),
@@ -125,7 +133,8 @@
                     deployTask: DeployTask,
                     settings: Settings,
                     auth: AuthManage,
-                    advancedSetting: AdvancedSetting
+                    advancedSetting: AdvancedSetting,
+                    schedulingStrategy: SchedulingStrategy
                 }
                 return comMap[tabActive.value]
             })
@@ -150,6 +159,10 @@
                 {
                     name: 'node',
                     label: proxy.$t('environment.node')
+                },
+                {
+                    name: 'schedulingStrategy',
+                    label: proxy.$t('environment.schedulingStrategy')
                 },
                 ...(currentEnv.value?.envType === ENV_TYPE_MAP.BUILD ? [
                     {
@@ -185,10 +198,10 @@
                         label: proxy.$t('environment.advancedSetting')
                     }
                 ] : []),
-                {
+                ...(projectScope.value !== 1 ? [{
                     name: 'auth',
                     label: proxy.$t('environment.authManage')
-                }
+                }] : [])
             ])
             
             // 获取可用的 tab 名称列表
@@ -313,6 +326,7 @@
     .env-name {
         flex: 0 1 auto;
         font-weight: 700;
+        flex: 0 1 auto;
         font-size: 14px;
         max-width: 300px;
         overflow: hidden;

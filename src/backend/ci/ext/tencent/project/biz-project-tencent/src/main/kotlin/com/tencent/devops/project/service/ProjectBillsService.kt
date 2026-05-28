@@ -192,7 +192,8 @@ class ProjectBillsService(
                         routerTag = AuthSystemType.RBAC_AUTH_TYPE,
                         enabled = true,
                         relatedProduct = false,
-                        bgIdList = listOf(IEG_BG_ID)
+                        bgIdList = listOf(IEG_BG_ID),
+                        channelCode = ProjectChannelCode.BS.name
                     ),
                     limit = limit,
                     offset = offset

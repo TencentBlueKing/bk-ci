@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -67,4 +67,9 @@ object AiMessageCode {
     const val AGENT_NOT_FOUND = "2133061"
     const val AGENT_RUN_TIMEOUT = "2133062"
     const val AGENT_RUN_FAILED = "2133063"
+
+    // ── 用户自定义大模型相关 (071-080) ──
+    const val USER_LLM_CONFIG_SAVE_FAILED = "2133071"
+    const val USER_LLM_CONFIG_INVALID = "2133072"
+    const val USER_LLM_CONFIG_AES_KEY_MISSING = "2133073"
 }

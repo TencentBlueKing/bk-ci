@@ -7,14 +7,20 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class AgentDao {
-    fun getAgentByWorkspaceId(
+    fun getAgentByWorkspaceIdGlobal(
         dslContext: DSLContext,
-        projectId: String,
         workspaceId: String
     ): TEnvironmentThirdpartyAgentRecord? {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
-            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
-                .and(CREATE_WORKSPACE_NAME.eq(workspaceId.trim())).fetchAny()
+            return dslContext.selectFrom(this)
+                .where(CREATE_WORKSPACE_NAME.eq(workspaceId.trim())).fetchAny()
+        }
+    }
+
+    fun deleteAgentByWorkspaceIdGlobal(dslContext: DSLContext, workspaceId: String) {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            dslContext.deleteFrom(this)
+                .where(CREATE_WORKSPACE_NAME.eq(workspaceId.trim())).execute()
         }
     }
 }

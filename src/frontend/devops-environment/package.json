@@ -9,11 +9,12 @@
     "clipboard": "^1.7.1",
     "echarts": "^5.3.2",
     "js-base64": "^3.7.2",
-    "lodash": "^4.17.21",
+    "lodash": "^4.18.0",
     "vee-validate": "^2.0.3",
     "vue": "~2.7.16",
     "vue-echarts": "^6.0.2",
     "vue-file-upload": "^0.1.12",
+    "vuedraggable": "^2.24.3",
     "vuex-class": "^0.3.0"
   },
   "devDependencies": {
@@ -57,7 +58,7 @@
     "webpack": "~5.76.1"
   },
   "scripts": {
-    "dev": "cross-env NODE_ENV=dev nx exec --  webpack-dev-server --mode development",
+    "dev": "cross-env NODE_ENV=dev nx exec -- webpack-dev-server --mode development",
     "public:dev": "cross-env NODE_ENV=dev webpack --mode production",
     "public:test": "cross-env NODE_ENV=test webpack --mode production",
     "public:master": "cross-env NODE_ENV=master webpack --mode production",

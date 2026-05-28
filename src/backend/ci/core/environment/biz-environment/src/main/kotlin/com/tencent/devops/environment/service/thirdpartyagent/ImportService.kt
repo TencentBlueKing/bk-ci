@@ -232,7 +232,7 @@ class ImportService @Autowired constructor(
 
             val nodeStringId = if (agentRecord.agentType == AgentType.CREATE.name) {
                 createEnvService.getWorkspaceDisplayName(userId, projectId, agentRecord.createWorkspaceName)
-                    ?: agentRecord.createWorkspaceName ?: "CREATE_${agentRecord.ip}"
+                    ?: agentRecord.ip
             } else {
                 "BUILD_${HashUtil.encodeLongId(nodeId)}_${agentRecord.ip}"
             }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -35,13 +35,14 @@ import com.tencent.devops.ai.context.AiChatContext
 import com.tencent.devops.ai.context.ContextMarker
 import com.tencent.devops.ai.pojo.ChatContextDTO
 import com.tencent.devops.ai.service.AgentSysPromptService
+import com.tencent.devops.ai.service.AiModelResolver
 import com.tencent.devops.common.client.Client
 import io.agentscope.core.ReActAgent
 import io.agentscope.core.agent.EventType
 import io.agentscope.core.agent.StreamOptions
 import io.agentscope.core.memory.autocontext.AutoContextConfig
 import io.agentscope.core.memory.autocontext.AutoContextMemory
-import io.agentscope.core.model.OpenAIChatModel
+import io.agentscope.core.model.Model
 import io.agentscope.core.tool.Toolkit
 import io.agentscope.core.tool.subagent.SubAgentConfig
 import org.slf4j.LoggerFactory
@@ -53,7 +54,7 @@ import org.slf4j.LoggerFactory
  * 挂载 Skill 与 Hook、解析系统提示词模板。
  */
 class SupervisorAgentFactory(
-    private val model: OpenAIChatModel,
+    private val modelResolver: AiModelResolver,
     private val autoContextConfig: AutoContextConfig,
     private val sessionContext: AgentSessionContext,
     private val sysPromptService: AgentSysPromptService,
@@ -71,6 +72,8 @@ class SupervisorAgentFactory(
      */
     fun create(): ReActAgent {
         val userId = resolveUserId()
+        val resolvedModel = modelResolver.resolve(userId)
+        val model = resolvedModel.model
         val chatContext = AiChatContext.getContext()
         val boundAgents = subAgents.filter { it.bindToSupervisor() }
         val variables = buildVariables(userId, chatContext, boundAgents)
@@ -81,14 +84,19 @@ class SupervisorAgentFactory(
         )
         logger.info(
             "[Supervisor] Creating agent: thread={}, " +
-                    "userId={}, context={}, " +
-                    "boundAgents={}/{}",
-            Thread.currentThread().name, userId, chatContext,
-            boundAgents.size, subAgents.size
+                    "userId={}, context={}, boundAgents={}/{}, modelSource={}, modelId={}",
+            Thread.currentThread().name,
+            userId,
+            chatContext,
+            boundAgents.size,
+            subAgents.size,
+            resolvedModel.source,
+            resolvedModel.identifier
         )
         val toolkit = buildToolkit(
             userId = userId,
-            boundAgents = boundAgents
+            boundAgents = boundAgents,
+            model = model
         )
         val skillBox = subAgentFactory.buildSkillBox(
             userId = userId,
@@ -130,7 +138,8 @@ class SupervisorAgentFactory(
      */
     private fun buildToolkit(
         userId: String,
-        boundAgents: List<SubAgentDefinition>
+        boundAgents: List<SubAgentDefinition>,
+        model: Model
     ): Toolkit {
         val toolkit = subAgentFactory.loadMcpClients(
             userId, SUPERVISOR_BIND_KEY

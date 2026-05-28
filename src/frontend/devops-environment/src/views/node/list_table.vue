@@ -186,7 +186,6 @@
                                     {{ item.tagKeyName }}: {{ item.tagValues[0].tagValueName }}
                                 </bk-tag>
                             </span>
-
                             <bk-popover
                                 placement="top"
                                 theme="light"

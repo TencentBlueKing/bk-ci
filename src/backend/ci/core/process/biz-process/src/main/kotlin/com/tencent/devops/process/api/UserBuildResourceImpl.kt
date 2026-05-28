@@ -83,7 +83,8 @@ class UserBuildResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int?
+        version: Int?,
+        branch: String?
     ): Result<BuildManualStartupInfo> {
         checkParam(userId, projectId, pipelineId)
         return Result(
@@ -92,7 +93,8 @@ class UserBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version,
-                channelCode = ChannelCode.getRequestChannelCode()
+                channelCode = ChannelCode.getRequestChannelCode(),
+                branch = branch
             )
         )
     }
@@ -127,7 +129,8 @@ class UserBuildResourceImpl @Autowired constructor(
         values: Map<String, String>,
         buildNo: Int?,
         triggerReviewers: List<String>?,
-        version: Int?
+        version: Int?,
+        branch: String?
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
         val manualStartup = pipelineBuildFacadeService.buildManualStartup(
@@ -139,7 +142,8 @@ class UserBuildResourceImpl @Autowired constructor(
             channelCode = ChannelCode.getRequestChannelCode(),
             buildNo = buildNo,
             version = version,
-            triggerReviewers = triggerReviewers
+            triggerReviewers = triggerReviewers,
+            branch = branch
         )
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(manualStartup)

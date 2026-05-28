@@ -28,6 +28,7 @@
 
 package com.tencent.devops.process.pojo.trigger
 
+import com.tencent.devops.common.api.pojo.I18Variable
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "代码库webhook事件记录")
@@ -39,7 +40,7 @@ data class RepoTriggerEventVo(
     @get:Schema(title = "代码库ID", required = false)
     val repoHashId: String,
     @get:Schema(title = "事件描述")
-    var eventDesc: String,
+    var eventDesc: I18Variable,
     @get:Schema(title = "触发时间")
     val eventTime: Long,
     @get:Schema(title = "总流水线数")

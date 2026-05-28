@@ -5,11 +5,11 @@ import com.tencent.devops.ai.agent.SubAgentFactory
 import com.tencent.devops.ai.context.AiChatContext
 import com.tencent.devops.ai.context.AgentSessionContext
 import com.tencent.devops.ai.session.PersistentAgentResolver
+import com.tencent.devops.ai.service.AiModelResolver
 import io.agentscope.core.ReActAgent
 import io.agentscope.core.agui.adapter.AguiAdapterConfig
 import io.agentscope.core.agui.processor.AguiRequestProcessor
 import io.agentscope.core.agui.registry.AguiAgentRegistry
-import io.agentscope.core.model.OpenAIChatModel
 import io.agentscope.core.session.Session
 import io.agentscope.spring.boot.agui.common.AguiAgentRegistryCustomizer
 import io.agentscope.spring.boot.agui.common.AguiProperties
@@ -36,7 +36,7 @@ class AguiAgentConfig {
         supervisorAgentFactory: Supplier<ReActAgent>,
         subAgentDefinitions: List<SubAgentDefinition>,
         subAgentFactory: SubAgentFactory,
-        openAIChatModel: OpenAIChatModel,
+        modelResolver: AiModelResolver,
         sessionContext: AgentSessionContext
     ): AguiAgentRegistryCustomizer {
         logger.info(
@@ -66,14 +66,18 @@ class AguiAgentConfig {
                         sessionContext.getUserId(it)
                     } ?: "unknown"
                     val chatContext = AiChatContext.getContext()
+                    val resolvedModel = modelResolver.resolve(userId)
                     logger.info(
                         "[AguiConfig] Creating standalone " +
-                                "sub-agent: agentId={}, userId={}",
-                        agentId, userId
+                                "sub-agent: agentId={}, userId={}, modelSource={}, modelId={}",
+                        agentId,
+                        userId,
+                        resolvedModel.source,
+                        resolvedModel.identifier
                     )
                     val agent = subAgentFactory.createAgent(
                         definition = definition,
-                        model = openAIChatModel,
+                        model = resolvedModel.model,
                         userId = userId,
                         chatContext = chatContext
                     )

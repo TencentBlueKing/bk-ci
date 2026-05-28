@@ -50,6 +50,18 @@ class UserDao {
         }
     }
 
+    fun listNormalUsers(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int
+    ): Result<TUserRecord> {
+        with(TUser.T_USER) {
+            return dslContext.selectFrom(this)
+                .where(USER_TYPE.eq(false))
+                .limit(offset, limit).fetch()
+        }
+    }
+
     fun getPublicType(dslContext: DSLContext, userId: String): TUserRecord? {
         with(TUser.T_USER) {
             return dslContext.selectFrom(this).where(USER_ID.eq(userId))
