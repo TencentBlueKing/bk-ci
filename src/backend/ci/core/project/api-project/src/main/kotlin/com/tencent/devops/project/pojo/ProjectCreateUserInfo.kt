@@ -32,50 +32,25 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema
 data class ProjectCreateUserInfo(
-    @get:Schema(
-        title = "操作人",
-        description = "发起本次添加操作的用户 ID，一般传当前操作者即可。"
-    )
+    @get:Schema(title = "操作人:发起本次添加操作的用户 ID，一般传当前操作者即可。")
     val createUserId: String?,
-    @get:Schema(
-        title = "角色名称",
-        description = "要添加到的角色名称，例如 manager、developer、viewer、executor。已知 groupId 时可不传。"
-    )
+    @get:Schema(title = "角色名称:要添加到的角色名称，例如 manager、developer、viewer、executor。已知 groupId 时可不传。")
     val roleName: String?,
     @get:Schema(
-        title = "角色Id",
-        description = "历史角色 ID，仅兼容旧版调用。可选值：0=visitor，2=manager，" +
-            "4=developer，5=maintainer，6=pm，7=qc，8=tester。已传 groupId 或 roleName 时可不传。"
+        title = "角色Id:历史角色 ID，仅兼容旧版调用。可选值：0=visitor，2=manager，" +
+                "4=developer，5=maintainer，6=pm，7=qc，8=tester。已传 groupId 或 roleName 时可不传。"
     )
     val roleId: Int?,
-    @get:Schema(
-        title = "组ID",
-        description = "用户组 ID。已知具体用户组时，优先传该字段。"
-    )
+    @get:Schema(title = "组ID:用户组 ID。已知具体用户组时，优先传该字段。")
     val groupId: Int?,
-    @get:Schema(
-        title = "目标用户",
-        description = "要加入用户组的用户 ID 列表，支持批量传入。"
-    )
+    @get:Schema(title = "目标用户:要加入用户组的用户 ID 列表，支持批量传入。")
     val userIds: List<String>? = emptyList(),
-    @get:Schema(
-        title = "目标部门",
-        description = "要加入用户组的部门 ID 列表，支持批量传入。"
-    )
+    @get:Schema(title = "目标部门:要加入用户组的部门 ID 列表，支持批量传入。")
     val deptIds: List<String>? = emptyList(),
-    @get:Schema(
-        title = "资源类型",
-        description = "资源类型，例如 project、pipeline。未传 groupId 时建议填写；不传默认按 project 处理。"
-    )
+    @get:Schema(title = "资源类型:资源类型，例如 project、pipeline。未传 groupId 时建议填写；不传默认按 project 处理。")
     val resourceType: String?,
-    @get:Schema(
-        title = "资源ID",
-        description = "资源 ID。如流水线id等。未传 groupId 时建议填写。"
-    )
+    @get:Schema(title = "资源ID：如流水线id等。未传 groupId 时建议填写。")
     val resourceCode: String?,
-    @get:Schema(
-        title = "过期天数",
-        description = "成员有效期，单位为天。例如传 30 表示 30 天后过期；不传默认 365 天。"
-    )
+    @get:Schema(title = "过期天数：成员有效期，单位为天。例如传 30 表示 30 天后过期；不传默认 365 天。")
     val expiredTime: Long? = null
 )
