@@ -130,7 +130,11 @@ object PipelineBuildParamKey {
     const val CI_TAPD_ID = "ci.tapd_id"
     const val CI_TAPD_PARENT_ID = "ci.tapd_parent_id"
     const val CI_TAPD_PRIORITY_ID = "ci.tapd_priority"
+    const val CI_TAPD_LINK_ID = "ci.tapd_link_id"
+    const val CI_TAPD_LINK_TYPE = "ci.tapd_link_type"
     const val CI_EVENT_FROM = "ci.event_from"
+    const val CI_EVENT_ID = "ci.event_id"
+    const val CI_TAPD_TITLE = "ci.tapd_title"
     // IMATE会话ID
     const val CI_IMATE_SESSION_ID = "ci.imate_session_id"
 }

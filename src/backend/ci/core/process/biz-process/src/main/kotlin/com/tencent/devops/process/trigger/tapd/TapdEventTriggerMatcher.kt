@@ -28,6 +28,7 @@
 package com.tencent.devops.process.trigger.tapd
 
 import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerInput
 import com.tencent.devops.common.pipeline.enums.TapdEventType
@@ -35,6 +36,8 @@ import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_RIGGER_EVENT_FROM_NOT_MATCH
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_TRIGGER_ACTION_NOT_MATCH
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_TRIGGER_PRIORITY_NOT_MATCH
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.OWNER_IGNORED
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.OWNER_NOT_MATCH
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.USER_IGNORED
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.USER_NOT_MATCH
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
@@ -55,7 +58,8 @@ class TapdEventTriggerMatcher {
 
     fun matches(
         element: TapdWebHookTriggerElement,
-        event: TapdWebhookTriggerEvent
+        event: TapdWebhookTriggerEvent,
+        variables: Map<String, String>
     ): WebhookAtomResponse {
         val input = element.data.input
         val taskId = element.id ?: ""
@@ -71,7 +75,8 @@ class TapdEventTriggerMatcher {
         getEventFilters(
             input = input,
             taskId = taskId,
-            event = event
+            event = event,
+            variables = variables
         ).forEach {
             val filterResponse = WebhookFilterResponse()
             if (!it.doFilter(filterResponse)) {
@@ -87,12 +92,13 @@ class TapdEventTriggerMatcher {
     private fun getEventFilters(
         input: TapdWebHookTriggerInput,
         taskId: String,
-        event: TapdWebhookTriggerEvent
+        event: TapdWebhookTriggerEvent,
+        variables: Map<String, String>
     ) = with(event) {
         val eventFromFilter = ContainsFilter(
             pipelineId = taskId,
             filterName = "tapdEventForm",
-            triggerOn = eventAction.value,
+            triggerOn = event.eventFrom ?: "web",
             included = input.includeEventFrom ?: emptyList(),
             failedReason = I18Variable(
                 code = BK_RIGGER_EVENT_FROM_NOT_MATCH,
@@ -117,8 +123,8 @@ class TapdEventTriggerMatcher {
         val userFilter = UserFilter(
             pipelineId = taskId,
             triggerOnUser = triggerUser,
-            includedUsers = input.includeUsers?.filter { it.isNotBlank() } ?: emptyList(),
-            excludedUsers = input.excludeUsers?.filter { it.isNotBlank() } ?: emptyList(),
+            includedUsers = input.includeUsers?.parseEnv(variables) ?: listOf(),
+            excludedUsers = input.excludeUsers?.parseEnv(variables) ?: listOf(),
             includedFailedReason = I18Variable(
                 code = USER_NOT_MATCH,
                 params = listOf(triggerUser)
@@ -131,10 +137,10 @@ class TapdEventTriggerMatcher {
         // 标签过滤
         val labelFilter = ListContainsFilter(
             pipelineId = taskId,
-            filterName = "tapdAction",
+            filterName = "tapdLabel",
             triggerOn = event.triggerLabels?.split("|")?.toSet() ?: setOf(),
-            included = WebhookUtils.convert(input.includeLabels),
-            excluded = WebhookUtils.convert(input.excludeLabels),
+            included = WebhookUtils.convert(input.includeLabels).parseEnv(variables),
+            excluded = WebhookUtils.convert(input.excludeLabels).parseEnv(variables),
             includeFailedReason = { item ->
                 I18Variable(
                     WebhookI18nConstants.BK_TRIGGER_LABEL_NOT_MATCH,
@@ -153,7 +159,7 @@ class TapdEventTriggerMatcher {
             pipelineId = taskId,
             filterName = "tapdPriorityFilter",
             triggerOn = event.triggerPriority ?: "",
-            included = WebhookUtils.convert(input.includePriority),
+            included = WebhookUtils.convert(input.includePriority).parseEnv(variables),
             failedReason = I18Variable(
                 code = BK_TRIGGER_PRIORITY_NOT_MATCH,
                 params = listOf()
@@ -161,16 +167,17 @@ class TapdEventTriggerMatcher {
         )
         // 当前处理人过滤
         val ownerFilter = UserFilter(
+            filterName = "tapdOwner",
             pipelineId = taskId,
             triggerOnUser = triggerOwner ?: "",
-            includedUsers = input.includeOwner?.filter { it.isNotBlank() } ?: emptyList(),
-            excludedUsers = input.excludeOwner?.filter { it.isNotBlank() } ?: emptyList(),
+            includedUsers = input.includeOwner?.parseEnv(variables) ?: listOf(),
+            excludedUsers = input.excludeOwner?.parseEnv(variables) ?: listOf(),
             includedFailedReason = I18Variable(
-                code = USER_NOT_MATCH,
+                code = OWNER_NOT_MATCH,
                 params = listOf(triggerOwner ?: "")
             ).toJsonStr(),
             excludedFailedReason = I18Variable(
-                code = USER_IGNORED,
+                code = OWNER_IGNORED,
                 params = listOf(triggerOwner ?: "")
             ).toJsonStr()
         )
@@ -178,5 +185,9 @@ class TapdEventTriggerMatcher {
             eventFromFilter, actionFilter, userFilter,
             labelFilter, priorityFilter, ownerFilter
         )
+    }
+
+    private fun List<String>.parseEnv(variables: Map<String, String>): List<String> {
+        return this.map { EnvUtils.parseEnv(it, variables) }.filter { it.isNotBlank() }
     }
 }

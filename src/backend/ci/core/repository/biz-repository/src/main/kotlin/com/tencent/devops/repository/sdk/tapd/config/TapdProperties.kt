@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.config
+package com.tencent.devops.repository.sdk.tapd.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 

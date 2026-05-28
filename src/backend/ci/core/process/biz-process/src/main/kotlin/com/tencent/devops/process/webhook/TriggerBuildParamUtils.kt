@@ -60,6 +60,7 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_CREATE_REF_T
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_CREATE_TIME
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_EVENT
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_EVENT_FROM
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_EVENT_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_EVENT_URL
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_FAILED_TASKNAMES
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_FAILED_TASKS
@@ -117,8 +118,11 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAG_DESC
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAG_FROM
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_ISSUES
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_LINK_ID
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_LINK_TYPE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_PARENT_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_PRIORITY_ID
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_TITLE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_WORKSPACE_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_WORKSPACE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.JOB_CONTAINER_NETWORK
@@ -520,7 +524,12 @@ object TriggerBuildParamUtils {
             CI_TAPD_ID,
             CI_TAPD_PARENT_ID,
             CI_TAPD_PRIORITY_ID,
-            CI_EVENT_FROM
+            CI_TAPD_LINK_ID,
+            CI_TAPD_LINK_TYPE,
+            CI_EVENT_FROM,
+            CI_EVENT_ID,
+            CI_TAPD_TITLE,
+            CI_NOTE_COMMENT
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[TapdWebHookTriggerElement.classType] = mutableMapOf("common" to params)
     }
