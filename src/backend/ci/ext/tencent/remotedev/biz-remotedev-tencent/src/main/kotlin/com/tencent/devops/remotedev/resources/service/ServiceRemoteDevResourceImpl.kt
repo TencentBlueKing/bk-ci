@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.resources.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_ILLEGAL_ERROR
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -105,6 +106,7 @@ import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
+import jakarta.ws.rs.core.Response
 import java.net.URLDecoder
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.stream.function.StreamBridge
@@ -149,6 +151,7 @@ class ServiceRemoteDevResourceImpl(
         private const val MAX_REFRESH_SIZE = 100
         private const val DEFAULT_PAGE_SIZE = 100
         private const val MAX_PAGE_SIZE = 1000
+        private const val MAX_DELETE_DELAY_SECONDS = 24 * 60 * 60
         private val logger = LoggerFactory.getLogger(
             OpProjectWorkspaceResourceImpl::class.java
         )
@@ -383,6 +386,15 @@ class ServiceRemoteDevResourceImpl(
         workspaceName: String,
         delaySeconds: Int?
     ): Result<Boolean> {
+        if (delaySeconds != null && (delaySeconds <= 1 || delaySeconds >= MAX_DELETE_DELAY_SECONDS)) {
+            throw ErrorCodeException(
+                errorCode = PARAMETER_ILLEGAL_ERROR,
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                defaultMessage = "delaySeconds must be > 1 and < $MAX_DELETE_DELAY_SECONDS (24h), got $delaySeconds",
+                params = arrayOf("delaySeconds", "must be > 1 and < $MAX_DELETE_DELAY_SECONDS (24h)")
+            )
+        }
+
         val record = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
         if (record == null || !record.ownerType.projectUse() || record.projectId != projectId) {
             logger.warn("delete project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
