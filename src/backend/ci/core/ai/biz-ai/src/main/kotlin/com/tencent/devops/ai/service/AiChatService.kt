@@ -271,6 +271,9 @@ class AiChatService @Autowired constructor(
         val encoded = encoder.encode(event)
         val sanitizedEncoded = AguiEventSanitizer.sanitizeEncodedEvent(encoded)
         if (sanitizedEncoded == null) {
+            // 过滤底层模型或框架偶发泄漏到前端的原始 tool-call 控制标记。
+            // 这类标记不应直接展示给用户，一旦透传通常意味着本轮工具调用
+            // 没有被正确解析，继续展示只会污染界面。
             logger.warn(
                 "[AguiChat] Dropped raw tool-call marker event: threadId={}, runId={}",
                 threadId, runId
@@ -278,7 +281,7 @@ class AiChatService @Autowired constructor(
             return
         }
         val duplicatedTerminalEvent = isTerminalEvent(sanitizedEncoded) &&
-            !activeRun.terminalEventSent.compareAndSet(false, true)
+                !activeRun.terminalEventSent.compareAndSet(false, true)
         if (duplicatedTerminalEvent) {
             logger.info(
                 "[AguiChat] Skip duplicated terminal event: threadId={}, runId={}",
