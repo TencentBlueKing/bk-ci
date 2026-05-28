@@ -87,6 +87,37 @@ class AiMessageService @Autowired constructor(
         ).map { toMessageInfo(record = it) }
     }
 
+    /**
+     * 终态兜底：若 [sessionId] 末尾消息为 USER（即上一轮没有产出 ASSISTANT），补写一条 ASSISTANT 占位。
+     *
+     * **背景**：[com.tencent.devops.ai.hook.AiMessagePersistenceHook] 仅在 PostCall（agent 跑完）时
+     * 写入 ASSISTANT。若会话被中途打断（用户主动停止 / LLM 超时 / 流异常），ASSISTANT 不会落库，
+     * DB 末尾停留在 USER。前端打开历史会话时若发现末尾是 USER，会自动重发上一条用户消息，
+     * 用户体验上等于"莫名其妙又被回答了一次"。
+     *
+     * 本方法基于"末尾 role 判断"实现幂等：跨实例广播多次进入也只会写一次。
+     *
+     * @return 实际新建的占位消息；若末尾不是 USER（已有 ASSISTANT 或会话为空）返回 null
+     */
+    fun ensureAssistantPlaceholderIfMissing(
+        sessionId: String,
+        placeholder: String,
+        extraData: String? = null
+    ): AiMessageCreateResult? {
+        if (sessionId.isBlank()) return null
+        val last = aiMessageDao.getLastBySessionId(
+            dslContext = dslContext,
+            sessionId = sessionId
+        ) ?: return null
+        if (!last.role.equals(ROLE_USER, ignoreCase = true)) return null
+        return createMessage(
+            sessionId = sessionId,
+            role = ROLE_ASSISTANT,
+            content = placeholder,
+            extraData = extraData
+        )
+    }
+
     fun deleteBySessionId(sessionId: String): Int {
         return aiMessageDao.deleteBySessionId(
             dslContext = dslContext,
@@ -104,6 +135,11 @@ class AiMessageService @Autowired constructor(
             createdTime = record.createdTime
                 .toInstant(ZoneOffset.ofHours(8)).toEpochMilli()
         )
+    }
+
+    companion object {
+        private const val ROLE_USER = "USER"
+        private const val ROLE_ASSISTANT = "ASSISTANT"
     }
 }
 
