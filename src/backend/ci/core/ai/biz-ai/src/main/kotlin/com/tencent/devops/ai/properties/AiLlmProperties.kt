@@ -9,6 +9,12 @@ data class AiLlmProperties(
     val apiKey: String = "",
     val baseUrl: String = "",
     val modelName: String = "deepseek-chat",
+    /**
+     * 思考模式档位（混元 Hy3 / OpenAI o-series 等支持的 `reasoning_effort` 参数）。
+     * 留空时不向请求体注入该字段，避免对不支持的模型造成兼容问题。
+     * 常见取值：`no_think` / `low` / `medium` / `high`，具体以模型供应商文档为准。
+     */
+    val reasoningEffort: String? = null,
     /** 蓝鲸 API 网关 bk_app_code，非空时启用网关认证模式 */
     val bkAppCode: String = "",
     /** 蓝鲸 API 网关 bk_app_secret */
@@ -91,6 +97,7 @@ data class AiLlmProperties(
                 baseUrl = baseUrl,
                 modelName = modelName,
                 apiKey = apiKey,
+                reasoningEffort = reasoningEffort,
                 bkAppCode = bkAppCode,
                 bkAppSecret = bkAppSecret,
                 connectTimeoutSeconds = connectTimeoutSeconds,
@@ -117,6 +124,11 @@ data class AiLlmModelOverride(
     val baseUrl: String,
     val modelName: String,
     val apiKey: String? = null,
+    /**
+     * 思考模式档位。留空时继承顶层 [AiLlmProperties.reasoningEffort]，
+     * 顶层也未配置则不向请求体注入该字段。
+     */
+    val reasoningEffort: String? = null,
     val bkAppCode: String? = null,
     val bkAppSecret: String? = null,
     val connectTimeoutSeconds: Long? = null,
@@ -135,6 +147,7 @@ data class AiLlmModelOverride(
         baseUrl = baseUrl,
         modelName = modelName,
         apiKey = apiKey ?: defaults.apiKey,
+        reasoningEffort = reasoningEffort ?: defaults.reasoningEffort,
         bkAppCode = bkAppCode ?: defaults.bkAppCode,
         bkAppSecret = bkAppSecret ?: defaults.bkAppSecret,
         connectTimeoutSeconds = connectTimeoutSeconds ?: defaults.connectTimeoutSeconds,
@@ -155,6 +168,11 @@ data class AiLlmModelProperties(
     val baseUrl: String,
     val modelName: String,
     val apiKey: String = "",
+    /**
+     * 思考模式档位。为 null 或空串时表示不传 `reasoning_effort` 参数，
+     * 兼容不支持该字段的模型。
+     */
+    val reasoningEffort: String? = null,
     val bkAppCode: String = "",
     val bkAppSecret: String = "",
     val connectTimeoutSeconds: Long = 10,
