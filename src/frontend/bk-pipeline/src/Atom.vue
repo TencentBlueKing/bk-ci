@@ -156,28 +156,8 @@
                 </span>
             </template>
             <span class="atom-operate-area">
-                <span
-                    v-if="atom.canRetry && !isBusy"
-                    @click.stop="skipOrRetry(false)"
-                >
-                    {{ t("retry") }}
-                </span>
-                <span
-                    v-if="atom.canSkip && !isBusy"
-                    @click.stop="skipOrRetry(true)"
-                >
-                    {{ t("SKIP") }}
-                </span>
                 <bk-popover
-                    v-if="
-                        !isSkip &&
-                            !isWaiting &&
-                            atom.timeCost &&
-                            !atom.canSkip &&
-                            !atom.canRetry &&
-                            !isExecuting &&
-                            !reactiveData.editable
-                    "
+                    v-if="showExecuteTime"
                     :delay="[300, 0]"
                     placement="top"
                     :disabled="!atom.timeCost.executeCost"
@@ -189,6 +169,20 @@
                         <p>{{ formatTime }}</p>
                     </template>
                 </bk-popover>
+                <hover-slide-btn
+                    v-if="atom.canRetry && !isBusy"
+                    icon="refresh-line"
+                    :icon-size="10"
+                    @click.stop="skipOrRetry(false)"
+                >
+                    {{ t("retry") }}
+                </hover-slide-btn>
+                <span
+                    v-if="atom.canSkip && !isBusy"
+                    @click.stop="skipOrRetry(true)"
+                >
+                    {{ t("SKIP") }}
+                </span>
             </span>
 
             <Logo
@@ -237,6 +231,7 @@
 <script>
     import { bkCheckbox, bkPopover } from '@tencent/bk-magic-vue'
     import Logo from './Logo'
+    import HoverSlideBtn from './HoverSlideBtn'
     import StatusIcon from './StatusIcon'
     import {
         ATOM_CONTINUE_EVENT_NAME,
@@ -265,6 +260,7 @@
         components: {
             StatusIcon,
             Logo,
+            HoverSlideBtn,
             bkPopover,
             bkCheckbox
         },
@@ -435,6 +431,13 @@
                 return (
                     Array.isArray(this.atom.pauseReviewers) && this.atom.pauseReviewers.join(';')
                 )
+            },
+            showExecuteTime () {
+                return !this.isSkip
+                    && !this.isWaiting
+                    && this.atom.timeCost
+                    && !this.isExecuting
+                    && !this.reactiveData.editable
             },
             formatTime () {
                 try {
@@ -843,6 +846,9 @@
     margin: 0 8px 0 0;
     color: $primaryColor;
     font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
   }
 
   .atom-reviewing-tips {
