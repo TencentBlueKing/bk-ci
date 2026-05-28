@@ -530,8 +530,16 @@ class WorkspaceCommon @Autowired constructor(
         ownerType: WorkspaceOwnerType,
         notify: Boolean = true
     ) {
-        // 获取workspaceName对应的cgsId
-        val cgsId = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)?.hostIp
+        // 获取workspaceName对应的windowsInfo（含hostIp和regionId）
+        val windowsInfo = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(
+                    workspaceName,
+                    "workspaceName not found"
+                )
+            )
+        val cgsId = windowsInfo.hostIp
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(
@@ -575,7 +583,8 @@ class WorkspaceCommon @Autowired constructor(
                             )
                             makeDiskMount(
                                 ip = cgsId.substringAfter("."),
-                                user = operator
+                                user = operator,
+                                regionId = windowsInfo.regionId
                             )
                         }
                         notifyControl.dispatchWebsocketPushEvent(
@@ -787,13 +796,20 @@ class WorkspaceCommon @Autowired constructor(
         ip: String,
         user: String,
         owner: String? = null,
-        type: String? = null
+        type: String? = null,
+        regionId: Int? = null
     ) {
         try {
             val infoS = redisCache.get(PIPELINE_CONFIG_INFO) ?: return
             val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
+            val finalIp = if (regionId != null) {
+                "$regionId:$ip"
+            } else {
+                logger.warn("makeDiskMount with null regionId, fallback to pure ip|ip=$ip|user=$user")
+                ip
+            }
             val resIps = mutableSetOf<String>()
-            resIps.add(ip)
+            resIps.add(finalIp)
             val newParam = mutableMapOf<String, String>()
             info.buildParam.forEach { (k, v) ->
                 when (v) {
