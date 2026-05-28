@@ -35,7 +35,6 @@ import okhttp3.Credentials
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
-import java.util.Base64
 
 /**
  * TAPD 业务对象查询服务实现
