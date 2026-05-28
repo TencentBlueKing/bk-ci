@@ -413,6 +413,9 @@ class AiChatService @Autowired constructor(
                 )
             }
             activeRunManager.remove(threadId)
+            // 会话彻底结束，丢弃可能残留的 pendingStop（应对 register 前抛异常等异常路径），
+            // 避免影响下一次同 threadId 新会话。详见 [ActiveRunManager.pendingStops]。
+            activeRunManager.discardPendingStop(threadId)
             sessionContext.evictAll(threadId)
         }
         agent?.let { sessionContext.removeSink(it) }

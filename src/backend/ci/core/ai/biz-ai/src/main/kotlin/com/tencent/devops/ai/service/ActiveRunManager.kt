@@ -83,16 +83,13 @@ class ActiveRunManager(
     private val activeRuns = ConcurrentHashMap<String, ActiveRun>()
 
     /**
-     * 暂存"早到的 stop"请求。
+     * 暂存"早到的 stop"请求：stop 在 [register] 之前到达时，[get] 返回 null 会让 stop 信号丢失，
+     * agent 跑完整次回答前端才能收到 RUN_FINISHED。
      *
-     * **问题**：runChat 进入后要先经过 initContext / waitForAgentIdle / processor.process 三个前置
-     * 阶段才会调用 [register]。若用户在这段窗口（典型 < 5 秒）内点击停止，[get] 返回 null，
-     * stop 信号被静默丢弃，agent 会跑完整次回答，前端要等几秒~十几秒才看到 RUN_FINISHED。
+     * 链路：[recordPendingStop] 留痕 → runChat 在 [register] 后 [consumePendingStop] 触发同步终止；
+     * cleanup 用 [discardPendingStop] 兜底；[PENDING_STOP_TTL_MS] 防跨实例残留。
      *
-     * **解决方案**（一条链路 3 个调用点）：
-     * 1. [AiRunEventService.handleStopBroadcast] 找不到 ActiveRun 时调 [recordPendingStop] 留痕
-     * 2. runChat 在 [register] 之后立刻调 [consumePendingStop]，命中即触发同步直写 RUN_FINISHED + interrupt
-     * 3. [PENDING_STOP_TTL_MS] 兜底过期；[remove] 顺手清理同 threadId 残留
+     * 注意 [remove] 不能顺手清，否则会被 [AiRunEventService.handleStopBroadcast] 盲调时擦掉刚留的便条。
      */
     private val pendingStops = ConcurrentHashMap<String, PendingStop>()
 
@@ -136,8 +133,6 @@ class ActiveRunManager(
 
     fun remove(threadId: String) {
         activeRuns.remove(threadId)
-        // 顺手清理可能残留的 pending stop，避免误伤下一次同 threadId 的新会话
-        pendingStops.remove(threadId)
         try {
             redisOperation.delete(redisKey(threadId))
             redisOperation.delete(lockKey(threadId))
@@ -148,6 +143,17 @@ class ActiveRunManager(
             "[ActiveRun] Removed: threadId={}, remaining={}",
             threadId, activeRuns.size
         )
+    }
+
+    /**
+     * 显式丢弃 pendingStop。仅在会话彻底结束（runChat finally → cleanup）时调用，
+     * 避免 [consumePendingStop] 漏跑（如 register 之前就抛异常）导致 entry 残留。
+     *
+     * 注意：正常 happy path 下 [consumePendingStop] 已经 remove，这里通常 noop。
+     */
+    fun discardPendingStop(threadId: String) {
+        if (threadId.isBlank()) return
+        pendingStops.remove(threadId)
     }
 
     /**
