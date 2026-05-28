@@ -314,9 +314,15 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         )
     }
 
-    override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
-        logger.info("deleteProjectWorkspace $userId|$projectId|$workspaceName")
-        return client.get(ServiceRemoteDevResource::class).deleteProjectWorkspace(userId, projectId, workspaceName)
+    override fun deleteProjectWorkspace(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        delaySeconds: Int?
+    ): Result<Boolean> {
+        logger.info("deleteProjectWorkspace $userId|$projectId|$workspaceName|$delaySeconds")
+        return client.get(ServiceRemoteDevResource::class)
+            .deleteProjectWorkspace(userId, projectId, workspaceName, delaySeconds)
     }
 
     override fun getProjectWorkspace(
