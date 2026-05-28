@@ -1046,8 +1046,8 @@
                         this.macOSHwSpecList = res.data
 
                         const defaultHwSpec = res.data.find(i => i.uid === 'VMware')
-                        const defaultImage = defaultHwSpec.images[0]
-                        const defaultXcode = defaultImage.xcodes?.[0]
+                        const defaultImage = defaultHwSpec?.images?.[0]
+                        const defaultXcode = defaultImage?.xcodes?.[0]
 
                         // 新建流水线：初始化默认值
                         if (this.macOSHwSpec === undefined || (this.systemVersion === undefined && this.xcodeVersion === undefined)) {
@@ -1082,7 +1082,6 @@
                     if (res.data) {
                         this.macOSHwSpecList = res.data.models
                         this.systemVersionList = res.data.images
-                        
                         // 如果是存量数据，没有 macOSHwSpec 或者 macOSHwSpec 为空，设置macOSHwSpec默认值为VMware
                         if (!this.macOSHwSpec && res.data.models.length > 0) {
                             const defaultMacOSHwSpec = res.data.models.find(i => i.uid === 'VMware')

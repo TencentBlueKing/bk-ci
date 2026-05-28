@@ -100,7 +100,7 @@ class StreamProjectPermissionServiceImpl @Autowired constructor(
 
     override fun cancelUpdateAuthProject(userId: String, projectCode: String) = Unit
 
-    override fun needApproval(needApproval: Boolean?) = false
+    override fun needApproval(needApproval: Boolean?, projectScope: Int) = false
 
     override fun isShowUserManageIcon(): Boolean = false
 

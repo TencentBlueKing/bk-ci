@@ -166,7 +166,8 @@ class StartCloudInterfaceService @Autowired constructor(
                     mem = it.basic?.memoryLimit,
                     registerCgsTime = null,
                     internal = it.basic?.internal,
-                    macAddress = it.basic?.macAddress
+                    macAddress = it.basic?.macAddress,
+                    envId = it.cgsData.envId ?: it.basic?.envId
                 )
             )
         }

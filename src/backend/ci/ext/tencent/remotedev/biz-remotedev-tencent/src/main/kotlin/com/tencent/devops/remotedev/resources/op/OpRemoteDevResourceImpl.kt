@@ -8,6 +8,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpRemoteDevResource
+import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.ConfigUpdateRequest
@@ -27,6 +28,7 @@ import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.SleepControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import jakarta.ws.rs.core.Response
+import java.util.stream.Collectors
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -129,23 +131,39 @@ class OpRemoteDevResourceImpl @Autowired constructor(
                 (data.status == null || it.status == data.status) &&
                 (data.lockedFlag == null || it.locked == data.lockedFlag)
         }
+        val totalCount = filteredResources.size.toLong()
         val start = (pageNotNull - 1) * pageSizeNotNull
-        val end = (start + pageSizeNotNull).coerceAtMost(filteredResources.size)
-        return if (start >= filteredResources.size) {
-            Result(
+        if (start >= filteredResources.size) {
+            return Result(
                 Page(
-                    page = pageNotNull, pageSize = pageSizeNotNull, count = filteredResources.size.toLong(),
-                    records = emptyList()
-                )
-            )
-        } else {
-            Result(
-                Page(
-                    page = pageNotNull, pageSize = pageSizeNotNull, count = filteredResources.size.toLong(),
-                    records = filteredResources.subList(start, end).map { JsonUtil.toMap(it) }
+                    page = pageNotNull, pageSize = pageSizeNotNull, count = totalCount, records = emptyList()
                 )
             )
         }
+        val end = (start + pageSizeNotNull).coerceAtMost(filteredResources.size)
+        val pagedResources = filteredResources.subList(start, end)
+
+        val envStatusMap: Map<String, String> = pagedResources
+            .filter { it.status == Constansts.CGS_AVAIABLE_STATUS && !it.envId.isNullOrBlank() }
+            .parallelStream()
+            .map { resource ->
+                val envStatus = kotlin.runCatching {
+                    workspaceCommon.getWorkspaceInfoByEid(resource.envId!!)?.status?.name
+                }.getOrNull() ?: ENV_STATUS_UNKNOWN
+                resource.envId!! to envStatus
+            }
+            .collect(Collectors.toMap({ it.first }, { it.second }, { a, _ -> a }))
+
+        val records = pagedResources.map { item ->
+            val map = JsonUtil.toMap(item).toMutableMap()
+            if (item.status == Constansts.CGS_AVAIABLE_STATUS && item.envId != null) {
+                map["envStatus"] = envStatusMap[item.envId] ?: ENV_STATUS_UNKNOWN
+            }
+            map
+        }
+        return Result(
+            Page(page = pageNotNull, pageSize = pageSizeNotNull, count = totalCount, records = records)
+        )
     }
 
     override fun getCgsConfig(userId: String): Result<CgsResourceConfig> {
@@ -217,5 +235,9 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         workspaceNames: List<String>
     ): Result<Boolean> {
         return Result(makeMoneyService.reduceWorkspaceBills(workspaceNames, startDate, endDate))
+    }
+
+    companion object {
+        private const val ENV_STATUS_UNKNOWN = "unknown"
     }
 }

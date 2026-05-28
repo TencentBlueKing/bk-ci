@@ -29,6 +29,8 @@ data class ProjectConditionDTO(
     val resourceType: String? = null,
     @get:Schema(title = "路由tag")
     val routerTag: AuthSystemType? = null,
+    @get:Schema(title = "因为routerTag字段是个枚举值,并且与数据的值不对应,所以增加一个dbRouteTag字段与数据库对应")
+    val dbRouteTag: String? = null,
     @get:Schema(title = "是否包含router_tag为null")
     val includeNullRouterTag: Boolean? = false,
     @get:Schema(title = "是否关联产品")

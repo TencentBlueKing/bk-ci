@@ -289,13 +289,31 @@ class ProjectInfoDao {
         }
     }
 
+    /**
+     * 批量保存项目-插件关联关系。
+     *
+     * 并发优化要点：
+     *   1. 入参先按唯一键 (projectId, atomCode) 去重，避免同批次内对同一行重复发起插入，
+     *      减少 UNI_TPA_PROJECT_CODE 上的重复锁竞争；
+     *   2. 同时按 (projectId, atomCode) 排序，让多个实例对相邻键的加锁顺序一致，
+     *      显著降低跨事务的死锁概率；
+     *   3. 拆分小批次(50)逐批 batch.execute()，避免单批次过大导致长事务/大范围加锁；
+     *   4. 通过 CASE WHEN 把 atomName 没变化时的 UPDATE 退化为 no-op（不写 redo/binlog），
+     *      减少不必要的 redo / 主从同步压力（注意：行的 X 锁仍会获取，这一点要靠 service
+     *      层缓存把"大多数已存在记录"挡在 DAO 外才能真正缓解）。
+     *
+     * 注意：此方法不应再被包裹在外层大事务内调用，否则上述短事务优化会失效。
+     */
     fun batchSaveProjectAtomInfo(
         dslContext: DSLContext,
         saveProjectAtomRelationPOs: List<SaveProjectAtomRelationDataPO>
     ) {
         if (saveProjectAtomRelationPOs.isEmpty()) return
-        // 分批次处理（每批100条）
-        saveProjectAtomRelationPOs.chunked(100) { chunk ->
+        // 按唯一键去重 + 排序，控制并发加锁顺序，降低锁竞争和死锁概率
+        val deduped = saveProjectAtomRelationPOs
+            .distinctBy { it.projectId to it.atomCode }
+            .sortedWith(compareBy({ it.projectId }, { it.atomCode }))
+        deduped.chunked(BATCH_SAVE_CHUNK_SIZE).forEach { chunk ->
             with(TProjectAtom.T_PROJECT_ATOM) {
                 dslContext.batch(
                     chunk.map { po ->
@@ -315,10 +333,16 @@ class ProjectInfoDao {
                             po.creator,
                             po.modifier
                         ).onDuplicateKeyUpdate()
-                            .set(ATOM_NAME, po.atomName)
+                            // 仅当 atomName 真的发生变化才写入新值，否则赋为旧值让 InnoDB 跳过 redo
+                            .set(ATOM_NAME, DSL.`when`(ATOM_NAME.ne(po.atomName), po.atomName).otherwise(ATOM_NAME))
                     }
                 ).execute()
             }
         }
+    }
+
+    companion object {
+        // 单批最多 50 条，避免长事务在唯一索引上长时间持有 next-key lock
+        private const val BATCH_SAVE_CHUNK_SIZE = 50
     }
 }

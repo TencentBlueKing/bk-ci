@@ -23,9 +23,6 @@ const props = defineProps({
   btnLoading: Boolean
 });
 
-const projectForm = ref<any>(null);
-const projectData = ref<any>(props.data);
-
 // KPI字段配置状态
 const kpiConfig = ref(false)
 const rules = {
@@ -51,6 +48,10 @@ const rules = {
     },
   ]
 };
+
+const projectForm = ref<any>(null);
+const projectData = ref<any>(props.data);
+const isPersonalProject = computed(() => projectData.value.projectScope === 1)
 const initPipelineDialect = ref();
 const activeCollapse = ref(['baseInfo', 'permission', 'pipeline', 'artifactory']);
 const collapsePanels = computed(() => [
@@ -59,11 +60,11 @@ const collapsePanels = computed(() => [
     title: '基础信息',
     component: BaseInfoContent,
   },
-  {
+  ...!isPersonalProject.value ? [{
     name: 'permission',
     title: '权限',
     component: PermissionContent,
-  },
+  }] : []
   // ...projectData.value.properties ? [{
   //   name: 'pipeline',
   //   title: '流水线',

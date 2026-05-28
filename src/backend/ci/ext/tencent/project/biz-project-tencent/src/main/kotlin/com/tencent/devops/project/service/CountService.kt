@@ -46,7 +46,8 @@ class CountService @Autowired constructor(
     private val userDailyLoginDao: UserDailyLoginDao,
     private val userDailyFirstAndLastLoginDao: UserDailyFirstAndLastLoginDao,
     private val projectUserRefreshService: ProjectUserRefreshService,
-    private val projectUserService: ProjectUserService
+    private val projectUserService: ProjectUserService,
+    private val projectLocalService: ProjectLocalService
 ) {
     fun countLogin(userId: String, xRealIP: String?, xForwardedFor: String?, userAgent: String?) {
         logger.info("Count login [user=$userId, xRealIP=$xRealIP, xForwardedFor=$xForwardedFor, userAgent=$userAgent]")
@@ -111,6 +112,10 @@ class CountService @Autowired constructor(
         userDailyFirstAndLastLoginDao.upsert(dslContext, userId, date, firstLoginTime = time, lastLoginTime = time)
 
         userDailyLoginDao.create(dslContext, userId, os, ip)
+
+        projectLocalService.batchGetOrCreatePersonalProjectsForUserIds(
+            userIds = listOf(userId)
+        )
     }
 
     companion object {

@@ -165,6 +165,7 @@
                     <bk-table-column :label="$t('projectOperation')">
                         <template slot-scope="{ row }">
                             <bk-button
+                                v-if="row.projectScope === 0"
                                 class="mr5"
                                 text
                                 v-perm="{
@@ -189,12 +190,20 @@
                             >
                                 {{ $t('extendManage') }}
                             </bk-button> -->
-                            <bk-button
-                                text
-                                @click="handleQuitClick(row)"
+                            <span
+                                v-bk-tooltips="{
+                                    content: $t('personalProjectCannotExit'),
+                                    disabled: row.projectScope !== 1
+                                }"
                             >
-                                {{ $t("projectExit") }}
-                            </bk-button>
+                                <bk-button
+                                    text
+                                    :disabled="row.projectScope === 1"
+                                    @click="handleQuitClick(row)"
+                                >
+                                    {{ $t('projectExit') }}
+                                </bk-button>
+                            </span>
                         </template>
                     </bk-table-column>
                 </bk-table>

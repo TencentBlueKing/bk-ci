@@ -29,6 +29,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
+import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.async.AsyncNotify
@@ -1061,5 +1062,49 @@ class ServiceRemoteDevResourceImpl(
                 search = search
             )
         )
+    }
+
+    override fun batchQueryThumbnailWorkspaces(
+        userId: String,
+        enable: Boolean,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<String>> {
+        logger.info(
+            "batchQueryThumbnailWorkspaces" +
+                " |$userId|enable=$enable|page=$page|pageSize=$pageSize"
+        )
+        return Result(
+            workspaceRecordService.batchQueryThumbnailWorkspaces(
+                enable = enable,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
+    override fun enableWorkspaceThumbnail(
+        userId: String,
+        workspaceName: String,
+        enable: Boolean
+    ): Result<Boolean> {
+        logger.info(
+            "enableWorkspaceThumbnail" +
+                " |$userId|$workspaceName|enable=$enable"
+        )
+        return Result(
+            workspaceRecordService.enableThumbnail(
+                workspaceName = workspaceName,
+                enable = enable
+            )
+        )
+    }
+
+    override fun startCloudWorkspaceDetail(
+        userId: String,
+        workspaceName: String?,
+        envHashId: String?
+    ): Result<WorkspaceStartCloudDetail?> {
+        return Result(workspaceService.startCloudWorkspaceDetail(userId, workspaceName, envHashId))
     }
 }

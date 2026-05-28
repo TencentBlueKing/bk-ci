@@ -187,7 +187,7 @@ class TxProjectServiceImpl @Autowired constructor(
         }
         if (!englishNames.contains(projectVO.englishName)) {
             logger.warn("The user don't have the permission to get the project $englishName")
-            return null
+            throw OperationException("The user don't have the permission to visit the project")
         }
         return projectVO
     }

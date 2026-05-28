@@ -20,6 +20,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
+import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
@@ -1129,4 +1130,65 @@ interface ServiceRemoteDevResource {
         )
         search: WorkspaceSearch
     ): Result<Page<Workspace>>
+
+    @Operation(summary = "分页批量获取THUMBNAIL的实例id列表")
+    @GET
+    @Path("/batch_query_thumbnail_workspaces")
+    fun batchQueryThumbnailWorkspaces(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(
+            description = "ENABLE状态：true=开启THUMBNAIL，false=关闭THUMBNAIL",
+            required = true
+        )
+        @QueryParam("enable")
+        enable: Boolean,
+        @Parameter(description = "第几页（从1开始）", required = true, example = "1")
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "每页多少条（最大1000）", required = true, example = "100")
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<Page<String>>
+
+    @Operation(summary = "开启或关闭工作空间缩略图")
+    @POST
+    @Path("/enable_workspace_thumbnail")
+    fun enableWorkspaceThumbnail(
+        @Parameter(
+            description = "用户ID",
+            required = true,
+            example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        )
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(
+            description = "工作空间名称",
+            required = true
+        )
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(
+            description = "是否启用：true=开启，false=关闭",
+            required = true
+        )
+        @QueryParam("enable")
+        enable: Boolean
+    ): Result<Boolean>
+
+    @Operation(summary = "获取指定工作空间详情")
+    @GET
+    @Path("/start_cloud_workspace_detail")
+    fun startCloudWorkspaceDetail(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
+        @Parameter(description = "环境id", required = true)
+        @QueryParam("envHashId")
+        envHashId: String?
+    ): Result<WorkspaceStartCloudDetail?>
 }
