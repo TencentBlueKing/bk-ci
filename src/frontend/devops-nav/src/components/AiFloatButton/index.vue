@@ -1,6 +1,5 @@
 <template>
     <div
-        v-if="showAiEntry"
         :class="floatWrapperClasses"
         :style="floatWrapperStyle"
     >
@@ -57,7 +56,6 @@
     import cookie from 'js-cookie'
     import { AI_IFRAME_EVENTS } from '@/utils/constants'
     import eventBus from '@/utils/eventBus'
-    import request from '@/utils/request'
     import {
         computed,
         getCurrentInstance,
@@ -80,9 +78,6 @@
     const iframeLoading = ref(true)
     const iframeRef = ref<HTMLIFrameElement | null>(null)
     const floatIconRef = ref<HTMLElement | null>(null)
-    const aiEligibleProjectCodes = ref<Set<string>>(new Set())
-    const aiProjectsFetchDone = ref(false)
-    const showAiEntry = ref(false)
     const store = useStore()
 
     type FloatSnapEdge = 'left' | 'right' | 'top' | 'bottom' | null
@@ -160,28 +155,6 @@
         const list = store.state.projectList as Project[] | null | undefined
         const hit = list?.find(p => p.projectCode === code)
         return hit?.projectName != null && hit.projectName !== '' ? String(hit.projectName) : ''
-    }
-
-    function syncShowAiEntry () {
-        if (!aiProjectsFetchDone.value) {
-            showAiEntry.value = false
-            return
-        }
-        const code = getCurrentProjectCode()
-        showAiEntry.value = !!code && aiEligibleProjectCodes.value.has(code)
-    }
-
-    async function loadAiEligibleProjects () {
-        try {
-            const res: string[] = await request.get(`ai/api/user/ai/projects`)
-            aiEligibleProjectCodes.value = new Set(res)
-        } catch (e) {
-            console.warn('[AiFloatButton] failed to load AI-enabled projects', e)
-            aiEligibleProjectCodes.value = new Set()
-        } finally {
-            aiProjectsFetchDone.value = true
-            syncShowAiEntry()
-        }
     }
 
     function getMergedContext () {
@@ -422,7 +395,6 @@
     }
 
     onMounted(() => {
-        loadAiEligibleProjects()
         eventBus.$on(AI_IFRAME_EVENTS.CLOSE_PANEL, handleClosePanel)
         eventBus.$on(AI_IFRAME_EVENTS.UPDATE_SUB_CONTEXT, handleSubContextUpdate)
         eventBus.$on(AI_IFRAME_EVENTS.REQUEST_CONTEXT, postContextToAi)
@@ -438,15 +410,8 @@
     })
 
     watch(subAppContext, () => {
-        syncShowAiEntry()
         postContextToAi()
     }, { deep: true })
-
-    watch(showAiEntry, (visible) => {
-        if (!visible) {
-            panelVisible.value = false
-        }
-    })
 </script>
 
 <style lang="scss" scoped>
