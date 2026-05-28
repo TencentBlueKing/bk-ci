@@ -800,6 +800,7 @@ class WorkspaceCommon @Autowired constructor(
         regionId: Int? = null
     ) {
         try {
+            logger.info("makeDiskMount|ip=$ip|user=$user|owner=$owner|type=$type|regionId=$regionId")
             val infoS = redisCache.get(PIPELINE_CONFIG_INFO) ?: return
             val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
             val finalIp = if (regionId != null) {
