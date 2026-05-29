@@ -28,35 +28,32 @@
 package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.model.process.tables.TPipelineBuildVarOverflow
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 /**
  * 大变量溢出存储表的 DAO。
  *
- * 该表为新增表 [T_PIPELINE_BUILD_VAR_OVERFLOW]，DDL 见
+ * 该表为新增表 T_PIPELINE_BUILD_VAR_OVERFLOW，DDL 见
  * `process/docs/T_PIPELINE_BUILD_VAR_OVERFLOW_MIGRATION.sql`。
  *
  * 设计要点：
- * - 不依赖 jOOQ 自动生成代码，完全通过 [DSL] 字段引用，避免不同环境
- *   未及时重新生成 model-process 模块的代码导致编译失败；
+ * - 该表已在现网建好，jOOQ codegen 会生成
+ *   [com.tencent.devops.model.process.tables.TPipelineBuildVarOverflow]，
+ *   因此直接复用生成代码，与主表 T_PIPELINE_BUILD_VAR 的 DAO 风格保持一致；
  * - 主键为 (BUILD_ID, KEY)，与主表 T_PIPELINE_BUILD_VAR 一致；
- * - 仅承担"溢出值"的物理存储，业务一致性逻辑由 [com.tencent.devops.process.service.BuildVariableService] 把守。
+ * - 仅承担"溢出值"的物理存储，业务一致性逻辑由
+ *   [com.tencent.devops.process.service.BuildVariableService] 把守。
+ *
+ * 注意：本 DAO 故意**不提供** `batchSave` 的单 SQL 批量实现。
+ *  - 单个溢出值最大 4M（字符），N 条值合并成一条 INSERT 会迅速突破
+ *    MySQL `max_allowed_packet`（生产环境通常 16M~64M）；
+ *  - 因此 [batchSave] 采用"循环调用 [save] + `ON DUPLICATE KEY UPDATE`"实现，
+ *    单条 IO，单次最坏内存峰值 ≤ 4M，吞吐通过整条流水线"大变量数量本就有限"自然控制。
  */
 @Repository
 class PipelineBuildVarOverflowDao {
-
-    private val table = DSL.table(DSL.name(TABLE_NAME))
-    private val fBuildId = DSL.field(DSL.name("BUILD_ID"), String::class.java)
-    private val fKey = DSL.field(DSL.name("KEY"), String::class.java)
-    private val fValue = DSL.field(DSL.name("VALUE"), String::class.java)
-    private val fValueLength = DSL.field(DSL.name("VALUE_LENGTH"), Int::class.java)
-    private val fProjectId = DSL.field(DSL.name("PROJECT_ID"), String::class.java)
-    private val fPipelineId = DSL.field(DSL.name("PIPELINE_ID"), String::class.java)
-    private val fVarType = DSL.field(DSL.name("VAR_TYPE"), String::class.java)
-    private val fReadOnly = DSL.field(DSL.name("READ_ONLY"), Boolean::class.java)
-    private val fSensitive = DSL.field(DSL.name("SENSITIVE"), Boolean::class.java)
 
     fun save(
         dslContext: DSLContext,
@@ -66,22 +63,24 @@ class PipelineBuildVarOverflowDao {
         param: BuildParameters
     ) {
         val value = param.value.toString()
-        dslContext.insertInto(table)
-            .set(fBuildId, buildId)
-            .set(fKey, param.key)
-            .set(fValue, value)
-            .set(fValueLength, value.length)
-            .set(fProjectId, projectId)
-            .set(fPipelineId, pipelineId)
-            .set(fVarType, param.valueType?.name)
-            .set(fReadOnly, param.readOnly)
-            .set(fSensitive, param.sensitive)
-            .onDuplicateKeyUpdate()
-            .set(fValue, value)
-            .set(fValueLength, value.length)
-            .set(fVarType, param.valueType?.name)
-            .set(fSensitive, param.sensitive)
-            .execute()
+        with(TPipelineBuildVarOverflow.T_PIPELINE_BUILD_VAR_OVERFLOW) {
+            dslContext.insertInto(this)
+                .set(BUILD_ID, buildId)
+                .set(KEY, param.key)
+                .set(VALUE, value)
+                .set(VALUE_LENGTH, value.length)
+                .set(PROJECT_ID, projectId)
+                .set(PIPELINE_ID, pipelineId)
+                .set(VAR_TYPE, param.valueType?.name)
+                .set(READ_ONLY, param.readOnly)
+                .set(SENSITIVE, param.sensitive)
+                .onDuplicateKeyUpdate()
+                .set(VALUE, value)
+                .set(VALUE_LENGTH, value.length)
+                .set(VAR_TYPE, param.valueType?.name)
+                .set(SENSITIVE, param.sensitive)
+                .execute()
+        }
     }
 
     fun batchSave(
@@ -92,6 +91,7 @@ class PipelineBuildVarOverflowDao {
         params: List<BuildParameters>
     ) {
         if (params.isEmpty()) return
+        // 见类注释：单条 4M 值不允许聚合，逐条入库防止超过 max_allowed_packet。
         params.forEach { save(dslContext, projectId, pipelineId, buildId, it) }
     }
 
@@ -102,11 +102,13 @@ class PipelineBuildVarOverflowDao {
         buildId: String,
         key: String
     ): String? {
-        return dslContext.select(fValue).from(table)
-            .where(fBuildId.eq(buildId))
-            .and(fKey.eq(key))
-            .and(fProjectId.eq(projectId))
-            .fetchOne(fValue)
+        with(TPipelineBuildVarOverflow.T_PIPELINE_BUILD_VAR_OVERFLOW) {
+            return dslContext.select(VALUE).from(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(KEY.eq(key))
+                .and(PROJECT_ID.eq(projectId))
+                .fetchOne(VALUE)
+        }
     }
 
     fun deleteByKey(
@@ -115,11 +117,13 @@ class PipelineBuildVarOverflowDao {
         buildId: String,
         key: String
     ): Int {
-        return dslContext.deleteFrom(table)
-            .where(fBuildId.eq(buildId))
-            .and(fKey.eq(key))
-            .and(fProjectId.eq(projectId))
-            .execute()
+        with(TPipelineBuildVarOverflow.T_PIPELINE_BUILD_VAR_OVERFLOW) {
+            return dslContext.deleteFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(KEY.eq(key))
+                .and(PROJECT_ID.eq(projectId))
+                .execute()
+        }
     }
 
     fun deleteByBuildId(
@@ -127,10 +131,12 @@ class PipelineBuildVarOverflowDao {
         projectId: String,
         buildId: String
     ): Int {
-        return dslContext.deleteFrom(table)
-            .where(fBuildId.eq(buildId))
-            .and(fProjectId.eq(projectId))
-            .execute()
+        with(TPipelineBuildVarOverflow.T_PIPELINE_BUILD_VAR_OVERFLOW) {
+            return dslContext.deleteFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
+                .execute()
+        }
     }
 
     fun deleteByPipelineId(
@@ -138,13 +144,11 @@ class PipelineBuildVarOverflowDao {
         projectId: String,
         pipelineId: String
     ): Int {
-        return dslContext.deleteFrom(table)
-            .where(fProjectId.eq(projectId))
-            .and(fPipelineId.eq(pipelineId))
-            .execute()
-    }
-
-    companion object {
-        const val TABLE_NAME = "T_PIPELINE_BUILD_VAR_OVERFLOW"
+        with(TPipelineBuildVarOverflow.T_PIPELINE_BUILD_VAR_OVERFLOW) {
+            return dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
     }
 }

@@ -43,6 +43,7 @@ import com.tencent.devops.model.process.tables.TPipelineBuildSummary
 import com.tencent.devops.model.process.tables.TPipelineBuildTask
 import com.tencent.devops.model.process.tables.TPipelineBuildTemplateAcrossInfo
 import com.tencent.devops.model.process.tables.TPipelineBuildVar
+import com.tencent.devops.model.process.tables.TPipelineBuildVarOverflow
 import com.tencent.devops.model.process.tables.TPipelineCallback
 import com.tencent.devops.model.process.tables.TPipelineFavor
 import com.tencent.devops.model.process.tables.TPipelineGroup
@@ -93,6 +94,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTemplateAcrossInfoRecord
+import com.tencent.devops.model.process.tables.records.TPipelineBuildVarOverflowRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildVarRecord
 import com.tencent.devops.model.process.tables.records.TPipelineCallbackRecord
 import com.tencent.devops.model.process.tables.records.TPipelineFavorRecord
@@ -349,51 +351,47 @@ class ProcessDataMigrateDao {
     }
 
     /**
-     * 抓取大变量溢出表 T_PIPELINE_BUILD_VAR_OVERFLOW 的原始记录，
+     * 抓取大变量溢出表 T_PIPELINE_BUILD_VAR_OVERFLOW 的记录，
      * 以便在归档/分库迁移过程中和主表保持一致。
      *
-     * 由于 jOOQ 尚未生成该表的代码，这里使用 plain SQL，列字段名与 DDL 一致。
+     * 该表已在现网建好，jOOQ codegen 会生成
+     * [com.tencent.devops.model.process.tables.TPipelineBuildVarOverflow]，
+     * 因此直接复用生成代码，与其它 `getXxxRecords` 方法风格一致。
+     *
+     * 内存安全：调用方
+     * [com.tencent.devops.misc.strategy.impl.pipeline.PipelineBuildLinkedDataMigrationStrategy]
+     * 按**单 buildId** 流式调用，避免一次性把多个 build 的 mediumtext 全部载入内存。
      */
-    fun getPipelineBuildVarOverflowRows(
+    fun getPipelineBuildVarOverflowRecords(
         dslContext: DSLContext,
         projectId: String,
         buildIds: List<String>
-    ): List<Map<String, Any?>> {
+    ): List<TPipelineBuildVarOverflowRecord> {
         if (buildIds.isEmpty()) return emptyList()
-        val table = org.jooq.impl.DSL.table(org.jooq.impl.DSL.name("T_PIPELINE_BUILD_VAR_OVERFLOW"))
-        val projectField = org.jooq.impl.DSL.field(org.jooq.impl.DSL.name("PROJECT_ID"), String::class.java)
-        val buildField = org.jooq.impl.DSL.field(org.jooq.impl.DSL.name("BUILD_ID"), String::class.java)
-        return try {
-            dslContext.select().from(table)
-                .where(projectField.eq(projectId))
-                .and(buildField.`in`(buildIds))
-                .fetchMaps()
-        } catch (ignored: Exception) {
-            // DDL 可能尚未执行：返回空，由调用方决定是否中止迁移。
-            emptyList()
+        with(TPipelineBuildVarOverflow.T_PIPELINE_BUILD_VAR_OVERFLOW) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
+                .fetchInto(TPipelineBuildVarOverflowRecord::class.java)
         }
     }
 
     /**
      * 把大变量溢出表 T_PIPELINE_BUILD_VAR_OVERFLOW 的记录写入目标分库。
+     *
+     * 单条 mediumtext 值最大 4M，因此**逐条** `executeInsert`——禁止用
+     * `batchInsert` 聚合，否则极易突破 MySQL `max_allowed_packet`；
+     * 每条都用 jOOQ 生成 record 整体搬运，原样保留 CREATE_TIME / UPDATE_TIME 等列。
      */
     fun migratePipelineBuildVarOverflowData(
         migratingShardingDslContext: DSLContext,
-        rows: List<Map<String, Any?>>
+        records: List<TPipelineBuildVarOverflowRecord>
     ) {
-        if (rows.isEmpty()) return
-        val tableName = "T_PIPELINE_BUILD_VAR_OVERFLOW"
-        try {
-            // 逐行 insert 即可：迁移频率低，量级小（同一 buildId 的溢出记录通常 <10 条）。
-            rows.forEach { row ->
-                val keys = row.keys.toList()
-                val cols = keys.joinToString(", ") { "`$it`" }
-                val placeholders = keys.joinToString(", ") { "?" }
-                val sql = "INSERT INTO `$tableName`($cols) VALUES ($placeholders)"
-                migratingShardingDslContext.execute(sql, *keys.map { row[it] }.toTypedArray())
+        if (records.isEmpty()) return
+        with(TPipelineBuildVarOverflow.T_PIPELINE_BUILD_VAR_OVERFLOW) {
+            records.forEach { record ->
+                val insertRecord = migratingShardingDslContext.newRecord(this, record)
+                migratingShardingDslContext.executeInsert(insertRecord)
             }
-        } catch (ignored: Exception) {
-            // 与读取保持一致：DDL 可能尚未执行
         }
     }
 

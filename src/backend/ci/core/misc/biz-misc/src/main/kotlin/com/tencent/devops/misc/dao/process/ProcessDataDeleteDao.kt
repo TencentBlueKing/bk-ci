@@ -45,6 +45,7 @@ import com.tencent.devops.model.process.tables.TPipelineBuildSummary
 import com.tencent.devops.model.process.tables.TPipelineBuildTask
 import com.tencent.devops.model.process.tables.TPipelineBuildTemplateAcrossInfo
 import com.tencent.devops.model.process.tables.TPipelineBuildVar
+import com.tencent.devops.model.process.tables.TPipelineBuildVarOverflow
 import com.tencent.devops.model.process.tables.TPipelineCallback
 import com.tencent.devops.model.process.tables.TPipelineFavor
 import com.tencent.devops.model.process.tables.TPipelineGroup
@@ -189,20 +190,22 @@ class ProcessDataDeleteDao {
 
     fun deletePipelineBuildVar(dslContext: DSLContext, projectId: String, buildIds: List<String>) {
         if (buildIds.isEmpty()) return
+        // 与设计文档 2.5 节"先删 OVERFLOW → 再删主表"保持一致：
+        // 即便 misc 清理是离线批处理，仍然按统一顺序操作，避免出现
+        // "主表已删、溢出表残留孤儿"的窗口，便于日后审计/对账。
+        deletePipelineBuildVarOverflow(dslContext, projectId, buildIds)
         with(TPipelineBuildVar.T_PIPELINE_BUILD_VAR) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
                 .execute()
         }
-        // 同步清理大变量溢出表，避免主表删完后溢出表残留孤儿数据。
-        deletePipelineBuildVarOverflow(dslContext, projectId, buildIds)
     }
 
     /**
      * 删除大变量溢出表中本批 buildId 的全部记录。
      *
-     * 该表为新增表 T_PIPELINE_BUILD_VAR_OVERFLOW，jOOQ 尚未生成对应代码，
-     * 这里使用 plain SQL 表/字段引用，避免对未生成代码的强依赖。
+     * 该表已在现网建好，直接使用 jOOQ 生成表
+     * [TPipelineBuildVarOverflow]，与本类其它删除方法风格一致。
      */
     fun deletePipelineBuildVarOverflow(
         dslContext: DSLContext,
@@ -210,16 +213,10 @@ class ProcessDataDeleteDao {
         buildIds: List<String>
     ) {
         if (buildIds.isEmpty()) return
-        val table = org.jooq.impl.DSL.table(org.jooq.impl.DSL.name("T_PIPELINE_BUILD_VAR_OVERFLOW"))
-        val projectField = org.jooq.impl.DSL.field(org.jooq.impl.DSL.name("PROJECT_ID"), String::class.java)
-        val buildField = org.jooq.impl.DSL.field(org.jooq.impl.DSL.name("BUILD_ID"), String::class.java)
-        try {
-            dslContext.deleteFrom(table)
-                .where(projectField.eq(projectId))
-                .and(buildField.`in`(buildIds))
+        with(TPipelineBuildVarOverflow.T_PIPELINE_BUILD_VAR_OVERFLOW) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
                 .execute()
-        } catch (ignored: Exception) {
-            // DDL 可能尚未执行（灰度期间）；不阻塞主表清理。
         }
     }
 

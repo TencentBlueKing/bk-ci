@@ -258,9 +258,7 @@ class PipelineBuildLinkedDataMigrationStrategy(
      * 设计要点：
      *  - 一次只 fetch 一个 buildId 的溢出记录。即使该 build 包含多条 4M 大变量，
      *    此处单次内存峰值也只有"该 build 的所有大变量字符之和"，不会跨 build 叠加；
-     *  - 迁移失败按"快速失败"处理，避免迁移过程中"主表已迁、溢出表丢失"造成数据不一致；
-     *  - 表不存在的兜底由 [com.tencent.devops.misc.dao.process.ProcessDataMigrateDao]
-     *    内部 swallow，便于灰度阶段未建表的环境继续推进。
+     *  - 迁移失败按"快速失败"处理，避免迁移过程中"主表已迁、溢出表丢失"造成数据不一致。
      */
     private fun migrateOverflowPerBuild(
         buildIds: List<String>,
@@ -270,15 +268,15 @@ class PipelineBuildLinkedDataMigrationStrategy(
     ) {
         buildIds.forEach { buildId ->
             try {
-                val rows = processDataMigrateDao.getPipelineBuildVarOverflowRows(
+                val records = processDataMigrateDao.getPipelineBuildVarOverflowRecords(
                     dslContext = dslContext,
                     projectId = projectId,
                     buildIds = listOf(buildId)
                 )
-                if (rows.isNotEmpty()) {
+                if (records.isNotEmpty()) {
                     processDataMigrateDao.migratePipelineBuildVarOverflowData(
                         migratingShardingDslContext = migratingDslContext,
-                        rows = rows
+                        records = records
                     )
                 }
             } catch (e: Exception) {
