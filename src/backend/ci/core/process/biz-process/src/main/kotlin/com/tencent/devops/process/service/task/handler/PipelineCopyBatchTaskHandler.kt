@@ -12,11 +12,14 @@ import com.tencent.devops.process.dao.PipelineBatchTaskDao
 import com.tencent.devops.process.dao.PipelineBatchTaskDetailDao
 import com.tencent.devops.process.dao.PipelineCopyTaskDao
 import com.tencent.devops.process.dao.PipelineCopyTaskResourceDao
+import com.tencent.devops.process.dao.PipelineCopyTaskResourceRelDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
-import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskStatus
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyAction
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyStrategy
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchCopyTaskParam
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskAnalyzeEvent
@@ -26,10 +29,12 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskExecuteEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyStrategy
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceInfo
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceRelInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceStatus
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSummary
 import com.tencent.devops.process.pojo.pipeline.task.RepositoryCopyResourceProperties
 import com.tencent.devops.process.service.PipelineDependentResourceService
 import com.tencent.devops.process.service.task.PipelineBatchTaskFactory
@@ -51,6 +56,7 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
     private val pipelineBatchTaskDetailDao: PipelineBatchTaskDetailDao,
     private val pipelineCopyTaskDao: PipelineCopyTaskDao,
     private val pipelineCopyTaskResourceDao: PipelineCopyTaskResourceDao,
+    private val pipelineCopyTaskResourceRelDao: PipelineCopyTaskResourceRelDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineDependentResourceService: PipelineDependentResourceService,
@@ -88,7 +94,7 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
             pipelineCopyTaskInfo = PipelineCopyTaskInfo(
                 projectId = projectId,
                 taskId = taskId,
-                status = PipelineCopyTaskStatus.SUB_PIPELINE_ANALYZING
+                status = PipelineBatchTaskStatus.PIPELINE_ANALYZING
             )
         )
     }
@@ -125,15 +131,31 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
             addAll(details)
             addAll(subDetails)
         }
+        val resources = allDetails.map(::buildPipelineCopyResource)
+        val relations = allDetails.map(::buildPipelineCopyResourceRel)
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             pipelineBatchTaskDetailDao.batchCreate(
                 dslContext = transactionContext,
                 details = subDetails
             )
+            pipelineBatchTaskDao.update(
+                dslContext = transactionContext,
+                update = PipelineBatchTaskUpdate(
+                    projectId = event.projectId,
+                    taskId = event.taskId,
+                    subPipelineCount = allDetails.count { it.subPipeline },
+                    pacCount = allDetails.count { it.pac },
+                    taskSummary = JsonUtil.toJson(buildSummary(resources), formatted = false)
+                )
+            )
             pipelineCopyTaskResourceDao.batchCreate(
                 dslContext = transactionContext,
-                resources = allDetails.map(::buildPipelineCopyResource)
+                resources = resources
+            )
+            pipelineCopyTaskResourceRelDao.batchCreate(
+                dslContext = transactionContext,
+                relations = relations
             )
         }
     }
@@ -179,11 +201,30 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
         return PipelineCopyTaskResourceInfo(
             taskId = detail.taskId,
             projectId = detail.projectId,
-            pipelineId = detail.pipelineId,
             resourceType = PipelineDependentResourceType.PIPELINE,
             resourceId = detail.pipelineId,
             resourceName = detail.pipelineName,
             status = PipelineCopyTaskResourceStatus.PROCESSED
+        )
+    }
+
+    private fun buildPipelineCopyResourceRel(detail: PipelineBatchTaskDetailInfo): PipelineCopyTaskResourceRelInfo {
+        return PipelineCopyTaskResourceRelInfo(
+            taskId = detail.taskId,
+            projectId = detail.projectId,
+            pipelineId = detail.pipelineId,
+            pipelineName = detail.pipelineName,
+            resourceType = PipelineDependentResourceType.PIPELINE,
+            resourceId = detail.pipelineId,
+            resourceName = detail.pipelineName
+        )
+    }
+
+    private fun buildSummary(resources: List<PipelineCopyTaskResourceInfo>): PipelineCopyTaskSummary {
+        return PipelineCopyTaskSummary(
+            unprocessedCount = resources.count { it.status == PipelineCopyTaskResourceStatus.UNPROCESSED },
+            highRiskCount = resources.count { it.highRisk },
+            autoFinishCount = resources.count { it.copyAction == PipelineCopyAction.AUTO_FINISH }
         )
     }
 
@@ -201,7 +242,6 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
             PipelineCopyTaskResourceInfo(
                 taskId = task.taskId,
                 projectId = task.projectId,
-                pipelineId = detail.pipelineId,
                 resourceType = resource.resourceType,
                 resourceId = resource.resourceId,
                 resourceName = resource.resourceName,
@@ -241,7 +281,6 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
             PipelineCopyTaskResourceInfo(
                 taskId = task.taskId,
                 projectId = task.projectId,
-                pipelineId = detail.pipelineId,
                 resourceType = PipelineDependentResourceType.PIPELINE,
                 resourceId = resource.resourceId,
                 resourceName = resource.resourceName,
@@ -280,7 +319,7 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
         }
         val excludedPipelineIds = taskDetails.map { it.pipelineId }.toSet()
         // 获取排除流水线依赖的子流水线
-        val resourceIds = pipelineCopyTaskResourceDao.list(
+        val resourceIds = pipelineCopyTaskResourceRelDao.list(
             dslContext = dslContext,
             projectId = projectId,
             taskId = taskId,
@@ -291,7 +330,7 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
             return
         }
         // 子流水线除了被排除的流水线引用,还有没有被其他流水线引用,如果还有被其他流水线引用,则不排除
-        val activeResourceCountMap = pipelineCopyTaskResourceDao.list(
+        val activeResourceCountMap = pipelineCopyTaskResourceRelDao.list(
             dslContext = dslContext,
             projectId = projectId,
             taskId = taskId,
@@ -343,7 +382,7 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
         if (taskDetails.isEmpty()) {
             return
         }
-        pipelineCopyTaskResourceDao.deleteByPipelineIds(
+        pipelineCopyTaskResourceRelDao.deleteByPipelineIds(
             dslContext = dslContext,
             projectId = projectId,
             taskId = taskId,
@@ -373,7 +412,7 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
                     projectId = targetProjectId,
                     pipelineName = resource.resourceName
                 ) != null
-                PipelineDependentResourceType.ENVIRONMENT -> client.get(ServiceEnvironmentResource::class).getByName(
+                PipelineDependentResourceType.BUILD_ENV -> client.get(ServiceEnvironmentResource::class).getByName(
                     userId = userId,
                     projectId = targetProjectId,
                     envName = resource.resourceName,
@@ -404,7 +443,7 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
     private fun defaultStrategy(resourceType: PipelineDependentResourceType): PipelineCopyStrategy? {
         return when (resourceType) {
             PipelineDependentResourceType.REPOSITORY -> PipelineCopyStrategy.REPOSITORY_REUSE_SAME_NAME_PROTOCOL
-            PipelineDependentResourceType.ENVIRONMENT -> PipelineCopyStrategy.ENVIRONMENT_REUSE_SAME_NAME
+            PipelineDependentResourceType.BUILD_ENV -> PipelineCopyStrategy.DEPLOY_ENV_REUSE_SAME_NAME
             PipelineDependentResourceType.BUILD_NODE -> PipelineCopyStrategy.BUILD_NODE_REUSE_SAME_NAME
             PipelineDependentResourceType.DEPLOY_NODE -> PipelineCopyStrategy.DEPLOY_NODE_REUSE_SAME_NAME
             PipelineDependentResourceType.CREDENTIAL -> PipelineCopyStrategy.CREDENTIAL_REUSE_SAME_NAME

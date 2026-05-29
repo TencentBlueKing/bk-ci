@@ -7,8 +7,11 @@ enum class PipelineBatchTaskStatus {
     @Schema(description = "草稿")
     DRAFT,
 
-    @Schema(description = "分析中")
-    ANALYZING,
+    @Schema(description = "流水线分析中")
+    PIPELINE_ANALYZING,
+
+    @Schema(description = "流水线资源分析中")
+    PIPELINE_RESOURCE_ANALYZING,
 
     @Schema(description = "执行中")
     EXECUTING,
@@ -21,9 +24,6 @@ enum class PipelineBatchTaskStatus {
 
     @Schema(description = "部分失败")
     PARTIAL_FAILED,
-
-    @Schema(description = "取消")
-    CANCELED,
 
     @Schema(description = "已删除")
     DELETED

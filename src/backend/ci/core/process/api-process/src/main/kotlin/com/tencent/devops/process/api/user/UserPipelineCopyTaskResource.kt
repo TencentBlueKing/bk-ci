@@ -3,18 +3,19 @@ package com.tencent.devops.process.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyAction
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyPipelineInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyResourceBasicInfoGroup
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyResourceDetail
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyResourceDetailGroup
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyResourceInfoGroup
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskConfigRequest
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteStatus
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteProgress
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskInfo
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.Valid
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
@@ -47,21 +48,6 @@ interface UserPipelineCopyTaskResource {
         taskId: String
     ): Result<PipelineCopyTaskInfo?>
 
-    @Operation(summary = "获取流水线复制任务状态")
-    @GET
-    @Path("/{taskId}/status")
-    fun taskStatus(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "任务ID", required = true)
-        @PathParam("taskId")
-        taskId: String
-    ): Result<PipelineBatchTaskStatus>
-
     @Operation(summary = "保存流水线复制配置草稿")
     @POST
     @Path("/{taskId}/config/draft")
@@ -76,6 +62,7 @@ interface UserPipelineCopyTaskResource {
         @PathParam("taskId")
         taskId: String,
         @Parameter(description = "流水线复制配置草稿请求", required = true)
+        @Valid
         request: PipelineCopyTaskConfigRequest
     ): Result<Boolean>
 
@@ -96,10 +83,10 @@ interface UserPipelineCopyTaskResource {
         request: PipelineCopyTaskConfigRequest
     ): Result<Boolean>
 
-    @Operation(summary = "列举流水线复制资源详情")
+    @Operation(summary = "列举流水线复制资源")
     @GET
-    @Path("/{taskId}/resources/details")
-    fun listResourceDetails(
+    @Path("/{taskId}/resources")
+    fun listResource(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -114,8 +101,11 @@ interface UserPipelineCopyTaskResource {
         resourceType: PipelineDependentResourceType?,
         @Parameter(description = "资源名", required = false)
         @QueryParam("resourceName")
-        resourceName: String?
-    ): Result<List<PipelineCopyResourceDetailGroup>>
+        resourceName: String?,
+        @Parameter(description = "资源复制动作", required = false)
+        @QueryParam("copyAction")
+        copyAction: PipelineCopyAction? = null
+    ): Result<List<PipelineCopyResourceInfoGroup>>
 
     @Operation(summary = "查询流水线复制资源关联的流水线")
     @GET
@@ -155,7 +145,24 @@ interface UserPipelineCopyTaskResource {
         @PathParam("taskId")
         taskId: String,
         @Parameter(description = "流水线复制资源信息", required = true)
-        resources: List<PipelineCopyResourceDetail>
+        resources: List<PipelineCopyTaskResourceInfo>
+    ): Result<Boolean>
+
+    @Operation(summary = "准备执行流水线复制")
+    @POST
+    @Path("/{taskId}/execute/prepare")
+    fun prepareExecute(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "任务ID", required = true)
+        @PathParam("taskId")
+        taskId: String,
+        @Parameter(description = "流水线复制资源信息", required = true)
+        resources: List<PipelineCopyTaskResourceInfo>
     ): Result<Boolean>
 
     @Operation(summary = "执行流水线复制")
@@ -170,15 +177,13 @@ interface UserPipelineCopyTaskResource {
         projectId: String,
         @Parameter(description = "任务ID", required = true)
         @PathParam("taskId")
-        taskId: String,
-        @Parameter(description = "流水线复制资源信息", required = true)
-        resources: List<PipelineCopyResourceDetail>
+        taskId: String
     ): Result<Boolean>
 
-    @Operation(summary = "获取流水线复制执行状态")
+    @Operation(summary = "获取流水线复制执行汇总")
     @GET
-    @Path("/{taskId}/execute/status")
-    fun executeStatus(
+    @Path("/{taskId}/execute/summary")
+    fun executeSummary(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -188,12 +193,12 @@ interface UserPipelineCopyTaskResource {
         @Parameter(description = "任务ID", required = true)
         @PathParam("taskId")
         taskId: String
-    ): Result<PipelineCopyTaskExecuteStatus>
+    ): Result<PipelineCopyTaskExecuteSummary>
 
-    @Operation(summary = "获取流水线复制资源基础信息")
+    @Operation(summary = "获取流水线复制执行进度")
     @GET
-    @Path("/{taskId}/resources/basic")
-    fun listResourceBasicInfo(
+    @Path("/{taskId}/execute/progress")
+    fun executeProgress(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -202,20 +207,8 @@ interface UserPipelineCopyTaskResource {
         projectId: String,
         @Parameter(description = "任务ID", required = true)
         @PathParam("taskId")
-        taskId: String,
-        @Parameter(description = "资源类型", required = false)
-        @QueryParam("resourceType")
-        resourceType: PipelineDependentResourceType?,
-        @Parameter(description = "资源是否需要补齐", required = false)
-        @QueryParam("needCompletion")
-        needCompletion: Boolean? = null,
-        @Parameter(description = "资源是否需要处理", required = false)
-        @QueryParam("needTransfer")
-        needTransfer: Boolean? = null,
-        @Parameter(description = "是否自动完成", required = false)
-        @QueryParam("autoFinish")
-        autoFinish: Boolean? = null
-    ): Result<List<PipelineCopyResourceBasicInfoGroup>>
+        taskId: String
+    ): Result<PipelineCopyTaskExecuteProgress>
 
     @Operation(summary = "确认流水线复制资源")
     @POST

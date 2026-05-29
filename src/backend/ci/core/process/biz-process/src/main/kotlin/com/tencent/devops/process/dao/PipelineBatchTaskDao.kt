@@ -1,5 +1,6 @@
 package com.tencent.devops.process.dao
 
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BATCH_TASK
 import com.tencent.devops.model.process.tables.records.TPipelineBatchTaskRecord
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskInfo
@@ -25,6 +26,8 @@ class PipelineBatchTaskDao {
         status: PipelineBatchTaskStatus,
         step: PipelineBatchTaskStep,
         totalCount: Int,
+        subPipelineCount: Int,
+        pacCount: Int,
         creator: String
     ): Int {
         return with(T_PIPELINE_BATCH_TASK) {
@@ -35,9 +38,12 @@ class PipelineBatchTaskDao {
                 TASK_NAME,
                 TASK_TYPE,
                 TASK_PARAM,
+                TASK_SUMMARY,
                 STATUS,
                 STEP,
                 TOTAL_COUNT,
+                SUB_PIPELINE_COUNT,
+                PAC_COUNT,
                 SUCCESS_COUNT,
                 FAILED_COUNT,
                 CREATOR,
@@ -49,9 +55,12 @@ class PipelineBatchTaskDao {
                 taskName,
                 taskType.name,
                 taskParam,
+                null,
                 status.name,
                 step.name,
                 totalCount,
+                subPipelineCount,
+                pacCount,
                 0,
                 0,
                 creator,
@@ -135,8 +144,17 @@ class PipelineBatchTaskDao {
             if (update.taskParam != null) {
                 query.set(TASK_PARAM, update.taskParam)
             }
+            if (update.taskSummary != null) {
+                query.set(TASK_SUMMARY, update.taskSummary)
+            }
             if (update.status != null) {
                 query.set(STATUS, update.status!!.name)
+            }
+            if (update.subPipelineCount != null) {
+                query.set(SUB_PIPELINE_COUNT, update.subPipelineCount)
+            }
+            if (update.pacCount != null) {
+                query.set(PAC_COUNT, update.pacCount)
             }
             if (update.successCount != null) {
                 query.set(SUCCESS_COUNT, update.successCount)
@@ -201,14 +219,17 @@ class PipelineBatchTaskDao {
                 taskName = taskName,
                 taskType = PipelineBatchTaskType.valueOf(taskType),
                 taskParam = taskParam,
+                taskSummary = taskSummary,
                 status = PipelineBatchTaskStatus.valueOf(status),
                 step = PipelineBatchTaskStep.valueOf(step),
                 totalCount = totalCount,
+                subPipelineCount = subPipelineCount,
+                pacCount = pacCount,
                 successCount = successCount,
                 failedCount = failedCount,
                 creator = creator,
-                createTime = createTime,
-                updateTime = updateTime
+                createTime = createTime.timestampmilli(),
+                updateTime = updateTime.timestampmilli()
             )
         }
     }

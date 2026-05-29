@@ -468,6 +468,9 @@ object ProcessMessageCode {
     // 流水线批量任务明细{0}当前状态为{1}，不能恢复
     const val ERROR_PIPELINE_BATCH_TASK_DETAIL_CAN_NOT_RESTORE = "2101370"
     const val ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_EXECUTE = "2101371" // 流水线批量任务{0}当前状态为{1}，不能执行
+    const val ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_SAVE_CONFIG = "2101372" // 流水线批量任务{0}当前状态为{1}，不能保存配置
+    const val ERROR_PIPELINE_BATCH_TASK_TYPE_NOT_MATCH = "2101373" // 流水线批量任务{0}类型为{1}，不是{2}
+    const val ERROR_PIPELINE_COPY_RESOURCE_NOT_ALL_PROCESSED = "2101374" // 流水线复制任务{0}还有{1}个资源未处理，不能执行
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

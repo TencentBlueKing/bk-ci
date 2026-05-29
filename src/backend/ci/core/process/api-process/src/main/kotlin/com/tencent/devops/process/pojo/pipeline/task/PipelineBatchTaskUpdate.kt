@@ -14,8 +14,14 @@ data class PipelineBatchTaskUpdate(
     val taskName: String? = null,
     @get:Schema(description = "任务参数")
     val taskParam: String? = null,
+    @get:Schema(description = "任务汇总信息")
+    val taskSummary: String? = null,
     @get:Schema(description = "任务状态")
     val status: PipelineBatchTaskStatus? = null,
+    @get:Schema(description = "自动添加的子流水线数量")
+    val subPipelineCount: Int? = null,
+    @get:Schema(description = "PAC数量")
+    val pacCount: Int? = null,
     @get:Schema(description = "成功数")
     val successCount: Int? = null,
     @get:Schema(description = "失败数")

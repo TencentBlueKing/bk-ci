@@ -19,9 +19,6 @@ enum class PipelineCopyTaskStatus {
     @Schema(description = "部分失败")
     PARTIAL_FAILED,
 
-    @Schema(description = "取消")
-    CANCELED,
-
     @Schema(description = "已删除")
     DELETED,
 

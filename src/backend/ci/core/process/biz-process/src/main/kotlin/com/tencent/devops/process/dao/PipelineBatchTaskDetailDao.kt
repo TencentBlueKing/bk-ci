@@ -1,5 +1,6 @@
 package com.tencent.devops.process.dao
 
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BATCH_TASK_DETAIL
 import com.tencent.devops.model.process.tables.records.TPipelineBatchTaskDetailRecord
@@ -11,6 +12,9 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 @Repository
 class PipelineBatchTaskDetailDao {
@@ -55,8 +59,8 @@ class PipelineBatchTaskDetailDao {
                     detail.change,
                     detail.status.name,
                     detail.errorMessage,
-                    detail.startTime,
-                    detail.endTime
+                    detail.startTime?.let(::toLocalDateTime),
+                    detail.endTime?.let(::toLocalDateTime)
                 )
             }
         }
@@ -311,11 +315,15 @@ class PipelineBatchTaskDetailDao {
                 change = change,
                 status = PipelineBatchTaskDetailStatus.valueOf(status),
                 errorMessage = errorMessage,
-                startTime = startTime,
-                endTime = endTime,
-                createTime = createTime,
-                updateTime = updateTime
+                startTime = startTime?.timestampmilli(),
+                endTime = endTime?.timestampmilli(),
+                createTime = createTime.timestampmilli(),
+                updateTime = updateTime.timestampmilli()
             )
         }
+    }
+
+    private fun toLocalDateTime(timestamp: Long): LocalDateTime {
+        return LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.systemDefault())
     }
 }

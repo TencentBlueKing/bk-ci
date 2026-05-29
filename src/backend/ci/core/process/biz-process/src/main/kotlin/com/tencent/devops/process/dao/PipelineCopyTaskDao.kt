@@ -1,12 +1,11 @@
 package com.tencent.devops.process.dao
 
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.process.Tables.T_PIPELINE_COPY_TASK
 import com.tencent.devops.model.process.tables.records.TPipelineCopyTaskRecord
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
-import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskStatus
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyStrategy
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyStrategy
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskUpdate
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -71,15 +70,15 @@ class PipelineCopyTaskDao {
                 taskName = taskName,
                 targetProjectId = targetProjectId,
                 pipelineCopyStrategy = pipelineCopyStrategy?.let { PipelineCopyStrategy.valueOf(it) },
-                status = PipelineCopyTaskStatus.valueOf(status),
+                status = PipelineBatchTaskStatus.valueOf(status),
                 pipelineCount = pipelineCount,
                 subPipelineCount = subPipelineCount,
                 pacCount = pacCount,
                 unprocessedCount = unprocessedCount,
                 highRiskCount = highRiskCount,
                 autoFinishCount = autoFinishCount,
-                createTime = createTime,
-                updateTime = updateTime
+                createTime = createTime.timestampmilli(),
+                updateTime = updateTime.timestampmilli()
             )
         }
     }

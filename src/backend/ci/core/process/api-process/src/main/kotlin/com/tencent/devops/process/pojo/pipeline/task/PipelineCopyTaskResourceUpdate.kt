@@ -1,5 +1,7 @@
 package com.tencent.devops.process.pojo.pipeline.task
 
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyAction
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyStrategy
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -13,6 +15,8 @@ data class PipelineCopyTaskResourceUpdate(
     val resourceType: PipelineDependentResourceType,
     @get:Schema(description = "资源ID", required = true)
     val resourceId: String,
+    @get:Schema(description = "复制策略")
+    val copyStrategy: PipelineCopyStrategy? = null,
     @get:Schema(description = "目标资源类型")
     val targetResourceType: PipelineDependentResourceType? = null,
     @get:Schema(description = "目标资源ID")
@@ -29,12 +33,8 @@ data class PipelineCopyTaskResourceUpdate(
     val targetNameExists: Boolean? = null,
     @get:Schema(description = "目标ID是否存在")
     val targetIdExists: Boolean? = null,
-    @get:Schema(description = "是否自动完成")
-    val autoFinish: Boolean? = null,
-    @get:Schema(description = "资源是否需要补齐")
-    val needCompletion: Boolean? = null,
-    @get:Schema(description = "资源是否需要迁移")
-    val needTransfer: Boolean? = null,
+    @get:Schema(description = "资源复制动作")
+    val copyAction: PipelineCopyAction? = null,
     @get:Schema(description = "用户是否已确认处理完成")
     val confirmed: Boolean? = null
 )

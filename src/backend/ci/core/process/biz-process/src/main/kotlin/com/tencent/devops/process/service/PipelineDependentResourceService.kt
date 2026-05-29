@@ -406,7 +406,7 @@ class PipelineDependentResourceService @Autowired constructor(
         return if (dispatchType.agentType == AgentType.ID) {
             PipelineDependentResourceRef(
                 projectId = projectId,
-                resourceType = PipelineDependentResourceType.ENVIRONMENT,
+                resourceType = PipelineDependentResourceType.BUILD_ENV,
                 refType = PipelineDependentResourceRefType.ID,
                 refValue = dispatchType.value
             )
@@ -416,7 +416,7 @@ class PipelineDependentResourceService @Autowired constructor(
             val envValue = EnvUtils.parseEnv(dispatchType.value, variables)
             PipelineDependentResourceRef(
                 projectId = envProjectId,
-                resourceType = PipelineDependentResourceType.ENVIRONMENT,
+                resourceType = PipelineDependentResourceType.BUILD_ENV,
                 refType = PipelineDependentResourceRefType.NAME,
                 refValue = envValue
             )
@@ -476,7 +476,7 @@ class PipelineDependentResourceService @Autowired constructor(
                         ref = ref
                     )
                 )
-                PipelineDependentResourceType.ENVIRONMENT -> resolveEnvironmentRef(
+                PipelineDependentResourceType.BUILD_ENV -> resolveEnvironmentRef(
                     userId = userId,
                     ref = ref
                 )?.let { resources.add(it) }

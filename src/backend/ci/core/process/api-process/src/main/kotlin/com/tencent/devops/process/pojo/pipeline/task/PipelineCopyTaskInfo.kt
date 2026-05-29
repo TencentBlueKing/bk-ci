@@ -1,8 +1,8 @@
 package com.tencent.devops.process.pojo.pipeline.task
 
-import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskStatus
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyStrategy
 import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
 
 @Schema(description = "流水线复制任务信息")
 data class PipelineCopyTaskInfo(
@@ -17,7 +17,7 @@ data class PipelineCopyTaskInfo(
     @get:Schema(description = "流水线ID处理策略")
     val pipelineCopyStrategy: PipelineCopyStrategy? = null,
     @get:Schema(description = "复制状态", required = true)
-    val status: PipelineCopyTaskStatus,
+    val status: PipelineBatchTaskStatus,
     @get:Schema(description = "流水线复制数量", required = true)
     val pipelineCount: Int = 0,
     @get:Schema(description = "自动添加的子流水线数量", required = true)
@@ -30,8 +30,10 @@ data class PipelineCopyTaskInfo(
     val highRiskCount: Int = 0,
     @get:Schema(description = "自动完成的资源数量", required = true)
     val autoFinishCount: Int = 0,
+    @get:Schema(description = "创建人", required = true)
+    val creator: String,
     @get:Schema(description = "创建时间")
-    val createTime: LocalDateTime? = null,
+    val createTime: Long? = null,
     @get:Schema(description = "更新时间")
-    val updateTime: LocalDateTime? = null
+    val updateTime: Long? = null
 )

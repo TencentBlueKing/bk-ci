@@ -3,7 +3,6 @@ package com.tencent.devops.process.pojo.pipeline.task
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
 
 @Schema(description = "流水线批量任务明细信息")
 data class PipelineBatchTaskDetailInfo(
@@ -34,11 +33,11 @@ data class PipelineBatchTaskDetailInfo(
     @get:Schema(description = "错误信息")
     val errorMessage: String?,
     @get:Schema(description = "开始时间")
-    val startTime: LocalDateTime?,
+    val startTime: Long?,
     @get:Schema(description = "结束时间")
-    val endTime: LocalDateTime?,
+    val endTime: Long?,
     @get:Schema(description = "创建时间")
-    val createTime: LocalDateTime? = null,
+    val createTime: Long? = null,
     @get:Schema(description = "更新时间")
-    val updateTime: LocalDateTime? = null
+    val updateTime: Long? = null
 )

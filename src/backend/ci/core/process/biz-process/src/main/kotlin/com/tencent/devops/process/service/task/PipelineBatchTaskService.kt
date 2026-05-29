@@ -101,6 +101,8 @@ class PipelineBatchTaskService @Autowired constructor(
                 status = PipelineBatchTaskStatus.DRAFT,
                 step = PipelineBatchTaskStep.CONFIG,
                 totalCount = details.size,
+                subPipelineCount = details.count { it.subPipeline },
+                pacCount = details.count { it.pac },
                 creator = userId
             )
             pipelineBatchTaskDetailDao.batchCreate(
