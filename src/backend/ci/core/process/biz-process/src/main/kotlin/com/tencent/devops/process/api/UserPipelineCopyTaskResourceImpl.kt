@@ -6,12 +6,12 @@ import com.tencent.devops.process.api.user.UserPipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyAction
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyPipelineInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyResourceInfoGroup
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyResourceGroup
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskConfigRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteProgress
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteSummary
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceInfo
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTask
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.service.task.PipelineCopyTaskService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -24,8 +24,8 @@ class UserPipelineCopyTaskResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         taskId: String
-    ): Result<PipelineCopyTaskInfo?> {
-        return Result(pipelineCopyTaskService.get(projectId = projectId, taskId = taskId))
+    ): Result<PipelineCopyTask?> {
+        return Result(pipelineCopyTaskService.get(userId = userId, projectId = projectId, taskId = taskId))
     }
 
     override fun saveConfigDraft(
@@ -50,7 +50,14 @@ class UserPipelineCopyTaskResourceImpl @Autowired constructor(
         taskId: String,
         request: PipelineCopyTaskConfigRequest
     ): Result<Boolean> {
-        throw UnsupportedOperationException("analyzeResourceDepend is not implemented")
+        return Result(
+            pipelineCopyTaskService.analyzeResourceDepend(
+                userId = userId,
+                projectId = projectId,
+                taskId = taskId,
+                request = request
+            )
+        )
     }
 
     override fun listResource(
@@ -60,9 +67,10 @@ class UserPipelineCopyTaskResourceImpl @Autowired constructor(
         resourceType: PipelineDependentResourceType?,
         resourceName: String?,
         copyAction: PipelineCopyAction?
-    ): Result<List<PipelineCopyResourceInfoGroup>> {
+    ): Result<List<PipelineCopyResourceGroup>> {
         return Result(
             pipelineCopyTaskService.listResource(
+                userId = userId,
                 projectId = projectId,
                 taskId = taskId,
                 resourceType = resourceType,
@@ -82,6 +90,7 @@ class UserPipelineCopyTaskResourceImpl @Autowired constructor(
     ): Result<List<PipelineCopyPipelineInfo>> {
         return Result(
             pipelineCopyTaskService.listResourcePipelines(
+                userId = userId,
                 projectId = projectId,
                 taskId = taskId,
                 resourceType = resourceType,
@@ -95,30 +104,30 @@ class UserPipelineCopyTaskResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         taskId: String,
-        resources: List<PipelineCopyTaskResourceInfo>
+        resources: List<PipelineCopyTaskResource>
     ): Result<Boolean> {
-        return Result(
-            pipelineCopyTaskService.saveResourceDraft(
-                projectId = projectId,
-                taskId = taskId,
-                resources = resources
-            )
+        pipelineCopyTaskService.saveResourceDraft(
+            userId = userId,
+            projectId = projectId,
+            taskId = taskId,
+            resources = resources
         )
+        return Result(true)
     }
 
     override fun prepareExecute(
         userId: String,
         projectId: String,
         taskId: String,
-        resources: List<PipelineCopyTaskResourceInfo>
+        resources: List<PipelineCopyTaskResource>
     ): Result<Boolean> {
-        return Result(
-            pipelineCopyTaskService.prepareExecute(
-                projectId = projectId,
-                taskId = taskId,
-                resources = resources
-            )
+        pipelineCopyTaskService.prepareExecute(
+            userId = userId,
+            projectId = projectId,
+            taskId = taskId,
+            resources = resources
         )
+        return Result(true)
     }
 
     override fun execute(
@@ -126,7 +135,12 @@ class UserPipelineCopyTaskResourceImpl @Autowired constructor(
         projectId: String,
         taskId: String
     ): Result<Boolean> {
-        throw UnsupportedOperationException("execute is not implemented")
+        pipelineCopyTaskService.execute(
+            userId = userId,
+            projectId = projectId,
+            taskId = taskId
+        )
+        return Result(true)
     }
 
     override fun executeSummary(

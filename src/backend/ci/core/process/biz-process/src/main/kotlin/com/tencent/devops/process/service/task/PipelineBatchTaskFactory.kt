@@ -5,8 +5,8 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatus
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetail
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -27,7 +27,7 @@ class PipelineBatchTaskFactory @Autowired constructor(
         status: PipelineBatchTaskDetailStatus,
         pipelineIds: List<String>,
         subPipeline: Boolean = false
-    ): List<PipelineBatchTaskDetailInfo> {
+    ): List<PipelineBatchTaskDetail> {
         val pipelineInfos = pipelineInfoDao.listInfoByPipelineIds(
             dslContext = dslContext,
             projectId = projectId,
@@ -50,7 +50,7 @@ class PipelineBatchTaskFactory @Autowired constructor(
             .map { it.pipelineId }
             .toSet()
         return pipelineIds.map { pipelineId ->
-            PipelineBatchTaskDetailInfo(
+            PipelineBatchTaskDetail(
                 taskId = taskId,
                 projectId = projectId,
                 taskType = taskType,

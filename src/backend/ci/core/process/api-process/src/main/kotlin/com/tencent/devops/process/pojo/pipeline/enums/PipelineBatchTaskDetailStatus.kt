@@ -1,4 +1,4 @@
-package com.tencent.devops.process.pojo.pipeline.task
+package com.tencent.devops.process.pojo.pipeline.enums
 
 import io.swagger.v3.oas.annotations.media.Schema
 

@@ -1,29 +1,33 @@
 package com.tencent.devops.process.service.task
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineBatchTaskDao
-import com.tencent.devops.process.dao.PipelineBatchTaskDetailDao
 import com.tencent.devops.process.dao.PipelineCopyTaskResourceDao
 import com.tencent.devops.process.dao.PipelineCopyTaskResourceRelDao
-import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyAction
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchCopyTaskParam
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatus
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskInfo
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskAnalyzeEvent
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskExecuteEvent
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyPipelineInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyResourceInfoGroup
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyResourceGroup
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskConfigRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteProgress
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteSummary
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceStatus
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTask
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceStatus
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSummary
 import org.jooq.DSLContext
@@ -35,17 +39,18 @@ import org.springframework.stereotype.Service
 class PipelineCopyTaskService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineBatchTaskDao: PipelineBatchTaskDao,
-    private val pipelineBatchTaskDetailDao: PipelineBatchTaskDetailDao,
     private val pipelineCopyTaskResourceDao: PipelineCopyTaskResourceDao,
     private val pipelineCopyTaskResourceRelDao: PipelineCopyTaskResourceRelDao,
-    private val pipelinePermissionService: PipelinePermissionService,
+    private val authProjectApi: AuthProjectApi,
+    private val sampleEventDispatcher: SampleEventDispatcher,
+    val pipelineAuthServiceCode: PipelineAuthServiceCode,
 ) {
 
-    fun get(projectId: String, taskId: String): PipelineCopyTaskInfo? {
+    fun get(userId: String, projectId: String, taskId: String): PipelineCopyTask? {
         val task = getTask(projectId = projectId, taskId = taskId)
         val param = parseParam(task)
         val summary = parseSummary(task)
-        return PipelineCopyTaskInfo(
+        return PipelineCopyTask(
             taskId = task.taskId,
             projectId = task.projectId,
             taskName = task.taskName,
@@ -71,12 +76,8 @@ class PipelineCopyTaskService @Autowired constructor(
         request: PipelineCopyTaskConfigRequest
     ): Boolean {
         val targetProjectId = request.targetProjectId
-        if (!pipelinePermissionService.checkProjectManager(userId = userId, projectId = targetProjectId)) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PERMISSION_NOT_PROJECT_MANAGER,
-                params = arrayOf(userId, targetProjectId)
-            )
-        }
+        checkProjectManager(userId = userId, projectId = projectId)
+        checkProjectManager(userId = userId, projectId = targetProjectId)
         val task = getTask(projectId = projectId, taskId = taskId)
         if (task.status != PipelineBatchTaskStatus.DRAFT) {
             throw ErrorCodeException(
@@ -99,14 +100,43 @@ class PipelineCopyTaskService @Autowired constructor(
         ) == 1
     }
 
+    fun analyzeResourceDepend(
+        userId: String,
+        projectId: String,
+        taskId: String,
+        request: PipelineCopyTaskConfigRequest
+    ): Boolean {
+        saveConfigDraft(
+            userId = userId,
+            projectId = projectId,
+            taskId = taskId,
+            request = request
+        )
+        sampleEventDispatcher.dispatch(
+            PipelineBatchTaskAnalyzeEvent(
+                taskId = taskId,
+                taskType = PipelineBatchTaskType.PIPELINE_COPY,
+                projectId = projectId
+            )
+        )
+        return true
+    }
+
     fun listResource(
+        userId: String,
         projectId: String,
         taskId: String,
         resourceType: PipelineDependentResourceType? = null,
         resourceName: String? = null,
         copyAction: PipelineCopyAction? = null
-    ): List<PipelineCopyResourceInfoGroup> {
-        getTask(projectId = projectId, taskId = taskId)
+    ): List<PipelineCopyResourceGroup> {
+        val task = getTask(projectId = projectId, taskId = taskId)
+        val param = parseParam(task) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
+            params = arrayOf(taskId)
+        )
+        checkProjectVisit(userId = userId, projectId = projectId)
+        checkProjectVisit(userId = userId, projectId = param.targetProjectId)
         return pipelineCopyTaskResourceDao.list(
             dslContext = dslContext,
             projectId = projectId,
@@ -114,11 +144,19 @@ class PipelineCopyTaskService @Autowired constructor(
             resourceType = resourceType,
             resourceName = resourceName,
             copyAction = copyAction
-        ).groupBy { it.resourceType }
+        ).filterNot {
+            // 流水线只需要展示冲突的资源
+            it.resourceType == PipelineDependentResourceType.PIPELINE &&
+                !it.targetNameExists &&
+                !it.targetIdExists
+        }.groupBy { it.resourceType }
             .map { (type, resources) ->
-                PipelineCopyResourceInfoGroup(
+                PipelineCopyResourceGroup(
                     resourceType = type,
-                    totalCount = resources.size.toLong(),
+                    totalCount = resources.size,
+                    unprocessedCount = resources.count {
+                        it.status == PipelineCopyTaskResourceStatus.UNPROCESSED
+                    },
                     sourceProjectReferCount = 0,
                     resources = resources
                 )
@@ -126,13 +164,20 @@ class PipelineCopyTaskService @Autowired constructor(
     }
 
     fun listResourcePipelines(
+        userId: String,
         projectId: String,
         taskId: String,
         resourceType: PipelineDependentResourceType,
         resourceId: String,
         pipelineName: String?
     ): List<PipelineCopyPipelineInfo> {
-        getTask(projectId = projectId, taskId = taskId)
+        val task = getTask(projectId = projectId, taskId = taskId)
+        val param = parseParam(task) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
+            params = arrayOf(taskId)
+        )
+        checkProjectVisit(userId = userId, projectId = projectId)
+        checkProjectVisit(userId = userId, projectId = param.targetProjectId)
         return pipelineCopyTaskResourceRelDao.listResourcePipelines(
             dslContext = dslContext,
             projectId = projectId,
@@ -144,19 +189,29 @@ class PipelineCopyTaskService @Autowired constructor(
     }
 
     fun saveResourceDraft(
+        userId: String,
         projectId: String,
         taskId: String,
-        resources: List<PipelineCopyTaskResourceInfo>
-    ): Boolean {
-        getTask(projectId = projectId, taskId = taskId)
-        var success = true
+        resources: List<PipelineCopyTaskResource>
+    ) {
+        val task = getTask(projectId = projectId, taskId = taskId)
+        if (task.status != PipelineBatchTaskStatus.DRAFT) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_SAVE_CONFIG,
+                params = arrayOf(taskId, task.status.name)
+            )
+        }
+        val param = parseParam(task) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
+            params = arrayOf(taskId)
+        )
+        checkProjectManager(userId = userId, projectId = projectId)
+        checkProjectManager(userId = userId, projectId = param.targetProjectId)
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            resources.forEach { resource ->
-                val copyStrategy = requireNotNull(resource.copyStrategy) {
-                    "copyStrategy cannot be null when save resource draft"
-                }
-                val updateCount = pipelineCopyTaskResourceDao.updateDraft(
+            resources.filter { it.copyStrategy != null }.forEach { resource ->
+                val copyStrategy = resource.copyStrategy!!
+                pipelineCopyTaskResourceDao.update(
                     dslContext = transactionContext,
                     update = PipelineCopyTaskResourceUpdate(
                         projectId = projectId,
@@ -169,56 +224,85 @@ class PipelineCopyTaskService @Autowired constructor(
                         status = PipelineCopyTaskResourceStatus.PROCESSED
                     )
                 )
-                success = success && updateCount == 1
             }
-            refreshSummary(
-                dslContext = transactionContext,
-                projectId = projectId,
-                taskId = taskId
-            )
         }
-        return success
     }
 
     fun prepareExecute(
+        userId: String,
         projectId: String,
         taskId: String,
-        resources: List<PipelineCopyTaskResourceInfo>
-    ): Boolean {
-        val saveResult = saveResourceDraft(
+        resources: List<PipelineCopyTaskResource>
+    ) {
+        val unprocessedResources = resources.filter { it.copyStrategy == null }.map { it.resourceName }
+        if (unprocessedResources.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_EMPTY,
+                params = arrayOf(taskId, unprocessedResources.joinToString(","))
+            )
+        }
+        saveResourceDraft(
+            userId = userId,
             projectId = projectId,
             taskId = taskId,
             resources = resources
         )
-        val unprocessedCount = pipelineCopyTaskResourceDao.list(
+        val totalCount = pipelineCopyTaskResourceDao.count(
             dslContext = dslContext,
             projectId = projectId,
             taskId = taskId
-        ).count { it.status == PipelineCopyTaskResourceStatus.UNPROCESSED }
+        )
+        val unProcessedCount = pipelineCopyTaskResourceDao.count(
+            dslContext = dslContext,
+            projectId = projectId,
+            taskId = taskId,
+            status = PipelineCopyTaskResourceStatus.UNPROCESSED
+        )
+        if (unProcessedCount > 0) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_NOT_ALL_PROCESSED,
+                params = arrayOf(taskId, unProcessedCount.toString())
+            )
+        }
+    }
+
+    fun execute(
+        userId: String,
+        projectId: String,
+        taskId: String
+    ) {
+        val task = getTask(projectId = projectId, taskId = taskId)
+        if (task.status != PipelineBatchTaskStatus.DRAFT) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_EXECUTE,
+                params = arrayOf(taskId, task.status.name)
+            )
+        }
+        val param = parseParam(task) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
+            params = arrayOf(taskId)
+        )
+        checkProjectManager(userId = userId, projectId = projectId)
+        checkProjectManager(userId = userId, projectId = param.targetProjectId)
+
+        val unprocessedCount = pipelineCopyTaskResourceDao.count(
+            dslContext = dslContext,
+            projectId = projectId,
+            taskId = taskId,
+            status = PipelineCopyTaskResourceStatus.UNPROCESSED
+        )
         if (unprocessedCount > 0) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_NOT_ALL_PROCESSED,
                 params = arrayOf(taskId, unprocessedCount.toString())
             )
         }
-        return saveResult
-    }
-
-    fun executeSummary(
-        projectId: String,
-        taskId: String
-    ): PipelineCopyTaskExecuteSummary {
-        val task = getTask(projectId = projectId, taskId = taskId)
-        val resources = pipelineCopyTaskResourceDao.list(
-            dslContext = dslContext,
-            projectId = projectId,
-            taskId = taskId
-        )
-        return PipelineCopyTaskExecuteSummary(
-            pipelineCount = task.totalCount.toLong(),
-            needCompletionCount = resources.count { it.copyAction == PipelineCopyAction.NEED_COMPLETION }.toLong(),
-            needTransferCount = resources.count { it.copyAction == PipelineCopyAction.NEED_TRANSFER }.toLong(),
-            autoFinishCount = resources.count { it.copyAction == PipelineCopyAction.AUTO_FINISH }.toLong()
+        sampleEventDispatcher.dispatch(
+            PipelineBatchTaskExecuteEvent(
+                taskId = taskId,
+                taskType = PipelineBatchTaskType.PIPELINE_COPY,
+                projectId = projectId
+            )
         )
     }
 
@@ -229,8 +313,23 @@ class PipelineCopyTaskService @Autowired constructor(
         val task = getTask(projectId = projectId, taskId = taskId)
         return PipelineCopyTaskExecuteProgress(
             status = task.status,
-            totalCount = task.totalCount.toLong(),
-            executedCount = executedCount(task)
+            totalCount = task.totalCount,
+            executedCount = task.successCount + task.failedCount
+        )
+    }
+
+    fun executeSummary(
+        projectId: String,
+        taskId: String
+    ): PipelineCopyTaskExecuteSummary {
+        val task = getTask(projectId = projectId, taskId = taskId)
+        val summary = parseSummary(task)
+
+        return PipelineCopyTaskExecuteSummary(
+            pipelineCount = task.totalCount,
+            needCompletionCount = summary.needCompletionCount,
+            needTransferCount = summary.needCompletionCount,
+            autoFinishCount = summary.autoFinishCount
         )
     }
 
@@ -254,7 +353,7 @@ class PipelineCopyTaskService @Autowired constructor(
         ) == 1
     }
 
-    private fun getTask(projectId: String, taskId: String): PipelineBatchTaskInfo {
+    private fun getTask(projectId: String, taskId: String): PipelineBatchTask {
         val task = pipelineBatchTaskDao.get(
             dslContext = dslContext,
             projectId = projectId,
@@ -272,54 +371,45 @@ class PipelineCopyTaskService @Autowired constructor(
         return task
     }
 
-    private fun parseParam(task: PipelineBatchTaskInfo): PipelineBatchCopyTaskParam? {
+    private fun parseParam(task: PipelineBatchTask): PipelineBatchCopyTaskParam? {
         return task.taskParam?.takeIf { it.isNotBlank() }?.let {
             JsonUtil.to(it, PipelineBatchCopyTaskParam::class.java)
         }
     }
 
-    private fun parseSummary(task: PipelineBatchTaskInfo): PipelineCopyTaskSummary {
+    private fun parseSummary(task: PipelineBatchTask): PipelineCopyTaskSummary {
         return task.taskSummary?.takeIf { it.isNotBlank() }?.let {
             JsonUtil.to(it, PipelineCopyTaskSummary::class.java)
         } ?: PipelineCopyTaskSummary()
     }
 
-    private fun refreshSummary(
-        dslContext: DSLContext,
-        projectId: String,
-        taskId: String
+    private fun checkProjectVisit(
+        userId: String,
+        projectId: String
     ) {
-        val resources = pipelineCopyTaskResourceDao.list(
-            dslContext = dslContext,
-            projectId = projectId,
-            taskId = taskId
-        )
-        pipelineBatchTaskDao.update(
-            dslContext = dslContext,
-            update = PipelineBatchTaskUpdate(
-                projectId = projectId,
-                taskId = taskId,
-                taskSummary = JsonUtil.toJson(
-                    PipelineCopyTaskSummary(
-                        unprocessedCount = resources.count { it.status == PipelineCopyTaskResourceStatus.UNPROCESSED },
-                        highRiskCount = resources.count { it.highRisk },
-                        autoFinishCount = resources.count { it.copyAction == PipelineCopyAction.AUTO_FINISH }
-                    ),
-                    formatted = false
-                )
+        if (!authProjectApi.validateUserProjectPermission(
+                user = userId,
+                serviceCode = pipelineAuthServiceCode,
+                projectCode = projectId,
+                permission = AuthPermission.VISIT
             )
-        )
+        ) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.USER_NOT_HAVE_PROJECT_PERMISSIONS,
+                params = arrayOf(userId, projectId)
+            )
+        }
     }
 
-    private fun executedCount(task: PipelineBatchTaskInfo): Long {
-        val summaries = pipelineBatchTaskDetailDao.detailStatusSummary(
-            dslContext = dslContext,
-            projectId = task.projectId,
-            taskId = task.taskId,
-            taskType = task.taskType
-        )
-        return summaries.filter {
-            it.status == PipelineBatchTaskDetailStatus.SUCCESS || it.status == PipelineBatchTaskDetailStatus.FAILED
-        }.sumOf { it.count }
+    private fun checkProjectManager(
+        userId: String,
+        projectId: String
+    ) {
+        if (!authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PERMISSION_NOT_PROJECT_MANAGER,
+                params = arrayOf(userId, projectId)
+            )
+        }
     }
 }

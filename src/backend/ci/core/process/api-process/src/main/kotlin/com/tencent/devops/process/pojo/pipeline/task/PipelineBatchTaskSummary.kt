@@ -11,6 +11,10 @@ data class PipelineCopyTaskSummary(
     val unprocessedCount: Int = 0,
     @get:Schema(description = "高风险资源数", required = true)
     val highRiskCount: Int = 0,
-    @get:Schema(description = "自动完成的资源数量", required = true)
-    val autoFinishCount: Int = 0
+    @get:Schema(description = "资源需要补齐数量", required = true)
+    val needCompletionCount: Int = 0,
+    @get:Schema(description = "资源需要迁移数量", required = true)
+    val needTransferCount: Int = 0,
+    @get:Schema(description = "自动完成数量", required = true)
+    val autoFinishCount: Int = 0,
 ) : PipelineBatchTaskSummary

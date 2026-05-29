@@ -6,12 +6,12 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyAction
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyPipelineInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyResourceInfoGroup
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyResourceGroup
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskConfigRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteProgress
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteSummary
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceInfo
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTask
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -26,7 +26,7 @@ import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
-@Tag(name = "USER_PIPELINE_COPY", description = "用户-流水线复制资源")
+@Tag(name = "USER_PIPELINE_COPY_TASK", description = "用户-流水线复制资源")
 @Path("/user/pipeline/copy/{projectId}/tasks")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -46,7 +46,7 @@ interface UserPipelineCopyTaskResource {
         @Parameter(description = "任务ID", required = true)
         @PathParam("taskId")
         taskId: String
-    ): Result<PipelineCopyTaskInfo?>
+    ): Result<PipelineCopyTask?>
 
     @Operation(summary = "保存流水线复制配置草稿")
     @POST
@@ -105,7 +105,7 @@ interface UserPipelineCopyTaskResource {
         @Parameter(description = "资源复制动作", required = false)
         @QueryParam("copyAction")
         copyAction: PipelineCopyAction? = null
-    ): Result<List<PipelineCopyResourceInfoGroup>>
+    ): Result<List<PipelineCopyResourceGroup>>
 
     @Operation(summary = "查询流水线复制资源关联的流水线")
     @GET
@@ -145,7 +145,7 @@ interface UserPipelineCopyTaskResource {
         @PathParam("taskId")
         taskId: String,
         @Parameter(description = "流水线复制资源信息", required = true)
-        resources: List<PipelineCopyTaskResourceInfo>
+        resources: List<PipelineCopyTaskResource>
     ): Result<Boolean>
 
     @Operation(summary = "准备执行流水线复制")
@@ -162,7 +162,7 @@ interface UserPipelineCopyTaskResource {
         @PathParam("taskId")
         taskId: String,
         @Parameter(description = "流水线复制资源信息", required = true)
-        resources: List<PipelineCopyTaskResourceInfo>
+        resources: List<PipelineCopyTaskResource>
     ): Result<Boolean>
 
     @Operation(summary = "执行流水线复制")

@@ -1,27 +1,25 @@
 package com.tencent.devops.process.dao
 
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.api.util.toLocalDateTime
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BATCH_TASK_DETAIL
 import com.tencent.devops.model.process.tables.records.TPipelineBatchTaskDetailRecord
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatus
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetail
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatusSummary
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
 
 @Repository
 class PipelineBatchTaskDetailDao {
 
     fun batchCreate(
         dslContext: DSLContext,
-        details: List<PipelineBatchTaskDetailInfo>
+        details: List<PipelineBatchTaskDetail>
     ): IntArray {
         if (details.isEmpty()) {
             return intArrayOf()
@@ -59,8 +57,8 @@ class PipelineBatchTaskDetailDao {
                     detail.change,
                     detail.status.name,
                     detail.errorMessage,
-                    detail.startTime?.let(::toLocalDateTime),
-                    detail.endTime?.let(::toLocalDateTime)
+                    detail.startTime?.toLocalDateTime(),
+                    detail.endTime?.toLocalDateTime()
                 )
             }
         }
@@ -108,7 +106,7 @@ class PipelineBatchTaskDetailDao {
         resourceIds: Set<String>? = null,
         offset: Int? = null,
         limit: Int? = null
-    ): List<PipelineBatchTaskDetailInfo> {
+    ): List<PipelineBatchTaskDetail> {
         if ((pipelineIds != null && pipelineIds.isEmpty()) || (resourceIds != null && resourceIds.isEmpty())) {
             return emptyList()
         }
@@ -141,7 +139,7 @@ class PipelineBatchTaskDetailDao {
         projectId: String,
         taskId: String,
         change: Boolean? = null
-    ): List<PipelineBatchTaskDetailInfo> {
+    ): List<PipelineBatchTaskDetail> {
         return with(T_PIPELINE_BATCH_TASK_DETAIL) {
             dslContext.selectFrom(this)
                 .where(buildTaskConditions(projectId = projectId, taskId = taskId, change = change))
@@ -178,7 +176,7 @@ class PipelineBatchTaskDetailDao {
         projectId: String,
         taskId: String,
         pipelineId: String
-    ): PipelineBatchTaskDetailInfo? {
+    ): PipelineBatchTaskDetail? {
         return with(T_PIPELINE_BATCH_TASK_DETAIL) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
@@ -205,39 +203,6 @@ class PipelineBatchTaskDetailDao {
                 .and(TASK_ID.eq(taskId))
                 .and(PIPELINE_ID.`in`(pipelineIds))
                 .execute()
-        }
-    }
-
-    fun updateByPipelineIds(
-        dslContext: DSLContext,
-        projectId: String,
-        taskId: String,
-        pipelineIds: Set<String>,
-        status: PipelineBatchTaskDetailStatus? = null,
-        change: Boolean? = null
-    ): Int {
-        if (pipelineIds.isEmpty()) {
-            return 0
-        }
-        return with(T_PIPELINE_BATCH_TASK_DETAIL) {
-            var result = 0
-            if (status != null) {
-                result = dslContext.update(this)
-                    .set(STATUS, status.name)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(TASK_ID.eq(taskId))
-                    .and(PIPELINE_ID.`in`(pipelineIds))
-                    .execute()
-            }
-            if (change != null) {
-                result = dslContext.update(this)
-                    .set(CHANGE, change)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(TASK_ID.eq(taskId))
-                    .and(PIPELINE_ID.`in`(pipelineIds))
-                    .execute()
-            }
-            result
         }
     }
 
@@ -299,9 +264,9 @@ class PipelineBatchTaskDetailDao {
         }
     }
 
-    private fun convert(record: TPipelineBatchTaskDetailRecord): PipelineBatchTaskDetailInfo {
+    private fun convert(record: TPipelineBatchTaskDetailRecord): PipelineBatchTaskDetail {
         return with(record) {
-            PipelineBatchTaskDetailInfo(
+            PipelineBatchTaskDetail(
                 taskId = taskId,
                 projectId = projectId,
                 taskType = PipelineBatchTaskType.valueOf(taskType),
@@ -321,9 +286,5 @@ class PipelineBatchTaskDetailDao {
                 updateTime = updateTime.timestampmilli()
             )
         }
-    }
-
-    private fun toLocalDateTime(timestamp: Long): LocalDateTime {
-        return LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.systemDefault())
     }
 }

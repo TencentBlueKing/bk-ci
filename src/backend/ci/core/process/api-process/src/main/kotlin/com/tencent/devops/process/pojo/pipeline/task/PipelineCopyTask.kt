@@ -5,7 +5,7 @@ import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyStrategy
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(description = "流水线复制任务信息")
-data class PipelineCopyTaskInfo(
+data class PipelineCopyTask(
     @get:Schema(description = "任务ID", required = true)
     val taskId: String,
     @get:Schema(description = "项目ID", required = true)

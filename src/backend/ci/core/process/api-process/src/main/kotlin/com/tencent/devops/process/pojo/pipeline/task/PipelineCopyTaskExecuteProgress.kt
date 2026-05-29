@@ -8,7 +8,7 @@ data class PipelineCopyTaskExecuteProgress(
     @get:Schema(description = "任务状态", required = true)
     val status: PipelineBatchTaskStatus,
     @get:Schema(description = "任务总数", required = true)
-    val totalCount: Long,
+    val totalCount: Int,
     @get:Schema(description = "已执行数量", required = true)
-    val executedCount: Long
+    val executedCount: Int
 )

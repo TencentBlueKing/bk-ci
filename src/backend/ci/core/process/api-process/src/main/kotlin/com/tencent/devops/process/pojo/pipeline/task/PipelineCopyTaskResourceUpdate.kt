@@ -2,6 +2,7 @@ package com.tencent.devops.process.pojo.pipeline.task
 
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyAction
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyStrategy
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import io.swagger.v3.oas.annotations.media.Schema
 

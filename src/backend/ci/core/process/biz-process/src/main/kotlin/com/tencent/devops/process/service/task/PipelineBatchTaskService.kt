@@ -9,20 +9,17 @@ import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineBatchTaskDao
 import com.tencent.devops.process.dao.PipelineBatchTaskDetailDao
-import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
-import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStep
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateRequest
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatus
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetail
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatusSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskExecuteEvent
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
-import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
@@ -33,11 +30,8 @@ class PipelineBatchTaskService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineBatchTaskDao: PipelineBatchTaskDao,
     private val pipelineBatchTaskDetailDao: PipelineBatchTaskDetailDao,
-    private val pipelineInfoDao: PipelineInfoDao,
     private val sampleEventDispatcher: SampleEventDispatcher,
     private val handlers: List<PipelineBatchTaskHandler>,
-    private val pipelineYamlInfoDao: PipelineYamlInfoDao,
-    private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     private val pipelineBatchTaskFactory: PipelineBatchTaskFactory
 ) {
 
@@ -48,7 +42,7 @@ class PipelineBatchTaskService @Autowired constructor(
         creator: String?,
         page: Int,
         pageSize: Int
-    ): SQLPage<PipelineBatchTaskInfo> {
+    ): SQLPage<PipelineBatchTask> {
         val (offset, limit) = PageUtil.convertPageSizeToSQLLimit(page = page, pageSize = pageSize)
         val count = pipelineBatchTaskDao.count(
             dslContext = dslContext,
@@ -109,13 +103,6 @@ class PipelineBatchTaskService @Autowired constructor(
                 dslContext = transactionContext,
                 details = details
             )
-            handler.create(
-                dslContext = transactionContext,
-                userId = userId,
-                projectId = projectId,
-                taskId = taskId,
-                request = request
-            )
         }
         sampleEventDispatcher.dispatch(
             PipelineBatchTaskCreateEvent(
@@ -127,7 +114,7 @@ class PipelineBatchTaskService @Autowired constructor(
         return taskId
     }
 
-    fun get(projectId: String, taskId: String): PipelineBatchTaskInfo? {
+    fun get(projectId: String, taskId: String): PipelineBatchTask? {
         return pipelineBatchTaskDao.get(dslContext = dslContext, projectId = projectId, taskId = taskId)
     }
 
@@ -140,7 +127,7 @@ class PipelineBatchTaskService @Autowired constructor(
         subPipeline: Boolean?,
         page: Int,
         pageSize: Int
-    ): SQLPage<PipelineBatchTaskDetailInfo> {
+    ): SQLPage<PipelineBatchTaskDetail> {
         val (offset, limit) = PageUtil.convertPageSizeToSQLLimit(page = page, pageSize = pageSize)
         val count = pipelineBatchTaskDetailDao.count(
             dslContext = dslContext,
@@ -218,6 +205,31 @@ class PipelineBatchTaskService @Autowired constructor(
             taskId = taskId,
             pipelineIds = setOf(pipelineId),
             status = getHandler(detail.taskType).detailStatusWhenCreate(),
+            change = true
+        )
+    }
+
+    fun restoreAllPipelines(
+        projectId: String,
+        taskId: String
+    ) {
+        val task = getTask(projectId = projectId, taskId = taskId)
+        val pipelineIds = pipelineBatchTaskDetailDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            taskId = taskId,
+            status = PipelineBatchTaskDetailStatus.EXCLUDED,
+            subPipeline = false
+        ).map { it.pipelineId }.toSet()
+        if (pipelineIds.isEmpty()) {
+            return
+        }
+        pipelineBatchTaskDetailDao.updateStatus(
+            dslContext = dslContext,
+            projectId = projectId,
+            taskId = taskId,
+            pipelineIds = pipelineIds,
+            status = getHandler(task.taskType).detailStatusWhenCreate(),
             change = true
         )
     }
@@ -305,7 +317,7 @@ class PipelineBatchTaskService @Autowired constructor(
         }
     }
 
-    private fun getTask(projectId: String, taskId: String): PipelineBatchTaskInfo {
+    private fun getTask(projectId: String, taskId: String): PipelineBatchTask {
         return pipelineBatchTaskDao.get(
             dslContext = dslContext,
             projectId = projectId,
@@ -320,7 +332,7 @@ class PipelineBatchTaskService @Autowired constructor(
         projectId: String,
         taskId: String,
         pipelineId: String
-    ): PipelineBatchTaskDetailInfo {
+    ): PipelineBatchTaskDetail {
         return pipelineBatchTaskDetailDao.get(
             dslContext = dslContext,
             projectId = projectId,

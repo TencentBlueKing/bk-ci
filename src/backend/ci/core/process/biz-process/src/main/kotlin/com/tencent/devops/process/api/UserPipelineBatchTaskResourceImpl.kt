@@ -5,10 +5,10 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineBatchTaskResource
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateRequest
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatus
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetail
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatusSummary
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskInfo
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.service.task.PipelineBatchTaskService
@@ -27,7 +27,7 @@ class UserPipelineBatchTaskResourceImpl @Autowired constructor(
         creator: String?,
         page: Int,
         pageSize: Int
-    ): Result<SQLPage<PipelineBatchTaskInfo>> {
+    ): Result<SQLPage<PipelineBatchTask>> {
         return Result(
             pipelineBatchTaskService.list(
                 projectId = projectId,
@@ -52,7 +52,7 @@ class UserPipelineBatchTaskResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         taskId: String
-    ): Result<PipelineBatchTaskInfo?> {
+    ): Result<PipelineBatchTask?> {
         return Result(pipelineBatchTaskService.get(projectId = projectId, taskId = taskId))
     }
 
@@ -66,7 +66,7 @@ class UserPipelineBatchTaskResourceImpl @Autowired constructor(
         subPipeline: Boolean?,
         page: Int,
         pageSize: Int
-    ): Result<SQLPage<PipelineBatchTaskDetailInfo>> {
+    ): Result<SQLPage<PipelineBatchTaskDetail>> {
         return Result(
             pipelineBatchTaskService.listDetails(
                 projectId = projectId,
@@ -124,6 +124,18 @@ class UserPipelineBatchTaskResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun restoreAllPipelines(
+        userId: String,
+        projectId: String,
+        taskId: String
+    ): Result<Boolean> {
+        pipelineBatchTaskService.restoreAllPipelines(
+            projectId = projectId,
+            taskId = taskId
+        )
+        return Result(true)
+    }
+
     override fun execute(
         userId: String,
         projectId: String,
@@ -157,5 +169,14 @@ class UserPipelineBatchTaskResourceImpl @Autowired constructor(
         taskId: String
     ): Result<Boolean> {
         return Result(pipelineBatchTaskService.retry(projectId = projectId, taskId = taskId))
+    }
+
+    override fun retryPipeline(
+        userId: String,
+        projectId: String,
+        taskId: String,
+        pipelineId: String
+    ): Result<Boolean> {
+        TODO("Not yet implemented")
     }
 }

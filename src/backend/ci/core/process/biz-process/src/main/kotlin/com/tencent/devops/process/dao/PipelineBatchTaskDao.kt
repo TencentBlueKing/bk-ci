@@ -3,7 +3,7 @@ package com.tencent.devops.process.dao
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BATCH_TASK
 import com.tencent.devops.model.process.tables.records.TPipelineBatchTaskRecord
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskInfo
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStep
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
@@ -74,7 +74,7 @@ class PipelineBatchTaskDao {
         dslContext: DSLContext,
         projectId: String,
         taskId: String
-    ): PipelineBatchTaskInfo? {
+    ): PipelineBatchTask? {
         return with(T_PIPELINE_BATCH_TASK) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
@@ -114,7 +114,7 @@ class PipelineBatchTaskDao {
         creator: String?,
         offset: Int,
         limit: Int
-    ): List<PipelineBatchTaskInfo> {
+    ): List<PipelineBatchTask> {
         return with(T_PIPELINE_BATCH_TASK) {
             dslContext.selectFrom(this)
                 .where(
@@ -211,9 +211,9 @@ class PipelineBatchTaskDao {
         }
     }
 
-    private fun convert(record: TPipelineBatchTaskRecord): PipelineBatchTaskInfo {
+    private fun convert(record: TPipelineBatchTaskRecord): PipelineBatchTask {
         return with(record) {
-            PipelineBatchTaskInfo(
+            PipelineBatchTask(
                 taskId = taskId,
                 projectId = projectId,
                 taskName = taskName,

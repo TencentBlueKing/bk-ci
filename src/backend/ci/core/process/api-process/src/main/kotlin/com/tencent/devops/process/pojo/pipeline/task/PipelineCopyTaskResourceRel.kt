@@ -4,7 +4,7 @@ import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceT
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(description = "流水线复制任务资源关系")
-data class PipelineCopyTaskResourceRelInfo(
+data class PipelineCopyTaskResourceRel(
     @get:Schema(description = "任务ID", required = true)
     val taskId: String,
     @get:Schema(description = "项目ID", required = true)

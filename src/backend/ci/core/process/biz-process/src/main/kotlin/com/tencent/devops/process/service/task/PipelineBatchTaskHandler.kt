@@ -1,13 +1,12 @@
 package com.tencent.devops.process.service.task
 
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskAnalyzeEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateRequest
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskExecuteEvent
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskInfo
-import org.jooq.DSLContext
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 
 /**
  * 流水线批量任务处理器
@@ -35,14 +34,6 @@ interface PipelineBatchTaskHandler {
         request: PipelineBatchTaskCreateRequest
     ) = Unit
 
-    fun create(
-        dslContext: DSLContext,
-        userId: String,
-        projectId: String,
-        taskId: String,
-        request: PipelineBatchTaskCreateRequest
-    ) = Unit
-
     /**
      * 创建任务后的业务处理
      */
@@ -59,7 +50,7 @@ interface PipelineBatchTaskHandler {
     fun validateWhenExecute(
         userId: String,
         projectId: String,
-        task: PipelineBatchTaskInfo
+        task: PipelineBatchTask
     ) = Unit
 
     /**
@@ -73,6 +64,6 @@ interface PipelineBatchTaskHandler {
     fun validateWhenDelete(
         userId: String,
         projectId: String,
-        task: PipelineBatchTaskInfo
+        task: PipelineBatchTask
     ) = Unit
 }

@@ -8,8 +8,8 @@ import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyAction
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyStrategy
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyResourceProperties
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceStatus
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceStatus
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -21,7 +21,7 @@ class PipelineCopyTaskResourceDao {
 
     fun batchCreate(
         dslContext: DSLContext,
-        resources: List<PipelineCopyTaskResourceInfo>
+        resources: List<PipelineCopyTaskResource>
     ) {
         if (resources.isEmpty()) {
             return
@@ -82,11 +82,9 @@ class PipelineCopyTaskResourceDao {
         resourceIds: Set<String>? = null,
         resourceType: PipelineDependentResourceType? = null,
         resourceName: String? = null,
-        copyAction: PipelineCopyAction? = null
-    ): List<PipelineCopyTaskResourceInfo> {
-        if (resourceIds != null && resourceIds.isEmpty()) {
-            return emptyList()
-        }
+        copyAction: PipelineCopyAction? = null,
+        status: PipelineCopyTaskResourceStatus? = null
+    ): List<PipelineCopyTaskResource> {
         return with(T_PIPELINE_COPY_TASK_RESOURCE) {
             dslContext.selectFrom(this)
                 .where(
@@ -96,12 +94,41 @@ class PipelineCopyTaskResourceDao {
                         resourceIds = resourceIds,
                         resourceType = resourceType,
                         resourceName = resourceName,
-                        copyAction = copyAction
+                        copyAction = copyAction,
+                        status = status
                     )
                 )
                 .orderBy(RESOURCE_TYPE.asc(), RESOURCE_NAME.asc(), RESOURCE_ID.asc())
                 .fetch()
                 .map(::convert)
+        }
+    }
+
+    fun count(
+        dslContext: DSLContext,
+        projectId: String,
+        taskId: String,
+        resourceIds: Set<String>? = null,
+        resourceType: PipelineDependentResourceType? = null,
+        resourceName: String? = null,
+        copyAction: PipelineCopyAction? = null,
+        status: PipelineCopyTaskResourceStatus? = null
+    ): Long {
+        return with(T_PIPELINE_COPY_TASK_RESOURCE) {
+            dslContext.selectCount()
+                .from(this)
+                .where(
+                    buildConditions(
+                        projectId = projectId,
+                        taskId = taskId,
+                        resourceIds = resourceIds,
+                        resourceType = resourceType,
+                        resourceName = resourceName,
+                        copyAction = copyAction,
+                        status = status
+                    )
+                )
+                .fetchOne(0, Long::class.java) ?: 0L
         }
     }
 
@@ -146,31 +173,9 @@ class PipelineCopyTaskResourceDao {
         }
     }
 
-    fun updateDraft(
-        dslContext: DSLContext,
-        update: PipelineCopyTaskResourceUpdate
-    ): Int {
-        return with(T_PIPELINE_COPY_TASK_RESOURCE) {
-            dslContext.update(this)
-                .set(COPY_STRATEGY, update.copyStrategy?.name)
-                .set(
-                    TARGET_RESOURCE_PROPERTIES,
-                    update.targetResourceProperties?.let { JsonUtil.toJson(it, formatted = false) }
-                )
-                .set(COPY_ACTION, update.copyAction?.name)
-                .set(STATUS, update.status?.name)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .where(PROJECT_ID.eq(update.projectId))
-                .and(TASK_ID.eq(update.taskId))
-                .and(RESOURCE_TYPE.eq(update.resourceType.name))
-                .and(RESOURCE_ID.eq(update.resourceId))
-                .execute()
-        }
-    }
-
-    private fun convert(record: TPipelineCopyTaskResourceRecord): PipelineCopyTaskResourceInfo {
+    private fun convert(record: TPipelineCopyTaskResourceRecord): PipelineCopyTaskResource {
         return with(record) {
-            PipelineCopyTaskResourceInfo(
+            PipelineCopyTaskResource(
                 taskId = taskId,
                 projectId = projectId,
                 resourceType = PipelineDependentResourceType.valueOf(resourceType),
@@ -204,7 +209,8 @@ class PipelineCopyTaskResourceDao {
         resourceIds: Set<String>?,
         resourceType: PipelineDependentResourceType?,
         resourceName: String?,
-        copyAction: PipelineCopyAction?
+        copyAction: PipelineCopyAction?,
+        status: PipelineCopyTaskResourceStatus? = null
     ): List<Condition> {
         return with(T_PIPELINE_COPY_TASK_RESOURCE) {
             val conditions = mutableListOf<Condition>()
@@ -221,6 +227,9 @@ class PipelineCopyTaskResourceDao {
             }
             if (copyAction != null) {
                 conditions.add(COPY_ACTION.eq(copyAction.name))
+            }
+            if (status != null) {
+                conditions.add(STATUS.eq(status.name))
             }
             conditions
         }

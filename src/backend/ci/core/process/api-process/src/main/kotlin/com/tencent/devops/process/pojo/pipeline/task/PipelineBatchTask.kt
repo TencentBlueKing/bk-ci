@@ -6,7 +6,7 @@ import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(description = "流水线批量任务信息")
-data class PipelineBatchTaskInfo(
+data class PipelineBatchTask(
     @get:Schema(description = "任务ID", required = true)
     val taskId: String,
     @get:Schema(description = "项目ID", required = true)

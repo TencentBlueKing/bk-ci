@@ -5,10 +5,10 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateRequest
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatus
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetail
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatusSummary
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskInfo
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import io.swagger.v3.oas.annotations.Operation
@@ -60,7 +60,7 @@ interface UserPipelineBatchTaskResource {
         @QueryParam("pageSize")
         @DefaultValue("20")
         pageSize: Int
-    ): Result<SQLPage<PipelineBatchTaskInfo>>
+    ): Result<SQLPage<PipelineBatchTask>>
 
     @Operation(summary = "创建流水线批量任务")
     @POST
@@ -89,7 +89,7 @@ interface UserPipelineBatchTaskResource {
         @Parameter(description = "任务ID", required = true)
         @PathParam("taskId")
         taskId: String
-    ): Result<PipelineBatchTaskInfo?>
+    ): Result<PipelineBatchTask?>
 
     @Operation(summary = "查询流水线批量任务明细")
     @GET
@@ -124,7 +124,7 @@ interface UserPipelineBatchTaskResource {
         @QueryParam("pageSize")
         @DefaultValue("20")
         pageSize: Int
-    ): Result<SQLPage<PipelineBatchTaskDetailInfo>>
+    ): Result<SQLPage<PipelineBatchTaskDetail>>
 
     @Operation(summary = "查询流水线批量任务明细状态汇总")
     @GET
@@ -180,6 +180,21 @@ interface UserPipelineBatchTaskResource {
         pipelineId: String
     ): Result<Boolean>
 
+    @Operation(summary = "恢复全部已排除的流水线批量任务明细")
+    @POST
+    @Path("/{projectId}/tasks/{taskId}/pipelines/restore")
+    fun restoreAllPipelines(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "任务ID", required = true)
+        @PathParam("taskId")
+        taskId: String
+    ): Result<Boolean>
+
     @Operation(summary = "执行流水线批量任务")
     @POST
     @Path("/{projectId}/tasks/{taskId}/execute")
@@ -223,5 +238,23 @@ interface UserPipelineBatchTaskResource {
         @Parameter(description = "任务ID", required = true)
         @PathParam("taskId")
         taskId: String
+    ): Result<Boolean>
+
+    @Operation(summary = "重试单个失败流水线批量任务明细")
+    @POST
+    @Path("/{projectId}/tasks/{taskId}/pipelines/{pipelineId}/retry")
+    fun retryPipeline(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "任务ID", required = true)
+        @PathParam("taskId")
+        taskId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String
     ): Result<Boolean>
 }

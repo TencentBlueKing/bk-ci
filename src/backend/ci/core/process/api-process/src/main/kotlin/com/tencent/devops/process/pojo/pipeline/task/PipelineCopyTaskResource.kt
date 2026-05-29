@@ -2,11 +2,12 @@ package com.tencent.devops.process.pojo.pipeline.task
 
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyAction
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyStrategy
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(description = "流水线复制任务资源")
-data class PipelineCopyTaskResourceInfo(
+data class PipelineCopyTaskResource(
     @get:Schema(description = "任务ID", required = true)
     val taskId: String,
     @get:Schema(description = "项目ID", required = true)

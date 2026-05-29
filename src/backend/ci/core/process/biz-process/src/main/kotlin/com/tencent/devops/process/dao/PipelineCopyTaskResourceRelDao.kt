@@ -5,7 +5,7 @@ import com.tencent.devops.model.process.Tables.T_PIPELINE_COPY_TASK_RESOURCE_REL
 import com.tencent.devops.model.process.tables.records.TPipelineCopyTaskResourceRelRecord
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyPipelineInfo
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceRelInfo
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceRel
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -15,7 +15,7 @@ class PipelineCopyTaskResourceRelDao {
 
     fun batchCreate(
         dslContext: DSLContext,
-        relations: List<PipelineCopyTaskResourceRelInfo>
+        relations: List<PipelineCopyTaskResourceRel>
     ) {
         if (relations.isEmpty()) {
             return
@@ -54,7 +54,7 @@ class PipelineCopyTaskResourceRelDao {
         resourceType: PipelineDependentResourceType? = null,
         resourceName: String? = null,
         pipelineName: String? = null
-    ): List<PipelineCopyTaskResourceRelInfo> {
+    ): List<PipelineCopyTaskResourceRel> {
         if ((pipelineIds != null && pipelineIds.isEmpty()) || (resourceIds != null && resourceIds.isEmpty())) {
             return emptyList()
         }
@@ -157,9 +157,9 @@ class PipelineCopyTaskResourceRelDao {
         }
     }
 
-    private fun convert(record: TPipelineCopyTaskResourceRelRecord): PipelineCopyTaskResourceRelInfo {
+    private fun convert(record: TPipelineCopyTaskResourceRelRecord): PipelineCopyTaskResourceRel {
         return with(record) {
-            PipelineCopyTaskResourceRelInfo(
+            PipelineCopyTaskResourceRel(
                 taskId = taskId,
                 projectId = projectId,
                 pipelineId = pipelineId,
