@@ -107,9 +107,6 @@ class PipelineBatchTaskDetailDao {
         offset: Int? = null,
         limit: Int? = null
     ): List<PipelineBatchTaskDetail> {
-        if ((pipelineIds != null && pipelineIds.isEmpty()) || (resourceIds != null && resourceIds.isEmpty())) {
-            return emptyList()
-        }
         return with(T_PIPELINE_BATCH_TASK_DETAIL) {
             val query = dslContext.selectFrom(this)
                 .where(
@@ -131,20 +128,6 @@ class PipelineBatchTaskDetailDao {
             } else {
                 query.fetch().map(::convert)
             }
-        }
-    }
-
-    fun listByTaskId(
-        dslContext: DSLContext,
-        projectId: String,
-        taskId: String,
-        change: Boolean? = null
-    ): List<PipelineBatchTaskDetail> {
-        return with(T_PIPELINE_BATCH_TASK_DETAIL) {
-            dslContext.selectFrom(this)
-                .where(buildTaskConditions(projectId = projectId, taskId = taskId, change = change))
-                .fetch()
-                .map(::convert)
         }
     }
 

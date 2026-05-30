@@ -45,7 +45,13 @@ class UserPipelineBatchTaskResourceImpl @Autowired constructor(
         projectId: String,
         request: PipelineBatchTaskCreateRequest
     ): Result<String> {
-        return Result(pipelineBatchTaskService.create(userId = userId, projectId = projectId, request = request))
+        return Result(
+            pipelineBatchTaskService.create(
+                userId = userId,
+                projectId = projectId,
+                request = request
+            )
+        )
     }
 
     override fun get(

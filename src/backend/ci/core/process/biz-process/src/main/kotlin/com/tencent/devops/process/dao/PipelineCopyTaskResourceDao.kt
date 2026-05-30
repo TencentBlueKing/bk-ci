@@ -7,7 +7,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyAction
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyStrategy
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyResourceProperties
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyResourceProp
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceStatus
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
@@ -48,7 +48,8 @@ class PipelineCopyTaskResourceDao {
                     TARGET_NAME_EXISTS,
                     TARGET_ID_EXISTS,
                     COPY_ACTION,
-                    CONFIRMED
+                    CONFIRMED,
+                    PIPELINE_REFER_COUNT
                 ).values(
                     resource.taskId,
                     resource.projectId,
@@ -68,7 +69,8 @@ class PipelineCopyTaskResourceDao {
                     resource.targetNameExists,
                     resource.targetIdExists,
                     resource.copyAction.name,
-                    resource.confirmed
+                    resource.confirmed,
+                    resource.pipelineReferCount
                 ).onDuplicateKeyIgnore()
             }
         }
@@ -145,6 +147,23 @@ class PipelineCopyTaskResourceDao {
         }
     }
 
+    fun deleteByResourceIds(
+        dslContext: DSLContext,
+        projectId: String,
+        taskId: String,
+        resourceType: PipelineDependentResourceType,
+        resourceIds: Set<String>
+    ): Int {
+        return with(T_PIPELINE_COPY_TASK_RESOURCE) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TASK_ID.eq(taskId))
+                .and(RESOURCE_TYPE.eq(resourceType.name))
+                .and(RESOURCE_ID.`in`(resourceIds))
+                .execute()
+        }
+    }
+
     fun update(
         dslContext: DSLContext,
         update: PipelineCopyTaskResourceUpdate
@@ -197,6 +216,7 @@ class PipelineCopyTaskResourceDao {
                 targetIdExists = targetIdExists,
                 copyAction = PipelineCopyAction.valueOf(copyAction),
                 confirmed = confirmed,
+                pipelineReferCount = pipelineReferCount,
                 createTime = createTime.timestampmilli(),
                 updateTime = updateTime.timestampmilli()
             )
@@ -235,9 +255,9 @@ class PipelineCopyTaskResourceDao {
         }
     }
 
-    private fun toProperties(value: String?): PipelineCopyResourceProperties? {
+    private fun toProperties(value: String?): PipelineCopyResourceProp? {
         return value?.takeIf { it.isNotBlank() }?.let {
-            JsonUtil.to(it, PipelineCopyResourceProperties::class.java)
+            JsonUtil.to(it, PipelineCopyResourceProp::class.java)
         }
     }
 

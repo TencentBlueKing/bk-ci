@@ -174,6 +174,19 @@ class PipelineLabelDao {
         }
     }
 
+    fun getByName(
+        dslContext: DSLContext,
+        projectId: String,
+        name: String
+    ): TPipelineLabelRecord? {
+        with(TPipelineLabel.T_PIPELINE_LABEL) {
+            return dslContext.selectFrom(this)
+                .where(NAME.eq(name))
+                .and(PROJECT_ID.eq(projectId))
+                .fetchAny()
+        }
+    }
+
     fun getByIds(
         dslContext: DSLContext,
         projectId: String,

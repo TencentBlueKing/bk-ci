@@ -61,6 +61,7 @@ class PipelineBatchTaskFactory @Autowired constructor(
                 subPipeline = subPipeline,
                 locked = pipelineLockedMap[pipelineId] ?: false,
                 versionStatus = pipelineVersionStatusMap[pipelineId],
+                change = true,
                 status = status,
                 errorMessage = null,
                 startTime = null,

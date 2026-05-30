@@ -3,6 +3,7 @@ package com.tencent.devops.process.service
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.Model
@@ -182,7 +183,7 @@ class PipelineDependentResourceService @Autowired constructor(
             PipelineDependentResource(
                 projectId = projectId,
                 resourceType = PipelineDependentResourceType.PIPELINE_LABEL,
-                resourceId = it.toString(),
+                resourceId = HashUtil.encodeLongId(it),
                 resourceName = labelMap[it]?.name ?: it.toString()
             )
         }.toSet()
@@ -233,6 +234,7 @@ class PipelineDependentResourceService @Autowired constructor(
         return refs
     }
 
+    @Suppress("NestedBlockDepth")
     private fun collectTriggerContainerRefs(
         projectId: String,
         stage: Stage,
@@ -296,6 +298,7 @@ class PipelineDependentResourceService @Autowired constructor(
         return refs
     }
 
+    @Suppress("NestedBlockDepth")
     private fun collectCheckoutElementRefs(
         projectId: String,
         stage: Stage,
@@ -498,7 +501,10 @@ class PipelineDependentResourceService @Autowired constructor(
         return resources
     }
 
-    private fun resolveRepositoryRef(userId: String, ref: PipelineDependentResourceRef): Set<PipelineDependentResource> {
+    private fun resolveRepositoryRef(
+        userId: String,
+        ref: PipelineDependentResourceRef
+    ): Set<PipelineDependentResource> {
         val repositoryType = ref.refType.toRepositoryType()
         val repository = try {
             client.get(ServiceRepositoryResource::class).get(

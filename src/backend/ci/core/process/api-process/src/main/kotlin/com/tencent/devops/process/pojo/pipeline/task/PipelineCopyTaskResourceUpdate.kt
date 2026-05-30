@@ -25,7 +25,7 @@ data class PipelineCopyTaskResourceUpdate(
     @get:Schema(description = "目标资源名")
     val targetResourceName: String? = null,
     @get:Schema(description = "目标资源属性")
-    val targetResourceProperties: PipelineCopyResourceProperties? = null,
+    val targetResourceProperties: PipelineCopyResourceProp? = null,
     @get:Schema(description = "资源状态")
     val status: PipelineCopyTaskResourceStatus? = null,
     @get:Schema(description = "错误信息")

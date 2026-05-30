@@ -43,7 +43,7 @@ class PipelineCopyTaskService @Autowired constructor(
     private val pipelineCopyTaskResourceRelDao: PipelineCopyTaskResourceRelDao,
     private val authProjectApi: AuthProjectApi,
     private val sampleEventDispatcher: SampleEventDispatcher,
-    val pipelineAuthServiceCode: PipelineAuthServiceCode,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
 ) {
 
     fun get(userId: String, projectId: String, taskId: String): PipelineCopyTask? {

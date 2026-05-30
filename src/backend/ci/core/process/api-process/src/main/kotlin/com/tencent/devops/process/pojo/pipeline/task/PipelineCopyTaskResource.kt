@@ -19,7 +19,7 @@ data class PipelineCopyTaskResource(
     @get:Schema(description = "源资源名", required = true)
     val resourceName: String,
     @get:Schema(description = "源资源属性")
-    val resourceProperties: PipelineCopyResourceProperties? = null,
+    val resourceProperties: PipelineCopyResourceProp? = null,
     @get:Schema(description = "复制策略")
     val copyStrategy: PipelineCopyStrategy? = null,
     @get:Schema(description = "资源复制动作", required = true)
@@ -33,7 +33,7 @@ data class PipelineCopyTaskResource(
     @get:Schema(description = "目标资源名")
     val targetResourceName: String? = null,
     @get:Schema(description = "目标资源属性")
-    val targetResourceProperties: PipelineCopyResourceProperties? = null,
+    val targetResourceProperties: PipelineCopyResourceProp? = null,
     @get:Schema(description = "资源状态", required = true)
     val status: PipelineCopyTaskResourceStatus = PipelineCopyTaskResourceStatus.UNPROCESSED,
     @get:Schema(description = "错误信息")
@@ -46,6 +46,8 @@ data class PipelineCopyTaskResource(
     val targetIdExists: Boolean = false,
     @get:Schema(description = "用户是否已确认处理完成", required = true)
     val confirmed: Boolean = false,
+    @get:Schema(description = "流水线引用数", required = true)
+    val pipelineReferCount: Int = 0,
     @get:Schema(description = "创建时间")
     val createTime: Long? = null,
     @get:Schema(description = "更新时间")

@@ -55,9 +55,6 @@ class PipelineCopyTaskResourceRelDao {
         resourceName: String? = null,
         pipelineName: String? = null
     ): List<PipelineCopyTaskResourceRel> {
-        if ((pipelineIds != null && pipelineIds.isEmpty()) || (resourceIds != null && resourceIds.isEmpty())) {
-            return emptyList()
-        }
         return with(T_PIPELINE_COPY_TASK_RESOURCE_REL) {
             dslContext.selectFrom(this)
                 .where(
@@ -129,9 +126,6 @@ class PipelineCopyTaskResourceRelDao {
         taskId: String,
         pipelineIds: Set<String>
     ): Int {
-        if (pipelineIds.isEmpty()) {
-            return 0
-        }
         return with(T_PIPELINE_COPY_TASK_RESOURCE_REL) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
