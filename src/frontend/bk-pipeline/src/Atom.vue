@@ -155,9 +155,11 @@
                     <span>{{ t("stop") }}</span>
                 </span>
             </template>
-            <span class="atom-operate-area">
+            <span
+                v-if="showExecuteTime"
+                class="atom-operate-area"
+            >
                 <bk-popover
-                    v-if="showExecuteTime"
                     :delay="[300, 0]"
                     placement="top"
                     :disabled="!atom.timeCost.executeCost"
@@ -169,19 +171,23 @@
                         <p>{{ formatTime }}</p>
                     </template>
                 </bk-popover>
-                <hover-slide-btn
-                    v-if="atom.canRetry && !isBusy"
-                    icon="refresh-line"
-                    :icon-size="10"
-                    @click.stop="skipOrRetry(false)"
-                >
-                    {{ t("retry") }}
-                </hover-slide-btn>
+            </span>
+            <span
+                v-if="atomOperateList.length"
+                class="atom-operate-area atom-action-area"
+            >
                 <span
-                    v-if="atom.canSkip && !isBusy"
-                    @click.stop="skipOrRetry(true)"
+                    v-for="action in atomOperateList"
+                    :key="action.key"
+                    :class="['atom-action-btn', `atom-action-${action.key}`]"
+                    @click.stop="skipOrRetry(action.skip)"
                 >
-                    {{ t("SKIP") }}
+                    <Logo
+                        :name="action.icon"
+                        size="9"
+                        class="atom-action-icon"
+                    />
+                    <span class="atom-action-label">{{ action.label }}</span>
                 </span>
             </span>
 
@@ -231,7 +237,6 @@
 <script>
     import { bkCheckbox, bkPopover } from '@tencent/bk-magic-vue'
     import Logo from './Logo'
-    import HoverSlideBtn from './HoverSlideBtn'
     import StatusIcon from './StatusIcon'
     import {
         ATOM_CONTINUE_EVENT_NAME,
@@ -260,7 +265,6 @@
         components: {
             StatusIcon,
             Logo,
-            HoverSlideBtn,
             bkPopover,
             bkCheckbox
         },
@@ -436,8 +440,28 @@
                 return !this.isSkip
                     && !this.isWaiting
                     && this.atom.timeCost
+                    && !this.isBusy
                     && !this.isExecuting
                     && !this.reactiveData.editable
+            },
+            atomOperateList () {
+                if (this.isBusy) return []
+                return [
+                    {
+                        key: 'retry',
+                        label: this.t('retry'),
+                        icon: 'refresh-line',
+                        skip: false,
+                        visible: this.atom.canRetry
+                    },
+                    {
+                        key: 'skip',
+                        label: this.t('SKIP'),
+                        icon: 'cc-skip',
+                        skip: true,
+                        visible: this.atom.canSkip
+                    }
+                ].filter((action) => action.visible)
             },
             formatTime () {
                 try {
@@ -842,6 +866,11 @@
     color: $primaryColor;
     font-size: 12px;
   }
+
+  .spin-icon {
+    margin-right: 8px;
+  }
+
   .atom-operate-area{
     margin: 0 8px 0 0;
     color: $primaryColor;
@@ -849,6 +878,77 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
+  }
+
+  .atom-action-area {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    height: 12px;
+    margin: 0;
+    overflow: hidden;
+    border-radius: 4px 0 0 0;
+    white-space: nowrap;
+    z-index: 3;
+  }
+
+  .atom-action-btn {
+    display: inline-flex;
+    flex: 0 0 16px;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 12px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all .2s ease-in-out;
+  }
+
+  .atom-action-label {
+    display: none;
+    line-height: 20px;
+  }
+
+  .atom-action-retry {
+    background-color: #E1ECFF;
+    .atom-action-icon,
+    .atom-action-label {
+      color: #3A84FF;
+    }
+    &:hover .atom-action-label {
+      color: #699DF4;
+    }
+  }
+
+  .atom-action-skip {
+    background-color: #DAF6E5;
+    .atom-action-icon,
+    .atom-action-label {
+      color: #2CAF5E;
+    }
+    &:hover .atom-action-label {
+      color: #65C389;
+    }
+  }
+
+  &:hover {
+    .atom-action-area {
+      height: 100%;
+      border-radius: 0;
+    }
+    .atom-action-btn {
+      flex-basis: 52px;
+      width: 52px;
+      height: 100%;
+    }
+    .atom-action-icon {
+      display: none;
+    }
+    .atom-action-label {
+      display: inline;
+    }
   }
 
   .atom-reviewing-tips {
