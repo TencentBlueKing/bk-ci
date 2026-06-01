@@ -45,7 +45,7 @@ interface AtomRunConditionHandleService {
         language: String,
         runtimeVersion: String,
         workspace: File
-    ): Boolean
+    ): String?
 
     /**
      * 处理target入口命令逻辑

@@ -33,6 +33,7 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.annotation.SkipLogField
 import com.tencent.devops.common.api.constant.ARTIFACT
 import com.tencent.devops.common.api.constant.ARTIFACTORY_TYPE
+import com.tencent.devops.common.api.constant.GOLANG
 import com.tencent.devops.common.api.constant.LABEL
 import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.META_DATA
@@ -325,6 +326,11 @@ open class MarketAtomTask : ITask() {
                 val atomExecutePath = System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)
                 atomExecutePath?.let {
                     runtimeVariables[BK_CI_ATOM_EXECUTE_ENV_PATH] = atomExecutePath
+                }
+                // Go 1.21+ 默认 GOTOOLCHAIN=auto，会自动联网下载匹配 toolchain
+                // 构建机无外网权限，设置为 local 禁用此行为，使用已安装的 Go 版本编译
+                if (atomLanguage == GOLANG) {
+                    runtimeVariables["GOTOOLCHAIN"] = "local"
                 }
             }
             // 获取插件post操作入口参数
