@@ -221,6 +221,10 @@ class UpdateCmdbNodeService @Autowired constructor(
                 inCCServerIdList.map {
                     serverIdToNodeStatus[it] = getNodeStatus(serverIdToAgentVersionInfoMap?.get(it))
                 }
+                logger.info(
+                    "updateCmdbNodeCCInfo|updateAgentStatus|count={}",
+                    serverIdToNodeStatus.size
+                )
                 cmdbNodeDao.batchUpdateNodeInCCByServerId(dslContext, serverIdToNodeStatus)
                 // 4. CC中信息（host_id、云区域id、操作系统类型）改变 - 更新信息，不变 - 不操作
                 val nodeUpdateInfoList = nodeRecords.filter {
@@ -239,11 +243,12 @@ class UpdateCmdbNodeService @Autowired constructor(
                         osType = cmdbNodeService.getOsTypeByCCCode(ccInfo?.osType)
                     )
                 }
-                if (logger.isDebugEnabled)
-                    logger.debug(
-                        "[checkDeployNodesIsInCCByPage]nodeUpdateInfoList: ${nodeUpdateInfoList?.joinToString()}"
-                    )
                 if (!nodeUpdateInfoList.isNullOrEmpty()) {
+                    logger.info(
+                        "updateCmdbNodeCCInfo|updateHostIdAndCloudAreaId|count={}|nodeIds={}",
+                        nodeUpdateInfoList.size,
+                        nodeUpdateInfoList.map { it.nodeId }
+                    )
                     cmdbNodeDao.batchUpdateHostIdAndCloudAreaIdByNodeId(nodeUpdateInfoList)
                 }
             }
@@ -251,6 +256,11 @@ class UpdateCmdbNodeService @Autowired constructor(
         // 2.2 不在cc中: 置空 host_id、云区域id、agent版本，且 NODE_STATUS 改成 NOT_IN_CC
         val invalidServerIdList = nodeServerIdList.filterNot { serverIdToCCInfoMap.containsKey(it) }
         if (invalidServerIdList.isNotEmpty()) {
+            logger.info(
+                "updateCmdbNodeCCInfo|setNotInCCAndHostIdCloudIdNull|count={}|serverIds={}",
+                invalidServerIdList.size,
+                invalidServerIdList
+            )
             cmdbNodeDao.updateNodeNotInCCByServerId(dslContext, invalidServerIdList)
         }
 
