@@ -29,7 +29,10 @@ package com.tencent.devops.process.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -70,4 +73,37 @@ interface UserSubPipelineInfoResource {
         @QueryParam("subBranch")
         subBranch: String?
     ): Result<List<PipelineBuildParamFormProp>>
+
+    @Operation(summary = "获取子流水线启动参数")
+    @GET
+    @Path("/manualStartupNodeList")
+    fun subStreamManualStartupNodeList(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = false, example = "")
+        @QueryParam("subPip")
+        pipelineId: String,
+        @Parameter(description = "IP", required = false)
+        @QueryParam("nodeIp")
+        nodeIp: String?,
+        @Parameter(description = "别名", required = false)
+        @QueryParam("displayName")
+        displayName: String?,
+        @Parameter(description = "创建人", required = false)
+        @QueryParam("createdUser")
+        createdUser: String?,
+        @Parameter(description = "Agent 状态", required = false)
+        @QueryParam("nodeStatus")
+        nodeStatus: NodeStatus?,
+        @Parameter(description = "第几页", required = false)
+        @QueryParam("page")
+        page: Int? = 1,
+        @Parameter(description = "每页多少条", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int? = 20
+    ): Result<Page<NodeBaseInfo>>
 }
