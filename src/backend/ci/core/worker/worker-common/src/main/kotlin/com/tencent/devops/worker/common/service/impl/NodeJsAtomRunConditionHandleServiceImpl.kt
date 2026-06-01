@@ -58,7 +58,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         language: String,
         runtimeVersion: String,
         workspace: File
-    ): Boolean {
+    ): String? {
         // 获取安装包运行时环境信息
         val atomApi = ApiFactory.create(AtomArchiveSDKApi::class)
         val storePkgRunEnvInfoResult = atomApi.getStorePkgRunEnvInfo(
@@ -113,7 +113,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 pkgFile.delete()
             }
         }
-        return true
+        return null
     }
 
     private fun getNodejsPath(osType: OSType, pkgFileDir: File): String? {
