@@ -181,6 +181,7 @@ class PipelineCopyTaskResourceDao {
             update.errorMessage?.let { query.set(ERROR_MESSAGE, it) }
             update.targetNameExists?.let { query.set(TARGET_NAME_EXISTS, it) }
             update.targetIdExists?.let { query.set(TARGET_ID_EXISTS, it) }
+            update.highRisk?.let { query.set(HIGH_RISK, it) }
             update.copyAction?.let { query.set(COPY_ACTION, it.name) }
             update.confirmed?.let { query.set(CONFIRMED, it) }
             query.set(UPDATE_TIME, LocalDateTime.now())

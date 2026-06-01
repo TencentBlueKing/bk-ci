@@ -13,6 +13,9 @@ enum class PipelineBatchTaskStatus {
     @Schema(description = "流水线资源分析中")
     PIPELINE_RESOURCE_ANALYZING,
 
+    @Schema(description = "保存中")
+    SAVING,
+
     @Schema(description = "执行中")
     EXECUTING,
 

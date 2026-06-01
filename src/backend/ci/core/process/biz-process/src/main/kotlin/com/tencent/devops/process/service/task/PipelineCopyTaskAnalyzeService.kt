@@ -5,9 +5,11 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.dao.PipelineBatchTaskDao
 import com.tencent.devops.process.dao.PipelineBatchTaskDetailDao
 import com.tencent.devops.process.dao.PipelineCopyTaskResourceDao
 import com.tencent.devops.process.dao.PipelineCopyTaskResourceRelDao
@@ -17,10 +19,13 @@ import com.tencent.devops.process.dao.template.PipelineTemplateInfoDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailStatus
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchCopyTaskParam
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskAnalyzeEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetail
 import com.tencent.devops.process.pojo.pipeline.task.PipelineConflictCopyResourceProp
 import com.tencent.devops.process.pojo.pipeline.task.PipelineConflictInfo
@@ -42,9 +47,13 @@ import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+/**
+ * 流水线复制任务分析服务
+ */
 @Service
 class PipelineCopyTaskAnalyzeService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -56,9 +65,32 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
     private val pipelineViewDao: PipelineViewDao,
     private val pipelineTemplateInfoDao: PipelineTemplateInfoDao,
     private val pipelineInfoDao: PipelineInfoDao,
-    private val client: Client
+    private val client: Client,
+    private val redisOperation: RedisOperation,
+    private val pipelineBatchTaskDao: PipelineBatchTaskDao,
+    private val pipelineCopyTaskStateService: PipelineCopyTaskStateService
 ) {
-    fun refreshChangedResources(
+    fun analyze(event: PipelineBatchTaskAnalyzeEvent) {
+        with(event) {
+            logger.info("start to analyze pipeline copy task|$projectId|$taskId")
+            val task = tryStartAnalyze(
+                projectId = projectId,
+                taskId = taskId
+            ) ?: return
+            doAnalyze(
+                projectId = event.projectId,
+                task = task
+            )
+            // 分析完成后,把状态再转换成草稿
+            pipelineCopyTaskStateService.updateTaskStatusWithLock(
+                projectId = projectId,
+                taskId = taskId,
+                status = PipelineBatchTaskStatus.DRAFT
+            )
+        }
+    }
+
+    private fun doAnalyze(
         projectId: String,
         task: PipelineBatchTask
     ) {
@@ -921,9 +953,63 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
         }.toSet()
     }
 
+    private fun tryStartAnalyze(
+        projectId: String,
+        taskId: String
+    ): PipelineBatchTask? {
+        val lock = PipelineCopyTaskLock(
+            redisOperation = redisOperation,
+            projectId = projectId,
+            taskId = taskId
+        )
+        // 分析阶段,耗时比较长,锁只需要加在更新状态阶段
+        try {
+            lock.lock()
+            val task = pipelineBatchTaskDao.get(
+                dslContext = dslContext,
+                projectId = projectId,
+                taskId = taskId
+            ) ?: run {
+                logger.warn("pipeline batch task has no change, no need to analyze|$projectId|$taskId")
+                return null
+            }
+            if (task.taskType != PipelineBatchTaskType.PIPELINE_COPY) {
+                logger.warn("pipeline batch task type not match|$projectId|$taskId")
+                return null
+            }
+            if (task.status != PipelineBatchTaskStatus.DRAFT) {
+                logger.warn("pipeline batch task status not match|$projectId|$taskId|${task.status}")
+                return null
+            }
+            val changeCount = pipelineBatchTaskDetailDao.count(
+                dslContext = dslContext,
+                projectId = projectId,
+                taskId = taskId,
+                change = true
+            )
+            if (changeCount == 0L) {
+                logger.warn("pipeline batch task has |$projectId|$taskId")
+                return null
+            }
+            pipelineBatchTaskDao.updateStatus(
+                dslContext = dslContext,
+                projectId = projectId,
+                taskId = taskId,
+                status = PipelineBatchTaskStatus.PIPELINE_RESOURCE_ANALYZING
+            )
+            return task
+        } finally {
+            lock.unlock()
+        }
+    }
+
     private fun parseParam(task: PipelineBatchTask): PipelineBatchCopyTaskParam? {
         return task.taskParam?.takeIf { it.isNotBlank() }?.let {
             JsonUtil.to(it, PipelineBatchCopyTaskParam::class.java)
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineCopyTaskAnalyzeService::class.java)
     }
 }

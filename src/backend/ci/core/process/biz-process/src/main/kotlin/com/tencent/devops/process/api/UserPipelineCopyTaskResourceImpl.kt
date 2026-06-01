@@ -34,14 +34,13 @@ class UserPipelineCopyTaskResourceImpl @Autowired constructor(
         taskId: String,
         request: PipelineCopyTaskConfigRequest
     ): Result<Boolean> {
-        return Result(
-            pipelineCopyTaskService.saveConfigDraft(
-                userId = userId,
-                projectId = projectId,
-                taskId = taskId,
-                request = request
-            )
+        pipelineCopyTaskService.saveConfigDraft(
+            userId = userId,
+            projectId = projectId,
+            taskId = taskId,
+            request = request
         )
+        return Result(true)
     }
 
     override fun analyzeResourceDepend(

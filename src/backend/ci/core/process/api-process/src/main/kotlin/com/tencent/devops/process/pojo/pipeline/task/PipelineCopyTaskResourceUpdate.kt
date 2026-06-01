@@ -34,6 +34,8 @@ data class PipelineCopyTaskResourceUpdate(
     val targetNameExists: Boolean? = null,
     @get:Schema(description = "目标ID是否存在")
     val targetIdExists: Boolean? = null,
+    @get:Schema(description = "是否高危资源")
+    val highRisk: Boolean? = null,
     @get:Schema(description = "资源复制动作")
     val copyAction: PipelineCopyAction? = null,
     @get:Schema(description = "用户是否已确认处理完成")

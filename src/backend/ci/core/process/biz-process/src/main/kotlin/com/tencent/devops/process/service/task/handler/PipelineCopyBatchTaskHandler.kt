@@ -11,7 +11,6 @@ import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceStatus
-import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchCopyTaskParam
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskAnalyzeEvent
@@ -20,12 +19,11 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateRequ
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetail
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskExecuteEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceRel
 import com.tencent.devops.process.service.PipelineDependentResourceService
 import com.tencent.devops.process.service.task.PipelineBatchTaskFactory
 import com.tencent.devops.process.service.task.PipelineBatchTaskHandler
 import com.tencent.devops.process.service.task.PipelineCopyTaskAnalyzeService
+import com.tencent.devops.process.service.task.PipelineCopyTaskExecuteService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -41,7 +39,8 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineDependentResourceService: PipelineDependentResourceService,
     private val pipelineBatchTaskFactory: PipelineBatchTaskFactory,
-    private val pipelineCopyTaskAnalyzeService: PipelineCopyTaskAnalyzeService
+    private val pipelineCopyTaskAnalyzeService: PipelineCopyTaskAnalyzeService,
+    private val pipelineCopyTaskExecuteService: PipelineCopyTaskExecuteService
 ) : PipelineBatchTaskHandler {
 
     override fun support(taskType: PipelineBatchTaskType): Boolean {
@@ -116,19 +115,8 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
     }
 
     override fun handleAnalyzeEvent(event: PipelineBatchTaskAnalyzeEvent) {
-        val task = getTask(projectId = event.projectId, taskId = event.taskId) ?: return
-        val changeCount = pipelineBatchTaskDetailDao.count(
-            dslContext = dslContext,
-            projectId = event.projectId,
-            taskId = event.taskId,
-            change = true
-        )
-        if (changeCount == 0L) {
-            return
-        }
-        pipelineCopyTaskAnalyzeService.refreshChangedResources(
-            projectId = event.projectId,
-            task = task
+        pipelineCopyTaskAnalyzeService.analyze(
+            event = event
         )
     }
 
@@ -151,6 +139,8 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
     }
 
     override fun handleExecuteEvent(event: PipelineBatchTaskExecuteEvent) {
+        val task = getTask(projectId = event.projectId, taskId = event.taskId) ?: return
+        pipelineCopyTaskExecuteService.execute(projectId = event.projectId, task = task)
     }
 
     private fun getTask(projectId: String, taskId: String): PipelineBatchTask? {

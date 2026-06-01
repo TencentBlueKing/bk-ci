@@ -189,6 +189,21 @@ class PipelineBatchTaskDetailDao {
         }
     }
 
+    fun updateChange(
+        dslContext: DSLContext,
+        projectId: String,
+        taskId: String,
+        change: Boolean
+    ): Int {
+        return with(T_PIPELINE_BATCH_TASK_DETAIL) {
+            dslContext.update(this)
+                .set(CHANGE, change)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TASK_ID.eq(taskId))
+                .execute()
+        }
+    }
+
     fun deleteByPipelineIds(
         dslContext: DSLContext,
         projectId: String,
