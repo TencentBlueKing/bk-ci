@@ -15,6 +15,7 @@ import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.BkConfig
 import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.CreateOpenClawData
 import com.tencent.devops.remotedev.pojo.CreateOpenClawDataResp
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
@@ -44,6 +45,7 @@ class OpenClawService @Autowired constructor(
     private val client: Client,
     private val bkConfig: BkConfig,
     private val workspaceDao: WorkspaceDao,
+    private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val deliverControl: DeliverControl,
     private val tokenService: ClientTokenService,
     private val permissionService: PermissionService
@@ -121,10 +123,11 @@ class OpenClawService @Autowired constructor(
         )
 
         // 3、执行openclaw初始化脚本：作为脚本命令作为入参传入，发起标准运维执行
+        val windowsInfo = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)
         val req = BkSopRequestBody(
-            name = "【云桌面】安装龙虾云桌面 ${data.params.userName}:${ip}",
+            name = "【云桌面】安装龙虾云桌面 ${data.params.userName}:${windowsInfo?.regionId}:${ip}",
             constants = mapOf(
-                "\${desktop_ip}" to ip,
+                "\${desktop_ip}" to "${windowsInfo?.regionId}:${ip}",
                 "\${envs_base64}" to Base64.getEncoder()
                     .encodeToString(JsonUtil.toJson(data.params.envs, false).toByteArray())
             )
