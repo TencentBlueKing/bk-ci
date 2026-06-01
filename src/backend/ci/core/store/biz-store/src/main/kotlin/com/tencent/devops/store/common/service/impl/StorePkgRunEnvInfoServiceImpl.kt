@@ -99,29 +99,14 @@ class StorePkgRunEnvInfoServiceImpl @Autowired constructor(
         } else {
             runtimeVersion
         }
-        logger.info(
-            "getStorePkgRunEnvInfo: requested=$runtimeVersion, " +
-                "converted=$convertRuntimeVersion, " +
-                "language=$language, osName=$osName, osArch=$osArch"
-        )
         val atomBusHandleService = AtomBusHandleFactory.createAtomBusHandleService(language)
         val finalOsName = atomBusHandleService.handleOsName(osName)
         val finalOsArch = atomBusHandleService.handleOsArch(osName, osArch)
         val key = "PkgRunEnvInfo:$devopsEnv:$storeType:$language:$finalOsName:$finalOsArch:$convertRuntimeVersion"
         var storePkgRunEnvInfo = pkgRunEnvInfoCache.getIfPresent(key)
         if (storePkgRunEnvInfo != null) {
-            logger.info(
-                "getStorePkgRunEnvInfo cache hit: key=$key, " +
-                    "cached runtimeVersion=${storePkgRunEnvInfo.runtimeVersion}, " +
-                    "pkgName=${storePkgRunEnvInfo.pkgName}"
-            )
             return storePkgRunEnvInfo
         }
-        // 获取安装包运行时环境信息记录，根据运行时版本号未查到就取默认记录
-        logger.info(
-            "getStorePkgRunEnvInfo db query: storeType=$storeType, language=$language, " +
-                "osName=$finalOsName, osArch=$finalOsArch, runtimeVersion=$convertRuntimeVersion"
-        )
         val storePkgRunEnvInfoRecord = storePkgRunEnvInfoDao.getStorePkgRunEnvInfo(
             dslContext = dslContext,
             storeType = storeType.type.toByte(),
@@ -137,20 +122,9 @@ class StorePkgRunEnvInfoServiceImpl @Autowired constructor(
             osArch = finalOsArch
         )
         return if (storePkgRunEnvInfoRecord == null) {
-            logger.warn(
-                "getStorePkgRunEnvInfo: no record found, " +
-                    "requested=$runtimeVersion, converted=$convertRuntimeVersion"
-            )
             null
         } else {
             storePkgRunEnvInfo = storePkgRunEnvInfoDao.convert(storePkgRunEnvInfoRecord)
-            logger.info(
-                "getStorePkgRunEnvInfo db result: " +
-                    "db runtimeVersion=${storePkgRunEnvInfo.runtimeVersion}, " +
-                    "pkgName=${storePkgRunEnvInfo.pkgName}, " +
-                    "pkgDownloadPath=${storePkgRunEnvInfo.pkgDownloadPath}, " +
-                    "defaultFlag=${storePkgRunEnvInfo.defaultFlag}"
-            )
             if (!devopsEnv.isNullOrBlank()) {
                 // 转换域名
                 val beanName = "${devopsEnv.uppercase()}_DOMAIN_SERVICE"
