@@ -77,6 +77,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         }
         val storePkgRunEnvInfo = storePkgRunEnvInfoResult.data
         val envDir = WorkspaceUtils.getCommonEnvDir() ?: workspace
+        var nodejsPath: String? = null
         logger.info("prepareRunEnv param:[$osType,$language,$runtimeVersion,$envDir,$storePkgRunEnvInfo]")
         storePkgRunEnvInfo?.let {
             val pkgName = storePkgRunEnvInfo.pkgName
@@ -87,7 +88,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 pkgName.removeSuffix(".tar.gz")
             }
             val pkgFileDir = File(envDir, "$NODEJS/$pkgFileFolderName")
-            val nodejsPath = getNodejsPath(osType, pkgFileDir)
+            nodejsPath = getNodejsPath(osType, pkgFileDir)
             // 把nodejs执行路径写入系统变量
             System.setProperty(BK_CI_ATOM_EXECUTE_ENV_PATH, "$nodejsPath${File.separator}")
             val command = "$nodejsPath${File.separator}node -v"
@@ -113,7 +114,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 pkgFile.delete()
             }
         }
-        return null
+        return nodejsPath
     }
 
     private fun getNodejsPath(osType: OSType, pkgFileDir: File): String? {
