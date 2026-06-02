@@ -187,8 +187,8 @@ interface BuildBuildResource {
 
     @Operation(summary = "获取构建任务的原始参数(TASK_PARAMS)")
     @GET
-    @Path("/{projectId}/{pipelineId}/{buildId}/tasks/{taskId}/source_param")
-    fun getTaskSourceParam(
+    @Path("/{projectId}/{pipelineId}/{buildId}/tasks/{taskId}/getTaskParams")
+    fun getTaskParams(
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,

@@ -140,7 +140,7 @@ class BuildBuildResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getTaskSourceParam(
+    override fun getTaskParams(
         projectId: String,
         pipelineId: String,
         buildId: String,
