@@ -42,14 +42,25 @@ import org.springframework.stereotype.Repository
  * - 该表已在现网建好，jOOQ codegen 会生成
  *   [com.tencent.devops.model.process.tables.TPipelineBuildVarOverflow]，
  *   因此直接复用生成代码，与主表 T_PIPELINE_BUILD_VAR 的 DAO 风格保持一致；
- * - 主键为 (BUILD_ID, KEY)，与主表 T_PIPELINE_BUILD_VAR 一致；
+ * - 主键为 (BUILD_ID, KEY, CREATE_TIME)：CREATE_TIME 进主键是为了让本表能按
+ *   CREATE_TIME 做 RANGE 分区（MySQL 要求分区列必须属于每一个唯一键），
+ *   从而支持"按月 DROP PARTITION"的高效清理；
  * - 仅承担"溢出值"的物理存储，业务一致性逻辑由
  *   [com.tencent.devops.process.service.BuildVariableService] 把守。
+ *
+ * 关于写入的 upsert 语义（**重要**）：
+ *  - 因为 CREATE_TIME（默认 CURRENT_TIMESTAMP(3)）进了主键，旧的
+ *    `INSERT ... ON DUPLICATE KEY UPDATE` 在"同一 (BUILD_ID, KEY) 重复写入"时
+ *    会因 CREATE_TIME 不同而**判定为不冲突 → 插入重复行**；
+ *  - 因此 [save] 改为"**先 UPDATE，命中 0 行再 INSERT**"：既保证同一变量逻辑唯一，
+ *    又保留首次写入的 CREATE_TIME（分区归属稳定）。写入均在
+ *    [com.tencent.devops.process.service.BuildVariableService] 的
+ *    PipelineBuildVarLock(buildId[, key]) RedisLock 内串行，无并发竞态。
  *
  * 注意：本 DAO 故意**不提供** `batchSave` 的单 SQL 批量实现。
  *  - 单个溢出值最大 4M（字符），N 条值合并成一条 INSERT 会迅速突破
  *    MySQL `max_allowed_packet`（生产环境通常 16M~64M）；
- *  - 因此 [batchSave] 采用"循环调用 [save] + `ON DUPLICATE KEY UPDATE`"实现，
+ *  - 因此 [batchSave] 采用"循环调用 [save]"实现，
  *    单条 IO，单次最坏内存峰值 ≤ 4M，吞吐通过整条流水线"大变量数量本就有限"自然控制。
  */
 @Repository
@@ -64,22 +75,30 @@ class PipelineBuildVarOverflowDao {
     ) {
         val value = param.value.toString()
         with(TPipelineBuildVarOverflow.T_PIPELINE_BUILD_VAR_OVERFLOW) {
-            dslContext.insertInto(this)
-                .set(BUILD_ID, buildId)
-                .set(KEY, param.key)
-                .set(VALUE, value)
-                .set(VALUE_LENGTH, value.length)
-                .set(PROJECT_ID, projectId)
-                .set(PIPELINE_ID, pipelineId)
-                .set(VAR_TYPE, param.valueType?.name)
-                .set(READ_ONLY, param.readOnly)
-                .set(SENSITIVE, param.sensitive)
-                .onDuplicateKeyUpdate()
+            // CREATE_TIME 进主键后不能再用 ON DUPLICATE KEY UPDATE（新 CREATE_TIME 不冲突会插重复行）。
+            // 改为"先 UPDATE 命中则结束，否则 INSERT"，保留首次 CREATE_TIME，保证逻辑唯一。
+            val updated = dslContext.update(this)
                 .set(VALUE, value)
                 .set(VALUE_LENGTH, value.length)
                 .set(VAR_TYPE, param.valueType?.name)
                 .set(SENSITIVE, param.sensitive)
+                .where(BUILD_ID.eq(buildId))
+                .and(KEY.eq(param.key))
+                .and(PROJECT_ID.eq(projectId))
                 .execute()
+            if (updated == 0) {
+                dslContext.insertInto(this)
+                    .set(BUILD_ID, buildId)
+                    .set(KEY, param.key)
+                    .set(VALUE, value)
+                    .set(VALUE_LENGTH, value.length)
+                    .set(PROJECT_ID, projectId)
+                    .set(PIPELINE_ID, pipelineId)
+                    .set(VAR_TYPE, param.valueType?.name)
+                    .set(READ_ONLY, param.readOnly)
+                    .set(SENSITIVE, param.sensitive)
+                    .execute()
+            }
         }
     }
 
@@ -103,10 +122,14 @@ class PipelineBuildVarOverflowDao {
         key: String
     ): String? {
         with(TPipelineBuildVarOverflow.T_PIPELINE_BUILD_VAR_OVERFLOW) {
+            // 正常情况下 (BUILD_ID, KEY) 仅一行；orderBy CREATE_TIME desc + limit(1) 仅作防御，
+            // 避免历史脏数据（多 CREATE_TIME 行）导致 fetchOne 抛错，并始终取最新值。
             return dslContext.select(VALUE).from(this)
                 .where(BUILD_ID.eq(buildId))
                 .and(KEY.eq(key))
                 .and(PROJECT_ID.eq(projectId))
+                .orderBy(CREATE_TIME.desc())
+                .limit(1)
                 .fetchOne(VALUE)
         }
     }

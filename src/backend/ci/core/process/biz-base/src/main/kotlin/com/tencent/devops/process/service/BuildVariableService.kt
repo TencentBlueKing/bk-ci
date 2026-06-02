@@ -46,10 +46,7 @@ import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
-import com.tencent.devops.process.utils.PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX
-import com.tencent.devops.process.utils.PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -59,32 +56,9 @@ class BuildVariableService @Autowired constructor(
     private val pipelineBuildVarDao: PipelineBuildVarDao,
     private val pipelineBuildVarOverflowDao: PipelineBuildVarOverflowDao,
     private val pipelineAsCodeService: PipelineAsCodeService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val pipelineVarOverflowConfig: PipelineVarOverflowConfig
 ) {
-
-    /**
-     * 大变量懒加载器的 Caffeine 缓存字符上限。
-     * 由 `pipeline.variables.lazyLoad.cacheMax` Spring 配置覆盖，默认 [PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX]（8M）。
-     *
-     * 注意：该配置**只影响新构建中懒加载大变量的内部缓存大小**，
-     * 历史构建（单变量最多 4K）走 smallVars 直读路径，对其零影响。
-     */
-    @Value("\${pipeline.variables.lazyLoad.cacheMax:$PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX}")
-    private var lazyLoadCacheMax: Long = PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX.toLong()
-
-    /**
-     * 大变量懒加载器的单会话总加载字节硬上限。
-     * 由 `pipeline.variables.lazyLoad.budgetMax` Spring 配置覆盖，默认 [PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX]（32M）。
-     *
-     * 超过该值时抛出
-     * [com.tencent.devops.process.service.BuildVarOverflowBudgetExceededException]，
-     * 阻止异常脚本一次性把多个 4M 大变量灌入内存导致 OOM。
-     *
-     * 注意：该配置**只影响新构建中懒加载大变量的总量阈值**，
-     * 历史构建（单变量最多 4K）走 smallVars 直读路径，**永远不会触发该阈值**。
-     */
-    @Value("\${pipeline.variables.lazyLoad.budgetMax:$PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX}")
-    private var lazyLoadBudgetMax: Long = PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX.toLong()
 
     /**
      * 获取构建执行次数（重试次数+1），如没有重试过，则为1
@@ -183,8 +157,8 @@ class BuildVariableService @Autowired constructor(
             dslContext = commonDslContext,
             projectId = projectId,
             buildId = buildId,
-            maxCacheBytes = lazyLoadCacheMax,
-            maxBudgetBytes = lazyLoadBudgetMax
+            maxCacheBytes = pipelineVarOverflowConfig.lazyLoadCacheMax,
+            maxBudgetBytes = pipelineVarOverflowConfig.lazyLoadBudgetMax
         )
         return BuildVariableSnapshot(
             smallVars = dataMap,
@@ -224,8 +198,8 @@ class BuildVariableService @Autowired constructor(
                 dslContext = commonDslContext,
                 projectId = projectId,
                 buildId = buildId,
-                maxCacheBytes = lazyLoadCacheMax,
-                maxBudgetBytes = lazyLoadBudgetMax
+                maxCacheBytes = pipelineVarOverflowConfig.lazyLoadCacheMax,
+                maxBudgetBytes = pipelineVarOverflowConfig.lazyLoadBudgetMax
             ).load(varName)
         } else {
             main
@@ -548,7 +522,8 @@ class BuildVariableService @Autowired constructor(
     }
 
     /**
-     * 单变量硬上限校验：超过 [BuildVarOverflowUtils.HARD_MAX_LENGTH]（默认 4M）则**直接丢弃**。
+     * 单变量硬上限校验：超过 [PipelineVarOverflowConfig.hardMaxLength]（默认 4M，
+     * 可由 `pipeline.variables.hardMaxLength` 动态调整）则**直接丢弃**。
      *
      * 设计取舍：
      *  - 抛异常会让一次 batch save 整体失败，影响构建；
@@ -560,10 +535,11 @@ class BuildVariableService @Autowired constructor(
      * @return true 表示通过校验可以继续保存；false 表示已被丢弃。
      */
     private fun acceptWithinHardLimit(buildId: String, key: String, rawValue: String): Boolean {
-        if (rawValue.length <= BuildVarOverflowUtils.HARD_MAX_LENGTH) return true
+        val hardMax = pipelineVarOverflowConfig.hardMaxLength
+        if (rawValue.length <= hardMax) return true
         LOG.warn(
             "$buildId|VAR_HARD_OVERSIZE|key=$key|len=${rawValue.length}|" +
-                "hardMax=${BuildVarOverflowUtils.HARD_MAX_LENGTH}|dropped"
+                "hardMax=$hardMax|dropped"
         )
         return false
     }
