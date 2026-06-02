@@ -217,7 +217,6 @@
                             end_time: endTime,
                             fields: ['labels', 'status', 'appointee'],
                             size: 100,
-                            bk_biz_ids: [-4219865],
                         })
                         
                         // 提取 status 数据
@@ -264,7 +263,6 @@
                         end_time: endTime,
                         fields: ['labels', 'status', 'appointee'],
                         size: 100,
-                        bk_biz_ids: [-4219865],
                     })
                     
                     const resultsList = results.data?.fields || []
