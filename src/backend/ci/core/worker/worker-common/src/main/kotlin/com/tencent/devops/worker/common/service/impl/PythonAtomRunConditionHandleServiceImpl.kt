@@ -43,8 +43,8 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         language: String,
         runtimeVersion: String,
         workspace: File
-    ): Boolean {
-        return true
+    ): String? {
+        return null
     }
 
     override fun handleAtomTarget(

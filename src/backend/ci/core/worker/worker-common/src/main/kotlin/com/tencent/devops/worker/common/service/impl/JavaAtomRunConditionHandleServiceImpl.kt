@@ -49,7 +49,7 @@ class JavaAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         language: String,
         runtimeVersion: String,
         workspace: File
-    ): Boolean {
+    ): String? {
         val runtimeJdkVersion = AgentEnv.getRuntimeJdkVersion()
         val runtimeJdkPath = AgentEnv.getRuntimeJdkPath()
         // 这里首先使用的是插件配置的jdk版本，如果构建机没有该jdk环境，那么打印日志提示并使用worker的jdk版本执行
@@ -67,7 +67,7 @@ class JavaAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             }
         }
         System.setProperty(BK_CI_JAVA_ATOM_EXECUTE_ENV_PATH, javaPath)
-        return true
+        return javaPath
     }
 
     override fun handleAtomTarget(
