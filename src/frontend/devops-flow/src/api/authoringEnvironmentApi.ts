@@ -191,10 +191,20 @@ export async function fetchAuthoringNodeList(
 export function convertToCreationNode(node: AuthoringNodeItem): CreationNode {
   return {
     id: node.nodeHashId,
-    name: node.displayName,
+    name: getAuthoringNodeDisplayText(node),
     ip: node.ip || '',
     status: node.agentStatus ? 'online' : 'offline',
     agentStatus: node.agentStatus,
     envEnableNode: node.envEnableNode,
   }
+}
+
+/**
+ * Get node display text for UI.
+ * Prefer IP because it is more recognizable than node IDs.
+ */
+export function getAuthoringNodeDisplayText(
+  node: Pick<AuthoringNodeItem, 'ip' | 'displayName' | 'name'>,
+): string {
+  return node.ip || node.displayName || node.name || '--'
 }
