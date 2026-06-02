@@ -62,10 +62,12 @@
                         :category-data="creativeCategory"
                         :errors="{
                             sortError: formErrors.creativeSortError,
-                            jobError: formErrors.creativeJobError
+                            jobError: formErrors.creativeJobError,
+                            envError: formErrors.creativeEnvError
                         }"
                         @classify-change="changeClassify"
                         @job-type-change="changeCreativeJobType"
+                        @os-change="changeCreativeOs"
                     ></category-config>
                 </bk-checkbox-group>
             </bk-form-item>
@@ -209,7 +211,8 @@
                     pipelineJobError: false,
                     pipelineEnvError: false,
                     creativeSortError: false,
-                    creativeJobError: false
+                    creativeJobError: false,
+                    creativeEnvError: false
                 },
                 isLoading: true,
                 isSaving: false,
@@ -301,6 +304,12 @@
                     os = agentConfig?.osList || []
                 }
                 
+                // 如果是 CREATIVE_STREAM，查找 CREATIVE_STREAM 类型的 osList
+                if (scope === 'CREATIVE_STREAM') {
+                    const creativeConfig = config.jobTypeConfigs?.find(item => item.jobType === 'CREATIVE_STREAM')
+                    os = creativeConfig?.osList || []
+                }
+                
                 return {
                     classifyCode: config.classifyCode || '',
                     jobTypes,
@@ -327,6 +336,10 @@
                 console.log(val,'--')
                 
                 this.formErrors.pipelineEnvError = false
+            },
+
+            changeCreativeOs () {
+                this.formErrors.creativeEnvError = false
             },
 
             validateCategory () {
@@ -382,6 +395,14 @@
                         this.formErrors.creativeJobError = true
                         hasError = true
                     }
+                    
+                    // 如果选择了 CREATIVE_STREAM 类型，校验操作系统
+                    if (this.creativeCategory.jobTypes && this.creativeCategory.jobTypes.includes('CREATIVE_STREAM')) {
+                        if (!this.creativeCategory.os || this.creativeCategory.os.length === 0) {
+                            this.formErrors.creativeEnvError = true
+                            hasError = true
+                        }
+                    }
                 }
                 
                 if (hasError) {
@@ -426,8 +447,9 @@
                             const jobTypes = data.jobTypes || []
                             config.jobTypeConfigs = jobTypes.map(jobType => {
                                 const jobTypeConfig = { jobType }
-                                // 如果是 PIPELINE 范畴且是 AGENT 类型，添加 osList
-                                if (scope === 'PIPELINE' && jobType === 'AGENT') {
+                                // 如果需要 osList：PIPELINE 的 AGENT 或 CREATIVE_STREAM 的 CREATIVE_STREAM
+                                if ((scope === 'PIPELINE' && jobType === 'AGENT')
+                                    || (scope === 'CREATIVE_STREAM' && jobType === 'CREATIVE_STREAM')) {
                                     jobTypeConfig.osList = data.os || []
                                 }
                                 return jobTypeConfig
