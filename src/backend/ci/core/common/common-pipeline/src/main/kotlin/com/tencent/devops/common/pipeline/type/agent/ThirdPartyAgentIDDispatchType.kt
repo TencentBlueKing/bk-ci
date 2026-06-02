@@ -35,7 +35,7 @@ data class ThirdPartyAgentIDDispatchType(
     @JsonProperty("value")
     var displayName: String,
     override var workspace: String?,
-    override val agentType: AgentType = AgentType.NAME,
+    override val agentType: AgentDispatchType = AgentDispatchType.NAME,
     override val dockerInfo: ThirdPartyAgentDockerInfo?,
     override var reusedInfo: ReusedInfo?
 ) : ThirdPartyAgentDispatch(

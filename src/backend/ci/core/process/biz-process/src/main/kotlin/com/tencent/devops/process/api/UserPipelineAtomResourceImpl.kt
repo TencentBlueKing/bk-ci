@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineAtomResource
 import com.tencent.devops.process.pojo.PipelineAtomRel
+import com.tencent.devops.process.pojo.PipelineAtomRelCount
 import com.tencent.devops.process.service.PipelineAtomService
 import com.tencent.devops.store.pojo.atom.AtomProp
 import org.springframework.beans.factory.annotation.Autowired
@@ -94,5 +95,12 @@ class UserPipelineAtomResourceImpl @Autowired constructor(
             version = version,
             archiveFlag = archiveFlag
         )
+    }
+
+    override fun getAtomRelCount(
+        storeCode: String,
+        projectCode: String?
+    ): Result<PipelineAtomRelCount> {
+        return pipelineAtomService.getAtomRelCount(storeCode, projectCode)
     }
 }

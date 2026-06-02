@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.pojo.enums
 
+import com.tencent.devops.artifactory.constant.REPO_NAME_CREATIVE
 import com.tencent.devops.artifactory.constant.REPO_NAME_CUSTOM
 import com.tencent.devops.artifactory.constant.REPO_NAME_IMAGE
 import com.tencent.devops.artifactory.constant.REPO_NAME_PIPELINE
@@ -37,7 +38,8 @@ enum class ArtifactoryType {
     PIPELINE,
     CUSTOM_DIR,
     IMAGE,
-    REPORT;
+    REPORT,
+    CREATIVE;
 
     fun toFileType(): FileTypeEnum {
         return when (this) {
@@ -53,6 +55,7 @@ enum class ArtifactoryType {
             CUSTOM_DIR -> REPO_NAME_CUSTOM
             IMAGE -> REPO_NAME_IMAGE
             REPORT -> REPO_NAME_REPORT
+            CREATIVE -> REPO_NAME_CREATIVE
         }
     }
 }

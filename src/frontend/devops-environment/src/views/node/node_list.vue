@@ -11,13 +11,14 @@
                 <section class="filter-bar">
                     <div class="btn-part">
                         <bk-button
+                            v-if="!isCreateResType"
                             :key="projectId"
                             v-perm="{
                                 permissionData: {
                                     projectId: projectId,
-                                    resourceType: NODE_RESOURCE_TYPE,
+                                    resourceType: currentResourceType,
                                     resourceCode: projectId,
-                                    action: NODE_RESOURCE_ACTION.CREATE
+                                    action: currentResourceAction.CREATE
                                 }
                             }"
                             theme="primary"
@@ -60,13 +61,13 @@
                                         v-perm="{
                                             permissionData: {
                                                 projectId: projectId,
-                                                resourceType: NODE_RESOURCE_TYPE,
+                                                resourceType: currentResourceType,
                                                 resourceCode: projectId,
-                                                action: NODE_RESOURCE_ACTION.CREATE
+                                                action: item.action
                                             }
                                         }"
                                         @click="item.handler"
-                                        key="thirdPartyBuildMachine"
+                                        :key="item.key"
                                     >
                                         {{ $t(item.textKey) }}
                                     </a>
@@ -111,24 +112,36 @@
                     </div>
                 </section>
 
-                <list-table
-                    ref="listTable"
-                    :node-list="nodeList"
-                    :table-loading="tableLoading"
-                    :pagination="pagination"
-                    :search-value="searchValue"
-                    :tag-search-value="tagSearchValue"
-                    :date-time-range="dateTimeRange"
-                    :node-tag-list="nodeTagList"
-                    @page-change="handlePageChange"
-                    @page-limit-change="handlePageLimitChange"
-                    @sort-change="handleSortChange"
-                    @refresh="requestList"
-                    @updataCurEditNodeItem="updataCurEditNodeItem"
-                    @install-agent="installAgent"
-                    @clear-filter="clearFilter"
-                    @selected-change="handleSelectedChange"
-                />
+                <CollapseLayout
+                    class="mt20"
+                    storage-key="node_list"
+                >
+                    <list-table
+                        ref="listTable"
+                        :node-list="nodeList"
+                        :table-loading="tableLoading"
+                        :pagination="pagination"
+                        :search-value="searchValue"
+                        :tag-search-value="tagSearchValue"
+                        :date-time-range="dateTimeRange"
+                        :node-tag-list="nodeTagList"
+                        :is-flod="flod"
+                        :default-sort="defaultSort"
+                        @page-change="handlePageChange"
+                        @page-limit-change="handlePageLimitChange"
+                        @sort-change="handleSortChange"
+                        @refresh="requestList"
+                        @updataCurEditNodeItem="updataCurEditNodeItem"
+                        @install-agent="installAgent"
+                        @clear-filter="clearFilter"
+                        @selected-change="handleSelectedChange"
+                        @toggle-fold="toggleFlod"
+                        @show-detail="handleShowNodeDetail"
+                    />
+                    <template slot="flod">
+                        <node-detail :install-agent="installAgent" />
+                    </template>
+                </CollapseLayout>
             </template>
         </section>
         <third-construct
@@ -291,13 +304,22 @@
     import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
     import { getQueryString } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage.js'
-    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
+    import {
+        NODE_RESOURCE_ACTION,
+        NODE_RESOURCE_TYPE,
+        CREATIVE_STREAM_NODE_RESOURCE_ACTION,
+        CREATIVE_NODE_RESOURCE_TYPE
+    } from '@/utils/permission'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
     import ListTable from './list_table.vue'
     import { mapState, mapActions } from 'vuex'
     const ENV_NODE_TABLE_LIMIT_CACHE = 'env_node_table_limit_cache'
-    import { ENV_ACTIVE_NODE_TYPE, ALLNODE } from '@/store/constants'
+    import { ENV_ACTIVE_NODE_TYPE, ALLNODE, SERVICE_RESOURCE_TYPE } from '@/store/constants'
+    import CollapseLayout from '@/components/CollapseLayout'
+    import useCollapseLayout from '@/hooks/useCollapseLayout'
+    import useUrlQuery from '@/hooks/useUrlQuery'
+    import NodeDetail from './node_detail.vue'
     export default {
         components: {
             ListTable,
@@ -306,8 +328,6 @@
         },
         data () {
             return {
-                NODE_RESOURCE_TYPE,
-                NODE_RESOURCE_ACTION,
                 ENV_ACTIVE_NODE_TYPE,
                 ALLNODE,
                 curEditNodeItem: '',
@@ -328,6 +348,7 @@
                 successStatus: ['NORMAL', 'BUILD_IMAGE_SUCCESS'],
                 failStatus: ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN', 'RUNNING'],
                 tableLoading: false,
+                isNodeTypeChanging: false, // 节点类型切换标志位，防止重复请求
                 // 页面loading
                 loading: {
                     isLoading: false,
@@ -437,20 +458,23 @@
                         name: this.$t('environment.nodeInfo.os'),
                         id: 'osName'
                     },
-                    {
-                        name: this.$t('environment.nodeInfo.usage'),
-                        id: 'nodeType',
-                        children: [
-                            {
-                                id: 'CMDB',
-                                name: this.$t('environment.deploy')
-                            },
-                            {
-                                id: 'THIRDPARTY',
-                                name: this.$t('environment.build')
-                            }
-                        ]
-                    },
+                    ...(!this.isCreateResType ? [
+                        {
+                            name: this.$t('environment.nodeInfo.usage'),
+                            id: 'nodeType',
+                            children: [
+                                {
+                                    id: 'CMDB',
+                                    name: this.$t('environment.deploy')
+                                },
+                                {
+                                    id: 'THIRDPARTY',
+                                    name: this.$t('environment.build')
+                                }
+                            ]
+                        }
+                    ] : [])
+                    ,
                     {
                         name: this.$t('environment.nodeInfo.importer'),
                         id: 'createdUser'
@@ -481,20 +505,22 @@
                         name: this.$t('environment.lastModifier'),
                         id: 'lastModifiedUser'
                     },
-                    {
-                        name: this.$t('environment.nodeInfo.lastRunPipeline'),
-                        id: 'latestBuildPipelineId',
-                        remoteMethod:
-                            async (search) => {
-                                const res = await this.$store.dispatch('environment/getLatestBuildPipelineList', {
-                                    projectId: this.projectId
-                                })
-                                return res.records.map(item => ({
-                                    name: item.pipelineName,
-                                    id: item.pipelineId
-                                }))
-                            }
-                    }
+                    ...(!this.isCreateResType ? [
+                        {
+                            name: this.$t('environment.nodeInfo.lastRunPipeline'),
+                            id: 'latestBuildPipelineId',
+                            remoteMethod:
+                                async (search) => {
+                                    const res = await this.$store.dispatch('environment/getLatestBuildPipelineList', {
+                                        projectId: this.projectId
+                                    })
+                                    return res.records.map(item => ({
+                                        name: item.pipelineName,
+                                        id: item.pipelineId
+                                    }))
+                                }
+                        }
+                    ] : [])
                 ]
                 return data.filter(data => {
                     return !this.searchValue.find(val => val.id === data.id)
@@ -525,27 +551,33 @@
                     {
                         key: 'thirdPartyBuildMachine',
                         textKey: 'environment.batchSetTag',
-                        handler: () => this.batchSetTag()
+                        handler: () => this.batchSetTag(),
+                        action: this.currentResourceAction.EDIT
                     },
                     {
                         key: 'bulkEditMaxConcurrency',
                         textKey: 'environment.bulkEditMaxConcurrency',
                         tooltips: this.$t('environment.未选择构建节点，不支持修改'),
                         disabled: this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'THIRDPARTY'),
-                        handler: () => this.batchSetMaxConcurrency()
+                        handler: () => this.batchSetMaxConcurrency(),
+                        action: this.currentResourceAction.EDIT
                     },
-                    {
-                        key: 'bulkResetImportUser',
-                        textKey: 'environment.bulkResetImportUser',
-                        tooltips: this.$t('environment.未选择部署节点，不支持重置'),
-                        disabled: this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'CMDB'),
-                        handler: () => this.batchResetImportUser()
-                    },
-                    {
-                        key: 'idcTestMachine',
-                        textKey: 'environment.batchDeleteNode',
-                        handler: () => this.batchDeleteNode()
-                    }
+                    ...(!this.isCreateResType ? [
+                        {
+                            key: 'bulkResetImportUser',
+                            textKey: 'environment.bulkResetImportUser',
+                            tooltips: this.$t('environment.未选择部署节点，不支持重置'),
+                            disabled: this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'CMDB'),
+                            handler: () => this.batchResetImportUser(),
+                            action: this.currentResourceAction.EDIT
+                        },
+                        {
+                            key: 'idcTestMachine',
+                            textKey: 'environment.batchDeleteNode',
+                            handler: () => this.batchDeleteNode(),
+                            action: this.currentResourceAction.DELETE
+                        }
+                    ] : [])
                 ]
             },
             username (){
@@ -573,6 +605,32 @@
             hasPermissionCMDBCount () {
                 const { total = 0, thirdParty = 0, noPermission = 0 } = this.selectNodeCounts
                 return total - thirdParty - noPermission
+            },
+            // 从 URL 参数生成表格默认排序
+            defaultSort () {
+                const { sortType, collation } = this.queryParams
+                if (!sortType || !collation) {
+                    return {}
+                }
+                
+                const orderMap = {
+                    ASC: 'ascending',
+                    DESC: 'descending'
+                }
+                
+                return {
+                    prop: sortType,
+                    order: orderMap[collation] || 'ascending'
+                }
+            },
+            isCreateResType () {
+                return this.$route.params.resType === SERVICE_RESOURCE_TYPE.CREATE
+            },
+            currentResourceType () {
+                return this.isCreateResType ? CREATIVE_NODE_RESOURCE_TYPE : NODE_RESOURCE_TYPE
+            },
+            currentResourceAction () {
+                return this.isCreateResType ? CREATIVE_STREAM_NODE_RESOURCE_ACTION : NODE_RESOURCE_ACTION
             }
         },
         watch: {
@@ -585,10 +643,42 @@
                     this.syncCurrentTags()
                 }
             },
-            '$route.params.nodeType' (newVal) {
-                if (newVal) {
+            '$route.params.nodeType' (newVal, oldVal) {
+                // 只有当 nodeType 真正发生变化时才处理
+                if (newVal !== oldVal) {
                     this.handleNodeTypeChange()
                 }
+            },
+            // 监听整个路由变化，确保从其他页面跳转回来时刷新数据
+            '$route' (to, from) {
+                // 如果是从 setNodeTag 页面跳转回来，或者 nodeType 参数发生变化
+                if (from.name === 'setNodeTag' && to.name === 'nodeList') {
+                    // 延迟执行，确保组件已经完全加载
+                    this.$nextTick(async () => {
+                        await this.requestList()
+                        // 同时刷新计数数据
+                        await this.requestGetCounts(this.projectId)
+                    })
+                }
+            },
+            // 监听 queryParams 分页参数变化，同步到 paginationData
+            'queryParams.page' (newVal) {
+                if (newVal && newVal !== this.paginationData.current) {
+                    this.paginationData.current = newVal
+                }
+            },
+            'queryParams.pageSize' (newVal) {
+                if (newVal && newVal !== this.paginationData.limit) {
+                    this.paginationData.limit = newVal
+                }
+            },
+            // 监听 URL 中的 nodeHashId 参数，控制 CollapseLayout 的展开/折叠状态
+            'queryParams.nodeHashId': {
+                handler (newVal) {
+                    // 如果 URL 有 nodeHashId，展开详情页；否则折叠
+                    this.setFlod(!!newVal)
+                },
+                immediate: true
             },
             // 构建机型变化
             'constructImportForm.model' (val) {
@@ -622,6 +712,9 @@
                 }
             },
             searchValue (val) {
+                // 如果是 handleNodeTypeChange 触发的清空，跳过请求
+                if (this.isNodeTypeChanging) return
+                
                 if (val.length) {
                     val.forEach(i => {
                         if (i.values) {
@@ -635,6 +728,11 @@
                     this.requestParams = {}
                 }
                 this.requestList(this.requestParams)
+            },
+            isCreateResType: {
+                handler (val) {
+                    this.init()
+                }
             }
         },
         created () {
@@ -672,7 +770,8 @@
                 this.$router.push({
                     name: 'setNodeTag',
                     params: {
-                        projectId: this.projectId
+                        ...this.$route.params,
+                        nodeType: currentNodeType
                     }
                 })
             },
@@ -831,9 +930,30 @@
                 this.requestList(this.requestParams)
             },
             async handleNodeTypeChange () {
+                // 设置标志位，避免 searchValue watcher 触发额外请求
+                this.isNodeTypeChanging = true
+                
+                // 清除搜索和标签条件
+                this.searchValue = []
                 this.tagSearchValue = []
+                this.requestParams = {}
+                
+                // 重置分页到第一页
+                this.paginationData.current = 1
+                this.updatePagination(1, this.paginationData.limit)
+                
+                // 同步当前标签和节点类型
                 await this.syncCurrentTags()
+                
+                // 更新 URL 参数
+                this.updateSearchValue([])
+                this.updateTagSearchValue([])
+                
+                // 重新请求数据
                 await this.requestList()
+                
+                // 重置标志位
+                this.isNodeTypeChanging = false
             },
 
             handleClearTagSearch () {
@@ -881,8 +1001,11 @@
                         params: {
                             ...params,
                             ...(this.currentNodeType ? { nodeType: this.currentNodeType } : {}),
-                            page: this.pagination.current,
-                            pageSize: this.pagination.limit
+                            page: this.paginationData.current,
+                            pageSize: this.paginationData.limit,
+                            ...(this.isCreateResType ? {
+                                nodeType: 'CREATE'
+                            }: {})
                         },
                         ...(this.currentTags.length ? { tags: this.currentTags } : {})
                     })
@@ -913,9 +1036,9 @@
             goToApplyPerm () {
                 this.handleNoPermission({
                     projectId: this.projectId,
-                    resourceType: NODE_RESOURCE_TYPE,
+                    resourceType: this.currentResourceType,
                     resourceCode: this.projectId,
-                    action: NODE_RESOURCE_ACTION.CREATE
+                    action: this.currentResourceAction.CREATE
                 })
             },
             dropdownIsShow (isShow) {
@@ -1078,10 +1201,8 @@
                         nodeHashId
                     })
                     if (res.os === 'WINDOWS' && res.agentUrl) {
-                        this.constructImportForm.link = res.agentUrl
                         this.constructImportForm.agentId = res.agentId
                     } else if (['MACOS', 'LINUX'].includes(res.os) && res.agentScript) {
-                        this.constructImportForm.link = res.agentScript
                         this.constructImportForm.agentId = res.agentId
                     } else {
                         this.requestDevCommand()
@@ -1117,9 +1238,10 @@
                 this.dialogLoading.isShow = false
                 this.constructToolConf.isShow = false
                 this.constructImportForm.link = ''
+                this.constructImportForm.location = ''
                 this.constructImportForm.loginName = ''
                 this.constructImportForm.loginPassword = ''
-                this.constructImportForm.autoSwitchAccount = true
+                this.constructImportForm.autoSwitchAccount = false
                 this.constructImportForm.installType = 'SERVICE'
                 this.constructToolConf.importText = this.$t('environment.import')
                 this.requestList()
@@ -1156,7 +1278,12 @@
                 this.searchValue = []
                 this.tagSearchValue = []
                 this.currentTags = []
-                this.$router.push({ name: 'nodeList', params: { nodeType: ALLNODE } })
+                // 如果是 CreateResType，保持当前 nodeType 不变
+                if (this.isCreateResType) {
+                    this.requestList()
+                } else {
+                    this.$router.push({ name: 'nodeList', params: { nodeType: ALLNODE } })
+                }
             },
 
             handleToPipelineDetail (param) {

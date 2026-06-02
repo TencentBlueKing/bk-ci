@@ -89,6 +89,16 @@ const routes = [
                         path: ':nodeType',
                         name: 'nodeList',
                         component: nodeList,
+                        children: [
+                            {
+                                path: 'setNodeTag',
+                                name: 'setNodeTag',
+                                component: setNodeTag,
+                                meta: {
+                                    collapsePageName: 'nodeList',
+                                }
+                            },
+                        ],
                         meta: {
                             title: 'nodeList',
                             logo: 'environment',

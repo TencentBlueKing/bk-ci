@@ -60,6 +60,9 @@ import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.BuildJobType
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.JobIdAndName
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.PipelineIdAndName
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildCountResp
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyAskInfo
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyAskResp
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildDockerInfo
@@ -141,7 +144,9 @@ class ThirdPartyAgentService @Autowired constructor(
                     containerHashId = containerHashId,
                     envId = envId,
                     ignoreEnvAgentIds = ignoreEnvAgentIds,
-                    jobId = jobId
+                    jobId = jobId,
+                    startUser = userId,
+                    stageId = stageId
                 )
             } catch (e: DeadlockLoserDataAccessException) {
                 logger.warn("Fail to add the third party agent build of ($buildId|$vmSeqId|${agent.agentId}")
@@ -234,7 +239,7 @@ class ThirdPartyAgentService @Autowired constructor(
                 }
 
                 logger.info("Start the build(${build.buildId}) of agent($agentId) and seq(${build.vmSeqId})")
-                thirdPartyAgentBuildDao.updateStatus(dslContext, build.id, PipelineTaskStatus.RUNNING)
+                thirdPartyAgentBuildDao.updateStatus(dslContext, build.id, PipelineTaskStatus.RUNNING, null)
 
                 try {
                     client.get(ServiceThirdPartyAgentResource::class)
@@ -420,7 +425,13 @@ class ThirdPartyAgentService @Autowired constructor(
         }
     }
 
-    fun finishBuild(buildId: String, vmSeqId: String?, buildResult: Boolean, executeCount: Int?) {
+    fun finishBuild(
+        buildId: String,
+        vmSeqId: String?,
+        buildResult: Boolean,
+        executeCount: Int?,
+        timeInterval: Long?
+    ) {
         val now = LocalDateTime.now().timestampmilli()
         if (vmSeqId.isNullOrBlank()) {
             val records = thirdPartyAgentBuildDao.list(dslContext, buildId, executeCount)
@@ -438,7 +449,7 @@ class ThirdPartyAgentService @Autowired constructor(
                     createTime = null,
                     endTime = now
                 )
-                finishBuild(record, buildResult)
+                finishBuild(record, buildResult, timeInterval)
             }
         } else {
             val record = thirdPartyAgentBuildDao.getWithExecuteCount(
@@ -457,7 +468,7 @@ class ThirdPartyAgentService @Autowired constructor(
                 createTime = null,
                 endTime = now
             )
-            finishBuild(record, buildResult)
+            finishBuild(record, buildResult, timeInterval)
         }
     }
 
@@ -513,7 +524,7 @@ class ThirdPartyAgentService @Autowired constructor(
         )
     }
 
-    private fun finishBuild(record: TDispatchThirdpartyAgentBuildRecord, success: Boolean) {
+    private fun finishBuild(record: TDispatchThirdpartyAgentBuildRecord, success: Boolean, timeInterval: Long?) {
         logger.info(
             "Finish the third party agent(${record.agentId}) build(${record.buildId}) " +
                     "of seq(${record.vmSeqId}) and status(${record.status})"
@@ -537,8 +548,10 @@ class ThirdPartyAgentService @Autowired constructor(
             vmSeqId = record.vmSeqId
         )
         thirdPartyAgentBuildDao.updateStatus(
-            dslContext, record.id,
-            if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE
+            dslContext = dslContext,
+            id = record.id,
+            status = if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE,
+            timeInterval = timeInterval
         )
         with(record) {
             pipelineEventDispatcher.dispatch(
@@ -602,7 +615,8 @@ class ThirdPartyAgentService @Autowired constructor(
                     PipelineTaskStatus.FAILURE
                 } else {
                     PipelineTaskStatus.DONE
-                }
+                },
+                timeInterval = null
             )
         }
 
@@ -934,6 +948,117 @@ class ThirdPartyAgentService @Autowired constructor(
         }
 
         return strategyResult.data!!
+    }
+
+    fun fetchBuildPipeline(
+        projectId: String,
+        agentId: String?,
+        envId: Long?,
+        page: Int?,
+        pageSize: Int?,
+        startTime: Long?,
+        endTime: Long?,
+        pipelineId: String?,
+        jobId: String?,
+        creator: String?
+    ): TPAPipelineBuildCountResp {
+        if (agentId.isNullOrBlank() && envId == null) {
+            return TPAPipelineBuildCountResp(0L, 0L, Page(0, 0, 0, emptyList()))
+        }
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 10
+        val sqlLimit = if (pageSizeNotNull != -1) {
+            PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        } else {
+            null
+        }
+        val offset = sqlLimit?.offset ?: 0
+        val limit = sqlLimit?.limit ?: 100
+        val (pipelineCount, jobCount) = thirdPartyAgentBuildDao.countAgentBuildPipelineJob(
+            dslContext = dslContext,
+            projectId = projectId,
+            agentId = agentId,
+            envId = envId,
+            startTime = startTime,
+            endTime = endTime,
+            pipelineId = pipelineId,
+            jobId = jobId,
+            creator = creator
+        )
+        return TPAPipelineBuildCountResp(
+            pipelineCount, jobCount, Page(
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                count = jobCount,
+                records = thirdPartyAgentBuildDao.fetchAgentBuildPipelineJob(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    agentId = agentId,
+                    envId = envId,
+                    limit = limit,
+                    offset = offset,
+                    startTime = startTime,
+                    endTime = endTime,
+                    pipelineId = pipelineId,
+                    jobId = jobId,
+                    creator = creator
+                )
+            )
+        )
+    }
+
+    fun fetchPipelineIdAndName(
+        projectId: String,
+        agentId: String?,
+        envId: Long?,
+        pipelineName: String?
+    ): List<PipelineIdAndName> {
+        if (agentId.isNullOrBlank() && envId == null) {
+            return emptyList()
+        }
+        return thirdPartyAgentBuildDao.fetchPipelineIdAndName(
+            dslContext = dslContext,
+            projectId = projectId,
+            agentId = agentId,
+            envId = envId,
+            pipelineName = pipelineName
+        ).map { PipelineIdAndName(it.first, it.second) }
+    }
+
+    fun fetchJobIdAndName(
+        projectId: String,
+        agentId: String?,
+        envId: Long?,
+        jobName: String?
+    ): List<JobIdAndName> {
+        if (agentId.isNullOrBlank() && envId == null) {
+            return emptyList()
+        }
+        return thirdPartyAgentBuildDao.fetchJobIdAndName(
+            dslContext = dslContext,
+            projectId = projectId,
+            agentId = agentId,
+            envId = envId,
+            jobName = jobName
+        ).map { JobIdAndName(it.first, it.second) }
+    }
+
+    fun fetchCreator(
+        projectId: String,
+        agentId: String?,
+        envId: Long?,
+        creator: String?
+    ): List<String> {
+        if (agentId.isNullOrBlank() && envId == null) {
+            return emptyList()
+        }
+        return thirdPartyAgentBuildDao.fetchCreator(
+            dslContext = dslContext,
+            projectId = projectId,
+            agentId = agentId,
+            envId = envId,
+            creator = creator
+        )
     }
 
     companion object {
