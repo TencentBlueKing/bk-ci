@@ -1,7 +1,9 @@
 package com.tencent.devops.process.service.task
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineBatchTaskDao
 import com.tencent.devops.process.dao.PipelineCopyTaskResourceDao
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
@@ -10,11 +12,14 @@ import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyAction
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyStrategy
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchCopyTaskParam
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskExecuteEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSummary
+import com.tencent.devops.process.pojo.pipeline.task.RepoAuthCopyResourceProp
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -29,28 +34,80 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineBatchTaskDao: PipelineBatchTaskDao,
     private val pipelineCopyTaskResourceDao: PipelineCopyTaskResourceDao,
+    private val pipelineCopyResourceGetService: PipelineCopyResourceGetService,
+    private val pipelineCopyResourceCreateService: PipelineCopyResourceCreateService
 ) {
 
     fun execute(event: PipelineBatchTaskExecuteEvent) {
         with(event) {
-            tryStartExecute(projectId = projectId, taskId = taskId) ?: return
+            val task = tryStartExecute(projectId = projectId, taskId = taskId) ?: return
             val resources = pipelineCopyTaskResourceDao.list(
                 dslContext = dslContext,
                 projectId = projectId,
                 taskId = taskId,
                 status = PipelineCopyTaskResourceStatus.PROCESSED
             )
+            val param = parseParam(task) ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
+                params = arrayOf(task.taskId)
+            )
             if (resources.isNotEmpty()) {
                 // 凭证要在代码库之前创建
-                executeCredentials(projectId = projectId, taskId = taskId, resources = resources)
-                executeRepositories(projectId = projectId, taskId = taskId, resources = resources)
+                executeCredentials(
+                    userId = task.creator,
+                    projectId = projectId,
+                    taskId = taskId,
+                    targetProjectId = param.targetProjectId,
+                    resources = resources
+                )
+                executeRepositories(
+                    userId = task.creator,
+                    projectId = projectId,
+                    taskId = taskId,
+                    targetProjectId = param.targetProjectId,
+                    resources = resources
+                )
                 // 节点要在环境之前创建
-                executeNodes(projectId = projectId, taskId = taskId, resources = resources)
-                executeEnvs(projectId = projectId, taskId = taskId, resources = resources)
-                executePipelineGroups(projectId = projectId, taskId = taskId, resources = resources)
-                executePipelineLabels(projectId = projectId, taskId = taskId, resources = resources)
-                executePipelineTemplates(projectId = projectId, taskId = taskId, resources = resources)
-                executePipelines(projectId = projectId, taskId = taskId, resources = resources)
+                executeNodes(
+                    userId = task.creator,
+                    projectId = projectId,
+                    taskId = taskId,
+                    targetProjectId = param.targetProjectId,
+                    resources = resources
+                )
+                executeEnvs(
+                    userId = task.creator,
+                    projectId = projectId,
+                    taskId = taskId,
+                    targetProjectId = param.targetProjectId,
+                    resources = resources
+                )
+                executePipelineGroups(
+                    userId = task.creator,
+                    projectId = projectId,
+                    taskId = taskId,
+                    targetProjectId = param.targetProjectId,
+                    resources = resources
+                )
+                executePipelineLabels(
+                    userId = task.creator,
+                    projectId = projectId,
+                    taskId = taskId,
+                    targetProjectId = param.targetProjectId,
+                    resources = resources
+                )
+                executePipelineTemplates(
+                    projectId = projectId,
+                    taskId = taskId,
+                    targetProjectId = param.targetProjectId,
+                    resources = resources
+                )
+                executePipelines(
+                    projectId = projectId,
+                    taskId = taskId,
+                    targetProjectId = param.targetProjectId,
+                    resources = resources
+                )
             }
             finishExecute(projectId = projectId, taskId = taskId)
         }
@@ -106,242 +163,537 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
     }
 
     private fun executeCredentials(
+        userId: String,
         projectId: String,
         taskId: String,
+        targetProjectId: String,
         resources: List<PipelineCopyTaskResource>
     ) {
         resources.filter {
             it.resourceType == PipelineDependentResourceType.CREDENTIAL
         }.forEach {
-            executeCredential(projectId = projectId, taskId = taskId, it)
+            executeCredential(
+                userId = userId,
+                projectId = projectId,
+                taskId = taskId,
+                targetProjectId = targetProjectId,
+                resource = it
+            )
         }
     }
 
     private fun executeCredential(
+        userId: String,
         projectId: String,
         taskId: String,
+        targetProjectId: String,
         resource: PipelineCopyTaskResource
     ) {
-        when (resource.copyStrategy!!) {
-            PipelineCopyStrategy.CREDENTIAL_REUSE_SAME_NAME -> {
+        var status = PipelineCopyTaskResourceStatus.SUCCESS
+        var targetResourceId: String? = null
+        var targetResourceName: String? = null
+        var errorMessage: String? = null
+        try {
+            when (val copyStrategy = validateCopyStrategy(resource = resource)) {
+                PipelineCopyStrategy.CREDENTIAL_REUSE_SAME_NAME -> {
+                    val targetResource = pipelineCopyResourceGetService.getCredentialBasicInfo(
+                        userId = userId,
+                        projectId = targetProjectId,
+                        credentialId = resource.resourceId,
+                        expectExists = true
+                    )
+                    targetResourceId = targetResource!!.resourceId
+                    targetResourceName = targetResource.resourceName
+                }
 
+                PipelineCopyStrategy.CREDENTIAL_REPLACE_TARGET -> {
+                    if (resource.targetResourceId.isNullOrBlank()) {
+                        throw ErrorCodeException(
+                            errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TARGET_RESOURCE_EMPTY,
+                            params = arrayOf(resource.resourceName, resource.resourceType.name, copyStrategy.name)
+                        )
+                    }
+                    val targetResource = pipelineCopyResourceGetService.getCredentialBasicInfo(
+                        userId = userId,
+                        projectId = targetProjectId,
+                        credentialId = resource.targetResourceId!!,
+                        expectExists = true
+                    )
+                    targetResourceId = targetResource!!.resourceId
+                    targetResourceName = targetResource.resourceName
+                }
+
+                PipelineCopyStrategy.CREDENTIAL_CREATE_NEW -> {
+                    val targetResource = pipelineCopyResourceCreateService.createCredential(
+                        userId = userId,
+                        sourceProjectId = projectId,
+                        credentialId = resource.resourceId,
+                        targetProjectId = targetProjectId
+                    )
+                    targetResourceId = targetResource.resourceId
+                    targetResourceName = targetResource.resourceId
+                }
+
+                else -> {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_NOT_SUPPORT,
+                        params = arrayOf(
+                            resource.resourceName,
+                            copyStrategy.name,
+                            resource.resourceType.name
+                        )
+                    )
+                }
             }
-
-            PipelineCopyStrategy.CREDENTIAL_REPLACE_TARGET -> {
-
-            }
-
-            PipelineCopyStrategy.CREDENTIAL_CREATE_NEW -> {
-
-            }
-
-            else -> {
-                logger.error("unknown credential copy strategy: ${resource.copyStrategy}")
-            }
+        } catch (ignored: Exception) {
+            status = PipelineCopyTaskResourceStatus.FAILED
+            errorMessage = ignored.message
         }
+        pipelineCopyTaskResourceDao.update(
+            dslContext = dslContext,
+            update = PipelineCopyTaskResourceUpdate(
+                projectId = projectId,
+                taskId = taskId,
+                resourceType = resource.resourceType,
+                resourceId = resource.resourceId,
+                targetResourceType = resource.resourceType,
+                status = status,
+                targetResourceId = targetResourceId,
+                targetResourceName = targetResourceName,
+                errorMessage = errorMessage
+            )
+        )
     }
 
     private fun executeRepositories(
+        userId: String,
         projectId: String,
         taskId: String,
+        targetProjectId: String,
         resources: List<PipelineCopyTaskResource>
     ) {
         resources.filter {
             it.resourceType == PipelineDependentResourceType.REPOSITORY
         }.forEach {
-            executeRepository(projectId = projectId, taskId = taskId, it)
+            executeRepository(
+                userId = userId,
+                projectId = projectId,
+                taskId = taskId,
+                targetProjectId = targetProjectId,
+                resource = it
+            )
         }
     }
 
     private fun executeRepository(
+        userId: String,
         projectId: String,
         taskId: String,
+        targetProjectId: String,
         resource: PipelineCopyTaskResource
     ) {
-        when (resource.copyStrategy!!) {
-            PipelineCopyStrategy.REPOSITORY_REUSE_SAME_NAME_PROTOCOL -> {
+        var status = PipelineCopyTaskResourceStatus.SUCCESS
+        var targetResourceId: String? = null
+        var targetResourceName: String? = null
+        var errorMessage: String? = null
+        try {
+            val copyStrategy = validateCopyStrategy(resource = resource)
+            when (resource.copyStrategy!!) {
+                PipelineCopyStrategy.REPOSITORY_REUSE_SAME_NAME_PROTOCOL -> {
+                    val targetResource = pipelineCopyResourceGetService.getRepositoryByName(
+                        userId = userId,
+                        projectId = targetProjectId,
+                        repositoryName = resource.resourceName,
+                        expectExists = true
+                    )
+                    targetResourceId = targetResource!!.resourceId
+                    targetResourceName = targetResource.resourceName
+                }
 
+                PipelineCopyStrategy.REPOSITORY_CREATE_NEW -> {
+                    pipelineCopyResourceGetService.validateRepositoryProperties(resource)
+                    val targetResource = pipelineCopyResourceCreateService.createRepository(
+                        userId = userId,
+                        sourceProjectId = projectId,
+                        repoName = resource.resourceName,
+                        targetProjectId = targetProjectId,
+                        targetRepoAuthCopyResourceProp = resource.targetResourceProp as RepoAuthCopyResourceProp
+                    )
+                    targetResourceId = targetResource.resourceId
+                    targetResourceName = targetResource.resourceName
+                }
+
+                else -> {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_NOT_SUPPORT,
+                        params = arrayOf(
+                            resource.resourceName,
+                            copyStrategy.name,
+                            resource.resourceType.name
+                        )
+                    )
+                }
             }
-
-            PipelineCopyStrategy.REPOSITORY_CREATE_NEW -> {
-
-            }
-
-            else -> {
-                logger.error("unknown repository copy strategy: ${resource.copyStrategy}")
-            }
+        } catch (ignored: Exception) {
+            status = PipelineCopyTaskResourceStatus.FAILED
+            errorMessage = ignored.message
         }
+        pipelineCopyTaskResourceDao.update(
+            dslContext = dslContext,
+            update = PipelineCopyTaskResourceUpdate(
+                projectId = projectId,
+                taskId = taskId,
+                resourceType = resource.resourceType,
+                resourceId = resource.resourceId,
+                targetResourceType = resource.resourceType,
+                status = status,
+                targetResourceId = targetResourceId,
+                targetResourceName = targetResourceName,
+                errorMessage = errorMessage
+            )
+        )
     }
 
     private fun executeEnvs(
+        userId: String,
         projectId: String,
         taskId: String,
+        targetProjectId: String,
         resources: List<PipelineCopyTaskResource>
     ) {
         resources.filter {
             it.resourceType == PipelineDependentResourceType.BUILD_ENV ||
-                it.resourceType == PipelineDependentResourceType.DEPLOY_ENV
+                    it.resourceType == PipelineDependentResourceType.DEPLOY_ENV
         }.forEach {
-            executeEnv(projectId = projectId, taskId = taskId, it)
+            executeEnv(
+                userId = userId,
+                projectId = projectId,
+                taskId = taskId,
+                targetProjectId = targetProjectId,
+                resource = it
+            )
         }
     }
 
     private fun executeEnv(
+        userId: String,
         projectId: String,
         taskId: String,
+        targetProjectId: String,
         resource: PipelineCopyTaskResource
     ) {
-        when (resource.copyStrategy!!) {
-            PipelineCopyStrategy.BUILD_ENV_REUSE_SAME_NAME -> {
+        var status = PipelineCopyTaskResourceStatus.SUCCESS
+        var targetResourceId: String? = null
+        var targetResourceName: String? = null
+        var errorMessage: String? = null
+        try {
+            when (val copyStrategy = validateCopyStrategy(resource)) {
+                PipelineCopyStrategy.BUILD_ENV_REUSE_SAME_NAME,
+                PipelineCopyStrategy.DEPLOY_ENV_REUSE_SAME_NAME -> {
+                    val targetResource = pipelineCopyResourceGetService.getEnvByName(
+                        userId = userId,
+                        projectId = targetProjectId,
+                        envName = resource.resourceName,
+                        expectExists = true
+                    )
+                    targetResourceId = targetResource!!.resourceId
+                    targetResourceName = targetResource.resourceName
+                }
 
+                PipelineCopyStrategy.BUILD_ENV_CREATE_WITHOUT_NODE,
+                PipelineCopyStrategy.DEPLOY_ENV_CREATE_WITHOUT_NODE -> {
+                    val targetResource = pipelineCopyResourceCreateService.createEnv(
+                        userId = userId,
+                        sourceProjectId = projectId,
+                        sourceEnvHashId = resource.resourceId,
+                        targetProjectId = targetProjectId,
+                        nodeHashIds = emptyList()
+                    )
+                    targetResourceId = targetResource.resourceId
+                    targetResourceName = targetResource.resourceName
+                }
+
+                PipelineCopyStrategy.BUILD_ENV_CREATE_AND_MOVE_NODE,
+                PipelineCopyStrategy.DEPLOY_ENV_CREATE_AND_MOVE_NODE -> {
+                    val targetResource = pipelineCopyResourceCreateService.createEnvAndMoveNodes(
+                        userId = userId,
+                        sourceProjectId = projectId,
+                        sourceEnvHashId = resource.resourceId,
+                        targetProjectId = targetProjectId
+                    )
+                    targetResourceId = targetResource.resourceId
+                    targetResourceName = targetResource.resourceName
+                }
+
+                else -> throwStrategyNotSupport(resource = resource, copyStrategy = copyStrategy)
             }
-
-            PipelineCopyStrategy.BUILD_ENV_CREATE_WITHOUT_NODE -> {
-
-            }
-
-            PipelineCopyStrategy.BUILD_ENV_CREATE_AND_MOVE_NODE -> {
-
-            }
-
-            PipelineCopyStrategy.DEPLOY_ENV_REUSE_SAME_NAME -> {
-
-            }
-
-            PipelineCopyStrategy.DEPLOY_ENV_CREATE_WITHOUT_NODE -> {
-
-            }
-
-            PipelineCopyStrategy.DEPLOY_ENV_CREATE_AND_MOVE_NODE -> {
-
-            }
-
-            else -> {
-                logger.error("unknown env copy strategy: ${resource.copyStrategy}")
-            }
+        } catch (ignored: Exception) {
+            status = PipelineCopyTaskResourceStatus.FAILED
+            errorMessage = ignored.message
         }
+        pipelineCopyTaskResourceDao.update(
+            dslContext = dslContext,
+            update = PipelineCopyTaskResourceUpdate(
+                projectId = projectId,
+                taskId = taskId,
+                resourceType = resource.resourceType,
+                resourceId = resource.resourceId,
+                targetResourceType = resource.resourceType,
+                status = status,
+                targetResourceId = targetResourceId,
+                targetResourceName = targetResourceName,
+                errorMessage = errorMessage
+            )
+        )
     }
 
     private fun executeNodes(
+        userId: String,
         projectId: String,
         taskId: String,
+        targetProjectId: String,
         resources: List<PipelineCopyTaskResource>
     ) {
         resources.filter {
             it.resourceType == PipelineDependentResourceType.BUILD_NODE ||
-                it.resourceType == PipelineDependentResourceType.DEPLOY_NODE
+                    it.resourceType == PipelineDependentResourceType.DEPLOY_NODE
         }.forEach {
-            executeNode(projectId = projectId, taskId = taskId, it)
+            executeNode(
+                userId = userId,
+                projectId = projectId,
+                taskId = taskId,
+                targetProjectId = targetProjectId,
+                resource = it
+            )
         }
     }
 
     private fun executeNode(
+        userId: String,
         projectId: String,
         taskId: String,
+        targetProjectId: String,
         resource: PipelineCopyTaskResource
     ) {
-        when (resource.copyStrategy!!) {
-            PipelineCopyStrategy.BUILD_NODE_REUSE_SAME_NAME -> {
+        var status = PipelineCopyTaskResourceStatus.SUCCESS
+        var targetResourceId: String? = null
+        var targetResourceName: String? = null
+        var errorMessage: String? = null
+        try {
+            when (val copyStrategy = validateCopyStrategy(resource)) {
+                PipelineCopyStrategy.BUILD_NODE_REUSE_SAME_NAME,
+                PipelineCopyStrategy.DEPLOY_NODE_REUSE_SAME_NAME -> {
+                    val targetResource = pipelineCopyResourceGetService.getNodeByName(
+                        userId = userId,
+                        projectId = targetProjectId,
+                        nodeName = resource.resourceName,
+                        expectExists = true
+                    )
+                    targetResourceId = targetResource!!.resourceId
+                    targetResourceName = targetResource.resourceName
+                }
 
+                PipelineCopyStrategy.BUILD_NODE_MOVE_TO_TARGET_PROJECT,
+                PipelineCopyStrategy.DEPLOY_NODE_MOVE_TO_TARGET_PROJECT -> {
+                    val targetResource = pipelineCopyResourceCreateService.moveNodeToTargetProject(
+                        userId = userId,
+                        sourceProjectId = projectId,
+                        nodeHashId = resource.resourceId,
+                        targetProjectId = targetProjectId
+                    )
+                    targetResourceId = targetResource.resourceId
+                    targetResourceName = targetResource.resourceName
+                }
+
+                else -> throwStrategyNotSupport(resource = resource, copyStrategy = copyStrategy)
             }
-
-            PipelineCopyStrategy.BUILD_NODE_MOVE_TO_TARGET_PROJECT -> {
-
-            }
-
-            PipelineCopyStrategy.DEPLOY_NODE_REUSE_SAME_NAME -> {
-
-            }
-
-            PipelineCopyStrategy.DEPLOY_NODE_MOVE_TO_TARGET_PROJECT -> {
-
-            }
-
-            else -> {
-                logger.error("unknown node copy strategy: ${resource.copyStrategy}")
-            }
+        } catch (ignored: Exception) {
+            status = PipelineCopyTaskResourceStatus.FAILED
+            errorMessage = ignored.message
         }
+        pipelineCopyTaskResourceDao.update(
+            dslContext = dslContext,
+            update = PipelineCopyTaskResourceUpdate(
+                projectId = projectId,
+                taskId = taskId,
+                resourceType = resource.resourceType,
+                resourceId = resource.resourceId,
+                targetResourceType = resource.resourceType,
+                status = status,
+                targetResourceId = targetResourceId,
+                targetResourceName = targetResourceName,
+                errorMessage = errorMessage
+            )
+        )
     }
 
     private fun executePipelineGroups(
+        userId: String,
         projectId: String,
         taskId: String,
+        targetProjectId: String,
         resources: List<PipelineCopyTaskResource>
     ) {
         resources.filter {
             it.resourceType == PipelineDependentResourceType.PIPELINE_GROUP
         }.forEach {
-            executePipelineGroup(projectId = projectId, taskId = taskId, it)
+            executePipelineGroup(
+                userId = userId,
+                projectId = projectId,
+                taskId = taskId,
+                targetProjectId = targetProjectId,
+                resource = it
+            )
         }
     }
 
     private fun executePipelineGroup(
+        userId: String,
         projectId: String,
         taskId: String,
+        targetProjectId: String,
         resource: PipelineCopyTaskResource
     ) {
-        when (resource.copyStrategy!!) {
-            PipelineCopyStrategy.PIPELINE_GROUP_AUTO_REUSE_OR_CREATE -> {
+        var status = PipelineCopyTaskResourceStatus.SUCCESS
+        var targetResourceId: String? = null
+        var targetResourceName: String? = null
+        var errorMessage: String? = null
+        try {
+            when (val copyStrategy = validateCopyStrategy(resource)) {
+                PipelineCopyStrategy.PIPELINE_GROUP_AUTO_REUSE_OR_CREATE -> {
+                    val pipelineGroup = pipelineCopyResourceGetService.getPipelineGroupByName(
+                        projectId = targetProjectId,
+                        viewName = resource.resourceName,
+                        expectExists = null
+                    ) ?: pipelineCopyResourceCreateService.createPipelineGroup(
+                        userId = userId,
+                        sourceProjectId = projectId,
+                        viewName = resource.resourceId,
+                        targetProjectId = targetProjectId
+                    )
+                    targetResourceId = pipelineGroup.resourceId
+                    targetResourceName = pipelineGroup.resourceName
+                }
 
+                PipelineCopyStrategy.PIPELINE_GROUP_IGNORE -> Unit
+
+                else -> throwStrategyNotSupport(resource = resource, copyStrategy = copyStrategy)
             }
-
-            PipelineCopyStrategy.PIPELINE_GROUP_IGNORE -> {
-
-            }
-
-            else -> {
-                logger.error("unknown pipeline group copy strategy: ${resource.copyStrategy}")
-            }
+        } catch (ignored: Exception) {
+            status = PipelineCopyTaskResourceStatus.FAILED
+            errorMessage = ignored.message
         }
+        pipelineCopyTaskResourceDao.update(
+            dslContext = dslContext,
+            update = PipelineCopyTaskResourceUpdate(
+                projectId = projectId,
+                taskId = taskId,
+                resourceType = resource.resourceType,
+                resourceId = resource.resourceId,
+                targetResourceType = resource.resourceType,
+                status = status,
+                targetResourceId = targetResourceId,
+                targetResourceName = targetResourceName,
+                errorMessage = errorMessage
+            )
+        )
     }
 
     private fun executePipelineLabels(
+        userId: String,
         projectId: String,
         taskId: String,
+        targetProjectId: String,
         resources: List<PipelineCopyTaskResource>
     ) {
         resources.filter {
             it.resourceType == PipelineDependentResourceType.PIPELINE_LABEL
         }.forEach {
-            executePipelineLabel(projectId = projectId, taskId = taskId, it)
+            executePipelineLabel(
+                userId = userId,
+                projectId = projectId,
+                taskId = taskId,
+                targetProjectId = targetProjectId,
+                resource = it
+            )
         }
     }
 
     private fun executePipelineLabel(
+        userId: String,
         projectId: String,
         taskId: String,
+        targetProjectId: String,
         resource: PipelineCopyTaskResource
     ) {
-        when (resource.copyStrategy!!) {
-            PipelineCopyStrategy.LABEL_AUTO_REUSE_OR_CREATE -> {
+        var status = PipelineCopyTaskResourceStatus.SUCCESS
+        var targetResourceId: String? = null
+        var targetResourceName: String? = null
+        var errorMessage: String? = null
+        try {
+            val copyStrategy = validateCopyStrategy(resource)
+            when (copyStrategy) {
+                PipelineCopyStrategy.LABEL_AUTO_REUSE_OR_CREATE -> {
+                    val pipelineLabel = pipelineCopyResourceGetService.getPipelineLabelByName(
+                        projectId = targetProjectId,
+                        labelName = resource.resourceName,
+                        expectExists = null
+                    ) ?: pipelineCopyResourceCreateService.createPipelineLabel(
+                        userId = userId,
+                        sourceProjectId = projectId,
+                        sourceLabelId = resource.resourceId,
+                        targetProjectId = targetProjectId
+                    )
+                    targetResourceId = pipelineLabel.resourceId
+                    targetResourceName = pipelineLabel.resourceName
+                }
 
+                PipelineCopyStrategy.LABEL_IGNORE -> Unit
+
+                else -> throwStrategyNotSupport(resource = resource, copyStrategy = copyStrategy)
             }
-
-            PipelineCopyStrategy.LABEL_IGNORE -> {
-
-            }
-
-            else -> {
-                logger.error("unknown pipeline label copy strategy: ${resource.copyStrategy}")
-            }
+        } catch (ignored: Exception) {
+            status = PipelineCopyTaskResourceStatus.FAILED
+            errorMessage = ignored.message
         }
+        pipelineCopyTaskResourceDao.update(
+            dslContext = dslContext,
+            update = PipelineCopyTaskResourceUpdate(
+                projectId = projectId,
+                taskId = taskId,
+                resourceType = resource.resourceType,
+                resourceId = resource.resourceId,
+                targetResourceType = resource.resourceType,
+                status = status,
+                targetResourceId = targetResourceId,
+                targetResourceName = targetResourceName,
+                errorMessage = errorMessage
+            )
+        )
     }
 
     private fun executePipelineTemplates(
         projectId: String,
         taskId: String,
+        targetProjectId: String,
         resources: List<PipelineCopyTaskResource>
     ) {
         resources.filter {
             it.resourceType == PipelineDependentResourceType.PIPELINE_TEMPLATE
         }.forEach {
-            executePipelineTemplate(projectId = projectId, taskId = taskId, it)
+            executePipelineTemplate(
+                projectId = projectId,
+                taskId = taskId,
+                targetProjectId = targetProjectId,
+                resource = it
+            )
         }
     }
 
     private fun executePipelineTemplate(
         projectId: String,
         taskId: String,
+        targetProjectId: String,
         resource: PipelineCopyTaskResource
     ) {
         when (resource.copyStrategy!!) {
@@ -362,18 +714,25 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
     private fun executePipelines(
         projectId: String,
         taskId: String,
+        targetProjectId: String,
         resources: List<PipelineCopyTaskResource>
     ) {
         resources.filter {
             it.resourceType == PipelineDependentResourceType.PIPELINE
         }.forEach {
-            executePipeline(projectId = projectId, taskId = taskId, it)
+            executePipeline(
+                projectId = projectId,
+                taskId = taskId,
+                targetProjectId = targetProjectId,
+                resource = it
+            )
         }
     }
 
     private fun executePipeline(
         projectId: String,
         taskId: String,
+        targetProjectId: String,
         resource: PipelineCopyTaskResource
     ) {
         when (resource.copyStrategy!!) {
@@ -470,6 +829,37 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
             failedCount == 0 && successCount == resourceCount -> PipelineBatchTaskStatus.SUCCESS
             successCount == 0 -> PipelineBatchTaskStatus.FAILED
             else -> PipelineBatchTaskStatus.PARTIAL_FAILED
+        }
+    }
+
+    private fun validateCopyStrategy(resource: PipelineCopyTaskResource): PipelineCopyStrategy {
+        val copyStrategy = resource.copyStrategy ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_CAN_NOT_EMPTY,
+            params = arrayOf(resource.resourceType.name, resource.resourceName)
+        )
+        if (!copyStrategy.support(resource.resourceType)) {
+            throwStrategyNotSupport(resource = resource, copyStrategy = copyStrategy)
+        }
+        return copyStrategy
+    }
+
+    private fun throwStrategyNotSupport(
+        resource: PipelineCopyTaskResource,
+        copyStrategy: PipelineCopyStrategy
+    ): Nothing {
+        throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_NOT_SUPPORT,
+            params = arrayOf(
+                resource.resourceName,
+                copyStrategy.name,
+                resource.resourceType.name
+            )
+        )
+    }
+
+    private fun parseParam(task: PipelineBatchTask): PipelineBatchCopyTaskParam? {
+        return task.taskParam?.takeIf { it.isNotBlank() }?.let {
+            JsonUtil.to(it, PipelineBatchCopyTaskParam::class.java)
         }
     }
 

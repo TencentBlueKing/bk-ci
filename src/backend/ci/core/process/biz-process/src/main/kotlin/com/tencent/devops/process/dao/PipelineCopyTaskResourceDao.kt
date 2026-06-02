@@ -62,7 +62,7 @@ class PipelineCopyTaskResourceDao {
                     resource.targetResourceType?.name,
                     resource.targetResourceId,
                     resource.targetResourceName,
-                    resource.targetResourceProperties?.let { JsonUtil.toJson(it, formatted = false) },
+                    resource.targetResourceProp?.let { JsonUtil.toJson(it, formatted = false) },
                     resource.status.name,
                     resource.errorMessage,
                     resource.highRisk,
@@ -193,6 +193,40 @@ class PipelineCopyTaskResourceDao {
         }
     }
 
+    fun batchUpdate(
+        dslContext: DSLContext,
+        updates: List<PipelineCopyTaskResourceUpdate>
+    ): Int {
+        if (updates.isEmpty()) {
+            return 0
+        }
+        val queries = with(T_PIPELINE_COPY_TASK_RESOURCE) {
+            updates.map { resourceUpdate ->
+                val query = dslContext.update(this)
+                resourceUpdate.copyStrategy?.let { query.set(COPY_STRATEGY, it.name) }
+                resourceUpdate.targetResourceType?.let { query.set(TARGET_RESOURCE_TYPE, it.name) }
+                resourceUpdate.targetResourceId?.let { query.set(TARGET_RESOURCE_ID, it) }
+                resourceUpdate.targetResourceName?.let { query.set(TARGET_RESOURCE_NAME, it) }
+                resourceUpdate.targetResourceProperties?.let {
+                    query.set(TARGET_RESOURCE_PROPERTIES, JsonUtil.toJson(it, formatted = false))
+                }
+                resourceUpdate.status?.let { query.set(STATUS, it.name) }
+                resourceUpdate.errorMessage?.let { query.set(ERROR_MESSAGE, it) }
+                resourceUpdate.targetNameExists?.let { query.set(TARGET_NAME_EXISTS, it) }
+                resourceUpdate.targetIdExists?.let { query.set(TARGET_ID_EXISTS, it) }
+                resourceUpdate.highRisk?.let { query.set(HIGH_RISK, it) }
+                resourceUpdate.copyAction?.let { query.set(COPY_ACTION, it.name) }
+                resourceUpdate.confirmed?.let { query.set(CONFIRMED, it) }
+                query.set(UPDATE_TIME, LocalDateTime.now())
+                    .where(PROJECT_ID.eq(resourceUpdate.projectId))
+                    .and(TASK_ID.eq(resourceUpdate.taskId))
+                    .and(RESOURCE_TYPE.eq(resourceUpdate.resourceType.name))
+                    .and(RESOURCE_ID.eq(resourceUpdate.resourceId))
+            }
+        }
+        return dslContext.batch(queries).execute().sum()
+    }
+
     private fun convert(record: TPipelineCopyTaskResourceRecord): PipelineCopyTaskResource {
         return with(record) {
             PipelineCopyTaskResource(
@@ -209,7 +243,7 @@ class PipelineCopyTaskResourceDao {
                 },
                 targetResourceId = targetResourceId,
                 targetResourceName = targetResourceName,
-                targetResourceProperties = toProperties(targetResourceProperties),
+                targetResourceProp = toProperties(targetResourceProperties),
                 status = PipelineCopyTaskResourceStatus.valueOf(status),
                 errorMessage = errorMessage,
                 highRisk = highRisk,

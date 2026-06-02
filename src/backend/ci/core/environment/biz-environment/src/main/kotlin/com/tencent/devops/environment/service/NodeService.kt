@@ -891,6 +891,12 @@ class NodeService @Autowired constructor(
                 targetProjectId = targetProjectId,
                 nodeIds = nodeIds
             )
+            nodeTagDao.transferNodesTags(
+                dslContext = transactionContext,
+                sourceProjectId = sourceProjectId,
+                targetProjectId = targetProjectId,
+                nodeIds = nodeIds.toSet()
+            )
         }
         logger.info(
             "transfer nodes success|userId=$userId|sourceProjectId=$sourceProjectId|" +

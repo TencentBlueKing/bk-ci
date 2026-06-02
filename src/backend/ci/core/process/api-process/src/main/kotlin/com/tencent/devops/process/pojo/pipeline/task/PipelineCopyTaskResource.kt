@@ -33,7 +33,7 @@ data class PipelineCopyTaskResource(
     @get:Schema(description = "目标资源名")
     val targetResourceName: String? = null,
     @get:Schema(description = "目标资源属性")
-    val targetResourceProperties: PipelineCopyResourceProp? = null,
+    val targetResourceProp: PipelineCopyResourceProp? = null,
     @get:Schema(description = "资源状态", required = true)
     val status: PipelineCopyTaskResourceStatus = PipelineCopyTaskResourceStatus.UNPROCESSED,
     @get:Schema(description = "错误信息")
