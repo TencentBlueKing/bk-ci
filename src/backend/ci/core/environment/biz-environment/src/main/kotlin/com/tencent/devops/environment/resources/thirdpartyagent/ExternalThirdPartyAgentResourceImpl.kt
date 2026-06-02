@@ -97,4 +97,8 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
             agentType = agentType
         )
     }
+
+    override fun addCreateNode(deviceId: String, os: OS): String {
+        return batchInstallAgentService.genCreateAgentInstallScriptByDeviceId(deviceId, os)
+    }
 }

@@ -210,16 +210,30 @@ class BatchInstallAgentService @Autowired constructor(
         userId: String,
         projectId: String,
         workspaceName: String,
+        os: OS
     ): String {
         val agentId = genNewAgent(
             projectId = projectId,
             userId = userId,
-            os = OS.WINDOWS,
+            os = os,
             zoneName = createEnvService.getWorkspaceZoneName(projectId, workspaceName),
             agentType = AgentType.CREATE,
             createWorkspaceName = workspaceName
         )
         return HashUtil.encodeLongId(agentId)
+    }
+
+    fun genCreateAgentInstallScriptByDeviceId(
+        deviceId: String,
+        os: OS
+    ): String {
+        // TODO: 通过deviceId获取用户和项目信息，这里要考虑下权限相关的
+        return genCreateAgentInstallScript(
+            userId = TODO(),
+            projectId = TODO(),
+            workspaceName = deviceId,
+            os = os
+        )
     }
 
     companion object {
