@@ -46,10 +46,10 @@ import org.springframework.stereotype.Service
 @Service
 class IMateService {
 
-    @Value("\${support.imate.base-url}")
+    @Value("\${imate.base-url}")
     private lateinit var baseUrl: String
 
-    @Value("\${support.imate.token}")
+    @Value("\${imate.token}")
     private lateinit var token: String
 
     fun queryUserRobots(username: String): Result<List<IMateRobotInfo>> {
