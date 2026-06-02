@@ -99,7 +99,7 @@ object PipelineParamUtils {
             key = key,
             type = param.valueType!!
         ).forEach { (subKey, paramKey) ->
-            allParams.add(param.copy(key = paramKey, value = paramValue[subKey] ?: ""))
+            fillContextPrefix(param.copy(key = paramKey, value = paramValue[subKey] ?: ""), originStartContexts)
         }
 
         allParams.forEach { fillContextPrefix(it, originStartContexts) }
@@ -134,7 +134,10 @@ object PipelineParamUtils {
         // 下级参数，填充住参数名前缀
         paramValue.forEachIndexed { index, map ->
             map.forEach { (subKey, subValue) ->
-                allParams.add(param.copy(key = "$key.$index.$subKey", value = subValue ?: ""))
+                fillContextPrefix(
+                    param.copy(key = "${key}.${index}.${subKey}", value = subValue ?: ""),
+                    originStartContexts
+                )
             }
         }
         // 添加variables前缀
