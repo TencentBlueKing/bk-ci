@@ -99,7 +99,7 @@ class GolangAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             val goBinaryName = if (osType == OSType.WINDOWS) GO_EXE_NAME else GO_BIN_NAME
             val goBinaryFile = File(goBinPath, goBinaryName)
             val needDownload = if (!goBinaryFile.exists()) {
-                LoggerService.addNormalLine("Go ${runtimeVersion} not found, starting download...")
+                LoggerService.addNormalLine("Go $runtimeVersion not found, starting download...")
                 true
             } else {
                 // 缓存命中，检查版本号是否匹配（版本匹配则不会触发 GOTOOLCHAIN=auto）
@@ -174,21 +174,7 @@ class GolangAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 if (osType == OSType.WINDOWS) {
                     ZipUtil.unZipFile(pkgFile, goVersionDir.absolutePath, false)
                 } else {
-                    // Linux/Mac: Go tarball 包含 go/ 顶层目录，需特殊处理
-                    val tmpDir = File(envDir, "$GO_DIR_PREFIX/tmp")
-                    tmpDir.mkdirs()
-                    CommandLineUtils.execute(
-                        "tar -xzf $pkgName -C ${tmpDir.absolutePath}",
-                        pkgFile.parentFile,
-                        print2Logger = true
-                    )
-                    val extractedGoDir = File(tmpDir, "go")
-                    if (extractedGoDir.exists()) {
-                        extractedGoDir.renameTo(goVersionDir)
-                    } else {
-                        tmpDir.listFiles()?.forEach { it.renameTo(File(goVersionDir, it.name)) }
-                    }
-                    tmpDir.delete()
+                    extractGoTarball(envDir, pkgName, pkgFile, goVersionDir)
                 }
 
                 // 验证解压后的 Go 二进制文件
@@ -214,6 +200,26 @@ class GolangAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 // 解压/验证失败（downloadSucceeded=true）→ 下次循环保留pkgFile，跳过下载只重新解压
             }
         }
+    }
+
+    /**
+     * 解压 Go tarball（Linux/Mac），处理 go/ 顶层目录
+     */
+    private fun extractGoTarball(envDir: File, pkgName: String, pkgFile: File, goVersionDir: File) {
+        val tmpDir = File(envDir, "$GO_DIR_PREFIX/tmp")
+        tmpDir.mkdirs()
+        CommandLineUtils.execute(
+            "tar -xzf $pkgName -C ${tmpDir.absolutePath}",
+            pkgFile.parentFile,
+            print2Logger = true
+        )
+        val extractedGoDir = File(tmpDir, "go")
+        if (extractedGoDir.exists()) {
+            extractedGoDir.renameTo(goVersionDir)
+        } else {
+            tmpDir.listFiles()?.forEach { it.renameTo(File(goVersionDir, it.name)) }
+        }
+        tmpDir.delete()
     }
 
     /**
