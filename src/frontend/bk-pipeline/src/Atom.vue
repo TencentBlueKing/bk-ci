@@ -888,6 +888,7 @@
     align-items: center;
     height: 12px;
     margin: 0;
+    gap: 0;
     overflow: hidden;
     border-radius: 4px 0 0 0;
     white-space: nowrap;
