@@ -122,6 +122,7 @@ object PipelineParamUtils {
                 is String -> {
                     JsonUtil.to(value, object : TypeReference<List<Map<String, String>>>() {})
                 }
+
                 else -> {
                     value as List<Map<String, String>>
                 }
@@ -135,7 +136,7 @@ object PipelineParamUtils {
         paramValue.forEachIndexed { index, map ->
             map.forEach { (subKey, subValue) ->
                 fillContextPrefix(
-                    param.copy(key = "${key}.${index}.${subKey}", value = subValue ?: ""),
+                    param.copy(key = "$key.$index.$subKey", value = subValue ?: ""),
                     originStartContexts
                 )
             }
