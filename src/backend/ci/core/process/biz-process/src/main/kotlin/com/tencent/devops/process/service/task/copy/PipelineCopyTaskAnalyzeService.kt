@@ -37,18 +37,8 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceRel
 import com.tencent.devops.process.pojo.pipeline.task.PipelineLabelGroupCopyResourceProp
 import com.tencent.devops.process.pojo.pipeline.task.PipelineViewCopyResourceProp
-import com.tencent.devops.process.pojo.pipeline.task.RepoAuthCopyResourceProp
+import com.tencent.devops.process.pojo.pipeline.task.RepositoryCopyResourceProp
 import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.repository.pojo.CodeGitRepository
-import com.tencent.devops.repository.pojo.CodeGitlabRepository
-import com.tencent.devops.repository.pojo.CodeP4Repository
-import com.tencent.devops.repository.pojo.CodeSvnRepository
-import com.tencent.devops.repository.pojo.CodeTGitRepository
-import com.tencent.devops.repository.pojo.GithubRepository
-import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.pojo.ScmGitRepository
-import com.tencent.devops.repository.pojo.ScmSvnRepository
-import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -682,7 +672,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
     ): PipelineCopyTaskResource {
         var targetNameExists = false
         var status = PipelineCopyTaskResourceStatus.UNPROCESSED
-        var repoAuthCopyResourceProperties: RepoAuthCopyResourceProp? = null
+        var repositoryCopyResourceProperties: RepositoryCopyResourceProp? = null
         try {
             val repository = client.get(ServiceRepositoryResource::class).get(
                 projectId = projectId,
@@ -690,7 +680,9 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                 repositoryType = RepositoryType.ID
             ).data
             if (repository != null) {
-                repoAuthCopyResourceProperties = buildRepositoryCopyResourceProperties(repository)
+                repositoryCopyResourceProperties = RepositoryCopyResourceProp(
+                    scmCode = repository.scmCode
+                )
             } else {
                 status = PipelineCopyTaskResourceStatus.FAILED
             }
@@ -714,44 +706,12 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
             resourceType = resource.resourceType,
             resourceId = resource.resourceId,
             resourceName = resource.resourceName,
-            resourceProperties = repoAuthCopyResourceProperties,
+            resourceProperties = repositoryCopyResourceProperties,
             targetProjectId = targetProjectId,
             status = status,
             targetNameExists = targetNameExists,
             pipelineReferCount = pipelineReferCount
         )
-    }
-
-    private fun buildRepositoryCopyResourceProperties(repository: Repository): RepoAuthCopyResourceProp {
-        val (authType, authInfo) = when (repository) {
-            is CodeGitRepository -> repository.authType?.name to repository.getAuthInfo(repository.authType)
-            is CodeTGitRepository -> repository.authType?.name to repository.getAuthInfo(repository.authType)
-            is CodeGitlabRepository -> repository.authType?.name to repository.getAuthInfo(repository.authType)
-            is ScmGitRepository -> repository.authType?.name to repository.getAuthInfo(repository.authType)
-            is CodeSvnRepository -> repository.getSvnAuthType() to repository.credentialId
-            is ScmSvnRepository -> repository.getSvnAuthType() to repository.credentialId
-            is GithubRepository -> RepoAuthType.OAUTH.name to repository.userName
-            is CodeP4Repository -> RepoAuthType.HTTP.name to repository.credentialId
-            else -> null to null
-        }
-        return RepoAuthCopyResourceProp(
-            authType = authType,
-            authInfo = authInfo,
-            repositoryType = repository.scmCode.ifBlank { repository.getScmType().name },
-            repositoryUrl = repository.url
-        )
-    }
-
-    private fun Repository.getAuthInfo(authType: RepoAuthType?): String {
-        return if (authType == RepoAuthType.OAUTH) userName else credentialId
-    }
-
-    private fun CodeSvnRepository.getSvnAuthType(): String {
-        return svnType?.uppercase() ?: RepoAuthType.SSH.name
-    }
-
-    private fun ScmSvnRepository.getSvnAuthType(): String {
-        return svnType?.uppercase() ?: RepoAuthType.SSH.name
     }
 
     private fun buildEnvCopyResource(

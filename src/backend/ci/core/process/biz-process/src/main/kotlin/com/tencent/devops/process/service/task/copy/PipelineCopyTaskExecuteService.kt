@@ -23,7 +23,6 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineLabelGroupCopyResourceProp
-import com.tencent.devops.process.pojo.pipeline.task.RepoAuthCopyResourceProp
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

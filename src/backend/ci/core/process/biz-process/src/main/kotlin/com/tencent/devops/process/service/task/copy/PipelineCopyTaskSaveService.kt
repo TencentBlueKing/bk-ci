@@ -17,7 +17,6 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskConfigRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
-import com.tencent.devops.process.pojo.pipeline.task.RepoAuthCopyResourceProp
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -167,7 +166,6 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                         resourceType = resource.resourceType,
                         resourceId = resource.resourceId,
                         targetResourceType = resource.resourceType,
-                        targetResourceProperties = resource.targetResourceProp as RepoAuthCopyResourceProp,
                         status = PipelineCopyTaskResourceStatus.PROCESSED,
                         copyStrategy = copyStrategy,
                         copyAction = copyStrategy.copyAction

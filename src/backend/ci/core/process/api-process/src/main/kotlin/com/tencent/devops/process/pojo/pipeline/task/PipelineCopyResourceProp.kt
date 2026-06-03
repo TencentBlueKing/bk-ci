@@ -8,8 +8,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@subType")
 @JsonSubTypes(
     JsonSubTypes.Type(
-        value = RepoAuthCopyResourceProp::class,
-        name = RepoAuthCopyResourceProp.classType
+        value = RepositoryCopyResourceProp::class,
+        name = RepositoryCopyResourceProp.classType
     ),
     JsonSubTypes.Type(
         value = PipelineConflictCopyResourceProp::class,
