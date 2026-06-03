@@ -1,10 +1,33 @@
 <template>
     <span
         class="hover-slide-btn"
+        :class="{
+            'hover-slide-btn--group': isGroup
+        }"
         :style="btnStyle"
         v-on="$listeners"
     >
-        <span class="hover-slide-btn__badge">
+        <template v-if="isGroup">
+            <span
+                v-for="action in actions"
+                :key="action.key"
+                class="hover-slide-btn__action"
+                :style="getActionStyle(action)"
+                @click.stop="handleActionClick(action)"
+            >
+                <Logo
+                    v-if="action.icon"
+                    :name="action.icon"
+                    :size="action.iconSize || iconSize"
+                    class="hover-slide-btn__action-icon"
+                />
+                <span class="hover-slide-btn__action-text">{{ action.label }}</span>
+            </span>
+        </template>
+        <span
+            v-else
+            class="hover-slide-btn__badge"
+        >
             <slot name="badge">
                 <Logo
                     v-if="icon"
@@ -13,7 +36,10 @@
                 />
             </slot>
         </span>
-        <span class="hover-slide-btn__text">
+        <span
+            v-if="!isGroup"
+            class="hover-slide-btn__text"
+        >
             <slot />
         </span>
     </span>
@@ -53,20 +79,45 @@
             badgeSize: {
                 type: [String, Number],
                 default: 16
+            },
+            actions: {
+                type: Array,
+                default: () => []
+            },
+            actionWidth: {
+                type: [String, Number],
+                default: 52
             }
         },
         computed: {
+            isGroup () {
+                return this.actions.length > 0
+            },
             btnStyle () {
                 const w = typeof this.width === 'number' ? `${this.width}px` : this.width
                 const h = typeof this.height === 'number' ? `${this.height}px` : this.height
                 const bs = typeof this.badgeSize === 'number' ? `${this.badgeSize}px` : this.badgeSize
+                const aw = typeof this.actionWidth === 'number' ? `${this.actionWidth}px` : this.actionWidth
                 return {
                     '--slide-btn-color': this.color,
                     '--slide-btn-text-color': this.textColor,
                     '--slide-btn-width': w,
                     '--slide-btn-height': h,
-                    '--slide-btn-badge-size': bs
+                    '--slide-btn-badge-size': bs,
+                    '--slide-btn-action-width': aw
                 }
+            }
+        },
+        methods: {
+            getActionStyle (action) {
+                return {
+                    '--slide-btn-action-color': action.color,
+                    '--slide-btn-action-text-color': action.textColor,
+                    '--slide-btn-action-hover-color': action.hoverTextColor
+                }
+            },
+            handleActionClick (action) {
+                this.$emit('action-click', action)
             }
         }
     }
@@ -121,6 +172,64 @@
         .hover-slide-btn__text {
             transform: translateX(0);
         }
+    }
+
+    &.hover-slide-btn--group {
+        right: 0;
+        bottom: 0;
+        align-items: center;
+        width: auto;
+        height: var(--slide-btn-badge-size);
+        margin: 0;
+        border-radius: 4px 0 0 0;
+        white-space: nowrap;
+        z-index: 3;
+        transition: height .2s ease-in-out, border-radius .2s ease-in-out;
+
+        .hover-slide-btn__action {
+            display: inline-flex;
+            flex: 0 0 var(--slide-btn-badge-size);
+            align-items: center;
+            justify-content: center;
+            width: var(--slide-btn-badge-size);
+            height: var(--slide-btn-badge-size);
+            background-color: var(--slide-btn-action-color);
+            color: var(--slide-btn-action-text-color);
+            font-size: 12px;
+            transition: all .2s ease-in-out;
+        }
+
+        .hover-slide-btn__action-icon {
+            color: var(--slide-btn-action-text-color);
+        }
+
+        .hover-slide-btn__action-text {
+            display: none;
+            line-height: 20px;
+        }
+    }
+}
+
+.hover-slide-btn--group:hover {
+    height: 100%;
+    border-radius: 0;
+
+    .hover-slide-btn__action {
+        flex-basis: var(--slide-btn-action-width);
+        width: var(--slide-btn-action-width);
+        height: 100%;
+    }
+
+    .hover-slide-btn__action:hover {
+        color: var(--slide-btn-action-hover-color);
+    }
+
+    .hover-slide-btn__action-icon {
+        display: none;
+    }
+
+    .hover-slide-btn__action-text {
+        display: inline;
     }
 }
 </style>

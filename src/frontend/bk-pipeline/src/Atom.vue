@@ -172,24 +172,14 @@
                     </template>
                 </bk-popover>
             </span>
-            <span
+            <hover-slide-btn
                 v-if="atomOperateList.length"
-                class="atom-operate-area atom-action-area"
-            >
-                <span
-                    v-for="action in atomOperateList"
-                    :key="action.key"
-                    :class="['atom-action-btn', `atom-action-${action.key}`]"
-                    @click.stop="skipOrRetry(action.skip)"
-                >
-                    <Logo
-                        :name="action.icon"
-                        size="9"
-                        class="atom-action-icon"
-                    />
-                    <span class="atom-action-label">{{ action.label }}</span>
-                </span>
-            </span>
+                :actions="atomOperateList"
+                :icon-size="9"
+                :badge-size="12"
+                :action-width="52"
+                @action-click="handleAtomOperateClick"
+            />
 
             <Logo
                 v-if="reactiveData.editable && !atom.isError"
@@ -236,6 +226,7 @@
 
 <script>
     import { bkCheckbox, bkPopover } from '@tencent/bk-magic-vue'
+    import HoverSlideBtn from './HoverSlideBtn'
     import Logo from './Logo'
     import StatusIcon from './StatusIcon'
     import {
@@ -265,6 +256,7 @@
         components: {
             StatusIcon,
             Logo,
+            HoverSlideBtn,
             bkPopover,
             bkCheckbox
         },
@@ -451,6 +443,9 @@
                         key: 'retry',
                         label: this.t('retry'),
                         icon: 'refresh-line',
+                        color: '#E1ECFF',
+                        textColor: '#3A84FF',
+                        hoverTextColor: '#699DF4',
                         skip: false,
                         visible: this.atom.canRetry
                     },
@@ -458,6 +453,9 @@
                         key: 'skip',
                         label: this.t('SKIP'),
                         icon: 'cc-skip',
+                        color: '#DAF6E5',
+                        textColor: '#2CAF5E',
+                        hoverTextColor: '#65C389',
                         skip: true,
                         visible: this.atom.canSkip
                     }
@@ -667,6 +665,10 @@
                 })
             },
 
+            handleAtomOperateClick (action) {
+                this.skipOrRetry(action.skip)
+            },
+
             async skipOrRetry (skip = false) {
                 if (this.isBusy) return
                 try {
@@ -865,6 +867,8 @@
   .atom-execounter {
     color: $primaryColor;
     font-size: 12px;
+    flex-shrink: 0;
+    margin-right: 8px;
   }
 
   .spin-icon {
@@ -878,78 +882,6 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-  }
-
-  .atom-action-area {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    height: 12px;
-    margin: 0;
-    gap: 0;
-    overflow: hidden;
-    border-radius: 4px 0 0 0;
-    white-space: nowrap;
-    z-index: 3;
-  }
-
-  .atom-action-btn {
-    display: inline-flex;
-    flex: 0 0 16px;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 12px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all .2s ease-in-out;
-  }
-
-  .atom-action-label {
-    display: none;
-    line-height: 20px;
-  }
-
-  .atom-action-retry {
-    background-color: #E1ECFF;
-    .atom-action-icon,
-    .atom-action-label {
-      color: #3A84FF;
-    }
-    &:hover .atom-action-label {
-      color: #699DF4;
-    }
-  }
-
-  .atom-action-skip {
-    background-color: #DAF6E5;
-    .atom-action-icon,
-    .atom-action-label {
-      color: #2CAF5E;
-    }
-    &:hover .atom-action-label {
-      color: #65C389;
-    }
-  }
-
-  &:hover {
-    .atom-action-area {
-      height: 100%;
-      border-radius: 0;
-    }
-    .atom-action-btn {
-      flex-basis: 52px;
-      width: 52px;
-      height: 100%;
-    }
-    .atom-action-icon {
-      display: none;
-    }
-    .atom-action-label {
-      display: inline;
-    }
   }
 
   .atom-reviewing-tips {
