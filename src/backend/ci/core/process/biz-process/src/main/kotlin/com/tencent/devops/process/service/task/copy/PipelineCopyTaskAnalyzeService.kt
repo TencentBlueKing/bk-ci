@@ -1,4 +1,4 @@
-package com.tencent.devops.process.service.task
+package com.tencent.devops.process.service.task.copy
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -32,7 +32,6 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineConflictInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceRel
 import com.tencent.devops.process.pojo.pipeline.task.RepoAuthCopyResourceProp
-import com.tencent.devops.process.service.PipelineDependentResourceService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
@@ -60,7 +59,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
     private val pipelineBatchTaskDetailDao: PipelineBatchTaskDetailDao,
     private val pipelineCopyTaskResourceDao: PipelineCopyTaskResourceDao,
     private val pipelineCopyTaskResourceRelDao: PipelineCopyTaskResourceRelDao,
-    private val pipelineDependentResourceService: PipelineDependentResourceService,
+    private val pipelineDependencyAnalyzeService: PipelineDependencyAnalyzeService,
     private val pipelineLabelDao: PipelineLabelDao,
     private val pipelineViewDao: PipelineViewDao,
     private val pipelineTemplateInfoDao: PipelineTemplateInfoDao,
@@ -81,11 +80,9 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                 projectId = event.projectId,
                 task = task
             )
-            // 分析完成后,把状态再转换成草稿
-            pipelineCopyTaskStateService.updateTaskStatusWithLock(
-                projectId = projectId,
-                taskId = taskId,
-                status = PipelineBatchTaskStatus.DRAFT
+            finishAnalyze(
+                projectId = event.projectId,
+                taskId = taskId
             )
         }
     }
@@ -115,6 +112,18 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
             projectId = projectId,
             taskId = task.taskId,
             targetProjectId = param.targetProjectId
+        )
+    }
+
+    fun finishAnalyze(
+        projectId: String,
+        taskId: String
+    ) {
+        // 分析完成后,把状态再转换成草稿
+        pipelineCopyTaskStateService.updateTaskStatusWithLock(
+            projectId = projectId,
+            taskId = taskId,
+            status = PipelineBatchTaskStatus.DRAFT
         )
     }
 
@@ -436,7 +445,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
         val pipelineIds = details.map { it.pipelineId }.toSet()
         val copyTaskResourceRelSet = mutableSetOf<PipelineCopyTaskResourceRel>()
         val resources = details.flatMap { detail ->
-            val dependentResources = pipelineDependentResourceService.analysisResourceDependency(
+            val dependentResources = pipelineDependencyAnalyzeService.analysisResourceDependency(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = detail.pipelineId

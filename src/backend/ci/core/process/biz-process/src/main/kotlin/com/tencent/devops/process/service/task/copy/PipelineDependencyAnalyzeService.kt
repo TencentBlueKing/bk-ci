@@ -1,4 +1,4 @@
-package com.tencent.devops.process.service
+package com.tencent.devops.process.service.task.copy
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
@@ -43,12 +43,13 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import kotlin.collections.get
 
 @Service
 /**
  * 流水线依赖资源分析
  */
-class PipelineDependentResourceService @Autowired constructor(
+class PipelineDependencyAnalyzeService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val pipelineViewGroupDao: PipelineViewGroupDao,
@@ -647,7 +648,7 @@ class PipelineDependentResourceService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineDependentResourceService::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineDependencyAnalyzeService::class.java)
 
         private val REPO_CHECKOUT_ATOM_CODES = setOf(
             "gitCodeRepo", "PullFromGithub", "Gitlab", "atomtgit", "checkout", "svnCodeRepo"

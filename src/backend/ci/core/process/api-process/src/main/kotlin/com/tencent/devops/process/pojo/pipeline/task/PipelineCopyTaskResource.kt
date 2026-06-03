@@ -48,6 +48,8 @@ data class PipelineCopyTaskResource(
     val confirmed: Boolean = false,
     @get:Schema(description = "流水线引用数", required = true)
     val pipelineReferCount: Int = 0,
+    @get:Schema(description = "资源被源项目引用的数量", required = true)
+    val sourceProjectReferCount: Int = 0,
     @get:Schema(description = "创建时间")
     val createTime: Long? = null,
     @get:Schema(description = "更新时间")

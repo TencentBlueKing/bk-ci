@@ -92,7 +92,7 @@ class PipelineBatchTaskService @Autowired constructor(
                 taskName = request.taskName,
                 taskType = request.taskType,
                 taskParam = null,
-                status = PipelineBatchTaskStatus.DRAFT,
+                status = handler.taskStatusWhenCreate(),
                 step = PipelineBatchTaskStep.CONFIG,
                 totalCount = details.size,
                 subPipelineCount = details.count { it.subPipeline },

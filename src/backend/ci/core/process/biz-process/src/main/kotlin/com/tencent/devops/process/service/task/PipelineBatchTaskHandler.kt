@@ -1,6 +1,7 @@
 package com.tencent.devops.process.service.task
 
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailStatus
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskAnalyzeEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateEvent
@@ -19,6 +20,11 @@ interface PipelineBatchTaskHandler {
      * 是否支持指定任务类型
      */
     fun support(taskType: PipelineBatchTaskType): Boolean
+
+    /**
+     * 创建任务时的初始任务状态
+     */
+    fun taskStatusWhenCreate(): PipelineBatchTaskStatus
 
     /**
      * 创建任务明细时的初始明细状态

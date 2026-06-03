@@ -11,8 +11,6 @@ data class PipelineCopyResourceGroup(
     val totalCount: Int,
     @get:Schema(description = "未处理的资源数", required = true)
     val unprocessedCount: Int = 0,
-    @get:Schema(description = "源项目被引用的数量", required = true)
-    val sourceProjectReferCount: Int,
     @get:Schema(description = "资源信息", required = true)
     val resources: List<PipelineCopyTaskResource>
 )

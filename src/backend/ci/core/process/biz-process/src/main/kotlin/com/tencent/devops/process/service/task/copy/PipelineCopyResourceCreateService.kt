@@ -1,4 +1,4 @@
-package com.tencent.devops.process.service.task
+package com.tencent.devops.process.service.task.copy
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.pojo.EnvCreateInfo
@@ -18,7 +19,10 @@ import com.tencent.devops.process.dao.label.PipelineLabelDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.enums.Logic
+import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
 import com.tencent.devops.process.pojo.pipeline.task.RepoAuthCopyResourceProp
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
+import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.view.PipelineViewService
 import com.tencent.devops.process.utils.CredentialUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
@@ -50,14 +54,16 @@ class PipelineCopyResourceCreateService @Autowired constructor(
     private val pipelineGroupDao: PipelineGroupDao,
     private val pipelineLabelDao: PipelineLabelDao,
     private val pipelineViewDao: PipelineViewDao,
-    private val pipelineViewService: PipelineViewService
+    private val pipelineViewService: PipelineViewService,
+    private val pipelineDependencyReplaceService: PipelineDependencyReplaceService,
+    private val pipelineInfoFacadeService: PipelineInfoFacadeService
 ) {
     fun createCredential(
         userId: String,
         sourceProjectId: String,
         credentialId: String,
         targetProjectId: String
-    ): PipelineCopyTargetResource {
+    ): PipelineCopyResourceBasicInfo {
         val pair = DHUtil.initKey()
         val encoder = Base64.getEncoder()
         val credentialBasicInfo = client.get(ServiceCredentialResource::class).getBasicInfo(
@@ -122,7 +128,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             resourceName = credentialId,
             result = createResult
         )
-        return PipelineCopyTargetResource(
+        return PipelineCopyResourceBasicInfo(
             resourceId = credentialId,
             resourceName = credentialId
         )
@@ -134,7 +140,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
         repoName: String,
         targetProjectId: String,
         targetRepoAuthCopyResourceProp: RepoAuthCopyResourceProp
-    ): PipelineCopyTargetResource {
+    ): PipelineCopyResourceBasicInfo {
         val repository = client.get(ServiceRepositoryResource::class).get(
             projectId = sourceProjectId,
             repositoryId = repoName,
@@ -158,7 +164,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             resourceName = repoName,
             result = createResult
         )
-        return PipelineCopyTargetResource(
+        return PipelineCopyResourceBasicInfo(
             resourceId = targetRepoHashId.hashId,
             resourceName = repoName
         )
@@ -169,7 +175,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
         sourceProjectId: String,
         nodeHashId: String,
         targetProjectId: String
-    ): PipelineCopyTargetResource {
+    ): PipelineCopyResourceBasicInfo {
         val sourceNode = client.get(ServiceNodeResource::class).getNodeStatus(
             userId = userId,
             projectId = sourceProjectId,
@@ -191,7 +197,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             resourceName = sourceNode.displayName ?: sourceNode.name,
             result = transferResult
         )
-        return PipelineCopyTargetResource(
+        return PipelineCopyResourceBasicInfo(
             resourceId = sourceNode.nodeHashId,
             resourceName = sourceNode.displayName ?: sourceNode.name
         )
@@ -202,7 +208,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
         sourceProjectId: String,
         viewName: String,
         targetProjectId: String
-    ): PipelineCopyTargetResource {
+    ): PipelineCopyResourceBasicInfo {
         val sourceView = pipelineViewDao.fetchAnyByName(
             dslContext = dslContext,
             projectId = sourceProjectId,
@@ -229,7 +235,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
                 pipelineIds = if (sourceView.viewType == PipelineViewType.STATIC) emptyList() else null
             )
         )
-        return PipelineCopyTargetResource(
+        return PipelineCopyResourceBasicInfo(
             resourceId = HashUtil.encodeLongId(targetViewId),
             resourceName = sourceView.name
         )
@@ -240,7 +246,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
         sourceProjectId: String,
         sourceLabelId: String,
         targetProjectId: String
-    ): PipelineCopyTargetResource {
+    ): PipelineCopyResourceBasicInfo {
         val sourceLabel = pipelineLabelDao.getById(
             dslContext = dslContext,
             projectId = sourceProjectId,
@@ -276,7 +282,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             userId = userId,
             id = targetLabelId
         )
-        return PipelineCopyTargetResource(
+        return PipelineCopyResourceBasicInfo(
             resourceId = HashUtil.encodeLongId(targetLabelId),
             resourceName = sourceLabel.name
         )
@@ -288,7 +294,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
         sourceEnvHashId: String,
         targetProjectId: String,
         nodeHashIds: List<String>
-    ): PipelineCopyTargetResource {
+    ): PipelineCopyResourceBasicInfo {
         val sourceEnv = client.get(ServiceEnvironmentResource::class).get(
             userId = userId,
             projectId = sourceProjectId,
@@ -315,7 +321,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             resourceName = sourceEnv.name,
             result = createResult
         )
-        return PipelineCopyTargetResource(
+        return PipelineCopyResourceBasicInfo(
             resourceId = envId.hashId,
             resourceName = sourceEnv.name
         )
@@ -326,7 +332,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
         sourceProjectId: String,
         sourceEnvHashId: String,
         targetProjectId: String
-    ): PipelineCopyTargetResource {
+    ): PipelineCopyResourceBasicInfo {
         val sourceNodes = client.get(ServiceEnvironmentResource::class).listNodesByEnvIds(
             userId = userId,
             projectId = sourceProjectId,
@@ -350,6 +356,35 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             sourceEnvHashId = sourceEnvHashId,
             targetProjectId = targetProjectId,
             nodeHashIds = sourceNodeHashIds
+        )
+    }
+
+    fun createPipeline(
+        userId: String,
+        sourceProjectId: String,
+        sourcePipelineId: String,
+        targetProjectId: String,
+        targetPipelineId: String,
+        targetPipelineName: String,
+        dependentResources: List<PipelineCopyTaskResource>
+    ): PipelineCopyResourceBasicInfo {
+        val modelAndSetting = pipelineDependencyReplaceService.replaceResourceDependency(
+            userId = userId,
+            projectId = sourceProjectId,
+            pipelineId = sourcePipelineId,
+            replaceResourceMap = buildReplaceResourceMap(dependentResources)
+        )
+        pipelineInfoFacadeService.createPipeline(
+            userId = userId,
+            projectId = targetProjectId,
+            model = modelAndSetting.model.copy(name = targetPipelineName),
+            channelCode = ChannelCode.BS,
+            setting = modelAndSetting.setting,
+            fixPipelineId = targetPipelineId
+        )
+        return PipelineCopyResourceBasicInfo(
+            resourceId = targetPipelineId,
+            resourceName = targetPipelineName
         )
     }
 
@@ -398,6 +433,23 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             )
         }
         return result.data!!
+    }
+
+    private fun buildReplaceResourceMap(
+        resources: List<PipelineCopyTaskResource>
+    ): Map<String, PipelineDependentResource> {
+        return resources.mapNotNull { resource ->
+            val targetProjectId = resource.targetProjectId?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+            val targetResourceId = resource.targetResourceId?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+            val targetResourceName = resource.targetResourceName?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+            val key = "${resource.resourceType.name}_${resource.resourceId}"
+            key to PipelineDependentResource(
+                projectId = targetProjectId,
+                resourceType = resource.resourceType,
+                resourceId = targetResourceId,
+                resourceName = targetResourceName
+            )
+        }.toMap()
     }
 
     private fun generateSegmentId(bizTag: String): Long {

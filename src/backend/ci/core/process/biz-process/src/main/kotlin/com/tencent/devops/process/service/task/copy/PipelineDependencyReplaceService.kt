@@ -1,4 +1,4 @@
-package com.tencent.devops.process.service
+package com.tencent.devops.process.service.task.copy
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
@@ -42,12 +42,13 @@ import com.tencent.devops.process.utils.PipelineVarUtil
 import jakarta.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import kotlin.collections.get
 
 /**
  * 流水线依赖资源替换
  */
 @Service
-class PipelineResourceReplaceService @Autowired constructor(
+class PipelineDependencyReplaceService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineSettingFacadeService: PipelineSettingFacadeService
 ) {
@@ -78,27 +79,34 @@ class PipelineResourceReplaceService @Autowired constructor(
             pipelineId = pipelineId,
             version = resource.settingVersion ?: 0
         )
+        val context = ReplaceContext(replaceResourceMap = replaceResourceMap)
         val replacedModel = resource.model.copy(
             stages = replaceStages(
                 projectId = projectId,
                 stages = resource.model.stages,
-                replaceResourceMap = replaceResourceMap
+                context = context
             )
         )
+        if (context.missingResources.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_DEPENDENT_RESOURCE_MIGRATE_FAILED,
+                params = arrayOf(formatMissingResources(context.missingResources))
+            )
+        }
         return PipelineModelAndSetting(model = replacedModel, setting = setting)
     }
 
     private fun replaceStages(
         projectId: String,
         stages: List<Stage>,
-        replaceResourceMap: Map<String, PipelineDependentResource>
+        context: ReplaceContext
     ): List<Stage> {
         return stages.map { stage ->
             stage.copy(
                 containers = replaceContainers(
                     projectId = projectId,
                     containers = stage.containers,
-                    replaceResourceMap = replaceResourceMap
+                    context = context
                 )
             )
         }
@@ -107,7 +115,7 @@ class PipelineResourceReplaceService @Autowired constructor(
     private fun replaceContainers(
         projectId: String,
         containers: List<Container>,
-        replaceResourceMap: Map<String, PipelineDependentResource>
+        context: ReplaceContext
     ): List<Container> {
         return containers.map { container ->
             when (container) {
@@ -116,7 +124,7 @@ class PipelineResourceReplaceService @Autowired constructor(
                         elements = replaceElements(
                             projectId = projectId,
                             elements = container.elements,
-                            replaceResourceMap = replaceResourceMap
+                            context = context
                         )
                     )
                 }
@@ -124,13 +132,13 @@ class PipelineResourceReplaceService @Autowired constructor(
                 is VMBuildContainer -> {
                     val replaceContainer = replaceBuildContainer(
                         container = container,
-                        replaceResource = replaceResourceMap
+                        context = context
                     )
                     replaceContainer.copy(
                         elements = replaceElements(
                             projectId = projectId,
                             elements = container.elements,
-                            replaceResourceMap = replaceResourceMap
+                            context = context
                         )
                     )
                 }
@@ -140,7 +148,7 @@ class PipelineResourceReplaceService @Autowired constructor(
                         elements = replaceElements(
                             projectId = projectId,
                             elements = container.elements,
-                            replaceResourceMap = replaceResourceMap
+                            context = context
                         )
                     )
                 }
@@ -153,21 +161,21 @@ class PipelineResourceReplaceService @Autowired constructor(
     private fun replaceElements(
         projectId: String,
         elements: List<Element>,
-        replaceResourceMap: Map<String, PipelineDependentResource>
+        context: ReplaceContext
     ): List<Element> {
         return elements.map { element ->
             when {
                 element is WebHookTriggerElement -> {
                     replaceTriggerRepository(
                         element = element,
-                        replaceResourceMap = replaceResourceMap
+                        context = context
                     )
                 }
 
                 isRepoCheckoutElement(element) -> {
                     replaceCheckoutRepository(
                         element = element,
-                        replaceResourceMap = replaceResourceMap
+                        context = context
                     )
                 }
 
@@ -175,7 +183,7 @@ class PipelineResourceReplaceService @Autowired constructor(
                     replaceSubPipelineElement(
                         projectId = projectId,
                         element = element,
-                        replaceResourceMap = replaceResourceMap
+                        context = context
                     )
                 }
 
@@ -186,20 +194,20 @@ class PipelineResourceReplaceService @Autowired constructor(
 
     private fun replaceBuildContainer(
         container: VMBuildContainer,
-        replaceResource: Map<String, PipelineDependentResource>
+        context: ReplaceContext
     ): VMBuildContainer {
         val dispatchType = container.dispatchType as? ThirdPartyAgentDispatch ?: return container
         val replacedDispatchType = when {
             dispatchType is ThirdPartyAgentEnvDispatchType &&
                 dispatchType.agentType == AgentType.ID -> replaceEnvDispatchType(
                 dispatchType = dispatchType,
-                replaceResource = replaceResource
+                context = context
             )
 
             dispatchType is ThirdPartyAgentIDDispatchType &&
                 dispatchType.idType() -> replaceNodeDispatchType(
                 dispatchType = dispatchType,
-                replaceResource = replaceResource
+                context = context
             )
 
             else -> dispatchType
@@ -213,16 +221,15 @@ class PipelineResourceReplaceService @Autowired constructor(
 
     private fun replaceEnvDispatchType(
         dispatchType: ThirdPartyAgentEnvDispatchType,
-        replaceResource: Map<String, PipelineDependentResource>
+        context: ReplaceContext
     ): ThirdPartyAgentEnvDispatchType {
-        val resourceKey = resourceKey(
+        val targetEnvId = context.getTargetResource(
             resourceType = PipelineDependentResourceType.BUILD_ENV,
             resourceId = dispatchType.value
-        )
-        val targetEnvId = replaceResource[resourceKey]?.resourceId
+        )?.resourceId
         val dockerInfo = replaceDockerInfo(
             dockerInfo = dispatchType.dockerInfo,
-            replaceResource = replaceResource
+            context = context
         )
         if (targetEnvId == null && dockerInfo === dispatchType.dockerInfo) {
             return dispatchType
@@ -235,16 +242,15 @@ class PipelineResourceReplaceService @Autowired constructor(
 
     private fun replaceNodeDispatchType(
         dispatchType: ThirdPartyAgentIDDispatchType,
-        replaceResource: Map<String, PipelineDependentResource>
+        context: ReplaceContext
     ): ThirdPartyAgentIDDispatchType {
-        val resourceKey = resourceKey(
+        val targetNodeId = context.getTargetResource(
             resourceType = PipelineDependentResourceType.BUILD_NODE,
             resourceId = dispatchType.displayName
-        )
-        val targetNodeId = replaceResource[resourceKey]?.resourceId
+        )?.resourceId
         val dockerInfo = replaceDockerInfo(
             dockerInfo = dispatchType.dockerInfo,
-            replaceResource = replaceResource
+            context = context
         )
         if (targetNodeId == null && dockerInfo === dispatchType.dockerInfo) {
             return dispatchType
@@ -257,18 +263,17 @@ class PipelineResourceReplaceService @Autowired constructor(
 
     private fun replaceDockerInfo(
         dockerInfo: ThirdPartyAgentDockerInfo?,
-        replaceResource: Map<String, PipelineDependentResource>
+        context: ReplaceContext
     ): ThirdPartyAgentDockerInfo? {
         val credential = dockerInfo?.credential ?: return dockerInfo
         val credentialId = credential.credentialId?.takeIf { it.isNotBlank() } ?: return dockerInfo
         if (PipelineVarUtil.isVar(credentialId)) {
             return dockerInfo
         }
-        val resourceKey = resourceKey(
+        val targetCredential = context.getTargetResource(
             resourceType = PipelineDependentResourceType.CREDENTIAL,
             resourceId = credentialId
-        )
-        val targetCredential = replaceResource[resourceKey] ?: return dockerInfo
+        ) ?: return dockerInfo
         return dockerInfo.copy(
             credential = credential.copy(
                 credentialId = targetCredential.resourceId,
@@ -280,13 +285,13 @@ class PipelineResourceReplaceService @Autowired constructor(
     @Suppress("CyclomaticComplexMethod")
     private fun replaceTriggerRepository(
         element: Element,
-        replaceResourceMap: Map<String, PipelineDependentResource>
+        context: ReplaceContext
     ): Element {
         return when {
             element is CodeGitWebHookTriggerElement && element.repositoryType == TriggerRepositoryType.ID -> {
                 val targetRepositoryId = getTargetRepositoryId(
                     repositoryHashId = element.repositoryHashId,
-                    replaceResourceMap = replaceResourceMap
+                    context = context
                 ) ?: return element
                 element.copy(repositoryHashId = targetRepositoryId)
             }
@@ -294,7 +299,7 @@ class PipelineResourceReplaceService @Autowired constructor(
             element is CodeSVNWebHookTriggerElement && element.repositoryType == TriggerRepositoryType.ID -> {
                 val targetRepositoryId = getTargetRepositoryId(
                     repositoryHashId = element.repositoryHashId,
-                    replaceResourceMap = replaceResourceMap
+                    context = context
                 ) ?: return element
                 element.copy(repositoryHashId = targetRepositoryId)
             }
@@ -302,7 +307,7 @@ class PipelineResourceReplaceService @Autowired constructor(
             element is CodeGitlabWebHookTriggerElement && element.repositoryType == TriggerRepositoryType.ID -> {
                 val targetRepositoryId = getTargetRepositoryId(
                     repositoryHashId = element.repositoryHashId,
-                    replaceResourceMap = replaceResourceMap
+                    context = context
                 ) ?: return element
                 element.copy(repositoryHashId = targetRepositoryId)
             }
@@ -310,7 +315,7 @@ class PipelineResourceReplaceService @Autowired constructor(
             element is CodeGithubWebHookTriggerElement && element.repositoryType == TriggerRepositoryType.ID -> {
                 val targetRepositoryId = getTargetRepositoryId(
                     repositoryHashId = element.repositoryHashId,
-                    replaceResourceMap = replaceResourceMap
+                    context = context
                 ) ?: return element
                 element.copy(repositoryHashId = targetRepositoryId)
             }
@@ -319,7 +324,7 @@ class PipelineResourceReplaceService @Autowired constructor(
                 element.data.input.repositoryType == TriggerRepositoryType.ID -> {
                 val targetRepositoryId = getTargetRepositoryId(
                     repositoryHashId = element.data.input.repositoryHashId,
-                    replaceResourceMap = replaceResourceMap
+                    context = context
                 ) ?: return element
                 element.copy(
                     data = element.data.copy(
@@ -332,7 +337,7 @@ class PipelineResourceReplaceService @Autowired constructor(
                 element.data.input.repositoryType == TriggerRepositoryType.ID -> {
                 val targetRepositoryId = getTargetRepositoryId(
                     repositoryHashId = element.data.input.repositoryHashId,
-                    replaceResourceMap = replaceResourceMap
+                    context = context
                 ) ?: return element
                 element.copy(
                     data = element.data.copy(
@@ -345,7 +350,7 @@ class PipelineResourceReplaceService @Autowired constructor(
                 element.data.input.repositoryType == TriggerRepositoryType.ID -> {
                 val targetRepositoryId = getTargetRepositoryId(
                     repositoryHashId = element.data.input.repositoryHashId,
-                    replaceResourceMap = replaceResourceMap
+                    context = context
                 ) ?: return element
                 element.copy(
                     data = element.data.copy(
@@ -358,7 +363,7 @@ class PipelineResourceReplaceService @Autowired constructor(
                 element.data.input.repositoryType == TriggerRepositoryType.ID -> {
                 val targetRepositoryId = getTargetRepositoryId(
                     repositoryHashId = element.data.input.repositoryHashId,
-                    replaceResourceMap = replaceResourceMap
+                    context = context
                 ) ?: return element
                 element.copy(
                     data = CodeP4WebHookTriggerData(
@@ -374,13 +379,13 @@ class PipelineResourceReplaceService @Autowired constructor(
     @Suppress("CyclomaticComplexMethod")
     private fun replaceCheckoutRepository(
         element: Element,
-        replaceResourceMap: Map<String, PipelineDependentResource>
+        context: ReplaceContext
     ): Element {
         return when {
             element is CodeGitElement && element.repositoryType == RepositoryType.ID -> {
                 val targetRepositoryId = getTargetRepositoryId(
                     repositoryHashId = element.repositoryHashId,
-                    replaceResourceMap = replaceResourceMap
+                    context = context
                 ) ?: return element
                 element.copy(repositoryHashId = targetRepositoryId)
             }
@@ -388,7 +393,7 @@ class PipelineResourceReplaceService @Autowired constructor(
             element is CodeSvnElement && element.repositoryType == RepositoryType.ID -> {
                 val targetRepositoryId = getTargetRepositoryId(
                     repositoryHashId = element.repositoryHashId,
-                    replaceResourceMap = replaceResourceMap
+                    context = context
                 ) ?: return element
                 element.copy(repositoryHashId = targetRepositoryId)
             }
@@ -396,7 +401,7 @@ class PipelineResourceReplaceService @Autowired constructor(
             element is CodeGitlabElement && element.repositoryType == RepositoryType.ID -> {
                 val targetRepositoryId = getTargetRepositoryId(
                     repositoryHashId = element.repositoryHashId,
-                    replaceResourceMap = replaceResourceMap
+                    context = context
                 ) ?: return element
                 element.copy(repositoryHashId = targetRepositoryId)
             }
@@ -404,7 +409,7 @@ class PipelineResourceReplaceService @Autowired constructor(
             element is GithubElement && element.repositoryType == RepositoryType.ID -> {
                 val targetRepositoryId = getTargetRepositoryId(
                     repositoryHashId = element.repositoryHashId,
-                    replaceResourceMap = replaceResourceMap
+                    context = context
                 ) ?: return element
                 element.copy(repositoryHashId = targetRepositoryId)
             }
@@ -417,7 +422,7 @@ class PipelineResourceReplaceService @Autowired constructor(
                 if (repositoryType == RepositoryType.ID.name && !repositoryHashId.isNullOrBlank()) {
                     val targetRepositoryId = getTargetRepositoryId(
                         repositoryHashId = repositoryHashId,
-                        replaceResourceMap = replaceResourceMap
+                        context = context
                     ) ?: return element
                     element.copy(
                         data = replaceInputField(
@@ -452,13 +457,14 @@ class PipelineResourceReplaceService @Autowired constructor(
     private fun replaceSubPipelineElement(
         projectId: String,
         element: Element,
-        replaceResourceMap: Map<String, PipelineDependentResource>
+        context: ReplaceContext
     ): Element {
         return when {
             element is SubPipelineCallElement && element.isIdSubPipelineType() -> {
-                val targetPipeline = replaceResourceMap[
-                    resourceKey(PipelineDependentResourceType.PIPELINE, element.subPipelineId)
-                ] ?: return element
+                val targetPipeline = context.getTargetResource(
+                    resourceType = PipelineDependentResourceType.PIPELINE,
+                    resourceId = element.subPipelineId
+                ) ?: return element
                 element.copy(subPipelineId = targetPipeline.resourceId)
             }
 
@@ -466,7 +472,7 @@ class PipelineResourceReplaceService @Autowired constructor(
                 val replacedData = replaceSubPipelineExecData(
                     projectId = projectId,
                     data = element.data,
-                    replaceResourceMap = replaceResourceMap
+                    context = context
                 ) ?: return element
                 element.copy(data = replacedData)
             }
@@ -475,7 +481,7 @@ class PipelineResourceReplaceService @Autowired constructor(
                 val replacedData = replaceSubPipelineExecData(
                     projectId = projectId,
                     data = element.data,
-                    replaceResourceMap = replaceResourceMap
+                    context = context
                 ) ?: return element
                 element.copy(data = replacedData)
             }
@@ -487,7 +493,7 @@ class PipelineResourceReplaceService @Autowired constructor(
     private fun replaceSubPipelineExecData(
         projectId: String,
         data: Map<String, Any>,
-        replaceResourceMap: Map<String, PipelineDependentResource>
+        context: ReplaceContext
     ): Map<String, Any>? {
         val input = data[INPUT]
         if (input !is Map<*, *>) {
@@ -502,9 +508,10 @@ class PipelineResourceReplaceService @Autowired constructor(
         ) {
             return null
         }
-        val targetPipeline = replaceResourceMap[
-            resourceKey(PipelineDependentResourceType.PIPELINE, subPipelineId)
-        ] ?: return null
+        val targetPipeline = context.getTargetResource(
+            resourceType = PipelineDependentResourceType.PIPELINE,
+            resourceId = subPipelineId
+        ) ?: return null
         return replaceInputField(
             data = data,
             fieldName = SUB_PIPELINE_EXEC_ID,
@@ -527,27 +534,50 @@ class PipelineResourceReplaceService @Autowired constructor(
 
     private fun getTargetRepositoryId(
         repositoryHashId: String?,
-        replaceResourceMap: Map<String, PipelineDependentResource>
+        context: ReplaceContext
     ): String? {
         val sourceRepositoryHashId = repositoryHashId?.takeIf { it.isNotBlank() } ?: return null
-        return replaceResourceMap[
-            resourceKey(
-                resourceType = PipelineDependentResourceType.REPOSITORY,
-                resourceId = sourceRepositoryHashId
-            )
-        ]?.resourceId
+        return context.getTargetResource(
+            resourceType = PipelineDependentResourceType.REPOSITORY,
+            resourceId = sourceRepositoryHashId
+        )?.resourceId
     }
 
     private fun SubPipelineCallElement.isIdSubPipelineType(): Boolean {
         return subPipelineType == null || subPipelineType == SubPipelineType.ID
     }
 
-    private fun resourceKey(
-        resourceType: PipelineDependentResourceType,
-        resourceId: String
-    ): String {
-        return "${resourceType}_$resourceId"
+    private fun formatMissingResources(missingResources: Set<MissingReplaceResource>): String {
+        return missingResources.joinToString(",") {
+            "${it.resourceType.name}:${it.resourceId}"
+        }
     }
+
+    private data class ReplaceContext(
+        val replaceResourceMap: Map<String, PipelineDependentResource>,
+        val missingResources: MutableSet<MissingReplaceResource> = linkedSetOf()
+    ) {
+        fun getTargetResource(
+            resourceType: PipelineDependentResourceType,
+            resourceId: String
+        ): PipelineDependentResource? {
+            val sourceResourceId = resourceId.takeIf { it.isNotBlank() } ?: return null
+            return replaceResourceMap["${resourceType}_$sourceResourceId"] ?: run {
+                missingResources.add(
+                    MissingReplaceResource(
+                        resourceType = resourceType,
+                        resourceId = sourceResourceId
+                    )
+                )
+                null
+            }
+        }
+    }
+
+    private data class MissingReplaceResource(
+        val resourceType: PipelineDependentResourceType,
+        val resourceId: String
+    )
 
     companion object {
         private const val INPUT = "input"

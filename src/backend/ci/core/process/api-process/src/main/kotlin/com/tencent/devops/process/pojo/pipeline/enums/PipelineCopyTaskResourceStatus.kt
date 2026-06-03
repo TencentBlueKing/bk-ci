@@ -14,5 +14,8 @@ enum class PipelineCopyTaskResourceStatus {
     SUCCESS,
 
     @Schema(description = "复制失败")
-    FAILED
+    FAILED,
+
+    @Schema(description = "跳过")
+    SKIP
 }

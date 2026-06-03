@@ -1,4 +1,4 @@
-package com.tencent.devops.process.service.task
+package com.tencent.devops.process.service.task.copy
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
@@ -106,7 +106,7 @@ class PipelineCopyTaskSaveService @Autowired constructor(
         taskId: String,
         resources: List<PipelineCopyTaskResource>
     ) {
-        val task = tryStartAnalyze(projectId = projectId, taskId = taskId) ?: return
+        val task = tryStartSave(projectId = projectId, taskId = taskId) ?: return
         parseParam(task) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
             params = arrayOf(task.taskId)
@@ -219,7 +219,7 @@ class PipelineCopyTaskSaveService @Autowired constructor(
         }
     }
 
-    private fun tryStartAnalyze(
+    private fun tryStartSave(
         projectId: String,
         taskId: String
     ): PipelineBatchTask? {

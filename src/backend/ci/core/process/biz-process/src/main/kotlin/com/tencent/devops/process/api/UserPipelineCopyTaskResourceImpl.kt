@@ -12,7 +12,7 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteProg
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTask
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
-import com.tencent.devops.process.service.task.PipelineCopyTaskService
+import com.tencent.devops.process.service.task.copy.PipelineCopyTaskService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

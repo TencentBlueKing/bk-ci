@@ -1,4 +1,4 @@
-package com.tencent.devops.process.service.task
+package com.tencent.devops.process.service.task.copy
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -34,7 +34,7 @@ class PipelineCopyResourceGetService @Autowired constructor(
         projectId: String,
         credentialId: String,
         expectExists: Boolean
-    ): PipelineCopyTargetResource? {
+    ): PipelineCopyResourceBasicInfo? {
         return getResource(
             projectId = projectId,
             resourceName = credentialId,
@@ -45,7 +45,7 @@ class PipelineCopyResourceGetService @Autowired constructor(
                 projectId = projectId,
                 credentialId = credentialId
             ).data?.let {
-                PipelineCopyTargetResource(
+                PipelineCopyResourceBasicInfo(
                     resourceId = credentialId,
                     resourceName = credentialId
                 )
@@ -94,7 +94,7 @@ class PipelineCopyResourceGetService @Autowired constructor(
         projectId: String,
         repositoryName: String,
         expectExists: Boolean
-    ): PipelineCopyTargetResource? {
+    ): PipelineCopyResourceBasicInfo? {
         return getResource(
             projectId = projectId,
             resourceName = repositoryName,
@@ -105,7 +105,7 @@ class PipelineCopyResourceGetService @Autowired constructor(
                 repositoryId = repositoryName,
                 repositoryType = RepositoryType.NAME
             ).data?.let {
-                PipelineCopyTargetResource(
+                PipelineCopyResourceBasicInfo(
                     resourceId = it.repoHashId!!,
                     resourceName = it.aliasName
                 )
@@ -118,7 +118,7 @@ class PipelineCopyResourceGetService @Autowired constructor(
         projectId: String,
         nodeName: String,
         expectExists: Boolean?
-    ): PipelineCopyTargetResource? {
+    ): PipelineCopyResourceBasicInfo? {
         return getNode(
             userId = userId,
             projectId = projectId,
@@ -133,7 +133,7 @@ class PipelineCopyResourceGetService @Autowired constructor(
         projectId: String,
         nodeHashId: String,
         expectExists: Boolean?
-    ): PipelineCopyTargetResource? {
+    ): PipelineCopyResourceBasicInfo? {
         return getNode(
             userId = userId,
             projectId = projectId,
@@ -148,7 +148,7 @@ class PipelineCopyResourceGetService @Autowired constructor(
         projectId: String,
         envName: String,
         expectExists: Boolean?
-    ): PipelineCopyTargetResource? {
+    ): PipelineCopyResourceBasicInfo? {
         return getResource(
             projectId = projectId,
             resourceName = envName,
@@ -160,7 +160,7 @@ class PipelineCopyResourceGetService @Autowired constructor(
                 envName = envName,
                 checkPermission = false
             ).data?.let {
-                PipelineCopyTargetResource(
+                PipelineCopyResourceBasicInfo(
                     resourceId = it.envHashId,
                     resourceName = it.name
                 )
@@ -173,7 +173,7 @@ class PipelineCopyResourceGetService @Autowired constructor(
         projectId: String,
         envHashId: String,
         expectExists: Boolean?
-    ): PipelineCopyTargetResource? {
+    ): PipelineCopyResourceBasicInfo? {
         return getResource(
             projectId = projectId,
             resourceName = envHashId,
@@ -185,7 +185,7 @@ class PipelineCopyResourceGetService @Autowired constructor(
                 envHashId = envHashId,
                 checkPermission = false
             ).data?.let {
-                PipelineCopyTargetResource(
+                PipelineCopyResourceBasicInfo(
                     resourceId = it.envHashId,
                     resourceName = it.name
                 )
@@ -197,7 +197,7 @@ class PipelineCopyResourceGetService @Autowired constructor(
         projectId: String,
         viewName: String,
         expectExists: Boolean?
-    ): PipelineCopyTargetResource? {
+    ): PipelineCopyResourceBasicInfo? {
         return getResource(
             projectId = projectId,
             resourceName = viewName,
@@ -209,7 +209,7 @@ class PipelineCopyResourceGetService @Autowired constructor(
                 name = viewName,
                 isProject = true
             )?.let {
-                PipelineCopyTargetResource(
+                PipelineCopyResourceBasicInfo(
                     resourceId = it.id.toString(),
                     resourceName = it.name
                 )
@@ -221,7 +221,7 @@ class PipelineCopyResourceGetService @Autowired constructor(
         projectId: String,
         labelName: String,
         expectExists: Boolean?
-    ): PipelineCopyTargetResource? {
+    ): PipelineCopyResourceBasicInfo? {
         return getResource(
             projectId = projectId,
             resourceName = labelName,
@@ -232,7 +232,7 @@ class PipelineCopyResourceGetService @Autowired constructor(
                 projectId = projectId,
                 name = labelName
             )?.let {
-                PipelineCopyTargetResource(
+                PipelineCopyResourceBasicInfo(
                     resourceId = HashUtil.encodeLongId(it.id),
                     resourceName = it.name
                 )
@@ -246,7 +246,7 @@ class PipelineCopyResourceGetService @Autowired constructor(
         nodeHashId: String?,
         nodeName: String?,
         expectExists: Boolean?
-    ): PipelineCopyTargetResource? {
+    ): PipelineCopyResourceBasicInfo? {
         val resourceName = nodeHashId ?: nodeName.orEmpty()
         return getResource(
             projectId = projectId,
@@ -260,7 +260,7 @@ class PipelineCopyResourceGetService @Autowired constructor(
                 nodeName = nodeName,
                 agentHashId = null
             ).data?.let {
-                PipelineCopyTargetResource(
+                PipelineCopyResourceBasicInfo(
                     resourceId = it.nodeHashId,
                     resourceName = it.displayName ?: it.name
                 )
