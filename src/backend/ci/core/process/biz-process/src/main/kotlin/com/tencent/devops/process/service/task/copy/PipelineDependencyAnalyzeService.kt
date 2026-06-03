@@ -2,6 +2,7 @@ package com.tencent.devops.process.service.task.copy
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
@@ -24,10 +25,12 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchTy
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.label.PipelineLabelDao
 import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
 import com.tencent.devops.process.dao.label.PipelineViewGroupDao
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.SubPipelineRefService
 import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
@@ -51,6 +54,7 @@ import org.springframework.stereotype.Service
 class PipelineDependencyAnalyzeService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
+    private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineViewGroupDao: PipelineViewGroupDao,
     private val pipelineViewDao: PipelineViewDao,
     private val pipelineLabelPipelineDao: PipelineLabelPipelineDao,
@@ -67,6 +71,22 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
         pipelineId: String
     ): Set<PipelineDependentResource> {
         val resources = mutableSetOf<PipelineDependentResource>()
+        val pipelineInfo = pipelineInfoDao.getPipelineInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+            params = arrayOf(pipelineId)
+        )
+        resources.add(
+            PipelineDependentResource(
+                projectId = projectId,
+                resourceType = PipelineDependentResourceType.PIPELINE,
+                resourceId = pipelineId,
+                resourceName = pipelineInfo.pipelineName
+            )
+        )
         resources.addAll(collectPipelineGroupResources(projectId = projectId, pipelineId = pipelineId))
         resources.addAll(collectPipelineLabelResources(projectId = projectId, pipelineId = pipelineId))
         collectPipelineTemplateResource(projectId = projectId, pipelineId = pipelineId)?.let { resources.add(it) }
