@@ -22,6 +22,7 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSummary
+import com.tencent.devops.process.pojo.pipeline.task.PipelineLabelGroupCopyResourceProp
 import com.tencent.devops.process.pojo.pipeline.task.RepoAuthCopyResourceProp
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -567,7 +568,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         try {
             when (val copyStrategy = validateCopyStrategy(resource)) {
                 PipelineCopyStrategy.PIPELINE_GROUP_AUTO_REUSE_OR_CREATE -> {
-                    val pipelineGroup = pipelineCopyResourceGetService.getPipelineGroupByName(
+                    val pipelineGroup = pipelineCopyResourceGetService.getPipelineViewByName(
                         projectId = targetProjectId,
                         viewName = resource.resourceName,
                         expectExists = null
@@ -640,8 +641,14 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
             val copyStrategy = validateCopyStrategy(resource)
             when (copyStrategy) {
                 PipelineCopyStrategy.LABEL_AUTO_REUSE_OR_CREATE -> {
-                    val pipelineLabel = pipelineCopyResourceGetService.getPipelineLabelByName(
+                    val labelGroupProp = resource.resourceProperties as? PipelineLabelGroupCopyResourceProp
+                        ?: throw ErrorCodeException(
+                            errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS,
+                            params = arrayOf(projectId, resource.resourceId)
+                        )
+                    val pipelineLabel = pipelineCopyResourceGetService.getPipelineLabelByGroupAndName(
                         projectId = targetProjectId,
+                        groupName = labelGroupProp.groupName,
                         labelName = resource.resourceName,
                         expectExists = null
                     ) ?: pipelineCopyResourceCreateService.createPipelineLabel(
@@ -919,7 +926,8 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 taskId = taskId
             )
             val successCount = resources.count {
-                it.status == PipelineCopyTaskResourceStatus.SUCCESS
+                it.status == PipelineCopyTaskResourceStatus.SUCCESS ||
+                        it.status == PipelineCopyTaskResourceStatus.SKIP
             }
             val failedCount = resources.count {
                 it.status == PipelineCopyTaskResourceStatus.FAILED

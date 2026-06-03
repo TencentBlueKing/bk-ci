@@ -8,6 +8,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.dao.label.PipelineGroupDao
 import com.tencent.devops.process.dao.label.PipelineLabelDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
@@ -27,6 +28,7 @@ class PipelineCopyResourceGetService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val pipelineLabelDao: PipelineLabelDao,
+    private val pipelineGroupDao: PipelineGroupDao,
     private val pipelineViewDao: PipelineViewDao
 ) {
     fun getCredentialBasicInfo(
@@ -128,21 +130,6 @@ class PipelineCopyResourceGetService @Autowired constructor(
         )
     }
 
-    fun getNodeByHashId(
-        userId: String,
-        projectId: String,
-        nodeHashId: String,
-        expectExists: Boolean?
-    ): PipelineCopyResourceBasicInfo? {
-        return getNode(
-            userId = userId,
-            projectId = projectId,
-            nodeHashId = nodeHashId,
-            nodeName = null,
-            expectExists = expectExists
-        )
-    }
-
     fun getEnvByName(
         userId: String,
         projectId: String,
@@ -168,32 +155,7 @@ class PipelineCopyResourceGetService @Autowired constructor(
         }
     }
 
-    fun getEnvByHashId(
-        userId: String,
-        projectId: String,
-        envHashId: String,
-        expectExists: Boolean?
-    ): PipelineCopyResourceBasicInfo? {
-        return getResource(
-            projectId = projectId,
-            resourceName = envHashId,
-            expectExists = expectExists
-        ) {
-            client.get(ServiceEnvironmentResource::class).get(
-                userId = userId,
-                projectId = projectId,
-                envHashId = envHashId,
-                checkPermission = false
-            ).data?.let {
-                PipelineCopyResourceBasicInfo(
-                    resourceId = it.envHashId,
-                    resourceName = it.name
-                )
-            }
-        }
-    }
-
-    fun getPipelineGroupByName(
+    fun getPipelineViewByName(
         projectId: String,
         viewName: String,
         expectExists: Boolean?
@@ -217,19 +179,27 @@ class PipelineCopyResourceGetService @Autowired constructor(
         }
     }
 
-    fun getPipelineLabelByName(
+    fun getPipelineLabelByGroupAndName(
         projectId: String,
+        groupName: String,
         labelName: String,
         expectExists: Boolean?
     ): PipelineCopyResourceBasicInfo? {
+        val resourceName = "$groupName-$labelName"
         return getResource(
             projectId = projectId,
-            resourceName = labelName,
+            resourceName = resourceName,
             expectExists = expectExists
         ) {
+            val targetGroup = pipelineGroupDao.getByName(
+                dslContext = dslContext,
+                projectId = projectId,
+                name = groupName
+            ) ?: return@getResource null
             pipelineLabelDao.getByName(
                 dslContext = dslContext,
                 projectId = projectId,
+                groupId = targetGroup.id,
                 name = labelName
             )?.let {
                 PipelineCopyResourceBasicInfo(

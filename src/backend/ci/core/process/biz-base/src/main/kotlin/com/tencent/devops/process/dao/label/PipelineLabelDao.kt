@@ -177,12 +177,12 @@ class PipelineLabelDao {
     fun getByName(
         dslContext: DSLContext,
         projectId: String,
+        groupId: Long,
         name: String
     ): TPipelineLabelRecord? {
         with(TPipelineLabel.T_PIPELINE_LABEL) {
             return dslContext.selectFrom(this)
-                .where(NAME.eq(name))
-                .and(PROJECT_ID.eq(projectId))
+                .where(GROUP_ID.eq(groupId).and(PROJECT_ID.eq(projectId)).and(NAME.eq(name)))
                 .fetchAny()
         }
     }

@@ -6,10 +6,10 @@ import com.tencent.devops.model.process.Tables.T_PIPELINE_COPY_TASK_RESOURCE
 import com.tencent.devops.model.process.tables.records.TPipelineCopyTaskResourceRecord
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyAction
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyStrategy
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyResourceProp
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
-import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceStatus
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -295,5 +295,4 @@ class PipelineCopyTaskResourceDao {
             JsonUtil.to(it, PipelineCopyResourceProp::class.java)
         }
     }
-
 }

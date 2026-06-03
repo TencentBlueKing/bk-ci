@@ -17,15 +17,17 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.label.PipelineGroupDao
 import com.tencent.devops.process.dao.label.PipelineLabelDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
+import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
+import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
-import com.tencent.devops.process.pojo.pipeline.task.RepoAuthCopyResourceProp
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
+import com.tencent.devops.process.pojo.pipeline.task.RepoAuthCopyResourceProp
 import com.tencent.devops.process.service.PipelineInfoFacadeService
+import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.PipelineViewService
 import com.tencent.devops.process.utils.CredentialUtils
-import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
@@ -53,6 +55,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineGroupDao: PipelineGroupDao,
     private val pipelineLabelDao: PipelineLabelDao,
+    private val pipelineGroupService: PipelineGroupService,
     private val pipelineViewDao: PipelineViewDao,
     private val pipelineViewService: PipelineViewService,
     private val pipelineDependencyReplaceService: PipelineDependencyReplaceService,
@@ -263,28 +266,48 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS,
             params = arrayOf(sourceProjectId, sourceLabel.groupId.toString())
         )
-        val targetGroupId = pipelineGroupDao.list(
-            dslContext = dslContext,
-            projectId = targetProjectId
-        ).firstOrNull { it.name == sourceGroup.name }?.id ?: pipelineGroupDao.create(
+        var targetGroup = pipelineGroupDao.getByName(
             dslContext = dslContext,
             projectId = targetProjectId,
-            name = sourceGroup.name,
-            userId = userId,
-            id = generateSegmentId("PIPELINE_GROUP")
+            name = sourceGroup.name
         )
-        val targetLabelId = generateSegmentId("PIPELINE_LABEL")
-        pipelineLabelDao.create(
+        if (targetGroup == null) {
+            pipelineGroupService.addGroup(
+                userId = userId,
+                pipelineGroup = PipelineGroupCreate(
+                    projectId = targetProjectId,
+                    name = sourceGroup.name
+                )
+            )
+            targetGroup = pipelineGroupDao.getByName(
+                dslContext = dslContext,
+                projectId = targetProjectId,
+                name = sourceGroup.name
+            ) ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TARGET_RESOURCE_CREATE_FAILED,
+                params = arrayOf(targetProjectId, sourceGroup.name)
+            )
+        }
+        pipelineGroupService.addLabel(
+            userId = userId,
+            projectId = targetProjectId,
+            pipelineLabel = PipelineLabelCreate(
+                groupId = HashUtil.encodeLongId(targetGroup.id),
+                name = sourceLabel.name
+            )
+        )
+        val targetLabel = pipelineLabelDao.getByName(
             dslContext = dslContext,
             projectId = targetProjectId,
-            groupId = targetGroupId,
-            name = sourceLabel.name,
-            userId = userId,
-            id = targetLabelId
+            groupId = targetGroup.id,
+            name = sourceLabel.name
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TARGET_RESOURCE_CREATE_FAILED,
+            params = arrayOf(targetProjectId, sourceLabel.name)
         )
         return PipelineCopyResourceBasicInfo(
-            resourceId = HashUtil.encodeLongId(targetLabelId),
-            resourceName = sourceLabel.name
+            resourceId = HashUtil.encodeLongId(targetLabel.id),
+            resourceName = targetLabel.name
         )
     }
 
@@ -450,13 +473,5 @@ class PipelineCopyResourceCreateService @Autowired constructor(
                 resourceName = targetResourceName
             )
         }.toMap()
-    }
-
-    private fun generateSegmentId(bizTag: String): Long {
-        val result = client.get(ServiceAllocIdResource::class).generateSegmentId(bizTag)
-        return result.data ?: throw ErrorCodeException(
-            errorCode = result.status.toString(),
-            defaultMessage = result.message
-        )
     }
 }
