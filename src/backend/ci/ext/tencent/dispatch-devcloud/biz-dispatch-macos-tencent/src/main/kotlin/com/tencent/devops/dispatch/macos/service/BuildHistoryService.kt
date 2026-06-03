@@ -1,5 +1,6 @@
 package com.tencent.devops.dispatch.macos.service
 
+import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.dispatch.macos.dao.BuildHistoryDao
 import com.tencent.devops.dispatch.macos.dao.BuildTaskDao
 import com.tencent.devops.dispatch.macos.enums.MacJobStatus
@@ -34,7 +35,7 @@ class BuildHistoryService @Autowired constructor(
         )
 
         // 检查此任务是否已消费,如已有消费记录且非主动发起的event重试，则返回存储异常标志
-        if (buildHistory?.isNotEmpty == true && (event.retryTime ?: 0) <= 1) {
+        if (buildHistory?.isNotEmpty == true && event.retryTime <= 1) {
             logger.error("$event has been consumed.")
             return -1L
         }
@@ -52,6 +53,14 @@ class BuildHistoryService @Autowired constructor(
         rec.containerHashId = event.containerHashId
         rec.executeCount = event.executeCount
 
+        // 保存MacOS构建环境信息
+        val dispatchType = event.dispatchType as? MacOSDispatchType
+        rec.os = dispatchType?.systemVersion ?: ""
+        rec.xcode = dispatchType?.xcodeVersion ?: ""
+        rec.macosHwSpec = dispatchType?.macOSHwSpec ?: ""
+        val isStreamProject = event.projectId.startsWith("git_")
+        rec.source = if (isStreamProject) "gongfeng" else "landun"
+
         return buildHistoryDao.saveBuildHistory(dslContext, rec)
     }
 
@@ -59,6 +68,7 @@ class BuildHistoryService @Autowired constructor(
         vmIp: String,
         vmId: Int,
         buildHistoryId: Long,
+        taskId: String,
         event: PipelineAgentStartupEvent
     ) {
         val buildTaskRecord = TBuildTaskRecord()
@@ -78,7 +88,13 @@ class BuildHistoryService @Autowired constructor(
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             buildTaskDao.save(context, buildTaskRecord)
-            buildHistoryDao.updateVmIP(vmIp, vmId, buildHistoryId, context)
+            buildHistoryDao.updateVmIP(
+                vmIp = vmIp,
+                vmId = vmId,
+                buildHistoryId = buildHistoryId,
+                taskId = taskId,
+                dslContext = context
+            )
         }
     }
 
