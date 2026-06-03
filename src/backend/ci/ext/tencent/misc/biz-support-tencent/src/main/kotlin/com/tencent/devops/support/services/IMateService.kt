@@ -27,14 +27,17 @@
 
 package com.tencent.devops.support.services
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.support.model.imate.IMateAuthorizationInfo
 import com.tencent.devops.support.model.imate.IMateClientType
+import com.tencent.devops.support.model.imate.IMateRobotGrayControlInfo
 import com.tencent.devops.support.model.imate.IMateRobotInfo
 import com.tencent.devops.support.model.imate.IMateRobotOwnerType
+import com.tencent.devops.support.model.imate.IMateRobotWorkspaceInfo
 import com.tencent.devops.support.model.imate.IMateVisibleTargetInfo
 import com.tencent.devops.support.model.imate.IMateVisibleTargetType
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -109,9 +112,9 @@ class IMateService {
         val data = result.data ?: IMateAuthorizationData()
         return Result(
             IMateAuthorizationInfo(
-                authorized = data.isAuthorized,
-                tokenAuthorized = data.isTokenAuthorized,
-                canChat = data.isAuthorized && data.isTokenAuthorized,
+                authorized = data.authorized,
+                tokenAuthorized = data.tokenAuthorized,
+                canChat = data.authorized && data.tokenAuthorized,
                 authorizationUrl = buildAuthorizationUrl(clientUuid)
             )
         )
@@ -127,23 +130,63 @@ class IMateService {
 
     internal fun toRobotInfo(username: String, robot: IMateRobotResponse): IMateRobotInfo {
         val clientType = IMateClientType.fromValue(robot.clientType)
+        val clientUuid = robot.clientUuid.orEmpty()
         return IMateRobotInfo(
             id = robot.id,
             botName = robot.botName.orEmpty(),
             username = robot.username.orEmpty(),
-            clientUuid = robot.clientUuid.orEmpty(),
+            clientUuid = clientUuid,
+            clientAliasName = robot.clientAliasName,
+            clientDescription = robot.clientDescription,
+            clientIp = robot.clientIp,
+            workspaceId = robot.workspaceId,
+            model = robot.model,
+            gitRepos = robot.gitRepos,
+            gatewayUrl = robot.gatewayUrl,
+            status = robot.status,
+            webhookUrl = robot.webhookUrl,
+            token = robot.token,
+            encodingAesKey = robot.encodingAesKey,
+            createdAt = robot.createdAt,
+            updatedAt = robot.updatedAt,
+            url = robot.url,
+            source = robot.source,
+            ideUrl = robot.ideUrl,
+            master = robot.master,
             clientType = robot.clientType,
+            envId = robot.envId,
+            openEnvUrl = robot.openEnvUrl,
+            sandboxId = robot.sandboxId,
+            cvdEnvId = robot.cvdEnvId,
+            itfsSpaceId = robot.itfsSpaceId,
+            workspace = robot.workspace?.toInfo(),
+            statusModifyAt = robot.statusModifyAt,
+            websocketBotId = robot.websocketBotId,
+            websocketBotSecret = robot.websocketBotSecret,
+            connectType = robot.connectType,
+            openclawVersion = robot.openclawVersion,
+            deviceId = robot.deviceId,
+            deviceName = robot.deviceName,
+            wxBotToken = robot.wxBotToken,
+            wxLinkBotId = robot.wxLinkBotId,
+            wxLinkUserId = robot.wxLinkUserId,
+            wxBaseUrl = robot.wxBaseUrl,
+            wxbotStatus = robot.wxbotStatus,
+            websocketBotStatus = robot.websocketBotStatus,
+            grayControl = robot.grayControl?.toInfo(),
+            coverKey = robot.coverKey,
+            forceUpdate = robot.forceUpdate,
+            yuanbaoAppKey = robot.yuanbaoAppKey,
+            yuanbaoAppSecret = robot.yuanbaoAppSecret,
+            yuanbaoBotStatus = robot.yuanbaoBotStatus,
+            taihuClientId = robot.taihuClientId,
             robotScopeType = clientType.robotScopeType,
             ownerType = if (robot.username == username) {
                 IMateRobotOwnerType.SELF_CREATED
             } else {
                 IMateRobotOwnerType.SHARED_TO_USER
             },
-            status = robot.status,
-            url = robot.url,
-            authorizationUrl = buildAuthorizationUrl(robot.clientUuid.orEmpty()),
-            createdAt = robot.createdAt,
-            updatedAt = robot.updatedAt
+            authorizationUrl = buildAuthorizationUrl(clientUuid)
         )
     }
 
@@ -216,12 +259,94 @@ class IMateService {
         val botName: String? = null,
         val username: String? = null,
         val clientUuid: String? = null,
-        val clientType: String? = null,
+        val clientAliasName: String? = null,
+        val clientDescription: String? = null,
+        val clientIp: String? = null,
+        val workspaceId: String? = null,
+        val model: String? = null,
+        val gitRepos: List<Any>? = null,
+        val gatewayUrl: String? = null,
         val status: String? = null,
-        val url: String? = null,
+        val webhookUrl: String? = null,
+        val token: String? = null,
+        val encodingAesKey: String? = null,
         val createdAt: String? = null,
-        val updatedAt: String? = null
+        val updatedAt: String? = null,
+        val url: String? = null,
+        val source: String? = null,
+        val ideUrl: String? = null,
+        @JsonProperty("isMaster")
+        val master: Int? = null,
+        val clientType: String? = null,
+        val envId: String? = null,
+        val openEnvUrl: String? = null,
+        val sandboxId: String? = null,
+        val cvdEnvId: String? = null,
+        val itfsSpaceId: String? = null,
+        val workspace: IMateRobotWorkspaceResponse? = null,
+        val statusModifyAt: String? = null,
+        val websocketBotId: String? = null,
+        val websocketBotSecret: String? = null,
+        val connectType: String? = null,
+        val openclawVersion: String? = null,
+        val deviceId: String? = null,
+        val deviceName: String? = null,
+        val wxBotToken: String? = null,
+        val wxLinkBotId: String? = null,
+        val wxLinkUserId: String? = null,
+        val wxBaseUrl: String? = null,
+        val wxbotStatus: String? = null,
+        val websocketBotStatus: String? = null,
+        val grayControl: IMateRobotGrayControlResponse? = null,
+        val coverKey: String? = null,
+        @JsonProperty("isForceUpdate")
+        val forceUpdate: Boolean? = null,
+        val yuanbaoAppKey: String? = null,
+        val yuanbaoAppSecret: String? = null,
+        @JsonProperty("yuanbaoBotStaus")
+        val yuanbaoBotStatus: String? = null,
+        val taihuClientId: String? = null
     )
+
+    internal data class IMateRobotWorkspaceResponse(
+        val id: String? = null,
+        val name: String? = null,
+        val userId: String? = null,
+        val username: String? = null,
+        val type: String? = null,
+        val environmentId: String? = null,
+        val status: String? = null,
+        val deletedAt: String? = null,
+        val createdAt: String? = null,
+        val updatedAt: String? = null,
+        val attributes: Map<String, Any>? = null
+    ) {
+        fun toInfo(): IMateRobotWorkspaceInfo = IMateRobotWorkspaceInfo(
+            id = id,
+            name = name,
+            userId = userId,
+            username = username,
+            type = type,
+            environmentId = environmentId,
+            status = status,
+            deletedAt = deletedAt,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+            attributes = attributes
+        )
+    }
+
+    internal data class IMateRobotGrayControlResponse(
+        @JsonProperty("isSafeModelControl")
+        val safeModelControl: Boolean? = null,
+        @JsonProperty("isSafeEnvironmentControl")
+        val safeEnvironmentControl: Boolean? = null
+    ) {
+        fun toInfo(): IMateRobotGrayControlInfo = IMateRobotGrayControlInfo(
+            safeModelControl = safeModelControl,
+            safeEnvironmentControl = safeEnvironmentControl
+        )
+    }
 
     private data class IMateVisibleTargetsData(
         val visibleTargets: List<IMateVisibleTargetResponse>? = null
@@ -234,8 +359,10 @@ class IMateService {
     )
 
     private data class IMateAuthorizationData(
-        val isAuthorized: Boolean = false,
-        val isTokenAuthorized: Boolean = false
+        @JsonProperty("isAuthorized")
+        val authorized: Boolean = false,
+        @JsonProperty("isTokenAuthorized")
+        val tokenAuthorized: Boolean = false
     )
 
     companion object {
