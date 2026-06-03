@@ -2189,6 +2189,62 @@
     {
       "operation": "upsert_action",
       "data": {
+        "id": "codecc_rule_set_edit",
+        "name": "规则集编辑",
+        "name_en": "CodeCC Rule Set Edit",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "codecc_rule_set",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "codecc_rule_set_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "codecc_rule_set_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "codecc_rule_set_manage",
+        "name": "规则集权限管理",
+        "name_en": "CodeCC Rule Set Manage",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "codecc_rule_set",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "codecc_rule_set_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "codecc_rule_set_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
         "id": "codecc_ignore_type_manage",
         "name": "忽略配置",
         "name_en": "CodeCC Ignore Type Manage",

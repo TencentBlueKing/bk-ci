@@ -202,13 +202,6 @@ class UserManageService @Autowired constructor(
 
     fun syncUserInfoData(userIds: List<String>) {
         userIds.forEach {
-            val localUserInfo = userInfoDao.get(
-                dslContext = dslContext,
-                userId = it
-            )
-            if (localUserInfo != null) {
-                return@forEach
-            }
             val bkUserInfo = deptService.getUserInfoFromExternal(it)!!
             try {
                 val deptInfoDTO = extractDeptInfo(it)

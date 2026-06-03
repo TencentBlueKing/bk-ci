@@ -40,8 +40,10 @@ class AiModelFactory(
         retryMode: String
     ): OpenAIChatModel {
         val useBkGateway = properties.useBkGateway()
+        val effectiveReasoningEffort = properties.reasoningEffort?.takeIf { it.isNotBlank() }
         logger.info(
             "[ModelFactory] Initializing OpenAIChatModel: id={}, baseUrl={}, modelName={}, useBkGateway={}, " +
+                "reasoningEffort={}, " +
                 "connectTimeout={}s, readTimeout={}s, writeTimeout={}s, executionTimeout={}s, " +
                 "maxAttempts={}, configuredMaxAttempts={}, initialBackoff={}s, maxBackoff={}s, " +
                 "backoffMultiplier={}, retryMode={}",
@@ -49,6 +51,7 @@ class AiModelFactory(
             properties.baseUrl,
             properties.modelName,
             useBkGateway,
+            effectiveReasoningEffort ?: "<unset>",
             properties.connectTimeoutSeconds,
             properties.readTimeoutSeconds,
             properties.writeTimeoutSeconds,
@@ -124,16 +127,16 @@ class AiModelFactory(
         if (useBkGateway) {
             val authJson =
                 """{"bk_app_code":"${properties.bkAppCode}","bk_app_secret":"${properties.bkAppSecret}"}"""
-            val options = GenerateOptions.builder()
+            val optionsBuilder = GenerateOptions.builder()
                 .additionalHeader("X-Bkapi-Authorization", authJson)
                 .executionConfig(executionConfig)
-                .build()
-            builder.generateOptions(options).endpointPath("")
+            effectiveReasoningEffort?.let { optionsBuilder.reasoningEffort(it) }
+            builder.generateOptions(optionsBuilder.build()).endpointPath("")
         } else {
-            val options = GenerateOptions.builder()
+            val optionsBuilder = GenerateOptions.builder()
                 .executionConfig(executionConfig)
-                .build()
-            builder.apiKey(properties.apiKey).generateOptions(options)
+            effectiveReasoningEffort?.let { optionsBuilder.reasoningEffort(it) }
+            builder.apiKey(properties.apiKey).generateOptions(optionsBuilder.build())
         }
         return builder.build()
     }
