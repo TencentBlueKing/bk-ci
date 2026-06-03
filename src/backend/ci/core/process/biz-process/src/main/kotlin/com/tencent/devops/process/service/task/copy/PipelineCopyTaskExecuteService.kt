@@ -280,7 +280,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         resources: List<PipelineCopyTaskResource>
     ) {
         val resourceMap = resources.associateBy {
-            resourceKey(resourceType = it.resourceType, resourceId = it.resourceId)
+            PipelineCopyTaskFactory.resourceKey(resourceType = it.resourceType, resourceId = it.resourceId)
         }.toMutableMap()
         resources.filter {
             it.resourceType == PipelineDependentResourceType.REPOSITORY
@@ -736,7 +736,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         resources: List<PipelineCopyTaskResource>
     ) {
         val resourceMap = resources.associateBy {
-            resourceKey(resourceType = it.resourceType, resourceId = it.resourceId)
+            PipelineCopyTaskFactory.resourceKey(resourceType = it.resourceType, resourceId = it.resourceId)
         }.toMutableMap()
         resources.filter {
             it.resourceType == PipelineDependentResourceType.PIPELINE
@@ -749,7 +749,11 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 resource = it,
                 resourceMap = resourceMap
             )
-            resourceMap[resourceKey(resourceType = result.resourceType, resourceId = result.resourceId)] = result
+            val resourceKey = PipelineCopyTaskFactory.resourceKey(
+                resourceType = result.resourceType,
+                resourceId = result.resourceId
+            )
+            resourceMap[resourceKey] = result
         }
     }
 
@@ -843,7 +847,12 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
             pipelineIds = setOf(pipelineId)
         )
         return relations.map { relation ->
-            resourceMap[resourceKey(resourceType = relation.resourceType, resourceId = relation.resourceId)]
+            resourceMap[
+                PipelineCopyTaskFactory.resourceKey(
+                    resourceType = relation.resourceType,
+                    resourceId = relation.resourceId
+                )
+            ]
                 ?: throwDependencyFailed(relation.resourceType, relation.resourceId)
         }
     }
@@ -898,13 +907,6 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_DEPENDENT_RESOURCE_FAILED,
             params = arrayOf("${resourceType.name}:$resourceName")
         )
-    }
-
-    private fun resourceKey(
-        resourceType: PipelineDependentResourceType,
-        resourceId: String
-    ): String {
-        return "${resourceType.name}_$resourceId"
     }
 
     private fun finishExecute(

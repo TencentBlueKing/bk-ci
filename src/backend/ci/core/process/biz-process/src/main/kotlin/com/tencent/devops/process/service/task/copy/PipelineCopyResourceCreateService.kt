@@ -453,7 +453,9 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             resourceType = PipelineDependentResourceType.CREDENTIAL,
             resourceName = sourceCredentialId.orEmpty()
         )
-        val credentialResource = resourceMap[resourceKey(PipelineDependentResourceType.CREDENTIAL, sourceCredential)]
+        val credentialResource = resourceMap[
+            PipelineCopyTaskFactory.resourceKey(PipelineDependentResourceType.CREDENTIAL, sourceCredential)
+        ]
             ?: throwDependencyFailed(PipelineDependentResourceType.CREDENTIAL, sourceCredential)
         return credentialResource.targetResourceId?.takeIf { it.isNotBlank() }
             ?: throwDependencyFailed(PipelineDependentResourceType.CREDENTIAL, sourceCredential)
@@ -495,13 +497,6 @@ class PipelineCopyResourceCreateService @Autowired constructor(
         return svnType?.uppercase() ?: RepoAuthType.SSH.name
     }
 
-    private fun resourceKey(
-        resourceType: PipelineDependentResourceType,
-        resourceId: String
-    ): String {
-        return "${resourceType.name}_$resourceId"
-    }
-
     private fun throwDependencyFailed(
         resourceType: PipelineDependentResourceType,
         resourceName: String
@@ -533,7 +528,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             val targetProjectId = resource.targetProjectId?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
             val targetResourceId = resource.targetResourceId?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
             val targetResourceName = resource.targetResourceName?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
-            val key = resourceKey(resource.resourceType, resource.resourceId)
+            val key = PipelineCopyTaskFactory.resourceKey(resource.resourceType, resource.resourceId)
             key to PipelineDependentResource(
                 projectId = targetProjectId,
                 resourceType = resource.resourceType,

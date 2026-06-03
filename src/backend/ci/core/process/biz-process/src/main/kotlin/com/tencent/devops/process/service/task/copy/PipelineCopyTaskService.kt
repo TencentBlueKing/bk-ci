@@ -26,8 +26,8 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTask
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskConfigRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteProgress
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteSummary
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSaveResourceRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSummary
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -176,7 +176,7 @@ class PipelineCopyTaskService @Autowired constructor(
         userId: String,
         projectId: String,
         taskId: String,
-        resources: List<PipelineCopyTaskResource>
+        request: PipelineCopyTaskSaveResourceRequest
     ) {
         val task = getTask(projectId = projectId, taskId = taskId)
         if (task.status != PipelineBatchTaskStatus.DRAFT) {
@@ -195,7 +195,7 @@ class PipelineCopyTaskService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             taskId = taskId,
-            resources = resources
+            request = request
         )
     }
 
@@ -203,9 +203,11 @@ class PipelineCopyTaskService @Autowired constructor(
         userId: String,
         projectId: String,
         taskId: String,
-        resources: List<PipelineCopyTaskResource>
+        request: PipelineCopyTaskSaveResourceRequest
     ) {
-        val unprocessedResources = resources.filter { it.copyStrategy == null }.map { it.resourceName }
+        val unprocessedResources = request.resources
+            .filter { request.getCopyStrategy(it) == null }
+            .map { it.resourceName }
         if (unprocessedResources.isNotEmpty()) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_EMPTY,
@@ -216,7 +218,7 @@ class PipelineCopyTaskService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             taskId = taskId,
-            resources = resources
+            request = request
         )
         val unProcessedCount = pipelineCopyTaskResourceDao.count(
             dslContext = dslContext,

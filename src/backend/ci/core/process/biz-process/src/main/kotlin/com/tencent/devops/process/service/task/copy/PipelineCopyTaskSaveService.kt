@@ -16,6 +16,8 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchCopyTaskParam
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskConfigRequest
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSaveResource
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSaveResourceRequest
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
 import org.jooq.DSLContext
@@ -104,7 +106,7 @@ class PipelineCopyTaskSaveService @Autowired constructor(
         userId: String,
         projectId: String,
         taskId: String,
-        resources: List<PipelineCopyTaskResource>
+        request: PipelineCopyTaskSaveResourceRequest
     ) {
         val task = tryStartSave(projectId = projectId, taskId = taskId)
         parseParam(task) ?: throw ErrorCodeException(
@@ -114,7 +116,7 @@ class PipelineCopyTaskSaveService @Autowired constructor(
         saveResources(
             projectId = projectId,
             taskId = taskId,
-            resources = resources
+            request = request
         )
         finishSave(projectId = projectId, taskId = taskId)
     }
@@ -122,9 +124,28 @@ class PipelineCopyTaskSaveService @Autowired constructor(
     private fun saveResources(
         projectId: String,
         taskId: String,
-        resources: List<PipelineCopyTaskResource>
+        request: PipelineCopyTaskSaveResourceRequest
     ) {
-        val resourceUpdates = resources.map { resource ->
+        if (request.resources.isEmpty()) {
+            return
+        }
+        val storedResources = pipelineCopyTaskResourceDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            taskId = taskId,
+            resourceIds = request.resources.map { it.resourceId }.toSet()
+        ).associateBy {
+            PipelineCopyTaskFactory.resourceKey(resourceType = it.resourceType, resourceId = it.resourceId)
+        }
+        val resourceUpdates = request.resources.map { resource ->
+            val resourceKey = PipelineCopyTaskFactory.resourceKey(
+                resourceType = resource.resourceType,
+                resourceId = resource.resourceId
+            )
+            val storeResource = storedResources[resourceKey] ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS,
+                params = arrayOf(projectId, resource.resourceName)
+            )
             val copyStrategy = resource.copyStrategy ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_CAN_NOT_EMPTY,
                 params = arrayOf(resource.resourceType.name, resource.resourceName)
@@ -163,10 +184,10 @@ class PipelineCopyTaskSaveService @Autowired constructor(
 
                 PipelineCopyStrategy.PIPELINE_AUTO_RESOLVE_CONFLICT -> {
                     var targetResourceId: String? = null
-                    if (resource.targetIdExists) {
+                    if (storeResource.targetIdExists) {
                         targetResourceId = pipelineIdGenerator.getNextId()
                     }
-                    val targetResourceName = if (resource.targetNameExists) {
+                    val targetResourceName = if (storeResource.targetNameExists) {
                         if (resource.targetResourceName.isNullOrBlank()) {
                             throw ErrorCodeException(
                                 errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TARGET_RESOURCE_EMPTY,

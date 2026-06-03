@@ -11,7 +11,7 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskConfigReque
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteProgress
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTask
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSaveResourceRequest
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -144,8 +144,8 @@ interface UserPipelineCopyTaskResource {
         @Parameter(description = "任务ID", required = true)
         @PathParam("taskId")
         taskId: String,
-        @Parameter(description = "流水线复制资源信息", required = true)
-        resources: List<PipelineCopyTaskResource>
+        @Parameter(description = "流水线复制资源保存请求", required = true)
+        request: PipelineCopyTaskSaveResourceRequest
     ): Result<Boolean>
 
     @Operation(summary = "准备执行流水线复制")
@@ -161,8 +161,8 @@ interface UserPipelineCopyTaskResource {
         @Parameter(description = "任务ID", required = true)
         @PathParam("taskId")
         taskId: String,
-        @Parameter(description = "流水线复制资源信息", required = true)
-        resources: List<PipelineCopyTaskResource>
+        @Parameter(description = "流水线复制资源保存请求", required = true)
+        request: PipelineCopyTaskSaveResourceRequest
     ): Result<Boolean>
 
     @Operation(summary = "执行流水线复制")

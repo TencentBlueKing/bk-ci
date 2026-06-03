@@ -11,7 +11,7 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskConfigReque
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteProgress
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTask
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSaveResourceRequest
 import com.tencent.devops.process.service.task.copy.PipelineCopyTaskService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -103,13 +103,13 @@ class UserPipelineCopyTaskResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         taskId: String,
-        resources: List<PipelineCopyTaskResource>
+        request: PipelineCopyTaskSaveResourceRequest
     ): Result<Boolean> {
         pipelineCopyTaskService.saveResourceDraft(
             userId = userId,
             projectId = projectId,
             taskId = taskId,
-            resources = resources
+            request = request
         )
         return Result(true)
     }
@@ -118,13 +118,13 @@ class UserPipelineCopyTaskResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         taskId: String,
-        resources: List<PipelineCopyTaskResource>
+        request: PipelineCopyTaskSaveResourceRequest
     ): Result<Boolean> {
         pipelineCopyTaskService.prepareExecute(
             userId = userId,
             projectId = projectId,
             taskId = taskId,
-            resources = resources
+            request = request
         )
         return Result(true)
     }
