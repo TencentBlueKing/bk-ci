@@ -867,6 +867,8 @@
   .atom-execounter {
     color: $primaryColor;
     font-size: 12px;
+    flex-shrink: 0;
+    margin-right: 8px;
   }
 
   .spin-icon {
