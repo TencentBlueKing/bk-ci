@@ -7,6 +7,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineBatchTaskDao
 import com.tencent.devops.process.dao.PipelineBatchTaskDetailDao
 import com.tencent.devops.process.dao.PipelineCopyTaskResourceDao
+import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyStrategy
@@ -32,7 +33,8 @@ class PipelineCopyTaskSaveService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineBatchTaskDao: PipelineBatchTaskDao,
     private val pipelineBatchTaskDetailDao: PipelineBatchTaskDetailDao,
-    private val pipelineCopyTaskResourceDao: PipelineCopyTaskResourceDao
+    private val pipelineCopyTaskResourceDao: PipelineCopyTaskResourceDao,
+    private val pipelineIdGenerator: PipelineIdGenerator
 ) {
 
     fun saveConfigDraft(
@@ -159,16 +161,36 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                     )
                 }
 
-                PipelineCopyStrategy.REPOSITORY_CREATE_NEW -> {
+                PipelineCopyStrategy.PIPELINE_AUTO_RESOLVE_CONFLICT -> {
+                    var targetResourceId: String? = null
+                    if (resource.targetIdExists) {
+                        targetResourceId = pipelineIdGenerator.getNextId()
+                    }
+                    val targetResourceName = if (resource.targetNameExists) {
+                        if (resource.targetResourceName.isNullOrBlank()) {
+                            throw ErrorCodeException(
+                                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TARGET_RESOURCE_EMPTY,
+                                params = arrayOf(resource.resourceName, resource.resourceType.name, copyStrategy.name)
+                            )
+                        } else {
+                            resource.targetResourceName
+                        }
+
+                    } else {
+                        resource.resourceName
+                    }
                     PipelineCopyTaskResourceUpdate(
                         projectId = projectId,
                         taskId = taskId,
                         resourceType = resource.resourceType,
                         resourceId = resource.resourceId,
                         targetResourceType = resource.resourceType,
+                        targetResourceId = targetResourceId,
+                        targetResourceName = targetResourceName,
                         status = PipelineCopyTaskResourceStatus.PROCESSED,
                         copyStrategy = copyStrategy,
-                        copyAction = copyStrategy.copyAction
+                        copyAction = copyStrategy.copyAction,
+                        highRisk = copyStrategy.highRisk
                     )
                 }
 

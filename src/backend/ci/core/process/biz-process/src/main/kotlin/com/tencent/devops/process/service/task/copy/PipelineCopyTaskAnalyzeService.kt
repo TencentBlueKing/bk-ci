@@ -947,11 +947,8 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
             projectId = targetProjectId,
             pipelineName = resource.resourceName
         )
-        var pipelineConflictCopyResourceProp: PipelineConflictCopyResourceProp? = null
-        var status = PipelineCopyTaskResourceStatus.PROCESSED
-        var targetResourceName: String? = null
-        if (targetIdPipelineInfo != null || targetNamePipelineInfo != null) {
-            pipelineConflictCopyResourceProp = PipelineConflictCopyResourceProp(
+        return if (targetIdPipelineInfo != null || targetNamePipelineInfo != null) {
+            val pipelineConflictCopyResourceProp = PipelineConflictCopyResourceProp(
                 idConflict = targetIdPipelineInfo?.let {
                     PipelineConflictInfo(
                         pipelineId = it.pipelineId,
@@ -967,25 +964,39 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                     )
                 }
             )
-            status = PipelineCopyTaskResourceStatus.UNPROCESSED
+            PipelineCopyTaskResource(
+                taskId = taskId,
+                projectId = projectId,
+                resourceType = resource.resourceType,
+                resourceId = resource.resourceId,
+                resourceName = resource.resourceName,
+                resourceProperties = pipelineConflictCopyResourceProp,
+                targetProjectId = targetProjectId,
+                targetResourceType = resource.resourceType,
+                status = PipelineCopyTaskResourceStatus.UNPROCESSED,
+                targetNameExists = targetNamePipelineInfo != null,
+                targetIdExists = targetIdPipelineInfo != null,
+                pipelineReferCount = pipelineReferCount
+            )
         } else {
-            targetResourceName = resource.resourceName
+            PipelineCopyTaskResource(
+                taskId = taskId,
+                projectId = projectId,
+                resourceType = resource.resourceType,
+                resourceId = resource.resourceId,
+                resourceName = resource.resourceName,
+                resourceProperties = null,
+                copyStrategy = pipelineCopyStrategy,
+                targetProjectId = targetProjectId,
+                targetResourceType = resource.resourceType,
+                targetResourceId = targetPipelineId,
+                targetResourceName = resource.resourceName,
+                status = PipelineCopyTaskResourceStatus.PROCESSED,
+                targetNameExists = false,
+                targetIdExists = false,
+                pipelineReferCount = pipelineReferCount
+            )
         }
-        return PipelineCopyTaskResource(
-            taskId = taskId,
-            projectId = projectId,
-            resourceType = resource.resourceType,
-            resourceId = resource.resourceId,
-            resourceName = resource.resourceName,
-            resourceProperties = pipelineConflictCopyResourceProp,
-            targetProjectId = targetProjectId,
-            targetResourceId = targetPipelineId,
-            targetResourceName = targetResourceName,
-            status = status,
-            targetNameExists = targetNamePipelineInfo != null,
-            targetIdExists = targetIdPipelineInfo != null,
-            pipelineReferCount = pipelineReferCount
-        )
     }
 
     private fun buildPipelineCopyResourceRelSet(
