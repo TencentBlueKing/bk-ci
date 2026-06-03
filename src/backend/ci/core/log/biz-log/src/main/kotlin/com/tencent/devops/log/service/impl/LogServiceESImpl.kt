@@ -293,7 +293,7 @@ class LogServiceESImpl(
             if (!fromStart) {
                 queryLogs.logs.reverse()
             }
-            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
+//            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
         } catch (e: ElasticsearchStatusException) {
             handleSearchStatusException(buildId, "queryLogsBetweenLines", queryLogs, e)
         } catch (ignore: Exception) {
@@ -574,7 +574,7 @@ class LogServiceESImpl(
                 jobId = jobId,
                 stepId = stepId
             )
-            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
+//            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
         } catch (e: ElasticsearchStatusException) {
             handleSearchStatusException(buildId, "queryInitLogsPage", queryLogs, e)
         } catch (ignore: Throwable) {
@@ -688,7 +688,7 @@ class LogServiceESImpl(
             clearScrollQuietly(scrollClient, scrollId)
         }
 
-        if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
+//        if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
         return queryLogs
     }
 
@@ -828,7 +828,7 @@ class LogServiceESImpl(
             queryLogs.logs = parseResponse(response.hits)
             val totalHits = response.hits.totalHits?.value ?: queryLogs.logs.size.toLong()
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
-            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
+//            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
             queryLogs.hasMore = totalHits > queryLogs.logs.size
         } catch (e: ElasticsearchStatusException) {
             handleSearchStatusException(buildId, "doQueryInitLogs", queryLogs, e)
