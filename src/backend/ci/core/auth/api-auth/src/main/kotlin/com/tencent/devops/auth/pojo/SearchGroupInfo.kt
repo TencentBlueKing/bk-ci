@@ -21,6 +21,8 @@ data class SearchGroupInfo(
     val description: String? = null,
     @get:Schema(title = "用户组id")
     val groupId: Int? = null,
+    @get:Schema(title = "是否为跳转场景")
+    val redirect: Boolean? = null,
     @get:Schema(title = "page")
     val page: Int,
     @get:Schema(title = "pageSize")
