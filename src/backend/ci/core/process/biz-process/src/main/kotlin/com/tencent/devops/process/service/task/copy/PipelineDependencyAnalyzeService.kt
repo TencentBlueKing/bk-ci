@@ -612,10 +612,6 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
         )
     }
 
-    private fun pipelineKey(projectId: String, pipelineId: String): String {
-        return "$projectId:$pipelineId"
-    }
-
     private fun getContextMap(model: Model): Map<String, String> {
         val triggerContainer = model.stages.firstOrNull()?.containers?.firstOrNull() as? TriggerContainer
             ?: return emptyMap()

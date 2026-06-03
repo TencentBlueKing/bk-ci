@@ -45,6 +45,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
 
     fun execute(event: PipelineBatchTaskExecuteEvent) {
         with(event) {
+            logger.info("start to execute pipeline copy task|$projectId|$taskId")
             val task = tryStartExecute(projectId = projectId, taskId = taskId) ?: return
             val resources = pipelineCopyTaskResourceDao.list(
                 dslContext = dslContext,
@@ -849,9 +850,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
 
     private fun validatePipelineDependencies(resources: List<PipelineCopyTaskResource>) {
         val failedResource = resources.firstOrNull {
-            it.status == PipelineCopyTaskResourceStatus.FAILED ||
-                it.resourceType != PipelineDependentResourceType.PIPELINE &&
-                it.status != PipelineCopyTaskResourceStatus.SUCCESS
+            it.status == PipelineCopyTaskResourceStatus.FAILED
         }
         if (failedResource != null) {
             throwDependencyFailed(failedResource.resourceType, failedResource.resourceName)

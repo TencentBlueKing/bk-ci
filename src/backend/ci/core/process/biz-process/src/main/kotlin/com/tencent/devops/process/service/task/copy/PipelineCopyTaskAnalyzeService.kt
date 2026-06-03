@@ -657,6 +657,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
             resourceId = resource.resourceId,
             resourceName = resource.resourceName,
             targetProjectId = targetProjectId,
+            targetResourceType = resource.resourceType,
             status = PipelineCopyTaskResourceStatus.UNPROCESSED,
             targetNameExists = targetNameExists,
             pipelineReferCount = pipelineReferCount
@@ -708,6 +709,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
             resourceName = resource.resourceName,
             resourceProperties = repositoryCopyResourceProperties,
             targetProjectId = targetProjectId,
+            targetResourceType = resource.resourceType,
             status = status,
             targetNameExists = targetNameExists,
             pipelineReferCount = pipelineReferCount
@@ -741,6 +743,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
             resourceId = resource.resourceId,
             resourceName = resource.resourceName,
             targetProjectId = targetProjectId,
+            targetResourceType = resource.resourceType,
             status = PipelineCopyTaskResourceStatus.UNPROCESSED,
             targetNameExists = targetNameExists,
             pipelineReferCount = pipelineReferCount
@@ -776,6 +779,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
             resourceId = resource.resourceId,
             resourceName = resource.resourceName,
             targetProjectId = targetProjectId,
+            targetResourceType = resource.resourceType,
             status = PipelineCopyTaskResourceStatus.UNPROCESSED,
             targetNameExists = targetNameExists,
             pipelineReferCount = pipelineReferCount
@@ -838,6 +842,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
             resourceName = resource.resourceName,
             resourceProperties = labelGroupProp,
             targetProjectId = targetProjectId,
+            targetResourceType = resource.resourceType,
             status = status,
             targetNameExists = targetNameExists,
             pipelineReferCount = pipelineReferCount
@@ -876,6 +881,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
             resourceName = resource.resourceName,
             resourceProperties = resourceProperties,
             targetProjectId = targetProjectId,
+            targetResourceType = resource.resourceType,
             status = PipelineCopyTaskResourceStatus.UNPROCESSED,
             targetNameExists = targetNameExists,
             pipelineReferCount = pipelineReferCount
@@ -907,6 +913,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
             resourceId = resource.resourceId,
             resourceName = resource.resourceName,
             targetProjectId = targetProjectId,
+            targetResourceType = resource.resourceType,
             status = PipelineCopyTaskResourceStatus.UNPROCESSED,
             targetNameExists = targetNameExists,
             pipelineReferCount = pipelineReferCount
