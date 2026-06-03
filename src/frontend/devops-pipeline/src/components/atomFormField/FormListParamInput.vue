@@ -132,9 +132,7 @@
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import UseInstance from '@/hook/useInstance'
     import {
-        BOOLEAN,
         BOOLEAN_LIST,
-        CHECKBOX,
         MULTIPLE,
         isBooleanParam,
         isCheckboxParam,
@@ -142,14 +140,8 @@
         isMultipleParam,
         isTextareaParam
     } from '@/store/modules/atom/paramsConfig'
+    import { getFormListDefaultRow, getFormListFieldDefaultValue } from '@/utils/util'
     import { computed, ref, watch } from 'vue'
-
-    function getFieldDefaultValue (field) {
-        if (field.defaultValue !== undefined) return field.defaultValue
-        if (field.type === BOOLEAN || field.type === CHECKBOX) return false
-        if (field.type === MULTIPLE) return []
-        return ''
-    }
 
     export default {
         name: 'FormListParamInput',
@@ -166,6 +158,10 @@
                 default: false
             },
             value: {
+                type: [Array, String],
+                default: () => ([])
+            },
+            defaultValue: {
                 type: [Array, String],
                 default: () => ([])
             },
@@ -229,9 +225,9 @@
                 if (!field.options || !Array.isArray(field.options)) return []
                 return field.options.map(opt => ({
                     id: opt.key,
-                    name: opt.value,
+                    name: opt.value || opt.key,
                     value: opt.key,
-                    label: opt.value
+                    label: opt.value || opt.key
                 }))
             }
 
@@ -254,7 +250,7 @@
                     const newItem = { ...item }
                     props.fields.forEach(field => {
                         if (!Object.prototype.hasOwnProperty.call(newItem, field.id)) {
-                            newItem[field.id] = getFieldDefaultValue(field)
+                            newItem[field.id] = getFormListFieldDefaultValue(field)
                         }
                     })
                     return newItem
@@ -262,11 +258,7 @@
             }
 
             const createEmptyItem = () => {
-                const newItem = {}
-                props.fields.forEach(field => {
-                    newItem[field.id] = getFieldDefaultValue(field)
-                })
-                return newItem
+                return getFormListDefaultRow(props.fields, props.defaultValue)
             }
 
             const emitValueChange = () => {
@@ -284,7 +276,11 @@
             }
 
             const handleDeleteItem = (index) => {
-                localValue.value.splice(index, 1)
+                if (localValue.value.length <= 1) {
+                    localValue.value.splice(index, 1, createEmptyItem())
+                } else {
+                    localValue.value.splice(index, 1)
+                }
                 // 删除一行后，重新对齐 errors 的行索引
                 const nextErrors = {}
                 Object.keys(errors.value).forEach(key => {
@@ -358,11 +354,8 @@
                         localValue.value = []
                     }
                     ensureFieldKeys()
-                    // 没有任何行但已配置 fields 时，给执行人造一行空数据，
-                    // 并把这次填充同步给父组件，保持 param.defaultValue 与 UI 一致
                     if (localValue.value.length === 0 && props.fields && props.fields.length > 0 && !props.disabled) {
                         localValue.value.push(createEmptyItem())
-                        emitValueChange()
                     }
                 },
                 { immediate: true, deep: true }

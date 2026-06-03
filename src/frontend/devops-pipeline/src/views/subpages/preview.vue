@@ -314,7 +314,8 @@
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
     import { bus, UPDATE_PREVIEW_PIPELINE_NAME } from '@/utils/bus'
     import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { getParamsValuesMap, isObject, isShallowEqual } from '@/utils/util'
+    import { isFormListParam } from '@/store/modules/atom/paramsConfig'
+    import { getParamsValuesMap, isObject, isParamValueEqual, normalizeFormListValue } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
@@ -509,9 +510,7 @@
 
                     this.paramList = startupInfo.properties.filter(p => !p.constant && p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
                         ...p,
-                        isChanged: isObject(p.defaultValue)
-                            ? !isShallowEqual(p.defaultValue, p.value)
-                            : p.defaultValue !== p.value,
+                        isChanged: this.isParamChanged(p, p.value),
                         readOnly: false,
                         label: `${p.id}${p.name ? `(${p.name})` : ''}`
                     }))
@@ -772,6 +771,17 @@
                     ...this.versionParamValues
                 })
             },
+            getComparableParamValue (param, value) {
+                return isFormListParam(param?.type)
+                    ? normalizeFormListValue(value, param.fields)
+                    : value
+            },
+            isParamChanged (param, value) {
+                return !isParamValueEqual(
+                    this.getComparableParamValue(param, param?.defaultValue),
+                    this.getComparableParamValue(param, value)
+                )
+            },
             particalyUpdateParams (origin, partical, diffMap) {
                 const allParamMap = this.startupInfo?.properties?.reduce((acc, param) => {
                     acc.set(param.id, param)
@@ -787,7 +797,7 @@
                         diffMap.deleted.push(key)
                     } else if (!(param.required === true && param.constant === false) && !allVersionKeyList.includes(key)) {
                         diffMap.noRequired.push(key)
-                    } else if (!isShallowEqual(param.defaultValue, partical[key])) {
+                    } else if (this.isParamChanged(param, partical[key])) {
                         diffMap.changed.push(key)
                     }
                 })

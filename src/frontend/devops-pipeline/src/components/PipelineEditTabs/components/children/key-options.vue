@@ -1,6 +1,7 @@
 <template>
     <section>
         <batch-add-options
+            ref="batchAddOptions"
             :disabled="disabled"
             :submit-batch-add="handleBatchInput"
         />
@@ -116,6 +117,10 @@
             handleChangeOptions: {
                 type: Function,
                 required: true
+            },
+            requireValue: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -219,7 +224,7 @@
                     const value = this.list[i][key]
 
                     if (!value) {
-                        if (key === 'key') {
+                        if (key === 'key' || this.requireValue) {
                             result[i] = this.$t('editPage.requiredTips', [errPrefix])
                         }
                     } else {
@@ -237,6 +242,9 @@
             },
             onDragEnd () {
                 this.handleChangeOptions('options', this.list)
+            },
+            hasPendingBatchInput () {
+                return !!this.$refs.batchAddOptions?.hasPendingInput?.()
             }
         }
     }
