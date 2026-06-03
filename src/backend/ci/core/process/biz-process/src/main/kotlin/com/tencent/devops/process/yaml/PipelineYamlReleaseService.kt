@@ -106,7 +106,7 @@ class PipelineYamlReleaseService(
 
                     HTTP_401, HTTP_403 -> ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_USER_NO_PUSH_PERMISSION,
-                        params = arrayOf(repository.userName, repository.projectName)
+                        params = arrayOf(userId, repository.projectName)
                     )
 
                     else -> ignored
