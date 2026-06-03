@@ -106,7 +106,7 @@ class PipelineCopyTaskSaveService @Autowired constructor(
         taskId: String,
         resources: List<PipelineCopyTaskResource>
     ) {
-        val task = tryStartSave(projectId = projectId, taskId = taskId) ?: return
+        val task = tryStartSave(projectId = projectId, taskId = taskId)
         parseParam(task) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
             params = arrayOf(task.taskId)
@@ -222,7 +222,7 @@ class PipelineCopyTaskSaveService @Autowired constructor(
     private fun tryStartSave(
         projectId: String,
         taskId: String
-    ): PipelineBatchTask? {
+    ): PipelineBatchTask {
         val lock = PipelineCopyTaskLock(
             redisOperation = redisOperation,
             projectId = projectId,
@@ -235,17 +235,21 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 taskId = taskId
-            ) ?: run {
-                logger.warn("pipeline batch task has no change, no need to analyze|$projectId|$taskId")
-                return null
-            }
+            ) ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS,
+                params = arrayOf(taskId)
+            )
             if (task.taskType != PipelineBatchTaskType.PIPELINE_COPY) {
-                logger.warn("pipeline batch task type not match|$projectId|$taskId")
-                return null
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_TYPE_NOT_MATCH,
+                    params = arrayOf(taskId, task.taskType.name, PipelineBatchTaskType.PIPELINE_COPY.name)
+                )
             }
             if (task.status != PipelineBatchTaskStatus.DRAFT) {
-                logger.warn("pipeline batch task status not match|$projectId|$taskId|${task.status}")
-                return null
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_SAVE_CONFIG,
+                    params = arrayOf(taskId, task.status.name)
+                )
             }
             pipelineBatchTaskDao.updateStatus(
                 dslContext = dslContext,

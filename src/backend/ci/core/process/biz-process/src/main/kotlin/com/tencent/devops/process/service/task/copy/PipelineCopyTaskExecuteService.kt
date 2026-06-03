@@ -927,7 +927,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
             )
             val successCount = resources.count {
                 it.status == PipelineCopyTaskResourceStatus.SUCCESS ||
-                        it.status == PipelineCopyTaskResourceStatus.SKIP
+                    it.status == PipelineCopyTaskResourceStatus.SKIP
             }
             val failedCount = resources.count {
                 it.status == PipelineCopyTaskResourceStatus.FAILED

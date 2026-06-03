@@ -170,6 +170,13 @@ class PipelineBatchTaskService @Autowired constructor(
         taskId: String,
         pipelineId: String
     ) {
+        val task = getTask(projectId = projectId, taskId = taskId)
+        if (task.status != PipelineBatchTaskStatus.DRAFT) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_DETAIL_CAN_NOT_EXCLUDE,
+                params = arrayOf(pipelineId, task.status.name)
+            )
+        }
         val detail = getTaskDetail(projectId = projectId, taskId = taskId, pipelineId = pipelineId)
         if (detail.subPipeline || detail.status in DETAIL_STATUS_CAN_NOT_EXCLUDE) {
             throw ErrorCodeException(
@@ -192,6 +199,13 @@ class PipelineBatchTaskService @Autowired constructor(
         taskId: String,
         pipelineId: String
     ) {
+        val task = getTask(projectId = projectId, taskId = taskId)
+        if (task.status != PipelineBatchTaskStatus.DRAFT) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_DETAIL_CAN_NOT_RESTORE,
+                params = arrayOf(pipelineId, task.status.name)
+            )
+        }
         val detail = getTaskDetail(projectId = projectId, taskId = taskId, pipelineId = pipelineId)
         if (detail.status != PipelineBatchTaskDetailStatus.EXCLUDED) {
             throw ErrorCodeException(

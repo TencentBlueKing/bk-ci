@@ -5,11 +5,11 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
@@ -43,7 +43,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import kotlin.collections.get
 
 @Service
 /**
@@ -90,48 +89,23 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
         return resources
     }
 
-    fun analysisSubPipelineDependency(
+    fun analysisDirectSubPipelineDependency(
         projectId: String,
         pipelineId: String
     ): Set<PipelineDependentResource> {
-        return collectSubPipelineDependencies(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            visited = mutableSetOf(pipelineKey(projectId = projectId, pipelineId = pipelineId))
-        )
-    }
-
-    private fun collectSubPipelineDependencies(
-        projectId: String,
-        pipelineId: String,
-        visited: MutableSet<String>
-    ): Set<PipelineDependentResource> {
-        val resources = mutableSetOf<PipelineDependentResource>()
-        subPipelineRefService.list(
+        return subPipelineRefService.list(
             projectId = projectId,
             pipelineId = pipelineId
-        ).forEach { ref ->
-            val subProjectId = ref.subProjectId?.takeIf { it.isNotBlank() } ?: return@forEach
-            val subPipelineId = ref.subPipelineId?.takeIf { it.isNotBlank() } ?: return@forEach
-            val resource = PipelineDependentResource(
+        ).mapNotNull { ref ->
+            val subProjectId = ref.subProjectId?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+            val subPipelineId = ref.subPipelineId?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+            PipelineDependentResource(
                 projectId = subProjectId,
                 resourceType = PipelineDependentResourceType.PIPELINE,
                 resourceId = subPipelineId,
                 resourceName = ref.subPipelineName?.takeIf { it.isNotBlank() } ?: subPipelineId
             )
-            val resourceKey = pipelineKey(projectId = resource.projectId, pipelineId = resource.resourceId)
-            if (visited.add(resourceKey)) {
-                resources.add(resource)
-                resources.addAll(
-                    collectSubPipelineDependencies(
-                        projectId = resource.projectId,
-                        pipelineId = resource.resourceId,
-                        visited = visited
-                    )
-                )
-            }
-        }
-        return resources
+        }.toSet()
     }
 
     private fun collectPipelineGroupResources(
