@@ -165,7 +165,7 @@ class OpenClawService @Autowired constructor(
     }
 
     fun getTaskStatus(taskId: String): TaskStatusResp {
-        val url = bkConfig.bksopsStartTask.replace("{taskId}", taskId)
+        val url = bkConfig.bksopsTaskStatus.replace("{taskId}", taskId)
         logger.info("getTaskStatus|request url: $url")
         val request = Request.Builder()
             .url(url)
