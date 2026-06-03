@@ -27,7 +27,7 @@
                     :random-sub-path="param.latestRandomStringInPath"
                     :enable-version-control="param.enableVersionControl"
                     :is-diff-param="highlightChangedParam && param.isChanged"
-                    v-validate="{ required: param.required, objectRequired: isObject(param.value) || Array.isArray(param.value) }"
+                    v-validate="{ required: param.required, objectRequired: isObject(param.value) || isFormListParam(param.type) }"
                     :class="{
                         'is-diff-param': (highlightChangedParam && param.isChanged) || param.affectedChanged,
                         'is-change-param': param.isChange,

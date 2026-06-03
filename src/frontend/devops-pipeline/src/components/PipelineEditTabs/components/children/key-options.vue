@@ -117,10 +117,6 @@
             handleChangeOptions: {
                 type: Function,
                 required: true
-            },
-            requireValue: {
-                type: Boolean,
-                default: false
             }
         },
         data () {
@@ -224,7 +220,7 @@
                     const value = this.list[i][key]
 
                     if (!value) {
-                        if (key === 'key' || this.requireValue) {
+                        if (key === 'key') {
                             result[i] = this.$t('editPage.requiredTips', [errPrefix])
                         }
                     } else {
