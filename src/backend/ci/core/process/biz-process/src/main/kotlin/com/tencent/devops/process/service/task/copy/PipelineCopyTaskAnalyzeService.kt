@@ -947,28 +947,30 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
             projectId = targetProjectId,
             pipelineName = resource.resourceName
         )
-        val (pipelineConflictCopyResourceProp, status) =
-            if (targetIdPipelineInfo != null || targetNamePipelineInfo != null) {
-                val pipelineConflictCopyResourceProp = PipelineConflictCopyResourceProp(
-                    idConflict = targetIdPipelineInfo?.let {
-                        PipelineConflictInfo(
-                            pipelineId = it.pipelineId,
-                            pipelineName = it.pipelineName,
-                            creator = it.creator
-                        )
-                    },
-                    nameConflict = targetNamePipelineInfo?.let {
-                        PipelineConflictInfo(
-                            pipelineId = it.pipelineId,
-                            pipelineName = it.pipelineName,
-                            creator = it.creator
-                        )
-                    }
-                )
-                Pair(pipelineConflictCopyResourceProp, PipelineCopyTaskResourceStatus.UNPROCESSED)
-            } else {
-                Pair(null, PipelineCopyTaskResourceStatus.PROCESSED)
-            }
+        var pipelineConflictCopyResourceProp: PipelineConflictCopyResourceProp? = null
+        var status = PipelineCopyTaskResourceStatus.PROCESSED
+        var targetResourceName: String? = null
+        if (targetIdPipelineInfo != null || targetNamePipelineInfo != null) {
+            pipelineConflictCopyResourceProp = PipelineConflictCopyResourceProp(
+                idConflict = targetIdPipelineInfo?.let {
+                    PipelineConflictInfo(
+                        pipelineId = it.pipelineId,
+                        pipelineName = it.pipelineName,
+                        creator = it.creator
+                    )
+                },
+                nameConflict = targetNamePipelineInfo?.let {
+                    PipelineConflictInfo(
+                        pipelineId = it.pipelineId,
+                        pipelineName = it.pipelineName,
+                        creator = it.creator
+                    )
+                }
+            )
+            status = PipelineCopyTaskResourceStatus.UNPROCESSED
+        } else {
+            targetResourceName = resource.resourceName
+        }
         return PipelineCopyTaskResource(
             taskId = taskId,
             projectId = projectId,
@@ -977,6 +979,8 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
             resourceName = resource.resourceName,
             resourceProperties = pipelineConflictCopyResourceProp,
             targetProjectId = targetProjectId,
+            targetResourceId = targetPipelineId,
+            targetResourceName = targetResourceName,
             status = status,
             targetNameExists = targetNamePipelineInfo != null,
             targetIdExists = targetIdPipelineInfo != null,
