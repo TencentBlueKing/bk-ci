@@ -33,8 +33,7 @@ class PipelineCopyTaskSaveService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineBatchTaskDao: PipelineBatchTaskDao,
     private val pipelineBatchTaskDetailDao: PipelineBatchTaskDetailDao,
-    private val pipelineCopyTaskResourceDao: PipelineCopyTaskResourceDao,
-    private val pipelineCopyResourceGetService: PipelineCopyResourceGetService
+    private val pipelineCopyTaskResourceDao: PipelineCopyTaskResourceDao
 ) {
 
     fun saveConfigDraft(
@@ -162,7 +161,6 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                 }
 
                 PipelineCopyStrategy.REPOSITORY_CREATE_NEW -> {
-                    pipelineCopyResourceGetService.validateRepositoryProperties(resource)
                     PipelineCopyTaskResourceUpdate(
                         projectId = projectId,
                         taskId = taskId,

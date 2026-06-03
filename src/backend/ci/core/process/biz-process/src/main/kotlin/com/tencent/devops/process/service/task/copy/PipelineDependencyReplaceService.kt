@@ -89,7 +89,7 @@ class PipelineDependencyReplaceService @Autowired constructor(
         )
         if (context.missingResources.isNotEmpty()) {
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_DEPENDENT_RESOURCE_MIGRATE_FAILED,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_MIGRATE_FAILED,
                 params = arrayOf(formatMissingResources(context.missingResources))
             )
         }

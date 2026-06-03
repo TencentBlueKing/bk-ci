@@ -279,6 +279,9 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         targetProjectId: String,
         resources: List<PipelineCopyTaskResource>
     ) {
+        val resourceMap = resources.associateBy {
+            resourceKey(resourceType = it.resourceType, resourceId = it.resourceId)
+        }.toMutableMap()
         resources.filter {
             it.resourceType == PipelineDependentResourceType.REPOSITORY
         }.forEach {
@@ -287,7 +290,8 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 projectId = projectId,
                 taskId = taskId,
                 targetProjectId = targetProjectId,
-                resource = it
+                resource = it,
+                resourceMap = resourceMap
             )
         }
     }
@@ -297,7 +301,8 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         projectId: String,
         taskId: String,
         targetProjectId: String,
-        resource: PipelineCopyTaskResource
+        resource: PipelineCopyTaskResource,
+        resourceMap: MutableMap<String, PipelineCopyTaskResource>
     ) {
         var status = PipelineCopyTaskResourceStatus.SUCCESS
         var targetResourceId: String? = null
@@ -318,13 +323,12 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 }
 
                 PipelineCopyStrategy.REPOSITORY_CREATE_NEW -> {
-                    pipelineCopyResourceGetService.validateRepositoryProperties(resource)
                     val targetResource = pipelineCopyResourceCreateService.createRepository(
                         userId = userId,
                         sourceProjectId = projectId,
                         repoName = resource.resourceName,
                         targetProjectId = targetProjectId,
-                        targetRepoAuthCopyResourceProp = resource.targetResourceProp as RepoAuthCopyResourceProp
+                        resourceMap = resourceMap
                     )
                     targetResourceId = targetResource.resourceId
                     targetResourceName = targetResource.resourceName
@@ -731,11 +735,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         targetProjectId: String,
         resources: List<PipelineCopyTaskResource>
     ) {
-        val resourceMap = pipelineCopyTaskResourceDao.list(
-            dslContext = dslContext,
-            projectId = projectId,
-            taskId = taskId
-        ).associateBy {
+        val resourceMap = resources.associateBy {
             resourceKey(resourceType = it.resourceType, resourceId = it.resourceId)
         }.toMutableMap()
         resources.filter {

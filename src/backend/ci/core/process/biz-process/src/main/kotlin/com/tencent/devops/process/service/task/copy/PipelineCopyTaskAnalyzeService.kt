@@ -79,19 +79,29 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
 ) {
     fun analyze(event: PipelineBatchTaskAnalyzeEvent) {
         with(event) {
-            logger.info("start to analyze pipeline copy task|$projectId|$taskId")
-            val task = tryStartAnalyze(
-                projectId = projectId,
-                taskId = taskId
-            ) ?: return
-            doAnalyze(
-                projectId = event.projectId,
-                task = task
-            )
-            finishAnalyze(
-                projectId = event.projectId,
-                taskId = taskId
-            )
+            try {
+                logger.info("start to analyze pipeline copy task|$projectId|$taskId")
+                val task = tryStartAnalyze(
+                    projectId = projectId,
+                    taskId = taskId
+                ) ?: return
+                doAnalyze(
+                    projectId = event.projectId,
+                    task = task
+                )
+                finishAnalyze(
+                    projectId = event.projectId,
+                    taskId = taskId,
+                    status = PipelineBatchTaskStatus.DRAFT
+                )
+            } catch (ignore: Exception) {
+                logger.error("analyze pipeline copy task failed|$projectId|$taskId", ignore)
+                finishAnalyze(
+                    projectId = event.projectId,
+                    taskId = taskId,
+                    status = PipelineBatchTaskStatus.FAILED
+                )
+            }
         }
     }
 
@@ -103,7 +113,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
             params = arrayOf(task.taskId)
         )
-        excludeSubPipelineTasks(
+        /*excludeSubPipelineTasks(
             projectId = projectId,
             taskId = task.taskId
         )
@@ -114,7 +124,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
         deleteExcludedCopyResources(
             projectId = projectId,
             taskId = task.taskId
-        )
+        )*/
         createOrUpdateCopyResources(
             userId = task.creator,
             projectId = projectId,
@@ -126,13 +136,14 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
 
     fun finishAnalyze(
         projectId: String,
-        taskId: String
+        taskId: String,
+        status: PipelineBatchTaskStatus
     ) {
         // 分析完成后,把状态再转换成草稿
         pipelineCopyTaskStateService.updateTaskStatusWithLock(
             projectId = projectId,
             taskId = taskId,
-            status = PipelineBatchTaskStatus.DRAFT
+            status = status
         )
     }
 

@@ -483,20 +483,12 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_NOT_SUPPORT = "2101380"
     // 资源类型{0}，资源名称{1}的复制策略不能为空
     const val ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_CAN_NOT_EMPTY = "2101381"
-    // 资源类型{0}，资源名称{1}的目标代码库属性不能为空
-    const val ERROR_PIPELINE_COPY_TARGET_REPOSITORY_PROPERTIES_EMPTY = "2101382"
-    // 资源类型{0}，资源名称{1}的源代码库属性不能为空
-    const val ERROR_PIPELINE_COPY_SOURCE_REPOSITORY_PROPERTIES_EMPTY = "2101383"
-    // 资源类型{0}，资源名称{1}的源代码库授权类型{2}与目标代码库授权类型{3}不一致
-    const val ERROR_PIPELINE_COPY_REPOSITORY_AUTH_TYPE_NOT_MATCH = "2101384"
-    // 资源类型{0}，资源名称{1}的目标代码库授权类型{2}不是OAUTH，授权信息不能为空
-    const val ERROR_PIPELINE_COPY_TARGET_REPOSITORY_AUTH_INFO_EMPTY = "2101385"
     // 源项目{0}不存在资源：{1}
     const val ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS = "2101386"
     // 目标项目{0}创建资源{1}失败：{2}
     const val ERROR_PIPELINE_COPY_TARGET_RESOURCE_CREATE_FAILED = "2101387"
     // 流水线依赖资源迁移失败，以下资源未生成目标映射：{0}
-    const val ERROR_PIPELINE_COPY_DEPENDENT_RESOURCE_MIGRATE_FAILED = "2101388"
+    const val ERROR_PIPELINE_COPY_RESOURCE_MIGRATE_FAILED = "2101388"
     // 流水线依赖资源失败：{0}
     const val ERROR_PIPELINE_COPY_DEPENDENT_RESOURCE_FAILED = "2101389"
 

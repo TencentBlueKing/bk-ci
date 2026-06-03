@@ -22,8 +22,8 @@ import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
-import com.tencent.devops.process.pojo.pipeline.task.RepoAuthCopyResourceProp
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.PipelineViewService
@@ -142,7 +142,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
         sourceProjectId: String,
         repoName: String,
         targetProjectId: String,
-        targetRepoAuthCopyResourceProp: RepoAuthCopyResourceProp
+        resourceMap: MutableMap<String, PipelineCopyTaskResource>
     ): PipelineCopyResourceBasicInfo {
         val repository = client.get(ServiceRepositoryResource::class).get(
             projectId = sourceProjectId,
@@ -155,7 +155,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
         val targetRepository = buildTargetRepository(
             userId = userId,
             repository = repository,
-            targetRepoAuthCopyResourceProp = targetRepoAuthCopyResourceProp
+            resourceMap = resourceMap
         )
         val createResult = client.get(ServiceRepositoryResource::class).create(
             userId = userId,
@@ -414,34 +414,102 @@ class PipelineCopyResourceCreateService @Autowired constructor(
     private fun buildTargetRepository(
         userId: String,
         repository: Repository,
-        targetRepoAuthCopyResourceProp: RepoAuthCopyResourceProp
+        resourceMap: MutableMap<String, PipelineCopyTaskResource>
     ): Repository {
-        return if (targetRepoAuthCopyResourceProp.authType == RepoAuthType.OAUTH.name) {
-            when (repository) {
-                is CodeGitRepository -> repository.copy(userName = userId)
-                is CodeTGitRepository -> repository.copy(userName = userId)
-                is CodeGitlabRepository -> repository.copy(userName = userId)
-                is ScmGitRepository -> repository.copy(userName = userId)
-                is CodeSvnRepository -> repository.copy(userName = userId)
-                is ScmSvnRepository -> repository.copy(userName = userId)
-                is GithubRepository -> repository.copy(userName = userId)
-                is CodeP4Repository -> repository.copy(userName = userId)
-                else -> repository
-            }
-        } else {
-            val credentialId = targetRepoAuthCopyResourceProp.authInfo.orEmpty()
-            when (repository) {
-                is CodeGitRepository -> repository.copy(credentialId = credentialId)
-                is CodeTGitRepository -> repository.copy(credentialId = credentialId)
-                is CodeGitlabRepository -> repository.copy(credentialId = credentialId)
-                is ScmGitRepository -> repository.copy(credentialId = credentialId)
-                is CodeSvnRepository -> repository.copy(credentialId = credentialId)
-                is ScmSvnRepository -> repository.copy(credentialId = credentialId)
-                is GithubRepository -> repository.copy(credentialId = credentialId)
-                is CodeP4Repository -> repository.copy(credentialId = credentialId)
-                else -> repository
-            }
+        val (authType, sourceCredentialId) = repository.getRepoAuthInfo()
+        if (authType.isNullOrBlank()) {
+            return repository
         }
+        return if (authType == RepoAuthType.OAUTH.name) {
+            repository.copyUserName(userId = userId)
+        } else {
+            val targetCredentialId = getTargetCredentialId(
+                sourceCredentialId = sourceCredentialId,
+                resourceMap = resourceMap
+            )
+            repository.copyCredentialId(credentialId = targetCredentialId)
+        }
+    }
+
+    private fun Repository.getRepoAuthInfo(): Pair<String?, String?> {
+        return when (this) {
+            is CodeGitRepository -> (authType ?: RepoAuthType.SSH).name to credentialId
+            is CodeTGitRepository -> (authType ?: RepoAuthType.SSH).name to credentialId
+            is CodeGitlabRepository -> (authType ?: RepoAuthType.HTTP).name to credentialId
+            is ScmGitRepository -> (authType ?: RepoAuthType.SSH).name to credentialId
+            is CodeSvnRepository -> getSvnAuthType() to credentialId
+            is ScmSvnRepository -> getSvnAuthType() to credentialId
+            is GithubRepository -> RepoAuthType.OAUTH.name to credentialId
+            is CodeP4Repository -> RepoAuthType.HTTP.name to credentialId
+            else -> null to null
+        }
+    }
+
+    private fun getTargetCredentialId(
+        sourceCredentialId: String?,
+        resourceMap: MutableMap<String, PipelineCopyTaskResource>
+    ): String {
+        val sourceCredential = sourceCredentialId?.takeIf { it.isNotBlank() } ?: throwDependencyFailed(
+            resourceType = PipelineDependentResourceType.CREDENTIAL,
+            resourceName = sourceCredentialId.orEmpty()
+        )
+        val credentialResource = resourceMap[resourceKey(PipelineDependentResourceType.CREDENTIAL, sourceCredential)]
+            ?: throwDependencyFailed(PipelineDependentResourceType.CREDENTIAL, sourceCredential)
+        return credentialResource.targetResourceId?.takeIf { it.isNotBlank() }
+            ?: throwDependencyFailed(PipelineDependentResourceType.CREDENTIAL, sourceCredential)
+    }
+
+    private fun Repository.copyUserName(userId: String): Repository {
+        return when (this) {
+            is CodeGitRepository -> copy(userName = userId)
+            is CodeTGitRepository -> copy(userName = userId)
+            is CodeGitlabRepository -> copy(userName = userId)
+            is ScmGitRepository -> copy(userName = userId)
+            is CodeSvnRepository -> copy(userName = userId)
+            is ScmSvnRepository -> copy(userName = userId)
+            is GithubRepository -> copy(userName = userId)
+            is CodeP4Repository -> copy(userName = userId)
+            else -> this
+        }
+    }
+
+    private fun Repository.copyCredentialId(credentialId: String): Repository {
+        return when (this) {
+            is CodeGitRepository -> copy(credentialId = credentialId)
+            is CodeTGitRepository -> copy(credentialId = credentialId)
+            is CodeGitlabRepository -> copy(credentialId = credentialId)
+            is ScmGitRepository -> copy(credentialId = credentialId)
+            is CodeSvnRepository -> copy(credentialId = credentialId)
+            is ScmSvnRepository -> copy(credentialId = credentialId)
+            is GithubRepository -> copy(credentialId = credentialId)
+            is CodeP4Repository -> copy(credentialId = credentialId)
+            else -> this
+        }
+    }
+
+    private fun CodeSvnRepository.getSvnAuthType(): String {
+        return svnType?.uppercase() ?: RepoAuthType.SSH.name
+    }
+
+    private fun ScmSvnRepository.getSvnAuthType(): String {
+        return svnType?.uppercase() ?: RepoAuthType.SSH.name
+    }
+
+    private fun resourceKey(
+        resourceType: PipelineDependentResourceType,
+        resourceId: String
+    ): String {
+        return "${resourceType.name}_$resourceId"
+    }
+
+    private fun throwDependencyFailed(
+        resourceType: PipelineDependentResourceType,
+        resourceName: String
+    ): Nothing {
+        throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_DEPENDENT_RESOURCE_FAILED,
+            params = arrayOf("${resourceType.name}:$resourceName")
+        )
     }
 
     private fun <T> checkTargetResourceCreateResult(
@@ -465,7 +533,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             val targetProjectId = resource.targetProjectId?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
             val targetResourceId = resource.targetResourceId?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
             val targetResourceName = resource.targetResourceName?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
-            val key = "${resource.resourceType.name}_${resource.resourceId}"
+            val key = resourceKey(resource.resourceType, resource.resourceId)
             key to PipelineDependentResource(
                 projectId = targetProjectId,
                 resourceType = resource.resourceType,

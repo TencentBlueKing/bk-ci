@@ -11,10 +11,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.label.PipelineGroupDao
 import com.tencent.devops.process.dao.label.PipelineLabelDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
-import com.tencent.devops.process.pojo.pipeline.task.RepoAuthCopyResourceProp
 import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,42 +49,6 @@ class PipelineCopyResourceGetService @Autowired constructor(
                     resourceName = credentialId
                 )
             }
-        }
-    }
-
-    fun validateRepositoryProperties(resource: PipelineCopyTaskResource) {
-        val targetResourceProperties = resource.targetResourceProp as? RepoAuthCopyResourceProp
-            ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TARGET_REPOSITORY_PROPERTIES_EMPTY,
-                params = arrayOf(resource.resourceType.name, resource.resourceName)
-            )
-        val resourceProperties = resource.resourceProperties as? RepoAuthCopyResourceProp
-            ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_SOURCE_REPOSITORY_PROPERTIES_EMPTY,
-                params = arrayOf(resource.resourceType.name, resource.resourceName)
-            )
-        if (resourceProperties.authType != targetResourceProperties.authType) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_REPOSITORY_AUTH_TYPE_NOT_MATCH,
-                params = arrayOf(
-                    resource.resourceType.name,
-                    resource.resourceName,
-                    resourceProperties.authType ?: "",
-                    targetResourceProperties.authType ?: ""
-                )
-            )
-        }
-        if (targetResourceProperties.authType != RepoAuthType.OAUTH.name &&
-            targetResourceProperties.authInfo.isNullOrBlank()
-        ) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TARGET_REPOSITORY_AUTH_INFO_EMPTY,
-                params = arrayOf(
-                    resource.resourceType.name,
-                    resource.resourceName,
-                    targetResourceProperties.authType ?: ""
-                )
-            )
         }
     }
 
