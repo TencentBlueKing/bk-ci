@@ -51,6 +51,7 @@ influxdb:
   server: __BK_CI_INFLUXDB_ADDR__
   userName: __BK_CI_INFLUXDB_USER__
   password: __BK_CI_INFLUXDB_PASSWORD__
+  writeEnabled: true # 是否将监控数据写入influxdb，默认写入，置为false可关闭写入
          
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21927
 server:
@@ -95,6 +96,7 @@ influxdb:
   server: __BK_CI_INFLUXDB_ADDR__
   userName: __BK_CI_INFLUXDB_USER__
   password: __BK_CI_INFLUXDB_PASSWORD__
+  writeEnabled: true # 是否将监控数据写入influxdb，默认写入，置为false可关闭写入
 
 plugin:
   codecc:
