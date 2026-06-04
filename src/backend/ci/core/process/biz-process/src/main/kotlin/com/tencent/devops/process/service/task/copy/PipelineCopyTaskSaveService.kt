@@ -139,7 +139,7 @@ class PipelineCopyTaskSaveService @Autowired constructor(
         ).associateBy {
             PipelineCopyTaskUtils.resourceKey(resourceType = it.resourceType, resourceId = it.resourceId)
         }
-        val resourceUpdates = request.resources.map { resource ->
+        val resourceUpdates = request.resources.filter { it.copyStrategy != null }.map { resource ->
             val resourceKey = PipelineCopyTaskUtils.resourceKey(
                 resourceType = resource.resourceType,
                 resourceId = resource.resourceId
@@ -148,10 +148,7 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_DEPENDENT_RESOURCE_NOT_EXISTS,
                 params = arrayOf(taskId, "${resource.resourceType.name}:${resource.resourceName}")
             )
-            val copyStrategy = resource.copyStrategy ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_CAN_NOT_EMPTY,
-                params = arrayOf(resource.resourceType.name, resource.resourceName)
-            )
+            val copyStrategy = resource.copyStrategy!!
             if (!copyStrategy.support(resource.resourceType)) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_NOT_SUPPORT,
