@@ -31,14 +31,17 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchCopyTaskParam
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskAnalyzeEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetail
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineConflictCopyResourceProp
 import com.tencent.devops.process.pojo.pipeline.task.PipelineConflictInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceRel
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineLabelGroupCopyResourceProp
 import com.tencent.devops.process.pojo.pipeline.task.PipelineViewCopyResourceProp
 import com.tencent.devops.process.pojo.pipeline.task.RepositoryCopyResourceProp
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -453,38 +456,44 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
             return
         }
 
-        val pipelineIds = details.map { it.pipelineId }.toSet()
+        val successPipelineIds = mutableSetOf<String>()
+        val failedDetailUpdates = mutableListOf<PipelineBatchTaskDetailUpdate>()
         val copyTaskResourceRelSet = mutableSetOf<PipelineCopyTaskResourceRel>()
-        val resources = details.flatMap { detail ->
-            val dependentResources = pipelineDependencyAnalyzeService.analysisResourceDependency(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = detail.pipelineId
-            )
-            copyTaskResourceRelSet.addAll(
-                buildPipelineCopyResourceRelSet(
-                    detail = detail,
-                    dependentResources = dependentResources
-                )
-            )
-            dependentResources
-        }
-        val pipelineReferCountMap = buildPipelineReferCountMap(copyTaskResourceRelSet)
-        val copyTaskResourceSet = buildCopyResource(
+        val resources = mutableListOf<PipelineDependentResource>()
+        val createResources = mutableSetOf<PipelineCopyTaskResource>()
+        val updateResources = mutableListOf<PipelineCopyTaskResourceUpdate>()
+
+        analyzeCopyTaskResources(
+            userId = userId,
+            projectId = projectId,
+            taskId = taskId,
+            details = details,
+            successPipelineIds = successPipelineIds,
+            failedDetailUpdates = failedDetailUpdates,
+            copyTaskResourceRelSet = copyTaskResourceRelSet,
+            resources = resources
+        )
+        buildCreateOrUpdateCopyResources(
             userId = userId,
             projectId = projectId,
             taskId = taskId,
             targetProjectId = targetProjectId,
-            resources = resources.toSet(),
-            pipelineReferCountMap = pipelineReferCountMap,
-            pipelineCopyStrategy = pipelineCopyStrategy
+            pipelineCopyStrategy = pipelineCopyStrategy,
+            resources = resources,
+            copyTaskResourceRelSet = copyTaskResourceRelSet,
+            createResources = createResources,
+            updateResources = updateResources
         )
 
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             pipelineCopyTaskResourceDao.batchCreate(
                 dslContext = transactionContext,
-                resources = copyTaskResourceSet.toList()
+                resources = createResources.toList()
+            )
+            pipelineCopyTaskResourceDao.batchUpdate(
+                dslContext = transactionContext,
+                updates = updateResources
             )
             pipelineCopyTaskResourceRelDao.batchCreate(
                 dslContext = transactionContext,
@@ -494,11 +503,92 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                 dslContext = transactionContext,
                 projectId = projectId,
                 taskId = taskId,
-                pipelineIds = pipelineIds,
+                pipelineIds = successPipelineIds,
                 status = PipelineBatchTaskDetailStatus.WAIT_COPY,
                 change = false
             )
+            pipelineBatchTaskDetailDao.batchUpdate(
+                dslContext = transactionContext,
+                updates = failedDetailUpdates
+            )
         }
+    }
+
+    private fun analyzeCopyTaskResources(
+        userId: String,
+        projectId: String,
+        taskId: String,
+        details: List<PipelineBatchTaskDetail>,
+        successPipelineIds: MutableSet<String>,
+        failedDetailUpdates: MutableList<PipelineBatchTaskDetailUpdate>,
+        copyTaskResourceRelSet: MutableSet<PipelineCopyTaskResourceRel>,
+        resources: MutableList<PipelineDependentResource>
+    ) {
+        details.forEach { detail ->
+            try {
+                val dependentResources = pipelineDependencyAnalyzeService.analysisResourceDependency(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = detail.pipelineId
+                )
+                copyTaskResourceRelSet.addAll(
+                    buildPipelineCopyResourceRelSet(
+                        detail = detail,
+                        dependentResources = dependentResources
+                    )
+                )
+                resources.addAll(dependentResources)
+                successPipelineIds.add(detail.pipelineId)
+            } catch (ignore: Exception) {
+                logger.error(
+                    "analyze pipeline dependency failed|$projectId|$taskId|${detail.pipelineId}|${detail.pipelineName}",
+                    ignore
+                )
+                failedDetailUpdates.add(
+                    PipelineBatchTaskDetailUpdate(
+                        projectId = projectId,
+                        taskId = taskId,
+                        pipelineId = detail.pipelineId,
+                        status = PipelineBatchTaskDetailStatus.FAILED,
+                        change = false,
+                        errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignore)
+                    )
+                )
+            }
+        }
+    }
+
+    private fun buildCreateOrUpdateCopyResources(
+        userId: String,
+        projectId: String,
+        taskId: String,
+        targetProjectId: String,
+        pipelineCopyStrategy: PipelineCopyStrategy,
+        resources: List<PipelineDependentResource>,
+        copyTaskResourceRelSet: Set<PipelineCopyTaskResourceRel>,
+        createResources: MutableSet<PipelineCopyTaskResource>,
+        updateResources: MutableList<PipelineCopyTaskResourceUpdate>
+    ) {
+        val pipelineReferCountMap = buildPipelineReferCountMap(copyTaskResourceRelSet)
+        val existsResourceKeys = pipelineCopyTaskResourceDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            taskId = taskId
+        ).map {
+            PipelineCopyTaskUtils.resourceKey(it.resourceType, it.resourceId)
+        }.toSet()
+        buildCopyResource(
+            userId = userId,
+            projectId = projectId,
+            taskId = taskId,
+            targetProjectId = targetProjectId,
+            resources = resources.toSet(),
+            pipelineReferCountMap = pipelineReferCountMap,
+            pipelineCopyStrategy = pipelineCopyStrategy,
+            existsResourceKeys = existsResourceKeys,
+            createResources = createResources,
+            updateResources = updateResources
+        )
     }
 
     private fun buildCopyResource(
@@ -508,8 +598,11 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
         targetProjectId: String,
         resources: Set<PipelineDependentResource>,
         pipelineReferCountMap: Map<String, Int>,
-        pipelineCopyStrategy: PipelineCopyStrategy
-    ): Set<PipelineCopyTaskResource> {
+        pipelineCopyStrategy: PipelineCopyStrategy,
+        existsResourceKeys: Set<String>,
+        createResources: MutableSet<PipelineCopyTaskResource>,
+        updateResources: MutableList<PipelineCopyTaskResourceUpdate>
+    ) {
         val taskResources = mutableMapOf<String, PipelineCopyTaskResource>()
         resources.forEach { resource ->
             val copyResourceKey = PipelineCopyTaskUtils.resourceKey(resource.resourceType, resource.resourceId)
@@ -610,7 +703,33 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                 }
             }
         }
-        return taskResources.values.toSet()
+        taskResources.forEach { (copyResourceKey, copyTaskResource) ->
+            if (existsResourceKeys.contains(copyResourceKey)) {
+                updateResources.add(
+                    PipelineCopyTaskResourceUpdate(
+                        taskId = copyTaskResource.taskId,
+                        projectId = copyTaskResource.projectId,
+                        resourceType = copyTaskResource.resourceType,
+                        resourceId = copyTaskResource.resourceId,
+                        copyStrategy = copyTaskResource.copyStrategy,
+                        targetResourceType = copyTaskResource.targetResourceType,
+                        targetResourceId = copyTaskResource.targetResourceId,
+                        targetResourceName = copyTaskResource.targetResourceName,
+                        targetResourceProperties = copyTaskResource.targetResourceProp,
+                        status = copyTaskResource.status,
+                        errorMessage = copyTaskResource.errorMessage.orEmpty(),
+                        targetNameExists = copyTaskResource.targetNameExists,
+                        targetIdExists = copyTaskResource.targetIdExists,
+                        highRisk = copyTaskResource.highRisk,
+                        copyAction = copyTaskResource.copyAction,
+                        confirmed = copyTaskResource.confirmed,
+                        pipelineReferCount = copyTaskResource.pipelineReferCount
+                    )
+                )
+            } else {
+                createResources.add(copyTaskResource)
+            }
+        }
     }
 
     private fun buildPipelineReferCountMap(
@@ -667,31 +786,35 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
         var targetNameExists = false
         var status = PipelineCopyTaskResourceStatus.UNPROCESSED
         var repositoryCopyResourceProperties: RepositoryCopyResourceProp? = null
+        var sourceRepository: Repository? = null
+        var targetRepository: Repository? = null
+        var errorMessage: String? = null
         try {
-            val repository = client.get(ServiceRepositoryResource::class).get(
+            sourceRepository = client.get(ServiceRepositoryResource::class).get(
                 projectId = projectId,
                 repositoryId = resource.resourceId,
                 repositoryType = RepositoryType.ID
-            ).data
-            if (repository != null) {
-                repositoryCopyResourceProperties = RepositoryCopyResourceProp(
-                    scmCode = repository.scmCode
-                )
-            } else {
-                status = PipelineCopyTaskResourceStatus.FAILED
-            }
-        } catch (ignore: RemoteServiceException) {
+            ).data ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS,
+                params = arrayOf(projectId, resource.resourceName)
+            )
+            repositoryCopyResourceProperties = RepositoryCopyResourceProp(
+                scmCode = sourceRepository.scmCode,
+                repositoryUrl = sourceRepository.url
+            )
+        } catch (ignore: Exception) {
             status = PipelineCopyTaskResourceStatus.FAILED
+            errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignore)
         }
         try {
-            client.get(ServiceRepositoryResource::class).get(
+            targetRepository = client.get(ServiceRepositoryResource::class).get(
                 projectId = targetProjectId,
                 repositoryId = resource.resourceName,
                 repositoryType = RepositoryType.NAME
-            ).data?.let {
-                targetNameExists = true
-            }
-        } catch (ignore: RemoteServiceException) {
+            ).data
+            targetNameExists =
+                sourceRepository != null && targetRepository != null && sourceRepository.url == targetRepository.url
+        } catch (ignore: Exception) {
             targetNameExists = false
         }
         return PipelineCopyTaskResource(
@@ -704,6 +827,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
             targetProjectId = targetProjectId,
             targetResourceType = resource.resourceType,
             status = status,
+            errorMessage = errorMessage,
             targetNameExists = targetNameExists,
             pipelineReferCount = pipelineReferCount
         )
@@ -726,7 +850,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
             ).data?.let {
                 targetNameExists = true
             }
-        } catch (ignore: RemoteServiceException) {
+        } catch (ignore: Exception) {
             targetNameExists = false
         }
         return PipelineCopyTaskResource(
@@ -762,7 +886,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
             ).data?.let {
                 targetNameExists = true
             }
-        } catch (ignore: RemoteServiceException) {
+        } catch (ignore: Exception) {
             targetNameExists = false
         }
         return PipelineCopyTaskResource(
@@ -789,6 +913,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
         var status = PipelineCopyTaskResourceStatus.UNPROCESSED
         var targetNameExists = false
         var labelGroupProp: PipelineLabelGroupCopyResourceProp? = null
+        var errorMessage: String? = null
         try {
             val sourceLabel = pipelineLabelDao.getById(
                 dslContext = dslContext,
@@ -824,8 +949,9 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
             } ?: run {
                 targetNameExists = false
             }
-        } catch (ignored: RemoteServiceException) {
+        } catch (ignore: Exception) {
             status = PipelineCopyTaskResourceStatus.FAILED
+            errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignore)
         }
         return PipelineCopyTaskResource(
             taskId = taskId,
@@ -837,6 +963,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
             targetProjectId = targetProjectId,
             targetResourceType = resource.resourceType,
             status = status,
+            errorMessage = errorMessage,
             targetNameExists = targetNameExists,
             pipelineReferCount = pipelineReferCount
         )
@@ -863,7 +990,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                     viewType = it.viewType
                 )
             }
-        } catch (ignore: RemoteServiceException) {
+        } catch (ignore: Exception) {
             targetNameExists = false
         }
         return PipelineCopyTaskResource(
@@ -896,7 +1023,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                 templateName = resource.resourceName,
                 excludeTemplateId = null
             ).let { targetNameExists = it }
-        } catch (ignore: RemoteServiceException) {
+        } catch (ignore: Exception) {
             targetNameExists = false
         }
         return PipelineCopyTaskResource(

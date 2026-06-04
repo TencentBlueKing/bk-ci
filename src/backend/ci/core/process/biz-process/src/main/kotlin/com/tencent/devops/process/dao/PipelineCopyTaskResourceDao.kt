@@ -184,6 +184,7 @@ class PipelineCopyTaskResourceDao {
             update.highRisk?.let { query.set(HIGH_RISK, it) }
             update.copyAction?.let { query.set(COPY_ACTION, it.name) }
             update.confirmed?.let { query.set(CONFIRMED, it) }
+            update.pipelineReferCount?.let { query.set(PIPELINE_REFER_COUNT, it) }
             query.set(UPDATE_TIME, LocalDateTime.now())
                 .where(PROJECT_ID.eq(update.projectId))
                 .and(TASK_ID.eq(update.taskId))
@@ -217,6 +218,7 @@ class PipelineCopyTaskResourceDao {
                 resourceUpdate.highRisk?.let { query.set(HIGH_RISK, it) }
                 resourceUpdate.copyAction?.let { query.set(COPY_ACTION, it.name) }
                 resourceUpdate.confirmed?.let { query.set(CONFIRMED, it) }
+                resourceUpdate.pipelineReferCount?.let { query.set(PIPELINE_REFER_COUNT, it) }
                 query.set(UPDATE_TIME, LocalDateTime.now())
                     .where(PROJECT_ID.eq(resourceUpdate.projectId))
                     .and(TASK_ID.eq(resourceUpdate.taskId))

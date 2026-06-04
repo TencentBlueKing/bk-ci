@@ -10,11 +10,11 @@ data class PipelineBatchTaskDetailUpdate(
     @get:Schema(description = "任务ID", required = true)
     val taskId: String,
     @get:Schema(description = "流水线ID")
-    val pipelineId: String? = null,
-    @get:Schema(description = "流水线ID列表")
-    val pipelineIds: Set<String>? = null,
+    val pipelineId: String,
     @get:Schema(description = "明细状态")
     val status: PipelineBatchTaskDetailStatus? = null,
     @get:Schema(description = "是否修改")
-    val change: Boolean? = null
+    val change: Boolean? = null,
+    @get:Schema(description = "错误信息")
+    val errorMessage: String? = null
 )

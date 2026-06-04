@@ -39,5 +39,7 @@ data class PipelineCopyTaskResourceUpdate(
     @get:Schema(description = "资源复制动作")
     val copyAction: PipelineCopyAction? = null,
     @get:Schema(description = "用户是否已确认处理完成")
-    val confirmed: Boolean? = null
+    val confirmed: Boolean? = null,
+    @get:Schema(description = "流水线引用数")
+    val pipelineReferCount: Int? = null
 )

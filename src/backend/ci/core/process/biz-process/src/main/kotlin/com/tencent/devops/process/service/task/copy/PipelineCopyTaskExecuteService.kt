@@ -254,7 +254,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
             }
         } catch (ignored: Exception) {
             status = PipelineCopyTaskResourceStatus.FAILED
-            errorMessage = ignored.message
+            errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignored)
         }
         pipelineCopyTaskResourceDao.update(
             dslContext = dslContext,
@@ -279,7 +279,13 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         targetProjectId: String,
         resources: List<PipelineCopyTaskResource>
     ) {
-        val resourceMap = resources.associateBy {
+        // 不能直接使用resources,需要再查询获取最新的资源
+        val latestResources = pipelineCopyTaskResourceDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            taskId = taskId
+        )
+        val resourceMap = latestResources.associateBy {
             PipelineCopyTaskUtils.resourceKey(resourceType = it.resourceType, resourceId = it.resourceId)
         }.toMutableMap()
         resources.filter {
@@ -347,7 +353,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
             }
         } catch (ignored: Exception) {
             status = PipelineCopyTaskResourceStatus.FAILED
-            errorMessage = ignored.message
+            errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignored)
         }
         pipelineCopyTaskResourceDao.update(
             dslContext = dslContext,
@@ -440,7 +446,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
             }
         } catch (ignored: Exception) {
             status = PipelineCopyTaskResourceStatus.FAILED
-            errorMessage = ignored.message
+            errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignored)
         }
         pipelineCopyTaskResourceDao.update(
             dslContext = dslContext,
@@ -520,7 +526,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
             }
         } catch (ignored: Exception) {
             status = PipelineCopyTaskResourceStatus.FAILED
-            errorMessage = ignored.message
+            errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignored)
         }
         pipelineCopyTaskResourceDao.update(
             dslContext = dslContext,
@@ -592,7 +598,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
             }
         } catch (ignored: Exception) {
             status = PipelineCopyTaskResourceStatus.FAILED
-            errorMessage = ignored.message
+            errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignored)
         }
         pipelineCopyTaskResourceDao.update(
             dslContext = dslContext,
@@ -671,7 +677,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
             }
         } catch (ignored: Exception) {
             status = PipelineCopyTaskResourceStatus.FAILED
-            errorMessage = ignored.message
+            errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignored)
         }
         pipelineCopyTaskResourceDao.update(
             dslContext = dslContext,

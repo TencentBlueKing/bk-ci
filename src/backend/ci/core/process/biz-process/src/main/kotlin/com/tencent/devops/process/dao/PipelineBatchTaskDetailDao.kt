@@ -9,10 +9,12 @@ import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailSta
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetail
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailStatusSummary
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailUpdate
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class PipelineBatchTaskDetailDao {
@@ -178,6 +180,9 @@ class PipelineBatchTaskDetailDao {
         status: PipelineBatchTaskDetailStatus,
         change: Boolean
     ): Int {
+        if (pipelineIds.isEmpty()) {
+            return 0
+        }
         return with(T_PIPELINE_BATCH_TASK_DETAIL) {
             val query = dslContext.update(this)
                 .set(STATUS, status.name)
@@ -187,6 +192,45 @@ class PipelineBatchTaskDetailDao {
                 .and(PIPELINE_ID.`in`(pipelineIds))
                 .execute()
         }
+    }
+
+    fun update(
+        dslContext: DSLContext,
+        update: PipelineBatchTaskDetailUpdate
+    ): Int {
+        return with(T_PIPELINE_BATCH_TASK_DETAIL) {
+            val query = dslContext.update(this)
+            update.status?.let { query.set(STATUS, it.name) }
+            update.change?.let { query.set(CHANGE, it) }
+            update.errorMessage?.let { query.set(ERROR_MESSAGE, it) }
+            query.set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(update.projectId))
+                .and(TASK_ID.eq(update.taskId))
+                .and(PIPELINE_ID.eq(update.pipelineId))
+                .execute()
+        }
+    }
+
+    fun batchUpdate(
+        dslContext: DSLContext,
+        updates: List<PipelineBatchTaskDetailUpdate>
+    ): Int {
+        if (updates.isEmpty()) {
+            return 0
+        }
+        val queries = with(T_PIPELINE_BATCH_TASK_DETAIL) {
+            updates.map { update ->
+                val query = dslContext.update(this)
+                update.status?.let { query.set(STATUS, it.name) }
+                update.change?.let { query.set(CHANGE, it) }
+                update.errorMessage?.let { query.set(ERROR_MESSAGE, it) }
+                query.set(UPDATE_TIME, LocalDateTime.now())
+                    .where(PROJECT_ID.eq(update.projectId))
+                    .and(TASK_ID.eq(update.taskId))
+                    .and(PIPELINE_ID.eq(update.pipelineId))
+            }
+        }
+        return dslContext.batch(queries).execute().sum()
     }
 
     fun updateChange(
