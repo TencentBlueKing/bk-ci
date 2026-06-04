@@ -98,12 +98,6 @@ interface UserSubPipelineInfoResource {
         createdUser: String?,
         @Parameter(description = "Agent 状态", required = false)
         @QueryParam("nodeStatus")
-        nodeStatus: NodeStatus?,
-        @Parameter(description = "第几页", required = false)
-        @QueryParam("page")
-        page: Int? = 1,
-        @Parameter(description = "每页多少条", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int? = 20
-    ): Result<Page<NodeBaseInfo>>
+        nodeStatus: NodeStatus?
+    ): Result<List<NodeBaseInfo>>
 }

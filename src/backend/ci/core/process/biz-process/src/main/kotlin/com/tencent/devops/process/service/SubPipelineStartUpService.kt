@@ -567,10 +567,8 @@ class SubPipelineStartUpService @Autowired constructor(
         nodeIp: String?,
         displayName: String?,
         nodeStatus: NodeStatus?,
-        createdUser: String?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<Page<NodeBaseInfo>> {
+        createdUser: String?
+    ): Result<List<NodeBaseInfo>> {
         val oauthUser = if (parentProjectId.isNotBlank() && parentPipelineId.isNotBlank()) {
             pipelineRepositoryService.getPipelineOauthUser(
                 projectId = parentProjectId,
@@ -589,11 +587,12 @@ class SubPipelineStartUpService @Autowired constructor(
                 nodeStatus = nodeStatus,
                 displayName = displayName,
                 createdUser = createdUser,
-                page = page,
-                pageSize = pageSize
-            ).data
+                page = 1,
+                pageSize = 100
+            ).data?.records
         }
-        return Result(list ?: Page(0, 0, 0, ArrayList()))
+
+        return Result(list ?: emptyList())
     }
 
     fun getSubVar(projectId: String, buildId: String, taskId: String): Result<Map<String, String>> {

@@ -72,13 +72,11 @@ class UserSubPipelineInfoResourceImpl @Autowired constructor (
         nodeIp: String?,
         displayName: String?,
         createdUser: String?,
-        nodeStatus: NodeStatus?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<Page<NodeBaseInfo>> {
+        nodeStatus: NodeStatus?
+    ): Result<List<NodeBaseInfo>> {
         checkParam(userId)
         if (pipelineId.isBlank() || projectId.isBlank()) {
-            return Result(Page(0, 0, 0, ArrayList()))
+            return Result(emptyList())
         }
         return subPipeService.subStreamManualStartupNodeList(
             userId = userId,
@@ -87,9 +85,7 @@ class UserSubPipelineInfoResourceImpl @Autowired constructor (
             nodeIp = nodeIp,
             displayName = displayName,
             createdUser = createdUser,
-            nodeStatus = nodeStatus,
-            page = page,
-            pageSize = pageSize
+            nodeStatus = nodeStatus
         )
     }
 
