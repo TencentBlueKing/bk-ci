@@ -2,7 +2,9 @@ package com.tencent.devops.process.service.task.copy
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
@@ -11,6 +13,8 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineBatchTaskDao
 import com.tencent.devops.process.dao.PipelineCopyTaskResourceDao
 import com.tencent.devops.process.dao.PipelineCopyTaskResourceRelDao
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.pojo.PipelineInfoQueryCondition
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyAction
@@ -39,6 +43,7 @@ class PipelineCopyTaskService @Autowired constructor(
     private val pipelineBatchTaskDao: PipelineBatchTaskDao,
     private val pipelineCopyTaskResourceDao: PipelineCopyTaskResourceDao,
     private val pipelineCopyTaskResourceRelDao: PipelineCopyTaskResourceRelDao,
+    private val pipelineInfoDao: PipelineInfoDao,
     private val authProjectApi: AuthProjectApi,
     private val sampleEventDispatcher: SampleEventDispatcher,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
@@ -153,8 +158,11 @@ class PipelineCopyTaskService @Autowired constructor(
         taskId: String,
         resourceType: PipelineDependentResourceType,
         resourceId: String,
-        pipelineName: String?
-    ): List<PipelineCopyPipelineInfo> {
+        pipelineName: String?,
+        locked: Boolean?,
+        page: Int,
+        pageSize: Int
+    ): SQLPage<PipelineCopyPipelineInfo> {
         val task = getTask(projectId = projectId, taskId = taskId)
         val param = parseParam(task) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
@@ -162,14 +170,36 @@ class PipelineCopyTaskService @Autowired constructor(
         )
         checkProjectVisit(userId = userId, projectId = projectId)
         checkProjectVisit(userId = userId, projectId = param.targetProjectId)
-        return pipelineCopyTaskResourceRelDao.listResourcePipelines(
+        val pipelineIds = pipelineCopyTaskResourceRelDao.listResourcePipelineIds(
             dslContext = dslContext,
             projectId = projectId,
             taskId = taskId,
             resourceType = resourceType,
-            resourceId = resourceId,
-            pipelineName = pipelineName
+            resourceId = resourceId
         )
+        if (pipelineIds.isEmpty()) {
+            return SQLPage(count = 0, records = emptyList())
+        }
+        val (offset, limit) = PageUtil.convertPageSizeToSQLLimit(page = page, pageSize = pageSize)
+        val condition = PipelineInfoQueryCondition(
+            projectId = projectId,
+            pipelineIds = pipelineIds,
+            pipelineName = pipelineName,
+            locked = locked,
+            offset = offset,
+            limit = limit
+        )
+        val count = pipelineInfoDao.countByCondition(dslContext = dslContext, condition = condition)
+        val records = pipelineInfoDao.listByCondition(dslContext = dslContext, condition = condition)
+            .mapNotNull { pipelineInfoDao.convert(it, templateId = null) }
+            .map {
+                PipelineCopyPipelineInfo(
+                    pipelineId = it.pipelineId,
+                    pipelineName = it.pipelineName,
+                    locked = it.locked ?: false
+                )
+            }
+        return SQLPage(count = count, records = records)
     }
 
     fun saveResourceDraft(

@@ -2,6 +2,7 @@ package com.tencent.devops.process.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyAction
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
@@ -23,6 +24,7 @@ import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
@@ -128,8 +130,19 @@ interface UserPipelineCopyTaskResource {
         resourceId: String,
         @Parameter(description = "流水线名称", required = false)
         @QueryParam("pipelineName")
-        pipelineName: String?
-    ): Result<List<PipelineCopyPipelineInfo>>
+        pipelineName: String?,
+        @Parameter(description = "流水线是否禁用", required = false)
+        @QueryParam("locked")
+        locked: Boolean?,
+        @Parameter(description = "第几页", required = false)
+        @QueryParam("page")
+        @DefaultValue("1")
+        page: Int,
+        @Parameter(description = "每页多少条", required = false)
+        @QueryParam("pageSize")
+        @DefaultValue("20")
+        pageSize: Int
+    ): Result<SQLPage<PipelineCopyPipelineInfo>>
 
     @Operation(summary = "保存流水线复制资源草稿")
     @POST

@@ -7,5 +7,7 @@ data class PipelineCopyPipelineInfo(
     @get:Schema(description = "流水线ID", required = true)
     val pipelineId: String,
     @get:Schema(description = "流水线名称", required = true)
-    val pipelineName: String
+    val pipelineName: String,
+    @get:Schema(description = "流水线是否禁用", required = true)
+    val locked: Boolean
 )

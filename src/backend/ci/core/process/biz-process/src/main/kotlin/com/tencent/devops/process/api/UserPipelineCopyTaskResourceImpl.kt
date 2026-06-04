@@ -1,5 +1,6 @@
 package com.tencent.devops.process.api
 
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineCopyTaskResource
@@ -85,8 +86,11 @@ class UserPipelineCopyTaskResourceImpl @Autowired constructor(
         taskId: String,
         resourceType: PipelineDependentResourceType,
         resourceId: String,
-        pipelineName: String?
-    ): Result<List<PipelineCopyPipelineInfo>> {
+        pipelineName: String?,
+        locked: Boolean?,
+        page: Int,
+        pageSize: Int
+    ): Result<SQLPage<PipelineCopyPipelineInfo>> {
         return Result(
             pipelineCopyTaskService.listResourcePipelines(
                 userId = userId,
@@ -94,7 +98,10 @@ class UserPipelineCopyTaskResourceImpl @Autowired constructor(
                 taskId = taskId,
                 resourceType = resourceType,
                 resourceId = resourceId,
-                pipelineName = pipelineName
+                pipelineName = pipelineName,
+                locked = locked,
+                page = page,
+                pageSize = pageSize
             )
         )
     }

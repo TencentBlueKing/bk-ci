@@ -4,7 +4,6 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.process.Tables.T_PIPELINE_COPY_TASK_RESOURCE_REL
 import com.tencent.devops.model.process.tables.records.TPipelineCopyTaskResourceRelRecord
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyPipelineInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceRel
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -74,36 +73,24 @@ class PipelineCopyTaskResourceRelDao {
         }
     }
 
-    fun listResourcePipelines(
+    fun listResourcePipelineIds(
         dslContext: DSLContext,
         projectId: String,
         taskId: String,
         resourceType: PipelineDependentResourceType,
-        resourceId: String,
-        pipelineName: String?
-    ): List<PipelineCopyPipelineInfo> {
+        resourceId: String
+    ): Set<String> {
         return with(T_PIPELINE_COPY_TASK_RESOURCE_REL) {
-            dslContext.select(PIPELINE_ID, PIPELINE_NAME)
+            dslContext.select(PIPELINE_ID)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(TASK_ID.eq(taskId))
                 .and(RESOURCE_TYPE.eq(resourceType.name))
                 .and(RESOURCE_ID.eq(resourceId))
-                .let {
-                    if (!pipelineName.isNullOrBlank()) {
-                        it.and(PIPELINE_NAME.like("%$pipelineName%"))
-                    } else {
-                        it
-                    }
-                }
-                .groupBy(PIPELINE_ID, PIPELINE_NAME)
-                .orderBy(PIPELINE_NAME.asc(), PIPELINE_ID.asc())
-                .fetch {
-                    PipelineCopyPipelineInfo(
-                        pipelineId = it[PIPELINE_ID],
-                        pipelineName = it[PIPELINE_NAME]
-                    )
-                }
+                .groupBy(PIPELINE_ID)
+                .orderBy(PIPELINE_ID.asc())
+                .fetch(PIPELINE_ID)
+                .toSet()
         }
     }
 
