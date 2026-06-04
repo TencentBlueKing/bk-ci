@@ -204,6 +204,7 @@
     "groups": "User Group"
   },
   "execDetail": {
+    "progress": "Progress",
     "log": "Log",
     "setting": "Configuration",
     "execTime": "Number of retries",
@@ -1978,6 +1979,25 @@
   "eventID": "Event ID",
   "runningSteps": "Running steps: ",
   "completeness": "Completeness: ",
+  "progressDetail": {
+    "title": "Progress Details",
+    "refresh": "Refresh",
+    "totalProgress": "Total Progress",
+    "subtasks": "Subtask Progress",
+    "timeline": "Stage Timeline",
+    "currentProgress": "Current Progress",
+    "completed": "Completed",
+    "duration": "Duration",
+    "running": "Running",
+    "loadFailed": "Failed to load progress details",
+    "empty": "No progress details yet",
+    "status": {
+      "succeeded": "Done",
+      "failed": "Failed",
+      "running": "Running",
+      "pending": "Pending"
+    }
+  },
   "pacDesc": "Pipeline as Code mode, referred to as PAC mode. After enabling and submitting the pipeline file to the code base, you can maintain the pipeline by maintaining the code base file.",
   "delegationPermission": "Delegation Authority",
   "delegation": {

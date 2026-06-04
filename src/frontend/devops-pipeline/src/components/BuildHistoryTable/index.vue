@@ -150,6 +150,7 @@
                             v-if="props.row.stageStatus"
                             :steps="props.row.stageStatus"
                             :build-id="props.row.id"
+                            @show-progress-detail="showStageProgressDetail(props.row, $event)"
                         ></stage-steps>
                         <span v-else>--</span>
                     </template>
@@ -612,6 +613,56 @@
             :build-num="`#${activeBuild?.buildNum}`"
             :build-id="activeBuild?.id"
         />
+        <bk-sideslider
+            :is-show.sync="stageProgressSlider.isShow"
+            :quick-close="true"
+            :width="720"
+            ext-cls="stage-progress-slider"
+            @hidden="hideStageProgressDetail"
+        >
+            <div
+                slot="header"
+                class="stage-progress-slider-title"
+            >
+                <strong>{{ $t('progressDetail.title') }}</strong>
+                <span v-if="stageProgressSlider.meta">{{ stageProgressSlider.meta }}</span>
+                <bk-button
+                    v-if="canRefreshStageProgress"
+                    text
+                    :disabled="stageProgressSlider.loading"
+                    @click="reloadStageProgressDetail"
+                >
+                    <i :class="['devops-icon', 'icon-refresh', { 'spin-icon': stageProgressSlider.loading }]"></i>
+                    {{ $t('progressDetail.refresh') }}
+                </bk-button>
+            </div>
+            <div
+                slot="content"
+                :class="['stage-progress-slider-content', {
+                    'is-empty': !stageProgressTasks.length
+                }]"
+            >
+                <aside
+                    v-if="stageProgressTasks.length"
+                    class="stage-progress-task-list"
+                >
+                    <div
+                        v-for="(task, index) in stageProgressTasks"
+                        :key="`${task.taskName}-${index}`"
+                        :class="['stage-progress-task-item', { active: index === stageProgressSlider.activeTaskIndex }]"
+                        @click="stageProgressSlider.activeTaskIndex = index"
+                    >
+                        <span :title="task.taskName">{{ task.taskName || '--' }}</span>
+                    </div>
+                </aside>
+                <progress-detail-panel
+                    class="stage-progress-detail-panel"
+                    :build-id="stageProgressSlider.row?.id || ''"
+                    :detail-data="activeStageTaskProgressData"
+                    :show-empty="true"
+                />
+            </div>
+        </bk-sideslider>
     </div>
 </template>
 
@@ -621,10 +672,12 @@
     import MaterialItem from '@/components/ExecDetail/MaterialItem'
     import Logo from '@/components/Logo'
     import StageSteps from '@/components/StageSteps'
+    import ProgressDetailPanel from '@/components/ProgressDetailPanel'
     import EmptyException from '@/components/common/exception'
     import qrcode from '@/components/devops/qrcode'
     import ArtifactQuality from '@/components/ExecDetail/artifactQuality'
     import VersionDiffDialog from './VersionDiffDialog'
+    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import {
         BUILD_HISTORY_TABLE_COLUMNS_MAP,
         BUILD_HISTORY_TABLE_DEFAULT_COLUMNS,
@@ -647,6 +700,7 @@
             Logo,
             qrcode,
             StageSteps,
+            ProgressDetailPanel,
             MaterialItem,
             FilterBar,
             TableColumnSetting,
@@ -681,7 +735,16 @@
                 tableColumnKeys: initSortedColumns,
                 tableHeight: null,
                 dialogTopOffset: null,
-                isShowVersionDiffDialog: false
+                isShowVersionDiffDialog: false,
+                stageProgressSlider: {
+                    isShow: false,
+                    loading: false,
+                    row: null,
+                    step: null,
+                    data: null,
+                    activeTaskIndex: 0,
+                    meta: ''
+                }
             }
         },
         computed: {
@@ -851,6 +914,34 @@
             activeBuild () {
                 const { buildHistoryList, visibleIndex } = this
                 return buildHistoryList[visibleIndex] ?? null
+            },
+            stageProgressTasks () {
+                return this.stageProgressSlider.data?.taskProgressList ?? []
+            },
+            activeStageTask () {
+                return this.stageProgressTasks[this.stageProgressSlider.activeTaskIndex] ?? null
+            },
+            activeStageTaskProgressData () {
+                const task = this.activeStageTask
+                if (!task) return null
+                return {
+                    taskProgressRete: task.taskProgressRete,
+                    taskName: task.taskName,
+                    jobExecutionOrder: task.jobExecutionOrder,
+                    progressDetail: task.progressDetail ?? {
+                        progress: {
+                            title: task.taskName,
+                            value: task.taskProgressRete
+                        },
+                        subtasks: null,
+                        timeline: null
+                    }
+                }
+            },
+            canRefreshStageProgress () {
+                const buildStatus = this.stageProgressSlider.row?.status
+                const stageStatus = this.stageProgressSlider.step?.status
+                return [buildStatus, stageStatus].some(status => ['RUNNING', 'QUEUE'].includes(status))
             },
             currentBuildId () {
                 return this.activeBuild.id
@@ -1024,6 +1115,56 @@
                         return this.$t('editPage.toCheck')
                     case stage.status === 'SKIP':
                         return this.$t('skipStageDesc')
+                }
+            },
+            async showStageProgressDetail (row, step) {
+                this.stageProgressSlider.isShow = true
+                this.stageProgressSlider.row = row
+                this.stageProgressSlider.step = step
+                this.stageProgressSlider.meta = `#${row.buildNum} - ${step.name || step.stageId}`
+                this.stageProgressSlider.activeTaskIndex = 0
+                await this.requestStageProgressDetail()
+            },
+            async reloadStageProgressDetail () {
+                await this.requestStageProgressDetail()
+            },
+            async requestStageProgressDetail () {
+                if (this.stageProgressSlider.loading) return
+                const { row, step } = this.stageProgressSlider
+                if (!row || !step) {
+                    this.stageProgressSlider.loading = false
+                    return
+                }
+                try {
+                    this.stageProgressSlider.loading = true
+                    const { data } = await this.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/builds/${this.projectId}/${this.pipelineId}/getStageProgressRate`, {
+                        params: {
+                            buildId: row.id,
+                            stageId: step.stageId
+                        }
+                    })
+                    if (this.stageProgressSlider.isShow) {
+                        this.stageProgressSlider.data = data
+                        this.stageProgressSlider.activeTaskIndex = 0
+                    }
+                } catch (err) {
+                    this.$showTips({
+                        theme: 'error',
+                        message: err.message || this.$t('progressDetail.loadFailed')
+                    })
+                } finally {
+                    this.stageProgressSlider.loading = false
+                }
+            },
+            hideStageProgressDetail () {
+                this.stageProgressSlider = {
+                    isShow: false,
+                    loading: false,
+                    row: null,
+                    step: null,
+                    data: null,
+                    activeTaskIndex: 0,
+                    meta: ''
                 }
             },
             activeRemarkInput (row) {
@@ -1664,5 +1805,82 @@
         top: 50% !important;
         transform: var(--dialog-top-translateY) !important;
     }
+}
+.stage-progress-slider {
+    .bk-sideslider-title {
+        display: flex;
+        align-items: center;
+        padding-left: 12px !important;
+        line-height: normal;
+    }
+    .bk-sideslider-content {
+        background: $bgHoverColor;
+    }
+}
+.stage-progress-slider-title {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    gap: 8px;
+    strong {
+        line-height: 22px;
+        font-size: 16px;
+        color: $fontBoldColor;
+    }
+    > span {
+        color: $fontColor;
+        font-size: 12px;
+        line-height: 20px;
+    }
+    .devops-icon {
+        display: inline-block;
+        margin-right: 4px;
+    }
+}
+.stage-progress-slider-content {
+    display: grid;
+    grid-template-columns: 128px 1fr;
+    height: 100%;
+    min-height: 480px;
+    &.is-empty {
+        display: block;
+        .stage-progress-detail-panel {
+            height: 100%;
+        }
+        ::v-deep .progress-detail-body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+    }
+}
+.stage-progress-task-list {
+    padding: 12px 0;
+    border-right: 1px solid $borderColor;
+    background: #fff;
+}
+.stage-progress-task-item {
+    display: block;
+    width: 100%;
+    height: 36px;
+    padding: 0 16px;
+    line-height: 36px;
+    font-size: 12px;
+    color: $fontWeightColor;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    box-sizing: border-box;
+    &:hover,
+    &.active {
+        background: $primaryLightColor;
+        color: $primaryColor;
+    }
+}
+.stage-progress-detail-panel {
+    margin: 0;
 }
 </style>

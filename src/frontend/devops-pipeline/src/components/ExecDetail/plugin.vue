@@ -66,13 +66,15 @@
     import Report from './Report'
     import detailContainer from './detailContainer'
     import pluginLog from './log/pluginLog'
+    import ProgressDetailPanel from '@/components/ProgressDetailPanel'
 
     export default {
         components: {
             detailContainer,
             ReferenceVariable,
             pluginLog,
-            ErrorSummary
+            ErrorSummary,
+            ProgressDetailPanel
         },
         props: {
             execDetail: {
@@ -90,8 +92,9 @@
         },
         data () {
             return {
-                currentTab: 'log',
+                currentTab: null,
                 tabList: [
+                    { name: 'progress', show: true },
                     { name: 'log', show: true },
                     { name: 'artifactory', show: false, completeLoading: false },
                     { name: 'setting', show: true },
@@ -130,11 +133,23 @@
                 const {
                     editingElementPos: { elementIndex }
                 } = this
-                return this.container.elements[elementIndex]
+                return this.container.elements?.[elementIndex] ?? {}
             },
 
             componentList () {
                 return {
+                    progress: {
+                        component: ProgressDetailPanel,
+                        bindData: {
+                            buildId: this.execDetail.id,
+                            taskId: this.currentElement.id,
+                            executeCount: this.currentElement.executeCount,
+                            taskStatus: this.currentElement.status,
+                            showEmpty: true,
+                            showHeader: true,
+                            headerMeta: this.progressHeaderMeta
+                        }
+                    },
                     artifactory: {
                         component: Artifactory,
                         bindData: {
@@ -170,24 +185,48 @@
                 //     return null
                 // }
             },
+            progressHeaderMeta () {
+                const buildNum = this.execDetail.buildNum ? `#${this.execDetail.buildNum}` : ''
+                const stageName = `stage ${this.editingElementPos.stageIndex + 1}`
+                return [buildNum, stageName].filter(Boolean).join(' - ')
+            },
+            defaultTab () {
+                const progressFirstStatus = [
+                    'RUNNING',
+                    'QUEUE',
+                    'WAITING',
+                    'PREPARE_ENV',
+                    'LOOP_WAITING',
+                    'CALL_WAITING'
+                ]
+                return progressFirstStatus.includes(this.currentElement.status) ? 'progress' : 'log'
+            },
             sortedTabList () {
                 const mapping = {
+                    PROGRESS: 'progress',
                     LOG: 'log',
                     ARTIFACT: 'artifactory',
                     CONFIG: 'setting'
                 }
 
-                const orderedTabs = this.properties.map(prop => {
-                    const tabName = mapping[prop]
-                    return this.tabList.find(tab => tab.name === tabName)
-                }).filter(Boolean)
+                const orderedTabs = [
+                    this.tabList.find(tab => tab.name === 'progress'),
+                    ...this.properties.map(prop => {
+                        const tabName = mapping[prop]
+                        return this.tabList.find(tab => tab.name === tabName)
+                    })
+                ].filter(Boolean)
 
                 const reportTab = this.tabList.find(tab => tab.name === 'report')
                 if (reportTab) {
                     orderedTabs.push(reportTab)
                 }
-                
-                this.currentTab = orderedTabs.find(tab => tab.show)?.name
+
+                const visibleTabs = orderedTabs.filter(tab => tab.show)
+                if (!visibleTabs.some(tab => tab.name === this.currentTab)) {
+                    this.currentTab = visibleTabs.find(tab => tab.name === this.defaultTab)?.name
+                        ?? visibleTabs[0]?.name
+                }
                 return orderedTabs
             }
         },
@@ -195,11 +234,13 @@
         watch: {
             'currentElement.id': function () {
                 this.tabList = [
+                    { name: 'progress', show: true },
                     { name: 'log', show: true },
                     { name: 'artifactory', show: true, completeLoading: false },
                     { name: 'setting', show: true },
                     { name: 'report', show: false, completeLoading: false }
                 ]
+                this.currentTab = this.defaultTab
             }
         },
 
