@@ -31,7 +31,8 @@ package com.tencent.devops.common.api.enums
 enum class PlatformEnum(
     val id: Int,
     val mean: String,
-    val tails: List<String>
+    /** 默认后缀白名单，运行时可被 [PlatformTailsRegistry] 覆盖，读取生效值请用 [tails]。 */
+    val defaultTails: List<String>
 ) {
     UNKNOWN(-1, "未知", emptyList()),
 
@@ -44,6 +45,10 @@ enum class PlatformEnum(
     WIN(4, "Windows", listOf(".zip"))
 
     ;
+
+    /** 实际生效的文件后缀白名单：优先读 [PlatformTailsRegistry]，缺省回落 [defaultTails]。 */
+    val tails: List<String>
+        get() = PlatformTailsRegistry.get(this) ?: defaultTails
 
     fun isForPC(): Boolean {
         return this == WIN
