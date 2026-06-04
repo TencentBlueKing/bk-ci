@@ -38,6 +38,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
@@ -139,4 +140,14 @@ interface ExternalThirdPartyAgentResource {
         @QueryParam("agentType")
         agentType: AgentType?
     ): Response
+
+    @Operation(summary = "根据设备添加创作流节点")
+    @POST
+    @Path("/addCreateNodeByDeviceId")
+    fun addCreateNode(
+        @QueryParam("deviceId")
+        deviceId: String,
+        @QueryParam("os")
+        os: OS
+    ): String
 }
