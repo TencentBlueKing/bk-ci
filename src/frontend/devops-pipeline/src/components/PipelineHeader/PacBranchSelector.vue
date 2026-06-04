@@ -137,7 +137,7 @@
 
             // 获取分支列表
             const fetchBranchList = async (page = 1) => {
-                if (!pipelineId.value) return
+                if (!pipelineId.value || !pacEnabled.value) return
 
                 if (page > 1 && !hasNext.value) return
 
@@ -254,7 +254,7 @@
 
             // 监听 pipelineId 变化，重新获取分支列表
             watch(pipelineId, (newVal) => {
-                if (newVal) {
+                if (newVal && pacEnabled.value) {
                     selectedBranch.value = ''
                     hasNext.value = true
                     currentPage.value = 1
@@ -268,7 +268,7 @@
                 const cachedBranch = sessionStorage.getItem(cacheKey)
                 initialVersionName.value = cachedBranch || proxy.$route.query.versionName || ''
                 
-                if (pipelineId.value) {
+                if (pipelineId.value && pacEnabled.value) {
                     fetchBranchList(1)
                 }
             })
