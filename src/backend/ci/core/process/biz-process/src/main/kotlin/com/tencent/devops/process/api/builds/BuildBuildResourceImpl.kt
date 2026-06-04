@@ -139,4 +139,19 @@ class BuildBuildResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun getTaskParams(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String
+    ): Result<Map<String, Any>?> {
+        val task = pipelineBuildFacadeService.getByTaskId(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId
+        )
+        return Result(task?.taskParams ?: mapOf())
+    }
 }
