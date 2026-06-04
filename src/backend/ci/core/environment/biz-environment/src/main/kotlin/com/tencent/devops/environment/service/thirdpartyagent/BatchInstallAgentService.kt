@@ -181,6 +181,7 @@ class BatchInstallAgentService @Autowired constructor(
 
         return Triple(decodeSub[0], decodeSub[1], null)
     }
+
     fun genNewAgent(
         projectId: String,
         userId: String,

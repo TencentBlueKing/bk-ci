@@ -20,7 +20,7 @@ class CreateEnvService {
         return null
     }
 
-    fun addCreateNode(token: String, deviceId: String,userId: String, os: OS): String {
+    fun addCreateNode(token: String, deviceId: String,userId: String, os: OS, zoneName: String?): String {
         return ""
     }
 }
