@@ -145,8 +145,12 @@ interface ExternalThirdPartyAgentResource {
     @POST
     @Path("/addCreateNodeByDeviceId")
     fun addCreateNode(
+        @QueryParam("token")
+        token: String,
         @QueryParam("deviceId")
         deviceId: String,
+        @QueryParam("userId")
+        userId: String,
         @QueryParam("os")
         os: OS
     ): String

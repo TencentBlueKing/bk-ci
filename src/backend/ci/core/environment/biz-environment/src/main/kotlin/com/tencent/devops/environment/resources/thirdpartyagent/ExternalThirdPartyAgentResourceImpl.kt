@@ -33,6 +33,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdpartyagent.ExternalThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
+import com.tencent.devops.environment.service.CreateEnvService
 import com.tencent.devops.environment.service.thirdpartyagent.BatchInstallAgentService
 import com.tencent.devops.environment.service.thirdpartyagent.DownloadAgentInstallService
 import com.tencent.devops.environment.service.thirdpartyagent.ImportService
@@ -43,7 +44,8 @@ import jakarta.ws.rs.core.Response
 class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
     private val downloadAgentInstallService: DownloadAgentInstallService,
     private val importService: ImportService,
-    private val batchInstallAgentService: BatchInstallAgentService
+    private val batchInstallAgentService: BatchInstallAgentService,
+    private val createEnvService: CreateEnvService
 ) : ExternalThirdPartyAgentResource {
     override fun downloadAgentInstallScript(agentId: String) =
         downloadAgentInstallService.downloadInstallScript(agentId, null, null, null)
@@ -98,7 +100,7 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
         )
     }
 
-    override fun addCreateNode(deviceId: String, os: OS): String {
-        return batchInstallAgentService.genCreateAgentInstallScriptByDeviceId(deviceId, os)
+    override fun addCreateNode(token: String, deviceId: String,userId: String, os: OS): String {
+        return createEnvService.addCreateNode(token, deviceId,userId, os)
     }
 }
