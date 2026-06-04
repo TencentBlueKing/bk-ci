@@ -591,6 +591,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
         )
     }
 
+    @Suppress("CyclomaticComplexMethod", "LongMethod")
     private fun buildCopyResource(
         userId: String,
         projectId: String,
