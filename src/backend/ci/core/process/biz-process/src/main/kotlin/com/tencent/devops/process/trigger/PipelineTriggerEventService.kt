@@ -95,8 +95,8 @@ class PipelineTriggerEventService @Autowired constructor(
         private const val PIPELINE_TRIGGER_DETAIL_BIZ_ID = "PIPELINE_TRIGGER_DETAIL"
         // 构建链接
         private const val PIPELINE_BUILD_URL_PATTERN = "<a href=\"{0}\" target=\"_blank\">#{1}</a>"
-        private const val CREATIVE_STREAM_CONSOLE_PATH = "/console/creative-stream/%s/flow/%s/execute/%s/execute-detail"
-        private const val PIPELINE_CONSOLE_PATH = "/console/pipeline/%s/%s/detail/%s/executeDetail"
+        private const val CREATIVE_STREAM_CONSOLE_PATH = "/console/creative-stream/{0}/flow/{1}/execute/{2}/execute-detail"
+        private const val PIPELINE_CONSOLE_PATH = "/console/pipeline/{0}/{1}/detail/{2}/executeDetail"
     }
 
     fun getDetailId(): Long {
