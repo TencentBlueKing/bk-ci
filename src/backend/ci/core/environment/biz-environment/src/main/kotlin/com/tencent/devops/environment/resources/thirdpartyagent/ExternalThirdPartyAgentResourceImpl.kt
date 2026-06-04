@@ -101,6 +101,6 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
     }
 
     override fun addCreateNode(token: String, deviceId: String,userId: String, os: OS, zoneName: String?): String {
-        return createEnvService.addCreateNode(token, deviceId,userId, os)
+        return createEnvService.addCreateNode(token, deviceId,userId, os, zoneName)
     }
 }
