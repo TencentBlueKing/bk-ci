@@ -67,12 +67,4 @@ class PipelineCopyTaskFactory @Autowired constructor(
         }
     }
 
-    companion object {
-        fun resourceKey(
-            resourceType: PipelineDependentResourceType,
-            resourceId: String
-        ): String {
-            return "${resourceType.name}_$resourceId"
-        }
-    }
 }

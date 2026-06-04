@@ -280,7 +280,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         resources: List<PipelineCopyTaskResource>
     ) {
         val resourceMap = resources.associateBy {
-            PipelineCopyTaskFactory.resourceKey(resourceType = it.resourceType, resourceId = it.resourceId)
+            PipelineCopyTaskUtils.resourceKey(resourceType = it.resourceType, resourceId = it.resourceId)
         }.toMutableMap()
         resources.filter {
             it.resourceType == PipelineDependentResourceType.REPOSITORY
@@ -736,7 +736,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         resources: List<PipelineCopyTaskResource>
     ) {
         val resourceMap = resources.associateBy {
-            PipelineCopyTaskFactory.resourceKey(resourceType = it.resourceType, resourceId = it.resourceId)
+            PipelineCopyTaskUtils.resourceKey(resourceType = it.resourceType, resourceId = it.resourceId)
         }.toMutableMap()
         resources.filter {
             it.resourceType == PipelineDependentResourceType.PIPELINE
@@ -749,7 +749,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 resource = it,
                 resourceMap = resourceMap
             )
-            val resourceKey = PipelineCopyTaskFactory.resourceKey(
+            val resourceKey = PipelineCopyTaskUtils.resourceKey(
                 resourceType = result.resourceType,
                 resourceId = result.resourceId
             )
@@ -848,7 +848,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         )
         return relations.map { relation ->
             resourceMap[
-                PipelineCopyTaskFactory.resourceKey(
+                PipelineCopyTaskUtils.resourceKey(
                     resourceType = relation.resourceType,
                     resourceId = relation.resourceId
                 )

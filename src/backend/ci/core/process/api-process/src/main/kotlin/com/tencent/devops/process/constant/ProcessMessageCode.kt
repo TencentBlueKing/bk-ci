@@ -491,6 +491,8 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_COPY_RESOURCE_MIGRATE_FAILED = "2101388"
     // 流水线依赖资源失败：{0}
     const val ERROR_PIPELINE_COPY_DEPENDENT_RESOURCE_FAILED = "2101389"
+    // 流水线复制任务{0}依赖资源不存在：{1}
+    const val ERROR_PIPELINE_COPY_DEPENDENT_RESOURCE_NOT_EXISTS = "2101390"
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

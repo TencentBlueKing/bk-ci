@@ -2,6 +2,8 @@ package com.tencent.devops.process.service.task.copy
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineBatchTaskDao
@@ -16,10 +18,8 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchCopyTaskParam
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskConfigRequest
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSaveResource
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSaveResourceRequest
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSaveResourceRequest
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -36,7 +36,10 @@ class PipelineCopyTaskSaveService @Autowired constructor(
     private val pipelineBatchTaskDao: PipelineBatchTaskDao,
     private val pipelineBatchTaskDetailDao: PipelineBatchTaskDetailDao,
     private val pipelineCopyTaskResourceDao: PipelineCopyTaskResourceDao,
-    private val pipelineIdGenerator: PipelineIdGenerator
+    private val pipelineIdGenerator: PipelineIdGenerator,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
+    private val authProjectApi: AuthProjectApi,
+    private val pipelineCopyTaskStateService: PipelineCopyTaskStateService
 ) {
 
     fun saveConfigDraft(
@@ -109,10 +112,12 @@ class PipelineCopyTaskSaveService @Autowired constructor(
         request: PipelineCopyTaskSaveResourceRequest
     ) {
         val task = tryStartSave(projectId = projectId, taskId = taskId)
-        parseParam(task) ?: throw ErrorCodeException(
+        val param = parseParam(task) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
             params = arrayOf(task.taskId)
         )
+        checkProjectManager(userId = userId, projectId = projectId)
+        checkProjectManager(userId = userId, projectId = param.targetProjectId)
         saveResources(
             projectId = projectId,
             taskId = taskId,
@@ -126,25 +131,22 @@ class PipelineCopyTaskSaveService @Autowired constructor(
         taskId: String,
         request: PipelineCopyTaskSaveResourceRequest
     ) {
-        if (request.resources.isEmpty()) {
-            return
-        }
         val storedResources = pipelineCopyTaskResourceDao.list(
             dslContext = dslContext,
             projectId = projectId,
             taskId = taskId,
             resourceIds = request.resources.map { it.resourceId }.toSet()
         ).associateBy {
-            PipelineCopyTaskFactory.resourceKey(resourceType = it.resourceType, resourceId = it.resourceId)
+            PipelineCopyTaskUtils.resourceKey(resourceType = it.resourceType, resourceId = it.resourceId)
         }
         val resourceUpdates = request.resources.map { resource ->
-            val resourceKey = PipelineCopyTaskFactory.resourceKey(
+            val resourceKey = PipelineCopyTaskUtils.resourceKey(
                 resourceType = resource.resourceType,
                 resourceId = resource.resourceId
             )
             val storeResource = storedResources[resourceKey] ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS,
-                params = arrayOf(projectId, resource.resourceName)
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_DEPENDENT_RESOURCE_NOT_EXISTS,
+                params = arrayOf(taskId, "${resource.resourceType.name}:${resource.resourceName}")
             )
             val copyStrategy = resource.copyStrategy ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_CAN_NOT_EMPTY,
@@ -240,22 +242,11 @@ class PipelineCopyTaskSaveService @Autowired constructor(
         projectId: String,
         taskId: String
     ) {
-        val lock = PipelineCopyTaskLock(
-            redisOperation = redisOperation,
+        pipelineCopyTaskStateService.updateTaskStatusWithLock(
             projectId = projectId,
-            taskId = taskId
+            taskId = taskId,
+            status = PipelineBatchTaskStatus.DRAFT
         )
-        try {
-            lock.lock()
-            pipelineBatchTaskDao.updateStatus(
-                dslContext = dslContext,
-                projectId = projectId,
-                taskId = taskId,
-                status = PipelineBatchTaskStatus.DRAFT
-            )
-        } finally {
-            lock.unlock()
-        }
     }
 
     private fun tryStartSave(
@@ -305,6 +296,18 @@ class PipelineCopyTaskSaveService @Autowired constructor(
     private fun parseParam(task: PipelineBatchTask): PipelineBatchCopyTaskParam? {
         return task.taskParam?.takeIf { it.isNotBlank() }?.let {
             JsonUtil.to(it, PipelineBatchCopyTaskParam::class.java)
+        }
+    }
+
+    private fun checkProjectManager(
+        userId: String,
+        projectId: String
+    ) {
+        if (!authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PERMISSION_NOT_PROJECT_MANAGER,
+                params = arrayOf(userId, projectId)
+            )
         }
     }
 

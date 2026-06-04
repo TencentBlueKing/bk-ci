@@ -512,7 +512,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
     ): Set<PipelineCopyTaskResource> {
         val taskResources = mutableMapOf<String, PipelineCopyTaskResource>()
         resources.forEach { resource ->
-            val copyResourceKey = PipelineCopyTaskFactory.resourceKey(resource.resourceType, resource.resourceId)
+            val copyResourceKey = PipelineCopyTaskUtils.resourceKey(resource.resourceType, resource.resourceId)
             if (taskResources.containsKey(copyResourceKey)) return@forEach
             val pipelineReferCount = pipelineReferCountMap[copyResourceKey] ?: 0
             when (resource.resourceType) {
@@ -617,7 +617,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
         relations: Set<PipelineCopyTaskResourceRel>
     ): Map<String, Int> {
         return relations.groupBy {
-            PipelineCopyTaskFactory.resourceKey(it.resourceType, it.resourceId)
+            PipelineCopyTaskUtils.resourceKey(it.resourceType, it.resourceId)
         }.mapValues { (_, resourceRelations) ->
             resourceRelations.map { it.pipelineId }.toSet().size
         }

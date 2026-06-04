@@ -454,7 +454,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             resourceName = sourceCredentialId.orEmpty()
         )
         val credentialResource = resourceMap[
-            PipelineCopyTaskFactory.resourceKey(PipelineDependentResourceType.CREDENTIAL, sourceCredential)
+            PipelineCopyTaskUtils.resourceKey(PipelineDependentResourceType.CREDENTIAL, sourceCredential)
         ]
             ?: throwDependencyFailed(PipelineDependentResourceType.CREDENTIAL, sourceCredential)
         return credentialResource.targetResourceId?.takeIf { it.isNotBlank() }
@@ -528,7 +528,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             val targetProjectId = resource.targetProjectId?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
             val targetResourceId = resource.targetResourceId?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
             val targetResourceName = resource.targetResourceName?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
-            val key = PipelineCopyTaskFactory.resourceKey(resource.resourceType, resource.resourceId)
+            val key = PipelineCopyTaskUtils.resourceKey(resource.resourceType, resource.resourceId)
             key to PipelineDependentResource(
                 projectId = targetProjectId,
                 resourceType = resource.resourceType,

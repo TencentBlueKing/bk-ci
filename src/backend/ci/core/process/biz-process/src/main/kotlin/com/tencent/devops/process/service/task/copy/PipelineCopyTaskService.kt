@@ -178,19 +178,6 @@ class PipelineCopyTaskService @Autowired constructor(
         taskId: String,
         request: PipelineCopyTaskSaveResourceRequest
     ) {
-        val task = getTask(projectId = projectId, taskId = taskId)
-        if (task.status != PipelineBatchTaskStatus.DRAFT) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_SAVE_CONFIG,
-                params = arrayOf(taskId, task.status.name)
-            )
-        }
-        val param = parseParam(task) ?: throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
-            params = arrayOf(taskId)
-        )
-        checkProjectManager(userId = userId, projectId = projectId)
-        checkProjectManager(userId = userId, projectId = param.targetProjectId)
         pipelineCopyTaskSaveService.saveResourceDraft(
             userId = userId,
             projectId = projectId,
