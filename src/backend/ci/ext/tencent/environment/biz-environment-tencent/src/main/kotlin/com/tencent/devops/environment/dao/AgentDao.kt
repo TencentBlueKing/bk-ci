@@ -23,4 +23,6 @@ class AgentDao {
                 .where(CREATE_WORKSPACE_NAME.eq(workspaceId.trim())).execute()
         }
     }
+
+    fun fetchCreateAgentsByWorkspace
 }
