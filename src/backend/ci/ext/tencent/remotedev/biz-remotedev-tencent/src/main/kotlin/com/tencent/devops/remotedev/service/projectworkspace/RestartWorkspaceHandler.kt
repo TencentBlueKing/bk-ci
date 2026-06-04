@@ -257,7 +257,8 @@ class RestartWorkspaceHandler @Autowired constructor(
                 workspaceCommon.makeDiskMount(
                     ip = it,
                     user = event.userId,
-                    owner = owners.firstOrNull()
+                    owner = owners.firstOrNull(),
+                    regionId = workspace.regionId
                 )
             }
         } else {

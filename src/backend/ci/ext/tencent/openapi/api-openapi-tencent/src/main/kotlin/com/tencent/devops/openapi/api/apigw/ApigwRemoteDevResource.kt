@@ -409,7 +409,10 @@ interface ApigwRemoteDevResource {
         projectId: String,
         @Parameter(description = "工作空间名", required = true)
         @QueryParam("workspaceName")
-        workspaceName: String
+        workspaceName: String,
+        @Parameter(description = "延迟销毁时间（秒），为空表示正常销毁，缓冲24h", required = false)
+        @QueryParam("delaySeconds")
+        delaySeconds: Int? = null
     ): Result<Boolean>
 
     @Operation(summary = "获取windows工作空间-项目", tags = ["v4_app_remotedev_win_project_detail"])

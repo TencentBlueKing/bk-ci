@@ -121,6 +121,30 @@ export function useChat(resources: Ref<any[]>) {
   let selectedResources: any[] = [];
   let chatClient: any = null;
 
+  // Safety net for stopSending: if the server never delivers RUN_FINISHED /
+  // RUN_ERROR after we asked it to stop, we still want the UI to recover.
+  const STOP_TIMEOUT_MS = 10_000;
+  let stopTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  function clearStopTimeout() {
+    if (stopTimeoutId !== null) {
+      clearTimeout(stopTimeoutId);
+      stopTimeoutId = null;
+    }
+  }
+
+  function forceCompletePendingMessages() {
+    messages.value
+      .filter(
+        (m) =>
+          m.status === MessageStatus.Streaming ||
+          m.status === MessageStatus.Pending,
+      )
+      .forEach((m) => {
+        m.status = MessageStatus.Complete;
+      });
+  }
+
   const showWelcome = computed(
     () => !chatLoading.value && messages.value.length === 0,
   );
@@ -462,6 +486,11 @@ export function useChat(resources: Ref<any[]>) {
         }
 
         messageStatus.value = MessageStatus.Complete;
+        // Run is done (normal finish or stop-induced) — natural exit, so the
+        // stop-timeout safety net is no longer needed. Close the SSE so the
+        // connection doesn't linger; next send/resume will open a fresh one.
+        clearStopTimeout();
+        chatClient?.abort();
       },
       onError(err: any) {
         console.error("Chat error:", err);
@@ -483,6 +512,8 @@ export function useChat(resources: Ref<any[]>) {
           });
         }
         messageStatus.value = MessageStatus.Complete;
+        clearStopTimeout();
+        chatClient?.abort();
       },
     };
   }
@@ -491,6 +522,7 @@ export function useChat(resources: Ref<any[]>) {
     const gen = ++bootstrapGen;
     chatLoading.value = true;
     try {
+      clearStopTimeout();
       if (chatClient) {
         chatClient.close();
         chatClient = null;
@@ -599,22 +631,46 @@ export function useChat(resources: Ref<any[]>) {
   }
 
   const stopSending = () => {
-    if (chatClient) chatClient.abort();
-    if (sessionId.value) {
-      stopChat(sessionId.value).catch((err: any) => {
-        console.error("Failed to stop chat:", err);
-      });
-    }
-    messages.value
-      .filter(
-        (m) =>
-          m.status === MessageStatus.Streaming ||
-          m.status === MessageStatus.Pending,
-      )
-      .forEach((m) => {
-        m.status = MessageStatus.Complete;
-      });
-    messageStatus.value = MessageStatus.Complete;
+    if (!sessionId.value) return;
+    // Re-entry guard: already stopping — ignore repeated clicks while we wait
+    // for the server to deliver RUN_FINISHED on the SSE.
+    if (messageStatus.value === MessageStatus.StopLoading) return;
+
+    // Flip into chat-x's built-in "stopping" UI state. chat-x renders the
+    // stop button as loading + tooltip "正在停止" while messageStatus is
+    // StopLoading, so users can't trigger another stop in the meantime.
+    messageStatus.value = MessageStatus.StopLoading;
+
+    // Ask the server to stop the run; don't touch the SSE here. The run is
+    // still alive server-side, so RUN_FINISHED (or RUN_ERROR) will arrive on
+    // the existing stream, and onFinish/onError will reset messageStatus to
+    // Complete and close the connection cleanly.
+    //
+    // If the stopChat request itself fails (network glitch, gateway error,
+    // business error), DO NOT abort the SSE here: aborting would orphan the
+    // run and skip the natural RUN_FINISHED cleanup path. The run will
+    // usually still end on its own and onFinish/onError will take us out of
+    // StopLoading at that point.
+    stopChat(sessionId.value).catch((err: any) => {
+      console.error("Failed to stop chat:", err);
+    });
+
+    // Safety net: if neither RUN_FINISHED nor RUN_ERROR arrives within the
+    // window (server dead, gateway swallowed the close event, stopChat
+    // silently failed, etc.), force a local cleanup so the UI doesn't stay
+    // stuck in "正在停止" forever. The natural path clears this timer in
+    // onFinish/onError.
+    clearStopTimeout();
+    stopTimeoutId = setTimeout(() => {
+      stopTimeoutId = null;
+      if (messageStatus.value !== MessageStatus.StopLoading) return;
+      console.warn(
+        "[useChat] stop timeout reached, forcing local SSE cleanup",
+      );
+      chatClient?.abort();
+      forceCompletePendingMessages();
+      messageStatus.value = MessageStatus.Complete;
+    }, STOP_TIMEOUT_MS);
   };
 
   const resumeInterrupt = (payload: any) => {
@@ -688,6 +744,7 @@ export function useChat(resources: Ref<any[]>) {
   };
 
   const newChat = async () => {
+    clearStopTimeout();
     if (chatClient) {
       chatClient.close();
       chatClient = null;
@@ -715,6 +772,7 @@ export function useChat(resources: Ref<any[]>) {
 
   const loadSession = async (id: string, title?: string) => {
     if (id === sessionId.value) return;
+    clearStopTimeout();
     if (chatClient) {
       chatClient.close();
       chatClient = null;

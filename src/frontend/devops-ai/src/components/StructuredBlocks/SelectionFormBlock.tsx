@@ -18,14 +18,16 @@ export interface BkFormData {
   multiple?: boolean
 }
 
-const TAG_THEME: Record<string, string> = {
+type TagTheme = '' | 'success' | 'warning' | 'danger' | 'info'
+
+const TAG_THEME: Record<string, TagTheme> = {
   推荐: 'success',
   最小权限: 'success',
   权限较大: 'warning',
   危险: 'danger',
 }
 
-function getTagTheme(tag: string): string {
+function getTagTheme(tag: string): TagTheme {
   return TAG_THEME[tag] || 'info'
 }
 
@@ -36,7 +38,7 @@ export default defineComponent({
     onSendMessage: { type: Function as PropType<(msg: string) => void> },
   },
   setup(props) {
-    const selected = ref<string[]>([])
+    const selectedSet = ref<Set<string>>(new Set())
     const submitted = ref(false)
 
     const isMultiple = computed(() => props.content.multiple !== false)
@@ -44,23 +46,24 @@ export default defineComponent({
     function toggleOption(value: string) {
       if (submitted.value) return
       if (isMultiple.value) {
-        const idx = selected.value.indexOf(value)
-        if (idx >= 0) {
-          selected.value.splice(idx, 1)
+        const nextSelectedSet = new Set(selectedSet.value)
+        if (nextSelectedSet.has(value)) {
+          nextSelectedSet.delete(value)
         } else {
-          selected.value.push(value)
+          nextSelectedSet.add(value)
         }
+        selectedSet.value = nextSelectedSet
       } else {
-        selected.value = [value]
+        selectedSet.value = new Set([value])
       }
     }
 
     function handleSubmit() {
-      if (!selected.value.length || submitted.value) return
+      if (!selectedSet.value.size || submitted.value) return
       submitted.value = true
 
       const { options, title } = props.content
-      const labels = selected.value.map((v) => {
+      const labels = Array.from(selectedSet.value).map((v) => {
         const opt = options.find((o) => o.value === v)
         return opt ? `${opt.label}(${v})` : v
       })
@@ -80,7 +83,7 @@ export default defineComponent({
           )}
           <div class={styles.optionList}>
             {options.map((opt) => {
-              const isSelected = selected.value.includes(opt.value)
+              const isSelected = selectedSet.value.has(opt.value)
               const isDisabled = opt.disabled || submitted.value
               return (
                 <div
@@ -123,7 +126,7 @@ export default defineComponent({
             <Button
               theme="primary"
               size="small"
-              disabled={!selected.value.length || submitted.value}
+              disabled={!selectedSet.value.size || submitted.value}
               onClick={handleSubmit}
             >
               {submitted.value ? '已提交' : submitLabel}
