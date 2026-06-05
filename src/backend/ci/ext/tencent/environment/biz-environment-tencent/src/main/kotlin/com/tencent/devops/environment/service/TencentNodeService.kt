@@ -7,6 +7,8 @@ import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.AgentDao
@@ -24,6 +26,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.Base64
@@ -31,6 +34,7 @@ import java.util.Base64
 @Service
 class TencentNodeService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation,
     private val client: Client,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val agentDao: AgentDao,
@@ -124,8 +128,42 @@ class TencentNodeService @Autowired constructor(
         return true
     }
 
+    // 因为现在没有团队imate同步到我们的方式，所以每天轮询
+    @Scheduled(cron = "0 20 1 * * ?")
+    fun checkImateProps() {
+        val redisLock = RedisLock(redisOperation, CHECK_IMATE_PROPS_KEY, 3600L)
+        try {
+            if (!redisLock.tryLock()) {
+                return
+            }
+            doCheckImateProps()
+        } catch (ex: Throwable) {
+            logger.error("checkImateProps error", ex)
+        } finally {
+            redisLock.unlock()
+        }
+    }
+
+    fun doCheckImateProps() {
+        // userId:<deviceId:<projectId,agentId>>
+        val recordsMap = mutableMapOf<String, MutableMap<String, Pair<String, Long>>>()
+        agentDao.fetchImateAgents(dslContext).forEach {
+            recordsMap.putIfAbsent(
+                it.createdUser,
+                mutableMapOf(it.createWorkspaceName to Pair(it.projectId, it.id))
+            )?.set(it.createWorkspaceName, Pair(it.projectId, it.id))
+        }
+        recordsMap.forEach { (userId, deviceMap) ->
+            val imateList =
+                client.get(ServiceIMateResource::class).queryUserRobots(userId).data?.filter { it.username == userId }
+                    ?:  return@forEach
+            
+        }
+    }
+
 
     companion object {
+        private const val CHECK_IMATE_PROPS_KEY = "environment:check_imate_props_key"
         private val logger = LoggerFactory.getLogger(TencentNodeService::class.java)
     }
 }
