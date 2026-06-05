@@ -26,12 +26,12 @@
                 <i class="devops-icon icon-shift"></i>
                 {{ $t("switchToReleaseVersion") }}
             </bk-button>
-            <badge
+            <!-- <badge
                 v-if="isReleaseVersion"
                 class="pipeline-exec-badge"
                 :project-id="projectId"
                 :pipeline-id="pipelineId"
-            />
+            /> -->
         </pipeline-bread-crumb>
 
         <aside
@@ -116,7 +116,7 @@
 </template>
 
 <script>
-    import Badge from '@/components/Badge.vue'
+    // import Badge from '@/components/Badge.vue'
 
     import RollbackEntry from '@/components/PipelineDetailTabs/RollbackEntry'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
@@ -133,8 +133,7 @@
     export default {
         components: {
             PipelineBreadCrumb,
-
-            Badge,
+            // Badge,
             MoreActions,
             VersionSelector,
             VersionHistorySideSlider,
