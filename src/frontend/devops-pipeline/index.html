@@ -82,6 +82,11 @@
         var BK_PAAS_PRIVATE_URL = '__BK_PAAS_PRIVATE_URL__'
         var BKCI_YAML_SCHEMA_URI = ''
         var BK_APIGW_USER_WEB_URL = '<%= BK_APIGW_USER_WEB_URL %>'
+
+
+        window.getRoutePrefix = function () {
+          return window.PUBLIC_URL_PREFIX + "/console";
+        };
     </script>
 </body>
 
