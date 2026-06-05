@@ -230,7 +230,13 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.SYSTEM,
         errorCode = "2132054",
         formatErrorMessage = "workspace logged in: {0}"
-    );
+    ),
+    OPEN_CLAW_WORKSPACE_CREATE_ERROR(
+        errorType = ErrorType.USER,
+        errorCode = "2132055",
+        formatErrorMessage = "workspace create error: {0}"
+    ),
+    ;
 
     fun getErrorMessage(): String {
         return I18nUtil.getCodeLanMessage(this.errorCode)

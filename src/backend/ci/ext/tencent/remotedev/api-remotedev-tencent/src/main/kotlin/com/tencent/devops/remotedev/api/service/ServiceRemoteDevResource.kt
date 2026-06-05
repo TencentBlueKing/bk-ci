@@ -38,6 +38,9 @@ import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketRespData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
+import com.tencent.devops.remotedev.pojo.CreateOpenClawData
+import com.tencent.devops.remotedev.pojo.CreateOpenClawDataResp
+import com.tencent.devops.remotedev.pojo.TaskStatusResp
 import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
@@ -1194,4 +1197,25 @@ interface ServiceRemoteDevResource {
         @QueryParam("envHashId")
         envHashId: String?
     ): Result<WorkspaceStartCloudDetail?>
+
+    @Operation(summary = "分配龙虾云桌面")
+    @POST
+    @Path("/create_openclaw")
+    fun createOpenClaw(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: CreateOpenClawData
+    ): Result<CreateOpenClawDataResp>
+
+    @Operation(summary = "获取分配龙虾云桌面去任务状态")
+    @GET
+    @Path("/openclaw_task_status")
+    fun openClawTaskStatus(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("taskId")
+        taskId: String
+    ): Result<TaskStatusResp>
 }

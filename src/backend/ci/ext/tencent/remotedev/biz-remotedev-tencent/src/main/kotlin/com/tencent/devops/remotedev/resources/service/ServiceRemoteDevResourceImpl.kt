@@ -11,12 +11,15 @@ import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.async.AsyncExecute
+import com.tencent.devops.remotedev.pojo.CreateOpenClawData
+import com.tencent.devops.remotedev.pojo.CreateOpenClawDataResp
 import com.tencent.devops.remotedev.pojo.IWhiteList
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.OperateCvmDataType
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
+import com.tencent.devops.remotedev.pojo.TaskStatusResp
 import com.tencent.devops.remotedev.pojo.UserNotifyInfo
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WhiteListType
@@ -76,6 +79,7 @@ import com.tencent.devops.remotedev.resources.op.OpProjectWorkspaceResourceImpl
 import com.tencent.devops.remotedev.service.BKItsmService
 import com.tencent.devops.remotedev.service.CoffeeAIService
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
+import com.tencent.devops.remotedev.service.OpenClawService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.ProjectStrategyService
 import com.tencent.devops.remotedev.service.RemotedevProjectService
@@ -145,7 +149,8 @@ class ServiceRemoteDevResourceImpl(
     private val projectStrategyService: ProjectStrategyService,
     private val tGitBindService: TGitService,
     private val gitTransfer: RemoteDevGitTransfer,
-    private val coffeeAIService: CoffeeAIService
+    private val coffeeAIService: CoffeeAIService,
+    private val openClawService: OpenClawService
 ) : ServiceRemoteDevResource {
     companion object {
         private const val MAX_REFRESH_SIZE = 100
@@ -1029,8 +1034,7 @@ class ServiceRemoteDevResourceImpl(
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
                 params = arrayOf(
-                    "instanceIds size ${instanceIds.size}" +
-                        " exceeds max $MAX_REFRESH_SIZE"
+                    "instanceIds size ${instanceIds.size} exceeds max $MAX_REFRESH_SIZE"
                 )
             )
         }
@@ -1089,8 +1093,7 @@ class ServiceRemoteDevResourceImpl(
         pageSize: Int
     ): Result<Page<String>> {
         logger.info(
-            "batchQueryThumbnailWorkspaces" +
-                " |$userId|enable=$enable|page=$page|pageSize=$pageSize"
+            "batchQueryThumbnailWorkspaces |$userId|enable=$enable|page=$page|pageSize=$pageSize"
         )
         return Result(
             workspaceRecordService.batchQueryThumbnailWorkspaces(
@@ -1107,8 +1110,7 @@ class ServiceRemoteDevResourceImpl(
         enable: Boolean
     ): Result<Boolean> {
         logger.info(
-            "enableWorkspaceThumbnail" +
-                " |$userId|$workspaceName|enable=$enable"
+            "enableWorkspaceThumbnail |$userId|$workspaceName|enable=$enable"
         )
         return Result(
             workspaceRecordService.enableThumbnail(
@@ -1124,5 +1126,19 @@ class ServiceRemoteDevResourceImpl(
         envHashId: String?
     ): Result<WorkspaceStartCloudDetail?> {
         return Result(workspaceService.startCloudWorkspaceDetail(userId, workspaceName, envHashId))
+    }
+
+    override fun createOpenClaw(
+        userId: String,
+        data: CreateOpenClawData
+    ): Result<CreateOpenClawDataResp> {
+        return Result(openClawService.createOpenClaw(userId, data))
+    }
+
+    override fun openClawTaskStatus(
+        userId: String,
+        taskId: String
+    ): Result<TaskStatusResp> {
+        return Result(openClawService.getTaskStatus(taskId))
     }
 }
