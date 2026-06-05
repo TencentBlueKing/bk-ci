@@ -36,6 +36,12 @@ enum class ImateOriginEngine(val value: String) {
     }
 }
 
+data class ImportImageNodeData(
+    val zoneName: String,
+    val os: OS,
+    val agentList: List<ImportImageNodeDataItem>
+)
+
 data class ImportImageNodeDataItem(
     val name: String,
     val deviceId: String

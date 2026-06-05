@@ -14,7 +14,7 @@ import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.imate.ImateListItem
 import com.tencent.devops.environment.pojo.imate.ImateOriginEngine
-import com.tencent.devops.environment.pojo.imate.ImportImageNodeDataItem
+import com.tencent.devops.environment.pojo.imate.ImportImageNodeData
 import com.tencent.devops.environment.service.thirdpartyagent.BatchInstallAgentService
 import com.tencent.devops.support.api.service.ServiceIMateResource
 import org.jooq.DSLContext
@@ -74,8 +74,12 @@ class TencentNodeService @Autowired constructor(
         }
     }
 
-    fun batchImportImateNodes(userId: String, projectId: String, data: List<ImportImageNodeDataItem>): Boolean {
-        data.forEach { imate ->
+    fun batchImportImateNodes(
+        userId: String,
+        projectId: String,
+        data: ImportImageNodeData
+    ): Boolean {
+        data.agentList.forEach { imate ->
             // 校验是否有权限
             if (!environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE)) {
                 throw PermissionForbiddenException(
@@ -105,8 +109,8 @@ class TencentNodeService @Autowired constructor(
                 batchInstallAgentService.genNewAgent(
                     projectId = projectId,
                     userId = userId,
-                    os = OS.LINUX,
-                    zoneName = null,
+                    os = data.os,
+                    zoneName = data.zoneName,
                     agentType = AgentType.CREATE,
                     createWorkspaceName = imate.deviceId
                 )

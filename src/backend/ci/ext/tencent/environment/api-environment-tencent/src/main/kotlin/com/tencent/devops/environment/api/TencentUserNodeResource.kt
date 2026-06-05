@@ -4,10 +4,8 @@
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.environment.pojo.imate.ImateListItem
 import com.tencent.devops.environment.pojo.imate.ImportImageNodeData
-import com.tencent.devops.environment.pojo.imate.ImportImageNodeDataItem
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -47,6 +45,6 @@ interface TencentUserNodeResource {
         @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        data: List<ImportImageNodeDataItem>
+        data: ImportImageNodeData
     ): Result<Boolean>
 }

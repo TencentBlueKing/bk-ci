@@ -1,7 +1,6 @@
 ﻿package com.tencent.devops.environment.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -53,9 +52,7 @@ class TXCreateEnvService @Autowired constructor(
     override fun genCreateNodeInstallScript(
         token: String,
         deviceId: String,
-        userId: String,
-        os: OS,
-        zoneName: String?
+        userId: String
     ): Response {
         val (projectId, errMsg) = verifyTempToken(token, deviceId, userId)
         if (errMsg != null) {
@@ -74,16 +71,6 @@ class TXCreateEnvService @Autowired constructor(
             throw ErrorCodeException(
                 errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
                 params = arrayOf(deviceId)
-            )
-        }
-        val gateway = gatewayService.getGateway().firstOrNull { it.zoneName == zoneName }
-        // 因为初始化的时候没有网关，所以这里校验并修复网关
-        if (gateway != null && (record.gateway != gateway.gateway || record.fileGateway != gateway.fileGateway)) {
-            thirdPartyAgentDao.updateGateway(
-                dslContext = dslContext,
-                agentId = record.id,
-                gateway = gateway.gateway,
-                fileGateway = gateway.fileGateway
             )
         }
 
