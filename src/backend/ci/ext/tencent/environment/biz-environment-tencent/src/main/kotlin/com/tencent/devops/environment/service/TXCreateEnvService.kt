@@ -55,7 +55,7 @@ class TXCreateEnvService @Autowired constructor(
     ): Response {
         val (projectId, errMsg) = verifyTempToken(token, deviceId, userId)
         if (errMsg != null) {
-            logger.warn("genCreateNodeInstallScript $deviceId|$userId token check error $errMsg")
+            logger.warn("genCreateNodeInstallScript $deviceId|$userId token $token check error $errMsg")
             throw ErrorCodeException(
                 errorCode = EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION,
                 defaultMessage = errMsg
