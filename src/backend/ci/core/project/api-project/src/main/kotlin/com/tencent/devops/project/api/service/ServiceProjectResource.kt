@@ -340,7 +340,7 @@ interface ServiceProjectResource {
         maxId: Long
     ): Result<List<ProjectBaseInfo>>
 
-    @Operation(summary = "查看灰度项目列表")
+    @Operation(summary = "查看保密项目列表")
     @GET
     @Path("/listSecrecyProject")
     fun listSecrecyProject(): Result<Set<String>?>
