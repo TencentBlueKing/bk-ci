@@ -117,7 +117,7 @@ class TencentNodeService @Autowired constructor(
                 )
             }
             // 生成临时1小时TOKEN用来导入鉴权
-            val tokenData = "${projectId}:${imate.deviceId};$userId;${Instant.now().plusSeconds(3600).toEpochMilli()}"
+            val tokenData = "${projectId};${imate.deviceId};$userId;${Instant.now().plusSeconds(3600).toEpochMilli()}"
             val token = Base64.getUrlEncoder()
                 .encodeToString(AESUtil.encrypt(batchInstallAesKey, tokenData.toByteArray(charset("UTF-8"))))
             // TODO: 调用imate的接口安装并传递token
