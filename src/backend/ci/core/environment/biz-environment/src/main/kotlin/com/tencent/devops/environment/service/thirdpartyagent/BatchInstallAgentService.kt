@@ -206,7 +206,7 @@ class BatchInstallAgentService @Autowired constructor(
         )
     }
 
-    fun genCreateAgentInstallScript(
+    fun genCreateAgentId(
         userId: String,
         projectId: String,
         workspaceName: String,
