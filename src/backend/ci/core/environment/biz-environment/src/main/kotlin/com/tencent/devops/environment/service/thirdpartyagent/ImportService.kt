@@ -126,7 +126,8 @@ class ImportService @Autowired constructor(
                 gateway = gateway,
                 fileGateway = fileGateway,
                 agentType = agentType,
-                createWorkspaceName = null
+                createWorkspaceName = null,
+                agentProps = null
             )
 
             return HashUtil.encodeLongId(id)

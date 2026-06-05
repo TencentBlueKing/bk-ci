@@ -11,6 +11,8 @@ import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.thirdpartyagent.AgentBatchInstallTokenDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
+import com.tencent.devops.environment.model.AgentProps
+import com.tencent.devops.environment.model.AgentPropsSource
 import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.environment.service.AgentUrlService
@@ -144,7 +146,8 @@ class BatchInstallAgentService @Autowired constructor(
                 os = os,
                 zoneName = zoneName,
                 agentType = agentType,
-                createWorkspaceName = null
+                createWorkspaceName = null,
+                agentProps = null
             )
             HashUtil.encodeLongId(agentId)
         } else {
@@ -188,7 +191,8 @@ class BatchInstallAgentService @Autowired constructor(
         os: OS,
         zoneName: String?,
         agentType: AgentType?,
-        createWorkspaceName: String?
+        createWorkspaceName: String?,
+        agentProps: AgentProps?
     ): Long {
         val gateway = slaveGatewayService.getGateway(zoneName)
         val fileGateway = slaveGatewayService.getFileGateway(zoneName)
@@ -202,7 +206,8 @@ class BatchInstallAgentService @Autowired constructor(
             gateway = gateway,
             fileGateway = fileGateway,
             agentType = agentType,
-            createWorkspaceName = createWorkspaceName
+            createWorkspaceName = createWorkspaceName,
+            agentProps = agentProps
         )
     }
 
@@ -218,7 +223,8 @@ class BatchInstallAgentService @Autowired constructor(
             os = os,
             zoneName = createEnvService.getWorkspaceZoneName(projectId, workspaceName),
             agentType = AgentType.CREATE,
-            createWorkspaceName = workspaceName
+            createWorkspaceName = workspaceName,
+            agentProps = AgentProps.emptyBySource(AgentPropsSource.REMOTEDEV)
         )
         return HashUtil.encodeLongId(agentId)
     }
