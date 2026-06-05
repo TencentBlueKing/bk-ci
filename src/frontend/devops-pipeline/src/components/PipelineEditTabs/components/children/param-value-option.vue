@@ -122,7 +122,7 @@
                     :class="['form-list-label-actions', 'field-config-icon', { 'is-disabled': disabled }]"
                     @click="!disabled && handleShowFieldConfigDialog()"
                 >
-                    <Logo name="config" />
+                    <Logo name="config" size="16" />
                 </span>
             </label>
             <div class="bk-form-content">
@@ -168,12 +168,13 @@
             header-position="left"
             :close-on-esc="false"
             :mask-close="false"
+            :confirm-fn="handleFieldConfigConfirm"
             custom-class="form-list-config-dialog"
-            @confirm="handleFieldConfigConfirm"
             @cancel="handleFieldConfigCancel"
         >
             <div class="form-list-editor-container">
                 <form-list-field-editor
+                    :key="fieldConfigDialogKey"
                     ref="fieldEditor"
                     :disabled="disabled"
                     :fields="editingFields"
@@ -389,8 +390,6 @@
     import { CLASSIFY_ENUM } from '@/hook/useTemplateConstraint'
     import { ENVIRONMENT_API_URL_PREFIX, PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX, VAR_MAX_LENGTH } from '@/store/constants'
     import {
-        BOOLEAN,
-        CHECKBOX,
         CODE_LIB_OPTION,
         CODE_LIB_TYPE,
         getBranchOption,
@@ -414,7 +413,7 @@
         SUB_PIPELINE_OPTION,
         BOOLEAN_LIST
     } from '@/store/modules/atom/paramsConfig'
-    import { getParamsValuesMap } from '@/utils/util'
+    import { getFormListFieldDefaultValue, getParamsValuesMap } from '@/utils/util'
     import { mapGetters } from 'vuex'
     import FormListFieldEditor from './form-list-field-editor'
     import SelectTypeParam from './select-type-param'
@@ -470,6 +469,7 @@
                 selectDefautVal: '',
                 remoteParamOption: {},
                 fieldConfigDialogVisible: false,
+                fieldConfigDialogKey: 0,
                 editingFields: []
             }
         },
@@ -676,6 +676,7 @@
             },
             handleShowFieldConfigDialog () {
                 this.editingFields = (this.param.fields || []).map(f => ({ ...f }))
+                this.fieldConfigDialogKey += 1
                 this.fieldConfigDialogVisible = true
             },
             handleEditingFieldsChange (name, value) {
@@ -687,17 +688,26 @@
                 const editor = this.$refs.fieldEditor
                 if (editor && typeof editor.validateAllFields === 'function') {
                     const isValid = editor.validateAllFields()
-                    if (!isValid) return
+                    if (!isValid) {
+                        const errorMessage = editor.getFirstError?.()
+                        if (errorMessage) {
+                            this.$bkMessage({
+                                theme: 'error',
+                                message: errorMessage,
+                                limit: 1
+                            })
+                        }
+                        return false
+                    }
                 }
-                const newFields = [...this.editingFields]
+                const newFields = typeof editor?.getFields === 'function'
+                    ? editor.getFields()
+                    : [...this.editingFields]
                 this.handleChange('fields', newFields)
                 // 字段定义变更后，同步对齐 defaultValue 中各行的 key
                 this.syncDefaultValueWithFields(newFields)
                 this.fieldConfigDialogVisible = false
-            },
-            getFieldDefaultValue (field) {
-                if (field.type === BOOLEAN || field.type === CHECKBOX) return false
-                return ''
+                return true
             },
             syncDefaultValueWithFields (newFields) {
                 const currentDefaultValue = this.param.defaultValue
@@ -707,7 +717,7 @@
                 const buildItem = (source = {}) => validFields.reduce((acc, field) => {
                     acc[field.id] = Object.prototype.hasOwnProperty.call(source, field.id)
                         ? source[field.id]
-                        : this.getFieldDefaultValue(field)
+                        : getFormListFieldDefaultValue(field)
                     return acc
                 }, {})
 
@@ -721,6 +731,14 @@
             },
             validateFormList () {
                 if (!isFormListParam(this.param.type)) return true
+                if (!this.hasFormListFields) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: this.$t('storeMap.formListFieldConfigRequiredTip'),
+                        limit: 1
+                    })
+                    return false
+                }
                 const formListInput = this.$refs.formListInput
                 if (formListInput && typeof formListInput.validate === 'function') {
                     return formListInput.validate()

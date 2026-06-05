@@ -438,7 +438,6 @@ export const FORM_LIST_FIELD_TYPE_LIST = [
     STRING,
     TEXTAREA,
     ENUM,
-    CHECKBOX,
     BOOLEAN,
     MULTIPLE
 ].map(id => ({

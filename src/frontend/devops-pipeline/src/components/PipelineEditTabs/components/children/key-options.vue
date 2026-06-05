@@ -1,6 +1,7 @@
 <template>
     <section>
         <batch-add-options
+            ref="batchAddOptions"
             :disabled="disabled"
             :submit-batch-add="handleBatchInput"
         />
@@ -237,6 +238,9 @@
             },
             onDragEnd () {
                 this.handleChangeOptions('options', this.list)
+            },
+            hasPendingBatchInput () {
+                return !!this.$refs.batchAddOptions?.hasPendingInput?.()
             }
         }
     }

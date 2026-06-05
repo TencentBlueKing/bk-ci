@@ -95,7 +95,7 @@
         SVN_TAG,
         TEXTAREA
     } from '@/store/modules/atom/paramsConfig'
-    import { COMMON_PARAM_PREFIX, isObject, isShallowEqual } from '@/utils/util'
+    import { COMMON_PARAM_PREFIX, isObject, isShallowEqual, normalizeFormListValue } from '@/utils/util'
 
     export default {
         components: {
@@ -260,17 +260,9 @@
                     if (isFormListParam(param.type)) {
                         // FORM_LIST：value 必须是对象数组，再透传字段定义
                         const paramValue = this.paramValues[param.id]
-                        let formListValue = []
-                        if (Array.isArray(paramValue)) {
-                            formListValue = paramValue
-                        } else if (typeof paramValue === 'string' && paramValue) {
-                            try {
-                                const parsed = JSON.parse(paramValue)
-                                formListValue = Array.isArray(parsed) ? parsed : []
-                            } catch (e) {
-                                formListValue = []
-                            }
-                        }
+                        const formListValue = normalizeFormListValue(paramValue, param.fields, {
+                            filterDefaultRows: false
+                        })
                         Object.assign(restParam, {
                             value: formListValue,
                             fields: param.fields || []
@@ -375,7 +367,11 @@
             },
             handleParamUpdate (name, value) {
                 const param = this.getParamByName(name)
-                if (isMultipleParam(param.type) || (isRemoteType(param) && param.multiSelect)) { // 复选框，需要将数组转化为逗号隔开的字符串
+                if (isFormListParam(param.type)) {
+                    this.handleParamChange(param.name, normalizeFormListValue(value, param.fields, {
+                        filterDefaultRows: false
+                    }))
+                } else if (isMultipleParam(param.type) || (isRemoteType(param) && param.multiSelect)) { // 复选框，需要将数组转化为逗号隔开的字符串
                     this.handleParamChange(param.name, Array.isArray(value) ? value.join(',') : '')
                 } else {
                     this.handleParamChange(param.name, value)

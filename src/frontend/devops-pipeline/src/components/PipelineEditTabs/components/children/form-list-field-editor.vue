@@ -12,7 +12,7 @@
             <bk-table-column
                 :label="getColumnLabel('formListFieldId', true)"
                 prop="id"
-                :width="160"
+                :width="120"
             >
                 <template #default="{ row, $index }">
                     <div :class="['field-cell', { 'is-error': fieldErrors[$index]?.id }]">
@@ -21,16 +21,23 @@
                             :disabled="disabled"
                             :placeholder="t('nameInputTips')"
                             :value="row.id"
+                            @input="(val) => handleFieldChange($index, 'id', val)"
                             @change="(val) => handleFieldChange($index, 'id', val)"
                             @blur="validateField($index)"
                         />
+                        <p
+                            v-if="fieldErrors[$index]?.id && !fieldErrors[$index]?.idOnly"
+                            class="bk-form-help is-danger"
+                        >
+                            {{ fieldErrors[$index].id }}
+                        </p>
                     </div>
                 </template>
             </bk-table-column>
             <bk-table-column
                 :label="getColumnLabel('formListFieldType', true)"
                 prop="type"
-                :width="200"
+                :width="150"
             >
                 <template #default="{ row, $index }">
                     <bk-select
@@ -53,17 +60,28 @@
                 :label="t('storeMap.formListFieldOptions')"
             >
                 <template #default="{ row, $index }">
-                    <option-tags-cell
-                        v-if="isSelectorFieldType(row.type)"
-                        :options="row.options || []"
-                        :disabled="disabled"
-                        :on-delete="(optIdx) => handleDeleteOption($index, optIdx)"
-                        :on-edit="() => handleShowOptionEditor($index)"
-                    />
-                    <span
-                        v-else
-                        class="no-options-tip"
-                    >{{ t('storeMap.formListFieldNoOption') }}</span>
+                    <div :class="['field-cell', { 'is-error': fieldErrors[$index]?.options }]">
+                        <div class="option-cell-content">
+                            <span
+                                v-if="fieldErrors[$index]?.options"
+                                class="bk-form-help is-danger option-error-tip"
+                                v-bk-tooltips="{ content: fieldErrors[$index].options, allowHTML: false }"
+                            >
+                                <i class="bk-icon icon-exclamation-circle" />
+                            </span>
+                            <option-tags-cell
+                                v-if="isSelectorFieldType(row.type)"
+                                :options="row.options || []"
+                                :disabled="disabled"
+                                :on-delete="(optIdx) => handleDeleteOption($index, optIdx)"
+                                :on-edit="() => handleShowOptionEditor($index)"
+                            />
+                            <span
+                                v-else
+                                class="no-options-tip"
+                            >{{ t('storeMap.formListFieldNoOption') }}</span>
+                        </div>
+                    </div>
                 </template>
             </bk-table-column>
             <bk-table-column
@@ -82,7 +100,7 @@
             <bk-table-column
                 :label="t('storeMap.formListFieldDesc')"
                 prop="desc"
-                :min-width="140"
+                :min-width="100"
             >
                 <template #default="{ row, $index }">
                     <bk-input
@@ -90,13 +108,14 @@
                         :disabled="disabled"
                         :placeholder="t('editPage.descTips')"
                         :value="row.desc"
+                        @input="(val) => handleFieldChange($index, 'desc', val)"
                         @change="(val) => handleFieldChange($index, 'desc', val)"
                     />
                 </template>
             </bk-table-column>
             <bk-table-column
                 :label="t('storeMap.formListFieldAction')"
-                :width="80"
+                :width="60"
                 :center="true"
             >
                 <template #default="{ row, $index }">
@@ -134,6 +153,7 @@
             </template>
             <template #content>
                 <key-options
+                    ref="keyOptions"
                     class="option-panel-content"
                     :disabled="disabled"
                     :options="editingOptions"
@@ -211,7 +231,7 @@
             }
         },
         setup (props, { expose }) {
-            const { t } = UseInstance()
+            const { proxy, t } = UseInstance()
 
             // 把 paramsConfig 提供的字段类型列表 + i18n key 转成下拉显示项
             const fieldTypeList = computed(() =>
@@ -291,6 +311,7 @@
 
             function handleFieldChange (index, name, value) {
                 const field = localFields.value[index]
+                if (field[name] === value) return
                 Object.assign(field, { [name]: value })
                 localFields.value.splice(index, 1, field)
                 validateField(index)
@@ -301,8 +322,10 @@
                 const field = localFields.value[index]
                 if (field.type === value) return
                 const updates = { type: value }
-                if (value === BOOLEAN || value === CHECKBOX) {
+                if (value === BOOLEAN) {
                     updates.defaultValue = false
+                } else if (value === CHECKBOX) {
+                    updates.defaultValue = []
                 } else {
                     updates.defaultValue = ''
                 }
@@ -319,6 +342,7 @@
                 if (!field.options) return
                 field.options.splice(optIndex, 1)
                 localFields.value.splice(fieldIndex, 1, field)
+                validateField(fieldIndex)
                 emitFieldsChange()
             }
 
@@ -339,11 +363,33 @@
             }
 
             function handleOptionEditorConfirm () {
+                if (hasPendingBatchInput()) {
+                    proxy.$bkMessage({
+                        theme: 'warning',
+                        message: t('storeMap.formListFieldBatchPendingTip'),
+                        limit: 1
+                    })
+                    return
+                }
+                const optionError = validateOptions(editingOptions.value)
+                if (optionError) {
+                    proxy.$bkMessage({
+                        theme: 'error',
+                        message: optionError,
+                        limit: 1
+                    })
+                    return
+                }
                 const field = localFields.value[editingFieldIndex.value]
                 Object.assign(field, { options: [...editingOptions.value] })
                 localFields.value.splice(editingFieldIndex.value, 1, field)
+                validateField(editingFieldIndex.value)
                 emitFieldsChange()
                 optionEditorVisible.value = false
+            }
+
+            function hasPendingBatchInput () {
+                return !!proxy.$refs.keyOptions?.hasPendingBatchInput?.()
             }
 
             function handleOptionEditorCancel () {
@@ -354,7 +400,8 @@
                 const field = localFields.value[index]
                 const errors = {}
                 if (!field.id) {
-                    errors.id = t('editPage.requiredTips', ['id'])
+                    errors.id = t('storeMap.formListFieldIdRequired')
+                    errors.idOnly = true
                 } else if (!ID_REGEX.test(field.id)) {
                     errors.id = t('storeMap.formListFieldIdFormat')
                 } else {
@@ -365,18 +412,58 @@
                         errors.id = t('storeMap.formListFieldIdDuplicate')
                     }
                 }
+                if (isSelectorFieldType(field.type)) {
+                    const optionError = validateOptions(field.options || [])
+                    if (optionError) {
+                        errors.options = optionError
+                    }
+                }
                 fieldErrors[index] = errors
+            }
+
+            function validateOptions (options) {
+                if (!options.length) {
+                    return t('editPage.requiredTips', ['options'])
+                }
+                const keySet = new Set()
+                for (const option of options) {
+                    if (!option.key) {
+                        return t('editPage.requiredTips', ['value'])
+                    }
+                    if (keySet.has(option.key)) {
+                        return t('editPage.noRepeatTips', ['value'])
+                    }
+                    keySet.add(option.key)
+                }
+                return ''
             }
 
             function validateAllFields () {
                 let isValid = true
                 localFields.value.forEach((field, index) => {
                     validateField(index)
-                    if (Object.keys(fieldErrors[index] || {}).length > 0) {
+                    const errors = fieldErrors[index] || {}
+                    const realErrors = Object.keys(errors).filter(key => {
+                        if (key.endsWith('Only')) return false
+                        return true
+                    })
+                    if (realErrors.length > 0) {
                         isValid = false
                     }
                 })
                 return isValid
+            }
+
+            function getFirstError () {
+                for (const index of Object.keys(fieldErrors)) {
+                    const errors = fieldErrors[index] || {}
+                    const firstKey = Object.keys(errors).find(key => {
+                        if (key.endsWith('Only')) return false
+                        return true
+                    })
+                    if (firstKey) return errors[firstKey]
+                }
+                return ''
             }
 
             function emitFieldsChange () {
@@ -384,7 +471,9 @@
             }
 
             expose({
-                validateAllFields
+                validateAllFields,
+                getFirstError,
+                getFields: () => [...localFields.value]
             })
 
             return {
@@ -463,6 +552,24 @@
         .no-options-tip {
             color: #C4C6CC;
             font-size: 12px;
+        }
+
+        .option-cell-content {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+        }
+
+        .option-error-tip {
+            display: inline-flex;
+            align-items: center;
+            flex-shrink: 0;
+            margin: 0 4px 0 0;
+            cursor: help;
+
+            .bk-icon {
+                flex-shrink: 0;
+            }
         }
 
         .action-icons {
