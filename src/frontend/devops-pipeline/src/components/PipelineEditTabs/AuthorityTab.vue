@@ -5,6 +5,7 @@
         :resource-code="resourceCode"
         :project-code="projectCode"
         :show-create-group="false"
+        :ajax-prefix="ajaxPrefix"
         :resource-name="pipelineName"
     />
 </template>
@@ -18,7 +19,8 @@
         mixins: [pipelineOperateMixin],
         data () {
             return {
-                resourceType: 'pipeline'
+                resourceType: 'pipeline',
+                ajaxPrefix: window.PUBLIC_URL_PREFIX,
             }
         },
         computed: {

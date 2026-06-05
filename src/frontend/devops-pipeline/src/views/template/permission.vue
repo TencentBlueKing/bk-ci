@@ -4,6 +4,7 @@
         :resource-code="resourceCode"
         :project-code="projectCode"
         :show-create-group="false"
+        :ajax-prefix="ajaxPrefix"
         :resource-name="resourceName"
     />
 </template>
@@ -13,7 +14,8 @@
     export default {
         data () {
             return {
-                resourceType: 'pipeline_template'
+                resourceType: 'pipeline_template',
+                ajaxPrefix: window.PUBLIC_URL_PREFIX,
             }
         },
         computed: {
