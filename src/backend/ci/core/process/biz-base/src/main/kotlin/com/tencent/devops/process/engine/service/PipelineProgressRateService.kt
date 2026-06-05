@@ -16,6 +16,7 @@ import com.tencent.devops.process.pojo.BuildTaskProgressInfo
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -116,30 +117,25 @@ class PipelineProgressRateService constructor(
         val runningTaskProgresses = runningTasks.map(::toTaskProgress)
         val runningTaskTotalProgressRate = runningTaskProgresses.sumOf { it.progressRate }
         val stageProgressRate = (completedTasks.size + runningTaskTotalProgressRate) / stageTasks.size
-        val taskNameMap = getTaskNameMap(
+        val taskProgressesForList = if (runningTaskProgresses.isNotEmpty()) {
+            runningTaskProgresses
+        } else {
+            completedTasks
+                .map(::toTaskProgress)
+                .filter { it.progressDetail != null }
+                .sortedWith(
+                    compareByDescending<RunningTaskProgress> { it.record.endTime ?: LocalDateTime.MIN }
+                        .thenByDescending { it.record.taskSeq }
+                )
+        }
+        val taskProgressList = buildTaskProgressList(
+            taskProgresses = taskProgressesForList,
             projectId = projectId,
+            pipelineId = pipelineId,
             buildId = buildId,
-            taskIds = runningTasks.map { it.taskId }
+            executeCount = executeCount,
+            stageId = stageId
         )
-        val jobExecutionOrderCache = mutableMapOf<String, String>()
-        val taskProgressList = runningTaskProgresses.map {
-            val taskName = taskNameMap[it.record.taskId]
-            BuildTaskProgressInfo(
-                taskProgressRete = it.progressRate,
-                taskName = taskName,
-                jobExecutionOrder = jobExecutionOrderCache.getOrPut(it.record.containerId) {
-                    getJobExecutionOrder(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        executeCount = executeCount,
-                        stageId = stageId,
-                        containerId = it.record.containerId
-                    )
-                },
-                progressDetail = it.progressDetail?.withDefaultTitles(taskName)
-            )
-        }.sortedBy { it.jobExecutionOrder }
         return BuildStageProgressInfo(
             stageProgressRete = roundProgressRate(stageProgressRate),
             taskProgressList = taskProgressList
@@ -175,6 +171,43 @@ class PipelineProgressRateService constructor(
             taskName = taskName,
             progressDetail = taskRecord?.taskVar?.let(::getProgressDetail)?.withDefaultTitles(taskName)
         )
+    }
+
+    private fun buildTaskProgressList(
+        taskProgresses: List<RunningTaskProgress>,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int,
+        stageId: String
+    ): List<BuildTaskProgressInfo> {
+        if (taskProgresses.isEmpty()) {
+            return emptyList()
+        }
+        val taskNameMap = getTaskNameMap(
+            projectId = projectId,
+            buildId = buildId,
+            taskIds = taskProgresses.map { it.record.taskId }
+        )
+        val jobExecutionOrderCache = mutableMapOf<String, String>()
+        return taskProgresses.map {
+            val taskName = taskNameMap[it.record.taskId]
+            BuildTaskProgressInfo(
+                taskProgressRete = it.progressRate,
+                taskName = taskName,
+                jobExecutionOrder = jobExecutionOrderCache.getOrPut(it.record.containerId) {
+                    getJobExecutionOrder(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        executeCount = executeCount,
+                        stageId = stageId,
+                        containerId = it.record.containerId
+                    )
+                },
+                progressDetail = it.progressDetail?.withDefaultTitles(taskName)
+            )
+        }.sortedBy { it.jobExecutionOrder }
     }
 
     private fun getJobExecutionOrder(
