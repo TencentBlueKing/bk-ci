@@ -167,6 +167,11 @@ class ExperienceDownloadService @Autowired constructor(
         enablePublicAccess: Boolean = false,
         restrictToCurrentUser: Boolean = false
     ): DownloadUrl {
+        logger.info(
+            "[AUTH_TRACE][DownloadService.getExternalDownloadUrl] userId=$userId, experienceId=$experienceId, " +
+                    "isOuter=$isOuter, ttl=$ttl, enablePublicAccess=$enablePublicAccess, " +
+                    "restrictToCurrentUser=$restrictToCurrentUser"
+        )
         val canExperience = experienceBaseService.userCanExperience(userId, experienceId, isOuter)
         if (!canExperience) {
             throw ErrorCodeException(
@@ -231,6 +236,12 @@ class ExperienceDownloadService @Autowired constructor(
             }
 
             else -> {
+                val authorizedUserList = if (restrictToCurrentUser) listOf(userId) else null
+                logger.info(
+                    "[AUTH_TRACE][DownloadService->RPC.externalUrl] platform=$platform, projectId=$projectId, " +
+                            "creatorId=${experienceRecord.creator}, userId=$userId, path=$path, " +
+                            "authorizedUserList=$authorizedUserList"
+                )
                 client.get(ServiceArtifactoryResource::class)
                     .externalUrl(
                         projectId = projectId,
@@ -240,7 +251,7 @@ class ExperienceDownloadService @Autowired constructor(
                         path = path,
                         ttl = ttl ?: (24 * 3600),
                         directed = false,
-                        authorizedUserList = if (restrictToCurrentUser) listOf(userId) else null
+                        authorizedUserList = authorizedUserList
                     ).data!!.url
             }
         }

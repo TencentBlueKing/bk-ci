@@ -479,6 +479,11 @@ class ExperienceAppService(
         enablePublicAccess: Boolean = false,
         restrictToCurrentUser: Boolean = false
     ): DownloadUrl {
+        logger.info(
+            "[AUTH_TRACE][AppService.downloadUrl] userId=$userId, experienceHashId=$experienceHashId, " +
+                    "organization=$organization, ttl=$ttl, enablePublicAccess=$enablePublicAccess, " +
+                    "restrictToCurrentUser=$restrictToCurrentUser"
+        )
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         // 移除红点
         removeRedPoint(userId, experienceId)
