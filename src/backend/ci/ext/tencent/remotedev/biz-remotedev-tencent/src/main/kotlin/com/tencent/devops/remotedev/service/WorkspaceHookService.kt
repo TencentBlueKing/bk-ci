@@ -43,7 +43,6 @@ import com.tencent.devops.remotedev.pojo.bk.BkSopRequestBody
 import com.tencent.devops.remotedev.pojo.bk.BkSopResponse
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import java.util.Base64
-import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
