@@ -173,7 +173,11 @@ class OpenClawService @Autowired constructor(
             .get()
             .build()
         val resp = OkhttpUtils.doHttp(request).resolveResponse<BkSopStatusResp>()
-        return TaskStatusResp(resp.state)
+        val state = resp.data?.state ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.OPEN_CLAW_WORKSPACE_CREATE_ERROR.errorCode,
+            params = arrayOf("get task status failed, taskId=$taskId, resp=$resp")
+        )
+        return TaskStatusResp(state)
     }
 
     private inline fun <reified T> okhttp3.Response.resolveResponse(): T {

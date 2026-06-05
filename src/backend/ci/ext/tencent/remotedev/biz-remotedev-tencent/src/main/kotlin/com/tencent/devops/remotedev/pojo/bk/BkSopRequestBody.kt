@@ -23,5 +23,11 @@ data class BkSopResponse(
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class BkSopStatusResp(
-    val state: String
-)
+    val result: Boolean,
+    val data: Data?
+) {
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    data class Data(
+        val state: String
+    )
+}
