@@ -157,7 +157,7 @@ interface OpThirdPartyAgentResource {
         shares: AgentShared
     ): Result<Boolean>
 
-    @Operation(summary = "添加创作流节点")
+    @Operation(summary = "添加创作流节点，给自运维虾用的")
     @POST
     @Path("/addCreateNode")
     fun addCreateNode(
