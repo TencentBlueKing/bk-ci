@@ -44,7 +44,8 @@ interface RepoDownloadService {
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
-        ttl: Int
+        ttl: Int,
+        authorizedUserList: List<String>? = null
     ): Url
 
     /**

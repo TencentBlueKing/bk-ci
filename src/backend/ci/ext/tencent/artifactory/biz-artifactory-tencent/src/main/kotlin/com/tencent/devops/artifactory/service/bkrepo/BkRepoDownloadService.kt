@@ -121,7 +121,8 @@ open class BkRepoDownloadService(
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
-        ttl: Int
+        ttl: Int,
+        authorizedUserList: List<String>?
     ): Url {
         logger.info(
             "outerBkrepoDownloadUrl, creatorId: $creatorId, userId:$userId, projectId: $projectId, " +
@@ -134,7 +135,8 @@ open class BkRepoDownloadService(
             projectId = projectId,
             artifactoryType = artifactoryType,
             fullPath = normalizedPath,
-            ttl = ttl
+            ttl = ttl,
+            authorizedUserList = authorizedUserList ?: emptyList()
         )
         // 审计
         audit(

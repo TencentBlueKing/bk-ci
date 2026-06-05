@@ -164,7 +164,8 @@ class ExperienceDownloadService @Autowired constructor(
         experienceId: Long,
         isOuter: Boolean = false,
         ttl: Int? = null,
-        enablePublicAccess: Boolean = false
+        enablePublicAccess: Boolean = false,
+        restrictToCurrentUser: Boolean = false
     ): DownloadUrl {
         val canExperience = experienceBaseService.userCanExperience(userId, experienceId, isOuter)
         if (!canExperience) {
@@ -238,7 +239,8 @@ class ExperienceDownloadService @Autowired constructor(
                         userId = userId,
                         path = path,
                         ttl = ttl ?: (24 * 3600),
-                        directed = false
+                        directed = false,
+                        authorizedUserList = if (restrictToCurrentUser) listOf(userId) else null
                     ).data!!.url
             }
         }
