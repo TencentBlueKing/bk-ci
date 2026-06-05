@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.resources.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_ILLEGAL_ERROR
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -29,6 +30,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
+import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.async.AsyncNotify
@@ -104,6 +106,7 @@ import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
+import jakarta.ws.rs.core.Response
 import java.net.URLDecoder
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.stream.function.StreamBridge
@@ -148,6 +151,7 @@ class ServiceRemoteDevResourceImpl(
         private const val MAX_REFRESH_SIZE = 100
         private const val DEFAULT_PAGE_SIZE = 100
         private const val MAX_PAGE_SIZE = 1000
+        private const val MAX_DELETE_DELAY_SECONDS = 24 * 60 * 60
         private val logger = LoggerFactory.getLogger(
             OpProjectWorkspaceResourceImpl::class.java
         )
@@ -179,7 +183,8 @@ class ServiceRemoteDevResourceImpl(
         envId: String?,
         businessLineName: String?,
         ownerName: String?,
-        workspaceName: String?
+        workspaceName: String?,
+        hasDepartmentsInfo: Boolean?
     ): Result<List<WeSecProjectWorkspace>> {
         return Result(
             workspaceService.getWorkspaceList4WeSec(
@@ -188,7 +193,7 @@ class ServiceRemoteDevResourceImpl(
                 envId = envId,
                 businessLineName = businessLineName,
                 ownerName = ownerName,
-                hasDepartmentsInfo = null,
+                hasDepartmentsInfo = hasDepartmentsInfo,
                 hasCurrentUser = true,
                 workspaceName = workspaceName
             )
@@ -375,7 +380,21 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
+    override fun deleteProjectWorkspace(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        delaySeconds: Int?
+    ): Result<Boolean> {
+        if (delaySeconds != null && (delaySeconds <= 1 || delaySeconds >= MAX_DELETE_DELAY_SECONDS)) {
+            throw ErrorCodeException(
+                errorCode = PARAMETER_ILLEGAL_ERROR,
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                defaultMessage = "delaySeconds must be > 1 and < $MAX_DELETE_DELAY_SECONDS (24h), got $delaySeconds",
+                params = arrayOf("delaySeconds", "must be > 1 and < $MAX_DELETE_DELAY_SECONDS (24h)")
+            )
+        }
+
         val record = workspaceService.getWorkspaceRecord(workspaceName = workspaceName)
         if (record == null || !record.ownerType.projectUse() || record.projectId != projectId) {
             logger.warn("delete project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
@@ -386,7 +405,8 @@ class ServiceRemoteDevResourceImpl(
             deleteControl.deleteWorkspace(
                 userId = userId,
                 workspaceName = workspaceName,
-                needPermission = !permissionService.hasUserManager(userId, projectId)
+                needPermission = !permissionService.hasUserManager(userId, projectId),
+                delaySeconds = delaySeconds
             )
         )
     }
@@ -1060,5 +1080,49 @@ class ServiceRemoteDevResourceImpl(
                 search = search
             )
         )
+    }
+
+    override fun batchQueryThumbnailWorkspaces(
+        userId: String,
+        enable: Boolean,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<String>> {
+        logger.info(
+            "batchQueryThumbnailWorkspaces" +
+                " |$userId|enable=$enable|page=$page|pageSize=$pageSize"
+        )
+        return Result(
+            workspaceRecordService.batchQueryThumbnailWorkspaces(
+                enable = enable,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
+    override fun enableWorkspaceThumbnail(
+        userId: String,
+        workspaceName: String,
+        enable: Boolean
+    ): Result<Boolean> {
+        logger.info(
+            "enableWorkspaceThumbnail" +
+                " |$userId|$workspaceName|enable=$enable"
+        )
+        return Result(
+            workspaceRecordService.enableThumbnail(
+                workspaceName = workspaceName,
+                enable = enable
+            )
+        )
+    }
+
+    override fun startCloudWorkspaceDetail(
+        userId: String,
+        workspaceName: String?,
+        envHashId: String?
+    ): Result<WorkspaceStartCloudDetail?> {
+        return Result(workspaceService.startCloudWorkspaceDetail(userId, workspaceName, envHashId))
     }
 }

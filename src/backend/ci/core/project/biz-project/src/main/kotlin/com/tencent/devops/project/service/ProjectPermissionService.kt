@@ -77,7 +77,7 @@ interface ProjectPermissionService {
         projectCode: String
     )
 
-    fun needApproval(needApproval: Boolean?): Boolean
+    fun needApproval(needApproval: Boolean?, projectScope: Int): Boolean
 
     fun isShowUserManageIcon(): Boolean
 }

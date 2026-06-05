@@ -33,7 +33,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.common.web.utils.BkApiUtil
+import com.tencent.devops.common.web.utils.ApiAccessLimitCacheManager
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.plugin.trigger.lock.PipelineTimerTriggerLock
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
@@ -195,11 +195,17 @@ class PipelineJobBean(
         }
         val watcher = Watcher(id = "timer|[$comboKey]")
         try {
-            if (redisOperation.isMember(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)) {
+            // 使用缓存管理器优化查询（使用本地缓存）
+            val result = ApiAccessLimitCacheManager.checkPipelineLimitStatus(
+                redisOperation = redisOperation,
+                pipelineIds = arrayOf(pipelineId)
+            )
+            if (result[pipelineId] == true) {
                 logger.warn("Pipeline[$pipelineId] has restricted build permissions,please try again later!")
                 return
             }
-            if (redisOperation.isMember(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)) {
+            val projectLimitSet = ApiAccessLimitCacheManager.getProjectLimitSet(redisOperation)
+            if (projectLimitSet.contains(projectId)) {
                 logger.warn("Project[$projectId] has restricted build permissions,please try again later!")
                 return
             }

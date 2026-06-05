@@ -29,6 +29,7 @@
 package com.tencent.devops.project.pojo
 
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.project.pojo.enums.ProjectScopeType
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ProjectApprovalInfo(
@@ -83,5 +84,11 @@ data class ProjectApprovalInfo(
     @get:Schema(title = "运营产品名称")
     val productName: String? = null,
     @get:Schema(title = "项目相关配置")
-    val properties: ProjectProperties? = null
+    val properties: ProjectProperties? = null,
+    @get:Schema(title = "KPI产品编码")
+    val kpiCode: String? = null,
+    @get:Schema(title = "KPI产品名称")
+    val kpiName: String? = null,
+    @get:Schema(title = "项目组织形态", description = "0 团队项目，1 个人项目，默认团队")
+    val projectScope: Int = ProjectScopeType.TEAM.value,
 )

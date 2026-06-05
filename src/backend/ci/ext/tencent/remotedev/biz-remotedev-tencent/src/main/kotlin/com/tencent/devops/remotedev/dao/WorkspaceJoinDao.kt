@@ -9,6 +9,7 @@ import com.tencent.devops.model.remotedev.tables.TWindowsResourceType
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceZone
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceLabels
+import com.tencent.devops.model.remotedev.tables.TWorkspaceRecordTicket
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.remotedev.dao.WorkspaceDao.Companion.workspaceWithWindowsMapper
@@ -21,10 +22,12 @@ import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.QueryType
+import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordTicketType
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
 import org.jooq.Record1
+import org.jooq.Select
 import org.jooq.SelectConditionStep
 import org.jooq.SelectJoinStep
 import org.jooq.SelectSelectStep
@@ -287,80 +290,35 @@ class WorkspaceJoinDao {
             conditions.add(logicalAreaGetZone(dslContext, search.logicalArea!!))
         }
 
-        // owner 条件查询（EXISTS 替代 LEFT JOIN 避免行膨胀）
+        // owner 条件查询
         search.owner?.ifEmpty { null }?.let { owners ->
-            val personalCond = TWorkspace.T_WORKSPACE.OWNER_TYPE
-                .eq(WorkspaceOwnerType.PERSONAL.name)
-                .and(
-                    if (search.onFuzzyMatch) {
-                        TWorkspace.T_WORKSPACE.CREATOR
-                            .likeRegex(owners.joinToString("|"))
-                    } else {
-                        TWorkspace.T_WORKSPACE.CREATOR.`in`(owners)
-                    }
-                )
-
-            val sharedOwnerExists = DSL.exists(
-                DSL.selectOne()
-                    .from(TWorkspaceShared.T_WORKSPACE_SHARED)
-                    .where(
-                        TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME
-                            .eq(TWorkspace.T_WORKSPACE.NAME)
-                            .and(
-                                TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE
-                                    .eq(WorkspaceShared.AssignType.OWNER.name)
-                            )
-                            .and(
-                                if (search.onFuzzyMatch) {
-                                    TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
-                                        .likeRegex(owners.joinToString("|"))
-                                } else {
-                                    TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
-                                        .`in`(owners)
-                                }
-                            )
+            conditions.add(
+                TWorkspace.T_WORKSPACE.NAME.`in`(
+                    visibleWorkspaceNamesQuery(
+                        users = owners,
+                        fuzzy = search.onFuzzyMatch,
+                        assignTypes = listOf(
+                            WorkspaceShared.AssignType.OWNER.name
+                        )
                     )
+                )
             )
-            conditions.add(personalCond.or(sharedOwnerExists))
         }
 
-        // viewers 条件查询（EXISTS 替代 LEFT JOIN 避免行膨胀）
+        // viewers 条件查询
         search.viewers?.ifEmpty { null }?.let { viewers ->
-            val personalCond = TWorkspace.T_WORKSPACE.OWNER_TYPE
-                .eq(WorkspaceOwnerType.PERSONAL.name)
-                .and(
-                    if (search.onFuzzyMatch) {
-                        TWorkspace.T_WORKSPACE.CREATOR
-                            .likeRegex(viewers.joinToString("|"))
-                    } else {
-                        TWorkspace.T_WORKSPACE.CREATOR.`in`(viewers)
-                    }
-                )
-
-            val userMatchCond = if (search.onFuzzyMatch) {
-                TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
-                    .likeRegex(viewers.joinToString("|"))
-            } else {
-                TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
-                    .`in`(viewers)
-            }
-            val sharedViewerExists = DSL.exists(
-                DSL.selectOne()
-                    .from(TWorkspaceShared.T_WORKSPACE_SHARED)
-                    .where(
-                        TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME
-                            .eq(TWorkspace.T_WORKSPACE.NAME)
-                            .and(
-                                TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE
-                                    .`in`(
-                                        WorkspaceShared.AssignType.VIEWER.name,
-                                        WorkspaceShared.AssignType.OWNER.name
-                                    )
-                            )
-                            .and(userMatchCond)
+            conditions.add(
+                TWorkspace.T_WORKSPACE.NAME.`in`(
+                    visibleWorkspaceNamesQuery(
+                        users = viewers,
+                        fuzzy = search.onFuzzyMatch,
+                        assignTypes = listOf(
+                            WorkspaceShared.AssignType.VIEWER.name,
+                            WorkspaceShared.AssignType.OWNER.name
+                        )
                     )
+                )
             )
-            conditions.add(personalCond.or(sharedViewerExists))
         }
 
         // machineType 条件查询
@@ -707,6 +665,77 @@ class WorkspaceJoinDao {
                     .eq(userId)
             )
             .fetch().map { it[TWorkspace.T_WORKSPACE.NAME] as String }
+    }
+
+    /**
+     * 构建用户可见 workspace names 的非关联子查询，
+     * 用 NAME IN (SELECT ...) 替代 OR + EXISTS。
+     * MySQL 会将非关联 IN 子查询物化为临时表做 hash lookup，只执行一次。
+     * 数据不经过 JVM 堆，无内存压力和 SQL 长度问题。
+     */
+    private fun visibleWorkspaceNamesQuery(
+        users: List<String>,
+        fuzzy: Boolean,
+        assignTypes: List<String>
+    ): Select<Record1<String>> {
+        val sharedUserCond = if (fuzzy) {
+            TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
+                .likeRegex(users.joinToString("|"))
+        } else {
+            TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
+                .`in`(users)
+        }
+        return DSL
+            .select(
+                TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME
+            )
+            .from(TWorkspaceShared.T_WORKSPACE_SHARED)
+            .where(sharedUserCond)
+            .and(
+                TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE
+                    .`in`(assignTypes)
+            )
+    }
+
+    /**
+     * 分页查询指定 ENABLE 状态下 THUMBNAIL 类型的实例名称列表
+     * （仅返回未删除的实例，即 T_WORKSPACE.STATUS != DELETED.ordinal）
+     */
+    fun fetchThumbnailWorkspaceNames(
+        dslContext: DSLContext,
+        enable: Boolean,
+        limit: Int,
+        offset: Int
+    ): List<String> {
+        val t1 = TWorkspaceRecordTicket.T_WORKSPACE_RECORD_TICKET
+        val t2 = TWorkspace.T_WORKSPACE
+        return dslContext.select(t1.WORKSPACE_NAME)
+            .from(t1)
+            .innerJoin(t2).on(t1.WORKSPACE_NAME.eq(t2.NAME))
+            .where(t1.TYPE.eq(WorkspaceRecordTicketType.THUMBNAIL.name))
+            .and(t1.ENABLE.eq(ByteUtils.bool2Byte(enable)))
+            .and(t2.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+            .orderBy(t1.WORKSPACE_NAME.asc())
+            .limit(limit).offset(offset)
+            .fetch(t1.WORKSPACE_NAME)
+    }
+
+    /**
+     * 统计指定 ENABLE 状态下 THUMBNAIL 类型的未删除实例总数
+     */
+    fun countThumbnailWorkspaces(
+        dslContext: DSLContext,
+        enable: Boolean
+    ): Long {
+        val t1 = TWorkspaceRecordTicket.T_WORKSPACE_RECORD_TICKET
+        val t2 = TWorkspace.T_WORKSPACE
+        return dslContext.selectCount()
+            .from(t1)
+            .innerJoin(t2).on(t1.WORKSPACE_NAME.eq(t2.NAME))
+            .where(t1.TYPE.eq(WorkspaceRecordTicketType.THUMBNAIL.name))
+            .and(t1.ENABLE.eq(ByteUtils.bool2Byte(enable)))
+            .and(t2.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+            .fetchOne(0, Long::class.java) ?: 0L
     }
 
     companion object {

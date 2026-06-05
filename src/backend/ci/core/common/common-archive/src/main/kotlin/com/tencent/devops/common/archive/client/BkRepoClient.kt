@@ -77,6 +77,7 @@ import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.pojo.PackageVersionInfo
 import com.tencent.devops.common.archive.pojo.ProjectMetadata
 import com.tencent.devops.common.archive.pojo.QueryData
+import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.pojo.RepoCreateRequest
 import com.tencent.devops.common.archive.pojo.defender.ApkDefenderRequest
 import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTasks
@@ -444,10 +445,12 @@ class BkRepoClient constructor(
     fun deleteNode(userName: String, projectId: String, repoName: String, path: String, authorization: String) {
         logger.info("delete,  projectId: $projectId, repoName: $repoName, path: $path")
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/delete/$projectId/$repoName/$path"
+        val headers = getCommonHeaders(userName, projectId).apply {
+            put("Authorization", authorization)
+        }
         val request = Request.Builder()
             .url(url)
-            .header("Authorization", authorization)
-            .headers(getCommonHeaders(userName, projectId).toHeaders())
+            .headers(headers.toHeaders())
             .delete()
             .build()
         doRequest(request).resolveResponse<Response<Void>>()
@@ -1389,6 +1392,24 @@ class BkRepoClient constructor(
             }
             throw RemoteServiceException(responseData.message ?: responseData.code.toString(), this.code)
         }
+    }
+
+    fun getStoreComponentPkgSize(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        fullPath: String
+    ): Long? {
+        // 对路径每一段做 URL encode，保留 / 分隔符，避免中文/空格/#/? 等字符引起的问题
+        val encodedPath = fullPath.split("/")
+            .joinToString("/") { if (it.isEmpty()) it else URLEncoder.encode(it, "UTF-8") }
+        val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/detail/$projectId/$repoName/$encodedPath"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
+            .get()
+            .build()
+        return doRequest(request).resolveResponse<Response<QueryNodeInfo>>()?.data?.size
     }
 
     companion object {

@@ -23,6 +23,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
+import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
@@ -110,11 +111,11 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         projectId: String?,
         ip: String?,
         envId: String?,
-        workspaceName: String?
+        workspaceName: String?,
+        hasDepartmentsInfo: Boolean?
     ): Result<List<WeSecProjectWorkspace>> {
         logger.info("Get  projects workspace ,projectId:$projectId, ip:$ip, envId:$envId")
         if (projectId.isNullOrEmpty() && ip.isNullOrEmpty() && envId.isNullOrEmpty() && workspaceName.isNullOrEmpty()) {
-            // 三个参数都为空, 返回空列表
             return Result(emptyList())
         }
         return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(
@@ -123,7 +124,8 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             envId = envId,
             businessLineName = null,
             ownerName = null,
-            workspaceName = workspaceName
+            workspaceName = workspaceName,
+            hasDepartmentsInfo = hasDepartmentsInfo
         )
     }
 
@@ -312,9 +314,15 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         )
     }
 
-    override fun deleteProjectWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
-        logger.info("deleteProjectWorkspace $userId|$projectId|$workspaceName")
-        return client.get(ServiceRemoteDevResource::class).deleteProjectWorkspace(userId, projectId, workspaceName)
+    override fun deleteProjectWorkspace(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        delaySeconds: Int?
+    ): Result<Boolean> {
+        logger.info("deleteProjectWorkspace $userId|$projectId|$workspaceName|$delaySeconds")
+        return client.get(ServiceRemoteDevResource::class)
+            .deleteProjectWorkspace(userId, projectId, workspaceName, delaySeconds)
     }
 
     override fun getProjectWorkspace(
@@ -858,5 +866,60 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
                 pageSize = pageSize,
                 search = search
             )
+    }
+
+    override fun batchQueryThumbnailWorkspaces(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        enable: Boolean,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<String>> {
+        logger.info(
+            "batchQueryThumbnailWorkspaces" +
+                " |$appCode|$userId|enable=$enable|page=$page|pageSize=$pageSize"
+        )
+        return client.get(ServiceRemoteDevResource::class)
+            .batchQueryThumbnailWorkspaces(
+                userId = userId,
+                enable = enable,
+                page = page,
+                pageSize = pageSize
+            )
+    }
+
+    override fun enableWorkspaceThumbnail(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        workspaceName: String,
+        enable: Boolean
+    ): Result<Boolean> {
+        logger.info(
+            "enableWorkspaceThumbnail" +
+                " |$appCode|$userId|$workspaceName|enable=$enable"
+        )
+        return client.get(ServiceRemoteDevResource::class)
+            .enableWorkspaceThumbnail(
+                userId = userId,
+                workspaceName = workspaceName,
+                enable = enable
+            )
+    }
+
+    override fun startCloudWorkspaceDetail(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        workspaceName: String?,
+        envHashId: String?
+    ): Result<WorkspaceStartCloudDetail?> {
+        logger.info("startCloudWorkspaceDetail |$appCode|$userId|$workspaceName|$envHashId")
+        return client.get(ServiceRemoteDevResource::class).startCloudWorkspaceDetail(
+            userId = userId,
+            workspaceName = workspaceName,
+            envHashId = envHashId
+        )
     }
 }

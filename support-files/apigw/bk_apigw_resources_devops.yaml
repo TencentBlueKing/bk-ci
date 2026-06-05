@@ -236,6 +236,111 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-app/auth/metadata/list_actions:
+    get:
+      operationId: "v4_app_list_auth_actions"
+      description: "获取资源类型对应的操作列表"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/metadata/list_actions"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/metadata/list_resource_types:
+    get:
+      operationId: "v4_app_list_auth_resource_types"
+      description: "获取资源类型列表"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/metadata/list_resource_types"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/metadata/projects/{projectId}/get_resource_by_code:
+    get:
+      operationId: "v4_app_get_auth_resource_by_code"
+      description: "根据 Code 查询资源"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/metadata/projects/{projectId}/get_resource_by_code"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/metadata/projects/{projectId}/get_resource_by_name:
+    get:
+      operationId: "v4_app_get_auth_resource_by_name"
+      description: "根据名称查询资源"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/metadata/projects/{projectId}/get_resource_by_name"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/metadata/projects/{projectId}/search_resource:
+    get:
+      operationId: "v4_app_search_auth_resource"
+      description: "根据资源名称或 Code 搜索资源"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/metadata/projects/{projectId}/search_resource"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-app/auth/oauth2/endpoint/getAccessToken:
     post:
       operationId: "v4_app_oauth2_access_token"
@@ -442,6 +547,489 @@ paths:
           method: "get"
           name: "backend-1"
           path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/get_project_permission_info"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/apply_to_join_group:
+    post:
+      operationId: "v4_app_apply_join_auth_group"
+      description: "申请加入用户组"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/apply_to_join_group"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/groups/{groupId}/permission_detail:
+    get:
+      operationId: "v4_app_get_auth_group_permission_detail"
+      description: "查询用户组权限详情"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/groups/{groupId}/permission_detail"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/groups_for_apply:
+    get:
+      operationId: "v4_app_list_groups_for_apply"
+      description: "查询可申请的用户组列表"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/groups_for_apply"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/list_group_members:
+    get:
+      operationId: "v4_app_list_auth_group_members"
+      description: "查询用户组成员详情列表"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/list_group_members"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/list_groups:
+    post:
+      operationId: "v4_app_list_auth_groups"
+      description: "查询用户组列表"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/list_groups"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/list_project_members:
+    get:
+      operationId: "v4_app_list_auth_project_members"
+      description: "获取项目全体成员"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/list_project_members"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/members/add:
+    post:
+      operationId: "v4_app_add_auth_group_members"
+      description: "批量添加用户组成员"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/members/add"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/members/all_groups:
+    get:
+      operationId: "v4_app_get_all_auth_member_groups"
+      description: "获取成员所有用户组详情"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/members/all_groups"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/members/apply_handover:
+    post:
+      operationId: "v4_app_apply_auth_group_handover"
+      description: "成员自助申请交接用户组"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/members/apply_handover"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/members/apply_renewal:
+    post:
+      operationId: "v4_app_apply_auth_member_renewal"
+      description: "普通用户申请续期权限"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/members/apply_renewal"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/members/batch_handover:
+    put:
+      operationId: "v4_app_batch_handover_auth_members"
+      description: "批量交接用户组成员"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "put"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/members/batch_handover"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/members/batch_remove:
+    delete:
+      operationId: "v4_app_batch_remove_auth_members"
+      description: "批量移除用户组成员"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "delete"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/members/batch_remove"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/members/batch_remove_from_project:
+    put:
+      operationId: "v4_app_batch_remove_auth_members_from_project"
+      description: "批量将用户移出项目"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "put"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/members/batch_remove_from_project"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/members/batch_remove_from_project_check:
+    post:
+      operationId: "v4_app_check_batch_remove_auth_members"
+      description: "批量将用户移出项目检查"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/members/batch_remove_from_project_check"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/members/batch_renewal:
+    put:
+      operationId: "v4_app_batch_renewal_auth_members"
+      description: "批量续期用户组成员"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "put"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/members/batch_renewal"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/members/exit_groups:
+    delete:
+      operationId: "v4_app_exit_auth_groups"
+      description: "成员自助退出用户组"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "delete"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/members/exit_groups"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/members/exits_project:
+    put:
+      operationId: "v4_app_auth_member_exit_project"
+      description: "用户主动退出项目"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "put"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/members/exits_project"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/members/exits_project_check:
+    get:
+      operationId: "v4_app_check_auth_member_exit_project"
+      description: "用户主动退出项目检查"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/members/exits_project_check"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/members/group_count:
+    get:
+      operationId: "v4_app_get_auth_member_group_count"
+      description: "获取成员用户组数量"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/members/group_count"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/members/remove_from_project:
+    put:
+      operationId: "v4_app_remove_auth_member_from_project"
+      description: "将用户移出项目"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "put"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/members/remove_from_project"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/members/{batchOperateType}/check:
+    post:
+      operationId: "v4_app_check_auth_member_operate"
+      description: "批量操作成员检查"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/members/{batchOperateType}/check"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/members/{resourceType}/groups:
+    get:
+      operationId: "v4_app_get_auth_member_groups_detail"
+      description: "获取成员用户组详情"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/members/{resourceType}/groups"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/auth/project/{projectId}/member_manage/users/search:
+    get:
+      operationId: "v4_app_search_auth_users"
+      description: "根据关键词搜索用户"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/project/{projectId}/member_manage/users/search"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -1385,6 +1973,27 @@ paths:
           method: "post"
           name: "backend-1"
           path: "/openapi/api/apigw-app/v4/projects/{projectId}/build_execute_pause"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/projects/{projectId}/build_failed_tasks:
+    get:
+      operationId: "v4_app_build_failed_tasks"
+      description: "获取指定构建的失败任务信息"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/projects/{projectId}/build_failed_tasks"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -2568,6 +3177,27 @@ paths:
           method: "post"
           name: "backend-1"
           path: "/openapi/api/apigw-app/v4/projects/{projectId}/pipelines/pipeline_copying"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/projects/{projectId}/pipelines/pipeline_count:
+    get:
+      operationId: "v4_app_pipeline_get_count"
+      description: "获取列表页列表相关的数目"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/projects/{projectId}/pipelines/pipeline_count"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -4112,6 +4742,594 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-user/auth/metadata/list_actions:
+    get:
+      operationId: "v4_user_list_auth_actions"
+      description: "获取资源类型对应的操作列表"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/metadata/list_actions"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/metadata/list_resource_types:
+    get:
+      operationId: "v4_user_list_auth_resource_types"
+      description: "获取资源类型列表"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/metadata/list_resource_types"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/metadata/projects/{projectId}/get_resource_by_code:
+    get:
+      operationId: "v4_user_get_auth_resource_by_code"
+      description: "根据 Code 查询资源"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/metadata/projects/{projectId}/get_resource_by_code"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/metadata/projects/{projectId}/get_resource_by_name:
+    get:
+      operationId: "v4_user_get_auth_resource_by_name"
+      description: "根据名称查询资源"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/metadata/projects/{projectId}/get_resource_by_name"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/metadata/projects/{projectId}/search_resource:
+    get:
+      operationId: "v4_user_search_auth_resource"
+      description: "根据资源名称或 Code 搜索资源"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/metadata/projects/{projectId}/search_resource"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/apply_to_join_group:
+    post:
+      operationId: "v4_user_apply_join_auth_group"
+      description: "申请加入用户组"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/apply_to_join_group"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/groups/{groupId}/permission_detail:
+    get:
+      operationId: "v4_user_get_auth_group_permission_detail"
+      description: "查询用户组权限详情"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/groups/{groupId}/permission_detail"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/groups_for_apply:
+    get:
+      operationId: "v4_user_list_groups_for_apply"
+      description: "查询可申请的用户组列表"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/groups_for_apply"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/list_group_members:
+    get:
+      operationId: "v4_user_list_auth_group_members"
+      description: "查询用户组成员详情列表"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/list_group_members"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/list_groups:
+    post:
+      operationId: "v4_user_list_auth_groups"
+      description: "查询用户组列表"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/list_groups"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/list_project_members:
+    get:
+      operationId: "v4_user_list_auth_project_members"
+      description: "获取项目全体成员"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/list_project_members"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/members/add:
+    post:
+      operationId: "v4_user_add_auth_group_members"
+      description: "批量添加用户组成员"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/members/add"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/members/all_groups:
+    get:
+      operationId: "v4_user_get_all_auth_member_groups"
+      description: "获取成员所有用户组详情"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/members/all_groups"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/members/apply_handover:
+    post:
+      operationId: "v4_user_apply_auth_group_handover"
+      description: "成员自助申请交接用户组"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/members/apply_handover"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/members/apply_renewal:
+    post:
+      operationId: "v4_user_apply_auth_member_renewal"
+      description: "普通用户申请续期权限"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/members/apply_renewal"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/members/batch_handover:
+    put:
+      operationId: "v4_user_batch_handover_auth_members"
+      description: "批量交接用户组成员"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "put"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/members/batch_handover"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/members/batch_remove:
+    delete:
+      operationId: "v4_user_batch_remove_auth_members"
+      description: "批量移除用户组成员"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "delete"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/members/batch_remove"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/members/batch_remove_from_project:
+    put:
+      operationId: "v4_user_batch_remove_auth_members_from_project"
+      description: "批量将用户移出项目"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "put"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/members/batch_remove_from_project"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/members/batch_remove_from_project_check:
+    post:
+      operationId: "v4_user_check_batch_remove_auth_members"
+      description: "批量将用户移出项目检查"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/members/batch_remove_from_project_check"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/members/batch_renewal:
+    put:
+      operationId: "v4_user_batch_renewal_auth_members"
+      description: "批量续期用户组成员"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "put"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/members/batch_renewal"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/members/exit_groups:
+    delete:
+      operationId: "v4_user_exit_auth_groups"
+      description: "成员自助退出用户组"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "delete"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/members/exit_groups"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/members/exits_project:
+    put:
+      operationId: "v4_user_auth_member_exit_project"
+      description: "用户主动退出项目"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "put"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/members/exits_project"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/members/exits_project_check:
+    get:
+      operationId: "v4_user_check_auth_member_exit_project"
+      description: "用户主动退出项目检查"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/members/exits_project_check"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/members/group_count:
+    get:
+      operationId: "v4_user_get_auth_member_group_count"
+      description: "获取成员用户组数量"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/members/group_count"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/members/remove_from_project:
+    put:
+      operationId: "v4_user_remove_auth_member_from_project"
+      description: "将用户移出项目"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "put"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/members/remove_from_project"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/members/{batchOperateType}/check:
+    post:
+      operationId: "v4_user_check_auth_member_operate"
+      description: "批量操作成员检查"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/members/{batchOperateType}/check"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/members/{resourceType}/groups:
+    get:
+      operationId: "v4_user_get_auth_member_groups_detail"
+      description: "获取成员用户组详情"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/members/{resourceType}/groups"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/auth/project/{projectId}/member_manage/users/search:
+    get:
+      operationId: "v4_user_search_auth_users"
+      description: "根据关键词搜索用户"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/project/{projectId}/member_manage/users/search"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-user/auth/validate/projects/{projectId}/check_project_users:
     get:
       operationId: "v4_user_permission_project_check"
@@ -4946,6 +6164,27 @@ paths:
           method: "post"
           name: "backend-1"
           path: "/openapi/api/apigw-user/v4/projects/{projectId}/build_execute_pause"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/projects/{projectId}/build_failed_tasks:
+    get:
+      operationId: "v4_user_build_failed_tasks"
+      description: "获取指定构建的失败任务信息"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/projects/{projectId}/build_failed_tasks"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -6129,6 +7368,27 @@ paths:
           method: "post"
           name: "backend-1"
           path: "/openapi/api/apigw-user/v4/projects/{projectId}/pipelines/pipeline_copying"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/projects/{projectId}/pipelines/pipeline_count:
+    get:
+      operationId: "v4_user_pipeline_get_count"
+      description: "获取列表页列表相关的数目"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/projects/{projectId}/pipelines/pipeline_count"
           timeout: 30
         enableWebsocket: false
         isPublic: true

@@ -23,8 +23,8 @@ const props = defineProps({
   btnLoading: Boolean
 });
 
-const projectForm = ref<any>(null);
-const projectData = ref<any>(props.data);
+// KPI字段配置状态
+const kpiConfig = ref(false)
 const rules = {
   englishName: [
     {
@@ -43,11 +43,15 @@ const rules = {
   subjectScopes: [
     {
       validator: () => projectData.value.subjectScopes.length > 0,
-      message: t('请选择项目项目最大可授权人员范围'),
+      message: t('请选择项目最大可授权人员范围'),
       trigger: 'change',
     },
-  ],
+  ]
 };
+
+const projectForm = ref<any>(null);
+const projectData = ref<any>(props.data);
+const isPersonalProject = computed(() => projectData.value.projectScope === 1)
 const initPipelineDialect = ref();
 const activeCollapse = ref(['baseInfo', 'permission', 'pipeline', 'artifactory']);
 const collapsePanels = computed(() => [
@@ -56,11 +60,11 @@ const collapsePanels = computed(() => [
     title: '基础信息',
     component: BaseInfoContent,
   },
-  {
+  ...!isPersonalProject.value ? [{
     name: 'permission',
     title: '权限',
     component: PermissionContent,
-  },
+  }] : []
   // ...projectData.value.properties ? [{
   //   name: 'pipeline',
   //   title: '流水线',
@@ -135,6 +139,11 @@ const handleUpdate = (panel, params) => {
   emits('handleUpdate', panel, params)
 }
 
+// 处理KPI配置更新
+const handleKpiConfigUpdate = (config: boolean) => {
+  kpiConfig.value = config
+}
+
 watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], (newValues, oldValues) => {
   if (newValues[0] !== oldValues[0] || JSON.stringify(newValues[1]) !== JSON.stringify(oldValues[1])) {
     projectForm.value.validate();
@@ -181,6 +190,7 @@ onMounted(async () => {
                 @handle-change-form="handleChangeForm"
                 @clearValidate="handleClearValidate"
                 @setProjectDeptProp="setProjectDeptProp"
+                @updateKpiCodeConfig="handleKpiConfigUpdate"
               />
             </div>
           </template>
@@ -196,6 +206,7 @@ onMounted(async () => {
       @change="handleChangeForm"
       @clearValidate="handleClearValidate"
       @setProjectDeptProp="setProjectDeptProp"
+      @updateKpiCodeConfig="handleKpiConfigUpdate"
       @handleCancel="$emit('handleCancel')"
       @handleUpdate="handleUpdate"
       @initProjectData="$emit('initProjectData', $event)"

@@ -185,21 +185,21 @@
             >
                 <template slot-scope="props">
                     <div class="table-node-item node-item-status">
+                        <!-- 已从 CMDB 、蓝鲸CC 移除 -->
+                        <template v-if="removedStatus.includes(props.row.nodeStatus) && deploymentNodes.includes(props.row.nodeType)">
+                            <i class="bk-icon node-removed-icon icon-close error"></i>
+                            <span class="node-removed-message">
+                                {{ removedMessage[props.row.nodeStatus] }}
+                            </span>
+                        </template>
                         <!-- 责任人已变更 -->
                         <template
-                            v-if="((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && props.row.createdUser !== props.row.bakOperator)
+                            v-else-if="((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && props.row.createdUser !== props.row.bakOperator)
                                 || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator?.split(';').indexOf(props.row.createdUser) === -1))"
                         >
                             <span class="prompt-operator">
                                 <i class="devops-icon icon-exclamation-circle"></i>
                                 {{ $t('environment.nodeInfo.prohibited') }}
-                            </span>
-                        </template>
-                        <!-- 已从 CMDB 、蓝鲸CC 移除 -->
-                        <template v-else-if="removedStatus.includes(props.row.nodeStatus) && deploymentNodes.includes(props.row.nodeType)">
-                            <i class="bk-icon node-removed-icon icon-close error"></i>
-                            <span class="node-removed-message">
-                                {{ removedMessage[props.row.nodeStatus] }}
                             </span>
                         </template>
                         <template v-else>
@@ -229,7 +229,7 @@
                             </span>
                             <!-- 状态值 -->
                             <span class="node-status">
-                                {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}
+                                {{ $t(`environment.nodeStatusMap.${props.row.nodeStatus}`) }}
                                 <span v-if="props.row.agentVersion">
                                     ({{ props.row.agentVersion }})
                                 </span>

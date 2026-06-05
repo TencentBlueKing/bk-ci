@@ -40,8 +40,8 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlView
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineYamlStatus
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookVersion
 import com.tencent.devops.process.service.PipelineInfoFacadeService
@@ -232,7 +232,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             DateTimeUtil.stringToLocalDateTime(it)
         } ?: LocalDateTime.now()
         val ref = GitActionCommon.getRealRef(action = action, branch = branch)
-        val yamlInfo = PipelineYamlVo(
+        val yamlFileInfo = PipelineYamlFileInfo(
             repoHashId = repoHashId,
             filePath = yamlFile.yamlPath
         )
@@ -245,7 +245,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             isDefaultBranch = isDefaultBranch,
             description = action.data.eventCommon.commit.commitMsg,
             aspects = null,
-            yamlInfo = yamlInfo
+            yamlFileInfo = yamlFileInfo
         )
         val pipelineId = deployPipelineResult.pipelineId
         val version = deployPipelineResult.version
@@ -302,7 +302,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
         val ref = GitActionCommon.getRealRef(action = action, branch = branch)
         val repoHashId = action.data.setting.repoHashId
 
-        val yamlInfo = PipelineYamlVo(
+        val yamlFileInfo = PipelineYamlFileInfo(
             repoHashId = repoHashId,
             filePath = yamlFile.yamlPath
         )
@@ -316,7 +316,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             isDefaultBranch = isDefaultBranch,
             description = action.data.eventCommon.commit.commitMsg,
             aspects = null,
-            yamlInfo = yamlInfo
+            yamlFileInfo = yamlFileInfo
         )
         val version = deployPipelineResult.version
 

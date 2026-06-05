@@ -41,11 +41,11 @@ import com.tencent.devops.project.pojo.UserInfo
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.tof.TOFService
-import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 
 @Service
 @Suppress("ALL")
@@ -81,7 +81,7 @@ class ProjectUserRefreshService @Autowired constructor(
                 val pageLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
                 logger.info(
                     "refreshAllUser page: $page , pageSize: $pageSize, " +
-                        "limit: ${pageLimit.limit}, offset: ${pageLimit.offset}"
+                            "limit: ${pageLimit.limit}, offset: ${pageLimit.offset}"
                 )
                 val userList = projectUserService.listUser(pageLimit.limit, pageLimit.offset)
                 if (userList == null) {
@@ -162,7 +162,8 @@ class ProjectUserRefreshService @Autowired constructor(
             if (isUserInfoChange(
                     tofDeptInfo = deptInfo,
                     dbUserRecord = userInfo
-                )) {
+                )
+            ) {
                 logger.info("user info diff, bk:$userInfo, tof :$deptInfo")
                 // 组织信息不一致，刷新当前用户数据。 以tof数据为准, 数据源直接获取tof数据
                 projectUserDao.update(dslContext, deptInfo)
@@ -228,9 +229,9 @@ class ProjectUserRefreshService @Autowired constructor(
                     } else {
                         logger.info(
                             "[${it.creator}] fixGitCIProjectInfo getDevopsUserInfo: " +
-                                "creatorBgId=${devopsUser.bgId}, creatorBgName=${devopsUser.bgName}" +
-                                "creatorDeptId=${devopsUser.deptId}, creatorDeptName=${devopsUser.deptName}" +
-                                "creatorCenterId=${devopsUser.centerId}, creatorCenterName=${devopsUser.centerName}"
+                                    "creatorBgId=${devopsUser.bgId}, creatorBgName=${devopsUser.bgName}" +
+                                    "creatorDeptId=${devopsUser.deptId}, creatorDeptName=${devopsUser.deptName}" +
+                                    "creatorCenterId=${devopsUser.centerId}, creatorCenterName=${devopsUser.centerName}"
                         )
                         count += projectFreshDao.fixProjectInfo(
                             dslContext = dslContext,
@@ -326,15 +327,15 @@ class ProjectUserRefreshService @Autowired constructor(
         dbUserRecord: UserDeptDetail
     ): Boolean {
         return tofDeptInfo.bgId != dbUserRecord.bgId ||
-            tofDeptInfo.bgName != dbUserRecord.bgName ||
-            tofDeptInfo.deptId != dbUserRecord.deptId ||
-            tofDeptInfo.deptName != dbUserRecord.deptName ||
-            tofDeptInfo.centerId != dbUserRecord.centerId ||
-            tofDeptInfo.centerName != dbUserRecord.centerName ||
-            tofDeptInfo.groupId != dbUserRecord.groupId ||
-            tofDeptInfo.groupName != dbUserRecord.groupName ||
-            tofDeptInfo.businessLineId != dbUserRecord.businessLineId ||
-            tofDeptInfo.businessLineName != dbUserRecord.businessLineName
+                tofDeptInfo.bgName != dbUserRecord.bgName ||
+                tofDeptInfo.deptId != dbUserRecord.deptId ||
+                tofDeptInfo.deptName != dbUserRecord.deptName ||
+                tofDeptInfo.centerId != dbUserRecord.centerId ||
+                tofDeptInfo.centerName != dbUserRecord.centerName ||
+                tofDeptInfo.groupId != dbUserRecord.groupId ||
+                tofDeptInfo.groupName != dbUserRecord.groupName ||
+                tofDeptInfo.businessLineId != dbUserRecord.businessLineId ||
+                tofDeptInfo.businessLineName != dbUserRecord.businessLineName
     }
 
     companion object {

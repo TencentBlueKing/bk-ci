@@ -160,8 +160,8 @@
     const instanceName = computed(() => {
         return renderInstanceList.value[editingIndex.value]?.pipelineName ?? ''
     })
-    watch(() => currentVersion.value,  () => {
-        if (isInstanceCreateType.value) return
+    watch(() => currentVersion.value,  (newVal, oldVal) => {
+        if (isInstanceCreateType.value || Number(newVal) === Number(oldVal)) return
         fetchPipelinesDetails()
     })
     watch(() => curTemplateDetail.value, (val) => {
@@ -353,7 +353,6 @@
                         }
                     ]
                 })
-                fetchPipelinesDetails()
             }
 
             if (instanceViewType.value === INSTANCE_OPERATE_TYPE.UPGRADE  && !instanceList.value.length) {
@@ -367,13 +366,14 @@
                 return
             }
             proxy.$nextTick(() => {
+                fetchPipelinesDetails()
                 handleInstanceClick(instanceActiveIndex.value)
             })
         }
         if (instanceViewType.value === INSTANCE_OPERATE_TYPE.CREATE && !pipelineName.value) {
             handleShowInstanceCreate()
         }
-       
+
     }
     function handleBatchEdit () {
         if (editingIndex.value > -1) return
@@ -382,7 +382,7 @@
     onMounted(() => {
         init()
     })
-    
+
     onBeforeUnmount(() => {
         proxy.$store.commit(`templates/${SET_TEMPLATE_DETAIL}`, {
             templateVersion: '',

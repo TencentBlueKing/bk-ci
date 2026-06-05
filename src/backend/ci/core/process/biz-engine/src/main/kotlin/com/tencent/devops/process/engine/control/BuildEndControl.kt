@@ -40,6 +40,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildHistoryDataClearEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.AgentReuseMutex
@@ -116,6 +117,11 @@ class BuildEndControl @Autowired constructor(
         private const val FAIL_PIPELINE_COUNT = "fail_pipeline_count"
         private const val SUCCESS_PIPELINE_COUNT = "success_pipeline_count"
         private const val FINISH_PIPELINE_COUNT = "finish_pipeline_count"
+        // 流水线构建历史数据清理事件 dispatch 端节流 key 前缀
+        private const val PIPELINE_BUILD_HISTORY_DATA_CLEAR_DISPATCH_KEY_PREFIX =
+            "pipeline_build_history_data_clear_dispatch:"
+        // dispatch 端节流窗口(秒)：同一流水线在该窗口内仅派发一次清理事件，控制 MQ 入队速率，避免 MQ 入队速率过高
+        private const val PIPELINE_BUILD_HISTORY_DATA_CLEAR_DISPATCH_EXPIRED_SECOND = 300L
         private val LOG = LoggerFactory.getLogger(BuildEndControl::class.java)
     }
 
@@ -295,6 +301,32 @@ class BuildEndControl @Autowired constructor(
                 refreshTypes = RefreshType.HISTORY.binary
             )
         )
+
+        // 异步驱动misc服务检查并清理当前流水线的过期/超量构建记录
+        // 高频构建场景下不必每次构建结束都派发，dispatch 端先做一次轻量节流，
+        // 同一流水线在 PIPELINE_BUILD_HISTORY_DATA_CLEAR_DISPATCH_EXPIRED_SECOND 内只派发一次，
+        // 减少 MQ 入队压力；下游监听器自身仍会用流水线级 RedisLock 串行化处理。
+        try {
+            val throttleKey = "$PIPELINE_BUILD_HISTORY_DATA_CLEAR_DISPATCH_KEY_PREFIX$projectId:$pipelineId"
+            if (redisOperation.setIfAbsent(
+                    key = throttleKey,
+                    value = "1",
+                    expiredInSecond = PIPELINE_BUILD_HISTORY_DATA_CLEAR_DISPATCH_EXPIRED_SECOND
+                )
+            ) {
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildHistoryDataClearEvent(
+                        source = BuildEndControl::class.java.simpleName,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        userId = userId
+                    )
+                )
+            }
+        } catch (ignored: Throwable) {
+            // 这里 catch 住所有异常，避免清理事件派发失败影响构建结束主流程
+            LOG.warn("ENGINE|$buildId|dispatch PipelineBuildHistoryDataClearEvent failed", ignored)
+        }
 
         // 发送metrics统计数据消息
         metricsService.postMetricsData(buildInfo, model)

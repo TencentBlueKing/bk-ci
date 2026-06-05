@@ -93,6 +93,7 @@ interface ExternalThirdPartyAgentResource {
         arch: String?
     ): Response
 
+    @Deprecated("被批量安装脚本取代")
     @Operation(summary = "生成并下载新的批次安装所需要的文件")
     @GET
     @Path("/{agentHashId}/batch_zip")

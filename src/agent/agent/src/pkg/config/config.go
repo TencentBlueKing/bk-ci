@@ -40,17 +40,15 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
-
 	languageUtil "golang.org/x/text/language"
-	"gopkg.in/ini.v1"
+	ini "gopkg.in/ini.v1"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
-	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
+	innerFileUtil "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
 
@@ -67,7 +65,6 @@ const (
 	KeyRequestTimeoutSec = "devops.agent.request.timeout.sec"
 	KeyDetectShell       = "devops.agent.detect.shell"
 	KeyIgnoreLocalIps    = "devops.agent.ignoreLocalIps"
-	KeyBatchInstall      = "devops.agent.batch.install"
 	KeyLogsKeepHours     = "devops.agent.logs.keep.hours"
 	// KeyJdkDirPath 这个key不会预先出现在配置文件中，因为workdir未知，需要第一次动态获取
 	KeyJdkDirPath = "devops.agent.jdk.dir.path"
@@ -99,7 +96,6 @@ type AgentConfig struct {
 	TimeoutSec              int64
 	DetectShell             bool
 	IgnoreLocalIps          string
-	BatchInstallKey         string
 	LogsKeepHours           int
 	JdkDirPath              string
 	Jdk17DirPath            string
@@ -121,14 +117,14 @@ type AgentEnv struct {
 	HostName         string
 	AgentVersion     string
 	AgentInstallPath string
-	// WinTask 启动windows进程的组件如 服务/执行计划
-	WinTask string
 	// OsVersion 系统版本信息
 	OsVersion string
 	// cpu 型号信息
 	CPUProductInfo string
 	// gpu 型号信息
 	GPUProductInfo string
+	// InstallType 安装模式 (读取自 .install_type 文件)
+	InstallType string
 }
 
 func (e *AgentEnv) GetAgentIp() string {
@@ -147,8 +143,11 @@ func (e *AgentEnv) SetAgentIp(ip string) {
 }
 
 var GAgentEnv *AgentEnv
+
 var GAgentConfig *AgentConfig
+
 var UseCert bool
+
 var IsDebug = false
 
 // Init 加载和初始化配置
@@ -176,7 +175,7 @@ func LoadAgentEnv() {
 	GAgentEnv.HostName = systemutil.GetHostName()
 	GAgentEnv.OsName = systemutil.GetOsName()
 	GAgentEnv.AgentVersion = DetectAgentVersion()
-	GAgentEnv.WinTask = GetWinTaskType()
+	GAgentEnv.InstallType = loadInstallType()
 	if osVersion, err := GetOsVersion(); err != nil {
 		logs.WithError(err).Warn("get os version err")
 		GAgentEnv.OsVersion = ""
@@ -196,6 +195,16 @@ func LoadAgentIp() {
 		splitIps = util.SplitAndTrimSpace(GAgentConfig.IgnoreLocalIps, ",")
 	}
 	GAgentEnv.SetAgentIp(systemutil.GetAgentIp(splitIps))
+}
+
+// loadInstallType 读取 .install_type 文件内容，返回大写的安装模式字符串。
+// 文件不存在或内容为空时返回空字符串。
+func loadInstallType() string {
+	data, err := os.ReadFile(filepath.Join(systemutil.GetWorkDir(), ".install_type"))
+	if err != nil {
+		return ""
+	}
+	return strings.ToUpper(strings.TrimSpace(string(data)))
 }
 
 // DetectAgentVersion 检测Agent版本
@@ -241,10 +250,20 @@ func BuildAgentJarPath() string {
 func LoadAgentConfig() error {
 	GAgentConfig = new(AgentConfig)
 
-	conf, err := ini.Load(filepath.Join(systemutil.GetWorkDir(), ".agent.properties"))
+	configPath := filepath.Join(systemutil.GetWorkDir(), ".agent.properties")
+	bakPath := configPath + ".bak"
+
+	conf, err := ini.Load(configPath)
 	if err != nil {
-		logs.Error("load agent config failed, ", err)
-		return errors.New("load agent config failed")
+		logs.Errorf("load agent config failed: %s, attempting recovery from backup", err)
+
+		// 主配置加载失败，尝试从 .bak 备份恢复
+		conf, err = loadConfigFromBackup(configPath, bakPath)
+		if err != nil {
+			logs.Errorf("load agent config from backup also failed: %s", err)
+			return errors.New("load agent config failed and no valid backup available")
+		}
+		logs.Warn("successfully recovered agent config from backup file")
 	}
 
 	parallelTaskCount, err := conf.Section("").Key(KeyTaskCount).Int()
@@ -393,9 +412,6 @@ func LoadAgentConfig() error {
 	GAgentConfig.IgnoreLocalIps = ignoreLocalIps
 	logs.Info("IgnoreLocalIps: ", GAgentConfig.IgnoreLocalIps)
 
-	GAgentConfig.BatchInstallKey = strings.TrimSpace(conf.Section("").Key(KeyBatchInstall).String())
-	logs.Info("BatchInstallKey: ", GAgentConfig.BatchInstallKey)
-
 	GAgentConfig.LogsKeepHours = logsKeepHours
 	logs.Info("logsKeepHours: ", GAgentConfig.LogsKeepHours)
 
@@ -469,12 +485,101 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(KeyHTTPSProxy + "=" + GAgentConfig.HTTPSProxy + "\n")
 	content.WriteString(KeyNOProxy + "=" + GAgentConfig.NOProxy + "\n")
 
-	err := exitcode.WriteFileWithCheck(filePath, content.Bytes(), 0666)
+	// 写前校验：解析即将写入的内容，确保必填字段完整有效，防止写入损坏的配置
+	if err := validateConfigContent(content.Bytes()); err != nil {
+		logs.Error("config content validation before write failed: ", err.Error())
+		return fmt.Errorf("config pre-write validation failed: %w", err)
+	}
+
+	// 备份已有文件到 .bak（best-effort，失败不阻塞主流程）
+	bakPath := filePath + ".bak"
+	if existing, readErr := os.ReadFile(filePath); readErr == nil && len(existing) > 0 {
+		_ = os.WriteFile(bakPath, existing, 0666)
+	}
+
+	// 原子写入：复用 innerFileUtil.AtomicWriteFile（临时文件 → fsync → rename）
+	data := content.Bytes()
+	err := innerFileUtil.AtomicWriteFile(filePath, bytes.NewReader(data), 0666)
 	if err != nil {
-		logs.Error("write config failed:", err.Error())
+		logs.Error("atomic write config failed:", err.Error())
 		return errors.New("write config failed")
 	}
+
+	// 回读验证，确保写入内容与预期一致
+	written, err := os.ReadFile(filePath)
+	if err != nil {
+		logs.Errorf("read-back verify config failed: %s", err.Error())
+		return fmt.Errorf("read-back verify failed: %w", err)
+	}
+	if !bytes.Equal(written, data) {
+		logs.Errorf("read-back verify config mismatch: wrote %d bytes, read %d bytes", len(data), len(written))
+		return fmt.Errorf("read-back verify: content mismatch")
+	}
+
 	return nil
+}
+
+// validateConfigContent 解析配置字节内容，检查必填字段是否完整有效。
+// 用于写前校验，防止将损坏或不完整的配置写入磁盘。
+func validateConfigContent(data []byte) error {
+	conf, err := ini.Load(data)
+	if err != nil {
+		return fmt.Errorf("parse config content: %w", err)
+	}
+	s := conf.Section("")
+
+	checks := []struct {
+		key  string
+		name string
+	}{
+		{KeyProjectId, "projectId"},
+		{KeyAgentId, "agentId"},
+		{KeySecretKey, "secretKey"},
+		{KeyDevopsGateway, "gateway"},
+	}
+	for _, c := range checks {
+		if strings.TrimSpace(s.Key(c.key).String()) == "" {
+			return fmt.Errorf("invalid %s: empty value for key %s", c.name, c.key)
+		}
+	}
+
+	taskCount, err := s.Key(KeyTaskCount).Int()
+	if err != nil || taskCount < 0 {
+		return fmt.Errorf("invalid parallelTaskCount")
+	}
+
+	return nil
+}
+
+// loadConfigFromBackup 尝试从 .bak 备份文件加载配置。
+// 加载成功后会将备份内容恢复到主配置文件路径，实现自愈。
+func loadConfigFromBackup(configPath, bakPath string) (*ini.File, error) {
+	if _, err := os.Stat(bakPath); err != nil {
+		return nil, fmt.Errorf("backup file does not exist: %w", err)
+	}
+
+	conf, err := ini.Load(bakPath)
+	if err != nil {
+		return nil, fmt.Errorf("backup file is also corrupt: %w", err)
+	}
+
+	// 校验备份文件的必填字段是否完整
+	bakData, err := os.ReadFile(bakPath)
+	if err != nil {
+		return nil, fmt.Errorf("read backup file: %w", err)
+	}
+	if err := validateConfigContent(bakData); err != nil {
+		return nil, fmt.Errorf("backup file fails validation: %w", err)
+	}
+
+	// 将备份内容恢复到主配置文件（使用原子写入保证安全）
+	if restoreErr := innerFileUtil.AtomicWriteFile(configPath, bytes.NewReader(bakData), 0666); restoreErr != nil {
+		logs.Warnf("failed to restore backup to main config: %s (proceeding with in-memory backup)", restoreErr)
+	} else {
+		logs.Info("restored config from backup file to main config path")
+	}
+
+	return conf, nil
 }
 
 // GetAuthHeaderMap 生成鉴权头部
@@ -546,12 +651,12 @@ func initCert() {
 	fileInfo, err := os.Stat(AbsCertFilePath)
 	if err != nil {
 		// 证书不一定需要存在
-		logs.Warn("stat cert file error", err.Error())
+		logs.Infof("no cert file %s", err.Error())
 		return
 	}
 	if fileInfo.IsDir() {
 		// 证书不一定需要存在
-		logs.Warn("cert file is dir, skip")
+		logs.Info("cert file is dir, skip")
 		return
 	}
 	// Load client cert

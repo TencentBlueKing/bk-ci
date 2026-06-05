@@ -1,91 +1,52 @@
 ---
 name: managing-devops-pipeline
-description: 管理蓝盾流水线的构建操作，包括查询构建历史、获取启动参数、查看构建状态、启动构建。当用户提及流水线、构建、部署、CI/CD、蓝盾或需要触发构建任务时使用。
+description: 通过 MCP 管理 BK-CI 流水线构建时使用，例如查询构建历史、获取启动参数、查看构建状态和在确认后触发构建。当用户要操作现有流水线而不是修改代码实现时优先使用。
 ---
 
 # 蓝盾流水线管理
 
-通过 MCP 工具 `devops-prod-pipeline` 管理蓝盾流水线构建。
+## 适用场景
 
-## 核心概念
+- 查询流水线构建历史
+- 获取启动参数并准备触发构建
+- 查看构建状态与最近执行结果
+- 根据现有流水线链接解析 `projectId` 和 `pipelineId`
 
-- **projectId**：项目英文名（如 `myproject`）
-- **pipelineId**：流水线 ID，以 `p-` 开头（如 `p-abc123`）
-- **buildId**：构建 ID，以 `b-` 开头（如 `b-xyz789`）
+## 不适用场景
 
-## 重要规则
+- 修改流水线定义、模板或插件逻辑
+- 讨论流水线架构实现
+- 未经用户确认直接发起有副作用的构建操作
 
-**启动构建前必须获得用户确认**：在调用 `v4_user_build_start` 之前，必须向用户展示完整的构建入参并获得明确确认。未经用户确认，禁止执行构建操作。
+## 快速指导
 
-## 常用工作流
+1. 这个 skill 关注的是“如何安全地操作现有流水线构建”，不是流水线设计指南。
+2. 使用前先确认三个标识：
+   - `projectId`：项目英文名
+   - `pipelineId`：以 `p-` 开头的流水线 ID
+   - `buildId`：以 `b-` 开头的构建 ID
+3. 触发构建的最短链路是：先拿启动参数，再向用户展示完整入参并获得确认，最后才真正启动。
+4. 查询类操作通常直接读取即可；启动类操作必须明确区分“查看参数”和“执行触发”。
+5. 具体工具调用与示例 payload 不放在主文件，按需进入对应 `reference/`。
+6. 如果问题已经转向流水线模型、模板或执行链路，切到对应模块 skill。
 
-### 1. 启动构建
+## 高信号规则
 
-```
-步骤 1：获取启动参数 → devops-prod-pipeline:v4_user_build_startInfo
-步骤 2：向用户展示构建参数，等待用户确认 ⚠️ 必须执行
-步骤 3：用户确认后启动构建 → devops-prod-pipeline:v4_user_build_start
-步骤 4：查看状态 → devops-prod-pipeline:v4_user_build_status
-```
+- 所有有副作用的构建启动操作，都必须先获得用户明确确认
+- 主 skill 只负责告诉模型“什么时候查、什么时候问、什么时候才能启动”
+- `projectId`、`pipelineId`、`buildId` 是最基础的操作上下文，缺一不可
+- 通过 URL 解析标识时，应先确认链接确实是流水线详情页
 
-**步骤 2 确认模板**：
-```
-即将启动构建，请确认以下参数：
-- 项目：{projectId}
-- 流水线：{pipelineId}
-- 构建参数：
-  {列出所有 body_param 的 key-value}
+## 关键陷阱
 
-是否确认启动？
-```
+- 把“获取启动参数”误当成“已经允许启动构建”
+- 没展示完整入参就直接触发构建
+- 把示例 payload 和记忆性细节塞进主文件，导致上下文冗余
 
-### 2. 查询构建历史
+## 延伸阅读
 
-使用 `devops-prod-pipeline:v4_user_build_list` 获取历史记录。
-
-## 常用流水线
-
-用户配置的常用流水线，参阅 [config.json](config.json)
-
-**URL 解析规则**：从 `https://xxxxxx/console/pipeline/{projectId}/{pipelineId}` 提取：
-- `projectId`：`/pipeline/` 后的第一段
-- `pipelineId`：以 `p-` 开头的最后一段
-
-## 工具参考
-
-**获取构建历史**：参阅 [reference/build-list.md](reference/build-list.md)
-**获取启动参数**：参阅 [reference/build-startinfo.md](reference/build-startinfo.md)
-**查看构建状态**：参阅 [reference/build-status.md](reference/build-status.md)
-**启动构建**：参阅 [reference/build-start.md](reference/build-start.md)
-
-## 快速示例
-
-### 查询最近构建
-
-```json
-{
-  "path_param": { "projectId": "your-project" },
-  "query_param": { "pipelineId": "p-xxx", "page": 1, "pageSize": 10 }
-}
-```
-
-### 启动一次构建
-
-```json
-{
-  "path_param": { "projectId": "your-project" },
-  "query_param": { "pipelineId": "p-xxx" },
-  "body_param": { "branch": "master" }
-}
-```
-
-## 构建状态枚举
-
-| 状态 | 说明 |
-|------|------|
-| SUCCEED | 成功 |
-| FAILED | 失败 |
-| CANCELED | 已取消 |
-| RUNNING | 运行中 |
-| QUEUE | 排队中 |
-| STAGE_SUCCESS | 阶段成功 |
+- 获取构建历史：`reference/build-list.md`
+- 获取启动参数：`reference/build-startinfo.md`
+- 查看构建状态：`reference/build-status.md`
+- 启动构建：`reference/build-start.md`
+- 如果你在改流水线定义：再看 `process-module-architecture`

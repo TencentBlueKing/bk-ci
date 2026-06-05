@@ -61,6 +61,7 @@ import com.tencent.devops.store.common.service.StoreI18nMessageService
 import com.tencent.devops.store.common.service.StoreLogoService
 import com.tencent.devops.store.common.service.StoreWebsocketService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.common.utils.PublicComponentCacheManager
 import com.tencent.devops.store.common.utils.StoreFileAnalysisUtil
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
@@ -160,7 +161,7 @@ class OpAtomServiceImpl @Autowired constructor(
             category = category,
             classifyId = classifyId,
             atomStatus = atomStatus,
-            sortType = sortType?.sortType,
+            sortType = sortType,
             desc = desc,
             page = page,
             pageSize = pageSize
@@ -362,6 +363,8 @@ class OpAtomServiceImpl @Autowired constructor(
         } else {
             redisOperation.removeSetMember(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
         }
+        // 清除公共组件集合缓存，立即生效
+        PublicComponentCacheManager.invalidateCache(StoreTypeEnum.ATOM.name)
         // 通过websocket推送状态变更消息,推送所有有该插件权限的用户
         storeWebsocketService.sendWebsocketMessageByAtomCodeAndAtomId(atomCode, atomId)
         return Result(true)
@@ -573,6 +576,8 @@ class OpAtomServiceImpl @Autowired constructor(
                 val context = DSL.using(t)
                 atomDao.updateAtomByCode(context, userId, atomCode, AtomFeatureUpdateRequest(defaultFlag = true))
                 redisOperation.delete(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name)) // 直接删除重建
+                // 清除公共组件集合缓存，立即生效
+                PublicComponentCacheManager.invalidateCache(StoreTypeEnum.ATOM.name)
             }
             true
         } catch (e: Exception) {

@@ -16,6 +16,7 @@ import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.async.AsyncTCloudCfs
 import com.tencent.devops.remotedev.pojo.async.AsyncTGitAclIp
 import com.tencent.devops.remotedev.pojo.async.AsyncTGitAclUser
+import com.tencent.devops.remotedev.pojo.async.AsyncUpdateHostMonitor
 import com.tencent.devops.remotedev.pojo.async.AsyncUserAuthCheck
 import com.tencent.devops.remotedev.service.UserInfoCertService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
@@ -24,6 +25,7 @@ import com.tencent.devops.remotedev.service.job.RemoteDevJobService
 import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.NotificationCenterService
+import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
@@ -40,6 +42,7 @@ class AsyncExecuteListener @Autowired constructor(
     private val notifyControl: NotifyControl,
     private val userInfoCertService: UserInfoCertService,
     private val notificationCenterService: NotificationCenterService,
+    private val workspaceCommon: WorkspaceCommon,
     private val streamBridge: StreamBridge
 ) {
     class RetryEventException(val delayMills: Int) : RuntimeException()
@@ -124,6 +127,11 @@ class AsyncExecuteListener @Autowired constructor(
             AsyncExecuteEventType.ASYNC_USER_AUTH_CHECK -> {
                 val data = objectMapper.readValue<AsyncUserAuthCheck>(event.eventStr)
                 userInfoCertService.doAsyncAuthCheck(data)
+            }
+
+            AsyncExecuteEventType.ASYNC_UPDATE_HOST_MONITOR -> {
+                val data = objectMapper.readValue<AsyncUpdateHostMonitor>(event.eventStr)
+                workspaceCommon.updateHostMonitor(data.workspaceName, data.props, data.type)
             }
         }
     }
