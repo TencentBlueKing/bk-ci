@@ -10,6 +10,6 @@ class OpCreateResourceImpl @Autowired constructor(
     private val agentService: TencentAgentService
 ): OpCreateResource {
     override fun deleteNodes(userId: String, workspaceName: String) {
-        agentService.deleteCreateNode(userId, "", workspaceName)
+        agentService.deleteCreateNode(userId, null, workspaceName)
     }
 }
