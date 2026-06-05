@@ -41,6 +41,15 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoServic
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.CodeGitlabRepository
+import com.tencent.devops.repository.pojo.CodeP4Repository
+import com.tencent.devops.repository.pojo.CodeSvnRepository
+import com.tencent.devops.repository.pojo.CodeTGitRepository
+import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.ScmGitRepository
+import com.tencent.devops.repository.pojo.ScmSvnRepository
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -474,7 +483,9 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
                         ref = ref
                     )
                 )
-                PipelineDependentResourceType.BUILD_ENV -> resolveEnvironmentRef(
+                PipelineDependentResourceType.BUILD_ENV,
+                PipelineDependentResourceType.DEPLOY_ENV
+                    -> resolveEnvironmentRef(
                     userId = userId,
                     ref = ref
                 )?.let { resources.add(it) }
@@ -520,8 +531,8 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
                 resourceName = repository.aliasName
             )
         )
-        val credentialId = repository.credentialId.takeIf { it.isNotBlank() }
-        if (credentialId != null) {
+        val credentialId = repository.getCredentialId()
+        if (!credentialId.isNullOrBlank()) {
             resolveCredentialRef(
                 userId = userId,
                 ref = PipelineDependentResourceRef(
@@ -533,6 +544,19 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
             )?.let { resources.add(it) }
         }
         return resources
+    }
+
+    private fun Repository.getCredentialId(): String? {
+        return when {
+            this is CodeGitRepository && this.authType != RepoAuthType.OAUTH -> credentialId
+            this is CodeTGitRepository && this.authType != RepoAuthType.OAUTH -> credentialId
+            this is CodeGitlabRepository && this.authType != RepoAuthType.OAUTH -> credentialId
+            this is ScmGitRepository && this.authType != RepoAuthType.OAUTH -> credentialId
+            this is CodeSvnRepository -> credentialId
+            this is ScmSvnRepository -> credentialId
+            this is CodeP4Repository -> credentialId
+            else -> null
+        }
     }
 
     private fun resolveEnvironmentRef(userId: String, ref: PipelineDependentResourceRef): PipelineDependentResource? {
