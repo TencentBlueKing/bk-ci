@@ -122,7 +122,10 @@
                     :class="['form-list-label-actions', 'field-config-icon', { 'is-disabled': disabled }]"
                     @click="!disabled && handleShowFieldConfigDialog()"
                 >
-                    <Logo name="config" size="16" />
+                    <Logo
+                        name="config"
+                        size="16"
+                    />
                 </span>
             </label>
             <div class="bk-form-content">

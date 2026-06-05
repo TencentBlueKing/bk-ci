@@ -426,6 +426,7 @@
                     return t('editPage.requiredTips', ['options'])
                 }
                 const keySet = new Set()
+                const valueSet = new Set()
                 for (const option of options) {
                     if (!option.key) {
                         return t('editPage.requiredTips', ['value'])
@@ -434,6 +435,12 @@
                         return t('editPage.noRepeatTips', ['value'])
                     }
                     keySet.add(option.key)
+                    if (option.value) {
+                        if (valueSet.has(option.value)) {
+                            return t('editPage.noRepeatTips', ['name'])
+                        }
+                        valueSet.add(option.value)
+                    }
                 }
                 return ''
             }
