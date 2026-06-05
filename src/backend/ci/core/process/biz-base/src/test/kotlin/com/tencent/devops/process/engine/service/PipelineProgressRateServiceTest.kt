@@ -21,6 +21,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.Runs
 import io.mockk.slot
+import java.time.LocalDateTime
 import java.util.Locale
 import org.jooq.DSLContext
 import org.junit.jupiter.api.Assertions
@@ -144,6 +145,57 @@ class PipelineProgressRateServiceTest {
         Assertions.assertEquals("编译阶段时间线", result.taskProgressList?.first()?.progressDetail?.timeline?.title)
     }
 
+    @Test
+    fun calculateStageProgressRateReturnsCompletedTaskWithProgressDetailWhenNoRunningTask() {
+        val progressDetail = BuildTaskProgressDetail(
+            progress = BuildTaskProgressSummary(value = 0.75)
+        )
+        every { pipelineRuntimeService.getBuildInfo(PROJECT_ID, BUILD_ID) } returns buildInfo()
+        every {
+            buildRecordTaskDao.getLatestNormalRecords(
+                dslContext = dslContext,
+                projectId = PROJECT_ID,
+                buildId = BUILD_ID,
+                executeCount = 1,
+                matrixContainerIds = emptyList(),
+                stageId = STAGE_ID
+            )
+        } returns listOf(
+            buildRecordTask(
+                taskId = TASK_ID,
+                containerId = "container-1",
+                status = BuildStatus.SUCCEED,
+                taskVar = mutableMapOf("progressRate" to 0.75, "progressDetail" to progressDetail),
+                endTime = LocalDateTime.of(2026, 4, 1, 10, 30)
+            )
+        )
+        every { pipelineTaskService.getAllBuildTask(PROJECT_ID, BUILD_ID) } returns listOf(
+            buildTask().copy(status = BuildStatus.SUCCEED)
+        )
+        every {
+            buildRecordService.getContainerOrderInStage(
+                projectId = PROJECT_ID,
+                pipelineId = PIPELINE_ID,
+                buildId = BUILD_ID,
+                executeCount = 1,
+                stageId = STAGE_ID,
+                containerId = "container-1"
+            )
+        } returns 0
+
+        val result = service.calculateStageProgressRate(
+            projectId = PROJECT_ID,
+            pipelineId = PIPELINE_ID,
+            buildId = BUILD_ID,
+            stageId = STAGE_ID
+        )
+
+        Assertions.assertEquals(1.0, result.stageProgressRete)
+        Assertions.assertEquals(1, result.taskProgressList?.size)
+        Assertions.assertEquals(0.75, result.taskProgressList?.first()?.taskProgressRete)
+        Assertions.assertEquals(0.75, result.taskProgressList?.first()?.progressDetail?.progress?.value)
+    }
+
     private fun buildInfo() = BuildInfo(
         projectId = PROJECT_ID,
         pipelineId = PIPELINE_ID,
@@ -178,7 +230,8 @@ class PipelineProgressRateServiceTest {
         taskId: String,
         containerId: String,
         status: BuildStatus,
-        taskVar: MutableMap<String, Any>
+        taskVar: MutableMap<String, Any>,
+        endTime: LocalDateTime? = null
     ) = BuildRecordTask(
         buildId = BUILD_ID,
         projectId = PROJECT_ID,
@@ -193,6 +246,7 @@ class PipelineProgressRateServiceTest {
         classType = "linuxScript",
         atomCode = "script",
         status = status.name,
+        endTime = endTime,
         timestamps = emptyMap<BuildTimestampType, BuildRecordTimeStamp>()
     )
 
