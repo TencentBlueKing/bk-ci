@@ -231,7 +231,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                     if (targetCredentialId.isNullOrBlank()) {
                         throw ErrorCodeException(
                             errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TARGET_RESOURCE_EMPTY,
-                            params = arrayOf(resource.resourceName, resource.resourceType.name, copyStrategy.name)
+                            params = arrayOf(resource.resourceType.name, resource.resourceName, copyStrategy.name)
                         )
                     }
                     val targetResource = pipelineCopyResourceGetService.getCredentialBasicInfo(
@@ -259,14 +259,18 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                     throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_NOT_SUPPORT,
                         params = arrayOf(
+                            resource.resourceType.name,
                             resource.resourceName,
-                            copyStrategy.name,
-                            resource.resourceType.name
+                            copyStrategy.name
                         )
                     )
                 }
             }
         } catch (ignored: Exception) {
+            logger.error(
+                "execute credential failed|$projectId|$taskId|${resource.resourceId}|${resource.resourceName}",
+                ignored
+            )
             status = PipelineCopyTaskResourceStatus.FAILED
             errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignored)
         }
@@ -356,14 +360,18 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                     throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_NOT_SUPPORT,
                         params = arrayOf(
+                            resource.resourceType.name,
                             resource.resourceName,
-                            copyStrategy.name,
-                            resource.resourceType.name
+                            copyStrategy.name
                         )
                     )
                 }
             }
         } catch (ignored: Exception) {
+            logger.error(
+                "execute repository failed|$projectId|$taskId|${resource.resourceId}|${resource.resourceName}",
+                ignored
+            )
             status = PipelineCopyTaskResourceStatus.FAILED
             errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignored)
         }
@@ -455,6 +463,10 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 else -> throwStrategyNotSupport(resource = resource, copyStrategy = copyStrategy)
             }
         } catch (ignored: Exception) {
+            logger.error(
+                "execute env failed|$projectId|$taskId|${resource.resourceId}|${resource.resourceName}",
+                ignored
+            )
             status = PipelineCopyTaskResourceStatus.FAILED
             errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignored)
         }
@@ -533,6 +545,10 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 else -> throwStrategyNotSupport(resource = resource, copyStrategy = copyStrategy)
             }
         } catch (ignored: Exception) {
+            logger.error(
+                "execute node failed|$projectId|$taskId|${resource.resourceId}|${resource.resourceName}",
+                ignored
+            )
             status = PipelineCopyTaskResourceStatus.FAILED
             errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignored)
         }
@@ -603,6 +619,10 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 else -> throwStrategyNotSupport(resource = resource, copyStrategy = copyStrategy)
             }
         } catch (ignored: Exception) {
+            logger.error(
+                "execute pipeline group failed|$projectId|$taskId|${resource.resourceId}|${resource.resourceName}",
+                ignored
+            )
             status = PipelineCopyTaskResourceStatus.FAILED
             errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignored)
         }
@@ -680,6 +700,10 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 else -> throwStrategyNotSupport(resource = resource, copyStrategy = copyStrategy)
             }
         } catch (ignored: Exception) {
+            logger.error(
+                "execute pipeline label failed|$projectId|$taskId|${resource.resourceId}|${resource.resourceName}",
+                ignored
+            )
             status = PipelineCopyTaskResourceStatus.FAILED
             errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignored)
         }
@@ -724,31 +748,6 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 logger.error("unknown pipeline template copy strategy: ${resource.copyStrategy}")
             }
         }
-    }
-
-    private fun addResourceUpdate(
-        updates: MutableList<PipelineCopyTaskResourceUpdate>,
-        projectId: String,
-        taskId: String,
-        resource: PipelineCopyTaskResource,
-        status: PipelineCopyTaskResourceStatus,
-        targetResourceId: String?,
-        targetResourceName: String?,
-        errorMessage: String?
-    ) {
-        updates.add(
-            PipelineCopyTaskResourceUpdate(
-                projectId = projectId,
-                taskId = taskId,
-                resourceType = resource.resourceType,
-                resourceId = resource.resourceId,
-                targetResourceType = resource.resourceType,
-                status = status,
-                targetResourceId = targetResourceId,
-                targetResourceName = targetResourceName,
-                errorMessage = errorMessage
-            )
-        )
     }
 
     private fun executePipelines(
@@ -870,6 +869,10 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 else -> throwStrategyNotSupport(resource = resource, copyStrategy = copyStrategy)
             }
         } catch (ignored: Exception) {
+            logger.error(
+                "execute pipeline failed|$projectId|$taskId|${resource.resourceId}|${resource.resourceName}",
+                ignored
+            )
             status = PipelineCopyTaskResourceStatus.FAILED
             errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignored)
         }
@@ -946,7 +949,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         if (resource.targetResourceId.isNullOrBlank() || resource.targetResourceName.isNullOrBlank()) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TARGET_RESOURCE_EMPTY,
-                params = arrayOf(resource.resourceName, resource.resourceType.name, copyStrategy.name)
+                params = arrayOf(resource.resourceType.name, resource.resourceName, copyStrategy.name)
             )
         }
     }
@@ -1087,9 +1090,9 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
         throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_NOT_SUPPORT,
             params = arrayOf(
+                resource.resourceType.name,
                 resource.resourceName,
-                copyStrategy.name,
-                resource.resourceType.name
+                copyStrategy.name
             )
         )
     }

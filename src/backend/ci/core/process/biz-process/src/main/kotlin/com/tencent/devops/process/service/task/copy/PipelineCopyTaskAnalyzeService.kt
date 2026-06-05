@@ -84,15 +84,13 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                 )
                 finishAnalyze(
                     projectId = event.projectId,
-                    taskId = taskId,
-                    status = PipelineBatchTaskStatus.DRAFT
+                    taskId = taskId
                 )
             } catch (ignore: Exception) {
                 logger.error("analyze pipeline copy task failed|$projectId|$taskId", ignore)
                 finishAnalyze(
                     projectId = event.projectId,
-                    taskId = taskId,
-                    status = PipelineBatchTaskStatus.FAILED
+                    taskId = taskId
                 )
             }
         }
@@ -129,14 +127,13 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
 
     fun finishAnalyze(
         projectId: String,
-        taskId: String,
-        status: PipelineBatchTaskStatus
+        taskId: String
     ) {
         // 分析完成后,把状态再转换成草稿
         pipelineCopyTaskStateService.updateTaskStatusWithLock(
             projectId = projectId,
             taskId = taskId,
-            status = status
+            status = PipelineBatchTaskStatus.DRAFT
         )
     }
 
@@ -1179,7 +1176,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                 change = true
             )
             if (changeCount == 0L) {
-                logger.warn("pipeline batch task has |$projectId|$taskId")
+                logger.warn("pipeline batch task has no changed detail, no need to analyze|$projectId|$taskId")
                 return null
             }
             pipelineBatchTaskDao.updateStatus(

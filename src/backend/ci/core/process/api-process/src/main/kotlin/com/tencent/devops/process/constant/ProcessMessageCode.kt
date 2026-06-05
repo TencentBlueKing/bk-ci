@@ -475,11 +475,11 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_EMPTY = "2101376" // 流水线复制任务{0}以下资源还没有处理：{1}
     // 目标项目{0}不存在资源：{1}
     const val ERROR_PIPELINE_COPY_TARGET_RESOURCE_NOT_EXISTS = "2101377"
-    // 资源{1}({0})使用复制策略{2}时目标资源不能为空
+    // 资源类型{0}，资源名称:{1},使用复制策略{2}时，目标资源不能为空
     const val ERROR_PIPELINE_COPY_TARGET_RESOURCE_EMPTY = "2101378"
     // 目标项目{0}已存在资源：{1}
     const val ERROR_PIPELINE_COPY_TARGET_RESOURCE_EXISTS = "2101379"
-    // 资源{0}的复制策略{1}不支持资源类型{2}
+    // 资源类型{0},资源名称{1}，不支持复制策略{2}
     const val ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_NOT_SUPPORT = "2101380"
     // 资源类型{0}，资源名称{1}的复制策略不能为空
     const val ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_CAN_NOT_EMPTY = "2101381"

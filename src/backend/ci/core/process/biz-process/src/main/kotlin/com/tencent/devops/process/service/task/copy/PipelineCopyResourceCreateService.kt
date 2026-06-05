@@ -395,12 +395,15 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             userId = userId,
             projectId = sourceProjectId,
             pipelineId = sourcePipelineId,
+            targetProjectId = targetProjectId,
+            targetPipelineId = targetPipelineId,
+            targetPipelineName = targetPipelineName,
             replaceResourceMap = buildReplaceResourceMap(dependentResources)
         )
         pipelineInfoFacadeService.createPipeline(
             userId = userId,
             projectId = targetProjectId,
-            model = modelAndSetting.model.copy(name = targetPipelineName),
+            model = modelAndSetting.model,
             channelCode = ChannelCode.BS,
             setting = modelAndSetting.setting,
             fixPipelineId = targetPipelineId

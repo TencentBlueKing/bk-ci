@@ -112,18 +112,22 @@ class PipelineCopyTaskSaveService @Autowired constructor(
         request: PipelineCopyTaskSaveResourceRequest
     ) {
         val task = tryStartSave(projectId = projectId, taskId = taskId)
-        val param = parseParam(task) ?: throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
-            params = arrayOf(task.taskId)
-        )
-        checkProjectManager(userId = userId, projectId = projectId)
-        checkProjectManager(userId = userId, projectId = param.targetProjectId)
-        saveResources(
-            projectId = projectId,
-            taskId = taskId,
-            request = request
-        )
-        finishSave(projectId = projectId, taskId = taskId)
+        try {
+            val param = parseParam(task) ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
+                params = arrayOf(task.taskId)
+            )
+            checkProjectManager(userId = userId, projectId = projectId)
+            checkProjectManager(userId = userId, projectId = param.targetProjectId)
+            saveResources(
+                projectId = projectId,
+                taskId = taskId,
+                request = request
+            )
+            finishSave(projectId = projectId, taskId = taskId)
+        } finally {
+            finishSave(projectId = projectId, taskId = taskId)
+        }
     }
 
     private fun saveResources(
@@ -153,9 +157,9 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_NOT_SUPPORT,
                     params = arrayOf(
+                        resource.resourceType.name,
                         resource.resourceName,
-                        copyStrategy.name,
-                        resource.resourceType.name
+                        copyStrategy.name
                     )
                 )
             }
@@ -165,7 +169,7 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                     if (targetResourceId.isNullOrBlank()) {
                         throw ErrorCodeException(
                             errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TARGET_RESOURCE_EMPTY,
-                            params = arrayOf(resource.resourceName, resource.resourceType.name, copyStrategy.name)
+                            params = arrayOf(resource.resourceType.name, resource.resourceName, copyStrategy.name)
                         )
                     }
                     PipelineCopyTaskResourceUpdate(
@@ -175,6 +179,7 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                         resourceId = resource.resourceId,
                         targetResourceType = resource.resourceType,
                         targetResourceId = targetResourceId,
+                        targetResourceName = targetResourceId,
                         status = PipelineCopyTaskResourceStatus.PROCESSED,
                         copyStrategy = copyStrategy,
                         copyAction = copyStrategy.copyAction
@@ -182,15 +187,16 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                 }
 
                 PipelineCopyStrategy.PIPELINE_AUTO_RESOLVE_CONFLICT -> {
-                    var targetResourceId: String? = null
-                    if (storeResource.targetIdExists) {
-                        targetResourceId = pipelineIdGenerator.getNextId()
+                    val targetResourceId = if (storeResource.targetIdExists) {
+                        pipelineIdGenerator.getNextId()
+                    } else {
+                        resource.resourceId
                     }
                     val targetResourceName = if (storeResource.targetNameExists) {
                         if (resource.targetResourceName.isNullOrBlank()) {
                             throw ErrorCodeException(
                                 errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TARGET_RESOURCE_EMPTY,
-                                params = arrayOf(resource.resourceName, resource.resourceType.name, copyStrategy.name)
+                                params = arrayOf(resource.resourceType.name, resource.resourceName, copyStrategy.name)
                             )
                         } else {
                             resource.targetResourceName

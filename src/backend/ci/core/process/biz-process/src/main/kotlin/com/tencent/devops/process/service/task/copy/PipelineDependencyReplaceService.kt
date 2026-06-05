@@ -57,6 +57,9 @@ class PipelineDependencyReplaceService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        targetProjectId: String,
+        targetPipelineId: String,
+        targetPipelineName: String,
         replaceResourceMap: Map<String, PipelineDependentResource>
     ): PipelineModelAndSetting {
         pipelineRepositoryService.getPipelineInfo(projectId = projectId, pipelineId = pipelineId)
@@ -86,6 +89,13 @@ class PipelineDependencyReplaceService @Autowired constructor(
                 stages = resource.model.stages,
                 context = context
             )
+        ).copy(
+            name = targetPipelineName
+        )
+        val replaceSetting = setting.copy(
+            projectId = targetProjectId,
+            pipelineId = targetPipelineId,
+            pipelineName = targetPipelineName
         )
         if (context.missingResources.isNotEmpty()) {
             throw ErrorCodeException(
@@ -93,7 +103,7 @@ class PipelineDependencyReplaceService @Autowired constructor(
                 params = arrayOf(formatMissingResources(context.missingResources))
             )
         }
-        return PipelineModelAndSetting(model = replacedModel, setting = setting)
+        return PipelineModelAndSetting(model = replacedModel, setting = replaceSetting)
     }
 
     private fun replaceStages(
