@@ -122,6 +122,7 @@ class PipelineCopyTaskSaveService @Autowired constructor(
             saveResources(
                 projectId = projectId,
                 taskId = taskId,
+                targetProjectId = param.targetProjectId,
                 request = request
             )
             finishSave(projectId = projectId, taskId = taskId)
@@ -133,6 +134,7 @@ class PipelineCopyTaskSaveService @Autowired constructor(
     private fun saveResources(
         projectId: String,
         taskId: String,
+        targetProjectId: String,
         request: PipelineCopyTaskSaveResourceRequest
     ) {
         val storedResources = pipelineCopyTaskResourceDao.list(
@@ -220,6 +222,31 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                     )
                 }
 
+                PipelineCopyStrategy.REPOSITORY_REUSE_SAME_NAME_PROTOCOL,
+                PipelineCopyStrategy.BUILD_NODE_REUSE_SAME_NAME,
+                PipelineCopyStrategy.BUILD_ENV_REUSE_SAME_NAME,
+                PipelineCopyStrategy.DEPLOY_NODE_REUSE_SAME_NAME,
+                PipelineCopyStrategy.DEPLOY_ENV_REUSE_SAME_NAME,
+                PipelineCopyStrategy.CREDENTIAL_REUSE_SAME_NAME,
+                PipelineCopyStrategy.PIPELINE_TEMPLATE_REUSE_SAME_NAME -> {
+                    if (!storeResource.targetIdExists) {
+                        throw ErrorCodeException(
+                            errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_REUSE_RESOURCE_NOT_EXISTS,
+                            params = arrayOf(resource.resourceType.name, resource.resourceName)
+                        )
+                    }
+                    PipelineCopyTaskResourceUpdate(
+                        projectId = projectId,
+                        taskId = taskId,
+                        resourceType = resource.resourceType,
+                        resourceId = resource.resourceId,
+                        targetResourceType = resource.resourceType,
+                        status = PipelineCopyTaskResourceStatus.PROCESSED,
+                        copyStrategy = copyStrategy,
+                        copyAction = copyStrategy.copyAction,
+                        highRisk = copyStrategy.highRisk
+                    )
+                }
                 else -> {
                     PipelineCopyTaskResourceUpdate(
                         projectId = projectId,

@@ -3,12 +3,12 @@ package com.tencent.devops.process.pojo.pipeline.task
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(description = "流水线冲突复制资源属性")
-data class PipelineConflictCopyResourceProp(
+data class PipelineInfoCopyResourceProp(
     val idConflict: PipelineConflictInfo? = null,
     val nameConflict: PipelineConflictInfo? = null
 ) : PipelineCopyResourceProp {
     companion object {
-        const val classType = "pipelineConflict"
+        const val classType = "pipelineInfo"
     }
 }
 

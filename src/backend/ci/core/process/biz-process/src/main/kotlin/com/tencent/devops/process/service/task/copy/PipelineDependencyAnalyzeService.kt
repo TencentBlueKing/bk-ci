@@ -10,6 +10,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
@@ -17,6 +18,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
@@ -233,6 +235,7 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
             } else {
                 refs.addAll(collectBuildContainerRefs(projectId = projectId, stage = stage, variables = variables))
                 refs.addAll(collectCheckoutElementRefs(projectId = projectId, stage = stage, variables = variables))
+                refs.addAll(collectMarketElementRefs(projectId = projectId, stage = stage, variables = variables))
             }
         }
         return refs
@@ -246,6 +249,7 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
     ): Set<PipelineDependentResourceRef> {
         val refs = mutableSetOf<PipelineDependentResourceRef>()
         stage.containers.filterIsInstance<TriggerContainer>().forEach { container ->
+            refs.addAll(collectParamRefs(projectId = projectId, container = container))
             container.elements.filterIsInstance<WebHookTriggerElement>().forEach e@{ element ->
                 if (!element.elementEnabled()) {
                     return@e
@@ -262,6 +266,24 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
             }
         }
         return refs
+    }
+
+    private fun collectParamRefs(
+        projectId: String,
+        container: TriggerContainer
+    ): Set<PipelineDependentResourceRef> {
+        return container.params.mapNotNull { param ->
+            if (param.type != BuildFormPropertyType.SVN_TAG && param.type != BuildFormPropertyType.GIT_REF) {
+                return@mapNotNull null
+            }
+            val repoHashId = param.repoHashId?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+            PipelineDependentResourceRef(
+                projectId = projectId,
+                resourceType = PipelineDependentResourceType.REPOSITORY,
+                refType = PipelineDependentResourceRefType.ID,
+                refValue = repoHashId
+            )
+        }.toSet()
     }
 
     private fun collectBuildContainerRefs(
@@ -384,6 +406,140 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
         return RepositoryConfigUtils.buildConfig(repositoryId, repositoryType)
     }
 
+    private fun collectMarketElementRefs(
+        projectId: String,
+        stage: Stage,
+        variables: Map<String, String>
+    ): Set<PipelineDependentResourceRef> {
+        val refs = mutableSetOf<PipelineDependentResourceRef>()
+        stage.containers.forEach c@{ container ->
+            if (container is TriggerContainer || !container.containerEnabled()) {
+                return@c
+            }
+            container.elements.forEach e@{ element ->
+                if (!element.elementEnabled()) {
+                    return@e
+                }
+                val input = when (element) {
+                    is MarketBuildAtomElement -> {
+                        element.data["input"] as? Map<*, *> ?: return@e
+                    }
+
+                    is MarketBuildLessAtomElement -> {
+                        element.data["input"] as? Map<*, *> ?: return@e
+                    }
+
+                    else -> return@c
+                }
+                try {
+                    when (element.getAtomCode()) {
+                        JOB_SCRIPT_EXECUTION_ATOM_CODE -> getJobScriptExecutionResourceRef(
+                            projectId = projectId,
+                            input = input,
+                            variables = variables
+                        )
+                        JOB_PUSH_FILE_ATOM_CODE -> getJobPushFileResourceRef(
+                            projectId = projectId,
+                            input = input,
+                            variables = variables
+                        )
+                        else -> null
+                    }?.let { refs.add(it) }
+                } catch (ignored: Exception) {
+                    logger.warn(
+                        "analysis job element dependent resource failed|$projectId|${element.id}|${element.getAtomCode()}",
+                        ignored
+                    )
+                }
+            }
+        }
+        return refs
+    }
+
+    private fun getJobScriptExecutionResourceRef(
+        projectId: String,
+        input: Map<*, *>,
+        variables: Map<String, String>
+    ): PipelineDependentResourceRef? {
+        val (resourceType, refType, valueField) = when (input["envType"]?.toString()) {
+            "ENV" -> Triple(
+                PipelineDependentResourceType.DEPLOY_ENV,
+                PipelineDependentResourceRefType.ID,
+                "envId"
+            )
+
+            "ENV_NAME" -> Triple(
+                PipelineDependentResourceType.DEPLOY_ENV,
+                PipelineDependentResourceRefType.NAME,
+                "envName"
+            )
+
+            "NODE" -> Triple(
+                PipelineDependentResourceType.DEPLOY_NODE,
+                PipelineDependentResourceRefType.ID,
+                "nodeId"
+            )
+
+            "NODE_NAME" -> Triple(
+                PipelineDependentResourceType.DEPLOY_NODE,
+                PipelineDependentResourceRefType.NAME,
+                "nodeName"
+            )
+
+            else -> return null
+        }
+        val refValue = EnvUtils.parseEnv(input[valueField]?.toString(), variables).takeIf { it.isNotBlank() }
+            ?: return null
+        return PipelineDependentResourceRef(
+            projectId = projectId,
+            resourceType = resourceType,
+            refType = refType,
+            refValue = refValue
+        )
+    }
+
+    private fun getJobPushFileResourceRef(
+        projectId: String,
+        input: Map<*, *>,
+        variables: Map<String, String>
+    ): PipelineDependentResourceRef? {
+        val (resourceType, refType, valueField) = when (input["targetEnvType"]?.toString()) {
+            "ENV" -> Triple(
+                PipelineDependentResourceType.DEPLOY_ENV,
+                PipelineDependentResourceRefType.ID,
+                "targetEnvId"
+            )
+
+            "ENV_NAME" -> Triple(
+                PipelineDependentResourceType.DEPLOY_ENV,
+                PipelineDependentResourceRefType.NAME,
+                "targetEnvName"
+            )
+
+            "NODE" -> Triple(
+                PipelineDependentResourceType.DEPLOY_NODE,
+                PipelineDependentResourceRefType.ID,
+                "targetNodeId"
+            )
+
+            "NODE_NAME" -> Triple(
+                PipelineDependentResourceType.DEPLOY_NODE,
+                PipelineDependentResourceRefType.NAME,
+                "targetNodeName"
+            )
+
+            else -> return null
+        }
+        val refValue = EnvUtils.parseEnv(input[valueField]?.toString(), variables).takeIf { it.isNotBlank() }
+            ?: return null
+        return PipelineDependentResourceRef(
+            projectId = projectId,
+            resourceType = resourceType,
+            refType = refType,
+            refValue = refValue
+        )
+    }
+
     private fun RepositoryConfig.toResourceRef(projectId: String): PipelineDependentResourceRef? {
         val refValue = try {
             getRepositoryId()
@@ -477,27 +633,25 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
         val resources = mutableSetOf<PipelineDependentResource>()
         refs.forEach { ref ->
             when (ref.resourceType) {
-                PipelineDependentResourceType.REPOSITORY -> resources.addAll(
-                    resolveRepositoryRef(
-                        userId = userId,
-                        ref = ref
-                    )
-                )
+                PipelineDependentResourceType.REPOSITORY -> {
+                    resources.addAll(resolveRepositoryRef(userId = userId, ref = ref))
+                }
+
                 PipelineDependentResourceType.BUILD_ENV,
-                PipelineDependentResourceType.DEPLOY_ENV
-                    -> resolveEnvironmentRef(
-                    userId = userId,
-                    ref = ref
-                )?.let { resources.add(it) }
+                PipelineDependentResourceType.DEPLOY_ENV -> {
+                    resolveEnvironmentRef(userId = userId, ref = ref)?.let { resources.add(it) }
+                }
 
                 PipelineDependentResourceType.BUILD_NODE,
-                PipelineDependentResourceType.DEPLOY_NODE -> resolveNodeRef(
-                    userId = userId, ref = ref
-                )?.let { resources.add(it) }
+                PipelineDependentResourceType.DEPLOY_NODE -> {
+                    resolveNodeRef(userId = userId, ref = ref)?.let { resources.add(it) }
+                }
 
-                PipelineDependentResourceType.CREDENTIAL -> resolveCredentialRef(
-                    userId = userId, ref = ref
-                )?.let { resources.add(it) }
+                PipelineDependentResourceType.CREDENTIAL -> {
+                    resolveCredentialRef(userId = userId, ref = ref)?.let { resources.add(it) }
+                }
+
+
 
                 else -> {
                     logger.warn("not support dependent resource type|${ref.projectId}|${ref.resourceType}")
@@ -667,5 +821,7 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
         private val REPO_CHECKOUT_ATOM_CODES = setOf(
             "gitCodeRepo", "PullFromGithub", "Gitlab", "atomtgit", "checkout", "svnCodeRepo"
         )
+        private const val JOB_PUSH_FILE_ATOM_CODE = "JobPushFile"
+        private const val JOB_SCRIPT_EXECUTION_ATOM_CODE = "JobScriptExecutionA"
     }
 }

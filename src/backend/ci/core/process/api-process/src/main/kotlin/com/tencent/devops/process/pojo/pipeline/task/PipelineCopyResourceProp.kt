@@ -12,12 +12,12 @@ import io.swagger.v3.oas.annotations.media.Schema
         name = RepositoryCopyResourceProp.classType
     ),
     JsonSubTypes.Type(
-        value = PipelineConflictCopyResourceProp::class,
-        name = PipelineConflictCopyResourceProp.classType
+        value = PipelineInfoCopyResourceProp::class,
+        name = PipelineInfoCopyResourceProp.classType
     ),
     JsonSubTypes.Type(
-        value = PipelineLabelGroupCopyResourceProp::class,
-        name = PipelineLabelGroupCopyResourceProp.classType
+        value = PipelineLabelCopyResourceProp::class,
+        name = PipelineLabelCopyResourceProp.classType
     ),
     JsonSubTypes.Type(
         value = PipelineViewCopyResourceProp::class,

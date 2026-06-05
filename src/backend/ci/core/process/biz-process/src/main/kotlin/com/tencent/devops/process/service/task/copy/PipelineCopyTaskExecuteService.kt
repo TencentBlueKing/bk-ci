@@ -23,7 +23,7 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSummary
-import com.tencent.devops.process.pojo.pipeline.task.PipelineLabelGroupCopyResourceProp
+import com.tencent.devops.process.pojo.pipeline.task.PipelineLabelCopyResourceProp
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -675,7 +675,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
             val copyStrategy = validateCopyStrategy(resource)
             when (copyStrategy) {
                 PipelineCopyStrategy.LABEL_AUTO_REUSE_OR_CREATE -> {
-                    val labelGroupProp = resource.resourceProperties as? PipelineLabelGroupCopyResourceProp
+                    val labelGroupProp = resource.resourceProperties as? PipelineLabelCopyResourceProp
                         ?: throw ErrorCodeException(
                             errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS,
                             params = arrayOf(projectId, resource.resourceId)

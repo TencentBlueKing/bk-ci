@@ -32,12 +32,12 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskAnalyzeEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetail
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailUpdate
-import com.tencent.devops.process.pojo.pipeline.task.PipelineConflictCopyResourceProp
+import com.tencent.devops.process.pojo.pipeline.task.PipelineInfoCopyResourceProp
 import com.tencent.devops.process.pojo.pipeline.task.PipelineConflictInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceRel
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
-import com.tencent.devops.process.pojo.pipeline.task.PipelineLabelGroupCopyResourceProp
+import com.tencent.devops.process.pojo.pipeline.task.PipelineLabelCopyResourceProp
 import com.tencent.devops.process.pojo.pipeline.task.PipelineViewCopyResourceProp
 import com.tencent.devops.process.pojo.pipeline.task.RepositoryCopyResourceProp
 import com.tencent.devops.repository.api.ServiceRepositoryResource
@@ -910,7 +910,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
     ): PipelineCopyTaskResource {
         var status = PipelineCopyTaskResourceStatus.UNPROCESSED
         var targetNameExists = false
-        var labelGroupProp: PipelineLabelGroupCopyResourceProp? = null
+        var labelGroupProp: PipelineLabelCopyResourceProp? = null
         var errorMessage: String? = null
         try {
             val sourceLabel = pipelineLabelDao.getById(
@@ -929,7 +929,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS,
                 params = arrayOf(projectId, sourceLabel.groupId.toString())
             )
-            labelGroupProp = PipelineLabelGroupCopyResourceProp(
+            labelGroupProp = PipelineLabelCopyResourceProp(
                 groupId = HashUtil.encodeLongId(sourceGroup.id),
                 groupName = sourceGroup.name
             )
@@ -1073,7 +1073,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
             pipelineName = resource.resourceName
         )
         return if (targetIdPipelineInfo != null || targetNamePipelineInfo != null) {
-            val pipelineConflictCopyResourceProp = PipelineConflictCopyResourceProp(
+            val pipelineInfoCopyResourceProp = PipelineInfoCopyResourceProp(
                 idConflict = targetIdPipelineInfo?.let {
                     PipelineConflictInfo(
                         pipelineId = it.pipelineId,
@@ -1095,7 +1095,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                 resourceType = resource.resourceType,
                 resourceId = resource.resourceId,
                 resourceName = resource.resourceName,
-                resourceProperties = pipelineConflictCopyResourceProp,
+                resourceProperties = pipelineInfoCopyResourceProp,
                 targetProjectId = targetProjectId,
                 targetResourceType = resource.resourceType,
                 status = PipelineCopyTaskResourceStatus.UNPROCESSED,
