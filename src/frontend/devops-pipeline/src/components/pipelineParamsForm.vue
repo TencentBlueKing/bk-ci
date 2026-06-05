@@ -32,6 +32,7 @@
                                     :show-select-all="true"
                                     :handle-change="handleParamUpdate"
                                     flex
+                                    :data-vv-as="param.label || param.id"
                                     v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })"
                                     :class="{
                                         'is-diff-param': highlightChangedParam && param.isChanged
@@ -71,6 +72,7 @@
                             :show-select-all="true"
                             :handle-change="handleParamUpdate"
                             flex
+                            :data-vv-as="param.label || param.id"
                             v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })"
                             :class="{
                                 'is-diff-param': highlightChangedParam && param.isChanged

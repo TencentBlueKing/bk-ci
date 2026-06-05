@@ -66,7 +66,7 @@ export function updateRecentVisitServiceList (path: string): void {
     try {
         const recentVisitService: string | null = localStorage.getItem('recentVisitService')
         const recentVisitServiceList = recentVisitService ? JSON.parse(recentVisitService) : []
-        const serviceReg: RegExp = /^\/(console\/)?([^\/]+)\/?/
+        const serviceReg: RegExp = new RegExp(`^${window.PUBLIC_URL_PREFIX}(/console/)?([^\/]+)\/?`)
         const serviceMatch: object | null = path.match(serviceReg)
         const serviceKey: string = serviceMatch ? serviceMatch[2] : ''
 
