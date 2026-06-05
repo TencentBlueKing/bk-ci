@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.Instant
+import java.util.Base64
 
 @Service
 class TencentNodeService @Autowired constructor(
@@ -117,12 +118,14 @@ class TencentNodeService @Autowired constructor(
             }
             // 生成临时1小时TOKEN用来导入鉴权
             val tokenData = "${projectId}:${imate.deviceId};$userId;${Instant.now().plusSeconds(3600).toEpochMilli()}"
-            val token = AESUtil.encrypt(batchInstallAesKey, tokenData)
+            val token = Base64.getUrlEncoder()
+                .encodeToString(AESUtil.encrypt(batchInstallAesKey, tokenData.toByteArray(charset("UTF-8"))))
             // TODO: 调用imate的接口安装并传递token
             logger.info("batchImportImateNodes token $token") // TODO: 仅测试，过后删
         }
         return true
     }
+
 
     companion object {
         private val logger = LoggerFactory.getLogger(TencentNodeService::class.java)

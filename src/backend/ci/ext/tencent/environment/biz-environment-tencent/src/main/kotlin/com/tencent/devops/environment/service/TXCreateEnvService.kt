@@ -7,7 +7,6 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
-import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.service.thirdpartyagent.DownloadAgentInstallService
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
@@ -19,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.util.Base64
 
 @Service
 @Primary
@@ -26,7 +26,6 @@ class TXCreateEnvService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
-    private val gatewayService: SlaveGatewayService,
     private val downloadAgentInstallService: DownloadAgentInstallService
 ) : CreateEnvService() {
 
@@ -84,7 +83,8 @@ class TXCreateEnvService @Autowired constructor(
 
     // 校验临时token "projectId;deviceId;userId;time"
     private fun verifyTempToken(token: String, deviceId: String, userId: String): Pair<String, String?> {
-        val decodeSub = AESUtil.decrypt(batchInstallAesKey, token).split(";")
+        val realToken = Base64.getUrlDecoder().decode(token)
+        val decodeSub = AESUtil.decrypt(batchInstallAesKey, realToken).toString(charset("UTF-8")).split(";")
         if (decodeSub.size < 4) {
             return Pair("", "token verify error")
         }
