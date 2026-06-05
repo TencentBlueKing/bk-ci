@@ -9,7 +9,10 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.dao.AgentDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
+import com.tencent.devops.environment.model.AgentProps
+import com.tencent.devops.environment.model.AgentPropsSource
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.imate.ImateListItem
@@ -30,6 +33,7 @@ class TencentNodeService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
+    private val agentDao: AgentDao,
     private val nodeService: NodeService,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val batchInstallAgentService: BatchInstallAgentService
@@ -44,8 +48,7 @@ class TencentNodeService @Autowired constructor(
         displayName: String
     ): Boolean {
         val record =
-            thirdPartyAgentDao.getAgentByWorkspaceName(dslContext, projectId, listOf(workspaceName)).firstOrNull()
-                ?: return false
+            agentDao.getAgentByWorkspaceIdGlobal(dslContext, workspaceName, projectId) ?: return false
         nodeService.updateDisplayName(userId, projectId, HashUtil.encodeLongId(record.nodeId), displayName)
         return true
     }
@@ -100,20 +103,15 @@ class TencentNodeService @Autowired constructor(
                 )
             }
             // 生成节点,如果用说明没导入成功，再次导入
-            if (thirdPartyAgentDao.getAgentByWorkspaceName(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    workspaceNames = listOf(imate.deviceId)
-                ).firstOrNull() == null
-            ) {
-                // 暂时只有linux，未来有了再加，他们的接口没字段
+            if (agentDao.getAgentByWorkspaceIdGlobal(dslContext, imate.deviceId, projectId) == null) {
                 batchInstallAgentService.genNewAgent(
                     projectId = projectId,
                     userId = userId,
                     os = data.os,
                     zoneName = data.zoneName,
                     agentType = AgentType.CREATE,
-                    createWorkspaceName = imate.deviceId
+                    createWorkspaceName = imate.deviceId,
+                    agentProps = AgentProps.emptyBySource(AgentPropsSource.DEVCOUD)
                 )
             }
             // 生成临时1小时TOKEN用来导入鉴权

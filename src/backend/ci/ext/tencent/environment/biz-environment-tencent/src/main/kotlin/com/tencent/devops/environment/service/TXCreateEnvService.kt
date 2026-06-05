@@ -1,15 +1,20 @@
 ﻿package com.tencent.devops.environment.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
-import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
+import com.tencent.devops.environment.dao.AgentDao
+import com.tencent.devops.environment.model.AgentProps
+import com.tencent.devops.environment.model.AgentPropsSource
 import com.tencent.devops.environment.service.thirdpartyagent.DownloadAgentInstallService
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
+import com.tencent.devops.support.api.service.ServiceIMateResource
 import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -25,7 +30,7 @@ import java.util.Base64
 class TXCreateEnvService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
-    private val thirdPartyAgentDao: ThirdPartyAgentDao,
+    private val agentDao: AgentDao,
     private val downloadAgentInstallService: DownloadAgentInstallService
 ) : CreateEnvService() {
 
@@ -43,9 +48,30 @@ class TXCreateEnvService @Autowired constructor(
     }
 
     override fun getWorkspaceDisplayName(userId: String, projectId: String, workspaceId: String?): String? {
-        return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(
-            userId, projectId, workspaceId ?: return null
-        ).data?.displayName
+        workspaceId ?: return null
+        // 优先根据来源判读，没有就兜底使用系统
+        val record =
+            agentDao.getAgentByWorkspaceIdGlobal(dslContext, workspaceId, projectId) ?: return null
+        val source = if (record.agentProps == null) {
+            null
+        } else {
+            try {
+                JsonUtil.to<AgentProps>(record.agentProps).source
+            } catch (_: Exception) {
+                null
+            }
+        }
+        if (source == AgentPropsSource.DEVCOUD || (source == null && record.os == OS.LINUX.name)) {
+            return client.get(ServiceIMateResource::class)
+                .queryUserRobots(userId).data?.filter { it.username == userId }
+                ?.firstOrNull { it.clientUuid == workspaceId }?.botName
+        }
+        if (source == AgentPropsSource.REMOTEDEV || (source == null && record.os == OS.WINDOWS.name)) {
+            return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(
+                userId, projectId, workspaceId
+            ).data?.displayName
+        }
+        return null
     }
 
     override fun genCreateNodeInstallScript(
@@ -61,11 +87,11 @@ class TXCreateEnvService @Autowired constructor(
                 defaultMessage = errMsg
             )
         }
-        val record = thirdPartyAgentDao.getAgentByWorkspaceName(
+        val record = agentDao.getAgentByWorkspaceIdGlobal(
             dslContext = dslContext,
-            projectId = projectId,
-            workspaceNames = listOf(deviceId)
-        ).firstOrNull()
+            workspaceId = deviceId,
+            projectId = projectId
+        )
         if (record == null) {
             logger.error("addCreateNode no found agent $projectId|$deviceId|$userId")
             throw ErrorCodeException(

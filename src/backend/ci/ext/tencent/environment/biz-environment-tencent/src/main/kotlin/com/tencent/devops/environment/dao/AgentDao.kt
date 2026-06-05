@@ -9,11 +9,16 @@ import org.springframework.stereotype.Repository
 class AgentDao {
     fun getAgentByWorkspaceIdGlobal(
         dslContext: DSLContext,
-        workspaceId: String
+        workspaceId: String,
+        projectId: String?
     ): TEnvironmentThirdpartyAgentRecord? {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
-            return dslContext.selectFrom(this)
-                .where(CREATE_WORKSPACE_NAME.eq(workspaceId.trim())).fetchAny()
+            val dsl = dslContext.selectFrom(this)
+                .where(CREATE_WORKSPACE_NAME.eq(workspaceId.trim()))
+            if (projectId != null) {
+                return dsl.and(PROJECT_ID.eq(projectId)).fetchAny()
+            }
+            return dsl.fetchAny()
         }
     }
 
