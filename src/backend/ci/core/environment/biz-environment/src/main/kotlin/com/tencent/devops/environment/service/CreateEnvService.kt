@@ -1,6 +1,5 @@
 ﻿package com.tencent.devops.environment.service
 
-import com.tencent.devops.common.api.pojo.OS
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.StreamingOutput
@@ -26,9 +25,7 @@ class CreateEnvService {
     fun genCreateNodeInstallScript(
         token: String,
         deviceId: String,
-        userId: String,
-        os: OS,
-        zoneName: String?
+        userId: String
     ): Response {
         return Response.ok(StreamingOutput { output ->
             output.write("".toByteArray())

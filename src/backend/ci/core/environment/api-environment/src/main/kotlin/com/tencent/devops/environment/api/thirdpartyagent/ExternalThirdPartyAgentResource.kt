@@ -150,10 +150,6 @@ interface ExternalThirdPartyAgentResource {
         @QueryParam("deviceId")
         deviceId: String,
         @QueryParam("userId")
-        userId: String,
-        @QueryParam("os")
-        os: OS,
-        @QueryParam("zoneName")
-        zoneName: String?
+        userId: String
     ): Response
 }

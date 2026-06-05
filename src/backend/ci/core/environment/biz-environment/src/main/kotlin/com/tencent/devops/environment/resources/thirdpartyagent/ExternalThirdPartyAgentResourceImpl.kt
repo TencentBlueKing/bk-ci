@@ -103,10 +103,8 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
     override fun genCreateNodeInstallScript(
         token: String,
         deviceId: String,
-        userId: String,
-        os: OS,
-        zoneName: String?
+        userId: String
     ): Response {
-        return createEnvService.genCreateNodeInstallScript(token, deviceId, userId, os, zoneName)
+        return createEnvService.genCreateNodeInstallScript(token, deviceId, userId)
     }
 }
