@@ -112,6 +112,11 @@ class TencentServiceArtifactoryResourceImpl @Autowired constructor(
         authorizedUserList: List<String>?
     ): Result<Url> {
         checkParam(projectId)
+        logger.info(
+            "[AUTH_TRACE][RPC.externalUrl received] projectId=$projectId, artifactoryType=$artifactoryType, " +
+                    "creatorId=$creatorId, userId=$userId, path=$path, ttl=$ttl, directed=$directed, " +
+                    "authorizedUserList=$authorizedUserList"
+        )
         return Result(
             bkRepoDownloadService.outerDownloadUrlByToken(
                 creatorId = creatorId,

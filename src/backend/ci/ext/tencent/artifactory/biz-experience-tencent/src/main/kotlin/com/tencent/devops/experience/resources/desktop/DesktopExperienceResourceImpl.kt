@@ -12,6 +12,7 @@ import com.tencent.devops.experience.pojo.DownloadUrl
 import com.tencent.devops.experience.pojo.ExperienceChangeLog
 import com.tencent.devops.experience.pojo.ExperienceList
 import com.tencent.devops.experience.service.ExperienceAppService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -107,6 +108,10 @@ class DesktopExperienceResourceImpl @Autowired constructor(
         organization: String?
     ): Result<DownloadUrl> {
         checkParam(userId, experienceHashId)
+        logger.info(
+            "[Desktop.downloadUrl] userId=$userId, experienceHashId=$experienceHashId, " +
+                    "organization=$organization, restrictToCurrentUser=true"
+        )
         val result = experienceAppService.downloadUrl(
             userId = userId,
             experienceHashId = experienceHashId,
@@ -132,6 +137,7 @@ class DesktopExperienceResourceImpl @Autowired constructor(
     }
 
     companion object {
+        private val logger = LoggerFactory.getLogger(DesktopExperienceResourceImpl::class.java)
         // 桌面端默认平台为WIN
         private const val DEFAULT_PLATFORM = 4
         private const val DEFAULT_APP_VERSION = "2.0.0"

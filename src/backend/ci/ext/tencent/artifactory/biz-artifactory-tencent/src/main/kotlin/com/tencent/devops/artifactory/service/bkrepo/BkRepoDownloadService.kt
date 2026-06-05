@@ -126,7 +126,8 @@ open class BkRepoDownloadService(
     ): Url {
         logger.info(
             "outerBkrepoDownloadUrl, creatorId: $creatorId, userId:$userId, projectId: $projectId, " +
-                    "artifactoryType: $artifactoryType, path: $path, ttl: $ttl"
+                    "artifactoryType: $artifactoryType, path: $path, ttl: $ttl, " +
+                    "authorizedUserList: $authorizedUserList"
         )
         val normalizedPath = getNormalizePath(path, artifactoryType, creatorId ?: userId, projectId)
         val url = bkRepoService.externalDownloadUrl(
