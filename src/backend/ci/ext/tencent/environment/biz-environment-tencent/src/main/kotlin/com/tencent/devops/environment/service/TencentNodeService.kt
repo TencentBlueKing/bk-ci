@@ -12,6 +12,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.AgentDao
+import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.model.AgentProps
 import com.tencent.devops.environment.model.AgentPropsSource
@@ -40,7 +41,8 @@ class TencentNodeService @Autowired constructor(
     private val agentDao: AgentDao,
     private val nodeService: NodeService,
     private val environmentPermissionService: EnvironmentPermissionService,
-    private val batchInstallAgentService: BatchInstallAgentService
+    private val batchInstallAgentService: BatchInstallAgentService,
+    private val nodeDao: NodeDao
 ) {
     @Value("\${environment.batch-install.aes-key}")
     private val batchInstallAesKey = ""
@@ -145,19 +147,63 @@ class TencentNodeService @Autowired constructor(
     }
 
     fun doCheckImateProps() {
-        // userId:<deviceId:<projectId,agentId>>
-        val recordsMap = mutableMapOf<String, MutableMap<String, Pair<String, Long>>>()
+        val recordsMap = mutableMapOf<String, MutableMap<String, CheckImateAgentData>>()
         agentDao.fetchImateAgents(dslContext).forEach {
             recordsMap.putIfAbsent(
                 it.createdUser,
-                mutableMapOf(it.createWorkspaceName to Pair(it.projectId, it.id))
-            )?.set(it.createWorkspaceName, Pair(it.projectId, it.id))
+                mutableMapOf(it.createWorkspaceName to CheckImateAgentData(it.projectId, it.id, it.nodeId, it.status))
+            )?.set(it.createWorkspaceName, CheckImateAgentData(it.projectId, it.id, it.nodeId, it.status))
         }
+
+        val needUpdateDeleteStatusAgents = mutableMapOf<String, MutableSet<Long>>()
+        val needDeleteAgents = mutableMapOf<String, MutableSet<Long>>()
+        val needCheckRenameAgents = mutableMapOf<String, MutableMap<Long, String>>()
         recordsMap.forEach { (userId, deviceMap) ->
-            val imateList =
+            val imateMap =
                 client.get(ServiceIMateResource::class).queryUserRobots(userId).data?.filter { it.username == userId }
-                    ?:  return@forEach
-            
+                    ?.associate { it.clientUuid to it.botName }
+                    ?: return@forEach
+            deviceMap.forEach deviceMap@{ (deviceId, agentData) ->
+                val (projectId, agentId, nodeId, status) = agentData
+                // 找到的标记下筛查要不要改名
+                val botName = imateMap[deviceId]
+                if (botName != null) {
+                    needCheckRenameAgents.putIfAbsent(projectId, mutableMapOf(nodeId to botName))?.set(nodeId, botName)
+                    return@deviceMap
+                }
+                // 如果没找到这个用户的 imate 说明可能被删除了，先标记下删除，如果第二次就删掉
+                if (status == AgentStatus.IMPORT_EXCEPTION.status) {
+                    needUpdateDeleteStatusAgents.putIfAbsent(projectId, mutableSetOf(agentId))?.add(agentId)
+                }
+                if (status == AgentStatus.DELETE.status) {
+                    needDeleteAgents.putIfAbsent(projectId, mutableSetOf(agentId))?.add(agentId)
+                }
+                // 正常来说不该有这种情况，需要提醒
+                if (status == AgentStatus.IMPORT_OK.status) {
+                    logger.error("doCheckImateProps $userId|$deviceId not find imate but agent running")
+                }
+            }
+        }
+        // 检查要不要改名
+        needCheckRenameAgents.forEach { (projectId, nodeIdAndBotName) ->
+            nodeDao.listByIds(dslContext, projectId, nodeIdAndBotName.keys).forEach { node ->
+                val botName = nodeIdAndBotName[node.nodeId]
+                if (node.displayName == botName) {
+                    nodeIdAndBotName.remove(node.nodeId)
+                }
+            }
+        }
+        needUpdateDeleteStatusAgents.forEach { (projectId, agentList) ->
+            thirdPartyAgentDao.batchUpdateStatus(dslContext, projectId, agentList.toSet(), AgentStatus.DELETE)
+            logger.info("doCheckImateProps update delete status $projectId|$agentList")
+        }
+        needDeleteAgents.forEach { (projectId, agentList) ->
+            // TODO: 批量删除
+            logger.info("doCheckImateProps delete  $projectId|$agentList")
+        }
+        needCheckRenameAgents.forEach { (projectId, nodeIdAndBotName) ->
+            // TODO: 批量修改
+            logger.info("doCheckImateProps update displayName $projectId|$nodeIdAndBotName")
         }
     }
 
@@ -167,3 +213,10 @@ class TencentNodeService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(TencentNodeService::class.java)
     }
 }
+
+data class CheckImateAgentData(
+    val projectId: String,
+    val agentId: Long,
+    val nodeId: Long,
+    val status: Int
+)
