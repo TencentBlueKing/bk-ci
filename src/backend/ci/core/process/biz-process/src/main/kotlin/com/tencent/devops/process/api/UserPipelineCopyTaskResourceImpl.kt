@@ -185,6 +185,7 @@ class UserPipelineCopyTaskResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         return Result(
             pipelineCopyTaskService.confirmResource(
+                userId = userId,
                 projectId = projectId,
                 taskId = taskId,
                 resourceType = resourceType,
