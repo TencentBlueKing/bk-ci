@@ -42,37 +42,42 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
     private val pipelineCopyTaskResourceDao: PipelineCopyTaskResourceDao,
     private val pipelineCopyTaskResourceRelDao: PipelineCopyTaskResourceRelDao,
     private val pipelineCopyResourceGetService: PipelineCopyResourceGetService,
-    private val pipelineCopyResourceCreateService: PipelineCopyResourceCreateService
+    private val pipelineCopyResourceCreateService: PipelineCopyResourceCreateService,
+    private val pipelineCopyTaskStateService: PipelineCopyTaskStateService
 ) {
 
     fun execute(event: PipelineBatchTaskExecuteEvent) {
         with(event) {
             logger.info("start to execute pipeline copy task|$projectId|$taskId")
             val task = tryStartExecute(projectId = projectId, taskId = taskId) ?: return
-            val resources = pipelineCopyTaskResourceDao.list(
-                dslContext = dslContext,
-                projectId = projectId,
-                taskId = taskId,
-                status = PipelineCopyTaskResourceStatus.PROCESSED
-            )
-            val param = parseParam(task) ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
-                params = arrayOf(task.taskId)
-            )
-            executeDependentResources(
-                userId = task.creator,
-                projectId = projectId,
-                taskId = taskId,
-                targetProjectId = param.targetProjectId,
-                resources = resources
-            )
-            executePipelines(
-                userId = task.creator,
-                projectId = projectId,
-                taskId = taskId,
-                targetProjectId = param.targetProjectId
-            )
-            finishExecute(projectId = projectId, taskId = taskId)
+            try {
+                val resources = pipelineCopyTaskResourceDao.list(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    taskId = taskId,
+                    status = PipelineCopyTaskResourceStatus.PROCESSED
+                )
+                val param = parseParam(task) ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
+                    params = arrayOf(task.taskId)
+                )
+                executeDependentResources(
+                    userId = task.creator,
+                    projectId = projectId,
+                    taskId = taskId,
+                    targetProjectId = param.targetProjectId,
+                    resources = resources
+                )
+                executePipelines(
+                    userId = task.creator,
+                    projectId = projectId,
+                    taskId = taskId,
+                    targetProjectId = param.targetProjectId
+                )
+                finishExecute(projectId = projectId, taskId = taskId)
+            } catch (ignored: Exception) {
+                logger.error("Failed to execute pipeline copy task|$projectId|$taskId", ignored)
+            }
         }
     }
 

@@ -495,6 +495,8 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_COPY_DEPENDENT_RESOURCE_NOT_EXISTS = "2101390"
     // 资源类型{0}, 资源名{1}，目标项目不存在同名资源，不能选择资源复用策略
     const val ERROR_PIPELINE_COPY_REUSE_RESOURCE_NOT_EXISTS = "2101391"
+    // 资源类型{0}不支持复制策略{1}
+    const val ERROR_PIPELINE_COPY_RESOURCE_TYPE_STRATEGY_NOT_SUPPORT = "2101392"
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

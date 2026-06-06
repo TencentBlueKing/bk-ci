@@ -86,8 +86,8 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                     projectId = event.projectId,
                     taskId = taskId
                 )
-            } catch (ignore: Exception) {
-                logger.error("analyze pipeline copy task failed|$projectId|$taskId", ignore)
+            } catch (ignored: Exception) {
+                logger.error("Failed to analyze pipeline copy task|$projectId|$taskId", ignored)
                 finishAnalyze(
                     projectId = event.projectId,
                     taskId = taskId
