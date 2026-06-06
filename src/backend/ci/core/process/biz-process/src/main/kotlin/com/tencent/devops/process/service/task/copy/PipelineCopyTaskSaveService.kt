@@ -65,13 +65,13 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                     params = arrayOf(taskId, task.taskType.name, PipelineBatchTaskType.PIPELINE_COPY.name)
                 )
             }
-            if (task.status != PipelineBatchTaskStatus.DRAFT) {
+            if (!canSaveDraft(task.status)) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_SAVE_CONFIG,
                     params = arrayOf(taskId, task.status.name)
                 )
             }
-            val oldParam = parseParam(task)
+            val oldParam = PipelineCopyTaskUtils.parseParam(task)
             val param = PipelineBatchCopyTaskParam(
                 targetProjectId = request.targetProjectId,
                 pipelineCopyStrategy = request.pipelineCopyStrategy
@@ -85,9 +85,11 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                         taskId = taskId,
                         taskName = request.taskName,
                         taskParam = JsonUtil.toJson(param, formatted = false),
+                        status = PipelineBatchTaskStatus.DRAFT,
+                        clearErrorMessage = true
                     )
                 )
-                if (oldParam != null && oldParam.targetProjectId != request.targetProjectId) {
+                if (oldParam != null && task.needAnalyzeAgain(request)) {
                     pipelineBatchTaskDetailDao.updateChange(
                         dslContext = transactionContext,
                         projectId = projectId,
@@ -102,13 +104,14 @@ class PipelineCopyTaskSaveService @Autowired constructor(
     }
 
     fun saveResourceDraft(
+        userId: String,
         projectId: String,
         taskId: String,
         request: PipelineCopyTaskSaveResourceRequest
     ) {
-        val task = tryStartSave(projectId = projectId, taskId = taskId)
+        val task = tryStartSave(userId = userId, projectId = projectId, taskId = taskId)
         try {
-            val param = parseParam(task) ?: throw ErrorCodeException(
+            val param = PipelineCopyTaskUtils.parseParam(task) ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
                 params = arrayOf(task.taskId)
             )
@@ -122,8 +125,21 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                 taskId = taskId,
                 request = request
             )
+            val resources = pipelineCopyTaskResourceDao.list(
+                dslContext = dslContext,
+                projectId = projectId,
+                taskId = taskId
+            )
+            val taskSummary = PipelineCopyTaskUtils.buildSummary(
+                resources = resources,
+                updates = resourceUpdates
+            )
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
+                pipelineCopyTaskResourceDao.batchUpdate(
+                    dslContext = transactionContext,
+                    updates = resourceUpdates
+                )
                 pipelineBatchTaskDao.update(
                     dslContext = transactionContext,
                     update = PipelineBatchTaskUpdate(
@@ -131,11 +147,12 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                         taskId = taskId,
                         status = PipelineBatchTaskStatus.DRAFT,
                         taskParam = JsonUtil.toJson(newParam, formatted = false),
+                        taskSummary = JsonUtil.toJson(
+                            taskSummary,
+                            formatted = false
+                        ),
+                        clearErrorMessage = true
                     )
-                )
-                pipelineCopyTaskResourceDao.batchUpdate(
-                    dslContext = transactionContext,
-                    updates = resourceUpdates
                 )
             }
         } catch (exception: Exception) {
@@ -144,7 +161,7 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 taskId = taskId,
-                status = PipelineBatchTaskStatus.DRAFT
+                status = task.status
             )
             throw exception
         }
@@ -367,6 +384,7 @@ class PipelineCopyTaskSaveService @Autowired constructor(
     }
 
     private fun tryStartSave(
+        userId: String,
         projectId: String,
         taskId: String
     ): PipelineBatchTask {
@@ -391,7 +409,7 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                     params = arrayOf(taskId, task.taskType.name, PipelineBatchTaskType.PIPELINE_COPY.name)
                 )
             }
-            if (task.status != PipelineBatchTaskStatus.DRAFT) {
+            if (!canSaveDraft(task.status)) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_SAVE_CONFIG,
                     params = arrayOf(taskId, task.status.name)
@@ -409,10 +427,20 @@ class PipelineCopyTaskSaveService @Autowired constructor(
         }
     }
 
-    private fun parseParam(task: PipelineBatchTask): PipelineBatchCopyTaskParam? {
-        return task.taskParam?.takeIf { it.isNotBlank() }?.let {
-            JsonUtil.to(it, PipelineBatchCopyTaskParam::class.java)
-        }
+    private fun canSaveDraft(status: PipelineBatchTaskStatus): Boolean {
+        return status in setOf(
+            PipelineBatchTaskStatus.DRAFT,
+            PipelineBatchTaskStatus.PIPELINE_ANALYZE_FAILED,
+            PipelineBatchTaskStatus.PIPELINE_RESOURCE_ANALYZE_FAILED,
+            PipelineBatchTaskStatus.EXECUTE_FAILED
+        )
+    }
+
+    private fun PipelineBatchTask.needAnalyzeAgain(request: PipelineCopyTaskConfigRequest): Boolean {
+        val oldParam = PipelineCopyTaskUtils.parseParam(this) ?: return false
+        return status == PipelineBatchTaskStatus.PIPELINE_RESOURCE_ANALYZE_FAILED ||
+            oldParam.targetProjectId != request.targetProjectId ||
+            oldParam.pipelineCopyStrategy != request.pipelineCopyStrategy
     }
 
     companion object {

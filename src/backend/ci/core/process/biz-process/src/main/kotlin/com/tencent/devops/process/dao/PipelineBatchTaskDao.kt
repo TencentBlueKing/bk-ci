@@ -39,6 +39,7 @@ class PipelineBatchTaskDao {
                 TASK_TYPE,
                 TASK_PARAM,
                 TASK_SUMMARY,
+                ERROR_MESSAGE,
                 STATUS,
                 STEP,
                 TOTAL_COUNT,
@@ -55,6 +56,7 @@ class PipelineBatchTaskDao {
                 taskName,
                 taskType.name,
                 taskParam,
+                null,
                 null,
                 status.name,
                 step.name,
@@ -147,6 +149,12 @@ class PipelineBatchTaskDao {
             if (update.taskSummary != null) {
                 query.set(TASK_SUMMARY, update.taskSummary)
             }
+            if (update.errorMessage != null) {
+                query.set(ERROR_MESSAGE, update.errorMessage)
+            }
+            if (update.clearErrorMessage) {
+                query.setNull(ERROR_MESSAGE)
+            }
             if (update.status != null) {
                 query.set(STATUS, update.status!!.name)
             }
@@ -220,6 +228,7 @@ class PipelineBatchTaskDao {
                 taskType = PipelineBatchTaskType.valueOf(taskType),
                 taskParam = taskParam,
                 taskSummary = taskSummary,
+                errorMessage = errorMessage,
                 status = PipelineBatchTaskStatus.valueOf(status),
                 step = PipelineBatchTaskStep.valueOf(step),
                 totalCount = totalCount,

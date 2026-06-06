@@ -10,14 +10,23 @@ enum class PipelineBatchTaskStatus {
     @Schema(description = "流水线分析中")
     PIPELINE_ANALYZING,
 
+    @Schema(description = "流水线分析失败")
+    PIPELINE_ANALYZE_FAILED,
+
     @Schema(description = "流水线资源分析中")
     PIPELINE_RESOURCE_ANALYZING,
+
+    @Schema(description = "流水线资源分析失败")
+    PIPELINE_RESOURCE_ANALYZE_FAILED,
 
     @Schema(description = "保存中")
     SAVING,
 
     @Schema(description = "执行中")
     EXECUTING,
+
+    @Schema(description = "执行异常失败")
+    EXECUTE_FAILED,
 
     @Schema(description = "成功")
     SUCCESS,

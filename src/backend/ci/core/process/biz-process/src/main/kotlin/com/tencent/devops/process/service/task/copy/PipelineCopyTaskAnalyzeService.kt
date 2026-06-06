@@ -27,16 +27,16 @@ import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyStrategy
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchCopyTaskParam
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskAnalyzeEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetail
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailUpdate
-import com.tencent.devops.process.pojo.pipeline.task.PipelineInfoCopyResourceProp
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineConflictInfo
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceRel
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
+import com.tencent.devops.process.pojo.pipeline.task.PipelineInfoCopyResourceProp
 import com.tencent.devops.process.pojo.pipeline.task.PipelineLabelCopyResourceProp
 import com.tencent.devops.process.pojo.pipeline.task.PipelineViewCopyResourceProp
 import com.tencent.devops.process.pojo.pipeline.task.RepositoryCopyResourceProp
@@ -88,9 +88,11 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                 )
             } catch (ignored: Exception) {
                 logger.error("Failed to analyze pipeline copy task|$projectId|$taskId", ignored)
-                finishAnalyze(
+                pipelineCopyTaskStateService.updateTaskStatusWithLock(
                     projectId = event.projectId,
-                    taskId = taskId
+                    taskId = taskId,
+                    status = PipelineBatchTaskStatus.PIPELINE_RESOURCE_ANALYZE_FAILED,
+                    errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignored)
                 )
             }
         }
@@ -100,7 +102,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
         projectId: String,
         task: PipelineBatchTask
     ) {
-        val param = parseParam(task) ?: throw ErrorCodeException(
+        val param = PipelineCopyTaskUtils.parseParam(task) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
             params = arrayOf(task.taskId)
         )
@@ -129,11 +131,18 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
         projectId: String,
         taskId: String
     ) {
+        val resources = pipelineCopyTaskResourceDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            taskId = taskId
+        )
         // 分析完成后,把状态再转换成草稿
         pipelineCopyTaskStateService.updateTaskStatusWithLock(
             projectId = projectId,
             taskId = taskId,
-            status = PipelineBatchTaskStatus.DRAFT
+            status = PipelineBatchTaskStatus.DRAFT,
+            taskSummary = JsonUtil.toJson(PipelineCopyTaskUtils.buildSummary(resources), formatted = false),
+            clearErrorMessage = true
         )
     }
 
@@ -1165,7 +1174,11 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                 logger.warn("pipeline batch task type not match|$projectId|$taskId")
                 return null
             }
-            if (task.status != PipelineBatchTaskStatus.DRAFT) {
+            if (task.status !in setOf(
+                    PipelineBatchTaskStatus.DRAFT,
+                    PipelineBatchTaskStatus.PIPELINE_RESOURCE_ANALYZE_FAILED
+                )
+            ) {
                 logger.warn("pipeline batch task status not match|$projectId|$taskId|${task.status}")
                 return null
             }
@@ -1175,25 +1188,22 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                 taskId = taskId,
                 change = true
             )
-            if (changeCount == 0L) {
+            if (changeCount == 0L && task.status != PipelineBatchTaskStatus.PIPELINE_RESOURCE_ANALYZE_FAILED) {
                 logger.warn("pipeline batch task has no changed detail, no need to analyze|$projectId|$taskId")
                 return null
             }
-            pipelineBatchTaskDao.updateStatus(
+            pipelineBatchTaskDao.update(
                 dslContext = dslContext,
-                projectId = projectId,
-                taskId = taskId,
-                status = PipelineBatchTaskStatus.PIPELINE_RESOURCE_ANALYZING
+                update = PipelineBatchTaskUpdate(
+                    projectId = projectId,
+                    taskId = taskId,
+                    status = PipelineBatchTaskStatus.PIPELINE_RESOURCE_ANALYZING,
+                    clearErrorMessage = true
+                )
             )
             return task
         } finally {
             lock.unlock()
-        }
-    }
-
-    private fun parseParam(task: PipelineBatchTask): PipelineBatchCopyTaskParam? {
-        return task.taskParam?.takeIf { it.isNotBlank() }?.let {
-            JsonUtil.to(it, PipelineBatchCopyTaskParam::class.java)
         }
     }
 

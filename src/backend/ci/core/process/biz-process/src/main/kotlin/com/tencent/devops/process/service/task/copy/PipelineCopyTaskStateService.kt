@@ -3,6 +3,7 @@ package com.tencent.devops.process.service.task.copy
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.PipelineBatchTaskDao
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
+import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -19,7 +20,10 @@ class PipelineCopyTaskStateService @Autowired constructor(
     fun updateTaskStatusWithLock(
         projectId: String,
         taskId: String,
-        status: PipelineBatchTaskStatus
+        status: PipelineBatchTaskStatus,
+        taskSummary: String? = null,
+        errorMessage: String? = null,
+        clearErrorMessage: Boolean = false
     ) {
         val lock = PipelineCopyTaskLock(
             redisOperation = redisOperation,
@@ -28,11 +32,16 @@ class PipelineCopyTaskStateService @Autowired constructor(
         )
         try {
             lock.lock()
-            pipelineBatchTaskDao.updateStatus(
+            pipelineBatchTaskDao.update(
                 dslContext = dslContext,
-                projectId = projectId,
-                taskId = taskId,
-                status = status
+                update = PipelineBatchTaskUpdate(
+                    projectId = projectId,
+                    taskId = taskId,
+                    taskSummary = taskSummary,
+                    status = status,
+                    errorMessage = errorMessage,
+                    clearErrorMessage = clearErrorMessage
+                )
             )
         } finally {
             lock.unlock()

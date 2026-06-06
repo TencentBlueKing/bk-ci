@@ -11,18 +11,15 @@ import com.tencent.devops.process.dao.PipelineCopyTaskResourceRelDao
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
-import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyAction
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyStrategy
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchCopyTaskParam
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskDetailUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskExecuteEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineLabelCopyResourceProp
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -57,7 +54,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                     taskId = taskId,
                     status = PipelineCopyTaskResourceStatus.PROCESSED
                 )
-                val param = parseParam(task) ?: throw ErrorCodeException(
+                val param = PipelineCopyTaskUtils.parseParam(task) ?: throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
                     params = arrayOf(task.taskId)
                 )
@@ -77,6 +74,12 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 finishExecute(projectId = projectId, taskId = taskId)
             } catch (ignored: Exception) {
                 logger.error("Failed to execute pipeline copy task|$projectId|$taskId", ignored)
+                pipelineCopyTaskStateService.updateTaskStatusWithLock(
+                    projectId = projectId,
+                    taskId = taskId,
+                    status = PipelineBatchTaskStatus.EXECUTE_FAILED,
+                    errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignored)
+                )
             }
         }
     }
@@ -160,7 +163,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 logger.warn("pipeline batch task type not match|$projectId|$taskId")
                 return null
             }
-            if (task.status != PipelineBatchTaskStatus.DRAFT) {
+            if (task.status !in setOf(PipelineBatchTaskStatus.DRAFT, PipelineBatchTaskStatus.EXECUTE_FAILED)) {
                 logger.warn("pipeline batch task status not match|$projectId|$taskId|${task.status}")
                 return null
             }
@@ -174,11 +177,14 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 logger.warn("pipeline copy task has unprocessed resources|$projectId|$taskId|$unprocessedCount")
                 return null
             }
-            pipelineBatchTaskDao.updateStatus(
+            pipelineBatchTaskDao.update(
                 dslContext = dslContext,
-                projectId = projectId,
-                taskId = taskId,
-                status = PipelineBatchTaskStatus.EXECUTING
+                update = PipelineBatchTaskUpdate(
+                    projectId = projectId,
+                    taskId = taskId,
+                    status = PipelineBatchTaskStatus.EXECUTING,
+                    clearErrorMessage = true
+                )
             )
             return task
         } finally {
@@ -1030,37 +1036,23 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 update = PipelineBatchTaskUpdate(
                     projectId = projectId,
                     taskId = taskId,
-                    taskSummary = JsonUtil.toJson(buildSummary(resources), formatted = false),
+                    taskSummary = JsonUtil.toJson(
+                        PipelineCopyTaskUtils.buildSummary(resources),
+                        formatted = false
+                    ),
                     status = buildExecuteStatus(
                         resourceCount = copyDetails.size,
                         successCount = successCount,
                         failedCount = failedCount
                     ),
                     successCount = successCount,
-                    failedCount = failedCount
+                    failedCount = failedCount,
+                    clearErrorMessage = true
                 )
             )
         } finally {
             lock.unlock()
         }
-    }
-
-    private fun buildSummary(resources: List<PipelineCopyTaskResource>): PipelineCopyTaskSummary {
-        return PipelineCopyTaskSummary(
-            unprocessedCount = resources.count {
-                it.status == PipelineCopyTaskResourceStatus.UNPROCESSED
-            },
-            highRiskCount = resources.count { it.highRisk },
-            needCompletionCount = resources.count {
-                it.copyAction == PipelineCopyAction.NEED_COMPLETION
-            },
-            needTransferCount = resources.count {
-                it.copyAction == PipelineCopyAction.NEED_TRANSFER
-            },
-            autoFinishCount = resources.count {
-                it.copyAction == PipelineCopyAction.AUTO_FINISH
-            }
-        )
     }
 
     private fun buildExecuteStatus(
@@ -1100,12 +1092,6 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                 copyStrategy.name
             )
         )
-    }
-
-    private fun parseParam(task: PipelineBatchTask): PipelineBatchCopyTaskParam? {
-        return task.taskParam?.takeIf { it.isNotBlank() }?.let {
-            JsonUtil.to(it, PipelineBatchCopyTaskParam::class.java)
-        }
     }
 
     companion object {

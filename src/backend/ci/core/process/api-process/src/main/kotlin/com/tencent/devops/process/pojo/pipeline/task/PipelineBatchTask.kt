@@ -19,6 +19,8 @@ data class PipelineBatchTask(
     val taskParam: String?,
     @get:Schema(description = "任务汇总信息")
     val taskSummary: String? = null,
+    @get:Schema(description = "错误信息")
+    val errorMessage: String? = null,
     @get:Schema(description = "任务状态", required = true)
     val status: PipelineBatchTaskStatus,
     @get:Schema(description = "当前步骤", required = true)

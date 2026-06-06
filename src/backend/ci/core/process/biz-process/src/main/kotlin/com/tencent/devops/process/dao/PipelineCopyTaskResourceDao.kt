@@ -106,6 +106,24 @@ class PipelineCopyTaskResourceDao {
         }
     }
 
+    fun get(
+        dslContext: DSLContext,
+        projectId: String,
+        taskId: String,
+        resourceType: PipelineDependentResourceType,
+        resourceId: String
+    ): PipelineCopyTaskResource? {
+        return with(T_PIPELINE_COPY_TASK_RESOURCE) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TASK_ID.eq(taskId))
+                .and(RESOURCE_TYPE.eq(resourceType.name))
+                .and(RESOURCE_ID.eq(resourceId))
+                .fetchOne()
+                ?.let(::convert)
+        }
+    }
+
     fun count(
         dslContext: DSLContext,
         projectId: String,

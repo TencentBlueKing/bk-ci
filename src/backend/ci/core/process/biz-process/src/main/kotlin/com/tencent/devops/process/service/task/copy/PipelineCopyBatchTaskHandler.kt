@@ -1,7 +1,6 @@
 package com.tencent.devops.process.service.task.copy
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineCopyTaskResourceDao
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -9,7 +8,6 @@ import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskDetailSta
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskStatus
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineBatchTaskType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceStatus
-import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchCopyTaskParam
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskAnalyzeEvent
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskCreateEvent
@@ -66,7 +64,7 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
     }
 
     override fun validateWhenExecute(userId: String, projectId: String, task: PipelineBatchTask) {
-        val param = parseParam(task) ?: throw ErrorCodeException(
+        val param = PipelineCopyTaskUtils.parseParam(task) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_TASK_CONFIG_NOT_EXISTS,
             params = arrayOf(task.taskId)
         )
@@ -91,11 +89,5 @@ class PipelineCopyBatchTaskHandler @Autowired constructor(
 
     override fun handleExecuteEvent(event: PipelineBatchTaskExecuteEvent) {
         pipelineCopyTaskExecuteService.execute(event = event)
-    }
-
-    private fun parseParam(task: PipelineBatchTask): PipelineBatchCopyTaskParam? {
-        return task.taskParam?.takeIf { it.isNotBlank() }?.let {
-            JsonUtil.to(it, PipelineBatchCopyTaskParam::class.java)
-        }
     }
 }

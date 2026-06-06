@@ -26,7 +26,8 @@ class PipelineCopyTaskCreateService @Autowired constructor(
     private val pipelineCopyTaskResourceRelDao: PipelineCopyTaskResourceRelDao,
     private val redisOperation: RedisOperation,
     private val pipelineBatchTaskFactory: PipelineBatchTaskFactory,
-    private val pipelineCopyTaskFactory: PipelineCopyTaskFactory
+    private val pipelineCopyTaskFactory: PipelineCopyTaskFactory,
+    private val pipelineCopyTaskStateService: PipelineCopyTaskStateService
 ) {
 
     fun create(event: PipelineBatchTaskCreateEvent) {
@@ -36,11 +37,21 @@ class PipelineCopyTaskCreateService @Autowired constructor(
                 projectId = projectId,
                 taskId = taskId
             ) ?: return
-            doCreate(
-                projectId = projectId,
-                taskId = taskId,
-                taskType = taskType
-            )
+            try {
+                doCreate(
+                    projectId = projectId,
+                    taskId = taskId,
+                    taskType = taskType
+                )
+            } catch (ignored: Exception) {
+                logger.error("Failed to create pipeline copy task|$projectId|$taskId", ignored)
+                pipelineCopyTaskStateService.updateTaskStatusWithLock(
+                    projectId = projectId,
+                    taskId = taskId,
+                    status = PipelineBatchTaskStatus.PIPELINE_ANALYZE_FAILED,
+                    errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignored)
+                )
+            }
         }
     }
 
@@ -101,7 +112,8 @@ class PipelineCopyTaskCreateService @Autowired constructor(
                         taskId = taskId,
                         status = PipelineBatchTaskStatus.DRAFT,
                         subPipelineCount = allDetails.count { it.subPipeline },
-                        pacCount = allDetails.count { it.pac }
+                        pacCount = allDetails.count { it.pac },
+                        clearErrorMessage = true
                     )
                 )
             }
@@ -134,9 +146,24 @@ class PipelineCopyTaskCreateService @Autowired constructor(
                 logger.warn("pipeline batch task type not match|$projectId|$taskId")
                 return null
             }
-            if (task.status != PipelineBatchTaskStatus.PIPELINE_ANALYZING) {
+            if (task.status !in setOf(
+                    PipelineBatchTaskStatus.PIPELINE_ANALYZING,
+                    PipelineBatchTaskStatus.PIPELINE_ANALYZE_FAILED
+                )
+            ) {
                 logger.warn("pipeline batch task status not match|$projectId|$taskId|${task.status}")
                 return null
+            }
+            if (task.status == PipelineBatchTaskStatus.PIPELINE_ANALYZE_FAILED) {
+                pipelineBatchTaskDao.update(
+                    dslContext = dslContext,
+                    update = PipelineBatchTaskUpdate(
+                        projectId = projectId,
+                        taskId = taskId,
+                        status = PipelineBatchTaskStatus.PIPELINE_ANALYZING,
+                        clearErrorMessage = true
+                    )
+                )
             }
             return task
         } finally {

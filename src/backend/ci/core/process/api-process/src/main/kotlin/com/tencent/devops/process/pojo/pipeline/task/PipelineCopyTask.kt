@@ -18,6 +18,8 @@ data class PipelineCopyTask(
     val pipelineCopyStrategy: PipelineCopyStrategy? = null,
     @get:Schema(description = "复制状态", required = true)
     val status: PipelineBatchTaskStatus,
+    @get:Schema(description = "错误信息")
+    val errorMessage: String? = null,
     @get:Schema(description = "流水线复制数量", required = true)
     val pipelineCount: Int = 0,
     @get:Schema(description = "自动添加的子流水线数量", required = true)

@@ -17,13 +17,16 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.label.PipelineGroupDao
 import com.tencent.devops.process.dao.label.PipelineLabelDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
+import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceStatus
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
+import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceRel
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.PipelineViewService
@@ -57,6 +60,7 @@ class PipelineCopyResourceCreateService @Autowired constructor(
     private val pipelineLabelDao: PipelineLabelDao,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineViewDao: PipelineViewDao,
+    private val pipelineViewGroupDao: PipelineViewGroupDao,
     private val pipelineViewService: PipelineViewService,
     private val pipelineDependencyReplaceService: PipelineDependencyReplaceService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService
@@ -408,10 +412,52 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             setting = modelAndSetting.setting,
             fixPipelineId = targetPipelineId
         )
+        associateStaticPipelineGroups(
+            userId = userId,
+            targetProjectId = targetProjectId,
+            targetPipelineId = targetPipelineId,
+            dependentResources = dependentResources
+        )
+
         return PipelineCopyResourceBasicInfo(
             resourceId = targetPipelineId,
             resourceName = targetPipelineName
         )
+    }
+
+    private fun associateStaticPipelineGroups(
+        userId: String,
+        targetProjectId: String,
+        targetPipelineId: String,
+        dependentResources: List<PipelineCopyTaskResource>
+    ) {
+        dependentResources.filter {
+            it.resourceType == PipelineDependentResourceType.PIPELINE_GROUP &&
+                it.status == PipelineCopyTaskResourceStatus.SUCCESS
+        }.forEach { resource ->
+            val targetViewId = parseViewId(resource.targetResourceId) ?: return@forEach
+            val targetView = pipelineViewDao.get(
+                dslContext = dslContext,
+                projectId = targetProjectId,
+                viewId = targetViewId
+            ) ?: return@forEach
+            if (targetView.isProject && targetView.viewType == PipelineViewType.STATIC) {
+                pipelineViewGroupDao.create(
+                    dslContext = dslContext,
+                    projectId = targetProjectId,
+                    viewId = targetViewId,
+                    pipelineId = targetPipelineId,
+                    userId = userId
+                )
+            }
+        }
+    }
+
+    private fun parseViewId(viewId: String?): Long? {
+        if (viewId.isNullOrBlank()) {
+            return null
+        }
+        return HashUtil.decodeIdToLong(viewId)
     }
 
     private fun buildTargetRepository(

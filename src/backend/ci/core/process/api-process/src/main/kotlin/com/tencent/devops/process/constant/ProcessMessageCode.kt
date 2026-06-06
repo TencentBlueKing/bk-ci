@@ -497,6 +497,10 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_COPY_REUSE_RESOURCE_NOT_EXISTS = "2101391"
     // 资源类型{0}不支持复制策略{1}
     const val ERROR_PIPELINE_COPY_RESOURCE_TYPE_STRATEGY_NOT_SUPPORT = "2101392"
+    // 资源类型{0}，资源ID{1}当前状态为{2}，不能确认
+    const val ERROR_PIPELINE_COPY_RESOURCE_STATUS_CAN_NOT_CONFIRM = "2101393"
+    // 资源类型{0}，资源ID{1}自动完成，不需要确认
+    const val ERROR_PIPELINE_COPY_RESOURCE_AUTO_FINISH_CAN_NOT_CONFIRM = "2101394"
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
