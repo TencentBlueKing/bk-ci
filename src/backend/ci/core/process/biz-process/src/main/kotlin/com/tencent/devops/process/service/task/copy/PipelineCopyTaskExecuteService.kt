@@ -618,7 +618,7 @@ class PipelineCopyTaskExecuteService @Autowired constructor(
                     ) ?: pipelineCopyResourceCreateService.createPipelineGroup(
                         userId = userId,
                         sourceProjectId = projectId,
-                        viewName = resource.resourceId,
+                        viewName = resource.resourceName,
                         targetProjectId = targetProjectId
                     )
                     targetResourceId = pipelineGroup.resourceId
