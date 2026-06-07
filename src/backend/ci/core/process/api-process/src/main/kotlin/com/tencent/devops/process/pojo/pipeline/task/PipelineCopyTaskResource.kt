@@ -23,7 +23,7 @@ data class PipelineCopyTaskResource(
     @get:Schema(description = "复制策略")
     val copyStrategy: PipelineCopyStrategy? = null,
     @get:Schema(description = "资源复制动作", required = true)
-    val copyAction: PipelineCopyAction = PipelineCopyAction.AUTO_FINISH,
+    val copyAction: PipelineCopyAction? = null,
     @get:Schema(description = "目标项目ID")
     val targetProjectId: String? = null,
     @get:Schema(description = "目标资源类型")

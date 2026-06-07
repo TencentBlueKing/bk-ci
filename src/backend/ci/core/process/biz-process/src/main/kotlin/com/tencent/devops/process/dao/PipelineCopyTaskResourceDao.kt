@@ -68,7 +68,7 @@ class PipelineCopyTaskResourceDao {
                     resource.highRisk,
                     resource.targetNameExists,
                     resource.targetIdExists,
-                    resource.copyAction.name,
+                    resource.copyAction?.name,
                     resource.confirmed,
                     resource.pipelineReferCount
                 ).onDuplicateKeyIgnore()
@@ -182,6 +182,7 @@ class PipelineCopyTaskResourceDao {
         }
     }
 
+    @Suppress("CyclomaticComplexMethod")
     fun update(
         dslContext: DSLContext,
         update: PipelineCopyTaskResourceUpdate
@@ -212,6 +213,7 @@ class PipelineCopyTaskResourceDao {
         }
     }
 
+    @Suppress("CyclomaticComplexMethod")
     fun batchUpdate(
         dslContext: DSLContext,
         updates: List<PipelineCopyTaskResourceUpdate>
@@ -269,7 +271,7 @@ class PipelineCopyTaskResourceDao {
                 highRisk = highRisk,
                 targetNameExists = targetNameExists,
                 targetIdExists = targetIdExists,
-                copyAction = PipelineCopyAction.valueOf(copyAction),
+                copyAction = copyAction?.let { PipelineCopyAction.valueOf(copyAction) },
                 confirmed = confirmed,
                 pipelineReferCount = pipelineReferCount,
                 createTime = createTime.timestampmilli(),

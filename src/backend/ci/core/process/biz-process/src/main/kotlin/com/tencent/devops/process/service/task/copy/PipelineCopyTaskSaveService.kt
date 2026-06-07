@@ -313,7 +313,7 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                 PipelineCopyStrategy.DEPLOY_ENV_REUSE_SAME_NAME,
                 PipelineCopyStrategy.CREDENTIAL_REUSE_SAME_NAME,
                 PipelineCopyStrategy.PIPELINE_TEMPLATE_REUSE_SAME_NAME -> {
-                    if (!storeResource.targetIdExists) {
+                    if (!storeResource.targetNameExists) {
                         throw ErrorCodeException(
                             errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_REUSE_RESOURCE_NOT_EXISTS,
                             params = arrayOf(resource.resourceType.name, resource.resourceName)
