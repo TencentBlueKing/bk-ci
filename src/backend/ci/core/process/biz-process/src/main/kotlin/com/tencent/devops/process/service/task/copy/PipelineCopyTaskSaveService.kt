@@ -195,7 +195,6 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                 buildResourceUpdatesByResourceType(
                     projectId = projectId,
                     taskId = taskId,
-                    storedResources = storedResources,
                     copyStrategy = it,
                     resourceType = PipelineDependentResourceType.PIPELINE_GROUP
                 )
@@ -206,7 +205,6 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                 buildResourceUpdatesByResourceType(
                     projectId = projectId,
                     taskId = taskId,
-                    storedResources = storedResources,
                     copyStrategy = it,
                     resourceType = PipelineDependentResourceType.PIPELINE_LABEL
                 )
@@ -353,7 +351,6 @@ class PipelineCopyTaskSaveService @Autowired constructor(
     private fun buildResourceUpdatesByResourceType(
         projectId: String,
         taskId: String,
-        storedResources: List<PipelineCopyTaskResource>,
         copyStrategy: PipelineCopyStrategy,
         resourceType: PipelineDependentResourceType
     ): List<PipelineCopyTaskResourceUpdate> {
@@ -366,6 +363,12 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                 )
             )
         }
+        val storedResources = pipelineCopyTaskResourceDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            taskId = taskId,
+            resourceType = resourceType
+        )
         return storedResources.filter {
             it.resourceType == resourceType
         }.map { resource ->

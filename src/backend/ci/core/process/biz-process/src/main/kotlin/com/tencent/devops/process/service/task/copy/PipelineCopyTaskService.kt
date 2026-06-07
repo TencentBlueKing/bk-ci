@@ -229,12 +229,28 @@ class PipelineCopyTaskService @Autowired constructor(
         request: PipelineCopyTaskSaveResourceRequest
     ) {
         val unprocessedResources = request.resources
+            .filter {
+                it.resourceType != PipelineDependentResourceType.PIPELINE_GROUP &&
+                    it.resourceType != PipelineDependentResourceType.PIPELINE_LABEL
+            }
             .filter { request.getCopyStrategy(it) == null }
             .map { it.resourceName }
         if (unprocessedResources.isNotEmpty()) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_EMPTY,
                 params = arrayOf(taskId, unprocessedResources.joinToString(","))
+            )
+        }
+        if (request.pipelineGroupCopyStrategy == null) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_EMPTY,
+                params = arrayOf(taskId, PipelineDependentResourceType.PIPELINE_GROUP.name)
+            )
+        }
+        if (request.pipelineLabelCopyStrategy == null) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_RESOURCE_STRATEGY_EMPTY,
+                params = arrayOf(taskId, PipelineDependentResourceType.PIPELINE_LABEL.name)
             )
         }
         saveResourceDraft(
