@@ -986,6 +986,17 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
         var targetNameExists = false
         var resourceProperties: PipelineViewCopyResourceProp? = null
         try {
+            val sourcePipelineGroup = pipelineViewDao.get(
+                dslContext = dslContext,
+                projectId = targetProjectId,
+                viewId = HashUtil.decodeIdToLong(resource.resourceId)
+            ) ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS,
+                params = arrayOf(projectId, resource.resourceName)
+            )
+            resourceProperties = PipelineViewCopyResourceProp(
+                viewType = sourcePipelineGroup.viewType
+            )
             pipelineViewDao.fetchAnyByName(
                 dslContext = dslContext,
                 projectId = targetProjectId,
@@ -993,9 +1004,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                 isProject = true
             )?.let {
                 targetNameExists = true
-                resourceProperties = PipelineViewCopyResourceProp(
-                    viewType = it.viewType
-                )
+
             }
         } catch (ignore: Exception) {
             targetNameExists = false

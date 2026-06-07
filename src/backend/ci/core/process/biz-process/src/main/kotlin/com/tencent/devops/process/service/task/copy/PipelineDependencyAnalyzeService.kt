@@ -161,7 +161,7 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
             PipelineDependentResource(
                 projectId = projectId,
                 resourceType = PipelineDependentResourceType.PIPELINE_GROUP,
-                resourceId = it.toString(),
+                resourceId = HashUtil.encodeLongId(it),
                 resourceName = viewMap[it]?.name ?: it.toString()
             )
         }.toSet()
