@@ -70,6 +70,18 @@ class PipelineCopyTaskSaveService @Autowired constructor(
                     params = arrayOf(taskId, task.status.name)
                 )
             }
+            if (pipelineBatchTaskDao.countByTaskName(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    taskName = request.taskName,
+                    excludeTaskId = taskId
+                ) > 0
+            ) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BATCH_TASK_NAME_DUPLICATE,
+                    params = arrayOf(request.taskName)
+                )
+            }
             val oldParam = PipelineCopyTaskUtils.parseParam(task)
             val param = PipelineBatchCopyTaskParam(
                 targetProjectId = request.targetProjectId,

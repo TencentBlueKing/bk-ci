@@ -299,11 +299,13 @@ class PipelineBatchTaskService @Autowired constructor(
             projectId = projectId,
             task = task
         )
+        val deletedTaskName = task.taskName?.takeIf { it.isNotBlank() }?.let(::buildDeletedTaskName)
         return pipelineBatchTaskDao.update(
             dslContext = dslContext,
             update = PipelineBatchTaskUpdate(
                 projectId = projectId,
                 taskId = taskId,
+                taskName = deletedTaskName,
                 status = PipelineBatchTaskStatus.DELETED
             )
         ) == 1
@@ -363,7 +365,21 @@ class PipelineBatchTaskService @Autowired constructor(
             ?: throw InvalidParamException("unsupported taskType: $taskType")
     }
 
+    private fun buildDeletedTaskName(taskName: String): String {
+        val timestamp = System.currentTimeMillis()
+        val suffix = "_$timestamp"
+        val maxPrefixLength = TASK_NAME_MAX_LENGTH - suffix.length
+        val prefix = if (taskName.length > maxPrefixLength) {
+            taskName.substring(0, maxPrefixLength)
+        } else {
+            taskName
+        }
+        return "$prefix$suffix"
+    }
+
     companion object {
+        private const val TASK_NAME_MAX_LENGTH = 128
+
         private val DETAIL_STATUS_CAN_NOT_EXCLUDE = setOf(
             PipelineBatchTaskDetailStatus.EXCLUDED,
             PipelineBatchTaskDetailStatus.SUCCESS,

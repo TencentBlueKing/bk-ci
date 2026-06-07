@@ -919,7 +919,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
     ): PipelineCopyTaskResource {
         var status = PipelineCopyTaskResourceStatus.UNPROCESSED
         var targetNameExists = false
-        var labelGroupProp: PipelineLabelCopyResourceProp? = null
+        var labelProp: PipelineLabelCopyResourceProp? = null
         var errorMessage: String? = null
         try {
             val sourceLabel = pipelineLabelDao.getById(
@@ -938,7 +938,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS,
                 params = arrayOf(projectId, sourceLabel.groupId.toString())
             )
-            labelGroupProp = PipelineLabelCopyResourceProp(
+            labelProp = PipelineLabelCopyResourceProp(
                 groupId = HashUtil.encodeLongId(sourceGroup.id),
                 groupName = sourceGroup.name
             )
@@ -966,7 +966,7 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
             resourceType = resource.resourceType,
             resourceId = resource.resourceId,
             resourceName = resource.resourceName,
-            resourceProperties = labelGroupProp,
+            resourceProperties = labelProp,
             targetProjectId = targetProjectId,
             targetResourceType = resource.resourceType,
             status = status,
@@ -983,18 +983,20 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
         resource: PipelineDependentResource,
         pipelineReferCount: Int
     ): PipelineCopyTaskResource {
+        var status = PipelineCopyTaskResourceStatus.UNPROCESSED
         var targetNameExists = false
-        var resourceProperties: PipelineViewCopyResourceProp? = null
+        var pipelineViewProp: PipelineViewCopyResourceProp? = null
+        var errorMessage: String? = null
         try {
             val sourcePipelineGroup = pipelineViewDao.get(
                 dslContext = dslContext,
-                projectId = targetProjectId,
+                projectId = projectId,
                 viewId = HashUtil.decodeIdToLong(resource.resourceId)
             ) ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS,
                 params = arrayOf(projectId, resource.resourceName)
             )
-            resourceProperties = PipelineViewCopyResourceProp(
+            pipelineViewProp = PipelineViewCopyResourceProp(
                 viewType = sourcePipelineGroup.viewType
             )
             pipelineViewDao.fetchAnyByName(
@@ -1004,10 +1006,10 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
                 isProject = true
             )?.let {
                 targetNameExists = true
-
             }
         } catch (ignore: Exception) {
-            targetNameExists = false
+            status = PipelineCopyTaskResourceStatus.FAILED
+            errorMessage = PipelineCopyTaskUtils.getErrorMessage(ignore)
         }
         return PipelineCopyTaskResource(
             taskId = taskId,
@@ -1015,10 +1017,11 @@ class PipelineCopyTaskAnalyzeService @Autowired constructor(
             resourceType = resource.resourceType,
             resourceId = resource.resourceId,
             resourceName = resource.resourceName,
-            resourceProperties = resourceProperties,
+            resourceProperties = pipelineViewProp,
             targetProjectId = targetProjectId,
             targetResourceType = resource.resourceType,
-            status = PipelineCopyTaskResourceStatus.UNPROCESSED,
+            status = status,
+            errorMessage = errorMessage,
             targetNameExists = targetNameExists,
             pipelineReferCount = pipelineReferCount
         )

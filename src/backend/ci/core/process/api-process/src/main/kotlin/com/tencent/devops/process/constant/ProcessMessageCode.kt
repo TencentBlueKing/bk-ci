@@ -501,6 +501,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_COPY_RESOURCE_STATUS_CAN_NOT_CONFIRM = "2101393"
     // 资源类型{0}，资源ID{1}自动完成，不需要确认
     const val ERROR_PIPELINE_COPY_RESOURCE_AUTO_FINISH_CAN_NOT_CONFIRM = "2101394"
+    const val ERROR_PIPELINE_BATCH_TASK_NAME_DUPLICATE = "2101395" // 流水线批量任务名称[{0}]已存在，不允许重复
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

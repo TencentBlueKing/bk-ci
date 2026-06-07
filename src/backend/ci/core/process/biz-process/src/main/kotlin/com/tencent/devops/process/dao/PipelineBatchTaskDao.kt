@@ -86,6 +86,26 @@ class PipelineBatchTaskDao {
         }
     }
 
+    fun countByTaskName(
+        dslContext: DSLContext,
+        projectId: String,
+        taskName: String,
+        excludeTaskId: String? = null
+    ): Long {
+        return with(T_PIPELINE_BATCH_TASK) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(TASK_NAME.eq(taskName))
+            if (excludeTaskId != null) {
+                conditions.add(TASK_ID.ne(excludeTaskId))
+            }
+            dslContext.selectCount()
+                .from(this)
+                .where(conditions)
+                .fetchOne(0, Long::class.java) ?: 0L
+        }
+    }
+
     fun count(
         dslContext: DSLContext,
         projectId: String,
