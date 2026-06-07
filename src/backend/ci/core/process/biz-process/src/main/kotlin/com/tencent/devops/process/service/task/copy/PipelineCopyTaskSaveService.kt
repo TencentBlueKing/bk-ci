@@ -17,7 +17,6 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchCopyTaskParam
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTask
 import com.tencent.devops.process.pojo.pipeline.task.PipelineBatchTaskUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskConfigRequest
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSaveResourceRequest
 import org.jooq.DSLContext
@@ -172,22 +171,12 @@ class PipelineCopyTaskSaveService @Autowired constructor(
         taskId: String,
         request: PipelineCopyTaskSaveResourceRequest
     ): List<PipelineCopyTaskResourceUpdate> {
-        val storedResources = pipelineCopyTaskResourceDao.list(
-            dslContext = dslContext,
-            projectId = projectId,
-            taskId = taskId,
-            resourceIds = request.resources.map { it.resourceId }.toSet()
-        )
-        val storedResourceMap = storedResources.associateBy {
-            PipelineCopyTaskUtils.resourceKey(resourceType = it.resourceType, resourceId = it.resourceId)
-        }
         val resourceUpdates = mutableListOf<PipelineCopyTaskResourceUpdate>()
         resourceUpdates.addAll(
-            buildCopyTaskResourceUpdates(
+            buildResourceUpdatesByResourceId(
                 projectId = projectId,
                 taskId = taskId,
-                request = request,
-                storedResourceMap = storedResourceMap
+                request = request
             )
         )
         request.pipelineGroupCopyStrategy?.let {
@@ -214,12 +203,20 @@ class PipelineCopyTaskSaveService @Autowired constructor(
     }
 
     @Suppress("LongMethod")
-    private fun buildCopyTaskResourceUpdates(
+    private fun buildResourceUpdatesByResourceId(
         projectId: String,
         taskId: String,
         request: PipelineCopyTaskSaveResourceRequest,
-        storedResourceMap: Map<String, PipelineCopyTaskResource>
     ): List<PipelineCopyTaskResourceUpdate> {
+        val storedResources = pipelineCopyTaskResourceDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            taskId = taskId,
+            resourceIds = request.resources.map { it.resourceId }.toSet()
+        )
+        val storedResourceMap = storedResources.associateBy {
+            PipelineCopyTaskUtils.resourceKey(resourceType = it.resourceType, resourceId = it.resourceId)
+        }
         // copyStrategy为空,说明用户还没处理这个资源
         // 流水线组和流水线标签,不需要处理前端传入的资源
         val resourceUpdates = request.resources.filter {
