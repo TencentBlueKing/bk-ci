@@ -122,6 +122,32 @@
         return null
     }
 
+    function openUrl (url, target) {
+        var normalizedTarget = (target || '').toLowerCase()
+
+        if (normalizedTarget === '_blank') {
+            window.open(url, target)
+            return
+        }
+
+        if (normalizedTarget === '_parent' && window.parent) {
+            window.parent.location.href = url
+            return
+        }
+
+        if (normalizedTarget === '_top' && window.top) {
+            window.top.location.href = url
+            return
+        }
+
+        if (target && normalizedTarget !== '_self') {
+            window.open(url, target)
+            return
+        }
+
+        window.location.href = url
+    }
+
     function handleDocumentClick (event) {
         if (!event || event.defaultPrevented || event.button > 0) {
             return
@@ -136,7 +162,17 @@
         var href = anchor.getAttribute('href')
         var prefixedHref = prefixSameOriginUrl(href)
         if (prefixedHref !== href) {
-            anchor.setAttribute('href', prefixedHref)
+            event.preventDefault()
+            event.stopPropagation()
+
+            var target = anchor.getAttribute('target') || ''
+            if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+                var normalizedTarget = target.toLowerCase()
+                window.open(prefixedHref, !target || normalizedTarget === '_self' ? '_blank' : target)
+                return
+            }
+
+            openUrl(prefixedHref, target)
         }
     }
 

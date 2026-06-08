@@ -168,7 +168,7 @@ export default (r, initSetLocale = false) => {
             }
             console.log('sync backendLocalEnum', backendLocalEnum[localeLang], localeLang, bkLocalEnum[localeLang])
             await Promise.any([
-                axios.put('/ms/project/api/user/locales/update', {
+                axios.put(`${window.PUBLIC_URL_PREFIX}/ms/project/api/user/locales/update`, {
                     language: backendLocalEnum[localeLang] ?? localeLang
                 }),
                 jsonpLocale(bkLocalEnum[localeLang])
