@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.api.enums
 
-
 enum class PlatformEnum(
     val id: Int,
     val mean: String,
