@@ -33,8 +33,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 enum class IMateRobotScopeType {
     @Schema(title = "个人 imate")
     PERSONAL,
+
     @Schema(title = "共享 imate")
     SHARED,
+
     @Schema(title = "未知类型")
     UNKNOWN
 }
@@ -43,6 +45,7 @@ enum class IMateRobotScopeType {
 enum class IMateRobotOwnerType {
     @Schema(title = "查询人自己创建")
     SELF_CREATED,
+
     @Schema(title = "他人分享给查询人")
     SHARED_TO_USER
 }
@@ -51,8 +54,10 @@ enum class IMateRobotOwnerType {
 enum class IMateVisibleTargetType(private val value: String) {
     @Schema(title = "个人用户")
     USER("user"),
+
     @Schema(title = "组织架构")
     ORG("org"),
+
     @Schema(title = "未知类型")
     UNKNOWN("unknown");
 
@@ -70,12 +75,16 @@ enum class IMateClientType(
 ) {
     @Schema(title = "个人 openclaw")
     DEVCLOUD("devcloud", IMateRobotScopeType.PERSONAL),
+
     @Schema(title = "共享 openclaw")
     TEAM_DEVCLOUD("team_devcloud", IMateRobotScopeType.SHARED),
+
     @Schema(title = "个人 hermes")
     HERMES_DEVCLOUD("hermes_devcloud", IMateRobotScopeType.PERSONAL),
+
     @Schema(title = "共享 hermes")
     TEAM_HERMES_DEVCLOUD("team_hermes_devcloud", IMateRobotScopeType.SHARED),
+
     @Schema(title = "未知类型")
     UNKNOWN("unknown", IMateRobotScopeType.UNKNOWN);
 
@@ -246,4 +255,10 @@ data class IMateAuthorizationInfo(
     val canChat: Boolean,
     @get:Schema(title = "OAuth 授权页地址")
     val authorizationUrl: String
+)
+
+@Schema(title = "imate安装任务返回")
+data class IMateTaskResp(
+    @get:Schema(title = "任务ID")
+    val taskId: String
 )

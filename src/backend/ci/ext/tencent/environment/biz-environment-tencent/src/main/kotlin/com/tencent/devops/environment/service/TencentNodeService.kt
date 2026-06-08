@@ -63,9 +63,10 @@ class TencentNodeService @Autowired constructor(
         userId: String,
         projectId: String
     ): List<ImateListItem> {
-        // 只能导入自己创建的
+        // 只能导入自己创建的团队的
         val imateList =
             client.get(ServiceIMateResource::class).queryUserRobots(userId).data?.filter { it.username == userId }
+                ?.filter { ImateOriginEngine.teamType(it.clientType) }
                 ?: return emptyList()
         val installedAgents =
             thirdPartyAgentDao.getAgentByWorkspaceName(dslContext, projectId, imateList.map { it.clientUuid }.toList())
@@ -124,8 +125,12 @@ class TencentNodeService @Autowired constructor(
             val tokenData = "${projectId};${imate.deviceId};$userId;${Instant.now().plusSeconds(3600).toEpochMilli()}"
             val token = Base64.getUrlEncoder()
                 .encodeToString(AESUtil.encrypt(batchInstallAesKey, tokenData.toByteArray(charset("UTF-8"))))
-            // TODO: 调用imate的接口安装并传递token
-            logger.info("batchImportImateNodes token $token") // TODO: 仅测试，过后删
+            val taskId = client.get(ServiceIMateResource::class).installLandunPlugin(
+                username = userId,
+                clientUuid = imate.deviceId,
+                token = token
+            )
+            logger.info("batchImportImateNodes install plugin $taskId")
         }
         return true
     }

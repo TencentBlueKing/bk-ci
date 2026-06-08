@@ -29,6 +29,7 @@ package com.tencent.devops.support.services
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.bkrepo.common.api.constant.MediaTypes
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -38,10 +39,13 @@ import com.tencent.devops.support.model.imate.IMateRobotGrayControlInfo
 import com.tencent.devops.support.model.imate.IMateRobotInfo
 import com.tencent.devops.support.model.imate.IMateRobotOwnerType
 import com.tencent.devops.support.model.imate.IMateRobotWorkspaceInfo
+import com.tencent.devops.support.model.imate.IMateTaskResp
 import com.tencent.devops.support.model.imate.IMateVisibleTargetInfo
 import com.tencent.devops.support.model.imate.IMateVisibleTargetType
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -120,6 +124,31 @@ class IMateService {
         )
     }
 
+    fun installLandunPlugin(
+        username: String,
+        clientUuid: String,
+        token: String
+    ): Result<IMateTaskResp?> {
+        val result = request(
+            path = INSTALL_LANDUN_PLUGIN_PATH,
+            queryParams = emptyMap(),
+            body = JsonUtil.toJson(
+                mapOf(
+                    "username" to username,
+                    "clientUuid" to clientUuid,
+                    "token" to token
+                ), false
+            ),
+            typeReference = object : TypeReference<IMateOpenApiResponse<IMateTaskResp>>() {}
+        )
+        if (result.isNotOk()) {
+            return Result(status = result.status, message = result.message)
+        }
+        return Result(
+            result.data?.let { IMateTaskResp(it.taskId) }
+        )
+    }
+
     internal fun buildAuthorizationUrl(clientUuid: String): String {
         return baseUrl.removeSuffix("/").toHttpUrl().newBuilder()
             .encodedPath("/oauth")
@@ -193,14 +222,23 @@ class IMateService {
     private fun <T> request(
         path: String,
         queryParams: Map<String, String>,
-        typeReference: TypeReference<IMateOpenApiResponse<T>>
+        typeReference: TypeReference<IMateOpenApiResponse<T>>,
+        body: String? = null,
     ): Result<T?> {
         return try {
-            val request = Request.Builder()
-                .url(buildRequestUrl(path, queryParams))
-                .header(TOKEN_HEADER, token)
-                .get()
-                .build()
+            val request = if (body == null) {
+                Request.Builder()
+                    .url(buildRequestUrl(path, queryParams))
+                    .header(TOKEN_HEADER, token)
+                    .get()
+                    .build()
+            } else {
+                Request.Builder()
+                    .url(buildRequestUrl(path, queryParams))
+                    .header(TOKEN_HEADER, token)
+                    .post(body.toRequestBody(MediaTypes.APPLICATION_JSON.toMediaTypeOrNull()))
+                    .build()
+            }
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body?.string().orEmpty()
                 if (!response.isSuccessful) {
@@ -371,6 +409,7 @@ class IMateService {
         private const val QUERY_USER_ROBOT_PATH = "/server/web-api/openapi/v1/queryUserRobot"
         private const val GET_VISIBLE_TARGETS_PATH = "/server/web-api/openapi/v1/getVisibleTargets"
         private const val CHECK_AUTHORIZATION_PATH = "/server/web-api/openapi/v1/checkAuthorization"
+        private const val INSTALL_LANDUN_PLUGIN_PATH = "/server/web-api/openapi/v1/installLandunPlugin"
         private val logger = LoggerFactory.getLogger(IMateService::class.java)
     }
 }

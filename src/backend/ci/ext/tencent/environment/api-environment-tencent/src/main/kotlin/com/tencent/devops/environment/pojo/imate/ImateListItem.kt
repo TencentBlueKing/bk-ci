@@ -33,6 +33,14 @@ enum class ImateOriginEngine(val value: String) {
             TEAM_HERMES_DEVCLOUD.value -> ImateItemEngine.Hermes
             else -> ImateItemEngine.Unknown
         }
+
+        fun teamType(value: String?) = when (value) {
+            DEVCLOUD.value -> false
+            TEAM_DEVCLOUD.value -> true
+            HERMES_DEVCLOUD.value -> false
+            TEAM_HERMES_DEVCLOUD.value -> true
+            else -> false
+        }
     }
 }
 
