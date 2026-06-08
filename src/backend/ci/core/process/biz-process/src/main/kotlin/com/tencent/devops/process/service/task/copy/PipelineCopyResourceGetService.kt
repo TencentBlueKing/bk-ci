@@ -7,6 +7,8 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
+import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.label.PipelineGroupDao
 import com.tencent.devops.process.dao.label.PipelineLabelDao
@@ -82,13 +84,24 @@ class PipelineCopyResourceGetService @Autowired constructor(
         nodeName: String,
         expectExists: Boolean?
     ): PipelineCopyResourceBasicInfo? {
-        return getNode(
-            userId = userId,
+        return getResource(
             projectId = projectId,
-            nodeHashId = null,
-            nodeName = nodeName,
+            resourceName = nodeName,
             expectExists = expectExists
-        )
+        ) {
+            client.get(ServiceNodeResource::class).getNodeStatus(
+                userId = userId,
+                projectId = projectId,
+                nodeHashId = null,
+                nodeName = nodeName,
+                agentHashId = null
+            ).data?.let {
+                PipelineCopyResourceBasicInfo(
+                    resourceId = it.nodeHashId,
+                    resourceName = it.displayName ?: it.name
+                )
+            }
+        }
     }
 
     fun getEnvByName(
@@ -114,6 +127,19 @@ class PipelineCopyResourceGetService @Autowired constructor(
                 )
             }
         }
+    }
+
+    fun getAgentById(
+        projectId: String,
+        agentHashId: String
+    ): ThirdPartyAgent {
+        return client.get(ServiceThirdPartyAgentResource::class).getAgentById(
+            projectId = projectId,
+            agentId = agentHashId
+        ).data ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS,
+            params = arrayOf(projectId, agentHashId)
+        )
     }
 
     fun getPipelineViewByName(
@@ -166,34 +192,6 @@ class PipelineCopyResourceGetService @Autowired constructor(
                 PipelineCopyResourceBasicInfo(
                     resourceId = HashUtil.encodeLongId(it.id),
                     resourceName = it.name
-                )
-            }
-        }
-    }
-
-    private fun getNode(
-        userId: String,
-        projectId: String,
-        nodeHashId: String?,
-        nodeName: String?,
-        expectExists: Boolean?
-    ): PipelineCopyResourceBasicInfo? {
-        val resourceName = nodeHashId ?: nodeName.orEmpty()
-        return getResource(
-            projectId = projectId,
-            resourceName = resourceName,
-            expectExists = expectExists
-        ) {
-            client.get(ServiceNodeResource::class).getNodeStatus(
-                userId = userId,
-                projectId = projectId,
-                nodeHashId = nodeHashId,
-                nodeName = nodeName,
-                agentHashId = null
-            ).data?.let {
-                PipelineCopyResourceBasicInfo(
-                    resourceId = it.nodeHashId,
-                    resourceName = it.displayName ?: it.name
                 )
             }
         }

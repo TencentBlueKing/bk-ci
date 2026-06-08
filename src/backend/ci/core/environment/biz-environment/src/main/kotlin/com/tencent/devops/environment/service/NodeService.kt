@@ -75,6 +75,7 @@ import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.NodeTagDao
 import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
+import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentActionDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.NodeBaseInfo
@@ -111,6 +112,7 @@ class NodeService @Autowired constructor(
     private val envDao: EnvDao,
     private val envNodeDao: EnvNodeDao,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
+    private val thirdPartyAgentActionDao: ThirdPartyAgentActionDao,
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val slaveGatewayDao: SlaveGatewayDao,
@@ -914,6 +916,12 @@ class NodeService @Autowired constructor(
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             nodeDao.updateProjectId(
+                dslContext = transactionContext,
+                sourceProjectId = sourceProjectId,
+                targetProjectId = targetProjectId,
+                nodeId = nodeId
+            )
+            thirdPartyAgentDao.updateProjectIdByNodeId(
                 dslContext = transactionContext,
                 sourceProjectId = sourceProjectId,
                 targetProjectId = targetProjectId,
