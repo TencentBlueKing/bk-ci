@@ -151,8 +151,22 @@ class TencentNodeService @Autowired constructor(
         agentDao.fetchImateAgents(dslContext).forEach {
             recordsMap.putIfAbsent(
                 it.createdUser,
-                mutableMapOf(it.createWorkspaceName to CheckImateAgentData(it.projectId, it.id, it.nodeId, it.status))
-            )?.set(it.createWorkspaceName, CheckImateAgentData(it.projectId, it.id, it.nodeId, it.status))
+                mutableMapOf(
+                    it.createWorkspaceName to CheckImateAgentData(
+                        projectId = it.projectId,
+                        agentId = it.id,
+                        nodeId = it.nodeId,
+                        status = it.status
+                    )
+                )
+            )?.set(
+                it.createWorkspaceName, CheckImateAgentData(
+                    projectId = it.projectId,
+                    agentId = it.id,
+                    nodeId = it.nodeId,
+                    status = it.status
+                )
+            )
         }
 
         val needUpdateDeleteStatusAgents = mutableMapOf<String, MutableSet<Long>>()
@@ -198,11 +212,11 @@ class TencentNodeService @Autowired constructor(
             logger.info("doCheckImateProps update delete status $projectId|$agentList")
         }
         needDeleteAgents.forEach { (projectId, agentList) ->
-            // TODO: 批量删除
+            agentDao.batchDeleteAgents(dslContext, projectId, agentList)
             logger.info("doCheckImateProps delete  $projectId|$agentList")
         }
         needCheckRenameAgents.forEach { (projectId, nodeIdAndBotName) ->
-            // TODO: 批量修改
+            agentDao.batchUpdateNodeDisplayName(dslContext, projectId, nodeIdAndBotName)
             logger.info("doCheckImateProps update displayName $projectId|$nodeIdAndBotName")
         }
     }

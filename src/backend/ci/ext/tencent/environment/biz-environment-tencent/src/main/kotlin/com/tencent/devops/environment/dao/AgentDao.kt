@@ -1,7 +1,7 @@
 ﻿package com.tencent.devops.environment.dao
 
-import com.tencent.devops.environment.pojo.imate.ImateListItem
 import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgent
+import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -41,5 +41,22 @@ class AgentDao {
                     )
                 ).fetch()
         }
+    }
+
+    fun batchDeleteAgents(dslContext: DSLContext, projectId: String?, agentIds: Set<Long>) {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            dslContext.deleteFrom(this).where(PROJECT_ID.eq(projectId)).and(ID.`in`(agentIds)).execute()
+        }
+    }
+
+    fun batchUpdateNodeDisplayName(dslContext: DSLContext, projectId: String?, nodeAndName: Map<Long, String>) {
+        dslContext.batch(
+            with(TNode.T_NODE) {
+                nodeAndName.map { (nodeId, displayName) ->
+                    dslContext.update(this).set(DISPLAY_NAME, displayName).where(NODE_ID.eq(nodeId))
+                        .and(PROJECT_ID.eq(projectId))
+                }
+            }
+        ).execute()
     }
 }
