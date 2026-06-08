@@ -599,7 +599,10 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
                 refValue = dispatchType.displayName
             )
         } else {
-            val nodeValue = EnvUtils.parseEnv(dispatchType.value, variables).takeIf { it.isNotBlank() } ?: return null
+            val nodeValue = EnvUtils.parseEnv(
+                dispatchType.displayName,
+                variables
+            ).takeIf { it.isNotBlank() } ?: return null
             PipelineDependentResourceRef(
                 projectId = projectId,
                 resourceType = PipelineDependentResourceType.BUILD_NODE,
@@ -744,17 +747,17 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
                 client.get(ServiceNodeResource::class).getNodeStatus(
                     userId = userId,
                     projectId = ref.projectId,
-                    nodeHashId = ref.refValue,
+                    nodeHashId = null,
                     nodeName = null,
-                    agentHashId = null
+                    agentHashId = ref.refValue
                 ).data
             } else {
                 client.get(ServiceNodeResource::class).getNodeStatus(
                     userId = userId,
                     projectId = ref.projectId,
                     nodeHashId = null,
-                    nodeName = ref.refValue,
-                    agentHashId = null
+                    nodeName = null,
+                    agentHashId = ref.refValue
                 ).data
             }
         } catch (ignored: Exception) {

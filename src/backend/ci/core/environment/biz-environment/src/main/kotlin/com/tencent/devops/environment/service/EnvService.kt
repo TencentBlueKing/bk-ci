@@ -115,9 +115,6 @@ class EnvService @Autowired constructor(
     private val nodeService: NodeService,
     private val client: Client
 ) : IEnvService {
-    companion object {
-        private val logger = LoggerFactory.getLogger(EnvService::class.java)
-    }
 
     override fun checkName(projectId: String, envId: Long?, envName: String) {
         if (envName.contains("@")) {
@@ -1420,5 +1417,9 @@ class EnvService @Autowired constructor(
                    )
             )
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(EnvService::class.java)
     }
 }
