@@ -56,6 +56,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.service.PipelineAsCodeService
+import com.tencent.devops.process.service.PipelineVarOverflowConfig
 import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.BK_CI_AUTHORIZER
@@ -106,7 +107,8 @@ class PipelineBuildService(
     private val pipelineUrlBean: PipelineUrlBean,
     private val simpleRateLimiter: SimpleRateLimiter,
     private val buildIdGenerator: BuildIdGenerator,
-    private val pipelineAsCodeService: PipelineAsCodeService
+    private val pipelineAsCodeService: PipelineAsCodeService,
+    private val pipelineVarOverflowConfig: PipelineVarOverflowConfig
 ) {
     companion object {
         private val NO_LIMIT_CHANNEL = listOf(ChannelCode.CODECC)
@@ -444,17 +446,31 @@ class PipelineBuildService(
     }
 
     /**
-     * 仅做"硬上限 4M"防御性校验。
-     * 超过 [com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX]
-     * 时终止构建，避免单条变量值撑爆溢出表的 mediumtext 列。
+     * 启动参数大小防御性校验，两道闸门：
+     *  1. **单值硬上限**（4M，[PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX]）：避免单条值撑爆溢出表 mediumtext；
+     *  2. **总大小上限**（可配置，[PipelineVarOverflowConfig.startupParamsTotalMax]，默认 32M）：
+     *     避免一次传入大量大变量导致启动期内存 / 溢出表写入 / 后续按需读取失控。
+     *
+     * 在此处校验可一处覆盖所有启动通道（manualStartup / timer / webhook / service / app / replay）。
+     * 注意：此时 pipelineParamMap 尚未追加 `variables.` 前缀副本，故各用户变量只计一次，统计准确。
      */
     fun rejectIfVariableHardOversize(pipelineParamMap: MutableMap<String, BuildParameters>) {
+        var totalLen = 0L
+        val totalMax = pipelineVarOverflowConfig.startupParamsTotalMax
         pipelineParamMap.forEach { (key, value) ->
             val len = value.value.toString().length
             if (len > PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_FAIL_IF_VARIABLE_INVALID,
                     params = arrayOf(key)
+                )
+            }
+            totalLen += len
+            if (totalLen > totalMax) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_START_VARIABLES_TOTAL_OVERSIZE,
+                    params = arrayOf(totalLen.toString(), totalMax.toString()),
+                    defaultMessage = "Total size of startup variables[$totalLen] exceeds the limit[$totalMax]"
                 )
             }
         }

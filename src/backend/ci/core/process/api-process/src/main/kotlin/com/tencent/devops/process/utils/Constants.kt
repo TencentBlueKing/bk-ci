@@ -240,6 +240,25 @@ const val PIPELINE_VARIABLES_STRING_LENGTH_MAX = 4000
 const val PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX = 4 * 1024 * 1024
 
 /**
+ * 单次启动时所有启动参数值的**总长度**上限（字符数），默认 32M。
+ *
+ * 与单值硬上限 [PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX]（4M）互补：
+ * 前者限制单个变量，本上限限制"一次启动传入的全部变量之和"，
+ * 避免传入大量 4M 变量导致启动期内存（StartBuildContext 多份引用）、
+ * 溢出表写入量、以及后续按需读取（受 budgetMax 约束只能部分解析）失控。
+ *
+ * **运营可配置**：通过 Spring 配置覆盖
+ *     `pipeline.variables.startupTotalMax = 67108864`  # 例：调大到 64M
+ *  详见 [PIPELINE_VARIABLES_STARTUP_TOTAL_MAX_KEY]。
+ */
+const val PIPELINE_VARIABLES_STARTUP_TOTAL_MAX = 32 * 1024 * 1024
+
+/**
+ * Spring 配置键：覆盖 [PIPELINE_VARIABLES_STARTUP_TOTAL_MAX] 默认值。单位：字符数。
+ */
+const val PIPELINE_VARIABLES_STARTUP_TOTAL_MAX_KEY = "pipeline.variables.startupTotalMax"
+
+/**
  * 大变量主表引用前缀。
  * 当变量值超过 [PIPELINE_VARIABLES_STRING_LENGTH_MAX]，主表只存"纯引用"：
  *

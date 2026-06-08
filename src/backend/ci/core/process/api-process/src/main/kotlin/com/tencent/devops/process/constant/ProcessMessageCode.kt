@@ -459,6 +459,12 @@ object ProcessMessageCode {
     // 实例化异常：流水线其他变量[{0}]默认值被改成模版默认值,请联系助手分析
     const val ERROR_TEMPLATE_INSTANCE_OPTIONAL_PARAM_OVERRIDDEN = "2101364"
 
+    // 本次启动的所有启动参数值总大小[{0}]超过系统限制[{1}]，启动失败
+    const val ERROR_START_VARIABLES_TOTAL_OVERSIZE = "2101365"
+
+    // 启动参数[{0}]的默认值长度[{1}]超过系统限制[{2}]，请缩短默认值后再保存
+    const val ERROR_START_PARAM_DEFAULT_VALUE_OVERSIZE = "2101366"
+
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}

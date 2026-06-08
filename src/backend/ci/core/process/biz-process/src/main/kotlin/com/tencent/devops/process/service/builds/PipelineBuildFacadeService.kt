@@ -424,7 +424,11 @@ class PipelineBuildFacadeService(
         triggerReviewers: List<String>? = null,
         version: Int? = null
     ): BuildId {
-        logger.info("[$pipelineId] Manual build start with buildNo[$buildNo] and vars: $values")
+        // 不直接打印 values（启动参数现在单值最多 4M，全量打印会撑爆日志/内存），仅打印 key 与长度
+        logger.info(
+            "[$pipelineId] Manual build start with buildNo[$buildNo] and vars: " +
+                values.entries.joinToString(prefix = "{", postfix = "}") { "${it.key}(len=${it.value.length})" }
+        )
         if (checkPermission) {
             val permission = AuthPermission.EXECUTE
             pipelinePermissionService.validPipelinePermission(
@@ -2846,16 +2850,18 @@ class PipelineBuildFacadeService(
             buildId = buildId,
             keys = setOf(PIPELINE_START_TASK_ID)
         )
-        // 按原有的启动参数组装启动参数(排除重试次数)
-        val startParameters = buildInfo.buildParameters?.filter {
+        // 按原有的启动参数组装启动参数(排除重试次数)；大值是引用串，重放前先解析回真实值
+        val startParameters = pipelineRuntimeService.resolveStartupParamOverflow(
+            projectId = projectId, buildId = buildInfo.buildId, params = buildInfo.buildParameters
+        ).filter {
             it.key != PIPELINE_RETRY_COUNT
-        }?.associate {
+        }.associate {
             it.key to if (CascadePropertyUtils.supportCascadeParam(it.valueType) && it.value is Map<*, *>) {
                 JsonUtil.toJson(it.value)
             } else {
                 it.value.toString()
             }
-        }?.toMutableMap() ?: mutableMapOf()
+        }.toMutableMap()
         startParameters.putAll(buildVars)
         val startType = StartType.toStartType(buildInfo.trigger)
         // 定时触发不存在调试的情况
@@ -3293,10 +3299,12 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         buildInfo: BuildInfo
     ): String {
-        // 按原有的启动参数组装启动参数
+        // 按原有的启动参数组装启动参数；大值是引用串，重启前先解析回真实值
         val startParameters = mutableMapOf<String, String>()
-        buildInfo.buildParameters?.map {
-            startParameters.put(it.key, it.value.toString())
+        pipelineRuntimeService.resolveStartupParamOverflow(
+            projectId = projectId, buildId = buildInfo.buildId, params = buildInfo.buildParameters
+        ).forEach {
+            startParameters[it.key] = it.value.toString()
         }
         val startType = StartType.toStartType(buildInfo.trigger)
         // 发起新构建

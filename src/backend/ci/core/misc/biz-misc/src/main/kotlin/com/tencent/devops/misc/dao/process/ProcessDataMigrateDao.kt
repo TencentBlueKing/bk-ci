@@ -32,6 +32,7 @@ import com.tencent.devops.model.process.tables.TPipelineBuildContainer
 import com.tencent.devops.model.process.tables.TPipelineBuildDetail
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.TPipelineBuildHistoryDebug
+import com.tencent.devops.model.process.tables.TPipelineBuildHistoryParamOverflow
 import com.tencent.devops.model.process.tables.TPipelineBuildParamCombination
 import com.tencent.devops.model.process.tables.TPipelineBuildParamCombinationDetail
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordContainer
@@ -83,6 +84,7 @@ import com.tencent.devops.model.process.tables.records.TAuditResourceRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryDebugRecord
+import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryParamOverflowRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildParamCombinationDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildParamCombinationRecord
@@ -388,6 +390,42 @@ class ProcessDataMigrateDao {
     ) {
         if (records.isEmpty()) return
         with(TPipelineBuildVarOverflow.T_PIPELINE_BUILD_VAR_OVERFLOW) {
+            records.forEach { record ->
+                val insertRecord = migratingShardingDslContext.newRecord(this, record)
+                migratingShardingDslContext.executeInsert(insertRecord)
+            }
+        }
+    }
+
+    /**
+     * 抓取启动参数大值溢出表 T_PIPELINE_BUILD_HISTORY_PARAM_OVERFLOW 的记录。
+     *
+     * 该表是启动参数大值的长期载体（不分区），与构建历史同生命周期，迁移时需随主表一起搬运。
+     * 内存安全：调用方按**单 buildId** 流式调用，避免一次性把多个 build 的 mediumtext 全部载入内存。
+     */
+    fun getPipelineBuildHistoryParamOverflowRecords(
+        dslContext: DSLContext,
+        projectId: String,
+        buildIds: List<String>
+    ): List<TPipelineBuildHistoryParamOverflowRecord> {
+        if (buildIds.isEmpty()) return emptyList()
+        with(TPipelineBuildHistoryParamOverflow.T_PIPELINE_BUILD_HISTORY_PARAM_OVERFLOW) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
+                .fetchInto(TPipelineBuildHistoryParamOverflowRecord::class.java)
+        }
+    }
+
+    /**
+     * 把启动参数大值溢出表 T_PIPELINE_BUILD_HISTORY_PARAM_OVERFLOW 的记录写入目标分库。
+     * 单条 mediumtext 值最大 4M，故**逐条** executeInsert，禁止 batchInsert 聚合以免突破 max_allowed_packet。
+     */
+    fun migratePipelineBuildHistoryParamOverflowData(
+        migratingShardingDslContext: DSLContext,
+        records: List<TPipelineBuildHistoryParamOverflowRecord>
+    ) {
+        if (records.isEmpty()) return
+        with(TPipelineBuildHistoryParamOverflow.T_PIPELINE_BUILD_HISTORY_PARAM_OVERFLOW) {
             records.forEach { record ->
                 val insertRecord = migratingShardingDslContext.newRecord(this, record)
                 migratingShardingDslContext.executeInsert(insertRecord)

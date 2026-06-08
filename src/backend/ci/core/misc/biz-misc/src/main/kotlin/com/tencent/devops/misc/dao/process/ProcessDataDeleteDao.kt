@@ -36,6 +36,7 @@ import com.tencent.devops.model.process.tables.TPipelineBuildContainer
 import com.tencent.devops.model.process.tables.TPipelineBuildDetail
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.TPipelineBuildHistoryDebug
+import com.tencent.devops.model.process.tables.TPipelineBuildHistoryParamOverflow
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordContainer
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordModel
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordStage
@@ -214,6 +215,25 @@ class ProcessDataDeleteDao {
     ) {
         if (buildIds.isEmpty()) return
         with(TPipelineBuildVarOverflow.T_PIPELINE_BUILD_VAR_OVERFLOW) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
+                .execute()
+        }
+    }
+
+    /**
+     * 删除构建启动参数大值溢出表中本批 buildId 的全部记录。
+     *
+     * 该表是启动参数大值的长期载体（不分区），与构建历史 T_PIPELINE_BUILD_HISTORY[_DEBUG]
+     * 同生命周期，故随历史一起按 buildId 清理 / 归档迁移。
+     */
+    fun deletePipelineBuildHistoryParamOverflow(
+        dslContext: DSLContext,
+        projectId: String,
+        buildIds: List<String>
+    ) {
+        if (buildIds.isEmpty()) return
+        with(TPipelineBuildHistoryParamOverflow.T_PIPELINE_BUILD_HISTORY_PARAM_OVERFLOW) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
                 .execute()

@@ -177,7 +177,11 @@ class PipelineBuildRetryService @Autowired constructor(
             val webHookStartParam = mutableMapOf<String, BuildParameters>()
             // 填充构建参数时，若为流水线基础变量，则需补充[variable.]前缀
             val paramKeys = resource.model.getTriggerContainer().params.map { it.id }
-            buildInfo.buildParameters?.forEach { param ->
+            // 历史 BUILD_PARAMETERS 中大值是引用串，重试要把真实值写回 VAR 表/新历史，故先解析回真实值
+            val resolvedBuildParameters = pipelineRuntimeService.resolveStartupParamOverflow(
+                projectId = projectId, buildId = buildId, params = buildInfo.buildParameters
+            )
+            resolvedBuildParameters.forEach { param ->
                 webHookStartParam[param.key] = param
                 if (paramKeys.contains(param.key)) {
                     val variableKey = PipelineVarUtil.getVariableKey(param.key)

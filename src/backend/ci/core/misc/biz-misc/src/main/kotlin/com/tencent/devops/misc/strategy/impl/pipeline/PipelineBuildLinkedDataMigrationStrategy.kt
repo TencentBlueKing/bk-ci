@@ -279,6 +279,18 @@ class PipelineBuildLinkedDataMigrationStrategy(
                         records = records
                     )
                 }
+                // 启动参数大值溢出表（长期载体）同样按单 buildId 流式迁移
+                val paramRecords = processDataMigrateDao.getPipelineBuildHistoryParamOverflowRecords(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    buildIds = listOf(buildId)
+                )
+                if (paramRecords.isNotEmpty()) {
+                    processDataMigrateDao.migratePipelineBuildHistoryParamOverflowData(
+                        migratingShardingDslContext = migratingDslContext,
+                        records = paramRecords
+                    )
+                }
             } catch (e: Exception) {
                 logger.error("Failed to migrate overflow data for build[$buildId]", e)
                 throw e

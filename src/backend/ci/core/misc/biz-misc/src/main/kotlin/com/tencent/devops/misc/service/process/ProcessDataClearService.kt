@@ -153,6 +153,8 @@ class ProcessDataClearService @Autowired constructor(
             processDataDeleteDao.deletePipelineBuildRecordStage(context, projectId, buildIds)
             processDataDeleteDao.deletePipelineBuildRecordContainer(context, projectId, buildIds)
             processDataDeleteDao.deletePipelineBuildRecordTask(context, projectId, buildIds)
+            // 启动参数大值长期载体，与构建历史同生命周期；归档与正式库路径都需清理
+            processDataDeleteDao.deletePipelineBuildHistoryParamOverflow(context, projectId, buildIds)
             processDataDeleteDao.deleteReport(
                 dslContext = context,
                 projectId = projectId,

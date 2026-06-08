@@ -29,6 +29,7 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.process.utils.PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX
 import com.tencent.devops.process.utils.PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX
+import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STARTUP_TOTAL_MAX
 import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
@@ -37,13 +38,10 @@ import org.springframework.stereotype.Component
 /**
  * 大变量内存控制阈值的**可动态调整**配置。
  *
- * 之所以独立成一个 [RefreshScope] Bean（而不是直接把 @Value 放在
- * [BuildVariableService] 上）：
- *  - [RefreshScope] 让这些阈值在配置中心 push / `/actuator/refresh` 后**无需重启**即可生效，
- *    满足"内存限制阈值动态调整"的运营诉求；
+ *  - 满足"内存限制阈值动态调整"的运营诉求；
  *  - 把易变的阈值与核心写读服务解耦，避免给被广泛注入的 [BuildVariableService] 套代理。
  *
- * 三个阈值都只对"启用大变量后的新构建"生效，对历史 build（单变量 ≤ 4K）**完全零影响**。
+ * 三个阈值都只对"启用大变量后的新构建"生效，对历史 build（单变量 ≤ 4K）完全零影响。
  */
 @Component
 @RefreshScope
@@ -73,4 +71,22 @@ class PipelineVarOverflowConfig {
      */
     @Value("\${pipeline.variables.lazyLoad.budgetMax:$PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX}")
     val lazyLoadBudgetMax: Long = PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX.toLong()
+
+    /**
+     * 单次启动所有启动参数值的**总长度**上限（字符数）。超过则在启动入口直接抛错终止，
+     * 避免大量大变量导致启动期内存 / 溢出表写入 / 后续读取失控。
+     * 默认 [PIPELINE_VARIABLES_STARTUP_TOTAL_MAX]（32M）。
+     */
+    @Value("\${pipeline.variables.startupTotalMax:$PIPELINE_VARIABLES_STARTUP_TOTAL_MAX}")
+    val startupParamsTotalMax: Long = PIPELINE_VARIABLES_STARTUP_TOTAL_MAX.toLong()
+
+    /**
+     * 保存流水线编排时是否校验启动参数（TriggerContainer.params / templateParams）默认值长度。
+     *
+     * 校验阈值不单独配置，直接复用运行期主表上限
+     * [com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX]（4000），
+     * 保证"保存时通过校验的默认值，启动后写入 VAR 主表也不会溢出"。
+     */
+    @Value("\${pipeline.startParam.defaultValue.checkEnabled:true}")
+    val startParamDefaultValueCheckEnabled: Boolean = true
 }
