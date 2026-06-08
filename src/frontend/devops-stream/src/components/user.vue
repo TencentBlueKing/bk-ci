@@ -79,7 +79,7 @@
         position: relative;
         display: flex;
         align-items: center;
-        color: $fontLigtherColor;
+        color: $fontLighterColor;
         height: 100%;
         cursor: pointer;
 

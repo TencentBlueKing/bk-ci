@@ -15,7 +15,6 @@
             :max-height="521"
             :header-cell-style="{ background: '#fff' }"
             :pagination="pagination"
-            :max-height="521"
             @page-change="handlePageChange"
             @page-limit-change="handleLimitChange"
         >
