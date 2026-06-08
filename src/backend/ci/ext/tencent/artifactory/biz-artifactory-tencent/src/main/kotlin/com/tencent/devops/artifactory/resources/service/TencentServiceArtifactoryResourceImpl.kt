@@ -153,7 +153,6 @@ class TencentServiceArtifactoryResourceImpl @Autowired constructor(
         return Result(bkRepoDownloadService.innerDownloadUrlByUser(userId, projectId, artifactoryType, path))
     }
 
-
     @AuditEntry(actionId = ActionId.PIPELINE_DOWNLOAD)
     override fun downloadUrl(
         projectId: String,
