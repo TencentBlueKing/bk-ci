@@ -21,7 +21,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.net.URLDecoder
 
 /**
  * 流水线yaml引用解析器,用于将yaml文件中的引用解析成具体的yaml版本
@@ -184,7 +183,7 @@ class PipelineYamlVersionResolver @Autowired constructor(
         val fileContent = try {
             scmProxyService.getFileContent(
                 projectId = projectId,
-                ref = URLDecoder.decode(ref, "UTF-8"),
+                ref = ref,
                 path = filePath,
                 authRepository = AuthRepository(repository)
             )?.takeIf { it.blobId.isNotBlank() }
