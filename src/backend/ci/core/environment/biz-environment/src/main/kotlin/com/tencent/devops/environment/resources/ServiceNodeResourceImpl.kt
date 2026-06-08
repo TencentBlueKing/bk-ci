@@ -139,18 +139,18 @@ class ServiceNodeResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun transferNodes(
+    override fun transferNode(
         userId: String,
         projectId: String,
         targetProjectId: String,
-        nodeHashIds: List<String>
+        nodeHashId: String
     ): Result<Boolean> {
         return Result(
-            nodeService.transferNodes(
+            nodeService.transferNode(
                 userId = userId,
                 sourceProjectId = projectId,
                 targetProjectId = targetProjectId,
-                nodeHashIds = nodeHashIds
+                nodeHashId = nodeHashId
             )
         )
     }

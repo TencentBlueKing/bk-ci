@@ -23,10 +23,9 @@ import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.pojo.pipeline.PipelineDependentResource
-import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineCopyTaskResourceStatus
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineDependentResourceType
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResource
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceRel
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.PipelineViewService
@@ -193,11 +192,11 @@ class PipelineCopyResourceCreateService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS,
             params = arrayOf(sourceProjectId, nodeHashId)
         )
-        val transferResult = client.get(ServiceNodeResource::class).transferNodes(
+        val transferResult = client.get(ServiceNodeResource::class).transferNode(
             userId = userId,
             projectId = sourceProjectId,
             targetProjectId = targetProjectId,
-            nodeHashIds = listOf(nodeHashId)
+            nodeHashId = nodeHashId
         )
         checkTargetResourceCreateResult(
             targetProjectId = targetProjectId,
@@ -360,29 +359,28 @@ class PipelineCopyResourceCreateService @Autowired constructor(
         sourceEnvHashId: String,
         targetProjectId: String
     ): PipelineCopyResourceBasicInfo {
-        val sourceNodes = client.get(ServiceEnvironmentResource::class).listNodesByEnvIds(
+        val sourceEnv = client.get(ServiceEnvironmentResource::class).get(
             userId = userId,
             projectId = sourceProjectId,
-            envHashIds = listOf(sourceEnvHashId)
+            envHashId = sourceEnvHashId,
+            checkPermission = false
         ).data ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_COPY_SOURCE_RESOURCE_NOT_EXISTS,
             params = arrayOf(sourceProjectId, sourceEnvHashId)
         )
-        val sourceNodeHashIds = sourceNodes.map { it.nodeHashId }
-        if (sourceNodeHashIds.isNotEmpty()) {
-            client.get(ServiceNodeResource::class).transferNodes(
+        val envId = checkTargetResourceCreateResult(
+            targetProjectId = targetProjectId,
+            resourceName = sourceEnv.name,
+            result = client.get(ServiceEnvironmentResource::class).createEnvAndTransferNodes(
                 userId = userId,
                 projectId = sourceProjectId,
                 targetProjectId = targetProjectId,
-                nodeHashIds = sourceNodeHashIds
+                sourceEnvHashId = sourceEnvHashId
             )
-        }
-        return createEnv(
-            userId = userId,
-            sourceProjectId = sourceProjectId,
-            sourceEnvHashId = sourceEnvHashId,
-            targetProjectId = targetProjectId,
-            nodeHashIds = sourceNodeHashIds
+        )
+        return PipelineCopyResourceBasicInfo(
+            resourceId = envId.hashId,
+            resourceName = sourceEnv.name
         )
     }
 

@@ -226,69 +226,6 @@ class NodeTagDao {
         }
     }
 
-    fun transferNodesTags(
-        dslContext: DSLContext,
-        sourceProjectId: String,
-        targetProjectId: String,
-        nodeIds: Set<Long>
-    ) {
-        if (nodeIds.isEmpty() || sourceProjectId == targetProjectId) {
-            return
-        }
-        val nodeAndValueAndKeyIds = mutableMapOf<Long, MutableMap<Long, Long>>()
-        dslContext.select(
-            TNodeTags.T_NODE_TAGS.NODE_ID,
-            TNodeTags.T_NODE_TAGS.TAG_KEY_ID,
-            TNodeTags.T_NODE_TAGS.TAG_VALUE_ID,
-            TNodeTagKey.T_NODE_TAG_KEY.KEY_NAME,
-            TNodeTagKey.T_NODE_TAG_KEY.ALLOW_MUL_VALUES,
-            TNodeTagValues.T_NODE_TAG_VALUES.VALUE_NAME
-        ).from(TNodeTags.T_NODE_TAGS)
-            .leftJoin(TNodeTagKey.T_NODE_TAG_KEY)
-            .on(TNodeTags.T_NODE_TAGS.TAG_KEY_ID.eq(TNodeTagKey.T_NODE_TAG_KEY.ID))
-            .leftJoin(TNodeTagValues.T_NODE_TAG_VALUES)
-            .on(TNodeTags.T_NODE_TAGS.TAG_VALUE_ID.eq(TNodeTagValues.T_NODE_TAG_VALUES.ID))
-            .where(TNodeTags.T_NODE_TAGS.PROJECT_ID.eq(sourceProjectId))
-            .and(TNodeTags.T_NODE_TAGS.NODE_ID.`in`(nodeIds))
-            .fetch()
-            .forEach { nodeTag ->
-                val nodeId = nodeTag[TNodeTags.T_NODE_TAGS.NODE_ID]
-                val sourceKeyId = nodeTag[TNodeTags.T_NODE_TAGS.TAG_KEY_ID]
-                val sourceValueId = nodeTag[TNodeTags.T_NODE_TAGS.TAG_VALUE_ID]
-                val targetKeyId: Long
-                val targetValueId: Long
-                if (sourceKeyId < 0 || sourceValueId < 0) {
-                    targetKeyId = sourceKeyId
-                    targetValueId = sourceValueId
-                } else {
-                    val tagKeyName = nodeTag[TNodeTagKey.T_NODE_TAG_KEY.KEY_NAME] ?: return@forEach
-                    val tagValueName = nodeTag[TNodeTagValues.T_NODE_TAG_VALUES.VALUE_NAME] ?: return@forEach
-                    targetKeyId = getOrCreateTagKey(
-                        dslContext = dslContext,
-                        projectId = targetProjectId,
-                        tagName = tagKeyName,
-                        allowMulVal = nodeTag[TNodeTagKey.T_NODE_TAG_KEY.ALLOW_MUL_VALUES] ?: false
-                    )
-                    targetValueId = getOrCreateTagValue(
-                        dslContext = dslContext,
-                        projectId = targetProjectId,
-                        tagKeyId = targetKeyId,
-                        tagValueName = tagValueName
-                    )
-                }
-                nodeAndValueAndKeyIds.getOrPut(nodeId) { mutableMapOf() }[targetValueId] = targetKeyId
-            }
-        if (nodeAndValueAndKeyIds.isEmpty()) {
-            return
-        }
-        deleteNodesTags(dslContext = dslContext, projectId = sourceProjectId, nodeIds = nodeIds)
-        batchAddNodeTags(
-            dslContext = dslContext,
-            projectId = targetProjectId,
-            nodeAndValueAndKeyIds = nodeAndValueAndKeyIds
-        )
-    }
-
     fun batchAddNodeTags(
         dslContext: DSLContext,
         projectId: String,
@@ -329,55 +266,6 @@ class NodeTagDao {
             }
             return dsl.fetch()
         }
-    }
-
-    private fun getOrCreateTagKey(
-        dslContext: DSLContext,
-        projectId: String,
-        tagName: String,
-        allowMulVal: Boolean
-    ): Long {
-        return dslContext.select(TNodeTagKey.T_NODE_TAG_KEY.ID)
-            .from(TNodeTagKey.T_NODE_TAG_KEY)
-            .where(TNodeTagKey.T_NODE_TAG_KEY.PROJECT_ID.eq(projectId))
-            .and(TNodeTagKey.T_NODE_TAG_KEY.KEY_NAME.eq(tagName))
-            .fetchOne(TNodeTagKey.T_NODE_TAG_KEY.ID)
-            ?: dslContext.insertInto(
-                TNodeTagKey.T_NODE_TAG_KEY,
-                TNodeTagKey.T_NODE_TAG_KEY.PROJECT_ID,
-                TNodeTagKey.T_NODE_TAG_KEY.KEY_NAME,
-                TNodeTagKey.T_NODE_TAG_KEY.ALLOW_MUL_VALUES
-            ).values(
-                projectId,
-                tagName,
-                allowMulVal
-            ).returning(TNodeTagKey.T_NODE_TAG_KEY.ID)
-                .fetchOne()!![TNodeTagKey.T_NODE_TAG_KEY.ID]
-    }
-
-    private fun getOrCreateTagValue(
-        dslContext: DSLContext,
-        projectId: String,
-        tagKeyId: Long,
-        tagValueName: String
-    ): Long {
-        return dslContext.select(TNodeTagValues.T_NODE_TAG_VALUES.ID)
-            .from(TNodeTagValues.T_NODE_TAG_VALUES)
-            .where(TNodeTagValues.T_NODE_TAG_VALUES.PROJECT_ID.eq(projectId))
-            .and(TNodeTagValues.T_NODE_TAG_VALUES.TAG_KEY_ID.eq(tagKeyId))
-            .and(TNodeTagValues.T_NODE_TAG_VALUES.VALUE_NAME.eq(tagValueName))
-            .fetchOne(TNodeTagValues.T_NODE_TAG_VALUES.ID)
-            ?: dslContext.insertInto(
-                TNodeTagValues.T_NODE_TAG_VALUES,
-                TNodeTagValues.T_NODE_TAG_VALUES.PROJECT_ID,
-                TNodeTagValues.T_NODE_TAG_VALUES.TAG_KEY_ID,
-                TNodeTagValues.T_NODE_TAG_VALUES.VALUE_NAME
-            ).values(
-                projectId,
-                tagKeyId,
-                tagValueName
-            ).returning(TNodeTagValues.T_NODE_TAG_VALUES.ID)
-                .fetchOne()!![TNodeTagValues.T_NODE_TAG_VALUES.ID]
     }
 
     fun fetchTag(

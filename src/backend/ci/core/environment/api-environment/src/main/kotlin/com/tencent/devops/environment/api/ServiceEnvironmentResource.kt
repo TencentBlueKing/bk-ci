@@ -87,6 +87,24 @@ interface ServiceEnvironmentResource {
         environment: EnvCreateInfo
     ): Result<EnvironmentId>
 
+    @Operation(summary = "创建环境并迁移节点到目标项目")
+    @POST
+    @Path("/projects/{projectId}/transfer_env/{targetProjectId}/{sourceEnvHashId}")
+    fun createEnvAndTransferNodes(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "源项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "目标项目ID", required = true)
+        @PathParam("targetProjectId")
+        targetProjectId: String,
+        @Parameter(description = "源环境 hashId", required = true)
+        @PathParam("sourceEnvHashId")
+        sourceEnvHashId: String
+    ): Result<EnvironmentId>
+
     @Operation(summary = "获取环境信息")
     @GET
     @Path("/projects/{projectId}/envs/{envHashId}")

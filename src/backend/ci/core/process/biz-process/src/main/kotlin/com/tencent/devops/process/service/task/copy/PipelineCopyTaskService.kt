@@ -3,7 +3,6 @@ package com.tencent.devops.process.service.task.copy
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
@@ -31,7 +30,6 @@ import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteProg
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskExecuteSummary
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskResourceUpdate
 import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSaveResourceRequest
-import com.tencent.devops.process.pojo.pipeline.task.PipelineCopyTaskSummary
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

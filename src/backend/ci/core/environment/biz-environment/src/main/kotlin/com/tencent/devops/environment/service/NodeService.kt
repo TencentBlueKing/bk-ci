@@ -32,6 +32,7 @@ import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.ALIAS
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.IMPORTER
 import com.tencent.devops.common.api.constant.LATEST_EXECUTE_PIPELINE
 import com.tencent.devops.common.api.constant.LATEST_EXECUTE_TIME
@@ -48,7 +49,9 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.api.ServiceAgentResource
@@ -62,7 +65,6 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_IMPORT_PERMISSION_NODES
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_CMDB_PRIMARY_BAK_OPERATOR
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_TYPE_TO_CHANGE_CREATOR_ONLY_SUPPORT_CMDB
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.NODE_USAGE_BUILD
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.NODE_USAGE_DEPLOYMENT
@@ -89,16 +91,16 @@ import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.environment.utils.NodeUtils
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import jakarta.servlet.http.HttpServletResponse
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.Executors
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("ALL")
@@ -113,7 +115,9 @@ class NodeService @Autowired constructor(
     private val environmentPermissionService: EnvironmentPermissionService,
     private val slaveGatewayDao: SlaveGatewayDao,
     private val nodeTagDao: NodeTagDao,
-    private val nodeTagService: NodeTagService
+    private val nodeTagService: NodeTagService,
+    private val authProjectApi: AuthProjectApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(NodeService::class.java)
@@ -867,42 +871,76 @@ class NodeService @Autowired constructor(
         }
     }
 
-    fun transferNodes(
+    @ActionAuditRecord(
+        actionId = ActionId.ENV_NODE_TRANSFER,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.ENV_NODE
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#sourceProjectId")],
+        scopeId = "#sourceProjectId",
+        content = ActionAuditContent.ENV_NODE_TRANSFER_CONTENT
+    )
+    fun transferNode(
         userId: String,
         sourceProjectId: String,
         targetProjectId: String,
-        nodeHashIds: List<String>
+        nodeHashId: String,
+        checkPermission: Boolean = true
     ): Boolean {
-        if (nodeHashIds.isEmpty()) {
-            return true
+        logger.info(
+            "transfer node start|userId=$userId|sourceProjectId=$sourceProjectId|" +
+                "targetProjectId=$targetProjectId|nodeHashId=$nodeHashId"
+        )
+        val nodeId = HashUtil.decodeIdToLong(nodeHashId)
+        if (checkPermission) {
+            checkProjectManager(userId, sourceProjectId)
+            checkProjectManager(userId, targetProjectId)
         }
-        val nodeIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }
+        val sourceNode = nodeDao.get(dslContext, sourceProjectId, nodeId)
+        if (sourceNode == null) {
+            val targetNode = nodeDao.get(dslContext, targetProjectId, nodeId)
+            if (targetNode != null) {
+                logger.info(
+                    "transfer node skipped|userId=$userId|sourceProjectId=$sourceProjectId|" +
+                        "targetProjectId=$targetProjectId|nodeHashId=$nodeHashId"
+                )
+                return true
+            }
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(nodeHashId)
+            )
+        }
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             nodeDao.updateProjectId(
                 dslContext = transactionContext,
                 sourceProjectId = sourceProjectId,
                 targetProjectId = targetProjectId,
-                nodeIds = nodeIds
+                nodeId = nodeId
             )
-            envNodeDao.updateProjectId(
-                dslContext = transactionContext,
-                sourceProjectId = sourceProjectId,
-                targetProjectId = targetProjectId,
-                nodeIds = nodeIds
-            )
-            nodeTagDao.transferNodesTags(
-                dslContext = transactionContext,
-                sourceProjectId = sourceProjectId,
-                targetProjectId = targetProjectId,
-                nodeIds = nodeIds.toSet()
-            )
+            environmentPermissionService.createNode(userId, targetProjectId, nodeId, sourceNode.nodeName)
+            environmentPermissionService.deleteNode(sourceProjectId, nodeId)
         }
+        ActionAuditContext.current()
+            .setInstanceId(sourceNode.nodeId.toString())
+            .setInstanceName(sourceNode.nodeName)
+            .addExtendData("sourceProjectId", sourceProjectId)
+            .addExtendData("targetProjectId", targetProjectId)
         logger.info(
-            "transfer nodes success|userId=$userId|sourceProjectId=$sourceProjectId|" +
-                "targetProjectId=$targetProjectId|nodeHashIds=$nodeHashIds"
+            "transfer node success|userId=$userId|sourceProjectId=$sourceProjectId|" +
+                "targetProjectId=$targetProjectId|nodeHashId=$nodeHashId"
         )
         return true
+    }
+
+    fun checkProjectManager(userId: String, projectId: String) {
+        if (!authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_PERMISSION_NOT_PROJECT_MANAGER,
+                params = arrayOf(userId, projectId)
+            )
+        }
     }
 
     private fun checkDisplayName(projectId: String, nodeId: Long?, displayName: String) {

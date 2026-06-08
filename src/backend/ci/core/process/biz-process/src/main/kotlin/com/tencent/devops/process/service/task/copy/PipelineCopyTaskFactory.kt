@@ -66,5 +66,4 @@ class PipelineCopyTaskFactory @Autowired constructor(
             }
         }
     }
-
 }

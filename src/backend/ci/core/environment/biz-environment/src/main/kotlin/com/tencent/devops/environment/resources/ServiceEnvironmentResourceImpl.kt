@@ -81,6 +81,20 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         return Result(envService.createEnvironment(userId, projectId, environment))
     }
 
+    override fun createEnvAndTransferNodes(
+        userId: String,
+        projectId: String,
+        targetProjectId: String,
+        sourceEnvHashId: String
+    ) = Result(
+        envService.createEnvAndTransferNodes(
+            userId = userId,
+            sourceProjectId = projectId,
+            targetProjectId = targetProjectId,
+            sourceEnvHashId = sourceEnvHashId
+        )
+    )
+
     @AuditEntry(actionId = ActionId.ENVIRONMENT_VIEW)
     override fun get(
         userId: String,

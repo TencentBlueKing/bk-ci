@@ -96,6 +96,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import jakarta.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.text.SimpleDateFormat
@@ -114,6 +115,9 @@ class EnvService @Autowired constructor(
     private val nodeService: NodeService,
     private val client: Client
 ) : IEnvService {
+    companion object {
+        private val logger = LoggerFactory.getLogger(EnvService::class.java)
+    }
 
     override fun checkName(projectId: String, envId: Long?, envName: String) {
         if (envName.contains("@")) {
@@ -920,6 +924,104 @@ class EnvService @Autowired constructor(
             envId = envId,
             nodeIds = nodeLongIds
         )
+    }
+
+    @ActionAuditRecord(
+        actionId = ActionId.ENVIRONMENT_TRANSFER,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.ENVIRONMENT
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#sourceProjectId")],
+        scopeId = "#sourceProjectId",
+        content = ActionAuditContent.ENVIRONMENT_TRANSFER_CONTENT
+    )
+    fun createEnvAndTransferNodes(
+        userId: String,
+        sourceProjectId: String,
+        targetProjectId: String,
+        sourceEnvHashId: String
+    ): EnvironmentId {
+        logger.info(
+            "create env and transfer nodes start|userId=$userId|sourceProjectId=$sourceProjectId|" +
+                "targetProjectId=$targetProjectId|sourceEnvHashId=$sourceEnvHashId"
+        )
+        nodeService.checkProjectManager(userId, sourceProjectId)
+        nodeService.checkProjectManager(userId, targetProjectId)
+
+        val sourceEnvId = HashUtil.decodeIdToLong(sourceEnvHashId)
+        val sourceEnv = envDao.get(dslContext, sourceProjectId, sourceEnvId)
+        val targetEnvId = getOrCreateTargetEnv(
+            userId = userId,
+            targetProjectId = targetProjectId,
+            sourceEnv = sourceEnv
+        )
+        logger.info(
+            "create env success|userId=$userId|sourceProjectId=$sourceProjectId|" +
+                    "targetProjectId=$targetProjectId|sourceEnvId=$sourceEnvId|targetEnvId=$targetEnvId"
+        )
+
+        val sourceEnvNodes = envNodeDao.list(dslContext, sourceProjectId, listOf(sourceEnvId))
+        val sourceNodeIds = sourceEnvNodes.map { it.nodeId }
+        val targetProjectNodeIds = if (sourceNodeIds.isEmpty()) {
+            emptySet()
+        } else {
+            nodeDao.listByIds(dslContext, targetProjectId, sourceNodeIds).map { it.nodeId }.toSet()
+        }
+        sourceNodeIds.filterNot { it in targetProjectNodeIds }.forEach { nodeId ->
+            nodeService.transferNode(
+                userId = userId,
+                sourceProjectId = sourceProjectId,
+                targetProjectId = targetProjectId,
+                nodeHashId = HashUtil.encodeLongId(nodeId),
+                checkPermission = false
+            )
+        }
+
+        val targetEnvNodeIds = envNodeDao.list(dslContext, targetProjectId, listOf(targetEnvId))
+            .map { it.nodeId }
+            .toSet()
+        val needRelateNodeIds = sourceNodeIds.filterNot { it in targetEnvNodeIds }
+
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            envNodeDao.batchStoreEnvNode(context, needRelateNodeIds, targetEnvId, targetProjectId)
+            envNodeDao.batchDeleteEnvNode(context, sourceProjectId, sourceEnvId, sourceNodeIds)
+        }
+
+        ActionAuditContext.current()
+            .setInstanceId(sourceEnvId.toString())
+            .setInstanceName(sourceEnv.envName)
+            .addExtendData("sourceProjectId", sourceProjectId)
+            .addExtendData("targetProjectId", targetProjectId)
+            .addExtendData("targetEnvId", targetEnvId.toString())
+            .addExtendData("nodeIds", sourceNodeIds.joinToString(","))
+
+        return EnvironmentId(HashUtil.encodeLongId(targetEnvId))
+    }
+
+    private fun getOrCreateTargetEnv(
+        userId: String,
+        targetProjectId: String,
+        sourceEnv: TEnvRecord
+    ): Long {
+        envDao.getByEnvName(dslContext, targetProjectId, sourceEnv.envName)?.let {
+            return it.envId
+        }
+        var newEnvId = 0L
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            newEnvId = envDao.create(
+                dslContext = context,
+                userId = userId,
+                projectId = targetProjectId,
+                envName = sourceEnv.envName,
+                envDesc = sourceEnv.envDesc,
+                envType = sourceEnv.envType,
+                envVars = sourceEnv.envVars
+            )
+            environmentPermissionService.createEnv(userId, targetProjectId, newEnvId, sourceEnv.envName)
+        }
+        return newEnvId
     }
 
     override fun listEnvironmentByLimit(projectId: String, offset: Int?, limit: Int?): Page<EnvWithPermission> {

@@ -651,8 +651,6 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
                     resolveCredentialRef(userId = userId, ref = ref)?.let { resources.add(it) }
                 }
 
-
-
                 else -> {
                     logger.warn("not support dependent resource type|${ref.projectId}|${ref.resourceType}")
                 }

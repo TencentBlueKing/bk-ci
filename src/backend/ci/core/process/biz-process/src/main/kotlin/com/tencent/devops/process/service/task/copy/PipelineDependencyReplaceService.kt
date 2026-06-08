@@ -527,7 +527,9 @@ class PipelineDependencyReplaceService @Autowired constructor(
     }
 
     private fun replaceMarketBuildLessAtomElement(
-        projectId: String, element: MarketBuildLessAtomElement, context: ReplaceContext
+        projectId: String,
+        element: MarketBuildLessAtomElement,
+        context: ReplaceContext
     ): Element {
         val input = element.data[INPUT]
         if (input !is Map<*, *>) {
