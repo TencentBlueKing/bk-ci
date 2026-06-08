@@ -108,7 +108,8 @@ class TencentServiceArtifactoryResourceImpl @Autowired constructor(
         userId: String,
         path: String,
         ttl: Int,
-        directed: Boolean?
+        directed: Boolean?,
+        authorizedUserList: List<String>?
     ): Result<Url> {
         checkParam(projectId)
         return Result(
@@ -118,7 +119,8 @@ class TencentServiceArtifactoryResourceImpl @Autowired constructor(
                 projectId = projectId,
                 artifactoryType = artifactoryType,
                 path = path,
-                ttl = ttl
+                ttl = ttl,
+                authorizedUserList = authorizedUserList
             )
         )
     }

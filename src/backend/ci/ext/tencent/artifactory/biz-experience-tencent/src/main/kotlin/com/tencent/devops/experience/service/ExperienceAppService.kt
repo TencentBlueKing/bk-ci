@@ -476,7 +476,8 @@ class ExperienceAppService(
         experienceHashId: String,
         organization: String?,
         ttl: Int? = null,
-        enablePublicAccess: Boolean = false
+        enablePublicAccess: Boolean = false,
+        restrictToCurrentUser: Boolean = false
     ): DownloadUrl {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         // 移除红点
@@ -486,7 +487,8 @@ class ExperienceAppService(
             experienceId = experienceId,
             ttl = ttl,
             isOuter = organization == ORGANIZATION_OUTER,
-            enablePublicAccess = enablePublicAccess
+            enablePublicAccess = enablePublicAccess,
+            restrictToCurrentUser = restrictToCurrentUser
         )
     }
 
