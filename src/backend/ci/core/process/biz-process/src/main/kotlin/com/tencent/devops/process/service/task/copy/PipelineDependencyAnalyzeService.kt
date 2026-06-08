@@ -767,7 +767,12 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
         return PipelineDependentResource(
             projectId = ref.projectId,
             resourceType = ref.resourceType,
-            resourceId = node.nodeHashId,
+            // 部署节点,流水线使用的是agentHashId
+            resourceId = if (ref.resourceType == PipelineDependentResourceType.DEPLOY_NODE) {
+                node.nodeHashId
+            } else {
+                node.agentHashId!!
+            },
             resourceName = node.displayName!!
         )
     }
