@@ -1741,6 +1741,11 @@
                       "type" : "string"
                     }
                   }
+                }, {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "object"
+                  }
                 } ]
               },
               "readonly" : {
@@ -1764,7 +1769,7 @@
                     "type" : "string"
                   },
                   "type" : {
-                    "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "git-ref", "svn-tag", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips", "repo-ref" ]
+                    "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "git-ref", "svn-tag", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips", "repo-ref", "form-list" ]
                   },
                   "options" : {
                     "type" : "array",
@@ -1838,6 +1843,111 @@
                   },
                   "payload" : {
                     "type" : "object"
+                  },
+                  "fields" : {
+                    "type" : "object",
+                    "patternProperties" : {
+                      "^(?!template$)(?!^[A-Z][A-Z0-9_]*$).+$" : {
+                        "anyOf" : [ {
+                          "type" : "object",
+                          "additionalProperties" : false,
+                          "required" : [ "value" ],
+                          "properties" : {
+                            "value" : {
+                              "anyOf" : [ {
+                                "type" : "string"
+                              }, {
+                                "type" : "number"
+                              }, {
+                                "type" : "boolean"
+                              } ]
+                            },
+                            "readonly" : {
+                              "type" : "boolean"
+                            },
+                            "required" : {
+                              "type" : "boolean"
+                            },
+                            "value-not-empty" : {
+                              "type" : "boolean"
+                            },
+                            "props" : {
+                              "type" : "object",
+                              "additionalProperties" : false,
+                              "required" : [ "type" ],
+                              "properties" : {
+                                "label" : {
+                                  "type" : "string"
+                                },
+                                "type" : {
+                                  "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean" ]
+                                },
+                                "options" : {
+                                  "type" : "array",
+                                  "items" : {
+                                    "type" : "object",
+                                    "additionalProperties" : false,
+                                    "required" : [ "id" ],
+                                    "properties" : {
+                                      "id" : {
+                                        "anyOf" : [ {
+                                          "type" : "string"
+                                        }, {
+                                          "type" : "number"
+                                        }, {
+                                          "type" : "boolean"
+                                        } ]
+                                      },
+                                      "label" : {
+                                        "anyOf" : [ {
+                                          "type" : "string"
+                                        }, {
+                                          "type" : "number"
+                                        }, {
+                                          "type" : "boolean"
+                                        } ]
+                                      },
+                                      "description" : {
+                                        "type" : "string"
+                                      }
+                                    }
+                                  }
+                                },
+                                "description" : {
+                                  "type" : "string"
+                                },
+                                "required" : {
+                                  "type" : "boolean"
+                                }
+                              },
+                              "allOf" : [ {
+                                "if" : {
+                                  "required" : [ "options" ]
+                                },
+                                "then" : {
+                                  "not" : {
+                                    "required" : [ "datasource" ]
+                                  }
+                                }
+                              }, {
+                                "if" : {
+                                  "required" : [ "datasource" ]
+                                },
+                                "then" : {
+                                  "not" : {
+                                    "required" : [ "options" ]
+                                  }
+                                }
+                              } ]
+                            },
+                            "name" : {
+                              "type" : "string"
+                            }
+                          }
+                        } ]
+                      }
+                    },
+                    "additionalProperties" : false
                   }
                 },
                 "allOf" : [ {
@@ -1914,6 +2024,11 @@
                     "type" : "string"
                   }
                 }
+              }, {
+                "type" : "array",
+                "items" : {
+                  "type" : "object"
+                }
               } ]
             },
             "readonly" : {
@@ -1940,7 +2055,7 @@
                   "type" : "string"
                 },
                 "type" : {
-                  "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "git-ref", "svn-tag", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips", "repo-ref" ]
+                  "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "git-ref", "svn-tag", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips", "repo-ref", "form-list" ]
                 },
                 "options" : {
                   "type" : "array",
@@ -2014,6 +2129,111 @@
                 },
                 "payload" : {
                   "type" : "object"
+                },
+                "fields" : {
+                  "type" : "object",
+                  "patternProperties" : {
+                    "^(?!template$)(?!^[A-Z][A-Z0-9_]*$).+$" : {
+                      "anyOf" : [ {
+                        "type" : "object",
+                        "additionalProperties" : false,
+                        "required" : [ "value" ],
+                        "properties" : {
+                          "value" : {
+                            "anyOf" : [ {
+                              "type" : "string"
+                            }, {
+                              "type" : "number"
+                            }, {
+                              "type" : "boolean"
+                            } ]
+                          },
+                          "readonly" : {
+                            "type" : "boolean"
+                          },
+                          "required" : {
+                            "type" : "boolean"
+                          },
+                          "value-not-empty" : {
+                            "type" : "boolean"
+                          },
+                          "props" : {
+                            "type" : "object",
+                            "additionalProperties" : false,
+                            "required" : [ "type" ],
+                            "properties" : {
+                              "label" : {
+                                "type" : "string"
+                              },
+                              "type" : {
+                                "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean" ]
+                              },
+                              "options" : {
+                                "type" : "array",
+                                "items" : {
+                                  "type" : "object",
+                                  "additionalProperties" : false,
+                                  "required" : [ "id" ],
+                                  "properties" : {
+                                    "id" : {
+                                      "anyOf" : [ {
+                                        "type" : "string"
+                                      }, {
+                                        "type" : "number"
+                                      }, {
+                                        "type" : "boolean"
+                                      } ]
+                                    },
+                                    "label" : {
+                                      "anyOf" : [ {
+                                        "type" : "string"
+                                      }, {
+                                        "type" : "number"
+                                      }, {
+                                        "type" : "boolean"
+                                      } ]
+                                    },
+                                    "description" : {
+                                      "type" : "string"
+                                    }
+                                  }
+                                }
+                              },
+                              "description" : {
+                                "type" : "string"
+                              },
+                              "required" : {
+                                "type" : "boolean"
+                              }
+                            },
+                            "allOf" : [ {
+                              "if" : {
+                                "required" : [ "options" ]
+                              },
+                              "then" : {
+                                "not" : {
+                                  "required" : [ "datasource" ]
+                                }
+                              }
+                            }, {
+                              "if" : {
+                                "required" : [ "datasource" ]
+                              },
+                              "then" : {
+                                "not" : {
+                                  "required" : [ "options" ]
+                                }
+                              }
+                            } ]
+                          },
+                          "name" : {
+                            "type" : "string"
+                          }
+                        }
+                      } ]
+                    }
+                  },
+                  "additionalProperties" : false
                 }
               },
               "allOf" : [ {
