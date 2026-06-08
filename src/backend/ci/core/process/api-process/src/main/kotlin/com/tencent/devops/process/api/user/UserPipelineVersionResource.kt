@@ -404,7 +404,7 @@ interface UserPipelineVersionResource {
         buildNo: BuildNoUpdateReq
     ): Result<Boolean>
 
-    @Operation(summary = "根据分支名获取流水线指定版本的两种编排[PAC 流水线]")
+    @Operation(summary = "根据分支名获取流水线指定版本的两种编排[PAC 流水线], 后续会移除，请使用getVersionByBranchName")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/branches/{branch}")
     fun getVersionByBranch(
@@ -419,6 +419,30 @@ interface UserPipelineVersionResource {
         pipelineId: String,
         @Parameter(description = "流水线编排版本", required = true)
         @PathParam("branch")
+        branch: String,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false,
+        @Parameter(description = "请求来源", required = false)
+        @QueryParam("source")
+        source: PipelineGetVersionSource? = PipelineGetVersionSource.VIEW
+    ): Result<PipelineVersionWithModel>
+
+    @Operation(summary = "根据分支名获取流水线指定版本的两种编排[PAC 流水线]")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/getVersionByBranch")
+    fun getVersionByBranchName(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "流水线编排版本", required = true)
+        @QueryParam("branch")
         branch: String,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
